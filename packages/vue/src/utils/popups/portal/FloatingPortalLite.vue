@@ -17,8 +17,10 @@ export interface FloatingPortalLiteProps
 </script>
 
 <script setup lang="ts">
+import type { Component } from 'vue';
 import { EMPTY_OBJECT } from '../../../common/empty';
-import type { ComponentRenderFn, HTMLProps } from '../../../internals/types';
+import type { HTMLProps } from '../../../internals/types';
+import FloatingPortalChildren from './FloatingPortalChildren.vue';
 import { useFloatingPortalNode } from './useFloatingPortalNode';
 
 defineOptions({ inheritAttrs: false });
@@ -27,7 +29,7 @@ const props = withDefaults(defineProps<FloatingPortalLiteProps>(), { as: 'div' }
 
 defineSlots<{
   default(props: { state: FloatingPortalLiteState }): unknown;
-  render: ComponentRenderFn<HTMLProps, FloatingPortalLiteState>;
+  render(props: { props: HTMLProps; state: FloatingPortalLiteState; children: Component }): unknown;
 }>();
 
 const state: FloatingPortalLiteState = EMPTY_OBJECT;
@@ -35,6 +37,7 @@ const state: FloatingPortalLiteState = EMPTY_OBJECT;
 const { element, elementProps, containerElement, deactivated } = useFloatingPortalNode({
   container: () => props.container,
   componentProps: props,
+  children: true,
 });
 
 defineExpose({ element });
@@ -42,7 +45,13 @@ defineExpose({ element });
 
 <template>
   <Teleport v-if="containerElement" :to="containerElement" :disabled="deactivated">
-    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+    <slot
+      v-if="$slots.render"
+      name="render"
+      :props="elementProps()"
+      :state="state"
+      :children="FloatingPortalChildren"
+    />
     <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
   </Teleport>
 </template>

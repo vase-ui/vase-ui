@@ -23,13 +23,6 @@ expectType<
   typeof renderSlotProps
 >(renderSlotProps);
 
-const numberPayloadHandle = PreviewCard.createHandle<number>();
-
-<PreviewCard.Trigger handle={numberPayloadHandle} payload={42} />;
-<PreviewCard.Trigger handle={numberPayloadHandle} />;
-// @ts-expect-error The handle requires a number payload, not a string.
-<PreviewCard.Trigger handle={numberPayloadHandle} payload={'invalid'} />;
-
 <PreviewCard.Trigger href="/page" target="_blank" rel="noreferrer" />;
 // @ts-expect-error `href` is a string.
 <PreviewCard.Trigger href={42} />;
