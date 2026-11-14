@@ -1,6 +1,6 @@
 import { computed } from 'vue';
 import type { ButtonHTMLAttributes, ComputedRef, Ref, VNodeChild } from 'vue';
-import type { UseAnchorPositioningSharedParameters } from '../internals/useAnchorPositioning';
+import type { Side, UseAnchorPositioningSharedParameters } from '../internals/useAnchorPositioning';
 import { useToastProviderContext } from './provider/ToastProviderContext';
 
 /**
@@ -106,12 +106,18 @@ export interface ToastManagerActionProps extends ButtonHTMLAttributes {
 
 export interface ToastManagerPositionerProps extends Omit<
   UseAnchorPositioningSharedParameters,
-  'anchor'
+  'anchor' | 'side'
 > {
   /**
    * An element to position the toast against.
    */
   anchor?: Element | null | undefined;
+  /**
+   * Which side of the anchor element to align the toast against.
+   * May automatically change to avoid collisions.
+   * @default 'top'
+   */
+  side?: Side | undefined;
 }
 
 export interface UseToastManagerReturnValue<Data extends object = any> {
