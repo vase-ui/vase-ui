@@ -8,6 +8,7 @@ import {
   flushMicrotasks,
   screen,
   useTestInteractions,
+  wait,
   waitFor,
 } from '#test-utils';
 import type { VaseUIRenderResult } from '#test-utils';
@@ -2181,6 +2182,9 @@ describe('useDismiss', () => {
     await user.click(screen.getByText('open 1'));
     expect(screen.getByText('open 2')).toBeInTheDocument();
 
+    // Vue skips the later listeners of an event that comes in the millisecond when Vue attached
+    // them. The first click mounts the button of the second click.
+    await wait(1);
     await user.click(screen.getByText('open 2'));
     await flushMicrotasks();
 
