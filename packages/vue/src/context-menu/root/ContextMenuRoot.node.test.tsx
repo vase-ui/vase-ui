@@ -36,4 +36,25 @@ describe('<ContextMenu.Root /> on a server', () => {
   ])('renders the trigger of $name', async ({ node, html }) => {
     expect(await renderToString(node)).toBe(html);
   });
+
+  it('renders the trigger of an open root, and no popup', async () => {
+    const html = await renderToString(
+      <ContextMenu.Root defaultOpen>
+        <ContextMenu.Trigger>area</ContextMenu.Trigger>
+        <ContextMenu.Portal>
+          <ContextMenu.Backdrop />
+          <ContextMenu.Positioner>
+            <ContextMenu.Popup>
+              menu
+              <ContextMenu.Arrow />
+            </ContextMenu.Popup>
+          </ContextMenu.Positioner>
+        </ContextMenu.Portal>
+      </ContextMenu.Root>,
+    );
+
+    expect(html).toBe(
+      '<!--[--><!--[--><div data-popup-open data-pressed style="-webkit-touch-callout:none;"><!--[-->area<!--]--></div><!----><!--]--><!--]-->',
+    );
+  });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { KeepAlive, computed, defineComponent, onMounted, provide, shallowRef } from 'vue';
+import { KeepAlive, computed, defineComponent, provide, shallowRef } from 'vue';
 import * as Menu from '../index.parts';
 import {
   createRenderer,
@@ -21,7 +21,6 @@ import {
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
 import { REASONS } from '../../internals/reasons';
 import { ToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
-import { useMenuRootContext } from '../root/MenuRootContext';
 import MenuPopupReplace from './MenuPopupReplace.test.vue';
 
 const ToolbarProvider = defineComponent((_, { slots }) => {
@@ -468,20 +467,10 @@ describe('<Menu.Popup />', () => {
       });
     });
 
-    // `Menu.List` writes its element to the store. This mock does the same.
-    const ListMock = defineComponent(() => {
-      const { store } = useMenuRootContext();
-      const list = shallowRef<HTMLElement | null>(null);
-      onMounted(() => {
-        store.set('listElement', list.value);
-      });
-      return () => <div ref={list} role="menu" tabindex={-1} data-testid="list" />;
-    });
-
     it('focuses the list when the menu opens with no highlighted item', async () => {
       await renderMenu(() => (
         <Menu.Popup data-testid="popup">
-          <ListMock />
+          <Menu.List data-testid="list" />
         </Menu.Popup>
       ));
 
@@ -495,7 +484,7 @@ describe('<Menu.Popup />', () => {
       const { trigger } = await renderMenu(() => (
         <Menu.Popup data-testid="popup">
           <probe.Probe />
-          <ListMock />
+          <Menu.List data-testid="list" />
         </Menu.Popup>
       ));
       probe.store.set('activeIndex', 0);

@@ -2,12 +2,48 @@ import MenuArrow from './arrow/MenuArrow.vue';
 import type { MenuArrowProps, MenuArrowState } from './arrow/MenuArrow.vue';
 import MenuBackdrop from './backdrop/MenuBackdrop.vue';
 import type { MenuBackdropProps, MenuBackdropState } from './backdrop/MenuBackdrop.vue';
+import MenuCheckboxItem from './checkbox-item/MenuCheckboxItem.vue';
+import type {
+  MenuCheckboxItemChangeEventDetails,
+  MenuCheckboxItemChangeEventReason,
+  MenuCheckboxItemProps,
+  MenuCheckboxItemState,
+} from './checkbox-item/MenuCheckboxItem.vue';
+import MenuCheckboxItemIndicator from './checkbox-item-indicator/MenuCheckboxItemIndicator.vue';
+import type {
+  MenuCheckboxItemIndicatorProps,
+  MenuCheckboxItemIndicatorState,
+} from './checkbox-item-indicator/MenuCheckboxItemIndicator.vue';
+import MenuGroup from './group/MenuGroup.vue';
+import type { MenuGroupProps, MenuGroupState } from './group/MenuGroup.vue';
+import MenuGroupLabel from './group-label/MenuGroupLabel.vue';
+import type { MenuGroupLabelProps, MenuGroupLabelState } from './group-label/MenuGroupLabel.vue';
+import MenuItem from './item/MenuItem.vue';
+import type { MenuItemProps, MenuItemState } from './item/MenuItem.vue';
+import MenuLinkItem from './link-item/MenuLinkItem.vue';
+import type { MenuLinkItemProps, MenuLinkItemState } from './link-item/MenuLinkItem.vue';
+import MenuList from './list/MenuList.vue';
+import type { MenuListProps, MenuListState } from './list/MenuList.vue';
 import MenuPopup from './popup/MenuPopup.vue';
 import type { MenuPopupProps, MenuPopupState } from './popup/MenuPopup.vue';
 import MenuPortal from './portal/MenuPortal.vue';
 import type { MenuPortalProps, MenuPortalState } from './portal/MenuPortal.vue';
 import MenuPositioner from './positioner/MenuPositioner.vue';
 import type { MenuPositionerProps, MenuPositionerState } from './positioner/MenuPositioner.vue';
+import MenuRadioGroup from './radio-group/MenuRadioGroup.vue';
+import type {
+  MenuRadioGroupChangeEventDetails,
+  MenuRadioGroupChangeEventReason,
+  MenuRadioGroupProps,
+  MenuRadioGroupState,
+} from './radio-group/MenuRadioGroup.vue';
+import MenuRadioItem from './radio-item/MenuRadioItem.vue';
+import type { MenuRadioItemProps, MenuRadioItemState } from './radio-item/MenuRadioItem.vue';
+import MenuRadioItemIndicator from './radio-item-indicator/MenuRadioItemIndicator.vue';
+import type {
+  MenuRadioItemIndicatorProps,
+  MenuRadioItemIndicatorState,
+} from './radio-item-indicator/MenuRadioItemIndicator.vue';
 import MenuRoot from './root/MenuRoot.vue';
 import type {
   MenuRootActions,
@@ -43,6 +79,78 @@ export namespace Backdrop {
 }
 
 /**
+ * A menu item that toggles a setting on or off.
+ * Renders a `<div>` element.
+ */
+export const CheckboxItem: typeof MenuCheckboxItem = MenuCheckboxItem;
+export namespace CheckboxItem {
+  export type State = MenuCheckboxItemState;
+  export type Props = MenuCheckboxItemProps;
+  export type ChangeEventReason = MenuCheckboxItemChangeEventReason;
+  export type ChangeEventDetails = MenuCheckboxItemChangeEventDetails;
+}
+
+/**
+ * Indicates whether the checkbox item is ticked.
+ * Renders a `<span>` element.
+ */
+export const CheckboxItemIndicator: typeof MenuCheckboxItemIndicator = MenuCheckboxItemIndicator;
+export namespace CheckboxItemIndicator {
+  export type Props = MenuCheckboxItemIndicatorProps;
+  export type State = MenuCheckboxItemIndicatorState;
+}
+
+/**
+ * Groups related menu items with the corresponding label.
+ * Renders a `<div>` element.
+ */
+export const Group: typeof MenuGroup = MenuGroup;
+export namespace Group {
+  export type Props = MenuGroupProps;
+  export type State = MenuGroupState;
+}
+
+/**
+ * An accessible label that is automatically associated with its parent group.
+ * Renders a `<div>` element.
+ */
+export const GroupLabel: typeof MenuGroupLabel = MenuGroupLabel;
+export namespace GroupLabel {
+  export type Props = MenuGroupLabelProps;
+  export type State = MenuGroupLabelState;
+}
+
+/**
+ * An individual interactive item in the menu.
+ * Renders a `<div>` element.
+ */
+export const Item: typeof MenuItem = MenuItem;
+export namespace Item {
+  export type State = MenuItemState;
+  export type Props = MenuItemProps;
+}
+
+/**
+ * A link in the menu that can be used to navigate to a different page or section.
+ * Renders an `<a>` element.
+ */
+export const LinkItem: typeof MenuLinkItem = MenuLinkItem;
+export namespace LinkItem {
+  export type State = MenuLinkItemState;
+  export type Props = MenuLinkItemProps;
+}
+
+/**
+ * Groups menu items so other content, such as a filter input, can share the popup.
+ * Renders a `<div>` element.
+ */
+export const List: typeof MenuList = MenuList;
+export namespace List {
+  export type Props = MenuListProps;
+  export type State = MenuListState;
+}
+
+/**
  * A container for the menu items.
  * Renders a `<div>` element.
  */
@@ -74,6 +182,38 @@ export namespace Positioner {
 }
 
 /**
+ * Groups related radio items.
+ * Renders a `<div>` element.
+ */
+export const RadioGroup: typeof MenuRadioGroup = MenuRadioGroup;
+export namespace RadioGroup {
+  export type Props = MenuRadioGroupProps;
+  export type State = MenuRadioGroupState;
+  export type ChangeEventReason = MenuRadioGroupChangeEventReason;
+  export type ChangeEventDetails = MenuRadioGroupChangeEventDetails;
+}
+
+/**
+ * A menu item that works like a radio button in a given group.
+ * Renders a `<div>` element.
+ */
+export const RadioItem: typeof MenuRadioItem = MenuRadioItem;
+export namespace RadioItem {
+  export type State = MenuRadioItemState;
+  export type Props = MenuRadioItemProps;
+}
+
+/**
+ * Indicates whether the radio item is selected.
+ * Renders a `<span>` element.
+ */
+export const RadioItemIndicator: typeof MenuRadioItemIndicator = MenuRadioItemIndicator;
+export namespace RadioItemIndicator {
+  export type Props = MenuRadioItemIndicatorProps;
+  export type State = MenuRadioItemIndicatorState;
+}
+
+/**
  * Groups all parts of the menu.
  * Doesn't render its own HTML element.
  */
@@ -100,4 +240,5 @@ export namespace Trigger {
   export type State = MenuTriggerState;
 }
 
+export { Separator } from '../separator';
 export { MenuHandle as Handle, createMenuHandle as createHandle } from './store/MenuHandle';
