@@ -54,7 +54,7 @@ export interface MenuPopupProps
 </script>
 
 <script setup lang="ts">
-import { computed, onScopeDispose, toRaw, watch } from 'vue';
+import { computed, inject, onScopeDispose, toRaw, watch } from 'vue';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
@@ -67,10 +67,11 @@ import FloatingFocusManager from '../../utils/popups/focus/FloatingFocusManager.
 import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { useToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
-import { useMenuFilterImpl } from '../filter-root/MenuFilterContext';
+import { MenuFilterImplContext, useMenuFilterImpl } from '../filter-root/MenuFilterContext';
 import { useMenuPositionerContext } from '../positioner/MenuPositionerContext';
 import type { MenuRootChangeEventReason } from '../root/MenuRoot.vue';
 import { useMenuRootContext } from '../root/MenuRootContext';
+import { useMenuSubmenuRootContext } from '../submenu-root/MenuSubmenuRootContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -81,7 +82,9 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, MenuPopupState>;
 }>();
 
-const { store, generatedPopupId, setRenderedPopupId, orientation } = useMenuRootContext();
+const { store, generatedPopupId, setRenderedPopupId, orientation, virtualFocus } =
+  useMenuRootContext();
+const inheritedSubmenuRootContext = useMenuSubmenuRootContext();
 const { side, align } = useMenuPositionerContext();
 const insideToolbar = useToolbarRootContext(true) !== undefined;
 // A filterable menu makes the popup a dialog that holds the input, and the input takes the focus.
@@ -92,6 +95,10 @@ const transitionStatus = computed(() => store.select('transitionStatus'));
 const floatingTreeRoot = computed(() => store.select('floatingTreeRoot'));
 const mounted = computed(() => store.select('mounted'));
 const parent = computed(() => store.select('parent'));
+// A dialog menu can be in the part of a submenu root. Only the real submenu reads its context.
+const submenuRootContext = computed(() =>
+  parent.value.type === 'menu' ? inheritedSubmenuRootContext : undefined,
+);
 // The store types a trigger as an `Element`. A trigger part renders an `HTMLElement`.
 const activeTriggerElement = computed(
   () => store.select('activeTriggerElement') as HTMLElement | null,
@@ -130,6 +137,15 @@ watch(
     onCleanup(() => tree.events.off('close', handleClose));
   },
   { immediate: true },
+);
+
+// Only a menu under a filterable root bundles the handoff to a filterable parent. Whether one is
+// above is fixed for a mounted popup.
+const parentHandoff = inject(MenuFilterImplContext, null)?.useParentHandoff(
+  store,
+  parent.value,
+  open,
+  virtualFocus,
 );
 
 useHoverPopupInteraction(store, {
@@ -171,6 +187,8 @@ const { element, elementProps } = useRenderElement('div', props, {
   ],
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
+    // This listener runs after each other listener of the popup.
+    { onKeydown: parentHandoff?.sendKeyToParentList },
     store.select('popupProps'),
     {
       id: popupId.value,
@@ -188,14 +206,20 @@ const { element, elementProps } = useRenderElement('div', props, {
             ),
           }),
       onKeydown(event: KeyboardEvent) {
+        submenuRootContext.value?.onPopupKeydown?.(event);
         if (insideToolbar && COMPOSITE_KEYS.has(event.key)) {
           event.stopPropagation();
         }
       },
+      onFocusin: parentHandoff?.handleFocus,
     },
     getDisabledMountTransitionStyles(transitionStatus.value),
     filterPopup ? filterPopup.props(attrs) : attrs,
-    { 'data-rootownerid': store.select('rootId') },
+    // This listener runs before each other listener of the popup.
+    {
+      'data-rootownerid': store.select('rootId'),
+      onKeydown: parentHandoff?.stopParentNavigationKey,
+    },
   ],
 });
 
@@ -220,6 +244,11 @@ const initialFocus = computed<FocusOption>(() => {
     return listElement;
   };
 });
+
+// Internal defaults, not targets of the consumer: the focus manager keeps a focus that moved.
+const dynamicReturnFocus = computed(
+  () => submenuRootContext.value?.getReturnElement ?? parentHandoff?.parentVirtualFocusRef,
+);
 
 const returnFocus = computed(() => {
   const { type } = parent.value;
@@ -250,7 +279,8 @@ defineExpose({ element });
     :open-interaction-type="store.select('openMethod')"
     :modal="parent.type === 'context-menu'"
     :disabled="!mounted"
-    :return-focus="finalFocus ?? returnFocus"
+    :return-focus="finalFocus ?? dynamicReturnFocus ?? returnFocus"
+    :explicit-return-focus="finalFocus === undefined && dynamicReturnFocus ? false : undefined"
     :initial-focus="initialFocus"
     restore-focus
     :get-inside-elements="parent.type === undefined ? getInsideElements : undefined"

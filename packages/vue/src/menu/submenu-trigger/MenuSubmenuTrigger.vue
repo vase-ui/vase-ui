@@ -78,9 +78,11 @@ import { useClick } from '../../utils/popups/interactions/useClick';
 import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
 import { triggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
 import { useTriggerRegistration } from '../../utils/popups/popupStoreUtils';
+import { useMenuFilterItem } from '../filter-root/MenuFilterContext';
 import { useMenuItem } from '../item/useMenuItem';
 import type { UseMenuItemMetadata } from '../item/useMenuItem';
 import { useMenuRootContext } from '../root/MenuRootContext';
+import { useMenuSubmenuRootContext } from '../submenu-root/MenuSubmenuRootContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -107,8 +109,13 @@ if (context?.parent.type !== 'menu') {
 
 const { store, parentVirtualFocus } = context;
 const parentMenuStore = context.parent.store;
+const submenuRootContext = useMenuSubmenuRootContext();
 
 const listItem = useCompositeListItem({ label: () => props.label });
+// The trigger is an item of the list of the parent menu. A filterable parent hides its element
+// while the query filters it out, and the template then gives its content to a component that
+// reads the text and renders nothing.
+const filterItem = useMenuFilterItem({ label: () => props.label }, 'submenu-trigger');
 const thisTriggerId = useVaseUiId(() => props.id);
 
 const open = computed(() => store.select('open'));
@@ -231,11 +238,17 @@ const { element, elementProps } = useRenderElement('div', props, {
     (trigger) => {
       triggerElement.value = trigger;
     },
+    filterItem.ref,
   ],
   props: (attrs) => [
     click.reference,
     hoverProps,
     rootTriggerProps.value,
+    // The filterable submenu root replaces the key handler of the generic trigger, because the
+    // keys that enter and leave the submenu depend on the orientations of both menus.
+    submenuRootContext?.onTriggerKeydown
+      ? { onKeydown: submenuRootContext.onTriggerKeydown }
+      : undefined,
     parentMenuStore.select('itemProps'),
     // Opening a submenu changes the trigger's expanded state while the trigger still holds
     // focus, and VoiceOver announces that state change instead of the submenu item that focus
@@ -250,6 +263,7 @@ const { element, elementProps } = useRenderElement('div', props, {
       tabindex: parentVirtualFocus || !(open.value || highlighted.value) ? -1 : 0,
     },
     ownProps,
+    filterItem.props,
     attrs,
     // `getItemProps` stays last so `useButton` keeps gating consumer handlers while disabled.
     getItemProps,
@@ -259,7 +273,12 @@ const { element, elementProps } = useRenderElement('div', props, {
 defineExpose({ element });
 </script>
 
+<!-- prettier-ignore -->
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+  <slot v-if="filterItem.visible.value && $slots.render" name="render" :props="elementProps()" :state="state" />
+  <component :is="as" v-else-if="filterItem.visible.value" v-bind="elementProps()"><slot :state="state" /></component>
+  <component :is="filterItem.HiddenItemText" v-else :set-text="filterItem.setHiddenText">
+    <slot v-if="$slots.render" name="render" :props="{} as HTMLProps" :state="state" />
+    <slot v-else :state="state" />
+  </component>
 </template>
