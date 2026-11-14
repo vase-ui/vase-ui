@@ -14,7 +14,6 @@ import {
   hydrate,
   isJSDOM,
   moveMouse,
-  nextAnimationsRead,
   nextEvent,
   popupConformanceTests,
   popupListConformanceTests,
@@ -1977,8 +1976,8 @@ describe('<Menu.Root />', () => {
                 {`
                   .transition-test-indicator {
                     transition:
-                      transform 100s ease-out,
-                      opacity 100s ease-out;
+                      transform 100ms ease-out,
+                      opacity 100ms ease-out;
                   }
 
                   .transition-test-indicator[data-ending-style] {
@@ -1996,22 +1995,27 @@ describe('<Menu.Root />', () => {
 
           const firstItem = await screen.findByTestId('item-1');
           await user.hover(firstItem);
+          // In WebKit, a list ignores a move with no movement.
+          await fireEvent.mouseMove(firstItem, { movementX: 1 });
 
           await waitFor(() => {
             expect(firstItem).toHaveFocus();
           });
 
-          const animations = await nextAnimationsRead(screen.getByTestId('menu'), {
-            action: () => user.keyboard('[Escape]'),
+          // The wait for the end of the exit starts before the Escape, so it has no time limit.
+          await nextEvent(screen.getByTestId('menu'), 'transitionend', {
+            after: 'transitionrun',
+            action: async () => {
+              await user.keyboard('[Escape]');
+
+              // During an exit transition, the positioner can receive a mouseleave after Escape
+              // when pointer-events change while the pointer rests over the popup.
+              await fireEvent.mouseLeave(screen.getByTestId('menu-positioner'), {
+                relatedTarget: document.body,
+              });
+            },
           });
 
-          // During an exit transition, the positioner can receive a mouseleave after Escape
-          // when pointer-events change while the pointer rests over the popup.
-          await fireEvent.mouseLeave(screen.getByTestId('menu-positioner'), {
-            relatedTarget: document.body,
-          });
-
-          animations.forEach((animation) => animation.finish());
           await waitFor(() => {
             expect(screen.queryByRole('menu')).toBe(null);
           });
@@ -4112,7 +4116,8 @@ describe('<Menu.Root />', () => {
 
       await fireEvent.click(screen.getByRole('button', { name: 'Toggle' }));
       const item = await screen.findByRole('menuitem', { name: 'Two' });
-      const hoverEvent = new MouseEvent('mousemove', { bubbles: true });
+      // In WebKit, a list ignores a move with no movement.
+      const hoverEvent = new MouseEvent('mousemove', { bubbles: true, movementX: 1 });
       await fireEvent(item, hoverEvent);
       await waitFor(() => {
         expect(onItemHighlighted).toHaveBeenLastCalledWith(item, expect.anything());
@@ -4124,6 +4129,7 @@ describe('<Menu.Root />', () => {
       expect(details.event).toBe(hoverEvent);
       expect(details.event).not.toBeInstanceOf(PointerEvent);
 
+      await fireEvent.pointerMove(item, { pointerType: 'mouse', movementX: 1 });
       const leaveEvent = new PointerEvent('pointerleave', {
         pointerType: 'mouse',
       });
@@ -4238,11 +4244,14 @@ describe('<Menu.Root />', () => {
         await user.click(screen.getByRole('button', { name: 'Toggle' }));
         const one = await screen.findByRole('menuitem', { name: 'One' });
         await user.hover(one);
+        // In WebKit, a list ignores a move with no movement.
+        await fireEvent.mouseMove(one, { movementX: 1 });
         await waitFor(() => {
           expect(one).toHaveAttribute('data-highlighted');
         });
 
         await setProps({ onItemHighlighted });
+        await fireEvent.pointerMove(one, { pointerType: 'mouse', movementX: 1 });
         await user.unhover(one);
         await waitFor(() => {
           expect(onItemHighlighted).toHaveBeenLastCalledWith(
