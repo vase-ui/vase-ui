@@ -63,7 +63,7 @@
       "describe": ["<Popover.Close />"],
       "title": "enables modal focus management when `modal=%s` and close is rendered",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
+      "waitsOn": "packages/react/src/popover/index.ts",
       "reason": "The case expects the modal marks of the focus manager on the elements outside the popup. `Popover.Popup` does not have the focus manager yet."
     },
     {
@@ -71,7 +71,7 @@
       "describe": ["<Popover.Close />"],
       "title": "does not enable modal focus management when close is not rendered",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
+      "waitsOn": "packages/react/src/popover/index.ts",
       "reason": "The case expects no modal marks of the focus manager. `Popover.Popup` does not have the focus manager yet, so the case cannot fail."
     },
     {
@@ -79,7 +79,7 @@
       "describe": ["<Popover.Popup />"],
       "suite": "popupFocusPropsTests",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
+      "waitsOn": "packages/react/src/popover/index.ts",
       "reason": "The suite tests `initialFocus` and `finalFocus`. `Popover.Popup` does not have the focus manager or these props yet."
     },
     {
@@ -87,7 +87,7 @@
       "describe": ["<Popover.Popup />"],
       "title": "focuses the popup when the active element becomes display:none",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
+      "waitsOn": "packages/react/src/popover/index.ts",
       "reason": "The case expects the focus to move into the popup when it opens. `Popover.Popup` does not have the focus manager yet."
     },
     {
@@ -101,7 +101,7 @@
       "upstream": "packages/react/src/popover/popup/PopoverPopup.test.tsx",
       "describe": ["<Popover.Popup />", "inside a toolbar"],
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
+      "waitsOn": "packages/react/src/popover/index.ts",
       "reason": "Each case opens the popover and expects the focus on an element of the popup. `Popover.Popup` does not have the focus manager yet."
     },
     {
@@ -168,7 +168,7 @@
       "describe": ["<Popover.Trigger />"],
       "title": "should toggle closed with Enter or Space when rendering a <div>",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
+      "waitsOn": "packages/react/src/popover/index.ts",
       "reason": "The case expects Shift+Tab to move the focus from the popup back to the trigger. It needs the focus manager of `Popover.Popup`, which moves the focus into the popup when it opens."
     },
     {
