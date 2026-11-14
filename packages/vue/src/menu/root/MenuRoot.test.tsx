@@ -1,12 +1,14 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, computed, defineComponent, onMounted, shallowRef } from 'vue';
 import type { ComponentPublicInstance, PropType } from 'vue';
+import { Menubar } from '@vase-ui/vue/menubar';
 import {
   createRenderer,
   fireEvent,
   flushMicrotasks,
   hydrate,
   renderOnServer,
+  screen,
   waitFor,
   within,
 } from '#test-utils';
@@ -25,6 +27,7 @@ import { provideFloatingNode, useFloatingTree } from '../../utils/popups/tree/Fl
 import type { FloatingTreeType } from '../../utils/popups/types';
 import * as Menu from '../index.parts';
 import type { MenuStore } from '../store/MenuStore';
+import type { MenuRootChangeEventDetails, MenuRootHighlightEventDetails } from './MenuRoot.vue';
 import { useMenuRootContext } from './MenuRootContext';
 import type { MenuRootContext } from './MenuRootContext';
 import MenuRootHydration from './MenuRootHydration.test.vue';
@@ -711,6 +714,348 @@ describe('<Menu.Root />', () => {
     });
   });
 
+  describe('dismissal', () => {
+    // The components of each menu are not in the components of the menu above it, so only the
+    // popup tree tells a menu that a press is in a menu below it.
+    it('keeps a menu open for a press in a menu that a trigger in its popup opened', async () => {
+      const middleHandle = Menu.createHandle();
+      const innerHandle = Menu.createHandle();
+      const { findByTestId, getByRole, queryByTestId } = await render(
+        <div>
+          <Menu.Root open>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Trigger handle={middleHandle} id="middle-trigger">
+                    Middle
+                  </Menu.Trigger>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+          <Menu.Root handle={middleHandle}>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup data-testid="middle-menu">
+                  <Menu.Trigger handle={innerHandle} id="inner-trigger">
+                    Inner
+                  </Menu.Trigger>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+          <Menu.Root handle={innerHandle}>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup data-testid="inner-menu">
+                  <Menu.Item>Beta</Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </div>,
+      );
+
+      middleHandle.open('middle-trigger');
+      await findByTestId('middle-menu');
+      innerHandle.open('inner-trigger');
+      await findByTestId('inner-menu');
+
+      await fireEvent.pointerDown(getByRole('menuitem', { name: 'Beta' }));
+      await flushMicrotasks();
+
+      expect(queryByTestId('inner-menu')).not.toBe(null);
+      expect(queryByTestId('middle-menu')).not.toBe(null);
+    });
+  });
+
+  describe('keys', () => {
+    function renderMenu(rootProps: Record<string, unknown> = {}, labels = ['One', 'Two', 'Three']) {
+      return render(
+        <Menu.Root open {...rootProps}>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                {labels.map((label) => (
+                  <Menu.Item key={label}>{label}</Menu.Item>
+                ))}
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>,
+      );
+    }
+
+    const getItem = (name: string) => screen.getByRole('menuitem', { name });
+    const getHighlighted = () =>
+      screen
+        .getAllByRole('menuitem')
+        .filter((item) => item.hasAttribute('data-highlighted'))
+        .map((item) => item.textContent);
+
+    async function focusItem(name: string) {
+      const item = getItem(name);
+      item.focus();
+      await flushMicrotasks();
+      return item;
+    }
+
+    it.each([
+      { name: 'vertical', orientation: 'vertical', next: 'ArrowDown', previous: 'ArrowUp' },
+      { name: 'horizontal', orientation: 'horizontal', next: 'ArrowRight', previous: 'ArrowLeft' },
+    ] as const)(
+      'moves the highlight with the arrow keys of a $name menu',
+      async ({ orientation, next, previous }) => {
+        const { user } = await renderMenu({ orientation });
+        await focusItem('One');
+
+        await user.keyboard(`[${next}]`);
+        await waitFor(() => {
+          expect(getItem('Two')).toHaveFocus();
+        });
+
+        await user.keyboard(`[${previous}]`);
+        await waitFor(() => {
+          expect(getItem('One')).toHaveFocus();
+        });
+      },
+    );
+
+    it('moves the highlight from the trigger of an open menu with a typeahead and the arrow keys', async () => {
+      const { user } = await render(
+        <Menu.Root defaultOpen>
+          <Menu.Trigger>Open</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.Item>One</Menu.Item>
+                <Menu.Item>Two</Menu.Item>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>,
+      );
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      trigger.focus();
+      await flushMicrotasks();
+
+      await user.keyboard('t');
+      await waitFor(() => {
+        expect(getItem('Two')).toHaveFocus();
+      });
+
+      trigger.focus();
+      await flushMicrotasks();
+      await user.keyboard('[ArrowDown]');
+      await waitFor(() => {
+        expect(getItem('One')).toHaveFocus();
+      });
+    });
+
+    it.each([
+      { name: 'loopFocus', loopFocus: true, target: 'One' },
+      { name: 'no loopFocus', loopFocus: false, target: 'Three' },
+    ])('moves from the last item to $target with $name', async ({ loopFocus, target }) => {
+      const { user } = await renderMenu({ loopFocus });
+      await focusItem('Three');
+
+      await user.keyboard('[ArrowDown]');
+      await flushMicrotasks();
+
+      expect(getHighlighted()).toEqual([target]);
+      await waitFor(() => {
+        expect(getItem(target)).toHaveFocus();
+      });
+    });
+
+    it('reports the focus, the key or the pointer that moved the highlight', async () => {
+      const events: unknown[] = [];
+      const { user } = await renderMenu({
+        onItemHighlighted: (
+          item: HTMLElement | undefined,
+          details: MenuRootHighlightEventDetails,
+        ) => events.push([item?.textContent, details.reason, details.event.type]),
+      });
+      await focusItem('One');
+      await user.keyboard('[ArrowDown]');
+      await flushMicrotasks();
+      // In WebKit, the list ignores a move with no movement: the browser sends it when the list
+      // scrolls under the pointer.
+      await fireEvent.mouseMove(getItem('Three'), { movementX: 1, movementY: 1 });
+      await flushMicrotasks();
+
+      expect(events).toEqual([
+        ['One', 'none', 'focusin'],
+        ['Two', 'keyboard', 'keydown'],
+        ['Three', 'pointer', 'mousemove'],
+      ]);
+    });
+
+    it.each([
+      { name: 'by default', highlightItemOnHover: undefined, highlighted: ['Two'] },
+      { name: 'with highlightItemOnHover false', highlightItemOnHover: false, highlighted: [] },
+    ])('highlights an item that the pointer moves over $name', async (testCase) => {
+      await renderMenu({ highlightItemOnHover: testCase.highlightItemOnHover });
+
+      await fireEvent.mouseMove(getItem('Two'), { movementX: 1, movementY: 1 });
+      await flushMicrotasks();
+
+      expect(getHighlighted()).toEqual(testCase.highlighted);
+    });
+
+    it('ignores the arrow keys and the typeahead while it is disabled', async () => {
+      const { user } = await renderMenu({ disabled: true });
+      const one = await focusItem('One');
+
+      await user.keyboard('[ArrowDown]t');
+      await flushMicrotasks();
+
+      expect(one).toHaveFocus();
+      expect(getHighlighted()).toEqual([]);
+    });
+
+    it('starts a new typeahead 500 ms after the last key', async () => {
+      useFakeTimers();
+      await renderMenu({}, ['Alpha', 'Bravo', 'Charlie']);
+      const alpha = await focusItem('Alpha');
+
+      await fireEvent.keyDown(alpha, { key: 'b' });
+      expect(getHighlighted()).toEqual(['Bravo']);
+
+      vi.advanceTimersByTime(500);
+      await fireEvent.keyDown(getItem('Bravo'), { key: 'c' });
+
+      expect(getHighlighted()).toEqual(['Charlie']);
+    });
+
+    it.each([
+      {
+        name: 'horizontal',
+        orientation: 'horizontal',
+        openKey: 'ArrowDown',
+        otherKey: 'ArrowRight',
+      },
+      { name: 'vertical', orientation: 'vertical', openKey: 'ArrowRight', otherKey: 'ArrowDown' },
+    ] as const)(
+      'opens a menu of a $name menubar with $openKey only',
+      async ({ orientation, openKey, otherKey }) => {
+        const { user } = await render(
+          <Menubar orientation={orientation}>
+            <Menu.Root>
+              <Menu.Trigger>File</Menu.Trigger>
+              <Menu.Portal>
+                <Menu.Positioner>
+                  <Menu.Popup>
+                    <Menu.Item>New</Menu.Item>
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.Root>
+          </Menubar>,
+        );
+        screen.getByRole('menuitem', { name: 'File' }).focus();
+        await flushMicrotasks();
+
+        await user.keyboard(`[${otherKey}]`);
+        await flushMicrotasks();
+
+        expect(screen.queryByRole('menu')).toBe(null);
+
+        await user.keyboard(`[${openKey}]`);
+
+        await waitFor(() => {
+          expect(getItem('New')).toHaveFocus();
+        });
+      },
+    );
+
+    it('VUE-46: moves the highlight of a horizontal parent menu with a key that closes the submenu', async () => {
+      const { user } = await render(
+        <Menu.Root open orientation="horizontal">
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.Item>Alpha</Menu.Item>
+                <Menu.SubmenuRoot>
+                  <Menu.SubmenuTrigger>More</Menu.SubmenuTrigger>
+                  <Menu.Portal>
+                    <Menu.Positioner>
+                      <Menu.Popup data-testid="submenu">
+                        <Menu.Item>Monthly</Menu.Item>
+                      </Menu.Popup>
+                    </Menu.Positioner>
+                  </Menu.Portal>
+                </Menu.SubmenuRoot>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>,
+      );
+      await focusItem('More');
+
+      await user.keyboard('[ArrowDown]');
+      await waitFor(() => {
+        expect(getItem('Monthly')).toHaveFocus();
+      });
+
+      await user.keyboard('[ArrowLeft]');
+
+      await waitFor(() => {
+        expect(getItem('Alpha')).toHaveFocus();
+      });
+      expect(screen.queryByTestId('submenu')).toBe(null);
+    });
+
+    it('closes a context menu with Tab', async () => {
+      const events: unknown[] = [];
+      const { user } = await render(
+        <ContextMenuProvider context={createContextMenuContext()}>
+          <Menu.Root
+            defaultOpen
+            onOpenChange={(open: boolean, details: MenuRootChangeEventDetails) =>
+              events.push([open, details.reason])
+            }
+          >
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Item>One</Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </ContextMenuProvider>,
+      );
+      await focusItem('One');
+
+      await user.keyboard('[Tab]');
+
+      expect(events).toEqual([[false, REASONS.focusOut]]);
+    });
+
+    it('gives the keys of the reference to the element that holds the focus under virtual focus', async () => {
+      const plain = createProbe();
+      const virtual = createProbe();
+      const VirtualFocusRoot = createRootPart({ virtualFocus: true });
+      await render(
+        <div>
+          <Menu.Root>
+            <plain.Probe />
+          </Menu.Root>
+          <VirtualFocusRoot>
+            <virtual.Probe />
+          </VirtualFocusRoot>
+        </div>,
+      );
+
+      expect(plain.store.state.inputProps).toEqual({});
+      expect(virtual.store.state.inputProps).toHaveProperty('onKeydown');
+      expect(plain.store.select('triggerProps', true)).toHaveProperty('onFocusin');
+      expect(virtual.store.select('triggerProps', true)).not.toHaveProperty('onFocusin');
+      expect(virtual.store.select('triggerProps', true)).toHaveProperty('onKeydown');
+    });
+  });
+
   describe('popup', () => {
     it('sets allowMouseEnter for a mouse move over the popup, and clears it after the unmount', async () => {
       const probe = createProbe();
@@ -822,13 +1167,15 @@ describe('<Menu.Root />', () => {
       );
       probe.store.set('keyboardEventRelay', relay);
 
-      await fireEvent.keyDown(getByTestId('popup'), { key: 'a' });
+      // The list navigation and the typeahead of a vertical menu do not stop the horizontal arrow
+      // keys. The menubar gets these keys.
+      await fireEvent.keyDown(getByTestId('popup'), { key: 'ArrowRight' });
 
       expect(relay).toHaveBeenCalledTimes(1);
-      expect(relay.mock.calls[0][0].key).toBe('a');
+      expect(relay.mock.calls[0][0].key).toBe('ArrowRight');
 
       stopKey = true;
-      await fireEvent.keyDown(getByTestId('popup'), { key: 'b' });
+      await fireEvent.keyDown(getByTestId('popup'), { key: 'ArrowLeft' });
 
       expect(relay).toHaveBeenCalledTimes(1);
     });

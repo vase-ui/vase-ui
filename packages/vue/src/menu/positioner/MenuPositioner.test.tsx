@@ -396,6 +396,30 @@ describe('<Menu.Positioner />', () => {
   });
 
   describe('collision avoidance', () => {
+    function SubmenuApp(props: {
+      collisionAvoidance?: Menu.Positioner.Props['collisionAvoidance'];
+    }) {
+      return (
+        <Menu.Root open>
+          <Menu.Trigger>Actions</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.SubmenuRoot open>
+                  <Menu.SubmenuTrigger>More</Menu.SubmenuTrigger>
+                  <Menu.Portal>
+                    <Menu.Positioner data-testid="submenu-positioner" {...props}>
+                      <Menu.Popup />
+                    </Menu.Positioner>
+                  </Menu.Portal>
+                </Menu.SubmenuRoot>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      );
+    }
+
     function lastCallFor(positioner: HTMLElement) {
       const calls = useAnchorPositioningSpy.mock.calls.filter(
         ([params]) => toValue(params.positionerElement) === positioner,
@@ -436,6 +460,61 @@ describe('<Menu.Positioner />', () => {
       const options = lastCallFor(screen.getByTestId('positioner'));
       expect(toValue(options?.collisionAvoidance)).toEqual(DROPDOWN_COLLISION_AVOIDANCE);
     });
+
+    it('uses the popup default for a submenu', async () => {
+      await render(<SubmenuApp />);
+
+      const options = lastCallFor(screen.getByTestId('submenu-positioner'));
+      expect(toValue(options?.collisionAvoidance)).toEqual(POPUP_COLLISION_AVOIDANCE);
+    });
+
+    it('uses the collisionAvoidance prop over the default', async () => {
+      const collisionAvoidance = { side: 'none', align: 'none' } as const;
+      await render(<SubmenuApp collisionAvoidance={collisionAvoidance} />);
+
+      const options = lastCallFor(screen.getByTestId('submenu-positioner'));
+      expect(toValue(options?.collisionAvoidance)).toBe(collisionAvoidance);
+    });
+  });
+
+  it('closes an open submenu with a sibling reason when its controlled parent closes', async () => {
+    const onSubmenuOpenChange = vi.fn();
+    const open = shallowRef(true);
+
+    const Test = defineComponent({
+      setup() {
+        return () => (
+          <Menu.Root open={open.value}>
+            <Menu.Trigger>Open</Menu.Trigger>
+            <Menu.Portal keepMounted>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.SubmenuRoot defaultOpen onOpenChange={onSubmenuOpenChange}>
+                    <Menu.SubmenuTrigger>More</Menu.SubmenuTrigger>
+                    <Menu.Portal>
+                      <Menu.Positioner>
+                        <Menu.Popup data-testid="submenu-popup" />
+                      </Menu.Positioner>
+                    </Menu.Portal>
+                  </Menu.SubmenuRoot>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        );
+      },
+    });
+
+    await render(<Test />);
+    expect(screen.queryByTestId('submenu-popup')).not.toBe(null);
+
+    open.value = false;
+    await flushMicrotasks();
+
+    await waitFor(() => {
+      expect(onSubmenuOpenChange.mock.lastCall?.[0]).toBe(false);
+    });
+    expect(onSubmenuOpenChange.mock.lastCall?.[1].reason).toBe('sibling-open');
   });
 
   describe('defaults of the parent', () => {
@@ -457,13 +536,6 @@ describe('<Menu.Positioner />', () => {
 
       expect(readLastOptions().collisionAvoidance).toEqual(DROPDOWN_COLLISION_AVOIDANCE);
       expect(readLastOptions().collisionAvoidance).not.toEqual(POPUP_COLLISION_AVOIDANCE);
-    });
-
-    it('uses the collisionAvoidance prop over the default', async () => {
-      const collisionAvoidance = { side: 'none', align: 'none' } as const;
-      await renderMenu({ collisionAvoidance });
-
-      expect(readLastOptions().collisionAvoidance).toBe(collisionAvoidance);
     });
 
     it('aligns a menu in a menubar to its start', async () => {

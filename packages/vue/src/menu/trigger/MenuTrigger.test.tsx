@@ -1,10 +1,12 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { computed, defineComponent, nextTick, shallowRef } from 'vue';
 import * as Menu from '../index.parts';
 import { Toolbar } from '@vase-ui/vue/toolbar';
+import { Menubar } from '@vase-ui/vue/menubar';
 import {
   createRenderer,
   describeConformance,
+  fireEvent,
   flushMicrotasks,
   screen,
   takeReportedMessages,
@@ -494,6 +496,166 @@ describe('<Menu.Trigger />', () => {
         expect(trigger).not.toBeVisible();
       },
     );
+  });
+
+  describe('prop: openOnHover', () => {
+    function renderMenu(trigger: Record<string, unknown>, root: Record<string, unknown> = {}) {
+      return render(
+        <Menu.Root {...root}>
+          <Menu.Trigger {...trigger}>Open</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner data-testid="positioner">
+              <Menu.Popup data-testid="popup" />
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>,
+      );
+    }
+
+    async function hover(element: HTMLElement) {
+      await fireEvent.mouseEnter(element);
+      await fireEvent.mouseMove(element);
+    }
+
+    // A case that asserts the state before a delay ends runs the delay with a fake clock.
+    function useFakeClock() {
+      vi.useFakeTimers();
+      onTestFinished(() => {
+        vi.useRealTimers();
+      });
+      return async (ms: number) => {
+        vi.advanceTimersByTime(ms);
+        await flushMicrotasks();
+      };
+    }
+
+    it('opens the menu when the pointer rests on the trigger for the delay', async () => {
+      const tick = useFakeClock();
+      const onOpenChange = vi.fn();
+      await renderMenu({ openOnHover: true, delay: 30 }, { onOpenChange });
+      const trigger = screen.getByRole('button', { name: 'Open' });
+
+      await hover(trigger);
+      await tick(29);
+      expect(trigger).not.toHaveAttribute('data-popup-open');
+
+      await tick(1);
+      expect(trigger).toHaveAttribute('data-popup-open');
+      expect(onOpenChange.mock.lastCall?.[1].reason).toBe('trigger-hover');
+    });
+
+    it.each([
+      { name: 'without openOnHover', trigger: {} },
+      { name: 'while disabled', trigger: { openOnHover: true, disabled: true } },
+    ])('does not open on hover $name', async ({ trigger }) => {
+      await renderMenu({ delay: 0, ...trigger });
+
+      await hover(screen.getByRole('button', { name: 'Open' }));
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('popup')).toBe(null);
+    });
+
+    it('closes a menu that hover opened after closeDelay when the pointer leaves the trigger', async () => {
+      const tick = useFakeClock();
+      await renderMenu({ openOnHover: true, delay: 0, closeDelay: 40 });
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      await hover(trigger);
+      await tick(0);
+      expect(trigger).toHaveAttribute('data-popup-open');
+
+      await fireEvent.mouseLeave(trigger, { clientX: 1000, clientY: 1000 });
+      await tick(39);
+      expect(trigger).toHaveAttribute('data-popup-open');
+
+      await tick(1);
+      expect(trigger).not.toHaveAttribute('data-popup-open');
+    });
+
+    it('closes a menu that hover opened after closeDelay when the pointer leaves the popup', async () => {
+      const tick = useFakeClock();
+      await renderMenu({ openOnHover: true, delay: 0, closeDelay: 40 });
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      await hover(trigger);
+      await tick(0);
+      const positioner = screen.getByTestId('positioner');
+
+      await fireEvent.mouseEnter(positioner);
+      await fireEvent.mouseLeave(positioner, { relatedTarget: document.body });
+      await tick(39);
+      expect(trigger).toHaveAttribute('data-popup-open');
+
+      await tick(1);
+      expect(trigger).not.toHaveAttribute('data-popup-open');
+    });
+
+    it('blocks pointer events outside a menu that hover opened', async () => {
+      await renderMenu({ openOnHover: true, delay: 0 });
+
+      await hover(screen.getByRole('button', { name: 'Open' }));
+      await screen.findByTestId('popup');
+
+      await waitFor(() => {
+        expect(document.body.style.pointerEvents).toBe('none');
+      });
+    });
+  });
+
+  describe('hover and focus in a menubar', () => {
+    function renderMenubar(fileOpen: boolean) {
+      return render(
+        <Menubar>
+          <Menu.Root defaultOpen={fileOpen}>
+            <Menu.Trigger>File</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup data-testid="file-menu" />
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+          <Menu.Root>
+            <Menu.Trigger openOnHover>Edit</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup data-testid="edit-menu" />
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menubar>,
+      );
+    }
+
+    it('opens a menu on hover while another menu of the menubar is open', async () => {
+      await renderMenubar(true);
+      const edit = screen.getByRole('menuitem', { name: 'Edit' });
+
+      await fireEvent.mouseEnter(edit);
+      await fireEvent.mouseMove(edit);
+
+      expect(await screen.findByTestId('edit-menu')).not.toBe(null);
+    });
+
+    it('opens a menu on focus while another menu of the menubar is open', async () => {
+      await renderMenubar(true);
+
+      screen.getByRole('menuitem', { name: 'Edit' }).focus();
+
+      expect(await screen.findByTestId('edit-menu')).not.toBe(null);
+    });
+
+    it('opens no menu on hover or focus while no menu of the menubar is open', async () => {
+      await renderMenubar(false);
+      const edit = screen.getByRole('menuitem', { name: 'Edit' });
+
+      await fireEvent.mouseEnter(edit);
+      await fireEvent.mouseMove(edit);
+      edit.focus();
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('edit-menu')).toBe(null);
+    });
   });
 
   it('does not have role prop inside a Popover', async () => {

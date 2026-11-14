@@ -59,7 +59,7 @@ export function useMenuItemCommonProps(
   // A submenu trigger is an item of the parent menu's list, so it follows that list's focus model.
   const isSubmenuTrigger = itemMetadata.type === 'submenu-trigger';
   const virtualFocus = isSubmenuTrigger ? rootContext.parentVirtualFocus : rootContext.virtualFocus;
-  const selectionStore =
+  const listStore =
     isSubmenuTrigger && rootContext.parent.type === 'menu'
       ? rootContext.parent.store
       : rootContext.store;
@@ -75,7 +75,7 @@ export function useMenuItemCommonProps(
       }
     },
     onMousemove(event: MouseEvent) {
-      const nodeId = store.select('floatingNodeId');
+      const nodeId = listStore.select('floatingNodeId');
       if (!nodeId) {
         return;
       }
@@ -145,7 +145,7 @@ export function useMenuItemCommonProps(
       role: 'menuitem',
       // `-1` rather than omitting it, which leaves links and buttons in the tab order.
       tabindex: !virtualFocus && store.select('highlightedWhileOpen', highlighted) ? 0 : -1,
-      'aria-selected': selectionStore.select('webkitAriaSelected', highlighted),
+      'aria-selected': listStore.select('webkitAriaSelected', highlighted),
       ...listeners,
     };
   });

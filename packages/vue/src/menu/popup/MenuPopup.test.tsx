@@ -1,6 +1,7 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { KeepAlive, computed, defineComponent, provide, shallowRef } from 'vue';
+import { Menubar } from '@vase-ui/vue/menubar';
 import * as Menu from '../index.parts';
 import {
   createRenderer,
@@ -21,6 +22,7 @@ import {
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
 import { REASONS } from '../../internals/reasons';
 import { ToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
+import { createAttribute } from '../../utils/popups/createAttribute';
 import MenuPopupReplace from './MenuPopupReplace.test.vue';
 
 const ToolbarProvider = defineComponent((_, { slots }) => {
@@ -124,6 +126,43 @@ describe('<Menu.Popup />', () => {
     );
     expect(onParentKeyDown).toHaveBeenCalled();
     expect(onParentKeyDown.mock.calls.every(([event]) => event.key === 'F1')).toBe(true);
+  });
+
+  it('moves focus into the items when the last item is already highlighted', async () => {
+    const { user } = await render(
+      <Menu.Root>
+        <Menu.Trigger>Open</Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup>
+              <a href="#profile">Profile</a>
+              <Menu.Item>One</Menu.Item>
+              <Menu.Item>Two</Menu.Item>
+              <Menu.Item>Three</Menu.Item>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>,
+    );
+
+    screen.getByRole('button', { name: 'Open' }).focus();
+    await flushMicrotasks();
+    await user.keyboard('[ArrowUp]');
+
+    const three = await screen.findByRole('menuitem', { name: 'Three' });
+    await waitFor(() => expect(three).toHaveAttribute('data-highlighted'));
+    // The open gives the focus to the item in an animation frame. That frame would take the focus
+    // back from the link.
+    await waitFor(() => expect(three).toHaveFocus());
+    screen.getByRole('link', { name: 'Profile' }).focus();
+    await flushMicrotasks();
+    expect(three).toHaveAttribute('data-highlighted');
+
+    await user.keyboard('[ArrowUp]');
+    await waitFor(() => expect(three).toHaveFocus());
+
+    await user.keyboard('[ArrowUp]');
+    await waitFor(() => expect(screen.getByRole('menuitem', { name: 'Two' })).toHaveFocus());
   });
 
   describe('attributes', () => {
@@ -336,6 +375,101 @@ describe('<Menu.Popup />', () => {
     });
   });
 
+  describe('hover', () => {
+    async function hover(element: HTMLElement) {
+      await fireEvent.mouseEnter(element);
+      await fireEvent.mouseMove(element);
+    }
+
+    async function leaveAndWait(positioner: HTMLElement) {
+      await fireEvent.mouseEnter(positioner);
+      await fireEvent.mouseLeave(positioner, { relatedTarget: document.body });
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      await flushMicrotasks();
+    }
+
+    it('keeps a submenu open when the pointer leaves it after a move in it', async () => {
+      await render(
+        <Menu.Root open>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.SubmenuRoot>
+                  <Menu.SubmenuTrigger delay={0}>More</Menu.SubmenuTrigger>
+                  <Menu.Portal>
+                    <Menu.Positioner data-testid="submenu-positioner">
+                      <Menu.Popup data-testid="submenu" />
+                    </Menu.Positioner>
+                  </Menu.Portal>
+                </Menu.SubmenuRoot>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>,
+      );
+      await hover(screen.getByRole('menuitem', { name: 'More' }));
+      await fireEvent.mouseMove(await screen.findByTestId('submenu'));
+
+      await leaveAndWait(screen.getByTestId('submenu-positioner'));
+
+      expect(screen.queryByTestId('submenu')).not.toBe(null);
+    });
+
+    it('keeps a menu of a menubar that hover opened open when the pointer leaves its popup', async () => {
+      await render(
+        <Menubar>
+          <Menu.Root defaultOpen>
+            <Menu.Trigger>File</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup />
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+          <Menu.Root>
+            <Menu.Trigger>Edit</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner data-testid="positioner">
+                <Menu.Popup data-testid="popup" />
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menubar>,
+      );
+      await hover(screen.getByRole('menuitem', { name: 'Edit' }));
+      await screen.findByTestId('popup');
+
+      await leaveAndWait(screen.getByTestId('positioner'));
+
+      expect(screen.queryByTestId('popup')).not.toBe(null);
+    });
+
+    it('keeps a disabled menu that hover opened open when the pointer leaves its popup', async () => {
+      const disabled = shallowRef(false);
+      const Test = defineComponent(() => () => (
+        <Menu.Root disabled={disabled.value}>
+          <Menu.Trigger openOnHover delay={0}>
+            Open
+          </Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner data-testid="positioner">
+              <Menu.Popup data-testid="popup" />
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      ));
+      await render(<Test />);
+      await hover(screen.getByRole('button', { name: 'Open' }));
+      await screen.findByTestId('popup');
+      disabled.value = true;
+      await flushMicrotasks();
+
+      await leaveAndWait(screen.getByTestId('positioner'));
+
+      expect(screen.queryByTestId('popup')).not.toBe(null);
+    });
+  });
+
   describe('focus', () => {
     // The menu is controlled, so a case opens it with no press of the trigger.
     async function renderMenu(popup: () => unknown, options: { before?: () => unknown } = {}) {
@@ -433,7 +567,7 @@ describe('<Menu.Popup />', () => {
       expect(document.body).toHaveFocus();
     });
 
-    it('focuses the trigger for Shift+Tab from the start of the popup', async () => {
+    it('closes the menu and focuses the trigger for Shift+Tab in the popup', async () => {
       const { trigger } = await renderMenu(() => (
         <Menu.Popup data-testid="popup">
           <button data-testid="inside">Inside</button>
@@ -446,7 +580,31 @@ describe('<Menu.Popup />', () => {
       await userEvent.tab({ shift: true });
 
       expect(trigger).toHaveFocus();
-      expect(screen.getByTestId('popup')).toBeVisible();
+      await waitFor(() => {
+        expect(screen.queryByTestId('popup')).toBe(null);
+      });
+    });
+
+    it('focuses the trigger when the focus goes to the focus guard before the popup', async () => {
+      const { trigger } = await renderMenu(() => (
+        <Menu.Popup data-testid="popup">
+          <button data-testid="inside">Inside</button>
+        </Menu.Popup>
+      ));
+      await waitFor(() => {
+        expect(screen.getByTestId('inside')).toHaveFocus();
+      });
+      const popup = screen.getByTestId('popup');
+      // Shift+Tab closes the menu before the focus gets to the guard, so the case focuses the guard.
+      const guard = popup.previousElementSibling as HTMLElement;
+      expect(guard).toHaveAttribute(createAttribute('focus-guard'));
+
+      guard.focus();
+
+      await waitFor(() => {
+        expect(trigger).toHaveFocus();
+      });
+      expect(popup).toBeVisible();
     });
 
     it('moves the focus to the popup when the focused element in the popup goes away', async () => {
@@ -512,14 +670,21 @@ describe('<Menu.Popup />', () => {
           </Menu.Root>
         </ContextMenuProvider>,
       );
+      const first = screen.getByTestId('first');
       await waitFor(() => {
-        expect(screen.getByTestId('first')).toHaveFocus();
+        expect(first).toHaveFocus();
       });
-      screen.getByTestId('last').focus();
+      const last = screen.getByTestId('last');
+      last.focus();
+      // Tab closes a context menu before the focus gets to the guard, so the case focuses the guard.
+      const guard = last.parentElement!.nextElementSibling as HTMLElement;
+      expect(guard).toHaveAttribute(createAttribute('focus-guard'));
 
-      await userEvent.tab();
+      guard.focus();
 
-      expect(screen.getByTestId('first')).toHaveFocus();
+      await waitFor(() => {
+        expect(first).toHaveFocus();
+      });
     });
 
     // With an active trigger the focus always returns, so the menu of these cases has no trigger.
