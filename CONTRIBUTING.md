@@ -1854,7 +1854,7 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - A page is a Markdown file in `docs`. `scripts/docs/navigation.ts` makes the navigation from these files. Do not add a page to `docs/.vitepress/config.ts`.
 - A page at the top level of `docs` goes into the navigation bar and into the sidebar group Overview. The home page, `docs/index.md`, is not in the navigation.
 - A folder with pages is one sidebar group. The title of the group is the folder name with a capital first letter.
-- The sidebar shows the groups Handbook, Components and Utils first, in that sequence. Each other group follows them, in the sequence of its folder name.
+- The sidebar shows the group Overview, then Handbook, Components and Utils, then each other group in the sequence of its folder name.
 - Each page in the navigation has `order: <whole number>` in its front matter. A group shows its pages in the sequence of `order`, then of title.
 - The title of a page in the navigation is its first-level heading.
 - The build fails when a page in the navigation has no `order` or no first-level heading.

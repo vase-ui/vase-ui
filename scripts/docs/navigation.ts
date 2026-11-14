@@ -18,8 +18,8 @@ interface Page extends PageLink {
 const NOT_GROUP_FOLDERS = new Set(['node_modules', 'public']);
 
 /**
- * The sidebar shows these groups first, in the sequence of the Base UI docs. Each other group
- * follows them, in the sequence of its folder name.
+ * The sidebar shows these groups after the group Overview, in the sequence of the Base UI docs. Each
+ * other group follows them, in the sequence of its folder name.
  */
 const GROUP_SEQUENCE = ['handbook', 'components', 'utils'];
 

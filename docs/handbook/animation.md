@@ -23,7 +23,7 @@ Use these attributes to make a transition when a component becomes visible or hi
 - `[data-starting-style]` is the style that the transition starts from.
 - `[data-ending-style]` is the style that the transition ends at.
 
-Prefer a transition to a CSS animation. A transition can stop midway and go back smoothly. For example, the user can close a popup before it is fully open. The popup then goes to its closed state from where it is, with no jump.
+Use a transition where you can. A transition can be canceled midway with no jump. For example, the user can close a popup before it is fully open. The popup then moves to its closed state from where it is.
 
 ::: code-group
 
@@ -104,7 +104,7 @@ Vase UI ends the exit when the animation that it finds ends. If it finds none, i
 
 The examples use [Dialog](/components/dialog).
 
-1. Give `motion.div` to the `#render` slot of `Dialog.Popup`. Bind the `props` of the slot on it, cast to `MotionProps`. The cast is for the type of `style`, which differs in Vue and in `motion-v`.
+1. Give `motion.div` to the `#render` slot of `Dialog.Popup`. Bind the `props` of the slot on it, cast to `MotionProps`. The cast is for the type of `style`, which differs between Vue and `motion-v`.
 2. Set `initial` to the closed style.
 3. Compute `animate` from `state.open`.
 
@@ -120,9 +120,9 @@ The examples use [Dialog](/components/dialog).
 
 Vase UI keeps the popup in the DOM while the exit animation plays. The popup needs no `<AnimatePresence>`, no `keepMounted` and no controlled `open`.
 
-Do not put a part in `<AnimatePresence>`. A portal part renders a `<Teleport>`, and `<AnimatePresence>` cannot animate a `<Teleport>`. The popup then leaves the DOM at once, with no exit animation.
+Do not put a part in `<AnimatePresence>`: a portal part renders a `<Teleport>`, which `<AnimatePresence>` cannot animate.
 
-You can also give `motion.div` to the `as` prop. The `#render` slot gives `state`, but the `as` prop does not. So `animate` reads a controlled `open`. Bind it with `v-model:open`.
+You can also give `motion.div` to the `as` prop. The `as` prop gets no `state`, so `animate` reads a controlled `open`.
 
 <<< ../examples/animation/MotionAsProp.vue{10,14-16}
 
@@ -142,7 +142,7 @@ A popup stays in the DOM while it is closed when its portal has `keepMounted`. T
 
 ### Manual unmounting
 
-Use this when Vase UI cannot find the exit animation, or when the popup must stay until something other than an animation ends. `motion-v` runs some values in JavaScript, such as `height`. Vase UI cannot find such an animation, so it removes the popup in the next frame, before the exit shows.
+Use this when Vase UI cannot find the exit animation. Use it also when something other than an animation must end the exit. `motion-v` runs some values in JavaScript, such as `height`. Vase UI cannot find such an animation, so it removes the popup in the next frame, before the exit shows.
 
 1. Call `details.preventUnmountOnClose()` in the `openChange` listener when the popup closes.
 2. When the exit ends, call `unmount()` on the root. Get the root with a template ref.
@@ -159,9 +159,9 @@ The root then emits `openChangeComplete` with `false`. `keepMounted` still decid
 
 :::
 
-To wait for something before the popup closes, control `open` and keep it `true` while you wait. After the wait, call `details.preventUnmountOnClose()`, then set `open` to `false`. Then call `unmount()` when the exit ends.
+To wait for something before the popup closes, control `open` and keep it `true` while you wait. After the wait, call `details.preventUnmountOnClose()`. Then set `open` to `false`. When the exit ends, call `unmount()`.
 
-The request lasts until the popup opens again. A request to open the popup clears it, so call it after the wait, not before.
+The request lasts until the popup opens again or unmounts, also when more close requests come during the wait. A request to open the popup clears it, so call `details.preventUnmountOnClose()` after the wait, not before. A close that you cancel with `details.cancel()` before the wait makes no request.
 
 <<< ../examples/animation/ManualUnmountAfterAwait.vue#listener{6-8 ts}
 
