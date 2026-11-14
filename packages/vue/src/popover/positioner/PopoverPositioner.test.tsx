@@ -1,7 +1,16 @@
 import { describe, expect, it, onTestFinished } from 'vitest';
-import { defineComponent, shallowRef } from 'vue';
+import { KeepAlive, Teleport, defineComponent, nextTick, shallowRef } from 'vue';
 import type { CSSProperties, FunctionalComponent, PropType, VNodeChild } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
+import {
+  createScrollDocument,
+  getScrollLockRegistry,
+  HIDDEN_SCROLLBARS_CSS,
+  isPageLocked,
+} from '../../../test/fixtures/scrollDocument';
+import type { ScrollDocument } from '../../../test/fixtures/scrollDocument';
+import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { REASONS } from '../../internals/reasons';
 import * as Tooltip from '../../tooltip/index.parts';
 import { useFloatingParentNodeId, useFloatingTree } from '../../utils/popups/tree/FloatingTree';
 import type { FloatingTreeType } from '../../utils/popups/types';
@@ -18,6 +27,7 @@ import {
   waitForPositioned,
   waitSingleFrame,
 } from '#test-utils';
+import PopoverPositionerScoped from './PopoverPositionerScoped.test.vue';
 
 const Trigger: FunctionalComponent<Popover.Trigger.Props> = (props, { slots }) => (
   <Popover.Trigger {...props} as="div" nativeButton={false}>
@@ -552,6 +562,128 @@ describe('<Popover.Positioner />', () => {
       await expectTransformOrigin(
         `${popupWidth / 2}px ${anchorRect.y + anchorHeight / 2 - positionerRect.y}px`,
       );
+    });
+  });
+
+  describe('VUE-61: the positioner of a modal popover has one root node', () => {
+    it('gives the scope id, v-show and a custom directive of the consumer to the positioner', async () => {
+      const shown = shallowRef(true);
+      await render(() => <PopoverPositionerScoped shown={shown.value} />);
+      await flushMicrotasks();
+      const positioner = screen.getByTestId('positioner');
+
+      expect(positioner.previousElementSibling).toHaveAttribute('role', 'presentation');
+      expect(getComputedStyle(positioner).outlineStyle).toBe('dashed');
+      expect(positioner).toHaveAttribute('data-mark', 'marked');
+      expect(positioner.style.display).not.toBe('none');
+
+      shown.value = false;
+      await nextTick();
+
+      expect(positioner.style.display).toBe('none');
+    });
+  });
+
+  describe('scroll lock', () => {
+    // The lock and the unlock each wait for a timer of 0 ms. The observers of `waitFor` do not see a
+    // document in a frame, so it polls.
+    const POLL = { interval: 5, timeout: 3000 };
+
+    function lockCount() {
+      return getScrollLockRegistry()?.lockCount ?? 0;
+    }
+
+    // The trigger and the portal are in the document of a frame, so the lock changes no style of
+    // the test page.
+    function createPopover(
+      page: ScrollDocument,
+      { root = {}, positioner = {} }: { root?: object; positioner?: object } = {},
+    ) {
+      const handle = Popover.createHandle<unknown>();
+      const ModalPopover = defineComponent({
+        name: 'ModalPopover',
+        setup: () => () => (
+          <Popover.Root handle={handle} modal {...root}>
+            <Teleport to={page.body}>
+              <Popover.Trigger id="trigger">Open</Popover.Trigger>
+            </Teleport>
+            <Popover.Portal container={page.body}>
+              <Popover.Positioner {...positioner}>
+                <Popover.Popup />
+              </Popover.Positioner>
+            </Popover.Portal>
+          </Popover.Root>
+        ),
+      });
+      return { handle, ModalPopover };
+    }
+
+    it('locks the page while a modal popover is open, and unlocks it when the popover closes', async () => {
+      const page = await createScrollDocument();
+      const { handle, ModalPopover } = createPopover(page);
+      await render(<ModalPopover />);
+
+      handle.open('trigger');
+      await waitFor(() => expect(isPageLocked(page)).toBe(true), POLL);
+
+      handle.close();
+      await waitFor(() => expect(isPageLocked(page)).toBe(false), POLL);
+      expect(lockCount()).toBe(0);
+    });
+
+    it.each([
+      { name: 'modal false', root: { modal: false }, reason: REASONS.triggerPress },
+      { name: 'trap-focus', root: { modal: 'trap-focus' }, reason: REASONS.triggerPress },
+      { name: 'a hover open', root: {}, reason: REASONS.triggerHover },
+    ])('does not lock the page for $name', async ({ root, reason }) => {
+      const page = await createScrollDocument();
+      const { handle, ModalPopover } = createPopover(page, { root });
+      await render(<ModalPopover />);
+
+      const trigger = page.doc.getElementById('trigger')!;
+      handle.store.setOpen(
+        true,
+        createChangeEventDetails(reason, new MouseEvent('mousedown'), trigger),
+      );
+      await flushMicrotasks();
+
+      expect(handle.store.select('open')).toBe(true);
+      expect(lockCount()).toBe(0);
+    });
+
+    it.each([
+      { name: 'as wide as the viewport', width: 'calc(100vw - 10px)', locks: 1 },
+      { name: 'narrower than the viewport', width: '240px', locks: 0 },
+    ])('locks the page for a touch open only when the popup is $name', async ({ width, locks }) => {
+      const page = await createScrollDocument({ css: HIDDEN_SCROLLBARS_CSS });
+      const { handle, ModalPopover } = createPopover(page, { positioner: { style: { width } } });
+      await render(<ModalPopover />);
+      handle.store.set('openMethod', 'touch');
+
+      handle.open('trigger');
+      await flushMicrotasks();
+
+      expect(handle.store.select('positionerElement')).not.toBe(null);
+      expect(lockCount()).toBe(locks);
+    });
+
+    it('VUE-5: releases the lock while KeepAlive holds the popover, and takes it back after', async () => {
+      const page = await createScrollDocument();
+      const show = shallowRef(true);
+      const { ModalPopover } = createPopover(page, {
+        root: { defaultOpen: true, defaultTriggerId: 'trigger' },
+      });
+      const Other = defineComponent({ name: 'Other', setup: () => () => <p>other</p> });
+      await render(() => (
+        <KeepAlive>{show.value ? <ModalPopover key="popover" /> : <Other key="other" />}</KeepAlive>
+      ));
+      await waitFor(() => expect(isPageLocked(page)).toBe(true), POLL);
+
+      show.value = false;
+      await waitFor(() => expect(isPageLocked(page)).toBe(false), POLL);
+
+      show.value = true;
+      await waitFor(() => expect(isPageLocked(page)).toBe(true), POLL);
     });
   });
 

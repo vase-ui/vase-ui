@@ -586,7 +586,7 @@ describe('<Popover.Root />', () => {
           <Popover.Portal>
             <Popover.Positioner>
               <Popover.Popup data-testid="parent-popup">
-                <button type="button">In the parent</button>
+                <span>In the parent</span>
                 <Popover.Root defaultOpen onOpenChange={record('child')}>
                   <Popover.Portal>
                     <Popover.Positioner>
@@ -613,7 +613,9 @@ describe('<Popover.Root />', () => {
       await user.click(screen.getByRole('button', { name: 'In the child' }));
       expect(changes).toEqual([]);
 
-      await user.click(screen.getByRole('button', { name: 'In the parent' }));
+      // The press gives the focus to the parent popup, which the child popup counts as inside. A
+      // press on a field of the parent closes the child sooner, with `focus-out`.
+      await user.click(screen.getByText('In the parent'));
       expect(changes).toEqual([['child', false, 'outside-press']]);
       expect(parentPopup).toHaveAttribute('data-open');
     });

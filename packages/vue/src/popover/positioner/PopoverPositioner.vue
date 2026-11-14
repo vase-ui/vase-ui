@@ -39,9 +39,11 @@ export interface PopoverPositionerProps
 
 <script setup lang="ts">
 import { provide } from 'vue';
+import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { usePopupPositioner } from '../../utils/popups/popupPositioner';
 import { provideFloatingNode, useFloatingNodeId } from '../../utils/popups/tree/FloatingTree';
+import { useAnchoredPopupScrollLock } from '../../utils/popups/useAnchoredPopupScrollLock';
 import { usePopoverPortalContext } from '../portal/PopoverPortalContext';
 import { usePopoverRootContext } from '../root/PopoverRootContext';
 import { PopoverPositionerContext } from './PopoverPositionerContext';
@@ -71,14 +73,24 @@ const store = usePopoverRootContext();
 const keepMounted = usePopoverPortalContext();
 const nodeId = useFloatingNodeId();
 
-const { element, elementProps, state, positioning } = usePopupPositioner<PopoverPositionerState>(
-  store,
-  props,
-  { keepMounted, positioning: { nodeId } },
-);
+const { element, elementProps, state, positioning, open } =
+  usePopupPositioner<PopoverPositionerState>(store, props, {
+    keepMounted,
+    positioning: { nodeId },
+  });
 
 provide(PopoverPositionerContext, positioning);
 provideFloatingNode(nodeId);
+
+useAnchoredPopupScrollLock(
+  () =>
+    open.value &&
+    store.select('modal') === true &&
+    store.select('openChangeReason') !== REASONS.triggerHover,
+  () => store.select('openMethod') === 'touch',
+  () => store.select('positionerElement'),
+  () => store.select('activeTriggerElement'),
+);
 
 defineExpose({ element });
 </script>
