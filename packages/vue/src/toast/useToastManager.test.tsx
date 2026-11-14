@@ -1572,7 +1572,7 @@ describe('useToast', () => {
 
         await render(
           <Toast.Provider>
-            <Toast.Viewport data-testid="viewport" style={{ pointerEvents: 'none' }}>
+            <Toast.Viewport data-testid="viewport">
               <CustomList />
             </Toast.Viewport>
             <AddButton />

@@ -11,7 +11,8 @@ export interface ToastPortalProps extends FloatingPortalLiteProps {}
 
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue';
-import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import type { Component } from 'vue';
+import type { HTMLProps } from '../../internals/types';
 import FloatingPortalLite from '../../utils/popups/portal/FloatingPortalLite.vue';
 
 defineOptions({ inheritAttrs: false });
@@ -20,7 +21,7 @@ const props = withDefaults(defineProps<ToastPortalProps>(), { as: 'div' });
 
 defineSlots<{
   default(props: { state: ToastPortalState }): unknown;
-  render: ComponentRenderFn<HTMLProps, ToastPortalState>;
+  render(props: { props: HTMLProps; state: ToastPortalState; children: Component }): unknown;
 }>();
 
 // As in Base UI, this part renders the portal of the popups and makes no element of its own.

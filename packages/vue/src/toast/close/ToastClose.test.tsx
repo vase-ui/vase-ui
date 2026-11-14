@@ -62,7 +62,7 @@ describe('<Toast.Close />', () => {
   it('hides the button from assistive technology until the viewport expands or the button has focus', async () => {
     await render(
       <Toast.Provider>
-        <Toast.Viewport data-testid="viewport" style={{ pointerEvents: 'none' }}>
+        <Toast.Viewport data-testid="viewport">
           <Toast.Root toast={toast}>
             <Toast.Close data-testid="close" />
           </Toast.Root>
