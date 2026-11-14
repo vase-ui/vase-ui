@@ -212,7 +212,7 @@ function getContextElement(reference: Element | VirtualElement): Element | undef
 /**
  * Returns the listeners that keep the coordinates of the hovered line up to date. Call it one time
  * in `setup`. Each argument is a value, a ref or a getter. A detached trigger can move to the store
- * of another root, so it gives a getter of the holder of the store that it reads now.
+ * of another root, so it gives a getter of the holder of its current store.
  */
 export function getInlineRectTriggerProps(
   coordsRef: MaybeRefOrGetter<InlineRectCoordsRef>,
