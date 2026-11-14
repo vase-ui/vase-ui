@@ -13,7 +13,6 @@ export interface SelectGroupProps
 <script setup lang="ts">
 import { computed, provide } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
-import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -27,9 +26,6 @@ defineSlots<{
   default(props: { state: SelectGroupState }): unknown;
   render: ComponentRenderFn<HTMLProps, SelectGroupState>;
 }>();
-
-// The group binds the id of its label, which comes after it.
-useDeferredServerRender();
 
 // The registry keeps the id of each label by its source. A template can mount a new label before it
 // unmounts the label that it replaces, so a removal by `id` would remove the id of the new label.

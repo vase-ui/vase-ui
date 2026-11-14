@@ -296,6 +296,7 @@ Some upstream parts render a hidden `<input>` beside their element. `Switch.Root
 - The input of a control with no native input, such as `Select.Root`, has the type that `getHiddenInputType` of `src/internals` gives. It is `type="hidden"` while the control has no `name`, no `autoComplete`, no `required` and no field. A password manager then skips the input.
 - Base UI also keeps a text input when the consumer gives `inputRef`. A part cannot know if a consumer reads its exposed `inputElement`, so `getHiddenInputType` has no parameter for it.
 - Such a part handles an `input` or a `change` event only when the value of the input is new. A program can send both events in one task, and the part then handles the first one. [What differs from the React source](#what-differs-from-the-react-source) says when a value is new.
+- A browser can autofill the hidden input of `Select.Root` with the value or the text of an item. The root then sets `forceMounted` in the store, so the items of a closed select mount in the next flush and give their values. After that flush, the root selects the item that matches.
 - For a change that a listener cancels, the part calls `preventDefault` on the click of the input. The browser then puts the old state back.
 - In a group with one input for each item, each item writes its state to its input after each change that no listener cancels. A browser unchecks the other inputs of a named group when one input gets checked. A parent that controls the group can also keep the old value.
 - A control whose field can have more than one input registers its input with `validation.registerInput` in the `ref` setter. It keeps the function that `registerInput` returns, and calls it when the input changes or goes away. It does not write `validation.inputRef`.
@@ -738,6 +739,7 @@ The positioning of a popup is in `src/internals/useAnchorPositioning.ts` and in 
 - `nodeId` and `externalTree` are each a value, a ref or a getter. A part whose popup can move to the node of another part gives getters. The context then moves to the new node, and the old node loses it (`VUE-43`).
 - `usePositioner` makes the props of the positioner element: `role="presentation"`, `hidden`, the styles, and `transition: none` while the transition status is `starting`. With `inert`, it adds `pointer-events: none`. The `style` of the consumer wins over these styles.
 - A positioner part that `usePopupPositioner` does not fit calls `useAnchorPositioning`, `useVaseUIFloating` and `usePositioner` itself. `test/fixtures/PositionerPart.vue` is the model for `useAnchorPositioning`.
+- `Select.Positioner` is such a part, because its state has no `instant`. It has `keepMounted: true` and no portal context, so it works outside `Select.Portal`.
 - A positioner part provides the `positioning` of the result as the context of its popup and its arrow. `tooltip/positioner/TooltipPositioner.vue` is the model.
 - The positioning context is `store.context.positioning`. The `context` of the node of the popup in the tree is the same object.
 - The context is one plain object with five members: `open`, `placement`, `nodeId`, `elements` and `rootStore`. `elements` has `reference`, `floating` and `domReference`.
@@ -821,6 +823,7 @@ The portal of a popup is in `src/utils/popups/portal`. `useFloatingPortalNode()`
 - `KeepAlive` leaves the content of a `Teleport` in the target. The portal sets `disabled` on its `Teleport` while `KeepAlive` holds the part. The content then leaves the document, and the same element returns.
 - `FloatingPortalLite` does not provide `PortalContext`, so a portal inside it does not render in the portal element of the Lite portal.
 - The portal part of a family renders `FloatingPortalLite` or `FloatingPortal` while the popup is mounted or its `keepMounted` prop is set. It provides `keepMounted` as a `ComputedRef<boolean>`, and the positioner gives it to `usePopupPositioner`. `tooltip/portal/TooltipPortal.vue` is the model.
+- `Select.Portal` has no `keepMounted` prop. It renders `FloatingPortal` while the popup is mounted or `forceMounted` of the store is set, and it provides no context.
 - `FloatingPortal` provides `PortalContext`. The context holds the portal element, four guards and `setFocusManagerState()`.
 - The focus manager of the popup calls `setFocusManagerState()` with its state, and with `null` when it goes away. It gives a new object for each change, because the portal does not see a change in an object.
 - While the state says that the popup is open and not modal, the portal renders two guards and an owner element. The sequence in the place of the part is guard, owner element, `Teleport`, guard. `KeepAlive` takes the guards and the owner element out of the document with the part.
@@ -992,6 +995,8 @@ The item registry:
 - `elementsRef` and `labelsRef` are `shallowRef` values. The list gives each a new array on each sort. An explicit index can leave an empty slot in the array.
 - An item with no list is valid. Its index is its explicit index, or `-1`.
 - A family can use the registry only for the index of its items. `Accordion.Root` calls `useCompositeList`, and `Accordion.Item` calls `useCompositeListItem`. The root does not call `useCompositeRoot`, so the items have no roving tab stop and no arrow keys. Base UI removed the arrow keys of the Accordion to follow the APG.
+- `Select.Positioner` calls `useCompositeList` for the items of Select. Each item writes its value to `itemValues` of the context in its first `ref` callback, before the `ref` of `useCompositeListItem`. The key is the element of the item.
+- In `onMapChange`, the positioner first reads the value of each item from its element. Vue can run `onMapChange` before the `onMounted` hooks of the items that an update adds, so a value that the item writes at its mount comes too late.
 
 The index on a server:
 

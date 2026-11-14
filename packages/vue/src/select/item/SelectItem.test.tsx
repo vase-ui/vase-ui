@@ -188,6 +188,63 @@ describe('<Select.Item />', () => {
     expect(screen.getByTestId('value').textContent).toBe('');
   });
 
+  it('does not change the value of a read-only select', async () => {
+    const handleValueChange = vi.fn();
+    const { user } = await render(
+      <Select.Root defaultOpen readOnly defaultValue="one" onValueChange={handleValueChange}>
+        <Select.Trigger>
+          <Select.Value data-testid="value" />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              <Select.Item value="one">one</Select.Item>
+              <Select.Item value="two">two</Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>,
+    );
+    await flushMicrotasks();
+
+    await user.click(screen.getByRole('option', { name: 'two' }));
+
+    expect(handleValueChange).not.toHaveBeenCalled();
+    expect(screen.getByTestId('value').textContent).toBe('one');
+  });
+
+  it('gives a value that changes in place to the root', async () => {
+    const itemValue = shallowRef('b');
+    const handleValueChange = vi.fn();
+    await render(() => (
+      <Select.Root name="letter" defaultOpen onValueChange={handleValueChange}>
+        <Select.Trigger />
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              <Select.Item value="a">a</Select.Item>
+              <Select.Item key="second" value={itemValue.value}>
+                second
+              </Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>
+    ));
+    await flushMicrotasks();
+
+    itemValue.value = 'c';
+    await flushMicrotasks();
+
+    // The browser fills the hidden input, and the root looks for the value among the items.
+    const input = document.querySelector<HTMLInputElement>('input[name="letter"]')!;
+    input.value = 'c';
+    await fireEvent.input(input);
+    await flushMicrotasks();
+
+    expect(handleValueChange.mock.lastCall?.[0]).toBe('c');
+  });
+
   describe('quick selection', () => {
     beforeEach(() => {
       vi.useFakeTimers({ shouldAdvanceTime: true });

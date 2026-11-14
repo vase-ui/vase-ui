@@ -880,7 +880,8 @@ const PAGES: PageCase[] = [
     path: '/portal',
     expectPage: expectPortalPageOnServer,
     expectHydratedPage: expectHydratedPortalPage,
-  },  { path: '/select', expectPage: expectSelectPage },
+  },
+  { path: '/select', expectPage: expectSelectPage },
 ];
 
 const MODES = [

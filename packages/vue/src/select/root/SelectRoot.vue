@@ -572,8 +572,7 @@ function selectAutofilledItem(autofilledValue: string, eventDetails: SelectRootC
   const autofilledValueLower = autofilledValue.toLowerCase();
   let matchingIndex = valuesRef.value.findIndex(
     (candidate) =>
-      stringifyAsValue(candidate, props.itemToStringValue).toLowerCase() ===
-        autofilledValueLower ||
+      stringifyAsValue(candidate, props.itemToStringValue).toLowerCase() === autofilledValueLower ||
       stringifyAsLabel(candidate, props.itemToStringLabel).toLowerCase() === autofilledValueLower,
   );
 

@@ -5,7 +5,9 @@ import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/type
 export interface SelectListState {}
 
 export interface SelectListProps
-  extends VaseUIComponentProps<SelectListState>, /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {}
+  extends
+    VaseUIComponentProps<SelectListState>,
+    /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {}
 </script>
 
 <script setup lang="ts">

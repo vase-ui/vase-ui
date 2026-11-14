@@ -133,10 +133,14 @@ describe('<Select.GroupLabel />', () => {
               v-slots={{
                 render: ({ props }: { props: Record<string, any> }) => {
                   elementRef = props.ref;
-                  return h('div', {
-                    ...props,
-                    ref: labelRef.value === 'first' ? callFirstRef : callSecondRef,
-                  }, 'Fruits');
+                  return h(
+                    'div',
+                    {
+                      ...props,
+                      ref: labelRef.value === 'first' ? callFirstRef : callSecondRef,
+                    },
+                    'Fruits',
+                  );
                 },
               }}
             />

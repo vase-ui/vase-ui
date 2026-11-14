@@ -1,6 +1,15 @@
 import { expect, describe, it } from 'vitest';
+import { defineComponent } from 'vue';
 import * as Select from '../index.parts';
-import { createRenderer, describeConformance, takeReportedMessages } from '#test-utils';
+import {
+  createRenderer,
+  describeConformance,
+  flushMicrotasks,
+  screen,
+  takeReportedMessages,
+} from '#test-utils';
+import type { SelectStore } from '../store';
+import { useSelectRootContext } from '../root/SelectRootContext';
 
 describe('<Select.ItemText />', () => {
   const { render } = createRenderer();
@@ -17,6 +26,32 @@ describe('<Select.ItemText />', () => {
       );
     },
   }));
+
+  it('gives the text of the first item and of the selected item to the store', async () => {
+    let store: SelectStore | undefined;
+    const StoreProbe = defineComponent(() => {
+      store = useSelectRootContext();
+      return () => null;
+    });
+
+    await render(
+      <Select.Root open defaultValue="b">
+        <StoreProbe />
+        <Select.Positioner>
+          <Select.Item value="a">
+            <Select.ItemText data-testid="a">a</Select.ItemText>
+          </Select.Item>
+          <Select.Item value="b">
+            <Select.ItemText data-testid="b">b</Select.ItemText>
+          </Select.Item>
+        </Select.Positioner>
+      </Select.Root>,
+    );
+    await flushMicrotasks();
+
+    expect(store!.context.firstItemTextRef.value).toBe(screen.getByTestId('a'));
+    expect(store!.context.selectedItemTextRef.value).toBe(screen.getByTestId('b'));
+  });
 
   it('throws a descriptive error when rendered outside <Select.Item>', async () => {
     await expect(

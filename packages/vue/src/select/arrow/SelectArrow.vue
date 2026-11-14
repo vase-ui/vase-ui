@@ -23,7 +23,9 @@ export interface SelectArrowState {
 }
 
 export interface SelectArrowProps
-  extends VaseUIComponentProps<SelectArrowState>, /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {}
+  extends
+    VaseUIComponentProps<SelectArrowState>,
+    /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {}
 </script>
 
 <script setup lang="ts">

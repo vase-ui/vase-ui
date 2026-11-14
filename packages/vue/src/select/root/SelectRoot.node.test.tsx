@@ -17,6 +17,62 @@ function readAttributes(html: string, testId: string) {
 }
 
 describe('<Select.Root /> on a server', () => {
+  it('renders no popup in the place of the portal', async () => {
+    const html = await renderToString(
+      <Select.Root defaultOpen>
+        <Select.Trigger />
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              <Select.Item value="a">a</Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>,
+    );
+
+    expect(html).not.toContain('role="listbox"');
+    expect(html).not.toContain('role="option"');
+  });
+
+  it('renders the parts of an open popup that is not in a portal', async () => {
+    const html = await renderToString(
+      <Select.Root defaultOpen defaultValue="a">
+        <Select.Trigger />
+        <Select.Backdrop data-testid="backdrop" />
+        <Select.Positioner data-testid="positioner">
+          <Select.Popup>
+            <Select.Arrow data-testid="arrow" />
+            <Select.List data-testid="list">
+              <Select.Group data-testid="group">
+                <Select.GroupLabel data-testid="group-label">Letters</Select.GroupLabel>
+                <Select.Item value="a" data-testid="item">
+                  <Select.ItemText>a</Select.ItemText>
+                  <Select.ItemIndicator data-testid="indicator" />
+                </Select.Item>
+              </Select.Group>
+              <Select.Separator data-testid="separator" />
+            </Select.List>
+          </Select.Popup>
+        </Select.Positioner>
+      </Select.Root>,
+    );
+
+    expect(readAttributes(html, 'positioner')).toHaveProperty('role', 'presentation');
+    expect(readAttributes(html, 'list')).toHaveProperty('role', 'listbox');
+    expect(readAttributes(html, 'item')).toMatchObject({
+      role: 'option',
+      'aria-selected': 'true',
+      'data-selected': '',
+    });
+    expect(readAttributes(html, 'indicator')).toHaveProperty('aria-hidden', 'true');
+    expect(readAttributes(html, 'separator')).toHaveProperty('role', 'presentation');
+    expect(readAttributes(html, 'arrow')).toHaveProperty('aria-hidden', 'true');
+    expect(readAttributes(html, 'backdrop')).toHaveProperty('role', 'presentation');
+    expect(readAttributes(html, 'group')).toHaveProperty('role', 'group');
+    expect(readAttributes(html, 'group-label')).toHaveProperty('aria-hidden', 'true');
+  });
+
   it('renders the label of the value and the hidden input of a closed select', async () => {
     const html = await renderToString(
       <Select.Root id="font" name="font" defaultValue="serif" items={{ serif: 'Serif' }}>
