@@ -14,10 +14,23 @@ import type {
   MenuCheckboxItemIndicatorProps,
   MenuCheckboxItemIndicatorState,
 } from './checkbox-item-indicator/MenuCheckboxItemIndicator.vue';
+import MenuClear from './clear/MenuClear.vue';
+import type { MenuClearProps, MenuClearState } from './clear/MenuClear.vue';
+import MenuEmpty from './empty/MenuEmpty.vue';
+import type { MenuEmptyProps, MenuEmptyState } from './empty/MenuEmpty.vue';
+import MenuFilterProvider from './filter-provider/MenuFilterProvider.vue';
+import type {
+  MenuFilterProviderChangeEventDetails,
+  MenuFilterProviderChangeEventReason,
+  MenuFilterProviderProps,
+  MenuFilterProviderState,
+} from './filter-provider/MenuFilterProvider.vue';
 import MenuGroup from './group/MenuGroup.vue';
 import type { MenuGroupProps, MenuGroupState } from './group/MenuGroup.vue';
 import MenuGroupLabel from './group-label/MenuGroupLabel.vue';
 import type { MenuGroupLabelProps, MenuGroupLabelState } from './group-label/MenuGroupLabel.vue';
+import MenuInput from './input/MenuInput.vue';
+import type { MenuInputProps, MenuInputState } from './input/MenuInput.vue';
 import MenuItem from './item/MenuItem.vue';
 import type { MenuItemProps, MenuItemState } from './item/MenuItem.vue';
 import MenuLinkItem from './link-item/MenuLinkItem.vue';
@@ -113,6 +126,42 @@ export namespace CheckboxItemIndicator {
 }
 
 /**
+ * A button that clears the input text.
+ * Requires the menu to be wrapped in `Menu.FilterProvider`.
+ * Renders a `<button>` element when the input has text.
+ */
+export const Clear: typeof MenuClear = MenuClear;
+export namespace Clear {
+  export type Props = MenuClearProps;
+  export type State = MenuClearState;
+}
+
+/**
+ * A message shown when the menu has no matching items.
+ * Requires the menu to be wrapped in `Menu.FilterProvider`.
+ * Renders a `<div>` element.
+ */
+export const Empty: typeof MenuEmpty = MenuEmpty;
+export namespace Empty {
+  export type Props = MenuEmptyProps;
+  export type State = MenuEmptyState;
+}
+
+/**
+ * Enables filtering for the menu or submenu it wraps. Add `Menu.Input` to the popup and place
+ * its items in `Menu.List`.
+ * Wrap each searchable submenu in its own provider.
+ * Doesn't render its own HTML element.
+ */
+export const FilterProvider: typeof MenuFilterProvider = MenuFilterProvider;
+export namespace FilterProvider {
+  export type State = MenuFilterProviderState;
+  export type Props = MenuFilterProviderProps;
+  export type ChangeEventReason = MenuFilterProviderChangeEventReason;
+  export type ChangeEventDetails = MenuFilterProviderChangeEventDetails;
+}
+
+/**
  * Groups related menu items with the corresponding label.
  * Renders a `<div>` element.
  */
@@ -130,6 +179,17 @@ export const GroupLabel: typeof MenuGroupLabel = MenuGroupLabel;
 export namespace GroupLabel {
   export type Props = MenuGroupLabelProps;
   export type State = MenuGroupLabelState;
+}
+
+/**
+ * A search field that filters the menu items.
+ * Requires the menu to be wrapped in `Menu.FilterProvider`.
+ * Renders an `<input>` element.
+ */
+export const Input: typeof MenuInput = MenuInput;
+export namespace Input {
+  export type Props = MenuInputProps;
+  export type State = MenuInputState;
 }
 
 /**
@@ -274,5 +334,6 @@ export namespace Trigger {
   export type State = MenuTriggerState;
 }
 
+export { getFilter as useFilter } from '../internals/filter';
 export { Separator } from '../separator';
 export { MenuHandle as Handle, createMenuHandle as createHandle } from './store/MenuHandle';

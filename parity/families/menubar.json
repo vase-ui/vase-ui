@@ -56,8 +56,8 @@
       "upstream": "packages/react/src/menubar/Menubar.test.tsx",
       "describe": ["filterable menubar menus"],
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/filter-provider/MenuFilterProvider.tsx",
-      "reason": "The case of the block renders `Menu.FilterProvider` and `Menu.Input`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/menu/index.ts",
+      "reason": "The file imports the entry point of Menu, which Vase UI does not have."
     }
   ],
   "surfaceAdditions": [

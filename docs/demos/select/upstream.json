@@ -1,0 +1,14 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/select/demos",
+  "files": {
+    "grouped/css-modules/index.module.css": "0d8d0b194bf84d332e99ccd829018a81008d7d55887fc569e63e3b4a799749b9",
+    "grouped/css-modules/index.tsx": "30013fdc94537f50e75b28b62f4466fa4431582785fe5fc4bd1e747599f7eed7",
+    "hero/css-modules/index.module.css": "0bee0a5e7de047f0360ccce3688153db19f5dd805c95833594d026bbc31d3658",
+    "hero/css-modules/index.tsx": "a9ea647693738f00c5dad11f5b402b9112233080ae56fdd3adba3683abf32bb7",
+    "multiple/css-modules/index.module.css": "5a944a8c33988c9f535f9f9058bc52a3bdae68c0836532555288e0ffbac2d218",
+    "multiple/css-modules/index.tsx": "ebd65196d44b72e6e3bc547eb0de27f4a3b3bfb887d6e8bc2135ff96c6970564",
+    "object-values/css-modules/index.module.css": "c80220e02af381ae274a9c0d79d83fdc3231c7882f759a247547c2caee525e44",
+    "object-values/css-modules/index.tsx": "3d2f3b1b2b0d0ebb5bb9bbe7a2aa46308e9b8345fb283e7681558d68de48ebff"
+  }
+}

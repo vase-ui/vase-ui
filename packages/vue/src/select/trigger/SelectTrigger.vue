@@ -38,7 +38,6 @@ export interface SelectTriggerProps<Value = any>
     /* @vue-ignore */ WithVaseUIEvent<Omit<ButtonHTMLAttributes, 'id' | 'disabled'>> {
   /**
    * Whether the component should ignore user interaction.
-   * @default false
    */
   disabled?: boolean | undefined;
   /**
@@ -80,7 +79,6 @@ const SELECTED_DELAY = 400;
 
 const props = withDefaults(defineProps<SelectTriggerProps<Value>>(), {
   as: 'button',
-  disabled: false,
   nativeButton: true,
 });
 

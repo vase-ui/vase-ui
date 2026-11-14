@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { h } from 'vue';
 import type { Component } from 'vue';
+import { Select } from '@vase-ui/vue/select';
 import { createRenderer, describeConformance, screen } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
-import * as Select from '../index.parts';
 
 describe('<Select.Icon />', () => {
   const { render } = createRenderer();
