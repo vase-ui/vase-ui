@@ -19,10 +19,6 @@ import PreviewCardRootHydration from './PreviewCardRootHydration.test.vue';
 
 const HYDRATION_FIXTURE = 'src/preview-card/root/PreviewCardRootHydration.test.vue';
 
-// The real pointer of the browser can rest on a link. A dispatched event still reaches the link,
-// and the real pointer sends no event of its own.
-const noRealPointer = { pointerEvents: 'none' } as const;
-
 const testPreviewCardProps = {
   rootProps: Object as PropType<Record<string, unknown>>,
   triggerProps: Object as PropType<Record<string, unknown>>,
@@ -886,22 +882,10 @@ describe('<PreviewCard.Root />', () => {
       const events: unknown[] = [];
       await render(
         <div>
-          <PreviewCard.Trigger
-            handle={handle}
-            id="first"
-            payload="First"
-            href="#first"
-            style={noRealPointer}
-          >
+          <PreviewCard.Trigger handle={handle} id="first" payload="First" href="#first">
             First
           </PreviewCard.Trigger>
-          <PreviewCard.Trigger
-            handle={handle}
-            id="second"
-            payload="Second"
-            href="#second"
-            style={noRealPointer}
-          >
+          <PreviewCard.Trigger handle={handle} id="second" payload="Second" href="#second">
             Second
           </PreviewCard.Trigger>
           <PreviewCard.Root
