@@ -1999,7 +1999,9 @@ describe('<Drawer.Viewport />', () => {
                       render: renderWithSize({ offsetHeight: 200 }, () => (
                         <div
                           data-testid="scroll"
-                          data-vase-ui-swipe-ignore={kind === 'axis ignore marker' ? 'x' : undefined}
+                          data-vase-ui-swipe-ignore={
+                            kind === 'axis ignore marker' ? 'x' : undefined
+                          }
                           style={kind === 'axis ignore marker' ? undefined : { overflowX: 'auto' }}
                         >
                           {kind === 'SVG scroller' ? (
@@ -2044,9 +2046,7 @@ describe('<Drawer.Viewport />', () => {
       expect(backdrop).toHaveAttribute('data-swiping');
 
       await fireTouch.move(target, { touches: [{ clientX: 100, clientY: 125 }] });
-      expect(parseFloat(popup.style.getPropertyValue('--drawer-swipe-movement-y'))).toBeLessThan(
-        0,
-      );
+      expect(parseFloat(popup.style.getPropertyValue('--drawer-swipe-movement-y'))).toBeLessThan(0);
 
       await fireTouch.end(target, { changedTouches: [{ clientX: 100, clientY: 125 }] });
       await flushMicrotasks();
@@ -2347,10 +2347,7 @@ describe('<Drawer.Viewport />', () => {
           <Drawer.Backdrop data-testid="backdrop" />
           <Drawer.Viewport>
             <Drawer.Popup>
-              <div
-                data-testid="scroll"
-                style={{ overflow: 'auto', width: '40px', height: '40px' }}
-              >
+              <div data-testid="scroll" style={{ overflow: 'auto', width: '40px', height: '40px' }}>
                 <div style={{ width: '120px', height: '120px' }}>Scrollable content</div>
               </div>
             </Drawer.Popup>
@@ -3919,9 +3916,9 @@ describe('<Drawer.Viewport />', () => {
       pointerType: 'mouse',
     });
     await flushMicrotasks();
-    expect(
-      Number.parseFloat(indent.style.getPropertyValue('--drawer-swipe-progress')),
-    ).toBeCloseTo(0.39);
+    expect(Number.parseFloat(indent.style.getPropertyValue('--drawer-swipe-progress'))).toBeCloseTo(
+      0.39,
+    );
     expect(indent.style.getPropertyValue('--drawer-height')).toBe('100px');
 
     await fireEvent.pointerMove(viewport, {
@@ -3941,12 +3938,7 @@ describe('<Drawer.Viewport />', () => {
     const snapPoint = shallowRef('100px');
 
     await render(() => (
-      <Drawer.Root
-        open
-        modal={false}
-        snapPoints={['100px', '200px']}
-        snapPoint={snapPoint.value}
-      >
+      <Drawer.Root open modal={false} snapPoints={['100px', '200px']} snapPoint={snapPoint.value}>
         <Drawer.Portal>
           <Drawer.Backdrop data-testid="backdrop" />
           <Drawer.Viewport

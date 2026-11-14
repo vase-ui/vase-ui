@@ -59,9 +59,11 @@
     },
     {
       "upstream": "packages/react/src/drawer/viewport/DrawerViewport.test.tsx",
+      "describe": ["<Drawer.Viewport />"],
+      "title": "allows touch gestures on a portaled combobox popup without starting drawer swipe",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The file imports the entry point of Drawer, which Vase UI does not have."
+      "waitsOn": "packages/react/src/combobox/index.ts",
+      "reason": "The case renders `Combobox.List` and `Combobox.Item` from the entry point of Combobox, which Vase UI does not have."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
