@@ -12,6 +12,8 @@ import {
   waitFor,
   waitSingleFrame,
 } from '#test-utils';
+import * as AlertDialog from '../../alert-dialog/index.parts';
+import * as Popover from '../../popover/index.parts';
 import * as Dialog from '../index.parts';
 import type { DialogStore } from '../store/DialogStore';
 import DialogPopupReplacement from './DialogPopupReplacement.test.vue';
@@ -193,6 +195,56 @@ describe('<Dialog.Popup />', () => {
     });
   });
 
+  it('does not return focus to the trigger of a popover that opened by default', async () => {
+    const open = shallowRef(false);
+    const App = defineComponent(() => () => (
+      <>
+        <Popover.Root defaultOpen>
+          <Popover.Trigger>Tip</Popover.Trigger>
+          <Popover.Portal>
+            <Popover.Positioner>
+              <Popover.Popup>
+                <Popover.Close>Got it</Popover.Close>
+              </Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>
+        <Dialog.Root
+          open={open.value}
+          onOpenChange={(nextOpen: boolean) => {
+            open.value = nextOpen;
+          }}
+        >
+          <Dialog.Portal>
+            <Dialog.Popup>
+              <Dialog.Close>Close</Dialog.Close>
+            </Dialog.Popup>
+          </Dialog.Portal>
+        </Dialog.Root>
+      </>
+    ));
+
+    const { user } = await render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Got it' }));
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: 'Got it' })).toBe(null);
+    });
+    (document.activeElement as HTMLElement).blur();
+
+    open.value = true;
+    const close = await screen.findByRole('button', { name: 'Close' });
+    await waitFor(() => {
+      expect(close).toHaveFocus();
+    });
+    await user.keyboard('[Escape]');
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).toBe(null);
+    });
+    await flushMicrotasks();
+    expect(screen.getByRole('button', { name: 'Tip' })).not.toHaveFocus();
+  });
+
   describe('nested dialog count', () => {
     it('provides the number of open nested dialogs as a CSS variable', async () => {
       const { user } = await render(
@@ -349,6 +401,44 @@ describe('<Dialog.Popup />', () => {
 
       expect(computedStyles.getPropertyValue('--nested-dialogs')).toBe('0');
     });
+
+    it('increments for nested alert dialog and decrements on close (cross-type)', async () => {
+      const { user } = await render(
+        <Dialog.Root>
+          <Dialog.Trigger>Open Dialog</Dialog.Trigger>
+          <Dialog.Portal>
+            <Dialog.Popup data-testid="parent-dialog">
+              <AlertDialog.Root>
+                <AlertDialog.Trigger>Open Alert</AlertDialog.Trigger>
+                <AlertDialog.Portal>
+                  <AlertDialog.Popup data-testid="nested-alert">
+                    <AlertDialog.Close>Close Alert</AlertDialog.Close>
+                  </AlertDialog.Popup>
+                </AlertDialog.Portal>
+              </AlertDialog.Root>
+              <Dialog.Close>Close Dialog</Dialog.Close>
+            </Dialog.Popup>
+          </Dialog.Portal>
+        </Dialog.Root>,
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Open Dialog' }));
+      await waitFor(() => expect(screen.getByTestId('parent-dialog')).not.toBe(null));
+
+      const parent = screen.getByTestId('parent-dialog');
+      expect(getComputedStyle(parent).getPropertyValue('--nested-dialogs')).toBe('0');
+
+      await user.click(screen.getByRole('button', { name: 'Open Alert' }));
+      await waitFor(() => expect(screen.getByTestId('nested-alert')).not.toBe(null));
+      await waitFor(() => {
+        expect(getComputedStyle(parent).getPropertyValue('--nested-dialogs')).toBe('1');
+      });
+
+      await user.click(screen.getByRole('button', { name: 'Close Alert' }));
+      await waitFor(() => {
+        expect(getComputedStyle(parent).getPropertyValue('--nested-dialogs')).toBe('0');
+      });
+    });
   });
 
   describe('style hooks', () => {
@@ -370,6 +460,36 @@ describe('<Dialog.Popup />', () => {
             </Dialog.Root>
           </Dialog.Portal>
         </Dialog.Root>,
+      );
+
+      const parentDialog = screen.getByTestId('parent-dialog');
+      const nestedDialog = screen.getByTestId('nested-dialog');
+
+      expect(parentDialog).not.toHaveAttribute('data-nested');
+      expect(nestedDialog).toHaveAttribute('data-nested');
+
+      expect(parentDialog).toHaveAttribute('data-nested-dialog-open');
+      expect(nestedDialog).not.toHaveAttribute('data-nested-dialog-open');
+    });
+
+    it('adds the `nested` and `nested-dialog-open` style hooks if a dialog has a parent alert dialog', async () => {
+      await render(
+        <AlertDialog.Root open>
+          <AlertDialog.Portal>
+            <AlertDialog.Popup data-testid="parent-dialog" />
+            <Dialog.Root open>
+              <Dialog.Portal>
+                <Dialog.Popup data-testid="nested-dialog">
+                  <Dialog.Root>
+                    <Dialog.Portal>
+                      <Dialog.Popup />
+                    </Dialog.Portal>
+                  </Dialog.Root>
+                </Dialog.Popup>
+              </Dialog.Portal>
+            </Dialog.Root>
+          </AlertDialog.Portal>
+        </AlertDialog.Root>,
       );
 
       const parentDialog = screen.getByTestId('parent-dialog');

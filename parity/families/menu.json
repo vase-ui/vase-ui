@@ -312,18 +312,11 @@
     },
     {
       "upstream": "packages/react/src/menu/positioner/MenuPositioner.test.tsx",
-      "describe": ["<Menu.Positioner />", "collision avoidance"],
-      "title": "uses the dropdown default for a context menu",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx",
-      "reason": "The case renders `ContextMenu.Positioner`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/menu/positioner/MenuPositioner.test.tsx",
       "describe": ["<Menu.Positioner />", "layout viewport"],
+      "title": "uses the visual viewport for a context menu submenu",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx",
-      "reason": "The case renders `ContextMenu.Positioner`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/context-menu/index.ts",
+      "reason": "The case renders `ContextMenu.SubmenuRoot`. The entry point of Context Menu exports that part. Vase UI does not have that entry point."
     },
     {
       "upstream": "packages/react/src/menu/positioner/MenuPositioner.test.tsx",
