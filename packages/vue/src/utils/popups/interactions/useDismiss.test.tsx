@@ -1,4 +1,4 @@
-import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { defineComponent, inject, KeepAlive, nextTick, shallowRef, Teleport } from 'vue';
 import type { PropType } from 'vue';
@@ -52,6 +52,21 @@ function setWebKit(webkit: boolean) {
     Object.defineProperty(platform.engine, 'webkit', { value: actual, configurable: true });
   });
 }
+
+// The focus manager moves the focus in an animation frame. As in the Base UI tests, that frame
+// runs at once.
+beforeEach(() => {
+  vi.spyOn(window, 'requestAnimationFrame').mockImplementation(
+    (callback: FrameRequestCallback): number => {
+      callback(0);
+      return 0;
+    },
+  );
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 const DOCUMENT_LISTENER_TYPES = [
   'keydown',
@@ -189,14 +204,6 @@ function isOpen(name: string) {
 function releasePointerAfterTest() {
   onTestFinished(async () => {
     await userEvent.pointer({ coords: { x: 0, y: 0 }, keys: '[/MouseLeft]' });
-  });
-}
-
-// The focus manager moves the focus in an animation frame. The upstream tests run that frame at
-// once, so a press of Escape there starts in the popup.
-async function waitForFocusIn(element: () => HTMLElement) {
-  await waitFor(() => {
-    expect(element()).toContainElement(document.activeElement as HTMLElement);
   });
 }
 
@@ -1187,7 +1194,6 @@ describe('useDismiss', () => {
 
         expect(screen.getByTestId('outer')).toBeInTheDocument();
         expect(screen.getByTestId('inner')).toBeInTheDocument();
-        await waitForFocusIn(() => screen.getByTestId('outer'));
 
         await user.keyboard('{Escape}');
         await flushMicrotasks();
@@ -1207,7 +1213,6 @@ describe('useDismiss', () => {
 
         expect(screen.getByTestId('outer')).toBeInTheDocument();
         expect(screen.getByTestId('inner')).toBeInTheDocument();
-        await waitForFocusIn(() => screen.getByTestId('outer'));
 
         await user.keyboard('{Escape}');
         await flushMicrotasks();
@@ -1233,7 +1238,6 @@ describe('useDismiss', () => {
 
         expect(screen.getByTestId('outer')).toBeInTheDocument();
         expect(screen.getByTestId('inner')).toBeInTheDocument();
-        await waitForFocusIn(() => screen.getByTestId('outer'));
 
         await user.keyboard('{Escape}');
         await flushMicrotasks();
@@ -1517,6 +1521,11 @@ describe('useDismiss', () => {
 
     describe('prop: capture.escapeKey', () => {
       it('when false', async () => {
+        // The portal of the inner popup mounts after the portal of the outer popup. Its focus
+        // manager makes the second frame request of the case. After a frame that runs at once,
+        // `AnimationFrame` never runs a later request. This case thus uses real frames and waits
+        // for the focus.
+        vi.restoreAllMocks();
         const { user } = await render(
           <Overlay>
             <NestedDialog id="outer">
@@ -1527,7 +1536,11 @@ describe('useDismiss', () => {
 
         expect(screen.getByText('outer')).toBeInTheDocument();
         expect(screen.getByText('inner')).toBeInTheDocument();
-        await waitForFocusIn(() => screen.getByText('inner').parentElement!);
+        await waitFor(() => {
+          expect(screen.getByText('inner').parentElement).toContainElement(
+            document.activeElement as HTMLElement,
+          );
+        });
 
         await user.keyboard('{Escape}');
         await flushMicrotasks();
