@@ -240,6 +240,14 @@
       "reason": "The case moves the highlight with the keys or with a typeahead, and Menu has neither yet. The pull request that adds the keys also ports the shared suite `popupListConformanceTests`."
     },
     {
+      "upstream": "packages/react/src/menu/popup/MenuPopup.test.tsx",
+      "describe": ["<Menu.Popup />", "prop: finalFocus"],
+      "title": "receives the interaction type of the item press that closed the menu",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
+      "reason": "The case opens the menu with Enter and presses Enter on the first item, which the list navigation of Menu highlights and focuses. Menu has no keys yet."
+    },
+    {
       "upstream": "packages/react/src/menu/popup/MenuPopupTransitionState.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/index.ts",
