@@ -1071,9 +1071,8 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     }
 
     if (nextOpen && closeQuery.value !== null) {
-      // `ComboboxInput` calls `setInputValue` before `setOpen`, so on an input-change reopen
-      // `inputValue` already has the typed text. That reopen clears no input, and the typed filter
-      // always survives.
+      // `ComboboxInput` calls `setInputValue` before `setOpen`. An input-change reopen thus comes
+      // with typed text: it clears no input, and the typed filter always survives.
       handleInterruptedReopen(eventDetails.reason === REASONS.inputChange);
     }
 

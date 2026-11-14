@@ -31,8 +31,8 @@ import ComboboxRootHydration from './ComboboxRootHydration.test.vue';
 // The Base UI cases of this file render those parts, so the pull requests that add the parts port
 // them. A ported case then replaces the case of this file that tests the same thing: the order of
 // the events, a canceled change, the controlled values, the hidden inputs, the autofill, the field
-// and the server render. The Base UI case of the check of `items` renders only the root. It is in
-// `items/createItems.test.tsx`.
+// and the server render. One Base UI case of this file renders only the root. It is in the block
+// `coverage edge cases`.
 
 const HYDRATION_FILE = 'src/combobox/root/ComboboxRootHydration.test.vue';
 const cities = ['Malmö', 'Malta', 'Oslo'];
@@ -1446,6 +1446,17 @@ describe('<Combobox.Root />', () => {
 
       expect(getNamedInputs(container)).toEqual([]);
       expect(container.querySelector('input[aria-hidden]')).toHaveAttribute('type', 'hidden');
+    });
+  });
+
+  describe('coverage edge cases', () => {
+    it('safely handles hidden-control focus without a visible control', async () => {
+      await render(<Combobox.Root />);
+      const hiddenInput = getHiddenInput();
+
+      await fireEvent.focusIn(hiddenInput);
+
+      expect(document.body).toHaveFocus();
     });
   });
 });
