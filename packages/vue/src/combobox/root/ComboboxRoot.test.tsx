@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
-import { KeepAlive, defineComponent, reactive, shallowRef, toRaw } from 'vue';
+import { KeepAlive, defineComponent, reactive, shallowRef, toRaw, watch } from 'vue';
 import type { ComputedRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
@@ -528,6 +528,58 @@ describe('<Combobox.Root />', () => {
 
       expect(getInput()).toHaveAttribute('aria-expanded', 'true');
       expect(highlights()).toEqual([]);
+
+      for (const animation of document.getAnimations()) {
+        animation.finish();
+      }
+    });
+
+    it('keeps the highlight of the popup that a controlled root closes for the typed text', async () => {
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+      const open = shallowRef(true);
+      const activeIndices: Array<number | null> = [];
+      const ActiveIndexRecorder = defineComponent(() => {
+        const rootStore = useComboboxRootContext();
+        watch(
+          () => rootStore.select('activeIndex'),
+          (activeIndex) => activeIndices.push(activeIndex),
+          { flush: 'sync' },
+        );
+        return () => null;
+      });
+      const { container } = await render(() => (
+        <Combobox.Root
+          id="city"
+          items={cities}
+          autoHighlight
+          open={open.value}
+          onInputValueChange={(value: string) => {
+            if (value === 'mal') {
+              open.value = false;
+            }
+          }}
+        >
+          <ActiveIndexRecorder />
+          <Combobox.Input />
+          <ComboboxListPart />
+        </Combobox.Root>
+      ));
+      // The popup of the fixture list is the parent of the list. Its animation holds the close.
+      const style = document.createElement('style');
+      style.textContent =
+        '@keyframes hold { to { opacity: 0.5; } } div:has(> #city-list) { animation: hold 100s; }';
+      container.append(style);
+      getInput().focus();
+      await type('ma');
+      await fireEvent.keyDown(getInput(), { key: 'ArrowDown' });
+      await flushMicrotasks();
+      expect(activeIndices).toEqual([0, 1]);
+
+      await type('mal');
+
+      expect(getInput()).toHaveAttribute('aria-expanded', 'false');
+      expect(getOptions()).toEqual(['Malmö', 'Malta']);
+      expect(activeIndices).toEqual([0, 1]);
 
       for (const animation of document.getAnimations()) {
         animation.finish();
