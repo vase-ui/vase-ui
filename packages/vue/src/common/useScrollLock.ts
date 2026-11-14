@@ -22,8 +22,8 @@ interface ScrollLockRegistry {
 const SCROLL_LOCK_KEY = Symbol.for('vase-ui.scroll-lock');
 
 // Two copies of the library on one page share one count and one restore function. Each copy keeps
-// its own timers and reads the registry when a timer runs, so a timer of another copy changes
-// nothing.
+// its own timers and reads the registry when a timer runs. Thus the result does not depend on
+// which copy started the timer.
 function getRegistry(): ScrollLockRegistry {
   const holder = globalThis as { [SCROLL_LOCK_KEY]?: ScrollLockRegistry };
   holder[SCROLL_LOCK_KEY] ??= {
