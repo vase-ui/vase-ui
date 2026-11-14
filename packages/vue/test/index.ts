@@ -10,6 +10,7 @@ export {
   pressWithScreenReader,
   pressWithTouch,
 } from './pointer';
+export { fireTouch } from './touch';
 export { useTestInteractions } from './useTestInteractions';
 export * from './wait';
 export { waitForPositioned } from './waitForPositioned';
