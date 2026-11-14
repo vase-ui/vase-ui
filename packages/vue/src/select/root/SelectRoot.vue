@@ -351,8 +351,10 @@ const {
         setTouched(true);
         setFocused(false);
 
+        // The field is not marked dirty when the user leaves a select that has no value, so a
+        // missing value counts with no earlier change.
         if (validationMode.value === 'onBlur') {
-          void validation.commit(selectedValue.value);
+          void validation.commit(selectedValue.value, true);
         }
       }
     },

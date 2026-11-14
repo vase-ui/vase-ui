@@ -10,6 +10,8 @@ import {
 } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
 import * as Select from '../index.parts';
+import type { SelectStore } from '../store';
+import SelectValueReplacement from './SelectValueReplacement.test.vue';
 
 type ValueSlotProps = { value: any };
 
@@ -802,6 +804,20 @@ describe('<Select.Value />', () => {
 
       expect(screen.getByTestId('value').textContent).toBe('Sans-serif');
     });
+  });
+
+  // The compiled template of the fixture mounts the new value part before it unmounts the old
+  // value part. A render function in TSX reuses the component, so it does not show this order.
+  it('keeps the element of the new value part in the store when a template replaces the part', async () => {
+    let store!: SelectStore;
+    const { setProps } = await render(
+      <SelectValueReplacement first onStore={(value: SelectStore) => (store = value)} />,
+    );
+    expect(store.context.valueRef.value).toBe(screen.getByTestId('first'));
+
+    await setProps({ first: false });
+
+    expect(store.context.valueRef.value).toBe(screen.getByTestId('second'));
   });
 
   describe('a value with no label', () => {

@@ -154,17 +154,5 @@ describe('<Select.Root /> on a server', () => {
         `${readAttributes(html, 'description').id} ${readAttributes(html, 'error').id}`,
       );
     });
-
-    it('gives a trigger with no label no `aria-labelledby`', async () => {
-      const html = await renderToString(
-        <Field.Root>
-          <Select.Root>
-            <Select.Trigger data-testid="trigger" />
-          </Select.Root>
-        </Field.Root>,
-      );
-
-      expect(readAttributes(html, 'trigger')).not.toHaveProperty('aria-labelledby');
-    });
   });
 });

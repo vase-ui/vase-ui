@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { KeepAlive, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import {
   createRenderer,
@@ -12,6 +13,8 @@ import {
   waitFor,
 } from '#test-utils';
 import * as Select from '../index.parts';
+import type { SelectStore } from '../store';
+import SelectTriggerReplacement from './SelectTriggerReplacement.test.vue';
 
 describe('<Select.Trigger />', () => {
   const { render } = createRenderer();
@@ -445,6 +448,59 @@ describe('<Select.Trigger />', () => {
     });
   });
 
+  describe('VUE-5: KeepAlive', () => {
+    it('VUE-5: ignores the release of the opening press while KeepAlive holds the select', async () => {
+      const active = shallowRef(true);
+      const onOpenChange = vi.fn();
+      await render(() => (
+        <KeepAlive>
+          {active.value ? (
+            <Select.Root key="select" onOpenChange={onOpenChange}>
+              <Select.Trigger data-testid="trigger" />
+            </Select.Root>
+          ) : null}
+        </KeepAlive>
+      ));
+      const trigger = screen.getByTestId('trigger');
+
+      await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+      await fireEvent.mouseDown(trigger, { button: 0 });
+      await waitFor(() => {
+        expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      });
+      expect(onOpenChange).toHaveBeenCalledTimes(1);
+
+      active.value = false;
+      await flushMicrotasks();
+      expect(trigger.isConnected).toBe(false);
+
+      await fireEvent.mouseUp(document.body, { button: 0, clientX: 300, clientY: 300 });
+      await wait(20);
+
+      expect(onOpenChange).toHaveBeenCalledTimes(1);
+
+      active.value = true;
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('trigger')).toHaveAttribute('aria-expanded', 'true');
+    });
+  });
+
+  // The compiled template of the fixture mounts the new trigger before it unmounts the old
+  // trigger. A render function in TSX reuses the trigger component, so it does not show this
+  // order.
+  it('keeps the element of the new trigger in the store when a template replaces the trigger', async () => {
+    let store!: SelectStore;
+    const { setProps } = await render(
+      <SelectTriggerReplacement first onStore={(value: SelectStore) => (store = value)} />,
+    );
+    expect(store.select('triggerElement')).toBe(screen.getByTestId('first'));
+
+    await setProps({ first: false });
+
+    expect(store.select('triggerElement')).toBe(screen.getByTestId('second'));
+  });
+
   describe('Field', () => {
     it('sets the focused state of the field, and marks it as touched and validates it on blur', async () => {
       const validate = vi.fn((_value: unknown) => null);
@@ -471,6 +527,56 @@ describe('<Select.Trigger />', () => {
       expect(field).toHaveAttribute('data-touched', '');
       expect(validate).toHaveBeenCalledTimes(1);
       expect(validate.mock.lastCall?.[0]).toBe('sans');
+    });
+  });
+
+  describe('BUG-1425: a required select with no value after blur', () => {
+    function renderSelect(validationMode?: 'onBlur') {
+      return render(
+        <div>
+          <Field.Root validationMode={validationMode} data-testid="field">
+            <Select.Root required>
+              <Select.Trigger data-testid="trigger" />
+            </Select.Root>
+            <Field.Error match="valueMissing" data-testid="error">
+              required
+            </Field.Error>
+          </Field.Root>
+          <button type="button">After</button>
+        </div>,
+      );
+    }
+
+    it('is invalid when the focus leaves the trigger, with no change before', async () => {
+      const { user } = await renderSelect('onBlur');
+      const trigger = screen.getByTestId('trigger');
+
+      trigger.focus();
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(trigger).not.toHaveAttribute('aria-invalid');
+
+      await user.tab();
+
+      expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
+      expect(screen.getByTestId('error')).toHaveTextContent('required');
+      expect(trigger).toHaveAttribute('aria-invalid', 'true');
+      expect(screen.getByTestId('field')).toHaveAttribute('data-touched', '');
+      expect(screen.getByTestId('field')).not.toHaveAttribute('data-dirty');
+    });
+
+    it('stays valid when the focus leaves the trigger, with the default validation mode', async () => {
+      const { user } = await renderSelect();
+      const trigger = screen.getByTestId('trigger');
+
+      trigger.focus();
+      await user.tab();
+
+      expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
+      expect(screen.getByTestId('field')).toHaveAttribute('data-touched', '');
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(trigger).not.toHaveAttribute('aria-invalid');
     });
   });
 

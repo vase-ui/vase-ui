@@ -210,6 +210,33 @@ describe('<Select.Root />', () => {
       });
     });
 
+    it('BUG-1425: makes a required select with no value invalid when an outside press closes the popup', async () => {
+      const { user } = await render(
+        <Field.Root data-testid="field" validationMode="onBlur">
+          <Select.Root defaultOpen required>
+            <StoreProbe />
+            <Select.Trigger data-testid="trigger" />
+          </Select.Root>
+          <Field.Error match="valueMissing" data-testid="error">
+            required
+          </Field.Error>
+        </Field.Root>,
+      );
+      expect(screen.queryByTestId('error')).toBe(null);
+
+      await user.click(document.body);
+
+      expect(screen.getByTestId('trigger')).toHaveAttribute('aria-expanded', 'false');
+      expect(screen.getByTestId('error')).toHaveTextContent('required');
+      expect(screen.getByTestId('trigger')).toHaveAttribute('aria-invalid', 'true');
+      expect(screen.getByTestId('field')).not.toHaveAttribute('data-dirty');
+
+      await setValueAsItem('sans');
+
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(screen.getByTestId('trigger')).not.toHaveAttribute('aria-invalid');
+    });
+
     it('sets the filled and dirty state of the field from the value', async () => {
       await render(
         <Field.Root data-testid="field">
