@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { shallowRef } from 'vue';
+import { defineComponent, shallowRef } from 'vue';
 import { createRenderer, describeConformance, flushMicrotasks, screen, waitFor } from '#test-utils';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import * as Dialog from '../index.parts';
@@ -9,42 +9,65 @@ import DialogViewportReplacement from './DialogViewportReplacement.test.vue';
 describe('<Dialog.Viewport />', () => {
   const { render } = createRenderer();
 
-  describe('with a test popup', () => {
-    describeConformance(<Dialog.Viewport />, () => ({
-      refInstanceof: window.HTMLDivElement,
-      render: (node) => {
-        return render(
-          <Dialog.Root open modal={false}>
-            <Dialog.Portal>
-              {node}
-              <Dialog.Popup />
-            </Dialog.Portal>
-          </Dialog.Root>,
-        );
-      },
-    }));
+  describeConformance(<Dialog.Viewport />, () => ({
+    refInstanceof: window.HTMLDivElement,
+    render: (node) => {
+      return render(
+        <Dialog.Root open modal={false}>
+          <Dialog.Portal>
+            {node}
+            <Dialog.Popup />
+          </Dialog.Portal>
+        </Dialog.Root>,
+      );
+    },
+  }));
+
+  it('renders only when the dialog is mounted by default', async () => {
+    const App = defineComponent(() => {
+      const open = shallowRef(false);
+      return () => (
+        <Dialog.Root
+          open={open.value}
+          onOpenChange={(value: boolean) => (open.value = value)}
+          modal={false}
+        >
+          <Dialog.Trigger>Open</Dialog.Trigger>
+          <Dialog.Portal>
+            <Dialog.Viewport data-testid="viewport">
+              <Dialog.Popup data-testid="popup">Content</Dialog.Popup>
+            </Dialog.Viewport>
+          </Dialog.Portal>
+        </Dialog.Root>
+      );
+    });
+
+    const { user } = await render(<App />);
+
+    expect(screen.queryByTestId('viewport')).toBe(null);
+
+    await user.click(screen.getByText('Open'));
+
+    expect(screen.getByTestId('viewport')).not.toBe(null);
+    expect(screen.getByTestId('viewport')).toContainElement(screen.getByTestId('popup'));
   });
 
-  it('renders only while the dialog is mounted by default', async () => {
-    const open = shallowRef(false);
-    await render(() => (
-      <Dialog.Root open={open.value} modal={false}>
-        <Dialog.Portal>
+  it('stays mounted when used within a keepMounted portal', async () => {
+    const { setProps } = await render(
+      <Dialog.Root open modal={false}>
+        <Dialog.Portal keepMounted>
           <Dialog.Viewport data-testid="viewport">
-            <Dialog.Popup data-testid="popup">Content</Dialog.Popup>
+            <Dialog.Popup>Content</Dialog.Popup>
           </Dialog.Viewport>
         </Dialog.Portal>
-      </Dialog.Root>
-    ));
-    expect(screen.queryByTestId('viewport')).toBe(null);
+      </Dialog.Root>,
+    );
 
-    open.value = true;
-    await flushMicrotasks();
-    expect(screen.getByTestId('viewport')).toContainElement(screen.getByTestId('popup'));
+    expect(screen.getByTestId('viewport')).not.toBe(null);
 
-    open.value = false;
-    await flushMicrotasks();
-    expect(screen.queryByTestId('viewport')).toBe(null);
+    await setProps({ open: false });
+
+    expect(screen.getByTestId('viewport')).not.toBe(null);
   });
 
   it('stays in the DOM, hidden and with no pointer events, while the dialog is closed and the portal keeps it mounted', async () => {

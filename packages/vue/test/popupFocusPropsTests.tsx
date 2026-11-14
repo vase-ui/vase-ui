@@ -320,7 +320,6 @@ export function popupFocusPropsTests(config: PopupFocusPropsTestsConfig) {
       expect(getTrigger()).not.toHaveFocus();
       if (!alwaysMounted) {
         // The focused close control was removed, so focus falls back to the body.
-        // eslint-disable-next-line vitest/no-conditional-expect -- a kept-mounted close control is not removed, so focus doesn't fall back
         expect(document.body).toHaveFocus();
       }
     });

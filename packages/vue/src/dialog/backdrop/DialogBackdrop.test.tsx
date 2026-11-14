@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { shallowRef } from 'vue';
+import { defineComponent, shallowRef } from 'vue';
 import {
   createRenderer,
   describeConformance,
@@ -99,25 +99,105 @@ describe('<Dialog.Backdrop />', () => {
   });
 
   describe('prop: forceRender', () => {
-    it.each([
-      { name: 'by default', forceRender: false, rendered: [true, false, false] },
-      { name: 'when forceRender is true', forceRender: true, rendered: [true, true, true] },
-    ])('renders the backdrops of nested dialogs $name', async ({ forceRender, rendered }) => {
+    it('renders only the root backdrop by default', async () => {
+      const App = defineComponent(() => {
+        const nestedOpen = shallowRef(true);
+
+        return () => (
+          <Dialog.Root open>
+            <Dialog.Backdrop data-testid="root-backdrop" />
+            <Dialog.Portal>
+              <Dialog.Popup>
+                Root dialog
+                <Dialog.Root
+                  open={nestedOpen.value}
+                  onOpenChange={(value: boolean) => (nestedOpen.value = value)}
+                >
+                  <Dialog.Backdrop data-testid="nested-backdrop" />
+                  <Dialog.Portal>
+                    <Dialog.Popup>Nested dialog</Dialog.Popup>
+                  </Dialog.Portal>
+                </Dialog.Root>
+              </Dialog.Popup>
+            </Dialog.Portal>
+          </Dialog.Root>
+        );
+      });
+
+      await render(<App />);
+
+      expect(screen.getByTestId('root-backdrop')).not.toBe(null);
+      expect(screen.queryByTestId('nested-backdrop')).toBe(null);
+    });
+
+    it('always renders by default when not nested', async () => {
       await render(
         <Dialog.Root open>
-          <Dialog.Backdrop data-testid="level-1" forceRender={forceRender} />
-          <Dialog.Root open>
-            <Dialog.Backdrop data-testid="level-2" forceRender={forceRender} />
-            <Dialog.Root open>
-              <Dialog.Backdrop data-testid="level-3" forceRender={forceRender} />
-            </Dialog.Root>
-          </Dialog.Root>
+          <Dialog.Backdrop data-testid="backdrop" />
+          <Dialog.Portal>
+            <Dialog.Popup>Content</Dialog.Popup>
+          </Dialog.Portal>
         </Dialog.Root>,
       );
 
-      expect(
-        ['level-1', 'level-2', 'level-3'].map((testId) => screen.queryByTestId(testId) !== null),
-      ).toEqual(rendered);
+      expect(screen.getByTestId('backdrop')).not.toBe(null);
+    });
+
+    // The two cases of Base UI below differ only in `forceRender`.
+    function renderThreeLevels(forceRender: boolean | undefined) {
+      const App = defineComponent(() => {
+        const level2Open = shallowRef(true);
+        const level3Open = shallowRef(true);
+
+        return () => (
+          <Dialog.Root open>
+            <Dialog.Backdrop data-testid="level-1-backdrop" forceRender={forceRender} />
+            <Dialog.Portal>
+              <Dialog.Popup>
+                Level 1 dialog
+                <Dialog.Root
+                  open={level2Open.value}
+                  onOpenChange={(value: boolean) => (level2Open.value = value)}
+                >
+                  <Dialog.Backdrop data-testid="level-2-backdrop" forceRender={forceRender} />
+                  <Dialog.Portal>
+                    <Dialog.Popup>
+                      Level 2 dialog
+                      <Dialog.Root
+                        open={level3Open.value}
+                        onOpenChange={(value: boolean) => (level3Open.value = value)}
+                      >
+                        <Dialog.Backdrop data-testid="level-3-backdrop" forceRender={forceRender} />
+                        <Dialog.Portal>
+                          <Dialog.Popup>Level 3 dialog</Dialog.Popup>
+                        </Dialog.Portal>
+                      </Dialog.Root>
+                    </Dialog.Popup>
+                  </Dialog.Portal>
+                </Dialog.Root>
+              </Dialog.Popup>
+            </Dialog.Portal>
+          </Dialog.Root>
+        );
+      });
+
+      return render(<App />);
+    }
+
+    it('renders only the root backdrop with multiple nesting levels', async () => {
+      await renderThreeLevels(undefined);
+
+      expect(screen.getByTestId('level-1-backdrop')).not.toBe(null);
+      expect(screen.queryByTestId('level-2-backdrop')).toBe(null);
+      expect(screen.queryByTestId('level-3-backdrop')).toBe(null);
+    });
+
+    it('always renders when true', async () => {
+      await renderThreeLevels(true);
+
+      expect(screen.getByTestId('level-1-backdrop')).not.toBe(null);
+      expect(screen.getByTestId('level-2-backdrop')).not.toBe(null);
+      expect(screen.getByTestId('level-3-backdrop')).not.toBe(null);
     });
   });
 

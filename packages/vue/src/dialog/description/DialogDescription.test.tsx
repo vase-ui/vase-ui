@@ -6,20 +6,18 @@ import * as Dialog from '../index.parts';
 describe('<Dialog.Description />', () => {
   const { render } = createRenderer();
 
-  describe('with a test popup', () => {
-    describeConformance(<Dialog.Description />, () => ({
-      refInstanceof: window.HTMLParagraphElement,
-      render: (node) => {
-        return render(
-          <Dialog.Root open modal={false}>
-            <Dialog.Portal>
-              <Dialog.Popup>{node}</Dialog.Popup>
-            </Dialog.Portal>
-          </Dialog.Root>,
-        );
-      },
-    }));
-  });
+  describeConformance(<Dialog.Description />, () => ({
+    refInstanceof: window.HTMLParagraphElement,
+    render: (node) => {
+      return render(
+        <Dialog.Root open modal={false}>
+          <Dialog.Portal>
+            <Dialog.Popup>{node}</Dialog.Popup>
+          </Dialog.Portal>
+        </Dialog.Root>,
+      );
+    },
+  }));
 
   describe('aria-describedby of the popup', () => {
     it('describes the popup with the generated id of the description', async () => {

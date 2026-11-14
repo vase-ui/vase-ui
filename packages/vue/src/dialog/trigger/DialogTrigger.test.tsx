@@ -157,38 +157,55 @@ describe('<Dialog.Trigger />', () => {
     });
   });
 
-  describe('disabled', () => {
-    it.each([
-      { name: 'native button', props: {}, disabled: '', ariaDisabled: null },
-      {
-        name: 'custom element',
-        props: { as: 'span', nativeButton: false },
-        disabled: null,
-        ariaDisabled: 'true',
-      },
-    ])(
-      'marks a disabled $name and does not open the dialog',
-      async ({ props, disabled, ariaDisabled }) => {
-        const handleOpenChange = vi.fn();
-        const { user } = await render(
-          <Dialog.Root modal={false} onOpenChange={handleOpenChange}>
-            <Dialog.Trigger disabled {...props}>
-              Open
-            </Dialog.Trigger>
-          </Dialog.Root>,
-        );
-        const trigger = screen.getByRole('button', { name: 'Open' });
-        expect(trigger.getAttribute('disabled')).toBe(disabled);
-        expect(trigger.getAttribute('aria-disabled')).toBe(ariaDisabled);
-        expect(trigger).toHaveAttribute('data-disabled');
+  describe('prop: disabled', () => {
+    it('disables the dialog', async () => {
+      const { user } = await render(
+        <Dialog.Root modal={false}>
+          <Dialog.Trigger disabled />
+          <Dialog.Portal>
+            <Dialog.Backdrop />
+            <Dialog.Popup>
+              <Dialog.Title>title text</Dialog.Title>
+            </Dialog.Popup>
+          </Dialog.Portal>
+        </Dialog.Root>,
+      );
 
-        await fireEvent.click(trigger, { detail: 1 });
-        await user.keyboard('[Tab]');
+      const trigger = screen.getByRole('button');
+      expect(trigger).toHaveAttribute('disabled');
+      expect(trigger).toHaveAttribute('data-disabled');
 
-        expect(handleOpenChange).not.toHaveBeenCalled();
-        expect(document.activeElement).not.toBe(trigger);
-      },
-    );
+      await user.click(trigger);
+      expect(screen.queryByText('title text')).toBe(null);
+
+      await user.keyboard('[Tab]');
+      expect(document.activeElement).not.toBe(trigger);
+    });
+
+    it('custom element', async () => {
+      const { user } = await render(
+        <Dialog.Root modal={false}>
+          <Dialog.Trigger disabled as="span" nativeButton={false} />
+          <Dialog.Portal>
+            <Dialog.Backdrop />
+            <Dialog.Popup>
+              <Dialog.Title>title text</Dialog.Title>
+            </Dialog.Popup>
+          </Dialog.Portal>
+        </Dialog.Root>,
+      );
+
+      const trigger = screen.getByRole('button');
+      expect(trigger).not.toHaveAttribute('disabled');
+      expect(trigger).toHaveAttribute('data-disabled');
+      expect(trigger).toHaveAttribute('aria-disabled', 'true');
+
+      await user.click(trigger);
+      expect(screen.queryByText('title text')).toBe(null);
+
+      await user.keyboard('[Tab]');
+      expect(document.activeElement).not.toBe(trigger);
+    });
   });
 
   describe('handle', () => {

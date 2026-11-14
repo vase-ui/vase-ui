@@ -7,20 +7,18 @@ import DialogTitleReplacement from './DialogTitleReplacement.test.vue';
 describe('<Dialog.Title />', () => {
   const { render } = createRenderer();
 
-  describe('with a test popup', () => {
-    describeConformance(<Dialog.Title />, () => ({
-      refInstanceof: window.HTMLHeadingElement,
-      render: (node) => {
-        return render(
-          <Dialog.Root open modal={false}>
-            <Dialog.Portal>
-              <Dialog.Popup>{node}</Dialog.Popup>
-            </Dialog.Portal>
-          </Dialog.Root>,
-        );
-      },
-    }));
-  });
+  describeConformance(<Dialog.Title />, () => ({
+    refInstanceof: window.HTMLHeadingElement,
+    render: (node) => {
+      return render(
+        <Dialog.Root open modal={false}>
+          <Dialog.Portal>
+            <Dialog.Popup>{node}</Dialog.Popup>
+          </Dialog.Portal>
+        </Dialog.Root>,
+      );
+    },
+  }));
 
   describe('aria-labelledby of the popup', () => {
     it('names the popup with the generated id of the title', async () => {
