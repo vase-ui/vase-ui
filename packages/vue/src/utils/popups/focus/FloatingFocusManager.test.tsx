@@ -67,6 +67,13 @@ function setWebKit(webkit: boolean) {
   });
 }
 
+// The pointer of the browser stays where a case leaves it, for each later test.
+function releasePointerAfterTest() {
+  onTestFinished(async () => {
+    await userEvent.pointer({ coords: { x: 0, y: 0 }, keys: '[/MouseLeft]' });
+  });
+}
+
 type ManagerProps = Partial<Omit<FloatingFocusManagerProps, 'store'>>;
 type PopupStore = ReturnType<typeof useFloatingRootStore>;
 
@@ -1247,7 +1254,10 @@ describe('FloatingFocusManager', () => {
       }>([
         {
           name: 'a press of the mouse',
-          close: () => userEvent.click(screen.getByTestId('close')),
+          close: () => {
+            releasePointerAfterTest();
+            return userEvent.click(screen.getByTestId('close'));
+          },
           options: { preventScroll: true },
         },
         {
@@ -1660,25 +1670,18 @@ describe('FloatingFocusManager', () => {
       await waitFor(() => expect(screen.getByTestId('before')).toHaveFocus());
     });
 
-    it('moves the focus into the popup above when no element that had the focus can take it', async () => {
+    // A popup with two fields that holds a popup. The button of the inner popup removes the
+    // reference of the inner popup in the update that closes it. The first field has the focus.
+    async function renderPopupInPopup() {
       const removed = shallowRef(false);
       await render(() => (
         <Popup>
           {{
             default: () => [
               <input data-testid="parent-field" />,
+              <input data-testid="parent-second-field" />,
               <Popup name="child-" referenceRemoved={removed.value}>
-                {{
-                  default: ({ close }: { close: () => void }) => (
-                    <button
-                      data-testid="child-change"
-                      onClick={() => {
-                        removed.value = true;
-                        close();
-                      }}
-                    />
-                  ),
-                }}
+                {{ default: changeAndClose(() => (removed.value = true)) }}
               </Popup>,
             ],
           }}
@@ -1686,12 +1689,28 @@ describe('FloatingFocusManager', () => {
       ));
       await openPopup();
       await waitFor(() => expect(screen.getByTestId('parent-field')).toHaveFocus());
-      await openPopup(document, 'child-');
-      await waitFor(() => expect(screen.getByTestId('child-change')).toHaveFocus());
+    }
 
-      await fireEvent.click(screen.getByTestId('child-change'));
+    it('moves the focus into the popup above when no element that had the focus can take it', async () => {
+      await renderPopupInPopup();
+      await openPopup(document, 'child-');
+      await waitFor(() => expect(screen.getByTestId('change')).toHaveFocus());
+
+      await fireEvent.click(screen.getByTestId('change'));
 
       await waitFor(() => expect(screen.getByTestId('parent-field')).toHaveFocus());
+    });
+
+    it('moves the focus to the element that had it before the open, and not into the popup above', async () => {
+      await renderPopupInPopup();
+      screen.getByTestId('parent-second-field').focus();
+      // The click leaves the focus on the second field. `openPopup` would focus the reference.
+      await fireEvent.click(screen.getByTestId('child-reference'));
+      await waitFor(() => expect(screen.getByTestId('change')).toHaveFocus());
+
+      await fireEvent.click(screen.getByTestId('change'));
+
+      await waitFor(() => expect(screen.getByTestId('parent-second-field')).toHaveFocus());
     });
 
     // The focus is on the body at each open, so the focus manager records the reference.
@@ -2045,6 +2064,32 @@ describe('FloatingFocusManager', () => {
 
         expect(handleOpenChange.mock.calls).toEqual([[false, 'focus-out']]);
       });
+
+      it('keeps the popup open when the focus leaves it in a press on another element of its portal', async () => {
+        const handleOpenChange = vi.fn();
+        await render(() => (
+          <div>
+            <Popup portal manager={{ modal: false }} onOpenChange={handleOpenChange}>
+              {{
+                default: () => [
+                  <input data-testid="one" />,
+                  <FloatingPortal>
+                    <input data-testid="nested" />
+                  </FloatingPortal>,
+                ],
+              }}
+            </Popup>
+            <input data-testid="outside" />
+          </div>
+        ));
+        await openPopup();
+        await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+
+        await fireEvent.pointerDown(screen.getByTestId('nested'));
+        await moveFocusTo('outside');
+
+        expect(handleOpenChange).not.toHaveBeenCalled();
+      });
     });
   });
 
@@ -2128,6 +2173,51 @@ describe('FloatingFocusManager', () => {
       await flushMicrotasks();
 
       expect(document.body).toHaveFocus();
+    });
+
+    it('moves no focus for an element that had the focus in the last open of a kept popup', async () => {
+      const removed = shallowRef(false);
+      const initialFocus = shallowRef(true);
+      await render(() => (
+        <Popup
+          keepMounted
+          role="dialog"
+          manager={{ restoreFocus: true, initialFocus: initialFocus.value }}
+        >
+          {{
+            default: ({ close }: { close: () => void }) => [
+              <input data-testid="one" />,
+              removed.value ? null : <input data-testid="two" />,
+              <button data-testid="close" onClick={() => close()} />,
+            ],
+          }}
+        </Popup>
+      ));
+      await openPopup();
+      await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+      screen.getByTestId('two').focus();
+      await fireEvent.click(screen.getByTestId('close'));
+      await waitFor(() => expect(screen.getByTestId('reference')).toHaveFocus());
+      initialFocus.value = false;
+      await openPopup();
+      screen.getByTestId('reference').blur();
+      await flushMicrotasks();
+
+      removed.value = true;
+      await nextTick();
+      await flushMicrotasks();
+
+      expect(document.body).toHaveFocus();
+    });
+
+    it('moves no focus when another element has the focus after the removal', async () => {
+      await renderAndFocusTwo(true);
+
+      screen.getByTestId('two').remove();
+      screen.getByTestId('reference').focus();
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('reference')).toHaveFocus();
     });
   });
 
@@ -2288,6 +2378,80 @@ describe('FloatingFocusManager', () => {
 
         expect(container).toHaveAttribute('inert');
         expect(containerField).not.toHaveAttribute('inert');
+      });
+    });
+
+    describe('popup in the content of a modal popup', () => {
+      // With `middle`, the popup is in a popup whose focus manager is disabled, and that popup is
+      // in the content of the modal popup.
+      const Popups = defineComponent({
+        props: { disabled: Boolean, middle: Boolean },
+        setup: (props) => () => {
+          const child = <Popup name="child-" portal role="dialog" />;
+          return (
+            <Popup portal role="dialog" manager={{ disabled: props.disabled }}>
+              {{
+                default: () => [
+                  <input data-testid="one" />,
+                  props.middle ? (
+                    <Popup name="middle-" portal manager={{ disabled: true }}>
+                      {{ default: () => child }}
+                    </Popup>
+                  ) : (
+                    child
+                  ),
+                ],
+              }}
+            </Popup>
+          );
+        },
+      });
+
+      async function openEach(middle = false) {
+        await openPopup();
+        if (middle) {
+          await openPopup(document, 'middle-');
+        }
+        await openPopup(document, 'child-');
+        await waitFor(() => expect(screen.getByTestId('child-one')).toHaveFocus());
+      }
+
+      const marks = () =>
+        ['floating', 'child-floating'].map((id) => {
+          const element = screen.getByTestId(id);
+          return ['aria-hidden', 'data-vase-ui-inert'].filter((name) => element.hasAttribute(name));
+        });
+      const marksOfChildOnTop = [['aria-hidden', 'data-vase-ui-inert'], []];
+
+      it('keeps the popup above hidden when that popup takes its marks later', async () => {
+        const disabled = shallowRef(true);
+        await render(() => <Popups disabled={disabled.value} />);
+        await openEach();
+        expect(marks()).toEqual(marksOfChildOnTop);
+
+        disabled.value = false;
+        await nextTick();
+
+        expect(marks()).toEqual(marksOfChildOnTop);
+      });
+
+      it.each([
+        { name: 'two popups', middle: false },
+        { name: 'three popups, the middle one disabled', middle: true },
+      ])('keeps the popup above hidden after KeepAlive puts $name back', async ({ middle }) => {
+        const shown = shallowRef(true);
+        await render(() => (
+          <KeepAlive>{shown.value ? <Popups middle={middle} /> : null}</KeepAlive>
+        ));
+        await openEach(middle);
+        expect(marks()).toEqual(marksOfChildOnTop);
+
+        shown.value = false;
+        await nextTick();
+        shown.value = true;
+        await nextTick();
+
+        expect(marks()).toEqual(marksOfChildOnTop);
       });
     });
 
