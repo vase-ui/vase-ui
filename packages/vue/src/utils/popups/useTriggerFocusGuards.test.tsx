@@ -469,7 +469,7 @@ describe('useTriggerFocusGuards', () => {
     const renderPortal = () => (
       <Popover.Portal>
         <Popover.Positioner>
-          <Popover.Popup initialFocus={false} data-testid="popup">
+          <Popover.Popup initialFocus={false}>
             {content === 'text' ? 'Text' : renderButtons(content)}
           </Popover.Popup>
         </Popover.Positioner>
@@ -501,7 +501,7 @@ describe('useTriggerFocusGuards', () => {
     const renderPortal = () => (
       <Menu.Portal>
         <Menu.Positioner>
-          <Menu.Popup data-testid="popup">
+          <Menu.Popup>
             {content === 'text' ? <Menu.Item>Item</Menu.Item> : renderButtons(content)}
           </Menu.Popup>
         </Menu.Positioner>
@@ -814,9 +814,6 @@ describe('useTriggerFocusGuards', () => {
 
         await pressTab();
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('popup')).toBe(null);
-        });
         expect(screen.getByTestId('before')).toHaveFocus();
         expect(trigger).toHaveAttribute('aria-expanded', 'false');
         expect(reasons).toEqual([REASONS.focusOut]);

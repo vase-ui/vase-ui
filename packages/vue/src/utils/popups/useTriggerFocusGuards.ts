@@ -39,7 +39,8 @@ export interface TriggerFocusGuardStore {
  * and it focuses the trigger when the popup stays open.
  *
  * The guard after the trigger sends a focus from the trigger, or from no element, to the start of
- * the popup. It sends a focus from any other element to the end of the popup. It asks for no close.
+ * the popup. It sends a focus from another element outside the popup to the end of the popup. It
+ * asks for no close.
  *
  * The guards are not in the template, so the trigger keeps one root node.
  */
@@ -60,8 +61,8 @@ export function useTriggerFocusGuards(
     await nextTick();
     const trigger = toValue(triggerElement);
     // The guards of the trigger follow the `open` state. A guard that is still in the document thus
-    // shows that the popup stayed open. The focus then goes to the trigger, the one place of the
-    // popup in the tab order.
+    // shows that the popup stayed open. A focus that enters from outside then goes to the trigger,
+    // which comes right before the popup in the tab order.
     if (entersTrigger && guard.isConnected) {
       trigger?.focus();
       return;
