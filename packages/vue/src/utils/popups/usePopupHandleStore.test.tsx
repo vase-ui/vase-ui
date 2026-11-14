@@ -80,9 +80,10 @@ describe('usePopupHandleStore', () => {
       return { server: readExpanded(template.content), client: readExpanded(container) };
     }
 
-    // The root attaches before the trigger that follows it hydrates. Hydration does not patch an
-    // attribute of a bound object, which is how a part binds its attributes. A trigger that read
-    // the store of the root would then keep the server HTML.
+    // The root of the fixture attaches before the trigger that follows it hydrates, as a mounted
+    // root does for a trigger that hydrates late. Hydration does not patch an attribute of a bound
+    // object, which is how a part binds its attributes. A trigger that read the store of the root
+    // would then keep the server HTML.
     it('gives the inert store while a trigger with a handle hydrates, and the store of the root after it', async () => {
       const { server, client } = await hydrateWithRoot({
         defaultOpen: true,
