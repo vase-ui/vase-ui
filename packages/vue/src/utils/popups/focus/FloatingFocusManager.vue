@@ -85,6 +85,8 @@ export interface FloatingFocusManagerProps {
    *   tabbable if possible, otherwise the last tabbable, then the floating element itself)
    * - `'popup'`: restore directly to the floating element (container) itself
    * - `false`: do not restore focus
+   *
+   * The restore needs `closeOnFocusOut` set to `true`.
    * @default false
    */
   restoreFocus?: boolean | 'popup' | undefined;
@@ -140,6 +142,11 @@ export interface FloatingFocusManagerProps {
 // The floating element of the focus manager above. A popup that has no node in the popup tree, such
 // as a dialog, finds its parent popup through this context.
 const ParentPopupElementContext: InjectionKey<() => HTMLElement | null> = Symbol();
+
+// The number of times that the focus managers above took their marks. A later take of the marks
+// lifts the marks of an earlier take, so the popup in the content of another popup must take its
+// marks last.
+const ParentMarksCountContext: InjectionKey<Readonly<Ref<number>>> = Symbol();
 
 const CLICK_TRIGGER_IDENTIFIER = createAttribute('click-trigger');
 
@@ -350,6 +357,15 @@ const tree = useFloatingTree(() => props.externalTree);
 const getParentPopupElement = inject(ParentPopupElementContext, null);
 provide(ParentPopupElementContext, () => floatingFocusElement.value);
 
+const parentMarksCount = inject(ParentMarksCountContext, null);
+const marksCount = shallowRef(0);
+// The sum also tells the focus managers below about a take above a focus manager that holds no
+// marks.
+provide(
+  ParentMarksCountContext,
+  computed(() => (parentMarksCount?.value ?? 0) + marksCount.value),
+);
+
 const getNodeId = () => props.store.context.positioning?.nodeId;
 
 // Whether `KeepAlive` holds the popup. The popup keeps its open state.
@@ -446,6 +462,9 @@ effect(
 
     closeType = '';
     lastInteractionType = '';
+    // A popup that stays mounted removes its listeners before the return of the focus, so the
+    // record can hold an element of the last open.
+    focusedElement = null;
 
     const doc = ownerDocument(floatingFocusEl);
     const previouslyFocusedElement = activeElement(doc);
@@ -789,9 +808,15 @@ effect(
   () => [isDisabled(), floatingFocusElement.value],
   () => {
     const floatingFocusEl = floatingFocusElement.value;
-    if (!isDisabled() && floatingFocusEl) {
-      handleTabIndex(floatingFocusEl);
+    if (isDisabled() || !floatingFocusEl) {
+      return undefined;
     }
+
+    handleTabIndex(floatingFocusEl);
+
+    return () => {
+      queueMicrotask(clearDisconnectedPreviouslyFocusedElements);
+    };
   },
 );
 
@@ -907,8 +932,6 @@ effect(
     const { modal, restoreFocus, store } = props;
     const storeContext = store.context;
     const untrappedTypeableCombobox = isUntrappedTypeableCombobox.value;
-    const nextFocusable = toValue(props.nextFocusableElement);
-    const previousFocusable = toValue(props.previousFocusableElement);
 
     if (isDisabled() || !props.closeOnFocusOut) {
       return undefined;
@@ -1001,8 +1024,8 @@ effect(
             portalContext?.afterInsideRef.value,
             portalContext?.beforeOutsideRef.value,
             portalContext?.afterOutsideRef.value,
-            previousFocusable,
-            nextFocusable,
+            toValue(props.previousFocusableElement),
+            toValue(props.nextFocusableElement),
           ].includes(relatedTarget);
 
         const movedToUnrelatedNode = !(
@@ -1081,9 +1104,7 @@ effect(
     }
 
     function markInsideComponentTree() {
-      // A closed store that a module shares has a frozen context, so only an open popup writes
-      // the marker.
-      if (pointerDownOutside || !store.select('open')) {
+      if (pointerDownOutside) {
         return;
       }
       storeContext.insideComponentTree = true;
@@ -1124,7 +1145,9 @@ effect(
 );
 
 // Hide everything outside the floating tree from assistive tech while open. The portal renders
-// its outside guards one update after it gets the state, so they are sources too.
+// its outside guards one update after it gets the state, so they are sources too. A focus manager
+// above can take its marks after this one, for example at a `KeepAlive` activation or when it
+// becomes enabled. Its count is thus a source, and this effect then takes its marks again.
 effect(
   () => [
     open.value,
@@ -1142,6 +1165,7 @@ effect(
     afterGuardElement.value,
     portalContext?.beforeOutsideRef.value,
     portalContext?.afterOutsideRef.value,
+    parentMarksCount?.value,
   ],
   () => {
     const floatingEl = floating.value;
@@ -1187,6 +1211,7 @@ effect(
       (x): x is Element => x != null,
     );
     const markerCleanup = markOthers(markerInsideElements);
+    marksCount.value += 1;
 
     return () => {
       markerCleanup();
