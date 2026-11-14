@@ -324,6 +324,7 @@
     {
       "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
       "describe": ["filterable menu navigation regressions"],
+      "title": "does not repeat matching when navigating past hidden component labels",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/index.ts",
       "reason": "The file imports the entry point of Menu, which Vase UI does not have."

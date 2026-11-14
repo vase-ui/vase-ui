@@ -14,6 +14,7 @@ import { useDirection } from '../../internals/direction-context/DirectionContext
 import { resolvePopupLabel } from '../../internals/resolvePopupLabel';
 import { mergeProps } from '../../merge-props';
 import { useMenuRootContext } from '../root/MenuRootContext';
+import { useMenuSubmenuRootContext } from '../submenu-root/MenuSubmenuRootContext';
 import type { MenuFilterList, MenuFilterListParameters } from './MenuFilterContext';
 import { isPlainMainOrientationKey } from './isPlainMainOrientationKey';
 import { moveHighlightFrom } from './moveHighlightFrom';
@@ -33,7 +34,11 @@ export function useFilterList(params: MenuFilterListParameters): MenuFilterList 
   const compositeList = useCompositeListContext();
 
   const value = useFilterDropdownValueContext();
-  const handleInputKeydown = useMenuFilterKeyDown(menuContext, () => value.value !== '');
+  const handleInputKeydown = useMenuFilterKeyDown(
+    menuContext,
+    () => value.value !== '',
+    useMenuSubmenuRootContext(),
+  );
   const list = useFilterDropdownList({ id: params.id });
 
   // The key of a popup below the list comes through the popup tree, because Vue does not give the

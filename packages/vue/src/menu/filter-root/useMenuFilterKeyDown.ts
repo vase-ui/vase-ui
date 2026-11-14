@@ -14,6 +14,7 @@ import {
 } from '../../utils/popups/interactions/useListNavigation';
 import type { MenuRootOrientation } from '../root/MenuRoot.vue';
 import type { MenuRootContext } from '../root/MenuRootContext';
+import type { MenuSubmenuRootContext } from '../submenu-root/MenuSubmenuRootContext';
 
 export type MenuFilterKeyAction =
   /** Native text editing in the input; list navigation and parent handlers stay out of it. */
@@ -144,8 +145,14 @@ export function getMenuFilterKeyAction(
  * @param context The context of the menu root. The root gives it, because a root cannot inject
  * what it provides.
  * @param hasValue Whether the input has text. It is read when a key comes.
+ * @param submenuContext The context of the submenu root around the part. Shift+Tab in a submenu
+ * gives the focus to its return element.
  */
-export function useMenuFilterKeyDown(context: MenuRootContext, hasValue: () => boolean) {
+export function useMenuFilterKeyDown(
+  context: MenuRootContext,
+  hasValue: () => boolean,
+  submenuContext?: MenuSubmenuRootContext,
+) {
   const { orientation, store } = context;
   const direction = useDirection();
 
@@ -217,9 +224,14 @@ export function useMenuFilterKeyDown(context: MenuRootContext, hasValue: () => b
         stopEvent(event);
         break;
       case 'close': {
-        // Mirror the plain menu: Shift+Tab closes the popup and returns focus to the trigger.
+        // As in a plain menu, Shift+Tab closes the popup and returns the focus. A submenu returns
+        // the focus to the element that had it in the parent menu. When the parent is filterable
+        // too, that element is the input of the parent, not the trigger, which is not in the tab
+        // order.
         stopEvent(event);
-        const returnElement = store.state.activeTriggerElement;
+        const returnElement =
+          (store.state.parent.type === 'menu' && submenuContext?.getReturnElement?.()) ||
+          store.state.activeTriggerElement;
         const details = createChangeEventDetails(REASONS.focusOut, event);
         store.setOpen(false, details);
         if (!details.isCanceled && isHTMLElement(returnElement)) {
