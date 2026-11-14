@@ -16,9 +16,10 @@ if (typeof document !== 'undefined') {
   const browserSetTimeout = globalThis.setTimeout;
   const { userEvent } = await import('vitest/browser');
 
-  // The browser keeps its real pointer where a test leaves it. In the next frame, an element that a
+  // The browser keeps its real pointer where a test leaves it. Some frames later, an element that a
   // later test renders under the pointer gets trusted hover events, and a hover popup of that test
-  // opens or closes by itself.
+  // opens or closes by itself. The page gets `pointerover` on the frame element when the pointer
+  // goes into a frame, so this listener also sees a press in a frame.
   let isPointerInPage = false;
   window.addEventListener(
     'pointerover',

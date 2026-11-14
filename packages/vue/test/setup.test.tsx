@@ -100,8 +100,8 @@ describe('task boundary between tests', () => {
 });
 
 describe('real pointer between tests', () => {
-  // Vitest runs the tests of a file in order. The first test only moves the real pointer onto an
-  // element. The element of the second test is at the same place.
+  // Vitest runs the tests of a file in order. The first test puts the real pointer on an element.
+  // The element of the second test is at the same place.
   const { render } = createRenderer();
   const SPOT: CSSProperties = {
     position: 'fixed',
@@ -111,15 +111,19 @@ describe('real pointer between tests', () => {
     height: '100px',
   };
 
-  it('moves the real pointer onto an element and ends', async () => {
-    await render(<div data-testid="spot" style={SPOT} />);
+  it('puts the real pointer on an element and ends', async () => {
+    const onPointerover = vi.fn();
+    await render(<div data-testid="spot" style={SPOT} onPointerover={onPointerover} />);
     await userEvent.hover(screen.getByTestId('spot'));
+
+    expect(onPointerover).toHaveBeenCalled();
   });
 
   it('gets no hover event from the real pointer of the last test', async () => {
     const onPointerover = vi.fn();
     await render(<div style={SPOT} onPointerover={onPointerover} />);
-    // For a pointer that does not move, the browser sends the hover events in the next frame.
+    // For a pointer that does not move, Chromium and Firefox send the hover events in two frames or
+    // fewer. WebKit sends them later, so without the move this case fails only in the other two.
     await waitSingleFrame();
     await waitSingleFrame();
 
