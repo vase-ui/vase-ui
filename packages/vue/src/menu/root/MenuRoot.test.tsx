@@ -97,6 +97,10 @@ const TestPopup = defineComponent({
 
 const imperativeActionDetails = () => createChangeEventDetails(REASONS.imperativeAction);
 
+// The real pointer of the browser can rest on an element. A dispatched event still reaches the
+// element, and the real pointer sends no event of its own.
+const noRealPointer = { pointerEvents: 'none' } as const;
+
 function useFakeTimers() {
   vi.useFakeTimers();
   onTestFinished(() => {
@@ -703,7 +707,7 @@ describe('<Menu.Root />', () => {
       const { getByTestId } = await render(
         <Menu.Root defaultOpen>
           <probe.Probe />
-          <TestPopup />
+          <TestPopup style={noRealPointer} />
         </Menu.Root>,
       );
       const { store } = probe;
@@ -728,7 +732,7 @@ describe('<Menu.Root />', () => {
       const { getByRole } = await render(
         <Menu.Root defaultOpen defaultTriggerId="trigger">
           <probe.Probe />
-          <TestTrigger id="trigger" />
+          <TestTrigger id="trigger" style={noRealPointer} />
         </Menu.Root>,
       );
       const { store } = probe;
@@ -752,7 +756,7 @@ describe('<Menu.Root />', () => {
           <Menu.Root>
             <Part>
               <probe.Probe />
-              <TestPopup />
+              <TestPopup style={noRealPointer} />
             </Part>
           </Menu.Root>,
         );
