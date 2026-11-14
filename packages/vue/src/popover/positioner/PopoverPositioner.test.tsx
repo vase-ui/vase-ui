@@ -76,7 +76,9 @@ describe('<Popover.Positioner />', () => {
     const top = shallowRef(0);
     await render(() => (
       <Popover.Root open>
-        <Trigger style={{ width: '100px', height: '100px', position: 'relative', top: `${top.value}px` }}>
+        <Trigger
+          style={{ width: '100px', height: '100px', position: 'relative', top: `${top.value}px` }}
+        >
           Trigger
         </Trigger>
         <Popover.Portal>
@@ -106,7 +108,9 @@ describe('<Popover.Positioner />', () => {
     const top = shallowRef(0);
     await render(() => (
       <Popover.Root open>
-        <Trigger style={{ width: '100px', height: '100px', position: 'relative', top: `${top.value}px` }}>
+        <Trigger
+          style={{ width: '100px', height: '100px', position: 'relative', top: `${top.value}px` }}
+        >
           Trigger
         </Trigger>
         <Popover.Portal keepMounted>

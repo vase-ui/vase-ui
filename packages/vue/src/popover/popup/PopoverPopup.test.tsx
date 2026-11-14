@@ -78,26 +78,31 @@ describe('<Popover.Popup />', () => {
     { name: 'modal', modal: true, expected: true },
     { name: 'trap-focus', modal: 'trap-focus', expected: true },
     { name: 'not modal', modal: false, expected: false },
-  ])('gives the focus manager a modal state with a close part: $name', async ({ modal, expected }) => {
-    const handle = Popover.createHandle<unknown>();
-    const hasClose = shallowRef(true);
-    await render(() => (
-      <Popover.Root defaultOpen modal={modal} handle={handle}>
-        <Popover.Portal>
-          <Popover.Positioner>
-            <Popover.Popup>{hasClose.value ? <Popover.Close>Close</Popover.Close> : null}</Popover.Popup>
-          </Popover.Positioner>
-        </Popover.Portal>
-      </Popover.Root>
-    ));
-    await flushMicrotasks();
-    expect(handle.store.state.focusManagerModal).toBe(expected);
+  ])(
+    'gives the focus manager a modal state with a close part: $name',
+    async ({ modal, expected }) => {
+      const handle = Popover.createHandle<unknown>();
+      const hasClose = shallowRef(true);
+      await render(() => (
+        <Popover.Root defaultOpen modal={modal} handle={handle}>
+          <Popover.Portal>
+            <Popover.Positioner>
+              <Popover.Popup>
+                {hasClose.value ? <Popover.Close>Close</Popover.Close> : null}
+              </Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>
+      ));
+      await flushMicrotasks();
+      expect(handle.store.state.focusManagerModal).toBe(expected);
 
-    hasClose.value = false;
-    await flushMicrotasks();
+      hasClose.value = false;
+      await flushMicrotasks();
 
-    expect(handle.store.state.focusManagerModal).toBe(false);
-  });
+      expect(handle.store.state.focusManagerModal).toBe(false);
+    },
+  );
 
   // The compiled template of the fixture mounts the new popup before it unmounts the old popup. A
   // render function in TSX reuses the popup component, so it does not show this order.
@@ -228,7 +233,9 @@ describe('<Popover.Popup />', () => {
           </Popover.Portal>
         </Popover.Root>,
       ),
-    ).rejects.toThrow('Vase UI: A popup or an arrow of Popover must be inside <Popover.Positioner>.');
+    ).rejects.toThrow(
+      'Vase UI: A popup or an arrow of Popover must be inside <Popover.Positioner>.',
+    );
     // The portal renders its content in an update after the mount, so Vue also warns about it.
     expect(takeReportedMessages()).toHaveLength(2);
   });

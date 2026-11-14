@@ -3,7 +3,13 @@ import { defineComponent, shallowRef } from 'vue';
 import * as Tooltip from '../../tooltip/index.parts';
 import { REASONS } from '../../internals/reasons';
 import * as Popover from '../index.parts';
-import { createRenderer, describeConformance, fireEvent, flushMicrotasks, screen } from '#test-utils';
+import {
+  createRenderer,
+  describeConformance,
+  fireEvent,
+  flushMicrotasks,
+  screen,
+} from '#test-utils';
 
 describe('<Popover.Close />', () => {
   const { render } = createRenderer();

@@ -18,7 +18,7 @@
     {
       "upstream": "packages/react/src/popover/viewport/PopoverViewport.tsx",
       "kind": "waits-on",
-      "reason": "Vase UI does not have `Popover.Viewport`. The part needs `Popover.Positioner` and `usePopupViewport`."
+      "reason": "Vase UI does not have `Popover.Viewport`."
     },
     {
       "upstream": "packages/react/src/popover/viewport/PopoverViewportCssVars.ts",

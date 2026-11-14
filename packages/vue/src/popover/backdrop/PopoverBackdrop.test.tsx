@@ -42,7 +42,13 @@ describe('<Popover.Backdrop />', () => {
         <Popover.Root open={controlled ? true : undefined} defaultOpen={!controlled}>
           <Popover.Backdrop
             v-slots={{
-              render: ({ props, state }: { props: Record<string, unknown>; state: BackdropState }) => (
+              render: ({
+                props,
+                state,
+              }: {
+                props: Record<string, unknown>;
+                state: BackdropState;
+              }) => (
                 <div {...props}>
                   <RecordState state={state} />
                 </div>
