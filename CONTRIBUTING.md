@@ -657,7 +657,7 @@ The state of a popup is in a store. The code is in `src/utils/popups`. `tooltip/
 - `getEmptyRootStore()` gives a closed `NullStore`, so a module that all requests share can hold it.
 - Take the innermost registered trigger that contains an event target, because an inner trigger can register after its outer trigger.
 - A trigger part calls `useTriggerDataForwarding(triggerId, store, () => ({ payload: props.payload }))` in `setup`. It gives the `registerTrigger` that the call returns to `useRenderElement` as a `ref`. A trigger that gives no data to the store calls `useTriggerRegistration(triggerId, store)` in the same way.
-- A trigger of a family with a popup tree, such as `Menu.Trigger`, also forwards `floatingTreeRoot`, `floatingNodeId` and `floatingParentNodeId`. A trigger with no tree above it makes a tree of its own, one time in `setup`.
+- A trigger of a family with a popup tree, such as `Menu.Trigger`, forwards `floatingTreeRoot`, `floatingNodeId` and `floatingParentNodeId` with its payload. A trigger with no tree above it makes a tree of its own, one time in `setup`.
 - `registerTrigger` only writes a `shallowRef`. One `watch` with `flush: 'post'` adds the element to the trigger map. It removes the entry when the element, the id or the store changes and when the part unmounts, but only an entry that holds its element.
 - The registration follows the store that a handle gives. A detached trigger moves from the inert store to the store of a root when the root attaches, and back when the root detaches.
 - A server render calls no `ref` callback, so it registers no trigger.
