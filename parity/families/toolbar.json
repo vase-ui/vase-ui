@@ -23,8 +23,8 @@
       "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
       "describe": ["<Toolbar.Button />", "rendering other Base UI components", "Dialog"],
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/dialog/trigger/DialogTrigger.tsx",
-      "reason": "Each case of the block renders `Dialog.Trigger` and the other parts of Dialog, which Vase UI does not have."
+      "waitsOn": "packages/react/src/dialog/index.ts",
+      "reason": "Each case of the block renders `Dialog.Trigger` and the other parts of Dialog from the entry point of Dialog. Vase UI does not have that entry point."
     },
     {
       "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
@@ -44,8 +44,8 @@
       "upstream": "packages/react/src/toolbar/input/ToolbarInput.test.tsx",
       "describe": ["<Toolbar.Input />", "rendering NumberField"],
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/number-field/input/NumberFieldInput.tsx",
-      "reason": "Each case of the block renders `NumberField.Input` and the other parts of Number Field, which Vase UI does not have."
+      "waitsOn": "packages/react/src/number-field/increment/NumberFieldIncrement.tsx",
+      "reason": "Each case of the block that Vase UI does not port yet renders `NumberField.Decrement` and `NumberField.Increment`, which Vase UI does not have."
     }
   ],
   "surfaceAdditions": [],

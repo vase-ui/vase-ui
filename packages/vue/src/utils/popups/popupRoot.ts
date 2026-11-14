@@ -10,7 +10,8 @@ import {
   toValue,
   watch,
 } from 'vue';
-import type { MaybeRefOrGetter } from 'vue';
+import type { MaybeRefOrGetter, Ref } from 'vue';
+import type { InteractionType } from '../../common/useEnhancedClickHandler';
 import { useControlled } from '../../common/useControlled';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -111,6 +112,23 @@ export interface UsePopupRootOptions<Store extends PopupRootStore> {
   disabled?: MaybeRefOrGetter<boolean | undefined>;
 }
 
+type CreatePopupRootStore<Store extends PopupRootStore> = (
+  initialState: PopupRootInitialState,
+  defaultPopupId: string | undefined,
+) => Store;
+
+export interface UseSingleAnchorPopupRootOptions<Store extends PopupRootStore> extends Pick<
+  UsePopupRootOptions<Store>,
+  'name' | 'onOpenChange' | 'onOpenChangeComplete'
+> {
+  /**
+   * The element whose animations end the close, as a ref. The default is `store.context.popupRef`.
+   * A root inside another popup, such as a dialog, gives the element of that popup. The close then
+   * waits for the animations of that popup.
+   */
+  popupRef?: Readonly<Ref<HTMLElement | null>> | undefined;
+}
+
 /**
  * Does what every popup root does for its popup. Call it in `setup` of the root.
  *
@@ -123,59 +141,45 @@ export interface UsePopupRootOptions<Store extends PopupRootStore> {
  */
 export function usePopupRoot<Store extends PopupRootStore>(
   props: PopupRootProps,
-  createStore: (initialState: PopupRootInitialState, defaultPopupId: string | undefined) => Store,
+  createStore: CreatePopupRootStore<Store>,
   options: UsePopupRootOptions<Store>,
 ) {
-  const defaultPopupId = useVaseUiId();
-  const store = createStore(
+  return usePopupRootWithPopupId(props, createStore, useVaseUiId(), options);
+}
+
+/**
+ * Does what `usePopupRoot` does, for a root that gives its own default popup id instead of a
+ * generated one. Call it in `setup` of the root.
+ *
+ * @param defaultPopupId The default popup id, or a ref or a getter of it. `undefined` leaves the
+ * popup with no default id. The store follows each change of the id.
+ */
+export function usePopupRootWithPopupId<Store extends PopupRootStore>(
+  props: PopupRootProps,
+  createStore: CreatePopupRootStore<Store>,
+  defaultPopupId: MaybeRefOrGetter<string | undefined>,
+  options: UsePopupRootOptions<Store>,
+) {
+  const store = usePopupRootStore(
     {
       open: props.defaultOpen ?? false,
       openProp: props.open,
       activeTriggerId: props.defaultTriggerId ?? null,
       triggerIdProp: props.triggerId,
     },
-    defaultPopupId.value,
+    createStore,
+    defaultPopupId,
+    options,
   );
-  store.context.onOpenChange = options.onOpenChange;
-  store.context.onOpenChangeComplete = options.onOpenChangeComplete;
+  usePopupRootOpenState(store, props, options.name);
 
-  // The store holds the state. These calls only give two warnings: a change between controlled and
-  // uncontrolled, and a change of the default of an uncontrolled root.
-  useControlled({
-    controlled: () => props.open,
-    default: () => props.defaultOpen,
-    name: options.name,
-    state: 'open',
-  });
+  // This call gives the same two warnings for `triggerId`.
   useControlled({
     controlled: () => props.triggerId,
     default: () => props.defaultTriggerId,
     name: options.name,
     state: 'triggerId',
   });
-
-  const parentNodeId = useFloatingParentNodeId();
-  watch(
-    parentNodeId,
-    (id) => {
-      store.context.nested = id !== null;
-    },
-    { immediate: true },
-  );
-
-  // A controlled root holds its last request in `state.open`, and a close through the prop does
-  // not reset it. After the reset, a `true` at the unmount is a request that came later.
-  watch(
-    () => props.open,
-    (open) => {
-      if (open === false) {
-        store.update({ openProp: false, open: false });
-      } else if (open !== undefined) {
-        store.set('openProp', open);
-      }
-    },
-    { immediate: true },
-  );
   watch(
     () => props.triggerId,
     (triggerId) => {
@@ -188,28 +192,11 @@ export function usePopupRoot<Store extends PopupRootStore>(
   const open = computed(() => !toValue(options.disabled) && store.select('open'));
   const payload = computed(() => store.select('payload') as Store['state']['payload']);
 
-  const { mounted, transitionStatus, forceUnmount } = useUnmountAfterClose({
+  const { mounted, transitionStatus, actions } = usePopupRootTransitions(
+    store,
     open,
-    ref: store.context.popupRef,
-    preventUnmountOnClose: () => store.select('preventUnmountingOnClose'),
-    setPreventUnmountOnClose: (preventUnmountOnClose) =>
-      store.set('preventUnmountingOnClose', preventUnmountOnClose),
-    animateInitialOpen: options.animateInitialOpen,
-    onUnmount() {
-      store.resetOnUnmount();
-      store.context.onOpenChangeComplete?.(false);
-    },
-  });
-
-  // A sync watcher writes `mounted` in the write that changes it, so a part never reads a value
-  // that is one open change old. The first run gives the first state, so a root that mounts open
-  // does not look like a reopen.
-  watch(
-    [mounted, transitionStatus],
-    ([nextMounted, nextTransitionStatus]) => {
-      store.update({ mounted: nextMounted, transitionStatus: nextTransitionStatus });
-    },
-    { flush: 'sync', immediate: true },
+    store.context.popupRef,
+    options.animateInitialOpen,
   );
 
   useImplicitActiveTrigger(store, {
@@ -247,12 +234,150 @@ export function usePopupRoot<Store extends PopupRootStore>(
   });
   onScopeDispose(() => detach?.());
 
+  return { store, open, mounted, payload, transitionStatus, actions };
+}
+
+/**
+ * Does what the root of a popup with one anchor does for its popup, such as Select and Combobox.
+ * Such a root has no handle, no payload, no trigger id and no registered trigger. Call it in
+ * `setup` of the root.
+ *
+ * @param props The `open` and `defaultOpen` props. They give the first state of the store, and the
+ * composable then follows `open`.
+ * @param createStore Makes the store one time. The store belongs to the root.
+ * @param options What differs between the popup roots.
+ * @returns The store, the state that the root renders, and the actions that the part exposes.
+ */
+export function useSingleAnchorPopupRoot<Store extends PopupRootStore>(
+  props: Pick<PopupRootProps, 'open' | 'defaultOpen'>,
+  createStore: CreatePopupRootStore<Store>,
+  options: UseSingleAnchorPopupRootOptions<Store>,
+) {
+  const store = usePopupRootStore(
+    {
+      open: props.defaultOpen ?? false,
+      openProp: props.open,
+      activeTriggerId: null,
+      triggerIdProp: undefined,
+    },
+    createStore,
+    useVaseUiId(),
+    options,
+  );
+  usePopupRootOpenState(store, props, options.name);
+
+  const open = computed(() => store.select('open'));
+  const { mounted, transitionStatus, actions } = usePopupRootTransitions(
+    store,
+    open,
+    options.popupRef ?? store.context.popupRef,
+  );
+
+  return { store, open, mounted, transitionStatus, actions };
+}
+
+/**
+ * Makes the store of a popup root, gives it the functions of the part, and keeps the default popup
+ * id and `nested` current.
+ */
+function usePopupRootStore<Store extends PopupRootStore>(
+  initialState: PopupRootInitialState,
+  createStore: CreatePopupRootStore<Store>,
+  defaultPopupId: MaybeRefOrGetter<string | undefined>,
+  options: Pick<UsePopupRootOptions<Store>, 'onOpenChange' | 'onOpenChangeComplete'>,
+) {
+  const store = createStore(initialState, toValue(defaultPopupId));
+  watch(
+    () => toValue(defaultPopupId),
+    (id) => store.set('defaultPopupId', id),
+  );
+  store.context.onOpenChange = options.onOpenChange;
+  store.context.onOpenChangeComplete = options.onOpenChangeComplete;
+
+  const parentNodeId = useFloatingParentNodeId();
+  watch(
+    parentNodeId,
+    (id) => {
+      store.context.nested = id !== null;
+    },
+    { immediate: true },
+  );
+
+  return store;
+}
+
+/**
+ * Follows the `open` prop of a popup root.
+ */
+function usePopupRootOpenState(
+  store: PopupRootStore,
+  props: Pick<PopupRootProps, 'open' | 'defaultOpen'>,
+  name: string,
+) {
+  // The store holds the state. This call only gives two warnings: a change between controlled and
+  // uncontrolled, and a change of the default of an uncontrolled root.
+  useControlled({
+    controlled: () => props.open,
+    default: () => props.defaultOpen,
+    name,
+    state: 'open',
+  });
+
+  // A controlled root holds its last request in `state.open`, and a close through the prop does
+  // not reset it. After the reset, a `true` at the unmount is a request that came later.
+  watch(
+    () => props.open,
+    (open) => {
+      if (open === false) {
+        store.update({ openProp: false, open: false });
+      } else if (open !== undefined) {
+        store.set('openProp', open);
+      }
+    },
+    { immediate: true },
+  );
+}
+
+/**
+ * Keeps the popup mounted through its exit animation, copies `mounted` and `transitionStatus` to
+ * the store, and makes the actions of the part.
+ */
+function usePopupRootTransitions(
+  store: PopupRootStore,
+  open: Readonly<Ref<boolean>>,
+  popupRef: Readonly<Ref<HTMLElement | null>>,
+  animateInitialOpen?: boolean | undefined,
+) {
+  const { mounted, transitionStatus, forceUnmount } = useUnmountAfterClose({
+    open,
+    ref: popupRef,
+    preventUnmountOnClose: () => store.select('preventUnmountingOnClose'),
+    setPreventUnmountOnClose: (preventUnmountOnClose) =>
+      store.set('preventUnmountingOnClose', preventUnmountOnClose),
+    animateInitialOpen,
+    onUnmount() {
+      store.resetOnUnmount();
+      store.context.onOpenChangeComplete?.(false);
+    },
+  });
+
+  // A sync watcher writes `mounted` in the write that changes it, so a part never reads a value
+  // that is one open change old. The first run gives the first state, so a root that mounts open
+  // does not look like a reopen.
+  watch(
+    [mounted, transitionStatus],
+    ([nextMounted, nextTransitionStatus]) => {
+      store.update({ mounted: nextMounted, transitionStatus: nextTransitionStatus });
+    },
+    { flush: 'sync', immediate: true },
+  );
+
   const actions: PopupRootActions = {
     unmount: forceUnmount,
     close: () => store.setOpen(false, createChangeEventDetails(REASONS.imperativeAction)),
   };
 
-  return { store, open, mounted, payload, transitionStatus, actions };
+  return { mounted, transitionStatus, actions };
 }
 
 /**
@@ -414,4 +539,34 @@ export function useImplicitActiveTrigger<State extends PopupStoreState<unknown>>
     runWhileActive,
     { flush: 'post' },
   );
+}
+
+/**
+ * Clears the open method of a popup that keeps one, when the popup closes and when the root
+ * unmounts. Call it in `setup` of the root.
+ *
+ * @param store The store of the popup.
+ * @param open Whether the popup is open, as `usePopupRoot` returns it.
+ */
+export function usePopupRootSync<
+  State extends PopupStoreState<unknown> & { openMethod: InteractionType | null },
+>(
+  store: ReactiveStore<Readonly<State>, PopupStoreContext<never>, PopupStoreSelectors>,
+  open: MaybeRefOrGetter<boolean>,
+) {
+  function clearOpenMethod() {
+    if (toRaw(store.state).openMethod !== null) {
+      store.set('openMethod', null as State['openMethod']);
+    }
+  }
+
+  watch(
+    () => toValue(open),
+    (isOpen) => {
+      if (!isOpen) {
+        clearOpenMethod();
+      }
+    },
+  );
+  onScopeDispose(clearOpenMethod);
 }

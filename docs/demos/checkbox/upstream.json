@@ -1,0 +1,8 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/checkbox/demos",
+  "files": {
+    "hero/css-modules/index.module.css": "9d6668ace1c03bb5864e971a1f47fc5c6210daeb7e1ae7c984bce4584fa61b88",
+    "hero/css-modules/index.tsx": "c0c87c98a2ffd042854aca6a0f389f86891e58ba16647e9e6bf0bb1f49d606e3"
+  }
+}

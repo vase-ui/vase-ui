@@ -14,10 +14,12 @@
       <li><NuxtLink to="/toggle-group">Toggle Group</NuxtLink></li>
       <li><NuxtLink to="/switch">Switch</NuxtLink></li>
       <li><NuxtLink to="/checkbox">Checkbox</NuxtLink></li>
+      <li><NuxtLink to="/radio-group">Radio Group</NuxtLink></li>
       <li><NuxtLink to="/scroll-area">Scroll Area</NuxtLink></li>
       <li><NuxtLink to="/field">Field</NuxtLink></li>
       <li><NuxtLink to="/tabs">Tabs</NuxtLink></li>
       <li><NuxtLink to="/input">Input</NuxtLink></li>
+      <li><NuxtLink to="/number-field">Number Field</NuxtLink></li>
       <li><NuxtLink to="/providers">Providers</NuxtLink></li>
       <li><NuxtLink to="/use-render">useRender</NuxtLink></li>
       <li><NuxtLink to="/unstable-use-media-query">useMediaQuery</NuxtLink></li>
