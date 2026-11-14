@@ -270,7 +270,10 @@ export default defineConfig([
       '@typescript-eslint/consistent-indexed-object-style': 'off',
       // A callback of the consumer can return nothing, so Base UI has `void` in a union.
       '@typescript-eslint/no-invalid-void-type': 'off',
+      // A number in a template is correct, such as `${height}px` for a CSS length.
       '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
+      // An arrow function that calls a function with no result is the text of Base UI, such as
+      // `() => resolve()`.
       '@typescript-eslint/no-confusing-void-expression': ['error', { ignoreArrowShorthand: true }],
       // `||` and `??` give different results for `''`, `0` and `false`.
       '@typescript-eslint/prefer-nullish-coalescing': [
