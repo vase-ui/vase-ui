@@ -20,6 +20,15 @@ export default defineConfig({
     ],
   },
   test: {
+    server: {
+      deps: {
+        // The server render of a demo loads these libraries as external modules, and each takes the
+        // Vue of the docs. A job that installs another Vue in this package then renders with two
+        // copies of Vue, and a warning of the second copy does not reach the test. Vite resolves
+        // the Vue of an inlined library to the one copy.
+        inline: [/vee-validate/, /@tanstack\/(vue-form|vue-store)/, /vue-demi/],
+      },
+    },
     sequence: {
       hooks: 'list',
     },

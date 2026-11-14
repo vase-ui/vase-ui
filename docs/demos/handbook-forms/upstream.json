@@ -1,0 +1,40 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/handbook/forms/demos",
+  "files": {
+    "components/autocomplete.tsx": "e83d841cf20ee191dbe6622107bc1686c3ecc6f8c357329241bbadb7cf7e076b",
+    "components/button.tsx": "2fe48b801c58231def6f52b14bfc0b74d96804f0279c18927dba9923f17ea328",
+    "components/checkbox-group.tsx": "b6d7877446b4107f375ed674d1fc8d824e0124973039c9df938004f9e63d467b",
+    "components/checkbox.tsx": "4e2bba73ee316cd7862378d7d04899f9da887b42f68d326a6835a020a9bcf6dc",
+    "components/combobox.tsx": "d2d1bca161de55c9af8aa6e627cae3343b5c9987caee3fb9a2cd2e742bdf4d68",
+    "components/field.tsx": "7804795210994dfec3af828d96edb78587c2f63f9361da6ed7eb334a014ab469",
+    "components/fieldset.tsx": "24a3334494eef7b603a2f9d008c558f2d3fe93158c2409f406c79a1b6ab64615",
+    "components/form.tsx": "401da4747a5ed335fbe8c63976c268ed5cbb59c2d2e3bf9a079b097f24412f61",
+    "components/number-field.tsx": "9070da89d84f1ba0889b45b088067f94ee77e64248ce48078c5477793ae2b649",
+    "components/radio-group.tsx": "b85f36b8d528d7e8a3c8a82c47fe550e006e7c18a3724a140a66b4936af1ad61",
+    "components/radio.tsx": "0e76650db8a9f3b22a817972a9aad80a3496be2c8bf06b5366274c2a971515f4",
+    "components/select.tsx": "bdf36e26fa94eba6d60d27c4cd0e2e688a8c1274d17a093dd7bc90bde2c9ea03",
+    "components/slider.tsx": "df90f5211abd433276230752d06c507e9ac3b4c7c9c47ee79a675886d2add50f",
+    "components/switch.tsx": "aa8b8c03c421026188bca5d87c7c2c9daf6b9fc868a77c417825e055ef4cbfea",
+    "components/toast.tsx": "cb09c4e71d2f15049397dc0bb2c8a14b33e75a1b9c8dcd88b47cab3c5744dd82"
+  },
+  "entryPoints": {
+    "components": [
+      "autocomplete",
+      "button",
+      "checkbox",
+      "checkbox-group",
+      "combobox",
+      "field",
+      "fieldset",
+      "form",
+      "number-field",
+      "radio",
+      "radio-group",
+      "select",
+      "slider",
+      "switch",
+      "toast"
+    ]
+  }
+}

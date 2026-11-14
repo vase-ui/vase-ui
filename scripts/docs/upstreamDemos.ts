@@ -9,6 +9,7 @@ import { DOCS_FOLDER_PREFIX, VASE_SOURCE_ROOT } from '../parity/paths.ts';
 import {
   extractCommand,
   familyFile,
+  ownFile,
   readParityFiles,
   REPOSITORY_ROOT,
 } from '../parity/repository.ts';
@@ -170,14 +171,16 @@ export function checkDemos(families: DemoFamily[], entryPoints: ReadonlySet<stri
   for (const { name, matchedCommit, record, files } of families) {
     const folder = demosFolder(name);
     const rerun = `Run \`${command(name)}\`.`;
-    if (record === undefined) {
-      problems.push(`${recordPath(name)} does not exist. ${rerun}`);
-      continue;
-    }
     if (matchedCommit === undefined) {
       problems.push(
-        `${familyFile(name)} does not exist, but ${name} has a page or a demo folder. Add the family file.`,
+        `${familyFile(name)} does not exist, but ${name} has a page or a demo folder. Add the family file. For a component that Base UI does not have, add ${ownFile(name)}.`,
       );
+      if (record === undefined) {
+        continue;
+      }
+    } else if (record === undefined) {
+      problems.push(`${recordPath(name)} does not exist. ${rerun}`);
+      continue;
     } else if (record.commit !== matchedCommit) {
       problems.push(
         `${recordPath(name)}: the record was read at commit ${record.commit}, but matchedCommit of ${name} is ${matchedCommit}. ${rerun}`,
@@ -231,8 +234,12 @@ function listFolderFiles(folder: string): Map<string, string> {
   );
 }
 
-/** The families that have a family page or a folder in `docs/demos`. */
-export function demoFamilyNames(root: string): string[] {
+/**
+ * The families that have a family page or a folder in `docs/demos`. `ownComponents` holds the names
+ * of the components that Base UI does not have. They have no demos of Base UI, so they are not in
+ * the list.
+ */
+export function demoFamilyNames(root: string, ownComponents: ReadonlySet<string>): string[] {
   const demos = join(root, 'docs/demos');
   const folders = existsSync(demos)
     ? readdirSync(demos, { withFileTypes: true })
@@ -240,7 +247,9 @@ export function demoFamilyNames(root: string): string[] {
         .map((item) => item.name)
     : [];
   const pages = listFamilyPages(join(root, 'docs')).map(({ family }) => family);
-  return [...new Set([...pages, ...folders])].sort((a, b) => a.localeCompare(b, 'en'));
+  return [...new Set([...pages, ...folders])]
+    .filter((name) => !ownComponents.has(name))
+    .sort((a, b) => a.localeCompare(b, 'en'));
 }
 
 /** The names of the entry points of Vase UI: the folders of the source that have an `index.ts`. */
@@ -253,12 +262,15 @@ export function loadEntryPoints(root: string): Set<string> {
   );
 }
 
-function readFamilyFiles(root: string): FamilyFiles[] {
-  const { families, problems } = readParityFiles(root, { readExtracts: false });
+function readFamilyFiles(root: string): {
+  families: FamilyFiles[];
+  ownComponents: ReadonlySet<string>;
+} {
+  const { families, ownComponents, problems } = readParityFiles(root, { readExtracts: false });
   if (problems.length > 0) {
     throw new Error(`${problems.join('\n')}\nCorrect these files first.`);
   }
-  return families;
+  return { families, ownComponents: new Set(ownComponents.map(({ name }) => name)) };
 }
 
 function readRecord(name: string, file: string): DemoRecord {
@@ -273,8 +285,8 @@ function readRecord(name: string, file: string): DemoRecord {
 }
 
 export function loadDemoFamilies(root: string): DemoFamily[] {
-  const families = readFamilyFiles(root);
-  return demoFamilyNames(root).map((name) => {
+  const { families, ownComponents } = readFamilyFiles(root);
+  return demoFamilyNames(root, ownComponents).map((name) => {
     const folder = join(root, demosFolder(name));
     const recordFile = join(root, recordPath(name));
     return {
@@ -295,8 +307,9 @@ async function main(): Promise<void> {
     throw new Error('Pass --upstream <path>, the path of a local clone of Base UI.');
   }
   const clone = resolve(values.upstream);
-  const families = readFamilyFiles(REPOSITORY_ROOT);
-  const names = positionals.length > 0 ? positionals : demoFamilyNames(REPOSITORY_ROOT);
+  const { families, ownComponents } = readFamilyFiles(REPOSITORY_ROOT);
+  const names =
+    positionals.length > 0 ? positionals : demoFamilyNames(REPOSITORY_ROOT, ownComponents);
   for (const name of names) {
     const family = families.find((item) => item.name === name)?.family;
     if (!family) {

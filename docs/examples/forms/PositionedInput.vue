@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { Field } from '@vase-ui/vue/field';
-import { Switch } from '@vase-ui/vue/switch';
+import { Select } from '@vase-ui/vue/select';
 </script>
 
 <template>
-  <Field.Root name="notifications">
+  <Field.Root name="apple">
     <div style="position: relative">
-      <Field.Label>
-        <Switch.Root required />
-        Notifications
-      </Field.Label>
+      <Select.Root>
+        <Select.Label>Apple</Select.Label>
+        <Select.Trigger />
+      </Select.Root>
     </div>
   </Field.Root>
 </template>

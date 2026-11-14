@@ -63,6 +63,8 @@ Use `@form-submit` in place of the native `submit` listener to get the form valu
 
 <<< ./form/FormSubmit.vue
 
+Give the first parameter of the listener the type of the form values. With no type, that parameter is `any`.
+
 When you use `@form-submit`, `Form` calls `preventDefault()` on the native submit event.
 
 ### Using with Zod

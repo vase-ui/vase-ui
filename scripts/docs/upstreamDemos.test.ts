@@ -193,6 +193,9 @@ test('the check reports a demo with no Vue file when each entry point that it im
   ]);
 });
 
+const NO_FAMILY_FILE =
+  'parity/families/button.json does not exist, but button has a page or a demo folder. Add the family file. For a component that Base UI does not have, add parity/own/button.json.';
+
 const failures: { name: string; family: DemoFamily; problem: string }[] = [
   {
     name: 'a family with no record',
@@ -240,8 +243,12 @@ const failures: { name: string; family: DemoFamily; problem: string }[] = [
   {
     name: 'a family with no family file',
     family: makeDemoFamily({ matchedCommit: undefined }),
-    problem:
-      'parity/families/button.json does not exist, but button has a page or a demo folder. Add the family file.',
+    problem: NO_FAMILY_FILE,
+  },
+  {
+    name: 'a family with no family file and no record',
+    family: makeDemoFamily({ matchedCommit: undefined, record: undefined }),
+    problem: NO_FAMILY_FILE,
   },
 ];
 
@@ -272,6 +279,53 @@ test('the entry points are the folders of the source that have an index.ts', () 
     writeFileSync(join(root, path), '');
   }
   assert.deepEqual(loadEntryPoints(root), new Set(['button', 'unstable-use-media-query']));
+});
+
+function makeRoot(files: Record<string, string>): string {
+  const root = mkdtempSync(join(tmpdir(), 'demo-families-'));
+  roots.push(root);
+  const upstream = {
+    commit: COMMIT,
+    describe: 'v1.0.0',
+    release: '1.0.0',
+    components: ['button'],
+    commits: [{ sha: COMMIT, date: '2026-01-01T00:00:00+00:00', subject: 'First', paths: [] }],
+  };
+  for (const [path, text] of Object.entries({
+    'parity/upstream.json': JSON.stringify(upstream),
+    'docs/components/sample.md': '# Sample\n',
+    'docs/demos/sample/hero/css-modules/index.vue': '<template></template>\n',
+    ...files,
+  })) {
+    mkdirSync(dirname(join(root, path)), { recursive: true });
+    writeFileSync(join(root, path), text);
+  }
+  return root;
+}
+
+const OWN_RECORD = JSON.stringify({
+  standard: ['https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/'],
+  reason: 'Base UI has no such component.',
+  parts: ['Root'],
+});
+
+test('an own component with a page and a demo folder is not a demo family, so the check has no problem', () => {
+  const root = makeRoot({ 'parity/own/sample.json': OWN_RECORD });
+  const families = loadDemoFamilies(root);
+  assert.deepEqual(families, []);
+  assert.deepEqual(checkDemos(families, ENTRY_POINTS), []);
+});
+
+test('a page with neither a family file nor an own record is a demo family, so the check reports it', () => {
+  const root = makeRoot({});
+  const families = loadDemoFamilies(root);
+  assert.deepEqual(
+    families.map(({ name }) => name),
+    ['sample'],
+  );
+  assert.deepEqual(checkDemos(families, ENTRY_POINTS), [
+    'parity/families/sample.json does not exist, but sample has a page or a demo folder. Add the family file. For a component that Base UI does not have, add parity/own/sample.json.',
+  ]);
 });
 
 test('each copied style sheet of the repository matches its record', () => {

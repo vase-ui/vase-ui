@@ -2,6 +2,7 @@ import { isSuiteRow } from './cases.ts';
 import type { TestRow } from './cases.ts';
 import { checkFamily } from './checkFamily.ts';
 import type { FamilySummary, FileTally, RowTally } from './checkFamily.ts';
+import { checkOwnComponent } from './checkOwn.ts';
 import { checkSurface } from './checkSurface.ts';
 import type { SurfaceSummary, Tally } from './checkSurface.ts';
 import type { BetterRow, FamilyFile, UpstreamFile } from './parityFiles.ts';
@@ -175,6 +176,17 @@ export function checkRepository(input: CheckInput): CheckResult {
       report.surface = surface.summary;
     }
     families.push(report);
+  }
+
+  for (const { name, record } of parity.ownComponents) {
+    problems.push(
+      ...checkOwnComponent(name, record, {
+        upstream: parity.upstream,
+        files,
+        root,
+        project: input.project,
+      }),
+    );
   }
 
   const better = checkBetter(parity.better, files, () =>
