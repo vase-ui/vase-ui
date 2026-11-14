@@ -11,6 +11,7 @@ import {
   hiddenInputTypeTests,
   hydrate,
   isJSDOM,
+  pressWithTouch,
   renderOnServer,
   screen,
   waitFor,
@@ -18,6 +19,7 @@ import {
 } from '#test-utils';
 import ComboboxInputPart from '../../../test/fixtures/ComboboxInputPart.vue';
 import ComboboxListPart from '../../../test/fixtures/ComboboxListPart.vue';
+import { isScrollLocked } from '../../../test/fixtures/scrollDocument';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import type { HTMLProps } from '../../internals/types';
 import { REASONS } from '../../internals/reasons';
@@ -5509,15 +5511,6 @@ describe('<Combobox.Root />', () => {
   });
 
   describe.skipIf(isJSDOM)('scroll locking', () => {
-    // The lock sets `overflow: hidden` on the page, or the marker of the lock on `<html>`.
-    function isScrollLocked(doc: Document) {
-      return (
-        doc.documentElement.style.overflow === 'hidden' ||
-        doc.documentElement.hasAttribute('data-vase-ui-scroll-locked') ||
-        doc.body.style.overflow === 'hidden'
-      );
-    }
-
     describe('touch scroll lock', () => {
       it('applies scroll lock when a touch-opened popup covers the viewport width', async () => {
         await render(
@@ -5538,8 +5531,7 @@ describe('<Combobox.Root />', () => {
 
         const trigger = screen.getByTestId('trigger');
 
-        await fireEvent.pointerDown(trigger, { pointerType: 'touch' });
-        await fireEvent.mouseDown(trigger);
+        await pressWithTouch(trigger);
 
         await screen.findByRole('listbox');
 
@@ -5567,8 +5559,7 @@ describe('<Combobox.Root />', () => {
 
         const trigger = screen.getByTestId('trigger');
 
-        await fireEvent.pointerDown(trigger, { pointerType: 'touch' });
-        await fireEvent.mouseDown(trigger);
+        await pressWithTouch(trigger);
 
         await screen.findByRole('listbox');
 
