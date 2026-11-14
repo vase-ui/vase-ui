@@ -65,7 +65,7 @@ const FLOATING_PROPS = { tabindex: -1, [FOCUSABLE_ATTRIBUTE]: '' };
 interface ListExposed {
   activeIndex: number | null;
   changes: string[];
-  proposals: Array<number | null>;
+  proposals: (number | null)[];
   orientation: Orientation | undefined;
   setActiveIndex(index: number | null): void;
 }
@@ -114,8 +114,8 @@ const List = defineComponent({
   setup(props, { expose }) {
     const open = shallowRef(props.defaultOpen);
     const activeIndex = shallowRef<number | null>(null);
-    const listRef = shallowRef<Array<HTMLElement | null>>([]);
-    const proposals: Array<number | null> = [];
+    const listRef = shallowRef<(HTMLElement | null)[]>([]);
+    const proposals: (number | null)[] = [];
     const changes: string[] = [];
     const { refs, context } = useFloating({
       open,
@@ -219,7 +219,7 @@ const NestedList = defineComponent({
   setup(props) {
     const open = shallowRef(false);
     const activeIndex = shallowRef<number | null>(null);
-    const listRef = shallowRef<Array<HTMLElement | null>>([]);
+    const listRef = shallowRef<(HTMLElement | null)[]>([]);
     const nodeId = useFloatingNodeId();
     const nested = useFloatingParentNodeId().value != null;
     const { refs, context } = useFloating({

@@ -108,7 +108,7 @@ export interface UseListNavigationProps {
    * A ref that holds an array of list items. The composable reads it only in a handler and after a
    * DOM update, so it does not follow a change of the list.
    */
-  listRef: Readonly<Ref<Array<HTMLElement | null>>>;
+  listRef: Readonly<Ref<(HTMLElement | null)[]>>;
   /**
    * The index of the currently active (focused or highlighted) item, which may
    * or may not be selected.
@@ -161,7 +161,7 @@ export interface UseListNavigationProps {
    * The composable reads the option one time, so a function is the form that follows a change.
    * @default undefined
    */
-  disabledIndices?: ReadonlyArray<number> | ((index: number) => boolean) | undefined;
+  disabledIndices?: readonly number[] | ((index: number) => boolean) | undefined;
   /**
    * Determines whether focus can escape the list, such that nothing is selected
    * after navigating beyond the boundary of the list. In some
@@ -418,8 +418,8 @@ export function useListNavigation(
   watch(getOrientation, writeOrientation);
 
   // The dependencies of each effect of Base UI, from the last run of that effect.
-  const lastDependencies = new Map<string, ReadonlyArray<unknown>>();
-  function haveChanged(effect: string, dependencies: ReadonlyArray<unknown>) {
+  const lastDependencies = new Map<string, readonly unknown[]>();
+  function haveChanged(effect: string, dependencies: readonly unknown[]) {
     const last = lastDependencies.get(effect);
     lastDependencies.set(effect, dependencies);
     return !last || dependencies.some((dependency, i) => !Object.is(dependency, last[i]));
