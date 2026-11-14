@@ -7,12 +7,11 @@ on:
 
 permissions: {}
 
-# In a long test run, Chromium keeps shared memory that only a garbage collection frees. A page that
-# holds too much loses its connections, and Vitest reports "Browser connection was closed". These
-# variables make Vitest collect the garbage after each test file. CONTRIBUTING.md, "Where a test
-# runs", says when to remove them.
+# Vitest collects the garbage of Chromium after a test file only when less than this number of GB is
+# free in the temporary folder. A number larger than any disk makes it collect after each test file.
+# Without that, a long Chromium run loses its connection. CONTRIBUTING.md, "Where a test runs", gives
+# the reason, and "Tool versions" says when to remove the variable.
 env:
-  VITEST_CHROMIUM_GC_FORCE: '1'
   VITEST_CHROMIUM_GC_DISK_THRESHOLD_GB: '1000000'
 
 concurrency:
