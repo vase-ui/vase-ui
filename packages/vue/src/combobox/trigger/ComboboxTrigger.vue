@@ -130,8 +130,9 @@ const triggerId = computed(() =>
 const ariaControls = computed(() => {
   if (isOpen.value && inputInsidePopup.value) {
     // Fall back to the default id while the popup registers its own (custom ids are stored once the
-    // popup mounts), so `aria-controls` is set on the same commit `open` becomes `true`.
-    return store.select('popupElementId') ?? getComboboxPopupId(store.select('id'));
+    // popup mounts), so `aria-controls` is set on the same commit `open` becomes `true`. The store
+    // holds an empty string for a popup element with no id, and the default id applies then too.
+    return store.select('popupElementId') || getComboboxPopupId(store.select('id'));
   }
   return isOpen.value ? store.select('listElement')?.id : undefined;
 });

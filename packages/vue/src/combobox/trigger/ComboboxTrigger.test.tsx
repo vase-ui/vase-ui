@@ -978,6 +978,25 @@ describe('<Combobox.Trigger />', () => {
       expect(popup.id).not.toBe('');
       expect(trigger).toHaveAttribute('aria-controls', popup.id);
     });
+
+    it('names the default id of the popup while the popup element has no id', async () => {
+      await render(
+        <Combobox.Root defaultOpen id="fruits">
+          <Combobox.Trigger data-testid="trigger" />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup data-testid="popup" id="">
+                <Combobox.Input />
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('popup').id).toBe('');
+      expect(screen.getByTestId('trigger')).toHaveAttribute('aria-controls', 'fruits-popup');
+    });
   });
 
   describe('typeahead', () => {

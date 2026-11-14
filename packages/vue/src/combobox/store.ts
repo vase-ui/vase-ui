@@ -31,11 +31,6 @@ export type State = ValuePopupState & {
     isItemEqualToValue: (itemValue: any, selectedValue: any) => boolean;
   };
 
-  /**
-   * The id of the popup element. While the input is inside the popup, the `aria-controls` of the
-   * trigger names it.
-   */
-  popupElementId: string | undefined;
   inputElement: HTMLInputElement | null;
   inputGroupElement: HTMLDivElement | null;
 

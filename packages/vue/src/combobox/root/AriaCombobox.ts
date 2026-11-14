@@ -664,7 +664,6 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
             isItemEqualToValue: isItemEqualToValue.value,
           },
           listElement: null,
-          popupElementId: undefined,
           triggerElement: null,
           inputElement: null,
           inputGroupElement: null,
