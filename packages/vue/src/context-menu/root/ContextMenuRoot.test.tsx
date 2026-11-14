@@ -4,20 +4,20 @@ import type { ComponentPublicInstance } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, hydrate, renderOnServer } from '#test-utils';
 import * as Menu from '../../menu/index.parts';
 import { useMenuRootContext } from '../../menu/root/MenuRootContext';
-import type { MenuStore } from '../../menu/store/MenuStore';
+import type { MenuRootContext } from '../../menu/root/MenuRootContext';
 import * as ContextMenu from '../index.parts';
 import { useContextMenuRootContext } from './ContextMenuRootContext';
 import type { ContextMenuRootContext } from './ContextMenuRootContext';
 import ContextMenuRootHydration from './ContextMenuRootHydration.test.vue';
 
-/** Reads the context and the Menu store that a part below the root gets. */
+/** Reads the context of the context menu and the context of the menu that a part below the root gets. */
 function createProbe() {
   const contexts: ContextMenuRootContext[] = [];
-  const stores: Array<MenuStore<unknown>> = [];
+  const menuContexts: MenuRootContext[] = [];
   const Probe = defineComponent({
     setup() {
       contexts.push(useContextMenuRootContext(false));
-      stores.push(useMenuRootContext().store);
+      menuContexts.push(useMenuRootContext());
       return () => null;
     },
   });
@@ -27,8 +27,11 @@ function createProbe() {
     get context() {
       return contexts[0];
     },
+    get menuContext() {
+      return menuContexts[0];
+    },
     get store() {
-      return stores[0];
+      return menuContexts[0].store;
     },
   };
 }
@@ -117,6 +120,49 @@ describe('<ContextMenu.Root />', () => {
   });
 
   describe('props', () => {
+    it.each([
+      {
+        name: 'the defaults',
+        props: {},
+        expected: {
+          open: false,
+          highlightItemOnHover: true,
+          loopFocus: true,
+          orientation: 'vertical',
+        },
+      },
+      {
+        name: 'each prop that is set',
+        props: {
+          defaultOpen: true,
+          highlightItemOnHover: false,
+          loopFocus: false,
+          orientation: 'horizontal' as const,
+        },
+        expected: {
+          open: true,
+          highlightItemOnHover: false,
+          loopFocus: false,
+          orientation: 'horizontal',
+        },
+      },
+    ])('gives $name to the menu root', async ({ props, expected }) => {
+      const probe = createProbe();
+      await render(
+        <ContextMenu.Root {...props}>
+          <probe.Probe />
+        </ContextMenu.Root>,
+      );
+      const { menuContext, store } = probe;
+
+      expect({
+        open: store.state.open,
+        highlightItemOnHover: store.select('highlightItemOnHover'),
+        loopFocus: menuContext.loopFocus.value,
+        orientation: menuContext.orientation.value,
+      }).toEqual(expected);
+    });
+
     it('follows the open prop', async () => {
       const open = shallowRef(false);
       const onOpenChange = vi.fn();
