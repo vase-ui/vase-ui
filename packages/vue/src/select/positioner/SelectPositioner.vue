@@ -30,11 +30,18 @@ export interface SelectPositionerProps
   extends
     VaseUIComponentProps<SelectPositionerState>,
     UseAnchorPositioningSharedParameters,
-    /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {}
+    /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
+  /**
+   * Whether the positioner overlaps the trigger so the selected item's text is aligned with the trigger's value text. This only applies to mouse input and is automatically disabled if there is not enough space.
+   * @default true
+   */
+  alignItemWithTrigger?: boolean | undefined;
+}
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, onScopeDispose, provide, toRaw, watch } from 'vue';
+import { computed, onMounted, onScopeDispose, provide, shallowRef, toRaw, watch } from 'vue';
+import type { CSSProperties } from 'vue';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import { DROPDOWN_COLLISION_AVOIDANCE } from '../../internals/constants';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -44,8 +51,11 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useAnchorPositioning } from '../../internals/useAnchorPositioning';
 import { useVaseUIFloating } from '../../utils/popups/positioning/useFloating';
 import { usePositioner } from '../../utils/popups/positioning/usePositioner';
+import { clearStyles } from '../popup/utils';
 import { useSelectRootContext } from '../root/SelectRootContext';
 import { SelectPositionerContext } from './SelectPositionerContext';
+
+const FIXED: CSSProperties = { position: 'fixed' };
 
 defineOptions({ inheritAttrs: false });
 
@@ -61,6 +71,7 @@ const props = withDefaults(defineProps<SelectPositionerProps>(), {
   collisionPadding: 5,
   sticky: false,
   positionMethod: 'absolute',
+  alignItemWithTrigger: true,
 });
 
 defineSlots<{
@@ -73,6 +84,39 @@ const store = useSelectRootContext();
 const open = computed(() => store.select('open'));
 const mounted = computed(() => store.select('mounted'));
 
+// The popup turns the placement off for the rest of an open when the trigger has no room. The
+// prop applies again only while the popup is not mounted.
+const controlledAlignItemWithTrigger = shallowRef(props.alignItemWithTrigger);
+
+watch(
+  [mounted, () => props.alignItemWithTrigger],
+  ([isMounted, alignItemWithTrigger]) => {
+    if (!isMounted) {
+      controlledAlignItemWithTrigger.value = alignItemWithTrigger;
+    }
+  },
+  { flush: 'sync' },
+);
+
+const alignItemWithTriggerActive = computed(
+  () =>
+    mounted.value &&
+    controlledAlignItemWithTrigger.value &&
+    store.select('openMethod') !== 'touch',
+);
+
+// The trigger reads the value in its focus handler.
+watch(
+  alignItemWithTriggerActive,
+  (active) => {
+    store.context.alignItemWithTriggerActiveRef.value = active;
+  },
+  { flush: 'sync', immediate: true },
+);
+onScopeDispose(() => {
+  store.context.alignItemWithTriggerActiveRef.value = false;
+});
+
 const positioning = useAnchorPositioning({
   anchor: () => props.anchor,
   positionMethod: () => props.positionMethod,
@@ -84,7 +128,9 @@ const positioning = useAnchorPositioning({
   collisionBoundary: () => props.collisionBoundary,
   collisionPadding: () => props.collisionPadding,
   sticky: () => props.sticky,
-  disableAnchorTracking: () => props.disableAnchorTracking,
+  // A Boolean prop is never `undefined`, so an explicit `false` cannot turn the tracking on while
+  // the popup is over the trigger. The positioner does not use the anchored position then.
+  disableAnchorTracking: () => props.disableAnchorTracking || alignItemWithTriggerActive.value,
   collisionAvoidance: () => props.collisionAvoidance ?? DROPDOWN_COLLISION_AVOIDANCE,
   keepMounted: true,
   mounted,
@@ -94,9 +140,13 @@ const positioning = useAnchorPositioning({
 
 useVaseUIFloating({ rootStore: store, mounted, positioning });
 
+const renderedSide = computed(() =>
+  alignItemWithTriggerActive.value ? ('none' as const) : positioning.side.value,
+);
+
 const state = computed<SelectPositionerState>(() => ({
   open: open.value,
-  side: positioning.side.value,
+  side: renderedSide.value,
   align: positioning.align.value,
   anchorHidden: positioning.anchorHidden.value,
 }));
@@ -112,7 +162,7 @@ let positionerElement: HTMLElement | null = null;
 
 const { element, elementProps } = usePositioner(props, {
   state,
-  styles: positioning.positionerStyles,
+  styles: () => (alignItemWithTriggerActive.value ? FIXED : positioning.positionerStyles.value),
   transitionStatus: () => store.select('transitionStatus'),
   ref(positioner) {
     // A compiled template can mount a new positioner before it unmounts the old one. The old one
@@ -181,6 +231,17 @@ useCompositeList({
         }
       }
     }
+
+    if (open.value && alignItemWithTriggerActive.value) {
+      store.update({
+        scrollUpArrowVisible: false,
+        scrollDownArrowVisible: false,
+      });
+
+      const stylesToClear: CSSProperties = { height: '' };
+      clearStyles(positionerElement, stylesToClear);
+      clearStyles(store.context.popupRef.value, stylesToClear);
+    }
   },
 });
 
@@ -189,7 +250,18 @@ onScopeDispose(() => {
   store.context.valuesRef.value = [];
 });
 
-provide(SelectPositionerContext, positioning);
+provide(SelectPositionerContext, {
+  align: positioning.align,
+  arrowRef: positioning.arrowRef,
+  arrowUncentered: positioning.arrowUncentered,
+  arrowStyles: positioning.arrowStyles,
+  isPositioned: positioning.isPositioned,
+  side: renderedSide,
+  alignItemWithTriggerActive,
+  setControlledAlignItemWithTrigger(alignItemWithTrigger) {
+    controlledAlignItemWithTrigger.value = alignItemWithTrigger;
+  },
+});
 
 defineExpose({ element });
 </script>
