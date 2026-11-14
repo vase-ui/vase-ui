@@ -4,47 +4,15 @@ import type {
   MenuRootChangeEventDetails,
   MenuRootChangeEventReason,
   MenuRootHighlightEventDetails,
-  MenuRootOrientation,
+  MenuRootProps,
 } from '../../menu/root/MenuRoot.vue';
 
 export interface ContextMenuRootState {}
 
-export interface ContextMenuRootProps {
-  /**
-   * Whether the menu is initially open.
-   *
-   * To render a controlled menu, use the `open` prop instead.
-   * @default false
-   */
-  defaultOpen?: boolean | undefined;
-  /**
-   * Whether the menu is currently open.
-   */
-  open?: boolean | undefined;
-  /**
-   * Whether moving the pointer over items should highlight them.
-   * Disabling this prop allows CSS `:hover` to be differentiated from the `:focus` (`data-highlighted`) state.
-   * @default true
-   */
-  highlightItemOnHover?: boolean | undefined;
-  /**
-   * Whether to loop keyboard focus back to the first item
-   * when the end of the list is reached while using the arrow keys.
-   * @default true
-   */
-  loopFocus?: boolean | undefined;
-  /**
-   * Whether the component should ignore user interaction.
-   * @default false
-   */
-  disabled?: boolean | undefined;
-  /**
-   * The visual orientation of the menu.
-   * Controls whether roving focus uses up/down or left/right arrow keys.
-   * @default 'vertical'
-   */
-  orientation?: MenuRootOrientation | undefined;
-}
+export interface ContextMenuRootProps extends Omit<
+  MenuRootProps,
+  'handle' | 'triggerId' | 'defaultTriggerId' | 'modal' | 'closeParentOnEsc'
+> {}
 
 export type ContextMenuRootActions = MenuRootActions;
 export type ContextMenuRootChangeEventReason = MenuRootChangeEventReason;
@@ -52,7 +20,7 @@ export type ContextMenuRootChangeEventDetails = MenuRootChangeEventDetails;
 </script>
 
 <script setup lang="ts">
-import { provide, shallowRef } from 'vue';
+import { provide, shallowRef, useTemplateRef } from 'vue';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import MenuRoot from '../../menu/root/MenuRoot.vue';
 import { MenuRootContext } from '../../menu/root/MenuRootContext';
@@ -126,17 +94,17 @@ provide(ContextMenuRootContext, context);
 // Without this value, a menu above the root makes the menu of the root a plain menu.
 provide(MenuRootContext, undefined);
 
-const menuRoot = shallowRef<ContextMenuRootActions | null>(null);
+const menuRootRef = useTemplateRef<ContextMenuRootActions>('menuRoot');
 
 defineExpose<ContextMenuRootActions>({
-  unmount: () => menuRoot.value?.unmount(),
-  close: () => menuRoot.value?.close(),
+  unmount: () => menuRootRef.value?.unmount(),
+  close: () => menuRootRef.value?.close(),
 });
 </script>
 
 <template>
   <MenuRoot
-    :ref="(root: unknown) => (menuRoot = root as ContextMenuRootActions | null)"
+    ref="menuRoot"
     :default-open="props.defaultOpen"
     :open="props.open"
     :highlight-item-on-hover="props.highlightItemOnHover"
