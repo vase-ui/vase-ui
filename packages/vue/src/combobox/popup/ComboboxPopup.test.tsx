@@ -445,9 +445,9 @@ describe('<Combobox.Popup />', () => {
 
       await nextEvent(popup, 'animationstart', { action: () => user.keyboard('{Escape}') });
       record();
-      // A part reads the animations of the popup at the close, before the ending style applies,
-      // and that list is empty. `nextAnimationsRead` would resolve with it. The animation of
-      // 100 s still runs after `animationstart`, so the case reads the list itself.
+      // The first read of the animations of the popup after the close gives an empty list, and
+      // `nextAnimationsRead` would resolve with it. The animation of 100 s still runs after
+      // `animationstart`, so the case reads the list itself.
       const animations = popup.getAnimations();
       for (const animation of animations) {
         animation.finish();
