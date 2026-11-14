@@ -27,12 +27,11 @@ import { contains } from '../../common/shadowDom';
 import type { HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
-import FocusGuard from '../../utils/popups/focus/FocusGuard.vue';
 import { useNavigationMenuPositionerContext } from '../positioner/NavigationMenuPositionerContext';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import { createElementSetter } from '../utils/createElementSetter';
 import NavigationMenuViewportChildren from './NavigationMenuViewportChildren.vue';
-import { useNavigationMenuViewportGuards } from './useNavigationMenuViewportGuards';
+import { useNavigationMenuViewportSiblingGuards } from './useNavigationMenuViewportGuards';
 
 defineOptions({ inheritAttrs: false });
 
@@ -59,10 +58,7 @@ const {
   setViewportInert,
 } = useNavigationMenuRootContext();
 
-// In a positioner, the two inside focus guards are siblings of the element. With no positioner,
-// the element holds them.
 const inPositioner = useNavigationMenuPositionerContext(true) !== undefined;
-const guards = inPositioner ? useNavigationMenuViewportGuards() : undefined;
 
 const domReference = computed(() => {
   const store: PopupInteractionStore = floatingRootStore.value ?? EMPTY_ROOT_STORE;
@@ -94,30 +90,34 @@ function handleFocusout(event: FocusEvent) {
   }
 }
 
-const { element, elementProps } = useRenderElement('div', props, {
-  ref: createElementSetter(viewportElement),
-  props: (attrs) => [
-    {
-      id: viewportId.value,
-      onFocusout: handleFocusout,
-      inert: !inPositioner && viewportInert.value ? true : undefined,
-    },
-    attrs,
-  ],
-  children: true,
-});
+const { element, elementProps } = useRenderElement<NavigationMenuViewportState, HTMLElement>(
+  'div',
+  props,
+  {
+    ref: createElementSetter(viewportElement),
+    props: (attrs) => [
+      {
+        id: viewportId.value,
+        onFocusout: handleFocusout,
+        inert: !inPositioner && viewportInert.value ? true : undefined,
+      },
+      attrs,
+    ],
+    children: true,
+  },
+);
+
+// In a positioner, the two inside focus guards are siblings of the element. Script keeps them
+// there, so the part has one root node. With no positioner, the element holds them.
+if (inPositioner) {
+  useNavigationMenuViewportSiblingGuards(element);
+}
 
 defineExpose({ element });
 </script>
 
 <!-- prettier-ignore -->
 <template>
-  <template v-if="guards">
-    <FocusGuard :ref="guards.setBeforeInsideGuard" @focusin="guards.handleBeforeInsideFocusin" />
-    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="NavigationMenuViewportChildren" />
-    <component :is="as" v-else v-bind="elementProps()"><NavigationMenuViewportChildren><slot :state="state" /></NavigationMenuViewportChildren></component>
-    <FocusGuard :ref="guards.setAfterInsideGuard" @focusin="guards.handleAfterInsideFocusin" />
-  </template>
-  <slot v-else-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="NavigationMenuViewportChildren" />
+  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="NavigationMenuViewportChildren" />
   <component :is="as" v-else v-bind="elementProps()"><NavigationMenuViewportChildren><slot :state="state" /></NavigationMenuViewportChildren></component>
 </template>

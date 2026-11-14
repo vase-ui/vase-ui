@@ -52,7 +52,7 @@ export type CompositeGridNavigator = (state: CompositeGridNavigationState) => nu
 
 /**
  * Makes the navigator that a root part gives to `useCompositeRoot` as `grid`.
- * A root part that does not import this file has no grid code in its bundle.
+ * A root part with no grid does not import this file. A bundler can then remove the grid code.
  * `config` is a value, a ref or a getter. The navigator reads it when a key comes.
  */
 export function gridNavigation(

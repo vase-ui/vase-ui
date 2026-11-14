@@ -231,22 +231,10 @@ describe('<Popover.Trigger />', () => {
           v-slots={{
             default: ({ payload }: { payload: unknown }) => (
               <>
-                <Popover.Trigger
-                  payload="One"
-                  openOnHover
-                  delay={0}
-                  closeDelay={0}
-                  style={{ pointerEvents: 'none' }}
-                >
+                <Popover.Trigger payload="One" openOnHover delay={0} closeDelay={0}>
                   One
                 </Popover.Trigger>
-                <Popover.Trigger
-                  payload="Two"
-                  openOnHover
-                  delay={0}
-                  closeDelay={0}
-                  style={{ pointerEvents: 'none' }}
-                >
+                <Popover.Trigger payload="Two" openOnHover delay={0} closeDelay={0}>
                   Two
                 </Popover.Trigger>
                 <Popover.Portal>
@@ -542,9 +530,12 @@ describe('<Popover.Trigger />', () => {
 
   describe('opened by hover', () => {
     async function renderOpenedByHover(tabindex?: number) {
+      // WebKit on macOS skips a button for the Tab key unless the button has a `tabindex`.
       await render(
         <div>
-          <button data-testid="before">Before</button>
+          <button data-testid="before" tabindex={0}>
+            Before
+          </button>
           <Popover.Root>
             <Popover.Trigger openOnHover delay={0} tabindex={tabindex}>
               Toggle
@@ -557,7 +548,9 @@ describe('<Popover.Trigger />', () => {
               </Popover.Positioner>
             </Popover.Portal>
           </Popover.Root>
-          <button data-testid="after">After</button>
+          <button data-testid="after" tabindex={0}>
+            After
+          </button>
         </div>,
       );
 
@@ -692,7 +685,7 @@ describe('<Popover.Trigger />', () => {
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
-  // instance set, and each later case of the file then gets a warning about a slot.
+  // instance set, and a later case of the file can then get a warning about a slot.
   it('throws a descriptive error when rendered without a root or a handle', async () => {
     await expect(render(<Popover.Trigger>Toggle</Popover.Trigger>)).rejects.toThrow(
       'Vase UI: <Popover.Trigger> must be inside <Popover.Root>, or it must have a `handle`. Without a root the trigger has no popover to open. Put the trigger inside <Popover.Root>, or pass a `handle`.',
