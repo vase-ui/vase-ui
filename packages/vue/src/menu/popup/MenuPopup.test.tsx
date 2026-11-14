@@ -1,6 +1,7 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { KeepAlive, computed, defineComponent, provide, shallowRef } from 'vue';
+import { Menubar } from '@vase-ui/vue/menubar';
 import * as Menu from '../index.parts';
 import {
   createRenderer,
@@ -326,6 +327,101 @@ describe('<Menu.Popup />', () => {
         expect(onOpenChangeComplete).toHaveBeenCalledTimes(1);
       });
       expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+    });
+  });
+
+  describe('hover', () => {
+    async function hover(element: HTMLElement) {
+      await fireEvent.mouseEnter(element);
+      await fireEvent.mouseMove(element);
+    }
+
+    async function leaveAndWait(positioner: HTMLElement) {
+      await fireEvent.mouseEnter(positioner);
+      await fireEvent.mouseLeave(positioner, { relatedTarget: document.body });
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      await flushMicrotasks();
+    }
+
+    it('keeps a submenu open when the pointer leaves it after a move in it', async () => {
+      await render(
+        <Menu.Root open>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.SubmenuRoot>
+                  <Menu.SubmenuTrigger delay={0}>More</Menu.SubmenuTrigger>
+                  <Menu.Portal>
+                    <Menu.Positioner data-testid="submenu-positioner">
+                      <Menu.Popup data-testid="submenu" />
+                    </Menu.Positioner>
+                  </Menu.Portal>
+                </Menu.SubmenuRoot>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>,
+      );
+      await hover(screen.getByRole('menuitem', { name: 'More' }));
+      await fireEvent.mouseMove(await screen.findByTestId('submenu'));
+
+      await leaveAndWait(screen.getByTestId('submenu-positioner'));
+
+      expect(screen.queryByTestId('submenu')).not.toBe(null);
+    });
+
+    it('keeps a menu of a menubar that hover opened open when the pointer leaves its popup', async () => {
+      await render(
+        <Menubar>
+          <Menu.Root defaultOpen>
+            <Menu.Trigger>File</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup />
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+          <Menu.Root>
+            <Menu.Trigger>Edit</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner data-testid="positioner">
+                <Menu.Popup data-testid="popup" />
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menubar>,
+      );
+      await hover(screen.getByRole('menuitem', { name: 'Edit' }));
+      await screen.findByTestId('popup');
+
+      await leaveAndWait(screen.getByTestId('positioner'));
+
+      expect(screen.queryByTestId('popup')).not.toBe(null);
+    });
+
+    it('keeps a disabled menu that hover opened open when the pointer leaves its popup', async () => {
+      const disabled = shallowRef(false);
+      const Test = defineComponent(() => () => (
+        <Menu.Root disabled={disabled.value}>
+          <Menu.Trigger openOnHover delay={0}>
+            Open
+          </Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner data-testid="positioner">
+              <Menu.Popup data-testid="popup" />
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      ));
+      await render(<Test />);
+      await hover(screen.getByRole('button', { name: 'Open' }));
+      await screen.findByTestId('popup');
+      disabled.value = true;
+      await flushMicrotasks();
+
+      await leaveAndWait(screen.getByTestId('positioner'));
+
+      expect(screen.queryByTestId('popup')).not.toBe(null);
     });
   });
 

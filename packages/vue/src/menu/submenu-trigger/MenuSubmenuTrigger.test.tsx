@@ -249,6 +249,64 @@ describe('<Menu.SubmenuTrigger />', () => {
       });
     });
 
+    it('opens the submenu on the first move over the trigger, with no enter event', async () => {
+      await renderSubmenu({ trigger: { delay: 0 } });
+
+      await fireEvent.mouseMove(screen.getByRole('menuitem', { name: 'More' }));
+
+      expect(await screen.findByTestId('submenu')).not.toBe(null);
+    });
+
+    it('cancels a hover open that waits for its delay at a mouseout with no mouseleave', async () => {
+      await renderSubmenu({ trigger: { delay: 20 } });
+      const trigger = screen.getByRole('menuitem', { name: 'More' });
+
+      await hover(trigger);
+      await fireEvent.mouseOut(trigger, {
+        relatedTarget: screen.getByRole('menuitem', { name: 'Alpha' }),
+      });
+      await wait(60);
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('submenu')).toBe(null);
+    });
+
+    it('keeps a submenu that hover opened open for a keyboard click of its trigger', async () => {
+      await renderSubmenu({ trigger: { delay: 0 } });
+      const trigger = screen.getByRole('menuitem', { name: 'More' });
+      await hover(trigger);
+      await screen.findByTestId('submenu');
+
+      await fireEvent.click(trigger, { detail: 0 });
+      await waitForAnimationFrame();
+
+      expect(screen.queryByTestId('submenu')).not.toBe(null);
+    });
+
+    it('stays open after a move in the submenu, when the pointer leaves its trigger', async () => {
+      await renderSubmenu({ trigger: { delay: 0 } });
+      const trigger = screen.getByRole('menuitem', { name: 'More' });
+      await hover(trigger);
+      await fireEvent.mouseMove(await screen.findByTestId('submenu'));
+
+      await fireEvent.mouseEnter(trigger);
+      await fireEvent.mouseLeave(trigger, { clientX: 1000, clientY: 1000 });
+      await waitForAnimationFrame();
+
+      expect(screen.queryByTestId('submenu')).not.toBe(null);
+    });
+
+    it.each([
+      { name: 'a disabled submenu root', props: { submenuRoot: { disabled: true } } },
+      { name: 'a disabled parent menu', props: { root: { disabled: true } } },
+    ])('is disabled by $name', async ({ props }) => {
+      await renderSubmenu(props);
+
+      const trigger = screen.getByRole('menuitem', { name: 'More' });
+      expect(trigger).toHaveAttribute('data-disabled');
+      expect(trigger).toHaveAttribute('aria-disabled', 'true');
+    });
+
     it.each([
       { name: 'by default', highlightItemOnHover: true },
       { name: 'with highlightItemOnHover false', highlightItemOnHover: false },

@@ -195,11 +195,7 @@ const click = useClick(store, {
   stickIfOpen: () => props.openOnHover,
 });
 
-const rootTriggerProps = computed(() => {
-  // The trigger renders its own id.
-  const { id: _rootTriggerId, ...triggerProps } = store.select('triggerProps', true);
-  return triggerProps;
-});
+const rootTriggerProps = computed(() => store.select('triggerProps', true));
 
 // Arrow keys open the submenu through list navigation without dispatching a click, so
 // `openMethod` stays null there; Enter and Space do dispatch one and report `keyboard`.
