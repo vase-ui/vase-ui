@@ -17,47 +17,48 @@ const CaretDownIcon: FunctionalComponent = () =>
     [h('path', { d: 'M12 6H4l4 4.5z' })],
   );
 
+const base = import.meta.env.BASE_URL;
+
 const overviewLinks = [
   {
-    href: '/react/overview/quick-start',
+    href: `${base}quick-start`,
     title: 'Quick Start',
     description: 'Install and assemble your first component.',
   },
   {
-    href: '/react/overview/accessibility',
-    title: 'Accessibility',
-    description: 'Learn how we build accessible components.',
+    href: `${base}parity`,
+    title: 'Parity',
+    description: 'See which components are complete and which are not started.',
   },
   {
-    href: '/react/overview/releases',
-    title: 'Releases',
-    description: 'See what’s new in the latest Base UI versions.',
+    href: `${base}thanks`,
+    title: 'Thanks',
+    description: 'Meet the people whose work Vase UI carries.',
   },
   {
-    href: '/react/overview/about',
+    href: base,
     title: 'About',
-    description: 'Learn more about Base UI and our mission.',
+    description: 'Learn more about Vase UI and why it exists.',
   },
 ] as const;
 
 const handbookLinks = [
   {
-    href: '/react/handbook/styling',
+    href: `${base}handbook/styling`,
     title: 'Styling',
     description:
-      'Base UI components can be styled with plain CSS, Tailwind CSS, CSS-in-JS, or CSS Modules.',
+      'Vase UI components can be styled with plain CSS, CSS Modules, or utility classes.',
   },
   {
-    href: '/react/handbook/animation',
+    href: `${base}components/navigation-menu#closing-animations`,
     title: 'Animation',
     description:
-      'Base UI components can be animated with CSS transitions, CSS animations, or JavaScript libraries.',
+      'Vase UI components can be animated with CSS transitions, CSS animations, or JavaScript.',
   },
   {
-    href: '/react/handbook/composition',
+    href: `${base}handbook/composition`,
     title: 'Composition',
-    description:
-      'Base UI components can be replaced and composed with your own existing components.',
+    description: 'Vase UI components can be replaced and composed with your own components.',
   },
 ] as const;
 </script>
@@ -105,7 +106,7 @@ const handbookLinks = [
       </NavigationMenu.Item>
 
       <NavigationMenu.Item>
-        <NavigationMenu.Link :class="styles.Trigger" href="https://github.com/mui/base-ui">
+        <NavigationMenu.Link :class="styles.Trigger" href="https://github.com/vase-ui/vase-ui">
           GitHub
         </NavigationMenu.Link>
       </NavigationMenu.Item>

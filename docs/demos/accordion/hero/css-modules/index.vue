@@ -26,13 +26,13 @@ const PlusIcon: FunctionalComponent = () =>
     <Accordion.Item :class="styles.Item">
       <Accordion.Header :class="styles.Header">
         <Accordion.Trigger :class="styles.Trigger">
-          What is Base UI?
+          What is Vase UI?
           <PlusIcon :class="styles.Icon" />
         </Accordion.Trigger>
       </Accordion.Header>
       <Accordion.Panel :class="styles.Panel">
         <div :class="styles.Content">
-          Base UI is a library of high-quality unstyled React components for design systems and web
+          Vase UI is a library of unstyled, accessible Vue components for design systems and web
           apps.
         </div>
       </Accordion.Panel>
@@ -61,7 +61,7 @@ const PlusIcon: FunctionalComponent = () =>
         </Accordion.Trigger>
       </Accordion.Header>
       <Accordion.Panel :class="styles.Panel">
-        <div :class="styles.Content">Of course! Base UI is free and open source.</div>
+        <div :class="styles.Content">Yes. Vase UI is free and open source.</div>
       </Accordion.Panel>
     </Accordion.Item>
   </Accordion.Root>

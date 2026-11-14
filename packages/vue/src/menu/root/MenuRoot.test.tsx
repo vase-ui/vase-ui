@@ -707,6 +707,61 @@ describe('<Menu.Root />', () => {
     });
   });
 
+  describe('dismissal', () => {
+    // The components of each menu are not in the components of the menu above it, so only the
+    // popup tree tells a menu that a press is in a menu below it.
+    it('keeps a menu open for a press in a menu that a trigger in its popup opened', async () => {
+      const middleHandle = Menu.createHandle();
+      const innerHandle = Menu.createHandle();
+      const { findByTestId, getByRole, queryByTestId } = await render(
+        <div>
+          <Menu.Root open>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Trigger handle={middleHandle} id="middle-trigger">
+                    Middle
+                  </Menu.Trigger>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+          <Menu.Root handle={middleHandle}>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup data-testid="middle-menu">
+                  <Menu.Trigger handle={innerHandle} id="inner-trigger">
+                    Inner
+                  </Menu.Trigger>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+          <Menu.Root handle={innerHandle}>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup data-testid="inner-menu">
+                  <Menu.Item>Beta</Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </div>,
+      );
+
+      middleHandle.open('middle-trigger');
+      await findByTestId('middle-menu');
+      innerHandle.open('inner-trigger');
+      await findByTestId('inner-menu');
+
+      await fireEvent.pointerDown(getByRole('menuitem', { name: 'Beta' }));
+      await flushMicrotasks();
+
+      expect(queryByTestId('inner-menu')).not.toBe(null);
+      expect(queryByTestId('middle-menu')).not.toBe(null);
+    });
+  });
+
   describe('popup', () => {
     it('sets allowMouseEnter for a mouse move over the popup, and clears it after the unmount', async () => {
       const probe = createProbe();

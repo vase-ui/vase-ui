@@ -1,3 +1,5 @@
+const base = import.meta.env.BASE_URL;
+
 export const audienceMenus = [
   {
     value: 'developers',
@@ -8,12 +10,12 @@ export const audienceMenus = [
       'Start with accessible parts and shape them to your app instead of working around a preset design system.',
     links: [
       {
-        href: '/react/overview/quick-start',
+        href: `${base}quick-start`,
         title: 'Quick start',
-        description: 'Install Base UI and get your first interactive primitive on screen fast.',
+        description: 'Install Vase UI and get your first interactive component on screen fast.',
       },
       {
-        href: '/react/handbook/composition',
+        href: `${base}handbook/composition`,
         title: 'Composition',
         description: 'Wrap and combine parts to match your product structure without hacks.',
       },
@@ -28,24 +30,19 @@ export const audienceMenus = [
       'Connect tokens, states, and accessibility rules once, then give every product team the same solid starting point.',
     links: [
       {
-        href: '/react/handbook/styling',
+        href: `${base}handbook/styling`,
         title: 'Styling',
         description: 'Map tokens and component states to your own CSS or utility setup.',
       },
       {
-        href: '/react/overview/accessibility',
-        title: 'Accessibility',
-        description: 'Review keyboard support and semantic defaults before anything ships.',
-      },
-      {
-        href: '/react/components/tooltip',
+        href: `${base}components/tooltip`,
         title: 'Tooltip',
         description: 'Set one clear pattern for lightweight help, hints, and field guidance.',
       },
       {
-        href: '/react/components/popover',
-        title: 'Popover',
-        description: 'Handle richer anchored panels like menus, inspectors, and onboarding.',
+        href: `${base}components/preview-card`,
+        title: 'Preview Card',
+        description: 'Preview the page behind a link in a popup.',
       },
     ],
   },
@@ -58,17 +55,18 @@ export const audienceMenus = [
       'Use the docs to align on quality bars, upgrades, and extension points while still leaving teams space to customize.',
     links: [
       {
-        href: '/react/overview/releases',
-        title: 'Releases',
-        description: 'Track version changes and migration notes before upgrades surprise teams.',
+        href: `${base}parity`,
+        title: 'Parity',
+        description:
+          'Track which changes are mirrored and which are queued before upgrades surprise teams.',
       },
       {
-        href: '/react/handbook/typescript',
+        href: `${base}handbook/typescript`,
         title: 'TypeScript',
-        description: 'See how the primitives type custom wrappers and shared abstractions.',
+        description: 'See how Vase UI types custom wrappers and shared abstractions.',
       },
       {
-        href: '/react/handbook/forms',
+        href: `${base}handbook/forms`,
         title: 'Forms',
         description: 'Standardize validation and field patterns teams reach for constantly.',
       },
@@ -83,17 +81,17 @@ export const audienceMenus = [
       'Cover the hard interaction details now so your team can spend more time on the product ideas that actually differentiate you.',
     links: [
       {
-        href: '/react/overview/quick-start',
+        href: `${base}quick-start`,
         title: 'Quick start',
         description: 'Get the package installed and your first component working in minutes.',
       },
       {
-        href: '/react/components/menu',
-        title: 'Menu',
-        description: 'Add action menus with keyboard support and focus handling already done.',
+        href: `${base}components/navigation-menu`,
+        title: 'Navigation Menu',
+        description: 'Add navigation menus with keyboard support and focus handling already done.',
       },
       {
-        href: '/react/components/dialog',
+        href: `${base}components/dialog`,
         title: 'Dialog',
         description: 'Launch settings or upgrade flows without rebuilding focus management.',
       },
@@ -109,18 +107,18 @@ export const guidesPanel = {
 
 export const guideLinks = [
   {
-    href: '/react/overview/accessibility',
-    title: 'Accessibility handbook',
-    description: 'Take a practical pass over focus order, semantics, and keyboard support.',
+    href: `${base}quick-start`,
+    title: 'Quick start',
+    description: 'Install the package and put your first component on the page.',
   },
   {
-    href: '/react/handbook/composition',
-    title: 'Composition handbook',
+    href: `${base}handbook/composition`,
+    title: 'Composition',
     description: 'Learn when to wrap parts, share behavior, and expose flexible APIs.',
   },
   {
-    href: '/react/handbook/styling',
-    title: 'Styling handbook',
+    href: `${base}handbook/styling`,
+    title: 'Styling',
     description: 'Apply tokens and state styles without fighting the underlying markup.',
   },
 ] as const;
