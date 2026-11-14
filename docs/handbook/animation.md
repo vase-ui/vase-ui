@@ -6,8 +6,8 @@ description: A guide to animating Vase UI components.
 <script setup lang="ts">
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
 import ManualUnmount from '../examples/animation/demos/manual-unmount/index.vue';
-import MotionKeepMounted from '../examples/animation/demos/motion-keep-mounted/index.vue';
-import MotionPopup from '../examples/animation/demos/motion-popup/index.vue';
+import MotionKeepMounted from '../demos/handbook-animation/animated-popover-motion-keep-mounted-true/css-modules/index.vue';
+import MotionPopup from '../demos/handbook-animation/animated-popover-motion-keep-mounted-false/css-modules/index.vue';
 import MotionSelect from '../demos/handbook-animation/animated-select-motion/css-modules/index.vue';
 </script>
 
@@ -103,9 +103,9 @@ Vase UI ends the exit when the animation that it finds ends. If it finds none, i
 
 ### Animate a popup with motion-v
 
-The examples of this section and the next section use [Dialog](/components/dialog).
+The examples of this section and the next section use [Popover](/components/popover).
 
-1. Give `motion.div` to the `#render` slot of `Dialog.Popup`. Bind the `props` of the slot on it, cast to `MotionProps`. The cast is for the type of `style`, which differs between Vue and `motion-v`.
+1. Give `motion.div` to the `#render` slot of `Popover.Popup`. Bind the `props` of the slot on it, cast to `MotionProps`. The cast is for the type of `style`, which differs between Vue and `motion-v`.
 2. Set `initial` to the closed style.
 3. Compute `animate` from `state.open`.
 
@@ -115,7 +115,9 @@ The examples of this section and the next section use [Dialog](/components/dialo
 
 ::: code-group
 
-<<< ../examples/animation/demos/motion-popup/index.vue{12,14,16-17}
+<<< ../demos/handbook-animation/animated-popover-motion-keep-mounted-false/css-modules/index.vue{14,16-18}
+
+<<< ../demos/handbook-animation/animated-popover-motion-keep-mounted-false/css-modules/index.module.css
 
 :::
 
@@ -137,7 +139,9 @@ A popup stays in the DOM while it is closed when its portal has `keepMounted`. T
 
 ::: code-group
 
-<<< ../examples/animation/demos/motion-keep-mounted/index.vue{10,12,14,16-17}
+<<< ../demos/handbook-animation/animated-popover-motion-keep-mounted-true/css-modules/index.vue{11,14,16-18}
+
+<<< ../demos/handbook-animation/animated-popover-motion-keep-mounted-true/css-modules/index.module.css
 
 :::
 
