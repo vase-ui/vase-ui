@@ -10,7 +10,7 @@ import {
   isListIndexDisabled,
 } from '../listIndex';
 
-type CompositeGridElementsRef = Readonly<Ref<ReadonlyArray<HTMLElement | null>>>;
+type CompositeGridElementsRef = Readonly<Ref<readonly (HTMLElement | null)[]>>;
 type CompositeGridOnLoop = (event: KeyboardEvent, prevIndex: number, nextIndex: number) => number;
 
 /** The number of columns (`width`) and of rows (`height`) that an item covers. */
@@ -77,7 +77,7 @@ export function gridNavigation(
     } = state;
 
     const sizes =
-      itemSizes ||
+      itemSizes ??
       Array.from({ length: elementsRef.value.length }, () => ({
         width: 1,
         height: 1,
@@ -95,7 +95,8 @@ export function gridNavigation(
       -1,
     );
     const cellIndex = getGridNavigatedIndex(
-      cellMap.map((itemIndex) => (itemIndex != null ? elementsRef.value[itemIndex] : null)),
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- A cell holds the index of an item, and `itemSizes` has a size for each item.
+      cellMap.map((itemIndex) => (itemIndex != null ? elementsRef.value[itemIndex]! : null)),
       {
         event,
         orientation,
@@ -105,7 +106,7 @@ export function gridNavigation(
         // An empty cell is disabled, so the navigation cannot land in it.
         disabledIndices: getGridCellIndices(
           [
-            ...(disabledIndices ||
+            ...(disabledIndices ??
               elementsRef.value.map((_, index) =>
                 isListIndexDisabled(elementsRef.value, index) ? index : undefined,
               )),

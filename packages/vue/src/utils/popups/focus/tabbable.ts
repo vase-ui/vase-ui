@@ -219,13 +219,13 @@ function getTabbableIn(container: HTMLElement, dir: 1 | -1): FocusableElement | 
 
 export function getNextTabbable(referenceElement: Element | null): FocusableElement | null {
   return (
-    getTabbableIn(ownerDocument(referenceElement).body, 1) || (referenceElement as FocusableElement)
+    getTabbableIn(ownerDocument(referenceElement).body, 1) ?? (referenceElement as FocusableElement)
   );
 }
 
 export function getPreviousTabbable(referenceElement: Element | null): FocusableElement | null {
   return (
-    getTabbableIn(ownerDocument(referenceElement).body, -1) ||
+    getTabbableIn(ownerDocument(referenceElement).body, -1) ??
     (referenceElement as FocusableElement)
   );
 }
@@ -249,7 +249,8 @@ export function getTabbableNearElement(
 
   const candidates = list.filter(isFocusableElement);
   for (let offset = 1; offset < list.length; offset += 1) {
-    const element = list[(index + direction * offset + list.length) % list.length];
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The remainder of a division by the length is an index of `list`.
+    const element = list[(index + direction * offset + list.length) % list.length]!;
     if (
       !contains(exclude, element) &&
       isTabbable(element) &&
@@ -259,11 +260,12 @@ export function getTabbableNearElement(
     }
   }
 
-  return list[index];
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- `indexOf` found the element, so `index` is an index of `list`.
+  return list[index]!;
 }
 
 export function isOutsideEvent(event: FocusEvent, container?: Element) {
-  const containerElement = container || (event.currentTarget as Element);
+  const containerElement = container ?? (event.currentTarget as Element);
   const relatedTarget = event.relatedTarget as HTMLElement | null;
   return !relatedTarget || !contains(containerElement, relatedTarget);
 }

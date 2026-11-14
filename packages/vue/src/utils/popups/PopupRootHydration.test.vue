@@ -14,7 +14,7 @@ const props = withDefaults(
     triggerId?: string | null | undefined;
     defaultTriggerId?: string | null | undefined;
     // The ids of the triggers in the root. `null` gives a trigger a generated id.
-    triggers?: Array<string | null> | undefined;
+    triggers?: (string | null)[] | undefined;
     detachedBefore?: string | undefined;
     detachedAfter?: string | undefined;
     popupId?: string | undefined;

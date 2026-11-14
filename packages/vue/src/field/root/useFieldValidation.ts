@@ -17,7 +17,7 @@ import { mergeProps } from '../../merge-props';
 
 export type { RegisteredInput, RegisteredInputs, UseFieldValidationReturnValue };
 
-const validityKeys = Object.keys(DEFAULT_VALIDITY_STATE) as Array<keyof ValidityState>;
+const validityKeys = Object.keys(DEFAULT_VALIDITY_STATE) as (keyof ValidityState)[];
 
 type ValidateResult = string | string[] | null | void;
 
@@ -69,7 +69,7 @@ function makeState(customError: boolean): Record<keyof ValidityState, boolean> {
 }
 
 function getNativeErrors(element: HTMLInputElement | null): string[] {
-  return element && element.validationMessage ? [element.validationMessage] : [];
+  return element?.validationMessage ? [element.validationMessage] : [];
 }
 
 export function useFieldValidation(
@@ -119,7 +119,7 @@ export function useFieldValidation(
 
   function getInputControl() {
     const element = findRepresentativeInput(registeredInputs, formElementRef.value);
-    return (element && toValue(registeredInputs.get(element)?.controlRef)) || null;
+    return (element && toValue(registeredInputs.get(element)?.controlRef)) ?? null;
   }
 
   function setCustomValidity(element: HTMLInputElement, message: string) {
@@ -330,10 +330,10 @@ export function useFieldValidation(
 
     if (validateOnChange && value !== '' && debounceTime) {
       timeout.start(debounceTime, () => {
-        commit(value);
+        void commit(value);
       });
     } else {
-      commit(value, false, !validateOnChange);
+      void commit(value, false, !validateOnChange);
     }
   }
 

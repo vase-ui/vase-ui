@@ -23,7 +23,7 @@ const activeEffectMessage =
  * and the cases that expect an error of `setup` show what that release does.
  */
 export function isReportedMessage(text: string, vueVersion: string): boolean {
-  const isVue36Prerelease = /^3\.6\.0-/.test(vueVersion);
+  const isVue36Prerelease = vueVersion.startsWith('3.6.0-');
   return !(isVue36Prerelease && text === activeEffectMessage);
 }
 

@@ -22,7 +22,7 @@ const markerName = createAttribute('inert');
 interface Mark {
   name: string;
   value: string;
-  isSet(element: Element): boolean;
+  isSet: (element: Element) => boolean;
 }
 
 const MARKS: Mark[] = [
@@ -164,7 +164,8 @@ function applyLocks(marks: ModalMarks) {
       });
     });
 
-    const written = marks.written[name];
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- `written` has a set for each name in `MARKS`.
+    const written = marks.written[name]!;
     written.forEach((element) => {
       if (!wanted.has(element)) {
         element.removeAttribute(name);

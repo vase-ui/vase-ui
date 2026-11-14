@@ -28,9 +28,9 @@ function getDevElementIds(map: PopupTriggerMap) {
  * trigger from each reader and keeps its place.
  */
 export class PopupTriggerMap {
-  private idMap: Map<string, Element> = new Map();
+  private idMap = new Map<string, Element>();
 
-  private inactiveIds: Set<string> = new Set();
+  private inactiveIds = new Set<string>();
 
   /**
    * Hides the entry with the given ID from each reader while `active` is `false`. The entry keeps

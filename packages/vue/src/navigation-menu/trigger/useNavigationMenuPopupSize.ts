@@ -22,7 +22,7 @@ const DEFAULT_SIZE = { width: 0, height: 0 };
  * Call it in the `setup` of the trigger.
  */
 export function useNavigationMenuPopupSize(
-  itemValue: ComputedRef<any>,
+  itemValue: ComputedRef,
   isActiveItem: ComputedRef<boolean>,
 ) {
   const {
@@ -251,6 +251,7 @@ export function useNavigationMenuPopupSize(
 
     function handleResize() {
       resizeFrame.cancel();
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The guard above returns when `popup` or `positioner` is `null`, and a function declaration keeps no narrowing.
       resizeFrame.request(() => syncCurrentSize(popup!, positioner!));
     }
 

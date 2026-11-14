@@ -46,13 +46,13 @@ const offsetCases = [
   },
 ] as const;
 
-const callbackDataCases: Array<{
+const callbackDataCases: {
   description: string;
   positioner: Pick<PositionerTestProps, 'side' | 'align'>;
   key: 'side' | 'align';
   direction: 'ltr' | 'rtl';
   expected: string;
-}> = [
+}[] = [
   {
     description: 'the latest side after a flip',
     positioner: { side: 'left' },

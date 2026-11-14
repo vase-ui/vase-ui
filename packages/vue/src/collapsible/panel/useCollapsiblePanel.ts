@@ -106,7 +106,7 @@ export function useCollapsiblePanel(
   );
 
   // A keyframe close uses the last measured size. `false` only clears the current dimensions.
-  function setDimensions(nextDimensions: Dimensions, shouldCacheMeasurement: boolean = true) {
+  function setDimensions(nextDimensions: Dimensions, shouldCacheMeasurement = true) {
     if (shouldCacheMeasurement) {
       lastMeasuredDimensions.value = nextDimensions;
     }
@@ -151,7 +151,7 @@ export function useCollapsiblePanel(
   // pixels. The height then goes from `auto` to `0`, and no transition runs. A read of the layout
   // after the update gives the browser that style.
   function readLayoutAfterUpdate() {
-    nextTick(() => {
+    void nextTick(() => {
       panel?.getBoundingClientRect();
     });
   }
