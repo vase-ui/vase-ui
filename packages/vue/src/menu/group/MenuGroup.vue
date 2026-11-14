@@ -14,6 +14,7 @@ import { EMPTY_OBJECT } from '../../common/empty';
 import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { useMenuFilterImpl } from '../filter-root/MenuFilterContext';
 import { MenuGroupContext } from './MenuGroupContext';
 
 defineOptions({ inheritAttrs: false });
@@ -29,11 +30,18 @@ defineSlots<{
 const labelIds = createIdRegistry();
 provide(MenuGroupContext, labelIds.registerId);
 
+// A filterable menu hides the group, label included, once the query filters out all of its items.
+const filterGroup = useMenuFilterImpl()?.useGroup();
+
 const state: MenuGroupState = EMPTY_OBJECT;
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  props: (attrs) => [{ role: 'group', 'aria-labelledby': labelIds.ids.value.at(-1) }, attrs],
+  props: (attrs) => [
+    { role: 'group', 'aria-labelledby': labelIds.ids.value.at(-1) },
+    attrs,
+    filterGroup?.hiddenProps.value,
+  ],
 });
 
 defineExpose({ element });

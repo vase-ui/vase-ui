@@ -76,6 +76,7 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { REGULAR_ITEM, useMenuItem } from '../item/useMenuItem';
+import { useMenuFilterItem } from '../filter-root/MenuFilterContext';
 import { useMenuRootContext } from '../root/MenuRootContext';
 import { itemMapping } from '../utils/stateAttributesMapping';
 import { MenuCheckboxItemContext } from './MenuCheckboxItemContext';
@@ -114,6 +115,9 @@ const [checked, setChecked] = useControlled({
 const { store } = useMenuRootContext();
 
 const listItem = useCompositeListItem({ label: () => props.label });
+// A filterable menu hides the element of an item that the query filters out. The state of the
+// item stays in this part, so a hidden item keeps it.
+const filterItem = useMenuFilterItem({ label: () => props.label });
 const itemId = useVaseUiId(() => props.id);
 
 const highlighted = computed(() => store.select('isActive', listItem.index.value));
@@ -155,7 +159,7 @@ function handleClick(event: MouseEvent) {
 const { element, elementProps } = useRenderElement('div', props, {
   state,
   stateAttributesMapping: itemMapping,
-  ref: [itemRef, listItem.ref],
+  ref: [itemRef, listItem.ref, filterItem.ref],
   props: (attrs) => [
     store.select('itemProps'),
     {
@@ -171,7 +175,11 @@ const { element, elementProps } = useRenderElement('div', props, {
 defineExpose({ element });
 </script>
 
+<!-- prettier-ignore -->
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+  <template v-if="filterItem.visible.value">
+    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+    <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+  </template>
+  <component :is="filterItem.HiddenItemText" v-else :set-text="filterItem.setHiddenText"><slot :state="state" /></component>
 </template>

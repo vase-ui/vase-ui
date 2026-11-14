@@ -80,6 +80,12 @@ export interface UseMenuRootOptions {
    * @default true
    */
   allowEscape?: MaybeRefOrGetter<boolean | undefined>;
+  /**
+   * Whether the highlight clears when the pointer leaves an item. It is a value, a ref or a
+   * getter.
+   * @default true
+   */
+  resetOnPointerLeave?: MaybeRefOrGetter<boolean | undefined>;
 }
 
 /**
@@ -90,7 +96,9 @@ export interface UseMenuRootOptions {
  * @param props The props of the root. A submenu root gives fewer props, because each prop is
  * optional.
  * @param options What the part gives: its emit functions and the internal props of Base UI.
- * @returns The payload of the active trigger and the actions that the part exposes.
+ * @returns The payload of the active trigger, the actions that the part exposes, and the context
+ * that the root provides. A component cannot inject what it provides, so a root that needs the
+ * context takes it from here.
  */
 export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: UseMenuRootOptions) {
   const { isSubmenu = false, virtualFocus = false } = options;
@@ -395,6 +403,7 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
     // filter highlights automatically.
     focusItemOnOpen: () => (virtualFocus ? store.select('keyboardOpen') : undefined),
     allowEscape: () => virtualFocus && loopFocus.value && allowEscape.value,
+    resetOnPointerLeave: options.resetOnPointerLeave,
     orientation,
     // A virtual-focus list can navigate on either axis, but its trigger always opens on the
     // vertical one.
@@ -562,5 +571,5 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
     provideFloatingTree(floatingTreeRoot);
   }
 
-  return { payload, actions };
+  return { payload, actions, context };
 }

@@ -44,6 +44,7 @@ import { useControlled } from '../../common/useControlled';
 import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { useMenuFilterImpl } from '../filter-root/MenuFilterContext';
 import { MenuGroupContext } from '../group/MenuGroupContext';
 import { MenuRadioGroupContext } from './MenuRadioGroupContext';
 
@@ -92,6 +93,9 @@ const labelIds = createIdRegistry();
 provide(MenuGroupContext, labelIds.registerId);
 provide(MenuRadioGroupContext, { value, setValue, disabled });
 
+// A filterable menu hides the group, label included, once the query filters out all of its items.
+const filterGroup = useMenuFilterImpl()?.useGroup();
+
 const state = computed<MenuRadioGroupState>(() => ({ disabled: props.disabled }));
 
 const { element, elementProps } = useRenderElement('div', props, {
@@ -105,6 +109,7 @@ const { element, elementProps } = useRenderElement('div', props, {
         'aria-disabled': props.disabled || undefined,
       },
       elementAttrs,
+      filterGroup?.hiddenProps.value,
     ];
   },
 });
