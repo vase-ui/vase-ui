@@ -261,10 +261,10 @@ describe('<Tooltip.Root />', () => {
 
     await render(
       <div>
-        <Tooltip.Trigger handle={handle} id="trigger-1" style={ignoreRealPointer}>
+        <Tooltip.Trigger handle={handle} id="trigger-1">
           Trigger 1
         </Tooltip.Trigger>
-        <Tooltip.Trigger handle={handle} id="trigger-2" style={ignoreRealPointer}>
+        <Tooltip.Trigger handle={handle} id="trigger-2">
           Trigger 2
         </Tooltip.Trigger>
         <Tooltip.Root handle={handle} trackCursorAxis="both">

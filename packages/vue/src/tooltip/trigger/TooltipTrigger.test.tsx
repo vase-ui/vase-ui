@@ -323,7 +323,7 @@ describe('<Tooltip.Trigger />', () => {
   it('opens only the tooltip of a nested trigger that gets the focus', async () => {
     await render(
       <Tooltip.Root>
-        <Tooltip.Trigger as="span" style={{ pointerEvents: 'none' }}>
+        <Tooltip.Trigger as="span">
           Outer
           <Tooltip.Root>
             <Tooltip.Trigger>Inner</Tooltip.Trigger>
@@ -353,15 +353,10 @@ describe('<Tooltip.Trigger />', () => {
     const handle = Tooltip.createHandle();
     await render(
       <>
-        <Tooltip.Trigger handle={handle} id="first" style={{ pointerEvents: 'none' }}>
+        <Tooltip.Trigger handle={handle} id="first">
           First
         </Tooltip.Trigger>
-        <Tooltip.Trigger
-          handle={handle}
-          id="second"
-          closeOnClick={false}
-          style={{ pointerEvents: 'none' }}
-        >
+        <Tooltip.Trigger handle={handle} id="second" closeOnClick={false}>
           Second
         </Tooltip.Trigger>
         <Tooltip.Root handle={handle} trackCursorAxis="both">

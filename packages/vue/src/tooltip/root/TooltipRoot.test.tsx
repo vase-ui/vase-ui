@@ -1220,8 +1220,7 @@ describe('<Tooltip.Root />', () => {
     });
   });
 
-  // The cases dispatch hover events, so the triggers ignore the real pointer.
-  const cursorTrigger = { width: '300px', height: '40px', ...ignoreRealPointer };
+  const cursorTrigger = { width: '300px', height: '40px' };
 
   function getCenterX(element: Element) {
     const rect = element.getBoundingClientRect();
@@ -1494,11 +1493,7 @@ describe('<Tooltip.Root />', () => {
       (props: { disableHoverablePopup?: boolean }) => () => (
         <div style={{ paddingTop: '100px', paddingLeft: '100px' }}>
           <Tooltip.Root disableHoverablePopup={props.disableHoverablePopup}>
-            <Tooltip.Trigger
-              delay={0}
-              closeDelay={0}
-              style={{ width: '120px', height: '40px', ...ignoreRealPointer }}
-            >
+            <Tooltip.Trigger delay={0} closeDelay={0} style={{ width: '120px', height: '40px' }}>
               Trigger
             </Tooltip.Trigger>
             <Tooltip.Portal>
@@ -1880,7 +1875,7 @@ describe('<Tooltip.Root />', () => {
           disableHoverablePopup={disableHoverablePopup.value}
           trackCursorAxis={trackCursorAxis.value}
         >
-          <Tooltip.Trigger style={ignoreRealPointer}>Trigger</Tooltip.Trigger>
+          <Tooltip.Trigger>Trigger</Tooltip.Trigger>
           {renderPortal({})}
         </Tooltip.Root>
       ));
@@ -1975,7 +1970,7 @@ describe('nested tooltips', () => {
   it('should not open the outer tooltip when hovering over a nested tooltip trigger', async () => {
     await render(
       <Tooltip.Root>
-        <Tooltip.Trigger data-testid="outer-trigger" as="span" style={ignoreRealPointer}>
+        <Tooltip.Trigger data-testid="outer-trigger" as="span">
           Outer
           <Tooltip.Root>
             <Tooltip.Trigger data-testid="inner-trigger">Inner</Tooltip.Trigger>
@@ -2015,7 +2010,7 @@ describe('nested tooltips', () => {
   it('should not open the outer tooltip when moving between sibling nested triggers', async () => {
     await render(
       <Tooltip.Root>
-        <Tooltip.Trigger data-testid="outer-trigger" as="span" style={ignoreRealPointer}>
+        <Tooltip.Trigger data-testid="outer-trigger" as="span">
           Outer
           <Tooltip.Root>
             <Tooltip.Trigger data-testid="inner-a-trigger">Inner A</Tooltip.Trigger>
@@ -2080,7 +2075,7 @@ describe('nested tooltips', () => {
   it('should not open ancestor tooltips when hovering over a third-level nested trigger', async () => {
     await render(
       <Tooltip.Root>
-        <Tooltip.Trigger data-testid="grandparent-trigger" as="span" style={ignoreRealPointer}>
+        <Tooltip.Trigger data-testid="grandparent-trigger" as="span">
           Grandparent
           <Tooltip.Root>
             <Tooltip.Trigger data-testid="parent-trigger" as="span">
@@ -2137,7 +2132,7 @@ describe('nested tooltips', () => {
   it('should open the outer tooltip when moving from a nested trigger to the parent area with zero delay', async () => {
     await render(
       <Tooltip.Root>
-        <Tooltip.Trigger data-testid="outer-trigger" as="span" delay={0} style={ignoreRealPointer}>
+        <Tooltip.Trigger data-testid="outer-trigger" as="span" delay={0}>
           <span data-testid="outer-area">Outer</span>
           <Tooltip.Root>
             <Tooltip.Trigger data-testid="inner-trigger">Inner</Tooltip.Trigger>
@@ -2179,13 +2174,7 @@ describe('nested tooltips', () => {
   it('should not open a disabled outer tooltip when moving from a nested trigger to the parent area with zero delay', async () => {
     await render(
       <Tooltip.Root>
-        <Tooltip.Trigger
-          data-testid="outer-trigger"
-          as="span"
-          delay={0}
-          disabled
-          style={ignoreRealPointer}
-        >
+        <Tooltip.Trigger data-testid="outer-trigger" as="span" delay={0} disabled>
           <span data-testid="outer-area">Outer</span>
           <Tooltip.Root>
             <Tooltip.Trigger data-testid="inner-trigger">Inner</Tooltip.Trigger>
@@ -2229,12 +2218,7 @@ describe('nested tooltips', () => {
 
     await render(
       <Tooltip.Root>
-        <Tooltip.Trigger
-          data-testid="outer-trigger"
-          as="span"
-          delay={delay}
-          style={ignoreRealPointer}
-        >
+        <Tooltip.Trigger data-testid="outer-trigger" as="span" delay={delay}>
           <span data-testid="outer-area">Outer</span>
           <Tooltip.Root>
             <Tooltip.Trigger data-testid="inner-trigger">Inner</Tooltip.Trigger>
@@ -2285,12 +2269,7 @@ describe('nested tooltips', () => {
 
     await render(
       <Tooltip.Root>
-        <Tooltip.Trigger
-          data-testid="outer-trigger"
-          as="span"
-          delay={delay}
-          style={ignoreRealPointer}
-        >
+        <Tooltip.Trigger data-testid="outer-trigger" as="span" delay={delay}>
           <span data-testid="outer-area">Outer</span>
           <Tooltip.Root>
             <Tooltip.Trigger data-testid="inner-trigger" delay={0}>
@@ -2340,12 +2319,7 @@ describe('nested tooltips', () => {
 
     await render(
       <Tooltip.Root>
-        <Tooltip.Trigger
-          data-testid="outer-trigger"
-          as="span"
-          delay={delay}
-          style={ignoreRealPointer}
-        >
+        <Tooltip.Trigger data-testid="outer-trigger" as="span" delay={delay}>
           <span data-testid="outer-area">Outer</span>
           <Tooltip.Root>
             <Tooltip.Trigger data-testid="inner-trigger">Inner</Tooltip.Trigger>
@@ -2393,7 +2367,7 @@ describe('nested tooltips', () => {
   it('should not open the outer tooltip when the pointer moves onto a nested trigger before the delay expires', async () => {
     await render(
       <Tooltip.Root>
-        <Tooltip.Trigger data-testid="outer-trigger" as="span" style={ignoreRealPointer}>
+        <Tooltip.Trigger data-testid="outer-trigger" as="span">
           <span data-testid="outer-area">Outer</span>
           <Tooltip.Root>
             <Tooltip.Trigger data-testid="inner-trigger">Inner</Tooltip.Trigger>
@@ -2439,12 +2413,7 @@ describe('nested tooltips', () => {
 
     await render(
       <Tooltip.Root>
-        <Tooltip.Trigger
-          data-testid="outer-trigger"
-          as="span"
-          delay={delay}
-          style={ignoreRealPointer}
-        >
+        <Tooltip.Trigger data-testid="outer-trigger" as="span" delay={delay}>
           <span data-testid="outer-area">Outer</span>
           <Tooltip.Root>
             <Tooltip.Trigger data-testid="inner-trigger" delay={delay * 10}>
@@ -2499,7 +2468,7 @@ describe('nested tooltips', () => {
   it('should close the outer tooltip when the pointer moves from outer area onto a nested trigger', async () => {
     await render(
       <Tooltip.Root>
-        <Tooltip.Trigger data-testid="outer-trigger" as="span" style={ignoreRealPointer}>
+        <Tooltip.Trigger data-testid="outer-trigger" as="span">
           <span data-testid="outer-area">Outer</span>
           <Tooltip.Root>
             <Tooltip.Trigger data-testid="inner-trigger">Inner</Tooltip.Trigger>
@@ -2548,7 +2517,6 @@ describe('nested tooltips', () => {
       <Tooltip.Root>
         <Tooltip.Trigger
           data-testid="outer-trigger"
-          style={ignoreRealPointer}
           v-slots={{
             render: ({ props }: { props: HTMLProps }) => (
               <span {...props} tabindex={0}>
@@ -2600,7 +2568,7 @@ describe('nested tooltips', () => {
 
     await render(
       <Tooltip.Root open onOpenChange={onOpenChange}>
-        <Tooltip.Trigger data-testid="outer-trigger" as="span" style={ignoreRealPointer}>
+        <Tooltip.Trigger data-testid="outer-trigger" as="span">
           <span>Outer</span>
           <Tooltip.Root>
             <Tooltip.Trigger data-testid="inner-trigger" delay={OPEN_DELAY * 10}>
@@ -2642,7 +2610,7 @@ describe('nested tooltips', () => {
   it('should allow the parent tooltip to open when a nested trigger is disabled', async () => {
     await render(
       <Tooltip.Root>
-        <Tooltip.Trigger data-testid="outer-trigger" as="span" style={ignoreRealPointer}>
+        <Tooltip.Trigger data-testid="outer-trigger" as="span">
           Outer
           <Tooltip.Root>
             <Tooltip.Trigger data-testid="inner-trigger" disabled>
@@ -2692,7 +2660,7 @@ describe('nested tooltips', () => {
       await render(
         <Teleport to={container}>
           <Tooltip.Root>
-            <Tooltip.Trigger data-testid="outer-trigger" as="span" style={ignoreRealPointer}>
+            <Tooltip.Trigger data-testid="outer-trigger" as="span">
               Outer
               <Tooltip.Root>
                 <Tooltip.Trigger data-testid="inner-trigger" as="div">
@@ -2755,7 +2723,7 @@ describe('nested tooltips', () => {
   it('falls back to the event target when the composed path is empty', async () => {
     await render(
       <Tooltip.Root>
-        <Tooltip.Trigger data-testid="outer-trigger" as="span" style={ignoreRealPointer}>
+        <Tooltip.Trigger data-testid="outer-trigger" as="span">
           Outer
           <Tooltip.Root>
             <Tooltip.Trigger data-testid="inner-trigger">Inner</Tooltip.Trigger>
@@ -2792,7 +2760,7 @@ describe('nested tooltips', () => {
   it('should open the outer tooltip when hovering over the non-nested area', async () => {
     await render(
       <Tooltip.Root>
-        <Tooltip.Trigger data-testid="outer-trigger" as="span" style={ignoreRealPointer}>
+        <Tooltip.Trigger data-testid="outer-trigger" as="span">
           <span data-testid="outer-area">Outer</span>
           <Tooltip.Root>
             <Tooltip.Trigger data-testid="inner-trigger">Inner</Tooltip.Trigger>
@@ -2828,7 +2796,7 @@ describe('nested tooltips', () => {
   it('should not reopen the outer tooltip via the local reopen path for touch pointers', async () => {
     await render(
       <Tooltip.Root>
-        <Tooltip.Trigger data-testid="outer-trigger" as="span" delay={0} style={ignoreRealPointer}>
+        <Tooltip.Trigger data-testid="outer-trigger" as="span" delay={0}>
           <span data-testid="outer-area">Outer</span>
           <Tooltip.Root>
             <Tooltip.Trigger data-testid="inner-trigger">Inner</Tooltip.Trigger>
@@ -2871,7 +2839,7 @@ describe('nested tooltips', () => {
   it('should allow mouse hover after leaving a touch interaction', async () => {
     await render(
       <Tooltip.Root>
-        <Tooltip.Trigger data-testid="outer-trigger" as="span" delay={0} style={ignoreRealPointer}>
+        <Tooltip.Trigger data-testid="outer-trigger" as="span" delay={0}>
           <span data-testid="outer-area">Outer</span>
           <Tooltip.Root>
             <Tooltip.Trigger data-testid="inner-trigger">Inner</Tooltip.Trigger>
@@ -2911,7 +2879,7 @@ describe('nested tooltips', () => {
   it('should not open the outer tooltip when moving from the outer popup to a nested trigger', async () => {
     await render(
       <Tooltip.Root>
-        <Tooltip.Trigger data-testid="outer-trigger" as="span" style={ignoreRealPointer}>
+        <Tooltip.Trigger data-testid="outer-trigger" as="span">
           <span data-testid="outer-area">Outer</span>
           <Tooltip.Root>
             <Tooltip.Trigger data-testid="inner-trigger" delay={OPEN_DELAY * 10}>
@@ -2967,7 +2935,7 @@ describe('nested tooltips', () => {
   it('should suppress the safePolygon-driven open while a nested trigger is hovered', async () => {
     await render(
       <Tooltip.Root>
-        <Tooltip.Trigger data-testid="outer-trigger" as="span" style={ignoreRealPointer}>
+        <Tooltip.Trigger data-testid="outer-trigger" as="span">
           <span data-testid="outer-area">Outer</span>
           <Tooltip.Root>
             <Tooltip.Trigger data-testid="inner-trigger" delay={OPEN_DELAY * 10}>

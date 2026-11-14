@@ -116,10 +116,7 @@ describe('<Tooltip.Popup />', () => {
     await render(
       <div style={{ paddingTop: '100px', paddingLeft: '100px' }}>
         <Tooltip.Root>
-          <Tooltip.Trigger
-            delay={0}
-            style={{ width: '120px', height: '40px', pointerEvents: 'none' }}
-          >
+          <Tooltip.Trigger delay={0} style={{ width: '120px', height: '40px' }}>
             Trigger
           </Tooltip.Trigger>
           <Tooltip.Portal>
