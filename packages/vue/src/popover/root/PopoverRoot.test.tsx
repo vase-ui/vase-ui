@@ -6,6 +6,7 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  popupConformanceTests,
   renderOnServer,
   screen,
   waitFor,
@@ -64,6 +65,22 @@ function createTreeReports() {
 
 describe('<Popover.Root />', () => {
   const { render } = createRenderer();
+
+  popupConformanceTests({
+    createComponent: (props) => (
+      <Popover.Root {...props.root}>
+        <Popover.Trigger {...props.trigger}>Open menu</Popover.Trigger>
+        <Popover.Portal {...props.portal}>
+          <Popover.Positioner>
+            <Popover.Popup {...props.popup}>Content</Popover.Popup>
+          </Popover.Positioner>
+        </Popover.Portal>
+      </Popover.Root>
+    ),
+    render,
+    triggerMouseAction: 'click',
+    expectedPopupRole: 'dialog',
+  });
 
   it('opens with defaultOpen and marks the trigger of defaultTriggerId', async () => {
     await render(
@@ -515,7 +532,7 @@ describe('<Popover.Root />', () => {
     });
   });
 
-  it('VUE-5: keeps its open state under KeepAlive and hears no Escape while deactivated', async () => {
+  it('VUE-5: keeps its open state and its popup under KeepAlive, and hears no Escape while deactivated', async () => {
     const changes: Change[] = [];
     const Page = defineComponent({
       name: 'Page',
@@ -523,6 +540,11 @@ describe('<Popover.Root />', () => {
         return () => (
           <Popover.Root defaultOpen defaultTriggerId="trigger" onOpenChange={recordChange(changes)}>
             <Popover.Trigger id="trigger">Open</Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Positioner>
+                <Popover.Popup data-testid="popup">Content</Popover.Popup>
+              </Popover.Positioner>
+            </Popover.Portal>
           </Popover.Root>
         );
       },
@@ -532,20 +554,84 @@ describe('<Popover.Root />', () => {
       <KeepAlive>{visible.value ? <Page key="page" /> : <p key="other">other</p>}</KeepAlive>
     ));
     const trigger = screen.getByRole('button');
+    const popup = await screen.findByTestId('popup');
 
     visible.value = false;
     await flushMicrotasks();
+    expect(popup.isConnected).toBe(false);
     await user.keyboard('[Escape]');
+    await fireEvent.click(document.body, { detail: 1 });
     expect(changes).toEqual([]);
 
     visible.value = true;
     await flushMicrotasks();
     expect(screen.getByRole('button')).toBe(trigger);
     expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByTestId('popup')).toBe(popup);
+    expect(popup).toHaveAttribute('data-open');
 
     await user.keyboard('[Escape]');
     expect(changes).toEqual([[false, 'escape-key']]);
     expect(trigger).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  describe('VUE-4: a popover in the popup of a popover', () => {
+    function renderNestedPopovers(changes: Array<[name: string, open: boolean, reason: string]>) {
+      const record =
+        (name: string) => (open: boolean, details: Popover.Root.ChangeEventDetails) => {
+          changes.push([name, open, details.reason]);
+        };
+      return render(
+        <Popover.Root defaultOpen onOpenChange={record('parent')}>
+          <Popover.Portal>
+            <Popover.Positioner>
+              <Popover.Popup data-testid="parent-popup">
+                <button type="button">In the parent</button>
+                <Popover.Root defaultOpen onOpenChange={record('child')}>
+                  <Popover.Portal>
+                    <Popover.Positioner>
+                      <Popover.Popup data-testid="child-popup">
+                        <button type="button">In the child</button>
+                      </Popover.Popup>
+                    </Popover.Positioner>
+                  </Popover.Portal>
+                </Popover.Root>
+              </Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>,
+      );
+    }
+
+    it('keeps both open for a press in the child, and closes only the child for a press in the parent', async () => {
+      const changes: Array<[string, boolean, string]> = [];
+      const { user } = await renderNestedPopovers(changes);
+      const parentPopup = await screen.findByTestId('parent-popup');
+      const childPopup = await screen.findByTestId('child-popup');
+      expect(parentPopup.contains(childPopup)).toBe(false);
+
+      await user.click(screen.getByRole('button', { name: 'In the child' }));
+      expect(changes).toEqual([]);
+
+      await user.click(screen.getByRole('button', { name: 'In the parent' }));
+      expect(changes).toEqual([['child', false, 'outside-press']]);
+      expect(parentPopup).toHaveAttribute('data-open');
+    });
+
+    it('closes the child with the first Escape and the parent with the second', async () => {
+      const changes: Array<[string, boolean, string]> = [];
+      const { user } = await renderNestedPopovers(changes);
+      await screen.findByTestId('child-popup');
+
+      await user.keyboard('[Escape]');
+      expect(changes).toEqual([['child', false, 'escape-key']]);
+
+      await user.keyboard('[Escape]');
+      expect(changes).toEqual([
+        ['child', false, 'escape-key'],
+        ['parent', false, 'escape-key'],
+      ]);
+    });
   });
 
   describe('hydration', () => {
@@ -607,6 +693,24 @@ describe('<Popover.Root />', () => {
       const { container } = await hydrate(PopoverRootHydration, { serverHtml, props });
 
       expect(readTriggers(container)).toEqual(client);
+    });
+
+    it('shows the popup of an open root in the body after the hydration, with its labels', async () => {
+      const props = { defaultOpen: true, defaultTriggerId: 'inside' };
+      const serverHtml = await renderOnServer(HYDRATION_FILE, props);
+
+      const { container } = await hydrate(PopoverRootHydration, { serverHtml, props });
+
+      const popup = await screen.findByTestId('popup');
+      expect(container.contains(popup)).toBe(false);
+      expect(screen.getByRole('button', { name: 'Inside' })).toHaveAttribute(
+        'aria-controls',
+        popup.id,
+      );
+      await waitFor(() => {
+        expect(popup).toHaveAttribute('aria-labelledby', screen.getByText('Title').id);
+      });
+      expect(popup).toHaveAttribute('aria-describedby', screen.getByText('Description').id);
     });
   });
 });

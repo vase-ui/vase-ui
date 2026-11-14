@@ -85,6 +85,7 @@ export type PopoverRootChangeEventDetails =
 
 <script setup lang="ts" generic="Payload = unknown">
 import { onScopeDispose, provide, watch } from 'vue';
+import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
 import { usePopupRoot, usePopupRootSync } from '../../utils/popups/popupRoot';
 import { usePopupInteractionProps } from '../../utils/popups/popupStoreUtils';
@@ -180,6 +181,20 @@ usePopupInteractionProps(store, () => ({
   inactiveTriggerProps: dismiss.reference,
   popupProps: dismiss.floating,
 }));
+
+// Each registry keeps the ids of the parts of one kind, so the popup keeps its name when one of
+// two titles unmounts. A part that writes its own id to the store would clear that name when it
+// unmounts.
+const titleIds = createIdRegistry();
+const descriptionIds = createIdRegistry();
+store.context.registerTitleId = titleIds.registerId;
+store.context.registerDescriptionId = descriptionIds.registerId;
+watch(
+  () => [titleIds.ids.value.at(-1), descriptionIds.ids.value.at(-1)] as const,
+  ([titleElementId, descriptionElementId]) => {
+    store.update({ titleElementId, descriptionElementId });
+  },
+);
 
 provide(PopoverRootContext, store);
 

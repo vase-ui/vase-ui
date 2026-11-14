@@ -68,6 +68,7 @@ import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { usePopupPositioner } from '../../utils/popups/popupPositioner';
 import { provideFloatingNode } from '../../utils/popups/tree/FloatingTree';
+import { useAnchoredPopupScrollLock } from '../../utils/popups/useAnchoredPopupScrollLock';
 import { useMenuPortalContext } from '../portal/MenuPortalContext';
 import { useMenuRootContext } from '../root/MenuRootContext';
 import type { MenuRootChangeEventReason } from '../root/MenuRoot.vue';
@@ -294,6 +295,19 @@ onMounted(emitOpenChange);
 watch([floatingTreeRoot, open, floatingNodeId, floatingParentNodeId], emitOpenChange, {
   flush: 'post',
 });
+
+useAnchoredPopupScrollLock(
+  () => {
+    const currentParent = parent.value;
+    const menubarModal = currentParent.type === 'menubar' && currentParent.context.modal.value;
+    const popupModal =
+      store.select('modal') && store.select('lastOpenChangeReason') !== REASONS.triggerHover;
+    return open.value && (menubarModal || popupModal);
+  },
+  () => store.select('openMethod') === 'touch',
+  () => store.select('positionerElement'),
+  triggerElement,
+);
 
 defineExpose({ element });
 </script>
