@@ -157,6 +157,18 @@ function getViewportScroller({ win, html, body }: ScrollDocument) {
 }
 
 /**
+ * Whether the scroll lock holds the document. It is the `isScrollLocked` helper of the Base UI
+ * tests, for a case that locks the page of the test.
+ */
+export function isScrollLocked(doc: Document = document) {
+  return (
+    doc.documentElement.style.overflow === 'hidden' ||
+    doc.documentElement.hasAttribute('data-vase-ui-scroll-locked') ||
+    doc.body.style.overflow === 'hidden'
+  );
+}
+
+/**
  * Says if the scroll lock holds the page. With overlay scrollbars and with a gutter, the element
  * that the viewport follows is hidden. With scrollbars that take space, the lock sets its marker
  * and gives the body a fixed size.

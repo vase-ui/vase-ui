@@ -163,28 +163,6 @@ describe('<Menu.Portal />', () => {
       return element;
     }
 
-    it.each([
-      { name: 'modal true', modal: true, hasBackdrop: true },
-      { name: 'modal false', modal: false, hasBackdrop: false },
-    ])(
-      'renders it before the positioner, only for a modal menu: $name',
-      async ({ modal, hasBackdrop }) => {
-        await render(
-          <Menu.Root defaultOpen modal={modal}>
-            <Menu.Portal data-testid="portal">
-              <Menu.Positioner data-testid="positioner">
-                <Menu.Popup />
-              </Menu.Positioner>
-            </Menu.Portal>
-          </Menu.Root>,
-        );
-
-        const backdrop = getBackdrop();
-        expect(backdrop !== null).toBe(hasBackdrop);
-        expect(screen.getByTestId('positioner').previousElementSibling).toBe(backdrop);
-      },
-    );
-
     it('renders it before Menu.Backdrop, and a press on Menu.Backdrop closes the menu', async () => {
       const onOpenChange = vi.fn();
       await render(

@@ -6,8 +6,12 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  isJSDOM,
   renderOnServer,
+  screen,
+  wait,
   waitFor,
+  waitSingleFrame,
 } from '#test-utils';
 import {
   ContextMenuProvider,
@@ -15,6 +19,7 @@ import {
   createContextMenuContext,
   createMenubarContext,
 } from '../../../test/fixtures/MenuParentFixture';
+import { isScrollLocked } from '../../../test/fixtures/scrollDocument';
 import { reset as resetWarnings } from '../../common/warn';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
@@ -28,6 +33,61 @@ import type { MenuRootContext } from './MenuRootContext';
 import MenuRootHydration from './MenuRootHydration.test.vue';
 import { useMenuRoot } from './useMenuRoot';
 import type { UseMenuRootOptions } from './useMenuRoot';
+
+type PartProps = Record<string, unknown>;
+
+const testMenuProps = {
+  rootProps: { type: Object as PropType<PartProps>, default: undefined },
+  omitTrigger: { type: Boolean, default: false },
+};
+
+const ContainedTriggerMenu = defineComponent({
+  props: testMenuProps,
+  setup(props) {
+    return () => (
+      <Menu.Root {...props.rootProps}>
+        {!props.omitTrigger ? <Menu.Trigger>Toggle</Menu.Trigger> : null}
+        <Menu.Portal>
+          <Menu.Positioner data-testid="menu-positioner">
+            <Menu.Popup data-testid="menu">
+              <Menu.Item data-testid="item-1">Item 1</Menu.Item>
+              <Menu.Item data-testid="item-2">Item 2</Menu.Item>
+              <Menu.Item data-testid="item-3" disabled>
+                Item 3
+              </Menu.Item>
+              <Menu.SubmenuRoot>
+                <Menu.SubmenuTrigger data-testid="submenu-trigger">Item 4</Menu.SubmenuTrigger>
+                <Menu.Portal>
+                  <Menu.Positioner>
+                    <Menu.Popup data-testid="submenu">
+                      <Menu.Item data-testid="item-4_1">Item 4.1</Menu.Item>
+                      <Menu.Item data-testid="item-4_2">Item 4.2</Menu.Item>
+                    </Menu.Popup>
+                  </Menu.Positioner>
+                </Menu.Portal>
+              </Menu.SubmenuRoot>
+              <Menu.Item data-testid="item-5">Item 5</Menu.Item>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>
+    );
+  },
+});
+
+const DetachedTriggerMenu = defineComponent({
+  props: testMenuProps,
+  setup(props) {
+    const menuHandle = Menu.createHandle();
+
+    return () => (
+      <>
+        <ContainedTriggerMenu rootProps={{ ...props.rootProps, handle: menuHandle }} omitTrigger />
+        <Menu.Trigger handle={menuHandle}>Toggle</Menu.Trigger>
+      </>
+    );
+  },
+});
 
 /** Reads the context and the tree that a part below a root gets. */
 function createProbe() {
@@ -953,6 +1013,161 @@ describe('<Menu.Root />', () => {
       expect(warn).toHaveBeenCalledWith(
         expect.stringMatching(/^Vase UI: The `modal` prop of <Menu\.Root> is `false`/),
       );
+    });
+  });
+
+  // All these tests run for contained and detached triggers.
+  // The rendered menu has the same structure in most cases.
+  describe.for([
+    { name: 'contained triggers', Component: ContainedTriggerMenu },
+    { name: 'detached triggers', Component: DetachedTriggerMenu },
+  ])('when using $name', ({ Component: TestMenu }) => {
+    describe('prop: modal', () => {
+      it('should render an internal backdrop when `true`', async () => {
+        const { user } = await render(
+          <div>
+            <TestMenu rootProps={{ modal: true }} />
+            <button>Outside</button>
+          </div>,
+        );
+
+        const trigger = screen.getByRole('button', { name: 'Toggle' });
+
+        await user.click(trigger);
+
+        await waitFor(() => {
+          expect(screen.queryByRole('menu')).not.toBe(null);
+        });
+
+        const positioner = screen.getByTestId('menu-positioner');
+
+        expect(positioner.previousElementSibling).toHaveAttribute('role', 'presentation');
+      });
+
+      it('should not render an internal backdrop when `false`', async () => {
+        const { user } = await render(
+          <div>
+            <TestMenu rootProps={{ modal: false }} />
+            <button>Outside</button>
+          </div>,
+        );
+
+        const trigger = screen.getByRole('button', { name: 'Toggle' });
+
+        await user.click(trigger);
+
+        await waitFor(() => {
+          expect(screen.queryByRole('menu')).not.toBe(null);
+        });
+
+        const positioner = screen.getByTestId('menu-positioner');
+
+        expect(positioner.previousElementSibling).toBe(null);
+      });
+    });
+
+    describe.skipIf(isJSDOM)('scroll locking', () => {
+      describe('interaction type tracking (openMethod)', () => {
+        it('should not apply scroll lock when opened via touch', async () => {
+          await render(<TestMenu rootProps={{ modal: true }} />);
+
+          const trigger = screen.getByRole('button', { name: 'Toggle' });
+
+          await fireEvent.pointerDown(trigger, { pointerType: 'touch' });
+          await fireEvent.mouseDown(trigger);
+
+          const menu = await screen.findByRole('menu');
+
+          const doc = menu.ownerDocument;
+          // The lock waits for a timer of 0 ms.
+          await wait(0);
+
+          expect(isScrollLocked(doc)).toBe(false);
+        });
+
+        it('should apply scroll lock when opened via mouse', async () => {
+          const { user } = await render(<TestMenu rootProps={{ modal: true }} />);
+
+          const trigger = screen.getByRole('button', { name: 'Toggle' });
+          const doc = trigger.ownerDocument;
+
+          await user.click(trigger);
+          await screen.findByRole('menu');
+          // The lock waits for a timer of 0 ms.
+          await wait(0);
+
+          expect(isScrollLocked(doc)).toBe(true);
+        });
+      });
+
+      describe('touch scroll lock', () => {
+        it.each([
+          { name: 'unmounted while closed', keepMounted: false },
+          { name: 'kept mounted while closed', keepMounted: true },
+        ])(
+          'should apply scroll lock when a touch-opened popup $name covers the viewport width',
+          async ({ keepMounted }) => {
+            await render(
+              <Menu.Root modal>
+                <Menu.Trigger>Open</Menu.Trigger>
+                <Menu.Portal keepMounted={keepMounted}>
+                  <Menu.Positioner data-testid="positioner" style={{ width: 'calc(100vw - 10px)' }}>
+                    <Menu.Popup>
+                      <Menu.Item>1</Menu.Item>
+                    </Menu.Popup>
+                  </Menu.Positioner>
+                </Menu.Portal>
+              </Menu.Root>,
+            );
+
+            const trigger = screen.getByRole('button', { name: 'Open' });
+
+            await fireEvent.pointerDown(trigger, { pointerType: 'touch' });
+            await fireEvent.mouseDown(trigger);
+
+            const menu = await screen.findByRole('menu');
+            const doc = menu.ownerDocument;
+
+            await waitFor(() => {
+              expect(isScrollLocked(doc)).toBe(true);
+            });
+          },
+        );
+
+        it.each([
+          { name: 'unmounted while closed', keepMounted: false },
+          { name: 'kept mounted while closed', keepMounted: true },
+        ])(
+          'should not apply scroll lock when a touch-opened popup $name is narrower than the viewport',
+          async ({ keepMounted }) => {
+            await render(
+              <Menu.Root modal>
+                <Menu.Trigger>Open</Menu.Trigger>
+                <Menu.Portal keepMounted={keepMounted}>
+                  <Menu.Positioner data-testid="positioner" style={{ width: '240px' }}>
+                    <Menu.Popup>
+                      <Menu.Item>1</Menu.Item>
+                    </Menu.Popup>
+                  </Menu.Positioner>
+                </Menu.Portal>
+              </Menu.Root>,
+            );
+
+            const trigger = screen.getByRole('button', { name: 'Open' });
+
+            await fireEvent.pointerDown(trigger, { pointerType: 'touch' });
+            await fireEvent.mouseDown(trigger);
+
+            const menu = await screen.findByRole('menu');
+            const doc = menu.ownerDocument;
+
+            await waitSingleFrame();
+            await flushMicrotasks();
+
+            expect(isScrollLocked(doc)).toBe(false);
+          },
+        );
+      });
     });
   });
 

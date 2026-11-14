@@ -69,23 +69,24 @@ describe('<Menu.Backdrop />', () => {
     expect(screen.getByTestId('backdrop').style.pointerEvents).toBe('none');
   });
 
-  it('does not set the pointer events of the backdrop when a press opened the menu', async () => {
-    const probe = createMenuStoreProbe();
-
-    await render(
+  it('does not set `pointer-events: none` style on backdrop if opened by click', async () => {
+    const { user } = await render(
       <Menu.Root>
-        <probe.Probe />
-        <Menu.Backdrop data-testid="backdrop" />
+        <Menu.Trigger delay={0}>Open</Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Backdrop data-testid="backdrop" />
+          <Menu.Positioner>
+            <Menu.Popup />
+          </Menu.Positioner>
+        </Menu.Portal>
       </Menu.Root>,
     );
 
-    probe.store.setOpen(
-      true,
-      createChangeEventDetails(REASONS.triggerPress, new MouseEvent('mousedown')),
-    );
-    await flushMicrotasks();
+    await user.click(screen.getByText('Open'));
+    // A negative assertion in `waitFor` passes on the first try, so the case waits for the open.
+    await screen.findByRole('menu');
 
-    expect(screen.getByTestId('backdrop').style.pointerEvents).toBe('');
+    expect(screen.getByTestId('backdrop').style.pointerEvents).not.toBe('none');
   });
 
   it('gives its element to the context menu above it, and takes it back at the unmount', async () => {
