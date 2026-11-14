@@ -8,7 +8,7 @@ import {
   screen,
   waitFor,
 } from '#test-utils';
-import * as Toast from '../index.parts';
+import { Toast } from '@vase-ui/vue/toast';
 import ToastLabelContent from '../utils/ToastLabelContent.vue';
 
 const toast = {

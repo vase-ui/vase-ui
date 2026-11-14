@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, Fragment } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
-import * as Toast from './index.parts';
+import { Toast } from '@vase-ui/vue/toast';
 import type { ToastObject } from './useToastManager';
 import { List } from './utils/test-utils';
 
