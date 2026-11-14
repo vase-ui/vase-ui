@@ -84,15 +84,25 @@ describe('<NumberField />', () => {
 
   type NumberFieldProps = NumberFieldRootInstance['$props'];
 
+  // A real pointer can rest over a button, and the browser then sends events of its own, such as a
+  // `mouseenter` event that starts a hold again. With `pointer-events: none` the button gets no such
+  // event. An event that a case dispatches still reaches the button.
+  const noRealPointer = { pointerEvents: 'none' } as const;
+
   // The helper of Base UI also renders `ScrubArea`. This helper renders only the parts that Vase UI
-  // has.
-  function NumberField(props: NumberFieldProps) {
+  // has. `user` refuses a button that has `pointer-events: none`, so a case that clicks a button
+  // through `user` sets `clickedByUser`.
+  function NumberField({
+    clickedByUser = false,
+    ...props
+  }: NumberFieldProps & { clickedByUser?: boolean }) {
+    const buttonStyle = clickedByUser ? undefined : noRealPointer;
     return (
       <NumberFieldBase.Root {...props}>
         <NumberFieldBase.Group>
           <NumberFieldBase.Input />
-          <NumberFieldBase.Increment />
-          <NumberFieldBase.Decrement />
+          <NumberFieldBase.Increment style={buttonStyle} />
+          <NumberFieldBase.Decrement style={buttonStyle} />
         </NumberFieldBase.Group>
       </NumberFieldBase.Root>
     );
@@ -2398,6 +2408,7 @@ describe('<NumberField />', () => {
         const value = shallowRef<number | null>(0);
         return () => (
           <NumberField
+            clickedByUser
             value={value.value}
             step={0.0001}
             onValueChange={(val: number | null) => {
@@ -2440,6 +2451,7 @@ describe('<NumberField />', () => {
         const value = shallowRef<number | null>(100000000000000.1);
         return () => (
           <NumberField
+            clickedByUser
             value={value.value}
             step={0.1}
             onValueChange={(val: number | null) => {
@@ -3062,7 +3074,7 @@ describe('<NumberField />', () => {
       const { user } = await render(
         <Form>
           <Field.Root name="quantity">
-            <NumberField required />
+            <NumberField clickedByUser required />
             <Field.Error match="valueMissing" data-testid="error">
               required
             </Field.Error>

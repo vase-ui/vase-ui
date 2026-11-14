@@ -68,6 +68,11 @@ async function tick(milliseconds: number) {
   await flushMicrotasks();
 }
 
+// A real pointer can rest over a button, and the browser then sends events of its own, such as a
+// `mouseenter` event that starts a hold again. With `pointer-events: none` the button gets no such
+// event. An event that a case dispatches still reaches the button.
+const noRealPointer = { pointerEvents: 'none' } as const;
+
 describe('useNumberFieldStepperButton', () => {
   const { render } = createRenderer();
 
@@ -83,10 +88,15 @@ describe('useNumberFieldStepperButton', () => {
       canceledDirtyStepValues,
       snappedDirtyStep,
     }) => {
-      function TestNumberField(props: NumberFieldProps) {
+      // `user` refuses a button that has `pointer-events: none`, so a case that clicks the button
+      // through `user` sets `clickedByUser`.
+      function TestNumberField({
+        clickedByUser = false,
+        ...props
+      }: NumberFieldProps & { clickedByUser?: boolean }) {
         return (
           <NumberField.Root defaultValue={0} {...props}>
-            <Stepper />
+            <Stepper style={clickedByUser ? undefined : noRealPointer} />
             <NumberField.Input />
           </NumberField.Root>
         );
@@ -148,7 +158,11 @@ describe('useNumberFieldStepperButton', () => {
         it('only calls onValueChange once per step', async () => {
           const handleValueChange = vi.fn();
           const { user } = await render(
-            <TestNumberField defaultValue={undefined} onValueChange={handleValueChange} />,
+            <TestNumberField
+              clickedByUser
+              defaultValue={undefined}
+              onValueChange={handleValueChange}
+            />,
           );
 
           const button = screen.getByRole('button');
@@ -197,7 +211,7 @@ describe('useNumberFieldStepperButton', () => {
           const onValueChange = vi.fn();
 
           const { user } = await render(
-            <TestNumberField defaultValue={1.23456} onValueChange={onValueChange} />,
+            <TestNumberField clickedByUser defaultValue={1.23456} onValueChange={onValueChange} />,
           );
 
           const input = screen.getByRole('textbox');
@@ -213,7 +227,11 @@ describe('useNumberFieldStepperButton', () => {
           const onValueChange = vi.fn();
 
           const { user } = await render(
-            <TestNumberField defaultValue={undefined} onValueChange={onValueChange} />,
+            <TestNumberField
+              clickedByUser
+              defaultValue={undefined}
+              onValueChange={onValueChange}
+            />,
           );
 
           const input = screen.getByRole('textbox');
@@ -573,7 +591,7 @@ describe('useNumberFieldStepperButton', () => {
                 onValueCommitted={onValueCommitted}
               >
                 <NumberField.Input />
-                <Stepper />
+                <Stepper style={noRealPointer} />
                 <button
                   onClick={() => {
                     value.value = 10;
@@ -758,7 +776,7 @@ describe('useNumberFieldStepperButton', () => {
                   onValueChange={onValueChange}
                   onValueCommitted={onValueCommitted}
                 >
-                  <Stepper />
+                  <Stepper style={noRealPointer} />
                   <NumberField.Input />
                 </NumberField.Root>
               ) : null}
