@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest';
+import { shallowRef } from 'vue';
 import * as Menu from '../index.parts';
 import { createRenderer, describeConformance, flushMicrotasks, screen } from '#test-utils';
+import {
+  ContextMenuProvider,
+  createContextMenuContext,
+} from '../../../test/fixtures/MenuParentFixture';
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
+import MenuBackdropReplace from './MenuBackdropReplace.test.vue';
 
 describe('<Menu.Backdrop />', () => {
   const { render } = createRenderer();
@@ -63,6 +69,43 @@ describe('<Menu.Backdrop />', () => {
     await flushMicrotasks();
 
     expect(screen.getByTestId('backdrop').style.pointerEvents).toBe(testCase.pointerEvents);
+  });
+
+  it('gives its element to the context menu above it, and takes it back at the unmount', async () => {
+    const context = createContextMenuContext();
+    const mounted = shallowRef(true);
+    await render(() => (
+      <ContextMenuProvider context={context}>
+        <Menu.Root open>
+          {mounted.value ? <Menu.Backdrop data-testid="backdrop" /> : null}
+        </Menu.Root>
+      </ContextMenuProvider>
+    ));
+    expect(context.backdropRef.value).toBe(screen.getByTestId('backdrop'));
+
+    mounted.value = false;
+    await flushMicrotasks();
+
+    expect(context.backdropRef.value).toBe(null);
+  });
+
+  it('keeps the element of a new backdrop that replaces the old backdrop in the context menu', async () => {
+    const context = createContextMenuContext();
+    const swapped = shallowRef(false);
+    await render(() => (
+      <ContextMenuProvider context={context}>
+        <Menu.Root open>
+          <MenuBackdropReplace swapped={swapped.value} />
+        </Menu.Root>
+      </ContextMenuProvider>
+    ));
+    expect(context.backdropRef.value).toBe(screen.getByTestId('old'));
+
+    swapped.value = true;
+    await flushMicrotasks();
+
+    expect(screen.queryByTestId('old')).toBe(null);
+    expect(context.backdropRef.value).toBe(screen.getByTestId('new'));
   });
 
   it('is hidden while the menu is not mounted', async () => {

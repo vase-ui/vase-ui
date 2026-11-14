@@ -14,6 +14,7 @@ import {
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
 import { REASONS } from '../../internals/reasons';
 import { ToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
+import MenuPopupReplace from './MenuPopupReplace.test.vue';
 
 const ToolbarProvider = defineComponent((_, { slots }) => {
   provide(ToolbarRootContext, {
@@ -53,6 +54,30 @@ describe('<Menu.Popup />', () => {
 
     const popup = screen.getByRole('menu', { name: 'Commands' });
     expect(popup).not.toHaveAttribute('aria-labelledby');
+  });
+
+  it('uses aria-labelledby from a render element', async () => {
+    await render(
+      <Menu.Root open>
+        <span id="commands-label">Commands</span>
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup
+              v-slots={{
+                render: ({ props }: { props: Record<string, unknown> }) => (
+                  <section {...props} aria-labelledby="commands-label" />
+                ),
+              }}
+            />
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>,
+    );
+
+    expect(screen.getByRole('menu', { name: 'Commands' })).toHaveAttribute(
+      'aria-labelledby',
+      'commands-label',
+    );
   });
 
   it('stops toolbar navigation keys without blocking ordinary key events', async () => {
@@ -304,6 +329,32 @@ describe('<Menu.Popup />', () => {
     });
   });
 
+  it('keeps the element of a new popup that replaces the old popup, so a close completes', async () => {
+    const swapped = shallowRef(false);
+    const onOpenChangeComplete = vi.fn();
+    const { user } = await render(() => (
+      <Menu.Root defaultOpen onOpenChangeComplete={onOpenChangeComplete}>
+        <Menu.Portal>
+          <Menu.Positioner>
+            <MenuPopupReplace swapped={swapped.value} />
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>
+    ));
+    await screen.findByTestId('old');
+
+    swapped.value = true;
+    await flushMicrotasks();
+    expect(screen.queryByTestId('old')).toBe(null);
+
+    await user.keyboard('[Escape]');
+    await waitFor(() => {
+      expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
+    });
+    await flushMicrotasks();
+    expect(screen.queryByTestId('new')).toBe(null);
+  });
+
   it('VUE-5: takes the popup out of the document while KeepAlive holds the menu, and puts the same popup back', async () => {
     const Page = defineComponent({
       name: 'Page',
@@ -340,10 +391,6 @@ describe('<Menu.Popup />', () => {
   });
 
   it('BUG-5410: closes the menu for a press in a same-origin iframe', async () => {
-    // The pointer of the browser stays where a case leaves it, for each later test.
-    onTestFinished(async () => {
-      await userEvent.pointer({ coords: { x: 0, y: 0 }, keys: '[/MouseLeft]' });
-    });
     const frame = document.createElement('iframe');
     frame.srcdoc = '<button style="width: 80px; height: 40px">in the frame</button>';
     frame.style.cssText =
