@@ -1,10 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { h } from 'vue';
+import type { Component } from 'vue';
 import { createRenderer, describeConformance, flushMicrotasks, screen, waitFor } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
 import { INITIAL_LIVE_REGION_TEXT_MUTATION_RESET_DELAY } from '../../internals/useInitialLiveRegionTextMutation';
 import * as Combobox from '../index.parts';
 import type { ComboboxStore } from '../store';
 import ComboboxEmptyReplacement from './ComboboxEmptyReplacement.test.vue';
+
+type EmptyRenderSlotProps = { props: HTMLProps; children: Component };
 
 describe('<Combobox.Empty />', () => {
   const { render } = createRenderer();
@@ -216,9 +220,9 @@ describe('<Combobox.Empty />', () => {
               <Combobox.Popup>
                 <Combobox.Empty
                   v-slots={{
-                    render: ({ props }: { props: HTMLProps }) => (
+                    render: ({ props, children }: EmptyRenderSlotProps) => (
                       <p {...props} data-testid="custom-empty">
-                        No results
+                        {h(children, null, () => 'No results')}
                       </p>
                     ),
                   }}
@@ -243,6 +247,76 @@ describe('<Combobox.Empty />', () => {
   });
 
   describe('Vue form of the empty part', () => {
+    it('shows the content of `children` in the render slot only while no item matches', async () => {
+      const { user } = await render(
+        <Combobox.Root items={['apple', 'banana']} defaultOpen>
+          <Combobox.Input data-testid="input" />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.Empty
+                  v-slots={{
+                    render: ({ props, children }: EmptyRenderSlotProps) => (
+                      <p {...props} data-testid="empty">
+                        {h(children, null, () => 'No results')}
+                      </p>
+                    ),
+                  }}
+                />
+                <Combobox.List
+                  v-slots={{
+                    item: ({ item }: { item: string }) => (
+                      <Combobox.Item key={item} value={item}>
+                        {item}
+                      </Combobox.Item>
+                    ),
+                  }}
+                />
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+
+      const empty = await screen.findByTestId('empty');
+      await waitFor(() => expect(screen.getByRole('option', { name: 'apple' })).toBeVisible());
+      expect(empty).toHaveTextContent('');
+
+      const input = screen.getByTestId('input');
+      await user.type(input, 'z');
+      await waitFor(() => expect(empty).toHaveTextContent('No results'));
+
+      await user.keyboard('{Backspace}');
+      await waitFor(() => expect(screen.getByRole('option', { name: 'apple' })).toBeVisible());
+      expect(empty).toHaveTextContent('');
+      expect(screen.getByTestId('empty')).toBe(empty);
+    });
+
+    it('warns when the render slot does not mount `children`', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      await render(
+        <Combobox.Root items={[]} defaultOpen>
+          <Combobox.Input />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.Empty
+                  v-slots={{
+                    render: ({ props }: EmptyRenderSlotProps) => <p {...props}>No results</p>,
+                  }}
+                />
+                <Combobox.List />
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+      await flushMicrotasks();
+
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy.mock.calls[0][0]).toContain('The `#render` slot did not mount `children`');
+    });
+
     it('keeps the element of an empty part that mounts before the old part unmounts', async () => {
       let store!: ComboboxStore;
       const { setProps } = await render(

@@ -276,6 +276,7 @@ Some upstream parts put nodes of their own in the element. Examples are the rang
 - Each such part has one internal SFC, `<Part>Children.vue`.
 - That SFC reads the values that its nodes need with `inject`. `ProgressRootChildren.vue` needs none, so it calls no `inject`. A part that is not a root provides these values itself: `Field.Error` provides its message in `FieldErrorContext`.
 - It renders the nodes around its default slot, in upstream's order.
+- A part that shows its default slot only in some states also has a `<Part>Children.vue`, such as `ComboboxEmptyChildren.vue`. That SFC renders the default slot only in those states. The `#render` slot then shows the content in the same states.
 - The `#render` slot of the part gets a third slot prop, `children`, which is that component.
 - A consumer writes `<a v-bind="props"><component :is="children">…</component></a>`.
 - A development build shows a warning when the `#render` slot does not mount `children`. The part makes this check together with the check for the element of the slot.

@@ -11,12 +11,13 @@ export interface ComboboxEmptyProps
 </script>
 
 <script setup lang="ts">
+import type { Component } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
-import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import type { HTMLProps } from '../../internals/types';
 import { useInitialLiveRegionTextMutation } from '../../internals/useInitialLiveRegionTextMutation';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
-import { useListEmpty } from '../utils/parts';
+import ComboboxEmptyChildren from './ComboboxEmptyChildren.vue';
 
 defineOptions({ inheritAttrs: false });
 
@@ -24,11 +25,10 @@ const props = withDefaults(defineProps<ComboboxEmptyProps>(), { as: 'div' });
 
 defineSlots<{
   default(props: { state: ComboboxEmptyState }): unknown;
-  render: ComponentRenderFn<HTMLProps, ComboboxEmptyState>;
+  render(props: { props: HTMLProps; state: ComboboxEmptyState; children: Component }): unknown;
 }>();
 
 const store = useComboboxRootContext();
-const empty = useListEmpty();
 const emptyRef = useInitialLiveRegionTextMutation<HTMLElement>();
 
 // A template can mount the part that replaces this part before it unmounts this part. The part then
@@ -47,14 +47,14 @@ const { element, elementProps } = useRenderElement('div', props, {
   state,
   ref: [setEmptyElement, emptyRef],
   props: (attrs) => [{ role: 'status', 'aria-live': 'polite', 'aria-atomic': true }, attrs],
+  children: true,
 });
 
 defineExpose({ element });
 </script>
 
+<!-- prettier-ignore -->
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"
-    ><slot v-if="empty" :state="state"
-  /></component>
+  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="ComboboxEmptyChildren" />
+  <component :is="as" v-else v-bind="elementProps()"><ComboboxEmptyChildren><slot :state="state" /></ComboboxEmptyChildren></component>
 </template>

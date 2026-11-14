@@ -307,8 +307,9 @@ export namespace Collection {
  * rendering. Prefer updating or conditionally rendering its children instead.
  * Renders a `<div>` element.
  *
- * The part renders its default slot only while the list is empty. With the `#render` slot, the part
- * renders no default slot. Put the content in your element, and show it only while the list is empty.
+ * The part renders its default slot only while the list is empty. The `#render` slot gets the slot
+ * prop `children`, a component that renders its own default slot only while the list is empty. Put
+ * the content in it: `<p v-bind="props"><component :is="children">No results</component></p>`.
  */
 export const Empty: typeof ComboboxEmpty = ComboboxEmpty;
 export namespace Empty {
