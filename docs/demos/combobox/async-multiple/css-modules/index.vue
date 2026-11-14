@@ -1,0 +1,362 @@
+<script setup lang="ts">
+import { computed, h, shallowRef, useId } from 'vue';
+import type { FunctionalComponent } from 'vue';
+import { Combobox } from '@vase-ui/vue/combobox';
+import styles from './index.module.css';
+
+const id = useId();
+
+const searchResults = shallowRef<DirectoryUser[]>([]);
+const selectedValues = shallowRef<DirectoryUser[]>([]);
+const searchValue = shallowRef('');
+const error = shallowRef<string | null>(null);
+const blockStartStatus = shallowRef(false);
+const isPending = shallowRef(false);
+
+const { contains } = Combobox.useFilter();
+
+let abortController: AbortController | null = null;
+
+const trimmedSearchValue = computed(() => searchValue.value.trim());
+
+const items = computed(() => {
+  if (selectedValues.value.length === 0) {
+    return searchResults.value;
+  }
+
+  const merged = [...searchResults.value];
+
+  selectedValues.value.forEach((user) => {
+    if (!searchResults.value.some((result) => result.id === user.id)) {
+      merged.push(user);
+    }
+  });
+
+  return merged;
+});
+
+const statusText = computed(() => {
+  if (error.value) {
+    return error.value;
+  }
+
+  if (trimmedSearchValue.value === '' && !blockStartStatus.value) {
+    return selectedValues.value.length > 0 ? null : 'Start typing to search people…';
+  }
+
+  if (searchResults.value.length === 0 && !blockStartStatus.value) {
+    return `No matches for "${trimmedSearchValue.value}".`;
+  }
+
+  return null;
+});
+
+const emptyMessage = computed(() => {
+  if (
+    trimmedSearchValue.value === '' ||
+    isPending.value ||
+    searchResults.value.length > 0 ||
+    error.value
+  ) {
+    return null;
+  }
+
+  return 'Try a different search term.';
+});
+
+function handleOpenChangeComplete(open: boolean) {
+  if (!open) {
+    searchResults.value = selectedValues.value;
+    blockStartStatus.value = false;
+  }
+}
+
+function handleValueChange(nextSelectedValues: DirectoryUser[]) {
+  selectedValues.value = nextSelectedValues;
+  searchValue.value = '';
+  error.value = null;
+
+  if (nextSelectedValues.length === 0) {
+    searchResults.value = [];
+    blockStartStatus.value = false;
+  } else {
+    blockStartStatus.value = true;
+  }
+}
+
+async function handleInputValueChange(
+  nextSearchValue: string,
+  { reason }: Combobox.Root.ChangeEventDetails,
+) {
+  searchValue.value = nextSearchValue;
+
+  const controller = new AbortController();
+  abortController?.abort();
+  abortController = controller;
+
+  if (nextSearchValue === '') {
+    searchResults.value = selectedValues.value;
+    error.value = null;
+    blockStartStatus.value = false;
+    isPending.value = false;
+    return;
+  }
+
+  if (reason === 'item-press') {
+    isPending.value = false;
+    return;
+  }
+
+  isPending.value = true;
+  error.value = null;
+
+  const result = await searchUsers(nextSearchValue, contains);
+
+  if (controller.signal.aborted) {
+    return;
+  }
+
+  searchResults.value = result.users;
+  error.value = result.error;
+  isPending.value = false;
+}
+
+const ICON_PROPS = {
+  width: '16',
+  height: '16',
+  viewBox: '0 0 16 16',
+  style: { display: 'block' },
+};
+
+const CheckIcon: FunctionalComponent = (_, { attrs }) =>
+  h('svg', { ...ICON_PROPS, fill: 'none', stroke: 'currentColor', ...attrs }, [
+    h('path', { d: 'm2.5 8.5 4 4 7-9' }),
+  ]);
+
+const XIcon: FunctionalComponent = (_, { attrs }) =>
+  h(
+    'svg',
+    {
+      ...ICON_PROPS,
+      fill: 'none',
+      stroke: 'currentColor',
+      'stroke-linecap': 'square',
+      'stroke-linejoin': 'round',
+      ...attrs,
+    },
+    [h('path', { d: 'm4.5 4.5 7 7m-7 0 7-7' })],
+  );
+
+interface DirectoryUser {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+  title: string;
+}
+
+async function searchUsers(
+  query: string,
+  filter: (item: string, query: string) => boolean,
+): Promise<{ users: DirectoryUser[]; error: string | null }> {
+  // Simulate network delay
+  await new Promise((resolve) => {
+    setTimeout(resolve, Math.random() * 500 + 100);
+  });
+
+  // Simulate occasional network errors (1% chance)
+  if (Math.random() < 0.01 || query === 'will_error') {
+    return {
+      users: [],
+      error: 'Failed to fetch people. Please try again.',
+    };
+  }
+
+  const users = allUsers.filter((user) => {
+    return (
+      filter(user.name, query) ||
+      filter(user.username, query) ||
+      filter(user.email, query) ||
+      filter(user.title, query)
+    );
+  });
+
+  return {
+    users,
+    error: null,
+  };
+}
+
+const allUsers: DirectoryUser[] = [
+  {
+    id: 'leslie-alexander',
+    name: 'Leslie Alexander',
+    username: 'leslie',
+    email: 'leslie.alexander@example.com',
+    title: 'Product Manager',
+  },
+  {
+    id: 'kathryn-murphy',
+    name: 'Kathryn Murphy',
+    username: 'kathryn',
+    email: 'kathryn.murphy@example.com',
+    title: 'Marketing Lead',
+  },
+  {
+    id: 'courtney-henry',
+    name: 'Courtney Henry',
+    username: 'courtney',
+    email: 'courtney.henry@example.com',
+    title: 'Design Systems',
+  },
+  {
+    id: 'michael-foster',
+    name: 'Michael Foster',
+    username: 'michael',
+    email: 'michael.foster@example.com',
+    title: 'Engineering Manager',
+  },
+  {
+    id: 'lindsay-walton',
+    name: 'Lindsay Walton',
+    username: 'lindsay',
+    email: 'lindsay.walton@example.com',
+    title: 'Product Designer',
+  },
+  {
+    id: 'tom-cook',
+    name: 'Tom Cook',
+    username: 'tom',
+    email: 'tom.cook@example.com',
+    title: 'Frontend Engineer',
+  },
+  {
+    id: 'whitney-francis',
+    name: 'Whitney Francis',
+    username: 'whitney',
+    email: 'whitney.francis@example.com',
+    title: 'Customer Success',
+  },
+  {
+    id: 'jacob-jones',
+    name: 'Jacob Jones',
+    username: 'jacob',
+    email: 'jacob.jones@example.com',
+    title: 'Security Engineer',
+  },
+  {
+    id: 'arlene-mccoy',
+    name: 'Arlene McCoy',
+    username: 'arlene',
+    email: 'arlene.mccoy@example.com',
+    title: 'Data Analyst',
+  },
+  {
+    id: 'marvin-mckinney',
+    name: 'Marvin McKinney',
+    username: 'marvin',
+    email: 'marvin.mckinney@example.com',
+    title: 'QA Specialist',
+  },
+  {
+    id: 'eleanor-pena',
+    name: 'Eleanor Pena',
+    username: 'eleanor',
+    email: 'eleanor.pena@example.com',
+    title: 'Operations',
+  },
+  {
+    id: 'jerome-bell',
+    name: 'Jerome Bell',
+    username: 'jerome',
+    email: 'jerome.bell@example.com',
+    title: 'DevOps Engineer',
+  },
+];
+</script>
+
+<template>
+  <Combobox.Root
+    :items="items"
+    :item-to-string-label="(user: DirectoryUser) => user.name"
+    :is-item-equal-to-value="(item: DirectoryUser, value: DirectoryUser) => item.id === value.id"
+    multiple
+    :filter="null"
+    @open-change-complete="handleOpenChangeComplete"
+    @value-change="handleValueChange"
+    @input-value-change="handleInputValueChange"
+  >
+    <div :class="styles.Container">
+      <label :class="styles.Label" :for="id">Assign reviewers</label>
+      <Combobox.InputGroup :class="styles.InputGroup">
+        <Combobox.Value v-slot="{ value }">
+          <Combobox.Chips
+            :class="styles.Chips"
+            :aria-label="value.length > 0 ? 'Selected reviewers' : undefined"
+          >
+            <Combobox.Chip
+              v-for="user in value"
+              :key="user.id"
+              :class="styles.Chip"
+              :aria-label="user.name"
+              aria-description="Press Backspace or Delete to remove"
+            >
+              {{ user.name }}
+              <Combobox.ChipRemove :class="styles.ChipRemove" :aria-label="`Remove ${user.name}`">
+                <XIcon />
+              </Combobox.ChipRemove>
+            </Combobox.Chip>
+            <Combobox.Input
+              :id="id"
+              :placeholder="value.length > 0 ? '' : 'e.g. Michael'"
+              :aria-description="
+                value.length > 0
+                  ? `${value.length} selected. From the start of the input, press Left Arrow to focus the selected items`
+                  : undefined
+              "
+              :class="styles.Input"
+            />
+          </Combobox.Chips>
+        </Combobox.Value>
+      </Combobox.InputGroup>
+    </div>
+
+    <Combobox.Portal>
+      <Combobox.Positioner :class="styles.Positioner" :side-offset="4">
+        <Combobox.Popup :class="styles.Popup" :aria-busy="isPending || undefined">
+          <div :class="styles.Viewport">
+            <Combobox.Status>
+              <div v-if="isPending || statusText" :class="styles.Status">
+                <template v-if="isPending">
+                  <span :class="styles.Spinner" aria-hidden="true" />
+                  Searching…
+                </template>
+                <template v-else>{{ statusText }}</template>
+              </div>
+            </Combobox.Status>
+            <Combobox.Empty>
+              <div v-if="emptyMessage" :class="styles.Empty">{{ emptyMessage }}</div>
+            </Combobox.Empty>
+            <Combobox.List>
+              <template #item="{ item: user }">
+                <Combobox.Item :class="styles.Item" :value="user">
+                  <Combobox.ItemIndicator :class="styles.ItemIndicator">
+                    <CheckIcon />
+                  </Combobox.ItemIndicator>
+                  <span :class="styles.ItemText">
+                    <span :class="styles.ItemTitle">{{ user.name }}</span>
+                    <span :class="styles.ItemEmail">{{ user.email }}</span>
+                    <span :class="styles.ItemSubtitle">
+                      <span>@{{ user.username }}</span>
+                      <span>{{ user.title }}</span>
+                    </span>
+                  </span>
+                </Combobox.Item>
+              </template>
+            </Combobox.List>
+          </div>
+        </Combobox.Popup>
+      </Combobox.Positioner>
+    </Combobox.Portal>
+  </Combobox.Root>
+</template>

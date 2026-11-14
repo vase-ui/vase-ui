@@ -1458,6 +1458,50 @@ async function expectAutocompletePage(page: Page) {
   expect(await readFormData(page)).toEqual(['city=malmo']);
 }
 
+// The server HTML has the value in the input, the chips of the selected values, the label that
+// names the trigger, and the inputs of the form. A portal renders its popup after the mount, so
+// the server HTML has no popup.
+async function expectComboboxPageOnServer(page: Page) {
+  expect(
+    await readAttributes(page.getByTestId('fruit-input'), [
+      'role',
+      'aria-expanded',
+      'aria-haspopup',
+      'aria-autocomplete',
+      'name',
+    ]),
+  ).toEqual({
+    role: 'combobox',
+    'aria-expanded': 'false',
+    'aria-haspopup': 'listbox',
+    'aria-autocomplete': 'list',
+    name: null,
+  });
+  expect(await page.getByTestId('fruit-input').inputValue()).toBe('Banana');
+
+  expect(await page.getByTestId('tags-chips').getAttribute('role')).toBe('toolbar');
+  expect(
+    (await page.getByTestId('tags-chip').allTextContents()).map((text) => text.trim()),
+  ).toEqual(['b']);
+
+  const labelId = await page.getByTestId('country-label').getAttribute('id');
+  expect(labelId).toBeTruthy();
+  expect(await page.getByTestId('country-trigger').getAttribute('aria-labelledby')).toBe(labelId);
+  expect(await page.getByTestId('country-trigger').textContent()).toBe('Sweden');
+
+  expect(await readFormData(page)).toEqual(['fruit=Banana', 'tags=b', 'country=Sweden']);
+  expect(await page.getByRole('listbox').count()).toBe(0);
+}
+
+// The root assumes that the input is in the popup until its input mounts. After the mount, the
+// trigger beside an input is a button with no role, as in a page that has no server HTML.
+async function expectHydratedComboboxPage(page: Page) {
+  await expectComboboxPageOnServer(page);
+  expect(
+    await readAttributes(page.getByTestId('fruit-trigger'), ['role', 'tabindex', 'aria-haspopup']),
+  ).toEqual({ role: null, tabindex: '-1', 'aria-haspopup': 'listbox' });
+}
+
 interface PageCase {
   path: string;
   expectPage: (page: Page) => Promise<void>;
@@ -1578,6 +1622,11 @@ const PAGES: PageCase[] = [
     expectHydratedPage: expectHydratedDialogPage,
   },
   { path: '/autocomplete', expectPage: expectAutocompletePage },
+  {
+    path: '/combobox',
+    expectPage: expectComboboxPageOnServer,
+    expectHydratedPage: expectHydratedComboboxPage,
+  },
 ];
 
 const MODES = [
@@ -2095,6 +2144,26 @@ describe.each(MODES)('in $name', async ({ dev }) => {
 
     expect(await page.getByRole('option').allTextContents()).toEqual(['Malmö', 'Malta']);
     expect(await readFormData(page)).toEqual(['city=ma']);
+    expect(messages).toEqual([]);
+  });
+
+  it('filters the items of /combobox while typing after hydration, and selects an item', async () => {
+    const page = await createPage('/combobox');
+    const messages = collectMessages(page);
+    const input = page.getByTestId('fruit-input');
+    const popup = page.getByTestId('fruit-popup');
+
+    await input.fill('ch');
+    await popup.waitFor({ state: 'visible' });
+
+    expect(await popup.evaluate((element) => element.closest('main') === null)).toBe(true);
+    expect(await page.getByRole('option').allTextContents()).toEqual(['Cherry']);
+
+    await page.getByRole('option', { name: 'Cherry' }).click();
+    await popup.waitFor({ state: 'detached' });
+
+    expect(await input.inputValue()).toBe('Cherry');
+    expect(await readFormData(page)).toEqual(['fruit=Cherry', 'tags=b', 'country=Sweden']);
     expect(messages).toEqual([]);
   });
 
