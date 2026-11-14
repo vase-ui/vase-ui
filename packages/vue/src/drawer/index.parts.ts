@@ -29,6 +29,8 @@ import type {
   DrawerRootState,
 } from './root/DrawerRoot.vue';
 import type { DrawerSnapPoint } from './root/DrawerRootContext';
+import DrawerSwipeArea from './swipe-area/DrawerSwipeArea.vue';
+import type { DrawerSwipeAreaProps, DrawerSwipeAreaState } from './swipe-area/DrawerSwipeArea.vue';
 import { DrawerTitle } from './title/DrawerTitle';
 import type { DrawerTitleProps, DrawerTitleState } from './title/DrawerTitle';
 
@@ -117,6 +119,16 @@ export namespace Root {
   export type SnapPointChangeEventReason = DrawerRootSnapPointChangeEventReason;
   export type SnapPointChangeEventDetails = DrawerRootSnapPointChangeEventDetails;
   export type SnapPoint = DrawerSnapPoint;
+}
+
+/**
+ * An invisible area that listens for swipe gestures to open the drawer.
+ * Renders a `<div>` element.
+ */
+export const SwipeArea: typeof DrawerSwipeArea = DrawerSwipeArea;
+export namespace SwipeArea {
+  export type Props = DrawerSwipeAreaProps;
+  export type State = DrawerSwipeAreaState;
 }
 
 /**

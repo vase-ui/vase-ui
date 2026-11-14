@@ -3,6 +3,7 @@ import { Teleport, defineComponent } from 'vue';
 import type { ComponentPublicInstance } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { createRenderer, fireEvent, flushMicrotasks, screen, within } from '#test-utils';
+import * as Select from '../../select/index.parts';
 import LabelableControl from '../../../test/fixtures/LabelableControl.vue';
 import LabelableLabel from '../../../test/fixtures/LabelableLabel.vue';
 import LabelableScope from '../../../test/fixtures/LabelableScope.vue';
@@ -24,6 +25,40 @@ function createShadowContainer(parent: Node = document.body) {
 
 describe('useLabel', () => {
   const { render } = createRenderer();
+
+  it('does not throw when a label is clicked in a detached React root', async () => {
+    const container = document.createElement('div');
+
+    const { unmount } = await render(
+      <Teleport to={container}>
+        <Field.Root>
+          <Field.Label nativeLabel={false} as="div">
+            Country
+          </Field.Label>
+          <Select.Root>
+            <Select.Trigger id="country">Choose a country</Select.Trigger>
+          </Select.Root>
+        </Field.Root>
+      </Teleport>,
+    );
+
+    const errors: ErrorEvent[] = [];
+    function handleError(event: ErrorEvent) {
+      event.preventDefault();
+      errors.push(event);
+    }
+    window.addEventListener('error', handleError);
+
+    try {
+      within(container).getByText('Country').click();
+      await flushMicrotasks();
+
+      expect(errors).toHaveLength(0);
+    } finally {
+      window.removeEventListener('error', handleError);
+      unmount();
+    }
+  });
 
   it('does not focus the control when a composed click originates inside a nested button', async () => {
     const Test = defineComponent(() => {

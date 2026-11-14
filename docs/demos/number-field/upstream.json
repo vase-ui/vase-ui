@@ -1,0 +1,8 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/number-field/demos",
+  "files": {
+    "hero/css-modules/index.module.css": "da5f140b702dc492251365bea6f04392e1050c9b263fa45afd6fbb9791e718f3",
+    "hero/css-modules/index.tsx": "0a10891c2734253dfac438effba145004ed6804963efb0fb27c1e9a4fca6b57e"
+  }
+}

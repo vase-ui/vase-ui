@@ -1,7 +1,7 @@
 export * from '../src/common/testUtils';
 export { pasteText } from './clipboard';
 export { createFormDataSpy } from './formData';
-export { createRenderer } from './createRenderer';
+export { createRenderer, waitForLaterMillisecond } from './createRenderer';
 export type { Renderable, VaseUIRenderResult } from './createRenderer';
 export { mockRuntimeLocale } from './mockRuntimeLocale';
 export {
@@ -19,6 +19,7 @@ export * from './animation';
 export { describeConformance } from './describeConformance';
 export { detachedTriggersConformanceTests } from './detachedTriggersConformanceTests';
 export { hiddenInputSizeTests } from './hiddenInputSizeTests';
+export { hiddenInputTypeTests } from './hiddenInputTypeTests';
 export { popupConformanceTests } from './popupConformanceTests';
 export { positionerConformanceTests } from './positionerConformanceTests';
 export { isInaccessible, screen, waitFor, within } from '@testing-library/dom';
