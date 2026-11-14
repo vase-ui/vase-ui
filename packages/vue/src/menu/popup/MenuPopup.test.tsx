@@ -1,6 +1,6 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { KeepAlive, computed, defineComponent, provide, shallowRef } from 'vue';
+import { KeepAlive, computed, defineComponent, onMounted, provide, shallowRef } from 'vue';
 import * as Menu from '../index.parts';
 import {
   createRenderer,
@@ -10,10 +10,16 @@ import {
   screen,
   takeReportedMessages,
   waitFor,
+  waitSingleFrame,
 } from '#test-utils';
+import {
+  ContextMenuProvider,
+  createContextMenuContext,
+} from '../../../test/fixtures/MenuParentFixture';
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
 import { REASONS } from '../../internals/reasons';
 import { ToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
+import { useMenuRootContext } from '../root/MenuRootContext';
 import MenuPopupReplace from './MenuPopupReplace.test.vue';
 
 const ToolbarProvider = defineComponent((_, { slots }) => {
@@ -326,6 +332,203 @@ describe('<Menu.Popup />', () => {
         expect(onOpenChangeComplete).toHaveBeenCalledTimes(1);
       });
       expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+    });
+  });
+
+  describe('focus', () => {
+    // The menu is controlled, so a case opens it with no press of the trigger.
+    async function renderMenu(popup: () => unknown, options: { before?: () => unknown } = {}) {
+      const open = shallowRef(false);
+      const result = await render(() => (
+        <div>
+          {options.before?.()}
+          <Menu.Root
+            modal={false}
+            open={open.value}
+            triggerId="trigger"
+            onUpdate:open={(nextOpen) => {
+              open.value = nextOpen;
+            }}
+          >
+            <Menu.Trigger id="trigger">Toggle</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>{popup()}</Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </div>
+      ));
+      const trigger = screen.getByRole('button', { name: 'Toggle' });
+      trigger.focus();
+      open.value = true;
+      return { ...result, trigger };
+    }
+
+    it('focuses the popup when the menu opens, and returns the focus when it closes', async () => {
+      const { user, trigger } = await renderMenu(() => <Menu.Popup data-testid="popup" />);
+      await waitFor(() => {
+        expect(screen.getByTestId('popup')).toHaveFocus();
+      });
+
+      await user.keyboard('{Escape}');
+
+      await waitFor(() => {
+        expect(trigger).toHaveFocus();
+      });
+    });
+
+    it.each([
+      { name: 'an element', finalFocus: (target: HTMLElement) => target },
+      { name: 'a ref', finalFocus: (target: HTMLElement) => shallowRef(target) },
+      { name: 'a function', finalFocus: (target: HTMLElement) => () => target },
+    ])('focuses the finalFocus target of $name when the menu closes', async ({ finalFocus }) => {
+      const target = shallowRef<HTMLElement | null>(null);
+      const { user } = await renderMenu(
+        () => (
+          <Menu.Popup
+            data-testid="popup"
+            finalFocus={target.value ? finalFocus(target.value) : undefined}
+          />
+        ),
+        {
+          before: () => (
+            <button
+              ref={(element) => {
+                target.value = element as HTMLElement | null;
+              }}
+            >
+              Final
+            </button>
+          ),
+        },
+      );
+      await waitFor(() => {
+        expect(screen.getByTestId('popup')).toHaveFocus();
+      });
+
+      await user.keyboard('{Escape}');
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Final' })).toHaveFocus();
+      });
+    });
+
+    it('gives the type of the interaction that closed the menu to a finalFocus function', async () => {
+      const finalFocus = vi.fn(() => false);
+      const { user } = await renderMenu(() => (
+        <Menu.Popup data-testid="popup" finalFocus={finalFocus} />
+      ));
+      await waitFor(() => {
+        expect(screen.getByTestId('popup')).toHaveFocus();
+      });
+
+      await user.keyboard('{Escape}');
+
+      await waitFor(() => {
+        expect(finalFocus).toHaveBeenCalledWith('keyboard');
+      });
+      await waitFor(() => {
+        expect(screen.queryByTestId('popup')).toBe(null);
+      });
+      expect(document.body).toHaveFocus();
+    });
+
+    it('focuses the trigger for Shift+Tab from the start of the popup', async () => {
+      const { trigger } = await renderMenu(() => (
+        <Menu.Popup data-testid="popup">
+          <button data-testid="inside">Inside</button>
+        </Menu.Popup>
+      ));
+      await waitFor(() => {
+        expect(screen.getByTestId('inside')).toHaveFocus();
+      });
+
+      await userEvent.tab({ shift: true });
+
+      expect(trigger).toHaveFocus();
+      expect(screen.getByTestId('popup')).toBeVisible();
+    });
+
+    it('moves the focus to the popup when the focused element in the popup goes away', async () => {
+      const shown = shallowRef(true);
+      await renderMenu(() => (
+        <Menu.Popup data-testid="popup">
+          {shown.value && <button data-testid="inside">Inside</button>}
+        </Menu.Popup>
+      ));
+      await waitFor(() => {
+        expect(screen.getByTestId('inside')).toHaveFocus();
+      });
+
+      shown.value = false;
+
+      await waitFor(() => {
+        expect(screen.getByTestId('popup')).toHaveFocus();
+      });
+    });
+
+    // `Menu.List` writes its element to the store. This mock does the same.
+    const ListMock = defineComponent(() => {
+      const { store } = useMenuRootContext();
+      const list = shallowRef<HTMLElement | null>(null);
+      onMounted(() => {
+        store.set('listElement', list.value);
+      });
+      return () => <div ref={list} role="menu" tabindex={-1} data-testid="list" />;
+    });
+
+    it('focuses the list when the menu opens with no highlighted item', async () => {
+      await renderMenu(() => (
+        <Menu.Popup data-testid="popup">
+          <ListMock />
+        </Menu.Popup>
+      ));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('list')).toHaveFocus();
+      });
+    });
+
+    it('moves no focus when the menu with a list opens with a highlighted item', async () => {
+      const probe = createMenuStoreProbe();
+      const { trigger } = await renderMenu(() => (
+        <Menu.Popup data-testid="popup">
+          <probe.Probe />
+          <ListMock />
+        </Menu.Popup>
+      ));
+      probe.store.set('activeIndex', 0);
+      await waitFor(() => {
+        expect(screen.getByTestId('list')).toBeVisible();
+      });
+      await waitSingleFrame();
+      await waitSingleFrame();
+
+      expect(trigger).toHaveFocus();
+    });
+
+    it('keeps the focus in a menu of a context menu', async () => {
+      await render(
+        <ContextMenuProvider context={createContextMenuContext()}>
+          <Menu.Root defaultOpen>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <button data-testid="first">First</button>
+                  <button data-testid="last">Last</button>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </ContextMenuProvider>,
+      );
+      await waitFor(() => {
+        expect(screen.getByTestId('first')).toHaveFocus();
+      });
+      screen.getByTestId('last').focus();
+
+      await userEvent.tab();
+
+      expect(screen.getByTestId('first')).toHaveFocus();
     });
   });
 
