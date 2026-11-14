@@ -21,6 +21,9 @@ export type VaseUIRenderResult = BoundFunctions<typeof queries> & {
   setProps: (props: Record<string, unknown>) => Promise<void>;
 };
 
+// The fake clock of Vitest runs a frame each 16 ms from the time when fake timers start.
+const FAKE_FRAME_DURATION = 16;
+
 /** A reading of the wall clock and of the monotonic clock at one time. */
 interface ClockMark {
   wall: number;
@@ -41,15 +44,19 @@ async function waitPastStampsSince(mark: ClockMark) {
   // so the second value is the latest stamp that the wall clock gives with no step back.
   // `Date.now()` is the latest stamp after a step forward.
   const stamp = Math.max(Date.now(), mark.wall + Math.ceil(performance.now() - mark.monotonic));
-  // Vitest has a mocked system time under fake timers and after `vi.setSystemTime`.
-  if (vi.getMockedSystemTime() !== null) {
-    // A fake `Date` does not move by itself, so the loop below would not end. The move goes past
-    // `stamp`, because a test can fake `Date` and not `performance`. When the fake timers do not
-    // fake `Date`, this call has no effect, and the loop waits for the real clock.
-    vi.setSystemTime(stamp + 1);
+  const mockedTime = vi.getMockedSystemTime()?.getTime();
+  if (mockedTime !== undefined) {
+    // A mocked clock does not move during the loop below, so the loop would not end.
+    // `vi.setSystemTime` runs no timer and moves each pending timer with the clock, but the frames
+    // stay at their times. A move of whole frames thus keeps each frame callback in its frame.
+    // With a mocked `Date` and a real `performance.now()`, the stamp can be more than one frame
+    // after `Date.now()`.
+    const frames = Math.max(1, Math.ceil((stamp + 1 - Date.now()) / FAKE_FRAME_DURATION));
+    vi.setSystemTime(mockedTime + frames * FAKE_FRAME_DURATION);
   }
-  // The loop compares with `<=`, so a step back of the wall clock during the loop does not end it.
-  // It waits in microtasks, because a case can assert the state before the next task.
+  // Fake timers can leave `Date` real. The loop compares with `<=`, so a step back of the wall
+  // clock during the loop does not end it. It waits in microtasks, because a case can assert the
+  // state before the next task.
   while (Date.now() <= stamp) {
     await Promise.resolve();
   }

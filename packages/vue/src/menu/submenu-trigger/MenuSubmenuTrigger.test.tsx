@@ -765,7 +765,7 @@ describe('<Menu.SubmenuTrigger />', () => {
   });
 
   // These cases are the last ones of the file. In Vue 3.5.12, a `setup` that throws leaves the
-  // current instance set, and a later case that renders a slot gets a warning about that slot. So
+  // current instance set, and a later case of the file can then get a warning about a slot. So
   // the case with slots comes first.
   it('throws when Menu.SubmenuRoot is rendered outside a menu', async () => {
     await expect(

@@ -285,7 +285,7 @@ describe('useToastLabelPart', () => {
   });
 
   // These cases are the last ones of the file. In Vue 3.5.12, a `setup` that throws leaves the
-  // current instance set, and a later case that renders a slot gets a warning about that slot. Each
+  // current instance set, and a later case of the file can then get a warning about a slot. Each
   // case thus renders the part alone, with no slot.
   describe.each(cases)('<$name />', ({ Part }) => {
     it('throws a descriptive error when rendered outside <Toast.Root>', async () => {

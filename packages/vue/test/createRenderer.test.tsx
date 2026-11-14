@@ -117,10 +117,10 @@ describe('createRenderer', () => {
       expect(await mountAndClick()).toBe(true);
     });
 
-    it('runs both listeners under fake timers that do not fake Date', async () => {
+    it('runs both listeners under fake timers that leave Date real', async () => {
       vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
       let failures = 0;
-      for (let index = 0; index < 20; index += 1) {
+      for (let index = 0; index < 100; index += 1) {
         if (!(await mountAndClick())) {
           failures += 1;
         }
@@ -129,16 +129,37 @@ describe('createRenderer', () => {
       expect(failures).toBe(0);
     });
 
-    it('runs both listeners under fake timers that fake only Date, and render resolves', async () => {
-      vi.useFakeTimers({ toFake: ['Date'] });
+    it('runs both listeners with a mocked date and real timers, and render resolves', async () => {
+      vi.setSystemTime(new Date('2026-01-01T00:00:00Z'));
 
       expect(await mountAndClick()).toBe(true);
     });
 
-    it('runs both listeners with a mocked system time and no fake timers, and render resolves', async () => {
-      vi.setSystemTime(new Date(2026, 0, 1));
+    it('runs both listeners with a mocked date and a mount longer than one frame, and render resolves', async () => {
+      vi.setSystemTime(new Date('2026-01-01T00:00:00Z'));
+      const capture = vi.fn();
+      const bubble = vi.fn();
+      // The mocked date does not move while the mount holds the page for 20 ms of real time.
+      const SlowMount = defineComponent(() => {
+        const end = performance.now() + 20;
+        while (performance.now() < end) {
+          // The loop holds the page.
+        }
+        return () => null;
+      });
+      const { getByTestId } = await render(
+        <div>
+          <div data-testid="target" {...{ onClickCapture: capture }} onClick={bubble} />
+          <SlowMount />
+        </div>,
+      );
 
-      expect(await mountAndClick()).toBe(true);
+      getByTestId('target').click();
+
+      expect({ capture: capture.mock.calls.length, bubble: bubble.mock.calls.length }).toEqual({
+        capture: 1,
+        bubble: 1,
+      });
     });
 
     describe('when the wall clock steps back by 3 ms', () => {
@@ -239,6 +260,48 @@ describe('createRenderer', () => {
 
         expect(target.calls()).toEqual({ capture: 1, bubble: 1 });
       });
+    });
+  });
+
+  describe('under fake timers', () => {
+    it('runs a frame callback of the mount at the next frame', async () => {
+      vi.useFakeTimers();
+      const frame = vi.fn();
+      const Framed = defineComponent(() => {
+        onMounted(() => {
+          requestAnimationFrame(frame);
+        });
+        return () => <div />;
+      });
+
+      await render(<Framed />);
+      expect(frame).not.toHaveBeenCalled();
+
+      vi.advanceTimersToNextFrame();
+      expect(frame).toHaveBeenCalledTimes(1);
+    });
+
+    it('runs no timer of the mount, and each timer keeps its delay', async () => {
+      vi.useFakeTimers();
+      const immediate = vi.fn();
+      const delayed = vi.fn();
+      const Timed = defineComponent(() => {
+        onMounted(() => {
+          setTimeout(immediate, 0);
+          setTimeout(delayed, 100);
+        });
+        return () => <div />;
+      });
+
+      await render(<Timed />);
+      expect(immediate).not.toHaveBeenCalled();
+
+      vi.advanceTimersByTime(99);
+      expect(immediate).toHaveBeenCalledTimes(1);
+      expect(delayed).not.toHaveBeenCalled();
+
+      vi.advanceTimersByTime(1);
+      expect(delayed).toHaveBeenCalledTimes(1);
     });
   });
 
