@@ -665,9 +665,8 @@ describe('<NavigationMenu.Root />', () => {
         await fireEvent.pointerUp(trigger, { pointerType: 'touch' });
         await fireEvent.click(trigger);
         await flushMicrotasks();
-        // Vue skips a listener for an event in the millisecond when Vue attached that listener,
-        // when another Vue listener got the event first. The nested trigger mounted in this
-        // millisecond, and the fake clock moves only each 20 ms.
+        // The click mounted the nested trigger in this millisecond of the fake clock. Vue skips the
+        // second and later listeners of an event in the millisecond when it attached them.
         vi.setSystemTime(Date.now() + 1);
 
         const nestedTrigger2 = screen.getByTestId('nested-trigger-2');
