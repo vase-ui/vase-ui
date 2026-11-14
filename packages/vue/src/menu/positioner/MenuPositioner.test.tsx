@@ -20,7 +20,7 @@ import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
 import { DROPDOWN_COLLISION_AVOIDANCE, POPUP_COLLISION_AVOIDANCE } from '../../internals/constants';
 import type { UseAnchorPositioningParameters } from '../../internals/useAnchorPositioning';
 import { REASONS } from '../../internals/reasons';
-import { provideFloatingNode } from '../../utils/popups/tree/FloatingTree';
+import { provideFloatingNode, useFloatingParentNodeId } from '../../utils/popups/tree/FloatingTree';
 
 const useAnchorPositioningSpy = vi.hoisted(() => vi.fn());
 
@@ -673,6 +673,33 @@ describe('<Menu.Positioner />', () => {
     await flushMicrotasks();
 
     expect(readContext()).toBe(undefined);
+  });
+
+  it('gives the node of the menu to the parts below it', async () => {
+    const parentNodeIds: Array<string | null> = [];
+    const NodeProbe = defineComponent({
+      setup() {
+        const parentNodeId = useFloatingParentNodeId();
+        parentNodeIds.push(parentNodeId.value);
+        return () => null;
+      },
+    });
+    const probe = createMenuStoreProbe();
+    await render(
+      <Menu.Root open>
+        <probe.Probe />
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup>
+              <NodeProbe />
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>,
+    );
+
+    expect(probe.store.select('floatingNodeId')).toBeTruthy();
+    expect(parentNodeIds).toEqual([probe.store.select('floatingNodeId')]);
   });
 
   it('marks the positioner and the popup of an Escape close as instant', async () => {

@@ -36,6 +36,9 @@ export interface MenuTriggerProps<Payload = unknown>
    * A payload to pass to the menu when it is opened.
    */
   payload?: Payload | undefined;
+  /**
+   * The id of the trigger. `triggerId` of the root and `open()` of a handle name a trigger by it.
+   */
   id?: string | undefined;
 }
 </script>

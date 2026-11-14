@@ -13,7 +13,7 @@ import {
 import CompositeRootPart from '../../../test/fixtures/CompositeRootPart.vue';
 import { MenubarProvider, createMenubarContext } from '../../../test/fixtures/MenuParentFixture';
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
-import { useFloatingTree } from '../../utils/popups/tree/FloatingTree';
+import { provideFloatingNode, useFloatingTree } from '../../utils/popups/tree/FloatingTree';
 import type { FloatingTreeType } from '../../utils/popups/types';
 
 const popup = (
@@ -299,6 +299,33 @@ describe('<Menu.Trigger />', () => {
       expect(detachedTree.nodesRef.value.map((node) => node.id)).toContain(
         probe.store.select('floatingNodeId'),
       );
+    });
+
+    it('gives the parent node of a detached trigger to the menu', async () => {
+      const handle = Menu.createHandle();
+      const probe = createMenuStoreProbe();
+      const ParentNode = defineComponent((_, { slots }) => {
+        provideFloatingNode('parent');
+        return () => slots.default?.();
+      });
+      await render(
+        <div>
+          <ParentNode>
+            <Menu.Trigger handle={handle} id="detached">
+              Detached
+            </Menu.Trigger>
+          </ParentNode>
+          <Menu.Root handle={handle}>
+            <probe.Probe />
+          </Menu.Root>
+        </div>,
+      );
+      expect(probe.store.select('floatingParentNodeId')).toBe(null);
+
+      handle.open('detached');
+      await flushMicrotasks();
+
+      expect(probe.store.select('floatingParentNodeId')).toBe('parent');
     });
 
     it('gives the parent and the keyboard relay of a trigger in a menubar to the menu', async () => {

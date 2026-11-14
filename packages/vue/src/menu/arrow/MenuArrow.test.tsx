@@ -1,6 +1,6 @@
-import { describe } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import * as Menu from '../index.parts';
-import { createRenderer, describeConformance } from '#test-utils';
+import { createRenderer, describeConformance, screen } from '#test-utils';
 
 describe('<Menu.Arrow />', () => {
   const { render } = createRenderer();
@@ -19,4 +19,24 @@ describe('<Menu.Arrow />', () => {
       );
     },
   }));
+
+  it('is hidden from the accessibility tree, and has the state of the positioner', async () => {
+    await render(
+      <Menu.Root open>
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup>
+              <Menu.Arrow data-testid="arrow" />
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>,
+    );
+
+    const arrow = screen.getByTestId('arrow');
+    expect(arrow).toHaveAttribute('aria-hidden', 'true');
+    expect(arrow).toHaveAttribute('data-open');
+    expect(arrow).toHaveAttribute('data-side', 'bottom');
+    expect(arrow).toHaveAttribute('data-align', 'center');
+  });
 });

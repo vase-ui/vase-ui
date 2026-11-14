@@ -266,6 +266,7 @@ export function useSingleAnchorPopupRoot<Store extends PopupRootStore>(
     },
     createStore,
     options,
+    useVaseUiId(),
   );
   usePopupRootOpenState(store, props, options.name);
 
@@ -286,7 +287,7 @@ function usePopupRootStore<Store extends PopupRootStore>(
   initialState: PopupRootInitialState,
   createStore: CreatePopupRootStore<Store>,
   options: Pick<UsePopupRootOptions<Store>, 'onOpenChange' | 'onOpenChangeComplete'>,
-  defaultPopupId: MaybeRefOrGetter<string | undefined> = useVaseUiId(),
+  defaultPopupId: MaybeRefOrGetter<string | undefined>,
 ) {
   const store = createStore(initialState, toValue(defaultPopupId));
   store.context.onOpenChange = options.onOpenChange;
