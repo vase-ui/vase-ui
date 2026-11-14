@@ -123,9 +123,7 @@ const isPressOpenedByThisTrigger = computed(() =>
 );
 const popupId = computed(() => store.value.select('triggerPopupId', triggerId.value));
 const isTouchPressOpen = computed(() => store.value.select('isTouchPressOpen', props.openOnHover));
-const hasFocusGuards = computed(() =>
-  store.value.select('hasTriggerFocusGuards', triggerId.value),
-);
+const hasFocusGuards = computed(() => store.value.select('hasTriggerFocusGuards', triggerId.value));
 
 const triggerElement = shallowRef<HTMLElement | null>(null);
 
