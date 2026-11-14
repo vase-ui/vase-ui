@@ -353,6 +353,7 @@ Rules:
 - The SFC compiler then writes `type: Boolean`, so a bare `multiple` is `true`. For `Multiple` alone, it writes `type: null`, so a bare `multiple` is the string `''`, which is falsy.
 - In a union of `boolean` and a string, write `boolean` first: `boolean | 'trap-focus'`. With the string first, a bare attribute is the string `''`.
 - The SFC compiler cannot read a type of the DOM library, such as `ValidityState`. In a union with `boolean`, the production build then keeps `Boolean` alone. For any other value, Vue warns in a development build of the consumer. Write the other member with a type of the package, as `Field.Error` does: `boolean | keyof FieldValidityData['state']`.
+- A Boolean prop with the default `true` cannot tell an absent prop from `true`. A check of Base UI for a prop that is set thus runs only for `false`. `Menu.Root` does this for `modal` on a nested menu.
 - Declare a required prop that can be `null` as `x: T | null`, such as `value` of `Progress.Root`. The SFC compiler then writes `required: true`, and Vue accepts `null` with no warning.
 - The props interface of a part can extend an `Omit` of the props interface of another part. The other interface can be in another `.vue` file and can have a type parameter. The SFC compiler reads the kept props, and each keeps its JSDoc. `AlertDialogRoot.vue` is the example.
 - Do not give a constant of `setup` the name of a prop. The SFC compiler then reports that name as a constant, and `pnpm parity:check` does not find the prop. `ProgressLabel.vue` declares the prop `id`, so its constant is `labelId`.
@@ -450,6 +451,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - `useAnchorPositioning` of `src/internals` is the only caller of `useFloating` of `@floating-ui/vue`. A positioner part of a popup family calls `usePopupPositioner` in `setup`. `test/fixtures/PopupPositionerPart.vue` is the model. See [Popup positioning](#popup-positioning).
 - To add or change a dependency of the package, run `pnpm --filter @vase-ui/vue add <name>@<range>`. Then commit `pnpm-lock.yaml`. Do not edit the lockfile. `THIRD_PARTY_NOTICES.md` names each run-time dependency.
 - When two families import each other, move the shared context or constant to `src/internals`.
+- `MenubarContext` and `ContextMenuRootContext` are in `src/internals`, because Menu reads them and Menubar and Context Menu render Menu.
 - `src/internals/constants.ts` has a part of the constants of Base UI. The pull request that first needs a constant adds it.
 - Base UI's `internals` folders import constants, types and functions of the Field and Form families. Those pieces are in `src/internals`: `field-constants/FieldControlDataAttributes.ts`, `field-root-context/getCombinedFieldValidityData.ts`, and the types in `field-root-context/FieldRootContext.ts` and `form-context/FormContext.ts`. The file of the family exports them again from the path of Base UI.
 - A file of `utils` that Base UI has keeps the path of Base UI, also when it imports a constant of a family. `utils` is a shared folder and not an entry point. An example is `utils/collapsibleOpenStateMapping.ts`.
@@ -628,9 +630,11 @@ The state of a popup is in a store. The code is in `src/utils/popups`. `tooltip/
 - A selector is a plain function of the state: `(state, ...args) => value`. `store.select(key, ...args)` calls it with the reactive state.
 - A part reads a selector in a `computed` in `setup`: `computed(() => store.select('isOpenedByTrigger', id.value))`. The part then renders again only when the value changes.
 - A `select` call in a render function makes the part render again on each change of a key that the selector reads.
+- A selector of a child store can read the store of its parent. A `computed` that reads the selector follows the parent, so the child store needs no subscription.
 - The store makes no `computed` and no watcher. The `computed` of a part stops with the part. Thus code can make a store outside a component, with no `effectScope`.
 - Write with `set`, `update` or `setState`. Do not assign to `state`.
 - `set` and `update` call `setState` with the full state, so a subclass that overrides `setState` sees each write.
+- A family store that must do work when one key of its state changes overrides `setState`, because a store makes no watcher. `MenuStore` shares the mouse-up ref of its parent in this way.
 - Vue has no public batch for writes. A watcher with the default flush runs one time for an update of many keys. A watcher with `flush: 'sync'` runs after the write of each key, so it can read a state that is not complete.
 - `setState` finds the changed keys before it writes the first key. A sync watcher can write the store during an update, and that write stays.
 - `BasePopupStore` writes `open` and `openProp` after the other keys. A sync watcher of the open state then reads the trigger and the reason of the change.
@@ -675,8 +679,9 @@ The state of a popup is in a store. The code is in `src/utils/popups`. `tooltip/
 - When triggers join an open popup that has no active trigger and none claims it, the root picks the first trigger of the trigger map that is in the document. The result is the same as at the mount. `KeepAlive` runs the hooks from the last part to the first part, so a claim by each trigger would pick the last trigger.
 - `KeepAlive` detaches the store of a deactivated root from its handle. The store attaches again at the activation.
 - A root of a popup with one anchor and no trigger registry, such as Select and Combobox, calls `useSingleAnchorPopupRoot(props, createStore, options)` in `setup`. The call returns `store`, `open`, `mounted`, `transitionStatus` and `actions`. Such a root has no handle, no payload and no trigger id.
-- `popupRoot.ts` has `usePopupRoot`, `useSingleAnchorPopupRoot`, `useImplicitActiveTrigger` and `usePopupRootSync`. The pull request that first needs `usePopupRootWithPopupId` adds it with its cases.
-- `usePopupRootSync(store, open)` clears `openMethod` of the store when `open` becomes `false` and when the root unmounts. A root whose store has the key `openMethod` calls it in `setup`.
+- `usePopupRootWithPopupId(props, createStore, defaultPopupId, options)` is `usePopupRoot` for a root that gives its own default popup id. The id is a value, a ref or a getter, and the store follows a change. `Menu.Root` gives the id that its popup registers, or else a generated id.
+- `popupRoot.ts` has `usePopupRoot`, `usePopupRootWithPopupId`, `useSingleAnchorPopupRoot`, `useImplicitActiveTrigger` and `usePopupRootSync`.
+- `usePopupRootSync(store, open)` clears `openMethod` of the store when `open` becomes `false` and when the root unmounts. A root whose trigger writes `openMethod` with `useOpenMethodTriggerProps` calls it in `setup`. `useOpenInteractionType` clears its own `openMethod`, so a root that uses it does not.
 - `types.ts` has a part of the types of Base UI. The pull request that first needs a type adds it.
 
 ### Popup tree
@@ -1039,13 +1044,14 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - `useFloating` sets `isPositioned` from the `open` option that it read when the position pass started. A pass can start while the popup is open and end after the popup closed. `useFloating` then gives `true` for a closed popup, and the part shows an old position.
 - The composable keeps its own `isPositioned` in a `shallowRef`. One `watch` on `middlewareData` and on the `isPositioned` of `useFloating` writes it. The value is `true` only when the `isPositioned` of `useFloating` is `true` and `open` is not `false` at that time.
 - Each reader of `isPositioned` reads this ref. A reader outside a render, such as the microtask of a function ref, needs the value in the write that ends the pass.
-- Where a handler of Base UI reads the state of the last render after a state write, keep that value in a variable that a `watch` with the default flush writes. A direct read in the handler gives the value after the write. `useFieldValidation` does this for the validity of the field: `renderedValid`.
+- Where a handler of Base UI reads the state of the last render after a state write, keep that value in a variable that a `watch` with the default flush writes. A direct read in the handler gives the value after the write. `useFieldValidation` does this for the validity of the field: `renderedValid`. `useMenuRoot` does this for the open state, and it gives the state to the store only while the root is mounted.
 - `useValueAsRef(value)` of Base UI becomes a variable that a `watch` of the value writes with `flush: 'sync'`. A handler then reads the value of the last change. `SliderControl.vue` does this for `values`.
 - `useValueChanged` calls its callback after the DOM update, because the callback of a field control reads the validity of the input. Under `KeepAlive` it waits for the activation and gives the value before the deactivation.
 - A consumer can change an object prop in place, because a `ref` of the consumer gives a reactive proxy. `errors` of `Form` is such a prop. A `computed` that reads the proxy with `Object.hasOwn` does not see a new key, because Vue tracks no `Object.hasOwn` of a proxy.
 - Watch such a prop with `deep: true`, and keep a plain copy of it in a `shallowRef`. Each change then gives a new object, and a `computed` that reads the copy runs again.
 - Do not use `watchPostEffect` for an effect. It runs again for each value that the effect reads, and an effect of upstream runs again only for the dependencies that it names. A dependency that the effect does not read, such as `restartKey` in `useOpenChangeComplete`, then starts no run.
 - An internal component of Base UI that only provides a context and renders its children becomes a composable that the root calls. `LabelableProvider.ts` exports `provideLabelableContext()`.
+- An internal root component of Base UI that more than one root part renders also becomes a composable. `useMenuRoot` does the work of `MenuRootInternal`.
 - A registration that the server HTML needs runs one time in `setup`. Register a getter for the value, so that a later change needs no new registration. Remove the registration in `onScopeDispose`. `useLabel` and `useRegisteredMessageId` do this.
 - Do not register with a `watch` that has `immediate` and a cleanup. A server render stops that watcher directly after its first run, and the stop runs the cleanup.
 - A registration from which a provider picks one value among many parts runs in `onMounted`. A control that replaces another control then registers after the old control left the registrations. `useLabelableId` does this for the id of a control, with a `watch` for a later change. `useRegisterFieldControl` does it for the control of a field. It registers one getter for all the values of the control. A `watch` registers the same getter again when the `id`, the `name`, the value or `enabled` of the control changes.
