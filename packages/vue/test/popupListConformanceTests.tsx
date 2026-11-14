@@ -385,7 +385,7 @@ export function popupListConformanceTests(config: PopupListTestConfig) {
         await openWithMouse(user);
         expect(getItem(1)).toHaveAttribute('aria-disabled', 'true');
 
-        await user.hover(getItem(1));
+        await hoverItem(user, getItem(1));
         await user.keyboard('{Enter}');
         await settle();
 

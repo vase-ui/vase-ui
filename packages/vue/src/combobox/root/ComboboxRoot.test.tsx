@@ -22,6 +22,8 @@ import {
   hydrate,
   isJSDOM,
   nextEvent,
+  popupConformanceTests,
+  popupListConformanceTests,
   renderOnServer,
   screen,
   waitFor,
@@ -254,6 +256,69 @@ describe('<Combobox.Root />', () => {
 
     const separator = screen.getByRole('presentation');
     expect(separator).toHaveAttribute(ComboboxSeparatorDataAttributes.orientation, 'vertical');
+  });
+
+  popupConformanceTests({
+    createComponent: (props) => (
+      <Combobox.Root {...props.root}>
+        <Combobox.Input data-testid="trigger" />
+        <Combobox.Portal {...props.portal}>
+          <Combobox.Positioner>
+            <Combobox.Popup>
+              <Combobox.List {...props.popup}>
+                <Combobox.Item value="item">Item</Combobox.Item>
+              </Combobox.List>
+            </Combobox.Popup>
+          </Combobox.Positioner>
+        </Combobox.Portal>
+      </Combobox.Root>
+    ),
+    render,
+    triggerMouseAction: 'click',
+    expectedPopupRole: 'listbox',
+    combobox: true,
+    openReason: REASONS.inputPress,
+    // The `popup` props go to the List (it carries the listbox role), which has no exit state.
+    exitAnimation: false,
+  });
+
+  popupListConformanceTests({
+    createComponent: ({ root, items, disabledItems, scrollerStyle, itemStyle, onItemClick }) => (
+      <Combobox.Root items={items} {...root}>
+        <Combobox.Input data-testid="trigger" />
+        <Combobox.Portal>
+          <Combobox.Positioner>
+            <Combobox.Popup data-testid="popup">
+              <Combobox.List data-testid="scroller" style={scrollerStyle}>
+                {{
+                  item: ({ item }: { item: string }) => (
+                    <Combobox.Item
+                      key={item}
+                      value={item}
+                      disabled={disabledItems.includes(item)}
+                      style={itemStyle}
+                      onClick={onItemClick}
+                    >
+                      <span>{item}</span>
+                    </Combobox.Item>
+                  ),
+                }}
+              </Combobox.List>
+            </Combobox.Popup>
+          </Combobox.Positioner>
+        </Combobox.Portal>
+      </Combobox.Root>
+    ),
+    render,
+    itemRole: 'option',
+    focusModel: 'virtual',
+    homeEnd: false,
+    selectable: true,
+    enterSpaceOpen: false,
+    typeahead: false,
+    modal: false,
+    triggerClickCloses: false,
+    listEnd: 'escape',
   });
 
   describe('IME composition', () => {
