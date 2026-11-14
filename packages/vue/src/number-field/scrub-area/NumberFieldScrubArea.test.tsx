@@ -354,31 +354,34 @@ describe('<NumberField.ScrubArea />', () => {
 
   // Gecko defers the pointer lock release by 20ms, so the scrub is still live right after
   // `pointerup` there; that path is covered by `NumberFieldScrubArea.gecko.test.tsx`.
-  it.skipIf(platform.engine.gecko)('ignores pointer movement once the scrub has ended', async () => {
-    await render(
-      <NumberField.Root defaultValue={0}>
-        <NumberField.Input />
-        <NumberField.ScrubArea data-testid="scrub-area">
-          <NumberField.ScrubAreaCursor />
-        </NumberField.ScrubArea>
-      </NumberField.Root>,
-    );
+  it.skipIf(platform.engine.gecko)(
+    'ignores pointer movement once the scrub has ended',
+    async () => {
+      await render(
+        <NumberField.Root defaultValue={0}>
+          <NumberField.Input />
+          <NumberField.ScrubArea data-testid="scrub-area">
+            <NumberField.ScrubAreaCursor />
+          </NumberField.ScrubArea>
+        </NumberField.Root>,
+      );
 
-    const scrubArea = screen.getByTestId('scrub-area');
-    const input = screen.getByRole('textbox');
+      const scrubArea = screen.getByTestId('scrub-area');
+      const input = screen.getByRole('textbox');
 
-    scrubArea.dispatchEvent(createPointerDownEvent(scrubArea));
-    scrubArea.dispatchEvent(createPointerMoveEvent({ movementX: 10 }));
-    await flushMicrotasks();
+      scrubArea.dispatchEvent(createPointerDownEvent(scrubArea));
+      scrubArea.dispatchEvent(createPointerMoveEvent({ movementX: 10 }));
+      await flushMicrotasks();
 
-    expect(input).toHaveValue('10');
+      expect(input).toHaveValue('10');
 
-    window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
-    window.dispatchEvent(createPointerMoveEvent({ movementX: 10 }));
-    await flushMicrotasks();
+      window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+      window.dispatchEvent(createPointerMoveEvent({ movementX: 10 }));
+      await flushMicrotasks();
 
-    expect(input).toHaveValue('10');
-  });
+      expect(input).toHaveValue('10');
+    },
+  );
 
   describe('React.Activity', () => {
     it('does not resume scrubbing when a hidden scrub area is revealed again', async () => {

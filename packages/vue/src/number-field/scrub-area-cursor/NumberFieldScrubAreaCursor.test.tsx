@@ -1,9 +1,16 @@
 import { describe, expect, vi, it } from 'vitest';
 import { defineComponent, provide, shallowRef } from 'vue';
 import { NumberField } from '@vase-ui/vue/number-field';
-import { createRenderer, describeConformance, screen, takeReportedMessages } from '#test-utils';
+import {
+  createRenderer,
+  describeConformance,
+  flushMicrotasks,
+  screen,
+  takeReportedMessages,
+} from '#test-utils';
 import { platform } from '../../common/platform';
 import { NumberFieldScrubAreaContext } from '../scrub-area/NumberFieldScrubAreaContext';
+import NumberFieldScrubAreaCursorReplace from './NumberFieldScrubAreaCursorReplace.test.vue';
 
 const isWebKit = platform.engine.webkit;
 
@@ -190,6 +197,36 @@ describe.skipIf(isWebKit)('<NumberField.ScrubAreaCursor />', () => {
       expect(screen.queryByTestId('scrub-area-cursor')).toBe(null);
     } finally {
       Element.prototype.requestPointerLock = originalRequestPointerLock;
+    }
+  });
+
+  it('moves a cursor that mounts before the old cursor unmounts', async () => {
+    const pointerLock = vi
+      .spyOn(document.body, 'requestPointerLock')
+      .mockImplementation(() => Promise.resolve());
+
+    try {
+      const swapped = shallowRef(false);
+      await render(() => <NumberFieldScrubAreaCursorReplace swapped={swapped.value} />);
+
+      const scrubArea = screen.getByTestId('scrub-area');
+      scrubArea.dispatchEvent(
+        new PointerEvent('pointerdown', { bubbles: true, clientX: 10, clientY: 10 }),
+      );
+      await flushMicrotasks();
+
+      swapped.value = true;
+      await flushMicrotasks();
+      expect(screen.queryByTestId('old-cursor')).toBe(null);
+      const cursor = screen.getByTestId('new-cursor');
+      expect(cursor.style.transform).toBe('');
+
+      window.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, movementX: 4 }));
+      await flushMicrotasks();
+
+      expect(cursor.style.transform).toContain('translate3d(14px,');
+    } finally {
+      pointerLock.mockRestore();
     }
   });
 

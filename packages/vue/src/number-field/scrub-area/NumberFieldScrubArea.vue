@@ -123,12 +123,7 @@ function onScrub({ movementX, movementY }: PointerEvent) {
   };
 
   const newCoords = {
-    x: wrap(
-      Math.round(coords.x + movementX),
-      virtualCursor.offsetWidth / 2,
-      rect.left,
-      rect.right,
-    ),
+    x: wrap(Math.round(coords.x + movementX), virtualCursor.offsetWidth / 2, rect.left, rect.right),
     y: wrap(
       Math.round(coords.y + movementY),
       virtualCursor.offsetHeight / 2,

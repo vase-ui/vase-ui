@@ -43,7 +43,10 @@ const { isScrubbing, isTouchInput, isPointerLockDenied, scrubAreaCursorRef } =
 
 const shouldRender = computed(
   () =>
-    isScrubbing.value && !platform.engine.webkit && !isTouchInput.value && !isPointerLockDenied.value,
+    isScrubbing.value &&
+    !platform.engine.webkit &&
+    !isTouchInput.value &&
+    !isPointerLockDenied.value,
 );
 
 // A template can mount the cursor that replaces this cursor before it unmounts this cursor.
