@@ -1,26 +1,36 @@
-import {
-  computed,
-  onActivated,
-  onDeactivated,
-  onScopeDispose,
-  shallowRef,
-  toValue,
-  watch,
-} from 'vue';
+import { computed, onMounted, onScopeDispose, shallowRef, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { useIsHydrating } from '../common/hydration';
 import { useVaseUiId } from '../internals/useBaseUiId';
+import { isInTreeOf, useKeepAliveState } from '../internals/useKeepAliveState';
 
 export type LabelIdSetter = (
   next: string | undefined | ((current: string | undefined) => string | undefined),
 ) => void;
 
+interface ShownLabel {
+  id: () => string;
+  element: () => Element | null | undefined;
+}
+
+/** What a label needs from its root. `useLabelId` makes it. */
+export interface LabelIdRoot {
+  setLabelId: LabelIdSetter;
+  defaultLabelId: ComputedRef<string>;
+  isMounted: () => boolean;
+  /** Whether an id reference of the root reaches `element`. */
+  reaches: (element: Element) => boolean;
+  /**
+   * Queues a label that `KeepAlive` shows. The root names the last queued label in the document,
+   * one time for each flush.
+   */
+  show: (label: ShownLabel) => void;
+}
+
 export interface UseLabelIdReturnValue {
   /** The id of the label that the root has now. */
   labelId: ComputedRef<string | undefined>;
-  /** The id of a label that has no `id` of its own. */
-  defaultLabelId: ComputedRef<string>;
-  setLabelId: LabelIdSetter;
+  labelRoot: LabelIdRoot;
   /**
    * Gives the `aria-labelledby` of the root. The root calls it with the attributes of the consumer,
    * in the function that it gives to `useRenderElement` as `props`.
@@ -39,15 +49,49 @@ export interface UseLabelIdReturnValue {
  *
  * The first render in a browser assumes the same as a server. Vue does not patch an attribute when
  * it hydrates. A root that assumes a label only on a server keeps the generated id in the DOM.
+ * @param rootElement The element of the root.
  */
-export function useLabelId(): UseLabelIdReturnValue {
+export function useLabelId(
+  rootElement: MaybeRefOrGetter<Element | null | undefined>,
+): UseLabelIdReturnValue {
   const defaultLabelId = useVaseUiId();
   const isHydrating = useIsHydrating();
   const registeredId = shallowRef<string | undefined>();
+  let isMounted = false;
+
+  onMounted(() => {
+    isMounted = true;
+  });
 
   const setLabelId: LabelIdSetter = (next) => {
     registeredId.value = typeof next === 'function' ? next(registeredId.value) : next;
   };
+
+  const shownLabels = new Set<ShownLabel>();
+  const showCount = shallowRef(0);
+
+  // React runs the effects of a branch that `Activity` shows in tree order, so the last label of
+  // the branch wins. `KeepAlive` runs the hooks from the last part to the first part, and a label
+  // that mounted later can be before the other labels.
+  watch(showCount, () => {
+    let lastElement: Element | undefined;
+    let lastId: string | undefined;
+    for (const label of shownLabels) {
+      const element = label.element();
+      if (
+        element &&
+        (!lastElement ||
+          lastElement.compareDocumentPosition(element) & element.DOCUMENT_POSITION_FOLLOWING)
+      ) {
+        lastElement = element;
+        lastId = label.id();
+      }
+    }
+    shownLabels.clear();
+    if (lastId !== undefined) {
+      registeredId.value = lastId;
+    }
+  });
 
   function getAriaLabelledBy(attrs: Record<string, unknown>) {
     if (registeredId.value !== undefined || !isHydrating.value || hasAriaLabel(attrs)) {
@@ -58,8 +102,16 @@ export function useLabelId(): UseLabelIdReturnValue {
 
   return {
     labelId: computed(() => registeredId.value),
-    defaultLabelId,
-    setLabelId,
+    labelRoot: {
+      setLabelId,
+      defaultLabelId,
+      isMounted: () => isMounted,
+      reaches: (element) => isInTreeOf(toValue(rootElement), element),
+      show(label) {
+        shownLabels.add(label);
+        showCount.value += 1;
+      },
+    },
     getAriaLabelledBy,
   };
 }
@@ -71,40 +123,52 @@ function hasAriaLabel(attrs: Record<string, unknown>) {
 
 /**
  * The label calls it. It gives the id of the label to the root.
- * When `KeepAlive` deactivates the label, the root does not have the id until the activation.
- * @param idProp The `id` of the consumer. It wins over `defaultLabelId`.
- * @param setLabelId The setter that `useLabelId` returns.
- * @param defaultLabelId The id that the root made, so that the id equals the id in the server HTML.
+ * When `KeepAlive` holds the label, the root does not have the id until the activation.
+ * @param idProp The `id` of the consumer. It wins over `defaultLabelId` of the root.
+ * @param root The `labelRoot` that `useLabelId` returns.
+ * @param element The element of the label.
  * @returns The id of the label.
  */
 export function useRegisteredLabelId(
   idProp: MaybeRefOrGetter<string | undefined>,
-  setLabelId: LabelIdSetter,
-  defaultLabelId: MaybeRefOrGetter<string>,
+  root: LabelIdRoot,
+  element: MaybeRefOrGetter<Element | null | undefined>,
 ): ComputedRef<string> {
-  const id = computed(() => toValue(idProp) ?? toValue(defaultLabelId));
-  // `KeepAlive` takes the label out of the document, so the root must not name it.
-  const isDeactivated = shallowRef(false);
+  const { setLabelId } = root;
+  const id = computed(() => toValue(idProp) ?? root.defaultLabelId.value);
+  const { isHeld, shown } = useKeepAliveState(element, root.reaches);
 
-  onDeactivated(() => {
-    isDeactivated.value = true;
+  // The server HTML and the hydration need the id from the first render of the root. A label that
+  // mounts later can mount in a held branch, so it waits for the mount.
+  const writesInSetup = !root.isMounted();
+  if (writesInSetup) {
+    setLabelId(id.value);
+  }
+
+  onMounted(() => {
+    if (!writesInSetup && !isHeld.value) {
+      setLabelId(id.value);
+    }
   });
 
-  onActivated(() => {
-    isDeactivated.value = false;
-  });
+  // The root picks one label for each flush. With the default flush, the pick would run between
+  // the watchers of two labels.
+  watch(
+    shown,
+    () => {
+      root.show({ id: () => id.value, element: () => toValue(element) });
+    },
+    { flush: 'sync' },
+  );
 
-  setLabelId(id.value);
-  // `KeepAlive` runs the `onActivated` hooks from the last part to the first part. A write in the
-  // hook would give the root the first label of a branch. The watchers run in the order in which the
-  // labels mounted.
-  watch([id, isDeactivated], ([nextId, deactivated], [previousId]) => {
-    if (deactivated) {
+  watch([id, isHeld], ([nextId, held], [previousId, wasHeld]) => {
+    if (held) {
       setLabelId((current) => (current === previousId ? undefined : current));
-    } else {
+    } else if (!wasHeld) {
       setLabelId(nextId);
     }
   });
+
   onScopeDispose(() => {
     setLabelId((current) => (current === id.value ? undefined : current));
   });

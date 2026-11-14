@@ -48,8 +48,8 @@ provide(
   computed(() => props.keepMounted),
 );
 
-// The owner element is in the component tree at the place of this portal. Its role thus follows
-// the place of the root, which is fixed. The `parent` in the store can change, because a detached
+// The owner element is at the place of this portal in the document. Its role thus follows the
+// place of the root, which is fixed. The `parent` in the store can change, because a detached
 // trigger gives its own.
 const portalOwnerRole = parent.type === 'menu' || parent.type === 'menubar' ? 'group' : undefined;
 

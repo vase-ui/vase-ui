@@ -36,9 +36,13 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, ProgressLabelState>;
 }>();
 
-const { setLabelId, defaultLabelId, state } = useProgressRootContext();
+const { labelRoot, state } = useProgressRootContext();
 
-const labelId = useRegisteredLabelId(() => props.id, setLabelId, defaultLabelId);
+const labelId = useRegisteredLabelId(
+  () => props.id,
+  labelRoot,
+  () => element.value,
+);
 
 const { element, elementProps } = useRenderElement('span', props, {
   state,

@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { h } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import * as vaseUi from '@vase-ui/vue';
@@ -16,3 +18,9 @@ await assert.rejects(import('@vase-ui/vue/internals/part-marker'));
 
 const scriptedHtml = await renderToString(h(ScriptedPart));
 assert.ok(scriptedHtml.includes('data-scripted-part-ran'), scriptedHtml);
+
+// Vue checks props only in its development build, and `vue` reads NODE_ENV when it loads.
+execFileSync(process.execPath, [fileURLToPath(new URL('development.mjs', import.meta.url))], {
+  stdio: 'inherit',
+  env: { ...process.env, NODE_ENV: 'development' },
+});

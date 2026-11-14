@@ -76,6 +76,10 @@ const emit = defineEmits<{
    * Callback fired when the pressed state is changed.
    */
   pressedChange: [pressed: boolean, eventDetails: ToggleChangeEventDetails];
+  /**
+   * Event handler called after `pressedChange` with the new value, unless a listener cancels the
+   * change. `v-model:pressed` uses it.
+   */
   'update:pressed': [pressed: boolean];
 }>();
 
@@ -106,7 +110,7 @@ if (process.env.NODE_ENV !== 'production' && groupContext) {
 
 const [isPressed, setPressedState] = useControlled({
   controlled: () =>
-    groupContext ? groupContext.value.value.indexOf(groupItemValue.value) > -1 : props.pressed,
+    groupContext ? groupContext.value.value.includes(groupItemValue.value) : props.pressed,
   default: () => props.defaultPressed,
   name: 'Toggle',
   state: 'pressed',
