@@ -427,6 +427,25 @@
   color: var(--vase-gray-t1);
 }
 
+/* A table of the API reference fills the column, as in Base UI. Below 40rem, its frame scrolls the
+   table, so that the description column does not get narrower than a few words. */
+.vp-doc .api-table {
+  margin: 1.25rem 0;
+  border: 1px solid var(--vase-color-border);
+  border-radius: var(--vase-radius-12);
+  overflow-x: auto;
+}
+
+.vp-doc .api-table table {
+  display: table;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  width: 100%;
+  min-width: 40rem;
+  max-width: none;
+}
+
 .vp-doc tr,
 .vp-doc tr:nth-child(2n) {
   border-top: 0;
