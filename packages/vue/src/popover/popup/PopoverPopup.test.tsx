@@ -79,7 +79,7 @@ describe('<Popover.Popup />', () => {
     { name: 'trap-focus', modal: 'trap-focus', expected: true },
     { name: 'not modal', modal: false, expected: false },
   ])(
-    'gives the focus manager a modal state with a close part: $name',
+    'writes focusManagerModal while the popup has a close part: $name',
     async ({ modal, expected }) => {
       const handle = Popover.createHandle<unknown>();
       const hasClose = shallowRef(true);
@@ -106,7 +106,7 @@ describe('<Popover.Popup />', () => {
 
   // The compiled template of the fixture mounts the new popup before it unmounts the old popup. A
   // render function in TSX reuses the popup component, so it does not show this order.
-  it('gives the focus manager the modal state of a new popup that replaces the old popup', async () => {
+  it('writes focusManagerModal for a new popup that replaces the old popup', async () => {
     const handle = Popover.createHandle<unknown>();
     const swapped = shallowRef(false);
     await render(() => (
