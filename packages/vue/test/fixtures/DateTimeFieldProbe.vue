@@ -199,7 +199,7 @@ defineExpose({ context: root });
 
 <template>
   <div v-bind="elementProps()">
-    <div :ref="root.setInputElement" v-bind="inputProps">
+    <div v-bind="inputProps">
       <template
         v-for="segment in root.segments.value"
         :key="`${root.listKey.value}:${segment.index}`"

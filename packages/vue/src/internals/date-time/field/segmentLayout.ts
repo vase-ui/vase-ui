@@ -16,6 +16,7 @@ export interface SegmentLayoutOptions {
   /** `12` or `24` replaces the hour cycle of the locale. */
   hourCycle: 12 | 24 | undefined;
   calendar: string;
+  /** Whether the layout must have an era. `Intl` has an era in its own pattern for some locales. */
   era: boolean;
   timeZoneName: boolean;
 }
@@ -29,15 +30,14 @@ export interface LayoutSegment {
 export interface SegmentLayout {
   hourCycle: HourCycle | undefined;
   segments: LayoutSegment[];
+  /** The options that gave the layout. The texts of the era and the zone name use them too. */
+  formatOptions: Intl.DateTimeFormatOptions;
 }
 
-function intlOptions({
-  date,
-  time,
-  hourCycle,
-  era,
-  timeZoneName,
-}: SegmentLayoutOptions): Intl.DateTimeFormatOptions {
+function intlOptions(
+  { date, time, hourCycle, timeZoneName }: SegmentLayoutOptions,
+  era: boolean,
+): Intl.DateTimeFormatOptions {
   const options: Intl.DateTimeFormatOptions = {};
   if (date) {
     options.year = 'numeric';
@@ -81,15 +81,13 @@ function toSegmentType(partType: string): SegmentType {
   }
 }
 
-/**
- * The order of the segments and the text of the literals for a locale, from the parts that `Intl`
- * gives for a sample. Two literals in a row are one literal.
- */
-export function getSegmentLayout(
+function layoutOf(
   locale: Intl.LocalesArgument,
-  options: SegmentLayoutOptions,
+  calendar: string,
+  hasTime: boolean,
+  formatOptions: Intl.DateTimeFormatOptions,
 ): SegmentLayout {
-  const [format, epoch] = formatter(getSample(options.calendar), intlOptions(options), locale);
+  const [format, epoch] = formatter(getSample(calendar), formatOptions, locale);
   const segments: LayoutSegment[] = [];
   for (const part of format.formatToParts(epoch)) {
     const type = toSegmentType(part.type);
@@ -100,7 +98,29 @@ export function getSegmentLayout(
       segments.push({ type, text: type === 'literal' ? part.value : '' });
     }
   }
-  return { hourCycle: options.time ? format.resolvedOptions().hourCycle : undefined, segments };
+  return {
+    hourCycle: hasTime ? format.resolvedOptions().hourCycle : undefined,
+    segments,
+    formatOptions,
+  };
+}
+
+/**
+ * The order of the segments and the text of the literals for a locale, from the parts that `Intl`
+ * gives for a sample. Two literals in a row are one literal. `Intl` gets the era only when its
+ * pattern for the locale and the calendar has no era. Where the pattern has one, such as the
+ * Japanese calendar, the era keeps the style of the pattern in each era.
+ */
+export function getSegmentLayout(
+  locale: Intl.LocalesArgument,
+  options: SegmentLayoutOptions,
+): SegmentLayout {
+  const hasTime = options.time !== undefined;
+  const layout = layoutOf(locale, options.calendar, hasTime, intlOptions(options, false));
+  const needsEra = options.era && !layout.segments.some(({ type }) => type === 'era');
+  return needsEra
+    ? layoutOf(locale, options.calendar, hasTime, intlOptions(options, true))
+    : layout;
 }
 
 // The calendar of a value gives the era, so the value is in the calendar of the layout. A year and
@@ -118,13 +138,10 @@ function inCalendar(value: TemporalValue, calendar: string): TemporalValue {
 export function getFixedSegmentTexts(
   value: TemporalValue,
   locale: Intl.LocalesArgument,
-  options: SegmentLayoutOptions,
+  { formatOptions }: SegmentLayout,
+  calendar: string,
 ): Record<'era' | 'timeZoneName', string> {
-  const [format, epoch] = formatter(
-    inCalendar(value, options.calendar),
-    intlOptions(options),
-    locale,
-  );
+  const [format, epoch] = formatter(inCalendar(value, calendar), formatOptions, locale);
   const texts = { era: '', timeZoneName: '' };
   for (const part of format.formatToParts(epoch)) {
     if (part.type === 'era' || part.type === 'timeZoneName') {

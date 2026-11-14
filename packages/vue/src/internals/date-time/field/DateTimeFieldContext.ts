@@ -96,7 +96,8 @@ export interface DateTimeFieldContext {
   handleInputPress: (event: MouseEvent) => void;
   /** The part gives it to the `ref` of its element. */
   setRootElement: (element: unknown) => void;
-  setInputElement: (element: unknown) => void;
+  /** The element that the root part exposes as `inputElement`. */
+  hiddenInputElement: Readonly<Ref<HTMLInputElement | null>>;
   /** The props of the element of the root, with the attributes of the consumer merged in. */
   getRootProps: (attrs: Record<string, any>) => Record<string, any>[];
   hiddenInputProps: () => Record<string, unknown>;

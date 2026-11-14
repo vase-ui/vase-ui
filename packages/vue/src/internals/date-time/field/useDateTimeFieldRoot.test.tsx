@@ -22,6 +22,8 @@ import { useDateTimeFieldContext } from './DateTimeFieldContext';
 
 const PROBE = 'test/fixtures/DateTimeFieldProbe.vue';
 
+type FieldRootInstance = InstanceType<typeof Field.Root>;
+
 const segmentOf = (container: Element, type: string) =>
   container.querySelector<HTMLInputElement>(`input[data-type="${type}"]`)!;
 const hiddenInputOf = (container: Element) =>
@@ -186,6 +188,52 @@ describe('useDateTimeFieldRoot', () => {
       expect(segmentOf(after!, 'year').value).toBe('1');
     });
 
+    it('moves a year across the eras of a calendar, and shows the era that the calendar gives', async () => {
+      const onValueChange = vi.fn();
+      const { container, user } = await render(
+        <DateTimeFieldProbe
+          defaultValue="2019-05-01"
+          locale="ja-JP"
+          calendar="japanese"
+          onValueChange={onValueChange}
+        />,
+      );
+      const eraText = (date: string) => {
+        const [format, epoch] = formatter(
+          Temporal.PlainDate.from(date).withCalendar('japanese'),
+          { year: 'numeric', month: 'numeric', day: 'numeric' },
+          'ja-JP',
+        );
+        return format.formatToParts(epoch).find((part) => part.type === 'era')?.value;
+      };
+
+      expect(container.querySelector('[data-type="era"]')).toHaveTextContent(
+        eraText('2019-05-01')!,
+      );
+      expect(segmentOf(container, 'year').value).toBe('1');
+
+      await user.click(segmentOf(container, 'year'));
+      await user.keyboard('{ArrowDown}');
+
+      expect(onValueChange.mock.calls[0]![0].toString()).toBe('2018-05-01');
+      expect(container.querySelector('[data-type="era"]')).toHaveTextContent(
+        eraText('2018-05-01')!,
+      );
+      expect(segmentOf(container, 'year').value).toBe('30');
+    });
+
+    it('makes the layout again when the locale changes', async () => {
+      const { container, setProps } = await render(
+        <DateTimeFieldProbe defaultValue="2026-11-14" locale="en-US" />,
+      );
+      expect(typesOf(container)).toEqual(['month', 'day', 'year']);
+
+      await setProps({ locale: 'de-DE' });
+
+      expect(typesOf(container)).toEqual(['day', 'month', 'year']);
+      expect(shownBy(container)).toBe('14.11.2026');
+    });
+
     it('shows the time zone name of a zoned value, unless hideTimeZone is set', async () => {
       const { container } = await render(
         <div>
@@ -339,7 +387,7 @@ describe('useDateTimeFieldRoot', () => {
         segment: 'minute',
         expected: '15:05:33',
       },
-    ])(
+    ] as const)(
       'works with $name that another realm made, which `instanceof` does not know',
       async (row) => {
         const frame = document.createElement('iframe');
@@ -573,6 +621,48 @@ describe('useDateTimeFieldRoot', () => {
       expect(segmentOf(container, 'hour').value).toBe('03');
     });
 
+    it('keeps the hour that a clock repeats when the minute changes', async () => {
+      const onValueChange = vi.fn();
+      const { container, user } = await render(
+        <DateTimeFieldProbe
+          defaultValue="2026-11-01T01:30:00-05:00[America/New_York]"
+          locale="en-US"
+          hourCycle={24}
+          onValueChange={onValueChange}
+        />,
+      );
+
+      await user.click(segmentOf(container, 'minute'));
+      await user.keyboard('{ArrowUp}');
+
+      expect(onValueChange.mock.calls[0]![0].toString()).toBe(
+        '2026-11-01T01:31:00-05:00[America/New_York]',
+      );
+    });
+
+    it('keeps the date and the zone of a zoned value in a time field, and shows its zone name', async () => {
+      const onValueChange = vi.fn();
+      const { container, user } = await render(
+        <DateTimeFieldProbe
+          family="time"
+          defaultValue="2026-11-14T15:04:33[Asia/Tokyo]"
+          locale="en-US"
+          hourCycle={24}
+          onValueChange={onValueChange}
+        />,
+      );
+
+      expect(typesOf(container)).toEqual(['hour', 'minute']);
+      expect(container.querySelector('[data-type="timeZoneName"]')).not.toBe(null);
+
+      await user.click(segmentOf(container, 'minute'));
+      await user.keyboard('{ArrowUp}');
+
+      expect(onValueChange.mock.calls[0]![0].toString()).toBe(
+        '2026-11-14T15:05:33+09:00[Asia/Tokyo]',
+      );
+    });
+
     it('empties the field with Clear, and sends the focus to the first segment', async () => {
       const onValueChange = vi.fn();
       const { container, user } = await render(
@@ -788,6 +878,39 @@ describe('useDateTimeFieldRoot', () => {
       createComponent: (props) => <DateTimeFieldProbe defaultValue="2026-11-14" {...props} />,
     });
 
+    it('keeps the size that the invalid event gave to the input when the root renders again', async () => {
+      const { container, setProps } = await render(<DateTimeFieldProbe required />);
+      const input = hiddenInputOf(container);
+      const size = () => {
+        const { width, height } = input.getBoundingClientRect();
+        return [width, height];
+      };
+
+      expect(size()).toEqual([0, 0]);
+      input.reportValidity();
+      await flushMicrotasks();
+      expect(size()).toEqual([1, 1]);
+
+      await setProps({ autoComplete: 'bday' });
+
+      expect(input).toHaveAttribute('autocomplete', 'bday');
+      expect(size()).toEqual([1, 1]);
+    });
+
+    it('gives the hidden input to the part that exposes it', async () => {
+      let probe: InstanceType<typeof DateTimeFieldProbe> | null = null;
+      const { container } = await render(() => (
+        <DateTimeFieldProbe
+          ref={(instance: unknown) => {
+            probe = instance as InstanceType<typeof DateTimeFieldProbe> | null;
+          }}
+          defaultValue="2026-11-14"
+        />
+      ));
+
+      expect(probe!.context.hiddenInputElement.value).toBe(hiddenInputOf(container));
+    });
+
     describe('a native reset of the form', () => {
       beforeEach(() => {
         vi.useFakeTimers();
@@ -922,6 +1045,90 @@ describe('useDateTimeFieldRoot', () => {
 
       expect(input.validity.customError).toBe(true);
       expect(input.validationMessage).toContain(message);
+    });
+
+    it.each([
+      {
+        name: 'a date before the least',
+        props: { defaultValue: '2026-11-01', minDate: '2026-11-02' },
+        match: 'rangeUnderflow',
+      },
+      {
+        name: 'a date after the greatest',
+        props: { defaultValue: '2026-11-21', maxDate: '2026-11-20' },
+        match: 'rangeOverflow',
+      },
+      {
+        name: 'a time before the least',
+        props: { family: 'time', defaultValue: '08:00', minTime: '09:00' },
+        match: 'rangeUnderflow',
+      },
+      {
+        name: 'a time after the greatest',
+        props: { family: 'time', defaultValue: '18:00', maxTime: '17:30' },
+        match: 'rangeOverflow',
+      },
+      {
+        name: 'a zoned value before the least day',
+        props: { defaultValue: '2026-11-01T12:00[Asia/Tokyo]', minDate: '2026-11-02' },
+        match: 'customError',
+      },
+      {
+        name: 'a year and month after the greatest',
+        props: { defaultValue: '2026-12', maxDate: '2026-11-20' },
+        match: 'customError',
+      },
+      {
+        name: 'a date that is not available',
+        props: { defaultValue: '2026-11-14', unavailableDates: { dayOfWeek: [6] } },
+        match: 'customError',
+      },
+    ] as const)('gives $match to Field for $name', async ({ props, match }) => {
+      let field: FieldRootInstance | null = null;
+      await render(() => (
+        <Field.Root
+          ref={(instance) => {
+            field = instance as FieldRootInstance | null;
+          }}
+          name="when"
+        >
+          <DateTimeFieldProbe locale="en-US" {...props} />
+          <Field.Error match={match} data-testid="error">
+            Out of range
+          </Field.Error>
+        </Field.Root>
+      ));
+      expect(screen.queryByTestId('error')).toBe(null);
+
+      field!.validate();
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('error')).toHaveTextContent('Out of range');
+    });
+
+    it('gives no error to Field for a value in the range', async () => {
+      let field: FieldRootInstance | null = null;
+      await render(() => (
+        <Field.Root
+          ref={(instance) => {
+            field = instance as FieldRootInstance | null;
+          }}
+          name="when"
+        >
+          <DateTimeFieldProbe
+            defaultValue="2026-11-10"
+            minDate="2026-11-02"
+            maxDate="2026-11-20"
+            locale="en-US"
+          />
+          <Field.Error data-testid="error" />
+        </Field.Root>
+      ));
+
+      field!.validate();
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('error')).toBe(null);
     });
 
     it('takes the custom error back when the entry is complete again', async () => {
@@ -1091,6 +1298,21 @@ describe('useDateTimeFieldRoot', () => {
       const serverHtml = await renderOnServer(PROBE, props);
 
       await hydrate(DateTimeFieldProbe, { serverHtml, props });
+    });
+
+    it('makes the segments again when the server has other ranges for the same segments', async () => {
+      // The same segments, in the same order, with the hour cycle h12 on the server and h11 here.
+      const serverHtml = await renderOnServer(PROBE, {
+        family: 'time',
+        locale: 'ja-JP-u-hc-h12',
+        defaultValue: '15:04',
+      });
+      const props = { family: 'time', locale: 'ja-JP-u-hc-h11', defaultValue: '15:04' };
+
+      const { container } = await hydrate(DateTimeFieldProbe, { serverHtml, props });
+
+      expect(segmentOf(container, 'hour')).toHaveAttribute('aria-valuemin', '0');
+      expect(segmentOf(container, 'hour')).toHaveAttribute('aria-valuemax', '11');
     });
 
     it('makes the segments again when the layout of the server has another order', async () => {

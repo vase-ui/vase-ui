@@ -119,6 +119,12 @@ describe('getSegmentLayout', () => {
 });
 
 describe('getFixedSegmentTexts', () => {
+  const textsOf = (
+    value: Temporal.PlainDate | Temporal.ZonedDateTime,
+    options: SegmentLayoutOptions,
+    locale = 'en-US',
+  ) => getFixedSegmentTexts(value, locale, getSegmentLayout(locale, options), options.calendar);
+
   it('gives the era and the time zone name that Intl gives for the value', () => {
     const zoned = Temporal.ZonedDateTime.from('0000-03-01T09:00[Asia/Tokyo]').withCalendar(
       'gregory',
@@ -134,7 +140,7 @@ describe('getFixedSegmentTexts', () => {
     }).formatToParts(zoned.epochMilliseconds);
     const textOf = (type: string) => parts.find((part) => part.type === type)?.value;
 
-    expect(getFixedSegmentTexts(zoned, 'en-US', options)).toEqual({
+    expect(textsOf(zoned, options)).toEqual({
       era: textOf('era'),
       timeZoneName: textOf('timeZoneName'),
     });
@@ -147,21 +153,44 @@ describe('getFixedSegmentTexts', () => {
       .filter((part) => part.type === 'era');
 
     expect(parts).toHaveLength(1);
-    expect(getFixedSegmentTexts(Temporal.PlainDate.from('2026-11-14'), 'en-US', options).era).toBe(
-      parts[0]?.value,
-    );
-    expect(
-      getFixedSegmentTexts(Temporal.PlainYearMonth.from('2026-11'), 'en-US', options).era,
-    ).toBe(parts[0]?.value);
+    expect(textsOf(Temporal.PlainDate.from('2026-11-14'), options).era).toBe(parts[0]?.value);
   });
 
   it('gives an empty text for a part that the layout does not have', () => {
-    expect(getFixedSegmentTexts(Temporal.PlainDate.from('2026-11-14'), 'en-US', DATE_TIME)).toEqual(
-      {
-        era: '',
-        timeZoneName: '',
-      },
-    );
+    expect(textsOf(Temporal.PlainDate.from('2026-11-14'), DATE_TIME)).toEqual({
+      era: '',
+      timeZoneName: '',
+    });
+  });
+});
+
+describe('the era of a layout', () => {
+  const japanese = { ...DATE_TIME, time: undefined, calendar: 'japanese', locale: 'ja-JP' };
+  const eraTextOf = (date: string, era: boolean) => {
+    const options = { ...japanese, era };
+    const layout = getSegmentLayout(japanese.locale, options);
+    return getFixedSegmentTexts(
+      Temporal.PlainDate.from(date),
+      japanese.locale,
+      layout,
+      options.calendar,
+    ).era;
+  };
+
+  it('keeps the style of the pattern of the locale when the pattern has an era', () => {
+    // The pattern of ja-JP for the Japanese calendar writes the short form of the era.
+    expect(eraTextOf('2019-05-01', false)).toBe(eraTextOf('2019-05-01', true));
+    expect(eraTextOf('2018-05-01', false)).toBe(eraTextOf('2018-05-01', true));
+    expect(eraTextOf('2018-05-01', true)).not.toBe('');
+    expect(eraTextOf('2018-05-01', true)).toHaveLength(eraTextOf('2019-05-01', true).length);
+  });
+
+  it('gives Intl the era when the pattern has none', () => {
+    const withEra = getSegmentLayout('en-US', { ...DATE_TIME, time: undefined, era: true });
+    const withoutEra = getSegmentLayout('en-US', { ...DATE_TIME, time: undefined, era: false });
+
+    expect(withEra.segments.some(({ type }) => type === 'era')).toBe(true);
+    expect(withoutEra.segments.some(({ type }) => type === 'era')).toBe(false);
   });
 });
 

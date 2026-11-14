@@ -49,6 +49,7 @@ import type {
 } from './DateTimeFieldContext';
 import { PARTIAL_MESSAGE, getInputLimits, getLimitMessage } from './customValidity';
 import type { ValueLimits } from './customValidity';
+import { getSegmentAttributes } from './segmentAttributes';
 import { getDayPeriodTexts, getFixedSegmentTexts, getSegmentLayout } from './segmentLayout';
 import type { EditableSegmentType, SegmentLayoutOptions, TimeUnit } from './segmentLayout';
 import {
@@ -425,7 +426,8 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
       ? getFixedSegmentTexts(
           value.value ?? fromNumbers(numbers.value, getTemplate(), numbersContext.value),
           locale.value,
-          layoutOptions.value,
+          layout.value,
+          displayCal.value,
         )
       : { era: '', timeZoneName: '' };
     return layout.value.segments.map((segment, index): DateTimeFieldSegment => {
@@ -573,7 +575,6 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   }
 
   const rootElement = shallowRef<HTMLElement | null>(null);
-  const inputElement = shallowRef<HTMLElement | null>(null);
 
   function handleInputPress(event: MouseEvent) {
     if (event.defaultPrevented || isDisabled.value) {
@@ -589,7 +590,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
 
   function handleSegmentBlur(event: FocusEvent) {
     // A move to another segment stays inside the field.
-    if (contains(rootElement.value ?? inputElement.value, event.relatedTarget as Element | null)) {
+    if (contains(rootElement.value, event.relatedTarget as Element | null)) {
       return;
     }
     setTouched(true);
@@ -902,22 +903,26 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     ];
   }
 
-  // The listKey changes when the layout of the server differs from the first layout of the
-  // browser. Vue writes no attribute while it hydrates, so the elements of the server keep the
-  // `data-type` and the `aria-label` of the server. New keys make the elements again.
+  // `listKey` changes when the layout of the server differs from the first layout of the browser.
+  // Vue reuses a server element of the same tag for another segment, and it writes no attribute
+  // while it hydrates. The element then keeps the attributes of the server, such as `data-type`
+  // and `aria-valuemax`. New keys make the elements again. Vue changes the text of a literal itself.
   const listKey = shallowRef(0);
-  const hydratedSegments = layout.value.segments;
+  const hydratedTypes = editableTypes.value;
+  const hydratedAttributes = hydratedTypes.map((type) =>
+    getSegmentAttributes(type, views.value[type] ?? EMPTY_VIEW),
+  );
   onMounted(() => {
-    const children = inputElement.value?.children;
-    if (!children) {
-      return;
-    }
+    const shown = getOrderedSegments();
     const isSame =
-      children.length === hydratedSegments.length &&
-      hydratedSegments.every(
-        ({ type, text }, index) =>
-          children[index]?.getAttribute('data-type') === type &&
-          (type !== 'literal' || children[index].textContent === text),
+      shown.length === hydratedTypes.length &&
+      shown.every(
+        (element, index) =>
+          element.dataset.type === hydratedTypes[index] &&
+          Object.entries(hydratedAttributes[index] ?? {}).every(
+            ([name, expected]) =>
+              element.getAttribute(name) === (expected === undefined ? null : String(expected)),
+          ),
       );
     if (!isSame) {
       listKey.value += 1;
@@ -951,9 +956,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     setRootElement(element) {
       rootElement.value = element as HTMLElement | null;
     },
-    setInputElement(element) {
-      inputElement.value = element as HTMLElement | null;
-    },
+    hiddenInputElement,
     getRootProps,
     hiddenInputProps,
     clear,

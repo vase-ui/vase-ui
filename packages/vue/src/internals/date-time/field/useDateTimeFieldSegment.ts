@@ -16,6 +16,7 @@ import type {
   DateTimeFieldSegment,
   SegmentSpin,
 } from './DateTimeFieldContext';
+import { getSegmentAttributes } from './segmentAttributes';
 import type { EditableSegmentType } from './segmentLayout';
 import {
   PAGE_STEPS,
@@ -310,22 +311,15 @@ export function useDateTimeFieldSegment(
   );
 
   const props = computed(() => {
-    const { number, text, placeholder, min, max, valueText, label, size, id } = view.value;
+    const { text, id } = view.value;
     return {
       id,
       type: 'text',
       role: 'spinbutton',
-      inputmode: type.value === 'dayPeriod' ? 'text' : 'numeric',
       autocomplete: 'off',
       spellcheck: 'false',
-      size,
       value: composingText.value ?? text,
-      placeholder,
-      'aria-label': label,
-      'aria-valuenow': number,
-      'aria-valuemin': min,
-      'aria-valuemax': max,
-      'aria-valuetext': valueText,
+      ...getSegmentAttributes(type.value, view.value),
       'aria-required': context.required.value || undefined,
       'aria-invalid': !context.disabled.value && context.invalid.value ? true : undefined,
       disabled: context.disabled.value ? '' : undefined,
