@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
-import { defineComponent, KeepAlive, onMounted, shallowRef } from 'vue';
+import { defineComponent, KeepAlive, nextTick, onMounted, shallowRef } from 'vue';
 import type { CSSProperties, PropType } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import {
@@ -18,6 +18,7 @@ import { REASONS } from '../../internals/reasons';
 import * as NavigationMenu from '../index.parts';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import NavigationMenuTriggerHydration from './NavigationMenuTriggerHydration.test.vue';
+import NavigationMenuTriggerScoped from './NavigationMenuTriggerScoped.test.vue';
 
 const HYDRATION_FIXTURE = 'src/navigation-menu/trigger/NavigationMenuTriggerHydration.test.vue';
 
@@ -724,6 +725,34 @@ describe('<NavigationMenu.Trigger />', () => {
       expect(handleValueChange.mock.calls[0][1].reason).toBe('focus-out');
       expect(screen.getByTestId('outside')).toHaveFocus();
     });
+  });
+
+  describe('VUE-57: the trigger has one root node', () => {
+    it.each([
+      { name: 'a closed item', defaultValue: null },
+      { name: 'an active item', defaultValue: 'one' },
+    ])(
+      'gives the scope id, v-show and a custom directive of the consumer to $name',
+      async ({ defaultValue }) => {
+        const shown = shallowRef(true);
+        await render(() => (
+          <NavigationMenuTriggerScoped defaultValue={defaultValue} shown={shown.value} />
+        ));
+        await flushMicrotasks();
+        const trigger = screen.getByTestId('trigger');
+
+        expect(getComputedStyle(trigger).outlineStyle).toBe('dashed');
+        expect(trigger).toHaveAttribute('data-mark', 'marked');
+        expect(trigger.parentElement!.querySelectorAll('[data-vase-ui-focus-guard]')).toHaveLength(
+          defaultValue === null ? 0 : 2,
+        );
+
+        shown.value = false;
+        await nextTick();
+
+        expect(trigger).not.toBeVisible();
+      },
+    );
   });
 
   describe('hydration', () => {
