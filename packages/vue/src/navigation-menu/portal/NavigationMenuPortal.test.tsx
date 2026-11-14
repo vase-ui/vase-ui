@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { defineComponent, h, KeepAlive, shallowRef } from 'vue';
-import type { Component } from 'vue';
-import type { HTMLProps } from '@vase-ui/vue/types';
 import { createRenderer, describeConformance, flushMicrotasks, screen } from '#test-utils';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
+
+type RenderSlotProps = Parameters<
+  NonNullable<InstanceType<typeof NavigationMenu.Portal>['$slots']['render']>
+>[0];
 
 describe('<NavigationMenu.Portal />', () => {
   const { render } = createRenderer();
@@ -54,7 +56,7 @@ describe('<NavigationMenu.Portal />', () => {
           </NavigationMenu.List>
           <NavigationMenu.Portal
             v-slots={{
-              render: ({ props, children }: { props: HTMLProps; children: Component }) => (
+              render: ({ props, children }: RenderSlotProps) => (
                 <section {...props} data-testid="portal">
                   {h(children, null, () => (
                     <NavigationMenu.Positioner>
