@@ -7,6 +7,14 @@ on:
 
 permissions: {}
 
+# In a long test run, Chromium keeps shared memory that only a garbage collection frees. A page that
+# holds too much loses its connections, and Vitest reports "Browser connection was closed". These
+# variables make Vitest collect the garbage after each test file. CONTRIBUTING.md, "Where a test
+# runs", says when to remove them.
+env:
+  VITEST_CHROMIUM_GC_FORCE: '1'
+  VITEST_CHROMIUM_GC_DISK_THRESHOLD_GB: '1000000'
+
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
