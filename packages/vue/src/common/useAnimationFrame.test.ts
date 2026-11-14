@@ -6,6 +6,13 @@ import {
   useAnimationFrame,
 } from './useAnimationFrame';
 
+function runAnimationFramesAtOnce() {
+  vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation((callback) => {
+    callback(0);
+    return 0;
+  });
+}
+
 describe('AnimationFrame', () => {
   beforeEach(() => {
     resetAnimationFrameScheduler();
@@ -33,6 +40,32 @@ describe('AnimationFrame', () => {
     callbacks[0]?.(0);
 
     expect(secondCallback).toHaveBeenCalledTimes(1);
+  });
+
+  it('VUE-41: runs the callback of each of two requests when `requestAnimationFrame` calls back at once', () => {
+    runAnimationFramesAtOnce();
+    const first = vi.fn();
+    const second = vi.fn();
+
+    AnimationFrame.request(first);
+    AnimationFrame.request(second);
+
+    expect(first).toHaveBeenCalledTimes(1);
+    expect(second).toHaveBeenCalledTimes(1);
+  });
+
+  it('VUE-41: runs the two requests that one callback makes when `requestAnimationFrame` calls back at once', () => {
+    runAnimationFramesAtOnce();
+    const first = vi.fn();
+    const second = vi.fn();
+
+    AnimationFrame.request(() => {
+      AnimationFrame.request(first);
+      AnimationFrame.request(second);
+    });
+
+    expect(first).toHaveBeenCalledTimes(1);
+    expect(second).toHaveBeenCalledTimes(1);
   });
 });
 

@@ -2,7 +2,7 @@
 import type { HTMLAttributes } from 'vue';
 import type { VaseUIChangeEventDetails } from '../internals/createBaseUIEventDetails';
 import type { FieldRootState } from '../internals/field-root-context/FieldRootContext';
-import type { REASONS } from '../internals/reasons';
+import { REASONS } from '../internals/reasons';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../internals/types';
 
 export interface RadioGroupState extends FieldRootState {
@@ -75,9 +75,10 @@ import { isEligibleInput } from '../field/root/useFieldValidation';
 import { useFieldsetRootContext } from '../fieldset/root/FieldsetRootContext';
 import { SHIFT } from '../internals/composite/composite';
 import { useCompositeRoot } from '../internals/composite/root/useCompositeRoot';
+import { createChangeEventDetails } from '../internals/createBaseUIEventDetails';
 import { fieldValidityMapping } from '../internals/field-constants/constants';
 import { useRegisterFieldControl } from '../internals/field-register-control';
-import { useFieldRootContext } from '../internals/field-root-context';
+import { useClearFieldError, useFieldRootContext } from '../internals/field-root-context';
 import { useFormContext } from '../internals/form-context';
 import { useDeferredServerRender, useLabelableContext } from '../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../internals/types';
@@ -99,6 +100,8 @@ const props = withDefaults(defineProps<RadioGroupProps<Value>>(), {
 const emit = defineEmits<{
   /**
    * Callback fired when the value changes.
+   * A native reset puts a group that has no `defaultValue` back to no value. The callback then gets
+   * `undefined`.
    */
   valueChange: [value: Value, eventDetails: RadioGroupChangeEventDetails];
   'update:value': [value: Value];
@@ -129,8 +132,9 @@ const fieldset = useFieldsetRootContext(true);
 useDeferredServerRender();
 
 const isDisabled = computed(() => fieldDisabled.value || props.disabled);
-const name = computed(() => fieldName.value ?? props.name);
-const id = useVaseUiId(() => props.id);
+const inputName = computed(() => fieldName.value ?? props.name);
+const controlId = useVaseUiId(() => props.id);
+const clearFieldError = useClearFieldError(inputName);
 
 const [checkedValue, setCheckedValueState] = useControlled<Value>({
   controlled: () => props.value,
@@ -138,6 +142,9 @@ const [checkedValue, setCheckedValueState] = useControlled<Value>({
   name: 'RadioGroup',
   state: 'value',
 });
+
+// The field holds `null` for a group with no value. A reset gives `undefined`, the same state.
+const fieldValue = computed(() => checkedValue.value ?? null);
 
 // A server writes the parts that come after the group before it runs the `setup` of a radio,
 // because the group defers its render. The group thus sets the first `filled` state itself.
@@ -194,12 +201,12 @@ function registerInputRef(input: HTMLInputElement) {
 function getFormValue() {
   const form = formElement.value;
   if (!form) {
-    return checkedValue.value ?? null;
+    return fieldValue.value;
   }
 
   for (const input of validation.registeredInputs.keys()) {
     if (input.checked && isEligibleInput(input, form)) {
-      return checkedValue.value ?? null;
+      return fieldValue.value;
     }
   }
 
@@ -208,26 +215,58 @@ function getFormValue() {
 
 useRegisterFieldControl(
   () => validation.getInputControl(),
-  id,
-  () => checkedValue.value ?? null,
+  controlId,
+  () => fieldValue.value,
   getFormValue,
   () => !isDisabled.value,
   () => props.name,
 );
 
-useValueChanged(checkedValue, () => {
-  clearErrors(name.value);
+// The change of a reset reaches `useValueChanged` after the reset timeout. A clear in the timeout
+// would come before `validation.change`, and the validation could show a new error. The timeout sets
+// this flag, and the callback clears the field and starts no validation.
+let isResetChangePending = false;
 
-  setDirty(checkedValue.value !== validityData.value.initialValue);
+useValueChanged(checkedValue, () => {
+  clearErrors(inputName.value);
+
+  setDirty(fieldValue.value !== validityData.value.initialValue);
   setFilled(checkedValue.value != null);
 
-  validation.change(checkedValue.value);
+  if (isResetChangePending) {
+    isResetChangePending = false;
+    clearFieldError(fieldValue.value);
+  } else {
+    validation.change(checkedValue.value);
+  }
 
   const fallbackInput = firstEnabledInput;
   if (checkedValue.value == null && fallbackInput && !fallbackInput.disabled) {
     inputElement.value = fallbackInput;
   }
 });
+
+let handledReset: Event | undefined;
+
+function reset(event: Event) {
+  if (event === handledReset) {
+    return;
+  }
+  handledReset = event;
+
+  if (props.value === undefined && checkedValue.value !== props.defaultValue) {
+    const details = createChangeEventDetails(REASONS.none, event);
+    // `Value` cannot name the value of a group that has no default.
+    setCheckedValue(props.defaultValue as Value, details);
+
+    if (!details.isCanceled) {
+      isResetChangePending = true;
+      return;
+    }
+  }
+
+  clearFieldError(fieldValue.value);
+}
 
 const state = computed<RadioGroupState>(() => ({
   ...fieldState.value,
@@ -241,7 +280,7 @@ provide(RadioGroupContext, {
   disabled: isDisabled,
   form: computed(() => props.form),
   validation,
-  name,
+  name: inputName,
   readOnly: computed(() => props.readOnly),
   registerInputRef,
   required: computed(() => props.required),
@@ -249,6 +288,7 @@ provide(RadioGroupContext, {
   setTouched,
   touched,
   inputSyncRequest,
+  reset,
 });
 
 // With a value, the server HTML has the tab stop on the checked radio. Base UI has `-1` on each radio.

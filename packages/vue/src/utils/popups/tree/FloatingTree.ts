@@ -15,7 +15,23 @@ import type { FloatingNodeType, FloatingTreeType, PopupPositioningContext } from
 import { FloatingTreeStore } from './FloatingTreeStore';
 
 const FloatingNodeContext: InjectionKey<ComputedRef<string | undefined>> = Symbol();
-const FloatingTreeContext: InjectionKey<FloatingTreeType> = Symbol();
+const FloatingTreeContext: InjectionKey<ComputedRef<FloatingTreeType>> = Symbol();
+
+// A node of `useFloatingNodeId` hides its context while its part is deactivated. This map gives the
+// slot that holds the context with no hiding.
+const nodeSlots = new WeakMap<FloatingNodeType, Pick<FloatingNodeType, 'context'>>();
+
+/**
+ * Removes `context` from `node`, only when the node holds this context. The node can hold the
+ * context of a newer popup, and that context stays. It also works for the node of a deactivated
+ * part.
+ */
+export function removeNodeContext(node: FloatingNodeType, context: PopupPositioningContext): void {
+  const slot = nodeSlots.get(node) ?? node;
+  if (slot.context === context) {
+    slot.context = undefined;
+  }
+}
 
 /**
  * Returns the parent node id for nested floating elements, if available.
@@ -33,7 +49,7 @@ export function useFloatingTree(
   externalTree?: MaybeRefOrGetter<FloatingTreeStore | undefined>,
 ): ComputedRef<FloatingTreeType | null> {
   const contextTree = inject(FloatingTreeContext, null);
-  return computed(() => toValue(externalTree) ?? contextTree);
+  return computed(() => toValue(externalTree) ?? contextTree?.value ?? null);
 }
 
 /**
@@ -47,7 +63,7 @@ export function useFloatingNodeId(
   const tree = useFloatingTree(externalTree);
   const parentId = useFloatingParentNodeId();
 
-  let context: PopupPositioningContext | undefined;
+  const slot: Pick<FloatingNodeType, 'context'> = {};
   let deactivated = false;
   const node: FloatingNodeType = {
     id,
@@ -58,12 +74,13 @@ export function useFloatingNodeId(
     // again thus changes the place of the node. The node stays, and a reader ignores a node with
     // no context.
     get context() {
-      return deactivated ? undefined : context;
+      return deactivated ? undefined : slot.context;
     },
     set context(value) {
-      context = value;
+      slot.context = value;
     },
   };
+  nodeSlots.set(node, slot);
 
   let registeredTree: FloatingTreeType | null = null;
   function register(nextTree: FloatingTreeType | null) {
@@ -110,10 +127,16 @@ export function provideFloatingNode(id: MaybeRefOrGetter<string | undefined>): v
  * - Nested virtual list navigation
  * - Nested floating elements that each open on hover
  * - Custom communication between parent and child floating elements
+ *
+ * `externalTree` is a store, a ref or a getter, and the parts below follow a change of it. With no
+ * tree, the part provides one tree of its own.
  * @see https://floating-ui.com/docs/FloatingTree
  */
-export function provideFloatingTree(externalTree?: FloatingTreeStore): FloatingTreeStore {
-  const tree = externalTree ?? new FloatingTreeStore();
+export function provideFloatingTree(
+  externalTree?: MaybeRefOrGetter<FloatingTreeStore | undefined>,
+): ComputedRef<FloatingTreeStore> {
+  const ownTree = new FloatingTreeStore();
+  const tree = computed(() => toValue(externalTree) ?? ownTree);
   provide(FloatingTreeContext, tree);
   return tree;
 }

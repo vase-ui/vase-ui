@@ -1,0 +1,9 @@
+{
+  "id": "VUE-30",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/toast/store.ts#L519-L527",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/utils/src/owner.ts#L3-L5"
+  ],
+  "behavior": "`close()` of a toast store reads no document while the store has no viewport element. A call in a server render, or before the viewport is mounted, thus closes the toast. Base UI reads the global `document` before it reads the viewport, so the same call throws in Node.",
+  "dueWith": "packages/react/src/toast/store.ts"
+}

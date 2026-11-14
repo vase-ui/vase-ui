@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToString } from 'vue/server-renderer';
 import { Field } from '@vase-ui/vue/field';
+import { Form } from '@vase-ui/vue/form';
 import { Radio } from '@vase-ui/vue/radio';
 import { RadioGroup } from '@vase-ui/vue/radio-group';
 import RadioGroupHydration from './RadioGroupHydration.test.vue';
@@ -96,6 +97,42 @@ describe('<RadioGroup />', () => {
 
       expect(labelId).toBeTruthy();
       expect(readAttribute(html, 'group', 'aria-labelledby')).toBe(labelId);
+    });
+
+    it('names the group and its radios with a description that comes after the group', async () => {
+      const html = await renderToString(
+        <Field.Root>
+          <RadioGroup data-testid="group">
+            <Radio.Root value="a" data-testid="a" />
+          </RadioGroup>
+          <Field.Description data-testid="description">Pick one.</Field.Description>
+        </Field.Root>,
+      );
+      const descriptionId = readAttribute(html, 'description', 'id');
+
+      expect(descriptionId).toBeTruthy();
+      expect(readAttribute(html, 'group', 'aria-describedby')).toBe(descriptionId);
+      expect(readAttribute(html, 'a', 'aria-describedby')).toBe(descriptionId);
+    });
+
+    it('names the group and its radios with an error that comes after the group', async () => {
+      const html = await renderToString(
+        <Form errors={{ fruit: 'Pick one.' }}>
+          <Field.Root name="fruit">
+            <RadioGroup data-testid="group">
+              <Radio.Root value="a" data-testid="a" />
+            </RadioGroup>
+            <Field.Error data-testid="error" />
+          </Field.Root>
+        </Form>,
+      );
+      const errorId = readAttribute(html, 'error', 'id');
+
+      expect(html).toContain('Pick one.');
+      expect(errorId).toBeTruthy();
+      expect(readAttribute(html, 'group', 'aria-invalid')).toBe('true');
+      expect(readAttribute(html, 'group', 'aria-describedby')).toBe(errorId);
+      expect(readAttribute(html, 'a', 'aria-describedby')).toBe(errorId);
     });
   });
 });
