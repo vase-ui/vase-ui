@@ -106,10 +106,8 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <template v-if="filterItem.visible.value">
-    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-    <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
-  </template>
+  <slot v-if="filterItem.visible.value && $slots.render" name="render" :props="elementProps()" :state="state" />
+  <component :is="as" v-else-if="filterItem.visible.value" v-bind="elementProps()"><slot :state="state" /></component>
   <component :is="filterItem.HiddenItemText" v-else :set-text="filterItem.setHiddenText">
     <slot v-if="$slots.render" name="render" :props="{} as HTMLProps" :state="state" />
     <slot v-else :state="state" />

@@ -40,10 +40,9 @@ export interface MenuFilterItem extends UseFilterDropdownItemReturnValue {
 }
 
 /**
- * The filter implementation that a filterable root gives to the parts below it. Only the root that
- * `Menu.FilterProvider` renders imports it, so a plain menu never bundles it. A part that a
- * filterable menu changes calls one function of this object, and merges the result into its own
- * props.
+ * The filter implementation that a filterable root gives to the parts below it. Only the code that
+ * `Menu.FilterProvider` imports makes it, so a plain menu never bundles it. A part that a filterable
+ * menu changes calls one function of this object, and merges the result into its own props.
  */
 export interface MenuFilterImpl {
   /** Gives the popup its dialog role, its listeners and its initial focus. */

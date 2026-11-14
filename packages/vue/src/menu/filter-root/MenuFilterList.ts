@@ -112,7 +112,9 @@ export function useFilterList(params: MenuFilterListParameters): MenuFilterList 
   }
 
   // The positioner provides the composite list that holds the items.
-  watch(compositeList!.map, handleItemMapChange, { flush: 'sync' });
+  if (compositeList) {
+    watch(compositeList.map, handleItemMapChange, { flush: 'sync' });
+  }
 
   return {
     props: (attrs) =>
