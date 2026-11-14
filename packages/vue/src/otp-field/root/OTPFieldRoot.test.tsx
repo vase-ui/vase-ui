@@ -535,6 +535,7 @@ describe('<OTPField.Root />', () => {
         { name: 'an `input` event', types: ['input'] as Array<'input' | 'change'> },
         { name: 'a `change` event', types: ['change'] as Array<'input' | 'change'> },
         { name: 'an `input` and a `change` event', types: ['input', 'change'] as const },
+        { name: 'a pair of `input` events', types: ['input', 'input'] as const },
       ])('takes a code that $name reports one time', async ({ types }) => {
         const handleValueChange = vi.fn();
         const handleValueInvalid = vi.fn();
