@@ -19,7 +19,8 @@ import { useAnimationsFinished } from '../../internals/useAnimationsFinished';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { mergeProps } from '../../merge-props';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
-import { usePopupRootWithPopupId } from '../../utils/popups/popupRoot';
+import { useOpenMethodTriggerProps } from '../../utils/popups/interactions/useOpenInteractionType';
+import { usePopupRootSync, usePopupRootWithPopupId } from '../../utils/popups/popupRoot';
 import {
   FOCUSABLE_POPUP_PROPS,
   usePopupInteractionProps,
@@ -187,6 +188,11 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
       { immediate: true },
     );
   }
+
+  const interactionTypeProps = useOpenMethodTriggerProps(open, (interactionType) =>
+    store.set('openMethod', interactionType),
+  );
+  usePopupRootSync(store, open);
 
   watch(
     () => ({
@@ -439,12 +445,13 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
     activeTriggerProps: mergeProps(
       dismiss.reference,
       { onMousemove: allowMouseEnter },
+      interactionTypeProps,
       {
         'aria-haspopup': 'menu',
         'aria-expanded': open.value,
       },
     ),
-    inactiveTriggerProps: mergeProps(dismiss.trigger, {
+    inactiveTriggerProps: mergeProps(dismiss.trigger, interactionTypeProps, {
       'aria-haspopup': 'menu',
       'aria-expanded': false,
     }),
