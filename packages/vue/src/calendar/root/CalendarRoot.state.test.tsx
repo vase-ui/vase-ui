@@ -420,7 +420,7 @@ describe('<Calendar.Root /> state', () => {
         },
       },
       { name: 'a focused day', props: { today: '2026-11-14', focusedDate: '2026-11-20' } },
-      { name: 'a locale that starts on Monday', props: { today: '2026-11-14', locale: 'fr' } },
+      { name: 'a week that starts on Monday', props: { today: '2026-11-14', firstDayOfWeek: 1 } },
       { name: 'the Persian calendar', props: { today: '2026-11-14', calendar: 'persian' } },
     ])('hydrates with $name with no warning and no difference', async ({ props }) => {
       const serverHtml = await renderOnServer(file, props);

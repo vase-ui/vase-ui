@@ -11,8 +11,9 @@ export type CalendarChangeEventDetails = VaseUIChangeEventDetails<CalendarChange
 /** The props that each calendar root has, whatever its selection. */
 export interface CalendarBaseProps {
   /**
-   * The month that the grid shows. It is the month of the first day of the page, in any
-   * calendar. Use it when controlled.
+   * The month that the grid shows. When the grid has another calendar than this month, the grid
+   * shows the month that holds the first day of this month.
+   * Use it when controlled.
    */
   month?: Temporal.PlainYearMonth | undefined;
   /**

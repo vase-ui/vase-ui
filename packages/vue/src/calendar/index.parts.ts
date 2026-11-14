@@ -47,7 +47,7 @@ import type { DateValue } from '../internals/date-time/temporal';
 export const Root: typeof CalendarRoot = CalendarRoot;
 export namespace Root {
   export type Props<
-    Value extends DateValue = DateValue,
+    Value extends DateValue = Temporal.PlainDate,
     Multiple extends boolean | undefined = false,
   > = CalendarRootProps<Value, Multiple>;
   export type State = CalendarRootState;

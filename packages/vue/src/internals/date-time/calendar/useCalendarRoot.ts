@@ -33,8 +33,6 @@ export interface UseCalendarRootOptions {
 
 /** What the root gives to its parts and to its own element. */
 export interface CalendarRootController {
-  /** The calendar of the dates of the grid. `gregory` is `iso8601` here: the dates are the same. */
-  calendar: ComputedRef<string>;
   /** The locale for `Intl`. It is `en-US` until the root is mounted, when the consumer gives none. */
   locale: ComputedRef<Intl.LocalesArgument | undefined>;
   /** The pages of the grid. */
@@ -272,7 +270,6 @@ export function useCalendarRoot({
   });
 
   return {
-    calendar,
     locale: formatLocale,
     pages,
     weekdays,

@@ -36,9 +36,7 @@ const zoned = Temporal.ZonedDateTime.from('2026-11-14T09:30[Asia/Tokyo]');
 // A calendar with no value gives a date.
 <Calendar.Root
   onValueChange={(value) => {
-    expectType<Temporal.PlainDate | Temporal.PlainDateTime | Temporal.ZonedDateTime, typeof value>(
-      value,
-    );
+    expectType<Temporal.PlainDate, typeof value>(value);
   }}
 />;
 

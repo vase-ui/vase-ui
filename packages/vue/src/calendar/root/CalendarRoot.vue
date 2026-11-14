@@ -36,7 +36,7 @@ type CalendarOutputValue<Value, Multiple extends boolean | undefined> = Multiple
   : Value;
 
 export interface CalendarRootProps<
-  Value extends DateValue = DateValue,
+  Value extends DateValue = Temporal.PlainDate,
   Multiple extends boolean | undefined = false,
 >
   extends
@@ -80,7 +80,10 @@ export type CalendarRootChangeEventDetails = CalendarChangeEventDetails;
 <script
   setup
   lang="ts"
-  generic="Value extends DateValue = DateValue, Multiple extends boolean | undefined = false"
+  generic="
+    Value extends DateValue = Temporal.PlainDate,
+    Multiple extends boolean | undefined = false
+  "
 >
 import { computed, provide } from 'vue';
 import { useDaySelection } from '../../internals/date-time/calendar/daySelection';
