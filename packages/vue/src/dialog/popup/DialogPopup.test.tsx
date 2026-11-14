@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { KeepAlive, defineComponent, shallowRef } from 'vue';
+import { Dialog } from '@vase-ui/vue/dialog';
 import {
   createRenderer,
   describeConformance,
@@ -14,7 +15,6 @@ import {
 } from '#test-utils';
 import * as AlertDialog from '../../alert-dialog/index.parts';
 import * as Popover from '../../popover/index.parts';
-import * as Dialog from '../index.parts';
 import type { DialogStore } from '../store/DialogStore';
 import DialogPopupReplacement from './DialogPopupReplacement.test.vue';
 

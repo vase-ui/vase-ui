@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { KeepAlive, defineComponent, shallowRef } from 'vue';
+import { Dialog } from '@vase-ui/vue/dialog';
 import { createRenderer, describeConformance, flushMicrotasks, screen } from '#test-utils';
-import * as Dialog from '../index.parts';
 
 describe('<Dialog.Description />', () => {
   const { render } = createRenderer();
