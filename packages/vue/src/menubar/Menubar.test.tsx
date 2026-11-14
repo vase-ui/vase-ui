@@ -38,7 +38,6 @@ function parse(html: string) {
   return template.content;
 }
 
-// A component that provides a tree above the menubar.
 function createTreeProvider() {
   let tree: FloatingTreeStore | undefined;
   const TreeProvider = defineComponent((_, { slots }) => {
@@ -229,13 +228,13 @@ describe('<Menubar />', () => {
           <MenubarMockMenu ref={menu} />
         </Menubar>,
       );
+      const menubar = container.firstElementChild as HTMLElement;
+      expect(menubar).not.toHaveAttribute('data-has-submenu-open');
 
       menu.value!.report(true, 'trigger-press', { nodeId: undefined });
       await nextTick();
 
-      expect(container.firstElementChild as HTMLElement).not.toHaveAttribute(
-        'data-has-submenu-open',
-      );
+      expect(menubar).not.toHaveAttribute('data-has-submenu-open');
     });
 
     it('ignores a report of a node below a menu', async () => {
@@ -248,14 +247,14 @@ describe('<Menubar />', () => {
           </MenubarMockMenu>
         </Menubar>,
       );
+      const menubar = container.firstElementChild as HTMLElement;
       expect(submenu.value!.parentNodeId).toBe(menu.value!.nodeId);
+      expect(menubar).not.toHaveAttribute('data-has-submenu-open');
 
       submenu.value!.report(true, 'trigger-press');
       await nextTick();
 
-      expect(container.firstElementChild as HTMLElement).not.toHaveAttribute(
-        'data-has-submenu-open',
-      );
+      expect(menubar).not.toHaveAttribute('data-has-submenu-open');
     });
 
     it('ignores a report on a tree above the menubar', async () => {
@@ -268,7 +267,9 @@ describe('<Menubar />', () => {
           </Menubar>
         </TreeProvider>,
       );
+      const menubar = container.firstElementChild as HTMLElement;
       expect(menu.value!.tree).not.toBe(getTree());
+      expect(menubar).not.toHaveAttribute('data-has-submenu-open');
 
       const details: MenuOpenEventDetails = {
         open: true,
@@ -279,9 +280,7 @@ describe('<Menubar />', () => {
       getTree().events.emit('menuopenchange', details);
       await nextTick();
 
-      expect(container.firstElementChild as HTMLElement).not.toHaveAttribute(
-        'data-has-submenu-open',
-      );
+      expect(menubar).not.toHaveAttribute('data-has-submenu-open');
     });
   });
 
@@ -369,11 +368,9 @@ describe('<Menubar />', () => {
         await user.keyboard(`[${nextKey}]`);
         expect(screen.getByTestId('c')).toHaveFocus();
 
-        // loop to the first item
         await user.keyboard(`[${nextKey}]`);
         expect(screen.getByTestId('a')).toHaveFocus();
 
-        // loop to the last item
         await user.keyboard(`[${prevKey}]`);
         expect(screen.getByTestId('c')).toHaveFocus();
 

@@ -112,13 +112,13 @@ const tree = provideFloatingTree();
 const nodeId = useFloatingNodeId(tree);
 provideFloatingNode(nodeId);
 
+// The part makes the tree, and `setup` runs one time. The listener thus needs no removal and no new
+// subscription.
 tree.events.on('menuopenchange', (details: MenuOpenEventDetails) => {
   if (!details.nodeId || details.parentNodeId !== nodeId) {
     return;
   }
 
-  // A close with `sibling-open` or `list-navigation` comes with the open of another menu of the
-  // menubar. The state thus stays set.
   if (details.open) {
     setHasSubmenuOpen(true);
   } else if (details.reason !== REASONS.siblingOpen && details.reason !== REASONS.listNavigation) {
