@@ -6,6 +6,7 @@ import { Checkbox } from '@vase-ui/vue/checkbox';
 import { Field } from '@vase-ui/vue/field';
 import { Fieldset } from '@vase-ui/vue/fieldset';
 import { Form } from '@vase-ui/vue/form';
+import { NumberField } from '@vase-ui/vue/number-field';
 import { Switch } from '@vase-ui/vue/switch';
 import type { HTMLProps } from '@vase-ui/vue/types';
 import {
@@ -1061,6 +1062,33 @@ describe('<Form />', () => {
   });
 
   describe('prop: onFormSubmit', () => {
+    it('runs when the form is submitted', async () => {
+      const submitSpy = vi.fn((formValues, eventDetails) => ({ formValues, eventDetails }));
+
+      await render(
+        <Form onFormSubmit={submitSpy}>
+          <Field.Root name="username">
+            <Field.Control defaultValue="alice132" />
+          </Field.Root>
+          <Field.Root name="quantity">
+            <NumberField.Root defaultValue={5}>
+              <NumberField.Input />
+            </NumberField.Root>
+          </Field.Root>
+          <button type="submit">submit</button>
+        </Form>,
+      );
+
+      await fireEvent.click(screen.getByText('submit'));
+
+      expect(submitSpy.mock.calls.length).toBe(1);
+      expect(submitSpy.mock.results.at(-1)?.value.formValues).toEqual({
+        username: 'alice132',
+        quantity: 5,
+      });
+      expect(submitSpy.mock.results.at(-1)?.value.eventDetails.event.defaultPrevented).toBe(true);
+    });
+
     it('does not run when the form is invalid', async () => {
       const submitSpy = vi.fn();
 
@@ -1107,6 +1135,76 @@ describe('<Form />', () => {
   });
 
   describe('prop: actionsRef', () => {
+    it('validates the form when the `validate` method is called', async () => {
+      const handle: { form?: FormInstance } = {};
+
+      const { user } = await render(() => (
+        <div>
+          <Form
+            ref={(value) => {
+              handle.form = value as FormInstance | null as FormInstance;
+            }}
+          >
+            <Field.Root name="username">
+              <Field.Control defaultValue="" required />
+              <Field.Error data-testid="error" />
+            </Field.Root>
+            <Field.Root name="quantity" validate={() => 'error'}>
+              <NumberField.Root defaultValue={5}>
+                <NumberField.Input />
+              </NumberField.Root>
+              <Field.Error data-testid="error" />
+            </Field.Root>
+            <button type="submit">submit</button>
+          </Form>
+          <button type="button" onClick={() => handle.form?.validate()}>
+            validate
+          </button>
+        </div>
+      ));
+
+      expect(screen.queryByTestId('error')).toBe(null);
+
+      await user.click(screen.getByText('validate'));
+
+      expect(screen.queryAllByTestId('error').length).toBe(2);
+    });
+
+    it('validates a field when the `validate` method is called with the field name', async () => {
+      const handle: { form?: FormInstance } = {};
+
+      const { user } = await render(() => (
+        <div>
+          <Form
+            ref={(value) => {
+              handle.form = value as FormInstance | null as FormInstance;
+            }}
+          >
+            <Field.Root name="username">
+              <Field.Control defaultValue="" required />
+              <Field.Error data-testid="error" />
+            </Field.Root>
+            <Field.Root name="quantity" validate={() => 'number field error'}>
+              <NumberField.Root defaultValue={5}>
+                <NumberField.Input />
+              </NumberField.Root>
+              <Field.Error data-testid="error" />
+            </Field.Root>
+            <button type="submit">submit</button>
+          </Form>
+          <button type="button" onClick={() => handle.form?.validate('quantity')}>
+            validate
+          </button>
+        </div>
+      ));
+
+      expect(screen.queryByTestId('error')).toBe(null);
+
+      await user.click(screen.getByText('validate'));
+
+      expect(screen.queryByTestId('error')).toHaveTextContent('number field error');
+    });
+
     it('targets only the current Strict Mode registration after name, id, and control replacement', async () => {
       const initialValidate = vi.fn(() => null);
       const renamedValidate = vi.fn(() => null);
