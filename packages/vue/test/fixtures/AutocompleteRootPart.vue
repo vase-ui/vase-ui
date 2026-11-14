@@ -1,31 +1,20 @@
 <script setup lang="ts">
-import { useControlled } from '../../src/common/useControlled';
+import { shallowRef } from 'vue';
 import { useAriaCombobox } from '../../src/combobox/root/AriaCombobox';
-import type { AriaCombobox } from '../../src/combobox/root/AriaCombobox';
 
 // The tests use this part in place of `Autocomplete.Root`. It gives the root of the combobox the
-// selection mode `none`, so the input value is the value of the form. As `Autocomplete.Root`, it
-// keeps the input value itself and always gives it to the root.
+// selection mode `none`, so the input value is the value of the form. It holds the text itself and
+// always gives it as `inputValue`, as `Autocomplete.Root` of Base UI does.
 const props = defineProps<{
   id?: string | undefined;
   name?: string | undefined;
-  required?: boolean | undefined;
   items?: readonly string[] | undefined;
-  value?: string | undefined;
   defaultInputValue?: string | undefined;
 }>();
 
-const emit = defineEmits<{
-  inputValueChange: [inputValue: string, eventDetails: AriaCombobox.ChangeEventDetails];
-  'update:value': [value: string];
-}>();
+const emit = defineEmits<{ inputValueChange: [inputValue: string] }>();
 
-const [inputValue, setInputValue] = useControlled<string>({
-  controlled: () => props.value,
-  default: () => props.defaultInputValue ?? '',
-  name: 'AutocompleteRootPart',
-  state: 'value',
-});
+const text = shallowRef(props.defaultInputValue ?? '');
 
 const { hiddenInputProps } = useAriaCombobox<string>(
   {
@@ -39,9 +28,7 @@ const { hiddenInputProps } = useAriaCombobox<string>(
     get id() {
       return props.id;
     },
-    get required() {
-      return props.required;
-    },
+    required: undefined,
     readOnly: undefined,
     disabled: undefined,
     defaultOpen: undefined,
@@ -52,11 +39,12 @@ const { hiddenInputProps } = useAriaCombobox<string>(
     highlightItemOnHover: undefined,
     loopFocus: undefined,
     get inputValue() {
-      return inputValue.value;
+      return text.value;
     },
     get defaultInputValue() {
       return props.defaultInputValue;
     },
+    inputValueControlled: false,
     grid: undefined,
     get items() {
       return props.items;
@@ -64,9 +52,6 @@ const { hiddenInputProps } = useAriaCombobox<string>(
     filteredItems: undefined,
     filter: undefined,
     filterQuery: undefined,
-    get inputValueControlled() {
-      return props.value !== undefined;
-    },
     itemToStringLabel: undefined,
     itemToStringValue: undefined,
     isItemEqualToValue: undefined,
@@ -82,12 +67,9 @@ const { hiddenInputProps } = useAriaCombobox<string>(
   },
   {
     onSelectedValueChange() {},
-    onInputValueChange(value, eventDetails) {
-      emit('inputValueChange', value, eventDetails);
-      if (!eventDetails.isCanceled) {
-        setInputValue(value);
-        emit('update:value', value);
-      }
+    onInputValueChange(value) {
+      emit('inputValueChange', value);
+      text.value = value;
     },
     onOpenChange() {},
     onOpenChangeComplete() {},

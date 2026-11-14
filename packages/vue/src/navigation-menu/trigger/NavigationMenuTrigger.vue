@@ -311,7 +311,8 @@ watch(
 
 function handleActivation(event: MouseEvent | KeyboardEvent) {
   const currentTarget = event.currentTarget as HTMLElement;
-  const previousValue = value.value;
+  // The `keydown` handler writes the value before this function runs.
+  const previousValue = renderedValue;
   const prevTriggerRect = prevTriggerElementRef.value?.getBoundingClientRect();
   const trigger = triggerElement.value;
 

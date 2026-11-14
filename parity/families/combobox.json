@@ -153,7 +153,7 @@
       "upstream": "packages/react/src/combobox/items/createItems.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Many of its cases also render parts of Combobox that Vase UI does not have, such as the list and the items."
+      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Most cases that have no counterpart also render parts of Combobox that Vase UI does not have, such as the list, the items and `Combobox.Value`."
     },
     {
       "upstream": "packages/react/src/combobox/label/ComboboxLabel.test.tsx",
@@ -220,7 +220,7 @@
       "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Many of its cases also render parts of Combobox that Vase UI does not have, such as the list and the items."
+      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Most of its cases render parts of Combobox that Vase UI does not have, such as the list and the items. The pull requests that add those parts port the file."
     },
     {
       "upstream": "packages/react/src/combobox/row/ComboboxRow.tsx",

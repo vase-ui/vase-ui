@@ -87,6 +87,13 @@ import type { FilterItemToString } from './utils';
 import { INITIAL_LAST_HIGHLIGHT, NO_ACTIVE_VALUE } from './utils/constants';
 
 export namespace AriaCombobox {
+  export type Props<Value, Mode extends SelectionMode = 'none', Item = Value> = AriaComboboxProps<
+    Value,
+    Mode,
+    Item
+  >;
+  export type State = AriaComboboxState;
+
   export interface Actions {
     unmount: () => void;
     close: () => void;
@@ -233,6 +240,13 @@ export interface AriaComboboxProps<Value, Mode extends SelectionMode = 'none', I
    */
   defaultInputValue?: ComboboxInputElementValue;
   /**
+   * INTERNAL: Whether the consumer controls the input value. A native reset changes no controlled
+   * value. A root part that makes `inputValue` from a state of its own gives this prop, because
+   * its `inputValue` is never `undefined`. With `undefined`, the input value is controlled when
+   * `inputValue` is not `undefined`.
+   */
+  inputValueControlled?: boolean | undefined;
+  /**
    * Whether list items are presented in a grid layout.
    * When enabled, arrow keys navigate across rows and columns inferred from DOM rows.
    * @default false
@@ -270,12 +284,6 @@ export interface AriaComboboxProps<Value, Mode extends SelectionMode = 'none', I
    * INTERNAL: The query that the filter uses in place of the trimmed input value.
    */
   filterQuery?: string | undefined;
-  /**
-   * INTERNAL: Whether the consumer controls the input value. The default is
-   * `inputValue !== undefined`. A root part that composes `inputValue` itself always gives it, so
-   * it gives this prop too.
-   */
-  inputValueControlled?: boolean | undefined;
   /**
    * When the item values are objects (`<Combobox.Item :value="object">`), this function converts the object value to a string representation for display in the input.
    * If the shape of the object is `{ value, label }`, the label will be used automatically without needing to specify this prop.
@@ -784,7 +792,13 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     if (currentQuery === '') {
       return currentLimit > -1
         ? flatItems.value.slice(0, currentLimit)
-        : (flatItems.value as Item[]);
+        : // The cast here is done as `flatItems` is readonly.
+          // `valuesRef`, a mutable ref, can be set to `flatFilteredValues`, which may
+          // reference this exact readonly value, creating a mutation risk.
+          // However, <Combobox.Item> can never mutate this value as the mutating effect
+          // bails early when `items` is provided, and this is only ever returned
+          // when `items` is provided due to the early return at the top of this `computed`.
+          (flatItems.value as Item[]);
     }
     const limitedItems: Item[] = [];
     for (const item of flatItems.value) {
@@ -935,6 +949,8 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     hadInputClear = eventDetails.reason === REASONS.inputClear;
     const state = toRaw(store.state);
 
+    // If user is typing, ensure we don't auto-highlight on open due to a race
+    // with the post-open effect that sets this flag.
     if (eventDetails.reason === REASONS.inputChange) {
       // A controlled popup may ignore a close request. Resuming input proves the popup
       // is remaining open, so release the query captured for an exit animation.
@@ -1056,7 +1072,8 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
 
     if (nextOpen && closeQuery.value !== null) {
       // `ComboboxInput` calls `setInputValue` before `setOpen`, so on an input-change reopen
-      // `inputValue` is still the pre-keystroke value and the typed filter always survives.
+      // `inputValue` already has the typed text. That reopen clears no input, and the typed filter
+      // always survives.
       handleInterruptedReopen(eventDetails.reason === REASONS.inputChange);
     }
 
@@ -1762,9 +1779,9 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     isItemEqualToValue: isItemEqualToValue.value,
     submitOnItemClick: props.submitOnItemClick ?? false,
     hasInputValue: hasInputValue.value,
-    // The input part writes `inputInsidePopup` in its `ref` callback. This key follows it in the
-    // same write. Until the root is mounted, it keeps the value of the first state, because a
-    // server calls no `ref` callback.
+    // The input part writes `inputInsidePopup` in its `ref` callback. The getter reads that key, so
+    // this key follows in the next write. Until the root is mounted, it keeps the value of the
+    // first state, because a server calls no `ref` callback.
     inputOwnsFormValue:
       selectionMode.value === 'none' &&
       (isHydrating.value || inlineProp.value || !inputInsidePopup.value),

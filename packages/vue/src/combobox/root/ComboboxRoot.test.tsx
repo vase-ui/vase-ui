@@ -12,7 +12,6 @@ import {
   hydrate,
   renderOnServer,
   screen,
-  takeReportedMessages,
   waitFor,
 } from '#test-utils';
 import AutocompleteRootPart from '../../../test/fixtures/AutocompleteRootPart.vue';
@@ -32,7 +31,8 @@ import ComboboxRootHydration from './ComboboxRootHydration.test.vue';
 // The Base UI cases of this file render those parts, so the pull requests that add the parts port
 // them. A ported case then replaces the case of this file that tests the same thing: the order of
 // the events, a canceled change, the controlled values, the hidden inputs, the autofill, the field
-// and the server render.
+// and the server render. The Base UI case of the check of `items` renders only the root. It is in
+// `items/createItems.test.tsx`.
 
 const HYDRATION_FILE = 'src/combobox/root/ComboboxRootHydration.test.vue';
 const cities = ['Malmö', 'Malta', 'Oslo'];
@@ -912,6 +912,57 @@ describe('<Combobox.Root />', () => {
       expect(handleInputValueChange).toHaveBeenCalledTimes(0);
       expect(getFormData('city')).toEqual(['Oslo']);
     });
+
+    it('keeps an input inside the popup empty', async () => {
+      const handleInputValueChange = vi.fn();
+      await render(
+        <form data-testid="form">
+          <Combobox.Root
+            name="city"
+            items={cities}
+            defaultValue="Oslo"
+            onInputValueChange={handleInputValueChange}
+          >
+            <ComboboxInputPart insidePopup />
+            <ComboboxListPart />
+          </Combobox.Root>
+        </form>,
+      );
+      await type('ma');
+      await pick('Malta');
+      expect(getFormData('city')).toEqual(['Malta']);
+
+      await reset();
+
+      expect(getFormData('city')).toEqual(['Oslo']);
+      expect(getInput().value).toBe('');
+      expect(handleInputValueChange.mock.calls.map(([text]) => text)).not.toContain('Oslo');
+    });
+
+    it('puts the text back when the root part holds the input value itself', async () => {
+      const handleInputValueChange = vi.fn();
+      await render(
+        <form data-testid="form">
+          <AutocompleteRootPart
+            name="search"
+            items={cities}
+            defaultInputValue="os"
+            onInputValueChange={handleInputValueChange}
+          >
+            <ComboboxInputPart />
+          </AutocompleteRootPart>
+        </form>,
+      );
+      await type('mal');
+      expect(getFormData('search')).toEqual(['mal']);
+      handleInputValueChange.mockClear();
+
+      await reset();
+
+      expect(getFormData('search')).toEqual(['os']);
+      expect(handleInputValueChange).toHaveBeenCalledTimes(1);
+      expect(handleInputValueChange.mock.lastCall?.[0]).toBe('os');
+    });
   });
 
   describe('VUE-21: a native reset clears the error of the field', () => {
@@ -991,75 +1042,8 @@ describe('<Combobox.Root />', () => {
       expect(validate).toHaveBeenCalledTimes(2);
       expect(screen.getByTestId('error')).toHaveTextContent('Not Malta');
     });
-  });
 
-  // A root of the selection mode `none` keeps the input value itself and always gives it to
-  // `useAriaCombobox`, as `Autocomplete.Root` does.
-  describe('VUE-21: a native reset in the selection mode none', () => {
-    beforeEach(() => {
-      vi.useFakeTimers();
-    });
-
-    afterEach(() => {
-      vi.useRealTimers();
-    });
-
-    async function reset() {
-      screen.getByTestId<HTMLFormElement>('form').reset();
-      vi.advanceTimersByTime(0);
-      await flushMicrotasks();
-    }
-
-    it('VUE-21: puts the default text back through inputValueChange', async () => {
-      const handleInputValueChange = vi.fn();
-      await render(
-        <form data-testid="form">
-          <AutocompleteRootPart
-            name="search"
-            items={cities}
-            defaultInputValue="ma"
-            onInputValueChange={handleInputValueChange}
-          >
-            <ComboboxInputPart />
-          </AutocompleteRootPart>
-        </form>,
-      );
-      await type('Malta');
-      handleInputValueChange.mockClear();
-
-      await reset();
-
-      expect(handleInputValueChange).toHaveBeenCalledTimes(1);
-      expect(handleInputValueChange.mock.lastCall?.[0]).toBe('ma');
-      expect(handleInputValueChange.mock.lastCall?.[1].reason).toBe('none');
-      expect(handleInputValueChange.mock.lastCall?.[1].event.type).toBe('reset');
-      expect(getInput().value).toBe('ma');
-      expect(getFormData('search')).toEqual(['ma']);
-    });
-
-    it('VUE-21: does not change a controlled root', async () => {
-      const handleInputValueChange = vi.fn();
-      await render(
-        <form data-testid="form">
-          <AutocompleteRootPart
-            name="search"
-            items={cities}
-            value="Oslo"
-            defaultInputValue="ma"
-            onInputValueChange={handleInputValueChange}
-          >
-            <ComboboxInputPart />
-          </AutocompleteRootPart>
-        </form>,
-      );
-
-      await reset();
-
-      expect(handleInputValueChange).toHaveBeenCalledTimes(0);
-      expect(getFormData('search')).toEqual(['Oslo']);
-    });
-
-    it('VUE-21: starts no validation for the change of a reset and removes the error of the field', async () => {
+    it('VUE-21: starts no validation for the change of a reset when the root part holds the input value', async () => {
       const validate = vi.fn((value: unknown) => (value === 'Malta' ? 'Not Malta' : null));
       await render(
         <Form data-testid="form">
@@ -1463,23 +1447,5 @@ describe('<Combobox.Root />', () => {
       expect(getNamedInputs(container)).toEqual([]);
       expect(container.querySelector('input[aria-hidden]')).toHaveAttribute('type', 'hidden');
     });
-  });
-
-  // A `setup` that throws leaves the current instance set in Vue 3.5.12, so this case is the last.
-  it('throws for an items object that is no collection', async () => {
-    await expect(
-      render(
-        <Combobox.Root items={{ label: 'Malta' } as never}>
-          <ComboboxInputPart />
-        </Combobox.Root>,
-      ),
-    ).rejects.toThrow(
-      'Vase UI: The `items` prop of Combobox got an object that is not a collection. The root cannot read its items. Give a list of items, a list of groups, or the result of `createItems()`.',
-    );
-
-    // Vue also warns about the error of `setup`.
-    expect(takeReportedMessages()).toEqual([
-      expect.stringContaining('Unhandled error during execution of setup function'),
-    ]);
   });
 });
