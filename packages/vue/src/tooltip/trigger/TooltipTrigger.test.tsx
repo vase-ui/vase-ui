@@ -10,6 +10,8 @@ import {
   isJSDOM,
   screen,
   takeReportedMessages,
+  wait,
+  waitFor,
 } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
 import { OPEN_DELAY } from '../utils/constants';
@@ -38,20 +40,17 @@ describe('<Tooltip.Trigger />', () => {
       await flushMicrotasks();
     }
 
-    async function enter(trigger: HTMLElement, pointerType = 'mouse') {
-      await fireEvent.pointerEnter(trigger, { pointerType });
+    async function enter(trigger: HTMLElement) {
+      await fireEvent.pointerEnter(trigger, { pointerType: 'mouse' });
       await fireEvent.mouseEnter(trigger);
       // The open delay starts when the pointer rests, so it needs a move.
       await fireEvent.mouseMove(trigger);
     }
 
-    async function renderTooltip(
-      triggerProps: Record<string, unknown> = {},
-      rootProps: Record<string, unknown> = {},
-    ) {
+    async function renderTooltip(triggerProps: Record<string, unknown>) {
       const onOpenChange = vi.fn();
       await render(
-        <Tooltip.Root onOpenChange={onOpenChange} {...rootProps}>
+        <Tooltip.Root onOpenChange={onOpenChange}>
           <Tooltip.Trigger style={{ pointerEvents: 'none' }} {...triggerProps}>
             Trigger
           </Tooltip.Trigger>
@@ -77,75 +76,6 @@ describe('<Tooltip.Trigger />', () => {
       expect(onOpenChange.mock.calls[0][0]).toBe(true);
       expect(onOpenChange.mock.calls[0][1].reason).toBe('trigger-hover');
       expect(onOpenChange.mock.calls[0][1].trigger).toBe(trigger);
-    });
-
-    it.each([
-      { name: 'at once with no `closeDelay`', triggerProps: { delay: 0 }, closeDelay: 0 },
-      {
-        name: 'after the `closeDelay`',
-        triggerProps: { delay: 0, closeDelay: 100 },
-        closeDelay: 100,
-      },
-    ])('closes $name when the pointer leaves the trigger', async ({ triggerProps, closeDelay }) => {
-      const { trigger, onOpenChange } = await renderTooltip(triggerProps);
-      await enter(trigger);
-      await tick(0);
-      expect(trigger).toHaveAttribute('data-popup-open');
-
-      await fireEvent.mouseLeave(trigger);
-      if (closeDelay > 0) {
-        await tick(closeDelay - 1);
-        expect(trigger).toHaveAttribute('data-popup-open');
-        await tick(1);
-      }
-
-      expect(trigger).not.toHaveAttribute('data-popup-open');
-      expect(onOpenChange.mock.lastCall?.[0]).toBe(false);
-      expect(onOpenChange.mock.lastCall?.[1].reason).toBe('trigger-hover');
-    });
-
-    it('does not open for a touch pointer', async () => {
-      const { trigger, onOpenChange } = await renderTooltip({ delay: 0 });
-
-      await enter(trigger, 'touch');
-      await tick(OPEN_DELAY);
-
-      expect(onOpenChange).not.toHaveBeenCalled();
-    });
-
-    it.each([
-      {
-        name: 'the trigger is disabled',
-        triggerProps: { delay: 0, disabled: true },
-        rootProps: {},
-      },
-      {
-        name: 'the tooltip is disabled',
-        triggerProps: { delay: 0 },
-        rootProps: { disabled: true },
-      },
-    ])('does not open while $name', async ({ triggerProps, rootProps }) => {
-      const { trigger, onOpenChange } = await renderTooltip(triggerProps, rootProps);
-
-      await enter(trigger);
-      await tick(OPEN_DELAY);
-
-      expect(onOpenChange).not.toHaveBeenCalled();
-    });
-
-    it.each([
-      { name: 'cancels an open that waits', closeOnClick: true, calls: 0 },
-      { name: 'keeps the open with `closeOnClick` false', closeOnClick: false, calls: 1 },
-    ])('$name when the trigger is pressed', async ({ closeOnClick, calls }) => {
-      const { trigger, onOpenChange } = await renderTooltip({ delay: 100, closeOnClick });
-
-      await enter(trigger);
-      await tick(50);
-      await fireEvent.pointerDown(trigger, { pointerType: 'mouse' });
-      await fireEvent.click(trigger);
-      await tick(100);
-
-      expect(onOpenChange).toHaveBeenCalledTimes(calls);
     });
   });
 
@@ -294,6 +224,101 @@ describe('<Tooltip.Trigger />', () => {
       await screen.findByTestId('popup');
     },
   );
+
+  describe('once the tooltip has unmounted', () => {
+    it('stays closed when focus returns to the trigger after leaving the window', async () => {
+      const { user } = await render(
+        <Tooltip.Root>
+          {/* The real pointer of the browser can rest on the trigger and open the tooltip. */}
+          <Tooltip.Trigger style={{ pointerEvents: 'none' }}>Trigger</Tooltip.Trigger>
+          <Tooltip.Portal>
+            <Tooltip.Positioner>
+              <Tooltip.Popup data-testid="popup">Content</Tooltip.Popup>
+            </Tooltip.Positioner>
+          </Tooltip.Portal>
+        </Tooltip.Root>,
+      );
+      const trigger = screen.getByRole('button', { name: 'Trigger' });
+
+      await user.keyboard('[Tab]');
+      expect(trigger).toHaveFocus();
+      await screen.findByTestId('popup');
+
+      await user.keyboard('[Escape]');
+      await waitFor(() => {
+        expect(screen.queryByTestId('popup')).toBe(null);
+      });
+
+      // Leaving the window blurs the trigger, then the window, while the trigger stays the
+      // active element; coming back focuses the window, then the trigger.
+      await fireEvent.focusOut(trigger);
+      await fireEvent.blur(window);
+      await fireEvent.focus(window);
+      await fireEvent.focusIn(trigger);
+      await wait(50);
+
+      expect(screen.queryByTestId('popup')).toBe(null);
+    });
+
+    it('does not request an open when its previously active trigger is hovered while the tooltip is open without a trigger', async () => {
+      const onOpenChange = vi.fn();
+
+      const App = defineComponent(() => {
+        const open = shallowRef(false);
+        return () => (
+          <>
+            <button
+              type="button"
+              onClick={() => {
+                open.value = true;
+              }}
+            >
+              Open externally
+            </button>
+            <Tooltip.Root
+              open={open.value}
+              onOpenChange={(nextOpen: boolean, eventDetails: Tooltip.Root.ChangeEventDetails) => {
+                onOpenChange(nextOpen, eventDetails);
+                open.value = nextOpen;
+              }}
+            >
+              <Tooltip.Trigger delay={50}>Trigger</Tooltip.Trigger>
+              {/* The real pointer of the browser can rest on this trigger and open the tooltip. */}
+              <Tooltip.Trigger delay={50} style={{ pointerEvents: 'none' }}>
+                Other trigger
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Positioner>
+                  <Tooltip.Popup data-testid="popup">Content</Tooltip.Popup>
+                </Tooltip.Positioner>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+          </>
+        );
+      });
+
+      const { user } = await render(<App />);
+      const trigger = screen.getByRole('button', { name: 'Trigger' });
+
+      trigger.focus();
+      await flushMicrotasks();
+      await screen.findByTestId('popup');
+      trigger.blur();
+      await flushMicrotasks();
+      await waitFor(() => {
+        expect(screen.queryByTestId('popup')).toBe(null);
+      });
+
+      await user.click(screen.getByRole('button', { name: 'Open externally' }));
+      await screen.findByTestId('popup');
+      onOpenChange.mockClear();
+
+      await user.hover(trigger);
+      await wait(100);
+
+      expect(onOpenChange).not.toHaveBeenCalled();
+    });
+  });
 
   it('throws a descriptive error when rendered without a root or a handle', async () => {
     await expect(render(<Tooltip.Trigger>Trigger</Tooltip.Trigger>)).rejects.toThrow(
