@@ -33,7 +33,7 @@ const CONTENT_SECTIONS = [
   },
   {
     title: 'Opening and closing',
-    body: 'Control it using external state via the `open` and `onOpenChange` props, or let it manage state for you internally.',
+    body: 'Control it using external state via `v-model:open`, or let it manage state for you internally.',
   },
   {
     title: 'Keyboard and focus behavior',
@@ -97,7 +97,7 @@ const CONTENT_SECTIONS = [
   },
   {
     title: 'Performance',
-    body: 'Children are mounted lazily when the dialog opens. If the dialog can reopen often, consider the `keepMounted` prop sparingly to perform the work only once on mount to avoid re-initializing complex React trees on each open.',
+    body: 'Children are mounted lazily when the dialog opens. If the dialog can reopen often, consider the `keepMounted` prop sparingly to perform the work only once on mount to avoid re-initializing complex component trees on each open.',
   },
   {
     title: 'When a popover is better',
@@ -109,10 +109,12 @@ const CONTENT_SECTIONS = [
   },
 ];
 
+const base = import.meta.env.BASE_URL;
+
 const RELATED_LINKS = [
-  { href: '/react/components/scroll-area', label: 'Scroll Area' },
-  { href: '/react/components/drawer', label: 'Drawer' },
-  { href: '/react/components/popover', label: 'Popover' },
+  { href: `${base}components/scroll-area`, label: 'Scroll Area' },
+  { href: `${base}components/alert-dialog`, label: 'Alert Dialog' },
+  { href: `${base}components/preview-card`, label: 'Preview Card' },
 ] as const;
 </script>
 
