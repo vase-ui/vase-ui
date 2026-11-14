@@ -28,6 +28,11 @@ export interface RadioGroupContext<Value> {
    * input when the count changes. Base UI does not have this member.
    */
   inputSyncRequest: Readonly<Ref<number>>;
+  /**
+   * Follows the native reset of the form of an input of the group. A radio calls it for each reset
+   * that it gets. The group handles the first call for each `reset` event.
+   */
+  reset: (event: Event) => void;
 }
 
 export const RadioGroupContext: InjectionKey<RadioGroupContext<any>> = Symbol();
