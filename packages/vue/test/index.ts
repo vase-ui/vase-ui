@@ -18,6 +18,7 @@ export { waitForPositioned } from './waitForPositioned';
 export * from './animation';
 export { describeConformance } from './describeConformance';
 export { detachedTriggersConformanceTests } from './detachedTriggersConformanceTests';
+export { dialogRootSharedTests } from './dialogRootSharedTests';
 export { hiddenInputSizeTests } from './hiddenInputSizeTests';
 export { hiddenInputTypeTests } from './hiddenInputTypeTests';
 export { popupConformanceTests } from './popupConformanceTests';
