@@ -15,7 +15,9 @@ export type MenuFilterProviderChangeEventDetails = FilterDropdownRootChangeEvent
 
 <script setup lang="ts">
 import { provide } from 'vue';
+import { useMenuFilterSubmenuRoot } from '../filter-submenu-root/MenuFilterSubmenuRoot';
 import { useMenuFilterRoot } from '../filter-root/useMenuFilterRoot';
+import type { MenuFilterRootOptions } from '../filter-root/MenuFilterRoot';
 import { MenuFilterProviderContext } from './MenuFilterProviderContext';
 
 const props = withDefaults(defineProps<MenuFilterProviderProps>(), {
@@ -41,21 +43,23 @@ defineSlots<{
   default(): unknown;
 }>();
 
+const options: MenuFilterRootOptions = {
+  value: () => props.value,
+  defaultValue: () => props.defaultValue,
+  onValueChange(value, eventDetails) {
+    emit('valueChange', value, eventDetails);
+    if (!eventDetails.isCanceled) {
+      emit('update:value', value);
+    }
+  },
+  filter: () => props.filter,
+  autoHighlight: () => props.autoHighlight,
+  locale: () => props.locale,
+};
+
 provide(MenuFilterProviderContext, {
-  useRoot: () =>
-    useMenuFilterRoot({
-      value: () => props.value,
-      defaultValue: () => props.defaultValue,
-      onValueChange(value, eventDetails) {
-        emit('valueChange', value, eventDetails);
-        if (!eventDetails.isCanceled) {
-          emit('update:value', value);
-        }
-      },
-      filter: () => props.filter,
-      autoHighlight: () => props.autoHighlight,
-      locale: () => props.locale,
-    }),
+  useRoot: () => useMenuFilterRoot(options),
+  useSubmenuRoot: () => useMenuFilterSubmenuRoot(options),
 });
 </script>
 

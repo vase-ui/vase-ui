@@ -154,6 +154,17 @@ describe('Menu filter parts conformance', () => {
     render: renderInList,
   }));
 
+  describeConformance(<Menu.SubmenuTrigger />, () => ({
+    refInstanceof: window.HTMLDivElement,
+    button: true,
+    render: (node) =>
+      renderInList(
+        <Menu.FilterProvider>
+          <Menu.SubmenuRoot>{node}</Menu.SubmenuRoot>
+        </Menu.FilterProvider>,
+      ),
+  }));
+
   // These cases are the last of the file. In Vue 3.5.12, a `setup` that throws leaves the current
   // instance set, and each later case of the file then gets a warning about a slot.
   it('throws when Trigger is rendered without a root or handle', async () => {
