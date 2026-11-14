@@ -3,6 +3,7 @@ import { defineComponent, KeepAlive, shallowRef, Transition } from 'vue';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import type { TextDirection } from '@vase-ui/vue/direction-provider';
+import { Popover } from '@vase-ui/vue/popover';
 import { Tabs } from '@vase-ui/vue/tabs';
 import {
   createRenderer,
@@ -1989,6 +1990,46 @@ describe('<Tabs.Root />', () => {
   });
 
   describe('popups', () => {
+    it('works inside Popover', async () => {
+      const { user } = await render(
+        <Popover.Root>
+          <Popover.Trigger>Open</Popover.Trigger>
+          <Popover.Portal>
+            <Popover.Positioner sideOffset={8}>
+              <Popover.Popup>
+                <Tabs.Root defaultValue="overview">
+                  <Tabs.List>
+                    <Tabs.Tab value="overview">Overview</Tabs.Tab>
+                    <Tabs.Tab value="projects">Projects</Tabs.Tab>
+                    <Tabs.Tab value="account">Account</Tabs.Tab>
+                  </Tabs.List>
+                  <Tabs.Panel value="overview" />
+                  <Tabs.Panel value="projects" />
+                  <Tabs.Panel value="account" />
+                </Tabs.Root>
+              </Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>,
+      );
+
+      const trigger = screen.getByRole('button', { name: 'Open' });
+
+      await user.click(trigger);
+
+      const tab1 = screen.getByRole('tab', { name: 'Overview' });
+      await waitFor(() => {
+        expect(tab1).toHaveFocus();
+      });
+      await waitForLaterMillisecond();
+      await user.keyboard('{ArrowRight}');
+
+      const tab2 = screen.getByRole('tab', { name: 'Projects' });
+      await waitFor(() => {
+        expect(tab2).toHaveFocus();
+      });
+    });
+
     it('works inside Dialog', async () => {
       const { user } = await render(
         <Dialog.Root>

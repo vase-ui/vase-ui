@@ -4,15 +4,7 @@
     "docs/src/app/(docs)/react/components/toolbar/**"
   ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
-  "exceptions": [
-    {
-      "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
-      "describe": ["<Toolbar.Button />", "rendering other Base UI components", "Popover"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/index.ts",
-      "reason": "Each case of the block renders `Popover.Trigger` and the other parts of Popover from the entry point of Popover. Vase UI does not have that entry point."
-    }
-  ],
+  "exceptions": [],
   "surfaceAdditions": [],
   "returnTypeDifferences": [],
   "notApplicableCommits": []

@@ -1,10 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { Teleport, KeepAlive, defineComponent, onMounted, shallowRef, watch } from 'vue';
+import { Teleport, KeepAlive, defineComponent, nextTick, onMounted, shallowRef, watch } from 'vue';
 import type { PropType, VNodeChild } from 'vue';
 import {
   createRenderer,
+  enterWithMouse,
   fireEvent,
+  fireTouch,
   flushMicrotasks,
   hydrate,
   isJSDOM,
@@ -18,8 +20,12 @@ import {
   waitSingleFrame,
 } from '#test-utils';
 import * as Combobox from '../../combobox/index.parts';
+import { PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
+import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
+import type { HTMLProps } from '../../internals/types';
 import * as Menu from '../../menu/index.parts';
+import { isScrollLocked } from '../../../test/fixtures/scrollDocument';
 import * as Popover from '../index.parts';
 import { useFloatingTree } from '../../utils/popups/tree/FloatingTree';
 import type { FloatingTreeType } from '../../utils/popups/types';
@@ -1957,6 +1963,1300 @@ describe('<Popover.Root />', () => {
         });
       });
     });
+
+    describe('prop: actionsRef', () => {
+      it('unmounts the popover when the `unmount` method is called', async () => {
+        const root = createRootRef();
+
+        const { user } = await render(
+          <TestPopover
+            rootProps={{
+              ref: root.ref,
+              onOpenChange: (_open: boolean, details: Popover.Root.ChangeEventDetails) => {
+                details.preventUnmountOnClose();
+              },
+            }}
+          />,
+        );
+
+        const trigger = screen.getByRole('button', { name: 'Toggle' });
+        await user.click(trigger);
+
+        await waitFor(() => {
+          expect(screen.queryByRole('dialog')).not.toBe(null);
+        });
+
+        await user.click(trigger);
+
+        await waitFor(() => {
+          expect(screen.queryByRole('dialog')).not.toBe(null);
+        });
+
+        root.current.unmount();
+        await flushMicrotasks();
+
+        await waitFor(() => {
+          expect(screen.queryByRole('dialog')).toBe(null);
+        });
+      });
+
+      it('does not repeat closing completion when `unmount` is called after the automatic unmount', async () => {
+        const root = createRootRef();
+        const onOpenChangeComplete = vi.fn();
+
+        const { user } = await render(
+          <TestPopover rootProps={{ ref: root.ref, onOpenChangeComplete }} />,
+        );
+
+        const trigger = screen.getByRole('button', { name: 'Toggle' });
+        await user.click(trigger);
+        await waitFor(() => {
+          expect(screen.queryByRole('dialog')).not.toBe(null);
+        });
+
+        await user.click(trigger);
+        await waitFor(() => {
+          expect(screen.queryByRole('dialog')).toBe(null);
+        });
+        expect(onOpenChangeComplete.mock.calls.filter(([open]) => !open)).toHaveLength(1);
+
+        root.current.unmount();
+        await flushMicrotasks();
+        expect(onOpenChangeComplete.mock.calls.filter(([open]) => !open)).toHaveLength(1);
+      });
+
+      it('keeps the opt-out when a controlled close is applied in a transition', async () => {
+        const root = createRootRef();
+        const onOpenChangeComplete = vi.fn();
+        const App = defineComponent({
+          setup() {
+            const open = shallowRef(true);
+            return () => (
+              <TestPopover
+                rootProps={{
+                  open: open.value,
+                  ref: root.ref,
+                  onOpenChangeComplete,
+                  onOpenChange: (nextOpen: boolean, details: Popover.Root.ChangeEventDetails) => {
+                    if (!nextOpen) {
+                      details.preventUnmountOnClose();
+                    }
+                    // Vue has no low-priority update. The write comes in the tick after the event.
+                    void nextTick(() => {
+                      open.value = nextOpen;
+                    });
+                  },
+                }}
+              />
+            );
+          },
+        });
+
+        const { user } = await render(<App />);
+        const trigger = screen.getByRole('button', { name: 'Toggle' });
+        await user.click(trigger);
+        await waitFor(() => {
+          expect(trigger).toHaveAttribute('aria-expanded', 'false');
+        });
+        expect(screen.queryByRole('dialog')).not.toBe(null);
+        expect(onOpenChangeComplete).not.toHaveBeenCalledWith(false);
+
+        root.current.unmount();
+        await flushMicrotasks();
+        expect(screen.queryByRole('dialog')).toBe(null);
+        expect(onOpenChangeComplete.mock.calls.filter(([open]) => !open)).toHaveLength(1);
+      });
+
+      it('ignores `unmount` while the popup is open', async () => {
+        const root = createRootRef();
+        const onOpenChangeComplete = vi.fn();
+        await render(
+          <TestPopover rootProps={{ defaultOpen: true, ref: root.ref, onOpenChangeComplete }} />,
+        );
+        const popup = screen.getByRole('dialog');
+
+        root.current.unmount();
+        await flushMicrotasks();
+
+        expect(screen.getByRole('dialog')).toBe(popup);
+        expect(popup).not.toHaveAttribute('data-starting-style');
+        expect(onOpenChangeComplete).not.toHaveBeenCalledWith(false);
+      });
+
+      it('unmounts when `close` and `unmount` are called in one batch', async () => {
+        const root = createRootRef();
+        const onOpenChangeComplete = vi.fn();
+        await render(
+          <TestPopover
+            rootProps={{
+              defaultOpen: true,
+              ref: root.ref,
+              onOpenChangeComplete,
+              onOpenChange: (open: boolean, details: Popover.Root.ChangeEventDetails) => {
+                if (!open) {
+                  details.preventUnmountOnClose();
+                }
+              },
+            }}
+          />,
+        );
+
+        root.current.close();
+        root.current.unmount();
+        await flushMicrotasks();
+
+        expect(screen.queryByRole('dialog')).toBe(null);
+        expect(onOpenChangeComplete.mock.calls.filter(([open]) => !open)).toHaveLength(1);
+      });
+
+      it('unmounts when `close` and `unmount` are called in one batch while controlled', async () => {
+        const root = createRootRef();
+        const onOpenChangeComplete = vi.fn();
+
+        const App = defineComponent({
+          setup() {
+            const open = shallowRef(true);
+            return () => (
+              <TestPopover
+                rootProps={{
+                  open: open.value,
+                  ref: root.ref,
+                  onOpenChangeComplete,
+                  onOpenChange: (nextOpen: boolean, details: Popover.Root.ChangeEventDetails) => {
+                    if (!nextOpen) {
+                      details.preventUnmountOnClose();
+                    }
+                    open.value = nextOpen;
+                  },
+                }}
+              />
+            );
+          },
+        });
+
+        await render(<App />);
+
+        root.current.close();
+        root.current.unmount();
+        await flushMicrotasks();
+
+        expect(screen.queryByRole('dialog')).toBe(null);
+        expect(onOpenChangeComplete.mock.calls.filter(([open]) => !open)).toHaveLength(1);
+      });
+
+      it('still unmounts on a later close after `unmount` was called while open', async () => {
+        const root = createRootRef();
+        const onOpenChangeComplete = vi.fn();
+        const { user } = await render(
+          <TestPopover rootProps={{ defaultOpen: true, ref: root.ref, onOpenChangeComplete }} />,
+        );
+
+        root.current.unmount();
+        await flushMicrotasks();
+        expect(screen.queryByRole('dialog')).not.toBe(null);
+
+        await user.click(screen.getByRole('button', { name: 'Toggle' }));
+        await waitFor(() => {
+          expect(screen.queryByRole('dialog')).toBe(null);
+        });
+        expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
+      });
+
+      it('still unmounts on a later close after `unmount` and a reopen in one batch', async () => {
+        const root = createRootRef();
+        const onOpenChangeComplete = vi.fn();
+        let reopenOnComplete = true;
+        let optOut = true;
+        const App = defineComponent({
+          setup() {
+            const open = shallowRef(true);
+            return () => (
+              <TestPopover
+                rootProps={{
+                  open: open.value,
+                  ref: root.ref,
+                  onOpenChange: (nextOpen: boolean, details: Popover.Root.ChangeEventDetails) => {
+                    if (!nextOpen && optOut) {
+                      details.preventUnmountOnClose();
+                    }
+                    open.value = nextOpen;
+                  },
+                  onOpenChangeComplete: (nextOpen: boolean) => {
+                    onOpenChangeComplete(nextOpen);
+                    // An exit-animation callback that reopens right after it unmounts.
+                    if (!nextOpen && reopenOnComplete) {
+                      reopenOnComplete = false;
+                      open.value = true;
+                    }
+                  },
+                }}
+              />
+            );
+          },
+        });
+
+        const { user } = await render(<App />);
+        root.current.close();
+        await flushMicrotasks();
+        expect(screen.queryByRole('dialog')).not.toBe(null);
+
+        root.current.unmount();
+        await flushMicrotasks();
+        expect(screen.queryByRole('dialog')).not.toBe(null);
+        expect(onOpenChangeComplete.mock.calls.filter(([open]) => !open)).toHaveLength(1);
+
+        optOut = false;
+        await user.click(screen.getByRole('button', { name: 'Toggle' }));
+        await waitFor(() => {
+          expect(screen.queryByRole('dialog')).toBe(null);
+        });
+        expect(onOpenChangeComplete.mock.calls.filter(([open]) => !open)).toHaveLength(2);
+      });
+
+      it('completes closing once when `unmount` is called twice in one batch', async () => {
+        const root = createRootRef();
+        const onOpenChangeComplete = vi.fn();
+        const { user } = await render(
+          <TestPopover
+            rootProps={{
+              defaultOpen: true,
+              ref: root.ref,
+              onOpenChangeComplete,
+              onOpenChange: (open: boolean, details: Popover.Root.ChangeEventDetails) => {
+                if (!open) {
+                  details.preventUnmountOnClose();
+                }
+              },
+            }}
+          />,
+        );
+
+        await user.click(screen.getByRole('button', { name: 'Toggle' }));
+        expect(screen.queryByRole('dialog')).not.toBe(null);
+
+        root.current.unmount();
+        root.current.unmount();
+        await flushMicrotasks();
+        expect(screen.queryByRole('dialog')).toBe(null);
+        expect(onOpenChangeComplete.mock.calls.filter(([open]) => !open)).toHaveLength(1);
+      });
+
+      it('closes the popover when the `close` method is called', async () => {
+        const root = createRootRef();
+        await render(<TestPopover rootProps={{ defaultOpen: true, ref: root.ref }} />);
+
+        root.current.close();
+        await flushMicrotasks();
+
+        await waitFor(() => {
+          expect(screen.queryByText('Content')).toBe(null);
+        });
+      });
+
+      it('clears the active trigger when `unmount` is called right after a controlled close', async () => {
+        const root = createRootRef();
+        const open = shallowRef(false);
+
+        const App = defineComponent({
+          setup() {
+            // Runs before the root gets the new `open` prop, so the unmount is deferred to the
+            // closing render.
+            watch(open, () => {
+              if (!open.value) {
+                root.current.unmount();
+              }
+            });
+
+            return () => (
+              <Popover.Root
+                ref={root.ref}
+                open={open.value}
+                onOpenChange={(nextOpen: boolean) => {
+                  open.value = nextOpen;
+                }}
+              >
+                <Popover.Trigger>Trigger 1</Popover.Trigger>
+                <Popover.Trigger>Trigger 2</Popover.Trigger>
+                <Popover.Portal>
+                  <Popover.Positioner>
+                    <Popover.Popup data-testid="popup">Content</Popover.Popup>
+                  </Popover.Positioner>
+                </Popover.Portal>
+              </Popover.Root>
+            );
+          },
+        });
+
+        const { user } = await render(<App />);
+        const trigger1 = screen.getByRole('button', { name: 'Trigger 1' });
+
+        await user.click(trigger1);
+        await waitFor(() => {
+          expect(trigger1).toHaveAttribute('aria-expanded', 'true');
+        });
+
+        open.value = false;
+        await flushMicrotasks();
+        await waitFor(() => {
+          expect(screen.queryByTestId('popup')).toBe(null);
+        });
+
+        open.value = true;
+        await flushMicrotasks();
+        await waitFor(() => {
+          expect(screen.queryByTestId('popup')).not.toBe(null);
+        });
+
+        expect(trigger1).toHaveAttribute('aria-expanded', 'false');
+      });
+
+      it('clears the active trigger when a popup part calls `unmount` as a controlled close renders', async () => {
+        globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+
+        const root = createRootRef();
+        const open = shallowRef(false);
+
+        // Its watcher runs in the flush in which the popup renders as closed, after the DOM update
+        // of that flush.
+        const UnmountOnClose = defineComponent({
+          props: { open: { type: Boolean, required: true } },
+          setup(props) {
+            watch(
+              () => props.open,
+              (isOpen) => {
+                if (!isOpen) {
+                  root.current.unmount();
+                }
+              },
+              { flush: 'post' },
+            );
+            return () => null;
+          },
+        });
+
+        const App = defineComponent({
+          setup() {
+            return () => (
+              <Popover.Root
+                ref={root.ref}
+                open={open.value}
+                onOpenChange={(nextOpen: boolean) => {
+                  open.value = nextOpen;
+                }}
+              >
+                <Popover.Trigger>Trigger 1</Popover.Trigger>
+                <Popover.Trigger>Trigger 2</Popover.Trigger>
+                <Popover.Portal>
+                  <Popover.Positioner>
+                    <Popover.Popup
+                      data-testid="popup"
+                      v-slots={{
+                        render: ({
+                          props,
+                          state,
+                        }: {
+                          props: HTMLProps;
+                          state: { open: boolean };
+                        }) => (
+                          <div {...props}>
+                            <UnmountOnClose open={state.open} />
+                          </div>
+                        ),
+                      }}
+                    />
+                  </Popover.Positioner>
+                </Popover.Portal>
+              </Popover.Root>
+            );
+          },
+        });
+
+        const { user } = await render(<App />);
+        const trigger1 = screen.getByRole('button', { name: 'Trigger 1' });
+
+        await user.click(trigger1);
+        await waitFor(() => {
+          expect(trigger1).toHaveAttribute('aria-expanded', 'true');
+        });
+
+        // A pending exit animation leaves the call of the part to `unmount` as the only one.
+        Object.defineProperty(screen.getByTestId('popup'), 'getAnimations', {
+          value: () => [{ finished: new Promise(() => {}) }],
+          configurable: true,
+        });
+
+        open.value = false;
+        await flushMicrotasks();
+        await waitFor(() => {
+          expect(screen.queryByTestId('popup')).toBe(null);
+        });
+
+        open.value = true;
+        await flushMicrotasks();
+        await waitFor(() => {
+          expect(screen.queryByTestId('popup')).not.toBe(null);
+        });
+
+        expect(trigger1).toHaveAttribute('aria-expanded', 'false');
+      });
+    });
+
+    describe('prop: modal', () => {
+      it('should render an internal backdrop when `true`', async () => {
+        const { user } = await render(
+          <div>
+            <TestPopover rootProps={{ modal: true }} />
+            <button>Outside</button>
+          </div>,
+        );
+
+        const trigger = screen.getByRole('button', { name: 'Toggle' });
+
+        await user.click(trigger);
+
+        await waitFor(() => {
+          expect(screen.queryByRole('dialog')).not.toBe(null);
+        });
+
+        const positioner = screen.getByTestId('positioner');
+
+        expect(positioner.previousElementSibling).toHaveAttribute('role', 'presentation');
+      });
+
+      it('should only render focus guards inside the popup when `true`', async () => {
+        const { user } = await render(
+          <div>
+            <TestPopover
+              rootProps={{ modal: true }}
+              popupProps={{ children: () => <Popover.Close>Close</Popover.Close> }}
+            />
+          </div>,
+        );
+
+        const trigger = screen.getByRole('button', { name: 'Toggle' });
+
+        await user.click(trigger);
+
+        await waitFor(() => {
+          expect(screen.queryByRole('dialog')).not.toBe(null);
+        });
+
+        expect(
+          trigger.previousElementSibling?.hasAttribute('data-vase-ui-focus-guard') ?? false,
+        ).toBe(false);
+        expect(trigger.nextElementSibling?.hasAttribute('data-vase-ui-focus-guard') ?? false).toBe(
+          false,
+        );
+        expect(
+          document.querySelectorAll('[data-vase-ui-focus-guard][data-type="inside"]'),
+        ).toHaveLength(2);
+      });
+
+      it('should keep trigger focus guards when `true` without a close part', async () => {
+        const { user } = await render(
+          <div>
+            <TestPopover
+              rootProps={{ defaultOpen: true, modal: true }}
+              popupProps={{ children: () => <input data-testid="input-inside" /> }}
+              afterTrigger={() => <input data-testid="focus-target" />}
+            />
+          </div>,
+        );
+
+        const trigger = screen.getByRole('button', { name: 'Toggle' });
+        expect(trigger.previousElementSibling).toHaveAttribute('data-vase-ui-focus-guard');
+        expect(trigger.nextElementSibling).toHaveAttribute('data-vase-ui-focus-guard');
+
+        screen.getByTestId('input-inside').focus();
+        await flushMicrotasks();
+
+        await user.tab();
+
+        expect(screen.getByTestId('focus-target')).toHaveFocus();
+
+        await waitFor(() => {
+          expect(screen.queryByTestId('popover-popup')).toBe(null);
+        });
+      });
+
+      it('should not render an internal backdrop when `false`', async () => {
+        const { user } = await render(
+          <div>
+            <TestPopover rootProps={{ modal: false }} />
+            <button>Outside</button>
+          </div>,
+        );
+
+        const trigger = screen.getByRole('button', { name: 'Toggle' });
+
+        await user.click(trigger);
+
+        await waitFor(() => {
+          expect(screen.queryByRole('dialog')).not.toBe(null);
+        });
+
+        const positioner = screen.getByTestId('positioner');
+
+        expect(positioner.previousElementSibling).toBe(null);
+      });
+
+      describe('with openOnHover', () => {
+        beforeEach(() => {
+          vi.useFakeTimers();
+        });
+
+        afterEach(() => {
+          vi.useRealTimers();
+        });
+
+        it('enables modal behavior after a hover-open is clicked', async () => {
+          await render(
+            <TestPopover
+              rootProps={{ modal: true }}
+              triggerProps={{ openOnHover: true, delay: 0 }}
+            />,
+          );
+
+          const trigger = screen.getByRole('button', { name: 'Toggle' });
+
+          await fireEvent.mouseEnter(trigger);
+          await fireEvent.mouseMove(trigger);
+
+          await flushMicrotasks();
+          expect(screen.queryByRole('dialog')).not.toBe(null);
+
+          const positioner = screen.getByTestId('positioner');
+          expect(positioner.previousElementSibling).toBe(null);
+
+          await tick(PATIENT_CLICK_THRESHOLD - 1);
+          await fireEvent.click(trigger);
+
+          await flushMicrotasks();
+
+          expect(positioner.previousElementSibling).toHaveAttribute('role', 'presentation');
+        });
+
+        it('reopens on hover after an impatient click is followed by a close button press', async () => {
+          await render(
+            <TestPopover
+              triggerProps={{ openOnHover: true, delay: 100 }}
+              popupProps={{ children: () => <Popover.Close>Close</Popover.Close> }}
+            />,
+          );
+
+          const trigger = screen.getByRole('button', { name: 'Toggle' });
+
+          await fireEvent.pointerEnter(trigger, { pointerType: 'mouse' });
+          await fireEvent.mouseEnter(trigger);
+          await fireEvent.mouseMove(trigger, { movementX: 10, movementY: 0 });
+
+          await tick(100);
+
+          expect(screen.queryByRole('dialog')).not.toBe(null);
+
+          await tick(PATIENT_CLICK_THRESHOLD - 1);
+          await fireEvent.click(trigger);
+          await flushMicrotasks();
+
+          await fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+          await flushMicrotasks();
+
+          expect(screen.queryByRole('dialog')).toBe(null);
+
+          // Re-enter with mouse events only. A fresh pointerenter can be
+          // missed after the click-driven close, but hover should still work.
+          await fireEvent.mouseEnter(trigger);
+          await fireEvent.mouseMove(trigger, { movementX: 10, movementY: 0 });
+
+          await tick(100);
+
+          expect(screen.queryByRole('dialog')).not.toBe(null);
+        });
+      });
+    });
+
+    describe.skipIf(isJSDOM)('scroll locking', () => {
+      describe('touch scroll lock', () => {
+        it.each([
+          { name: 'unmounted while closed', keepMounted: false },
+          { name: 'kept mounted while closed', keepMounted: true },
+        ])(
+          'applies scroll lock when a touch-opened popup $name covers the viewport width',
+          async ({ keepMounted }) => {
+            await render(
+              <Popover.Root modal>
+                <Popover.Trigger>Open</Popover.Trigger>
+                <Popover.Portal keepMounted={keepMounted}>
+                  <Popover.Positioner
+                    data-testid="positioner"
+                    style={{ width: 'calc(100vw - 10px)' }}
+                  >
+                    <Popover.Popup>Content</Popover.Popup>
+                  </Popover.Positioner>
+                </Popover.Portal>
+              </Popover.Root>,
+            );
+
+            const trigger = screen.getByRole('button', { name: 'Open' });
+
+            await fireEvent.pointerDown(trigger, { pointerType: 'touch' });
+            await fireEvent.mouseDown(trigger);
+            await fireEvent.click(trigger, { detail: 1 });
+
+            const popup = await screen.findByRole('dialog');
+            const doc = popup.ownerDocument;
+
+            await waitFor(() => {
+              expect(isScrollLocked(doc)).toBe(true);
+            });
+          },
+        );
+
+        it.each([
+          { name: 'unmounted while closed', keepMounted: false },
+          { name: 'kept mounted while closed', keepMounted: true },
+        ])(
+          'does not apply scroll lock when a touch-opened popup $name is narrower than the viewport',
+          async ({ keepMounted }) => {
+            await render(
+              <Popover.Root modal>
+                <Popover.Trigger>Open</Popover.Trigger>
+                <Popover.Portal keepMounted={keepMounted}>
+                  <Popover.Positioner data-testid="positioner" style={{ width: '240px' }}>
+                    <Popover.Popup>Content</Popover.Popup>
+                  </Popover.Positioner>
+                </Popover.Portal>
+              </Popover.Root>,
+            );
+
+            const trigger = screen.getByRole('button', { name: 'Open' });
+
+            await fireEvent.pointerDown(trigger, { pointerType: 'touch' });
+            await fireEvent.mouseDown(trigger);
+            await fireEvent.click(trigger, { detail: 1 });
+
+            const popup = await screen.findByRole('dialog');
+            const doc = popup.ownerDocument;
+
+            await waitSingleFrame();
+
+            expect(isScrollLocked(doc)).toBe(false);
+          },
+        );
+      });
+    });
+
+    describe('nested popup interactions', () => {
+      it('returns focus through nested programmatic popovers in close order', async () => {
+        const Test = defineComponent({
+          setup() {
+            const childOpen = shallowRef(false);
+
+            return () => (
+              <Popover.Root>
+                <Popover.Trigger>Parent trigger</Popover.Trigger>
+                <Popover.Portal>
+                  <Popover.Positioner>
+                    <Popover.Popup data-testid="parent-popup">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          childOpen.value = true;
+                        }}
+                      >
+                        Open child programmatically
+                      </button>
+
+                      <Popover.Root
+                        open={childOpen.value}
+                        triggerId="child-reference"
+                        onOpenChange={(nextOpen: boolean) => {
+                          childOpen.value = nextOpen;
+                        }}
+                      >
+                        <Popover.Trigger id="child-reference">Child reference</Popover.Trigger>
+                        <Popover.Portal>
+                          <Popover.Positioner>
+                            <Popover.Popup data-testid="child-popup">
+                              <Popover.Close>Close child</Popover.Close>
+                            </Popover.Popup>
+                          </Popover.Positioner>
+                        </Popover.Portal>
+                      </Popover.Root>
+
+                      <Popover.Close>Close parent</Popover.Close>
+                    </Popover.Popup>
+                  </Popover.Positioner>
+                </Popover.Portal>
+              </Popover.Root>
+            );
+          },
+        });
+
+        const { user } = await render(<Test />);
+
+        const parentTrigger = screen.getByRole('button', { name: 'Parent trigger' });
+        await user.click(parentTrigger);
+
+        await waitFor(() => {
+          expect(screen.queryByTestId('parent-popup')).not.toBe(null);
+        });
+
+        const childOpener = screen.getByRole('button', {
+          name: 'Open child programmatically',
+        });
+        await user.click(childOpener);
+
+        await waitFor(() => {
+          expect(screen.queryByTestId('child-popup')).not.toBe(null);
+        });
+
+        await user.click(screen.getByRole('button', { name: 'Close child' }));
+
+        await waitFor(() => {
+          expect(screen.queryByTestId('child-popup')).toBe(null);
+        });
+        expect(childOpener).toHaveFocus();
+        expect(screen.queryByTestId('parent-popup')).not.toBe(null);
+
+        await user.click(screen.getByRole('button', { name: 'Close parent' }));
+
+        await waitFor(() => {
+          expect(screen.queryByTestId('parent-popup')).toBe(null);
+        });
+        expect(parentTrigger).toHaveFocus();
+      });
+
+      it('keeps the parent popover open when press starts in nested popover and ends outside', async () => {
+        const Test = defineComponent({
+          setup() {
+            return () => (
+              <div>
+                <button type="button" data-testid="outside">
+                  Outside
+                </button>
+
+                <Popover.Root defaultOpen>
+                  <Popover.Trigger>Parent</Popover.Trigger>
+                  <Popover.Portal>
+                    <Popover.Positioner>
+                      <Popover.Popup data-testid="parent-popup">
+                        <Popover.Root>
+                          <Popover.Trigger>Child</Popover.Trigger>
+                          <Popover.Portal>
+                            <Popover.Positioner>
+                              <Popover.Popup data-testid="child-popup">Child content</Popover.Popup>
+                            </Popover.Positioner>
+                          </Popover.Portal>
+                        </Popover.Root>
+                      </Popover.Popup>
+                    </Popover.Positioner>
+                  </Popover.Portal>
+                </Popover.Root>
+              </div>
+            );
+          },
+        });
+
+        await render(<Test />);
+
+        expect(screen.queryByTestId('parent-popup')).not.toBe(null);
+
+        const childTrigger = screen.getByRole('button', { name: 'Child' });
+
+        await fireEvent.click(childTrigger);
+
+        const childPopup = await screen.findByTestId('child-popup');
+        const outside = screen.getByTestId('outside');
+
+        await fireEvent.pointerDown(childPopup, { pointerType: 'mouse', button: 0 });
+        await fireEvent.click(outside);
+
+        await waitFor(() => {
+          expect(screen.queryByTestId('parent-popup')).not.toBe(null);
+        });
+        expect(screen.queryByTestId('child-popup')).not.toBe(null);
+      });
+
+      it.skipIf(isJSDOM)(
+        'should not close popover when scrolling nested popup on touch',
+        async () => {
+          const fruits = Array.from({ length: 50 }, (_, i) => i);
+          await render(
+            <TestPopover
+              rootProps={{ defaultOpen: true }}
+              popupProps={{
+                children: () => (
+                  <Combobox.Root items={fruits} defaultOpen>
+                    <Combobox.Input placeholder="Choose a fruit" />
+                    <Combobox.Portal>
+                      <Combobox.Positioner>
+                        <Combobox.Popup
+                          data-testid="combobox-popup"
+                          style={{ maxHeight: '200px', overflow: 'auto' }}
+                        >
+                          <Combobox.List>
+                            {{
+                              item: ({ item }: { item: number }) => (
+                                <Combobox.Item key={item} value={item} style={{ height: '100px' }}>
+                                  {item}
+                                </Combobox.Item>
+                              ),
+                            }}
+                          </Combobox.List>
+                        </Combobox.Popup>
+                      </Combobox.Positioner>
+                    </Combobox.Portal>
+                  </Combobox.Root>
+                ),
+              }}
+            />,
+          );
+
+          const popoverPopup = screen.getByTestId('popover-popup');
+          expect(popoverPopup).not.toBe(null);
+
+          await flushMicrotasks();
+
+          const comboboxPopup = screen.getByTestId('combobox-popup');
+          expect(comboboxPopup).not.toBe(null);
+
+          // Simulate touch scroll: touchstart + touchmove on the scrollable list
+          await fireTouch.start(comboboxPopup, { touches: [{ clientX: 100, clientY: 100 }] });
+
+          // Wait for the timeout that marks the press as inside the popup tree to finish
+          await wait(0);
+
+          await fireTouch.move(comboboxPopup, { touches: [{ clientX: 100, clientY: 50 }] });
+
+          await fireTouch.end(comboboxPopup, { changedTouches: [{ clientX: 100, clientY: 50 }] });
+
+          await flushMicrotasks();
+
+          expect(screen.queryByTestId('popover-popup')).not.toBe(null);
+          expect(screen.queryByTestId('combobox-popup')).not.toBe(null);
+        },
+      );
+
+      it('should close child popover when clicking parent popover', async () => {
+        const { user } = await render(
+          <TestPopover
+            triggerProps={{ 'data-testid': 'parent-trigger' }}
+            popupProps={{
+              'data-testid': 'parent-popup',
+              children: () => (
+                <ContainedTriggerPopover
+                  triggerProps={{ 'data-testid': 'child-trigger' }}
+                  popupProps={{ 'data-testid': 'child-popup', children: () => null }}
+                />
+              ),
+            }}
+          />,
+        );
+
+        expect(screen.queryByTestId('parent-popup')).toBe(null);
+        expect(screen.queryByTestId('child-popup')).toBe(null);
+
+        const parentTrigger = screen.getByTestId('parent-trigger');
+        await user.click(parentTrigger);
+        await flushMicrotasks();
+
+        const parentPopup = screen.getByTestId('parent-popup');
+
+        expect(parentPopup).not.toBe(null);
+        expect(screen.queryByTestId('child-popup')).toBe(null);
+
+        const childTrigger = screen.getByTestId('child-trigger');
+        await user.click(childTrigger);
+        await flushMicrotasks();
+
+        expect(parentPopup).not.toBe(null);
+        expect(screen.getByTestId('child-popup')).not.toBe(null);
+
+        await user.click(parentPopup);
+        await flushMicrotasks();
+
+        expect(screen.queryByTestId('parent-popup')).not.toBe(null);
+        expect(screen.queryByTestId('child-popup')).toBe(null);
+      });
+    });
+  });
+
+  describe('preventUnmountOnClose()', () => {
+    it('does not leak from a canceled close into a synchronous second close', async () => {
+      const popover = Popover.createHandle();
+      let closeAttempts = 0;
+
+      const { user } = await render(
+        <>
+          <button type="button" onClick={() => popover.close()}>
+            Close popover
+          </button>
+          <Popover.Root
+            handle={popover}
+            defaultOpen
+            defaultTriggerId="trigger"
+            onOpenChange={(open: boolean, details: Popover.Root.ChangeEventDetails) => {
+              if (open) {
+                return;
+              }
+
+              closeAttempts += 1;
+
+              if (closeAttempts === 1) {
+                details.preventUnmountOnClose();
+                details.cancel();
+                popover.close();
+              }
+            }}
+          >
+            <Popover.Trigger handle={popover} id="trigger">
+              Toggle
+            </Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Positioner>
+                <Popover.Popup data-testid="popup">Content</Popover.Popup>
+              </Popover.Positioner>
+            </Popover.Portal>
+          </Popover.Root>
+        </>,
+      );
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('popup')).not.toBe(null);
+      });
+
+      await user.click(screen.getByRole('button', { name: 'Close popover' }));
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('popup')).toBe(null);
+      });
+    });
+
+    it('unmounts on a normal close after a prevented close and initially open remount', async () => {
+      const popover = Popover.createHandle();
+      let preventNextUnmount = true;
+
+      const App = defineComponent({
+        setup() {
+          const showRoot = shallowRef(true);
+          const remountOpen = shallowRef(false);
+
+          return () => (
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  showRoot.value = false;
+                }}
+              >
+                Unmount root
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  remountOpen.value = true;
+                  showRoot.value = true;
+                }}
+              >
+                Remount open
+              </button>
+              {showRoot.value && (
+                <Popover.Root
+                  handle={popover}
+                  defaultOpen={remountOpen.value}
+                  defaultTriggerId="trigger"
+                  onOpenChange={(open: boolean, details: Popover.Root.ChangeEventDetails) => {
+                    if (!open && preventNextUnmount) {
+                      preventNextUnmount = false;
+                      details.preventUnmountOnClose();
+                    }
+                  }}
+                >
+                  <Popover.Trigger handle={popover} id="trigger">
+                    Toggle
+                  </Popover.Trigger>
+                  <Popover.Portal>
+                    <Popover.Positioner>
+                      <Popover.Popup data-testid="popup">Content</Popover.Popup>
+                    </Popover.Positioner>
+                  </Popover.Portal>
+                </Popover.Root>
+              )}
+            </>
+          );
+        },
+      });
+
+      const { user } = await render(<App />);
+      const trigger = screen.getByRole('button', { name: 'Toggle' });
+
+      await user.click(trigger);
+      await waitFor(() => {
+        expect(screen.queryByTestId('popup')).not.toBe(null);
+      });
+
+      await user.click(trigger);
+      await waitFor(() => {
+        expect(trigger).not.toHaveAttribute('data-popup-open');
+      });
+      expect(screen.queryByTestId('popup')).not.toBe(null);
+
+      await user.click(screen.getByRole('button', { name: 'Unmount root' }));
+      expect(screen.queryByTestId('popup')).toBe(null);
+
+      await user.click(screen.getByRole('button', { name: 'Remount open' }));
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Toggle' })).toHaveAttribute('data-popup-open');
+      });
+      expect(screen.queryByTestId('popup')).not.toBe(null);
+
+      await user.click(screen.getByRole('button', { name: 'Toggle' }));
+      await waitFor(() => {
+        expect(screen.queryByTestId('popup')).toBe(null);
+      });
+    });
+  });
+
+  describe('close requests', () => {
+    it('reports the active trigger for an outside press close', async () => {
+      const onOpenChange = vi.fn();
+      const { user } = await render(
+        <div>
+          <button type="button">Outside</button>
+          <Popover.Root onOpenChange={onOpenChange}>
+            <Popover.Trigger>Trigger A</Popover.Trigger>
+            <Popover.Trigger>Trigger B</Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Positioner>
+                <Popover.Popup>Content</Popover.Popup>
+              </Popover.Positioner>
+            </Popover.Portal>
+          </Popover.Root>
+        </div>,
+      );
+      const triggerB = screen.getByRole('button', { name: 'Trigger B' });
+
+      await user.click(triggerB);
+      expect(screen.queryByText('Content')).not.toBe(null);
+      await fireEvent.click(screen.getByRole('button', { name: 'Outside' }));
+      await waitFor(() => {
+        expect(screen.queryByText('Content')).toBe(null);
+      });
+
+      expect(onOpenChange).toHaveBeenCalledTimes(2);
+      expect(onOpenChange.mock.calls[1]![1].reason).toBe(REASONS.outsidePress);
+      expect(onOpenChange.mock.calls[1]![1].trigger).toBe(triggerB);
+    });
+
+    it('marks a close without a reason as a dismissal', async () => {
+      const handle = Popover.createHandle();
+      await render(
+        <Popover.Root handle={handle} defaultOpen>
+          <Popover.Trigger handle={handle}>Trigger</Popover.Trigger>
+          <Popover.Portal keepMounted>
+            <Popover.Positioner>
+              <Popover.Popup data-testid="popup">Content</Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>,
+      );
+      expect(screen.getByTestId('popup')).toHaveAttribute('data-open');
+
+      handle.store.setOpen(
+        false,
+        createChangeEventDetails(undefined as unknown as typeof REASONS.none),
+      );
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('popup')).not.toHaveAttribute('data-open');
+      expect(screen.getByTestId('popup')).toHaveAttribute('data-instant', 'dismiss');
+    });
+  });
+
+  describe('hover open after a dismissal', () => {
+    it('renders the open popup without the dismissal instant type', async () => {
+      const renders: { open: boolean; instant: string | undefined }[] = [];
+
+      const { user } = await render(
+        <Popover.Root>
+          <Popover.Trigger openOnHover delay={0}>
+            Trigger
+          </Popover.Trigger>
+          <Popover.Portal keepMounted>
+            <Popover.Positioner>
+              <Popover.Popup
+                data-testid="popup"
+                stateClass={(state: Popover.Popup.State) => {
+                  renders.push({ open: state.open, instant: state.instant });
+                  return undefined;
+                }}
+              >
+                Content
+              </Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>,
+      );
+      const trigger = screen.getByRole('button', { name: 'Trigger' });
+
+      await user.click(trigger);
+      await waitFor(() => {
+        expect(screen.getByTestId('popup')).toHaveAttribute('data-open');
+      });
+      await user.keyboard('[Escape]');
+      await waitFor(() => {
+        expect(screen.getByTestId('popup')).not.toHaveAttribute('data-open');
+      });
+      expect(screen.getByTestId('popup')).toHaveAttribute('data-instant', 'dismiss');
+      await user.unhover(trigger);
+      renders.length = 0;
+
+      await fireEvent.pointerEnter(trigger, { pointerType: 'mouse' });
+      await fireEvent.mouseEnter(trigger);
+      await fireEvent.mouseMove(trigger);
+      await waitFor(() => {
+        expect(screen.getByTestId('popup')).toHaveAttribute('data-open');
+      });
+
+      expect(renders.find((entry) => entry.open)).toEqual({ open: true, instant: undefined });
+    });
+
+    it('cancels a pending hover open when the `close` action is called', async () => {
+      const onOpenChange = vi.fn();
+      const root = createRootRef();
+      await render(() => (
+        <Popover.Root ref={root.ref} onOpenChange={onOpenChange}>
+          <Popover.Trigger openOnHover delay={100}>
+            Trigger
+          </Popover.Trigger>
+          <Popover.Portal>
+            <Popover.Positioner>
+              <Popover.Popup data-testid="popup">Content</Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>
+      ));
+
+      await enterWithMouse(screen.getByRole('button', { name: 'Trigger' }));
+      root.current.close();
+      await flushMicrotasks();
+      await wait(200);
+
+      expect(onOpenChange).not.toHaveBeenCalled();
+      expect(screen.queryByTestId('popup')).toBe(null);
+    });
+  });
+
+  describe('after a close from a trigger', () => {
+    const App = defineComponent({
+      setup() {
+        const open = shallowRef(false);
+        return () => (
+          <>
+            <button
+              type="button"
+              onClick={() => {
+                open.value = true;
+              }}
+            >
+              Open externally
+            </button>
+            <Popover.Root
+              open={open.value}
+              onOpenChange={(nextOpen: boolean) => {
+                open.value = nextOpen;
+              }}
+            >
+              <Popover.Trigger>Trigger A</Popover.Trigger>
+              <Popover.Trigger>Trigger B</Popover.Trigger>
+              <Popover.Portal>
+                <Popover.Positioner>
+                  <Popover.Popup data-testid="popup">Content</Popover.Popup>
+                </Popover.Positioner>
+              </Popover.Portal>
+            </Popover.Root>
+            <Popover.Root>
+              <Popover.Trigger>Other popover</Popover.Trigger>
+              <Popover.Portal>
+                <Popover.Positioner>
+                  <Popover.Popup data-testid="other-popup">Other content</Popover.Popup>
+                </Popover.Positioner>
+              </Popover.Portal>
+            </Popover.Root>
+          </>
+        );
+      },
+    });
+
+    it('closes when that trigger is pressed after a controlled open without a trigger', async () => {
+      const { user } = await render(<App />);
+      const triggerA = screen.getByRole('button', { name: 'Trigger A' });
+
+      await user.click(triggerA);
+      await waitFor(() => {
+        expect(screen.queryByTestId('popup')).not.toBe(null);
+      });
+      await user.click(triggerA);
+      await waitFor(() => {
+        expect(screen.queryByTestId('popup')).toBe(null);
+      });
+
+      await fireEvent.click(screen.getByRole('button', { name: 'Open externally' }));
+      await waitFor(() => {
+        expect(screen.queryByTestId('popup')).not.toBe(null);
+      });
+
+      await user.click(triggerA);
+      await waitFor(() => {
+        expect(screen.queryByTestId('popup')).toBe(null);
+      });
+    });
+
+    it('returns focus to that trigger when a later open started from the body', async () => {
+      const { user } = await render(<App />);
+      const triggerA = screen.getByRole('button', { name: 'Trigger A' });
+      const otherTrigger = screen.getByRole('button', { name: 'Other popover' });
+
+      await user.click(triggerA);
+      await waitFor(() => {
+        expect(screen.queryByTestId('popup')).not.toBe(null);
+      });
+      await user.click(triggerA);
+      await waitFor(() => {
+        expect(screen.queryByTestId('popup')).toBe(null);
+      });
+
+      // Another popover is the last one opened from a focused element.
+      await user.click(otherTrigger);
+      await waitFor(() => {
+        expect(screen.queryByTestId('other-popup')).not.toBe(null);
+      });
+      await user.click(otherTrigger);
+      await waitFor(() => {
+        expect(screen.queryByTestId('other-popup')).toBe(null);
+      });
+
+      otherTrigger.blur();
+      await flushMicrotasks();
+      expect(document.activeElement).toBe(document.body);
+
+      await fireEvent.click(screen.getByRole('button', { name: 'Open externally' }));
+      await waitFor(() => {
+        expect(screen.queryByTestId('popup')).not.toBe(null);
+      });
+      await waitFor(() => {
+        expect(screen.getByTestId('popup')).toHaveFocus();
+      });
+
+      await user.keyboard('[Escape]');
+      await waitFor(() => {
+        expect(screen.queryByTestId('popup')).toBe(null);
+      });
+      await waitFor(() => {
+        expect(triggerA).toHaveFocus();
+      });
+    });
   });
 
   it('opens with defaultOpen and marks the trigger of defaultTriggerId', async () => {
@@ -2158,102 +3458,40 @@ describe('<Popover.Root />', () => {
     expect(screen.getByRole('button', { name: 'Open' })).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('gives the payload of the active trigger to the default slot', async () => {
-    const handle = Popover.createHandle<string>();
+  it('registers a trigger outside the root', async () => {
+    const handle = Popover.createHandle<unknown>();
     await render(
-      <Popover.Root
-        handle={handle}
-        v-slots={{
-          default: ({ payload }: { payload: string | undefined }) => (
-            <>
-              <p data-testid="payload">{payload ?? 'none'}</p>
-              <Popover.Trigger id="one" payload="first" />
-              <Popover.Trigger id="two" payload="second" />
-            </>
-          ),
-        }}
-      />,
+      <>
+        <Popover.Trigger id="before" handle={handle}>
+          Before
+        </Popover.Trigger>
+        <Popover.Root handle={handle}>
+          <Popover.Trigger id="inside">Inside</Popover.Trigger>
+        </Popover.Root>
+        <Popover.Trigger id="after" handle={handle}>
+          After
+        </Popover.Trigger>
+      </>,
     );
-    const payload = screen.getByTestId('payload');
-    expect(payload).toHaveTextContent('none');
+    const before = screen.getByRole('button', { name: 'Before' });
+    const inside = screen.getByRole('button', { name: 'Inside' });
+    const after = screen.getByRole('button', { name: 'After' });
 
-    handle.open('one');
+    handle.open('after');
     await flushMicrotasks();
-    expect(payload).toHaveTextContent('first');
+    expect([before, inside, after].map((item) => item.getAttribute('aria-expanded'))).toEqual([
+      'false',
+      'false',
+      'true',
+    ]);
 
-    handle.open('two');
+    handle.open('before');
     await flushMicrotasks();
-    expect(payload).toHaveTextContent('second');
-  });
-
-  describe('handle', () => {
-    it('opens and closes from the handle and reports isOpen', async () => {
-      const handle = Popover.createHandle<unknown>();
-      await render(
-        <Popover.Root handle={handle}>
-          <Popover.Trigger id="trigger">Open</Popover.Trigger>
-        </Popover.Root>,
-      );
-      const trigger = screen.getByRole('button');
-      expect(handle.isOpen).toBe(false);
-
-      handle.open('trigger');
-      await flushMicrotasks();
-      expect(handle.isOpen).toBe(true);
-      expect(trigger).toHaveAttribute('aria-expanded', 'true');
-
-      handle.close();
-      await flushMicrotasks();
-      expect(handle.isOpen).toBe(false);
-      expect(trigger).toHaveAttribute('aria-expanded', 'false');
-    });
-
-    it('registers a trigger outside the root', async () => {
-      const handle = Popover.createHandle<unknown>();
-      await render(
-        <>
-          <Popover.Trigger id="before" handle={handle}>
-            Before
-          </Popover.Trigger>
-          <Popover.Root handle={handle}>
-            <Popover.Trigger id="inside">Inside</Popover.Trigger>
-          </Popover.Root>
-          <Popover.Trigger id="after" handle={handle}>
-            After
-          </Popover.Trigger>
-        </>,
-      );
-      const before = screen.getByRole('button', { name: 'Before' });
-      const inside = screen.getByRole('button', { name: 'Inside' });
-      const after = screen.getByRole('button', { name: 'After' });
-
-      handle.open('after');
-      await flushMicrotasks();
-      expect([before, inside, after].map((item) => item.getAttribute('aria-expanded'))).toEqual([
-        'false',
-        'false',
-        'true',
-      ]);
-
-      handle.open('before');
-      await flushMicrotasks();
-      expect([before, inside, after].map((item) => item.getAttribute('aria-expanded'))).toEqual([
-        'true',
-        'false',
-        'false',
-      ]);
-    });
-
-    it('throws when open() names no registered trigger', async () => {
-      const handle = Popover.createHandle<unknown>();
-      await render(
-        <Popover.Root handle={handle}>
-          <Popover.Trigger id="trigger" />
-        </Popover.Root>,
-      );
-
-      expect(() => handle.open('missing')).toThrow(/Vase UI: PopoverHandle\.open\(\)/);
-    });
+    expect([before, inside, after].map((item) => item.getAttribute('aria-expanded'))).toEqual([
+      'true',
+      'false',
+      'false',
+    ]);
   });
 
   it('exposes close and unmount', async () => {
@@ -2277,30 +3515,6 @@ describe('<Popover.Root />', () => {
 
     expect(changes).toEqual([[false, 'imperative-action']]);
     expect(screen.getByRole('button')).toHaveAttribute('aria-expanded', 'false');
-  });
-
-  it('emits openChangeComplete when unmount() ends the close', async () => {
-    const completions: boolean[] = [];
-    const root = createRootRef();
-    await render(() => (
-      <Popover.Root
-        ref={root.ref}
-        defaultOpen
-        defaultTriggerId="trigger"
-        onOpenChange={(_open, details) => details.preventUnmountOnClose()}
-        onOpenChangeComplete={(open) => completions.push(open)}
-      >
-        <Popover.Trigger id="trigger" />
-      </Popover.Root>
-    ));
-
-    root.current.close();
-    await flushMicrotasks();
-    expect(completions).toEqual([]);
-
-    root.current.unmount();
-    await flushMicrotasks();
-    expect(completions).toEqual([false]);
   });
 
   it('gives the modal prop to the store', async () => {
