@@ -20,13 +20,6 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
       "reason": "The case presses Enter and Space on a disabled trigger, and it expects that the menu stays closed. The trigger of Vase UI has no press yet, so the case cannot fail."
-    },
-    {
-      "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
-      "describe": ["<Toolbar.Button />", "rendering other Base UI components", "Popover"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/index.ts",
-      "reason": "Each case of the block renders `Popover.Trigger` and the other parts of Popover from the entry point of Popover. Vase UI does not have that entry point."
     }
   ],
   "surfaceAdditions": [],
