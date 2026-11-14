@@ -3,7 +3,7 @@ import { defineComponent, h, KeepAlive, nextTick, shallowRef } from 'vue';
 import type { VNode } from 'vue';
 import { createRenderer, screen, takeReportedMessages } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
-import * as Toast from '../index.parts';
+import { Toast } from '@vase-ui/vue/toast';
 import type { ToastLabel } from '../useToastManager';
 import { List, Button } from './test-utils';
 
