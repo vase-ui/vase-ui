@@ -181,7 +181,7 @@ Give the constant the type `typeof DialogRoot`. Without it, the declaration buil
 
 A family whose upstream folder has no `index.parts.ts` declares the constant and its namespace in `index.ts`. A family whose upstream folder has an `index.parts.ts` keeps that file, also when it has one part. `pnpm parity:check` finds a counterpart by its path.
 
-A family can land in more than one pull request. Its `index.ts` then comes in the last one, so the package exports nothing of the family before then. The tests of the earlier pull requests import `../index.parts`.
+A family can land in more than one pull request. Its `index.ts` then comes in the last one, so the package exports nothing of the family before then. The exception is an entry point that a demo of another family imports. That `index.ts` comes with the last part that the demo renders, as in Slider. The tests of the pull requests before the `index.ts` import `../index.parts`.
 
 ## API convention
 
@@ -503,6 +503,7 @@ If a line must break a rule, put a disable comment on that line and give the rea
 - Add `data-allow-mismatch` to each element that the script changes, with the category of each change, such as `style`. Vue accepts a class, style or attribute mismatch only on the element that has the attribute with that category.
 - Vue compares the `style` of an element only when the client render gives a `style` key. An element that can have a `style` in its client render, such as the `style` of a consumer, needs the category `style`.
 - The part binds the attribute only while it hydrates, so the hydrated DOM stays equal to a client-only render.
+- A script can write a style property that no render writes. Vue does not remove that property when it hydrates, so the hydrated DOM differs from a client-only render. The part removes the property in `onMounted`. `Slider.Indicator` does this for `--end-position`.
 - A style element of the library must be in the server HTML, so that its rule applies before the page hydrates. The internal SFC `utils/StyleDisableScrollbar.vue` renders that element in the element of the part, only while the part hydrates.
 - The SFC writes `<component :is="'style'">`, because the Vue compiler removes a `<style>` tag from a template. It binds the nonce of `CSPProvider` with `:nonce.attr`. Without `.attr`, a client render sets the DOM property, and the element has no `nonce` attribute.
 - After the mount, `useStyleDisableScrollbar(element)` keeps one shared style element for each document or shadow root. The last part that uses the element removes it. With `disableStyleElements` of `CSPProvider`, no such element exists, and the consumer writes the rule of the class `vase-ui-disable-scrollbar` in a style sheet.
