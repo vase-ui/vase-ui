@@ -248,8 +248,9 @@ const siblingNodes = computed(() => {
     focusGuard.addEventListener('focusin', handleFocusGuard);
   }
   if (hasAlerts.value && !alertRegion) {
-    alertRegion = doc.createElement('div');
-    Object.assign(alertRegion.style, visuallyHidden);
+    const region = doc.createElement('div');
+    Object.assign(region.style, visuallyHidden);
+    alertRegion = region;
   }
   return {
     focusGuard: hasFocusGuards.value ? focusGuard : null,

@@ -13,8 +13,8 @@ const { hasFocusGuards, handleFocusGuard, alertRegion, highPriorityToasts } =
 
 markChildrenMounted();
 
-// The alerts are beside the viewport, not in it: the viewport is a polite live region. The
-// `Teleport` renders them in the alert region, so a label of a toast can be a component.
+// The alerts are beside the viewport, not in it, because the viewport is a polite live region. A
+// `Teleport` renders them in the alert region, so a label that is a function renders its component.
 </script>
 
 <template>
