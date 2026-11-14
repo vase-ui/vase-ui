@@ -34,7 +34,7 @@ An input combined with a list of predefined items to select.
 
 ## Usage guidelines
 
-- **Combobox is a Select with a filter**: Use Combobox when the user must pick one of the predefined items and the list is long enough to need a filter. It works like [Select](/components/select), but the user types in an input to filter the items.
+- **Combobox is a Select with a filter**: Use Combobox to pick one predefined item from a long list that needs a filter. It works like [Select](/components/select), but the user types in an input to filter the items.
 - **Avoid for search widgets**: Combobox does not accept free-form text. For a search widget, use [Autocomplete](/components/autocomplete).
 - **Avoid when there is no input**: Use [Select](/components/select) when the combobox has no input. Select has the accessibility features of a listbox with no input.
 - **Form controls must have an accessible name**: If `<Combobox.Input>` is the form control, label it with a native `<label>` or with `<Field.Label>`. When no label is visible, give it an `aria-label`. `<Combobox.Label>` labels `<Combobox.Trigger>`. Use it for the [input inside popup](#input-inside-popup) pattern, where the trigger is the form control. See the [forms guide](/handbook/forms).
@@ -98,15 +98,15 @@ When the data loads or changes at run time, make the collection in a `computed`.
 
 :::
 
-As a rule of thumb, use primitive items for simple lists. Use object values when the selected record is useful application state. Use `createItems()` when the selection must use a stable primitive ID and the list and the filter still use object records.
+As a rule of thumb, use primitive items for simple lists. Use object values when the selected record is useful application state. Use `createItems()` when the selection needs a stable primitive ID and the list still uses object records.
 
 Stable IDs keep the match of the items when a data library replaces the row objects at a refetch. With object values, use `isItemEqualToValue` to compare their IDs.
 
-When a server filters the results, `items` is the list of the records that the app knows, and `filteredItems` is the window of results that the popup shows. Give `filteredItems` the source items, not the derived values. Keep the flat or grouped structure of `items`:
+When a server filters the results, `items` is the list of records that the app knows. `filteredItems` is the window of results that the popup shows. Give `filteredItems` the source items, not the derived values. Keep the flat or grouped structure of `items`:
 
 <<< ./combobox/FilteredWindow.vue{23}
 
-Put the record of the selected user in `knownUsers`, so that its label stays available while the record is not in `searchResults`. Or give `itemToStringLabel` when the selected value alone gives the label.
+Put the record of the selected user in `knownUsers`. Its label then stays available while the record is not in `searchResults`. Or give `itemToStringLabel`, when the selected value alone gives the label.
 
 ### Multiple select
 
@@ -124,7 +124,7 @@ Add the `multiple` prop to `<Combobox.Root>` to let the user select more than on
 
 :::
 
-For screen readers to announce how to reach and remove the chips, give `aria-description` to `<Combobox.Chip>` and `<Combobox.Input>`, and give `aria-label` to `<Combobox.Chips>` and `<Combobox.ChipRemove>`. Vase UI does not ship these strings. Translate them with the rest of your interface.
+Screen readers must announce how to reach and remove the chips. Give `aria-description` to `<Combobox.Chip>` and `<Combobox.Input>`. Give `aria-label` to `<Combobox.Chips>` and `<Combobox.ChipRemove>`. Vase UI does not ship these strings. Translate them with the rest of your interface.
 
 The types of Vue do not list `aria-description`, so `strictTemplates` refuses it on a part. Give it with `v-bind`, as the demo does.
 
@@ -136,7 +136,7 @@ To limit the visible chips, slice the selected values that `<Combobox.Value>` gi
 
 In `multiple` mode, a selection clears the filter that the user typed. When the input is outside the popup, the selection also closes the popup. To let the user pick more than one result of a query, cancel the change request that does this.
 
-The request to cancel depends on where the input is. When the input is outside the popup, cancel the close request with the reason `item-press` in `openChange`:
+The request to cancel depends on where the input is. When the input is outside the popup, cancel the close request in `openChange`. That request has the reason `item-press`:
 
 <<< ./combobox/KeepFilterOutside.vue{5-7}
 
