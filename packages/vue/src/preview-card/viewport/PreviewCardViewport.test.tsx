@@ -3,9 +3,12 @@ import * as PreviewCard from '../index.parts';
 import {
   createRenderer,
   describeConformance,
+  fireEvent,
   flushMicrotasks,
+  screen,
   takeReportedMessages,
   viewportConformanceTests,
+  waitFor,
 } from '#test-utils';
 
 describe('<PreviewCard.Viewport />', () => {
@@ -54,6 +57,40 @@ describe('<PreviewCard.Viewport />', () => {
         }}
       </PreviewCard.Root>
     ),
+  });
+
+  it('has `data-instant` with the instant type of the card', async () => {
+    await render(
+      <PreviewCard.Root>
+        <PreviewCard.Trigger href="#" delay={0}>
+          Link
+        </PreviewCard.Trigger>
+        <PreviewCard.Portal keepMounted>
+          <PreviewCard.Positioner>
+            <PreviewCard.Popup data-testid="popup">
+              <PreviewCard.Viewport data-testid="viewport">Content</PreviewCard.Viewport>
+            </PreviewCard.Popup>
+          </PreviewCard.Positioner>
+        </PreviewCard.Portal>
+      </PreviewCard.Root>,
+    );
+    const viewport = await screen.findByTestId('viewport');
+    const popup = screen.getByTestId('popup');
+    const trigger = screen.getByRole('link', { name: 'Link' });
+    expect(viewport).not.toHaveAttribute('data-instant');
+
+    trigger.focus();
+    await flushMicrotasks();
+    await waitFor(() => {
+      expect(popup).toHaveAttribute('data-open');
+    });
+    expect(viewport).toHaveAttribute('data-instant', 'focus');
+
+    await fireEvent.keyDown(trigger, { key: 'Escape' });
+    await waitFor(() => {
+      expect(popup).toHaveAttribute('data-closed');
+    });
+    expect(viewport).toHaveAttribute('data-instant', 'dismiss');
   });
 
   it('throws a descriptive error when rendered outside <PreviewCard.Positioner>', async () => {
