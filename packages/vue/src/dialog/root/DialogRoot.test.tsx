@@ -1334,8 +1334,8 @@ describe('<Dialog.Root />', () => {
           await fireEvent.mouseDown(scrubArea, { button: 0 });
           await fireEvent.pointerUp(document.body, { pointerType: 'mouse', button: 0 });
           await fireEvent.mouseUp(document.body, { button: 0 });
-          // A press that starts inside and ends outside suppresses the next click until a timer of
-          // 0 ms ends.
+          // A press that starts inside with a prevented `pointerdown` and ends outside suppresses the
+          // next click until a timer of 0 ms ends.
           await wait(0);
 
           await fireEvent.click(document.body);
@@ -1620,8 +1620,8 @@ describe('<Dialog.Root />', () => {
     // such checkpoint, and a key press on a focused button gives a trusted click.
     async function click(testId: string) {
       const element = await query(testId);
-      // The popup can open in the millisecond of the click before. Vue skips a listener for an event
-      // of the millisecond in which it attached that listener.
+      // The popup can open in the millisecond of the click before. Vue skips the second and later
+      // listeners of an event in the millisecond in which it attached them.
       await waitForLaterMillisecond();
       if (element instanceof HTMLButtonElement) {
         element.focus();
