@@ -3,8 +3,8 @@ import { compareItemEquality } from '../internals/itemEquality';
 import type { RegisterId } from '../internals/labelable-provider/LabelableContext';
 import { hasNullItemLabel, stringifyAsValue } from '../internals/resolveValueLabel';
 import type { Group, ItemLabel } from '../internals/resolveValueLabel';
-import type { HTMLProps } from '../internals/types';
 import { popupStoreSelectors } from '../utils/popups/store';
+import type { InteractionProps } from '../utils/popups/types';
 import { ValuePopupStore, valuePopupSelectors } from '../utils/popups/value-popup/ValuePopupStore';
 import type {
   ValuePopupContext,
@@ -28,7 +28,7 @@ export type State = ValuePopupState & {
 
   // Root values every item reads, combined so each item needs a single read for them.
   itemRoot: {
-    props: HTMLProps;
+    props: InteractionProps;
     multiple: boolean;
     disabled: boolean;
     readOnly: boolean;
