@@ -19,7 +19,7 @@ import {
 import * as Dialog from '../../dialog/index.parts';
 import { PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
 import * as NavigationMenu from '../index.parts';
-import { OPEN_DELAY } from '../utils/constants';
+import { CLOSE_DELAY, OPEN_DELAY } from '../utils/constants';
 import NavigationMenuRootHydration from './NavigationMenuRootHydration.test.vue';
 import { useNavigationMenuRootContext } from './NavigationMenuRootContext';
 
@@ -1915,7 +1915,7 @@ describe('<NavigationMenu.Root />', () => {
         </NavigationMenu.List>
 
         <NavigationMenu.Portal>
-          <NavigationMenu.Positioner>
+          <NavigationMenu.Positioner data-testid="positioner">
             <NavigationMenu.Popup>
               <NavigationMenu.Viewport />
             </NavigationMenu.Popup>
@@ -1955,11 +1955,13 @@ describe('<NavigationMenu.Root />', () => {
       vi.advanceTimersByTime(OPEN_DELAY);
       await flushMicrotasks();
 
-      const popup = screen.getByTestId('popup-1');
       const dialogTrigger = screen.getByTestId('dialog-trigger');
 
       await fireEvent.pointerDown(dialogTrigger, { pointerType: 'mouse' });
-      await fireEvent.mouseLeave(popup);
+      // The listener is on the positioner, and `mouseleave` does not bubble.
+      await fireEvent.mouseLeave(screen.getByTestId('positioner'));
+      vi.advanceTimersByTime(CLOSE_DELAY);
+      await flushMicrotasks();
 
       await user.click(dialogTrigger);
 
