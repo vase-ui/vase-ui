@@ -1,0 +1,8 @@
+{
+  "id": "VUE-57",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/drawer/swipe-area/DrawerSwipeArea.tsx#L431-L436"
+  ],
+  "behavior": "When `Drawer.SwipeArea` unmounts during a gesture that opens the drawer, it removes the swipe movement, `data-swiping` and `transition: none` from the popup. It also removes the swipe progress from the backdrop and from `Drawer.Provider`. The drawer is then fully open. In Base UI, the swipe area only lets an outside press close the drawer again. The popup then stays at the position of the gesture, and the indent stays at the progress of the gesture.",
+  "dueWith": "packages/react/src/drawer/swipe-area/DrawerSwipeArea.tsx"
+}
