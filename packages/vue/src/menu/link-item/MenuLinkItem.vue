@@ -40,6 +40,7 @@ import { useRenderElement } from '../../internals/useRenderElement';
 import { mergeProps } from '../../merge-props';
 import { REGULAR_ITEM } from '../item/useMenuItem';
 import { useMenuItemCommonProps } from '../item/useMenuItemCommonProps';
+import { useMenuFilterItem } from '../filter-root/MenuFilterContext';
 import { useMenuRootContext } from '../root/MenuRootContext';
 
 defineOptions({ inheritAttrs: false });
@@ -61,6 +62,9 @@ const { store } = useMenuRootContext();
 let linkElement: HTMLElement | null = null;
 
 const listItem = useCompositeListItem({ label: () => props.label });
+// A filterable menu hides the element of an item that the query filters out. The template then
+// gives the content of the item to a component that reads its text and renders nothing.
+const filterItem = useMenuFilterItem({ label: () => props.label });
 const itemId = useVaseUiId(() => props.id);
 
 const highlighted = computed(() => store.select('isActive', listItem.index.value));
@@ -94,6 +98,7 @@ const { element, elementProps } = useRenderElement('a', props, {
     },
     buttonRef,
     listItem.ref,
+    filterItem.ref,
   ],
   props: (attrs) => [store.select('itemProps'), attrs, getItemProps],
 });
@@ -101,7 +106,12 @@ const { element, elementProps } = useRenderElement('a', props, {
 defineExpose({ element });
 </script>
 
+<!-- prettier-ignore -->
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+  <slot v-if="filterItem.visible.value && $slots.render" name="render" :props="elementProps()" :state="state" />
+  <component :is="as" v-else-if="filterItem.visible.value" v-bind="elementProps()"><slot :state="state" /></component>
+  <component :is="filterItem.HiddenItemText" v-else :set-text="filterItem.setHiddenText">
+    <slot v-if="$slots.render" name="render" :props="{} as HTMLProps" :state="state" />
+    <slot v-else :state="state" />
+  </component>
 </template>

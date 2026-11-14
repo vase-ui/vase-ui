@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, onTestFinished } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { shallowRef } from 'vue';
 import type { ShallowRef, VNodeChild } from 'vue';
 import * as Menu from '../../menu/index.parts';
+import * as Popover from '../../popover/index.parts';
 import { createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
 import { REASONS } from '../../internals/reasons';
@@ -384,6 +385,71 @@ describe('useTriggerFocusGuards', () => {
 
       expect(context.beforeTriggerFocusGuardRef.value).toBe(null);
       expect(context.triggerFocusTargetRef.value).toBe(null);
+    });
+  });
+
+  describe('Popover that stays open', () => {
+    // The `open` prop of the root does not change, so the close of a guard has no effect.
+    async function renderOpenPopover(content: () => VNodeChild) {
+      await render(() => (
+        <div>
+          <Popover.Root open triggerId="trigger">
+            <Popover.Trigger id="trigger">Toggle</Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Positioner>
+                <Popover.Popup initialFocus={false}>{content()}</Popover.Popup>
+              </Popover.Positioner>
+            </Popover.Portal>
+          </Popover.Root>
+          <button>After</button>
+        </div>
+      ));
+      await flushMicrotasks();
+      return screen.getByRole('button', { name: 'Toggle' });
+    }
+
+    // Counts the moves of the focus. After `limit` moves, it stops the listeners of the guards. A
+    // sequence of moves with no end then fails its case, and the page does not stop.
+    function countFocusMoves(limit: number) {
+      let moves = 0;
+      const controller = new AbortController();
+      document.addEventListener(
+        'focusin',
+        (event) => {
+          moves += 1;
+          if (moves >= limit) {
+            event.stopImmediatePropagation();
+          }
+        },
+        { capture: true, signal: controller.signal },
+      );
+      onTestFinished(() => controller.abort());
+      return () => moves;
+    }
+
+    it('moves the focus into the popup again for Tab from the end of the popup', async () => {
+      await renderOpenPopover(() => <button>Inside</button>);
+      const inside = screen.getByRole('button', { name: 'Inside' });
+      inside.focus();
+      await flushMicrotasks();
+
+      await userEvent.tab();
+      await flushMicrotasks();
+
+      expect(inside).toHaveFocus();
+    });
+
+    it('VUE-63: gives the focus to the trigger for Tab when the popup has no tabbable element', async () => {
+      const trigger = await renderOpenPopover(() => 'Text');
+      trigger.focus();
+      await flushMicrotasks();
+      const getFocusMoves = countFocusMoves(100);
+
+      await userEvent.tab();
+      await flushMicrotasks();
+
+      expect(trigger).toHaveFocus();
+      expect(getFocusMoves()).toBeLessThan(100);
     });
   });
 });
