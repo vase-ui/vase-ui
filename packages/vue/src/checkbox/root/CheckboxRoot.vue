@@ -88,6 +88,13 @@ export interface CheckboxRootProps
    */
   indeterminate?: boolean | undefined;
   /**
+   * Whether the checkbox controls a group of child checkboxes.
+   *
+   * Must be used in a Checkbox Group.
+   * @default false
+   */
+  parent?: boolean | undefined;
+  /**
    * The value submitted with the form when the checkbox is unchecked.
    * By default, unchecked checkboxes do not submit any value, matching native checkbox behavior.
    */
@@ -113,9 +120,21 @@ export type CheckboxRootChangeEventDetails =
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, provide, shallowRef, watch } from 'vue';
+import {
+  computed,
+  nextTick,
+  onActivated,
+  onDeactivated,
+  onMounted,
+  onUpdated,
+  provide,
+  shallowRef,
+  watch,
+} from 'vue';
 import { addEventListener } from '../../common/addEventListener';
+import { EMPTY_OBJECT } from '../../common/empty';
 import { getDefaultFormSubmitter } from '../../common/getDefaultFormSubmitter';
+import { useIsHydrated } from '../../common/hydration';
 import { ownerWindow } from '../../common/owner';
 import { useControlled } from '../../common/useControlled';
 import { useTimeout } from '../../common/useTimeout';
@@ -140,6 +159,8 @@ import { useFormReset } from '../../internals/useFormReset';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { dispatchClickWithModifiers } from '../../utils/dispatchClickWithModifiers';
+import { useCheckboxGroupContext } from '../../checkbox-group/CheckboxGroupContext';
+import type { UseCheckboxGroupParentReturnValue } from '../../checkbox-group/useCheckboxGroupParent';
 import { getCheckboxStateAttributesMapping } from '../utils/getCheckboxStateAttributesMapping';
 import { CheckboxRootContext } from './CheckboxRootContext';
 
@@ -153,6 +174,7 @@ const props = withDefaults(defineProps<CheckboxRootProps>(), {
   indeterminate: false,
   name: undefined,
   nativeButton: false,
+  parent: false,
   readOnly: false,
   required: false,
 });
@@ -170,6 +192,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, CheckboxRootState>;
 }>();
 
+const group = useCheckboxGroupContext();
 const { clearErrors } = useFormContext();
 const {
   state: fieldState,
@@ -180,21 +203,73 @@ const {
   validationMode,
   disabled: fieldDisabled,
   name: fieldName,
-  validation,
+  validation: fieldValidation,
 } = useFieldRootContext();
 const fieldItemContext = useFieldItemContext();
-const { getDescriptionProps } = useLabelableContext();
+const { getDescriptionProps, registerControlId } = useLabelableContext();
+
+// The field of the group owns the inputs of the checkboxes of the group.
+const validation = group?.validation ?? fieldValidation;
 
 const isDisabled = computed(
-  () => fieldDisabled.value || fieldItemContext.disabled.value || props.disabled,
+  () =>
+    fieldDisabled.value ||
+    fieldItemContext.disabled.value ||
+    (group?.disabled.value ?? false) ||
+    props.disabled,
 );
 const inputName = computed(() => fieldName.value ?? props.name);
+// In a group, the value of the checkbox is the name that the group lists when the checkbox is on.
+const itemValue = computed(() => props.value ?? inputName.value);
 const clearFieldError = useClearFieldError(inputName);
+
+const groupParent = computed(() =>
+  group?.allValues.value === undefined ? undefined : group.parent,
+);
+const groupProps = computed<
+  Partial<ReturnType<UseCheckboxGroupParentReturnValue['getParentProps']>>
+>(() => {
+  const parent = groupParent.value;
+  if (!parent) {
+    return EMPTY_OBJECT;
+  }
+
+  if (props.parent) {
+    return parent.getParentProps();
+  }
+
+  return itemValue.value === undefined ? EMPTY_OBJECT : parent.getChildProps(itemValue.value);
+});
+const isIndeterminate = computed(
+  () => (groupProps.value.indeterminate ?? false) || props.indeterminate,
+);
 
 const inputElement = shallowRef<HTMLInputElement | null>(null);
 // Vue calls a ref setter during a render, so the setter reads no reactive state.
 let heldInput: HTMLInputElement | null = null;
+// The parent checkbox is not an input of its field, because it has no value to give to the form.
+let isParentInput = props.parent;
 let unregisterInput: (() => void) | void;
+// `KeepAlive` takes the input out of the document, and the field must not use an input that is not
+// in the document. A deactivated required checkbox that is off would block the submit of the form,
+// and its value would stay in the values of the form.
+const isDeactivated = shallowRef(false);
+
+function updateInputRegistration() {
+  unregisterInput?.();
+  // A field can have more than one input, so the input goes to the registry of the field and not
+  // to `validation.inputRef`. The group reads the value when the form needs it, so a change of the
+  // value needs no new registration.
+  unregisterInput =
+    heldInput && !isParentInput
+      ? validation.registerInput(heldInput, {
+          controlRef: () => element.value,
+          get value() {
+            return group ? itemValue.value : undefined;
+          },
+        })
+      : undefined;
+}
 
 function setInputElement(value: unknown) {
   const input = value as HTMLInputElement | null;
@@ -205,23 +280,60 @@ function setInputElement(value: unknown) {
 
   heldInput = input;
   inputElement.value = input;
-  unregisterInput?.();
-  // A field can have more than one input, so the input goes to the registry of the field and not
-  // to `validation.inputRef`.
-  unregisterInput = input
-    ? validation.registerInput(input, { controlRef: () => element.value, value: undefined })
-    : undefined;
+  updateInputRegistration();
 }
+
+onDeactivated(() => {
+  isDeactivated.value = true;
+  unregisterInput?.();
+  unregisterInput = undefined;
+});
+
+onActivated(() => {
+  isDeactivated.value = false;
+});
+
+// `KeepAlive` runs the `onActivated` hooks from the last part to the first part. A registration in
+// the hook would reverse the order of the inputs. A watcher runs in the order of the parts.
+watch(isDeactivated, (deactivated) => {
+  if (!deactivated) {
+    updateInputRegistration();
+  }
+});
+
+watch(
+  () => props.parent,
+  (parent) => {
+    isParentInput = parent;
+
+    if (!isDeactivated.value) {
+      updateInputRegistration();
+    }
+  },
+);
 
 const setFocused = useSetFieldFocused(isDisabled, () => element.value);
 
 const rootId = useVaseUiId();
+// A group that shares the labelable scope of the checkbox is the control of the field and takes its
+// name from `aria-labelledby`. The checkboxes must not claim the control id of that scope, or each
+// of them would render the same id. A `Field.Item` opens a scope that the checkbox does own. The
+// provider chain does not change, so `setup` makes this choice one time.
+const ownsControlId = group?.registerControlId !== registerControlId;
 // An empty `id` is not an own id: the control takes the id of the provider.
-const controlId = useLabelableId({ id: () => props.id || undefined });
+const controlId = useLabelableId({ id: () => props.id || undefined, enabled: ownsControlId });
 const hiddenInputId = computed(() => (props.nativeButton ? undefined : controlId.value));
 
+// The group holds the state of a checkbox that has a value, and of the parent checkbox of a group
+// that has `allValues`. Another checkbox keeps its own state.
+const groupChecked = computed(() =>
+  group && !props.parent && itemValue.value !== undefined
+    ? group.value.value.includes(itemValue.value)
+    : groupProps.value.checked,
+);
+
 const [isChecked, setCheckedState] = useControlled({
-  controlled: () => props.checked,
+  controlled: () => groupChecked.value ?? props.checked,
   default: () => props.defaultChecked,
   name: 'Checkbox',
   state: 'checked',
@@ -232,12 +344,15 @@ useRegisterFieldControl(
   rootId,
   () => isChecked.value,
   undefined,
-  () => !isDisabled.value,
+  () => !group && !isDisabled.value,
   () => props.name,
 );
 
-setFilled(isChecked.value);
-watch(isChecked, setFilled);
+// A group derives the filled state of the field from its value.
+if (!group) {
+  setFilled(isChecked.value);
+  watch(isChecked, setFilled);
+}
 
 // The change of a reset reaches `useValueChanged` after the reset timeout. A clear in the timeout
 // would come before `validation.change`, and the validation could show a new error. The timeout sets
@@ -245,6 +360,11 @@ watch(isChecked, setFilled);
 let isResetChangePending = false;
 
 useValueChanged(isChecked, () => {
+  // The group clears the error, sets the dirty state and validates its own value.
+  if (group) {
+    return;
+  }
+
   clearErrors(inputName.value);
   setDirty(isChecked.value !== validityData.value.initialValue);
 
@@ -287,8 +407,8 @@ function writeStateToInput() {
     input.checked = isChecked.value;
   }
 
-  if (input.indeterminate !== props.indeterminate) {
-    input.indeterminate = props.indeterminate;
+  if (input.indeterminate !== isIndeterminate.value) {
+    input.indeterminate = isIndeterminate.value;
   }
 }
 
@@ -296,6 +416,25 @@ function requestChange(nextChecked: boolean, event: Event) {
   const details = createChangeEventDetails(REASONS.none, event);
 
   emit('checkedChange', nextChecked, details);
+
+  if (details.isCanceled) {
+    return false;
+  }
+
+  // The group gets the same `details` object, so a `cancel()` in `valueChange` of the group also
+  // stops `update:checked`.
+  const value = itemValue.value;
+  const changeGroup = groupProps.value.onCheckedChange;
+  if (changeGroup) {
+    changeGroup(nextChecked, details);
+  } else if (group && !props.parent && value !== undefined) {
+    group.setValue(
+      nextChecked
+        ? [...group.value.value, value]
+        : group.value.value.filter((item) => item !== value),
+      details,
+    );
+  }
 
   if (details.isCanceled) {
     return false;
@@ -324,13 +463,33 @@ function onInputClick(event: MouseEvent) {
   void nextTick(writeStateToInput);
 }
 
-useFormReset(inputElement, (event) => {
-  const hasChanged =
+// An uncontrolled checkbox goes back to its default value through its change event. The result is
+// `true` when the state changed.
+function resetChecked(event: Event) {
+  return (
     props.checked === undefined &&
     isChecked.value !== props.defaultChecked &&
-    requestChange(props.defaultChecked, event);
+    requestChange(props.defaultChecked, event)
+  );
+}
 
-  if (hasChanged) {
+useFormReset(inputElement, (event) => {
+  if (group) {
+    // The group puts back each checkbox that has an `itemValue`, and it clears the error of the
+    // field one time for each reset.
+    group.reset(event);
+
+    // The group does not hold the state of a checkbox that keeps its own state, so that checkbox puts
+    // its own state back. The callback of `useValueChanged` returns early in a group, so the
+    // checkbox sets no flag and clears no error.
+    if (groupChecked.value === undefined) {
+      resetChecked(event);
+    }
+
+    return;
+  }
+
+  if (resetChecked(event)) {
     isResetChangePending = true;
   } else {
     clearFieldError(isChecked.value);
@@ -352,7 +511,7 @@ watch(
   { flush: 'post' },
 );
 
-watch(() => props.indeterminate, writeStateToInput, { flush: 'post' });
+watch(isIndeterminate, writeStateToInput, { flush: 'post' });
 
 const enterTimeout = useTimeout();
 
@@ -404,7 +563,7 @@ const state = computed<CheckboxRootState>(() => ({
   disabled: isDisabled.value,
   readOnly: props.readOnly,
   required: props.required,
-  indeterminate: props.indeterminate,
+  indeterminate: isIndeterminate.value,
 }));
 
 provide(CheckboxRootContext, state);
@@ -419,11 +578,12 @@ const { element, elementProps } = useRenderElement('span', props, {
     {
       id: props.nativeButton ? controlId.value : rootId.value,
       role: 'checkbox',
-      'aria-checked': props.indeterminate ? 'mixed' : isChecked.value,
+      'aria-checked': isIndeterminate.value ? 'mixed' : isChecked.value,
       'aria-readonly': props.readOnly || undefined,
       'aria-required': props.required || undefined,
       'aria-label': props.ariaLabel,
       'aria-labelledby': ariaLabelledBy.value,
+      'data-parent': props.parent ? '' : undefined,
       onFocusin() {
         setFocused(true);
       },
@@ -437,7 +597,7 @@ const { element, elementProps } = useRenderElement('span', props, {
         setFocused(false);
 
         if (validationMode.value === 'onBlur') {
-          void validation.commit(input.checked);
+          void validation.commit(group ? group.value.value : input.checked);
         }
       },
       onKeydown,
@@ -457,11 +617,55 @@ const { element, elementProps } = useRenderElement('span', props, {
       },
     },
     attrs,
+    props.parent && groupParent.value
+      ? { 'aria-controls': groupProps.value['aria-controls'] }
+      : undefined,
     getButtonProps,
     getDescriptionProps,
     (merged) => validation.getValidationProps(isDisabled.value, merged),
   ],
 });
+
+// A `#render` slot can give the element an `id` that no prop shows, so the part reads the `id` from
+// the element after each update.
+const renderedId = shallowRef<string>();
+
+function readRenderedId() {
+  renderedId.value = element.value?.id || undefined;
+}
+
+onMounted(readRenderedId);
+onUpdated(readRenderedId);
+
+// The parent checkbox of the group lists the id of each child in `aria-controls`, and it reads the
+// disabled state of each child when it changes the value. The id waits for the mount, because a
+// server has no element to read. The disabled state needs no element. Its `watch` has a cleanup, so
+// it has no `immediate`, and `isHydrated` gives it the first run after the mount. `KeepAlive` takes
+// the element out of the document, so a held child reports neither.
+const isHydrated = useIsHydrated();
+
+watch(
+  [isHydrated, isDeactivated, groupParent, () => props.parent, itemValue, isDisabled],
+  ([hydrated, deactivated, parent, isParent, value, disabled], _previous, onCleanup) => {
+    if (!hydrated || deactivated || isParent || !parent || value === undefined) {
+      return;
+    }
+
+    parent.disabledStates.set(value, disabled);
+    onCleanup(() => parent.disabledStates.delete(value));
+  },
+);
+
+watch(
+  [isDeactivated, groupParent, () => props.parent, itemValue, renderedId],
+  ([deactivated, parent, isParent, value, id], _previous, onCleanup) => {
+    if (deactivated || isParent || !parent || value === undefined || id === undefined) {
+      return;
+    }
+
+    onCleanup(parent.registerChildId(value, id));
+  },
+);
 
 // The style is the constant itself, in an object that no `mergeProps` call makes.
 // `handleHiddenInputInvalid` then keeps the size that it writes.
@@ -473,7 +677,8 @@ function inputProps() {
     disabled: isDisabled.value,
     form: props.form,
     id: hiddenInputId.value,
-    name: inputName.value,
+    // The parent checkbox has no name, so the form does not get it.
+    name: props.parent ? undefined : inputName.value,
     required: props.required,
     style: inputName.value ? visuallyHiddenInput : visuallyHiddenInputPinned,
     tabindex: -1,
@@ -484,7 +689,9 @@ function inputProps() {
     onFocusin() {
       element.value?.focus();
     },
-    ...(props.value !== undefined ? { value: props.value } : undefined),
+    ...(props.value !== undefined
+      ? { value: (group ? isChecked.value && props.value : props.value) || '' }
+      : undefined),
   };
 }
 
@@ -495,7 +702,7 @@ defineExpose({ element, inputElement });
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
   <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
   <input
-    v-if="!isChecked && inputName && uncheckedValue !== undefined"
+    v-if="!isChecked && !group && inputName && !parent && uncheckedValue !== undefined"
     type="hidden"
     :form="form"
     :name="inputName"

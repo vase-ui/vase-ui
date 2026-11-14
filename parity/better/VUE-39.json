@@ -1,0 +1,9 @@
+{
+  "id": "VUE-39",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/viewport/usePopupViewport.tsx#L383-L386",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/viewport/usePopupViewport.tsx#L398"
+  ],
+  "behavior": "The content of the new trigger mounts one time for a change of the active trigger, when the trigger gives its payload with the change. Base UI mounts it two times: the key of the content has the id of the trigger, and a layout effect of the same change raises the count in the key.",
+  "dueWith": "packages/react/src/utils/popups/viewport/usePopupViewport.tsx"
+}
