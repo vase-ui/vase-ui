@@ -280,6 +280,7 @@ export function useNavigationMenuPopupSize(
 
     function handleResize() {
       resizeFrame.cancel();
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The guard above returns when `popup` or `positioner` is `null`, and a function declaration keeps no narrowing.
       resizeFrame.request(() => syncCurrentSize(popup!, positioner!));
     }
 
