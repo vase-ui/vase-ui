@@ -172,8 +172,8 @@ describe('<PreviewCard.Popup />', () => {
     expect(takeReportedMessages()).toHaveLength(2);
   });
 
-  // In Vue 3.5.12, a `setup` that throws leaves the current instance set, and a later slot then
-  // gives a warning. The case that renders no slot thus comes last.
+  // In Vue 3.5.12, a `setup` that throws leaves the current instance set, and a later case of the
+  // file can then get a warning about a slot. The case that renders no slot thus comes last.
   it('throws a descriptive error when rendered outside <PreviewCard.Root>', async () => {
     await expect(render(<PreviewCard.Popup />)).rejects.toThrow(
       'Vase UI: A part of PreviewCard must be inside <PreviewCard.Root>.',

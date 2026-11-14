@@ -1139,7 +1139,7 @@ describe('<ContextMenu.Trigger />', () => {
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
-  // instance set, and each later case of the file then gets a warning about a slot.
+  // instance set, and a later case of the file can then get a warning about a slot.
   it('throws when rendered outside ContextMenu.Root', async () => {
     await expect(render(<ContextMenu.Trigger />)).rejects.toThrow(
       'Vase UI: A part of Context Menu must be inside <ContextMenu.Root>. Without a root the part has no context menu state. Put the part inside <ContextMenu.Root>.',
