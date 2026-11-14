@@ -13,9 +13,9 @@ interface ScrollLockRegistry {
   version: 1;
   /** The number of calls that hold a lock. */
   lockCount: number;
-  /** Puts the page back. It is `null` while this library has not locked the page. */
+  /** Puts the page back, or stops the wait for the lock of another script. It is `null` when neither exists. */
   restore: (() => void) | null;
-  /** Whether the `scrollbar-gutter` of a document keeps the width of its page. */
+  /** For each document, whether `scrollbar-gutter: stable` keeps the width of its page when the scrollbar goes. */
   stableGutter: WeakMap<Document, boolean>;
 }
 

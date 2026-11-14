@@ -17,9 +17,9 @@ import type { CSSProperties } from 'vue';
 
 // As in Base UI, an attribute of a consumer wins over the role and the marker, and the style of the
 // part replaces a `style` of the consumer.
-// The outside press check of `useDismiss` reads `[data-vase-ui-inert]`. Without the marker, the
-// check takes the backdrop for an element that a script added after the popup rendered, and it
-// ignores a press on the backdrop.
+// While the page has an element with `data-vase-ui-inert`, the outside press check of `useDismiss`
+// ignores a press on an element whose root ancestor holds none. It takes that element for one that
+// a script added after the popup rendered. The marker keeps a press on the backdrop out of that rule.
 defineOptions({ inheritAttrs: false });
 const props = defineProps<InternalBackdropProps>();
 

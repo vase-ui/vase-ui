@@ -795,7 +795,7 @@ The interaction composables of a popup are in `src/utils/popups/interactions`.
 The scroll lock stops the scroll of the page under a modal popup. The code is in `src/common/useScrollLock.ts`, `src/utils/popups/useAnchoredPopupScrollLock.ts` and `src/utils/popups/InternalBackdrop.vue`.
 
 - Call `useAnchoredPopupScrollLock` in `setup` of the positioner of an anchored popup. Call `useScrollLock` in `setup` of the root of a Dialog.
-- Each parameter of the two composables is a value, a ref or a getter. A getter that gives `undefined` means that the lock is off. Only a call with no argument is on by default.
+- Each parameter of the two composables is a value, a ref or a getter. `useScrollLock` is on when its first argument is left out. A ref or a getter that gives `undefined` means that the lock is off.
 - A lock exists only while the part is enabled, is mounted and is not held by `KeepAlive`. A server render takes no lock.
 - The lock reads the scrollbars from the window of the document that it locks (`VUE-37`).
 - One plain object on `globalThis[Symbol.for('vase-ui.scroll-lock')]` holds the state. Its fields are `version`, `lockCount`, `restore` and `stableGutter`. Two copies of the library then share one count (`VUE-6`). Each copy keeps its own timers.
