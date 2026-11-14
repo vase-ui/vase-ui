@@ -27,8 +27,8 @@ export interface UseComboboxFilterOptions extends UseFilterOptions {
 
 /**
  * Matches items against a query using `Intl.Collator` for robust string matching.
- * Call it in `setup`. Pass the options as a getter, so that the filter follows a change of an
- * option. With no `locale`, the filter uses `en-US` until the component is mounted, and then the
+ * Call it in `setup`. Pass the options as a ref or a getter, so that the filter follows a change of
+ * an option. With no `locale`, the filter uses `en-US` until the component is mounted, and then the
  * runtime locale.
  */
 export function useComboboxFilter(
