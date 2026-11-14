@@ -995,15 +995,6 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
             }
           }
         }
-
-        if (
-          hasQuery &&
-          autoHighlightMode.value &&
-          state.activeIndex == null &&
-          (open.value || state.inline)
-        ) {
-          store.set('activeIndex', 0);
-        }
       }
     } else if (
       eventDetails.reason === REASONS.inputClear &&

@@ -1,6 +1,6 @@
 import { expect, describe, it } from 'vitest';
 import { defineComponent } from 'vue';
-import * as Combobox from '../index.parts';
+import { Combobox } from '@vase-ui/vue/combobox';
 import { createRenderer, describeConformance, screen } from '#test-utils';
 
 describe('<Combobox.GroupLabel />', () => {

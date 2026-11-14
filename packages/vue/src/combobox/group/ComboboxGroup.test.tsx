@@ -1,5 +1,5 @@
 import { expect, describe, it } from 'vitest';
-import * as Combobox from '../index.parts';
+import { Combobox } from '@vase-ui/vue/combobox';
 import { createRenderer, describeConformance, screen, waitFor } from '#test-utils';
 
 describe('<Combobox.Group />', () => {

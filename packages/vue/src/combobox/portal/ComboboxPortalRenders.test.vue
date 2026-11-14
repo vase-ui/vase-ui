@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import * as Combobox from '../index.parts';
+import { Combobox } from '@vase-ui/vue/combobox';
 
 // A compiled template, as in an app. `stateClass` runs in each render of its part.
 defineProps<{

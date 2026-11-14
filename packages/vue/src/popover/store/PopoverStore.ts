@@ -42,6 +42,7 @@ type Context = PopupStoreContext<PopoverRootChangeEventDetails> & {
   readonly triggerFocusTargetRef: ShallowRef<HTMLElement | null>;
   readonly beforeTriggerFocusGuardRef: ShallowRef<HTMLElement | null>;
   readonly beforeContentFocusGuardRef: ShallowRef<HTMLElement | null>;
+  readonly afterContentFocusGuardRef: ShallowRef<HTMLElement | null>;
   readonly stickIfOpenTimeout: Timeout;
   // Only a press of a trigger reads it, so it is not a part of the state.
   stickIfOpen: boolean;
@@ -192,6 +193,7 @@ function createInitialContext(): Context {
     triggerFocusTargetRef: shallowRef<HTMLElement | null>(null),
     beforeTriggerFocusGuardRef: shallowRef<HTMLElement | null>(null),
     beforeContentFocusGuardRef: shallowRef<HTMLElement | null>(null),
+    afterContentFocusGuardRef: shallowRef<HTMLElement | null>(null),
     stickIfOpenTimeout: new Timeout(),
     stickIfOpen: true,
     registerTitleId: NOOP,

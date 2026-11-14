@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import * as Combobox from '../../src/combobox/index.parts';
+import { Combobox } from '@vase-ui/vue/combobox';
 import { useComboboxRootContext } from '../../src/combobox/root/ComboboxRootContext';
 import type { ComboboxStore } from '../../src/combobox/store';
 

@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { Combobox } from '@vase-ui/vue/combobox';
 import {
   createRenderer,
   describeConformance,
@@ -8,7 +9,6 @@ import {
   takeReportedMessages,
   waitFor,
 } from '#test-utils';
-import * as Combobox from '../index.parts';
 
 describe('<Combobox.ChipRemove />', () => {
   const { render } = createRenderer();
