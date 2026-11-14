@@ -57,7 +57,7 @@ const TestViewport = defineComponent({
   },
 });
 
-const SnapPointsCase = defineComponent({
+const TestSnapPointsCase = defineComponent({
   props: {
     snapPoints: { type: Array as PropType<DrawerSnapPoint[]>, required: true },
     snapPoint: {
@@ -73,6 +73,34 @@ const SnapPointsCase = defineComponent({
         <SnapPointProbe />
         <PopupHeightReport height={props.popupHeight} />
         <TestViewport height={props.viewportHeight} />
+      </Drawer.Root>
+    );
+  },
+});
+
+// The case gives the heights in CSS. The browser lays them out, so each part measures them at its
+// mount.
+const SnapPointsCase = defineComponent({
+  props: {
+    snapPoints: { type: Array as PropType<DrawerSnapPoint[]>, required: true },
+    snapPoint: {
+      type: [Number, String] as PropType<DrawerSnapPoint | null>,
+      default: undefined,
+    },
+    popupHeight: { type: Number, default: 300 },
+    viewportHeight: { type: Number, default: 400 },
+  },
+  setup(props) {
+    return () => (
+      <Drawer.Root open modal={false} snapPoints={props.snapPoints} snapPoint={props.snapPoint}>
+        <SnapPointProbe />
+        <Drawer.Portal>
+          <Drawer.Viewport style={{ height: `${props.viewportHeight}px` }}>
+            <Drawer.Popup data-testid="popup" style={{ height: `${props.popupHeight}px` }}>
+              Drawer
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
       </Drawer.Root>
     );
   },
@@ -94,7 +122,7 @@ function nextAnimationFrame() {
 describe('Drawer snap point composition', () => {
   const { render } = createRenderer();
 
-  it('resolves the units against the viewport, drops invalid values, clamps the heights and keeps the last duplicate', async () => {
+  it('resolves supported units, filters invalid values, clamps heights, and keeps the last duplicate', async () => {
     const previousFontSize = document.documentElement.style.fontSize;
     document.documentElement.style.fontSize = '20px';
     onTestFinished(() => {
@@ -129,9 +157,12 @@ describe('Drawer snap point composition', () => {
       ]);
     });
     expect(readProbe().activeSnapPointOffset).toBe(99.5);
+    expect(screen.getByTestId('popup').style.getPropertyValue('--drawer-snap-point-offset')).toBe(
+      '99.5px',
+    );
   });
 
-  it('gives the offset of the active snap point, and null for a null or an invalid value', async () => {
+  it('uses fractional and pixel snap points and resolves null or invalid active values as closed', async () => {
     const { setProps } = await render(
       <SnapPointsCase snapPoints={[0.5, 200, '2rem']} snapPoint={200} />,
     );
@@ -140,21 +171,36 @@ describe('Drawer snap point composition', () => {
       expect(readProbe().activeSnapPointOffset).toBe(100);
     });
 
-    await setProps({ snapPoints: [0.5, 200, '2rem'], snapPoint: 0.5 });
-    expect(readProbe().activeSnapPointOffset).toBe(100);
-
-    await setProps({ snapPoints: [0.5, 200, '2rem'], snapPoint: '2rem' });
-    expect(readProbe().activeSnapPointOffset).toBe(268);
-
     await setProps({ snapPoints: [0.5, 200, '2rem'], snapPoint: null });
     expect(readProbe().activeSnapPointOffset).toBeNull();
+    expect(screen.getByTestId('popup').style.getPropertyValue('--drawer-snap-point-offset')).toBe(
+      '0px',
+    );
 
     await setProps({ snapPoints: [0.5, 200, '2rem'], snapPoint: 'invalid' });
     expect(readProbe().activeSnapPointOffset).toBeNull();
   });
 
+  it('produces no resolved snap point when the list is empty', async () => {
+    await render(<SnapPointsCase snapPoints={[]} />);
+
+    expect(readProbe().resolvedSnapPoints).toEqual([]);
+    expect(readProbe().activeSnapPointOffset).toBeNull();
+  });
+
+  it('resolves a single snap point without a deduplication pass', async () => {
+    await render(<SnapPointsCase snapPoints={['100px']} snapPoint="100px" />);
+
+    await waitFor(() => {
+      expect(readProbe().resolvedSnapPoints).toEqual([
+        { value: '100px', height: 100, offset: 200 },
+      ]);
+    });
+    expect(readProbe().activeSnapPointOffset).toBe(200);
+  });
+
   it('gives no snap point for an empty list, or before the popup reports its height', async () => {
-    const { setProps } = await render(<SnapPointsCase snapPoints={[]} snapPoint={null} />);
+    const { setProps } = await render(<TestSnapPointsCase snapPoints={[]} snapPoint={null} />);
     await flushMicrotasks();
 
     expect(readProbe().resolvedSnapPoints).toEqual([]);
@@ -167,7 +213,7 @@ describe('Drawer snap point composition', () => {
 
   it('measures the viewport again when it resizes', async () => {
     const { setProps } = await render(
-      <SnapPointsCase snapPoints={[0.5]} snapPoint={0.5} viewportHeight={400} />,
+      <TestSnapPointsCase snapPoints={[0.5]} snapPoint={0.5} viewportHeight={400} />,
     );
 
     await waitFor(() => {

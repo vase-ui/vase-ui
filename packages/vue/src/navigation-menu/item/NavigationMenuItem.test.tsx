@@ -1,6 +1,6 @@
 import { describe } from 'vitest';
 import { createRenderer, describeConformance } from '#test-utils';
-import * as NavigationMenu from '../index.parts';
+import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 
 describe('<NavigationMenu.Item />', () => {
   const { render } = createRenderer();
