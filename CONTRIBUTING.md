@@ -328,6 +328,7 @@ Some upstream parts render a hidden `<input>` beside their element. `Switch.Root
 - A part inside a root can validate each change of the value of the root. The root then sets a flag in its context for the change of a reset, and the part starts no validation while the flag is set. `NumberField.Root` does this with `isResetChangePending`. The root clears the error of the field itself.
 - A field counts `valueMissing` only after it is marked dirty. A value that differs from its initial value marks the field. A call of `validate()` on the field or on the form marks it too, and a submit calls `validate()` for each field. The `dirty` prop with the value `true` also marks it. A part that the user cannot empty, such as `RadioGroup`, gives `true` as the second argument of `validation.commit` at its blur. The field then counts `valueMissing` with no mark.
 - `Select.Trigger` also gives `true` at its blur. `Select.Root` gives `true` when a press outside or a focus that leaves closes the popup. A select that the user leaves with no value is not marked dirty.
+- A combobox with a selection mode does the same where its trigger is the control. Its trigger gives `true` at its blur, and its root gives `true` when a press outside or a focus that leaves closes the popup. An input outside the popup is a text field that the user can empty, so it gives no `true`.
 
 ```vue
 <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
@@ -576,7 +577,7 @@ A part that binds the id of a part that comes after it:
 - A part that defers assumes nothing. With no registered id, it has no attribute.
 - A later part that is below an async `setup`, or below a component that defers, registers too late for the server HTML. The part that binds the id gets it after the page hydrates.
 - A popup trigger does not call it. Each value that the trigger lacks on a server comes from a registration, an attachment or an element. A server has none of them. A deferral adds none of them.
-- `Select.Trigger` is the exception, because it is also the control of a field. It binds the id of `Select.Label`, and the ids of the label and the messages of a field. It calls `useDeferredServerRender()`, so the server HTML has these ids in each order of the parts.
+- `Select.Trigger` and `Combobox.Trigger` are the exceptions, because each is also the control of a field. Each binds the id of the label part of its family, and the ids of the label and the messages of a field. Each calls `useDeferredServerRender()`, so the server HTML has these ids in each order of the parts.
 
 The label of a root:
 
@@ -592,7 +593,7 @@ The label of a root:
 - An `aria-labelledby` of the consumer on the root wins, because the attributes of the consumer merge last.
 - Two labels with no `id` in one root get the same id.
 - `Slider.Root` is the exception, as in Base UI: its label always has the id `<id>-label`, and `<id>` is the `id` of the root. The root thus calls `createLabelIdRegistry()` and not `useLabelId()`. It assumes that id until it is mounted, under the rules above.
-- `Select.Label` also has the id `<id>-label`, as in Base UI. `Select.Root` calls `createLabelIdRegistry()` and puts the registry in the context of its store. `Select.Trigger` reads the registry and defers its server render, so it assumes no label.
+- `Select.Label` and `Combobox.Label` also have the id `<id>-label`, as in Base UI. The root of each family calls `createLabelIdRegistry()` and puts the registry in the context of its store. The trigger reads the registry and defers its server render, so it assumes no label.
 
 The label, the control and the messages of a field:
 

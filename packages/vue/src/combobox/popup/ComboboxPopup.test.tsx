@@ -6,7 +6,6 @@ import {
   fireEvent,
   flushMicrotasks,
   isInaccessible,
-  nextAnimationsRead,
   nextEvent,
   screen,
   waitFor,
@@ -229,6 +228,7 @@ describe('<Combobox.Popup />', () => {
       const trigger = screen.getByTestId('trigger');
 
       await fireEvent.pointerDown(trigger, { pointerType: 'touch' });
+      await fireEvent.mouseDown(trigger);
       await fireEvent.click(trigger, { detail: 1 });
 
       await waitFor(() => {
@@ -416,7 +416,9 @@ describe('<Combobox.Popup />', () => {
     }
 
     // Opens the popup with its trigger and closes it with the Escape key. The callback records the
-    // document when the exit animation starts. The function resolves after the popup unmounts.
+    // document when the exit animation starts. The function resolves after the exit ends. A press
+    // of the trigger keeps the content of the popup mounted for typeahead, so the positioner then
+    // stays in the DOM and is hidden.
     async function recordExit(record: () => void) {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
       const { user } = await render(
@@ -425,7 +427,7 @@ describe('<Combobox.Popup />', () => {
           <Combobox.Root>
             <Combobox.Trigger data-testid="trigger">Open</Combobox.Trigger>
             <Combobox.Portal>
-              <Combobox.Positioner>
+              <Combobox.Positioner data-testid="positioner">
                 <Combobox.Popup class="popup" data-testid="popup">
                   <Combobox.Input data-testid="input" />
                 </Combobox.Popup>
@@ -440,11 +442,10 @@ describe('<Combobox.Popup />', () => {
       });
       expect(getFocusableUnderAriaHidden().length).toBeGreaterThan(0);
       const popup = screen.getByTestId('popup');
-      const animationsRead = nextAnimationsRead(popup);
 
       await nextEvent(popup, 'animationstart', { action: () => user.keyboard('{Escape}') });
       record();
-      const animations = await animationsRead;
+      const animations = popup.getAnimations();
       for (const animation of animations) {
         animation.finish();
       }
@@ -452,7 +453,7 @@ describe('<Combobox.Popup />', () => {
       // animations has no time limit.
       await Promise.all(animations.map((animation) => animation.finished));
       await waitFor(() => {
-        expect(popup.isConnected).toBe(false);
+        expect(screen.getByTestId('positioner')).toHaveAttribute('hidden');
       });
     }
 

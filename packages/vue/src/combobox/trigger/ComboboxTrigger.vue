@@ -76,10 +76,7 @@ import { stopEvent } from '../../utils/popups/event';
 import { useClick } from '../../utils/popups/interactions/useClick';
 import { useTypeahead } from '../../utils/popups/interactions/useTypeahead';
 import { resolveAriaLabelledBy } from '../../utils/resolveAriaLabelledBy';
-import {
-  useComboboxInputValueContext,
-  useComboboxRootContext,
-} from '../root/ComboboxRootContext';
+import { useComboboxInputValueContext, useComboboxRootContext } from '../root/ComboboxRootContext';
 import { getComboboxPopupId } from '../root/utils';
 import { useListEmpty, usePopupSide } from '../utils/parts';
 import { triggerStateAttributesMapping } from '../utils/stateAttributesMapping';
@@ -149,7 +146,10 @@ const typeahead = useTypeahead(store.interactions, {
   // Typeahead on a closed trigger commits a value rather than moving a highlight, so it stays
   // gated on `readOnly`.
   enabled: () =>
-    !isOpen.value && !isReadOnly.value && !comboboxDisabled.value && selectionMode.value === 'single',
+    !isOpen.value &&
+    !isReadOnly.value &&
+    !comboboxDisabled.value &&
+    selectionMode.value === 'single',
   listRef: store.context.labelsRef,
   activeIndex: () => store.select('activeIndex'),
   selectedIndex: () => store.select('selectedIndex'),
@@ -283,10 +283,14 @@ const { element, elementProps } = useRenderElement('button', props, {
         setTouched(true);
         setFocused(false);
 
+        // A combobox that the user leaves with no value is not marked dirty. With a selection mode,
+        // the trigger is a select, so the field counts `valueMissing` with no mark (BUG-1425).
         if (validationMode.value === 'onBlur') {
-          const valueToValidate =
-            selectionMode.value === 'none' ? inputValue.value : toRaw(store.state).selectedValue;
-          void validation.commit(valueToValidate);
+          const selectsValues = selectionMode.value !== 'none';
+          void validation.commit(
+            selectsValues ? toRaw(store.state).selectedValue : inputValue.value,
+            selectsValues,
+          );
         }
       },
       onMousedown(event: MouseEvent) {

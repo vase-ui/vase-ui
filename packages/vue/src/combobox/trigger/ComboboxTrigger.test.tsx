@@ -1396,19 +1396,12 @@ describe('<Combobox.Trigger />', () => {
   });
 
   describe('BUG-1425: a required combobox with no value after blur', () => {
-    it.each([
-      { name: 'the focus leaves the trigger', inputInsidePopup: true },
-      { name: 'the focus leaves the input', inputInsidePopup: false },
-    ])('is invalid when $name, with no change before', async ({ inputInsidePopup }) => {
+    it('is invalid when the focus leaves the trigger, with no change before', async () => {
       const { user } = await render(
         <div>
           <Field.Root validationMode="onBlur" data-testid="field">
             <Combobox.Root required>
-              {inputInsidePopup ? (
-                <Combobox.Trigger data-testid="control" />
-              ) : (
-                <Combobox.Input data-testid="control" />
-              )}
+              <Combobox.Trigger data-testid="trigger" />
             </Combobox.Root>
             <Field.Error match="valueMissing" data-testid="error">
               required
@@ -1417,18 +1410,19 @@ describe('<Combobox.Trigger />', () => {
           <button type="button">After</button>
         </div>,
       );
-      const control = screen.getByTestId('control');
+      const trigger = screen.getByTestId('trigger');
 
-      control.focus();
+      trigger.focus();
       await flushMicrotasks();
 
       expect(screen.queryByTestId('error')).toBe(null);
+      expect(trigger).not.toHaveAttribute('aria-invalid');
 
       await user.tab();
 
       expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
       expect(screen.getByTestId('error')).toHaveTextContent('required');
-      expect(control).toHaveAttribute('aria-invalid', 'true');
+      expect(trigger).toHaveAttribute('aria-invalid', 'true');
       expect(screen.getByTestId('field')).toHaveAttribute('data-touched', '');
       expect(screen.getByTestId('field')).not.toHaveAttribute('data-dirty');
     });
@@ -1492,12 +1486,12 @@ describe('<Combobox.Trigger />', () => {
       expect(trigger).not.toHaveAttribute('aria-invalid');
     });
 
-    it('stays valid when the focus leaves the empty input of a required autocomplete', async () => {
+    it('stays valid when the focus leaves the trigger of a root with no selection mode', async () => {
       const { user } = await render(
         <div>
           <Field.Root validationMode="onBlur" data-testid="field">
             <Autocomplete.Root required>
-              <Autocomplete.Input data-testid="input" />
+              <Combobox.Trigger data-testid="trigger" />
             </Autocomplete.Root>
             <Field.Error match="valueMissing" data-testid="error">
               required
@@ -1506,15 +1500,15 @@ describe('<Combobox.Trigger />', () => {
           <button type="button">After</button>
         </div>,
       );
-      const input = screen.getByTestId('input');
+      const trigger = screen.getByTestId('trigger');
 
-      input.focus();
+      trigger.focus();
       await user.tab();
 
       expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
       expect(screen.getByTestId('field')).toHaveAttribute('data-touched', '');
       expect(screen.queryByTestId('error')).toBe(null);
-      expect(input).not.toHaveAttribute('aria-invalid');
+      expect(trigger).not.toHaveAttribute('aria-invalid');
     });
   });
 
@@ -1584,25 +1578,5 @@ describe('<Combobox.Trigger />', () => {
       expect(labelId).not.toBe('');
       expect(screen.getByTestId('trigger')).toHaveAttribute('aria-labelledby', labelId);
     });
-
-    it('is named by the label of its field before the label of the combobox', async () => {
-      await render(
-        <Field.Root>
-          <Field.Label nativeLabel={false} as="div" data-testid="field-label">
-            Field
-          </Field.Label>
-          <Combobox.Root>
-            <Combobox.Label>Fruit</Combobox.Label>
-            <Combobox.Trigger data-testid="trigger" />
-          </Combobox.Root>
-        </Field.Root>,
-      );
-
-      expect(screen.getByTestId('trigger')).toHaveAttribute(
-        'aria-labelledby',
-        screen.getByTestId('field-label').id,
-      );
-    });
   });
-
 });

@@ -60,9 +60,11 @@ describe('<Combobox.Label />', () => {
   });
 
   it('derives its id from the root, and ignores an id of the consumer', async () => {
+    // The props type of the label has no `id`, so only an untyped consumer can give one.
+    const untypedAttributes: object = { id: 'custom' };
     await render(
       <Combobox.Root id="fruit">
-        <Combobox.Label id="custom" data-testid="label">
+        <Combobox.Label {...untypedAttributes} data-testid="label">
           Fruit
         </Combobox.Label>
         <Combobox.Trigger data-testid="trigger" />

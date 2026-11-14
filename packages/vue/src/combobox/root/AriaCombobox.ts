@@ -1118,9 +1118,13 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     ) {
       setTouched(true);
       setFocused(false);
+      // A combobox that the user leaves with no value is not marked dirty. With a selection mode,
+      // the trigger is a select, so the field counts `valueMissing` with no mark (BUG-1425).
       if (validationMode.value === 'onBlur') {
+        const selectsValues = selectionMode.value !== 'none';
         void validation.commit(
-          selectionMode.value === 'none' ? inputValue.value : selectedValue.value,
+          selectsValues ? selectedValue.value : inputValue.value,
+          selectsValues,
         );
       }
     }

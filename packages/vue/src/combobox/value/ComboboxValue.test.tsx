@@ -886,4 +886,21 @@ describe('<Combobox.Value />', () => {
       expect(screen.getByTestId('value')).toHaveTextContent('Select options');
     });
   });
+
+  describe('a value with no label', () => {
+    it.each([
+      { name: 'a multiple combobox with no value', root: { multiple: true } },
+      { name: 'an empty string value', root: { defaultValue: '' } },
+    ])('renders no text node for $name', async ({ root }) => {
+      await render(
+        <Combobox.Root {...root}>
+          <span data-testid="value">
+            <Combobox.Value />
+          </span>
+        </Combobox.Root>,
+      );
+
+      expect(screen.getByTestId('value')).toBeEmptyDOMElement();
+    });
+  });
 });
