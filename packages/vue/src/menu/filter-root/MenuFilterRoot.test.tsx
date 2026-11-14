@@ -4569,6 +4569,103 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     expect(item).not.toHaveAttribute('aria-selected');
   });
 
+  describe.skipIf(isJSDOM)('hover-opened submenu ownership', () => {
+    const HoverMenu = defineComponent(() => () => (
+      <Menu.FilterProvider>
+        <Menu.Root>
+          <Menu.Trigger>Actions</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner sideOffset={8}>
+              <Menu.Popup>
+                <Menu.Input aria-label="Filter actions" />
+                <Menu.List>
+                  <Menu.Item>Rename</Menu.Item>
+                  <Menu.Item>Duplicate</Menu.Item>
+                  <Menu.FilterProvider>
+                    <Menu.SubmenuRoot>
+                      <Menu.SubmenuTrigger delay={0}>Share</Menu.SubmenuTrigger>
+                      <Menu.Portal>
+                        <Menu.Positioner sideOffset={4}>
+                          <Menu.Popup>
+                            <Menu.Input aria-label="Filter sharing options" />
+                            <Menu.List>
+                              <Menu.Item>Email</Menu.Item>
+                            </Menu.List>
+                          </Menu.Popup>
+                        </Menu.Positioner>
+                      </Menu.Portal>
+                    </Menu.SubmenuRoot>
+                  </Menu.FilterProvider>
+                </Menu.List>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      </Menu.FilterProvider>
+    ));
+
+    async function openAndHoverTrigger(user: ReturnType<typeof userEvent.setup>) {
+      await user.click(screen.getByRole('button', { name: 'Actions' }));
+      await screen.findByRole('searchbox', { name: 'Filter actions' });
+      await user.hover(screen.getByRole('menuitem', { name: 'Share' }));
+      const submenuInput = await screen.findByRole('searchbox', { name: 'Filter sharing options' });
+      await fireEvent.mouseMove(submenuInput);
+      return submenuInput;
+    }
+
+    it('closes when the pointer sweeps off the trigger', async () => {
+      const { user } = await render(<HoverMenu />);
+      await openAndHoverTrigger(user);
+
+      await user.hover(screen.getByRole('menuitem', { name: 'Rename' }));
+
+      await waitFor(() => {
+        expect(screen.queryByRole('searchbox', { name: 'Filter sharing options' })).toBe(null);
+      });
+    });
+
+    it('closes when the pointer leaves the submenu popup', async () => {
+      const { user } = await render(<HoverMenu />);
+      await openAndHoverTrigger(user);
+
+      await user.hover(await screen.findByRole('menuitem', { name: 'Email' }));
+      await user.hover(screen.getByRole('menuitem', { name: 'Duplicate' }));
+
+      await waitFor(() => {
+        expect(screen.queryByRole('searchbox', { name: 'Filter sharing options' })).toBe(null);
+      });
+    });
+
+    it('closes and resets after a query was typed into the hover-opened submenu', async () => {
+      const { user } = await render(<HoverMenu />);
+      const submenuInput = await openAndHoverTrigger(user);
+
+      // The hover hand-off makes the submenu input the typing target.
+      await waitFor(() => {
+        expect(submenuInput).toHaveFocus();
+      });
+      await fireEvent.input(submenuInput, { target: { value: 'em' } });
+      await waitFor(() => {
+        expect(submenuInput).toHaveValue('em');
+      });
+
+      await user.hover(screen.getByRole('menuitem', { name: 'Rename' }));
+
+      await waitFor(() => {
+        expect(screen.queryByRole('searchbox', { name: 'Filter sharing options' })).toBe(null);
+      });
+
+      // Reopening starts from an empty query rather than the previous one.
+      await user.hover(screen.getByRole('menuitem', { name: 'Share' }));
+      const reopenedInput = await screen.findByRole('searchbox', {
+        name: 'Filter sharing options',
+      });
+      await waitFor(() => {
+        expect(reopenedInput).toHaveValue('');
+      });
+    });
+  });
+
   describe('prop: filter', () => {
     const CustomFilterMenu = defineComponent({
       props: {

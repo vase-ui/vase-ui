@@ -8,54 +8,6 @@
       "reason": "The file is the entry point of Menu. It comes in the last pull request of the family, so the package exports nothing of Menu before then."
     },
     {
-      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.initialHighlight.test.tsx",
-      "describe": ["filterable menu initial highlight"],
-      "title": "highlights the first enabled action and keeps the input in the arrow loop",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The case presses the trigger to open the menu. The trigger of Vase UI has no press yet."
-    },
-    {
-      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.initialHighlight.test.tsx",
-      "describe": ["filterable menu initial highlight"],
-      "title": "clears the initial highlight when typing and permits an empty result",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The case presses the trigger to open the menu. The trigger of Vase UI has no press yet."
-    },
-    {
-      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.initialHighlight.test.tsx",
-      "describe": ["filterable menu initial highlight"],
-      "title": "handles opening with %s",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The case presses the trigger to open the menu. The trigger of Vase UI has no press yet."
-    },
-    {
-      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.initialHighlight.test.tsx",
-      "describe": ["filterable menu initial highlight"],
-      "title": "focuses the input when a screen reader press opens the menu",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The case presses the trigger to open the menu. The trigger of Vase UI has no press yet."
-    },
-    {
-      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.initialHighlight.test.tsx",
-      "describe": ["filterable menu initial highlight"],
-      "title": "does not focus the input when an item is tapped after a touch open",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The case presses the trigger to open the menu. The trigger of Vase UI has no press yet."
-    },
-    {
-      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.initialHighlight.test.tsx",
-      "describe": ["filterable menu initial highlight"],
-      "title": "highlights the first action again when reopening",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The case presses the trigger to open the menu. The trigger of Vase UI has no press yet."
-    },
-    {
       "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.react17.test.tsx",
       "kind": "not-applicable",
       "reason": "The cases are for React 17, which has no `useId`. `useVaseUiId` gives an id in `setup`."
@@ -73,16 +25,6 @@
       "title": "uses an explicit label from the popup render element",
       "kind": "not-applicable",
       "reason": "The case gives a React element with an `aria-label` as `render`. In Vue `#render` is a slot, which is a function, so the part does not see the `aria-label` of the element of the slot. The `aria-label` attribute of the part gives the same result."
-    },
-    {
-      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
-      "describe": [
-        "<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>",
-        "hover-opened submenu ownership"
-      ],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The cases press the trigger to open the menu. The trigger of Vase UI has no press yet."
     },
     {
       "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
