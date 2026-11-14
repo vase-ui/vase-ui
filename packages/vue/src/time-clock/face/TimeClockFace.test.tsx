@@ -4,7 +4,13 @@ import type { Component } from 'vue';
 import { TimeClock } from '@vase-ui/vue/time-clock';
 import type { TimeClockFaceNumber } from '@vase-ui/vue/time-clock';
 import type { HTMLProps } from '@vase-ui/vue/types';
-import { createRenderer, describeConformance, fireEvent, screen, waitFor } from '#test-utils';
+import {
+  createRenderer,
+  describeConformance,
+  fireEvent,
+  flushMicrotasks,
+  screen,
+} from '#test-utils';
 import { pointOnFace } from '../utils/test-utils';
 
 const time = (text: string) => Temporal.PlainTime.from(text);
@@ -687,10 +693,9 @@ describe('<TimeClock.Face />', () => {
 
       slider.value = '4';
       await fireEvent.input(slider);
+      await flushMicrotasks();
 
-      await waitFor(() => {
-        expect(slider).toHaveValue('11');
-      });
+      expect(slider).toHaveValue('11');
     });
   });
 });

@@ -6,9 +6,9 @@ import type {
   WithVaseUIEvent,
 } from '../../internals/types';
 import type { TimeClockRootState } from '../root/TimeClockRoot.vue';
-import type { TimeClockDayPeriod } from '../utils/clockViews';
+import type { TimeClockDayPeriodValue } from '../utils/clockViews';
 
-export type { TimeClockDayPeriod } from '../utils/clockViews';
+export type { TimeClockDayPeriodValue } from '../utils/clockViews';
 
 export interface TimeClockDayPeriodState extends TimeClockRootState {
   /**
@@ -30,7 +30,7 @@ export interface TimeClockDayPeriodProps
    * The day period that the part selects.
    * The text of the part is the text of that day period in the locale.
    */
-  value: TimeClockDayPeriod;
+  value: TimeClockDayPeriodValue;
 }
 </script>
 

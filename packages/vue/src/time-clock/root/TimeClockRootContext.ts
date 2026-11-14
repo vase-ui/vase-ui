@@ -1,7 +1,7 @@
 import { inject } from 'vue';
 import type { ComputedRef, InjectionKey } from 'vue';
 import type {
-  TimeClockDayPeriod,
+  TimeClockDayPeriodValue,
   TimeClockFaceNumber,
   TimeClockHourCycle,
   TimeClockView,
@@ -31,16 +31,16 @@ export interface TimeClockRootContext {
   /** The number of the face that the time of the clock selects. */
   selectedNumber: ComputedRef<TimeClockFaceNumber>;
   /** The day period of the time of the clock. */
-  dayPeriod: ComputedRef<TimeClockDayPeriod>;
+  dayPeriod: ComputedRef<TimeClockDayPeriodValue>;
   isNumberDisabled: (number: TimeClockFaceNumber) => boolean;
-  isDayPeriodDisabled: (dayPeriod: TimeClockDayPeriod) => boolean;
+  isDayPeriodDisabled: (dayPeriod: TimeClockDayPeriodValue) => boolean;
   setDragging: (dragging: boolean) => void;
   selectNumber: (number: TimeClockFaceNumber, details: TimeClockRootChangeEventDetails) => void;
   /** Goes a number of places forward, or back for a negative number, to the next number that is not disabled. */
   stepNumber: (places: number, details: TimeClockRootChangeEventDetails) => void;
   selectEdge: (edge: 'first' | 'last', details: TimeClockRootChangeEventDetails) => void;
   selectDayPeriod: (
-    dayPeriod: TimeClockDayPeriod,
+    dayPeriod: TimeClockDayPeriodValue,
     details: TimeClockRootChangeEventDetails,
   ) => void;
   setView: (view: TimeClockView, details: TimeClockRootChangeEventDetails) => void;

@@ -10,7 +10,7 @@ export type TimeClockView = 'hour' | 'minute' | 'second';
 
 export type TimeClockHourCycle = 12 | 24;
 
-export type TimeClockDayPeriod = 'am' | 'pm';
+export type TimeClockDayPeriodValue = 'am' | 'pm';
 
 export interface TimeClockFaceNumber {
   /**
@@ -143,13 +143,13 @@ export function timeOfFaceNumber(
   return time.with(view === 'minute' ? { minute: number.value } : { second: number.value });
 }
 
-export function dayPeriodOf(time: Temporal.PlainTime): TimeClockDayPeriod {
+export function dayPeriodOf(time: Temporal.PlainTime): TimeClockDayPeriodValue {
   return time.hour >= 12 ? 'pm' : 'am';
 }
 
 export function timeOfDayPeriod(
   time: Temporal.PlainTime,
-  dayPeriod: TimeClockDayPeriod,
+  dayPeriod: TimeClockDayPeriodValue,
 ): Temporal.PlainTime {
   return time.with({ hour: (time.hour % 12) + (dayPeriod === 'pm' ? 12 : 0) });
 }

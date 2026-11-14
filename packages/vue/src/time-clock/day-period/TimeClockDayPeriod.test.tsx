@@ -111,6 +111,19 @@ describe('<TimeClock.DayPeriod />', () => {
       expect(String(onValueChange.mock.calls[0]?.[0])).toBe(result);
     });
 
+    it('goes to the limits from a time that is out of them', async () => {
+      const { onValueChange, result } = renderClock({
+        defaultValue: time('10:00'),
+        minTime: time('13:00'),
+        maxTime: time('17:00'),
+      });
+      const { user } = await result;
+
+      await user.click(screen.getByTestId('pm'));
+
+      expect(String(onValueChange.mock.calls[0]?.[0])).toBe('17:00:00');
+    });
+
     it('gives no change for the day period that the time is in', async () => {
       const { onValueChange, result } = renderClock();
       const { user } = await result;
@@ -174,10 +187,22 @@ describe('<TimeClock.DayPeriod />', () => {
         pm: true,
       },
       {
-        name: 'a time that disabledTimes names',
-        extra: { disabledTimes: (t: Temporal.PlainTime) => t.hour === 22 },
+        name: 'a day period that disabledTimes names',
+        extra: { disabledTimes: (t: Temporal.PlainTime) => t.hour >= 12 },
         am: false,
         pm: true,
+      },
+      {
+        name: 'one disabled hour of a day period',
+        extra: { disabledTimes: (t: Temporal.PlainTime) => t.hour === 22 },
+        am: false,
+        pm: false,
+      },
+      {
+        name: 'a present time that is out of the limits, for the other half of the day',
+        extra: { minTime: time('13:00'), maxTime: time('17:00') },
+        am: true,
+        pm: false,
       },
     ])('is disabled for $name', async ({ extra, am, pm }) => {
       await render(

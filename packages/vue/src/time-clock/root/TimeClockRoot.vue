@@ -165,7 +165,7 @@ import {
   timeOfDayPeriod,
   timeOfFaceNumber,
 } from '../utils/clockViews';
-import type { TimeClockDayPeriod, TimeClockFaceNumber, TimeLimits } from '../utils/clockViews';
+import type { TimeClockDayPeriodValue, TimeClockFaceNumber, TimeLimits } from '../utils/clockViews';
 import { TimeClockRootContext } from './TimeClockRootContext';
 
 assertTemporal('TimeClock.Root');
@@ -296,8 +296,13 @@ function isNumberDisabled(number: TimeClockFaceNumber): boolean {
   );
 }
 
-function isDayPeriodDisabled(period: TimeClockDayPeriod): boolean {
-  return !isTimeAllowed(timeOfDayPeriod(time.value, period), 'hour', limits.value);
+// A day period is disabled when none of its hours is allowed. The hour of the present time can be
+// out of the limits, and the user must still be able to go to the other half of the day.
+function isDayPeriodDisabled(period: TimeClockDayPeriodValue): boolean {
+  const firstHour = period === 'am' ? 0 : 12;
+  return Array.from({ length: 12 }, (_, hour) => time.value.with({ hour: firstHour + hour })).every(
+    (candidate) => !isTimeAllowed(candidate, 'hour', limits.value),
+  );
 }
 
 // The first value has the kind of the reference. With no reference, it is a plain time.
@@ -359,7 +364,10 @@ function selectEdge(edge: 'first' | 'last', details: TimeClockRootChangeEventDet
   }
 }
 
-function selectDayPeriod(period: TimeClockDayPeriod, details: TimeClockRootChangeEventDetails) {
+function selectDayPeriod(
+  period: TimeClockDayPeriodValue,
+  details: TimeClockRootChangeEventDetails,
+) {
   if (isDisabled.value || isReadOnly.value || isDayPeriodDisabled(period)) {
     return;
   }

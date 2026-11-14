@@ -7,6 +7,7 @@ import {
   describeConformance,
   expectNoAxeViolations,
   fireEvent,
+  flushMicrotasks,
   hydrate,
   renderOnServer,
   screen,
@@ -158,9 +159,9 @@ describe('<TimeClock.Root />', () => {
       expect(screen.getByRole('slider')).toHaveValue('11');
 
       model.value = time('02:00');
-      await vi.waitFor(() => {
-        expect(screen.getByRole('slider')).toHaveValue('2');
-      });
+      await flushMicrotasks();
+
+      expect(screen.getByRole('slider')).toHaveValue('2');
     });
 
     it('keeps the time of a controlled clock whose parent does not update it', async () => {
