@@ -32,14 +32,6 @@
       "reason": "The case renders `ContextMenu.SubmenuRoot` and `ContextMenu.SubmenuTrigger`, which Vase UI does not have. The trigger also lacks the check of the root owner id at the `mouseup`, which needs `findRootOwnerId` of Menu."
     },
     {
-      "upstream": "packages/react/src/context-menu/trigger/ContextMenuTrigger.test.tsx",
-      "describe": ["<ContextMenu.Trigger />"],
-      "title": "blocks native context menus on both internal and external backdrops",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The case reads the internal backdrop of a modal menu, which `Menu.Positioner` does not render yet."
-    },
-    {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "Root",
       "kind": "waits-on",

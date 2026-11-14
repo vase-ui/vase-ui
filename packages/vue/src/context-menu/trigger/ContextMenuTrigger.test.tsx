@@ -284,6 +284,36 @@ describe('<ContextMenu.Trigger />', () => {
     });
   });
 
+  it('blocks native context menus on both internal and external backdrops', async () => {
+    await render(
+      <ContextMenu.Root defaultOpen>
+        <ContextMenu.Trigger>Right click me</ContextMenu.Trigger>
+        <ContextMenu.Portal>
+          <ContextMenu.Backdrop data-testid="backdrop" />
+          <ContextMenu.Positioner>
+            <ContextMenu.Popup />
+          </ContextMenu.Positioner>
+        </ContextMenu.Portal>
+      </ContextMenu.Root>,
+    );
+
+    const internalBackdrop = document.querySelector(
+      '[data-vase-ui-portal] > [data-vase-ui-inert][role="presentation"]',
+    )!;
+    const externalBackdrop = screen.getByTestId('backdrop');
+    const internalEvent = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+    const externalEvent = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+    const outsideEvent = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+
+    internalBackdrop.dispatchEvent(internalEvent);
+    externalBackdrop.dispatchEvent(externalEvent);
+    document.body.dispatchEvent(outsideEvent);
+
+    expect(internalEvent.defaultPrevented).toBe(true);
+    expect(externalEvent.defaultPrevented).toBe(true);
+    expect(outsideEvent.defaultPrevented).toBe(false);
+  });
+
   it('blocks native context menus in a portal mounted inside the trigger DOM subtree', async () => {
     const portalContainer = shallowRef<HTMLDivElement | null>(null);
 
