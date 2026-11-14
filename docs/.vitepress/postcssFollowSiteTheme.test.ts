@@ -49,6 +49,11 @@ const CASES = [
     expected: '.a { :where(.dark) & .b { color: white } }',
   },
   {
+    name: 'a nested rule in an at-rule',
+    css: '.a { @media (hover: hover) { .b { @media (prefers-color-scheme: dark) { color: white; } } } }',
+    expected: '.a { @media (hover: hover) { :where(.dark) & .b { color: white } } }',
+  },
+  {
     name: 'a nested rule with & at its end',
     css: '.a { .b[data-highlighted] & { @media (prefers-color-scheme: dark) { color: white; } } }',
     expected: '.a { :where(.dark) .b[data-highlighted] & { color: white } }',
