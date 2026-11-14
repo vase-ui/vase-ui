@@ -56,8 +56,8 @@ export function useCollapsiblePanel(
   // Vue calls the `ref` setter during the render of the part. A reactive read there would make the
   // render depend on it, so the element is a plain variable.
   let panel: HTMLElement | null = null;
-  // The render reads each value below. A plain variable is not a source of the render, so each
-  // value is a `shallowRef`.
+  // The render reads the next three values. A plain variable is not a source of the render, so
+  // each of them is a `shallowRef`.
   const animationType = shallowRef<AnimationType | null>(null);
   const dimensions = shallowRef<Dimensions>(EMPTY_DIMENSIONS);
   const lastMeasuredDimensions = shallowRef<Dimensions>(EMPTY_DIMENSIONS);
