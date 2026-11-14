@@ -1,9 +1,11 @@
 import { inject } from 'vue';
 import type { ComputedRef, InjectionKey, ShallowRef } from 'vue';
 import type { TextDirection } from '../../internals/direction-context/DirectionContext';
+import type { REASONS } from '../../internals/reasons';
 import type { Orientation } from '../../internals/types';
 import type { Layout, PanelConstraints } from '../utils/layout';
 import type {
+  ResizableRootActions,
   ResizableRootChangeEventDetails,
   ResizableRootCommitEventDetails,
 } from './ResizableRoot.vue';
@@ -23,7 +25,30 @@ export interface ResizablePanelRegistration {
   minSize: () => number | string;
   maxSize: () => number | string;
   defaultSize: number | string | undefined;
+  collapsible: () => boolean;
+  collapsedSize: () => number | string;
+  collapseThreshold: () => number | string | undefined;
+  disabled: () => boolean;
   element: Readonly<ShallowRef<HTMLElement | null>>;
+}
+
+/**
+ * A handle that moves a panel for a key or a double click.
+ */
+export interface ResizableHandleMove {
+  /**
+   * The index in `panels` of the panel before the handle.
+   */
+  pivot: number;
+  reason: typeof REASONS.keyboard | 'reset';
+  event: KeyboardEvent | MouseEvent;
+}
+
+/**
+ * What `useParentRoot()` gives: the orientation and the methods of the nearest root.
+ */
+export interface ResizableParentRoot extends ResizableRootActions {
+  orientation: ComputedRef<Orientation>;
 }
 
 export interface ResizableRootContext {
@@ -32,6 +57,7 @@ export interface ResizableRootContext {
   disabled: ComputedRef<boolean>;
   step: ComputedRef<number>;
   largeStep: ComputedRef<number>;
+  pushPanels: ComputedRef<boolean>;
   /**
    * The panels in the order of the document.
    */
@@ -65,6 +91,31 @@ export interface ResizableRootContext {
    */
   changeLayout: (layout: Layout, details: ResizableRootChangeEventDetails) => Layout | undefined;
   commitLayout: (layout: Layout, details: ResizableRootCommitEventDetails) => void;
+  /**
+   * Collapses the panel to its collapsed size, and commits the change. It does nothing for a panel
+   * that is not collapsible or is collapsed. A handle (`by`) moves the panel for a key. With no
+   * handle, the move is an action of the app.
+   */
+  collapsePanel: (id: string, by?: ResizableHandleMove) => void;
+  /**
+   * Gives a collapsed panel the size that it had before it collapsed, or its least size, and
+   * commits the change. It does not collapse another panel, and it does nothing for a panel that
+   * is not collapsed.
+   */
+  expandPanel: (id: string, by?: ResizableHandleMove) => void;
+  /**
+   * Gives the panel a size, and commits the change. It is an action of the app.
+   */
+  resizePanel: (id: string, size: number | string) => void;
+  /**
+   * Gives the panel the size that it has in the first layout, and commits the change. A double
+   * click on a handle (`by`) does this. The result is `false` when the panel has that size already.
+   */
+  resetPanel: (id: string, by: ResizableHandleMove) => boolean;
+  /**
+   * What `useParentRoot()` gives to a part inside the root.
+   */
+  actions: ResizableParentRoot;
 }
 
 export const ResizableRootContext: InjectionKey<ResizableRootContext> = Symbol();

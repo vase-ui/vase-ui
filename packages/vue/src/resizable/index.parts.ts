@@ -1,9 +1,14 @@
 import ResizableHandle from './handle/ResizableHandle.vue';
 import type { ResizableHandleProps, ResizableHandleState } from './handle/ResizableHandle.vue';
 import ResizablePanel from './panel/ResizablePanel.vue';
-import type { ResizablePanelProps, ResizablePanelState } from './panel/ResizablePanel.vue';
+import type {
+  ResizablePanelActions,
+  ResizablePanelProps,
+  ResizablePanelState,
+} from './panel/ResizablePanel.vue';
 import ResizableRoot from './root/ResizableRoot.vue';
 import type {
+  ResizableRootActions,
   ResizableRootChangeEventDetails,
   ResizableRootChangeEventReason,
   ResizableRootCommitEventDetails,
@@ -23,6 +28,7 @@ export const Root: typeof ResizableRoot = ResizableRoot;
 export namespace Root {
   export type State = ResizableRootState;
   export type Props = ResizableRootProps;
+  export type Actions = ResizableRootActions;
   export type Layout = ResizableRootLayout;
   export type ChangeEventReason = ResizableRootChangeEventReason;
   export type ChangeEventDetails = ResizableRootChangeEventDetails;
@@ -38,6 +44,7 @@ export const Panel: typeof ResizablePanel = ResizablePanel;
 export namespace Panel {
   export type State = ResizablePanelState;
   export type Props = ResizablePanelProps;
+  export type Actions = ResizablePanelActions;
 }
 
 /**
@@ -49,3 +56,6 @@ export namespace Handle {
   export type State = ResizableHandleState;
   export type Props = ResizableHandleProps;
 }
+
+export { useParentPanel } from './utils/useParentPanel';
+export { useParentRoot } from './utils/useParentRoot';

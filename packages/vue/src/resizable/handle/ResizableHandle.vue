@@ -1,6 +1,8 @@
 <script lang="ts">
 import type { HTMLAttributes } from 'vue';
+import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import type { Orientation, VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
+import * as ResizableHandleDataAttributes from './ResizableHandleDataAttributes';
 
 export interface ResizableHandleState {
   /**
@@ -15,6 +17,16 @@ export interface ResizableHandleState {
    * Whether the user is dragging the handle.
    */
   dragging: boolean;
+  /**
+   * Whether the handle is at the end of its travel on the left, or at the top in a vertical root:
+   * it cannot move that way. The side is a side of the screen, also in a right-to-left root.
+   */
+  atMin: boolean;
+  /**
+   * Whether the handle is at the end of its travel on the right, or at the bottom in a vertical
+   * root: it cannot move that way. The side is a side of the screen, also in a right-to-left root.
+   */
+  atMax: boolean;
 }
 
 export interface ResizableHandleProps
@@ -34,6 +46,11 @@ export interface ResizableHandleProps
    */
   primaryPanel?: 'previous' | 'next' | undefined;
 }
+
+const stateAttributesMapping: StateAttributesMapping<ResizableHandleState> = {
+  atMin: (value) => (value ? { [ResizableHandleDataAttributes.atMin]: '' } : null),
+  atMax: (value) => (value ? { [ResizableHandleDataAttributes.atMax]: '' } : null),
+};
 </script>
 
 <script setup lang="ts">
@@ -61,7 +78,13 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useResizableRootContext } from '../root/ResizableRootContext';
 import { createHandleDrag } from '../utils/handleDrag';
-import { adjustLayout, areLayoutsEqual, getHandleRange } from '../utils/layout';
+import {
+  adjustLayout,
+  areLayoutsEqual,
+  getHandleLimits,
+  getHandleRange,
+  isCollapsed,
+} from '../utils/layout';
 
 defineOptions({ inheritAttrs: false });
 
@@ -102,7 +125,13 @@ const valueAttributes = computed(() => {
   if (panel === undefined) {
     return undefined;
   }
-  const range = getHandleRange(root.constraints.value, root.shown.value, pivot.value, panel);
+  const range = getHandleRange(
+    root.constraints.value,
+    root.shown.value,
+    pivot.value,
+    panel,
+    root.pushPanels.value,
+  );
   return {
     'aria-controls': panel.id,
     ...(isDisabled.value
@@ -115,6 +144,12 @@ const valueAttributes = computed(() => {
         }),
   };
 });
+
+const limits = computed(() =>
+  pivot.value < 0 || isDisabled.value
+    ? undefined
+    : getHandleLimits(root.constraints.value, root.shown.value, pivot.value, root.pushPanels.value),
+);
 
 let handleElement: HTMLElement | null = null;
 const drag = createHandleDrag(root, {
@@ -162,18 +197,53 @@ function onKeydown(event: KeyboardEvent) {
   ) {
     return;
   }
+  if (event.key === 'Enter') {
+    toggleCollapse(event);
+    return;
+  }
   const delta = getKeyDelta(event);
   if (delta === undefined) {
     return;
   }
   event.preventDefault();
-  const next = adjustLayout(root.constraints.value, root.shown.value, pivot.value, delta);
+  const next = adjustLayout(root.constraints.value, root.shown.value, pivot.value, delta, {
+    exact: true,
+    push: root.pushPanels.value,
+  });
   if (areLayoutsEqual(next, root.shown.value)) {
     return;
   }
   const applied = root.changeLayout(next, createChangeEventDetails(REASONS.keyboard, event));
   if (applied) {
     root.commitLayout(applied, createGenericEventDetails(REASONS.keyboard, event));
+  }
+}
+
+// Enter collapses a collapsible primary panel, or gives it back its size. The other keys leave Enter
+// to the browser.
+function toggleCollapse(event: KeyboardEvent) {
+  const panel = primary.value;
+  const size = panel === undefined ? undefined : root.shown.value[panel.id];
+  if (panel === undefined || size === undefined || !panel.collapsible || panel.locked) {
+    return;
+  }
+  event.preventDefault();
+  const by = { pivot: pivot.value, reason: REASONS.keyboard, event };
+  if (isCollapsed(panel, size)) {
+    root.expandPanel(panel.id, by);
+  } else {
+    root.collapsePanel(panel.id, by);
+  }
+}
+
+// A double click gives the primary panel the size that it had at the start.
+function onDblclick(event: MouseEvent) {
+  const panel = primary.value;
+  if (event.defaultPrevented || isDisabled.value || panel === undefined || panel.locked) {
+    return;
+  }
+  if (root.resetPanel(panel.id, { pivot: pivot.value, reason: 'reset', event })) {
+    event.preventDefault();
   }
 }
 
@@ -217,14 +287,22 @@ onScopeDispose(() => {
   drag.end();
 });
 
-const state = computed<ResizableHandleState>(() => ({
-  orientation: root.orientation.value,
-  disabled: isDisabled.value,
-  dragging: drag.dragging.value,
-}));
+const state = computed<ResizableHandleState>(() => {
+  // The panel before the handle is on the right in a horizontal root that has the direction `rtl`.
+  const flipped = root.orientation.value === 'horizontal' && root.direction.value === 'rtl';
+  const { atMin = false, atMax = false } = limits.value ?? {};
+  return {
+    orientation: root.orientation.value,
+    disabled: isDisabled.value,
+    dragging: drag.dragging.value,
+    atMin: flipped ? atMax : atMin,
+    atMax: flipped ? atMin : atMax,
+  };
+});
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
+  stateAttributesMapping,
   ref: [
     listItemRef,
     (node) => {
@@ -240,6 +318,8 @@ const { element, elementProps } = useRenderElement('div', props, {
       ...valueAttributes.value,
       onKeydown,
       onMousedown,
+      onDblclick,
+      onClickCapture: drag.stopClickAfterDrag,
       onPointerdown,
       onPointermove: drag.move,
       onPointerup: drag.end,

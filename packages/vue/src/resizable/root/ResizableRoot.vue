@@ -54,6 +54,7 @@ export interface ResizableRootProps
   /**
    * The uncontrolled layout at the start.
    * A panel with no entry takes its `defaultSize`, or an equal share of the space that is left.
+   * The `reset()` method and a double click on a handle give the panels the sizes of this layout.
    *
    * To render a controlled root, use the `layout` prop instead.
    */
@@ -69,16 +70,53 @@ export interface ResizableRootProps
    * @default 10
    */
   largeStep?: number | undefined;
+  /**
+   * Whether a move of a handle can go on into the panels after the panel next to the handle.
+   * When a panel next to the handle is at its least size, the move goes on into the next panel.
+   * With `false`, a move changes only the two panels beside the handle.
+   * The methods of the panels and of the root move the panels as they are asked, and ignore this
+   * prop.
+   * @default true
+   */
+  pushPanels?: boolean | undefined;
 }
 
 export type ResizableRootChangeEventReason =
-  typeof REASONS.drag | typeof REASONS.keyboard | typeof REASONS.none;
+  | typeof REASONS.drag
+  | typeof REASONS.keyboard
+  | typeof REASONS.imperativeAction
+  | typeof REASONS.none
+  | 'reset';
 export type ResizableRootChangeEventDetails =
   VaseUIChangeEventDetails<ResizableRootChangeEventReason>;
 
-export type ResizableRootCommitEventReason = typeof REASONS.drag | typeof REASONS.keyboard;
+export type ResizableRootCommitEventReason =
+  typeof REASONS.drag | typeof REASONS.keyboard | typeof REASONS.imperativeAction | 'reset';
 export type ResizableRootCommitEventDetails =
   VaseUIGenericEventDetails<ResizableRootCommitEventReason>;
+
+export interface ResizableRootActions {
+  /**
+   * Gives a copy of the layout that the panels show: the size of each panel that is mounted, in
+   * percent of the panel space.
+   */
+  getLayout: () => ResizableRootLayout;
+  /**
+   * Gives each panel the size that the layout has for it, as far as the constraints of the panels
+   * allow. A panel that the layout lacks takes its `defaultSize`, or an equal share of the space
+   * that is left.
+   * The change has the reason `'imperative-action'`. It does nothing when the panels already show
+   * the layout.
+   */
+  setLayout: (layout: ResizableRootLayout) => void;
+  /**
+   * Gives the panels the layout that they had at the start: the `defaultLayout` of the root, and
+   * the `defaultSize` of each panel that it does not name.
+   * The change has the reason `'imperative-action'`. It does nothing when the panels already show
+   * that layout.
+   */
+  reset: () => void;
+}
 </script>
 
 <script setup lang="ts">
@@ -88,15 +126,25 @@ import { ownerWindow } from '../../common/owner';
 import { useControlled } from '../../common/useControlled';
 import { warn } from '../../common/warn';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import {
+  createChangeEventDetails,
+  createGenericEventDetails,
+} from '../../internals/createBaseUIEventDetails';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { areConstraintsFeasible, resolveLayout, toRequestedLayout } from '../utils/layout';
+import {
+  adjustLayoutToSize,
+  areConstraintsFeasible,
+  areLayoutsEqual,
+  isCollapsed,
+  resolveLayout,
+  toRequestedLayout,
+} from '../utils/layout';
 import type { PanelConstraints } from '../utils/layout';
 import { parseSize } from '../utils/parseSize';
 import { ResizableRootContext } from './ResizableRootContext';
-import type { ResizablePanelRegistration } from './ResizableRootContext';
+import type { ResizableHandleMove, ResizablePanelRegistration } from './ResizableRootContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -108,6 +156,7 @@ const props = withDefaults(defineProps<ResizableRootProps>(), {
   defaultLayout: undefined,
   step: 1,
   largeStep: 10,
+  pushPanels: true,
 });
 
 const emit = defineEmits<{
@@ -120,13 +169,15 @@ const emit = defineEmits<{
    *
    * - `'drag'` while the user drags a handle
    * - `'keyboard'` for a key on a handle
+   * - `'reset'` for a double click on a handle
+   * - `'imperative-action'` for a method of a panel or of the root
    * - `'none'` when a panel mounts that the layout does not name
    */
   layoutChange: [layout: ResizableRootLayout, eventDetails: ResizableRootChangeEventDetails];
   'update:layout': [layout: ResizableRootLayout];
   /**
    * Event handler called when the user ends a change of the layout: at the release of a drag that
-   * changed the layout, and after a key that changed it.
+   * changed the layout, and after a key, a double click or a method that changed it.
    * Does not fire if the layout did not change, or if a listener canceled the change.
    * **Warning**: This is a generic event, not a change event.
    *
@@ -134,6 +185,8 @@ const emit = defineEmits<{
    *
    * - `'drag'` for a drag of a handle
    * - `'keyboard'` for a key on a handle
+   * - `'reset'` for a double click on a handle
+   * - `'imperative-action'` for a method of a panel or of the root
    */
   layoutCommitted: [layout: ResizableRootLayout, eventDetails: ResizableRootCommitEventDetails];
   /**
@@ -163,15 +216,25 @@ const [requested, setRequested] = useControlled<ResizableRootLayout>({
   state: 'layout',
 });
 
+// The layout at the start. A later change of `defaultLayout` has no effect.
+const firstRequested: ResizableRootLayout = props.defaultLayout ?? EMPTY_OBJECT;
+
 const registered = shallowRef<readonly ResizablePanelRegistration[]>([]);
 const panels = computed(() => registered.value.toSorted((a, b) => a.index.value - b.index.value));
 const constraints = computed<PanelConstraints[]>(() =>
-  panels.value.map((panel) => ({
-    id: panel.id.value,
-    minSize: parseSize(panel.minSize()),
-    maxSize: parseSize(panel.maxSize()),
-    defaultSize: panel.defaultSize === undefined ? undefined : parseSize(panel.defaultSize),
-  })),
+  panels.value.map((panel) => {
+    const collapseThreshold = panel.collapseThreshold();
+    return {
+      id: panel.id.value,
+      minSize: parseSize(panel.minSize()),
+      maxSize: parseSize(panel.maxSize()),
+      collapsible: panel.collapsible(),
+      collapsedSize: parseSize(panel.collapsedSize()),
+      defaultSize: panel.defaultSize === undefined ? undefined : parseSize(panel.defaultSize),
+      collapseThreshold: collapseThreshold === undefined ? undefined : parseSize(collapseThreshold),
+      locked: panel.disabled(),
+    };
+  }),
 );
 const shown = computed(() => resolveLayout(constraints.value, requested.value));
 
@@ -187,7 +250,7 @@ if (process.env.NODE_ENV !== 'production') {
         warn(
           `Two panels of one root have the id "${duplicate}".`,
           'The layout has one size for each id, so the panels cannot have sizes of their own.',
-          'Give each panel an id of its own.',
+          'Give each panel an id of your own.',
         );
       }
       if (!areConstraintsFeasible(current)) {
@@ -195,6 +258,16 @@ if (process.env.NODE_ENV !== 'production') {
           'The sizes of the panels cannot sum to 100.',
           'The minimum and maximum sizes of the panels leave no layout that fills the root.',
           'Raise a `maxSize` or lower a `minSize`.',
+        );
+      }
+      const stuck = current.find(
+        (panel) => panel.collapsible && panel.minSize <= panel.collapsedSize,
+      );
+      if (stuck) {
+        warn(
+          `The panel "${stuck.id}" is collapsible, and its \`minSize\` is not greater than its \`collapsedSize\`.`,
+          'A collapsible panel collapses when it goes below its `minSize`, so this panel cannot collapse.',
+          'Give the panel a `minSize` that is greater than its `collapsedSize`.',
         );
       }
     },
@@ -234,12 +307,37 @@ function registerPanel(panel: ResizablePanelRegistration) {
   });
 }
 
-function changeLayout(layout: ResizableRootLayout, details: ResizableRootChangeEventDetails) {
-  const next = toRequestedLayout(layout, requested.value);
+// The size that each panel had before a change collapsed it. `expand()` gives it back.
+const sizesBeforeCollapse = new Map<string, number>();
+
+function rememberSizesBeforeCollapse(before: ResizableRootLayout, after: ResizableRootLayout) {
+  for (const panel of constraints.value) {
+    const sizeBefore = before[panel.id];
+    const sizeAfter = after[panel.id];
+    if (
+      sizeBefore !== undefined &&
+      sizeAfter !== undefined &&
+      !isCollapsed(panel, sizeBefore) &&
+      isCollapsed(panel, sizeAfter)
+    ) {
+      sizesBeforeCollapse.set(panel.id, sizeBefore);
+    }
+  }
+}
+
+// `base` is the layout that the new layout replaces: its entries for panels that are not mounted
+// stay in the layout.
+function changeLayout(
+  layout: ResizableRootLayout,
+  details: ResizableRootChangeEventDetails,
+  base: ResizableRootLayout = requested.value,
+) {
+  const next = toRequestedLayout(layout, base);
   emit('layoutChange', next, details);
   if (details.isCanceled) {
     return undefined;
   }
+  rememberSizesBeforeCollapse(shown.value, layout);
   emit('update:layout', next);
   setRequested(next);
   return next;
@@ -247,6 +345,16 @@ function changeLayout(layout: ResizableRootLayout, details: ResizableRootChangeE
 
 function commitLayout(layout: ResizableRootLayout, details: ResizableRootCommitEventDetails) {
   emit('layoutCommitted', layout, details);
+}
+
+function createCommitDetails(
+  reason: ResizableRootCommitEventReason,
+  event?: Event,
+): ResizableRootCommitEventDetails {
+  // `reset` is a reason of this family only, so `createGenericEventDetails` does not know it.
+  return reason === 'reset'
+    ? { reason, event: event ?? new Event('vase-ui') }
+    : createGenericEventDetails(reason, event);
 }
 
 function startDragging() {
@@ -288,12 +396,105 @@ function getPanelSpace() {
   return space;
 }
 
+function findPanel(id: string) {
+  const index = constraints.value.findIndex((panel) => panel.id === id);
+  const panel = constraints.value[index];
+  const size = shown.value[id];
+  return panel === undefined || size === undefined ? undefined : { panel, index, size };
+}
+
+// Gives the panel `index` the size `size` by a move of a handle, and emits the change and the
+// commit. A key or a double click moves the handle that has the focus or the press, and it obeys
+// `pushPanels`. A method moves the handle after the panel, or the handle before the last panel,
+// with the panels after it pushed. A method also works on a disabled panel.
+function giveSize(
+  index: number,
+  size: number,
+  only: number | undefined,
+  by: ResizableHandleMove | undefined,
+): boolean {
+  const unlocked = constraints.value.map((panel, panelIndex) =>
+    panelIndex === index ? { ...panel, locked: false } : panel,
+  );
+  const next = adjustLayoutToSize(
+    unlocked,
+    shown.value,
+    by?.pivot ?? (index < unlocked.length - 1 ? index : index - 1),
+    index,
+    size,
+    { only, push: by === undefined || props.pushPanels },
+  );
+  if (areLayoutsEqual(next, shown.value)) {
+    return false;
+  }
+  const reason = by?.reason ?? REASONS.imperativeAction;
+  const applied = changeLayout(next, createChangeEventDetails(reason, by?.event));
+  if (applied) {
+    commitLayout(applied, createCommitDetails(reason, by?.event));
+  }
+  return true;
+}
+
+function collapsePanel(id: string, by?: ResizableHandleMove) {
+  const found = findPanel(id);
+  if (found?.panel.collapsible && !isCollapsed(found.panel, found.size)) {
+    giveSize(found.index, found.panel.collapsedSize, found.index, by);
+  }
+}
+
+function expandPanel(id: string, by?: ResizableHandleMove) {
+  const found = findPanel(id);
+  if (found && isCollapsed(found.panel, found.size)) {
+    giveSize(found.index, sizesBeforeCollapse.get(id) ?? found.panel.minSize, -1, by);
+  }
+}
+
+function resizePanel(id: string, size: number | string) {
+  const found = findPanel(id);
+  if (found) {
+    giveSize(found.index, parseSize(size), found.index, undefined);
+  }
+}
+
+function resetPanel(id: string, by: ResizableHandleMove) {
+  const found = findPanel(id);
+  const first = resolveLayout(constraints.value, firstRequested)[id];
+  return found !== undefined && first !== undefined && giveSize(found.index, first, undefined, by);
+}
+
+function getLayout() {
+  return { ...shown.value };
+}
+
+function setLayout(layout: ResizableRootLayout) {
+  const resolved = resolveLayout(constraints.value, layout);
+  const current = toRequestedLayout(shown.value, requested.value);
+  if (areLayoutsEqual(toRequestedLayout(resolved, layout), current)) {
+    return;
+  }
+  const applied = changeLayout(
+    resolved,
+    createChangeEventDetails(REASONS.imperativeAction),
+    layout,
+  );
+  if (applied) {
+    commitLayout(applied, createGenericEventDetails(REASONS.imperativeAction));
+  }
+}
+
+function reset() {
+  setLayout(firstRequested);
+}
+
+const orientation = computed(() => props.orientation);
+
 provide(ResizableRootContext, {
-  orientation: computed(() => props.orientation),
+  orientation,
   direction,
   disabled: computed(() => props.disabled),
   step: computed(() => props.step),
   largeStep: computed(() => props.largeStep),
+  pushPanels: computed(() => props.pushPanels),
   panels,
   constraints,
   shown,
@@ -303,6 +504,11 @@ provide(ResizableRootContext, {
   stopDragging,
   changeLayout,
   commitLayout,
+  collapsePanel,
+  expandPanel,
+  resizePanel,
+  resetPanel,
+  actions: { orientation, getLayout, setLayout, reset },
 });
 
 const { element, elementProps } = useRenderElement('div', props, {
@@ -318,7 +524,7 @@ const { element, elementProps } = useRenderElement('div', props, {
   ],
 });
 
-defineExpose({ element });
+defineExpose({ element, getLayout, setLayout, reset });
 </script>
 
 <template>

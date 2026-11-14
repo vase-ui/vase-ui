@@ -33,6 +33,11 @@ interface HandleDrag {
    * Ends the drag that runs. The call changes nothing when no drag runs.
    */
   end: (event?: PointerEvent) => void;
+  /**
+   * Stops the click that follows a drag in which the pointer moved. Give it to the capture
+   * listener of `click`. The click that follows a press with no move goes on.
+   */
+  stopClickAfterDrag: (event: MouseEvent) => void;
 }
 
 /**
@@ -52,8 +57,14 @@ export function createHandleDrag(
   let startLayout: Layout = {};
   // The layout of the last change that no listener canceled. The release commits it.
   let applied: Layout | undefined;
+  // Whether the pointer moved in the drag that runs.
+  let moved = false;
+  // Whether the next click is the click that follows a drag in which the pointer moved. A press
+  // clears it, so no timer is needed.
+  let stopClick = false;
 
   function start(event: PointerEvent) {
+    stopClick = false;
     const pivot = options.pivot();
     if (event.button !== 0 || event.defaultPrevented || options.disabled() || pivot < 0) {
       return false;
@@ -70,6 +81,7 @@ export function createHandleDrag(
     panelSpace = space;
     startLayout = root.shown.value;
     applied = undefined;
+    moved = false;
     try {
       options.element()?.setPointerCapture(event.pointerId);
     } catch {
@@ -84,6 +96,7 @@ export function createHandleDrag(
       return;
     }
     dragging.value = false;
+    stopClick = moved;
     const element = options.element();
     if (element?.hasPointerCapture(pointerId)) {
       element.releasePointerCapture(pointerId);
@@ -114,13 +127,24 @@ export function createHandleDrag(
       return;
     }
     const distance = (horizontal ? event.clientX : event.clientY) - startPointer;
+    moved ||= distance !== 0;
     const delta = ((rtl ? -distance : distance) / panelSpace) * 100;
-    const next = adjustLayout(root.constraints.value, startLayout, pivot, delta);
+    const next = adjustLayout(root.constraints.value, startLayout, pivot, delta, {
+      push: root.pushPanels.value,
+    });
     if (areLayoutsEqual(next, shown)) {
       return;
     }
     applied = root.changeLayout(next, createChangeEventDetails(REASONS.drag, event)) ?? applied;
   }
 
-  return { dragging, start, move, end };
+  function stopClickAfterDrag(event: MouseEvent) {
+    if (stopClick) {
+      stopClick = false;
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  }
+
+  return { dragging, start, move, end, stopClickAfterDrag };
 }
