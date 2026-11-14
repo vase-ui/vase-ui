@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import {
   createRenderer,
   describeConformance,
@@ -151,6 +152,68 @@ describe('<NavigationMenu.Positioner />', () => {
       await vi.advanceTimersByTimeAsync(100);
       await flushMicrotasks();
       expect(positioner).not.toHaveAttribute('data-instant');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('has data-instant in a menu that is open at the first render, until a 0 ms timer ends', async () => {
+    vi.useFakeTimers();
+    try {
+      await renderMenu({ defaultValue: 'one' });
+      await flushMicrotasks();
+      const positioner = screen.getByTestId('positioner');
+      expect(positioner).toHaveAttribute('data-instant');
+
+      await vi.advanceTimersByTimeAsync(0);
+      await flushMicrotasks();
+      expect(positioner).not.toHaveAttribute('data-instant');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('ignores a resize of the window while KeepAlive holds the menu, and follows one after the activation', async () => {
+    vi.useFakeTimers();
+    try {
+      const visible = shallowRef(true);
+      // `KeepAlive` caches only a stateful component.
+      const Menu = defineComponent(() => () => (
+        <NavigationMenu.Root defaultValue="one">
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="one">
+              <NavigationMenu.Trigger>One</NavigationMenu.Trigger>
+              <NavigationMenu.Content>
+                <NavigationMenu.Link href="#one">Link of one</NavigationMenu.Link>
+              </NavigationMenu.Content>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          <NavigationMenu.Portal>
+            <NavigationMenu.Positioner data-testid="positioner">
+              <NavigationMenu.Popup>
+                <NavigationMenu.Viewport />
+              </NavigationMenu.Popup>
+            </NavigationMenu.Positioner>
+          </NavigationMenu.Portal>
+        </NavigationMenu.Root>
+      ));
+      await render(() => <KeepAlive>{visible.value ? <Menu /> : null}</KeepAlive>);
+      await vi.advanceTimersByTimeAsync(0);
+      await flushMicrotasks();
+      const positioner = screen.getByTestId('positioner');
+      expect(positioner).not.toHaveAttribute('data-instant');
+
+      visible.value = false;
+      await flushMicrotasks();
+      window.dispatchEvent(new Event('resize'));
+      await flushMicrotasks();
+      visible.value = true;
+      await flushMicrotasks();
+      expect(positioner).not.toHaveAttribute('data-instant');
+
+      window.dispatchEvent(new Event('resize'));
+      await flushMicrotasks();
+      expect(positioner).toHaveAttribute('data-instant');
     } finally {
       vi.useRealTimers();
     }

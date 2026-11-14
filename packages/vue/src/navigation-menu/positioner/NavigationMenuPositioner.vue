@@ -219,7 +219,7 @@ watch(
     }
 
     // The listeners run in the capture phase, so they run before the focus handler of a focus
-    // guard.
+    // guard. `usePositioner` takes no props of the part, so they are DOM listeners.
     onCleanup(
       mergeCleanups(
         addEventListener(element, 'focusin', handleFocus, true),
