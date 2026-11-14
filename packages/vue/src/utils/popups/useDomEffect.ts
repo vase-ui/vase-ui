@@ -6,7 +6,9 @@ import type { WatchSource } from 'vue';
  * that `run` returns runs before the next run and when the part unmounts.
  *
  * While `KeepAlive` holds the part, the cleanup has run and `run` does not run. `run` runs again
- * at the activation.
+ * at the activation. A change that queues `run` earlier in the flush of the deactivation still
+ * runs it. `KeepAlive` has then moved the branch out of the document, except the content of a
+ * `Teleport`, and `onDeactivated` has not run yet.
  *
  * A server calls no `onMounted` hook and runs no such `watch`, so `run` reads nothing there.
  *
