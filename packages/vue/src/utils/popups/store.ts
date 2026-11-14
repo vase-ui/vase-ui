@@ -110,7 +110,7 @@ export type PopupStoreState<Payload> = {
 };
 
 export function createInitialPopupStoreState<Payload>(
-  defaultPopupId?: string | undefined,
+  defaultPopupId?: string,
 ): PopupStoreState<Payload> {
   return {
     open: false,
@@ -130,9 +130,9 @@ export function createInitialPopupStoreState<Payload>(
     popupElement: null,
     positionerElement: null,
     anchorOverride: null,
-    activeTriggerProps: EMPTY_OBJECT as HTMLAttributes,
-    inactiveTriggerProps: EMPTY_OBJECT as HTMLAttributes,
-    popupProps: EMPTY_OBJECT as HTMLAttributes,
+    activeTriggerProps: EMPTY_OBJECT,
+    inactiveTriggerProps: EMPTY_OBJECT,
+    popupProps: EMPTY_OBJECT,
   };
 }
 

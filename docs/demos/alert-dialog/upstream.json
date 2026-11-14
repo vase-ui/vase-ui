@@ -1,0 +1,16 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/alert-dialog/demos",
+  "files": {
+    "_index.module.css": "2601d0bb58d48e7a522082e032700d84413bde51cd4308f2d40337ab7c609f7b",
+    "detached-triggers-controlled/css-modules/index.tsx": "aa9afb04fb1735fdfaf94417840ce977bfa00ad79f31cd79c60223d8ed6bef1f",
+    "detached-triggers-simple/css-modules/index.tsx": "e9540e31770cdfc53147ae6c051f4e41f98bf376b8629daba58b4049ebe4da92",
+    "hero/css-modules/index.module.css": "2d8fcda049507f77e64b6f494f34edfb4b52b6b895ea35065eb11a98c02a988f",
+    "hero/css-modules/index.tsx": "4f21a5bf2e3f4cb3a3dc602e4880e50da9c8b53c0c85b3b3b949ec7864582359",
+    "open-from-menu/css-modules/index.module.css": "54ece553994b981b89cb734128c0dd363a870900e25bc9c9e3d74d6d917f299e",
+    "open-from-menu/css-modules/index.tsx": "4db05db81ff76f4283555e39f469d088a274f8dafc87b983ae19dcaea4a0fb42"
+  },
+  "entryPoints": {
+    "open-from-menu": ["menu"]
+  }
+}

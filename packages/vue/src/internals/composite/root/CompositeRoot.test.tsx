@@ -32,7 +32,7 @@ const GridCompositeRoot = defineComponent(
             event: KeyboardEvent,
             prevIndex: number,
             nextIndex: number,
-            elementsRef: Readonly<Ref<ReadonlyArray<HTMLElement | null>>>,
+            elementsRef: Readonly<Ref<readonly (HTMLElement | null)[]>>,
           ) => number)
         | undefined;
       enableHomeAndEndKeys?: boolean | undefined;
@@ -408,7 +408,7 @@ describe('Composite', () => {
           _event: KeyboardEvent,
           _prevIndex: number,
           _nextIndex: number,
-          _elementsRef: Readonly<Ref<ReadonlyArray<HTMLElement | null>>>,
+          _elementsRef: Readonly<Ref<readonly (HTMLElement | null)[]>>,
         ) => 1,
       );
 
@@ -445,7 +445,7 @@ describe('Composite', () => {
           _event: KeyboardEvent,
           _prevIndex: number,
           nextIndex: number,
-          _elementsRef: Readonly<Ref<ReadonlyArray<HTMLElement | null>>>,
+          _elementsRef: Readonly<Ref<readonly (HTMLElement | null)[]>>,
         ) => nextIndex,
       );
 
@@ -671,7 +671,7 @@ describe('Composite', () => {
           _event: KeyboardEvent,
           _prevIndex: number,
           _nextIndex: number,
-          _elementsRef: Readonly<Ref<ReadonlyArray<HTMLElement | null>>>,
+          _elementsRef: Readonly<Ref<readonly (HTMLElement | null)[]>>,
         ) => 4,
       );
 
@@ -708,7 +708,7 @@ describe('Composite', () => {
           _event: KeyboardEvent,
           _prevIndex: number,
           nextIndex: number,
-          _elementsRef: Readonly<Ref<ReadonlyArray<HTMLElement | null>>>,
+          _elementsRef: Readonly<Ref<readonly (HTMLElement | null)[]>>,
         ) => nextIndex,
       );
 
@@ -750,7 +750,7 @@ describe('Composite', () => {
           _event: KeyboardEvent,
           prevIndex: number,
           _nextIndex: number,
-          _elementsRef: Readonly<Ref<ReadonlyArray<HTMLElement | null>>>,
+          _elementsRef: Readonly<Ref<readonly (HTMLElement | null)[]>>,
         ) => prevIndex,
       );
 
@@ -784,7 +784,7 @@ describe('Composite', () => {
           _event: KeyboardEvent,
           _prevIndex: number,
           nextIndex: number,
-          _elementsRef: Readonly<Ref<ReadonlyArray<HTMLElement | null>>>,
+          _elementsRef: Readonly<Ref<readonly (HTMLElement | null)[]>>,
         ) => nextIndex,
       );
 

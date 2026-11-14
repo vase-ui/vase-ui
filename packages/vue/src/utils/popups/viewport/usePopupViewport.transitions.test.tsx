@@ -90,7 +90,7 @@ function getRadios(container: HTMLElement | null) {
  * transition, so a listener on the viewport gets each event.
  */
 function recordTransitionRuns(viewport: HTMLElement) {
-  const runs: Array<{ target: Element; property: string }> = [];
+  const runs: { target: Element; property: string }[] = [];
   viewport.addEventListener('transitionrun', (event) => {
     runs.push({ target: event.target as Element, property: event.propertyName });
   });
@@ -118,7 +118,7 @@ describe('usePopupViewport', () => {
   // A style element and the scene. The text of the content is `Content <payload>`.
   function renderMorph(
     styles: string,
-    triggers: Array<{ id?: string; payload?: unknown; style?: Record<string, string> }>,
+    triggers: { id?: string; payload?: unknown; style?: Record<string, string> }[],
     options: Partial<ViewportScene> = {},
   ) {
     return render(() => (
@@ -252,7 +252,7 @@ describe('usePopupViewport', () => {
         expect(screen.getByText('Content 0')).toBeVisible();
       });
 
-      const states: Array<{ starting: boolean; ending: boolean }> = [];
+      const states: { starting: boolean; ending: boolean }[] = [];
       const observer = new MutationObserver(() => {
         const previous = getPreviousContainer();
         const current = getCurrentContainer();
@@ -539,7 +539,7 @@ describe('usePopupViewport', () => {
     });
 
     function createTrackedContent() {
-      const mounted: Array<string | undefined> = [];
+      const mounted: (string | undefined)[] = [];
       const Tracked = defineComponent({
         props: { payload: { type: String, default: undefined } },
         setup(props) {

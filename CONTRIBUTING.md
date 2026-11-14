@@ -46,8 +46,9 @@ pnpm --filter @vase-ui/vue exec playwright install chromium firefox webkit
 | `pnpm parity:extract --upstream <path> [family]` | Writes `parity/families/<family>.upstream.json` from a local clone of Base UI. With no family name, it writes each extract. With `--check`, it writes nothing and fails when an extract is absent or differs. With `--counts` alone, it prints the counts of Base UI at the tracked commit. |
 | `pnpm parity:track <sha> --upstream <path>`      | Writes `parity/upstream.json` for a Base UI commit. The commit must be the tracked commit or a descendant of it.                                                                                                                                                                            |
 | `pnpm docs:demos --upstream <path> [family]`     | Writes the demo style sheets of a family and the record `docs/demos/<family>/upstream.json` from a local clone of Base UI. With no family name, it does this for each family with a page or a demo folder. With `--check`, it writes nothing and fails when a file is absent or differs.    |
+| `pnpm lint:fix`                                  | Applies each fix of ESLint, and then formats the files with Prettier. A report that has no fix stays for hand work.                                                                                                                                                                         |
 | `pnpm format`                                    | Formats the files with Prettier.                                                                                                                                                                                                                                                            |
-| `pnpm typecheck`                                 | Runs `tsc` on the root `scripts` folder. Then it writes the barrel and runs vue-tsc on the package.                                                                                                                                                                                         |
+| `pnpm typecheck`                                 | Runs `tsc` on the root `scripts` folder. Then it writes the barrel and runs vue-tsc on the two projects of the package.                                                                                                                                                                     |
 | `pnpm build`                                     | Builds `packages/vue/dist`.                                                                                                                                                                                                                                                                 |
 | `pnpm check:package`                             | Builds the package with the fixture families and packs it through `prepack`. It fails when the pack lacks the license, notices or readme. It runs publint, Are the Types Wrong and a consumer project. The project fails when a prehydration script is in a client bundle or not in Node.   |
 | `pnpm release:check-tag <tag>`                   | Fails when the tag is not `v` plus the version in `packages/vue/package.json`, or when that version does not have the form `YYYY.M.MICRO`.                                                                                                                                                  |
@@ -475,6 +476,50 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - Upstream calls some functions of the consumer only while a popup is mounted, such as the `anchor` function. Read such a getter only while the popup is mounted too. A getter that reads an element that exists only while the popup is open then does not run for a closed popup. A getter that has no such upstream rule, such as the one of `collisionBoundary`, also runs while the popup is closed, after the mount.
 - Where upstream calls `useBaseUiId`, call `useVaseUiId(() => props.id)` in setup. It gives the `id` prop, or a generated id with the prefix `vase-ui-`. The ids of the parts derive from the id of the root. The label of a root does not call it, because the root makes the id of the label. See [Server render](#server-render).
 
+## TypeScript
+
+- Run `pnpm lint:fix` to apply each fix of ESLint and to format the files.
+- Run `pnpm typecheck` and `pnpm lint` after it. They show the reports that need hand work.
+- A branch that merges `main` runs these three commands.
+
+### Compiler flags
+
+- The root project, `docs` and `packages/vue` extend `@tsconfig/strictest`. A flag of the preset is off only for a reason that this section gives.
+- `packages/vue` has two projects. `tsconfig.build.json` has the source. The build, `pnpm parity:check` and the API reference read it.
+- `tsconfig.test.json` has each file of the package. `tsconfig.json` only names the two projects.
+- The test project has `noUncheckedIndexedAccess`, `noImplicitOverride`, `noUnusedLocals` and `noUnusedParameters` off. A ported test then keeps the text of the Base UI test.
+- `exactOptionalPropertyTypes` is off in the package. With the flag, the built declarations give a listener no `| undefined`. A consumer that sets the flag then cannot pass `undefined` to a listener.
+- The consumer project of `pnpm check:package` sets `exactOptionalPropertyTypes`. It passes `undefined` to an optional prop and to a listener.
+- `noPropertyAccessFromIndexSignature` is off. A bundler replaces `process.env.NODE_ENV` only in that form. The Vue documentation and the parts write `slots.default` and `$slots.render`.
+- `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes` are also off in the root project and in `docs`, because the scripts do not obey them.
+- `lib` and `target` of the package are ES2024. Each API of ES2024 is Baseline Widely Available, except a resizable `ArrayBuffer`, a growable `SharedArrayBuffer` and `Atomics.waitAsync`. Do not use these three, `using` or `Symbol.dispose`.
+- `erasableSyntaxOnly` is on. Do not write an `enum`, a parameter property or a namespace that has a value. A namespace of types is correct.
+
+### ESLint
+
+- ESLint uses `strictTypeChecked` and `stylisticTypeChecked` of typescript-eslint. `eslint.config.js` gives the reason for each rule that is off or has an option.
+- The rules that need types run on `.ts` and `.tsx` files. vue-tsc checks the types of an SFC.
+
+### Index reads and `!`
+
+`noUncheckedIndexedAccess` adds `undefined` to the type of an index read, and `no-non-null-assertion` refuses `!`. In the source, use the first of these rules that applies:
+
+1. Write the code so that no read can be absent, when the result is as short and does the same. Use `for...of`, a destructure or `.at(-1)`.
+2. If an algorithm of Base UI needs the index, keep the read and write `!`. Disable `@typescript-eslint/no-non-null-assertion` for the line, or for the block when a function has many such reads. The reason says why the index is in range. If Base UI gives a read that can be absent to code that accepts it, keep the read with `!`. The reason says what that code does with the absent value.
+3. Do not add a guard or a default that cannot run. Do not write `as T`.
+
+A disable comment has the form `// eslint-disable-next-line <rule> -- <reason>`. For a block, write `/* eslint-disable <rule> -- <reason> */` before the block and `/* eslint-enable <rule> */` after it.
+
+### Idioms
+
+- Write `??` where the left operand is an object, `null` or `undefined`. Where Base UI has `||` for a string, a number or a Boolean, keep `||`. The two operators differ for `''`, `0` and `false`.
+- Write `Object.hasOwn` and `??=`.
+- Write `.at(-1)` for the last item of a list.
+- Write `import type` on its own line.
+- Write `void` before a promise that the code does not wait for.
+- An optional parameter has no `| undefined`. An optional prop has it, as [Props](#props) says.
+- A test file keeps the `!` and the casts of the Base UI test.
+
 ## Rules for the source
 
 ### Files
@@ -539,7 +584,7 @@ If a line must break a rule, put a disable comment on that line and give the rea
 - The build changes that import into a subpath import with the folder of the part, such as `#prehydration/tabs/indicator`. The pattern `#prehydration/*` in `imports` of `packages/vue/package.json` resolves it.
 - The `browser` condition of the pattern gives `internals/prehydrationScript.stub`, whose text is empty. A client bundle of a consumer then does not hold the text. `pnpm check:package` fails when a client bundle holds the text, or when the server HTML in Node lacks it.
 - Do not write the subpath import in the source. A test job has no `dist`, and Vite cannot resolve the import.
-- `imports` also has `#test-utils`. When a package has `imports`, Vite resolves each `#` specifier from that field, and it does not use the `paths` of `tsconfig.json` for that specifier.
+- `imports` also has `#test-utils`. When a package has `imports`, Vite resolves each `#` specifier from that field, and it does not use the `paths` of `tsconfig.build.json` for that specifier.
 - Add `data-allow-mismatch` to each element that the script changes, with the category of each change, such as `style`. Vue accepts a class, style or attribute mismatch only on the element that has the attribute with that category.
 - Vue compares the `style` of an element only when the client render gives a `style` key. An element that can have a `style` in its client render, such as the `style` of a consumer, needs the category `style`.
 - The part binds the attribute only while it hydrates, so the hydrated DOM stays equal to a client-only render.
@@ -550,7 +595,7 @@ If a line must break a rule, put a disable comment on that line and give the rea
 - A portal renders after mount. It does not render while the popup is closed, unless `keepMounted` is set. The server HTML thus has one comment in its place, also for an open popup. See [Popup portal](#popup-portal).
 - `NavigationMenu.Content` teleports into its viewport, and the root gets the element of the viewport only after the mount. The server HTML thus has no content, also for an open item. With `keepMounted`, the content is in its item, hidden.
 - The server render of some families depends on an id, a locale, a prehydration script or a portal. It can also depend on a state that a server cannot know, such as the loading status of an image. Such a family adds a page and its cases to the Nuxt fixture, `fixtures/nuxt`. While no entry point exports a part, the page imports it by its path in `packages/vue/src`, as the page `portal.vue` does. Such a page imports each other part that shares a context with that part by its path too, because a part of the built package and a part of the source do not share a context. The page `select.vue` does this for `Field`.
-- The type check of the fixture reads the source that a page imports by its path. The package checks its source without `noUncheckedIndexedAccess` and `noImplicitOverride`, and Nuxt sets both options by default, so `nuxt.config.ts` of the fixture turns them off.
+- The type check of the fixture reads the source that a page imports by its path. Nuxt sets `noUncheckedIndexedAccess` and `noImplicitOverride`, and the build project of the package sets them too.
 
 The hydration state:
 
@@ -913,6 +958,7 @@ The portal of a popup is in `src/utils/popups/portal`. `useFloatingPortalNode()`
 - That part renders nothing while the popup is not mounted, unless its `keepMounted` prop is `true`. It provides `keepMounted` to the parts in it.
 - `Dialog.Portal` gives `FloatingPortal` a default slot that renders `DialogPortalChildren.vue`. That component renders `InternalBackdrop.vue` before the default slot of the consumer, while a dialog with `modal` set to `true` is mounted. The backdrop is `inert` while the dialog closes. `DialogPortalChildren.vue` writes the element of the backdrop to `internalBackdropRef` of the store context.
 - `Menu.Portal` gives `FloatingPortal` a default slot that renders `MenuPortalChildren.vue`. Its `#render` slot gets that component as `children`. That component renders `InternalBackdrop.vue` before the default slot of the consumer, while a modal menu is mounted and a hover did not open it. A menu in a menubar has the backdrop while the menubar is modal. The backdrop has a hole for the trigger of a menu with no parent, or for the menubar. The backdrop is `inert` while the menu closes. Base UI renders this backdrop in the positioner. A backdrop there gives the positioner more than one root node, and a `<style scoped>` rule, `v-show` or a custom directive of the consumer then does not work on the positioner (`VUE-61`). `MenuPortalChildren.vue` writes the element of the backdrop to `internalBackdropRef` of a context menu above the menu.
+- `Select.Portal` gives `FloatingPortal` a default slot that renders `SelectPortalChildren.vue`. Its `#render` slot gets that component as `children`. That component renders `InternalBackdrop.vue` before the default slot of the consumer, while the popup of a modal select is mounted. The backdrop has a hole for the trigger. The backdrop is `inert` while the select closes. As for `Menu.Portal`, Base UI renders this backdrop in the positioner (`VUE-61`).
 - The `#render` slots of `FloatingPortal` and `FloatingPortalLite` get `children`. The component is `FloatingPortalChildren.vue`, which renders only its default slot. A portal part that has nodes of its own gives its own component: `Dialog.Portal` gives `DialogPortalChildren.vue`. A portal part with no nodes of its own, such as `Tooltip.Portal`, gives each slot prop of the portal to its own `#render` slot. See [Parts with nodes of their own](#parts-with-nodes-of-their-own).
 - `Dialog.Popup` gives the internal backdrop to its focus manager in `getInsideElements`, so the modal marks do not touch it. The release of the marks would remove the `inert` of the backdrop of a closing dialog.
 - `Drawer.Popup` gives the internal backdrop to its focus manager in the same way.
@@ -1401,6 +1447,7 @@ Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>. Without a root the trigg
 - With `false`, Vitest mocks a module in Firefox by request interception, not by import map. Do not set `browser.importMapMocks` to `true`: Vitest then refuses a mock in Firefox.
 - `packages/vue/vitest.config.ts` also sets the Firefox preference `dom.w3c_touch_events.enabled` to `1`. Without it, a test in Firefox has no `Touch` and no `TouchEvent`.
 - `packages/vue/vitest.config.ts` runs the test files of Firefox one at a time. Firefox has one mouse for all its windows, and each test file that runs at the same time gets a window of its own. When the real pointer leaves the page of one window, Firefox can send the leave events to the page of another window. The first page then keeps the pointer, and the other page gets `mouseleave` events that its test did not cause.
+- The job `test-browser` of CI runs the Firefox tests in three shards: `--shard=1/3`, `--shard=2/3` and `--shard=3/3`. Each shard is a job on its own runner, so the shards do not share a mouse. To run one shard on your machine, add its flag: `pnpm test:firefox --shard=1/3`. With no `--shard`, `pnpm test:firefox` runs all test files.
 - A test file with a name that ends in `.node.test.ts` or `.node.test.tsx` runs in Node with no DOM. Use it for server render and for logic that must work with no DOM.
 - A `.node.test` file does not import `#test-utils`, because that index loads the libraries of the DOM helpers. To render a part, such a file imports `renderToString` from `vue/server-renderer` and the part directly.
 - A family can have one `.node.test.tsx` file for the server render of the whole family, in the folder of its root: `progress/root/ProgressRoot.node.test.tsx`. A `replaced` Base UI case is the exception. It goes to the `.node.test.tsx` file of the folder of its Base UI test, as [How to port a test](#how-to-port-a-test) says: `fieldset/legend/FieldsetLegend.node.test.tsx`.
@@ -1449,6 +1496,7 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 | `useMergedRefs(a, b)`                                                                                      | A function ref that calls each ref                                                                                                                                                                                                                        |
 | `React.useState` in a test component                                                                       | A `shallowRef` in the setup function of `defineComponent`                                                                                                                                                                                                 |
 | A forced render of the parent that must render the part again, such as `forceRender` of `React.useReducer` | A `shallowRef` count that the test binds to an attribute of the part, such as `data-render`                                                                                                                                                               |
+| `React.memo` around a test component, so that a render of its parent does not render it again              | A component with no props and no children. Vue renders a child component again only when its props, its slots or the reactive values that its render reads change.                                                                                        |
 | `setProps({ children: <Part … /> })`                                                                       | A `shallowRef` that the test component reads                                                                                                                                                                                                              |
 | `useIsoLayoutEffect` or `React.useEffect` in a test component                                              | `onMounted`. Where a dependency changes in the test, add the `watch` of [What differs from the React source](#what-differs-from-the-react-source).                                                                                                        |
 | A case that asserts that a part acts before the passive effects of React run                               | A timer that a test component sets in `onMounted`, or that the case sets before the change. The case asserts that the part acted before the timer ran. Vue runs the hooks of a mount and of an unmount in the flush, before the next task.                |
@@ -1498,7 +1546,8 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 | `Navigation.tsx` of `test/floating-ui-tests`                                                               | The same path, because the family `focus` ports the file. Its style sheet is a set of style objects, because the package has no type for a CSS module.                                                                                                    |
 | A direct call of `userEvent`, such as `userEvent.hover(element)`, where each call needs a new pointer      | Keep the direct call. It makes a new instance, so its pointer does not leave the element of the call before.                                                                                                                                              |
 | `resetBrowserPointer()` of `#test-utils`, in a `beforeEach` hook or in `onTestFinished`                    | No counterpart. Remove the call. `test/setup.ts` moves the real pointer of the browser off the page after a test that put it there.                                                                                                                       |
-| `style={{ pointerEvents: 'none' }}` on a trigger, where it only keeps the real pointer off the trigger     | No style. `test/setup.ts` moves the real pointer of the browser off the page after a test that put it there.                                                                                                                                              |
+| `isScrollLocked(doc)` of `#test-utils`                                                                     | `isScrollLocked(doc)` of `test/fixtures/scrollDocument.ts`. It reads the computed overflow of the element that scrolls the page, and the marker `data-vase-ui-scroll-locked`.                                                                             |
+| `pointerEvents: 'none'` in the `style` of an element, where it only keeps the real pointer off the element | No such property. `test/setup.ts` moves the real pointer of the browser off the page after a test that put it there.                                                                                                                                      |
 | `{Esc}` in a `keyboard` call of user-event                                                                 | `{Escape}`. user-event sends the key `Esc` for `{Esc}`. React changes that key to `Escape`. Vue gives the event of the browser, and the parts compare the key with `Escape`.                                                                              |
 | A `beforeEach` hook at the top of a file that also has cases of Vase UI's own                              | The same hook in each `describe` block of the Base UI cases. A hook at the top runs for each case of the file.                                                                                                                                            |
 | A `beforeEach` hook that gives `HTMLElement.prototype` the property `inert`                                | No counterpart. jsdom has no `inert`, and a browser has it.                                                                                                                                                                                               |
@@ -1604,7 +1653,7 @@ This section is the contract of the test helpers. Each helper must obey it. The 
 - `popupConformanceTests`, `positionerConformanceTests`, `detachedTriggersConformanceTests` and `viewportConformanceTests` are the shared suites of a popup family. `createComponent` of each suite except `detachedTriggersConformanceTests` gets the props of the parts and returns a vnode.
 - `popupListConformanceTests` is the shared suite of a popup that moves a highlight through a list of items, such as Menu, Select and Combobox. `createComponent` gets `root`, `items`, `disabledItems`, `onItemClick`, `scrollerStyle` and `itemStyle`, and it returns a vnode. In that vnode, give `data-testid="trigger"` to the trigger, `data-testid="popup"` to the popup and `data-testid="scroller"` to the element that scrolls the items.
 - `root.ref` of `popupConformanceTests` is a function ref that gets the exposed actions of the root. A case that sets it renders a function.
-- `popupConformanceTests` gives a hover trigger `pointer-events: none`, because the real pointer of the browser can rest on it.
+- `popupConformanceTests` gives a hover trigger `delay: 0`, so the popup opens at the `mouseenter` event. A `delay` in the `trigger` props of a case replaces it.
 - `createComponent` of `positionerConformanceTests` gives `render` of the positioner props to the `#render` slot of the part. Under that slot, the part renders no popup.
 - `detachedTriggersConformanceTests` gets the parts of the family as components. It puts `triggerProps` on each trigger. The suite dispatches the hover events. Do not give the triggers `pointer-events: none`, because `test/setup.ts` moves the real pointer off the page after a test that put it there. Set `outsideElementsInert` for a popup that sets `inert` outside it: the suite then expects the focus on the active trigger after a close.
 - `viewportConformanceTests` gets `render`, `createComponent` and `openOn`. `createComponent` gets the props of the parts and `renderContent(payload)`, and it puts that content in the Viewport part. `openOn` is `'click'` or `'focus'`: the event that opens the popup or moves it to another trigger.
@@ -1698,6 +1747,7 @@ The hydration helpers:
 - A case that changes the source of a cached image first waits for the `load` event of that image. Firefox does not cancel the event when the source changes, so the new image gets it.
 - Assert the start state before the action when the end state can be true already.
 - Use the `firePointer` test helper when a test depends on the time of an event.
+- `fireTouch` gives no `timeStamp`, so the browser stamps a touch event with its own clock, and a stalled run makes a fast swipe slow. A touch case that depends on the speed of a swipe gives each event a fixed stamp. See `stampEventTimes` in `drawer/viewport/DrawerViewport.test.tsx`.
 - A case that presses a key or clicks in a popup in the millisecond of the open first waits for a later millisecond with `waitForLaterMillisecond()`, as `render` does after a mount. The portal of a popup that is not modal and the popup element of `useDismiss` have capture listeners, so an event of such a press reaches a second listener. See [Test helpers](#test-helpers).
 - A pointer call of `user` throws when the element has or inherits `pointer-events: none`. A case that clicks an element through `user` renders the element with no such style.
 - Use `it.each` with object rows and `$name` titles for tests that differ only in data.
@@ -1819,6 +1869,7 @@ A family that Base UI documents in `docs/src/app/(docs)/react/utils/`, such as `
 - The page has the title and one intro line. It has the sections of the Base UI page, with the code in Vue. It also has each demo of the family and the API reference.
 - The front matter has `order: 1`. The group then shows its pages in the sequence of their titles.
 - A demo is `docs/demos/<family>/<demo>/css-modules/index.vue`. It keeps the elements, the text and the attributes of the Base UI file `demos/<demo>/css-modules/index.tsx`. Vase UI does not port the Tailwind demos.
+- `docs/tsconfig.json` sets `dataAttributes` to `data-*`. With `strictTemplates`, vue-tsc then accepts a `data-*` attribute on a part, such as `data-color` in the hero demo of Alert Dialog.
 - A Base UI demo can import a file of `demos/<demo>` that is outside `css-modules`, such as `custom-sanitize/useInvalidFeedback.ts` of OTP Field. Port that file to the same path in `docs/demos/<family>`.
 - The style sheet of a demo is the Base UI file, byte for byte. Do not edit it. Prettier does not format it, because `.prettierignore` names `docs/demos/**/*.module.css`. The same CSS then proves that the data attributes and the CSS variables are those of Base UI. A demo has no `<style>` block, and ESLint refuses one.
 - `docs/demos/<family>/upstream.json` records the Base UI commit and the SHA-256 of each Base UI demo file at that commit. `pnpm docs:demos --upstream <path> <family>` writes the record and the style sheets. Do not edit the record.
@@ -1833,9 +1884,12 @@ A family that Base UI documents in `docs/src/app/(docs)/react/utils/`, such as `
 - A page can show a part of a sample. Mark the part with `// #region <name>` and `// #endregion <name>` in the script of the sample. Show it with `<<< ./<family>/<Name>.vue#<name>{ts}`. The `ts` gives it the colors of TypeScript.
 - Write `<ApiReference />` under the heading `## API reference`. The site build makes the reference from the types and the JSDoc of the source. The reference lists the parts in the sequence of the Base UI page, which the extract records. Do not write a table by hand. To change a text of the reference, change the JSDoc.
 - A `types.md` can repeat the parts of another family. The `types.md` of Radio Group repeats `Radio.Root` and `Radio.Indicator`. The reference reads such a part from the entry file of the family that exports it. The page of Radio Group thus shows both parts.
-- `<ApiReference name="<name>" />` shows one function or one type of the family, with no heading and no description. The name is the path of the export, such as `mergeProps` or `useRender.Parameters`. The page writes the heading and the text. The build fails when the reference has no function or type with that name.
-- The reference shows no class. The page of a family with a handle, such as Tooltip, describes the members of the handle class in its text.
-- For a function, the component shows a table of its parameters (`c?` is an optional parameter) and then its return value. For a type, it shows one table of its properties, with a column Default when a property has a default.
+- `<ApiReference name="<name>" />` shows one function, class or type of the family, with no heading and no description. The name is the path of the export, such as `mergeProps`, `Tooltip.Handle`, `useRender.Parameters` or `ToastManagerAddOptions`. A type is an entry of the section API Reference or Additional Types of the `types.md`. The page writes the heading and the text. The build fails when the reference has no function, class or type with that name.
+- When the Base UI page has the section Additional types, write `## Additional types` at the end of the page. Under it, write a `### <name>` heading and `<ApiReference name="<name>" />` for each type that `showAdditionalTypes` of the Base UI page names.
+- For a function, the component shows a table of its parameters (`c?` is an optional parameter) and then its return value. For a type, it shows one table of its properties in the sequence of their names, with a column Default when a property has a default. For a union of strings, it shows the values in the sequence of the declaration.
+- For a class, the component shows a table of its public properties and then a table of its public methods, in the sequence of the declaration. A member with the `@internal` tag is not in the tables.
+- The column Default shows the text of the `@default` tag in the JSDoc of the prop or the property. For a prop, the reference reads the tag from the exported props interface of the part, such as `TooltipTriggerProps`. It does not show the default of Vue. To show a default, write a `@default` tag.
+- The reference reads the tags of a property only from its own declaration. A property that an interface declares again does not get the `@default` tag of the base interface. Write the tag again when the default stays the same.
 - Each demo is a test fixture. `packages/vue/test/demos.test.tsx` mounts each demo, checks it with axe and hydrates its server render, in each engine. A new demo needs no new test.
 
 ### Thanks page

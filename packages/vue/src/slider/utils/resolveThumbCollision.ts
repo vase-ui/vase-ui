@@ -68,7 +68,8 @@ export function resolveThumbCollision(
 
   switch (behavior) {
     case 'swap': {
-      const pressedInitialValue = activeValues[pressedIndex];
+      /* eslint-disable @typescript-eslint/no-non-null-assertion -- Each index is the index of a thumb. A swap needs a neighbor, so `targetIndex` is in range. */
+      const pressedInitialValue = activeValues[pressedIndex]!;
       const epsilon = 1e-7;
 
       const movingForward = nextValue > pressedInitialValue;
@@ -99,12 +100,13 @@ export function resolveThumbCollision(
           return baseline;
         }
 
-        return activeValues[index];
+        return activeValues[index]!;
       });
 
       const nextValueForTarget = shouldSwapForward
-        ? Math.max(nextValue, candidateValues[targetIndex])
-        : Math.min(nextValue, candidateValues[targetIndex]);
+        ? Math.max(nextValue, candidateValues[targetIndex]!)
+        : Math.min(nextValue, candidateValues[targetIndex]!);
+      /* eslint-enable @typescript-eslint/no-non-null-assertion */
 
       const adjustedValues = getPushedThumbValues(
         candidateValues,
