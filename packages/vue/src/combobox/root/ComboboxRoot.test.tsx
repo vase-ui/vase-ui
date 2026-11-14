@@ -755,6 +755,57 @@ describe('<Combobox.Root />', () => {
       expect(handleInputValueChange).toHaveBeenCalledTimes(0);
       expect(getFormData('city')).toEqual(['Oslo']);
     });
+
+    it('keeps an input inside the popup empty', async () => {
+      const handleInputValueChange = vi.fn();
+      await render(
+        <form data-testid="form">
+          <Combobox.Root
+            name="city"
+            items={cities}
+            defaultValue="Oslo"
+            onInputValueChange={handleInputValueChange}
+          >
+            <ComboboxInputPart insidePopup />
+            <ComboboxListPart />
+          </Combobox.Root>
+        </form>,
+      );
+      await type('ma');
+      await pick('Malta');
+      expect(getFormData('city')).toEqual(['Malta']);
+
+      await reset();
+
+      expect(getFormData('city')).toEqual(['Oslo']);
+      expect(getInput().value).toBe('');
+      expect(handleInputValueChange.mock.calls.map(([text]) => text)).not.toContain('Oslo');
+    });
+
+    it('puts the text back when the root part holds the input value itself', async () => {
+      const handleInputValueChange = vi.fn();
+      await render(
+        <form data-testid="form">
+          <AutocompleteRootPart
+            name="search"
+            items={cities}
+            defaultInputValue="os"
+            onInputValueChange={handleInputValueChange}
+          >
+            <ComboboxInputPart />
+          </AutocompleteRootPart>
+        </form>,
+      );
+      await type('mal');
+      expect(getFormData('search')).toEqual(['mal']);
+      handleInputValueChange.mockClear();
+
+      await reset();
+
+      expect(getFormData('search')).toEqual(['os']);
+      expect(handleInputValueChange).toHaveBeenCalledTimes(1);
+      expect(handleInputValueChange.mock.lastCall?.[0]).toBe('os');
+    });
   });
 
   describe('VUE-21: a native reset clears the error of the field', () => {

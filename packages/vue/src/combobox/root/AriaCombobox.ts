@@ -226,6 +226,12 @@ export interface AriaComboboxProps<Value, Mode extends SelectionMode = 'none', I
    */
   defaultInputValue?: ComboboxInputElementValue;
   /**
+   * INTERNAL: Whether the consumer controls the input value. A root part that makes `inputValue`
+   * from a state of its own gives this prop. With `undefined`, the input value is controlled when
+   * `inputValue` is not `undefined`.
+   */
+  inputValueControlled?: boolean | undefined;
+  /**
    * Whether list items are presented in a grid layout.
    * When enabled, arrow keys navigate across rows and columns inferred from DOM rows.
    * @default false
@@ -761,7 +767,13 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     if (currentQuery === '') {
       return currentLimit > -1
         ? flatItems.value.slice(0, currentLimit)
-        : (flatItems.value as Item[]);
+        : // The cast here is done as `flatItems` is readonly.
+          // `valuesRef`, a mutable ref, can be set to `flatFilteredValues`, which may
+          // reference this exact readonly value, creating a mutation risk.
+          // However, <Combobox.Item> can never mutate this value as the mutating effect
+          // bails early when `items` is provided, and this is only ever returned
+          // when `items` is provided due to the early return at the top of this `computed`.
+          (flatItems.value as Item[]);
     }
     const limitedItems: Item[] = [];
     for (const item of flatItems.value) {
@@ -911,6 +923,8 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     // A canceled selection clear must not suppress close-completion cleanup.
     hadInputClear = eventDetails.reason === REASONS.inputClear;
 
+    // If user is typing, ensure we don't auto-highlight on open due to a race
+    // with the post-open effect that sets this flag.
     if (eventDetails.reason === REASONS.inputChange) {
       // A controlled popup may ignore a close request. Resuming input proves the popup
       // is remaining open, so release the query captured for an exit animation.
@@ -1553,7 +1567,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
         hasChanged = !details.isCanceled;
       }
     }
-    if (props.inputValue === undefined) {
+    if (!(props.inputValueControlled ?? props.inputValue !== undefined)) {
       const defaultInputValue = getDefaultInputValue();
       if (inputValue.value !== defaultInputValue) {
         const details = createChangeEventDetails(REASONS.none, event);

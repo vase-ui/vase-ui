@@ -30,6 +30,7 @@ export interface ComboboxRootProps<
   | 'itemToStringValue'
   | 'isItemEqualToValue'
   | 'filterQuery'
+  | 'inputValueControlled'
   | 'selectionMode'
   | 'defaultSelectedValue'
   | 'selectedValue'
@@ -225,6 +226,7 @@ const {
     get defaultInputValue() {
       return props.defaultInputValue;
     },
+    inputValueControlled: undefined,
     get grid() {
       return props.grid;
     },
