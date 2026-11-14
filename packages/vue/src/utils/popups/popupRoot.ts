@@ -168,12 +168,8 @@ export function usePopupRootWithPopupId<Store extends PopupRootStore>(
       triggerIdProp: props.triggerId,
     },
     createStore,
-    options,
     defaultPopupId,
-  );
-  watch(
-    () => toValue(defaultPopupId),
-    (id) => store.set('defaultPopupId', id),
+    options,
   );
   usePopupRootOpenState(store, props, options.name);
 
@@ -265,8 +261,8 @@ export function useSingleAnchorPopupRoot<Store extends PopupRootStore>(
       triggerIdProp: undefined,
     },
     createStore,
-    options,
     useVaseUiId(),
+    options,
   );
   usePopupRootOpenState(store, props, options.name);
 
@@ -281,15 +277,20 @@ export function useSingleAnchorPopupRoot<Store extends PopupRootStore>(
 }
 
 /**
- * Makes the store of a popup root, gives it the functions of the part, and keeps `nested` current.
+ * Makes the store of a popup root, gives it the functions of the part, and keeps the default popup
+ * id and `nested` current.
  */
 function usePopupRootStore<Store extends PopupRootStore>(
   initialState: PopupRootInitialState,
   createStore: CreatePopupRootStore<Store>,
-  options: Pick<UsePopupRootOptions<Store>, 'onOpenChange' | 'onOpenChangeComplete'>,
   defaultPopupId: MaybeRefOrGetter<string | undefined>,
+  options: Pick<UsePopupRootOptions<Store>, 'onOpenChange' | 'onOpenChangeComplete'>,
 ) {
   const store = createStore(initialState, toValue(defaultPopupId));
+  watch(
+    () => toValue(defaultPopupId),
+    (id) => store.set('defaultPopupId', id),
+  );
   store.context.onOpenChange = options.onOpenChange;
   store.context.onOpenChangeComplete = options.onOpenChangeComplete;
 

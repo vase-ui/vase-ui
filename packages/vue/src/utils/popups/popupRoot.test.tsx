@@ -1,5 +1,5 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import { KeepAlive, defineComponent, nextTick, onMounted, shallowRef } from 'vue';
+import { KeepAlive, defineComponent, nextTick, onMounted, provide, shallowRef } from 'vue';
 import type { MaybeRefOrGetter, PropType } from 'vue';
 import {
   createRenderer,
@@ -12,7 +12,11 @@ import {
   takeReportedMessages,
   waitFor,
 } from '#test-utils';
-import { PopupFixtureStore, createPopupFixtureHandle } from '../../../test/fixtures/PopupFixture';
+import {
+  PopupFixtureContext,
+  PopupFixtureStore,
+  createPopupFixtureHandle,
+} from '../../../test/fixtures/PopupFixture';
 import PopupPart from '../../../test/fixtures/PopupPart.vue';
 import PopupRootPart from '../../../test/fixtures/PopupRootPart.vue';
 import PopupTriggerPart from '../../../test/fixtures/PopupTriggerPart.vue';
@@ -2010,7 +2014,7 @@ describe('usePopupRootWithPopupId', () => {
   function createRoot(popupId: MaybeRefOrGetter<string | undefined>) {
     let store!: PopupFixtureStore<unknown>;
     const Root = defineComponent({
-      setup() {
+      setup(_props, { slots }) {
         store = usePopupRootWithPopupId(
           {},
           (initialState, defaultPopupId) =>
@@ -2018,7 +2022,8 @@ describe('usePopupRootWithPopupId', () => {
           popupId,
           { name: 'Root', onOpenChange() {}, onOpenChangeComplete() {} },
         ).store;
-        return () => null;
+        provide(PopupFixtureContext, store);
+        return () => slots.default?.();
       },
     });
 
@@ -2052,6 +2057,26 @@ describe('usePopupRootWithPopupId', () => {
     await flushMicrotasks();
 
     expect(getStore().select('popupId')).toBe(undefined);
+  });
+
+  it('names the id in aria-controls of the trigger that opens the popup', async () => {
+    const popupId = shallowRef('first');
+    const { Root } = createRoot(popupId);
+    const { getByRole } = await render(
+      <Root>
+        <PopupTriggerPart>trigger</PopupTriggerPart>
+      </Root>,
+    );
+    const trigger = getByRole('button');
+
+    await fireEvent.click(trigger);
+
+    expect(trigger.getAttribute('aria-controls')).toBe('first');
+
+    popupId.value = 'second';
+    await nextTick();
+
+    expect(trigger.getAttribute('aria-controls')).toBe('second');
   });
 
   it('leaves the popup with no default id for undefined', async () => {
