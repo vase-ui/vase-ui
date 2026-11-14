@@ -1,7 +1,8 @@
-import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, Teleport, computed, defineComponent, nextTick, shallowRef, toValue } from 'vue';
 import type { FunctionalComponent } from 'vue';
 import { Menubar } from '@vase-ui/vue/menubar';
+import * as ContextMenu from '../../context-menu/index.parts';
 import * as Menu from '../index.parts';
 import {
   createRenderer,
@@ -195,6 +196,22 @@ describe('<Menu.Positioner />', () => {
       return calls[calls.length - 1]?.[0] as UseAnchorPositioningParameters | undefined;
     }
 
+    it('uses the dropdown default for a context menu', async () => {
+      await render(
+        <ContextMenu.Root>
+          <ContextMenu.Trigger>Area</ContextMenu.Trigger>
+          <ContextMenu.Portal keepMounted>
+            <ContextMenu.Positioner data-testid="positioner">
+              <ContextMenu.Popup />
+            </ContextMenu.Positioner>
+          </ContextMenu.Portal>
+        </ContextMenu.Root>,
+      );
+
+      const options = lastCallFor(screen.getByTestId('positioner'));
+      expect(toValue(options?.collisionAvoidance)).toEqual(DROPDOWN_COLLISION_AVOIDANCE);
+    });
+
     it('uses the dropdown default for a menubar menu', async () => {
       await render(
         <Menubar>
@@ -215,34 +232,21 @@ describe('<Menu.Positioner />', () => {
   });
 
   describe('defaults of the parent', () => {
-    function renderMenu(parent: 'menubar' | 'context-menu' | undefined, positioner = {}) {
-      const menu = (
+    function renderMenu(positioner = {}) {
+      useAnchorPositioningSpy.mockClear();
+      return render(
         <Menu.Root open>
           <Menu.Portal>
             <Menu.Positioner {...positioner}>
               <Menu.Popup />
             </Menu.Positioner>
           </Menu.Portal>
-        </Menu.Root>
+        </Menu.Root>,
       );
-
-      useAnchorPositioningSpy.mockClear();
-      if (parent === 'menubar') {
-        return render(<MenubarProvider context={createMenubarContext()}>{menu}</MenubarProvider>);
-      }
-      if (parent === 'context-menu') {
-        return render(
-          <ContextMenuProvider context={createContextMenuContext()}>{menu}</ContextMenuProvider>,
-        );
-      }
-      return render(menu);
     }
 
-    it.each([
-      { name: 'no parent', parent: undefined },
-      { name: 'a context menu', parent: 'context-menu' as const },
-    ])('uses the dropdown collision avoidance for a menu in $name', async ({ parent }) => {
-      await renderMenu(parent);
+    it('uses the dropdown collision avoidance for a menu with no parent', async () => {
+      await renderMenu();
 
       expect(readLastOptions().collisionAvoidance).toEqual(DROPDOWN_COLLISION_AVOIDANCE);
       expect(readLastOptions().collisionAvoidance).not.toEqual(POPUP_COLLISION_AVOIDANCE);
@@ -250,7 +254,7 @@ describe('<Menu.Positioner />', () => {
 
     it('uses the collisionAvoidance prop over the default', async () => {
       const collisionAvoidance = { side: 'none', align: 'none' } as const;
-      await renderMenu(undefined, { collisionAvoidance });
+      await renderMenu({ collisionAvoidance });
 
       expect(readLastOptions().collisionAvoidance).toBe(collisionAvoidance);
     });
@@ -293,7 +297,6 @@ describe('<Menu.Positioner />', () => {
         sideOffset: -5,
         arrowPadding: 0,
         positionMethod: 'fixed',
-        shift: { crossAxis: true, rootBoundary: 'layoutViewport' },
       });
       const anchor = toValue(
         toValue(
@@ -302,20 +305,51 @@ describe('<Menu.Positioner />', () => {
       );
       expect(anchor).toBe(context.anchor.value);
     });
+  });
 
-    it('disables cross-axis shifting for a context menu when side collision avoidance is flip', async () => {
-      await renderMenu('context-menu', { collisionAvoidance: { side: 'flip' } });
+  describe('layout viewport', () => {
+    beforeEach(() => {
+      useAnchorPositioningSpy.mockClear();
+    });
+
+    it('uses the layout viewport for a root context menu', async () => {
+      await render(
+        <ContextMenu.Root open>
+          <ContextMenu.Portal>
+            <ContextMenu.Positioner>
+              <ContextMenu.Popup>Popup</ContextMenu.Popup>
+            </ContextMenu.Positioner>
+          </ContextMenu.Portal>
+        </ContextMenu.Root>,
+      );
+
+      expect(readLastOptions().shift).toEqual({ crossAxis: true, rootBoundary: 'layoutViewport' });
+    });
+
+    it('disables cross-axis shifting when side collision avoidance is flip', async () => {
+      await render(
+        <ContextMenu.Root open>
+          <ContextMenu.Portal>
+            <ContextMenu.Positioner collisionAvoidance={{ side: 'flip' }}>
+              <ContextMenu.Popup>Popup</ContextMenu.Popup>
+            </ContextMenu.Positioner>
+          </ContextMenu.Portal>
+        </ContextMenu.Root>,
+      );
 
       expect(readLastOptions().shift).toEqual({ crossAxis: false, rootBoundary: 'layoutViewport' });
     });
 
-    it('keeps the explicit placement and offsets of a context menu', async () => {
-      await renderMenu('context-menu', {
-        side: 'right',
-        align: 'center',
-        sideOffset: 11,
-        alignOffset: 13,
-      });
+    it('preserves explicit context-menu placement and offsets', async () => {
+      await render(
+        <ContextMenu.Root open>
+          <ContextMenu.Portal>
+            <ContextMenu.Positioner side="right" align="center" sideOffset={11} alignOffset={13}>
+              <ContextMenu.Popup>Popup</ContextMenu.Popup>
+            </ContextMenu.Positioner>
+          </ContextMenu.Portal>
+        </ContextMenu.Root>,
+      );
 
       expect(readLastOptions()).toMatchObject({
         side: 'right',
