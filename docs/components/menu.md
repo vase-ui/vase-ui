@@ -322,7 +322,7 @@ Give the same handle from `Menu.createHandle()` to the root and to its detached 
 
 ## useFilter
 
-`Menu.useFilter` matches text against a query by the locale of the user. Use it when you filter the items yourself.
+`Menu.useFilter` returns the functions `contains`, `startsWith` and `endsWith`. They compare a text with a query in the locale of the user. Use them when you filter the items yourself.
 
 <ApiReference name="Menu.useFilter" />
 
