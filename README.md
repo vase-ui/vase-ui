@@ -12,7 +12,7 @@ Vase UI is an independent project. It is not affiliated with MUI.
 
 Every Base UI component and documented API has a Vase UI counterpart.
 
-- When Base UI publishes a release, the matching Vase UI release follows within 14 days. A Base UI major release arrives under the `next` tag in that time, and becomes `latest` in our next January release.
+- When Base UI publishes a release, the matching Vase UI release follows within 14 days. The breaking parts of a Base UI major release arrive in our next January release (`YYYY.1.0`).
 - [The parity page](https://vase-ui.github.io/vase-ui/parity) shows, for every component, the Base UI commit it matches, and every Base UI change with its state: mirrored, queued, or not applicable to Vue, with the reason.
 - Where Vue or the browser lets us handle an edge case better than the original, we do, and we list each one with its test.
 

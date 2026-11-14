@@ -1,14 +1,7 @@
-import {
-  onActivated,
-  onDeactivated,
-  onMounted,
-  onScopeDispose,
-  shallowRef,
-  toValue,
-  watch,
-} from 'vue';
+import { onMounted, onScopeDispose, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 import { useFieldRootContext } from '../field-root-context/FieldRootContext';
+import { useKeepAliveState } from '../useKeepAliveState';
 import type { FieldControlRegistration } from './useFieldControlRegistration';
 
 /**
@@ -25,27 +18,19 @@ export function useRegisterFieldControl(
   enabled: MaybeRefOrGetter<boolean> = true,
   name?: MaybeRefOrGetter<FieldControlRegistration['name']>,
 ): void {
-  const { registerFieldControl } = useFieldRootContext();
+  const { registerFieldControl, reaches } = useFieldRootContext();
   const source = Symbol();
-  // The two hooks only set a flag that the getter reads. The entry stays, and so does its place.
-  // `KeepAlive` runs the `onActivated` hooks of one branch from the last part to the first part.
-  // A new entry in that hook would reverse the order of the controls.
-  const isDeactivated = shallowRef(false);
-
-  onDeactivated(() => {
-    isDeactivated.value = true;
-  });
-
-  onActivated(() => {
-    isDeactivated.value = false;
-  });
+  // The getter reads the state, and the entry keeps its place. `KeepAlive` runs the `onActivated`
+  // hooks of one branch from the last part to the first part. A new entry in that hook would
+  // reverse the order of the controls.
+  const { isHeld } = useKeepAliveState(controlRef, reaches);
 
   const getId = () => toValue(id);
   const getName = () => toValue(name);
   const isEnabled = () => toValue(enabled);
 
   function getRegistration(): FieldControlRegistration | undefined {
-    return isDeactivated.value || !isEnabled()
+    return isHeld.value || !isEnabled()
       ? undefined
       : {
           controlRef,

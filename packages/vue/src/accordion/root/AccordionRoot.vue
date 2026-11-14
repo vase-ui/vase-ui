@@ -110,6 +110,10 @@ const emit = defineEmits<{
    * Provides the new value as an argument.
    */
   valueChange: [value: AccordionValue<Value>, eventDetails: AccordionRootChangeEventDetails];
+  /**
+   * Event handler called after `valueChange` with the new value, unless a listener cancels the
+   * change. `v-model:value` uses it.
+   */
   'update:value': [value: AccordionValue<Value>];
 }>();
 

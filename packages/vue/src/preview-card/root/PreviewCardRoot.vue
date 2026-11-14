@@ -91,6 +91,10 @@ const emit = defineEmits<{
    * Event handler called when the preview card is opened or closed.
    */
   openChange: [open: boolean, eventDetails: PreviewCardRootChangeEventDetails];
+  /**
+   * Event handler called after `openChange` with the new value, unless a listener cancels the
+   * change. `v-model:open` uses it.
+   */
   'update:open': [open: boolean];
   /**
    * Event handler called after any animations complete when the preview card is opened or closed.
