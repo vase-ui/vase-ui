@@ -402,7 +402,9 @@ Rules:
 - `on[A-Z]…` handlers run from right to left. An array of handlers is made flat.
 - A falsy handler value in a later set keeps the handler of an earlier set. Vue's own `mergeProps` does the same for `on` keys.
 - Code that calls a handler from a props set must accept a function, an array and a falsy value. A consumer can give each of them. The call `false?.()` throws.
-- A set can be a function `(merged) => props`.
+- A set can be a function `(merged) => props`. The result replaces the props that are merged up to that point, so the function calls the earlier handlers itself.
+- `mergeProps` treats the result of such a function as a set. It copies the result, and each handler in the copy gets a `VaseUIEvent`. Base UI wraps no handler of the result. Base UI does not copy the result of a function that is not the first set (`VUE-70`).
+- A function in the first set gets a new empty object, and `mergePropsN([])` returns a new object. Do not use one constant for them, because a function or a caller can write to it.
 - `ref` is not merged.
 - An event is an object that has `preventDefault`. Do not use `instanceof`.
 - The type argument is the tag of the element: `mergeProps<'button'>`. The sets and the result then have the attributes of that element. With no type argument, a set accepts the attributes of each element, and the type of the result is `NativeElements['div']`: the attributes that each HTML element has.
