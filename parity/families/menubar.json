@@ -10,62 +10,62 @@
       "describe": ["<Menubar />"],
       "title": "ignores a delayed touch click immediately after focus opens another menu",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.tsx",
-      "reason": "The case renders a test menubar whose menus have a submenu with `Menu.SubmenuTrigger`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The case presses a trigger of the menubar to open its menu. The trigger of Vase UI has no press yet."
     },
     {
       "upstream": "packages/react/src/menubar/Menubar.test.tsx",
       "describe": ["<Menubar />"],
       "title": "keeps a controlled menu open on a delayed touch click it ignores, until the cooldown ends",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.tsx",
-      "reason": "The case renders a test menubar whose menus have a submenu with `Menu.SubmenuTrigger`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The case presses a trigger of the menubar to open its menu. The trigger of Vase UI has no press yet."
     },
     {
       "upstream": "packages/react/src/menubar/Menubar.test.tsx",
       "describe": ["<Menubar />"],
       "title": "closes on a touch item click immediately after focus opens another menu",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.tsx",
-      "reason": "The case renders a test menubar whose menus have a submenu with `Menu.SubmenuTrigger`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The case presses a trigger of the menubar to open its menu. The trigger of Vase UI has no press yet."
     },
     {
       "upstream": "packages/react/src/menubar/Menubar.test.tsx",
       "describe": ["<Menubar />"],
       "title": "keeps focus on an outside target when a triggerless menubar menu closes",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.tsx",
-      "reason": "The case renders a menu in the menubar. The cases of this file that render a menu are ported together, when Vase UI has `Menu.SubmenuTrigger`, the last part of Menu that the test menubars render."
+      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
+      "reason": "The case checks where the focus goes when a menu of the menubar closes. The popup of Vase UI has no focus management yet, so the case would pass with no code to test."
     },
     {
       "upstream": "packages/react/src/menubar/Menubar.test.tsx",
       "describe": ["<Menubar />", "when using $name"],
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.tsx",
-      "reason": "Each case of the block but one renders one of three test menubars, or renders `Menu.Trigger` in the menubar. The menus of a test menubar have a submenu with `Menu.SubmenuTrigger`, which Vase UI does not have. The cases of this file that render a menu are ported together, when Vase UI has `Menu.SubmenuTrigger`, the last part of Menu that the test menubars render. The case `role > sets aria-orientation on the root element` renders only the menubar, in the `describe.for` of the three test menubars. `Menubar.test.tsx` has cases of its own for the role and for `aria-orientation` of the menubar."
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "Most cases of the block press a trigger of the menubar, and the others move the focus or the highlight with the keys. The trigger of Vase UI has no press yet, and Menu has no keys yet. The case `role > sets aria-orientation on the root element` renders only the menubar, in the `describe.for` of the three test menubars. `Menubar.test.tsx` has cases of its own for the role and for `aria-orientation` of the menubar."
     },
     {
       "upstream": "packages/react/src/menubar/Menubar.test.tsx",
       "describe": ["<Menubar />"],
       "title": "renders contained top-level portal ownership as an allowed menubar child",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.tsx",
-      "reason": "The case renders a test menubar whose menus have a submenu with `Menu.SubmenuTrigger`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The case presses a trigger of the menubar to open its menu. The trigger of Vase UI has no press yet."
     },
     {
       "upstream": "packages/react/src/menubar/Menubar.test.tsx",
       "describe": ["<Menubar />"],
       "title": "renders detached top-level portal ownership without an accessibility role",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.tsx",
-      "reason": "The case renders a test menubar whose menus have a submenu with `Menu.SubmenuTrigger`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The case presses a trigger of the menubar to open its menu. The trigger of Vase UI has no press yet."
     },
     {
       "upstream": "packages/react/src/menubar/Menubar.test.tsx",
       "describe": ["<Menubar />", "disabled state"],
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.tsx",
-      "reason": "Each case of the block renders a menu in the menubar. The cases of this file that render a menu are ported together, when Vase UI has `Menu.SubmenuTrigger`, the last part of Menu that the test menubars render."
+      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
+      "reason": "The cases need only the parts of Menu that Vase UI has. They are ported with the other cases of this file that render a menu in the menubar, which need the press of the trigger and the focus management of the popup."
     },
     {
       "upstream": "packages/react/src/menubar/Menubar.test.tsx",
