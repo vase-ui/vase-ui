@@ -207,7 +207,7 @@ describe('<ContextMenu.Root />', () => {
       expect(events).toEqual([[false, 'imperative-action']]);
     });
 
-    it('VUE-48: the details of openChange have preventUnmountOnClose()', async () => {
+    it('VUE-49: the details of openChange have preventUnmountOnClose()', async () => {
       const completions: boolean[] = [];
       const probe = createProbe();
       let root!: ComponentPublicInstance;
