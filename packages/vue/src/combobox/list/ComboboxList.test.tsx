@@ -101,9 +101,9 @@ describe('<Combobox.List />', () => {
     expect(screen.getByRole('listbox')).not.toHaveAttribute('aria-readonly');
   });
 
-  // `Autocomplete.Portal`, `Autocomplete.Positioner`, `Autocomplete.Popup` and `Autocomplete.List`
-  // are these parts of Combobox under other names, and the Autocomplete entry does not export them
-  // yet. The case asserts only the list.
+  // `Autocomplete.Portal`, `Autocomplete.Positioner`, `Autocomplete.Popup`, `Autocomplete.List` and
+  // `Autocomplete.Item` are these parts of Combobox under other names, and the Autocomplete entry
+  // does not export them yet. The case asserts only the list.
   it('sets aria-readonly on the Autocomplete listbox when the root is readOnly', async () => {
     await render(
       <Autocomplete.Root readOnly defaultOpen>
