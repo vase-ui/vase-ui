@@ -161,7 +161,7 @@ export function createNullPopoverStore<Payload>(): PopoverHandleStore<Payload> {
 
 function createInitialState<Payload>(
   initialState: Partial<State<Payload>> | undefined,
-  defaultPopupId?: string | undefined,
+  defaultPopupId?: string,
 ): State<Payload> {
   const state: State<Payload> = {
     ...createInitialPopupStoreState<Payload>(defaultPopupId),

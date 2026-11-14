@@ -46,7 +46,7 @@ export function isVirtualPointerEvent(event: PointerEvent) {
 export function isMouseLikePointerType(pointerType: string | undefined, strict?: boolean) {
   // Chromium on some Linux machines gives the `pointerType` "pen" for a mouse:
   // https://github.com/floating-ui/floating-ui/issues/2015
-  const values: Array<string | undefined> = ['mouse', 'pen'];
+  const values: (string | undefined)[] = ['mouse', 'pen'];
   if (!strict) {
     values.push('', undefined);
   }

@@ -379,7 +379,7 @@ describe('<Toast.Provider />', () => {
       await renderApp(toastManager, visible);
 
       let resolvePromise: (value: string) => void = () => {};
-      toastManager.promise(
+      void toastManager.promise(
         new Promise<string>((resolve) => {
           resolvePromise = resolve;
         }),

@@ -59,7 +59,7 @@ typedManager.update('typed', (prevToast) => {
 // @ts-expect-error - count is a missing property, the updater returns the whole value
 typedManager.update('typed', () => ({ data: { id: 'typed-update' } }));
 
-typedManager.promise(Promise.resolve(2), {
+void typedManager.promise(Promise.resolve(2), {
   loading: {
     id: 'typed',
     title: 'loading',
@@ -78,7 +78,7 @@ typedManager.promise(Promise.resolve(2), {
   error: 'error',
 });
 
-typedManager.promise(Promise.resolve(2), {
+void typedManager.promise(Promise.resolve(2), {
   loading: 'loading',
   // @ts-expect-error - id is only accepted on loading
   success: { id: 'typed', title: 'success' },
@@ -108,7 +108,7 @@ legacyManager.update<ToastPayload>('legacy', (prevToast) => ({
   data: { id: 'legacy', count: (prevToast.data?.count ?? 0) + 1 },
 }));
 
-legacyManager.promise<number, ToastPayload>(Promise.resolve(5), {
+void legacyManager.promise<number, ToastPayload>(Promise.resolve(5), {
   loading: { id: 'legacy', title: 'loading' },
   success: (value) => ({
     title: `${value}`,
@@ -132,7 +132,7 @@ callableManager.update('callable', (prevToast) => {
   return { data: prevToast.data };
 });
 
-callableManager.promise(Promise.resolve(1), {
+void callableManager.promise(Promise.resolve(1), {
   loading: { data: () => 'loading' },
   success: { data: () => 'done' },
   error: 'failed',

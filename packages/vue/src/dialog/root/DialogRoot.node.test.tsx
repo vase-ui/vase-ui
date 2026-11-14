@@ -9,7 +9,7 @@ function renderApp(render: () => unknown) {
 }
 
 function getButtonTag(html: string, id: string) {
-  return html.match(new RegExp(`<button [^>]*id="${id}"[^>]*>`))?.[0];
+  return new RegExp(`<button [^>]*id="${id}"[^>]*>`).exec(html)?.[0];
 }
 
 describe('<Dialog.Root /> on a server', () => {

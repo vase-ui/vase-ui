@@ -48,6 +48,7 @@ export interface UseFloatingRootStoreOptions {
  * Call it in `setup`.
  */
 export function useFloatingRootStore(options: UseFloatingRootStoreOptions): FloatingRootStore {
+  // eslint-disable-next-line @typescript-eslint/unbound-method -- The store calls `onOpenChange` as a plain callback. The method form keeps its parameters bivariant, as in Base UI.
   const { open, onOpenChange, elements = {} } = options;
 
   const defaultPopupId = useId();

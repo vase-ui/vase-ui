@@ -2041,7 +2041,7 @@ describe('<Tabs.Root />', () => {
               value={value.value}
               onValueChange={(nextValue) => {
                 onValueChange(nextValue);
-                Promise.resolve().then(() => {
+                void Promise.resolve().then(() => {
                   value.value = nextValue;
                 });
               }}
@@ -2708,7 +2708,7 @@ describe('<Tabs.Root />', () => {
               eventDetails.cancel();
             }
           }}
-          {...{ 'onUpdate:value': (value: unknown) => calls.push(`update:value ${value}`) }}
+          {...{ 'onUpdate:value': (value: number) => calls.push(`update:value ${value}`) }}
         >
           <Tabs.List>
             <Tabs.Tab value={0} disabled />

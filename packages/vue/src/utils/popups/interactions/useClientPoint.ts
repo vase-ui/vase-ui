@@ -31,9 +31,9 @@ function createVirtualElement(
   let isAutoUpdateEvent = false;
 
   return {
-    contextElement: domElement || undefined,
+    contextElement: domElement ?? undefined,
     getBoundingClientRect() {
-      const domRect = domElement?.getBoundingClientRect() || {
+      const domRect = domElement?.getBoundingClientRect() ?? {
         width: 0,
         height: 0,
         x: 0,
