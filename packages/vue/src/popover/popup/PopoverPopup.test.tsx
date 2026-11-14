@@ -19,11 +19,6 @@ import PopoverPopupReplace from './PopoverPopupReplace.test.vue';
 describe('<Popover.Popup />', () => {
   const { render } = createRenderer();
 
-  // TEMPORARY: names each case at its start, to find a case that does not end in WebKit.
-  beforeEach((context) => {
-    console.log(`start: ${context.task.name}`);
-  });
-
   describeConformance(<Popover.Popup />, () => ({
     refInstanceof: window.HTMLDivElement,
     async render(node) {
