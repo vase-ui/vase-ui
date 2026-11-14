@@ -5,7 +5,7 @@ import { useTimeout } from '../common/useTimeout';
 import { useDomEffect } from '../utils/popups/useDomEffect';
 
 // Word Joiner is invisible and zero-width, so it forces a text mutation without shifting layout.
-const LIVE_REGION_MARKER = '⁠';
+const LIVE_REGION_MARKER = '\u2060';
 // Safari VoiceOver needed roughly 200ms to reliably notice the initial polite live-region change.
 export const INITIAL_LIVE_REGION_TEXT_MUTATION_RESET_DELAY = 200;
 
