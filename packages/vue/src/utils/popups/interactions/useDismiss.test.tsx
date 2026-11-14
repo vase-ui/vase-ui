@@ -13,6 +13,7 @@ import { REASONS } from '../../../internals/reasons';
 import { mergeProps } from '../../../merge-props/mergeProps';
 import { createAttribute } from '../createAttribute';
 import { getEmptyRootStore } from '../floating-root/getEmptyRootStore';
+import { useFloatingRootStore } from '../floating-root/useFloatingRootStore';
 import FloatingPortalLite from '../portal/FloatingPortalLite.vue';
 import { provideFloatingNode, provideFloatingTree, useFloatingNodeId } from '../tree/FloatingTree';
 import type { PopupOpenChangeEventDetails } from '../store';
