@@ -58,7 +58,9 @@
     "packages/react/test/mockRuntimeLocale.ts",
     "packages/react/test/pointer.ts",
     "packages/react/test/pointer.test.tsx",
-    "packages/react/test/wait.ts"
+    "packages/react/test/positionerConformanceTests.tsx",
+    "packages/react/test/wait.ts",
+    "packages/react/test/waitForPositioned.ts"
   ],
   "sources": [
     "packages/react/src/internals/PrehydrationScript.tsx",
@@ -131,7 +133,9 @@
     "packages/react/test/index.ts",
     "packages/react/test/mockRuntimeLocale.ts",
     "packages/react/test/pointer.ts",
-    "packages/react/test/wait.ts"
+    "packages/react/test/positionerConformanceTests.tsx",
+    "packages/react/test/wait.ts",
+    "packages/react/test/waitForPositioned.ts"
   ],
   "typeTests": [
     "packages/react/src/internals/createBaseUIEventDetails.spec.ts",
@@ -2059,6 +2063,116 @@
             "firePointer"
           ],
           "title": "rejects a non-positive timeStamp instead of falling back to the real clock"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/test/positionerConformanceTests.tsx",
+      "rows": [
+        {
+          "describe": [
+            "Positioner conformance",
+            "prop: $prop"
+          ],
+          "title": "offsets the positioner when a number is specified",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Positioner conformance",
+            "prop: $prop"
+          ],
+          "title": "offsets the positioner when a function is specified",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Positioner conformance",
+            "prop: $prop"
+          ],
+          "title": "reads $description inside the function",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Positioner conformance"
+          ],
+          "title": "rests exactly at collisionPadding from the colliding edge",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Positioner conformance"
+          ],
+          "title": "places the popup on the default side when it fits",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Positioner conformance",
+            "prop: collisionAvoidance"
+          ],
+          "title": "`uses the ${defaultCollisionAvoidance} default when the prop is not set`",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Positioner conformance",
+            "prop: collisionAvoidance"
+          ],
+          "title": "uses the prop over the default",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Positioner conformance"
+          ],
+          "title": "passes the same state object while nothing it holds changes",
+          "conditions": [
+            "skipIf(isJSDOM)",
+            "skipIf(!stableState)"
+          ]
+        },
+        {
+          "describe": [
+            "Positioner conformance"
+          ],
+          "title": "uses transform positioning without Viewport",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Positioner conformance"
+          ],
+          "title": "uses top/left positioning with Viewport",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Positioner conformance"
+          ],
+          "title": "updates positioning when Viewport mounts and unmounts",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
         }
       ]
     }
