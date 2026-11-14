@@ -59,7 +59,9 @@ export interface FormProps<FormValues extends Record<string, any> = Record<strin
 }
 </script>
 
-<script setup lang="ts" generic="FormValues extends Record<string, any> = Record<string, any>">
+<script setup lang="ts" generic="FormValues extends Record<string, any> = any">
+// vue-tsc resolves `FormValues` before it checks a `@form-submit` listener of a template.
+// With the default `any`, that check accepts a listener that has a typed parameter.
 import { computed, provide, shallowRef, toValue, watch } from 'vue';
 import { EMPTY_OBJECT } from '../common/empty';
 import { createGenericEventDetails } from '../internals/createBaseUIEventDetails';

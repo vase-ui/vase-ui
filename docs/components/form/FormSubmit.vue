@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Form } from '@vase-ui/vue/form';
 
-async function onFormSubmit(formValues: Form.Values) {
+async function onFormSubmit(formValues: { id: string; quantity: number }) {
   const payload = {
     product_id: formValues.id,
     order_quantity: formValues.quantity,
