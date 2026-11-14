@@ -3151,7 +3151,9 @@ describe('<CheckboxGroup />', () => {
         >
           <Field.Root name="fruits">
             <CheckboxGroup>
-              {extra.value ? <Checkbox.Root key="banana" value="banana" data-testid="banana" /> : null}
+              {extra.value ? (
+                <Checkbox.Root key="banana" value="banana" data-testid="banana" />
+              ) : null}
               <Checkbox.Root key="apple" value="apple" data-testid="apple" />
             </CheckboxGroup>
           </Field.Root>
