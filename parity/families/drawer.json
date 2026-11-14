@@ -58,14 +58,6 @@
       "reason": "The case mocks `useId` to give `undefined` at first, as in React 17. `useVaseUiId` gives an id in `setup`, so the swipe area has its id in its first render."
     },
     {
-      "upstream": "packages/react/src/drawer/viewport/DrawerViewport.test.tsx",
-      "describe": ["<Drawer.Viewport />"],
-      "title": "allows touch gestures on a portaled combobox popup without starting drawer swipe",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The case renders `Combobox.List` and `Combobox.Item` from the entry point of Combobox, which Vase UI does not have."
-    },
-    {
       "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
       "entry": "Root",
       "kind": "waits-on",

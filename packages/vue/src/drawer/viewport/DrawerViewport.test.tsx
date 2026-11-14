@@ -11,6 +11,7 @@ import {
   screen,
   waitFor,
 } from '#test-utils';
+import * as Combobox from '../../combobox/index.parts';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps, VaseUIEvent } from '../../internals/types';
 import * as Drawer from '../index.parts';
@@ -920,6 +921,98 @@ describe('<Drawer.Viewport />', () => {
     portaledPopup.dispatchEvent(touchMove);
 
     expect(touchMove.defaultPrevented).toBe(false);
+  });
+
+  it('allows touch gestures on a portaled combobox popup without starting drawer swipe', async () => {
+    const handleOpenChange = vi.fn();
+    const { user } = await render(
+      <Drawer.Root open onOpenChange={handleOpenChange}>
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport>
+            <Drawer.Popup>
+              <Drawer.Content>
+                <Combobox.Root
+                  defaultOpen
+                  items={[
+                    'Apple',
+                    'Banana',
+                    'Cherry',
+                    'Date',
+                    'Elderberry',
+                    'Fig',
+                    'Grape',
+                    'Honeydew',
+                    'Kiwi',
+                    'Lime',
+                  ]}
+                >
+                  <Combobox.Input />
+                  <Combobox.Portal>
+                    <Combobox.Positioner>
+                      <Combobox.Popup>
+                        <Combobox.List style={{ maxHeight: '40px', overflow: 'auto' }}>
+                          {{
+                            item: ({ item }: { item: string }) => (
+                              <Combobox.Item key={item} value={item}>
+                                {item}
+                              </Combobox.Item>
+                            ),
+                          }}
+                        </Combobox.List>
+                      </Combobox.Popup>
+                    </Combobox.Positioner>
+                  </Combobox.Portal>
+                </Combobox.Root>
+              </Drawer.Content>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const listbox = await screen.findByRole('listbox');
+    const backdrop = screen.getByTestId('backdrop');
+    await waitFor(() => {
+      expect(listbox.scrollHeight).toBeGreaterThan(listbox.clientHeight);
+    });
+    expect(listbox.scrollHeight).toBeGreaterThan(listbox.clientHeight);
+
+    stubElementFromPoint(document, () => listbox);
+
+    const rect = listbox.getBoundingClientRect();
+
+    await user.pointer([
+      {
+        target: listbox,
+        coords: {
+          clientX: rect.left + rect.width / 2,
+          clientY: rect.top + rect.height - 8,
+        },
+        keys: '[TouchA>]',
+      },
+      {
+        target: listbox,
+        coords: {
+          clientX: rect.left + rect.width / 2,
+          clientY: rect.top + rect.height / 2,
+        },
+        pointerName: 'TouchA',
+      },
+      {
+        target: listbox,
+        coords: {
+          clientX: rect.left + rect.width / 2,
+          clientY: rect.top + 8,
+        },
+        pointerName: 'TouchA',
+      },
+      { keys: '[/TouchA]' },
+    ]);
+
+    expect(backdrop).not.toHaveAttribute('data-swiping');
+    expect(handleOpenChange).not.toHaveBeenCalled();
+    expect(listbox).toBeVisible();
   });
 
   it('still allows touch swipes from elements with legacy data-swipe-ignore', async () => {
