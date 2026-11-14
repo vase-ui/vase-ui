@@ -1,6 +1,7 @@
 <!-- @strictTemplates true -->
 <script setup lang="ts">
 import * as Checkbox from '../src/checkbox/index.parts';
+import * as OTPField from '../src/otp-field/index.parts';
 import * as Radio from '../src/radio/index.parts';
 import * as Slider from '../src/slider/index.parts';
 import * as Switch from '../src/switch/index.parts';
@@ -17,6 +18,13 @@ const id = 'id';
   <Checkbox.Root :aria-label="5" />
   <!-- @vue-expect-error `aria-labelledby` is a string -->
   <Checkbox.Root :aria-labelledby="5" />
+
+  <OTPField.Root :length="6" aria-labelledby="id" />
+  <OTPField.Root :length="6" :aria-labelledby="id" />
+  <OTPField.Root :length="6" ariaLabelledby="id" />
+  <OTPField.Root :length="6" :ariaLabelledby="id" />
+  <!-- @vue-expect-error `aria-labelledby` is a string -->
+  <OTPField.Root :length="6" :aria-labelledby="5" />
 
   <Radio.Root value="a" aria-label="x" aria-labelledby="id" />
   <Radio.Root value="a" :aria-label="id" :aria-labelledby="id" />
