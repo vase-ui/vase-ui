@@ -84,8 +84,6 @@ describe('<NumberField />', () => {
 
   type NumberFieldProps = NumberFieldRootInstance['$props'];
 
-  // The helper of Base UI also renders `ScrubArea`. This helper renders only the parts that Vase UI
-  // has.
   function NumberField(props: NumberFieldProps) {
     return (
       <NumberFieldBase.Root {...props}>
@@ -93,6 +91,7 @@ describe('<NumberField />', () => {
           <NumberFieldBase.Input />
           <NumberFieldBase.Increment />
           <NumberFieldBase.Decrement />
+          <NumberFieldBase.ScrubArea />
         </NumberFieldBase.Group>
       </NumberFieldBase.Root>
     );

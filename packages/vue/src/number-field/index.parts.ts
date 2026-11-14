@@ -21,6 +21,16 @@ import type {
   NumberFieldRootProps,
   NumberFieldRootState,
 } from './root/NumberFieldRoot.vue';
+import NumberFieldScrubArea from './scrub-area/NumberFieldScrubArea.vue';
+import type {
+  NumberFieldScrubAreaProps,
+  NumberFieldScrubAreaState,
+} from './scrub-area/NumberFieldScrubArea.vue';
+import NumberFieldScrubAreaCursor from './scrub-area-cursor/NumberFieldScrubAreaCursor.vue';
+import type {
+  NumberFieldScrubAreaCursorProps,
+  NumberFieldScrubAreaCursorState,
+} from './scrub-area-cursor/NumberFieldScrubAreaCursor.vue';
 
 /**
  * Groups all parts of the number field and manages its state.
@@ -77,4 +87,27 @@ export const Input: typeof NumberFieldInput = NumberFieldInput;
 export namespace Input {
   export type State = NumberFieldInputState;
   export type Props = NumberFieldInputProps;
+}
+
+/**
+ * An interactive area where the user can click and drag to change the field value.
+ * Renders a `<span>` element.
+ */
+export const ScrubArea: typeof NumberFieldScrubArea = NumberFieldScrubArea;
+export namespace ScrubArea {
+  export type State = NumberFieldScrubAreaState;
+  export type Props = NumberFieldScrubAreaProps;
+}
+
+/**
+ * A custom element to display instead of the native cursor while using the scrub area.
+ * Renders a `<span>` element.
+ *
+ * This component uses the [Pointer Lock API](https://developer.mozilla.org/en-US/docs/Web/API/Pointer_Lock_API), which may prompt the browser to display a related notification. It is disabled
+ * in Safari to avoid a layout shift that this notification causes there.
+ */
+export const ScrubAreaCursor: typeof NumberFieldScrubAreaCursor = NumberFieldScrubAreaCursor;
+export namespace ScrubAreaCursor {
+  export type State = NumberFieldScrubAreaCursorState;
+  export type Props = NumberFieldScrubAreaCursorProps;
 }

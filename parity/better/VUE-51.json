@@ -1,0 +1,9 @@
+{
+  "id": "VUE-51",
+  "evidence": [
+    "https://vuejs.org/guide/built-ins/keep-alive.html",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/number-field/scrub-area/NumberFieldScrubArea.tsx#L150-L290"
+  ],
+  "behavior": "When `KeepAlive` deactivates a scrub area during a scrub, the scrub ends with no commit. The root loses `data-scrubbing`, the cursor goes out of the document and the pointer lock ends. After the activation, a pointer release commits nothing. Under `<Activity>`, Base UI clears only the scrubbing state of the root. The area keeps its own scrubbing state, so it shows its cursor again after the activation, and the next pointer release commits the value.",
+  "dueWith": "packages/react/src/number-field/scrub-area/NumberFieldScrubArea.tsx"
+}
