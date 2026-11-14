@@ -190,6 +190,53 @@ describe('<PreviewCard.Root />', () => {
     await flushMicrotasks();
   }
 
+  describe('data-instant', () => {
+    async function setupKeepMountedCard() {
+      await render(
+        <PreviewCard.Root>
+          <PreviewCard.Trigger href="#" delay={0}>
+            Link
+          </PreviewCard.Trigger>
+          <PreviewCard.Portal keepMounted>
+            <PreviewCard.Positioner>
+              <PreviewCard.Popup data-testid="popup">Content</PreviewCard.Popup>
+            </PreviewCard.Positioner>
+          </PreviewCard.Portal>
+        </PreviewCard.Root>,
+      );
+      return screen.getByRole('link', { name: 'Link' });
+    }
+
+    it('is focus when the card opens from trigger focus', async () => {
+      const trigger = await setupKeepMountedCard();
+      expect(screen.getByTestId('popup')).not.toHaveAttribute('data-instant');
+
+      trigger.focus();
+      await flushMicrotasks();
+
+      await waitFor(() => {
+        expect(screen.getByTestId('popup')).toHaveAttribute('data-open');
+      });
+      expect(screen.getByTestId('popup')).toHaveAttribute('data-instant', 'focus');
+    });
+
+    it('is dismiss when Escape closes the card', async () => {
+      const trigger = await setupKeepMountedCard();
+      trigger.focus();
+      await flushMicrotasks();
+      await waitFor(() => {
+        expect(screen.getByTestId('popup')).toHaveAttribute('data-open');
+      });
+
+      await fireEvent.keyDown(trigger, { key: 'Escape' });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('popup')).toHaveAttribute('data-closed');
+      });
+      expect(screen.getByTestId('popup')).toHaveAttribute('data-instant', 'dismiss');
+    });
+  });
+
   describe.for([
     { name: 'contained triggers', Component: ContainedTriggerPreviewCard },
     { name: 'detached triggers', Component: DetachedTriggerPreviewCard },
@@ -237,6 +284,39 @@ describe('<PreviewCard.Root />', () => {
 
         await flushMicrotasks();
 
+        await tick(CLOSE_DELAY);
+
+        expect(screen.queryByText('Content')).toBe(null);
+      });
+
+      it('should open when the trigger is focused', async () => {
+        await render(<TestPreviewCard />);
+
+        const trigger = screen.getByRole('link', { name: 'Link' });
+
+        trigger.focus();
+        await flushMicrotasks();
+
+        await tick(OPEN_DELAY);
+
+        await flushMicrotasks();
+
+        expect(screen.getByText('Content')).not.toBe(null);
+      });
+
+      it('should close when the trigger is blurred', async () => {
+        await render(<TestPreviewCard />);
+
+        const trigger = screen.getByRole('link', { name: 'Link' });
+
+        trigger.focus();
+        await flushMicrotasks();
+        await tick(OPEN_DELAY);
+        await flushMicrotasks();
+        expect(screen.getByText('Content')).not.toBe(null);
+
+        trigger.blur();
+        await flushMicrotasks();
         await tick(CLOSE_DELAY);
 
         expect(screen.queryByText('Content')).toBe(null);
