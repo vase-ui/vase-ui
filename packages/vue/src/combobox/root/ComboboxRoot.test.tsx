@@ -12,7 +12,6 @@ import {
   hydrate,
   renderOnServer,
   screen,
-  takeReportedMessages,
   waitFor,
 } from '#test-utils';
 import AutocompleteRootPart from '../../../test/fixtures/AutocompleteRootPart.vue';
@@ -30,7 +29,8 @@ import ComboboxRootHydration from './ComboboxRootHydration.test.vue';
 // parts in their place, and they test the root. The Base UI cases of this file render those parts,
 // so the pull requests that add the parts port them. A ported case then replaces the case of this
 // file that tests the same thing: the order of the events, a canceled change, the controlled
-// values, the hidden inputs, the autofill, the field and the server render.
+// values, the hidden inputs, the autofill, the field and the server render. The Base UI case of the
+// check of `items` renders only the root. It is in `items/createItems.test.tsx`.
 
 const HYDRATION_FILE = 'src/combobox/root/ComboboxRootHydration.test.vue';
 const cities = ['Malmö', 'Malta', 'Oslo'];
@@ -1223,23 +1223,5 @@ describe('<Combobox.Root />', () => {
       expect(getNamedInputs(container)).toEqual([]);
       expect(container.querySelector('input[aria-hidden]')).toHaveAttribute('type', 'hidden');
     });
-  });
-
-  // A `setup` that throws leaves the current instance set in Vue 3.5.12, so this case is the last.
-  it('throws for an items object that is no collection', async () => {
-    await expect(
-      render(
-        <Combobox.Root items={{ label: 'Malta' } as never}>
-          <ComboboxInputPart />
-        </Combobox.Root>,
-      ),
-    ).rejects.toThrow(
-      'Vase UI: The `items` prop of Combobox got an object that is not a collection. The root cannot read its items. Give a list of items, a list of groups, or the result of `createItems()`.',
-    );
-
-    // Vue also warns about the error of `setup`.
-    expect(takeReportedMessages()).toEqual([
-      expect.stringContaining('Unhandled error during execution of setup function'),
-    ]);
   });
 });
