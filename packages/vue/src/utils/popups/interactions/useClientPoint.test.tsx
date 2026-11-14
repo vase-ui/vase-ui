@@ -996,15 +996,12 @@ describe('rules with no Base UI case', () => {
   });
 
   describe('a popup of the popup root', () => {
-    // The real pointer of the browser stays where an earlier test left it. An element under it gets
-    // events that no case sends, so no element of this block takes pointer events.
     const TRIGGER_STYLE = {
       position: 'fixed',
       left: '100px',
       top: '100px',
       width: '300px',
       height: '40px',
-      pointerEvents: 'none',
     } as const;
 
     // The popup root of the fixture, with the positioner of a family. The trigger follows the
@@ -1026,7 +1023,7 @@ describe('rules with no Base UI case', () => {
                 positionMethod="fixed"
                 side="bottom"
                 sideOffset={10}
-                style={{ width: '50px', height: '20px', pointerEvents: 'none' }}
+                style={{ width: '50px', height: '20px' }}
               >
                 <PopupPart>popup</PopupPart>
               </PopupPositionerPart>

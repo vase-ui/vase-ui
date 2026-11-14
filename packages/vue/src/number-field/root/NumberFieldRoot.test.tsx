@@ -89,9 +89,8 @@ describe('<NumberField />', () => {
   // event. An event that a case dispatches still reaches the button.
   const noRealPointer = { pointerEvents: 'none' } as const;
 
-  // The helper of Base UI also renders `ScrubArea`. This helper renders only the parts that Vase UI
-  // has. `user` refuses a button that has `pointer-events: none`, so a case that clicks a button
-  // through `user` sets `clickedByUser`.
+  // `user` refuses a button that has `pointer-events: none`, so a case that clicks a button through
+  // `user` sets `clickedByUser`.
   function NumberField({
     clickedByUser = false,
     ...props
@@ -103,6 +102,7 @@ describe('<NumberField />', () => {
           <NumberFieldBase.Input />
           <NumberFieldBase.Increment style={buttonStyle} />
           <NumberFieldBase.Decrement style={buttonStyle} />
+          <NumberFieldBase.ScrubArea />
         </NumberFieldBase.Group>
       </NumberFieldBase.Root>
     );

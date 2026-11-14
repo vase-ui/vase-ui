@@ -77,6 +77,15 @@ describe('<Tooltip.Trigger />', () => {
       expect(onOpenChange.mock.calls[0][1].reason).toBe('trigger-hover');
       expect(onOpenChange.mock.calls[0][1].trigger).toBe(trigger);
     });
+
+    it('does not open while the trigger is disabled', async () => {
+      const { trigger, onOpenChange } = await renderTooltip({ delay: 0, disabled: true });
+
+      await enter(trigger);
+      await tick(OPEN_DELAY);
+
+      expect(onOpenChange).not.toHaveBeenCalled();
+    });
   });
 
   it('closes a tooltip that the pointer opened when `KeepAlive` deactivates the trigger', async () => {
@@ -229,8 +238,7 @@ describe('<Tooltip.Trigger />', () => {
     it('stays closed when focus returns to the trigger after leaving the window', async () => {
       const { user } = await render(
         <Tooltip.Root>
-          {/* The real pointer of the browser can rest on the trigger and open the tooltip. */}
-          <Tooltip.Trigger style={{ pointerEvents: 'none' }}>Trigger</Tooltip.Trigger>
+          <Tooltip.Trigger>Trigger</Tooltip.Trigger>
           <Tooltip.Portal>
             <Tooltip.Positioner>
               <Tooltip.Popup data-testid="popup">Content</Tooltip.Popup>
@@ -283,10 +291,7 @@ describe('<Tooltip.Trigger />', () => {
               }}
             >
               <Tooltip.Trigger delay={50}>Trigger</Tooltip.Trigger>
-              {/* The real pointer of the browser can rest on this trigger and open the tooltip. */}
-              <Tooltip.Trigger delay={50} style={{ pointerEvents: 'none' }}>
-                Other trigger
-              </Tooltip.Trigger>
+              <Tooltip.Trigger delay={50}>Other trigger</Tooltip.Trigger>
               <Tooltip.Portal>
                 <Tooltip.Positioner>
                   <Tooltip.Popup data-testid="popup">Content</Tooltip.Popup>

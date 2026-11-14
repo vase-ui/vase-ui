@@ -3,7 +3,6 @@ import { computed, defineComponent, shallowRef } from 'vue';
 import * as Tooltip from '../index.parts';
 import {
   createRenderer,
-  enterWithMouse,
   fireEvent,
   flushMicrotasks,
   hydrate,
@@ -60,10 +59,6 @@ const testTooltipProps: Array<keyof TestTooltipProps> = [
   'popupProps',
 ];
 
-// The cases dispatch hover events. The real pointer of the browser can rest on a trigger and send
-// events of its own, so each trigger ignores it. A dispatched event still reaches the trigger.
-const ignoreRealPointer = { pointerEvents: 'none' } as const;
-
 function renderPortal(props: TestTooltipProps) {
   return (
     <Tooltip.Portal {...props.portalProps}>
@@ -79,7 +74,7 @@ function renderPortal(props: TestTooltipProps) {
 const ContainedTriggerTooltip = defineComponent(
   (props: TestTooltipProps) => () => (
     <Tooltip.Root {...props.rootProps}>
-      <Tooltip.Trigger data-testid="trigger" style={ignoreRealPointer} {...props.triggerProps}>
+      <Tooltip.Trigger data-testid="trigger" {...props.triggerProps}>
         Toggle
       </Tooltip.Trigger>
       {renderPortal(props)}
@@ -93,12 +88,7 @@ const DetachedTriggerTooltip = defineComponent(
     const tooltipHandle = Tooltip.createHandle();
     return () => (
       <>
-        <Tooltip.Trigger
-          data-testid="trigger"
-          handle={tooltipHandle}
-          style={ignoreRealPointer}
-          {...props.triggerProps}
-        >
+        <Tooltip.Trigger data-testid="trigger" handle={tooltipHandle} {...props.triggerProps}>
           Toggle
         </Tooltip.Trigger>
         <Tooltip.Root handle={tooltipHandle} {...props.rootProps}>
@@ -115,15 +105,10 @@ const MultipleDetachedTriggersTooltip = defineComponent(
     const tooltipHandle = Tooltip.createHandle();
     return () => (
       <>
-        <Tooltip.Trigger
-          data-testid="trigger"
-          handle={tooltipHandle}
-          style={ignoreRealPointer}
-          {...props.triggerProps}
-        >
+        <Tooltip.Trigger data-testid="trigger" handle={tooltipHandle} {...props.triggerProps}>
           Toggle
         </Tooltip.Trigger>
-        <Tooltip.Trigger data-testid="trigger-2" handle={tooltipHandle} style={ignoreRealPointer}>
+        <Tooltip.Trigger data-testid="trigger-2" handle={tooltipHandle}>
           Toggle another
         </Tooltip.Trigger>
         <Tooltip.Root handle={tooltipHandle} {...props.rootProps}>
@@ -204,9 +189,7 @@ describe('<Tooltip.Root />', () => {
   it('marks the popup data-instant dismiss when Escape closes it', async () => {
     await render(
       <Tooltip.Root>
-        <Tooltip.Trigger delay={0} style={ignoreRealPointer}>
-          Toggle
-        </Tooltip.Trigger>
+        <Tooltip.Trigger delay={0}>Toggle</Tooltip.Trigger>
         <Tooltip.Portal keepMounted>
           <Tooltip.Positioner>
             <Tooltip.Popup data-testid="popup">Content</Tooltip.Popup>
@@ -236,7 +219,7 @@ describe('<Tooltip.Root />', () => {
     const ContainedApp = defineComponent(
       (props: { showTrigger: boolean }) => () => (
         <Tooltip.Root>
-          {props.showTrigger && <Tooltip.Trigger style={ignoreRealPointer}>Toggle</Tooltip.Trigger>}
+          {props.showTrigger && <Tooltip.Trigger>Toggle</Tooltip.Trigger>}
           <Tooltip.Portal>
             <Tooltip.Positioner>
               <Tooltip.Popup>Content</Tooltip.Popup>
@@ -252,11 +235,7 @@ describe('<Tooltip.Root />', () => {
         const handle = Tooltip.createHandle();
         return () => (
           <>
-            {props.showTrigger && (
-              <Tooltip.Trigger handle={handle} style={ignoreRealPointer}>
-                Toggle
-              </Tooltip.Trigger>
-            )}
+            {props.showTrigger && <Tooltip.Trigger handle={handle}>Toggle</Tooltip.Trigger>}
             <Tooltip.Root handle={handle}>
               <Tooltip.Portal>
                 <Tooltip.Positioner>
@@ -420,6 +399,7 @@ describe('<Tooltip.Root />', () => {
 
         await fireEvent.mouseEnter(trigger);
         await fireEvent.mouseMove(trigger);
+        await fireEvent.mouseMove(trigger);
 
         await tick(OPEN_DELAY);
 
@@ -537,7 +517,7 @@ describe('<Tooltip.Root />', () => {
     describe('preventUnmountOnClose()', () => {
       it('does not prevent unmounting on later closes', async () => {
         let preventNextClose = true;
-        await render(
+        const { user } = await render(
           <TestTooltip
             rootProps={{
               onOpenChange: (open: boolean, details: Details) => {
@@ -555,23 +535,23 @@ describe('<Tooltip.Root />', () => {
         );
 
         const trigger = screen.getByRole('button', { name: 'Toggle' });
-        await enterWithMouse(trigger);
+        await user.hover(trigger);
 
         await screen.findByTestId('positioner');
 
-        await fireEvent.mouseLeave(trigger);
+        await user.unhover(trigger);
 
         await waitFor(() => {
           expect(screen.getByTestId('positioner')).toHaveAttribute('data-closed');
         });
 
-        await enterWithMouse(trigger);
+        await user.hover(trigger);
 
         await waitFor(() => {
           expect(trigger).toHaveAttribute('data-popup-open');
         });
 
-        await fireEvent.mouseLeave(trigger);
+        await user.unhover(trigger);
 
         await waitFor(() => {
           expect(screen.queryByTestId('positioner')).toBe(null);
@@ -591,7 +571,7 @@ describe('<Tooltip.Root />', () => {
       it('unmounts the tooltip when the `unmount` method is called', async () => {
         const actions = actionsRef();
 
-        await render(
+        const { user } = await render(
           <TestTooltip
             rootProps={{
               ref: actions.setRef,
@@ -603,11 +583,11 @@ describe('<Tooltip.Root />', () => {
         );
 
         const trigger = screen.getByRole('button', { name: 'Toggle' });
-        await enterWithMouse(trigger);
+        await user.hover(trigger);
 
         await screen.findByTestId('positioner');
 
-        await fireEvent.mouseLeave(trigger);
+        await user.unhover(trigger);
 
         await waitFor(() => {
           expect(screen.getByTestId('positioner')).toHaveAttribute('data-closed');
@@ -625,7 +605,7 @@ describe('<Tooltip.Root />', () => {
         const onOpenChange = vi.fn();
         const actions = actionsRef();
 
-        await render(
+        const { user } = await render(
           <TestTooltip
             rootProps={{ ref: actions.setRef, onOpenChange }}
             triggerProps={{ delay: 0 }}
@@ -633,7 +613,7 @@ describe('<Tooltip.Root />', () => {
         );
 
         const trigger = screen.getByRole('button', { name: 'Toggle' });
-        await enterWithMouse(trigger);
+        await user.hover(trigger);
 
         await screen.findByTestId('popup');
 
@@ -1432,9 +1412,7 @@ describe('<Tooltip.Root />', () => {
     it('shows the popup after the awaited hover event', async () => {
       await render(
         <Tooltip.Root>
-          <Tooltip.Trigger delay={0} style={ignoreRealPointer}>
-            Trigger
-          </Tooltip.Trigger>
+          <Tooltip.Trigger delay={0}>Trigger</Tooltip.Trigger>
           <Tooltip.Portal>
             <Tooltip.Positioner>
               <Tooltip.Popup>Content</Tooltip.Popup>

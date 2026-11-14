@@ -175,10 +175,13 @@ export interface UseDismissProps {
  * A press in a same-origin frame below the document of the popup counts as a press on the frame
  * element. A press in a cross-origin frame closes nothing, and neither does a press in a frame in
  * a shadow tree.
+ *
+ * `store` is a store, a ref or a getter. A handler reads it when it runs. When it changes, the
+ * composable moves its listeners to the new store.
  * @see https://floating-ui.com/docs/useDismiss
  */
 export function useDismiss(
-  store: PopupInteractionStore,
+  store: MaybeRefOrGetter<PopupInteractionStore>,
   props: UseDismissProps = {},
 ): DismissElementProps {
   const {
@@ -191,8 +194,7 @@ export function useDismiss(
     externalTree,
   } = props;
 
-  const storeContext = store.context;
-  const { events } = storeContext;
+  const getStore = () => toValue(store);
 
   const tree = useFloatingTree(externalTree);
   const outsidePressEnabled = outsidePress !== false;
@@ -230,22 +232,22 @@ export function useDismiss(
   // marker only for an open popup and only when it is set.
   function clearInsideComponentTree() {
     clearInsideComponentTreeTimeout.clear();
-    if (storeContext.insideComponentTree) {
-      storeContext.insideComponentTree = false;
+    if (getStore().context.insideComponentTree) {
+      getStore().context.insideComponentTree = false;
     }
   }
 
   function markInsideComponentTree() {
     parent?.markInsideComponentTree();
-    if (!isEnabled() || !store.select('open')) {
+    if (!isEnabled() || !getStore().select('open')) {
       return;
     }
-    storeContext.insideComponentTree = true;
+    getStore().context.insideComponentTree = true;
     clearInsideComponentTreeTimeout.start(0, clearInsideComponentTree);
   }
 
   function hasBlockingChild(bubbleKey: 'escapeKeyBubbles' | 'outsidePressBubbles') {
-    const nodeId = storeContext.positioning?.nodeId;
+    const nodeId = getStore().context.positioning?.nodeId;
     const children = tree.value ? getNodeChildren(tree.value.nodesRef.value, nodeId) : [];
 
     return children.some(
@@ -258,11 +260,16 @@ export function useDismiss(
       return;
     }
 
-    store.setOpen(false, createChangeEventDetails(REASONS.triggerPress, event));
+    getStore().setOpen(false, createChangeEventDetails(REASONS.triggerPress, event));
   }
 
   function closeOnEscapeKeyDown(event: KeyboardEvent) {
-    if (!store.select('open') || !isEnabled() || !isEscapeKeyEnabled() || event.key !== 'Escape') {
+    if (
+      !getStore().select('open') ||
+      !isEnabled() ||
+      !isEscapeKeyEnabled() ||
+      event.key !== 'Escape'
+    ) {
       return;
     }
 
@@ -284,7 +291,7 @@ export function useDismiss(
 
     const eventDetails = createChangeEventDetails(REASONS.escapeKey, event);
 
-    store.setOpen(false, eventDetails);
+    getStore().setOpen(false, eventDetails);
 
     if (!eventDetails.isCanceled) {
       event.preventDefault();
@@ -308,14 +315,14 @@ export function useDismiss(
   provide(DismissParentContext, {
     markInsideComponentTree,
     handleKeydown(event) {
-      if (!isEventTargetWithin(event, store.select('positionerElement'))) {
+      if (!isEventTargetWithin(event, getStore().select('positionerElement'))) {
         handleFloatingKeydown(event);
       }
     },
   });
 
   function markPressStartedInside(event: PointerEvent | MouseEvent) {
-    if (!store.select('open') || !isEnabled() || event.button !== 0) {
+    if (!getStore().select('open') || !isEnabled() || event.button !== 0) {
       return;
     }
 
@@ -323,7 +330,7 @@ export function useDismiss(
 
     // Only treat presses that start within the floating DOM subtree as inside.
     // This avoids suppressing parent dismissal when interacting with nested portals.
-    if (!contains(store.select('positionerElement'), target)) {
+    if (!contains(getStore().select('positionerElement'), target)) {
       return;
     }
 
@@ -334,7 +341,7 @@ export function useDismiss(
   }
 
   function markInsidePressStartPrevented(event: PointerEvent | MouseEvent) {
-    if (!store.select('open') || !isEnabled()) {
+    if (!getStore().select('open') || !isEnabled()) {
       return;
     }
 
@@ -358,8 +365,8 @@ export function useDismiss(
   }
   // A server does not call `onBeforeMount`, so a server render takes no number. The hook runs for
   // a parent before its children, and `onMounted` runs for the children first.
-  onBeforeMount(() => takeLayer(store.select('open')));
-  watch(() => store.select('open'), takeLayer);
+  onBeforeMount(() => takeLayer(getStore().select('open')));
+  watch(() => getStore().select('open'), takeLayer);
 
   // A close and an open in one flush never show `open === false` to a watcher, so only
   // `openchange` can observe that session boundary. `update` covers the other changes.
@@ -383,14 +390,36 @@ export function useDismiss(
     touchState = null;
   }
 
+  // The store whose `openchange` event the composable listens to.
+  let listenedStore: PopupInteractionStore | undefined;
+
+  function listenToStore() {
+    const nextStore = getStore();
+    if (nextStore === listenedStore) {
+      return;
+    }
+
+    if (listenedStore) {
+      listenedStore.context.events.off('openchange', handleOpenChange);
+      // After the move, no listener of this composable clears the marker of the last store. A set
+      // marker makes the next outside press of that store count as inside.
+      if (listenedStore.context.insideComponentTree) {
+        listenedStore.context.insideComponentTree = false;
+      }
+    }
+    listenedStore = nextStore;
+    nextStore.context.events.on('openchange', handleOpenChange);
+  }
+
   let deactivated = false;
   let cleanup: (() => void) | undefined;
 
   function update() {
     cleanup?.();
     cleanup = undefined;
+    listenToStore();
 
-    const open = store.select('open');
+    const open = getStore().select('open');
     if (deactivated || !open || !isEnabled()) {
       // Reset here, not in the cleanup, which also runs when a source changes mid-gesture.
       if (!open || deactivated) {
@@ -405,10 +434,10 @@ export function useDismiss(
     }
 
     const { escapeKey: escapeKeyBubbles, outsidePress: outsidePressBubbles } = getBubbles();
-    storeContext.escapeKeyBubbles = escapeKeyBubbles;
-    storeContext.outsidePressBubbles = outsidePressBubbles;
+    getStore().context.escapeKeyBubbles = escapeKeyBubbles;
+    getStore().context.outsidePressBubbles = outsidePressBubbles;
 
-    const doc = ownerDocument(store.select('positionerElement'));
+    const doc = ownerDocument(getStore().select('positionerElement'));
 
     function handleCompositionEnd() {
       // Safari fires `compositionend` before `keydown`, so we need to wait
@@ -464,13 +493,13 @@ export function useDismiss(
 
     function isEventWithinOwnElements(event: Event) {
       return (
-        isEventWithin(event, store.select('positionerElement')) ||
-        isEventWithin(event, store.select('anchorElement'))
+        isEventWithin(event, getStore().select('positionerElement')) ||
+        isEventWithin(event, getStore().select('anchorElement'))
       );
     }
 
     function isEventWithinFloatingTree(event: Event) {
-      const nodeId = storeContext.positioning?.nodeId;
+      const nodeId = getStore().context.positioning?.nodeId;
       const targetIsInsideChildren =
         tree.value &&
         getNodeChildren(tree.value.nodesRef.value, nodeId).some((node) =>
@@ -492,7 +521,7 @@ export function useDismiss(
         return;
       }
 
-      if (storeContext.insideComponentTree) {
+      if (getStore().context.insideComponentTree) {
         clearInsideComponentTree();
         return;
       }
@@ -505,11 +534,11 @@ export function useDismiss(
       const markers = Array.from(
         (isShadowRoot(targetRoot)
           ? targetRoot
-          : ownerDocument(store.select('positionerElement'))
+          : ownerDocument(getStore().select('positionerElement'))
         ).querySelectorAll(inertSelector),
       );
 
-      const triggers = store.context.triggerElements;
+      const triggers = getStore().context.triggerElements;
 
       // If another trigger is clicked, don't close the floating element.
       if (
@@ -537,7 +566,7 @@ export function useDismiss(
         isElement(targetInDocument) &&
         !isRootElement(targetInDocument) &&
         // Clicked on a direct ancestor (e.g. FloatingOverlay).
-        !contains(targetInDocument, store.select('positionerElement')) &&
+        !contains(targetInDocument, getStore().select('positionerElement')) &&
         // If the target root element contains none of the markers, then the
         // element was injected after the floating element rendered.
         markers.every((marker) => !contains(targetRootAncestor, marker))
@@ -614,7 +643,7 @@ export function useDismiss(
         return;
       }
 
-      store.setOpen(false, createChangeEventDetails(REASONS.outsidePress, event));
+      getStore().setOpen(false, createChangeEventDetails(REASONS.outsidePress, event));
       clearInsideComponentTree();
     }
 
@@ -622,7 +651,7 @@ export function useDismiss(
       if (
         getOutsidePressEvent() !== 'sloppy' ||
         event.pointerType === 'touch' ||
-        !store.select('open') ||
+        !getStore().select('open') ||
         !isEnabled() ||
         isEventWithinOwnElements(event)
       ) {
@@ -635,7 +664,7 @@ export function useDismiss(
     function handleTouchStart(event: TouchEvent) {
       if (
         getOutsidePressEvent() !== 'sloppy' ||
-        !store.select('open') ||
+        !getStore().select('open') ||
         !isEnabled() ||
         isEventWithinOwnElements(event)
       ) {
@@ -665,7 +694,7 @@ export function useDismiss(
     // popups above get no marker from it. This popup needs none: the frame element takes the place
     // of the target in its own checks.
     function markPressInFrame(event: Event) {
-      if (contains(store.select('positionerElement'), getFrameOfEvent(event, doc))) {
+      if (contains(getStore().select('positionerElement'), getFrameOfEvent(event, doc))) {
         parent?.markInsideComponentTree();
       }
     }
@@ -906,9 +935,10 @@ export function useDismiss(
 
   watch(
     [
-      () => store.select('open'),
+      getStore,
+      () => getStore().select('open'),
       isEnabled,
-      () => ownerDocument(store.select('positionerElement')),
+      () => ownerDocument(getStore().select('positionerElement')),
       isEscapeKeyEnabled,
       () => getBubbles().escapeKey,
       () => getBubbles().outsidePress,
@@ -920,10 +950,7 @@ export function useDismiss(
 
   // A server calls no `onMounted` hook and runs no such `watch`, so a server render adds no
   // listener to a document or to a store that a module shares.
-  onMounted(() => {
-    events.on('openchange', handleOpenChange);
-    update();
-  });
+  onMounted(update);
   onDeactivated(() => {
     deactivated = true;
     update();
@@ -936,7 +963,7 @@ export function useDismiss(
     }
   });
   onScopeDispose(() => {
-    events.off('openchange', handleOpenChange);
+    listenedStore?.context.events.off('openchange', handleOpenChange);
     cleanup?.();
     clearInsideComponentTree();
   });
