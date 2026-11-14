@@ -40,8 +40,8 @@ export interface ResizableHandleProps
   disabled?: boolean | undefined;
   /**
    * The panel that the handle reports: the panel before the handle, or the panel after it.
-   * The value attributes of the handle, `aria-controls` and the keys Home, End, Page Up and Page Down
-   * are about this panel.
+   * The value attributes of the handle, `aria-controls`, the keys Home, End, Page Up, Page Down and
+   * Enter, and the double click are about this panel.
    * @default 'previous'
    */
   primaryPanel?: 'previous' | 'next' | undefined;

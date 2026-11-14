@@ -144,7 +144,7 @@ describe('<Resizable.Handle /> with the pointer of the browser', () => {
     await userEvent.pointer({ keys: '[/MouseLeft]' });
     expect(onClick).toHaveBeenCalledTimes(1);
 
-    // The rule ends with the click that it stops: a later press and release give a click again.
+    // The next press clears the rule, so a press and a release with no move give a click again.
     const moved = screen.getByTestId('handle').getBoundingClientRect();
     await userEvent.pointer({
       coords: { x: moved.left + moved.width / 2, y: moved.top + moved.height / 2 },
