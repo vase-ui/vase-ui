@@ -259,20 +259,25 @@ describe('<Autocomplete.Root />', () => {
     it('typed text replaces the inline text', async () => {
       const handleValueChange = vi.fn();
       await render(
-        <Autocomplete.Root mode="inline" items={cities} onValueChange={handleValueChange}>
+        <Autocomplete.Root
+          mode="both"
+          autoHighlight
+          items={cities}
+          onValueChange={handleValueChange}
+        >
           <Autocomplete.Input />
           <ComboboxListPart />
         </Autocomplete.Root>,
       );
       getInput().focus();
       await type('ma');
-      await pressArrowDown();
       expect(getInput().value).toBe('Malmö');
 
-      await type('Malmöx');
+      // The highlight stays on `Malmö`, so no new highlight writes the inline text again.
+      await type('mal');
 
-      expect(handleValueChange.mock.lastCall?.[0]).toBe('Malmöx');
-      expect(getInput().value).toBe('Malmöx');
+      expect(handleValueChange.mock.lastCall?.[0]).toBe('mal');
+      expect(getInput().value).toBe('mal');
     });
 
     it('a pointer highlight writes no inline text', async () => {
