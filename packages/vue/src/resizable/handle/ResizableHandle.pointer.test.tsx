@@ -57,6 +57,34 @@ describe('<Resizable.Handle /> with the pointer of the browser', () => {
     expect(screen.getByTestId('handle')).toHaveFocus();
   });
 
+  it('shows no focus ring for a press, also when a key focused another element before', async () => {
+    await render(
+      <div style={{ width: '400px', height: '100px' }}>
+        <input data-testid="before" aria-label="Before" />
+        <Resizable.Root style={{ height: '100%' }}>
+          <Resizable.Panel />
+          <Resizable.Handle data-testid="handle" style={{ flex: 'none', width: '8px' }} />
+          <Resizable.Panel />
+        </Resizable.Root>
+      </div>,
+    );
+    releasePointerAfterTest();
+    // The Tab key puts a visible focus on the text input.
+    await userEvent.keyboard('{Tab}');
+    expect(screen.getByTestId('before')).toHaveFocus();
+    expect(screen.getByTestId('before').matches(':focus-visible')).toBe(true);
+    const handle = screen.getByTestId('handle');
+    const rect = handle.getBoundingClientRect();
+
+    await userEvent.pointer({
+      coords: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 },
+      keys: '[MouseLeft>]',
+    });
+
+    expect(handle).toHaveFocus();
+    expect(handle.matches(':focus-visible')).toBe(false);
+  });
+
   it('follows the pointer across an iframe', async () => {
     const { first, at } = await renderPanels(
       <iframe

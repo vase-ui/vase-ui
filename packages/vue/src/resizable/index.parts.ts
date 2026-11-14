@@ -15,6 +15,8 @@ import type {
 
 /**
  * Groups the panels and the handles of the layout.
+ * Each panel and each handle must be a flex item of the root element. A wrapper element between
+ * them needs `display: contents`.
  * Renders a `<div>` element.
  */
 export const Root: typeof ResizableRoot = ResizableRoot;

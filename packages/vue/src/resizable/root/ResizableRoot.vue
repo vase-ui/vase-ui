@@ -120,7 +120,7 @@ const emit = defineEmits<{
    *
    * - `'drag'` while the user drags a handle
    * - `'keyboard'` for a key on a handle
-   * - `'none'` when a panel mounts or unmounts and the panels change the layout
+   * - `'none'` when a panel mounts that the layout does not name
    */
   layoutChange: [layout: ResizableRootLayout, eventDetails: ResizableRootChangeEventDetails];
   'update:layout': [layout: ResizableRootLayout];

@@ -49,7 +49,8 @@ export interface ResizableRootContext {
    */
   registerPanel: (panel: ResizablePanelRegistration) => void;
   /**
-   * The sum of the sizes of the panel elements on the screen, in pixels.
+   * The room that the panels share on the screen, in pixels: the sum of the content boxes of the
+   * panel elements.
    */
   getPanelSpace: () => number;
   /**
