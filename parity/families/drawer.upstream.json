@@ -1,0 +1,3406 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/drawer/**",
+    "docs/src/app/(docs)/react/components/drawer/**"
+  ],
+  "sources": [
+    "packages/react/src/drawer/backdrop/DrawerBackdrop.tsx",
+    "packages/react/src/drawer/backdrop/DrawerBackdropCssVars.ts",
+    "packages/react/src/drawer/backdrop/DrawerBackdropDataAttributes.ts",
+    "packages/react/src/drawer/close/DrawerClose.tsx",
+    "packages/react/src/drawer/content/DrawerContent.tsx",
+    "packages/react/src/drawer/content/drawerContentAttribute.ts",
+    "packages/react/src/drawer/description/DrawerDescription.tsx",
+    "packages/react/src/drawer/handle.ts",
+    "packages/react/src/drawer/indent-background/DrawerIndentBackground.tsx",
+    "packages/react/src/drawer/indent/DrawerIndent.tsx",
+    "packages/react/src/drawer/index.parts.ts",
+    "packages/react/src/drawer/index.ts",
+    "packages/react/src/drawer/popup/DrawerPopup.tsx",
+    "packages/react/src/drawer/popup/DrawerPopupCssVars.ts",
+    "packages/react/src/drawer/popup/DrawerPopupDataAttributes.ts",
+    "packages/react/src/drawer/portal/DrawerPortal.tsx",
+    "packages/react/src/drawer/provider/DrawerProvider.tsx",
+    "packages/react/src/drawer/provider/DrawerProviderContext.ts",
+    "packages/react/src/drawer/root/DrawerRoot.tsx",
+    "packages/react/src/drawer/root/DrawerRootContext.ts",
+    "packages/react/src/drawer/root/useDrawerSnapPoints.ts",
+    "packages/react/src/drawer/swipe-area/DrawerSwipeArea.tsx",
+    "packages/react/src/drawer/swipe-area/DrawerSwipeAreaDataAttributes.ts",
+    "packages/react/src/drawer/title/DrawerTitle.tsx",
+    "packages/react/src/drawer/trigger/DrawerTrigger.tsx",
+    "packages/react/src/drawer/viewport/DrawerViewport.tsx",
+    "packages/react/src/drawer/viewport/DrawerViewportContext.tsx",
+    "packages/react/src/drawer/viewport/DrawerViewportCssVars.ts",
+    "packages/react/src/drawer/viewport/DrawerViewportDataAttributes.ts",
+    "packages/react/src/drawer/virtual-keyboard-provider/DrawerVirtualKeyboardContext.tsx",
+    "packages/react/src/drawer/virtual-keyboard-provider/DrawerVirtualKeyboardProvider.tsx"
+  ],
+  "typeTests": [
+    "packages/react/src/drawer/root/DrawerRoot.spec.tsx"
+  ],
+  "cases": [
+    {
+      "file": "packages/react/src/drawer/content/DrawerContent.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Drawer.Content />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Drawer.Content />"
+          ],
+          "title": "does not add public swipe-ignore attributes"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/drawer/indent-background/DrawerIndentBackground.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Drawer.IndentBackground />"
+          ],
+          "title": "sets data-active when any drawer is open"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/drawer/indent/DrawerIndent.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Drawer.Indent />"
+          ],
+          "title": "sets data-active when any drawer is open"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/drawer/popup/DrawerPopup.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Drawer.Popup />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Drawer.Popup />"
+          ],
+          "title": "warns in development when not rendered within a viewport"
+        },
+        {
+          "describe": [
+            "<Drawer.Popup />"
+          ],
+          "title": "warns without relying on React owner-stack support"
+        },
+        {
+          "describe": [
+            "<Drawer.Popup />"
+          ],
+          "title": "defaults initial focus to the popup element"
+        },
+        {
+          "describe": [
+            "<Drawer.Popup />"
+          ],
+          "title": "leaves focus on the trigger when initial focus is disabled"
+        },
+        {
+          "describe": [
+            "<Drawer.Popup />"
+          ],
+          "title": "stops composite navigation keys from escaping the popup"
+        },
+        {
+          "describe": [
+            "<Drawer.Popup />"
+          ],
+          "title": "applies a negative snap point offset to upward drawers"
+        },
+        {
+          "describe": [
+            "<Drawer.Popup />"
+          ],
+          "title": "keeps the last measured popup height while nested content stretches it"
+        },
+        {
+          "describe": [
+            "<Drawer.Popup />"
+          ],
+          "title": "does not throw when a popup render function produces no element"
+        },
+        {
+          "describe": [
+            "<Drawer.Popup />"
+          ],
+          "title": "ignores a queued measurement after the popup unmounts"
+        },
+        {
+          "describe": [
+            "<Drawer.Popup />"
+          ],
+          "title": "includes border size in frontmost height CSS variable for nested drawers",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Popup />"
+          ],
+          "title": "reports nested presence and frontmost height before passive effects"
+        },
+        {
+          "describe": [
+            "<Drawer.Popup />"
+          ],
+          "title": "keeps the parent nested state when a closed handle-backed nested drawer mounts"
+        },
+        {
+          "describe": [
+            "<Drawer.Popup />"
+          ],
+          "title": "does not treat dialogs inside nested drawers as nested drawers"
+        },
+        {
+          "describe": [
+            "<Drawer.Popup />"
+          ],
+          "title": "does not treat alert dialogs inside nested drawers as nested drawers"
+        },
+        {
+          "describe": [
+            "<Drawer.Popup />"
+          ],
+          "title": "clears parent nested drawer state as soon as a nested drawer closes"
+        },
+        {
+          "describe": [
+            "<Drawer.Popup />"
+          ],
+          "title": "clears parent nested drawer state when a nested drawer starts closing before unmount",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Popup />"
+          ],
+          "title": "keeps a fixed height applied while a nested drawer closes",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Popup />"
+          ],
+          "title": "restores a fixed height before nested state when reopening a nested drawer",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/drawer/provider/DrawerProvider.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Drawer.Provider />"
+          ],
+          "title": "stays active until every open drawer is closed or removed"
+        },
+        {
+          "describe": [
+            "<Drawer.Provider />"
+          ],
+          "title": "ignores redundant registry updates without disturbing active state"
+        },
+        {
+          "describe": [
+            "<Drawer.Provider />"
+          ],
+          "title": "releases closed drawers once they are removed",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Provider />"
+          ],
+          "title": "synchronizes and restores visual state on Drawer.Indent"
+        },
+        {
+          "describe": [
+            "<Drawer.Provider />"
+          ],
+          "title": "allows indent parts to render without a provider"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/drawer/root/DrawerRoot.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "exposes the attributes rendered by borrowed trigger and close parts"
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "uses a size-based swipe threshold",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "supports detached triggers with handles"
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "does not re-render inactive detached triggers when the popup opens and closes"
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "supports imperative actions with handles"
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "attaches fresh root state when a handle-backed root remounts"
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "synchronizes trigger aria-controls with the popup id"
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "resets the active snap point when closing"
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "resets to the default snap point when provided"
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "provides event details when snap point changes"
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "does not reset snap point when a close is canceled"
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "honors canceled snap point changes and falls back from invalid uncontrolled values"
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "normalizes invalid nested swipe progress without notifying for duplicate values"
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "throws a descriptive error when the root context is missing"
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "reports and unregisters $label before passive effects"
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "clears swipe-dismiss styles when swipe close is canceled",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "does not dismiss a controlled drawer via swipe when open is always true",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "does not restore snap point when a controlled swipe close is accepted by the parent",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "restores snap point and swipe offsets when swipe close is canceled",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "damps active snap point overshoot after the swipe direction is established",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "allows dragging past a snap point when snapToSequentialPoints is enabled",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "advances on a short flick with a trailing stationary sample: %s",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "stays on the current snap point after repeated stationary samples",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "advances to the next snap point on fast flicks when snapToSequentialPoints is enabled",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "keeps the drawer open on low-velocity swipes near a snap point",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "keeps the drawer open when the release velocity reverses during an upward swipe",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "chooses the nearest sequential snap point on a slow drag",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "advances a sequential snap point toward dismissal",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "dismisses past the final sequential snap point",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "dismisses when a slow snap-point drag ends closer to closed",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "dismisses from upward snap points using upward velocity",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "opens from a controlled null snap point",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "dismisses from a controlled null snap point",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "keeps the first sequential snap point on a fast opening flick",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "keeps the current snap point after a sub-threshold drag",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "dismisses a non-sequential snap point when closed is nearest",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "finishes a controlled accepted dismissal while kept mounted",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "restores a snap point when a controlled parent rejects dismissal",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Root />"
+          ],
+          "title": "closes an uncontrolled drawer after a slow long drag",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Root />",
+            "CloseWatcher"
+          ],
+          "title": "closes when the watcher requests a close"
+        },
+        {
+          "describe": [
+            "<Drawer.Root />",
+            "CloseWatcher"
+          ],
+          "title": "keeps the same watcher active when a cancelable close request is canceled"
+        },
+        {
+          "describe": [
+            "<Drawer.Root />",
+            "CloseWatcher"
+          ],
+          "title": "closes on a close request that cannot be prevented even if onOpenChange cancels it"
+        },
+        {
+          "describe": [
+            "<Drawer.Root />",
+            "CloseWatcher"
+          ],
+          "title": "steps through content on back presses until one cannot be prevented (controlled: %s)"
+        },
+        {
+          "describe": [
+            "<Drawer.Root />",
+            "CloseWatcher"
+          ],
+          "title": "destroys the watcher on unmount"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/drawer/root/DrawerSnapPoints.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "Drawer snap point composition"
+          ],
+          "title": "resolves supported units, filters invalid values, clamps heights, and keeps the last duplicate"
+        },
+        {
+          "describe": [
+            "Drawer snap point composition"
+          ],
+          "title": "uses fractional and pixel snap points and resolves null or invalid active values as closed"
+        },
+        {
+          "describe": [
+            "Drawer snap point composition"
+          ],
+          "title": "produces no resolved snap point when the list is empty"
+        },
+        {
+          "describe": [
+            "Drawer snap point composition"
+          ],
+          "title": "resolves a single snap point without a deduplication pass"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/drawer/root/useDrawerSnapPoints.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "getSnapPointSwipeMovement"
+          ],
+          "title": "returns the raw movement when the drag does not overshoot the open edge"
+        },
+        {
+          "describe": [
+            "getSnapPointSwipeMovement"
+          ],
+          "title": "returns the raw movement at the open edge (nextOffset === 0)"
+        },
+        {
+          "describe": [
+            "getSnapPointSwipeMovement"
+          ],
+          "title": "damps the movement with a square root once the drag overshoots the open edge"
+        },
+        {
+          "describe": [
+            "closestSnapPointIndex"
+          ],
+          "title": "returns the closest value and keeps the first value on ties"
+        },
+        {
+          "describe": [
+            "closestSnapPointIndex"
+          ],
+          "title": "returns -1 when there are no values"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/drawer/swipe-area/DrawerSwipeArea.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "opens the drawer when swiped in the open direction"
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "does not open when the swipe direction never locks to the open direction"
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "prevents default pointer down for non-touch swipes"
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "does not open the drawer when disabled"
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "respects custom swipeDirection"
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "synchronizes overshoot styles across the popup, backdrop, and provider indent"
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "opens from the rendered transform distance in either horizontal direction"
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "omits frontmost height when an opening drawer has no measured height"
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "does not apply or close swipe state when a controlled parent rejects opening"
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "cancels an active opening gesture when the swipe area becomes disabled"
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "keeps the drawer open when the release click follows a mid-gesture disable"
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "does not prevent a non-cancelable pointer start"
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "ignores compatibility touch pointer gestures with real displacement"
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "works before a generated swipe area id is available"
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "registers the swipe area once a generated id becomes available"
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "follows a swipe area id change"
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "opens the drawer when swiped with touch events"
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "applies data-swiping during an active swipe gesture"
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "re-enables outside press dismissal after opening by swipe"
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "re-enables outside press dismissal for a touch outside press after opening by swipe"
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "does not dismiss from the $pointerType/$input click synthesized by the swipe-open release"
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "suppresses a trusted release click that arrives without a preceding pointerdown",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "allows a later click-only activation to dismiss after a swipe",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "allows a later pointerless virtual click to dismiss when the release has no click"
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "re-enables outside press dismissal after an interrupted swipe-open gesture"
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "re-enables outside press dismissal after a context menu interrupts swipe-open"
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "uses a size-based swipe threshold by default",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "keeps the swipe-area movement on the popup when re-grabbed during close",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "opens on a quick flick whose only move is already released (buttons: 0)"
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "commits a released-move quick flick exactly once when a real pointerup trails it"
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "opens on a quick flick that lands its whole travel in a single touch move"
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "does not open on an in-place press-release without movement"
+        },
+        {
+          "describe": [
+            "<Drawer.SwipeArea />"
+          ],
+          "title": "does not open a horizontal drawer on a stationary pointer move"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/drawer/viewport/DrawerViewport.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "registers the non-passive document touchmove listener only while open"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "clears text selection on swipe start"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "preserves text selection outside the popup when a swipe starts"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "does not clear text selection on touch swipe start"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "starts touch swipes from interactive elements"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "uses shadow-root hit testing for touch swipe targets"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "starts a swipe inside a shadow root using real hit testing",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "clears the backdrop data-swiping attribute when the drawer unmounts mid-swipe"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "uses the event target for non-keyboard touch scroll arbitration"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "scrolls instead of swiping when a touch drag starts on an SVG inside scrolled content"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "does not start a mouse drag swipe from an SVG inside scrollable content"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "dismisses with a touch swipe down that starts on an SVG inside a top-edge scroll container"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "allows clicks on non-interactive elements without data-base-ui-swipe-ignore"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "does not start touch swipes from elements with data-base-ui-swipe-ignore"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />",
+            "data-base-ui-swipe-ignore axis values"
+          ],
+          "title": "ignores %s touch swipes from elements with the drawer axis value \"%s\""
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />",
+            "data-base-ui-swipe-ignore axis values"
+          ],
+          "title": "hands cross-axis drags in %s drawers to elements with the value \"%s\""
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />",
+            "data-base-ui-swipe-ignore axis values"
+          ],
+          "title": "does not swipe or settle snap points while a %s cross-axis target handles the drag"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />",
+            "data-base-ui-swipe-ignore axis values"
+          ],
+          "title": "still swipes %s drawers from elements with the cross-axis value \"%s\""
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />",
+            "data-base-ui-swipe-ignore axis values"
+          ],
+          "title": "keeps an ancestor that ignores all directions in effect over a nested axis value"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "does not prevent native touch scrolling in portaled descendants"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "allows touch gestures on a portaled combobox popup without starting drawer swipe",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "still allows touch swipes from elements with legacy data-swipe-ignore"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "does not start non-touch swipes from Drawer.Content"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "does not jump when touch starts outside the popup and then enters it"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "dismisses when touch starts outside the popup, then continues swiping down inside it"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "treats pen interactions on Drawer.Content as non-touch swipes"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "does not mark nested drawers as swiping until movement passes the threshold"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "clears nested swiping when a nested drawer swipe is reversed before release"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "prevents touchmove at scroll top when swiping down on scrollable content"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "prevents touchmove at scroll bottom when swiping up on scrollable content"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "prevents touchmove when a scrollable ancestor wraps the popup at the top"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "starts a swipe away from the page scroll edge when the body is a scroll container",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "prevents touchmove when there is no scroll container"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "does not block touchmove on native range inputs"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "does not block touchmove on slider thumb range inputs"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "does not start swiping when adjusting input selection handles"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "does not start swiping when adjusting textarea selection handles"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "does not start swiping when adjusting contenteditable selection handles"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "does not start swiping when adjusting regular text selection handles"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "allows touchmove when scrolling down from scroll top"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "does not start an opposite-direction swipe from scroll bottom for down drawers with snap points"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "keeps damped snap-point styles when a duplicate-coordinate pointermove arrives"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "does not start an opposite-direction swipe from scroll right edge for right drawers"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "starts swipe-to-dismiss after a scrollable container reaches the dismiss edge"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "dismisses from a top-edge scroll container with a touch swipe down"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "dismisses from a bottom-edge scroll container with a touch swipe up"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "dismisses from a left-edge horizontal scroll container with a touch swipe right"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "dismisses from a right-edge horizontal scroll container with a touch swipe left"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "expands a collapsed sheet when the first move from a %s leaves the popup"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "allows horizontal swipe dismiss from a vertical scroll container"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "does not prevent a sub-slop first touchmove over cross-axis scrollable content"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "claims the gesture once the drawer axis passes the slop over cross-axis scrollable content"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "yields the gesture when the browser commits to a native cross-axis scroll"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "keeps tracking the finger when a claimed drag returns inside the slop"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "keeps driving a claimed drag through a non-cancelable touchmove"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "does not lock vertical swipe after minor cross-axis jitter in down drawers"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "does not hijack cross-axis gestures from mixed-axis scroll containers",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "does not block vertical scrolling in right drawers when only vertical overflow exists",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "does not block vertical scrolling in left drawers when only vertical overflow exists",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "does not block horizontal scrolling in down drawers when only horizontal overflow exists",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "does not block horizontal scrolling in up drawers when only horizontal overflow exists",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "toggles data-swiping on the backdrop while swiping"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "cancels pointer drags and ignores compatibility touch pointer cancellation"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "ignores touchstart when there is no active touch"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "uses regular horizontal dismissal when snap points are configured"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "does not dismiss from a fast swipe that was never attributed to the snap point axis"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "navigates snap points from a drag that was never attributed to the swipe axis"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "clears nested swipe state after an unattributed snap point gesture"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "clears nested swipe state after an attributed drag settles on a snap point"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "does not dismiss from an unattributed fast swipe with snapToSequentialPoints"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "does not start swipe dismissal when closing the snap point is canceled"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "settles on the nearest snap point when an unattributed drag ends past the last snap point"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "settles on the nearest snap point when an unattributed drag ends past the last snap point with snapToSequentialPoints"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "keeps the resting snap point progress when a press never starts a swipe"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "does not resolve snap points before the popup has a measurable height"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "falls back to regular dismissal when all snap points are invalid"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "ends swipe drag when the primary mouse button is released mid-gesture"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "ignores swipe input until a popup is mounted"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "cleans up when the popup unmounts during an active swipe"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "does not start pointer swipes while a closed drawer remains mounted"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "clears a selection whose endpoints are popup elements"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "preserves an expanded touch selection whose focus endpoint is in the popup"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "falls back to the viewport when a touch event has no element target"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "ignores compatibility touch pointer gestures with real displacement"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "publishes and clears swipe progress through Drawer.Provider"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "publishes resting snap progress before descendant layout effects"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "clears kept-mounted swipe state before descendant layout effects on reopen"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "clears nested progress before descendant layout effects when the child closes"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "clears provider and backdrop swipe state during layout teardown"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "leaves pinch-zoom touchmove to the browser"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "prevents page scrolling for a non-overflowing touch scroll container"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "keeps a claimed scroll-edge swipe moving through non-cancelable events"
+        },
+        {
+          "describe": [
+            "<Drawer.Viewport />"
+          ],
+          "title": "does not claim a stationary touch in overflowing content"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/drawer/virtual-keyboard-provider/DrawerVirtualKeyboardProvider.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "compensates for keyboard overlap without adding extra spacing and centers the focused input",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "tops the scroll container padding up to the visibility margin below the overlap",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "adds scroll slack to a light-DOM scroller for an input inside a shadow root",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "adds keyboard scroll slack to a potential scroll ancestor for textareas",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "adds keyboard scroll slack to the scroll container, not an overflowing textarea",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "sets the keyboard inset CSS variable for a focused input without a scroll target",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "captures focusin targets through a shadow root",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "keeps the keyboard inset when focus moves directly to another keyboard input",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "does not add keyboard scroll slack by default",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "restores keyboard scroll slack when the drawer closes",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "releases keyboard inset and scroll slack after focus leaves the field (pointerdown: %s)",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "activates an item on the first tap while the keyboard is open",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "does not add keyboard scroll slack while pinch-zoomed",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "focuses an unfocused keyboard input on touchend without page scroll",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "preserves native taps on picker inputs",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "preserves native taps that lift over a neighboring interactive element",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "resolves the lift point through the shadow root when the drawer renders in one",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "preserves native taps on disabled inputs",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "preserves native taps on disabled textareas",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "preserves native taps on a disabled labelled control",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "focuses a keyboard input with data-base-ui-swipe-ignore without starting drawer swipe",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "does not focus a keyboard input on touchend without touchstart",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "does not focus a keyboard input after touchcancel",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "does not focus a keyboard input while a nested drawer is open",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "preserves native taps on an already-focused keyboard input",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "refocuses an already-focused keyboard input when the keyboard viewport is closed",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "preserves native taps on an already-focused keyboard input on Android when no keyboard is detected",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "refocuses a tapped input after focus moves from another input while the keyboard is closed",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "overrides the incoming field geometry when focus moves without a tap while the keyboard is open",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "centers a field focused without a tap inside the scrollable body",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "does not restart a progressing or settled reduced-motion alignment scroll",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "re-issues the alignment scroll when a delayed realign pass finds it stalled",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "stops pending realignment once the user starts scrolling while geometry is changing",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "clears keyboard state when a tapped input redirects focus away",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "clears keyboard state when a tapped input blurs itself",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "defers the alignment scroll until the destination stops moving",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "eventually aligns when geometry never settles",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "realigns a tapped field in the scrollable body when the keyboard is already open for a field outside it",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "does not blur and re-focus for focus changes while the keyboard is closed",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "restores the page scroll position when a modal drawer page scrolls while the keyboard is open",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "does not restore the page scroll position for a non-modal drawer",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "does not treat a small visual viewport reduction as the software keyboard",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "computes the keyboard inset from a non-zero visual viewport offset",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "preserves preventScroll after activating an %s label with no input focused",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "preserves a focus change from a label click handler",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "focuses a contentEditable element on touchend",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "focuses the editing host when tapping a nested element inside a contentEditable",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "probes nearby points to resolve a keyboard input retargeted on touchend",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "does not focus a keyboard input when the touch moves past the tap threshold",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "restores the previous scroll slack when focus moves to a different scroll container",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "does not steal a tap that lands on an interactive element near a keyboard input",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "preserves native taps on keyboard inputs while pinch-zoomed",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "restores slack from a removed scroll container before adjusting a new one",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "clears inset and slack when the focused field is removed",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "captures an initially focused input without attempting an unnecessary page restore",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "ignores a directly captured touch target while a closed drawer remains mounted",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "does not focus a lift-point target outside the drawer",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "falls back to the touch target when point lookup misses",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "uses the remaining touch and MouseEvent fallback for keyboard taps",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "ignores a keyboard tap whose native target is not an element",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "ignores touchend without a lift coordinate",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />"
+          ],
+          "title": "does not align inputs when visualViewport is unavailable",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />",
+            "layout viewport resized for the keyboard (Chrome on iOS)"
+          ],
+          "title": "applies no keyboard inset or slack when the small viewport follows the keyboard",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />",
+            "layout viewport resized for the keyboard (Chrome on iOS)"
+          ],
+          "title": "aligns the focused field once the layout viewport has shrunk to the visual viewport",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />",
+            "layout viewport resized for the keyboard (Chrome on iOS)"
+          ],
+          "title": "scrolls the focused field once the layout viewport reaches the visual viewport",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />",
+            "layout viewport resized for the keyboard (Chrome on iOS)"
+          ],
+          "title": "waits for the layout viewport to grow to a shorter keyboard before scrolling",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />",
+            "layout viewport resized for the keyboard (Chrome on iOS)"
+          ],
+          "title": "does not treat a plain resize of both viewports as the software keyboard",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />",
+            "layout viewport resized for the keyboard (Chrome on iOS)"
+          ],
+          "title": "clears the keyboard inset and slack once the layout viewport catches up with the visual viewport",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />",
+            "layout viewport resized for the keyboard (Chrome on iOS)"
+          ],
+          "title": "preserves native taps while the keyboard is open and refocuses once it closes",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />",
+            "alignment on Android"
+          ],
+          "title": "$name",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />",
+            "alignment on Android"
+          ],
+          "title": "re-issues a canceled alignment scroll within a few frames",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />",
+            "alignment on Android"
+          ],
+          "title": "$name",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />",
+            "alignment on Android"
+          ],
+          "title": "$name",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Drawer.VirtualKeyboardProvider />",
+            "alignment on Android"
+          ],
+          "title": "does not treat a rotation as the keyboard on Android",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/drawer/types.md",
+      "parts": [
+        {
+          "name": "Root",
+          "tag": null,
+          "props": [
+            {
+              "name": "defaultOpen",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "open",
+              "required": false,
+              "type": "boolean",
+              "default": null
+            },
+            {
+              "name": "onOpenChange",
+              "required": false,
+              "type": "((open: boolean, eventDetails: Drawer.Root.ChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "snapPoints",
+              "required": false,
+              "type": "DrawerSnapPoint[]",
+              "default": null
+            },
+            {
+              "name": "defaultSnapPoint",
+              "required": false,
+              "type": "DrawerSnapPoint | null",
+              "default": null
+            },
+            {
+              "name": "snapPoint",
+              "required": false,
+              "type": "DrawerSnapPoint | null",
+              "default": null
+            },
+            {
+              "name": "onSnapPointChange",
+              "required": false,
+              "type": "((snapPoint: DrawerSnapPoint | null, eventDetails: Drawer.Root.SnapPointChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "actionsRef",
+              "required": false,
+              "type": "React.RefObject<Drawer.Root.Actions | null>",
+              "default": null
+            },
+            {
+              "name": "defaultTriggerId",
+              "required": false,
+              "type": "string | null",
+              "default": null
+            },
+            {
+              "name": "disablePointerDismissal",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "handle",
+              "required": false,
+              "type": "Drawer.Handle<Payload>",
+              "default": null
+            },
+            {
+              "name": "modal",
+              "required": false,
+              "type": "boolean | 'trap-focus'",
+              "default": "true"
+            },
+            {
+              "name": "onOpenChangeComplete",
+              "required": false,
+              "type": "((open: boolean) => void)",
+              "default": null
+            },
+            {
+              "name": "snapToSequentialPoints",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "swipeDirection",
+              "required": false,
+              "type": "DrawerSwipeDirection",
+              "default": "'down'"
+            },
+            {
+              "name": "triggerId",
+              "required": false,
+              "type": "string | null",
+              "default": null
+            },
+            {
+              "name": "children",
+              "required": false,
+              "type": "React.ReactNode | PayloadChildRenderFunction<Payload>",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "DrawerRootState",
+            "fields": [],
+            "code": "type DrawerRootState = {};"
+          },
+          "actions": {
+            "name": "DrawerRootActions",
+            "members": [
+              "unmount",
+              "close"
+            ],
+            "code": "type DrawerRootActions = {\n    unmount: () => void;\n    close: () => void;\n};"
+          },
+          "changeEventReason": {
+            "name": "DrawerRootChangeEventReason",
+            "values": [
+              "trigger-press",
+              "outside-press",
+              "escape-key",
+              "close-watcher",
+              "close-press",
+              "focus-out",
+              "imperative-action",
+              "swipe",
+              "none"
+            ],
+            "code": "type DrawerRootChangeEventReason = 'trigger-press' | 'outside-press' | 'escape-key' | 'close-watcher' | 'close-press' | 'focus-out' | 'imperative-action' | 'swipe' | 'none';"
+          },
+          "changeEventDetails": {
+            "name": "DrawerRootChangeEventDetails",
+            "code": "type DrawerRootChangeEventDetails = ({\n    reason: 'trigger-press';\n    event: KeyboardEvent | MouseEvent | TouchEvent | PointerEvent;\n} | {\n    reason: 'outside-press';\n    event: MouseEvent | TouchEvent | PointerEvent;\n} | {\n    reason: 'escape-key';\n    event: KeyboardEvent;\n} | {\n    reason: 'close-press';\n    event: KeyboardEvent | MouseEvent | PointerEvent;\n} | {\n    reason: 'focus-out';\n    event: FocusEvent | KeyboardEvent;\n} | {\n    reason: 'imperative-action';\n    event: Event;\n} | {\n    reason: 'none';\n    event: Event;\n} | {\n    reason: 'close-watcher';\n    event: Event;\n} | {\n    reason: 'swipe';\n    event: TouchEvent | PointerEvent;\n}) & {\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n    preventUnmountOnClose: () => void;\n};"
+          },
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Provider",
+          "tag": null,
+          "props": [
+            {
+              "name": "children",
+              "required": false,
+              "type": "React.ReactNode",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "DrawerProviderState",
+            "fields": [],
+            "code": "type DrawerProviderState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Trigger",
+          "tag": "button",
+          "props": [
+            {
+              "name": "handle",
+              "required": false,
+              "type": "Drawer.Handle<Payload>",
+              "default": null
+            },
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "payload",
+              "required": false,
+              "type": "Payload",
+              "default": null
+            },
+            {
+              "name": "id",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Drawer.Trigger.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Drawer.Trigger.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Drawer.Trigger.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "DrawerTriggerState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type DrawerTriggerState = {\n    disabled: boolean;\n    open: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-popup-open",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Portal",
+          "tag": "div",
+          "props": [
+            {
+              "name": "container",
+              "required": false,
+              "type": "HTMLElement | ShadowRoot | React.RefObject<HTMLElement | ShadowRoot | null> | null",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Drawer.Portal.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Drawer.Portal.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "keepMounted",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Drawer.Portal.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "DrawerPortalState",
+            "fields": [],
+            "code": "type DrawerPortalState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Backdrop",
+          "tag": "div",
+          "props": [
+            {
+              "name": "forceRender",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Drawer.Backdrop.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Drawer.Backdrop.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Drawer.Backdrop.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "DrawerBackdropState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              }
+            ],
+            "code": "type DrawerBackdropState = {\n    open: boolean;\n    transitionStatus: TransitionStatus;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": [
+            {
+              "name": "--drawer-swipe-progress",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Popup",
+          "tag": "div",
+          "props": [
+            {
+              "name": "initialFocus",
+              "required": false,
+              "type": "boolean | React.RefObject<HTMLElement | null> | ((openType: InteractionType) => boolean | void | HTMLElement | null)",
+              "default": null
+            },
+            {
+              "name": "finalFocus",
+              "required": false,
+              "type": "boolean | React.RefObject<HTMLElement | null> | ((closeType: InteractionType) => boolean | void | HTMLElement | null)",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Drawer.Popup.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Drawer.Popup.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Drawer.Popup.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "DrawerPopupState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              },
+              {
+                "name": "expanded",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "nested",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "nestedDrawerOpen",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "nestedDrawerSwiping",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "swipeDirection",
+                "optional": false,
+                "type": "DrawerSwipeDirection"
+              },
+              {
+                "name": "swiping",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type DrawerPopupState = {\n    open: boolean;\n    transitionStatus: TransitionStatus;\n    expanded: boolean;\n    nested: boolean;\n    nestedDrawerOpen: boolean;\n    nestedDrawerSwiping: boolean;\n    swipeDirection: DrawerSwipeDirection;\n    swiping: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-expanded",
+              "type": null
+            },
+            {
+              "name": "data-nested-drawer-open",
+              "type": null
+            },
+            {
+              "name": "data-nested-drawer-swiping",
+              "type": null
+            },
+            {
+              "name": "data-swipe-direction",
+              "type": "'up' | 'down' | 'left' | 'right'"
+            },
+            {
+              "name": "data-swipe-dismiss",
+              "type": null
+            },
+            {
+              "name": "data-swiping",
+              "type": null
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": [
+            {
+              "name": "--drawer-frontmost-height",
+              "type": "CSS"
+            },
+            {
+              "name": "--drawer-height",
+              "type": "CSS"
+            },
+            {
+              "name": "--drawer-snap-point-offset",
+              "type": "CSS"
+            },
+            {
+              "name": "--drawer-swipe-movement-x",
+              "type": "CSS"
+            },
+            {
+              "name": "--drawer-swipe-movement-y",
+              "type": "CSS"
+            },
+            {
+              "name": "--drawer-swipe-strength",
+              "type": "number"
+            },
+            {
+              "name": "--nested-drawers",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Content",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Drawer.Content.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Drawer.Content.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Drawer.Content.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "DrawerContentState",
+            "fields": [],
+            "code": "type DrawerContentState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Title",
+          "tag": "h2",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Drawer.Title.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Drawer.Title.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Drawer.Title.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "DrawerTitleState",
+            "fields": [],
+            "code": "type DrawerTitleState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Description",
+          "tag": "p",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Drawer.Description.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Drawer.Description.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Drawer.Description.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "DrawerDescriptionState",
+            "fields": [],
+            "code": "type DrawerDescriptionState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Close",
+          "tag": "button",
+          "props": [
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Drawer.Close.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Drawer.Close.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Drawer.Close.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "DrawerCloseState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type DrawerCloseState = {\n    disabled: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-disabled",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Viewport",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Drawer.Viewport.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Drawer.Viewport.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Drawer.Viewport.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "DrawerViewportState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              },
+              {
+                "name": "nested",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "nestedDialogOpen",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type DrawerViewportState = {\n    open: boolean;\n    transitionStatus: TransitionStatus;\n    nested: boolean;\n    nestedDialogOpen: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-nested",
+              "type": null
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": [
+            {
+              "name": "--drawer-keyboard-inset",
+              "type": "CSS"
+            }
+          ]
+        },
+        {
+          "name": "Indent",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Drawer.Indent.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Drawer.Indent.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Drawer.Indent.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "DrawerIndentState",
+            "fields": [
+              {
+                "name": "active",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type DrawerIndentState = {\n    active: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "IndentBackground",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Drawer.IndentBackground.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Drawer.IndentBackground.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Drawer.IndentBackground.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "DrawerIndentBackgroundState",
+            "fields": [
+              {
+                "name": "active",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type DrawerIndentBackgroundState = {\n    active: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "SwipeArea",
+          "tag": "div",
+          "props": [
+            {
+              "name": "swipeDirection",
+              "required": false,
+              "type": "DrawerSwipeDirection",
+              "default": null
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Drawer.SwipeArea.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Drawer.SwipeArea.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Drawer.SwipeArea.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "DrawerSwipeAreaState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "swiping",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "swipeDirection",
+                "optional": false,
+                "type": "SwipeDirection"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type DrawerSwipeAreaState = {\n    open: boolean;\n    swiping: boolean;\n    swipeDirection: SwipeDirection;\n    disabled: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-swipe-direction",
+              "type": "'up' | 'down' | 'left' | 'right'"
+            },
+            {
+              "name": "data-swiping",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "VirtualKeyboardProvider",
+          "tag": null,
+          "props": [
+            {
+              "name": "children",
+              "required": false,
+              "type": "React.ReactNode",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "DrawerVirtualKeyboardProviderState",
+            "fields": [],
+            "code": "type DrawerVirtualKeyboardProviderState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        }
+      ],
+      "functions": [
+        {
+          "name": "createHandle",
+          "tables": [],
+          "code": [
+            "type ReturnValue = Drawer.Handle<Payload>;"
+          ]
+        },
+        {
+          "name": "Handle",
+          "tables": [
+            {
+              "label": "Properties",
+              "rows": [
+                {
+                  "name": "isOpen",
+                  "type": "boolean",
+                  "modifiers": "readonly"
+                }
+              ]
+            }
+          ],
+          "code": [
+            "function open(triggerId: string | null): void;",
+            "function openWithPayload(payload: Payload): void;",
+            "function close(): void;"
+          ]
+        }
+      ],
+      "types": [
+        {
+          "name": "Root.SnapPoint",
+          "code": "type DrawerRootSnapPoint = number | string;"
+        },
+        {
+          "name": "Root.SnapPointChangeEventDetails",
+          "code": "type DrawerRootSnapPointChangeEventDetails = ({\n    reason: 'trigger-press';\n    event: KeyboardEvent | MouseEvent | TouchEvent | PointerEvent;\n} | {\n    reason: 'outside-press';\n    event: MouseEvent | TouchEvent | PointerEvent;\n} | {\n    reason: 'escape-key';\n    event: KeyboardEvent;\n} | {\n    reason: 'close-press';\n    event: KeyboardEvent | MouseEvent | PointerEvent;\n} | {\n    reason: 'focus-out';\n    event: FocusEvent | KeyboardEvent;\n} | {\n    reason: 'imperative-action';\n    event: Event;\n} | {\n    reason: 'none';\n    event: Event;\n} | {\n    reason: 'close-watcher';\n    event: Event;\n} | {\n    reason: 'swipe';\n    event: TouchEvent | PointerEvent;\n}) & {\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n};"
+        },
+        {
+          "name": "Root.SnapPointChangeEventReason",
+          "code": "type DrawerRootSnapPointChangeEventReason = 'trigger-press' | 'outside-press' | 'escape-key' | 'close-watcher' | 'close-press' | 'focus-out' | 'imperative-action' | 'swipe' | 'none';"
+        }
+      ],
+      "additionalTypes": [
+        {
+          "name": "DrawerBackdropCssVariables",
+          "code": "declare namespace DrawerBackdropCssVariables {\n    const swipeProgress: '--drawer-swipe-progress';\n}",
+          "constants": [
+            {
+              "name": "swipeProgress",
+              "value": "--drawer-swipe-progress"
+            }
+          ]
+        },
+        {
+          "name": "DrawerBackdropDataAttributes",
+          "code": "declare namespace DrawerBackdropDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            }
+          ]
+        },
+        {
+          "name": "DrawerCloseDataAttributes",
+          "code": "declare namespace DrawerCloseDataAttributes {\n    const disabled: 'data-disabled';\n}",
+          "constants": [
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            }
+          ]
+        },
+        {
+          "name": "DrawerPopupCssVariables",
+          "code": "declare namespace DrawerPopupCssVariables {\n    const nestedDrawers: '--nested-drawers';\n    const height: '--drawer-height';\n    const frontmostHeight: '--drawer-frontmost-height';\n    const swipeMovementX: '--drawer-swipe-movement-x';\n    const swipeMovementY: '--drawer-swipe-movement-y';\n    const snapPointOffset: '--drawer-snap-point-offset';\n    const swipeStrength: '--drawer-swipe-strength';\n}",
+          "constants": [
+            {
+              "name": "nestedDrawers",
+              "value": "--nested-drawers"
+            },
+            {
+              "name": "height",
+              "value": "--drawer-height"
+            },
+            {
+              "name": "frontmostHeight",
+              "value": "--drawer-frontmost-height"
+            },
+            {
+              "name": "swipeMovementX",
+              "value": "--drawer-swipe-movement-x"
+            },
+            {
+              "name": "swipeMovementY",
+              "value": "--drawer-swipe-movement-y"
+            },
+            {
+              "name": "snapPointOffset",
+              "value": "--drawer-snap-point-offset"
+            },
+            {
+              "name": "swipeStrength",
+              "value": "--drawer-swipe-strength"
+            }
+          ]
+        },
+        {
+          "name": "DrawerPopupDataAttributes",
+          "code": "declare namespace DrawerPopupDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n    const expanded: 'data-expanded';\n    const nestedDrawerOpen: 'data-nested-drawer-open';\n    const nestedDrawerSwiping: 'data-nested-drawer-swiping';\n    const swipeDismiss: 'data-swipe-dismiss';\n    const swipeDirection: 'data-swipe-direction';\n    const swiping: 'data-swiping';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            },
+            {
+              "name": "expanded",
+              "value": "data-expanded"
+            },
+            {
+              "name": "nestedDrawerOpen",
+              "value": "data-nested-drawer-open"
+            },
+            {
+              "name": "nestedDrawerSwiping",
+              "value": "data-nested-drawer-swiping"
+            },
+            {
+              "name": "swipeDismiss",
+              "value": "data-swipe-dismiss"
+            },
+            {
+              "name": "swipeDirection",
+              "value": "data-swipe-direction"
+            },
+            {
+              "name": "swiping",
+              "value": "data-swiping"
+            }
+          ]
+        },
+        {
+          "name": "DrawerSwipeAreaDataAttributes",
+          "code": "declare namespace DrawerSwipeAreaDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const disabled: 'data-disabled';\n    const swipeDirection: 'data-swipe-direction';\n    const swiping: 'data-swiping';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "swipeDirection",
+              "value": "data-swipe-direction"
+            },
+            {
+              "name": "swiping",
+              "value": "data-swiping"
+            }
+          ]
+        },
+        {
+          "name": "DrawerTriggerDataAttributes",
+          "code": "declare namespace DrawerTriggerDataAttributes {\n    const disabled: 'data-disabled';\n    const popupOpen: 'data-popup-open';\n}",
+          "constants": [
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "popupOpen",
+              "value": "data-popup-open"
+            }
+          ]
+        },
+        {
+          "name": "DrawerViewportCssVariables",
+          "code": "declare namespace DrawerViewportCssVariables {\n    const keyboardInset: '--drawer-keyboard-inset';\n}",
+          "constants": [
+            {
+              "name": "keyboardInset",
+              "value": "--drawer-keyboard-inset"
+            }
+          ]
+        },
+        {
+          "name": "DrawerViewportDataAttributes",
+          "code": "declare namespace DrawerViewportDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n    const nested: 'data-nested';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            },
+            {
+              "name": "nested",
+              "value": "data-nested"
+            }
+          ]
+        }
+      ],
+      "externalTypes": [
+        {
+          "name": "InteractionType",
+          "code": "type InteractionType = 'mouse' | 'touch' | 'pen' | 'keyboard' | '';"
+        },
+        {
+          "name": "DrawerSwipeDirection",
+          "code": "type DrawerSwipeDirection = 'up' | 'down' | 'left' | 'right';"
+        },
+        {
+          "name": "PayloadChildRenderFunction",
+          "code": "type PayloadChildRenderFunction = (arg: {\n    payload: unknown | undefined;\n}) => ReactNode;"
+        },
+        {
+          "name": "DrawerSnapPoint",
+          "code": "type DrawerSnapPoint = number | string;"
+        },
+        {
+          "name": "SwipeDirection",
+          "code": "type SwipeDirection = 'up' | 'down' | 'left' | 'right';"
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/drawer/page.mdx",
+      "referenceTags": [
+        "TypesDrawer.Provider",
+        "TypesDrawer.IndentBackground",
+        "TypesDrawer.Indent",
+        "TypesDrawer.Root",
+        "TypesDrawer.Trigger",
+        "TypesDrawer.SwipeArea",
+        "TypesDrawer.VirtualKeyboardProvider",
+        "TypesDrawer.Portal",
+        "TypesDrawer.Backdrop",
+        "TypesDrawer.Viewport",
+        "TypesDrawer.Popup",
+        "TypesDrawer.Content",
+        "TypesDrawer.Title",
+        "TypesDrawer.Description",
+        "TypesDrawer.Close",
+        "TypesDrawer.createHandle",
+        "TypesDrawer.Handle"
+      ]
+    }
+  ]
+}
