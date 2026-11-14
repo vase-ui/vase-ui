@@ -51,8 +51,6 @@ When the content of the preview card cannot be next to its trigger, use a detach
 
 The methods of the handle, such as `open()` and `close()`, act only while a `PreviewCard.Root` with the same handle is mounted. The handle ignores a call before a root mounts or after it unmounts, and a development build shows a warning for that call. Each root that mounts starts from a new state. It does not run an ignored call, and it does not keep the open state of an earlier root.
 
-`open(triggerId)` opens the preview card for the `PreviewCard.Trigger` that has that `id` and the same handle. While a root is mounted, it throws when the handle has no such trigger. `close()` closes the preview card. `isOpen` is `true` while the preview card is open, and a `computed` that reads it follows the open state.
-
 <<< ./preview-card/DetachedTriggers.vue{4,8,10}
 
 <DemoFrame>
@@ -137,3 +135,19 @@ The viewport is optional. Use it only when more than one trigger opens one popup
 ## API reference
 
 <ApiReference />
+
+## createHandle
+
+Creates a handle that connects a `PreviewCard.Root` with detached `PreviewCard.Trigger` parts. The type argument of the function is the type of the payload.
+
+<ApiReference name="PreviewCard.createHandle" />
+
+### Handle
+
+`PreviewCard.Handle` is the class of the handle.
+
+- `open(triggerId)` opens the preview card for the `PreviewCard.Trigger` that has that `id` and the same handle. While a root is mounted, it throws when the handle has no such trigger.
+- `close()` closes the preview card.
+- `isOpen` is `true` while the preview card is open, and `false` while no root is mounted. A `computed` that reads it follows the open state.
+
+Call `open()` and `close()` only in an event handler or an effect, and not in a render.
