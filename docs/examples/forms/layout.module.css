@@ -17,6 +17,12 @@
   width: 12rem;
 }
 
+@media (min-width: 768px) {
+  .Form .ImageInput {
+    width: 20rem;
+  }
+}
+
 .ImagePositioner[data-empty] {
   display: none;
 }

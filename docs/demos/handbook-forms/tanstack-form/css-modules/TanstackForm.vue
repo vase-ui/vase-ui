@@ -300,7 +300,7 @@ const SERVER_TYPES = [
           <Field.Label :class="fieldStyles.Label">Container image</Field.Label>
           <Autocomplete.Input
             placeholder="e.g. docker.io/library/node:latest"
-            :class="autocompleteStyles.Input"
+            :class="[autocompleteStyles.Input, layout.ImageInput]"
             @blur="field.handleBlur"
           />
           <Field.Description :class="fieldStyles.Description">

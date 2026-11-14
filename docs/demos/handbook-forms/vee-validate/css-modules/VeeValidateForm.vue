@@ -283,7 +283,7 @@ const protocols = ['http', 'https', 'ssh'];
           <Field.Label :class="fieldStyles.Label">Container image</Field.Label>
           <Autocomplete.Input
             placeholder="e.g. docker.io/library/node:latest"
-            :class="autocompleteStyles.Input"
+            :class="[autocompleteStyles.Input, layout.ImageInput]"
             @blur="handleBlur"
           />
           <Field.Description :class="fieldStyles.Description">
@@ -425,6 +425,7 @@ const protocols = ['http', 'https', 'ssh'];
               :format="{ style: 'percent', minimumFractionDigits: 0, maximumFractionDigits: 0 }"
               :class="layout.Slider"
               @update:value="handleChange"
+              @value-committed="(committed) => handleChange(committed)"
             >
               <Fieldset.Legend :class="fieldStyles.Label">Scaling threshold</Fieldset.Legend>
               <Slider.Value :class="layout.SliderValue" />

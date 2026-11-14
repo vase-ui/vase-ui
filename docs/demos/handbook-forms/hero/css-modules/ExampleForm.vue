@@ -201,7 +201,7 @@ const protocols = ['http', 'https', 'ssh'];
         <Field.Label :class="fieldStyles.Label">Container image</Field.Label>
         <Autocomplete.Input
           placeholder="e.g. docker.io/library/node:latest"
-          :class="autocompleteStyles.Input"
+          :class="[autocompleteStyles.Input, layout.ImageInput]"
         />
         <Field.Description :class="fieldStyles.Description">
           Enter a registry URL with optional tags
