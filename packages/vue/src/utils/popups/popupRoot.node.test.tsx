@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { createSSRApp } from 'vue';
+import { createSSRApp, defineComponent, h } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { createPopupFixtureHandle } from '../../../test/fixtures/PopupFixture';
+import { ValuePopupFixtureStore } from '../../../test/fixtures/ValuePopupFixture';
+import { useSingleAnchorPopupRoot } from './popupRoot';
 import PopupRootHydration from './PopupRootHydration.test.vue';
 
 interface TriggerValues {
@@ -119,5 +121,28 @@ describe('usePopupRoot on a server', () => {
     expect(handle.store).toBe(handle.serverStore);
     expect(handle.isOpen).toBe(false);
     expect(handle.serverStore.context.triggerElements.size).toBe(0);
+  });
+});
+
+describe('useSingleAnchorPopupRoot on a server', () => {
+  it('renders an open root on a server', async () => {
+    let store: ValuePopupFixtureStore | undefined;
+    const Root = defineComponent({
+      setup() {
+        const root = useSingleAnchorPopupRoot(
+          { defaultOpen: true },
+          (initialState, defaultPopupId) =>
+            new ValuePopupFixtureStore(initialState, defaultPopupId),
+          { name: 'Root', onOpenChange() {}, onOpenChangeComplete() {} },
+        );
+        store = root.store;
+        return () => (root.mounted.value ? h('div', { role: 'dialog' }, 'popup') : null);
+      },
+    });
+
+    const html = await renderToString(createSSRApp(Root));
+
+    expect(html).toBe('<div role="dialog">popup</div>');
+    expect(store?.state.mounted).toBe(true);
   });
 });

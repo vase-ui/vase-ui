@@ -1,0 +1,10 @@
+{
+  "id": "VUE-52",
+  "evidence": [
+    "https://vuejs.org/guide/essentials/reactivity-fundamentals.html#deep-reactivity",
+    "https://vuejs.org/api/reactivity-core.html#watch",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/select/root/SelectRoot.tsx#L406-L423"
+  ],
+  "behavior": "`Select.Value` follows a change that the consumer makes in place to a reactive `items` prop of `Select.Root`, such as a new key. Base UI sees only a new object. The root watches the prop deeply and keeps a new plain copy for each change.",
+  "dueWith": "packages/react/src/select/root/SelectRoot.tsx"
+}
