@@ -1,5 +1,6 @@
 import { computed, toRaw, toValue } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
+import { POPUP_COLLISION_AVOIDANCE } from '../../internals/constants';
 import { useAnchorPositioning } from '../../internals/useAnchorPositioning';
 import type {
   Align,
@@ -17,9 +18,6 @@ import { usePositioner } from './positioning/usePositioner';
 import type { ReactiveStore } from './ReactiveStore';
 import type { PopupStoreContext, PopupStoreSelectors, PopupStoreState } from './store';
 import type { PositioningInteractionStore } from './types';
-
-// A regular popup is not scrollable, so it can flip to any axis.
-const POPUP_COLLISION_AVOIDANCE = { fallbackAxisSide: 'end' } as const;
 
 /**
  * The state that every popup positioner shares.
