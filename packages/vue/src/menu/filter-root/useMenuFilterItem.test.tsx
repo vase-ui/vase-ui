@@ -201,6 +201,9 @@ describe('filtered Menu items', () => {
       });
 
       const { setProps } = await render(<Test value="" tick={0} />);
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeVisible();
+      });
 
       await setProps({ value: 'usu', tick: 0 });
       expect(screen.queryByRole('menuitem', { name: 'Zmień nazwę' })).toBe(null);
@@ -240,6 +243,9 @@ describe('filtered Menu items', () => {
       });
 
       const { setProps } = await render(<Test value="" label="Rename" />);
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeVisible();
+      });
 
       await setProps({ value: 'del', label: 'Rename' });
       await setProps({ value: 'del', label: 'Duplicate' });
@@ -278,6 +284,9 @@ describe('filtered Menu items', () => {
 
     it('matches the updated text of an item rendered through its render element', async () => {
       const { setProps } = await render(<RenderElementTest value="" name="One" />);
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeVisible();
+      });
 
       await setProps({ value: '', name: 'Two' });
       await setProps({ value: 'two', name: 'Two' });
@@ -287,6 +296,9 @@ describe('filtered Menu items', () => {
 
     it('matches a render element whose text changed while the item was filtered out', async () => {
       const { setProps } = await render(<RenderElementTest value="two" name="One" />);
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeVisible();
+      });
       expect(screen.queryByRole('menuitem', { name: 'One' })).toBe(null);
 
       await setProps({ value: 'two', name: 'Two' });
