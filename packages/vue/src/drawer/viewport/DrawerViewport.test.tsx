@@ -30,7 +30,7 @@ function trackTouchMoveListeners() {
       if (type === 'touchmove' && typeof options === 'object' && options.passive === false) {
         activeListeners.add(listener);
       }
-      return EventTarget.prototype.addEventListener.call(this, type, listener, options);
+      EventTarget.prototype.addEventListener.call(this, type, listener, options);
     });
   const removeSpy = vi
     .spyOn(document, 'removeEventListener')
@@ -38,7 +38,7 @@ function trackTouchMoveListeners() {
       if (type === 'touchmove') {
         activeListeners.delete(listener);
       }
-      return EventTarget.prototype.removeEventListener.call(this, type, listener, options);
+      EventTarget.prototype.removeEventListener.call(this, type, listener, options);
     });
   onTestFinished(() => {
     addSpy.mockRestore();
