@@ -70,6 +70,27 @@ describe.each([false, true])('submenu pointer focus with filteredParent=%s', (fi
   const { render } = createRenderer();
 
   it.each(['mouse', 'touch', 'pen'])(
+    'handles a %s press without hover opening',
+    async (pointerType) => {
+      await render(<Test filteredParent={filteredParent} openOnHover={false} />);
+      await waitForParentFocus(filteredParent);
+      await press(screen.getByRole('menuitem', { name: 'More' }), pointerType);
+      const input = await screen.findByRole('searchbox', { name: 'Filter more actions' });
+      await waitSingleFrame();
+      await waitFor(() => expect(input.matches(':focus')).toBe(pointerType === 'mouse'));
+    },
+  );
+
+  it('does not focus the input after a touch press with hover opening enabled', async () => {
+    await render(<Test filteredParent={filteredParent} />);
+    await waitForParentFocus(filteredParent);
+    await press(screen.getByRole('menuitem', { name: 'More' }), 'touch');
+    const input = await screen.findByRole('searchbox', { name: 'Filter more actions' });
+    await waitSingleFrame();
+    expect(input).not.toHaveFocus();
+  });
+
+  it.each(['mouse', 'touch', 'pen'])(
     'does not focus a hover-opened input on a %s press',
     async (pointerType) => {
       const { user } = await render(<Test filteredParent={filteredParent} />);

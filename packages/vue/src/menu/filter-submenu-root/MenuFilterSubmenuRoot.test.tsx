@@ -665,6 +665,187 @@ describe('closing a filtered submenu from the keyboard', () => {
     expect(screen.getByRole('menuitem', { name: 'More' })).toHaveAttribute('data-popup-open');
     expect(input).toHaveFocus();
   });
+
+  function Submenu(props: { filterable: boolean; container?: ShadowRoot }) {
+    const submenu = (
+      <Menu.SubmenuRoot>
+        <Menu.SubmenuTrigger>More</Menu.SubmenuTrigger>
+        <Menu.Portal container={props.container}>
+          <Menu.Positioner>
+            <Menu.Popup data-testid="submenu">
+              {props.filterable && <Menu.Input aria-label="Filter child actions" />}
+              <Menu.List>
+                <Menu.Item>Child</Menu.Item>
+              </Menu.List>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.SubmenuRoot>
+    );
+    return props.filterable ? <Menu.FilterProvider>{submenu}</Menu.FilterProvider> : submenu;
+  }
+
+  it.each([
+    { parentFilterable: false, submenuFilterable: true },
+    { parentFilterable: true, submenuFilterable: false },
+    { parentFilterable: true, submenuFilterable: true },
+  ])(
+    'moves a horizontal parent on when a vertical submenu closes on its main-axis key (filterable parent: $parentFilterable, filterable submenu: $submenuFilterable)',
+    async ({ parentFilterable, submenuFilterable }) => {
+      const menu = (
+        <Menu.Root orientation="horizontal">
+          <Menu.Trigger>Actions</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                {parentFilterable && <Menu.Input aria-label="Filter actions" />}
+                <Menu.List>
+                  <Menu.Item>First</Menu.Item>
+                  <Submenu filterable={submenuFilterable} />
+                  <Menu.Item>Last</Menu.Item>
+                </Menu.List>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      );
+      const { user } = await render(
+        parentFilterable ? <Menu.FilterProvider>{menu}</Menu.FilterProvider> : menu,
+      );
+
+      screen.getByRole('button', { name: 'Actions' }).focus();
+      await flushMicrotasks();
+      await user.keyboard('[Enter]');
+      const initialFocus = parentFilterable
+        ? await screen.findByRole('searchbox', { name: 'Filter actions' })
+        : await screen.findByRole('menuitem', { name: 'First' });
+      await waitFor(() => expect(initialFocus).toHaveFocus());
+      await user.keyboard('[ArrowRight]');
+      const trigger = screen.getByRole('menuitem', { name: 'More' });
+      await waitFor(() => {
+        expect(trigger).toHaveAttribute('data-highlighted');
+      });
+
+      await user.keyboard('[ArrowDown]');
+      const submenu = await screen.findByTestId('submenu');
+      await waitFor(() => {
+        expect(submenu.contains(document.activeElement)).toBe(true);
+      });
+      await user.keyboard('[ArrowLeft]');
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('submenu')).toBe(null);
+      });
+      expect(screen.getByRole('menuitem', { name: 'First' })).toHaveAttribute('data-highlighted');
+      expect(trigger).not.toHaveAttribute('data-highlighted');
+    },
+  );
+
+  it.each([false, true])(
+    'does not wrap a filterable parent when closing from its first item (filterable submenu: %s)',
+    async (submenuFilterable) => {
+      const { user } = await render(
+        <Menu.FilterProvider>
+          <Menu.Root orientation="horizontal">
+            <Menu.Trigger>Actions</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Input aria-label="Filter actions" />
+                  <Menu.List>
+                    <Submenu filterable={submenuFilterable} />
+                    <Menu.Item>Middle</Menu.Item>
+                    <Menu.Item>Last</Menu.Item>
+                  </Menu.List>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menu.FilterProvider>,
+      );
+
+      screen.getByRole('button', { name: 'Actions' }).focus();
+      await flushMicrotasks();
+      await user.keyboard('[Enter]');
+      const input = await screen.findByRole('searchbox', { name: 'Filter actions' });
+      const trigger = screen.getByRole('menuitem', { name: 'More' });
+      await waitFor(() => {
+        expect(input).toHaveAttribute('aria-activedescendant', trigger.id);
+      });
+
+      await user.keyboard('[ArrowDown]');
+      const submenu = await screen.findByTestId('submenu');
+      await waitFor(() => {
+        expect(submenu.contains(document.activeElement)).toBe(true);
+      });
+      await user.keyboard('[ArrowLeft]');
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('submenu')).toBe(null);
+      });
+      expect(input).toHaveFocus();
+      expect(input).toHaveAttribute('aria-activedescendant', trigger.id);
+      expect(screen.getByRole('menuitem', { name: 'Last' })).not.toHaveAttribute(
+        'data-highlighted',
+      );
+    },
+  );
+
+  it('moves a filterable parent on when a submenu portaled into a shadow root closes', async () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const shadowRoot = host.attachShadow({ mode: 'open' });
+
+    try {
+      const { user } = await render(
+        <Menu.FilterProvider>
+          <Menu.Root orientation="horizontal">
+            <Menu.Trigger>Actions</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Input aria-label="Filter actions" />
+                  <Menu.List>
+                    <Menu.Item>First</Menu.Item>
+                    <Submenu filterable={false} container={shadowRoot} />
+                    <Menu.Item>Last</Menu.Item>
+                  </Menu.List>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menu.FilterProvider>,
+      );
+
+      screen.getByRole('button', { name: 'Actions' }).focus();
+      await flushMicrotasks();
+      await user.keyboard('[Enter]');
+      await waitFor(() => {
+        expect(screen.getByRole('searchbox', { name: 'Filter actions' })).toHaveFocus();
+      });
+      await user.keyboard('[ArrowRight]');
+      const trigger = screen.getByRole('menuitem', { name: 'More' });
+      await waitFor(() => {
+        expect(trigger).toHaveAttribute('data-highlighted');
+      });
+
+      await user.keyboard('[ArrowDown]');
+      await waitFor(() => {
+        expect(shadowRoot.querySelector('[data-testid="submenu"]')).not.toBe(null);
+      });
+      await waitFor(() => {
+        expect(shadowRoot.activeElement).not.toBe(null);
+      });
+      await user.keyboard('[ArrowLeft]');
+
+      await waitFor(() => {
+        expect(shadowRoot.querySelector('[data-testid="submenu"]')).toBe(null);
+      });
+      expect(screen.getByRole('menuitem', { name: 'First' })).toHaveAttribute('data-highlighted');
+    } finally {
+      host.remove();
+    }
+  });
 });
 
 describe('nested popups of a filterable menu', () => {
