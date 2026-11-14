@@ -32,6 +32,32 @@ yarn add @vase-ui/vue@next
 
 The package is published with the `next` tag, so each command above names that tag.
 
+## Set up
+
+### Portals
+
+A component that renders a popup, such as [Tooltip](/components/tooltip) or [Preview Card](/components/preview-card), puts the popup in a portal. By default, the portal is in `<body>`, outside the root element of your app.
+
+Give the root element the style `isolation: isolate`. In a Vue app, the root element is the element that `createApp().mount()` gets, such as `#app`. In a Nuxt app, it is `#__nuxt`.
+
+::: code-group
+
+```css [Vue]
+#app {
+  isolation: isolate;
+}
+```
+
+```css [Nuxt]
+#__nuxt {
+  isolation: isolate;
+}
+```
+
+:::
+
+The root element then has its own stacking context. A popup shows above the page, and a `z-index` inside the root element cannot put an element above the popup.
+
 ## Use a component
 
 Each component has its own entry point, such as `@vase-ui/vue/button`. The entry point `@vase-ui/vue` exports them together.
