@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
@@ -206,6 +206,31 @@ describe('useDateTimeFieldRoot', () => {
       expect(hidden!.querySelector('[data-type="timeZoneName"]')).toBe(null);
     });
 
+    it.each([
+      { name: 'the time zone prop', props: { timeZone: 'Asia/Tokyo' }, expected: 'Asia/Tokyo' },
+      {
+        name: 'the zone of a zoned default value',
+        props: { defaultValue: '2026-11-14T15:04[Asia/Tokyo]' },
+        expected: 'Asia/Tokyo',
+      },
+      {
+        name: 'the time zone prop over the zone of the value',
+        props: { defaultValue: '2026-11-14T15:04[Asia/Tokyo]', timeZone: 'Europe/Paris' },
+        expected: 'Europe/Paris',
+      },
+      { name: 'the zone of the runtime', props: {}, expected: undefined },
+    ])('reads today in $name', async ({ props, expected }) => {
+      const now = vi.spyOn(Temporal.Now, 'plainDateISO');
+      onTestFinished(() => {
+        now.mockRestore();
+      });
+
+      await render(<DateTimeFieldProbe locale="en-US" {...props} />);
+
+      expect(now).toHaveBeenCalled();
+      expect(new Set(now.mock.calls.map(([timeZone]) => timeZone))).toEqual(new Set([expected]));
+    });
+
     it('shows a date in the calendar prop and keeps the calendar of the value', async () => {
       const onValueChange = vi.fn();
       const { container, user } = await render(
@@ -276,6 +301,33 @@ describe('useDateTimeFieldRoot', () => {
 
       const [value] = onValueChange.mock.calls[0] as [TemporalValue];
       expect(value.toString()).toBe(row.expected);
+    });
+
+    it('works with a value that another realm made, which `instanceof` does not know', async () => {
+      const frame = document.createElement('iframe');
+      document.body.append(frame);
+      onTestFinished(() => {
+        frame.remove();
+      });
+      const other = (frame.contentWindow as unknown as { Temporal: typeof Temporal }).Temporal;
+      const value = other.PlainDateTime.from('2026-11-14T15:04');
+      const onValueChange = vi.fn();
+      const { container, user } = await render(
+        <DateTimeFieldProbe
+          defaultValue={value}
+          locale="en-US"
+          hourCycle={24}
+          onValueChange={onValueChange}
+        />,
+      );
+
+      expect(value).not.toBeInstanceOf(Temporal.PlainDateTime);
+      expect(segmentOf(container, 'minute').value).toBe('04');
+
+      await user.click(segmentOf(container, 'minute'));
+      await user.keyboard('{ArrowUp}');
+
+      expect(onValueChange.mock.calls[0]![0].toString()).toBe('2026-11-14T15:05:00');
     });
 
     it('emits valueChange, then update:value, and gives the reason of the key', async () => {
@@ -847,6 +899,24 @@ describe('useDateTimeFieldRoot', () => {
       expect(screen.getByTestId('error')).toHaveTextContent(PARTIAL_MESSAGE);
       expect(root).toHaveAttribute('data-invalid');
       expect(root).toHaveAttribute('data-touched');
+    });
+
+    it('validates a field with two date fields through the first one that is invalid', async () => {
+      const { container, user } = await render(
+        <Field.Root name="range" validationMode="onBlur">
+          <DateTimeFieldProbe defaultValue="2026-11-14" locale="en-US" />
+          <DateTimeFieldProbe defaultValue="2026-11-20" locale="en-US" />
+          <Field.Error data-testid="error" />
+          <button type="button">Next</button>
+        </Field.Root>,
+      );
+      const [first] = Array.from(container.querySelectorAll<HTMLElement>('[role="group"]'));
+
+      await user.click(segmentOf(first!, 'day'));
+      await user.keyboard('{Backspace}{Backspace}');
+      await user.click(screen.getByRole('button', { name: 'Next' }));
+
+      expect(screen.getByTestId('error')).toHaveTextContent(PARTIAL_MESSAGE);
     });
 
     it('shows a missing value through Field after the user empties a required field', async () => {

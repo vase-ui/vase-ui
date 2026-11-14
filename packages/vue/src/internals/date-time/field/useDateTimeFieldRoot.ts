@@ -1,6 +1,8 @@
 import {
   computed,
   nextTick,
+  onActivated,
+  onDeactivated,
   onMounted,
   provide,
   shallowReactive,
@@ -555,7 +557,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   const segmentElements = shallowReactive(new Set<HTMLInputElement>());
   function getOrderedSegments() {
     return [...segmentElements].sort((a, b) =>
-      a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1,
+      a.compareDocumentPosition(b) & ownerWindow(a).Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1,
     );
   }
   const firstSegment = computed(() => getOrderedSegments()[0] ?? null);
@@ -762,23 +764,56 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     void nextTick(writeValueToHiddenInput);
   }
 
-  // A plain variable keeps the render of the hidden input part from depending on the element.
-  let ownHiddenInput: HTMLInputElement | null = null;
+  // Vue calls a ref setter during a render, so the setter reads no reactive state.
+  let heldInput: HTMLInputElement | null = null;
+  let unregisterInput: (() => void) | void;
+  // `KeepAlive` takes the input out of the document, and the field must not use an input that is
+  // not in the document.
+  const isDeactivated = shallowRef(false);
+
+  // A field can have more than one input, such as two date fields of a range. The input goes to the
+  // registry of the field and not to `validation.inputRef`. The registry gives the field the first
+  // input that is invalid.
+  function updateInputRegistration() {
+    unregisterInput?.();
+    unregisterInput = heldInput
+      ? validation.registerInput(heldInput, {
+          controlRef: () => firstSegment.value,
+          get value() {
+            return hiddenText.value;
+          },
+        })
+      : undefined;
+  }
 
   function setHiddenInput(input: unknown) {
     const next = input as HTMLInputElement | null;
     // Vue calls a function ref again on each patch, with the same element.
-    if (next === ownHiddenInput) {
+    if (next === heldInput) {
       return;
     }
-    // A template can mount the root that replaces this root before it unmounts this root. This root
-    // then clears the input of the field only when the input is its own.
-    if (next !== null || validation.inputRef.value === ownHiddenInput) {
-      validation.inputRef.value = next;
-    }
-    ownHiddenInput = next;
+    heldInput = next;
     hiddenInputElement.value = next;
+    updateInputRegistration();
   }
+
+  onDeactivated(() => {
+    isDeactivated.value = true;
+    unregisterInput?.();
+    unregisterInput = undefined;
+  });
+
+  onActivated(() => {
+    isDeactivated.value = false;
+  });
+
+  // `KeepAlive` runs the `onActivated` hooks from the last part to the first part. A registration
+  // in the hook would reverse the order of the inputs. A watcher runs in the order of the parts.
+  watch(isDeactivated, (deactivated) => {
+    if (!deactivated) {
+      updateInputRegistration();
+    }
+  });
 
   watch(
     hiddenInputElement,
