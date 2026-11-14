@@ -1,0 +1,11 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/fieldset/demos",
+  "files": {
+    "hero/css-modules/index.module.css": "cdc19cc431cb92404e534025ad2b9b447e6474fcdfa1ad776fb4dcfc2cf842a5",
+    "hero/css-modules/index.tsx": "70d44929869d0b1d8ea1632acfa5af7733ccfe8761ee7279bc58562700bedd5c"
+  },
+  "entryPoints": {
+    "hero": ["field"]
+  }
+}

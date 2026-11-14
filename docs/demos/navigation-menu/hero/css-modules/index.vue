@@ -50,7 +50,7 @@ const handbookLinks = [
       'Vase UI components can be styled with plain CSS, CSS Modules, or utility classes.',
   },
   {
-    href: `${base}components/navigation-menu#closing-animations`,
+    href: `${base}handbook/animation`,
     title: 'Animation',
     description:
       'Vase UI components can be animated with CSS transitions, CSS animations, or JavaScript.',

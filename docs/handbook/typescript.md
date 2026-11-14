@@ -26,7 +26,7 @@ Vue changes an absent Boolean prop to `false`. The wrapper gives `open` the defa
 
 ### State
 
-The `State` type is the internal state of the part. For example, a `Positioner` part, such as `<Tooltip.Positioner>`, has state that describes the position of the element in relation to its anchor.
+The `State` type is the internal state of the part. For example, a `Positioner` part, such as `<Popover.Positioner>`, has state that describes the position of the element in relation to its anchor.
 
 The sample gives a function with a typed `state` parameter to `stateClass`. It also uses the same state in the `#render` slot.
 

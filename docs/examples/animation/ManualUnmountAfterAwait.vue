@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { shallowRef } from 'vue';
-import { Dialog } from '@vase-ui/vue/dialog';
+import { Popover } from '@vase-ui/vue/popover';
 
 declare function save(): Promise<void>;
 
 const open = shallowRef(false);
 
 // #region listener
-async function handleOpenChange(nextOpen: boolean, details: Dialog.Root.ChangeEventDetails) {
+async function handleOpenChange(nextOpen: boolean, details: Popover.Root.ChangeEventDetails) {
   if (nextOpen) {
     open.value = true;
     return;
@@ -20,7 +20,7 @@ async function handleOpenChange(nextOpen: boolean, details: Dialog.Root.ChangeEv
 </script>
 
 <template>
-  <Dialog.Root :open="open" @open-change="handleOpenChange">
+  <Popover.Root :open="open" @open-change="handleOpenChange">
     <!-- ... -->
-  </Dialog.Root>
+  </Popover.Root>
 </template>
