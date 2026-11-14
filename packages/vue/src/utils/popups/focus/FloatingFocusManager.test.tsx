@@ -22,9 +22,10 @@ import {
   screen,
   useTestInteractions,
   waitFor,
+  waitForLaterMillisecond,
   within,
 } from '#test-utils';
-import { Main as Navigation } from '../../../../test/fixtures/Navigation';
+import { Main as Navigation } from '../../../../test/floating-ui-tests/Navigation';
 import { useFloating } from '../../../../test/floating-ui-tests/useFloating';
 import { platform } from '../../../common/platform';
 import type { InteractionType } from '../../../common/useEnhancedClickHandler';
@@ -257,18 +258,6 @@ function runFramesAtOnce() {
       return 0;
     },
   );
-}
-
-// Vue stamps an event with `Date.now()` in the first listener that gets it. It skips each later
-// listener that was attached in that millisecond or after it. The portal of a popup that is not
-// modal and the popup element of `useDismiss` have capture listeners. A case that presses a key or
-// clicks in the popup in the millisecond of the open thus waits for a later millisecond first, as
-// the renderer does after a mount.
-async function waitForLaterMillisecond() {
-  const start = Date.now();
-  while (Date.now() === start) {
-    await Promise.resolve();
-  }
 }
 
 function setOpenOf(open: ShallowRef<boolean>) {

@@ -8,8 +8,8 @@ import {
   flushMicrotasks,
   screen,
   useTestInteractions,
-  wait,
   waitFor,
+  waitForLaterMillisecond,
 } from '#test-utils';
 import type { VaseUIRenderResult } from '#test-utils';
 import { PopupFixtureContext } from '../../../../test/fixtures/PopupFixture';
@@ -2223,7 +2223,7 @@ describe('useDismiss', () => {
 
     // Vue skips the later listeners of an event that comes in the millisecond when Vue attached
     // them. The first click mounts the button of the second click.
-    await wait(1);
+    await waitForLaterMillisecond();
     await user.click(screen.getByText('open 2'));
     await flushMicrotasks();
 

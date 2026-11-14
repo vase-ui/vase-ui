@@ -1,5 +1,8 @@
 {
-  "upstreamPaths": ["packages/react/src/utils/popups/focus/**"],
+  "upstreamPaths": [
+    "packages/react/src/utils/popups/focus/**",
+    "packages/react/test/floating-ui-tests/Navigation.tsx"
+  ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [],
   "surfaceAdditions": [],
