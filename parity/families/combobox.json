@@ -136,6 +136,14 @@
     },
     {
       "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
+      "describe": ["<Combobox.Root />", "keyboard interaction"],
+      "title": "does not bubble Escape key when Empty component is present",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/combobox/empty/ComboboxEmpty.tsx",
+      "reason": "The case renders `Combobox.Empty`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
       "describe": ["<Combobox.Root />", "prop: filteredItems"],
       "title": "resets external filteredItems when reopening after a selection",
       "kind": "waits-on",
