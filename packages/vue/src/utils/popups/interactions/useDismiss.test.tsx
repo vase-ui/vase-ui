@@ -3241,28 +3241,39 @@ describe('useDismiss', () => {
       },
     );
 
-    it('VUE-79: keeps the popup open for a press in a newer popup in a closed shadow root', async () => {
-      const host = document.createElement('div');
-      document.body.append(host);
-      onTestFinished(() => host.remove());
-      const shadowRoot = host.attachShadow({ mode: 'closed' });
-      const changes: string[] = [];
-      await render(
-        <>
-          <Popup name="older" onChange={() => changes.push('older')} />
-          <Teleport to={shadowRoot as unknown as HTMLElement}>
-            <Popup name="newer" defaultOpen={false} onChange={() => changes.push('newer')} />
-          </Teleport>
-        </>,
-      );
-      await fireEvent.click(shadowRoot.querySelector('[data-testid="newer-trigger"]')!);
-      // Vue skips a listener of the popup element for an event in the millisecond of its mount.
-      await waitForLaterMillisecond();
+    // Each row ends at an event that a different capture listener of the popup element records.
+    it.each<{
+      name: string;
+      dismiss: UseDismissProps;
+      press: (target: Element) => Promise<void>;
+    }>([
+      { name: 'a mouse press', dismiss: {}, press: pressAndClick },
+      { name: 'a click', dismiss: { outsidePressEvent: 'intentional' }, press: pressAndClick },
+      { name: 'a swipe', dismiss: {}, press: (target) => swipe(target, 12) },
+      { name: 'a short swipe', dismiss: {}, press: (target) => swipe(target, 8) },
+    ])(
+      'VUE-79: keeps the popup open for $name in a newer popup in a closed shadow root',
+      async ({ dismiss, press }) => {
+        const host = document.createElement('div');
+        document.body.append(host);
+        onTestFinished(() => host.remove());
+        const shadowRoot = host.attachShadow({ mode: 'closed' });
+        const changes: string[] = [];
+        // Each popup takes its number at the mount, in the order of the tree. Thus `newer` opens after `older`.
+        await render(
+          <>
+            <Popup name="older" dismiss={dismiss} onChange={() => changes.push('older')} />
+            <Teleport to={shadowRoot as unknown as HTMLElement}>
+              <Popup name="newer" onChange={() => changes.push('newer')} />
+            </Teleport>
+          </>,
+        );
 
-      await fireEvent.pointerDown(shadowRoot.querySelector('[data-testid="newer"]')!, mouse);
+        await press(shadowRoot.querySelector('[data-testid="newer"]')!);
 
-      expect(changes).toEqual([]);
-    });
+        expect(changes).toEqual([]);
+      },
+    );
 
     it('keeps the popup open for a press in a newer popup of a second copy of the module', async () => {
       const copy: typeof import('./useDismiss') = await import('./useDismiss?copy' as string);
