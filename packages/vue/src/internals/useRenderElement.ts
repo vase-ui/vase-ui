@@ -1,6 +1,7 @@
 import {
   inject,
   normalizeStyle,
+  onBeforeUnmount,
   onBeforeUpdate,
   onMounted,
   onUpdated,
@@ -38,13 +39,19 @@ interface ChildrenMarker {
 const CHILDREN_MARKER: InjectionKey<ChildrenMarker> = Symbol();
 
 /**
- * Tells the part that its `children` component is mounted.
+ * Tells the part that its `children` component is mounted, until that component unmounts.
  * The `children` component of a part calls it in `setup`.
+ * Only a warning of a development build reads the mark, so a production build makes no mark.
  */
 export function markChildrenMounted(): void {
-  const marker = inject(CHILDREN_MARKER, null);
-  if (marker) {
-    marker.mounted = true;
+  if (process.env.NODE_ENV !== 'production') {
+    const marker = inject(CHILDREN_MARKER, null);
+    if (marker) {
+      marker.mounted = true;
+      onBeforeUnmount(() => {
+        marker.mounted = false;
+      });
+    }
   }
 }
 
@@ -80,16 +87,11 @@ export function useRenderElement<
   const slots = useSlots();
   const elementRef: ShallowRef<RenderedElementType | null> = shallowRef(null);
   const refCallbacks = Array.isArray(params.ref) ? params.ref : [params.ref];
-  const childrenMarker: ChildrenMarker = { mounted: false };
   let hasCalledElementProps = false;
   let hasWrittenStyleKey = false;
 
-  if (params.children) {
-    provide(CHILDREN_MARKER, childrenMarker);
-  }
-
   // Vue gives the setter an element, a component or `null`. The part keeps that value and
-  // resolves it again at mount.
+  // resolves it again after each render.
   let target: Element | ComponentPublicInstance | null = null;
   // A read of `elementRef` in the setter would make the render of the part depend on it, because
   // Vue calls the setter during that render.
@@ -170,12 +172,34 @@ export function useRenderElement<
     return outProps as HTMLProps;
   }
 
-  // A target component can set its exposed `element` after its render.
-  // At mount it has the element, so the callbacks never get the root element of such a target.
+  // A target component can set its exposed `element` after its render, also in its own `onMounted`.
+  // Vue runs that hook before the `onMounted` or `onUpdated` hook of the part. The callbacks thus
+  // get that element, and never the root element of such a target.
   onMounted(update);
+  onUpdated(update);
 
   if (process.env.NODE_ENV !== 'production') {
     let slotWasRendered = false;
+    const childrenMarker: ChildrenMarker = { mounted: false };
+    if (params.children) {
+      provide(CHILDREN_MARKER, childrenMarker);
+    }
+
+    // A consumer can give `as` or `#render` after the mount, so the check runs after each render.
+    // `warn` writes each message only one time.
+    const checkAsWithRenderSlot = () => {
+      if (
+        slots.render &&
+        componentProps.as !== undefined &&
+        componentProps.as !== toValue(element)
+      ) {
+        warn(
+          'The `as` prop and the `#render` slot are both set.',
+          'The `#render` slot wins, so `as` has no effect.',
+          'Remove one of them.',
+        );
+      }
+    };
 
     // A part can render its `#render` slot for the first time after the mount.
     // The checks thus run after each render in which the slot appears.
@@ -188,9 +212,8 @@ export function useRenderElement<
         return;
       }
 
-      // A target component in the slot can have its element only now.
-      // The part gives that element to the callbacks in its next render.
-      if (heldElement === null && resolveElement(target) === null) {
+      // `update` runs before this check, so `heldElement` is the element of this render.
+      if (heldElement === null) {
         warn(
           'The `#render` slot gave no element to the part.',
           'The part cannot find its element, so the behavior that needs the element does not work.',
@@ -208,24 +231,16 @@ export function useRenderElement<
       }
     };
 
+    const checkRender = () => {
+      checkAsWithRenderSlot();
+      checkRenderSlot();
+    };
+
     onBeforeUpdate(() => {
       hasCalledElementProps = false;
     });
-    onMounted(() => {
-      if (
-        slots.render &&
-        componentProps.as !== undefined &&
-        componentProps.as !== toValue(element)
-      ) {
-        warn(
-          'The `as` prop and the `#render` slot are both set.',
-          'The `#render` slot wins, so `as` has no effect.',
-          'Remove one of them.',
-        );
-      }
-      checkRenderSlot();
-    });
-    onUpdated(checkRenderSlot);
+    onMounted(checkRender);
+    onUpdated(checkRender);
   }
 
   return { element: elementRef, elementProps };

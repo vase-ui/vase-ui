@@ -80,6 +80,25 @@ const InnerElementTarget = defineComponent({
   },
 });
 
+// A wrapper of a widget that makes its element in `onMounted`. A getter with no reactive source
+// exposes the element, so the part does not render again when the element comes.
+const MountedElementTarget = defineComponent({
+  inheritAttrs: false,
+  setup(_, { attrs, expose }) {
+    const host = shallowRef<HTMLElement | null>(null);
+    let widgetElement: HTMLElement | null = null;
+    onMounted(() => {
+      widgetElement = host.value;
+    });
+    expose({
+      get element() {
+        return widgetElement;
+      },
+    });
+    return () => <div {...attrs} ref={host} data-testid="widget" />;
+  },
+});
+
 describe('useRenderElement', () => {
   const { render } = createRenderer();
 
@@ -800,6 +819,32 @@ describe('useRenderElement', () => {
       );
     });
 
+    it('warns when the `as` prop comes after the mount of a part with the `#render` slot', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { rerender } = await render(<TestComponent v-slots={{ render: renderSpan }} />);
+      expect(warnSpy).not.toHaveBeenCalled();
+
+      await rerender(<TestComponent as="section" v-slots={{ render: renderSpan }} />);
+
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy.mock.calls[0][0]).toContain(
+        'Vase UI: The `as` prop and the `#render` slot are both set.',
+      );
+    });
+
+    it('warns when the `#render` slot comes after the mount of a part with the `as` prop', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { rerender } = await render(<TestComponent as="section" />);
+      expect(warnSpy).not.toHaveBeenCalled();
+
+      await rerender(<TestComponent as="section" v-slots={{ render: renderSpan }} />);
+
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy.mock.calls[0][0]).toContain(
+        'Vase UI: The `as` prop and the `#render` slot are both set.',
+      );
+    });
+
     it('does not warn for a part whose render function returns null at mount', async () => {
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
@@ -910,15 +955,12 @@ describe('useRenderElement', () => {
         );
       });
 
+      function renderWithChildren({ props, children }: { props: HTMLProps; children: Component }) {
+        return <span {...props}>{h(children)}</span>;
+      }
+
       it('does not warn when the slot mounts `children`', async () => {
         const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-        const renderWithChildren = ({
-          props,
-          children,
-        }: {
-          props: HTMLProps;
-          children: Component;
-        }) => <span {...props}>{h(children)}</span>;
         const { rerender } = await render(
           <ChildrenTestComponent enabled={false} v-slots={{ render: renderWithChildren }} />,
         );
@@ -928,6 +970,49 @@ describe('useRenderElement', () => {
         expect(screen.getByTestId('own-node')).not.toBeNull();
         expect(warnSpy).not.toHaveBeenCalled();
       });
+
+      it('warns when a later appearance of the slot does not mount `children`', async () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const { rerender } = await render(
+          <ChildrenTestComponent enabled v-slots={{ render: renderWithChildren }} />,
+        );
+        await rerender(
+          <ChildrenTestComponent enabled={false} v-slots={{ render: renderWithChildren }} />,
+        );
+        expect(warnSpy).not.toHaveBeenCalled();
+
+        await rerender(<ChildrenTestComponent enabled v-slots={{ render: renderSpan }} />);
+
+        expect(warnSpy).toHaveBeenCalledTimes(1);
+        expect(warnSpy.mock.calls[0][0]).toContain(
+          'Vase UI: The `#render` slot did not mount `children`.',
+        );
+      });
+    });
+  });
+
+  describe('target component that exposes an element that it makes in `onMounted`', () => {
+    it('gives the element to a part that renders the target after the mount', async () => {
+      const refs = vi.fn();
+      let component: ComponentWithElement | null = null;
+      const Test = (props: { enabled: boolean }) => (
+        <RerenderTestComponent
+          enabled={props.enabled}
+          as={MountedElementTarget}
+          refs={refs}
+          ref={(value) => {
+            component = value as ComponentWithElement | null;
+          }}
+        />
+      );
+      const { rerender } = await render(<Test enabled={false} />);
+
+      await rerender(<Test enabled />);
+
+      const widget = screen.getByTestId('widget');
+      expect(refs).toHaveBeenCalledTimes(1);
+      expect(refs.mock.calls[0][0]).toBe(widget);
+      expect(component!.element).toBe(widget);
     });
   });
 
