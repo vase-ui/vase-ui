@@ -11,14 +11,13 @@ import {
   screen,
   takeReportedMessages,
 } from '#test-utils';
-import DialogPopupPart from '../../../test/fixtures/DialogPopupPart.vue';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import { REASONS } from '../../internals/reasons';
 import * as Dialog from '../index.parts';
 import type { DialogStore } from '../store/DialogStore';
 import DialogPortalHydration from './DialogPortalHydration.test.vue';
 
-const INTERNAL_BACKDROP_SELECTOR = '[data-vase-ui-inert]';
+const INTERNAL_BACKDROP_SELECTOR = '[role="presentation"][data-vase-ui-inert]';
 
 type RenderSlotProps = { props: Record<string, unknown>; children: Component };
 
@@ -40,7 +39,7 @@ describe('<Dialog.Portal />', () => {
       <Dialog.Root open={open.value} modal={false}>
         <Dialog.Portal keepMounted={keepMounted.value} data-testid="portal">
           <Dialog.Viewport data-testid="viewport">
-            <DialogPopupPart />
+            <Dialog.Popup />
           </Dialog.Viewport>
         </Dialog.Portal>
       </Dialog.Root>
@@ -75,14 +74,16 @@ describe('<Dialog.Portal />', () => {
           <Dialog.Root defaultOpen modal={modal}>
             <DialogStoreProbe onStore={(value) => (store = value)} />
             <Dialog.Portal data-testid="portal">
-              <DialogPopupPart />
+              <Dialog.Popup />
             </Dialog.Portal>
           </Dialog.Root>,
         );
 
-        const backdrop = screen.getByTestId('portal').querySelector(INTERNAL_BACKDROP_SELECTOR);
+        const portal = screen.getByTestId('portal');
+        const backdrop = portal.querySelector(INTERNAL_BACKDROP_SELECTOR);
         expect(backdrop !== null).toBe(hasBackdrop);
-        expect(screen.getByRole('dialog').previousElementSibling).toBe(backdrop);
+        // The focus guards of the popup come before the popup, so the backdrop is the first child.
+        expect(portal.firstElementChild === backdrop).toBe(hasBackdrop);
         expect(store.context.internalBackdropRef.value).toBe(backdrop);
       },
     );
@@ -102,7 +103,7 @@ describe('<Dialog.Portal />', () => {
                 render: ({ props, children }: RenderSlotProps) => (
                   <section {...props} data-testid="portal">
                     {h(children, null, () => (
-                      <DialogPopupPart />
+                      <Dialog.Popup />
                     ))}
                   </section>
                 ),
@@ -115,7 +116,8 @@ describe('<Dialog.Portal />', () => {
         const backdrop = portal.querySelector(INTERNAL_BACKDROP_SELECTOR);
         expect(portal.localName).toBe('section');
         expect(backdrop !== null).toBe(hasBackdrop);
-        expect(screen.getByRole('dialog').previousElementSibling).toBe(backdrop);
+        // The focus guards of the popup come before the popup, so the backdrop is the first child.
+        expect(portal.firstElementChild === backdrop).toBe(hasBackdrop);
         expect(store.context.internalBackdropRef.value).toBe(backdrop);
       },
     );
@@ -138,7 +140,7 @@ describe('<Dialog.Portal />', () => {
           >
             <DialogStoreProbe onStore={(value) => (store = value)} />
             <Dialog.Portal keepMounted={keepMounted} data-testid="portal">
-              <DialogPopupPart />
+              <Dialog.Popup />
             </Dialog.Portal>
           </Dialog.Root>
         ));
@@ -168,7 +170,7 @@ describe('<Dialog.Portal />', () => {
           <DialogStoreProbe onStore={(value) => (store = value)} />
           {showPortal.value ? (
             <Dialog.Portal>
-              <DialogPopupPart />
+              <Dialog.Popup />
             </Dialog.Portal>
           ) : null}
         </Dialog.Root>
@@ -189,7 +191,7 @@ describe('<Dialog.Portal />', () => {
           <DialogStoreProbe onStore={(value) => (store = value)} />
           {showOther.value ? <Dialog.Portal key="other" /> : null}
           <Dialog.Portal key="portal" data-testid="portal">
-            <DialogPopupPart />
+            <Dialog.Popup />
           </Dialog.Portal>
         </Dialog.Root>
       ));
@@ -207,7 +209,7 @@ describe('<Dialog.Portal />', () => {
       await render(
         <Dialog.Root defaultOpen onOpenChange={handleOpenChange}>
           <Dialog.Portal data-testid="portal">
-            <DialogPopupPart />
+            <Dialog.Popup />
           </Dialog.Portal>
         </Dialog.Root>,
       );
