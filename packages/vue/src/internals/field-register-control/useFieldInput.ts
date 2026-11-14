@@ -12,10 +12,11 @@ const inputsOfField = new WeakMap<ShallowRef<HTMLInputElement | null>, HTMLInput
  * Gives the input of a control to its field. Call it in `setup`. Call the result in the `ref`
  * setter of the input each time the input changes, with the element or `null`.
  *
- * The field validates the last input that a control gave. A control that `KeepAlive` holds gives
- * no input. When `KeepAlive` shows the control again, the control gives its input again. When the
- * last input goes, the field validates the input before it. A template can mount a new control
- * before it unmounts the control that the new control replaces, and the new input then stays last.
+ * The field validates the last input that a control gave. It does not validate the input of a
+ * control that `KeepAlive` holds. When `KeepAlive` shows the control again, the control gives its
+ * input again. When the last input goes, the field validates the input before it. A template can
+ * mount a new control before it unmounts the control that the new control replaces, and the new
+ * input then stays last.
  */
 export function useFieldInput(): (input: HTMLElement | null) => void {
   const { validation, reaches, setValidityData } = useFieldRootContext();
