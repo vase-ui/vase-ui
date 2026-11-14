@@ -249,6 +249,19 @@ describe('<Calendar.Root /> state', () => {
       expect(button('2026-10-22')).toBe(null);
     });
 
+    it('keeps the first day on the page when the calendar of the grid changes after the mount', async () => {
+      // The locale of the runtime replaces `en-US` after the mount, and its calendar can be
+      // Persian. The month Aban of the year 1405 ends on 2026-11-21, and Azar holds 2026-11-25.
+      const { setProps } = await renderCalendar({ defaultValue: day('2026-11-25') });
+
+      await setProps({ calendar: 'persian' });
+
+      expect(
+        screen.getByRole('group', { name: monthName('2026-11-25', 'en-US', 'persian') }),
+      ).not.toBe(null);
+      expect(button('2026-11-25')).not.toBe(null);
+    });
+
     it('gives the listeners an ISO month for an ISO grid', async () => {
       const onMonthChange = vi.fn();
       const { user } = await renderCalendar({ onMonthChange });
@@ -302,6 +315,22 @@ describe('<Calendar.Root /> state', () => {
       await waitFor(() => {
         expect(clock.mock.calls.length).toBeGreaterThan(calls);
       });
+    });
+
+    it('reads the clock again when the time zone changes', async () => {
+      // In the evening of New York, Tokyo has the next day.
+      spyOnClock().mockImplementation((timeZone) =>
+        day(timeZone === 'Asia/Tokyo' ? '2026-11-14' : '2026-11-13'),
+      );
+      const { setProps } = await render(
+        <CalendarAnatomy {...{ locale: 'en-US', timeZone: 'Asia/Tokyo' }} />,
+      );
+      expect(button('2026-11-14')).toHaveAttribute('aria-current', 'date');
+
+      await setProps({ timeZone: 'America/New_York' });
+
+      expect(button('2026-11-13')).toHaveAttribute('aria-current', 'date');
+      expect(button('2026-11-14')).not.toHaveAttribute('aria-current');
     });
 
     it('shows the day of the prop today, and not the day of the clock', async () => {

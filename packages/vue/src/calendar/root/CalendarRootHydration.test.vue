@@ -5,8 +5,6 @@ import CalendarAnatomy from './CalendarAnatomy.test.vue';
 const props = defineProps<{
   today: string;
   value?: string | undefined;
-  defaultValue?: string | undefined;
-  month?: string | undefined;
   focusedDate?: string | undefined;
   minDate?: string | undefined;
   maxDate?: string | undefined;
@@ -22,16 +20,12 @@ const date = (text: string | undefined) =>
   text === undefined ? undefined : Temporal.PlainDate.from(text);
 const dates = (text: string | undefined) =>
   text === undefined ? undefined : text.split(',').map((item) => Temporal.PlainDate.from(item));
-const yearMonth = (text: string | undefined) =>
-  text === undefined ? undefined : Temporal.PlainYearMonth.from(text);
 </script>
 
 <template>
   <CalendarAnatomy
     :today="date(props.today)"
     :value="props.multiple ? dates(props.value) : date(props.value)"
-    :default-value="props.multiple ? dates(props.defaultValue) : date(props.defaultValue)"
-    :month="yearMonth(props.month)"
     :focused-date="date(props.focusedDate)"
     :min-date="date(props.minDate)"
     :max-date="date(props.maxDate)"

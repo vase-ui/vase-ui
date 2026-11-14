@@ -93,6 +93,18 @@ describe('<Calendar.Root /> keys', () => {
       expectFocus(to);
     });
 
+    it.each([
+      { name: 'Enter', keys: '{ArrowRight}{Enter}' },
+      { name: 'Space', keys: '{ArrowRight} ' },
+    ])('presses the focused day with $name', async ({ keys }) => {
+      const onValueChange = vi.fn();
+      await pressKeys({ from: '2026-11-11', keys, props: { onValueChange } });
+
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+      expect(onValueChange.mock.calls[0]![0].toString()).toBe('2026-11-12');
+      expect(onValueChange.mock.calls[0]![1].reason).toBe('day-press');
+    });
+
     it('does not handle a key with Control, Alt or Meta', async () => {
       const { user } = await renderCalendar();
       button('2026-11-11')!.focus();
@@ -271,14 +283,6 @@ describe('<Calendar.Root /> keys', () => {
 
       expect(handlers.onValueChange).not.toHaveBeenCalled();
       expectFocus('2026-11-12');
-    });
-
-    it('presses the focused day with Enter', async () => {
-      const handlers = listener();
-      await pressKeys({ from: '2026-11-11', keys: '{ArrowRight}{Enter}', props: handlers });
-
-      expect(handlers.onValueChange.mock.calls[0]![0].toString()).toBe('2026-11-12');
-      expect(handlers.onValueChange.mock.calls[0]![1].reason).toBe('day-press');
     });
   });
 });

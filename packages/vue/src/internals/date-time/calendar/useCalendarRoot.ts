@@ -87,8 +87,8 @@ export function useCalendarRoot({
       props.timeZone ?? (first && isKind(first, 'zonedDateTime') ? first.timeZoneId : undefined)
     );
   });
-  // The clock is read in `setup` and when the month changes, so a page that stays open for days
-  // gets the right day when the user moves on.
+  // The clock is read in `setup`, and again when the month or the time zone changes. A page that
+  // stays open for days then gets the right day when the user moves on.
   const clockDay = shallowRef(today(timeZone.value));
   const todayDate = computed(() =>
     props.today === undefined ? clockDay.value : toPlainDate(props.today),
@@ -98,17 +98,22 @@ export function useCalendarRoot({
     return toPlainDate(date).withCalendar(calendar.value);
   }
 
-  const initialMonth = toGridDate(
+  // The first page holds this day until the month changes. It is a day and not a month, because
+  // the calendar of the grid can change after the mount: the locale of the runtime replaces
+  // `en-US`, and its calendar can have other months.
+  const initialDate = toPlainDate(
     props.focusedDate ?? props.defaultFocusedDate ?? selection.values.value[0] ?? todayDate.value,
-  ).toPlainYearMonth();
+  );
 
-  const [monthState, setMonthState] = useControlled<Temporal.PlainYearMonth>({
+  const [monthState, setMonthState] = useControlled<Temporal.PlainYearMonth | undefined>({
     controlled: () => props.month,
-    default: () => props.defaultMonth ?? initialMonth,
+    default: () => props.defaultMonth,
     name: 'Calendar',
     state: 'month',
   });
-  const visibleMonth = computed(() => toGridDate(monthState.value).toPlainYearMonth());
+  const visibleMonth = computed(() =>
+    toGridDate(monthState.value ?? initialDate).toPlainYearMonth(),
+  );
 
   const [focusedDateState, setFocusedDateState] = useControlled<Temporal.PlainDate | null>({
     controlled: () => props.focusedDate,
@@ -117,7 +122,7 @@ export function useCalendarRoot({
     state: 'focusedDate',
   });
 
-  watch(visibleMonth, () => {
+  watch([visibleMonth, timeZone], () => {
     clockDay.value = today(timeZone.value);
   });
 
