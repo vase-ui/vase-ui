@@ -6,11 +6,6 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/navigation-menu/index.ts",
-      "kind": "waits-on",
-      "reason": "The file is the entry point of Navigation Menu. It exports all parts of the family, and Vase UI does not have all of them."
-    },
-    {
       "upstream": "packages/react/src/navigation-menu/content/NavigationMenuContent.test.tsx",
       "describe": ["<NavigationMenu.Content />", "server-side rendering"],
       "kind": "replaced",
@@ -34,10 +29,12 @@
       "reason": "Base UI runs its browser tests only in Chromium, and the case asserts pixel sizes of the default font of Chromium. Firefox and WebKit have other default fonts. The Vase UI case compares the size variable of the positioner with the measured size of the content, so it runs in each engine."
     },
     {
-      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.webkit.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "Each case of the file renders the parts of Navigation Menu from the entry point of Navigation Menu. Vase UI does not have that entry point."
+      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
+      "describe": ["<NavigationMenu.Root />", "nested menus", "inline nested viewport"],
+      "title": "does not animate popup sizing when kept nested default content first moves into the portal",
+      "kind": "replaced",
+      "test": "packages/vue/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
+      "reason": "The case gives the popup a shell height for the first read of `offsetHeight` and the full height for the next reads, after the click. In Vue, the popup measures its open size in the flush of the click, before the case can mock the size, and the kept nested content is in the portal at that measure. The Vase UI case measures the real layout: each fixed height of the popup is its open height."
     },
     {
       "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRootContext.test.ts",
@@ -53,175 +50,25 @@
       "reason": "The case renders `Popover.Portal`, `Popover.Positioner` and `Popover.Popup`, which Vase UI does not have."
     },
     {
-      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
-      "describe": ["<NavigationMenu.Root />", "nested menus"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "Each case of the block renders the parts of Navigation Menu from the entry point of Navigation Menu. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
-      "entry": "Arrow",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "The entry point of Navigation Menu exports `NavigationMenu.Arrow`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
-      "entry": "Backdrop",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "The entry point of Navigation Menu exports `NavigationMenu.Backdrop`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
-      "entry": "Content",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "The entry point of Navigation Menu exports `NavigationMenu.Content`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
-      "entry": "Icon",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "The entry point of Navigation Menu exports `NavigationMenu.Icon`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
-      "entry": "Item",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "The entry point of Navigation Menu exports `NavigationMenu.Item`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
-      "entry": "Link",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "The entry point of Navigation Menu exports `NavigationMenu.Link`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
-      "entry": "List",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "The entry point of Navigation Menu exports `NavigationMenu.List`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
-      "entry": "Popup",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "The entry point of Navigation Menu exports `NavigationMenu.Popup`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
-      "entry": "Portal",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "The entry point of Navigation Menu exports `NavigationMenu.Portal`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
-      "entry": "Positioner",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "The entry point of Navigation Menu exports `NavigationMenu.Positioner`. Vase UI does not have that entry point."
-    },
-    {
       "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
       "entry": "Root",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "The entry point of Navigation Menu exports `NavigationMenu.Root`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
-      "entry": "Trigger",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "The entry point of Navigation Menu exports `NavigationMenu.Trigger`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
-      "entry": "Viewport",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "The entry point of Navigation Menu exports `NavigationMenu.Viewport`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
-      "entry": "NavigationMenuArrowDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "The entry point of Navigation Menu exports the attribute names of `NavigationMenu.Arrow`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
-      "entry": "NavigationMenuBackdropDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "The entry point of Navigation Menu exports the attribute names of `NavigationMenu.Backdrop`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
-      "entry": "NavigationMenuContentDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "The entry point of Navigation Menu exports the attribute names of `NavigationMenu.Content`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
-      "entry": "NavigationMenuIconDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "The entry point of Navigation Menu exports the attribute names of `NavigationMenu.Icon`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
-      "entry": "NavigationMenuLinkDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "The entry point of Navigation Menu exports the attribute names of `NavigationMenu.Link`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
-      "entry": "NavigationMenuPopupCssVariables",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "The entry point of Navigation Menu exports the CSS variable names of `NavigationMenu.Popup`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
-      "entry": "NavigationMenuPopupDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "The entry point of Navigation Menu exports the attribute names of `NavigationMenu.Popup`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
-      "entry": "NavigationMenuPositionerCssVariables",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "The entry point of Navigation Menu exports the CSS variable names of `NavigationMenu.Positioner`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
-      "entry": "NavigationMenuPositionerDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "The entry point of Navigation Menu exports the attribute names of `NavigationMenu.Positioner`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
-      "entry": "NavigationMenuTriggerDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "The entry point of Navigation Menu exports the attribute names of `NavigationMenu.Trigger`. Vase UI does not have that entry point."
+      "prop": "render",
+      "kind": "not-applicable",
+      "reason": "The default tag is `nav`, or `div` when the root is nested. The part decides it in `setup`, so the prop `as` has no static default."
     }
   ],
-  "surfaceAdditions": [],
+  "surfaceAdditions": [
+    {
+      "entry": "Popup",
+      "prop": "id",
+      "reason": "The part reads `id` to replace an absent id with a generated id, which the active trigger names in `aria-controls`. It is thus a declared prop. Base UI reads it from the native attributes of the popup, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Viewport",
+      "prop": "id",
+      "reason": "The part reads `id` to replace an absent id with a generated id, which the owner element of the active trigger names in `aria-owns`. It is thus a declared prop. Base UI reads it from the native attributes of the viewport, and `types.md` has no row for a native attribute."
+    }
+  ],
   "returnTypeDifferences": [],
   "notApplicableCommits": []
 }

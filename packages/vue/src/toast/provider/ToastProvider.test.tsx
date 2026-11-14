@@ -3,7 +3,7 @@ import { defineComponent, KeepAlive, nextTick, onMounted, shallowRef, toValue, w
 import type { MaybeRefOrGetter, ShallowRef } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
 import type { ToastManager } from '../createToastManager';
-import * as Toast from '../index.parts';
+import { Toast } from '@vase-ui/vue/toast';
 import type { ToastStore } from '../store';
 import { useToastProviderContext } from './ToastProviderContext';
 
