@@ -13,6 +13,7 @@ import {
   waitSingleFrame,
 } from '#test-utils';
 import * as AlertDialog from '../../alert-dialog/index.parts';
+import * as Popover from '../../popover/index.parts';
 import * as Dialog from '../index.parts';
 import type { DialogStore } from '../store/DialogStore';
 import DialogPopupReplacement from './DialogPopupReplacement.test.vue';
@@ -192,6 +193,56 @@ describe('<Dialog.Popup />', () => {
       });
       expect(popup.contains(document.activeElement)).toBe(true);
     });
+  });
+
+  it('does not return focus to the trigger of a popover that opened by default', async () => {
+    const open = shallowRef(false);
+    const App = defineComponent(() => () => (
+      <>
+        <Popover.Root defaultOpen>
+          <Popover.Trigger>Tip</Popover.Trigger>
+          <Popover.Portal>
+            <Popover.Positioner>
+              <Popover.Popup>
+                <Popover.Close>Got it</Popover.Close>
+              </Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>
+        <Dialog.Root
+          open={open.value}
+          onOpenChange={(nextOpen: boolean) => {
+            open.value = nextOpen;
+          }}
+        >
+          <Dialog.Portal>
+            <Dialog.Popup>
+              <Dialog.Close>Close</Dialog.Close>
+            </Dialog.Popup>
+          </Dialog.Portal>
+        </Dialog.Root>
+      </>
+    ));
+
+    const { user } = await render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Got it' }));
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: 'Got it' })).toBe(null);
+    });
+    (document.activeElement as HTMLElement).blur();
+
+    open.value = true;
+    const close = await screen.findByRole('button', { name: 'Close' });
+    await waitFor(() => {
+      expect(close).toHaveFocus();
+    });
+    await user.keyboard('[Escape]');
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).toBe(null);
+    });
+    await flushMicrotasks();
+    expect(screen.getByRole('button', { name: 'Tip' })).not.toHaveFocus();
   });
 
   describe('nested dialog count', () => {
