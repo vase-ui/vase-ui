@@ -54,8 +54,8 @@ async function mountAndSettle(app: App, container: HTMLElement) {
  * client-only render of the same component.
  *
  * The client-only render comes first, and the helper removes it before it hydrates. The document
- * thus holds one app at a time, as a page does. The two apps generate the same ids, so a
- * `<label for>` of one app would name a control of the other app.
+ * thus holds one app at a time, as a page does. The two apps generate the same ids. In one
+ * document, a `<label for>` of one app names a control of the other app.
  */
 export async function hydrate(
   component: Component,
@@ -116,8 +116,11 @@ async function renderOnClient(
     await mountAndSettle(app, container);
     return serializeChildren(container);
   } finally {
-    app.unmount();
-    container.remove();
+    try {
+      app.unmount();
+    } finally {
+      container.remove();
+    }
   }
 }
 
