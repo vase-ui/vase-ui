@@ -126,6 +126,7 @@ describe('<ContextMenu.Root />', () => {
         props: {},
         expected: {
           open: false,
+          disabled: false,
           highlightItemOnHover: true,
           loopFocus: true,
           orientation: 'vertical',
@@ -135,12 +136,14 @@ describe('<ContextMenu.Root />', () => {
         name: 'each prop that is set',
         props: {
           defaultOpen: true,
+          disabled: true,
           highlightItemOnHover: false,
           loopFocus: false,
           orientation: 'horizontal' as const,
         },
         expected: {
           open: true,
+          disabled: true,
           highlightItemOnHover: false,
           loopFocus: false,
           orientation: 'horizontal',
@@ -157,6 +160,7 @@ describe('<ContextMenu.Root />', () => {
 
       expect({
         open: store.state.open,
+        disabled: store.select('disabled'),
         highlightItemOnHover: store.select('highlightItemOnHover'),
         loopFocus: menuContext.loopFocus.value,
         orientation: menuContext.orientation.value,

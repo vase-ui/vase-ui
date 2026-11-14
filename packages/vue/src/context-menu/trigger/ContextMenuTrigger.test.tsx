@@ -132,6 +132,25 @@ describe('<ContextMenu.Trigger />', () => {
       expect(trigger).toHaveAttribute('data-pressed', '');
     });
 
+    it('sets allowMouseUpTriggerRef for a contextmenu event after a long press with a finger', async () => {
+      const probe = createProbe();
+      const { getByTestId } = await render(
+        <ContextMenu.Root>
+          <probe.Probe />
+          <ContextMenu.Trigger data-testid="trigger">Right click me</ContextMenu.Trigger>
+        </ContextMenu.Root>,
+      );
+      const trigger = getByTestId('trigger');
+
+      await fireTouch(trigger, 'touchstart', [{ clientX: 100, clientY: 100 }]);
+
+      expect(probe.context.allowMouseUpTriggerRef.value).toBe(false);
+
+      await fireEvent.contextMenu(trigger);
+
+      expect(probe.context.allowMouseUpTriggerRef.value).toBe(true);
+    });
+
     it('reports the contextmenu event in the details', async () => {
       const onOpenChange = vi.fn();
       const { getByTestId } = await render(
