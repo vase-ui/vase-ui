@@ -289,11 +289,11 @@ function handleKeydown(event: KeyboardEvent) {
   }
 }
 
-const setInput = useFieldInput();
+const giveFieldInput = useFieldInput();
 
 const { element, elementProps } = useRenderElement('input', props, {
   state,
-  ref: setInput,
+  ref: giveFieldInput,
   props: (attrs) => [
     {
       id: controlId.value,

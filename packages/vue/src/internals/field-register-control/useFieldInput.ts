@@ -12,10 +12,10 @@ const inputsOfField = new WeakMap<ShallowRef<HTMLInputElement | null>, HTMLInput
  * Gives the input of a control to its field. Call it in `setup`. Call the result in the `ref`
  * setter of the input each time the input changes, with the element or `null`.
  *
- * The field validates the last input in the list. A control that `KeepAlive` holds has no input in
- * the list. When `KeepAlive` shows the control again, its input goes to the end. When the last input
- * goes, the field validates the input before it. A template can mount a new control before it
- * unmounts the control that the new control replaces, and the new input then stays last.
+ * The field validates the last input that a control gave. A control that `KeepAlive` holds gives
+ * no input. When `KeepAlive` shows the control again, the control gives its input again. When the
+ * last input goes, the field validates the input before it. A template can mount a new control
+ * before it unmounts the control that the new control replaces, and the new input then stays last.
  */
 export function useFieldInput(): (input: HTMLElement | null) => void {
   const { validation, reaches, setValidityData } = useFieldRootContext();
@@ -28,8 +28,8 @@ export function useFieldInput(): (input: HTMLElement | null) => void {
   const inputs = inputsOfField.get(inputRef) ?? [];
   inputsOfField.set(inputRef, inputs);
 
-  // Vue calls the setter in the render of the control. A read of a ref there would make that render
-  // depend on the ref, so the setter reads this variable and only writes `element`.
+  // Vue calls the setter during the render of the control. A read of a ref there would make that
+  // render depend on the ref, so the setter reads this variable and only writes `element`.
   let ownInput: HTMLInputElement | null = null;
   const element = shallowRef<HTMLInputElement | null>(null);
   const { isHeld, shown } = useKeepAliveState(element, reaches);
@@ -54,8 +54,9 @@ export function useFieldInput(): (input: HTMLElement | null) => void {
   }
 
   // A held control gives an input when it mounts or when its element changes. The input leaves the
-  // list in the next flush. `Slider.Root` reads `validation.inputRef` in its `onMounted` to find out
-  // that `KeepAlive` holds it, so the removal must not come before that hook.
+  // list in the next flush. `Slider.Root` gives `validation.inputRef` to `useRegisterFieldControl`,
+  // which reads it in `onMounted` to find out that `KeepAlive` holds the slider. The removal thus
+  // must not come before that hook.
   watch([isHeld, element], ([held]) => {
     if (held) {
       release();

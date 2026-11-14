@@ -23,7 +23,6 @@ describe('useFieldInput', () => {
     expect(setInput).toBe(NOOP);
   });
 
-  // Each case submits the form with a real click and returns what the field and the form did.
   async function renderForm(controls: () => (VNode | null)[]) {
     const handleSubmit = vi.fn();
     const { user } = await render(() => (
@@ -49,16 +48,11 @@ describe('useFieldInput', () => {
     async ({ name }) => {
       const visible = shallowRef(true);
       const Branch = defineComponent(() => () => <Field.Control defaultValue="last" />);
-      const submit = await renderForm(() => [
-        <Field.Control key="shown" required />,
-        name === 'unmount' ? (
-          visible.value ? (
-            <Field.Control key="last" defaultValue="last" />
-          ) : null
-        ) : (
-          <KeepAlive key="branch">{visible.value ? <Branch /> : null}</KeepAlive>
-        ),
-      ]);
+      const renderLast =
+        name === 'unmount'
+          ? () => (visible.value ? <Field.Control key="last" defaultValue="last" /> : null)
+          : () => <KeepAlive key="branch">{visible.value ? <Branch /> : null}</KeepAlive>;
+      const submit = await renderForm(() => [<Field.Control key="shown" required />, renderLast()]);
 
       visible.value = false;
       await flushMicrotasks();
