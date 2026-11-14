@@ -11,6 +11,7 @@ import {
   screen,
   takeReportedMessages,
   waitFor,
+  waitForLaterMillisecond,
   waitSingleFrame,
 } from '#test-utils';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
@@ -756,6 +757,7 @@ describe('<Drawer.Root />', () => {
 
     await fireEvent.click(screen.getByRole('button', { name: 'Trigger 1' }));
     await flushMicrotasks();
+    await waitForLaterMillisecond();
     expect(screen.getByTestId('payload').textContent).toBe('1');
 
     await fireEvent.click(screen.getByText('Close'));
@@ -800,6 +802,7 @@ describe('<Drawer.Root />', () => {
     async function openAndClose() {
       await user.click(trigger);
       expect(await screen.findByTestId('popup')).not.toBe(null);
+      await waitForLaterMillisecond();
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
       await user.click(screen.getByRole('button', { name: 'Close' }));
       await waitFor(() => {
@@ -927,6 +930,7 @@ describe('<Drawer.Root />', () => {
     await waitFor(() => {
       expect(screen.getByText('Drawer content')).toBeVisible();
     });
+    await waitForLaterMillisecond();
     expect(screen.getByTestId('payload').textContent).toBe('1');
     expect(trigger).toHaveAttribute('aria-expanded', 'true');
     expect(trigger.getAttribute('aria-controls')).toBe(
