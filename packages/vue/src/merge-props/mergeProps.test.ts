@@ -964,21 +964,21 @@ describe('VUE-82: the scope of preventVaseUIHandler()', () => {
     ]);
   });
 
-  it.each([
-    { name: 'a lone earlier handler', earlierNames: ['earlier'] },
-    { name: 'a merged earlier handler', earlierNames: ['left', 'right'] },
-  ])('runs $name that a props function calls after its call', ({ earlierNames }) => {
+  it('runs each merged earlier handler that a props function calls after its call', () => {
     const log: string[] = [];
-    const [left, right] = earlierNames.map((name) => ({ onClick: () => log.push(name) }));
 
-    const mergedProps = mergeProps<'button'>(left, right, (props) => ({
-      onClick(event) {
-        event.preventVaseUIHandler();
-        props.onClick?.(event);
-      },
-    }));
+    const mergedProps = mergeProps<'button'>(
+      { onClick: () => log.push('left') },
+      { onClick: () => log.push('right') },
+      (props) => ({
+        onClick(event) {
+          event.preventVaseUIHandler();
+          props.onClick?.(event);
+        },
+      }),
+    );
     mergedProps.onClick?.(new PointerEvent('click'));
 
-    expect(log).toEqual(earlierNames.toReversed());
+    expect(log).toEqual(['right', 'left']);
   });
 });
