@@ -260,9 +260,9 @@ function placePopup(positionerElement: HTMLElement | null) {
     !triggerElement ||
     !positionerElement ||
     !popupElement ||
-    // `KeepAlive` takes the trigger out of the document before it calls `onDeactivated`. This effect
-    // can run in that gap, and the geometry of the trigger is then zero. The check below would find
-    // no room and turn the alignment off. `onActivated` runs this effect again.
+    // `KeepAlive` takes the trigger out of the document before it calls `onDeactivated`, and this
+    // effect can run in that gap. The trigger then has no geometry, so the fallback below would turn
+    // the alignment off for the rest of the open. `onActivated` runs this effect again.
     !triggerElement.isConnected ||
     (isAligned && !isPositioned.value) ||
     store.select('transitionStatus') === 'ending'
