@@ -8,6 +8,7 @@ import {
   hydrate,
   renderOnServer,
   waitFor,
+  within,
 } from '#test-utils';
 import {
   ContextMenuProvider,
@@ -18,6 +19,7 @@ import {
 import { reset as resetWarnings } from '../../common/warn';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
+import { createAttribute } from '../../utils/popups/createAttribute';
 import { useTriggerRegistration } from '../../utils/popups/popupStoreUtils';
 import { provideFloatingNode, useFloatingTree } from '../../utils/popups/tree/FloatingTree';
 import type { FloatingTreeType } from '../../utils/popups/types';
@@ -104,10 +106,6 @@ const TestPopup = defineComponent({
 });
 
 const imperativeActionDetails = () => createChangeEventDetails(REASONS.imperativeAction);
-
-// The real pointer of the browser can rest on an element. A dispatched event still reaches the
-// element, and the real pointer sends no event of its own.
-const noRealPointer = { pointerEvents: 'none' } as const;
 
 function useFakeTimers() {
   vi.useFakeTimers();
@@ -715,7 +713,7 @@ describe('<Menu.Root />', () => {
       const { getByTestId } = await render(
         <Menu.Root defaultOpen>
           <probe.Probe />
-          <TestPopup style={noRealPointer} />
+          <TestPopup />
         </Menu.Root>,
       );
       const { store } = probe;
@@ -740,7 +738,7 @@ describe('<Menu.Root />', () => {
       const { getByRole } = await render(
         <Menu.Root defaultOpen defaultTriggerId="trigger">
           <probe.Probe />
-          <TestTrigger id="trigger" style={noRealPointer} />
+          <TestTrigger id="trigger" />
         </Menu.Root>,
       );
       const { store } = probe;
@@ -764,7 +762,7 @@ describe('<Menu.Root />', () => {
           <Menu.Root>
             <Part>
               <probe.Probe />
-              <TestPopup style={noRealPointer} />
+              <TestPopup />
             </Part>
           </Menu.Root>,
         );
@@ -1180,6 +1178,25 @@ describe('<Menu.Root />', () => {
       const serverHtml = await renderOnServer('src/menu/root/MenuRootHydration.test.vue', {});
 
       await hydrate(MenuRootHydration, { serverHtml });
+    });
+
+    it('puts the focus guards beside the trigger of an open root only after the hydration', async () => {
+      const serverHtml = await renderOnServer('src/menu/root/MenuRootHydration.test.vue', {});
+      const template = document.createElement('template');
+      template.innerHTML = serverHtml;
+      expect(template.content.querySelectorAll(`[${createAttribute('focus-guard')}]`)).toHaveLength(
+        0,
+      );
+
+      const { container } = await hydrate(MenuRootHydration, { serverHtml });
+      await flushMicrotasks();
+
+      const trigger = within(container).getByRole('button', { name: 'Open' });
+      expect(
+        [trigger.previousElementSibling, trigger.nextElementSibling].map(
+          (sibling) => sibling?.hasAttribute(createAttribute('focus-guard')) ?? false,
+        ),
+      ).toEqual([true, true]);
     });
   });
 });

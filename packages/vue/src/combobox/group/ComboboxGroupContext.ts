@@ -1,9 +1,10 @@
 import { inject } from 'vue';
-import type { ComputedRef, InjectionKey, Ref } from 'vue';
+import type { ComputedRef, InjectionKey } from 'vue';
+import type { RegisterId } from '../../internals/labelable-provider/LabelableContext';
 
 export interface ComboboxGroupContext {
-  labelId: Readonly<Ref<string | undefined>>;
-  setLabelId: (id: string | undefined) => void;
+  labelId: ComputedRef<string | undefined>;
+  registerLabelId: RegisterId;
   /**
    * The items of this group, if the group has a list of items. A collection inside the group
    * renders them.

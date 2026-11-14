@@ -1,5 +1,5 @@
 import { defineComponent, shallowRef } from 'vue';
-import type { CSSProperties, VNode } from 'vue';
+import type { VNode } from 'vue';
 import type { UserEvent } from '@testing-library/user-event';
 import { expect, vi, describe, it, afterEach, beforeEach, onTestFinished } from 'vitest';
 import { isInaccessible, screen, waitFor } from '@testing-library/dom';
@@ -32,9 +32,8 @@ export function popupConformanceTests(config: PopupTestConfig) {
       ...props,
       trigger: {
         'data-testid': 'trigger',
-        // Hover-opened popups open right away, so the tests don't depend on timers. The trigger
-        // ignores the real pointer of the browser, which can rest on it and open the popup.
-        ...(triggerMouseAction === 'hover' ? { delay: 0, style: { pointerEvents: 'none' } } : {}),
+        // Hover-opened popups open right away, so the tests don't depend on timers.
+        ...(triggerMouseAction === 'hover' ? { delay: 0 } : {}),
         ...props.trigger,
       },
       popup: {
@@ -949,7 +948,6 @@ interface RootProps {
 interface TriggerProps {
   'data-testid'?: string;
   delay?: number;
-  style?: CSSProperties;
 }
 
 interface PopupProps {

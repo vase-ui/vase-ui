@@ -19,7 +19,7 @@ function setTriggerElement(element: unknown) {
 
 function handleClick(event: MouseEvent) {
   store.setOpen(
-    !toRaw(store.state).open,
+    !store.select('open'),
     createChangeEventDetails(REASONS.triggerPress, event, event.currentTarget as HTMLElement),
   );
 }
