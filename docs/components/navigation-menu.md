@@ -113,7 +113,7 @@ A native scrollbar is visible while the content changes. Use [Scroll Area](/comp
 
 ## Closing animations
 
-The popup stays in the DOM until its closing animation ends. To animate it with JavaScript, call `details.preventUnmountOnClose()` in the `valueChange` listener when the value becomes `null`. The popup then stays in the DOM until you call `unmount()`.
+The popup stays in the DOM until its closing animation ends. See [JavaScript animations](/handbook/animation#javascript-animations) to animate it with `motion-v` and to unmount it yourself. For Navigation Menu, call `details.preventUnmountOnClose()` in the `valueChange` listener when the value becomes `null`. The popup then stays in the DOM until you call `unmount()`.
 
 `NavigationMenu.Root` exposes `close()` and `unmount()` through a template ref. Call `unmount()` when your animation ends. To close the menu from your code, call `close()`. Do not set `value` to `null` for this, because a change of the `value` prop emits no `valueChange`.
 
