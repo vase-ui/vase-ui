@@ -39,6 +39,7 @@ import { DISABLED_TRANSITIONS_STYLE } from '../../internals/constants';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { FOCUSABLE_POPUP_PROPS } from '../../utils/popups/popupStoreUtils';
 import { usePreviewCardPositionerContext } from '../positioner/PreviewCardPositionerContext';
@@ -68,6 +69,8 @@ useOpenChangeComplete({
     }
   },
 });
+
+useHoverPopupInteraction(store, { closeDelay: () => store.select('closeDelay') });
 
 const state = computed<PreviewCardPopupState>(() => ({
   open: open.value,
