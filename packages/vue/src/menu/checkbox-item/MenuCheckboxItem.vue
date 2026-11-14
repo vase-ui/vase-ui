@@ -104,7 +104,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, MenuCheckboxItemState>;
 }>();
 
-const [checked, setChecked] = useControlled({
+const [isChecked, setChecked] = useControlled({
   controlled: () => props.checked,
   default: () => props.defaultChecked,
   name: 'MenuCheckboxItem',
@@ -117,11 +117,11 @@ const listItem = useCompositeListItem({ label: () => props.label });
 const itemId = useVaseUiId(() => props.id);
 
 const highlighted = computed(() => store.select('isActive', listItem.index.value));
-const disabled = computed(() => props.disabled || store.select('disabled'));
+const isDisabled = computed(() => props.disabled || store.select('disabled'));
 
 const { getItemProps, itemRef } = useMenuItem({
   closeOnClick: () => props.closeOnClick,
-  disabled,
+  disabled: isDisabled,
   highlighted,
   id: itemId,
   store,
@@ -130,15 +130,15 @@ const { getItemProps, itemRef } = useMenuItem({
 });
 
 const state = computed<MenuCheckboxItemState>(() => ({
-  disabled: disabled.value,
+  disabled: isDisabled.value,
   highlighted: highlighted.value,
-  checked: checked.value,
+  checked: isChecked.value,
 }));
 
 provide(MenuCheckboxItemContext, state);
 
 function handleClick(event: MouseEvent) {
-  const nextChecked = !checked.value;
+  const nextChecked = !isChecked.value;
   const details = createChangeEventDetails(REASONS.itemPress, event, undefined, {
     preventUnmountOnClose: NOOP,
   });
@@ -160,7 +160,7 @@ const { element, elementProps } = useRenderElement('div', props, {
     store.select('itemProps'),
     {
       role: 'menuitemcheckbox',
-      'aria-checked': checked.value,
+      'aria-checked': isChecked.value,
       onClick: handleClick,
     },
     attrs,
