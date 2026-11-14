@@ -20,7 +20,7 @@ describe('<Select.Root /> on a server', () => {
   it('renders no popup in the place of the portal', async () => {
     const html = await renderToString(
       <Select.Root defaultOpen>
-        <Select.Trigger />
+        <Select.Trigger data-testid="trigger" />
         <Select.Portal>
           <Select.Positioner>
             <Select.Popup>
@@ -33,6 +33,9 @@ describe('<Select.Root /> on a server', () => {
 
     expect(html).not.toContain('role="listbox"');
     expect(html).not.toContain('role="option"');
+    // The id of the list comes from its element, and a server has no element.
+    expect(readAttributes(html, 'trigger')).toMatchObject({ 'aria-expanded': 'true' });
+    expect(readAttributes(html, 'trigger')).not.toHaveProperty('aria-controls');
   });
 
   it('renders the parts of an open popup that is not in a portal', async () => {
@@ -70,6 +73,8 @@ describe('<Select.Root /> on a server', () => {
     expect(readAttributes(html, 'arrow')).toHaveProperty('aria-hidden', 'true');
     expect(readAttributes(html, 'backdrop')).toHaveProperty('role', 'presentation');
     expect(readAttributes(html, 'group')).toHaveProperty('role', 'group');
+    // The label registers its id in its `setup`, after the server wrote the attributes of the group.
+    expect(readAttributes(html, 'group')).not.toHaveProperty('aria-labelledby');
     expect(readAttributes(html, 'group-label')).toHaveProperty('aria-hidden', 'true');
   });
 
