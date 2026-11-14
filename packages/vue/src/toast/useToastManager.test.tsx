@@ -455,7 +455,7 @@ describe('useToast', () => {
           return () => (
             <button
               onClick={() => {
-                promise(
+                void promise(
                   new Promise((res) => {
                     setTimeout(() => {
                       res('success');
@@ -549,13 +549,13 @@ describe('useToast', () => {
           return () => (
             <button
               onClick={() =>
-                promise(
+                void promise(
                   new Promise((res) => {
                     res('test success');
                   }),
                   {
                     loading: 'loading',
-                    success: (data) => `${data}`,
+                    success: (data) => String(data),
                     error: 'error',
                   },
                 )
@@ -594,7 +594,7 @@ describe('useToast', () => {
           return () => (
             <button
               onClick={() =>
-                promise(
+                void promise(
                   new Promise<string>((res) => {
                     res('everything');
                   }),
@@ -650,7 +650,7 @@ describe('useToast', () => {
           return () => (
             <button
               onClick={() =>
-                promise(
+                void promise(
                   new Promise((res, rej) => {
                     rej(new Error('test error'));
                   }),
@@ -697,7 +697,7 @@ describe('useToast', () => {
           return () => (
             <button
               onClick={() =>
-                promise(
+                void promise(
                   new Promise((res) => {
                     res('success');
                   }),
@@ -752,7 +752,7 @@ describe('useToast', () => {
                   resolvePromise = resolve;
                 });
 
-                promise(pendingPromise, {
+                void promise(pendingPromise, {
                   loading: 'loading',
                   success: 'success',
                   error: 'error',
@@ -794,7 +794,7 @@ describe('useToast', () => {
             return () => (
               <button
                 onClick={() => {
-                  promise(
+                  void promise(
                     new Promise((res) => {
                       setTimeout(() => {
                         res('success');
@@ -895,7 +895,7 @@ describe('useToast', () => {
             return () => (
               <button
                 onClick={() => {
-                  promise(
+                  void promise(
                     new Promise((res) => {
                       setTimeout(() => {
                         res('success');
@@ -1003,7 +1003,7 @@ describe('useToast', () => {
             return () => (
               <button
                 onClick={() => {
-                  promise(
+                  void promise(
                     new Promise((res) => {
                       setTimeout(() => {
                         res('success');
@@ -1050,7 +1050,7 @@ describe('useToast', () => {
             return () => (
               <button
                 onClick={() => {
-                  promise(
+                  void promise(
                     new Promise((res) => {
                       setTimeout(() => {
                         res('success');
@@ -1099,7 +1099,7 @@ describe('useToast', () => {
             return () => (
               <button
                 onClick={() => {
-                  promise(
+                  void promise(
                     new Promise((res) => {
                       setTimeout(() => {
                         res('success');
@@ -1149,7 +1149,7 @@ describe('useToast', () => {
             return () => (
               <button
                 onClick={() => {
-                  promise(
+                  void promise(
                     new Promise((res) => {
                       setTimeout(() => {
                         res('success');
@@ -1541,7 +1541,7 @@ describe('useToast', () => {
           <>
             {toasts.value.map((t) => (
               <Toast.Root key={t.id} toast={t} data-testid={t.title}>
-                <Toast.Close data-testid={`close-${t.title}`} />
+                <Toast.Close data-testid={`close-${String(t.title)}`} />
               </Toast.Root>
             ))}
             <button
