@@ -22,6 +22,7 @@ import type { Component } from 'vue';
 import type { HTMLProps } from '../../internals/types';
 import FloatingPortal from '../../utils/popups/portal/FloatingPortal.vue';
 import { useSelectRootContext } from '../root/SelectRootContext';
+import SelectPortalChildren from './SelectPortalChildren.vue';
 
 defineOptions({ inheritAttrs: false });
 
@@ -50,10 +51,10 @@ defineExpose({ element });
     v-bind="{ ...$attrs, as, stateClass, stateStyle, container }"
   >
     <template v-if="$slots.render" #render="slotProps">
-      <slot name="render" v-bind="slotProps" />
+      <slot name="render" v-bind="slotProps" :children="SelectPortalChildren" />
     </template>
-    <template v-if="$slots.default" #default="slotProps">
-      <slot v-bind="slotProps" />
+    <template #default="slotProps">
+      <SelectPortalChildren><slot v-bind="slotProps" /></SelectPortalChildren>
     </template>
   </FloatingPortal>
 </template>

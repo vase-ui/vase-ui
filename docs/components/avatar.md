@@ -75,3 +75,9 @@ With `keepMounted`, the image is in the server HTML and starts to load before hy
 ## API reference
 
 <ApiReference />
+
+## Additional types
+
+### ImageLoadingStatus
+
+<ApiReference name="ImageLoadingStatus" />

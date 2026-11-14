@@ -17,13 +17,6 @@
       "reason": "The case suspends a React transition, and React then abandons a render. Vue has no render that it abandons."
     },
     {
-      "upstream": "packages/react/src/toast/useToastManager.test.tsx",
-      "describe": ["useToast", "in dialog"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The file imports `Dialog` from the entry point of Dialog, which Vase UI does not have. Each case renders parts of `Dialog`."
-    },
-    {
       "upstream": "packages/react/src/toast/utils/isRenderableNode.test.ts",
       "describe": ["hasRenderableChildren"],
       "title": "requires an element whose children are renderable",

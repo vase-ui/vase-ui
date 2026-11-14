@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
+import { Dialog } from '@vase-ui/vue/dialog';
 import {
   createRenderer,
   describeConformance,
@@ -11,7 +12,6 @@ import {
   waitFor,
 } from '#test-utils';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
-import * as Dialog from '../index.parts';
 import type { DialogStore } from '../store/DialogStore';
 import DialogBackdropHydration from './DialogBackdropHydration.test.vue';
 import DialogBackdropReplacement from './DialogBackdropReplacement.test.vue';

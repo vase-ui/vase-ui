@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
-import * as Dialog from '../index.parts';
+import { Dialog } from '@vase-ui/vue/dialog';
 import type { DialogStore } from '../store/DialogStore';
 
 defineProps<{ first: boolean; onStore: (store: DialogStore<unknown>) => void }>();

@@ -11,7 +11,7 @@ describe('<Combobox.Chips />', () => {
   describeConformance(<Combobox.Chips />, () => ({
     refInstanceof: window.HTMLDivElement,
     render(node) {
-      return render(<Combobox.Root multiple>{node}</Combobox.Root>);
+      return render(<Combobox.Root>{node}</Combobox.Root>);
     },
   }));
 
