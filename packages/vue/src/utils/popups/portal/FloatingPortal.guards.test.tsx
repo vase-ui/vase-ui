@@ -556,14 +556,10 @@ describe('FloatingPortal', () => {
 
       await hydrate(FloatingPortalHydration, { serverHtml });
 
-      // `hydrate` mounts two apps, so the document holds two portals, each with two guards.
-      const portals = screen.getAllByTestId('portal');
-      expect(portals).toHaveLength(2);
-      for (const portal of portals) {
-        expect(portal.parentElement).toBe(document.body);
-        expect(portal).toContainElement(portal.querySelector('[data-testid="content"]'));
-      }
-      expect(getOutsideGuards()).toHaveLength(4);
+      const portal = screen.getByTestId('portal');
+      expect(portal.parentElement).toBe(document.body);
+      expect(portal).toContainElement(screen.getByTestId('content'));
+      expect(getOutsideGuards()).toHaveLength(2);
     });
   });
 });

@@ -1022,6 +1022,46 @@ describe('<NavigationMenu.Trigger />', () => {
       });
       expect(positioner.style.getPropertyValue('--positioner-height')).toBe('80px');
     });
+
+    it('keeps the size variables when the window resizes while KeepAlive holds the menu', async () => {
+      const visible = shallowRef(true);
+      // `KeepAlive` caches only a stateful component.
+      const KeptMenu = defineComponent(() => () => (
+        <NavigationMenu.Root>
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="one">
+              <NavigationMenu.Trigger data-testid="trigger-one">One</NavigationMenu.Trigger>
+              <NavigationMenu.Content>
+                <div style={{ width: '100px', height: '40px' }} />
+              </NavigationMenu.Content>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          <NavigationMenu.Portal>
+            <NavigationMenu.Positioner data-testid="positioner">
+              <NavigationMenu.Popup>
+                <NavigationMenu.Viewport />
+              </NavigationMenu.Popup>
+            </NavigationMenu.Positioner>
+          </NavigationMenu.Portal>
+        </NavigationMenu.Root>
+      ));
+      await render(() => <KeepAlive>{visible.value ? <KeptMenu /> : null}</KeepAlive>);
+      await fireEvent.click(screen.getByTestId('trigger-one'));
+      await flushMicrotasks();
+      const positioner = screen.getByTestId('positioner');
+      await waitFor(() => {
+        expect(positioner.style.getPropertyValue('--positioner-width')).toBe('100px');
+      });
+
+      visible.value = false;
+      await flushMicrotasks();
+      // A size pass of a popup that is out of the document removes the variables and measures 0.
+      window.dispatchEvent(new Event('resize'));
+      await new Promise(requestAnimationFrame);
+      await new Promise(requestAnimationFrame);
+
+      expect(positioner.style.getPropertyValue('--positioner-width')).toBe('100px');
+    });
   });
 
   it('opens a vertical menu with the mirrored arrow key in RTL mode', async () => {
