@@ -115,8 +115,9 @@ const [checked, setChecked] = useControlled({
 const { store } = useMenuRootContext();
 
 const listItem = useCompositeListItem({ label: () => props.label });
-// A filterable menu hides the element of an item that the query filters out. The state of the
-// item stays in this part, so a hidden item keeps it.
+// A filterable menu hides the element of an item that the query filters out. The template then
+// gives the content of the item to a component that reads its text and renders nothing. The state
+// of the item stays in this part, so a hidden item keeps it.
 const filterItem = useMenuFilterItem({ label: () => props.label });
 const itemId = useVaseUiId(() => props.id);
 
@@ -181,5 +182,8 @@ defineExpose({ element });
     <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
     <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
   </template>
-  <component :is="filterItem.HiddenItemText" v-else :set-text="filterItem.setHiddenText"><slot :state="state" /></component>
+  <component :is="filterItem.HiddenItemText" v-else :set-text="filterItem.setHiddenText">
+    <slot v-if="$slots.render" name="render" :props="{} as HTMLProps" :state="state" />
+    <slot v-else :state="state" />
+  </component>
 </template>
