@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { defineComponent, KeepAlive, nextTick, shallowRef } from 'vue';
+import type { ComputedRef } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import type { TextDirection } from '@vase-ui/vue/direction-provider';
 import { Menubar } from '@vase-ui/vue/menubar';
@@ -24,6 +25,10 @@ import MenubarMockMenu from './MenubarMockMenu.test.vue';
 
 const HYDRATION_FIXTURE = 'src/menubar/MenubarHydration.test.vue';
 
+// The real pointer of the browser can rest on an item. A dispatched event still reaches the item,
+// and the real pointer sends no event of its own.
+const noRealPointer = { pointerEvents: 'none' } as const;
+
 type MockMenu = InstanceType<typeof MenubarMockMenu>;
 
 function readTabindexes(root: ParentNode) {
@@ -39,12 +44,12 @@ function parse(html: string) {
 }
 
 function createTreeProvider() {
-  let tree: FloatingTreeStore | undefined;
+  let tree: ComputedRef<FloatingTreeStore> | undefined;
   const TreeProvider = defineComponent((_, { slots }) => {
     tree = provideFloatingTree();
     return () => slots.default?.();
   });
-  return { TreeProvider, getTree: () => tree! };
+  return { TreeProvider, getTree: () => tree!.value };
 }
 
 describe('<Menubar />', () => {
@@ -121,30 +126,34 @@ describe('<Menubar />', () => {
     it('gives the props, the id and the element of the menubar to a part below it', async () => {
       const menu = shallowRef<MockMenu | null>(null);
       const { container } = await render(
-        <Menubar id="file-menubar">
+        <Menubar>
           <MenubarMockMenu ref={menu} />
         </Menubar>,
       );
+      const menubar = container.firstElementChild as HTMLElement;
+      expect(menubar.id).toMatch(/^vase-ui-/);
 
       const context = menu.value!.menubar;
       expect(context.modal.value).toBe(true);
       expect(context.disabled.value).toBe(false);
       expect(context.orientation.value).toBe('horizontal');
-      expect(context.rootId.value).toBe('file-menubar');
-      expect(context.contentElement.value).toBe(container.firstElementChild);
+      expect(context.rootId.value).toBe(menubar.id);
+      expect(context.contentElement.value).toBe(menubar);
       expect(context.hasSubmenuOpen.value).toBe(false);
       expect(context.allowMouseUpTriggerRef.value).toBe(false);
     });
 
     it('follows a change of the props', async () => {
       const menu = shallowRef<MockMenu | null>(null);
-      const { setProps } = await render(
+      const { container, setProps } = await render(
         <Menubar id="file-menubar">
           <MenubarMockMenu ref={menu} />
         </Menubar>,
       );
+      const menubar = container.firstElementChild as HTMLElement;
       const context = menu.value!.menubar;
       expect(context.modal.value).toBe(true);
+      expect(context.rootId.value).toBe('file-menubar');
 
       await setProps({ modal: false, disabled: true, orientation: 'vertical', id: 'edit-menubar' });
 
@@ -152,6 +161,11 @@ describe('<Menubar />', () => {
       expect(context.disabled.value).toBe(true);
       expect(context.orientation.value).toBe('vertical');
       expect(context.rootId.value).toBe('edit-menubar');
+
+      await setProps({ id: undefined });
+
+      expect(menubar.id).toMatch(/^vase-ui-/);
+      expect(context.rootId.value).toBe(menubar.id);
     });
 
     it('gives no context to an optional reader outside a menubar', async () => {
@@ -440,8 +454,8 @@ describe('<Menubar />', () => {
       const menu = shallowRef<MockMenu | null>(null);
       const { user } = await render(
         <Menubar>
-          <MenubarMockMenu ref={menu} data-testid="a" />
-          <MenubarMockMenu data-testid="b" />
+          <MenubarMockMenu ref={menu} data-testid="a" style={noRealPointer} />
+          <MenubarMockMenu data-testid="b" style={noRealPointer} />
         </Menubar>,
       );
       await user.keyboard('[Tab]');

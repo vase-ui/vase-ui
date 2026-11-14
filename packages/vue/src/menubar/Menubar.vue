@@ -112,9 +112,9 @@ const tree = provideFloatingTree();
 const nodeId = useFloatingNodeId(tree);
 provideFloatingNode(nodeId);
 
-// The part makes the tree, and `setup` runs one time. The listener thus needs no removal and no new
-// subscription.
-tree.events.on('menuopenchange', (details: MenuOpenEventDetails) => {
+// The part gives no external tree, so `tree.value` is always its own store. `setup` runs one time.
+// The listener thus needs no removal and no new subscription.
+tree.value.events.on('menuopenchange', (details: MenuOpenEventDetails) => {
   if (!details.nodeId || details.parentNodeId !== nodeId) {
     return;
   }
