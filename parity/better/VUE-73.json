@@ -1,0 +1,12 @@
+{
+  "id": "VUE-73",
+  "evidence": [
+    "https://www.w3.org/TR/wai-aria-1.2/#valuetype_idref",
+    "https://www.w3.org/TR/wai-aria-1.2/#valuetype_idref_list",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/combobox/trigger/ComboboxTrigger.tsx#L89-L97",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/combobox/popup/ComboboxPopup.tsx#L46-L50",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/internals/resolveRenderedId.ts#L9-L15"
+  ],
+  "behavior": "An open `Combobox.Trigger` names in `aria-controls` only an id that an element has. That element is the popup while the input is in the popup, and the list while the trigger is beside the input. The trigger has no `aria-controls` while that element has no id, and while no popup is mounted, as in the server HTML of an open root. Base UI gives the trigger `aria-controls=\"\"` when the popup or the list has an empty `id`. When a `render` prop drops the id of the popup, and while no popup is mounted, Base UI names the default id of the popup, which no element has.",
+  "dueWith": "packages/react/src/combobox/trigger/ComboboxTrigger.tsx"
+}
