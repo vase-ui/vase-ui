@@ -1,5 +1,6 @@
 import { describe, expect, it, onTestFinished } from 'vitest';
-import { watch } from 'vue';
+import { defineComponent, h, nextTick, watch } from 'vue';
+import { createRenderer } from '#test-utils';
 import { ValuePopupFixtureStore } from '../../../../test/fixtures/ValuePopupFixture';
 
 function createAnchors() {
@@ -10,6 +11,8 @@ function createAnchors() {
 }
 
 describe('ValuePopupStore', () => {
+  const { render } = createRenderer();
+
   it('writes the anchor of the family to anchorElement in the write that changes it', () => {
     const store = new ValuePopupFixtureStore();
     const { trigger } = createAnchors();
@@ -101,5 +104,30 @@ describe('ValuePopupStore', () => {
 
     expect(anchorsAtOpenChange).toHaveLength(1);
     expect(anchorsAtOpenChange[0]).toBe(trigger);
+  });
+
+  // Vue calls a function ref during the render of the part. A read of the state in the callback
+  // would make that render depend on the state. A trigger part sets the anchor in this way.
+  it('adds no dependency to the render of a part when its ref callback sets the anchor of the family', async () => {
+    const store = new ValuePopupFixtureStore();
+    let renders = 0;
+    const Part = defineComponent(() => () => {
+      renders += 1;
+      return h('button', {
+        ref: (element) => store.set('triggerElement', element as HTMLElement | null),
+      });
+    });
+
+    const { container } = await render(h(Part));
+    expect(store.state.anchorElement).toBe(container.firstElementChild);
+    expect(renders).toBe(1);
+
+    store.set('positionerElement', document.createElement('div'));
+    await nextTick();
+    expect(renders).toBe(1);
+
+    store.set('open', true);
+    await nextTick();
+    expect(renders).toBe(1);
   });
 });

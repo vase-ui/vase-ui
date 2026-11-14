@@ -1618,7 +1618,7 @@ interface SingleAnchorRootInstance {
   transitionStatus: TransitionStatus;
 }
 
-// A root with one anchor: a button, and a popup while the root is mounted. With `animatedClass`,
+// A root with one anchor: a button, and a popup while `mounted` is `true`. With `animatedClass`,
 // the popup holds an element that has the animations of the close, and the root gives that element
 // to the composable as `popupRef`.
 const SingleAnchorRoot = defineComponent({
