@@ -14,7 +14,7 @@ export function useMenuPositionerContext(): MenuPositionerContext {
   const context = inject(MenuPositionerContext, undefined);
   if (context === undefined) {
     throw new Error(
-      'Vase UI: <Menu.Popup> and <Menu.Arrow> must be inside <Menu.Positioner>. Without a positioner the part has no side and no alignment. Put the part inside <Menu.Positioner>.',
+      'Vase UI: <Menu.Popup>, <Menu.Arrow> and <Menu.Viewport> must be inside <Menu.Positioner>. Without a positioner the part has no side and no alignment. Put the part inside <Menu.Positioner>.',
     );
   }
 
