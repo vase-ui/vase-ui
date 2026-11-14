@@ -1,14 +1,18 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import {
   createRenderer,
   describeConformance,
+  fireEvent,
   flushMicrotasks,
   hydrate,
   renderOnServer,
   screen,
+  waitFor,
 } from '#test-utils';
+import * as Dialog from '../../dialog/index.parts';
 import * as NavigationMenu from '../index.parts';
+import { OPEN_DELAY } from '../utils/constants';
 import NavigationMenuRootHydration from './NavigationMenuRootHydration.test.vue';
 import { useNavigationMenuRootContext } from './NavigationMenuRootContext';
 
@@ -104,6 +108,106 @@ describe('<NavigationMenu.Root />', () => {
 
       expect(screen.getByTestId('root').localName).toBe('section');
       expect(screen.getByTestId('nested-root').localName).toBe('aside');
+    });
+  });
+
+  describe('nested popups', () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    const TestNavigationMenuWithNestedPopup = defineComponent((_props, { slots }) => () => (
+      <NavigationMenu.Root>
+        <NavigationMenu.List>
+          <NavigationMenu.Item value="item-1">
+            <NavigationMenu.Trigger data-testid="trigger-1">Item 1</NavigationMenu.Trigger>
+
+            <NavigationMenu.Content data-testid="popup-1">
+              {slots.default?.()}
+            </NavigationMenu.Content>
+          </NavigationMenu.Item>
+        </NavigationMenu.List>
+
+        <NavigationMenu.Portal>
+          <NavigationMenu.Positioner>
+            <NavigationMenu.Popup>
+              <NavigationMenu.Viewport />
+            </NavigationMenu.Popup>
+          </NavigationMenu.Positioner>
+        </NavigationMenu.Portal>
+      </NavigationMenu.Root>
+    ));
+
+    function TestNavigationMenuWithDialog() {
+      return (
+        <TestNavigationMenuWithNestedPopup>
+          <Dialog.Root>
+            <Dialog.Trigger data-testid="dialog-trigger">Open dialog</Dialog.Trigger>
+            <Dialog.Portal>
+              <Dialog.Popup
+                data-testid="dialog-popup"
+                onClick={(event) => {
+                  event.stopPropagation();
+                }}
+              >
+                <button type="button" data-testid="dialog-button">
+                  Dialog button
+                </button>
+              </Dialog.Popup>
+            </Dialog.Portal>
+          </Dialog.Root>
+        </TestNavigationMenuWithNestedPopup>
+      );
+    }
+
+    it('keeps a hover-open menu open when pointerdown happens on a nested dialog trigger', async () => {
+      const { user } = await render(<TestNavigationMenuWithDialog />);
+      const trigger = screen.getByTestId('trigger-1');
+
+      await fireEvent.mouseEnter(trigger);
+      await fireEvent.mouseMove(trigger);
+      vi.advanceTimersByTime(OPEN_DELAY);
+      await flushMicrotasks();
+
+      const popup = screen.getByTestId('popup-1');
+      const dialogTrigger = screen.getByTestId('dialog-trigger');
+
+      await fireEvent.pointerDown(dialogTrigger, { pointerType: 'mouse' });
+      await fireEvent.mouseLeave(popup);
+
+      await user.click(dialogTrigger);
+
+      expect(await screen.findByTestId('dialog-popup')).not.toBe(null);
+      expect(screen.queryByTestId('popup-1')).not.toBe(null);
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    it('keeps the menu open when interacting with a nested dialog', async () => {
+      const { user } = await render(<TestNavigationMenuWithDialog />);
+      const trigger = screen.getByTestId('trigger-1');
+
+      await user.click(trigger);
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('popup-1')).not.toBe(null);
+      });
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+
+      const dialogTrigger = screen.getByTestId('dialog-trigger');
+      await user.click(dialogTrigger);
+
+      expect(await screen.findByTestId('dialog-popup')).not.toBe(null);
+
+      await user.click(screen.getByTestId('dialog-button'));
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('popup-1')).not.toBe(null);
+      });
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
     });
   });
 
