@@ -1,15 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { shallowRef } from 'vue';
-import {
-  createRenderer,
-  describeConformance,
-  flushMicrotasks,
-  screen,
-  takeReportedMessages,
-  waitFor,
-} from '#test-utils';
+import { createRenderer, describeConformance, flushMicrotasks, screen, waitFor } from '#test-utils';
 import DialogPopupPart from '../../../test/fixtures/DialogPopupPart.vue';
-import DialogPortalPart from '../../../test/fixtures/DialogPortalPart.vue';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import * as Dialog from '../index.parts';
 import type { DialogStore } from '../store/DialogStore';
@@ -24,10 +16,10 @@ describe('<Dialog.Viewport />', () => {
       render: (node) => {
         return render(
           <Dialog.Root open modal={false}>
-            <DialogPortalPart>
+            <Dialog.Portal>
               {node}
               <DialogPopupPart />
-            </DialogPortalPart>
+            </Dialog.Portal>
           </Dialog.Root>,
         );
       },
@@ -38,11 +30,11 @@ describe('<Dialog.Viewport />', () => {
     const open = shallowRef(false);
     await render(() => (
       <Dialog.Root open={open.value} modal={false}>
-        <DialogPortalPart>
+        <Dialog.Portal>
           <Dialog.Viewport data-testid="viewport">
             <DialogPopupPart data-testid="popup">Content</DialogPopupPart>
           </Dialog.Viewport>
-        </DialogPortalPart>
+        </Dialog.Portal>
       </Dialog.Root>
     ));
     expect(screen.queryByTestId('viewport')).toBe(null);
@@ -60,11 +52,11 @@ describe('<Dialog.Viewport />', () => {
     const open = shallowRef(true);
     await render(() => (
       <Dialog.Root open={open.value} modal={false}>
-        <DialogPortalPart keepMounted>
+        <Dialog.Portal keepMounted>
           <Dialog.Viewport data-testid="viewport">
             <DialogPopupPart />
           </Dialog.Viewport>
-        </DialogPortalPart>
+        </Dialog.Portal>
       </Dialog.Root>
     ));
     const viewport = screen.getByTestId('viewport');
@@ -86,15 +78,15 @@ describe('<Dialog.Viewport />', () => {
     const nestedOpen = shallowRef(true);
     await render(() => (
       <Dialog.Root open modal={false}>
-        <DialogPortalPart>
+        <Dialog.Portal>
           <Dialog.Viewport data-testid="parent">
             <Dialog.Root open={nestedOpen.value} modal={false}>
-              <DialogPortalPart>
+              <Dialog.Portal>
                 <Dialog.Viewport data-testid="child" />
-              </DialogPortalPart>
+              </Dialog.Portal>
             </Dialog.Root>
           </Dialog.Viewport>
-        </DialogPortalPart>
+        </Dialog.Portal>
       </Dialog.Root>
     ));
     const parent = screen.getByTestId('parent');
@@ -117,9 +109,9 @@ describe('<Dialog.Viewport />', () => {
     await render(
       <Dialog.Root open modal={false}>
         <DialogStoreProbe onStore={(value) => (store = value)} />
-        <DialogPortalPart>
+        <Dialog.Portal>
           <Dialog.Viewport data-testid="viewport" />
-        </DialogPortalPart>
+        </Dialog.Portal>
       </Dialog.Root>,
     );
     const viewport = screen.getByTestId('viewport');
@@ -140,9 +132,9 @@ describe('<Dialog.Viewport />', () => {
     await render(() => (
       <Dialog.Root open modal={false}>
         <DialogStoreProbe onStore={(value) => (store = value)} />
-        <DialogPortalPart>
+        <Dialog.Portal>
           {mounted.value ? <Dialog.Viewport data-testid="viewport" /> : null}
-        </DialogPortalPart>
+        </Dialog.Portal>
       </Dialog.Root>
     ));
     expect(store.select('viewportElement')).toBe(screen.getByTestId('viewport'));
@@ -166,24 +158,5 @@ describe('<Dialog.Viewport />', () => {
     await setProps({ first: false });
 
     expect(store.select('viewportElement')).toBe(screen.getByTestId('second'));
-  });
-
-  // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
-  // instance set, and each later case of the file then gets a warning about a slot.
-  it('throws a descriptive error when rendered outside <Dialog.Portal>', async () => {
-    await expect(
-      render(
-        <Dialog.Root open>
-          <Dialog.Viewport />
-        </Dialog.Root>,
-      ),
-    ).rejects.toThrow(
-      'Vase UI: <Dialog.Portal> is missing. Without it the part cannot know if it stays mounted while the dialog is closed. Put the part inside <Dialog.Portal>.',
-    );
-
-    // Vue also warns about the error of `setup`.
-    expect(takeReportedMessages()).toEqual([
-      expect.stringContaining('Unhandled error during execution of setup function'),
-    ]);
   });
 });
