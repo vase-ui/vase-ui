@@ -796,12 +796,30 @@ The focus helpers of a popup are in `src/utils/popups/focus`.
 - A focus that the user moved outside the popup before the close stays there, unless the target is explicit. A `returnFocus` that is not a boolean is explicit. `explicitReturnFocus` can set the value.
 - After a press outside the popup, the part returns the focus only when the browser supports the `preventScroll` option of `focus()`. A virtual press, a nested popup and an explicit target do not need that support.
 - The part returns no focus after a close that a focus guard caused, and after a `mouseleave` event that closed a hover popup.
+- A popup that is not modal closes when the focus moves from its reference or its popup element to an element outside the popup. The reason is `focus-out`, and the part returns no focus. `closeOnFocusOut` set to `false` stops this close.
+- These elements count as inside the popup: the reference, the popup element and each element that contains it, the portal, the triggers of the store, the guards and the elements of `getInsideElements`.
+- The popup element and the reference of a node below the popup in the popup tree also count as inside, with their content. For a node above the popup, only the popup element itself and the reference itself count as inside. `externalTree` replaces the tree above the part.
+- A typeable reference with `role="combobox"` and `initialFocus` set to `false` closes its popup in the same way, also when the popup is modal.
+- A focus change in the task of a press on the reference, or on an element with `data-vase-ui-click-trigger`, does not close the popup.
+- In a `FloatingPortal`, a focus that leaves the popup element closes the popup only between the `pointerdown` and the `pointerup` of a press outside it. The guards of the portal close it for the Tab key.
+- With `restoreFocus`, the part moves the focus back into the popup when a removal or a hidden element in the popup leaves the focus on the body. This also needs `closeOnFocusOut`.
+- `true` focuses the last tabbable element that had the focus, or else the last tabbable element, or else the popup element. `'popup'` focuses the popup element.
+- Firefox and WebKit send no `focusout` when they remove the focused element. A `MutationObserver` on the popup element thus also starts the restore (`VUE-47`).
+- While a popup is open, the part gives `data-vase-ui-inert` to the elements outside it. While a modal popup is open, it also gives them `aria-hidden="true"`. A popup with a typeable combobox reference and `initialFocus` set to `false` also gives them `aria-hidden`. `markOthers.ts` writes the attributes.
+- `aria-hidden` skips live regions, their ancestors, scripts, the guards, the portals in the portal of the popup, and the elements of `getInsideElements`, `previousFocusableElement` and `nextFocusableElement`.
+- `aria-hidden` also skips the typeable combobox reference of the popup when `initialFocus` is `false`, and the typeable combobox reference of a popup above it in the tree.
+- With `outsideElementsInert`, a modal popup also gives `inert` to each element that gets `aria-hidden` (`BUG-4678`). The Tab key and a press then cannot reach those elements.
+- An element keeps an attribute that it had before the marks. The release of the marks leaves that attribute.
+- A popup that opens later lifts the marks of the earlier popups from its own elements and their ancestors (`BUG-5577`). The children of such an ancestor that hold none of its elements keep the marks.
+- A focus manager takes its marks again each time a focus manager above it takes marks. A popup in the content of another popup thus has the later marks.
+- The marks of all popups are in one registry on `globalThis[Symbol.for('vase-ui.modal-marks')]`. Two copies of the library share it.
 - When the `role` of the popup element contains `dialog`, the part sets `tabindex` and `data-tabindex` on it. Both are `0` while the popup has no tabbable element, and `-1` while it has one.
 - `data-tabindex` marks a value that the part wrote. A `tabindex` with no `data-tabindex` is the value of the consumer, and the part keeps it.
+- While `closeOnFocusOut` is `true`, the part sets the two attributes again when the focus leaves the reference.
 - The part keeps its effects in one list. `update` runs each effect whose sources changed, in the sequence of the list: first its last cleanup, then its setup. `onMounted` and one `watch` with `flush: 'post'` call `update`.
 - Two `watch` calls of one component with `flush: 'post'` run in the sequence of the writes to their sources. They do not run in the sequence of the calls. The list gives the sequence of the effects of Base UI.
 - A server calls no `onMounted` and runs no `watch` with `flush: 'post'`, so no effect runs there.
-- Under `KeepAlive`, the two hooks only set a flag, because the portal has not put the popup back at `onActivated`. The `update` after the DOM update of the hook then releases the listeners of the document, and takes them back.
+- Under `KeepAlive`, the two hooks only set a flag, because the portal has not put the popup back at `onActivated`. The `update` after the DOM update of the hook then releases the listeners of the document and the marks, and takes them back.
 - The deactivation moves the focus to `<body>`, so the initial focus moves again at the activation. The popup keeps its open state.
 - The deactivation returns no focus. The reference usually leaves the document with the popup, and an older element of the list would get the focus.
 - The state for the portal and the guards do not read the flag. `KeepAlive` takes the guards of the portal out of the document with the part, and the same guards must return.
