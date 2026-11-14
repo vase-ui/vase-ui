@@ -266,6 +266,9 @@ const { element, elementProps } = useRenderElement('div', props, {
       onPointermove: handlePenMove,
       onPointerup: handlePenEnd,
       onPointercancel: handlePenEnd,
+      // The element of its `pointerdown` does not capture a pen that works as a mouse.
+      // A pen that left the trigger sends it no `pointerup`, so the press ends at `pointerleave`.
+      onPointerleave: handlePenEnd,
       // Stops the callout that Safari on iOS shows for a long press.
       style: {
         '-webkit-touch-callout': 'none',

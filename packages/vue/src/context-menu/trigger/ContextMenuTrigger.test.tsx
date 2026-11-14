@@ -687,24 +687,25 @@ describe('<ContextMenu.Trigger />', () => {
       expect(onOpenChange).toHaveBeenCalledTimes(1);
     });
 
-    it.each([{ type: 'pointerUp' as const }, { type: 'pointerCancel' as const }])(
-      'cancels when the pen gets $type',
-      async ({ type }) => {
-        const onOpenChange = vi.fn();
-        const { getByTestId } = await render(
-          <ContextMenu.Root onOpenChange={onOpenChange}>
-            <ContextMenu.Trigger data-testid="trigger">Long press me</ContextMenu.Trigger>
-          </ContextMenu.Root>,
-        );
-        const trigger = getByTestId('trigger');
+    it.each([
+      { type: 'pointerup', fire: 'pointerUp' as const },
+      { type: 'pointercancel', fire: 'pointerCancel' as const },
+      { type: 'pointerleave', fire: 'pointerLeave' as const },
+    ])('cancels when the pen gets $type', async ({ fire }) => {
+      const onOpenChange = vi.fn();
+      const { getByTestId } = await render(
+        <ContextMenu.Root onOpenChange={onOpenChange}>
+          <ContextMenu.Trigger data-testid="trigger">Long press me</ContextMenu.Trigger>
+        </ContextMenu.Root>,
+      );
+      const trigger = getByTestId('trigger');
 
-        await fireEvent.pointerDown(trigger, { pointerType: 'pen', clientX: 50, clientY: 50 });
-        await fireEvent[type](trigger, { pointerType: 'pen', clientX: 50, clientY: 50 });
-        await advance(500);
+      await fireEvent.pointerDown(trigger, { pointerType: 'pen', clientX: 50, clientY: 50 });
+      await fireEvent[fire](trigger, { pointerType: 'pen', clientX: 50, clientY: 50 });
+      await advance(500);
 
-        expect(onOpenChange).not.toHaveBeenCalled();
-      },
-    );
+      expect(onOpenChange).not.toHaveBeenCalled();
+    });
 
     it('keeps the press while another pointer moves or leaves', async () => {
       const onOpenChange = vi.fn();
@@ -719,6 +720,7 @@ describe('<ContextMenu.Trigger />', () => {
       await fireEvent.pointerMove(trigger, { pointerType: 'touch', clientX: 100, clientY: 50 });
       await fireEvent.pointerUp(trigger, { pointerType: 'touch', clientX: 100, clientY: 50 });
       await fireEvent.pointerCancel(trigger, { pointerType: 'mouse' });
+      await fireEvent.pointerLeave(trigger, { pointerType: 'mouse' });
       await advance(500);
 
       expect(onOpenChange).toHaveBeenCalledTimes(1);
