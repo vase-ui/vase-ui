@@ -25,10 +25,6 @@ import MenubarMockMenu from './MenubarMockMenu.test.vue';
 
 const HYDRATION_FIXTURE = 'src/menubar/MenubarHydration.test.vue';
 
-// The real pointer of the browser can rest on an item. A dispatched event still reaches the item,
-// and the real pointer sends no event of its own.
-const noRealPointer = { pointerEvents: 'none' } as const;
-
 type MockMenu = InstanceType<typeof MenubarMockMenu>;
 
 function readTabindexes(root: ParentNode) {
@@ -450,8 +446,8 @@ describe('<Menubar />', () => {
       const menu = shallowRef<MockMenu | null>(null);
       const { user } = await render(
         <Menubar>
-          <MenubarMockMenu ref={menu} data-testid="a" style={noRealPointer} />
-          <MenubarMockMenu data-testid="b" style={noRealPointer} />
+          <MenubarMockMenu ref={menu} data-testid="a" />
+          <MenubarMockMenu data-testid="b" />
         </Menubar>,
       );
       await user.keyboard('[Tab]');

@@ -31,13 +31,7 @@ type RectLike = {
 };
 
 const multilineWrapperStyle = { width: '140px' };
-// These tests dispatch pointer coordinates directly. Exclude the real browser cursor so it cannot
-// generate a competing hover event over a different inline line.
-const multilineTriggerStyle: CSSProperties = {
-  display: 'inline',
-  lineHeight: '20px',
-  pointerEvents: 'none',
-};
+const multilineTriggerStyle: CSSProperties = { display: 'inline', lineHeight: '20px' };
 
 function expectWithin(actual: number, expected: number, tolerance = 2) {
   expect(Math.abs(actual - expected)).toBeLessThanOrEqual(tolerance);
@@ -721,7 +715,7 @@ describe('<PreviewCard.Positioner />', () => {
                   id="trigger-1"
                   data-testid="trigger-1"
                   delay={0}
-                  style={{ display: 'inline', pointerEvents: 'none' }}
+                  style={{ display: 'inline' }}
                 >
                   Trigger 1
                 </PreviewCard.Trigger>
@@ -730,7 +724,7 @@ describe('<PreviewCard.Positioner />', () => {
                   id="trigger-2"
                   data-testid="trigger-2"
                   delay={0}
-                  style={{ display: 'inline', pointerEvents: 'none' }}
+                  style={{ display: 'inline' }}
                 >
                   Trigger 2
                 </PreviewCard.Trigger>
@@ -802,13 +796,7 @@ describe('<PreviewCard.Positioner />', () => {
             <div>
               <div ref={portalContainer} data-testid="portal-container" />
               <PreviewCard.Root>
-                <PreviewCard.Trigger
-                  ref={triggerRef}
-                  href="#"
-                  delay={0}
-                  data-testid="trigger"
-                  style={{ pointerEvents: 'none' }}
-                >
+                <PreviewCard.Trigger ref={triggerRef} href="#" delay={0} data-testid="trigger">
                   Trigger
                 </PreviewCard.Trigger>
                 <PreviewCard.Portal keepMounted container={portalContainer}>
