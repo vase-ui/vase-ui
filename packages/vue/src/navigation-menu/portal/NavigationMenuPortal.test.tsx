@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { defineComponent, KeepAlive, shallowRef } from 'vue';
+import { defineComponent, h, KeepAlive, shallowRef } from 'vue';
+import type { Component } from 'vue';
+import type { HTMLProps } from '@vase-ui/vue/types';
 import { createRenderer, describeConformance, flushMicrotasks, screen } from '#test-utils';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 
@@ -37,6 +39,42 @@ describe('<NavigationMenu.Portal />', () => {
       </NavigationMenu.Root>,
     );
   }
+
+  describe('slot: render', () => {
+    it('puts the content of children in the element of the slot', async () => {
+      await render(
+        <NavigationMenu.Root defaultValue="one">
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="one">
+              <NavigationMenu.Trigger>One</NavigationMenu.Trigger>
+              <NavigationMenu.Content>
+                <NavigationMenu.Link href="#one">Link of one</NavigationMenu.Link>
+              </NavigationMenu.Content>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          <NavigationMenu.Portal
+            v-slots={{
+              render: ({ props, children }: { props: HTMLProps; children: Component }) => (
+                <section {...props} data-testid="portal">
+                  {h(children, null, () => (
+                    <NavigationMenu.Positioner>
+                      <NavigationMenu.Popup data-testid="popup">
+                        <NavigationMenu.Viewport />
+                      </NavigationMenu.Popup>
+                    </NavigationMenu.Positioner>
+                  ))}
+                </section>
+              ),
+            }}
+          />
+        </NavigationMenu.Root>,
+      );
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('portal')).toContainElement(screen.getByTestId('popup'));
+      expect(screen.getByTestId('popup')).toContainElement(screen.getByText('Link of one'));
+    });
+  });
 
   it('renders nothing while the menu is closed', async () => {
     await renderMenu();
