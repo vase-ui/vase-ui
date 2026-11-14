@@ -185,8 +185,8 @@ export function useFieldValidation(
       }
 
       // Only make `valueMissing` mark the field invalid if it's been changed
-      // to reduce error noise. A control that has no text to type has no such change, so it asks
-      // for the error with `countValueMissing`.
+      // to reduce error noise. A control that has no text to type cannot become empty by a change,
+      // so it asks for the error with `countValueMissing`.
       if (hasOnlyValueMissingError && !markedDirtyRef.value && !countValueMissing) {
         computedState.valid = true;
         computedState.valueMissing = false;
