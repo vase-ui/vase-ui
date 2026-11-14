@@ -5,6 +5,7 @@ import type { PropType } from 'vue';
 import {
   createRenderer,
   fireEvent,
+  fireTouch,
   flushMicrotasks,
   screen,
   useTestInteractions,
@@ -23,6 +24,7 @@ import { REASONS } from '../../../internals/reasons';
 import { mergeProps } from '../../../merge-props/mergeProps';
 import { createAttribute } from '../createAttribute';
 import { getEmptyRootStore } from '../floating-root/getEmptyRootStore';
+import { useFloatingRootStore } from '../floating-root/useFloatingRootStore';
 import FloatingFocusManager from '../focus/FloatingFocusManager.vue';
 import FloatingPortal from '../portal/FloatingPortal.vue';
 import FloatingPortalLite from '../portal/FloatingPortalLite.vue';
@@ -307,38 +309,6 @@ const App = defineComponent({
   },
 });
 
-interface TouchPoint {
-  identifier: number;
-  target: EventTarget;
-  clientX: number;
-  clientY: number;
-}
-
-// A browser refuses a plain object as a `Touch`. Firefox on a desktop has no `TouchEvent`, and
-// WebKit on a desktop refuses `new Touch()`. Those engines get an `Event` that has the two lists.
-async function fireTouch(
-  type: 'touchstart' | 'touchmove' | 'touchend',
-  target: Element,
-  init: { touches: TouchPoint[]; changedTouches: TouchPoint[] },
-) {
-  let event: Event;
-  try {
-    const toTouch = (point: TouchPoint) => new Touch(point);
-    event = new TouchEvent(type, {
-      bubbles: true,
-      cancelable: true,
-      composed: true,
-      touches: init.touches.map(toTouch),
-      changedTouches: init.changedTouches.map(toTouch),
-    });
-  } catch {
-    event = new Event(type, { bubbles: true, cancelable: true, composed: true });
-    Object.defineProperty(event, 'touches', { value: init.touches });
-    Object.defineProperty(event, 'changedTouches', { value: init.changedTouches });
-  }
-  await fireEvent(target, event);
-}
-
 describe('useDismiss', () => {
   const { render } = createRenderer();
 
@@ -571,8 +541,8 @@ describe('useDismiss', () => {
 
         await render(<ReopenApp />);
 
-        const touch = { identifier: 1, target: document.body, clientX: 10, clientY: 10 };
-        await fireTouch('touchstart', document.body, { touches: [touch], changedTouches: [touch] });
+        const touch = { clientX: 10, clientY: 10 };
+        await fireTouch.start(document.body, { touches: [touch], changedTouches: [touch] });
 
         await fireEvent.click(screen.getByRole('button'));
         expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
@@ -582,16 +552,16 @@ describe('useDismiss', () => {
         // Both the deferred touchend dismissal and the immediate touchmove dismissal belong
         // to the previous session, even though the interaction composable never unmounted.
         const movedTouch = { ...touch, clientX: touch.clientX + distance };
-        await fireTouch('touchmove', document.body, {
+        await fireTouch.move(document.body, {
           touches: [movedTouch],
           changedTouches: [movedTouch],
         });
-        await fireTouch('touchend', document.body, { touches: [], changedTouches: [movedTouch] });
+        await fireTouch.end(document.body, { touches: [], changedTouches: [movedTouch] });
         expect(screen.getByRole('tooltip')).toBeInTheDocument();
 
         // A new gesture in this session must still dismiss normally.
-        await fireTouch('touchstart', document.body, { touches: [touch], changedTouches: [touch] });
-        await fireTouch('touchmove', document.body, {
+        await fireTouch.start(document.body, { touches: [touch], changedTouches: [touch] });
+        await fireTouch.move(document.body, {
           touches: [{ ...touch, clientX: 22 }],
           changedTouches: [{ ...touch, clientX: 22 }],
         });
@@ -2985,6 +2955,98 @@ describe('useDismiss', () => {
 
       await pressInFrame(marked.frame);
       expect(isOpen('popup')).toBe(false);
+    });
+  });
+
+  describe('a store that changes', () => {
+    /**
+     * A popup element with the props of `useDismiss` for the store that `current` names. Both
+     * stores are open, and each records its changes.
+     */
+    function renderSwitchingStores(dismissProps: UseDismissProps = {}) {
+      const current = shallowRef<'a' | 'b'>('a');
+      const changes: (Change & { store: string })[] = [];
+      const stores: Record<'a' | 'b', ReturnType<typeof useFloatingRootStore>> = {} as never;
+
+      const Popup = defineComponent(() => {
+        const floating = shallowRef<HTMLElement | null>(null);
+        for (const name of ['a', 'b'] as const) {
+          stores[name] = useFloatingRootStore({
+            open: true,
+            onOpenChange(open, details) {
+              changes.push({
+                store: name,
+                open,
+                reason: details.reason,
+                eventType: details.event.type,
+              });
+            },
+            elements: { positionerElement: floating },
+          });
+        }
+        const dismiss = useDismiss(() => stores[current.value], dismissProps);
+
+        return () => (
+          <div
+            data-testid="popup"
+            {...mergeProps(dismiss.floating, {
+              ref: (element: unknown) => {
+                floating.value = element as HTMLElement | null;
+              },
+            })}
+          >
+            popup
+          </div>
+        );
+      });
+
+      return { current, changes, stores, Popup };
+    }
+
+    it('closes the popup of the store that the getter gives at the time of the press', async () => {
+      const { current, changes, Popup } = renderSwitchingStores();
+      await render(<Popup />);
+
+      await fireEvent.keyDown(document.body, { key: 'Escape' });
+      current.value = 'b';
+      await flushMicrotasks();
+      await fireEvent.keyDown(document.body, { key: 'Escape' });
+
+      expect(changes).toEqual([
+        { store: 'a', open: false, reason: REASONS.escapeKey, eventType: 'keydown' },
+        { store: 'b', open: false, reason: REASONS.escapeKey, eventType: 'keydown' },
+      ]);
+    });
+
+    it('moves its openchange listener to the new store', async () => {
+      const { current, stores, Popup } = renderSwitchingStores();
+      await render(<Popup />);
+      const offA = vi.spyOn(stores.a.context.events, 'off');
+      const onB = vi.spyOn(stores.b.context.events, 'on');
+
+      current.value = 'b';
+      await flushMicrotasks();
+
+      expect(offA).toHaveBeenCalledWith('openchange', expect.any(Function));
+      expect(onB).toHaveBeenCalledWith('openchange', offA.mock.calls[0][1]);
+    });
+
+    it('clears the inside marker of the last store, so that its next outside press closes it', async () => {
+      const { current, changes, Popup } = renderSwitchingStores();
+      await render(<Popup />);
+
+      // A press in the popup sets the marker of store a, and a 0 ms timer clears it.
+      await fireEvent.pointerDown(screen.getByTestId('popup'), mouse);
+      current.value = 'b';
+      await flushMicrotasks();
+      current.value = 'a';
+      await flushMicrotasks();
+
+      await fireEvent.pointerDown(document.body, mouse);
+
+      expect(changes).toEqual([
+        { store: 'a', open: false, reason: REASONS.outsidePress, eventType: 'pointerdown' },
+      ]);
     });
   });
 });
