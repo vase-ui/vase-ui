@@ -73,7 +73,7 @@ function getEscapeLayers(): EscapeLayers {
   return holder[ESCAPE_LAYERS_KEY];
 }
 
-// Each mounted `useDismiss` call gives the positioner element of its popup.
+// Each mounted `useDismiss` call adds a getter of the positioner element of its popup.
 const positionerElementGetters = new Set<() => Element | null>();
 
 /** Whether the shadow tree of `target` holds the positioner element of a popup, at any depth. */
@@ -758,7 +758,7 @@ export function useDismiss(
       // React runs the listeners of the pressed element at its root, after this listener. A
       // capture listener of the target runs before the bubble listeners of the target. Thus the
       // press closes the popup first, and a listener of the pressed element can open it again.
-      // Two targets keep a bubble listener. A capture listener that the document gets while it
+      // Two targets get a bubble listener. A capture listener that the document gets while it
       // runs its capture listeners does not run for this event. A press in a closed shadow root
       // has the host as its target here. The capture listeners of a popup element in that tree
       // must mark the press before this listener runs.
