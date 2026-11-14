@@ -465,7 +465,7 @@ describe('<Popover.Popup />', () => {
       vi.useRealTimers();
     });
 
-    it('closes `closeDelay` of its trigger after the pointer leaves it', async () => {
+    it('closes after the `closeDelay` of its trigger when the pointer leaves it', async () => {
       const onOpenChange = vi.fn();
       await render(
         <Popover.Root onOpenChange={onOpenChange}>
