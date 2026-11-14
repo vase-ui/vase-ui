@@ -50,8 +50,17 @@ function part(name: string, file = types) {
   return found!;
 }
 
-test('a prop has its type, default, required mark and description, and the shared props come last', () => {
-  const { props } = part('Sample.Popup');
+test('a prop has its type, documented default, required mark and description, and the shared props come last', () => {
+  const { props } = withTexts(
+    [
+      [
+        POPUP,
+        '/** Which side of the trigger the popup uses. */',
+        "/**\n   * Which side of the trigger the popup uses.\n   * @default 'bottom'\n   */",
+      ],
+    ],
+    () => part('Sample.Popup'),
+  );
   assert.deepEqual(
     props.map(({ name }) => name),
     ['disabled', 'keepMounted', 'name', 'side', 'stateClass', 'stateStyle', 'as'],
@@ -71,11 +80,13 @@ test('a prop has its type, default, required mark and description, and the share
     {
       name: 'side',
       type: '"bottom" | "top" | undefined',
-      default: '"bottom"',
+      default: "'bottom'",
       required: false,
       description: 'Which side of the trigger the popup uses.',
     },
   );
+  // The default of Vue is `false`, but the JSDoc has no `@default` tag.
+  assert.equal(props.find(({ name }) => name === 'keepMounted')?.default, null);
 });
 
 test('an event has its arguments and the text of its JSDoc', () => {
@@ -222,23 +233,32 @@ test('the functions are the parts and then the functions of the types.md that ha
   assert.deepEqual(names, ['Sample.closeHandle', 'Sample.createHandle']);
 });
 
-test('the types are the types of the types.md that have one property or more, with the path of the export as name', () => {
+test('the types are the types and then the additional types of the types.md that have one property or more or are a union of strings, with the path of the export as name', () => {
   const file = {
     ...types,
     types: [
       { name: 'SampleRootState', code: '' },
       { name: 'Ghost', code: '' },
-      { name: 'SampleRootChangeEventReason', code: '' },
       { name: 'Ghost.Handle', code: '' },
       { name: 'Sample.Handle', code: '' },
     ],
+    additionalTypes: [
+      { name: 'SampleRootChangeEventReason', code: '' },
+      { name: 'SamplePopupDataAttributes', code: '' },
+      { name: 'SampleRootChangeEventDetails', code: '' },
+    ],
   };
   assert.deepEqual(
-    buildApiTypes(project, ENTRY, file).map(({ name, properties }) => [
+    buildApiTypes(project, ENTRY, file).map(({ name, properties, values }) => [
       name,
       properties.map((property) => property.name),
+      values,
     ]),
-    [['Sample.Handle', ['open', 'close']]],
+    [
+      ['Sample.Handle', ['open', 'close'], []],
+      ['SampleRootChangeEventReason', [], ['trigger-press', 'escape-key', 'none']],
+      ['SampleRootChangeEventDetails', ['reason', 'event', 'cancel', 'isCanceled'], []],
+    ],
   );
 });
 

@@ -97,7 +97,7 @@ function idOf(name: string): string {
       <code>{{ named.apiFunction.returns.type }}</code>
     </p>
   </template>
-  <div v-else-if="named?.apiType" class="api-table">
+  <div v-else-if="named?.apiType && named.apiType.properties.length > 0" class="api-table">
     <table>
       <thead>
         <tr>
@@ -123,6 +123,9 @@ function idOf(name: string): string {
       </tbody>
     </table>
   </div>
+  <p v-else-if="named?.apiType">
+    <code>{{ named.apiType.values.map((value) => `'${value}'`).join(' | ') }}</code>
+  </p>
   <section v-for="part in parts" :key="part.name">
     <h3 :id="idOf(part.name)" tabindex="-1">
       {{ part.name }}

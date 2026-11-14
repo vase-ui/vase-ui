@@ -25,6 +25,7 @@ import { docsFolderGlobs } from './upstreamDocs.ts';
 export interface ApiProp {
   name: string;
   type: string;
+  /** The text of the `@default` tag of the prop, or `null`. */
   default: string | null;
   required: boolean;
   description: string;
@@ -73,6 +74,8 @@ export interface ApiType {
   /** `useRender.Parameters`. */
   name: string;
   properties: PropertySurface[];
+  /** The values of a union of strings, such as `ImageLoadingStatus`. Empty for a type with properties. */
+  values: string[];
 }
 
 export interface ApiReference {
@@ -84,15 +87,28 @@ export interface ApiReference {
 // Base UI puts `className`, `style` and `render` last. These are their Vue names.
 const SHARED_PROPS = ['stateClass', 'stateStyle', 'as'];
 
-function propsOf({ props }: ComponentSurface): ApiProp[] {
+// Vue gives `undefined` to a controlled prop, and a composable can calculate a default. The `@default`
+// tag gives the default that a user gets.
+function propsOf({ props }: ComponentSurface, defaults: Map<string, string | null>): ApiProp[] {
   const rank = (name: string): number => SHARED_PROPS.indexOf(name);
   return [...props]
-    .map(([name, prop]) => ({ name, ...prop }))
+    .map(([name, prop]) => ({ name, ...prop, default: defaults.get(name) ?? null }))
     .sort((a, b) => rank(a.name) - rank(b.name) || a.name.localeCompare(b.name, 'en'));
 }
 
 function membersOf(members: Map<string, MemberSurface>): ApiMember[] {
   return [...members].map(([name, { type, description }]) => ({ name, type, description }));
+}
+
+/** The text of the `@default` tag of each property of the exported type `typeName`. */
+function documentedDefaults(
+  project: VaseProject,
+  entryFile: string,
+  typeName: string,
+): Map<string, string | null> {
+  const match = project.findExports(entryFile, typeName).find(({ path }) => path === typeName);
+  const properties = (match && project.readProperties(match)) ?? [];
+  return new Map(properties.map(({ name, default: text }) => [name, text]));
 }
 
 function constantsOf(project: VaseProject, entryFile: string, namespace: string): ApiConstant[] {
@@ -124,7 +140,7 @@ export function buildApiParts(
         description: component.description,
         hasChildren:
           component.slots.get('render')?.props.some(({ name }) => name === 'children') === true,
-        props: propsOf(component),
+        props: propsOf(component, documentedDefaults(project, entryFile, `${flatName}Props`)),
         events: membersOf(component.emits),
         slots: [...component.slots].map(([name, slot]) => ({ name, ...slot })),
         exposed: membersOf(component.exposed),
@@ -183,20 +199,22 @@ export function buildApiFunctions(
 }
 
 /**
- * The types of a `types.md` that have one property or more, in its sequence. A name with no export
- * in the entry file is left out.
+ * The types and then the additional types of a `types.md`, in its sequence. A type with no property
+ * is left out, unless it is a union of strings. So is a name with no export in the entry file.
  */
 export function buildApiTypes(
   project: VaseProject,
   entryFile: string,
   file: SurfaceFile,
 ): ApiType[] {
-  return file.types.flatMap(({ name }) => {
+  return [...file.types, ...file.additionalTypes].flatMap(({ name }) => {
     const match = project
       .findExports(entryFile, name.slice(name.lastIndexOf('.') + 1))
       .find(({ path }) => path === name);
-    const properties = match && project.readProperties(match);
-    return properties && properties.length > 0 ? [{ name, properties }] : [];
+    const properties = (match && project.readProperties(match)) ?? [];
+    const values =
+      match && properties.length === 0 ? (project.readUnionValues(entryFile, name) ?? []) : [];
+    return properties.length > 0 || values.length > 0 ? [{ name, properties, values }] : [];
   });
 }
 
