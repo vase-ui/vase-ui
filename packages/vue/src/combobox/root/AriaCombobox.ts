@@ -1323,7 +1323,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     }
   }
 
-  function syncHighlight() {
+  function syncHighlight(settled = false) {
     // A kept-mounted dialog hides its inline list on close. Discard query-clear restoration
     // before it can overwrite the cleared highlight or report an item from the unfiltered list.
     if (!open.value && inline.value && getResolvedPopup()) {
@@ -1455,6 +1455,13 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     }
 
     const itemValue = candidateItems[storeActiveIndex];
+    // The items of a list with no `items` write their values to the registry in the effects that
+    // follow this watcher. A hole at the active index can thus be an item that registers in this
+    // flush, so the run after the flush decides.
+    if (!settled && itemValue === undefined && candidateItems === valuesRef.value) {
+      void nextTick(() => syncHighlight(true));
+      return;
+    }
     const previouslyHighlightedItemValue = lastHighlight.value;
     const isSameItem =
       previouslyHighlightedItemValue !== NO_ACTIVE_VALUE &&

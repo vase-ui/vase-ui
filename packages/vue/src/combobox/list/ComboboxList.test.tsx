@@ -238,6 +238,45 @@ describe('<Combobox.List />', () => {
       ]);
     });
 
+    it('keeps the element of an item when the filter moves the item', async () => {
+      await render(
+        <Combobox.Root items={['apple', 'banana', 'cherry']} defaultOpen>
+          <Combobox.Input />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List>
+                  {{
+                    item: ({ item }: { item: string }) => (
+                      <Combobox.Item key={item} value={item}>
+                        {item}
+                      </Combobox.Item>
+                    ),
+                  }}
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+      const cherry = screen.getByRole('option', { name: 'cherry' });
+
+      await fireEvent.input(screen.getByRole('combobox'), {
+        target: { value: 'cherry' },
+        inputType: 'insertText',
+      });
+      await flushMicrotasks();
+      expect(screen.getAllByRole('option')).toEqual([cherry]);
+
+      await fireEvent.input(screen.getByRole('combobox'), {
+        target: { value: '' },
+        inputType: 'deleteContentBackward',
+      });
+      await flushMicrotasks();
+      expect(screen.getAllByRole('option')).toHaveLength(3);
+      expect(screen.getByRole('option', { name: 'cherry' })).toBe(cherry);
+    });
+
     it('is the positioner element of a list with no positioner', async () => {
       let store: ComboboxStore | undefined;
       await render(

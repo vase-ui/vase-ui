@@ -26,10 +26,14 @@ const itemsToRender = computed<readonly any[]>((previous) => {
 function haveSameItems(previous: readonly any[], next: readonly any[]) {
   return previous.length === next.length && previous.every((item, index) => item === next[index]);
 }
+
+// The item is the key of its nodes, as the consumer of Base UI writes `key={item}`. An item then
+// keeps its element when the filter moves it. A `key` in the slot cannot do this: each item renders
+// in a fragment of its own, and Vue compares the keys of the children of one fragment only.
 </script>
 
 <template>
-  <template v-for="(item, index) in itemsToRender" :key="index"
+  <template v-for="(item, index) in itemsToRender" :key="item"
     ><slot :item="item" :index="index"
   /></template>
 </template>
