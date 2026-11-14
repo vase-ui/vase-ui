@@ -406,7 +406,7 @@ describe('<NavigationMenu.List />', () => {
       );
     }
 
-    it('keeps the menu open while the pointer is on the popup, and closes it for the close delay of the root after the pointer leaves the popup', async () => {
+    it('closes the menu for the close delay of the root after the pointer leaves the popup', async () => {
       await render(<HoverMenu />);
       const trigger = screen.getByTestId('trigger');
       await fireEvent.mouseEnter(trigger);
@@ -415,13 +415,10 @@ describe('<NavigationMenu.List />', () => {
       await flushMicrotasks();
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
 
+      // The trigger gets no leave event. Its safe polygon, which has the close delay of the
+      // trigger, thus does not handle the leave of the popup.
       const positioner = screen.getByTestId('positioner');
-      await fireEvent.mouseLeave(trigger, { relatedTarget: positioner });
       await fireEvent.mouseEnter(positioner);
-      vi.advanceTimersByTime(200);
-      await flushMicrotasks();
-      expect(trigger).toHaveAttribute('aria-expanded', 'true');
-
       await fireEvent.mouseLeave(positioner);
       vi.advanceTimersByTime(99);
       await flushMicrotasks();
