@@ -315,9 +315,6 @@ Creates a handle that connects a `Drawer.Root` with detached `Drawer.Trigger` pa
 
 `Drawer.Handle` is the class of the handle.
 
-- `open(triggerId)` opens the drawer for the `Drawer.Trigger` that has that `id` and the same handle. With `null`, it opens the drawer with no trigger.
-- `openWithPayload(payload)` opens the drawer with that payload and with no trigger.
-- `close()` closes the drawer.
-- `isOpen` is `true` while the drawer is open, and `false` while no root is mounted. A `computed` that reads it follows the open state.
+<ApiReference name="Drawer.Handle" />
 
-Call `open()`, `openWithPayload()` and `close()` only in an event handler or an effect, and not in a render.
+When no trigger has the `id` that `open()` gets, it opens the drawer with no trigger, and a development build shows a warning. A `computed` that reads `isOpen` follows the open state.
