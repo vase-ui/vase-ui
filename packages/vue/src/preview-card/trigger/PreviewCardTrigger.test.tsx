@@ -25,10 +25,6 @@ describe('<PreviewCard.Trigger />', () => {
     },
   }));
 
-  // The real pointer of the browser can rest on the link. A dispatched event then still reaches
-  // the link, and the real pointer sends no event of its own.
-  const noRealPointer = { pointerEvents: 'none' } as const;
-
   async function enter(link: HTMLElement, pointerType = 'mouse') {
     await fireEvent.pointerEnter(link, { pointerType });
     await fireEvent.mouseEnter(link);
@@ -38,7 +34,7 @@ describe('<PreviewCard.Trigger />', () => {
     const onOpenChange = vi.fn();
     await render(
       <PreviewCard.Root onOpenChange={onOpenChange}>
-        <PreviewCard.Trigger href="#preview" style={noRealPointer} {...triggerProps}>
+        <PreviewCard.Trigger href="#preview" {...triggerProps}>
           Link
         </PreviewCard.Trigger>
       </PreviewCard.Root>,
@@ -243,7 +239,7 @@ describe('<PreviewCard.Trigger />', () => {
     const Page = defineComponent({
       setup: () => () => (
         <PreviewCard.Root onOpenChange={onOpenChange}>
-          <PreviewCard.Trigger href="#preview" delay={0} style={noRealPointer}>
+          <PreviewCard.Trigger href="#preview" delay={0}>
             Link
           </PreviewCard.Trigger>
         </PreviewCard.Root>
