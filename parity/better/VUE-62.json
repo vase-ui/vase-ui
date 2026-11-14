@@ -1,0 +1,8 @@
+{
+  "id": "VUE-62",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/drawer/virtual-keyboard-provider/DrawerVirtualKeyboardProvider.tsx#L108-L160"
+  ],
+  "behavior": "While `Drawer.VirtualKeyboardProvider` holds the space for the keyboard on a scroll container, it watches the `style` attribute of that element. When a render or a script replaces a declaration of the provider, the provider keeps the new value for the restore and writes its declaration again before the next frame. In Base UI, a new `padding-bottom` of the consumer replaces the space until the next alignment, and the restore then writes the value from before the keyboard over it.",
+  "dueWith": "packages/react/src/drawer/virtual-keyboard-provider/DrawerVirtualKeyboardProvider.tsx"
+}
