@@ -779,6 +779,7 @@ const List = defineComponent({
         <>
           <Reference
             data-testid="reference"
+            style={{ pointerEvents: 'none' }}
             role={props.role}
             ref={refs.setReference}
             {...mergeProps(click, navigation.value.reference)}
@@ -786,6 +787,7 @@ const List = defineComponent({
           {open.value && (
             <div
               role="menu"
+              style={{ pointerEvents: 'none' }}
               ref={refs.setFloating}
               {...mergeProps(FLOATING_PROPS, navigation.value.floating)}
             >
@@ -2490,6 +2492,17 @@ describe('useListNavigation', () => {
       await keyDown(menu(), 'ArrowDown');
 
       expect(list.proposals).toEqual([]);
+
+      item(3).focus();
+      await nextTick();
+      expect(list.proposals).toEqual([]);
+
+      await fireEvent.pointerLeave(item(3), { pointerType: 'mouse' });
+      expect(list.proposals).toEqual([]);
+
+      reference().focus();
+      await nextTick();
+      expect(list.proposals).toEqual([]);
     });
 
     it('warns about options that do not agree', async () => {
@@ -2685,6 +2698,7 @@ describe('useListNavigation', () => {
     it('passes a key through a list that is not enabled to the list above', async () => {
       const middle: Entry = {
         label: 'more',
+        orientation: 'horizontal',
         options: { enabled: false },
         items: [{ label: 'deep', items: ['x', 'y'] }],
       };
@@ -2699,6 +2713,7 @@ describe('useListNavigation', () => {
       // The list below does not use this key, and the list in the middle is not enabled.
       await keyDown(part('menu-deep'), 'ArrowRight');
 
+      expect(activeIndexOf('more')).toBe('');
       expect(activeIndexOf('root')).toBe('0');
     });
 
@@ -2771,10 +2786,25 @@ describe('useListNavigation', () => {
 
   describe('KeepAlive', () => {
     it('gives the focus back to the active item at the activation', async () => {
+      let list!: ListExposed;
       const page = shallowRef<'list' | 'other'>('list');
       const Other = defineComponent({ setup: () => () => <p>other</p> });
       await render(() => (
-        <KeepAlive>{page.value === 'list' ? <List key="list" /> : <Other key="other" />}</KeepAlive>
+        <KeepAlive>
+          {page.value === 'list' ? (
+            <List
+              key="list"
+              options={{ selectedIndex: 0 }}
+              ref={(instance) => {
+                if (instance) {
+                  list = instance as unknown as ListExposed;
+                }
+              }}
+            />
+          ) : (
+            <Other key="other" />
+          )}
+        </KeepAlive>
       ));
       await keyDown(reference(), 'ArrowDown');
       await waitFor(() => expect(item(0)).toHaveFocus());
@@ -2787,6 +2817,7 @@ describe('useListNavigation', () => {
 
       page.value = 'list';
       await waitFor(() => expect(item(1)).toHaveFocus());
+      expect(list.proposals).toEqual([0, 1]);
       await keyDown(menu(), 'ArrowDown');
       expect(focused()).toBe('item-2');
     });
