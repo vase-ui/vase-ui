@@ -1,7 +1,16 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import { computed, shallowRef } from 'vue';
-import { createRenderer, flushMicrotasks, hydrate, renderOnServer, screen } from '#test-utils';
+import { computed, defineComponent, shallowRef } from 'vue';
+import {
+  createRenderer,
+  fireEvent,
+  flushMicrotasks,
+  hydrate,
+  popupConformanceTests,
+  renderOnServer,
+  screen,
+} from '#test-utils';
 import { REASONS } from '../../internals/reasons';
+import { useFloatingParentNodeId, useFloatingTree } from '../../utils/popups/tree/FloatingTree';
 import * as PreviewCard from '../index.parts';
 import PreviewCardRootHydration from './PreviewCardRootHydration.test.vue';
 
@@ -13,6 +22,75 @@ const noRealPointer = { pointerEvents: 'none' } as const;
 
 describe('<PreviewCard.Root />', () => {
   const { render } = createRenderer();
+
+  it('keeps the payload while a controlled reopen moves to another trigger', async () => {
+    const handle = PreviewCard.createHandle<string>();
+    const payloads: Array<string | undefined> = [];
+    const state = shallowRef<{ open: boolean; triggerId: string | null }>({
+      open: true,
+      triggerId: 'first',
+    });
+
+    const App = defineComponent({
+      setup: () => () => (
+        <>
+          <PreviewCard.Trigger handle={handle} id="first" payload="First">
+            First
+          </PreviewCard.Trigger>
+          <PreviewCard.Trigger handle={handle} id="second" payload="Second">
+            Second
+          </PreviewCard.Trigger>
+          <PreviewCard.Root
+            handle={handle}
+            open={state.value.open}
+            triggerId={state.value.triggerId}
+          >
+            {{
+              default: ({ payload }: { payload: string | undefined }) => {
+                payloads.push(payload);
+                return (
+                  <PreviewCard.Portal>
+                    <PreviewCard.Positioner>
+                      <PreviewCard.Popup>{payload}</PreviewCard.Popup>
+                    </PreviewCard.Positioner>
+                  </PreviewCard.Portal>
+                );
+              },
+            }}
+          </PreviewCard.Root>
+        </>
+      ),
+    });
+
+    await render(<App />);
+    await flushMicrotasks();
+    state.value = { open: false, triggerId: null };
+    await flushMicrotasks();
+
+    payloads.length = 0;
+    state.value = { open: true, triggerId: 'second' };
+    await flushMicrotasks();
+
+    expect(payloads).not.toContain(undefined);
+    expect(payloads.at(-1)).toBe('Second');
+  });
+
+  popupConformanceTests({
+    createComponent: (props) => (
+      <PreviewCard.Root {...props.root}>
+        <PreviewCard.Trigger href="#" {...props.trigger}>
+          Link
+        </PreviewCard.Trigger>
+        <PreviewCard.Portal {...props.portal}>
+          <PreviewCard.Positioner>
+            <PreviewCard.Popup {...props.popup}>Content</PreviewCard.Popup>
+          </PreviewCard.Positioner>
+        </PreviewCard.Portal>
+      </PreviewCard.Root>
+    ),
+    render,
+    triggerMouseAction: 'hover',
+  });
 
   describe('open state', () => {
     // A controlled card whose parent applies each change that `openChange` does not cancel.
@@ -351,6 +429,195 @@ describe('<PreviewCard.Root />', () => {
     });
   });
 
+  describe('nested preview card interactions', () => {
+    it('keeps the parent preview card open when clicking nested trigger', async () => {
+      await render(
+        <PreviewCard.Root defaultOpen>
+          <PreviewCard.Trigger href="#">Parent</PreviewCard.Trigger>
+          <PreviewCard.Portal>
+            <PreviewCard.Positioner>
+              <PreviewCard.Popup data-testid="parent-popup">
+                <PreviewCard.Root>
+                  <PreviewCard.Trigger href="#">Child</PreviewCard.Trigger>
+                  <PreviewCard.Portal>
+                    <PreviewCard.Positioner>
+                      <PreviewCard.Popup data-testid="child-popup">Child content</PreviewCard.Popup>
+                    </PreviewCard.Positioner>
+                  </PreviewCard.Portal>
+                </PreviewCard.Root>
+              </PreviewCard.Popup>
+            </PreviewCard.Positioner>
+          </PreviewCard.Portal>
+        </PreviewCard.Root>,
+      );
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('parent-popup')).not.toBe(null);
+
+      const childTrigger = screen.getByRole('link', { name: 'Child' });
+
+      await fireEvent.click(childTrigger);
+
+      await flushMicrotasks();
+
+      // Parent popup should still be open after clicking the child trigger
+      expect(screen.queryByTestId('parent-popup')).not.toBe(null);
+    });
+
+    it('keeps the parent preview card open when press starts in nested popup and ends outside', async () => {
+      await render(
+        <div>
+          <button type="button" data-testid="outside">
+            Outside
+          </button>
+
+          <PreviewCard.Root defaultOpen>
+            <PreviewCard.Trigger href="#">Parent</PreviewCard.Trigger>
+            <PreviewCard.Portal>
+              <PreviewCard.Positioner>
+                <PreviewCard.Popup data-testid="parent-popup">
+                  <PreviewCard.Root defaultOpen>
+                    <PreviewCard.Trigger href="#">Child</PreviewCard.Trigger>
+                    <PreviewCard.Portal>
+                      <PreviewCard.Positioner>
+                        <PreviewCard.Popup data-testid="child-popup">
+                          Child content
+                        </PreviewCard.Popup>
+                      </PreviewCard.Positioner>
+                    </PreviewCard.Portal>
+                  </PreviewCard.Root>
+                </PreviewCard.Popup>
+              </PreviewCard.Positioner>
+            </PreviewCard.Portal>
+          </PreviewCard.Root>
+        </div>,
+      );
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('parent-popup')).not.toBe(null);
+      expect(screen.queryByTestId('child-popup')).not.toBe(null);
+
+      const childPopup = screen.getByTestId('child-popup');
+      const outside = screen.getByTestId('outside');
+
+      await fireEvent.pointerDown(childPopup, { pointerType: 'mouse', button: 0 });
+      await fireEvent.click(outside);
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('parent-popup')).not.toBe(null);
+      expect(screen.queryByTestId('child-popup')).not.toBe(null);
+    });
+  });
+
+  describe('popup tree', () => {
+    it('registers the node of a nested card below the node of the outer card, in one tree', async () => {
+      const probes: Array<{
+        tree: ReturnType<typeof useFloatingTree>['value'];
+        parentId: string | null;
+      }> = [];
+      const TreeProbe = defineComponent({
+        setup() {
+          probes.push({ tree: useFloatingTree().value, parentId: useFloatingParentNodeId().value });
+          return () => null;
+        },
+      });
+
+      await render(
+        <PreviewCard.Root defaultOpen>
+          <PreviewCard.Trigger href="#">Parent</PreviewCard.Trigger>
+          <PreviewCard.Portal>
+            <PreviewCard.Positioner>
+              <PreviewCard.Popup>
+                <TreeProbe />
+                <PreviewCard.Root defaultOpen>
+                  <PreviewCard.Trigger href="#">Child</PreviewCard.Trigger>
+                  <PreviewCard.Portal>
+                    <PreviewCard.Positioner>
+                      <PreviewCard.Popup>
+                        <TreeProbe />
+                      </PreviewCard.Popup>
+                    </PreviewCard.Positioner>
+                  </PreviewCard.Portal>
+                </PreviewCard.Root>
+              </PreviewCard.Popup>
+            </PreviewCard.Positioner>
+          </PreviewCard.Portal>
+        </PreviewCard.Root>,
+      );
+      await flushMicrotasks();
+
+      expect(probes).toHaveLength(2);
+      const [outer, inner] = probes;
+      expect(outer.tree).not.toBe(null);
+      expect(inner.tree).toBe(outer.tree);
+      expect(outer.parentId).not.toBe(null);
+      const innerNode = outer.tree!.nodesRef.value.find((node) => node.id === inner.parentId);
+      expect(innerNode?.parentId).toBe(outer.parentId);
+    });
+
+    it('closes only the nested card on Escape while the focus is in the outer card', async () => {
+      const onOuterOpenChange = vi.fn();
+      const onInnerOpenChange = vi.fn();
+      const { user } = await render(
+        <PreviewCard.Root defaultOpen onOpenChange={onOuterOpenChange}>
+          <PreviewCard.Trigger href="#">Parent</PreviewCard.Trigger>
+          <PreviewCard.Portal>
+            <PreviewCard.Positioner>
+              <PreviewCard.Popup data-testid="parent-popup">
+                <button type="button">Action</button>
+                <PreviewCard.Root defaultOpen onOpenChange={onInnerOpenChange}>
+                  <PreviewCard.Trigger href="#">Child</PreviewCard.Trigger>
+                  <PreviewCard.Portal>
+                    <PreviewCard.Positioner>
+                      <PreviewCard.Popup data-testid="child-popup">Child content</PreviewCard.Popup>
+                    </PreviewCard.Positioner>
+                  </PreviewCard.Portal>
+                </PreviewCard.Root>
+              </PreviewCard.Popup>
+            </PreviewCard.Positioner>
+          </PreviewCard.Portal>
+        </PreviewCard.Root>,
+      );
+      await flushMicrotasks();
+      expect(screen.queryByTestId('child-popup')).not.toBe(null);
+
+      // The key event goes through the popup of the outer card, which finds the open nested card
+      // in the tree.
+      screen.getByRole('button', { name: 'Action' }).focus();
+      await user.keyboard('[Escape]');
+      await flushMicrotasks();
+
+      expect(onInnerOpenChange).toHaveBeenCalledTimes(1);
+      expect(onInnerOpenChange.mock.calls[0][1].reason).toBe(REASONS.escapeKey);
+      expect(onOuterOpenChange).not.toHaveBeenCalled();
+      expect(screen.queryByTestId('parent-popup')).not.toBe(null);
+    });
+  });
+
+  describe('close requests', () => {
+    it('reports the active trigger for an Escape close', async () => {
+      const onOpenChange = vi.fn();
+      const { user } = await render(
+        <PreviewCard.Root defaultOpen onOpenChange={onOpenChange}>
+          <PreviewCard.Trigger href="#">Trigger</PreviewCard.Trigger>
+          <PreviewCard.Portal>
+            <PreviewCard.Positioner>
+              <PreviewCard.Popup>Content</PreviewCard.Popup>
+            </PreviewCard.Positioner>
+          </PreviewCard.Portal>
+        </PreviewCard.Root>,
+      );
+      await flushMicrotasks();
+      expect(screen.queryByText('Content')).not.toBe(null);
+
+      await user.keyboard('[Escape]');
+
+      expect(onOpenChange).toHaveBeenCalledTimes(1);
+      expect(onOpenChange.mock.calls[0][1].reason).toBe(REASONS.escapeKey);
+      expect(onOpenChange.mock.calls[0][1].trigger).toBe(screen.getByText('Trigger'));
+    });
+  });
+
   describe('hydration', () => {
     it.each([
       { name: 'a closed card', props: {}, payload: 'none' },
@@ -360,6 +627,7 @@ describe('<PreviewCard.Root />', () => {
         props: { defaultOpen: true, defaultTriggerId: 'two' },
         payload: 'second',
       },
+      { name: 'a closed card that stays mounted', props: { keepMounted: true }, payload: 'none' },
     ])('hydrates the server HTML of $name', async ({ props, payload }) => {
       const serverHtml = await renderOnServer(HYDRATION_FIXTURE, props);
 

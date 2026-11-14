@@ -23,7 +23,8 @@ export interface TooltipPortalProps
 
 <script setup lang="ts">
 import { computed, provide, useTemplateRef } from 'vue';
-import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import type { Component } from 'vue';
+import type { HTMLProps } from '../../internals/types';
 import FloatingPortalLite from '../../utils/popups/portal/FloatingPortalLite.vue';
 import { useTooltipRootContext } from '../root/TooltipRootContext';
 import { TooltipPortalContext } from './TooltipPortalContext';
@@ -34,7 +35,7 @@ const props = withDefaults(defineProps<TooltipPortalProps>(), { as: 'div', keepM
 
 defineSlots<{
   default(props: { state: TooltipPortalState }): unknown;
-  render: ComponentRenderFn<HTMLProps, TooltipPortalState>;
+  render(props: { props: HTMLProps; state: TooltipPortalState; children: Component }): unknown;
 }>();
 
 const store = useTooltipRootContext();

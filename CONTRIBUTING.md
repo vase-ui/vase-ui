@@ -734,6 +734,7 @@ A popup tree holds one node for each popup below one root. The code is in `src/u
 - A `Menu.Root` that starts a tree provides the tree of its store. A part below the root thus reads the tree that a detached trigger gave to the store (`VUE-55`).
 - Base UI sometimes calls a hook in a component below the `FloatingTree` of the same file, as `PopoverRoot.tsx` and `Menubar.tsx` do. Give the result of `provideFloatingTree()` to that composable as `externalTree`.
 - A root that starts a tree only when no root of its family is above it reads its own context with `use<Root>Context(true)` before it provides the context.
+- Such a root calls `provideFloatingTree()` only in that case. A root inside another root then uses the tree of the outer root. `preview-card/root/PreviewCardRoot.vue` is the model.
 - A node registers in `onBeforeMount`. A server render does not call that hook, so a tree gets no node on a server.
 - The hook runs before the `setup` of the parts below. Each of them thus finds the node when it is mounted.
 - The nodes are in the order of those hooks: a node comes before the nodes below it. In Base UI, it comes after them. Find a node by its id. Do not use its position in the list.
@@ -748,6 +749,7 @@ The positioning of a popup is in `src/internals/useAnchorPositioning.ts` and in 
 - A positioner part of a popup family calls `usePopupPositioner(store, props, options)` in `setup`. It takes the reactive props of the part, so do not destructure them. The result has `element`, `elementProps`, `state`, `positioning`, `open` and `mounted`.
 - `usePopupPositioner` calls `useAnchorPositioning`, `useVaseUIFloating` and `usePositioner`. `options.positioning` replaces the positioning parameters that come from the props. It can also have `nodeId` and `externalTree`.
 - A part that registers a node in the popup tree calls `useFloatingNodeId()` before `usePopupPositioner`, and gives the id as `positioning: { nodeId }`. The positioning context then finds the node. `Tooltip.Positioner` registers no node, as in Base UI.
+- Where Base UI renders `FloatingNode` around the positioner, the part also calls `provideFloatingNode(nodeId)`. A popup below the part then registers its node as a child of this node. `preview-card/positioner/PreviewCardPositioner.vue` is the model.
 - `nodeId` and `externalTree` are each a value, a ref or a getter. A part whose popup can move to the node of another part gives getters. The context then moves to the new node, and the old node loses it (`VUE-43`).
 - `Menu.Positioner` registers no node of its own. The root registers the node, and a detached trigger can give another node. The positioner gives the `floatingNodeId` of the store as `nodeId`, and it provides the same id with `provideFloatingNode`.
 - `usePositioner` makes the props of the positioner element: `role="presentation"`, `hidden`, the styles, and `transition: none` while the transition status is `starting`. With `inert`, it adds `pointer-events: none`. The `style` of the consumer wins over these styles.
@@ -865,7 +867,7 @@ The portal of a popup is in `src/utils/popups/portal`. `useFloatingPortalNode()`
 - The portal part of a family, such as `Dialog.Portal`, renders `FloatingPortal` or `FloatingPortalLite`, as Base UI does, and no element of its own. It follows the rules for a part that Base UI writes as another part. See [Parts that render an element](#parts-that-render-an-element).
 - That part renders nothing while the popup is not mounted, unless its `keepMounted` prop is `true`. It provides `keepMounted` to the parts in it.
 - `Dialog.Portal` gives `FloatingPortal` a default slot that renders `DialogPortalChildren.vue`. That component renders `InternalBackdrop.vue` before the default slot of the consumer, while a dialog with `modal` set to `true` is mounted. The backdrop is `inert` while the dialog closes. `DialogPortalChildren.vue` writes the element of the backdrop to `internalBackdropRef` of the store context.
-- The `#render` slot of `FloatingPortal` gets `children`. The component is `FloatingPortalChildren.vue`, which renders only its default slot. A portal part that has nodes of its own gives its own component: `Dialog.Portal` gives `DialogPortalChildren.vue`. See [Parts with nodes of their own](#parts-with-nodes-of-their-own).
+- The `#render` slots of `FloatingPortal` and `FloatingPortalLite` get `children`. The component is `FloatingPortalChildren.vue`, which renders only its default slot. A portal part that has nodes of its own gives its own component: `Dialog.Portal` gives `DialogPortalChildren.vue`. A portal part with no nodes of its own, such as `Tooltip.Portal`, gives each slot prop of the portal to its own `#render` slot. See [Parts with nodes of their own](#parts-with-nodes-of-their-own).
 
 ### Popup interactions
 
@@ -1168,6 +1170,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - `useAnimationsFinished` uses this form for each completion that is not batched. Only microtasks wait, so the browser does not paint before the completion runs.
 - An error of a completion goes to `reportError`. The later completions still run.
 - An effect of upstream (`useEffect` or `useIsoLayoutEffect`) becomes a `watch` with a callback and no `immediate`. A server render does not run such a `watch`, except one with `flush: 'sync'`.
+- React runs the effects of an update from a discrete event, such as `pointerdown`, before the next event. A program can dispatch the next event in the same task, before the Vue flush. Where that event must get a listener that an effect adds, the effect is a `watch` with `flush: 'sync'`. `NumberField.ScrubArea` adds its `pointermove` and `pointerup` listeners in this way.
 - An effect that reads the DOM uses `onMounted(run)` plus `watch(sources, run, { flush: 'post' })`. `run` then runs at mount and after each DOM update that follows a change of a source. `useTransitionStatus`, `useOpenChangeComplete` and `useCollapsiblePanel` do this.
 - An effect that needs the element of the part, such as an observer, is a `watch` of the `element` of `useRenderElement` with `flush: 'post'`. Start the observer in the callback. Stop it in `onCleanup`. Vue runs the cleanup when the element changes and when the part unmounts. `scroll-area/viewport/ScrollAreaViewport.vue` is the model.
 - An effect of Base UI with no dependency list runs after each commit, so it also sees a DOM change of another component. A Vue component with the same props does not render again when its parent renders.
@@ -1686,6 +1689,7 @@ A family that Base UI documents in `docs/src/app/(docs)/react/utils/`, such as `
 - The page has the title and one intro line. It has the sections of the Base UI page, with the code in Vue. It also has each demo of the family and the API reference.
 - The front matter has `order: 1`. The group then shows its pages in the sequence of their titles.
 - A demo is `docs/demos/<family>/<demo>/css-modules/index.vue`. It keeps the elements, the text and the attributes of the Base UI file `demos/<demo>/css-modules/index.tsx`. Vase UI does not port the Tailwind demos.
+- A Base UI demo can import a file of `demos/<demo>` that is outside `css-modules`, such as `custom-sanitize/useInvalidFeedback.ts` of OTP Field. Port that file to the same path in `docs/demos/<family>`.
 - The style sheet of a demo is the Base UI file, byte for byte. Do not edit it. Prettier does not format it, because `.prettierignore` names `docs/demos/**/*.module.css`. The same CSS then proves that the data attributes and the CSS variables are those of Base UI. A demo has no `<style>` block, and ESLint refuses one.
 - `docs/demos/<family>/upstream.json` records the Base UI commit and the SHA-256 of each Base UI demo file at that commit. `pnpm docs:demos --upstream <path> <family>` writes the record and the style sheets. Do not edit the record.
 - A demo can import another entry point of Base UI, such as `@base-ui/react/toggle`. The record then has the key `entryPoints`. It has one row for each such demo: the folder of the demo and the sorted names of the entry points, as `"hero": ["slider"]`. A demo with no such import has no row.
