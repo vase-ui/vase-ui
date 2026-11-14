@@ -26,7 +26,7 @@ import { mergeProps } from '../../../merge-props/mergeProps';
 import { createAttribute } from '../createAttribute';
 import { getEmptyRootStore } from '../floating-root/getEmptyRootStore';
 import { useFloatingRootStore } from '../floating-root/useFloatingRootStore';
-import FloatingFocusManager from '../focus/FloatingFocusManager.vue';
+import { FloatingFocusManager } from '../../../../test/fixtures/floatingFocusManagerHarness';
 import FloatingPortal from '../portal/FloatingPortal.vue';
 import FloatingPortalLite from '../portal/FloatingPortalLite.vue';
 import {

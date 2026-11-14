@@ -3,7 +3,7 @@ import { defineComponent, shallowRef } from 'vue';
 import type { PropType, ShallowRef, VNode, VNodeChild } from 'vue';
 import { isInaccessible, screen, waitFor } from '@testing-library/dom';
 import type { InteractionType } from '../src/common/useEnhancedClickHandler';
-import type { FocusOption } from '../src/utils/popups/focus/FloatingFocusManager.vue';
+import type { FocusOption } from '../src/utils/popups/focus/FloatingFocusManager';
 import { waitForLaterMillisecond } from './createRenderer';
 import type { createRenderer } from './createRenderer';
 import { fireEvent } from './fireEvent';

@@ -1,5 +1,5 @@
-import { onUnmounted, toValue, watch } from 'vue';
-import type { MaybeRefOrGetter } from 'vue';
+import { onUnmounted, shallowRef, toValue, watch } from 'vue';
+import type { MaybeRefOrGetter, ShallowRef } from 'vue';
 import { ownerWindow } from '../../../common/owner';
 
 export interface ElementSiblings {
@@ -14,11 +14,15 @@ export interface ElementSiblings {
  * so the scope id, the directives and the `Transition` of a consumer apply to its element.
  *
  * `siblings` gives the same object while the nodes do not change. `null` removes the nodes.
+ *
+ * The result holds the object of `siblings` whose nodes are in the document, or `null`. Vue can run
+ * a `watch` of the caller before the `watch` that puts the nodes in the document.
  */
 export function useElementSiblings(
   element: MaybeRefOrGetter<HTMLElement | null>,
   siblings: MaybeRefOrGetter<ElementSiblings | null>,
-): void {
+): Readonly<ShallowRef<ElementSiblings | null>> {
+  const placedSiblings = shallowRef<ElementSiblings | null>(null);
   let placed: readonly ChildNode[] = [];
   let observer: MutationObserver | null = null;
   let observedParent: Node | null = null;
@@ -31,6 +35,7 @@ export function useElementSiblings(
       node.remove();
     }
     placed = [];
+    placedSiblings.value = null;
   }
 
   function place() {
@@ -70,6 +75,7 @@ export function useElementSiblings(
       }
       reference = node;
     }
+    placedSiblings.value = next;
 
     // Vue moves only the element when a parent moves the part or `KeepAlive` holds it, and Vue
     // puts a new node of a list immediately before the element. The observer then puts the nodes
@@ -88,4 +94,6 @@ export function useElementSiblings(
   // inserts the new part after the `onBeforeUnmount` hooks and after the effect scope stops. The
   // nodes thus stay until the DOM update is complete.
   onUnmounted(remove);
+
+  return placedSiblings;
 }

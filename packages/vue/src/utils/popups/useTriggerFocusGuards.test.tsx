@@ -10,7 +10,7 @@ import FocusManagerPart from '../../../test/fixtures/FocusManagerPart.vue';
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
 import { REASONS } from '../../internals/reasons';
 import { createAttribute } from './createAttribute';
-import type { FocusOption } from './focus/FloatingFocusManager.vue';
+import type { FocusOption } from './focus/FloatingFocusManager';
 import FloatingPortal from './portal/FloatingPortal.vue';
 
 // After an element loses the focus, the Tab key starts at that element in some browsers. In others

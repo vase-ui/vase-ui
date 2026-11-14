@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { defineComponent, shallowRef } from 'vue';
+import { defineComponent, h, nextTick, shallowRef, Transition, vShow, withDirectives } from 'vue';
+import type { Directive, VNode } from 'vue';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { Field } from '@vase-ui/vue/field';
@@ -17,6 +18,7 @@ import {
 } from '#test-utils';
 import ComboboxListPart from '../../../test/fixtures/ComboboxListPart.vue';
 import ComboboxPartsReplacement from '../../../test/fixtures/ComboboxPartsReplacement.vue';
+import PopupRootNodeScoped from '../../utils/popups/focus/PopupRootNodeScoped.test.vue';
 import { REASONS } from '../../internals/reasons';
 import type { VaseUIEvent } from '../../internals/types';
 import type { ComboboxStore } from '../store';
@@ -1685,6 +1687,57 @@ describe('<Combobox.Input />', () => {
 
       expect(handleFocusout).toHaveBeenCalledTimes(1);
       expect(screen.getByTestId('field')).not.toHaveAttribute('data-touched');
+    });
+  });
+
+  describe('VUE-60: Combobox.Input has one root node', () => {
+    const vMark: Directive<HTMLElement, string> = {
+      mounted(element, binding) {
+        element.setAttribute('data-mark', binding.value);
+      },
+    };
+    const attributes = { class: 'part', 'data-testid': 'part' };
+
+    it.each([
+      { name: 'scoped style' },
+      { name: 'custom directive' },
+      { name: 'v-show' },
+      { name: 'Transition' },
+    ])('applies a $name to the input of an open popup', async ({ name }) => {
+      const shown = shallowRef(true);
+
+      function renderInput(): VNode {
+        switch (name) {
+          case 'scoped style':
+            return h(PopupRootNodeScoped, { part: Combobox.Input });
+          case 'custom directive':
+            return withDirectives(h(Combobox.Input, attributes), [[vMark, 'marked']]);
+          case 'v-show':
+            return withDirectives(h(Combobox.Input, attributes), [[vShow, shown.value]]);
+          default:
+            return h(Transition, null, () => h(Combobox.Input, attributes));
+        }
+      }
+
+      await render(() =>
+        h(Combobox.Root, { defaultOpen: true, items: ['a'] }, () => [
+          renderInput(),
+          h(Combobox.Portal, null, () => h(Combobox.Positioner, null, () => h(Combobox.Popup))),
+        ]),
+      );
+      const input = await screen.findByTestId('part');
+
+      expect(input.previousElementSibling).toHaveAttribute('role', 'button');
+      expect(input.previousElementSibling).toHaveAttribute('aria-label', 'Dismiss');
+      if (name === 'scoped style') {
+        expect(getComputedStyle(input).outlineStyle).toBe('dashed');
+      } else if (name === 'custom directive') {
+        expect(input).toHaveAttribute('data-mark', 'marked');
+      } else if (name === 'v-show') {
+        shown.value = false;
+        await nextTick();
+        expect(getComputedStyle(input).display).toBe('none');
+      }
     });
   });
 });

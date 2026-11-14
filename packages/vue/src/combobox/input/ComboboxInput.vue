@@ -44,7 +44,6 @@ export interface ComboboxInputProps
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, provide, shallowRef, toRaw, watch } from 'vue';
-import type { ComponentPublicInstance } from 'vue';
 import { platform } from '../../common/platform';
 import { useTimeout } from '../../common/useTimeout';
 import { addInputFocusListeners } from '../../filter-dropdown/input/FilterDropdownInput';
@@ -59,16 +58,16 @@ import {
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
 import { useDeferredServerRender, useLabelableContext } from '../../internals/labelable-provider';
 import { REASONS } from '../../internals/reasons';
-import { resolveElement } from '../../internals/resolveElement';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { getHighlightReason } from '../../utils/getHighlightReason';
 import { stopEvent } from '../../utils/popups/event';
+import { useElementSiblings } from '../../utils/popups/focus/useElementSiblings';
 import { useComboboxChipsContext } from '../chips/ComboboxChipsContext';
 import { useComboboxPositionerContext } from '../positioner/ComboboxPositionerContext';
 import { useComboboxInputValueContext, useComboboxRootContext } from '../root/ComboboxRootContext';
-import ComboboxInternalDismissButton from '../utils/ComboboxInternalDismissButton.vue';
+import { useDismissButton } from '../utils/ComboboxInternalDismissButton';
 import {
   clickHighlightedItem,
   getChipNavigationKeys,
@@ -197,19 +196,6 @@ function setInputElement(element: HTMLElement | null) {
 onMounted(() => {
   store.update({ inputInsidePopup: isInsidePopup.value });
 });
-
-let ownDismissButton: HTMLSpanElement | null = null;
-function setStartDismissButton(value: unknown) {
-  const button = resolveElement(value as ComponentPublicInstance | null) as HTMLSpanElement | null;
-  // Vue calls a function ref again on each patch, with the same component.
-  if (button === ownDismissButton) {
-    return;
-  }
-  if (button !== null || store.context.startDismissRef.value === ownDismissButton) {
-    store.context.startDismissRef.value = button;
-  }
-  ownDismissButton = button;
-}
 
 function clearHighlight(event: Event) {
   store.context.setIndices({
@@ -578,11 +564,20 @@ const { element, elementProps } = useRenderElement('input', props, {
   stateAttributesMapping: triggerStateAttributesMapping,
 });
 
+const dismissButton = useDismissButton(
+  element,
+  () => open.value && focusManagerModal.value,
+  store.context.startDismissRef,
+);
+useElementSiblings(
+  element,
+  computed(() => (dismissButton.value ? { before: [dismissButton.value] } : null)),
+);
+
 defineExpose({ element });
 </script>
 
 <template>
-  <ComboboxInternalDismissButton v-if="open && focusManagerModal" :ref="setStartDismissButton" />
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
   <component :is="as" v-else v-bind="elementProps()" />
 </template>
