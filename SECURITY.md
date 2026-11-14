@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Only the newest release of `@vase-ui/vue` gets security corrections. A correction ships in a new release. An older version gets no correction.
+Only the newest release of `@vase-ui/vue` gets security corrections. A correction ships in a new release.
 
 ## How to report a security problem
 
@@ -14,9 +14,9 @@ Vase UI is a port of Base UI. If Base UI has the same problem, report it to Base
 
 ## What we do with a report
 
-1. We answer in the report. The report stays private.
-2. We confirm the problem and find the versions that have it.
+1. We answer in the report. The report stays private until we publish a security advisory.
+2. With your help, we confirm the problem and find the versions that have it.
 3. We correct the problem in private and publish a release with the correction.
-4. We publish a security advisory on GitHub that names that release. The advisory credits you if you want it.
+4. We publish the security advisory on GitHub. It names that release and gives you credit if you accept it.
 
 If a report does not show a security problem, we close it and give the reason.
