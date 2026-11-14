@@ -4073,10 +4073,10 @@ describe('<Drawer.Viewport />', () => {
       });
     onTestFinished(() => setPropertySpy.mockRestore());
 
-    snapPoint.value = '200px';
     setTimeout(() => {
       taskAfterChangeRan = true;
     });
+    snapPoint.value = '200px';
     await flushMicrotasks();
     expect(appliedBeforeTask).toBe(true);
     expect(backdrop.style.getPropertyValue('--drawer-swipe-progress')).toBe('0');
@@ -4110,10 +4110,10 @@ describe('<Drawer.Viewport />', () => {
       });
     onTestFinished(() => toggleAttributeSpy.mockRestore());
 
-    open.value = true;
     setTimeout(() => {
       taskAfterOpenRan = true;
     });
+    open.value = true;
     await flushMicrotasks();
     expect(resetBeforeTask).toBe(true);
     expect(popup.style.getPropertyValue('--drawer-swipe-movement-y')).toBe('0px');
@@ -4170,10 +4170,10 @@ describe('<Drawer.Viewport />', () => {
       });
     onTestFinished(() => setPropertySpy.mockRestore());
 
-    childOpen.value = false;
     setTimeout(() => {
       taskAfterCloseRan = true;
     });
+    childOpen.value = false;
     await flushMicrotasks();
     expect(clearedBeforeTask).toBe(true);
     expect(parentPopup.style.getPropertyValue('--drawer-swipe-progress')).toBe('0');
@@ -4237,10 +4237,10 @@ describe('<Drawer.Viewport />', () => {
       });
     onTestFinished(() => setPropertySpy.mockRestore());
 
-    showViewport.value = false;
     setTimeout(() => {
       taskAfterTeardownRan = true;
     });
+    showViewport.value = false;
     await flushMicrotasks();
     expect(clearedBeforeTask).toBe(true);
     expect(indent.style.getPropertyValue('--drawer-swipe-progress')).toBe('0');
