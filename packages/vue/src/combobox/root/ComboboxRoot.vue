@@ -138,16 +138,28 @@ const emit = defineEmits<{
    * Event handler called when the selected value of the combobox changes.
    */
   valueChange: [value: ValueChange, eventDetails: ComboboxRootChangeEventDetails];
+  /**
+   * Event handler called after `valueChange` with the new value, unless a listener cancels the
+   * change. `v-model:value` uses it.
+   */
   'update:value': [value: ValueChange];
   /**
    * Event handler called when the input value changes.
    */
   inputValueChange: [inputValue: string, eventDetails: ComboboxRootChangeEventDetails];
+  /**
+   * Event handler called after `inputValueChange` with the new value, unless a listener cancels the
+   * change. `v-model:inputValue` uses it.
+   */
   'update:inputValue': [inputValue: string];
   /**
    * Event handler called when the popup is opened or closed.
    */
   openChange: [open: boolean, eventDetails: ComboboxRootOpenChangeEventDetails];
+  /**
+   * Event handler called after `openChange` with the new value, unless a listener cancels the
+   * change. `v-model:open` uses it.
+   */
   'update:open': [open: boolean];
   /**
    * Event handler called after any animations complete when the popup is opened or closed.

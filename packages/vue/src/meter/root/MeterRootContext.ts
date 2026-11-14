@@ -1,6 +1,6 @@
 import { inject } from 'vue';
 import type { ComputedRef, InjectionKey } from 'vue';
-import type { LabelIdSetter } from '../../utils/useRegisteredLabelId';
+import type { LabelIdRoot } from '../../utils/useRegisteredLabelId';
 
 export interface MeterRootContext {
   /**
@@ -14,8 +14,7 @@ export interface MeterRootContext {
    */
   percentageValue: ComputedRef<number>;
   value: ComputedRef<number>;
-  setLabelId: LabelIdSetter;
-  defaultLabelId: ComputedRef<string>;
+  labelRoot: LabelIdRoot;
 }
 
 export const MeterRootContext: InjectionKey<MeterRootContext> = Symbol();

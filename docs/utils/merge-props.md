@@ -65,7 +65,7 @@ The return value of the function replaces the props that are merged up to that p
 
 <<< ./merge-props/FunctionSet.vue#function{ts}
 
-`event.preventVaseUIHandler()` does not stop a handler that such a function returns. That handler must read `event.vaseUIHandlerPrevented` and stop when it is `true`.
+A handler that such a function returns can call `event.preventVaseUIHandler()`. The call only sets `event.vaseUIHandlerPrevented`, so call the earlier handlers only when the flag is not `true`.
 
 ## API reference
 
