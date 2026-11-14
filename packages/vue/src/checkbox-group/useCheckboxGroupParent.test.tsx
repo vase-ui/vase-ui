@@ -811,5 +811,32 @@ describe('useCheckboxGroupParent', () => {
       await fireEvent.click(parent);
       expect(parent).toHaveAttribute('aria-checked', 'false');
     });
+
+    it('stops keeping the value of a disabled child that KeepAlive holds', async () => {
+      const shown = shallowRef(true);
+      const Blank = defineComponent(() => () => <span />);
+      const Held = defineComponent(() => () => <Checkbox.Root value="a" disabled />);
+      const App = defineComponent(() => () => (
+        <CheckboxGroup allValues={['a', 'b']} defaultValue={['a']}>
+          <Checkbox.Root parent data-testid="parent" />
+          <KeepAlive>{shown.value ? <Held key="held" /> : <Blank key="blank" />}</KeepAlive>
+          <Checkbox.Root value="b" />
+        </CheckboxGroup>
+      ));
+
+      await render(<App />);
+
+      shown.value = false;
+      await flushMicrotasks();
+
+      const parent = screen.getByTestId('parent');
+      await fireEvent.click(parent);
+      expect(parent).toHaveAttribute('aria-checked', 'true');
+
+      // The held child reports no disabled state. The parent thus clears its value, as for an
+      // enabled child.
+      await fireEvent.click(parent);
+      expect(parent).toHaveAttribute('aria-checked', 'false');
+    });
   });
 });

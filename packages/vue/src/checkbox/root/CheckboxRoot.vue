@@ -288,20 +288,18 @@ function setInputElement(value: unknown) {
 
 onDeactivated(() => {
   isDeactivated.value = true;
+  unregisterInput?.();
+  unregisterInput = undefined;
 });
 
 onActivated(() => {
   isDeactivated.value = false;
 });
 
-// `KeepAlive` runs the `onActivated` hooks of one branch from the last part to the first part. A
-// registration in a hook would reverse the order of the inputs, and the order decides which input
-// the form focuses first. The watcher runs after the hooks, in the order of the parts.
+// `KeepAlive` runs the `onActivated` hooks from the last part to the first part. A registration in
+// the hook would reverse the order of the inputs. A watcher runs in the order of the parts.
 watch(isDeactivated, (deactivated) => {
-  if (deactivated) {
-    unregisterInput?.();
-    unregisterInput = undefined;
-  } else {
+  if (!deactivated) {
     updateInputRegistration();
   }
 });
@@ -643,9 +641,10 @@ onMounted(readRenderedId);
 onUpdated(readRenderedId);
 
 // The parent checkbox of the group lists the id of each child in `aria-controls`, and it reads the
-// disabled state of each child when it changes the value. Both wait for the mount, because a server
-// has no element to read. `KeepAlive` takes the element out of the document, so a held child
-// reports neither.
+// disabled state of each child when it changes the value. The id waits for the mount, because a
+// server has no element to read. The disabled state needs no element. Its `watch` has a cleanup, so
+// it has no `immediate`, and `isHydrated` gives it the first run after the mount. `KeepAlive` takes
+// the element out of the document, so a held child reports neither.
 const isHydrated = useIsHydrated();
 
 watch(

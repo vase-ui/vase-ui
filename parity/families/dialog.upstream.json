@@ -1,0 +1,1935 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/dialog/**",
+    "docs/src/app/(docs)/react/components/dialog/**"
+  ],
+  "sources": [
+    "packages/react/src/dialog/backdrop/DialogBackdrop.tsx",
+    "packages/react/src/dialog/backdrop/DialogBackdropDataAttributes.ts",
+    "packages/react/src/dialog/close/DialogClose.tsx",
+    "packages/react/src/dialog/close/DialogCloseDataAttributes.ts",
+    "packages/react/src/dialog/description/DialogDescription.tsx",
+    "packages/react/src/dialog/index.parts.ts",
+    "packages/react/src/dialog/index.ts",
+    "packages/react/src/dialog/popup/DialogPopup.tsx",
+    "packages/react/src/dialog/popup/DialogPopupCssVars.ts",
+    "packages/react/src/dialog/popup/DialogPopupDataAttributes.ts",
+    "packages/react/src/dialog/portal/DialogPortal.tsx",
+    "packages/react/src/dialog/portal/DialogPortalContext.ts",
+    "packages/react/src/dialog/root/DialogRoot.tsx",
+    "packages/react/src/dialog/root/DialogRootContext.ts",
+    "packages/react/src/dialog/root/useDialogRoot.ts",
+    "packages/react/src/dialog/root/useRenderDialogRoot.tsx",
+    "packages/react/src/dialog/store/DialogHandle.ts",
+    "packages/react/src/dialog/store/DialogStore.ts",
+    "packages/react/src/dialog/title/DialogTitle.tsx",
+    "packages/react/src/dialog/trigger/DialogTrigger.tsx",
+    "packages/react/src/dialog/trigger/DialogTriggerDataAttributes.ts",
+    "packages/react/src/dialog/utils/stateAttributesMapping.ts",
+    "packages/react/src/dialog/viewport/DialogViewport.tsx",
+    "packages/react/src/dialog/viewport/DialogViewportDataAttributes.ts"
+  ],
+  "typeTests": [
+    "packages/react/src/dialog/root/DialogRoot.spec.tsx"
+  ],
+  "cases": [
+    {
+      "file": "packages/react/src/dialog/backdrop/DialogBackdrop.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Dialog.Backdrop />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Dialog.Backdrop />"
+          ],
+          "title": "has role=\"presentation\""
+        },
+        {
+          "describe": [
+            "<Dialog.Backdrop />",
+            "prop: forceRender"
+          ],
+          "title": "renders only the root backdrop by default"
+        },
+        {
+          "describe": [
+            "<Dialog.Backdrop />",
+            "prop: forceRender"
+          ],
+          "title": "always renders by default when not nested"
+        },
+        {
+          "describe": [
+            "<Dialog.Backdrop />",
+            "prop: forceRender"
+          ],
+          "title": "renders only the root backdrop with multiple nesting levels"
+        },
+        {
+          "describe": [
+            "<Dialog.Backdrop />",
+            "prop: forceRender"
+          ],
+          "title": "always renders when true"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/dialog/close/DialogClose.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Dialog.Close />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Dialog.Close />",
+            "prop: disabled"
+          ],
+          "title": "disables the button"
+        },
+        {
+          "describe": [
+            "<Dialog.Close />",
+            "prop: disabled"
+          ],
+          "title": "custom element"
+        },
+        {
+          "describe": [
+            "<Dialog.Close />"
+          ],
+          "title": "closes the dialog when undefined is passed to the `onClick` prop"
+        },
+        {
+          "describe": [
+            "<Dialog.Close />"
+          ],
+          "title": "does not close the dialog when the Base UI click handler is prevented"
+        },
+        {
+          "describe": [
+            "<Dialog.Close />"
+          ],
+          "title": "does not request another close when clicked after the dialog has closed"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/dialog/description/DialogDescription.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Dialog.Description />"
+          ],
+          "suite": "describeConformance"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/dialog/popup/DialogPopup.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Dialog.Popup />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Dialog.Popup />"
+          ],
+          "title": "throws a descriptive error when rendered outside <Dialog.Root>"
+        },
+        {
+          "describe": [
+            "<Dialog.Popup />",
+            "prop: keepMounted"
+          ],
+          "title": "should keep the dialog mounted when keepMounted=true"
+        },
+        {
+          "describe": [
+            "<Dialog.Popup />",
+            "prop: keepMounted"
+          ],
+          "title": "should not keep the dialog mounted when keepMounted=$name"
+        },
+        {
+          "describe": [
+            "<Dialog.Popup />",
+            "modal"
+          ],
+          "suite": "popupFocusPropsTests"
+        },
+        {
+          "describe": [
+            "<Dialog.Popup />",
+            "non-modal"
+          ],
+          "suite": "popupFocusPropsTests"
+        },
+        {
+          "describe": [
+            "<Dialog.Popup />",
+            "prop: initialFocus"
+          ],
+          "title": "focuses the popup itself rather than inner content when opened by touch"
+        },
+        {
+          "describe": [
+            "<Dialog.Popup />",
+            "display: contents ancestors"
+          ],
+          "title": "keeps initial focus working when the popup is wrapped by a display: contents ancestor",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Popup />",
+            "display: contents ancestors"
+          ],
+          "title": "keeps trap-focus tab cycling inside the popup when wrapped by a display: contents ancestor",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Popup />",
+            "prop: finalFocus"
+          ],
+          "title": "respects finalFocus when initialFocus points outside the popup"
+        },
+        {
+          "describe": [
+            "<Dialog.Popup />",
+            "prop: finalFocus"
+          ],
+          "title": "moves final focus to trigger if initialFocus points outside the popup and finalFocus is not specified"
+        },
+        {
+          "describe": [
+            "<Dialog.Popup />",
+            "return focus when opened from a popup item"
+          ],
+          "title": "returns focus to the $name trigger"
+        },
+        {
+          "describe": [
+            "<Dialog.Popup />"
+          ],
+          "title": "does not return focus to the trigger of a popover that opened by default"
+        },
+        {
+          "describe": [
+            "<Dialog.Popup />",
+            "nested dialog count"
+          ],
+          "title": "provides the number of open nested dialogs as a CSS variable",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Popup />",
+            "nested dialog count"
+          ],
+          "title": "decrements the count when an open nested dialog is unmounted",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Popup />",
+            "nested dialog count"
+          ],
+          "title": "does not change the count when a closed nested dialog is unmounted",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Popup />",
+            "nested dialog count"
+          ],
+          "title": "increments for nested alert dialog and decrements on close (cross-type)",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Popup />",
+            "style hooks"
+          ],
+          "title": "adds the `nested` and `nested-dialog-open` style hooks if a dialog has a parent dialog"
+        },
+        {
+          "describe": [
+            "<Dialog.Popup />",
+            "style hooks"
+          ],
+          "title": "adds the `nested` and `nested-dialog-open` style hooks if a dialog has a parent alert dialog"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/dialog/portal/DialogPortal.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Dialog.Portal />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Dialog.Portal />"
+          ],
+          "title": "throws a descriptive error when a portaled part is rendered without <Dialog.Portal>"
+        },
+        {
+          "describe": [
+            "<Dialog.Portal />",
+            "Suspense integration"
+          ],
+          "title": "should not throw \"Maximum update depth exceeded\" when Suspense boundary is outside Portal"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/dialog/root/DialogRoot.detached-triggers.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Dialog.Root />"
+          ],
+          "suite": "detachedTriggersConformanceTests"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "does not re-render inactive triggers"
+          ],
+          "title": "when the popup opens and closes"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "does not re-render inactive triggers"
+          ],
+          "title": "when the popup moves to another trigger"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />"
+          ],
+          "title": "closes a nonmodal dialog on Escape from an inactive trigger inside a popover on every open"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />"
+          ],
+          "title": "opens a handle-backed dialog as topmost over a dialog that opened while it was closed"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />"
+          ],
+          "title": "resets nested state recorded while open when a handle-backed dialog closes"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />"
+          ],
+          "title": "updates the parent nested state each time a handle-backed nested dialog opens and closes"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />"
+          ],
+          "title": "keeps the parent nested state when a closed handle-backed nested dialog mounts"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "handle-backed root ownership"
+          ],
+          "title": "hydrates a detached trigger from the stable fallback store"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "handle-backed root ownership"
+          ],
+          "title": "keeps the server snapshot stable when the root closes before a delayed trigger hydrates"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "handle-backed root ownership"
+          ],
+          "title": "opens from a descendant layout effect on initial mount"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "handle-backed root ownership"
+          ],
+          "title": "opens with a payload from a descendant layout effect on initial mount"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "handle-backed root ownership"
+          ],
+          "title": "closes from a descendant layout effect on an initially open root"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "handle-backed root ownership"
+          ],
+          "title": "does not warn for a detached payload open in production",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "handle-backed root ownership"
+          ],
+          "title": "ignores openWithPayload() after the root unmounts and keeps the remounted root without payload"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "handle-backed root ownership"
+          ],
+          "title": "does not attach a replacement root store from an abandoned transition render"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "handle-backed root ownership"
+          ],
+          "title": "attaches a fresh root store when the handle prop changes to a previously dirtied handle"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "handle-backed root ownership"
+          ],
+          "title": "keeps a handle-backed dialog open and controllable across handle swaps on a live root"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "handle-backed root ownership"
+          ],
+          "title": "attaches and detaches a handle when the prop toggles on a live root"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "handle-backed root ownership"
+          ],
+          "title": "associates the requested trigger when opened by id in the same commit a root attaches"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "handle-backed root ownership",
+            "multiple roots sharing one handle"
+          ],
+          "title": "does not warn when one root replaces another during a route transition"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "handle-backed root ownership",
+            "multiple roots sharing one handle"
+          ],
+          "title": "keeps the newer root attached after the older root unmounts"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "handle-backed root ownership",
+            "multiple roots sharing one handle"
+          ],
+          "title": "restores control to the previous root when a newer overlapping root detaches"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "handle-backed root ownership",
+            "multiple roots sharing one handle"
+          ],
+          "title": "keeps the root attached through Strict Mode effect replay"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "multiple triggers within Root"
+          ],
+          "title": "keeps the payload reactive",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "multiple detached triggers"
+          ],
+          "title": "attaches fresh root state when the root remounts after being unmounted while open",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "multiple detached triggers"
+          ],
+          "title": "resets stale payload when a handle-backed root remounts",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "multiple detached triggers"
+          ],
+          "title": "notifies persistent detached triggers after attaching fresh root state on remount",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "multiple detached triggers"
+          ],
+          "title": "resets stale controlled open state when a handle-backed root remounts uncontrolled",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "multiple detached triggers"
+          ],
+          "title": "does not warn when a handle-backed root remounts controlled after being uncontrolled",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "multiple detached triggers"
+          ],
+          "title": "keeps ARIA controls in sync when a detached handle is recreated while open",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "multiple detached triggers"
+          ],
+          "title": "keeps the payload reactive",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "multiple detached triggers"
+          ],
+          "title": "closes a non-modal dialog with Escape from an inactive detached trigger",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "imperative actions on the handle"
+          ],
+          "title": "associates an imperative open-by-id with a persistent detached trigger after the root remounts"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "imperative actions on the handle"
+          ],
+          "title": "stops resolving a handle-A trigger after the root switches to handle B"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "imperative actions on the handle"
+          ],
+          "title": "does not associate the only rendered trigger when opened with a payload"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "imperative actions on the handle"
+          ],
+          "title": "does not let a trigger that mounts while open replace the programmatic payload"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "imperative actions on the handle"
+          ],
+          "title": "keeps the programmatic payload when a controlled dialog declines a close request"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/dialog/root/DialogRoot.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Dialog.Root />"
+          ],
+          "suite": "popupConformanceTests"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />"
+          ],
+          "title": "ignores a native click whose pointerdown opened the dialog",
+          "conditions": [
+            "skipIf(isJSDOM || !platform.engine.blink)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />"
+          ],
+          "suite": "dialogRootSharedTests"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />"
+          ],
+          "title": "reports nested drawer counts before passive effects"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />"
+          ],
+          "title": "keeps trigger ownership when another trigger mounts while open"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name"
+          ],
+          "title": "rewires dismiss interactions after closing and reopening"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name"
+          ],
+          "title": "ARIA attributes"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name"
+          ],
+          "title": "keeps accessible names and descriptions in sync when label parts change"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name",
+            "prop: onOpenChange"
+          ],
+          "title": "reports no trigger when closing with an initial trigger id that is not mounted"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name",
+            "prop: onOpenChange"
+          ],
+          "title": "calls onOpenChange with the reason for change when user clicks backdrop while the modal dialog is open"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name",
+            "prop: onOpenChange"
+          ],
+          "title": "calls onOpenChange with the reason for change when user clicks outside while the non-modal dialog is open"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name",
+            "prop: onOpenChange",
+            "clicks on user backdrop"
+          ],
+          "title": "detects clicks on user backdrop",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name",
+            "prop: onOpenChange",
+            "clicks on user backdrop"
+          ],
+          "title": "does not change open state on non-main button clicks",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name",
+            "prop: onOpenChange"
+          ],
+          "title": "emits a single internal openchange when closing on Escape"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name",
+            "prop: onOpenChange"
+          ],
+          "title": "does not emit internal openchange when an Escape close is canceled"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name",
+            "prop: disablePointerDismissal"
+          ],
+          "title": "$outcome the dialog when clicking outside if disablePointerDismissal=$disablePointerDismissal"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name",
+            "outside press event with backdrops"
+          ],
+          "title": "uses intentional outside press with user backdrop (mouse): closes on click, not on mousedown"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name",
+            "outside press event with backdrops"
+          ],
+          "title": "uses intentional outside press with internal backdrop (modal=true): closes on click, not on mousedown"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name",
+            "outside press event with backdrops"
+          ],
+          "title": "closing via intentional outside press with user backdrop (modal=true): works when portaled into a shadow DOM"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name",
+            "outside press event with backdrops"
+          ],
+          "title": "closing via outside press: works when clicking another element inside the same shadow root"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name",
+            "outside press event with backdrops"
+          ],
+          "title": "closes when the outside press targets the document"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name",
+            "outside press event with backdrops"
+          ],
+          "title": "suppresses only the click of a press that starts inside and ends on the document"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name",
+            "outside press event with backdrops"
+          ],
+          "title": "closing via outside press: works when clicking outside the shadow root"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name",
+            "outside press event with backdrops"
+          ],
+          "title": "closing via outside press: works for a modal dialog when clicking outside the shadow root"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name"
+          ],
+          "title": "waits for the exit transition to finish before unmounting",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name",
+            "prop: modal"
+          ],
+          "title": "makes other interactive elements on the page inert when a modal dialog is open"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name",
+            "prop: modal"
+          ],
+          "title": "does not make other interactive elements on the page inert when a non-modal dialog is open"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name",
+            "prop: modal"
+          ],
+          "title": "should render an internal backdrop when `true`"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name",
+            "prop: modal"
+          ],
+          "title": "should not render an internal backdrop when `false`"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name"
+          ],
+          "title": "does not dismiss previous modal dialog when clicking new modal dialog"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name"
+          ],
+          "title": "dismisses non-nested dialogs one by one"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name",
+            "nested popups"
+          ],
+          "title": "should not dismiss the dialog when dismissing outside a nested modal menu",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name",
+            "nested popups"
+          ],
+          "title": "should not dismiss the dialog when dismissing outside a nested select popup",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name",
+            "nested popups"
+          ],
+          "title": "should not close the parent menu when Escape is pressed in a nested dialog",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name",
+            "pointerdown removal"
+          ],
+          "title": "moves focus to the popup when a focused child is removed on pointerdown and outside press still dismisses",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name",
+            "pointerdown removal"
+          ],
+          "title": "dismisses on first outside click after NumberField scrub interaction (pointer lock path)",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name",
+            "prop: onOpenChangeComplete"
+          ],
+          "title": "waits for a restarted enter animation to finish",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "when using $name",
+            "prop: onOpenChangeComplete"
+          ],
+          "title": "does not get called on open when dismissed during the enter animation",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />"
+          ],
+          "title": "does not close on a right-button outside press"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />"
+          ],
+          "title": "closes one sibling dialog per Escape press when several open together"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />"
+          ],
+          "title": "closes the newest sibling dialog on Escape after an older one remounts its popup"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />"
+          ],
+          "title": "closes a popover opened during a nested dialog, not the parent, on Escape after the nested dialog closes"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "closed shadow root",
+            "nested $name"
+          ],
+          "title": "keeps the parent open on close (outer: $outer, nested: $nested)"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "closed shadow root"
+          ],
+          "title": "still dismisses on a press outside the popup"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "touch outside press"
+          ],
+          "title": "closes a non-modal dialog without a backdrop",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "touch outside press"
+          ],
+          "title": "closes a trap-focus dialog without a backdrop",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "touch outside press"
+          ],
+          "title": "does not close when another touch is still active on touchend",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "touch outside press"
+          ],
+          "title": "does not close when two touches are lifted simultaneously on touchend",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "touch outside press"
+          ],
+          "title": "does not close when multiple touches move past the drag dismissal threshold",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "touch outside press"
+          ],
+          "title": "closes as soon as a single touch moves past the drag dismissal threshold",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "external scroll lock handoff",
+            "when a third-party overlay is still unlocking",
+            "$name"
+          ],
+          "title": "keeps the page locked until it takes over, and unlocks on close",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />",
+            "external scroll lock handoff"
+          ],
+          "title": "locks immediately when an external <body> lock cannot affect the page"
+        },
+        {
+          "describe": [
+            "<Dialog.Root />"
+          ],
+          "title": "returns focus to the menu trigger when a detached dialog trigger unmounts",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />"
+          ],
+          "title": "keeps focus trapped when dialog content contains a non-scrollable scroll area",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />"
+          ],
+          "title": "returns focus into the dialog when a close confirmation opened by an outside press closes",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Dialog.Root />"
+          ],
+          "title": "does not leak a non-modal popup field into an unrelated dialog return focus",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/dialog/title/DialogTitle.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Dialog.Title />"
+          ],
+          "suite": "describeConformance"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/dialog/trigger/DialogTrigger.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Dialog.Trigger />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Dialog.Trigger />"
+          ],
+          "title": "throws a descriptive error without a root or handle"
+        },
+        {
+          "describe": [
+            "<Dialog.Trigger />",
+            "prop: disabled"
+          ],
+          "title": "disables the dialog"
+        },
+        {
+          "describe": [
+            "<Dialog.Trigger />",
+            "prop: disabled"
+          ],
+          "title": "custom element"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/dialog/viewport/DialogViewport.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Dialog.Viewport />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Dialog.Viewport />"
+          ],
+          "title": "renders only when the dialog is mounted by default"
+        },
+        {
+          "describe": [
+            "<Dialog.Viewport />"
+          ],
+          "title": "stays mounted when used within a keepMounted portal"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/dialog/types.md",
+      "parts": [
+        {
+          "name": "Root",
+          "tag": null,
+          "props": [
+            {
+              "name": "defaultOpen",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "open",
+              "required": false,
+              "type": "boolean",
+              "default": null
+            },
+            {
+              "name": "onOpenChange",
+              "required": false,
+              "type": "((open: boolean, eventDetails: Dialog.Root.ChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "actionsRef",
+              "required": false,
+              "type": "React.RefObject<Dialog.Root.Actions | null>",
+              "default": null
+            },
+            {
+              "name": "defaultTriggerId",
+              "required": false,
+              "type": "string | null",
+              "default": null
+            },
+            {
+              "name": "disablePointerDismissal",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "handle",
+              "required": false,
+              "type": "Dialog.Handle<Payload>",
+              "default": null
+            },
+            {
+              "name": "modal",
+              "required": false,
+              "type": "boolean | 'trap-focus'",
+              "default": "true"
+            },
+            {
+              "name": "onOpenChangeComplete",
+              "required": false,
+              "type": "((open: boolean) => void)",
+              "default": null
+            },
+            {
+              "name": "triggerId",
+              "required": false,
+              "type": "string | null",
+              "default": null
+            },
+            {
+              "name": "children",
+              "required": false,
+              "type": "React.ReactNode | PayloadChildRenderFunction<Payload>",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "DialogRootState",
+            "fields": [],
+            "code": "type DialogRootState = {};"
+          },
+          "actions": {
+            "name": "DialogRootActions",
+            "members": [
+              "unmount",
+              "close"
+            ],
+            "code": "type DialogRootActions = {\n    unmount: () => void;\n    close: () => void;\n};"
+          },
+          "changeEventReason": {
+            "name": "DialogRootChangeEventReason",
+            "values": [
+              "trigger-press",
+              "outside-press",
+              "escape-key",
+              "close-press",
+              "focus-out",
+              "imperative-action",
+              "none"
+            ],
+            "code": "type DialogRootChangeEventReason = 'trigger-press' | 'outside-press' | 'escape-key' | 'close-press' | 'focus-out' | 'imperative-action' | 'none';"
+          },
+          "changeEventDetails": {
+            "name": "DialogRootChangeEventDetails",
+            "code": "type DialogRootChangeEventDetails = ({\n    reason: 'trigger-press';\n    event: KeyboardEvent | MouseEvent | TouchEvent | PointerEvent;\n} | {\n    reason: 'outside-press';\n    event: MouseEvent | TouchEvent | PointerEvent;\n} | {\n    reason: 'escape-key';\n    event: KeyboardEvent;\n} | {\n    reason: 'close-press';\n    event: KeyboardEvent | MouseEvent | PointerEvent;\n} | {\n    reason: 'focus-out';\n    event: FocusEvent | KeyboardEvent;\n} | {\n    reason: 'imperative-action';\n    event: Event;\n} | {\n    reason: 'none';\n    event: Event;\n}) & {\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n    preventUnmountOnClose: () => void;\n};"
+          },
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Trigger",
+          "tag": "button",
+          "props": [
+            {
+              "name": "handle",
+              "required": false,
+              "type": "Dialog.Handle<Payload>",
+              "default": null
+            },
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "payload",
+              "required": false,
+              "type": "Payload",
+              "default": null
+            },
+            {
+              "name": "id",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Dialog.Trigger.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Dialog.Trigger.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Dialog.Trigger.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "DialogTriggerState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type DialogTriggerState = {\n    disabled: boolean;\n    open: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-popup-open",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Portal",
+          "tag": "div",
+          "props": [
+            {
+              "name": "container",
+              "required": false,
+              "type": "HTMLElement | ShadowRoot | React.RefObject<HTMLElement | ShadowRoot | null> | null",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Dialog.Portal.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Dialog.Portal.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "keepMounted",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Dialog.Portal.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "DialogPortalState",
+            "fields": [],
+            "code": "type DialogPortalState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Backdrop",
+          "tag": "div",
+          "props": [
+            {
+              "name": "forceRender",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Dialog.Backdrop.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Dialog.Backdrop.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Dialog.Backdrop.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "DialogBackdropState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              }
+            ],
+            "code": "type DialogBackdropState = {\n    open: boolean;\n    transitionStatus: TransitionStatus;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Popup",
+          "tag": "div",
+          "props": [
+            {
+              "name": "initialFocus",
+              "required": false,
+              "type": "boolean | React.RefObject<HTMLElement | null> | ((openType: InteractionType) => boolean | void | HTMLElement | null)",
+              "default": null
+            },
+            {
+              "name": "finalFocus",
+              "required": false,
+              "type": "boolean | React.RefObject<HTMLElement | null> | ((closeType: InteractionType) => boolean | void | HTMLElement | null)",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Dialog.Popup.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Dialog.Popup.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Dialog.Popup.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "DialogPopupState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              },
+              {
+                "name": "nested",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "nestedDialogOpen",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type DialogPopupState = {\n    open: boolean;\n    transitionStatus: TransitionStatus;\n    nested: boolean;\n    nestedDialogOpen: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-nested",
+              "type": null
+            },
+            {
+              "name": "data-nested-dialog-open",
+              "type": null
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": [
+            {
+              "name": "--nested-dialogs",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Title",
+          "tag": "h2",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Dialog.Title.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Dialog.Title.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Dialog.Title.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "DialogTitleState",
+            "fields": [],
+            "code": "type DialogTitleState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Description",
+          "tag": "p",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Dialog.Description.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Dialog.Description.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Dialog.Description.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "DialogDescriptionState",
+            "fields": [],
+            "code": "type DialogDescriptionState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Close",
+          "tag": "button",
+          "props": [
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Dialog.Close.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Dialog.Close.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Dialog.Close.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "DialogCloseState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type DialogCloseState = {\n    disabled: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-disabled",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Viewport",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Dialog.Viewport.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Dialog.Viewport.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Dialog.Viewport.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "DialogViewportState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              },
+              {
+                "name": "nested",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "nestedDialogOpen",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type DialogViewportState = {\n    open: boolean;\n    transitionStatus: TransitionStatus;\n    nested: boolean;\n    nestedDialogOpen: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-nested",
+              "type": null
+            },
+            {
+              "name": "data-nested-dialog-open",
+              "type": null
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        }
+      ],
+      "functions": [
+        {
+          "name": "createHandle",
+          "tables": [],
+          "code": [
+            "type ReturnValue = Dialog.Handle<Payload>;"
+          ]
+        },
+        {
+          "name": "Handle",
+          "tables": [
+            {
+              "label": "Properties",
+              "rows": [
+                {
+                  "name": "isOpen",
+                  "type": "boolean",
+                  "modifiers": "readonly"
+                }
+              ]
+            }
+          ],
+          "code": [
+            "function open(triggerId: string | null): void;",
+            "function openWithPayload(payload: Payload): void;",
+            "function close(): void;"
+          ]
+        }
+      ],
+      "types": [],
+      "additionalTypes": [
+        {
+          "name": "DialogBackdropDataAttributes",
+          "code": "declare namespace DialogBackdropDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            }
+          ]
+        },
+        {
+          "name": "DialogCloseDataAttributes",
+          "code": "declare namespace DialogCloseDataAttributes {\n    const disabled: 'data-disabled';\n}",
+          "constants": [
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            }
+          ]
+        },
+        {
+          "name": "DialogPopupCssVariables",
+          "code": "declare namespace DialogPopupCssVariables {\n    const nestedDialogs: '--nested-dialogs';\n}",
+          "constants": [
+            {
+              "name": "nestedDialogs",
+              "value": "--nested-dialogs"
+            }
+          ]
+        },
+        {
+          "name": "DialogPopupDataAttributes",
+          "code": "declare namespace DialogPopupDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n    const nested: 'data-nested';\n    const nestedDialogOpen: 'data-nested-dialog-open';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            },
+            {
+              "name": "nested",
+              "value": "data-nested"
+            },
+            {
+              "name": "nestedDialogOpen",
+              "value": "data-nested-dialog-open"
+            }
+          ]
+        },
+        {
+          "name": "DialogTriggerDataAttributes",
+          "code": "declare namespace DialogTriggerDataAttributes {\n    const disabled: 'data-disabled';\n    const popupOpen: 'data-popup-open';\n}",
+          "constants": [
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "popupOpen",
+              "value": "data-popup-open"
+            }
+          ]
+        },
+        {
+          "name": "DialogViewportDataAttributes",
+          "code": "declare namespace DialogViewportDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n    const nested: 'data-nested';\n    const nestedDialogOpen: 'data-nested-dialog-open';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            },
+            {
+              "name": "nested",
+              "value": "data-nested"
+            },
+            {
+              "name": "nestedDialogOpen",
+              "value": "data-nested-dialog-open"
+            }
+          ]
+        }
+      ],
+      "externalTypes": [
+        {
+          "name": "InteractionType",
+          "code": "type InteractionType = 'mouse' | 'touch' | 'pen' | 'keyboard' | '';"
+        },
+        {
+          "name": "PayloadChildRenderFunction",
+          "code": "type PayloadChildRenderFunction = (arg: {\n    payload: unknown | undefined;\n}) => ReactNode;"
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/dialog/page.mdx",
+      "referenceTags": [
+        "TypesDialog.Root",
+        "TypesDialog.Trigger",
+        "TypesDialog.Portal",
+        "TypesDialog.Backdrop",
+        "TypesDialog.Viewport",
+        "TypesDialog.Popup",
+        "TypesDialog.Title",
+        "TypesDialog.Description",
+        "TypesDialog.Close",
+        "TypesDialog.createHandle",
+        "TypesDialog.Handle"
+      ]
+    }
+  ]
+}

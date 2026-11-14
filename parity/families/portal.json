@@ -4,14 +4,6 @@
   "exceptions": [
     {
       "upstream": "packages/react/src/utils/popups/portal/FloatingPortal.test.tsx",
-      "describe": ["FloatingPortal"],
-      "title": "uses the rendered portal ID for the aria-owns relationship",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx",
-      "reason": "The case renders `FloatingFocusManager`, which Vase UI does not have. The pull request that adds `FloatingFocusManager.tsx` ports the case."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/portal/FloatingPortal.test.tsx",
       "describe": ["$name container resolution"],
       "title": "$name without canceling a view transition",
       "kind": "not-applicable",

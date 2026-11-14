@@ -15,8 +15,8 @@
       "describe": ["<Tabs.Root />", "popups"],
       "title": "works inside Dialog",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/dialog/root/DialogRoot.tsx",
-      "reason": "The case renders `Dialog`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/dialog/index.ts",
+      "reason": "The case renders `Dialog.Trigger`, `Dialog.Portal` and `Dialog.Popup` from the entry point of Dialog. Vase UI does not have that entry point."
     },
     {
       "upstream": "packages/react/src/tabs/panel/TabsPanel.test.tsx",
