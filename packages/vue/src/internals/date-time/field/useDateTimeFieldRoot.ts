@@ -66,6 +66,7 @@ import {
 } from './segmentRanges';
 import type {
   DayPeriod,
+  Limits,
   NumbersContext,
   NumericSegmentType,
   SegmentNumbers,
@@ -252,8 +253,15 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
       (source && isKind(source, 'zonedDateTime') ? source.timeZoneId : undefined)
     );
   });
+  // With no value, the kind of the value that the field makes picks the calendar. A year and month
+  // shows only in a calendar that has its months, so the field does not change its calendar when it
+  // gets a value.
   const displayCal = computed(() =>
-    displayCalendar(toValue(parameters.calendar), templateSource.value, locale.value),
+    displayCalendar(
+      toValue(parameters.calendar),
+      templateSource.value ?? (kind.value === 'yearMonth' ? getTemplate() : undefined),
+      locale.value,
+    ),
   );
   const midnight = computed(() => today(timeZone.value).toPlainDateTime());
 
@@ -356,14 +364,19 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
 
   const controlId = useLabelableId({ id: () => toValue(parameters.id) });
 
-  // The name of a month depends on its year in a calendar with leap months.
+  // The name of a month depends on its year in a calendar with leap months. The value can have
+  // another calendar than the field, so the date goes into the calendar of the field first.
   function getMonthName(month: number): string {
     const date = fromNumbers({ ...numbers.value, month, day: 1 }, getTemplate(), {
       ...numbersContext.value,
       hasDate: true,
       hasTime: false,
     });
-    const [format, epoch] = formatter(date, { month: 'long' }, locale.value);
+    const [format, epoch] = formatter(
+      isKind(date, 'time') ? date : toPlainDate(date).withCalendar(displayCal.value),
+      { month: 'long' },
+      locale.value,
+    );
     return format.format(epoch);
   }
 
@@ -533,6 +546,24 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     setNumber(type, next, details);
   }
 
+  // A number outside the range of its segment means that the text has another layout, such as
+  // `2027/05/17` for the layout month, day, year. The year comes first, because the limits of the
+  // month and the day need a year that `Temporal` can make.
+  function isInRanges(next: SegmentNumbers): boolean {
+    const types = editableTypes.value.filter(isNumericType);
+    const isInRange = (type: NumericSegmentType, limits: Limits) => {
+      const number = next[type];
+      const { min, max } = getRange(type, limits, hourCycle.value);
+      return number !== undefined && number >= min && number <= max;
+    };
+    const anyLimits: Limits = { monthsInYear: 12, daysInMonth: 31 };
+    if (types.includes('year') && !isInRange('year', anyLimits)) {
+      return false;
+    }
+    const limits = getLimits(next, referenceNumbers.value, displayCal.value);
+    return types.every((type) => isInRange(type, limits));
+  }
+
   // A date with a different kind gives its numbers too: the segments of the layout use theirs.
   function parseText(text: string, isPaste: boolean): SegmentNumbers | undefined {
     const kinds: TemporalKind[] =
@@ -543,9 +574,11 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
         return toNumbers(parsed, displayCal.value, hourCycle.value);
       }
     }
-    return isPaste
-      ? parseLocaleText(text, editableTypes.value, digits.value, dayPeriodTexts.value)
-      : undefined;
+    if (!isPaste) {
+      return undefined;
+    }
+    const parsed = parseLocaleText(text, editableTypes.value, digits.value, dayPeriodTexts.value);
+    return parsed && isInRanges(parsed) ? parsed : undefined;
   }
 
   function pasteText(text: string, event: ClipboardEvent) {
@@ -588,9 +621,11 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
 
   const focused = shallowRef(false);
 
-  function handleSegmentBlur(event: FocusEvent) {
-    // A move to another segment stays inside the field.
-    if (contains(rootElement.value, event.relatedTarget as Element | null)) {
+  // The root handles the focus that leaves it, because an element in the root that is not a
+  // segment, such as a clear button, can have the focus last. A move inside the root keeps the field
+  // focused.
+  function handleFocusout(event: FocusEvent) {
+    if (!focused.value || contains(rootElement.value, event.relatedTarget as Element | null)) {
       return;
     }
     setTouched(true);
@@ -636,18 +671,15 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     if (hasDraft.value) {
       return PARTIAL_MESSAGE;
     }
-    return value.value === null ? '' : getLimitMessage(value.value, limits.value, locale.value);
+    return value.value === null
+      ? ''
+      : getLimitMessage(value.value, limits.value, locale.value, displayCal.value);
   });
 
   const hiddenInputElement = shallowRef<HTMLInputElement | null>(null);
-  let appliedMessage = '';
 
   function syncCustomValidity() {
-    const input = hiddenInputElement.value;
-    if (input && customMessage.value !== appliedMessage) {
-      appliedMessage = customMessage.value;
-      input.setCustomValidity(appliedMessage);
-    }
+    hiddenInputElement.value?.setCustomValidity(customMessage.value);
   }
 
   // The key of the validity of the field. It changes with the value and with a partial entry, and
@@ -898,6 +930,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
           'aria-describedby'
         ],
         'aria-labelledby': ariaLabelledBy.value,
+        onFocusout: handleFocusout,
       },
       elementAttrs,
     ];
@@ -951,7 +984,6 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     setFocused(next) {
       focused.value = next;
     },
-    handleSegmentBlur,
     handleInputPress,
     setRootElement(element) {
       rootElement.value = element as HTMLElement | null;

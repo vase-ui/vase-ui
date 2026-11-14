@@ -341,11 +341,12 @@ export function useDateTimeFieldSegment(
         }
         typedDigits = '';
         setFocused(true);
+        // A focus by script leaves the caret at the start in Chrome and Firefox, and selects the
+        // whole text in Safari. A segment selects its whole text in each engine.
         (event.currentTarget as HTMLInputElement).select();
       },
-      onFocusout(event: FocusEvent) {
+      onFocusout() {
         typedDigits = '';
-        context.handleSegmentBlur(event);
       },
       onKeydown: handleKeydown,
       onBeforeinput: handleBeforeinput,

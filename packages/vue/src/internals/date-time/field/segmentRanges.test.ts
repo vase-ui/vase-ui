@@ -297,6 +297,12 @@ describe('limits and years', () => {
       amount: 1,
       expected: { era: 'ce', year: 9999 },
     },
+    {
+      name: 'the greatest year BCE down',
+      numbers: { era: 'bce', year: 9999 },
+      amount: -1,
+      expected: { era: 'bce', year: 9999 },
+    },
   ])('shifts $name', ({ numbers, amount, expected }) => {
     expect(shiftYear(numbers, amount, 'gregory')).toEqual(expected);
   });

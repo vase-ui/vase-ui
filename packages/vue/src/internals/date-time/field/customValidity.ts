@@ -17,9 +17,13 @@ export interface ValueLimits {
 export const PARTIAL_MESSAGE = 'Fill in each part.';
 const UNAVAILABLE_MESSAGE = 'This date is not available.';
 
-function formatDay(day: DateValue, locale: Intl.LocalesArgument | undefined): string {
+function formatDay(
+  day: DateValue,
+  locale: Intl.LocalesArgument | undefined,
+  calendar: string,
+): string {
   const [format, epoch] = formatter(
-    day,
+    toPlainDate(day).withCalendar(calendar),
     { year: 'numeric', month: 'numeric', day: 'numeric' },
     locale,
   );
@@ -63,12 +67,14 @@ export function getInputLimits(
  * The message of the first limit that `value` breaks, or an empty text. The native input of a date,
  * of a date and time and of a time checks their own ranges, and this function checks the others:
  * the range of a zoned value and of a year and month, the time of a date and time, and the dates
- * that are not available. A year and month is in the range when one of its days is.
+ * that are not available. A year and month is in the range when one of its days is. A date of a
+ * message is in `calendar`, the calendar that the field shows.
  */
 export function getLimitMessage(
   value: TemporalValue,
   { minDate, maxDate, minTime, maxTime, unavailableDates }: ValueLimits,
   locale: Intl.LocalesArgument | undefined,
+  calendar: string,
 ): string {
   const notBefore = (text: string) => `Enter ${text} or later.`;
   const notAfter = (text: string) => `Enter ${text} or earlier.`;
@@ -77,10 +83,10 @@ export function getLimitMessage(
     const first = toPlainDate(value);
     const last = isKind(value, 'yearMonth') ? value.toPlainDate({ day: value.daysInMonth }) : first;
     if (minDate && compareDates(last, minDate) < 0) {
-      return notBefore(formatDay(minDate, locale));
+      return notBefore(formatDay(minDate, locale, calendar));
     }
     if (maxDate && compareDates(first, maxDate) > 0) {
-      return notAfter(formatDay(maxDate, locale));
+      return notAfter(formatDay(maxDate, locale, calendar));
     }
   }
 

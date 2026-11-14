@@ -732,9 +732,9 @@ A date or time field and the `Intl` data of the server:
 - Each engine has its own `Intl` data for a locale. Chromium has no data for `is-IS` and uses `en-US`. The server and the browser then give another layout.
 - A layout can differ in the order of the segments, in the number of segments, in the text of a literal and in the hour cycle.
 - While the field hydrates, the part that renders the segments binds `data-allow-mismatch="children"` on `Input`, `attribute` on a segment and `text` on a literal. `useDateTimeFieldSegment` binds the one of a segment. Each part calls `useIsHydrating()` itself. `test/fixtures/DateTimeFieldProbe.vue` is the model.
-- Vue changes the text of a literal itself. It writes no `aria-*` attribute while it hydrates, and it does not change the attributes of a server element that it reuses for another segment.
+- Vue changes the text of a literal itself. While it hydrates, it writes no attribute but the `value` of an input. A server element that Vue reuses for another segment thus keeps its attributes.
 - After the mount, the root compares the `data-type` and the attributes that `getSegmentAttributes` gives with the DOM. On a difference, it changes `listKey`, and the parts make the elements again.
-- A layout with another number of segments makes Vue log `Hydration completed but contains mismatches` one time, also under `data-allow-mismatch`. The DOM is then equal to a client-only render.
+- `Input` renders each item of the layout as a direct child of its element, with no fragment. For a fragment with another number of items, such as the fragment of `v-for`, Vue logs `Hydration completed but contains mismatches` also under `data-allow-mismatch`.
 
 ### What Vue replaces
 

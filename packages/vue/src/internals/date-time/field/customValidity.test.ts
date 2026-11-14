@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { formatter } from '../format';
+import type { TemporalValue } from '../temporal';
 import { getInputLimits, getLimitMessage } from './customValidity';
+import type { ValueLimits } from './customValidity';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
 const time = (text: string) => Temporal.PlainTime.from(text);
@@ -42,15 +44,8 @@ describe('getLimitMessage', () => {
     );
     return format.format(epoch);
   };
-  const message = (
-    ...[value, limits]: Parameters<typeof getLimitMessage> extends [
-      infer Value,
-      infer Limits,
-      unknown,
-    ]
-      ? [Value, Limits]
-      : never
-  ) => getLimitMessage(value, limits, 'en-US');
+  const message = (value: TemporalValue, limits: ValueLimits) =>
+    getLimitMessage(value, limits, 'en-US', 'gregory');
 
   it.each([
     { name: 'before the least day', value: '2026-11-09T10:00[Asia/Tokyo]', expected: 'later' },
@@ -65,6 +60,24 @@ describe('getLimitMessage', () => {
       expect(result).toContain(expected);
       expect(result).toContain(dayText(expected === 'later' ? limits.minDate : limits.maxDate));
     }
+  });
+
+  it('writes the date of a message in the calendar that the field shows', () => {
+    const minDate = day('2026-11-10');
+    const [format, epoch] = formatter(
+      minDate.withCalendar('persian'),
+      { year: 'numeric', month: 'numeric', day: 'numeric' },
+      'en-US',
+    );
+
+    expect(
+      getLimitMessage(
+        Temporal.ZonedDateTime.from('2026-11-09T10:00[Asia/Tokyo]'),
+        { minDate },
+        'en-US',
+        'persian',
+      ),
+    ).toContain(format.format(epoch));
   });
 
   it.each([

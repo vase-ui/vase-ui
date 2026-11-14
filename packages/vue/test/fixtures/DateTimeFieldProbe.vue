@@ -1,6 +1,8 @@
 <script lang="ts">
 import { defineComponent, h } from 'vue';
 import type { PropType } from 'vue';
+import { useIsHydrating } from '../../src/common/hydration';
+import { useDateTimeFieldContext } from '../../src/internals/date-time/field/DateTimeFieldContext';
 import {
   segmentStateAttributesMapping,
   useDateTimeFieldSegment,
@@ -30,13 +32,46 @@ const ProbeSegment = defineComponent({
     return () => h('input', elementProps());
   },
 });
+
+// The part that renders the items of the layout, as the input of a date field does. Each item is a
+// direct child of the element. A server with another number of items then gives a mismatch that
+// `data-allow-mismatch="children"` allows. In a fragment, such as the one of `v-for`, Vue logs
+// `Hydration completed but contains mismatches` with no check of the attribute.
+const ProbeInput = defineComponent({
+  name: 'ProbeInput',
+  setup() {
+    const context = useDateTimeFieldContext();
+    const isHydrating = useIsHydrating();
+    return () =>
+      h(
+        'div',
+        {
+          'data-testid': 'input',
+          'data-allow-mismatch': isHydrating.value ? 'children' : undefined,
+          onMousedown: context.handleInputPress,
+        },
+        context.segments.value.map((segment) => {
+          const key = `${context.listKey.value}:${segment.index}`;
+          return segment.editable
+            ? h(ProbeSegment, { key, segment })
+            : h(
+                'span',
+                {
+                  key,
+                  'data-type': segment.type,
+                  'aria-hidden': segment.type === 'literal' ? true : undefined,
+                  'data-allow-mismatch': isHydrating.value ? 'text' : undefined,
+                },
+                segment.text,
+              );
+        }),
+      );
+  },
+});
 </script>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useIsHydrating } from '../../src/common/hydration';
 import type { DateTimeFieldChangeEventDetails } from '../../src/internals/date-time/field/DateTimeFieldContext';
-import type { DateTimeFieldSegment } from '../../src/internals/date-time/field/DateTimeFieldContext';
 import DateTimeFieldHiddenInput from '../../src/internals/date-time/field/DateTimeFieldHiddenInput.vue';
 import {
   rootStateAttributesMapping,
@@ -167,8 +202,6 @@ const root = useDateTimeFieldRoot<TemporalValue>({
   updateValue: (value) => emit('update:value', value),
 });
 
-const isHydrating = useIsHydrating();
-
 const { elementProps } = useRenderElement(
   'div',
   {},
@@ -180,34 +213,12 @@ const { elementProps } = useRenderElement(
   },
 );
 
-const inputProps = computed(() => ({
-  'data-testid': 'input',
-  'data-allow-mismatch': isHydrating.value ? 'children' : undefined,
-  onMousedown: root.handleInputPress,
-}));
-
-function literalProps(segment: Extract<DateTimeFieldSegment, { editable: false }>) {
-  return {
-    'data-type': segment.type,
-    'aria-hidden': segment.type === 'literal' ? true : undefined,
-    'data-allow-mismatch': isHydrating.value ? 'text' : undefined,
-  };
-}
-
 defineExpose({ context: root });
 </script>
 
 <template>
   <div v-bind="elementProps()">
-    <div v-bind="inputProps">
-      <template
-        v-for="segment in root.segments.value"
-        :key="`${root.listKey.value}:${segment.index}`"
-      >
-        <ProbeSegment v-if="segment.editable" :segment="segment" />
-        <span v-else v-bind="literalProps(segment)">{{ segment.text }}</span>
-      </template>
-    </div>
+    <ProbeInput />
     <button
       type="button"
       data-testid="clear"

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import { createRenderer, fireEvent, flushMicrotasks, pasteText, screen } from '#test-utils';
 import DateTimeFieldProbe from '../../../../test/fixtures/DateTimeFieldProbe.vue';
+import { formatter } from '../format';
 import { getDayPeriodTexts } from './segmentLayout';
 
 const segmentOf = (container: Element, type: string) =>
@@ -675,6 +676,9 @@ describe('useDateTimeFieldSegment', () => {
       { name: 'text that is not a date', text: 'next friday' },
       { name: 'a layout with too few numbers', text: '5/2027' },
       { name: 'an empty text', text: '' },
+      { name: 'a layout with the year first', text: '2027/05/17' },
+      { name: 'a day past the end of its month', text: '2/30/2027' },
+      { name: 'a year above 9999', text: '5/17/999999' },
     ])('ignores $name', async ({ text }) => {
       const { container, onValueChange } = await setup({ defaultValue: '2026-11-14' });
 
@@ -854,6 +858,17 @@ describe('useDateTimeFieldSegment', () => {
       expect(segmentOf(container, 'day')).toHaveAttribute('aria-valuenow', '14');
       expect(segmentOf(container, 'hour')).toHaveAttribute('aria-valuemax', '23');
       expect(segmentOf(container, 'minute')).not.toHaveAttribute('aria-valuetext');
+    });
+
+    it('names the month in the calendar that the field shows', async () => {
+      const { container } = await setup({ defaultValue: '2026-11-14', calendar: 'persian' });
+      const [format, epoch] = formatter(
+        Temporal.PlainDate.from('2026-11-14').withCalendar('persian'),
+        { month: 'long' },
+        'en-US',
+      );
+
+      expect(segmentOf(container, 'month')).toHaveAttribute('aria-valuetext', format.format(epoch));
     });
 
     it.each([

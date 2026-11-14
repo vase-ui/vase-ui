@@ -259,7 +259,10 @@ export function getLimits(
   return { monthsInYear, daysInMonth };
 }
 
-/** The era and the year that are `amount` years from the year of `numbers`. The era can change. */
+/**
+ * The era and the year that are `amount` years from the year of `numbers`. The era can change. A
+ * year outside the range of the segment keeps the numbers.
+ */
 export function shiftYear(
   numbers: SegmentNumbers,
   amount: number,
@@ -276,9 +279,10 @@ export function shiftYear(
     day: 1,
   });
   const shifted = first.add({ years: amount });
-  return Math.abs(shifted.year) > MAX_YEAR
+  const shiftedYear = shifted.eraYear ?? shifted.year;
+  return shiftedYear < 1 || shiftedYear > MAX_YEAR
     ? { era, year }
-    : { era: shifted.era, year: shifted.eraYear ?? shifted.year };
+    : { era: shifted.era, year: shiftedYear };
 }
 
 /** `value` moved into `range`: a number past one end goes on from the other end. */

@@ -91,7 +91,6 @@ export interface DateTimeFieldContext {
   registerSegment: (element: HTMLInputElement) => void;
   unregisterSegment: (element: HTMLInputElement) => void;
   setFocused: (focused: boolean) => void;
-  handleSegmentBlur: (event: FocusEvent) => void;
   /** A press on the `Input` outside a segment gives the focus to the first empty segment, else to the first segment. */
   handleInputPress: (event: MouseEvent) => void;
   /** The part gives it to the `ref` of its element. */

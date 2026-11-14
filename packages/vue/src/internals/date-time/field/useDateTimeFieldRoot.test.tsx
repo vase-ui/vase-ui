@@ -586,6 +586,22 @@ describe('useDateTimeFieldRoot', () => {
       expect(value.toString()).toBe(row.expected);
     });
 
+    it('keeps the calendar of an empty year and month field when the locale has a calendar of other months', async () => {
+      const onValueChange = vi.fn();
+      const { container, user } = await render(
+        <DateTimeFieldProbe granularity="month" locale="fa-IR" onValueChange={onValueChange} />,
+      );
+
+      await user.click(segmentOf(container, 'month'));
+      await user.keyboard('5');
+      await user.click(segmentOf(container, 'year'));
+      await user.keyboard('2027');
+
+      expect(onValueChange.mock.calls.at(-1)![0].toString()).toBe('2027-05');
+      expect(segmentOf(container, 'month')).toHaveAttribute('aria-valuenow', '5');
+      expect(segmentOf(container, 'year')).toHaveAttribute('aria-valuenow', '2027');
+    });
+
     it('takes the numbers of an empty segment, and the zone, from referenceDate', async () => {
       const onValueChange = vi.fn();
       const { container, user } = await render(
@@ -1282,6 +1298,31 @@ describe('useDateTimeFieldRoot', () => {
       expect(root).toHaveAttribute('data-touched');
     });
 
+    it('marks the field as not focused and touched when the focus leaves from a button in the group', async () => {
+      const { container, user } = await render(
+        <Field.Root name="when" validationMode="onBlur">
+          <DateTimeFieldProbe defaultValue="2026-11-14" locale="en-US" />
+          <Field.Error data-testid="error" />
+          <button type="button">Next</button>
+        </Field.Root>,
+      );
+      const root = container.querySelector('[role="group"]')!;
+
+      await user.click(segmentOf(container, 'day'));
+      await user.keyboard('{Backspace}{Backspace}');
+      await user.tab();
+      await user.tab();
+      expect(screen.getByTestId('clear')).toHaveFocus();
+      expect(root).toHaveAttribute('data-focused');
+
+      await user.tab();
+
+      expect(screen.getByRole('button', { name: 'Next' })).toHaveFocus();
+      expect(root).not.toHaveAttribute('data-focused');
+      expect(root).toHaveAttribute('data-touched');
+      expect(screen.getByTestId('error')).toHaveTextContent(PARTIAL_MESSAGE);
+    });
+
     it('gives disabled, read-only and required to the group state and the segments', async () => {
       const { container } = await render(
         <div>
@@ -1314,6 +1355,10 @@ describe('useDateTimeFieldRoot', () => {
       {
         name: 'a date and time of a zone in de-DE',
         props: { locale: 'de-DE', defaultValue: '2026-11-14T15:04[Asia/Tokyo]' },
+      },
+      {
+        name: 'a date and time in is-IS',
+        props: { locale: 'is-IS', defaultValue: '2026-11-14T15:04' },
       },
     ])('hydrates $name with no warning', async ({ props }) => {
       const serverHtml = await renderOnServer(PROBE, props);
