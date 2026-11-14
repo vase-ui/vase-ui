@@ -93,12 +93,14 @@ const listItem = useCompositeListItem({ label: () => props.label });
 const itemId = useVaseUiId(() => props.id);
 
 const highlighted = computed(() => store.select('isActive', listItem.index.value));
-const disabled = computed(() => props.disabled || groupDisabled.value || store.select('disabled'));
+const isDisabled = computed(
+  () => props.disabled || groupDisabled.value || store.select('disabled'),
+);
 const checked = computed(() => selectedValue.value === props.value);
 
 const { getItemProps, itemRef } = useMenuItem({
   closeOnClick: () => props.closeOnClick,
-  disabled,
+  disabled: isDisabled,
   highlighted,
   id: itemId,
   store,
@@ -107,7 +109,7 @@ const { getItemProps, itemRef } = useMenuItem({
 });
 
 const state = computed<MenuRadioItemState>(() => ({
-  disabled: disabled.value,
+  disabled: isDisabled.value,
   highlighted: highlighted.value,
   checked: checked.value,
 }));

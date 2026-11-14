@@ -74,11 +74,11 @@ const listItem = useCompositeListItem({ label: () => props.label });
 const itemId = useVaseUiId(() => props.id);
 
 const highlighted = computed(() => store.select('isActive', listItem.index.value));
-const disabled = computed(() => props.disabled || store.select('disabled'));
+const isDisabled = computed(() => props.disabled || store.select('disabled'));
 
 const { getItemProps, itemRef } = useMenuItem({
   closeOnClick: () => props.closeOnClick,
-  disabled,
+  disabled: isDisabled,
   highlighted,
   id: itemId,
   store,
@@ -87,7 +87,7 @@ const { getItemProps, itemRef } = useMenuItem({
 });
 
 const state = computed<MenuItemState>(() => ({
-  disabled: disabled.value,
+  disabled: isDisabled.value,
   highlighted: highlighted.value,
 }));
 
