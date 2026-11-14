@@ -3007,7 +3007,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
     });
   });
 
-  describe('style of the scroll container', () => {
+  describe('VUE-62: style of the scroll container', () => {
     it('keeps the keyboard scroll slack when a render writes the style of the scroll container again', async () => {
       mockWindowInnerHeight(800);
       const visualViewport = mockVisualViewport(800);
