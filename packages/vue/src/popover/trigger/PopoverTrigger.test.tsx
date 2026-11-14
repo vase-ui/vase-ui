@@ -231,22 +231,10 @@ describe('<Popover.Trigger />', () => {
           v-slots={{
             default: ({ payload }: { payload: unknown }) => (
               <>
-                <Popover.Trigger
-                  payload="One"
-                  openOnHover
-                  delay={0}
-                  closeDelay={0}
-                  style={{ pointerEvents: 'none' }}
-                >
+                <Popover.Trigger payload="One" openOnHover delay={0} closeDelay={0}>
                   One
                 </Popover.Trigger>
-                <Popover.Trigger
-                  payload="Two"
-                  openOnHover
-                  delay={0}
-                  closeDelay={0}
-                  style={{ pointerEvents: 'none' }}
-                >
+                <Popover.Trigger payload="Two" openOnHover delay={0} closeDelay={0}>
                   Two
                 </Popover.Trigger>
                 <Popover.Portal>
@@ -542,9 +530,12 @@ describe('<Popover.Trigger />', () => {
 
   describe('opened by hover', () => {
     async function renderOpenedByHover(tabindex?: number) {
+      // WebKit on macOS skips a button for the Tab key unless the button has a `tabindex`.
       await render(
         <div>
-          <button data-testid="before">Before</button>
+          <button data-testid="before" tabindex={0}>
+            Before
+          </button>
           <Popover.Root>
             <Popover.Trigger openOnHover delay={0} tabindex={tabindex}>
               Toggle
@@ -557,7 +548,9 @@ describe('<Popover.Trigger />', () => {
               </Popover.Positioner>
             </Popover.Portal>
           </Popover.Root>
-          <button data-testid="after">After</button>
+          <button data-testid="after" tabindex={0}>
+            After
+          </button>
         </div>,
       );
 
