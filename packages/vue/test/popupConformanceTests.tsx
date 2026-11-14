@@ -457,6 +457,7 @@ export function popupConformanceTests(config: PopupTestConfig) {
         async ({ closes, synchronous }) => {
           const onOpenChangeComplete = vi.fn();
           const handleClose = vi.fn();
+          const handleCloseApplied = vi.fn();
 
           const App = defineComponent({
             setup() {
@@ -487,6 +488,7 @@ export function popupConformanceTests(config: PopupTestConfig) {
                         eventDetails.preventUnmountOnClose();
                       }
                       open.value = false;
+                      handleCloseApplied();
                     },
                   },
                 });
@@ -495,16 +497,20 @@ export function popupConformanceTests(config: PopupTestConfig) {
 
           const { user } = await renderPopup(<App />);
           expect(getPopup()).toBeVisible();
+          expect(getTrigger()).toHaveAttribute('data-popup-open');
 
           await user.keyboard('[Escape]');
           if (closes === 2) {
             await user.keyboard('[Escape]');
           }
           expect(handleClose).toHaveBeenCalledTimes(closes);
-          // The popup stays mounted, so the attribute of its closed state stays too.
+          // The close adds no attribute that every caller has: the list of Combobox has no
+          // `data-closed`, and a hover trigger has no `aria-expanded`. The case thus waits for the
+          // close that its handler applies.
           await waitFor(() => {
-            expect(getPopup()).toHaveAttribute('data-closed');
+            expect(handleCloseApplied).toHaveBeenCalledTimes(1);
           });
+          await flushMicrotasks();
           expect(getTrigger()).not.toHaveAttribute('data-popup-open');
           await wait(100);
           await flushMicrotasks();
