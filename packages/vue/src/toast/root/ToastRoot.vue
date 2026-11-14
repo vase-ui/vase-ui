@@ -4,12 +4,11 @@ import type { StateAttributesMapping } from '../../internals/getStateAttributesP
 import { transitionStatusMapping } from '../../internals/stateAttributesMapping';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
+import type { SwipeDirection } from '../../utils/useSwipeDismiss';
 import type { ToastObject as ToastObjectType } from '../useToastManager';
 import * as ToastRootDataAttributes from './ToastRootDataAttributes';
 
 export type ToastRootToastObject<Data extends object = any> = ToastObjectType<Data>;
-
-type SwipeDirection = 'up' | 'down' | 'left' | 'right';
 
 export interface ToastRootState {
   /**
@@ -57,21 +56,6 @@ export const toastRootStateAttributesMapping: StateAttributesMapping<ToastRootSt
     return value ? { [ToastRootDataAttributes.swipeDirection]: value } : null;
   },
 };
-
-function getDisplacement(direction: SwipeDirection, deltaX: number, deltaY: number) {
-  switch (direction) {
-    case 'up':
-      return -deltaY;
-    case 'down':
-      return deltaY;
-    case 'left':
-      return -deltaX;
-    case 'right':
-      return deltaX;
-    default:
-      return 0;
-  }
-}
 </script>
 
 <script setup lang="ts">
@@ -87,6 +71,7 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { getElementTransform } from '../../utils/getElementTransform';
+import { getDisplacement } from '../../utils/useSwipeDismiss';
 import { useToastProviderContext } from '../provider/ToastProviderContext';
 import { ToastRootContext } from './ToastRootContext';
 import * as ToastRootCssVars from './ToastRootCssVars';
