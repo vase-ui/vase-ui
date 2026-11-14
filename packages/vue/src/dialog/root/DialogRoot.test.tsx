@@ -1,10 +1,13 @@
-import { describe, expect, it, vi } from 'vitest';
+import type { CDPSession } from '@vitest/browser-playwright';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { KeepAlive, computed, defineComponent, onMounted, shallowRef } from 'vue';
 import {
   createRenderer,
   fireEvent,
   flushMicrotasks,
   hydrate,
+  popupConformanceTests,
   renderOnServer,
   screen,
   wait,
@@ -17,6 +20,7 @@ import {
   isPageLocked,
 } from '../../../test/fixtures/scrollDocument';
 import type { ScrollDocument } from '../../../test/fixtures/scrollDocument';
+import { platform } from '../../common/platform';
 import { REASONS } from '../../internals/reasons';
 import * as Dialog from '../index.parts';
 import { DialogStore } from '../store/DialogStore';
@@ -27,6 +31,145 @@ type Store = DialogStore<unknown>;
 
 describe('<Dialog.Root />', () => {
   const { render } = createRenderer();
+
+  popupConformanceTests({
+    createComponent: (props) => (
+      <Dialog.Root {...props.root}>
+        <Dialog.Trigger {...props.trigger}>Open dialog</Dialog.Trigger>
+        <Dialog.Portal {...props.portal}>
+          <Dialog.Popup {...props.popup}>Dialog</Dialog.Popup>
+        </Dialog.Portal>
+      </Dialog.Root>
+    ),
+    render,
+    triggerMouseAction: 'click',
+    expectedPopupRole: 'dialog',
+  });
+
+  it.skipIf(!platform.engine.blink)(
+    'ignores a native click whose pointerdown opened the dialog',
+    async () => {
+      const { cdp } = await import('vitest/browser');
+      const openChangeSpy = vi.fn();
+      const documentClicks: MouseEvent[] = [];
+
+      const App = defineComponent(() => {
+        const open = shallowRef(false);
+
+        return () => (
+          <>
+            <button type="button" onPointerdown={() => (open.value = true)}>
+              Open
+            </button>
+            <Dialog.Root
+              open={open.value}
+              onOpenChange={(nextOpen, eventDetails) => {
+                openChangeSpy(nextOpen, eventDetails.reason);
+                open.value = nextOpen;
+              }}
+            >
+              <Dialog.Portal>
+                <Dialog.Backdrop data-testid="backdrop" style={{ position: 'fixed', inset: 0 }} />
+                <Dialog.Popup data-testid="popup">Dialog</Dialog.Popup>
+              </Dialog.Portal>
+            </Dialog.Root>
+          </>
+        );
+      });
+
+      await render(<App />);
+
+      const openButton = screen.getByRole('button', { name: 'Open' });
+      const frame = window.frameElement as HTMLIFrameElement | null;
+      const frameRect = frame?.getBoundingClientRect();
+      const buttonRect = openButton.getBoundingClientRect();
+      const buttonCenter = {
+        x:
+          (frameRect?.left ?? 0) +
+          (frame?.clientLeft ?? 0) +
+          buttonRect.left +
+          buttonRect.width / 2,
+        y: (frameRect?.top ?? 0) + (frame?.clientTop ?? 0) + buttonRect.top + buttonRect.height / 2,
+      };
+      const session = cdp() as CDPSession;
+
+      function recordClick(event: MouseEvent) {
+        documentClicks.push(event);
+      }
+
+      document.addEventListener('click', recordClick, true);
+
+      try {
+        await session.send('Input.dispatchMouseEvent', {
+          type: 'mouseMoved',
+          ...buttonCenter,
+        });
+        await session.send('Input.dispatchMouseEvent', {
+          type: 'mousePressed',
+          ...buttonCenter,
+          button: 'left',
+          buttons: 1,
+          clickCount: 1,
+        });
+        await flushMicrotasks();
+
+        await waitFor(() => {
+          expect(screen.queryByTestId('popup')).not.toBe(null);
+        });
+
+        await session.send('Input.dispatchMouseEvent', {
+          type: 'mouseReleased',
+          ...buttonCenter,
+          button: 'left',
+          buttons: 0,
+          clickCount: 1,
+        });
+        await flushMicrotasks();
+
+        // The browser synthesizes the gesture's click asynchronously after
+        // the release; wait for it instead of sleeping a fixed amount.
+        await waitFor(() => {
+          expect(documentClicks.some((event) => event.isTrusted)).toBe(true);
+        });
+
+        const trustedClick = documentClicks.find((event) => event.isTrusted);
+        expect(trustedClick?.target).not.toBe(openButton);
+        // The click must land outside the popup subtree so it is evaluated as
+        // an outside press; a click inside the popup would be ignored for a
+        // different reason and stop covering the press-observed guard.
+        expect(screen.getByTestId('popup').contains(trustedClick?.target as Node)).toBe(false);
+        expect(screen.queryByTestId('popup')).not.toBe(null);
+        expect(openChangeSpy).not.toHaveBeenCalledWith(false, REASONS.outsidePress);
+
+        // The guard must only suppress the gesture that opened the dialog. A
+        // fresh press observed while open still dismisses — without this the
+        // suite would stay green if the press were never recorded for trusted
+        // input at all.
+        await session.send('Input.dispatchMouseEvent', {
+          type: 'mousePressed',
+          ...buttonCenter,
+          button: 'left',
+          buttons: 1,
+          clickCount: 1,
+        });
+        await session.send('Input.dispatchMouseEvent', {
+          type: 'mouseReleased',
+          ...buttonCenter,
+          button: 'left',
+          buttons: 0,
+          clickCount: 1,
+        });
+        await flushMicrotasks();
+
+        await waitFor(() => {
+          expect(screen.queryByTestId('popup')).toBe(null);
+        });
+        expect(openChangeSpy).toHaveBeenCalledWith(false, REASONS.outsidePress);
+      } finally {
+        document.removeEventListener('click', recordClick, true);
+      }
+    },
+  );
 
   it('reports nested drawer counts before passive effects', async () => {
     const childStore = new DialogStore(
@@ -96,6 +239,41 @@ describe('<Dialog.Root />', () => {
     expect(unmountedBeforeTask).toBe(true);
   });
 
+  it('keeps trigger ownership when another trigger mounts while open', async () => {
+    const Test = defineComponent(() => {
+      const showSecondTrigger = shallowRef(false);
+
+      return () => (
+        <Dialog.Root modal={false}>
+          <Dialog.Trigger id="trigger-1">Trigger 1</Dialog.Trigger>
+          {showSecondTrigger.value && <Dialog.Trigger id="trigger-2">Trigger 2</Dialog.Trigger>}
+          <Dialog.Portal>
+            <Dialog.Popup>
+              <button onClick={() => (showSecondTrigger.value = true)}>Mount trigger 2</button>
+            </Dialog.Popup>
+          </Dialog.Portal>
+        </Dialog.Root>
+      );
+    });
+
+    const { user } = await render(<Test />);
+    const trigger1 = screen.getByRole('button', { name: 'Trigger 1' });
+
+    await user.click(trigger1);
+
+    const popup = await screen.findByRole('dialog');
+    const trigger1Controls = trigger1.getAttribute('aria-controls');
+
+    expect(trigger1Controls).toBe(popup.getAttribute('id'));
+
+    await user.click(screen.getByRole('button', { name: 'Mount trigger 2' }));
+
+    const trigger2 = screen.getByRole('button', { name: 'Trigger 2' });
+    expect(trigger1).toHaveAttribute('aria-expanded', 'true');
+    expect(trigger1.getAttribute('aria-controls')).toBe(trigger1Controls);
+    expect(trigger2).toHaveAttribute('aria-expanded', 'false');
+    expect(trigger2).not.toHaveAttribute('aria-controls');
+  });
   describe('open state', () => {
     it('emits openChange and then update:open', async () => {
       const calls: string[] = [];
@@ -313,6 +491,43 @@ describe('<Dialog.Root />', () => {
   });
 
   describe('dismissal', () => {
+    // The modal marks make `Dialog.Backdrop` inert, so a real press on it reaches the internal
+    // backdrop below it. The marks leave the internal backdrop.
+    it.each([
+      { name: 'its backdrop', backdrop: true },
+      { name: 'its internal backdrop', backdrop: false },
+    ])('closes a modal dialog for a real press on $name', async ({ backdrop }) => {
+      onTestFinished(async () => {
+        await userEvent.pointer({ coords: { x: 0, y: 0 }, keys: '[/MouseLeft]' });
+      });
+      const handleOpenChange = vi.fn();
+      await render(
+        <Dialog.Root defaultOpen onOpenChange={handleOpenChange}>
+          <Dialog.Portal data-testid="portal">
+            {backdrop ? (
+              <Dialog.Backdrop data-testid="backdrop" style={{ position: 'fixed', inset: '0px' }} />
+            ) : null}
+            <Dialog.Popup style={{ position: 'fixed', top: '0px', left: '0px', width: '10px' }}>
+              Dialog
+            </Dialog.Popup>
+          </Dialog.Portal>
+        </Dialog.Root>,
+      );
+      const target = backdrop
+        ? screen.getByTestId('backdrop')
+        : screen.getByTestId('portal').querySelector<HTMLElement>('[role="presentation"]')!;
+      await waitFor(() => {
+        expect(target.closest('[inert]') !== null).toBe(backdrop);
+      });
+
+      await userEvent.click(target, { force: true });
+
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).toBe(null);
+      });
+      expect(handleOpenChange.mock.lastCall?.[1].reason).toBe(REASONS.outsidePress);
+    });
+
     it('closes on the Escape key', async () => {
       const handleOpenChange = vi.fn();
       await render(() => (
