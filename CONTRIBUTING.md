@@ -277,6 +277,7 @@ Some upstream parts put nodes of their own in the element. Examples are the rang
 - Each such part has one internal SFC, `<Part>Children.vue`.
 - That SFC reads the values that its nodes need with `inject`. `ProgressRootChildren.vue` needs none, so it calls no `inject`. A part that is not a root provides these values itself: `Field.Error` provides its message in `FieldErrorContext`.
 - It renders the nodes around its default slot, in upstream's order.
+- A part that shows its default slot only in some states also has a `<Part>Children.vue`, such as `ComboboxEmptyChildren.vue`. That SFC renders the default slot only in those states. The `#render` slot then shows the content in the same states.
 - The `#render` slot of the part gets a third slot prop, `children`, which is that component.
 - A consumer writes `<a v-bind="props"><component :is="children">…</component></a>`.
 - A development build shows a warning when the `#render` slot does not mount `children`. The part makes this check together with the check for the element of the slot.
@@ -1932,6 +1933,7 @@ A family that Base UI documents in `docs/src/app/(docs)/react/utils/`, such as `
 - The site has a base path, and VitePress does not add it to a link in a demo. Start the path of a link to a page of this site with `import.meta.env.BASE_URL`. Do not use `withBase` of VitePress, because the test of the demos mounts a demo with no VitePress.
 - `docs/tsconfig.json` sets `dataAttributes` to `data-*`. With `strictTemplates`, vue-tsc then accepts a `data-*` attribute on a part, such as `data-color` in the hero demo of Alert Dialog.
 - A Base UI demo can import a file of `demos/<demo>` that is outside `css-modules`, such as `custom-sanitize/useInvalidFeedback.ts` of OTP Field. Port that file to the same path in `docs/demos/<family>`.
+- A Base UI demo can import a library from npm, such as `match-sorter` or `@tanstack/react-virtual`. The Vue demo imports the same library, or its Vue counterpart, such as `@tanstack/vue-virtual`. Add it to the `devDependencies` of `docs/package.json` with an exact version: `pnpm --filter @vase-ui/docs add -D <name>@<version>`. Then commit `pnpm-lock.yaml`. The demo test of the package resolves the library from `docs/node_modules`.
 - The style sheet of a demo is the Base UI file, byte for byte. Do not edit it. Prettier does not format it, because `.prettierignore` names `docs/demos/**/*.module.css`. The same CSS then proves that the data attributes and the CSS variables are those of Base UI. A demo has no `<style>` block, and ESLint refuses one.
 - `docs/demos/<family>/upstream.json` records the Base UI commit and the SHA-256 of each Base UI demo file at that commit. `pnpm docs:demos --upstream <path> <family>` writes the record and the style sheets. Do not edit the record.
 - A demo can import another entry point of Base UI, such as `@base-ui/react/toggle`. The record then has the key `entryPoints`. It has one row for each such demo: the folder of the demo and the sorted names of the entry points, as `"hero": ["slider"]`. A demo with no such import has no row.

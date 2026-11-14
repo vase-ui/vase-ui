@@ -1,10 +1,10 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { renderToString } from 'vue/server-renderer';
+import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import { Input } from '@vase-ui/vue/input';
 import { getFilter } from '../../internals/filter';
-import * as Autocomplete from '../index.parts';
 import AutocompleteRootHydration from './AutocompleteRootHydration.test.vue';
 
 type ItemSlotProps = { item: string };

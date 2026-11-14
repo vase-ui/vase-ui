@@ -1,6 +1,6 @@
+import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { expectType } from '#test-utils';
 import * as Combobox from '../../combobox/index.parts';
-import * as Autocomplete from '../index.parts';
 
 const objectItems = [
   { value: 'a', label: 'apple' },

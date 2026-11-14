@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import * as Autocomplete from '../index.parts';
+import { Autocomplete } from '@vase-ui/vue/autocomplete';
 
 // With `noInput`, the root has no input outside the popup, as when the input is in a closed popup.
 defineProps<{

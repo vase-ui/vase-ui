@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
-import * as Autocomplete from '../index.parts';
 
 async function type(text: string) {
   await fireEvent.input(screen.getByRole('combobox'), {
