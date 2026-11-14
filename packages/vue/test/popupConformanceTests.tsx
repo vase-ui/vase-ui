@@ -504,7 +504,7 @@ export function popupConformanceTests(config: PopupTestConfig) {
             await user.keyboard('[Escape]');
           }
           expect(handleClose).toHaveBeenCalledTimes(closes);
-          // No one attribute shows the close for every caller. The list of Combobox has no
+          // The close adds no attribute that every caller has: the list of Combobox has no
           // `data-closed`, and a hover trigger has no `aria-expanded`. The case thus waits for the
           // close that its handler applies.
           await waitFor(() => {
