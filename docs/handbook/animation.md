@@ -98,7 +98,7 @@ When a popup closes, `open` becomes `false` at once. The popup stays in the DOM 
 
 When the animation ends, Vase UI removes the popup from the DOM, or hides it if the portal has `keepMounted`. The root emits `openChangeComplete` with `false`.
 
-Vase UI ends the exit when the animation that it finds ends. If it finds none, it ends the exit at once. To end the exit yourself, see [Manual unmounting](#manual-unmounting). The first two examples below animate `opacity`, so Vase UI ends the exit on its own.
+Vase UI ends the exit when the animation that it finds ends. If it finds none, it ends the exit in the next frame. To end the exit yourself, see [Manual unmounting](#manual-unmounting). The first two examples below animate `opacity`, so Vase UI ends the exit on its own.
 
 ### Animate a popup with motion-v
 
@@ -142,7 +142,7 @@ A popup stays in the DOM while it is closed when its portal has `keepMounted`. T
 
 ### Manual unmounting
 
-Use this when Vase UI cannot find the exit animation, or when the popup must stay until something other than an animation ends. `motion-v` runs some values in JavaScript, such as `height`. Vase UI cannot find such an animation, so it removes the popup before the exit shows.
+Use this when Vase UI cannot find the exit animation, or when the popup must stay until something other than an animation ends. `motion-v` runs some values in JavaScript, such as `height`. Vase UI cannot find such an animation, so it removes the popup in the next frame, before the exit shows.
 
 1. Call `details.preventUnmountOnClose()` in the `openChange` listener when the popup closes.
 2. When the exit ends, call `unmount()` on the root. Get the root with a template ref.
