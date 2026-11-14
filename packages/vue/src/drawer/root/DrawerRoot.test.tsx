@@ -17,7 +17,6 @@ import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import { platform } from '../../common/platform';
 import * as DrawerCloseDataAttributes from '../../dialog/close/DialogCloseDataAttributes';
 import * as Dialog from '../../dialog/index.parts';
-import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
 import type { DialogStore } from '../../dialog/store/DialogStore';
 import * as DrawerTriggerDataAttributes from '../../dialog/trigger/DialogTriggerDataAttributes';
 import { REASONS } from '../../internals/reasons';
@@ -625,16 +624,15 @@ const MissingRootContextConsumer = defineComponent({
   },
 });
 
-// Gives the test the store and the context that each part of the family reads.
-const RootProbe = defineComponent({
+const RootContextProbe = defineComponent({
   props: {
-    onRoot: {
-      type: Function as PropType<(store: Store, context: DrawerRootContext) => void>,
+    onContext: {
+      type: Function as PropType<(context: DrawerRootContext) => void>,
       required: true,
     },
   },
   setup(props) {
-    props.onRoot(useDialogRootContext(), useDrawerRootContext());
+    props.onContext(useDrawerRootContext());
     return () => null;
   },
 });
@@ -2118,7 +2116,7 @@ describe('<Drawer.Root />', () => {
             },
           }}
         >
-          <RootProbe onRoot={(_store, value) => (context = value)} />
+          <RootContextProbe onContext={(value) => (context = value)} />
         </Drawer.Root>
       ));
 
@@ -2142,7 +2140,7 @@ describe('<Drawer.Root />', () => {
       let context!: DrawerRootContext;
       await render(() => (
         <Drawer.Root snapPoints={snapPoints.value}>
-          <RootProbe onRoot={(_store, value) => (context = value)} />
+          <RootContextProbe onContext={(value) => (context = value)} />
         </Drawer.Root>
       ));
 
@@ -2171,10 +2169,10 @@ describe('<Drawer.Root />', () => {
             snapToSequentialPoints={sequential.value}
             snapPoints={snapPoints.value}
           >
-            <RootProbe onRoot={(_store, value) => (given = value)} />
+            <RootContextProbe onContext={(value) => (given = value)} />
           </Drawer.Root>
           <Drawer.Root>
-            <RootProbe onRoot={(_store, value) => (bare = value)} />
+            <RootContextProbe onContext={(value) => (bare = value)} />
           </Drawer.Root>
         </>
       ));
@@ -2201,9 +2199,9 @@ describe('<Drawer.Root />', () => {
       let child!: DrawerRootContext;
       await render(() => (
         <Drawer.Root>
-          <RootProbe onRoot={(_store, value) => (parent = value)} />
+          <RootContextProbe onContext={(value) => (parent = value)} />
           <Drawer.Root>
-            <RootProbe onRoot={(_store, value) => (child = value)} />
+            <RootContextProbe onContext={(value) => (child = value)} />
           </Drawer.Root>
         </Drawer.Root>
       ));
@@ -2242,11 +2240,11 @@ describe('<Drawer.Root />', () => {
       let bottom!: DrawerRootContext;
       await render(() => (
         <Drawer.Root>
-          <RootProbe onRoot={(_store, value) => (top = value)} />
+          <RootContextProbe onContext={(value) => (top = value)} />
           <Drawer.Root>
-            <RootProbe onRoot={(_store, value) => (middle = value)} />
+            <RootContextProbe onContext={(value) => (middle = value)} />
             <Drawer.Root>
-              <RootProbe onRoot={(_store, value) => (bottom = value)} />
+              <RootContextProbe onContext={(value) => (bottom = value)} />
             </Drawer.Root>
           </Drawer.Root>
         </Drawer.Root>
