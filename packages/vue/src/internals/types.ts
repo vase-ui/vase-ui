@@ -46,8 +46,11 @@ export type WithVaseUIEvent<T> = {
 /**
  * vue-tsc types a generic SFC as a function of its props and its context. `Component` refuses that
  * function when the SFC has a required slot. At run time the SFC is a component object.
+ * `@vue-ignore` hides the function type from the SFC compiler. Without it, the compiler gives `as`
+ * the run-time type `[String, Function]`. The build of the package keeps that type but not
+ * `skipCheck`, so Vue refuses a component object in the development build of a consumer.
  */
-export type GenericComponent = (props: any, ...args: any[]) => unknown;
+export type GenericComponent = /* @vue-ignore */ (props: any, ...args: any[]) => unknown;
 
 /**
  * Props shared by all Vase UI parts that render an element.

@@ -437,6 +437,7 @@ Rules:
 - A template and TSX then accept `aria-label` and `ariaLabel`, each as a `string`.
 - Add each such prop to the type tests `packages/vue/test/AriaAttributesInTemplate.spec.vue` and `packages/vue/test/ariaAttributes.spec.tsx`.
 - vue-tsc types a generic SFC as a function of its props and its context. `Component` refuses that function when the SFC has a required slot. `as` also accepts `GenericComponent` of `src/internals/types.ts`, so `<Toolbar.Button :as="Select.Trigger">` passes the type check.
+- `GenericComponent` has `/* @vue-ignore */`, so the SFC compiler writes no run-time type for `as`. Without it, the type is `[String, Function]`. The build of the package keeps the type but not `skipCheck`, so Vue refuses a component object in the development build of a consumer. `pnpm check:package` gives `Select.Trigger` to `as` of `Toolbar.Button` in a development build, and fails on a warning.
 - `Toggle` is not a generic SFC, because no other prop, event or slot of `Toggle` follows `Value`. It keeps the type parameter on its exported props interface: `ToggleProps<Value extends string = string>`, with `defineProps<ToggleProps>()`. `ToggleGroup` is a generic SFC, because the type of its `valueChange` event follows `Value`.
 - A popup trigger is a generic SFC, because its `payload` must have the type of its `handle`.
 - `Select.Trigger` has no handle and no payload. It is a generic SFC for the type of the value in its state.
