@@ -123,8 +123,9 @@ export function useDrawerSnapPoints(): UseDrawerSnapPointsReturnValue {
     }
   }
 
-  // `KeepAlive` takes the viewport of a deactivated part out of the document. The viewport then has
-  // no layout, so the observer stops until the part is active again.
+  // `KeepAlive` can take the viewport out of the document with the part, and the viewport then has
+  // no layout. The observer thus stops while the part is deactivated, and the part measures again at
+  // the activation.
   let deactivated = false;
   let disconnect = NOOP;
 
