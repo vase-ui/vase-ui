@@ -17,69 +17,11 @@ import type { PopupInteractionStore } from '../types';
 // The check is a function, so that a case can set the flags of `platform`.
 const isMacSafari = () => platform.os.mac && platform.engine.webkit;
 
-interface ModalityTracker {
-  /** Whether the last input of the window was a key and not a pointer press. */
-  keyboard: boolean;
-  users: number;
-  stop: () => void;
-}
-
-// One tracker for each window. The modality is a state of the window, and a trigger can get enabled
-// after the pointer press that opened its popup. The map is in the module, so each copy of the
-// library has its own trackers.
-const modalityTrackers = new WeakMap<Window, ModalityTracker>();
-
-/**
- * Takes one use of the modality tracker of `win`. It returns the tracker and the function that gives
- * the use back. The last use removes the listeners of the tracker.
- */
-function takeModalityTracker(win: Window): [ModalityTracker, () => void] {
-  let tracker = modalityTrackers.get(win);
-
-  if (!tracker) {
-    const created: ModalityTracker = { keyboard: true, users: 0, stop: () => {} };
-    created.stop = mergeCleanups(
-      addEventListener(
-        win,
-        'keydown',
-        () => {
-          created.keyboard = true;
-        },
-        true,
-      ),
-      addEventListener(
-        win,
-        'pointerdown',
-        () => {
-          created.keyboard = false;
-        },
-        true,
-      ),
-    );
-    modalityTrackers.set(win, created);
-    tracker = created;
-  }
-
-  tracker.users += 1;
-  const taken = tracker;
-
-  return [
-    taken,
-    () => {
-      taken.users -= 1;
-      if (taken.users === 0) {
-        taken.stop();
-        modalityTrackers.delete(win);
-      }
-    },
-  ];
-}
-
 export interface UseFocusProps {
   /**
    * Whether the composable is enabled, including its event handlers and its listener for the blur
-   * of the window. In Safari on a Mac, the tracker of the input modality also runs while it is not
-   * enabled.
+   * of the window. In Safari on a Mac, the listeners that track the input modality also run while
+   * it is not enabled.
    * @default true
    */
   enabled?: MaybeRefOrGetter<boolean | undefined>;
@@ -107,7 +49,7 @@ export function useFocus(
   let blockFocus = false;
   // Track which reference should be blocked from re-opening after Escape/press dismissal.
   let blockedReference: Element | null = null;
-  let modality: ModalityTracker | undefined;
+  let keyboardModality = true;
   // The element that the last `focusin` event reached: the trigger of this composable. `KeepAlive`
   // closes the popup only when this element is the anchor of the store.
   let lastFocusedTrigger: Element | null = null;
@@ -130,22 +72,34 @@ export function useFocus(
     }
   });
 
+  function onWindowKeydown() {
+    keyboardModality = true;
+  }
+
+  function onWindowPointerdown() {
+    keyboardModality = false;
+  }
+
   let stopWindowListeners: (() => void) | undefined;
-  function startWindowListeners(): (() => void) | undefined {
+  function listenToWindow() {
+    stopWindowListeners?.();
+    stopWindowListeners = undefined;
     if (deactivated) {
-      return undefined;
+      return;
     }
 
     const win = ownerWindow(currentStore().select('anchorElement'));
     // Base UI tracks the modality only while the composable is enabled. A trigger of a menubar is
-    // enabled only while a menu of the menubar is open, so it misses the press that opened the menu.
-    let giveModalityBack: (() => void) | undefined;
-    if (isMacSafari()) {
-      [modality, giveModalityBack] = takeModalityTracker(win);
-    }
-
+    // enabled only while a menu of the menubar is open, so it would miss the press that opened the
+    // menu.
+    const trackModality = isMacSafari();
+    const stopTrackingModality = mergeCleanups(
+      trackModality && addEventListener(win, 'keydown', onWindowKeydown, true),
+      trackModality && addEventListener(win, 'pointerdown', onWindowPointerdown, true),
+    );
     if (!enabled()) {
-      return giveModalityBack;
+      stopWindowListeners = stopTrackingModality;
+      return;
     }
 
     // If the reference was focused and the user left the tab/window, and the
@@ -164,16 +118,10 @@ export function useFocus(
       }
     }
 
-    return mergeCleanups(addEventListener(win, 'blur', onWindowBlur), giveModalityBack);
-  }
-
-  function listenToWindow() {
-    // The new use of the modality tracker comes before the old use goes. The count of its uses then
-    // does not go through zero, and the tracker keeps the modality.
-    const stopPrevious = stopWindowListeners;
-    modality = undefined;
-    stopWindowListeners = startWindowListeners();
-    stopPrevious?.();
+    stopWindowListeners = mergeCleanups(
+      addEventListener(win, 'blur', onWindowBlur),
+      stopTrackingModality,
+    );
   }
   onMounted(listenToWindow);
   watch([enabled, currentStore], listenToWindow, { flush: 'post' });
@@ -264,7 +212,7 @@ export function useFocus(
         // Safari fails to match `:focus-visible` if focus was initially
         // outside the document.
         if (isMacSafari() && !event.relatedTarget) {
-          if (!(modality?.keyboard ?? true) && !isTypeableElement(target)) {
+          if (!keyboardModality && !isTypeableElement(target)) {
             return;
           }
         } else if (!matchesFocusVisible(target)) {
