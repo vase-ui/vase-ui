@@ -76,8 +76,8 @@ export interface PopupInteractionContext {
   positioning?: PopupPositioningContext | undefined;
   /**
    * Whether the current event went through the popup element, or through the element of a popup
-   * below it in the component tree, such as a popup that `Teleport` moved. A document listener that
-   * sees the event as outside then ignores it. `useDismiss` and the focus manager set it, and it
+   * below it in the component tree, such as a popup that `Teleport` moved. A listener that sees the
+   * event as outside then ignores it. `useDismiss` and the focus manager set it, and it
    * is cleared in the next task.
    */
   insideComponentTree?: boolean | undefined;
@@ -181,6 +181,13 @@ export type DismissElementProps = Required<
 export type ListNavigationElementProps = Required<
   Pick<ElementProps, 'reference' | 'floating' | 'item' | 'trigger'>
 >;
+
+/**
+ * The props that `useTypeahead` returns. `reference` and `floating` are one object of listeners
+ * for the life of the composable. Each handler does nothing while the composable is not enabled,
+ * so the object always has the two members.
+ */
+export type TypeaheadElementProps = Required<Pick<ElementProps, 'reference' | 'floating'>>;
 
 /**
  * The props that `useClick` returns. Each handler does nothing while the composable is not enabled,
