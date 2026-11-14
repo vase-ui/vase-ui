@@ -1304,11 +1304,13 @@ describe('<Menu.Positioner />', () => {
 
   positionerConformanceTests({
     render,
+    viewport: true,
     createComponent: ({
       root,
       trigger,
       positioner: { render: renderPositioner, ...positioner },
       popup,
+      viewport,
     }) => (
       <Menu.Root {...root}>
         <Trigger {...trigger}>Trigger</Trigger>
@@ -1317,7 +1319,9 @@ describe('<Menu.Positioner />', () => {
             {...positioner}
             v-slots={renderPositioner ? { render: renderPositioner } : undefined}
           >
-            <Menu.Popup {...popup}>Popup</Menu.Popup>
+            <Menu.Popup {...popup}>
+              {viewport ? <Menu.Viewport>Popup</Menu.Viewport> : 'Popup'}
+            </Menu.Popup>
           </Menu.Positioner>
         </Menu.Portal>
       </Menu.Root>

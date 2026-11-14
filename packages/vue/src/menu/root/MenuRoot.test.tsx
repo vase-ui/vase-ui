@@ -5,6 +5,7 @@ import type { ComponentPublicInstance, PropType } from 'vue';
 import { Menubar } from '@vase-ui/vue/menubar';
 import {
   createRenderer,
+  enterWithMouse,
   fireEvent,
   flushMicrotasks,
   hydrate,
@@ -26,6 +27,7 @@ import { isScrollLocked } from '../../../test/fixtures/scrollDocument';
 import { reset as resetWarnings } from '../../common/warn';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
+import type { HTMLProps } from '../../internals/types';
 import { createAttribute } from '../../utils/popups/createAttribute';
 import { useTriggerRegistration } from '../../utils/popups/popupStoreUtils';
 import { provideFloatingNode, useFloatingTree } from '../../utils/popups/tree/FloatingTree';
@@ -193,8 +195,680 @@ function useFakeTimers() {
   });
 }
 
+type PartProps = Record<string, unknown>;
+
+const testMenuProps = {
+  rootProps: { type: Object as PropType<PartProps>, default: undefined },
+  portalProps: { type: Object as PropType<PartProps>, default: undefined },
+  // `children` is a function that returns the content of the popup.
+  popupProps: { type: Object as PropType<PartProps>, default: undefined },
+  triggerProps: { type: Object as PropType<PartProps>, default: undefined },
+  submenuProps: { type: Object as PropType<PartProps>, default: undefined },
+  submenuTriggerProps: { type: Object as PropType<PartProps>, default: undefined },
+};
+
+const TestMenuContents = defineComponent({
+  props: testMenuProps,
+  setup(props, { slots }) {
+    return () => {
+      const { children: popupChildren, ...restPopupProps } = props.popupProps ?? {};
+      return (
+        <Menu.Root {...props.rootProps}>
+          {slots.default?.()}
+          <Menu.Portal {...props.portalProps}>
+            <Menu.Positioner data-testid="menu-positioner">
+              <Menu.Popup data-testid="menu" {...restPopupProps}>
+                {typeof popupChildren === 'function' ? (
+                  popupChildren()
+                ) : (
+                  <>
+                    <Menu.Item data-testid="item-1">Item 1</Menu.Item>
+                    <Menu.Item data-testid="item-2">Item 2</Menu.Item>
+                    <Menu.Item data-testid="item-3" disabled>
+                      Item 3
+                    </Menu.Item>
+                    <Menu.SubmenuRoot {...props.submenuProps}>
+                      <Menu.SubmenuTrigger
+                        data-testid="submenu-trigger"
+                        {...props.submenuTriggerProps}
+                      >
+                        Item 4
+                      </Menu.SubmenuTrigger>
+                      <Menu.Portal>
+                        <Menu.Positioner>
+                          <Menu.Popup data-testid="submenu">
+                            <Menu.Item data-testid="item-4_1">Item 4.1</Menu.Item>
+                            <Menu.Item data-testid="item-4_2">Item 4.2</Menu.Item>
+                            <Menu.SubmenuRoot {...props.submenuProps}>
+                              <Menu.SubmenuTrigger
+                                data-testid="nested-submenu-trigger"
+                                {...props.submenuTriggerProps}
+                              >
+                                Item 4.3
+                              </Menu.SubmenuTrigger>
+                              <Menu.Portal>
+                                <Menu.Positioner>
+                                  <Menu.Popup data-testid="nested-submenu">
+                                    <Menu.Item data-testid="item-4_3_1">Item 4.3.1</Menu.Item>
+                                    <Menu.Item data-testid="item-4_3_2">Item 4.3.2</Menu.Item>
+                                  </Menu.Popup>
+                                </Menu.Positioner>
+                              </Menu.Portal>
+                            </Menu.SubmenuRoot>
+                          </Menu.Popup>
+                        </Menu.Positioner>
+                      </Menu.Portal>
+                    </Menu.SubmenuRoot>
+                    <Menu.Item data-testid="item-5">Item 5</Menu.Item>
+                  </>
+                )}
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      );
+    };
+  },
+});
+
+const ContainedTriggerMenu = defineComponent({
+  props: testMenuProps,
+  setup(props) {
+    return () => (
+      <TestMenuContents
+        rootProps={props.rootProps}
+        portalProps={props.portalProps}
+        popupProps={props.popupProps}
+        submenuProps={props.submenuProps}
+        submenuTriggerProps={props.submenuTriggerProps}
+      >
+        <Menu.Trigger {...props.triggerProps}>Toggle</Menu.Trigger>
+      </TestMenuContents>
+    );
+  },
+});
+
+const DetachedTriggerMenu = defineComponent({
+  props: testMenuProps,
+  setup(props) {
+    const menuHandle = new Menu.Handle();
+
+    return () => (
+      <>
+        <TestMenuContents
+          rootProps={{ ...props.rootProps, handle: menuHandle }}
+          portalProps={props.portalProps}
+          popupProps={props.popupProps}
+          submenuProps={props.submenuProps}
+          submenuTriggerProps={props.submenuTriggerProps}
+        />
+        <Menu.Trigger handle={menuHandle} {...props.triggerProps}>
+          Toggle
+        </Menu.Trigger>
+      </>
+    );
+  },
+});
+
 describe('<Menu.Root />', () => {
   const { render } = createRenderer();
+
+  describe('closing before the popup attaches', () => {
+    it('unmounts the popup when a layout effect closes it on mount', async () => {
+      const onOpenChangeComplete = vi.fn();
+
+      const App = defineComponent({
+        setup() {
+          const open = shallowRef(true);
+          onMounted(() => {
+            open.value = false;
+          });
+          return () => (
+            <Menu.Root
+              open={open.value}
+              onOpenChange={(nextOpen: boolean) => {
+                open.value = nextOpen;
+              }}
+              onOpenChangeComplete={onOpenChangeComplete}
+            >
+              <Menu.Trigger data-testid="trigger">Open</Menu.Trigger>
+              <Menu.Portal>
+                <Menu.Positioner>
+                  <Menu.Popup>
+                    <Menu.Item>Apple</Menu.Item>
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.Root>
+          );
+        },
+      });
+
+      await render(<App />);
+
+      await waitFor(() => {
+        expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
+      });
+      expect(screen.queryByRole('menu', { hidden: true })).toBe(null);
+    });
+  });
+
+  it('keeps focus in the menu when a Shift+Tab close is canceled', async () => {
+    const { user } = await render(
+      <Menu.Root
+        defaultOpen
+        onOpenChange={(open: boolean, details: Menu.Root.ChangeEventDetails) => {
+          if (!open) {
+            details.cancel();
+          }
+        }}
+      >
+        <Menu.Trigger>Toggle</Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup>
+              <Menu.Item>Item</Menu.Item>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>,
+    );
+
+    const menu = screen.getByRole('menu');
+    await waitFor(() => {
+      expect(menu).toHaveFocus();
+    });
+
+    await user.tab({ shift: true });
+
+    expect(menu).toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Toggle' })).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  describe.skipIf(isJSDOM)('hover opening', () => {
+    it('stays open while the pointer crosses the gap from the trigger to the popup', async () => {
+      await render(
+        <Menu.Root modal={false}>
+          <Menu.Trigger data-testid="trigger" openOnHover delay={0}>
+            Open
+          </Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner sideOffset={24}>
+              <Menu.Popup data-testid="popup">
+                <Menu.Item data-testid="item">One</Menu.Item>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+      await enterWithMouse(trigger);
+      await waitFor(() => {
+        expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      });
+      await waitSingleFrame();
+      await waitSingleFrame();
+
+      const triggerRect = trigger.getBoundingClientRect();
+      const item = screen.getByTestId('item');
+      const itemRect = item.getBoundingClientRect();
+      expect(itemRect.top - triggerRect.bottom).toBeGreaterThanOrEqual(20);
+      const x = Math.min(triggerRect.right, itemRect.right) - 5;
+
+      await fireEvent.mouseLeave(trigger, {
+        clientX: x,
+        clientY: triggerRect.bottom + 1,
+        relatedTarget: document.body,
+      });
+      for (let y = triggerRect.bottom + 4; y < itemRect.top; y += 4) {
+        await fireEvent.mouseMove(document.body, { clientX: x, clientY: y });
+      }
+      await enterWithMouse(item, { clientX: x, clientY: itemRect.top + 2 });
+      await waitSingleFrame();
+      await waitSingleFrame();
+
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(screen.getByTestId('popup')).toBeVisible();
+    });
+  });
+
+  describe('opening', () => {
+    const TestMenu = defineComponent({
+      setup(_, { slots }) {
+        return () => (
+          <Menu.Root>
+            <Menu.Trigger data-testid="trigger">Open</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  {slots.default?.() ?? (
+                    <>
+                      <Menu.Item>One</Menu.Item>
+                      <Menu.Item>Two</Menu.Item>
+                    </>
+                  )}
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        );
+      },
+    });
+
+    it('highlights the first item when the items render a microtask after a keyboard opening', async () => {
+      const RenderNextMicrotask = defineComponent({
+        setup(_, { slots }) {
+          const ready = shallowRef(false);
+          onMounted(() => {
+            queueMicrotask(() => {
+              ready.value = true;
+            });
+          });
+          return () => (ready.value ? slots.default?.() : null);
+        },
+      });
+
+      const { user } = await render(
+        <TestMenu>
+          <RenderNextMicrotask>
+            <Menu.Item>One</Menu.Item>
+            <Menu.Item>Two</Menu.Item>
+          </RenderNextMicrotask>
+        </TestMenu>,
+      );
+
+      screen.getByTestId('trigger').focus();
+      await flushMicrotasks();
+      await user.keyboard('{ArrowDown}');
+
+      await waitFor(() => {
+        expect(screen.getByRole('menuitem', { name: 'One' })).toHaveFocus();
+      });
+    });
+  });
+
+  describe.for([
+    { name: 'contained triggers', Component: ContainedTriggerMenu },
+    { name: 'detached triggers', Component: DetachedTriggerMenu },
+  ])('when using $name', ({ Component: TestMenu }) => {
+    it('sets aria-orientation on a horizontal popup', async () => {
+      await render(<TestMenu rootProps={{ defaultOpen: true, orientation: 'horizontal' }} />);
+
+      expect(screen.getByRole('menu')).toHaveAttribute('aria-orientation', 'horizontal');
+    });
+
+    it('does not render aria-orientation on a vertical popup', async () => {
+      await render(<TestMenu rootProps={{ defaultOpen: true }} />);
+
+      // `menu` is implicitly vertical.
+      expect(screen.getByRole('menu')).not.toHaveAttribute('aria-orientation');
+    });
+
+    describe('keyboard navigation', () => {
+      describe('text navigation', () => {
+        it.skipIf(isJSDOM)('changes the highlighted item', async () => {
+          const itemElements = [
+            <Menu.Item key="aa">Aa</Menu.Item>,
+            <Menu.Item key="ba">Ba</Menu.Item>,
+            <Menu.Item key="bb">Bb</Menu.Item>,
+            <Menu.Item key="ca">Ca</Menu.Item>,
+            <Menu.Item key="cb">Cb</Menu.Item>,
+            <Menu.Item key="cd">Cd</Menu.Item>,
+          ];
+
+          const { user } = await render(
+            <TestMenu rootProps={{ open: true }} popupProps={{ children: () => itemElements }} />,
+          );
+
+          const items = screen.getAllByRole('menuitem');
+
+          items[0].focus();
+          await flushMicrotasks();
+
+          await user.keyboard('c');
+          await waitFor(() => {
+            expect(screen.getByText('Ca')).toHaveFocus();
+          });
+
+          expect(screen.getByText('Ca')).toHaveAttribute('tabindex', '0');
+
+          await user.keyboard('d');
+          await waitFor(() => {
+            expect(screen.getByText('Cd')).toHaveFocus();
+          });
+
+          expect(screen.getByText('Cd')).toHaveAttribute('tabindex', '0');
+        });
+
+        it.skipIf(isJSDOM)('skips items hidden with CSS in text navigation', async () => {
+          const itemElements = [
+            <Menu.Item key="hidden" data-testid="item-hidden" style={{ display: 'none' }}>
+              Apple
+            </Menu.Item>,
+            <Menu.Item key="apricot" data-testid="item-apricot">
+              Apricot
+            </Menu.Item>,
+            <Menu.Item key="banana" data-testid="item-banana">
+              Banana
+            </Menu.Item>,
+          ];
+
+          const { user } = await render(
+            <TestMenu rootProps={{ open: true }} popupProps={{ children: () => itemElements }} />,
+          );
+
+          const hiddenItem = screen.getByTestId('item-hidden');
+          const apricotItem = screen.getByTestId('item-apricot');
+          const bananaItem = screen.getByTestId('item-banana');
+
+          bananaItem.focus();
+          await flushMicrotasks();
+
+          await user.keyboard('a');
+          await waitFor(() => {
+            expect(apricotItem).toHaveFocus();
+          });
+
+          expect(hiddenItem).toHaveAttribute('tabindex', '-1');
+        });
+
+        it.skipIf(isJSDOM)('skips natively disabled items in text navigation', async () => {
+          const itemElements = [
+            <Menu.Item key="apple">Apple</Menu.Item>,
+            <Menu.Item
+              key="banana"
+              data-testid="item-banana"
+              nativeButton
+              v-slots={{
+                render: ({ props }: { props: HTMLProps }) => (
+                  <button {...props} type="button" disabled>
+                    Banana
+                  </button>
+                ),
+              }}
+            />,
+            <Menu.Item key="blueberry" data-testid="item-blueberry">
+              Blueberry
+            </Menu.Item>,
+          ];
+
+          const { user } = await render(
+            <TestMenu rootProps={{ open: true }} popupProps={{ children: () => itemElements }} />,
+          );
+
+          const appleItem = screen.getByText('Apple');
+          const bananaItem = screen.getByTestId('item-banana');
+          const blueberryItem = screen.getByTestId('item-blueberry');
+
+          appleItem.focus();
+          await flushMicrotasks();
+
+          await user.keyboard('b');
+          await waitFor(() => {
+            expect(blueberryItem).toHaveFocus();
+          });
+
+          expect(bananaItem).toHaveAttribute('tabindex', '-1');
+          expect(bananaItem).not.toHaveAttribute('data-highlighted');
+        });
+
+        it.skipIf(isJSDOM)('skips the non-stringifiable items', async () => {
+          const itemElements = [
+            <Menu.Item key="aa">Aa</Menu.Item>,
+            <Menu.Item key="ba">Ba</Menu.Item>,
+            <Menu.Item key="empty" />,
+            <Menu.Item key="nested">
+              <div>Nested Content</div>
+            </Menu.Item>,
+            <Menu.Item key="undefined">{undefined}</Menu.Item>,
+            <Menu.Item key="null">{null}</Menu.Item>,
+            <Menu.Item key="bc">Bc</Menu.Item>,
+          ];
+
+          const { user } = await render(
+            <TestMenu rootProps={{ open: true }} popupProps={{ children: () => itemElements }} />,
+          );
+
+          const items = screen.getAllByRole('menuitem');
+
+          items[0].focus();
+          await flushMicrotasks();
+
+          await user.keyboard('b');
+          await waitFor(() => {
+            expect(screen.getByText('Ba')).toHaveFocus();
+          });
+          expect(screen.getByText('Ba')).toHaveAttribute('tabindex', '0');
+
+          await user.keyboard('c');
+          await waitFor(() => {
+            expect(screen.getByText('Bc')).toHaveFocus();
+          });
+          expect(screen.getByText('Bc')).toHaveAttribute('tabindex', '0');
+        });
+
+        it.skipIf(isJSDOM)('navigate to options with diacritic characters', async () => {
+          const itemElements = [
+            <Menu.Item key="aa">Aa</Menu.Item>,
+            <Menu.Item key="ba">Ba</Menu.Item>,
+            <Menu.Item key="bb">Bb</Menu.Item>,
+            <Menu.Item key="bą">Bą</Menu.Item>,
+          ];
+
+          const { user } = await render(
+            <TestMenu rootProps={{ open: true }} popupProps={{ children: () => itemElements }} />,
+          );
+
+          const items = screen.getAllByRole('menuitem');
+
+          items[0].focus();
+          await flushMicrotasks();
+
+          await user.keyboard('b');
+          await waitFor(() => {
+            expect(screen.getByText('Ba')).toHaveFocus();
+          });
+          expect(screen.getByText('Ba')).toHaveAttribute('tabindex', '0');
+
+          await user.keyboard('ą');
+          await waitFor(() => {
+            expect(screen.getByText('Bą')).toHaveFocus();
+          });
+          expect(screen.getByText('Bą')).toHaveAttribute('tabindex', '0');
+        });
+
+        it.skipIf(isJSDOM)(
+          'navigate to next options that begin with diacritic characters',
+          async () => {
+            const itemElements = [
+              <Menu.Item key="aa">Aa</Menu.Item>,
+              <Menu.Item key="ąa">ąa</Menu.Item>,
+              <Menu.Item key="ąb">ąb</Menu.Item>,
+              <Menu.Item key="ąc">ąc</Menu.Item>,
+            ];
+
+            const { user } = await render(
+              <TestMenu rootProps={{ open: true }} popupProps={{ children: () => itemElements }} />,
+            );
+
+            const items = screen.getAllByRole('menuitem');
+
+            items[0].focus();
+            await flushMicrotasks();
+
+            await user.keyboard('ą');
+            await waitFor(() => {
+              expect(screen.getByText('ąa')).toHaveFocus();
+            });
+            expect(screen.getByText('ąa')).toHaveAttribute('tabindex', '0');
+          },
+        );
+
+        it.skipIf(isJSDOM)(
+          'does not trigger the onClick event when Space is pressed during text navigation',
+          async () => {
+            const handleClick = vi.fn();
+
+            const itemElements = [
+              <Menu.Item key="one" onClick={() => handleClick()}>
+                Item One
+              </Menu.Item>,
+              <Menu.Item key="two" onClick={() => handleClick()}>
+                Item Two
+              </Menu.Item>,
+              <Menu.Item key="three" onClick={() => handleClick()}>
+                Item Three
+              </Menu.Item>,
+            ];
+
+            const { user } = await render(
+              <TestMenu rootProps={{ open: true }} popupProps={{ children: () => itemElements }} />,
+            );
+
+            const items = screen.getAllByRole('menuitem');
+
+            items[0].focus();
+            await flushMicrotasks();
+
+            await user.keyboard('Item T');
+
+            expect(handleClick.mock.calls.length > 0).toBe(false);
+
+            await waitFor(() => {
+              expect(items[1]).toHaveFocus();
+            });
+          },
+        );
+
+        it.skipIf(isJSDOM)(
+          'does not open a submenu when pressing Space during a typeahead session',
+          async () => {
+            const { user } = await render(
+              <TestMenu
+                rootProps={{ open: true }}
+                popupProps={{
+                  children: () => (
+                    <Menu.SubmenuRoot>
+                      <Menu.SubmenuTrigger data-testid="submenu-trigger">
+                        Add to Playlist
+                      </Menu.SubmenuTrigger>
+                      <Menu.Portal>
+                        <Menu.Positioner>
+                          <Menu.Popup data-testid="submenu">
+                            <Menu.Item>Add now</Menu.Item>
+                          </Menu.Popup>
+                        </Menu.Positioner>
+                      </Menu.Portal>
+                    </Menu.SubmenuRoot>
+                  ),
+                }}
+              />,
+            );
+
+            const submenuTrigger = screen.getByTestId('submenu-trigger');
+
+            submenuTrigger.focus();
+            await flushMicrotasks();
+
+            await user.keyboard('Add to p');
+
+            await waitFor(() => {
+              expect(submenuTrigger).toHaveFocus();
+            });
+
+            await user.keyboard('[Space]');
+            expect(screen.queryByTestId('submenu')).toBe(null);
+
+            await user.keyboard('[Space]');
+            expect(screen.queryByTestId('submenu')).toBe(null);
+          },
+        );
+
+        it('opens a focused submenu trigger with Space when not typing', async () => {
+          const { user } = await render(<TestMenu rootProps={{ open: true }} />);
+
+          const submenuTrigger = screen.getByTestId('submenu-trigger');
+
+          submenuTrigger.focus();
+          await flushMicrotasks();
+
+          await user.keyboard('[Space]');
+          expect(screen.queryByTestId('submenu')).not.toBe(null);
+        });
+
+        it.skipIf(isJSDOM)(
+          'matches "Item 2" after "Item " currently matches "Item 1"',
+          async () => {
+            const { user } = await render(
+              <TestMenu
+                rootProps={{ open: true }}
+                popupProps={{
+                  children: () => (
+                    <>
+                      <Menu.Item>Item 1</Menu.Item>
+                      <Menu.Item data-testid="item-2">Item 2</Menu.Item>
+                      <Menu.Item>Item 3</Menu.Item>
+                    </>
+                  ),
+                }}
+              />,
+            );
+
+            const item1 = screen.getByRole('menuitem', { name: 'Item 1' });
+            const item2 = screen.getByTestId('item-2');
+
+            item1.focus();
+            await flushMicrotasks();
+
+            await user.keyboard('Item 2');
+            expect(item2).toHaveFocus();
+          },
+        );
+
+        it.skipIf(isJSDOM)(
+          'matches a submenu trigger label after a space + numeric suffix',
+          async () => {
+            const { user } = await render(
+              <TestMenu
+                rootProps={{ open: true }}
+                popupProps={{
+                  children: () => (
+                    <>
+                      <Menu.Item>Item 1</Menu.Item>
+                      <Menu.SubmenuRoot>
+                        <Menu.SubmenuTrigger data-testid="submenu-trigger">
+                          Item 2
+                        </Menu.SubmenuTrigger>
+                        <Menu.Portal>
+                          <Menu.Positioner>
+                            <Menu.Popup data-testid="submenu">
+                              <Menu.Item>Nested 2.1</Menu.Item>
+                            </Menu.Popup>
+                          </Menu.Positioner>
+                        </Menu.Portal>
+                      </Menu.SubmenuRoot>
+                      <Menu.Item>Item 3</Menu.Item>
+                    </>
+                  ),
+                }}
+              />,
+            );
+
+            const item1 = screen.getByRole('menuitem', { name: 'Item 1' });
+            const submenuTrigger = screen.getByTestId('submenu-trigger');
+
+            item1.focus();
+            await flushMicrotasks();
+
+            await user.keyboard('Item 2');
+            expect(submenuTrigger).toHaveFocus();
+            expect(screen.queryByTestId('submenu')).toBe(null);
+          },
+        );
+      });
+    });
+  });
 
   it('starts a tree when no menu is above it', async () => {
     const probe = createProbe();
