@@ -212,8 +212,9 @@ export function useRenderElement<
         return;
       }
 
-      // `update` runs before this check, so `heldElement` is the element of this render.
-      if (heldElement === null) {
+      // A component in the slot can expose its element after this check, so the check reads the
+      // value that the setter got. `null` means that no element and no component reached the part.
+      if (target === null) {
         warn(
           'The `#render` slot gave no element to the part.',
           'The part cannot find its element, so the behavior that needs the element does not work.',

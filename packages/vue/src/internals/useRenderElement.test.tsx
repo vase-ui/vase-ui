@@ -14,6 +14,7 @@ import type {
   CSSProperties,
   HTMLAttributes,
   ImgHTMLAttributes,
+  PropType,
   Slots,
 } from 'vue';
 import {
@@ -23,6 +24,7 @@ import {
   renderOnServer,
   screen,
   takeReportedMessages,
+  waitFor,
 } from '#test-utils';
 import OverridingStylePart from '../../test/fixtures/OverridingStylePart.vue';
 import { EMPTY_OBJECT } from '../common/empty';
@@ -96,6 +98,23 @@ const MountedElementTarget = defineComponent({
       },
     });
     return () => <div {...attrs} ref={host} data-testid="widget" />;
+  },
+});
+
+// A wrapper that sets its exposed element after an `await` in `onMounted`. It exposes the element
+// as a ref, as the Composition page of the handbook tells a consumer to do.
+const AwaitedElementTarget = defineComponent({
+  inheritAttrs: false,
+  props: { ready: { type: Promise as PropType<Promise<void>>, required: true } },
+  setup(props, { attrs, expose }) {
+    const host = shallowRef<HTMLElement | null>(null);
+    const element = shallowRef<HTMLElement | null>(null);
+    onMounted(async () => {
+      await props.ready;
+      element.value = host.value;
+    });
+    expose({ element });
+    return () => <div {...attrs} ref={host} data-testid="awaited" />;
   },
 });
 
@@ -817,6 +836,44 @@ describe('useRenderElement', () => {
       expect(warnSpy.mock.calls[0][0]).toContain(
         'Vase UI: The `#render` slot gave no element to the part.',
       );
+    });
+
+    it('warns when the `#render` slot renders nothing', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      await render(<TestComponent v-slots={{ render: () => null }} />);
+
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy.mock.calls[0][0]).toContain(
+        'Vase UI: The `#render` slot gave no element to the part.',
+      );
+    });
+
+    it('gives the element of a component in the slot that sets its exposed ref after an `await`, with no warning', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { promise: ready, resolve: makeReady } = Promise.withResolvers<void>();
+      let component: ComponentWithElement | null = null;
+      const renderTarget = ({ props }: { props: HTMLProps }) => (
+        <AwaitedElementTarget {...props} ready={ready} />
+      );
+
+      await render(() => (
+        <TestComponent
+          ref={(value) => {
+            component = value as ComponentWithElement | null;
+          }}
+          v-slots={{ render: renderTarget }}
+        />
+      ));
+      expect(component!.element).toBe(null);
+      expect(warnSpy).not.toHaveBeenCalled();
+
+      makeReady();
+
+      await waitFor(() => {
+        expect(component!.element).toBe(screen.getByTestId('awaited'));
+      });
+      expect(warnSpy).not.toHaveBeenCalled();
     });
 
     it('warns when the `as` prop comes after the mount of a part with the `#render` slot', async () => {

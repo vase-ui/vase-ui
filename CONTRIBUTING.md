@@ -235,7 +235,8 @@ A part that Base UI takes from another family is exported again and not copied: 
 - If your element needs a ref of your own, call `props.ref` in a function ref: `:ref="(el) => { props.ref(el); own = el }"`.
 - The setter must make no change when it gets the same element again. Vue calls a function ref again on each patch.
 - In a Vapor component (`<script setup vapor>`), bind the setter by name: `<a v-bind="props" :ref="props.ref">`. Vapor drops the `ref` key of a bound object. It gives no warning.
-- A development build shows a warning when the `#render` slot of a part gives no element.
+- A development build shows a warning when the `#render` slot of a part gives no element and no component to the `ref` setter.
+- A component in the slot can set its exposed `element` later. A component whose exposed `element` is empty at the check thus gets no warning.
 - The part makes the check after each render in which the slot appears. A part with no element at mount thus gets the check when it renders its element.
 - If a consumer gives `as` and `#render`, `#render` wins. A development build shows a warning.
 - The part makes this check after each render. A consumer can give `as` or `#render` after the mount, and the check then shows the warning too.
