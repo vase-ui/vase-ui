@@ -2,6 +2,15 @@ import ComboboxArrow from './arrow/ComboboxArrow.vue';
 import type { ComboboxArrowProps, ComboboxArrowState } from './arrow/ComboboxArrow.vue';
 import ComboboxBackdrop from './backdrop/ComboboxBackdrop.vue';
 import type { ComboboxBackdropProps, ComboboxBackdropState } from './backdrop/ComboboxBackdrop.vue';
+import ComboboxChipRemove from './chip-remove/ComboboxChipRemove.vue';
+import type {
+  ComboboxChipRemoveProps,
+  ComboboxChipRemoveState,
+} from './chip-remove/ComboboxChipRemove.vue';
+import ComboboxChip from './chip/ComboboxChip.vue';
+import type { ComboboxChipProps, ComboboxChipState } from './chip/ComboboxChip.vue';
+import ComboboxChips from './chips/ComboboxChips.vue';
+import type { ComboboxChipsProps, ComboboxChipsState } from './chips/ComboboxChips.vue';
 import ComboboxClear from './clear/ComboboxClear.vue';
 import type { ComboboxClearProps, ComboboxClearState } from './clear/ComboboxClear.vue';
 import ComboboxCollection from './collection/ComboboxCollection.vue';
@@ -283,6 +292,36 @@ export const ItemIndicator: typeof ComboboxItemIndicator = ComboboxItemIndicator
 export namespace ItemIndicator {
   export type Props = ComboboxItemIndicatorProps;
   export type State = ComboboxItemIndicatorState;
+}
+
+/**
+ * A container for the chips in a multiselectable input.
+ * Renders a `<div>` element.
+ */
+export const Chips: typeof ComboboxChips = ComboboxChips;
+export namespace Chips {
+  export type Props = ComboboxChipsProps;
+  export type State = ComboboxChipsState;
+}
+
+/**
+ * An individual chip that represents a value in a multiselectable input.
+ * Renders a `<div>` element.
+ */
+export const Chip: typeof ComboboxChip = ComboboxChip;
+export namespace Chip {
+  export type Props = ComboboxChipProps;
+  export type State = ComboboxChipState;
+}
+
+/**
+ * A button to remove a chip.
+ * Renders a `<button>` element.
+ */
+export const ChipRemove: typeof ComboboxChipRemove = ComboboxChipRemove;
+export namespace ChipRemove {
+  export type Props = ComboboxChipRemoveProps;
+  export type State = ComboboxChipRemoveState;
 }
 
 /**

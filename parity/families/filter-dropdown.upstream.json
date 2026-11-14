@@ -1,0 +1,135 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/filter-dropdown/**",
+    "packages/react/test/filterDropdown.tsx"
+  ],
+  "sources": [
+    "packages/react/src/filter-dropdown/clear/FilterDropdownClear.tsx",
+    "packages/react/src/filter-dropdown/empty/FilterDropdownEmpty.tsx",
+    "packages/react/src/filter-dropdown/group/FilterDropdownGroupContext.ts",
+    "packages/react/src/filter-dropdown/group/useFilterDropdownGroup.ts",
+    "packages/react/src/filter-dropdown/input/FilterDropdownInput.tsx",
+    "packages/react/src/filter-dropdown/item/useFilterDropdownItem.ts",
+    "packages/react/src/filter-dropdown/list/FilterDropdownList.tsx",
+    "packages/react/src/filter-dropdown/root/FilterDropdownRoot.tsx",
+    "packages/react/src/filter-dropdown/root/FilterDropdownRootContext.ts",
+    "packages/react/src/filter-dropdown/root/useFilterDropdownCloseQuery.ts",
+    "packages/react/src/filter-dropdown/store.ts",
+    "packages/react/src/filter-dropdown/utils/refocusOwner.ts",
+    "packages/react/test/filterDropdown.tsx"
+  ],
+  "typeTests": [],
+  "cases": [
+    {
+      "file": "packages/react/src/filter-dropdown/clear/FilterDropdownClear.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<FilterDropdown.Clear />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<FilterDropdown.Clear />"
+          ],
+          "title": "does not render when the filter value is empty"
+        },
+        {
+          "describe": [
+            "<FilterDropdown.Clear />"
+          ],
+          "title": "clears the filter value and focuses the input when clicked"
+        },
+        {
+          "describe": [
+            "<FilterDropdown.Clear />"
+          ],
+          "title": "does nothing when disabled"
+        },
+        {
+          "describe": [
+            "<FilterDropdown.Clear />"
+          ],
+          "title": "ignores a click on a disabled non-native button"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/filter-dropdown/root/FilterDropdownRoot.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<FilterDropdown.Root />"
+          ],
+          "title": "renders the expected markup and ARIA relationships"
+        },
+        {
+          "describe": [
+            "<FilterDropdown.Root />"
+          ],
+          "title": "keeps focus on the input when the list or popup background is clicked"
+        },
+        {
+          "describe": [
+            "<FilterDropdown.Root />"
+          ],
+          "title": "focuses the input when the pointer enters or the popup itself receives focus"
+        },
+        {
+          "describe": [
+            "<FilterDropdown.Root />"
+          ],
+          "title": "does not focus a parent input when the pointer enters a portalled nested popup"
+        },
+        {
+          "describe": [
+            "<FilterDropdown.Root />"
+          ],
+          "title": "does not focus a parent input when the pointer enters an inline nested popup"
+        },
+        {
+          "describe": [
+            "<FilterDropdown.Root />"
+          ],
+          "title": "updates relationships when id props change"
+        },
+        {
+          "describe": [
+            "<FilterDropdown.Root />"
+          ],
+          "title": "releases id overrides when their props are removed"
+        },
+        {
+          "describe": [
+            "<FilterDropdown.Root />"
+          ],
+          "title": "keeps the live region in sync with a changing Empty message"
+        },
+        {
+          "describe": [
+            "<FilterDropdown.Root />",
+            "prop: filter with null"
+          ],
+          "title": "clears a stale highlight when the item set changes"
+        },
+        {
+          "describe": [
+            "<FilterDropdown.Root />",
+            "prop: filter with null"
+          ],
+          "title": "keeps autoHighlight seeding the first item"
+        },
+        {
+          "describe": [
+            "<FilterDropdown.Root />"
+          ],
+          "title": "clears a stale highlight when items change with an empty query"
+        }
+      ]
+    }
+  ],
+  "surface": [],
+  "pages": []
+}
