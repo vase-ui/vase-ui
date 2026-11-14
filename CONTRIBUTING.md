@@ -733,7 +733,7 @@ A date or time field and the `Intl` data of the server:
 - A layout can differ in the order of the segments, in the number of segments, in the text of a literal and in the hour cycle.
 - While the field hydrates, the part that renders the segments binds `data-allow-mismatch="children"` on `Input`, `attribute` on a segment and `text` on a literal. `useDateTimeFieldSegment` binds the one of a segment. Each part calls `useIsHydrating()` itself. `test/fixtures/DateTimeFieldProbe.vue` is the model.
 - Vue changes the text of a literal itself. It writes no `aria-*` attribute while it hydrates, and it does not change the attributes of a server element that it reuses for another segment.
-- After the mount, the root compares the attributes that `getSegmentAttributes` gives with the DOM. On a difference, it changes `listKey`, and the parts make the elements again.
+- After the mount, the root compares the `data-type` and the attributes that `getSegmentAttributes` gives with the DOM. On a difference, it changes `listKey`, and the parts make the elements again.
 - A layout with another number of segments makes Vue log `Hydration completed but contains mismatches` one time, also under `data-allow-mismatch`. The DOM is then equal to a client-only render.
 
 ### What Vue replaces
@@ -796,8 +796,8 @@ The date and time families call `Temporal` and `Intl` directly, through the func
 - `displayCalendar` gives the calendar in which a part shows a value: the `calendar` prop, else the calendar of the value when it is not ISO, else the calendar of the locale. A year and month shows in that calendar only where the calendar has the same months.
 - `Intl` and `Temporal` do not have the same calendars. A part reads the calendar of a locale only through `localeCalendar`, which gives `gregory` when `Temporal` has no such calendar.
 - `today(timeZone)` gives today, and the `today` prop wins over it. The `timeZone` prop wins over the zone of a zoned value, and that zone wins over the zone of the runtime.
-- `getSegmentLayout` gives the order of the segments and the text of the literals of a date or time field. It reads the parts that `Intl` gives for a fixed sample. The digits, the padding and the placeholders come from the code.
-- A date or time field has a value only when each segment has a number. A field with some segments empty has no value.
+- `getSegmentLayout` gives the order of the segments and the text of the literals of a date or time field. It reads the parts that `Intl` gives for a fixed sample. The digits come from `Intl.NumberFormat`, and the padding and the placeholders come from the code.
+- A date or time field has a value only when each segment has a number.
 - The numbers of an empty segment come from `referenceDate`, and then from today.
 
 ### Popup store
