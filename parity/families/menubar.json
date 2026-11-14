@@ -7,13 +7,6 @@
   "exceptions": [
     {
       "upstream": "packages/react/src/menubar/Menubar.test.tsx",
-      "describe": ["<Menubar />", "when using $name"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "Most cases of the block that have no counterpart move the focus or the highlight with the keys, and Menu has no keys yet. The other cases of the block are not ported yet."
-    },
-    {
-      "upstream": "packages/react/src/menubar/Menubar.test.tsx",
       "describe": ["filterable menubar menus"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/filter-provider/MenuFilterProvider.tsx",
