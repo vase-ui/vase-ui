@@ -2,8 +2,9 @@
 import { computed } from 'vue';
 import { useDialogRootContext } from '../../src/dialog/root/DialogRootContext';
 
-// The tests of Drawer use this part in place of `Drawer.Popup`, which Vase UI does not have. It
-// renders the popup element with the props that the root gives.
+// The cases of `Drawer.SwipeArea` with a test popup use this part in place of `Drawer.Popup`. It
+// renders the popup element with the props that the root gives, and it reports no height to the
+// root, so a case can give the size of the popup.
 defineOptions({ inheritAttrs: false });
 
 withDefaults(defineProps<{ keepMounted?: boolean }>(), { keepMounted: false });
