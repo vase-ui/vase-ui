@@ -60,6 +60,12 @@ function namesTemporal(declarations: Map<string, string>): boolean {
   return [...declarations.values()].some((code) => TEMPORAL_TYPE.test(code));
 }
 
+// TypeScript loads the `lib` of a reference line from each declaration file that a program loads.
+// A line anywhere in the declarations that an entry reaches is thus enough for that entry.
+function hasTemporalReference(declarations: Map<string, string>): boolean {
+  return [...declarations.values()].some((code) => code.startsWith(TEMPORAL_REFERENCE));
+}
+
 function expectContent(file: string, code: string, text: string, expected: boolean): void {
   const found = code.includes(text);
   console.log(`  ${file}: ${found ? 'has' : 'has no'} ${text}`);
@@ -94,32 +100,35 @@ async function main(): Promise<void> {
     `Each index.js in dist must be the barrel or a family. Found: ${entryFiles.join(', ')}`,
   );
 
-  console.log('[3/10] Check which declarations name Temporal');
+  console.log('[3/10] Check the declarations that name Temporal');
   const barrelDeclarations = reachedDeclarations('index.d.ts');
   for (const [file, code] of barrelDeclarations) {
     assert.ok(
       !TEMPORAL_TYPE.test(code) && !code.includes('esnext.temporal'),
-      `${file} is reachable from the barrel and names Temporal. Without the reference line, a TypeScript 5 consumer of the barrel fails on it. Start the index.ts of the entry with the reference line, so that the barrel leaves the entry out.`,
+      `${file} is reachable from the barrel and names Temporal. A consumer on TypeScript 5 fails on it. Start the index.ts of each date entry with the reference line, so that the barrel leaves the entry out. Import no date entry in another family.`,
     );
   }
   console.log(`  index.d.ts: ${barrelDeclarations.size} declaration files, none names Temporal`);
   const temporalEntries: string[] = [];
   for (const file of entryFiles.filter((name) => name !== 'index.js')) {
-    const declaration = file.replace(/\.js$/, '.d.ts');
-    const declarations = reachedDeclarations(declaration);
+    const declarations = reachedDeclarations(file.replace(/\.js$/, '.d.ts'));
     if (namesTemporal(declarations)) {
       temporalEntries.push(file);
       assert.ok(
-        declarations.get(declaration)?.startsWith(TEMPORAL_REFERENCE),
-        `${declaration} reaches a declaration that names Temporal, so it must start with ${TEMPORAL_REFERENCE} Without the line, a consumer fails with TS2503 until it sets "lib" itself.`,
+        hasTemporalReference(declarations),
+        `The declarations of ${file} name Temporal, and none of them starts with ${TEMPORAL_REFERENCE} Without the line, a consumer fails with TS2503 until it sets "lib" itself. Check that the patch of rolldown-plugin-dts is applied.`,
       );
-      console.log(`  ${declaration}: starts with the reference line`);
+      console.log(
+        `  ${file}: names Temporal, and a declaration that it reaches starts with the reference line`,
+      );
     }
   }
-  assert.ok(
-    temporalEntries.includes('temporal-part/index.js'),
-    'The fixture temporal-part must name Temporal in its declarations. Without it, this step checks nothing.',
-  );
+  for (const fixture of ['temporal-part/index.js', 'temporal-reexport/index.js']) {
+    assert.ok(
+      temporalEntries.includes(fixture),
+      `The fixture ${fixture} must name Temporal in its declarations. Without it, this step checks nothing.`,
+    );
+  }
 
   console.log(`[4/10] Write the manifest into ${PACKAGE_DIRECTORY}`);
   const manifest = JSON.parse(readFileSync('package.json', 'utf8'));

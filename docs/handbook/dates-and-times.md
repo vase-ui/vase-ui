@@ -1,0 +1,107 @@
+---
+order: 7
+description: A guide to the Temporal API, the polyfill and the types in the date and time components of Vase UI.
+---
+
+# Dates and times
+
+A guide to the `Temporal` API in the date and time components of Vase UI.
+
+## Why Temporal
+
+The date and time components take and give values of `Temporal`, the built-in date and time API of JavaScript. `Temporal` has one type for each kind of value. It also has calendars other than Gregorian.
+
+The components use no `Date` and no date library. They call `Temporal` and `Intl` directly. A component needs the global `Temporal`.
+
+## Browser support
+
+`Temporal` is native in Chrome 144, Edge 144, Firefox 139 and Node.js 26, and in each later version. No release of Safari has it. Node.js 24 and Node.js 22 do not have it. [Can I use](https://caniuse.com/temporal) lists the current versions.
+
+An engine that has no `Temporal` needs a polyfill. In a development build, a component throws an error that names the global `Temporal` when the engine has none.
+
+## Polyfill
+
+Vase UI does not include a polyfill. Add [`temporal-polyfill`](https://github.com/fullcalendar/temporal-polyfill) to your app:
+
+::: code-group
+
+```sh [pnpm]
+pnpm add temporal-polyfill
+```
+
+```sh [npm]
+npm install temporal-polyfill
+```
+
+```sh [yarn]
+yarn add temporal-polyfill
+```
+
+:::
+
+Import it before the app mounts. Put it first in the entry file of the app. The polyfill sets the global `Temporal` only when the engine has none:
+
+```ts
+import 'temporal-polyfill/global';
+import { createApp } from 'vue';
+import App from './App.vue';
+
+createApp(App).mount('#app');
+```
+
+The entry `temporal-polyfill/global` has the ISO and Gregorian calendars only. For each other calendar, import `temporal-polyfill/full/global`.
+
+In a Nuxt app, import the polyfill in a plugin. A plugin runs on the server and in the browser before the app mounts:
+
+```ts
+// plugins/temporal.ts
+import 'temporal-polyfill/global';
+
+export default defineNuxtPlugin(() => {});
+```
+
+## TypeScript
+
+The types of Vase UI use the global `Temporal` types of TypeScript 6.0. The declaration file of each date and time entry point starts with `/// <reference lib="esnext.temporal" preserve="true" />`. A project on TypeScript 6.0 needs no change of its `lib`.
+
+The entry point `@vase-ui/vue` does not export the date and time components. A project that imports none of them needs no `Temporal` types, and it can use an earlier version of TypeScript. Import each date or time component from its own entry point.
+
+On a version below 6.0, set `skipLibCheck` to `true` in `tsconfig.json`. To give your own code the `Temporal` types, add `import 'temporal-polyfill/types/global'` to one file of the project.
+
+## Value kinds
+
+A component gives back a value of the kind that it got. These are the kinds:
+
+- `Temporal.PlainDate`: a date.
+- `Temporal.PlainDateTime`: a date and a time.
+- `Temporal.ZonedDateTime`: a date and a time in a time zone.
+- `Temporal.PlainTime`: a time.
+- `Temporal.PlainYearMonth`: a month of a year.
+
+<<< ../examples/dates-and-times/ValueKinds.vue
+
+A date component takes a date, a date and time, or a date and time in a zone. A time component takes a time, a date and time, or a date and time in a zone. Some date components also take a year and month.
+
+When the user picks a day, the new value keeps the time, the time zone and the calendar of the value that you gave. When the user picks a time, it keeps the date, the time zone and the calendar.
+
+## Calendars
+
+A component shows a date in the calendar that its `calendar` prop names. With no prop, it uses the calendar of the value when that calendar is not ISO. With neither, it uses the calendar of the locale. `th-TH` gives the Buddhist calendar, and `fa-IR` gives the Persian calendar.
+
+Set `calendar="gregory"` to turn the calendar of the locale off. The value that the component gives back keeps its own calendar. A grid of another calendar does not change the calendar of the value.
+
+For a calendar other than ISO and Gregorian in an engine that needs the polyfill, import `temporal-polyfill/full/global`.
+
+## Time zones
+
+A `Temporal.ZonedDateTime` value keeps its time zone. The prop `timeZone` of a component sets the zone in which it reads today. With no prop, the component uses the zone of its value, and then the zone of the runtime.
+
+A zone change can skip an hour, and a time in that hour does not exist. When a pick gives a value such a time, the component moves the time forward by the size of the gap, as `Temporal` does.
+
+## Servers
+
+A server does not know the locale and the time zone of a visitor. With no `locale` prop, a component formats with `en-US` until it mounts. The server HTML and the first render of the browser are then equal.
+
+Give a component that has no value the props `today` and `timeZone`. The server HTML then shows the same day as the first render of the browser.
+
+On Node.js 24 and earlier, load the polyfill before the server starts: `node --import temporal-polyfill/global server.js`. In a Nuxt app, the plugin above covers the server.
