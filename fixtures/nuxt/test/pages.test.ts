@@ -867,7 +867,7 @@ async function readSliderPage(page: Page) {
       // A script of the server HTML with its nonce and its text.
       scripts: Array.from(document.querySelectorAll<HTMLScriptElement>('script'))
         .filter((script) => script.closest('[data-testid="price-control"]'))
-        .map((script) => [script.nonce !== '', (script.textContent ?? '').length > 0]),
+        .map((script) => [script.nonce, (script.textContent ?? '').length > 0]),
       // The entries that a submit of the page sends.
       formData: Array.from(
         new FormData(document.querySelector('form')!),
@@ -885,7 +885,7 @@ async function expectSliderPage(page: Page) {
     ['0', 'hidden', '0%'],
     ['1', 'hidden', '0%'],
   ]);
-  expect(result.scripts).toEqual([[true, true]]);
+  expect(result.scripts).toEqual([['test-nonce', true]]);
   // The labels link to the root and to the input in each order of the parts.
   expect(result.volumeLabelId).toBeTruthy();
   expect(result.volumeRoot['aria-labelledby']).toBe(result.volumeLabelId);
