@@ -5,11 +5,13 @@ import { test } from 'node:test';
 import { readTypesMd } from '../parity/typesMd.ts';
 import { REPOSITORY_ROOT } from '../parity/repository.ts';
 import { createVaseProject } from '../parity/vaseSurface.ts';
+import type { OwnComponent } from '../parity/parityFiles.ts';
 import {
   buildApiClasses,
   buildApiFunctions,
   buildApiParts,
   buildApiTypes,
+  buildOwnApiReference,
   createApiReferenceReader,
 } from './apiReference.ts';
 import { listFamilyPages } from './familyPages.ts';
@@ -283,6 +285,63 @@ test('the types are the types and then the additional types of the types.md that
   );
 });
 
+function makeOwnComponent(changes: Partial<OwnComponent> = {}): OwnComponent {
+  return {
+    standard: ['https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/'],
+    reason: 'Base UI has no sample component.',
+    parts: ['Popup', 'Ghost', 'Root'],
+    functions: ['createHandle', 'ghost'],
+    types: ['SampleRootChangeEventReason', 'Ghost', 'Sample.Handle'],
+    ...changes,
+  };
+}
+
+test('the reference of an own component has the parts, functions and types of its record in their sequence, and leaves out a name with no export', () => {
+  const reference = buildOwnApiReference(project, ENTRY, makeOwnComponent());
+  assert.deepEqual(
+    reference.parts.map(({ name }) => name),
+    ['Sample.Popup', 'Sample.Root'],
+  );
+  assert.deepEqual(
+    reference.functions.map(({ name }) => name),
+    ['Sample.createHandle'],
+  );
+  assert.deepEqual(reference.classes, []);
+  assert.deepEqual(
+    reference.types.map(({ name }) => name),
+    ['SampleRootChangeEventReason', 'Sample.Handle'],
+  );
+});
+
+test('the reference of an own component has the classes of its functions', () => {
+  const { classes, functions } = withTexts(
+    [
+      [
+        PARTS,
+        'export interface Handle {\n  open: () => void;\n  close: () => void;\n}',
+        'export class Handle {\n  open(): void {}\n  close(): void {}\n}',
+      ],
+    ],
+    () => buildOwnApiReference(project, ENTRY, makeOwnComponent({ functions: ['Handle'] })),
+  );
+  assert.deepEqual(
+    classes.map(({ name }) => name),
+    ['Sample.Handle'],
+  );
+  assert.deepEqual(functions, []);
+});
+
+test('the reference of an own component takes a name of its parts for a component only, and a name of its functions for a function only', () => {
+  const reference = buildOwnApiReference(
+    project,
+    ENTRY,
+    makeOwnComponent({ parts: ['createHandle'], functions: ['Root'], types: undefined }),
+  );
+  assert.deepEqual(reference.parts, []);
+  assert.deepEqual(reference.functions, []);
+  assert.deepEqual(reference.types, []);
+});
+
 const read = createApiReferenceReader(REPOSITORY_ROOT);
 
 test('each family page has an API reference with one part, function or type or more', () => {
@@ -361,10 +420,26 @@ test('the reference of separator has data-orientation with its type', () => {
   ]);
 });
 
-test('the reader throws and says what to do for a family with no family file', () => {
+test('the reader throws and says what to do for a family with no family file and no record', () => {
   assert.throws(
     () => read('no-such-family'),
-    /^Error: There is no family file parity\/families\/no-such-family\.json, but the site has a page for no-such-family\. Add the family file\.$/,
+    /^Error: There is no family file parity\/families\/no-such-family\.json and no record parity\/own\/no-such-family\.json, but the site has a page for no-such-family\. Add the family file\. For a component that Base UI does not have, add the record\.$/,
+  );
+});
+
+test('the reader gives the reference of an own component from its record, with no family file', () => {
+  const reference = createApiReferenceReader(FIXTURES)('sample');
+  assert.deepEqual(
+    reference.parts.map(({ name }) => name),
+    ['Sample.Root', 'Sample.Popup'],
+  );
+  assert.deepEqual(
+    reference.functions.map(({ name }) => name),
+    ['Sample.createHandle'],
+  );
+  assert.deepEqual(
+    reference.types.map(({ name }) => name),
+    ['Sample.Handle', 'SampleRootChangeEventReason'],
   );
 });
 

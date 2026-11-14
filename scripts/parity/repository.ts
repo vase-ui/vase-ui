@@ -5,19 +5,31 @@ import {
   validateBetterRow,
   validateExtract,
   validateFamilyFile,
+  validateOwnComponent,
   validateUpstreamFile,
 } from './parityFiles.ts';
-import type { BetterRow, FamilyExtract, FamilyFile, UpstreamFile } from './parityFiles.ts';
+import type {
+  BetterRow,
+  FamilyExtract,
+  FamilyFile,
+  OwnComponent,
+  UpstreamFile,
+} from './parityFiles.ts';
 import { VASE_ROOTS } from './paths.ts';
 
 export const REPOSITORY_ROOT = join(import.meta.dirname, '..', '..');
 
 export const UPSTREAM_FILE = 'parity/upstream.json';
 export const FAMILIES_FOLDER = 'parity/families';
+export const OWN_FOLDER = 'parity/own';
 export const BETTER_FOLDER = 'parity/better';
 
 export function familyFile(name: string): string {
   return `${FAMILIES_FOLDER}/${name}.json`;
+}
+
+export function ownFile(name: string): string {
+  return `${OWN_FOLDER}/${name}.json`;
 }
 
 export function extractFile(name: string): string {
@@ -38,9 +50,16 @@ export interface FamilyFiles {
   hasExtract: boolean;
 }
 
+/** The record of a component that Base UI does not have, with the name of the component. */
+export interface OwnComponentFile {
+  name: string;
+  record: OwnComponent;
+}
+
 export interface ParityFiles {
   upstream?: UpstreamFile;
   families: FamilyFiles[];
+  ownComponents: OwnComponentFile[];
   better: BetterRow[];
   problems: string[];
 }
@@ -72,6 +91,14 @@ function readJson<T>(
   return found.length === 0 ? (value as T) : undefined;
 }
 
+function checkFamilyName(path: string, name: string, problems: string[]): boolean {
+  if (FAMILY_NAME.test(name)) {
+    return true;
+  }
+  problems.push(`${path}: the family name "${name}" must match ${FAMILY_NAME}. Rename the file.`);
+  return false;
+}
+
 export function readUpstreamFile(root: string): { upstream?: UpstreamFile; problems: string[] } {
   const problems: string[] = [];
   if (!existsSync(join(root, UPSTREAM_FILE))) {
@@ -98,10 +125,7 @@ export function readParityFiles(root: string, options: { readExtracts: boolean }
     const isExtract = file.endsWith('.upstream.json');
     const name = file.slice(0, -(isExtract ? '.upstream.json' : '.json').length);
     const path = `${FAMILIES_FOLDER}/${file}`;
-    if (!FAMILY_NAME.test(name)) {
-      problems.push(
-        `${path}: the family name "${name}" must match ${FAMILY_NAME}. Rename the file.`,
-      );
+    if (!checkFamilyName(path, name, problems)) {
       continue;
     }
     const found = entry(name);
@@ -117,11 +141,27 @@ export function readParityFiles(root: string, options: { readExtracts: boolean }
     }
   }
 
+  const ownComponents = listJson(root, OWN_FOLDER).flatMap((file): OwnComponentFile[] => {
+    const name = file.slice(0, -'.json'.length);
+    const path = `${OWN_FOLDER}/${file}`;
+    if (!checkFamilyName(path, name, problems)) {
+      return [];
+    }
+    if (names.get(name)?.hasFamilyFile) {
+      problems.push(
+        `${path}: ${familyFile(name)} exists too. A component is a port or a component of Vase UI's own, not both. Delete one file.`,
+      );
+      return [];
+    }
+    const record = readJson<OwnComponent>(root, path, validateOwnComponent, problems);
+    return record ? [{ name, record }] : [];
+  });
+
   const better = listJson(root, BETTER_FOLDER).flatMap((file) => {
     const row = readJson<BetterRow>(root, `${BETTER_FOLDER}/${file}`, validateBetterRow, problems);
     return row ? [row] : [];
   });
-  return { upstream, families: [...names.values()], better, problems };
+  return { upstream, families: [...names.values()], ownComponents, better, problems };
 }
 
 export function listVaseFiles(root: string): string[] {

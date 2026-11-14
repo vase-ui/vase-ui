@@ -125,6 +125,7 @@ function makeParity(): ParityFiles {
         hasExtract: true,
       },
     ],
+    ownComponents: [],
     better: [],
     problems: [],
   };
@@ -149,6 +150,27 @@ test('a family with no problem gives a summary line and makes no project', () =>
     'sample: sources 0; type tests 0; cases 0; suite calls 0; 0 Vase UI rows with no upstream row',
     'parity/better: 0 rows, 0 due',
   ]);
+});
+
+test("a record of a component of Vase UI's own gets the checks of its name and its entry point, and has no summary line", () => {
+  const parity = makeParity();
+  parity.families = [];
+  parity.ownComponents = [
+    {
+      name: 'sample',
+      record: {
+        standard: ['https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/'],
+        reason: 'Base UI has no such component.',
+        parts: ['Root'],
+      },
+    },
+  ];
+  const result = run(parity);
+  assert.deepEqual(result.problems, [
+    'sample: parity/upstream.json lists a Base UI component with this name. Add a family file and delete parity/own/sample.json.',
+    'sample: packages/vue/src/sample/index.ts does not exist. Add the entry point, or delete parity/own/sample.json.',
+  ]);
+  assert.deepEqual(formatSummary(result), ['parity/better: 0 rows, 0 due']);
 });
 
 const wrongFiles: { name: string; change: (parity: ParityFiles) => void; message: RegExp }[] = [

@@ -1,16 +1,17 @@
 import { dirname, join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { docsFolderOf } from '../parity/checkSurface.ts';
-import type { FamilyExtract } from '../parity/parityFiles.ts';
+import type { FamilyExtract, OwnComponent } from '../parity/parityFiles.ts';
 import { VASE_SOURCE_ROOT } from '../parity/paths.ts';
 import {
   extractCommand,
   extractFile,
   familyFile,
+  ownFile,
   readParityFiles,
   REPOSITORY_ROOT,
 } from '../parity/repository.ts';
-import type { FamilyFiles } from '../parity/repository.ts';
+import type { FamilyFiles, OwnComponentFile } from '../parity/repository.ts';
 import type { SurfaceFile, SurfacePart } from '../parity/typesMd.ts';
 import { createVaseProject } from '../parity/vaseSurface.ts';
 import type {
@@ -125,6 +126,11 @@ function constantsOf(project: VaseProject, entryFile: string, namespace: string)
   );
 }
 
+/** The title of an entry of a `types.md`, or a name of the record of a component of Vase UI's own. */
+interface Named {
+  name: string;
+}
+
 /**
  * The parts of `file`, in their sequence. A part with no export in the entry file is left out,
  * and so is an export that is not a component from a `.vue` file. `pnpm parity:check` reports both.
@@ -132,7 +138,7 @@ function constantsOf(project: VaseProject, entryFile: string, namespace: string)
 export function buildApiParts(
   project: VaseProject,
   entryFile: string,
-  file: SurfaceFile,
+  file: { parts: readonly Named[] },
 ): ApiPart[] {
   return file.parts.flatMap(({ name: title }) => {
     const [match] = project.findExports(entryFile, title);
@@ -196,7 +202,7 @@ function findEntryFileOfPart(
 export function buildApiFunctions(
   project: VaseProject,
   entryFile: string,
-  file: SurfaceFile,
+  file: { parts: readonly Named[]; functions: readonly Named[] },
 ): ApiFunction[] {
   return [...file.parts, ...file.functions].flatMap(({ name: title }) => {
     const [match] = project.findExports(entryFile, title);
@@ -212,7 +218,7 @@ export function buildApiFunctions(
 export function buildApiClasses(
   project: VaseProject,
   entryFile: string,
-  file: SurfaceFile,
+  file: { functions: readonly Named[] },
 ): ApiClass[] {
   return file.functions.flatMap(({ name: title }) => {
     const [match] = project.findExports(entryFile, title);
@@ -229,7 +235,7 @@ export function buildApiClasses(
 export function buildApiTypes(
   project: VaseProject,
   entryFile: string,
-  file: SurfaceFile,
+  file: { types: readonly Named[]; additionalTypes: readonly Named[] },
 ): ApiType[] {
   return [...file.types, ...file.additionalTypes].flatMap(({ name }) => {
     const match = project
@@ -261,25 +267,58 @@ function sortPartsByPage(file: SurfaceFile, pages: FamilyExtract['pages']): Surf
   return { ...file, parts: [...file.parts].sort((a, b) => place(a) - place(b)) };
 }
 
+/**
+ * The API reference of a component of Vase UI's own. The record gives the names, in their
+ * sequence. A name with no export is left out. `pnpm parity:check` reports it.
+ */
+export function buildOwnApiReference(
+  project: VaseProject,
+  entryFile: string,
+  record: OwnComponent,
+): ApiReference {
+  const named = (names: readonly string[] = []): Named[] => names.map((name) => ({ name }));
+  const functions = named(record.functions);
+  return {
+    parts: buildApiParts(project, entryFile, { parts: named(record.parts) }),
+    functions: buildApiFunctions(project, entryFile, { parts: [], functions }),
+    classes: buildApiClasses(project, entryFile, { functions }),
+    types: buildApiTypes(project, entryFile, {
+      types: named(record.types),
+      additionalTypes: [],
+    }),
+  };
+}
+
 /** Returns a function from a family name to the API reference of the family. The first call makes the project. */
 export function createApiReferenceReader(root = REPOSITORY_ROOT): (family: string) => ApiReference {
   let project: VaseProject | undefined;
-  let families: FamilyFiles[] | undefined;
+  let parity: { families: FamilyFiles[]; ownComponents: OwnComponentFile[] } | undefined;
+  const readProject = (): VaseProject =>
+    (project ??= createVaseProject(join(root, 'packages/vue/tsconfig.build.json')));
 
   return (family) => {
-    if (!families) {
-      const parity = readParityFiles(root, { readExtracts: true });
-      if (parity.problems.length > 0) {
+    if (!parity) {
+      const read = readParityFiles(root, { readExtracts: true });
+      if (read.problems.length > 0) {
         throw new Error(
-          `${parity.problems.join('\n')}\nCorrect these files, then build the site again.`,
+          `${read.problems.join('\n')}\nCorrect these files, then build the site again.`,
         );
       }
-      families = parity.families;
+      parity = read;
+    }
+    const { families, ownComponents } = parity;
+    const record = ownComponents.find(({ name }) => name === family)?.record;
+    if (record) {
+      return buildOwnApiReference(
+        readProject(),
+        join(root, VASE_SOURCE_ROOT, family, 'index.ts'),
+        record,
+      );
     }
     const files = families.find(({ name }) => name === family);
     if (!files?.hasFamilyFile) {
       throw new Error(
-        `There is no family file ${familyFile(family)}, but the site has a page for ${family}. Add the family file.`,
+        `There is no family file ${familyFile(family)} and no record ${ownFile(family)}, but the site has a page for ${family}. Add the family file. For a component that Base UI does not have, add the record.`,
       );
     }
     const pages = files.extract?.pages ?? [];
@@ -289,9 +328,7 @@ export function createApiReferenceReader(root = REPOSITORY_ROOT): (family: strin
         `${extractFile(family)} has no types.md, so the API reference of ${family} has no source. Add the glob ${docsFolderGlobs(family)} to "upstreamPaths" in ${familyFile(family)}. Then run \`${extractCommand(family)}\`.`,
       );
     }
-    const vaseProject = (project ??= createVaseProject(
-      join(root, 'packages/vue/tsconfig.build.json'),
-    ));
+    const vaseProject = readProject();
     const entryFileOf = (file: SurfaceFile): string =>
       join(root, VASE_SOURCE_ROOT, docsFolderOf(file), 'index.ts');
     const build = <T>(
