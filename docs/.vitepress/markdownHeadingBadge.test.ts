@@ -58,7 +58,7 @@ test('does not strip a heading that is only a tag', async () => {
   assert.ok(!html.includes('heading-badge'));
 });
 
-// The attributes plugin leaves the spaces that come before the braces in the text of the heading.
+// The attributes plugin removes one space before the braces, so two spaces leave a trailing space.
 test('strips a tag before an id in braces', async () => {
   const html = await render('### Filtering [Preview]  {#search}\n');
 
