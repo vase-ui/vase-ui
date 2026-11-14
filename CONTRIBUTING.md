@@ -1464,6 +1464,7 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 - A case that fires its own `load` and `error` events on a real `<img>` holds the events of the browser. A capture listener on `document` stops each event that has `isTrusted`. See `holdBrowserImageEvents` in `avatar/image/AvatarImage.test.tsx`.
 - ESLint reports an `eslint-disable` comment that names a rule of a plugin that this repository does not have. It also reports a comment that disables nothing.
 - `#test-utils` is `packages/vue/test/index.ts`. It replaces the `#test-utils` and `@mui/internal-test-utils` of upstream.
+- The counterpart of an upstream file of test components, such as `toast/utils/test-utils.tsx`, is a `.ts` file with the same name. It exports each component of the upstream file from an SFC with a `.test.vue` name. The lint refuses a `.tsx` file in `src` that is not a test. See [Test helpers](#test-helpers).
 - `toErrorDev` and `toWarnDev` are custom matchers of upstream. For `.not.toErrorDev()`, assert that the spy got no call.
 - `renderHook` is a function of `@testing-library/react`. A composable needs the `setup` of a component.
 - Without `inheritAttrs: false`, Vue also puts the attributes on the root element of the test component. Each listener then runs two times.
@@ -1476,6 +1477,7 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 - Where Base UI polls a state that exists only while an animation runs, a ported case can record that state in a listener. It can also set `VASE_UI_ANIMATIONS_DISABLED` to `false`. The titles stay. See [Test rules](#test-rules).
 - Vue makes each element with the `document` of the page, also in an app that it mounts in the document of a frame. Such an element has the classes of the window of the page, and the DOM matchers refuse it. Assert `isConnected` in place of `toBeInTheDocument()`.
 - Where the Base UI cases of a file declare the same test component, the ported file can declare that component one time. A prop of the component gives a difference between the cases.
+- Vitest fakes `requestAnimationFrame` with the other timers. With fake timers and `VASE_UI_ANIMATIONS_DISABLED` set to `false`, a closed part stays in its exit until the test moves the clock. A ported jsdom case that asserts a part in its exit thus sets the flag to `false`. With `true`, the part leaves at once.
 
 ### Test helpers
 
