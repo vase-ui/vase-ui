@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Directive } from 'vue';
-import * as Select from '../index.parts';
+import { Select } from '@vase-ui/vue/select';
 
 withDefaults(defineProps<{ shown?: boolean }>(), { shown: true });
 
