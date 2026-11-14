@@ -233,7 +233,7 @@ export function getPreviousTabbable(referenceElement: Element | null): Focusable
 export function getTabbableNearElement(
   referenceElement: Element | null,
   direction: 1 | -1,
-  exclude?: Element | null,
+  exclude?: (element: Element) => boolean,
 ): FocusableElement | null {
   if (!referenceElement) {
     return null;
@@ -251,11 +251,7 @@ export function getTabbableNearElement(
   for (let offset = 1; offset < list.length; offset += 1) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The remainder of a division by the length is an index of `list`.
     const element = list[(index + direction * offset + list.length) % list.length]!;
-    if (
-      !contains(exclude, element) &&
-      isTabbable(element) &&
-      isTabbableRadio(element, candidates)
-    ) {
+    if (!exclude?.(element) && isTabbable(element) && isTabbableRadio(element, candidates)) {
       return element;
     }
   }

@@ -90,6 +90,39 @@ describe('<Combobox.ItemIndicator />', () => {
     expect(screen.getByTestId('indicator')).toHaveAttribute('data-selected');
   });
 
+  it('shows a check mark when it has no default slot', async () => {
+    await render(<TestComponent value="a" />);
+
+    expect(screen.getByTestId('indicator')).toHaveTextContent('✔️');
+  });
+
+  it('gives the state of the indicator to the default slot', async () => {
+    await render(
+      <Combobox.Root defaultOpen defaultValue="a">
+        <Combobox.Input />
+        <Combobox.Portal>
+          <Combobox.Positioner>
+            <Combobox.Popup>
+              <Combobox.List>
+                <Combobox.Item value="a">
+                  <Combobox.ItemIndicator
+                    data-testid="indicator"
+                    v-slots={{
+                      default: ({ state }: { state: Combobox.ItemIndicator.State }) =>
+                        state.selected ? 'on' : 'off',
+                    }}
+                  />
+                </Combobox.Item>
+              </Combobox.List>
+            </Combobox.Popup>
+          </Combobox.Positioner>
+        </Combobox.Portal>
+      </Combobox.Root>,
+    );
+
+    expect(screen.getByTestId('indicator')).toHaveTextContent('on');
+  });
+
   it('preserves the kept-mounted element across selection changes', async () => {
     const { setProps } = await render(<TestComponent value="b" keepMounted />);
     const indicator = screen.getByTestId('indicator');
