@@ -16,7 +16,7 @@ export interface ComboboxListProps
 </script>
 
 <script setup lang="ts">
-import { computed, shallowRef, toRaw, watch } from 'vue';
+import { computed, onScopeDispose, shallowRef, toRaw, watch } from 'vue';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -56,16 +56,24 @@ if (!toRaw(store.state).virtualized) {
   // where the autofill matches the rendered text. The registry takes one labels ref for its life,
   // so the list gives it a ref of its own and copies the labels that count.
   const renderedLabels = shallowRef<Array<string | null>>([]);
+  const countsRenderedLabels = () => !hasItems.value || store.select('forceMounted');
   useCompositeList({ elementsRef: store.context.listRef, labelsRef: renderedLabels });
   watch(
-    [renderedLabels, () => !hasItems.value || store.select('forceMounted')],
-    ([labels, countsRenderedLabels]) => {
-      if (countsRenderedLabels) {
+    [renderedLabels, countsRenderedLabels],
+    ([labels, counts]) => {
+      if (counts) {
         store.context.labelsRef.value = labels;
       }
     },
     { flush: 'sync' },
   );
+  // The scope stops the watcher before the registry clears `renderedLabels`, so the list clears
+  // the labels of the root itself, as the registry of Base UI does at its unmount.
+  onScopeDispose(() => {
+    if (countsRenderedLabels()) {
+      store.context.labelsRef.value = [];
+    }
+  });
 }
 
 // A compiled template can mount a new list before it unmounts the old one. The old one then must
