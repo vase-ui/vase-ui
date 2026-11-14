@@ -501,6 +501,13 @@ describe('useTypeahead', () => {
       disabled.value = [1];
       await press('a');
       expect(matches).toEqual([0, 2]);
+
+      vi.advanceTimersByTime(100);
+      resetMs.value = 1000;
+      await press('a');
+      vi.advanceTimersByTime(100);
+      await press('v');
+      expect(matches).toEqual([0, 2, 0, 2]);
     });
 
     it('ends the session when the focus leaves the reference and the popup', async () => {
