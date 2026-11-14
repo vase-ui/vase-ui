@@ -91,9 +91,9 @@ export const audienceMenus = [
         description: 'Add navigation menus with keyboard support and focus handling already done.',
       },
       {
-        href: `${base}components/alert-dialog`,
-        title: 'Alert Dialog',
-        description: 'Ask the user to confirm an action without rebuilding focus management.',
+        href: `${base}components/dialog`,
+        title: 'Dialog',
+        description: 'Launch settings or upgrade flows without rebuilding focus management.',
       },
     ],
   },
