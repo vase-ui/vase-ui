@@ -1,6 +1,5 @@
 <script setup lang="ts">
-// No entry point exports a part of Popover yet, so the page imports them by their path.
-import * as Popover from '../../../../packages/vue/src/popover/index.parts';
+import { Popover } from '@vase-ui/vue/popover';
 
 // The page makes the handle in `setup`, so a request does not share it with another request.
 const handle = Popover.createHandle<string>();

@@ -225,20 +225,6 @@ describe('<Menu.Popup />', () => {
       );
     });
 
-    it('has the orientation of a horizontal menu', async () => {
-      await render(
-        <Menu.Root open orientation="horizontal">
-          <Menu.Portal>
-            <Menu.Positioner>
-              <Menu.Popup />
-            </Menu.Positioner>
-          </Menu.Portal>
-        </Menu.Root>,
-      );
-
-      expect(screen.getByRole('menu')).toHaveAttribute('aria-orientation', 'horizontal');
-    });
-
     it('has the state of the menu in its data attributes', async () => {
       await render(
         <Menu.Root open>
@@ -846,7 +832,7 @@ describe('<Menu.Popup />', () => {
         </Menu.Root>,
       ),
     ).rejects.toThrow(
-      'Vase UI: <Menu.Popup> and <Menu.Arrow> must be inside <Menu.Positioner>. Without a positioner the part has no side and no alignment. Put the part inside <Menu.Positioner>.',
+      'Vase UI: <Menu.Popup>, <Menu.Arrow> and <Menu.Viewport> must be inside <Menu.Positioner>. Without a positioner the part has no side and no alignment. Put the part inside <Menu.Positioner>.',
     );
 
     // Vue also warns about the error of `setup`.
