@@ -94,6 +94,7 @@ export function buildOptions(
     platform: 'neutral',
     target: 'baseline-widely-available',
     plugins: [prehydrationScripts(sourceRoots), Vue({ isProduction: true })],
+    tsconfig: 'tsconfig.build.json',
     dts: { generator: 'tsc', tsc: { vue: true } },
     deps: { onlyBundle: [] },
   };

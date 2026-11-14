@@ -576,7 +576,7 @@ describe('<Popover.Root />', () => {
   });
 
   describe('VUE-4: a popover in the popup of a popover', () => {
-    function renderNestedPopovers(changes: Array<[name: string, open: boolean, reason: string]>) {
+    function renderNestedPopovers(changes: [name: string, open: boolean, reason: string][]) {
       const record =
         (name: string) => (open: boolean, details: Popover.Root.ChangeEventDetails) => {
           changes.push([name, open, details.reason]);
@@ -604,7 +604,7 @@ describe('<Popover.Root />', () => {
     }
 
     it('keeps both open for a press in the child, and closes only the child for a press in the parent', async () => {
-      const changes: Array<[string, boolean, string]> = [];
+      const changes: [string, boolean, string][] = [];
       const { user } = await renderNestedPopovers(changes);
       const parentPopup = await screen.findByTestId('parent-popup');
       const childPopup = await screen.findByTestId('child-popup');
@@ -621,7 +621,7 @@ describe('<Popover.Root />', () => {
     });
 
     it('closes the child with the first Escape and the parent with the second', async () => {
-      const changes: Array<[string, boolean, string]> = [];
+      const changes: [string, boolean, string][] = [];
       const { user } = await renderNestedPopovers(changes);
       await screen.findByTestId('child-popup');
 

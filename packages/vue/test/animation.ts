@@ -1,10 +1,73 @@
+const EVENT_FRAMES = 180;
+const GUARD_FRAMES = 600;
+
 /**
- * Waits for the next event of a type on a target. It fails when none comes, so a missing animation
- * gives a message and not a timeout of the test.
+ * Resolves or rejects as the wait that `attach` starts. It runs `action` after `attach`, and it
+ * rejects with `message` when the wait does not end in `frames` frames of the page after `action`
+ * ends. `attach` returns a function that removes the wait.
+ * The limit is in frames of the page and not in seconds. A busy machine can stall the page for
+ * some seconds, and a limit in seconds can end during the stall. The page renders no frame during
+ * a stall, so the stall uses no frame of the limit. The browser ends a transition or an animation
+ * only in a frame.
+ */
+function waitWithFrameLimit<T>(
+  { frames, message, action }: { frames: number; message: string; action?: () => unknown },
+  attach: (resolve: (value: T) => void, reject: (error: Error) => void) => () => void,
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    let isSettled = false;
+    let frameRequest = 0;
+    let detach = () => {};
+
+    function settle() {
+      isSettled = true;
+      cancelAnimationFrame(frameRequest);
+      detach();
+    }
+    function countFrames(remaining: number) {
+      frameRequest = requestAnimationFrame(() => {
+        if (remaining > 1) {
+          countFrames(remaining - 1);
+          return;
+        }
+        settle();
+        reject(new Error(message));
+      });
+    }
+
+    detach = attach(
+      (value) => {
+        settle();
+        resolve(value);
+      },
+      (error) => {
+        settle();
+        reject(error);
+      },
+    );
+    // eslint-disable-next-line @typescript-eslint/require-await -- The async function turns a throw of `action` into a rejection.
+    (async () => action?.())().then(
+      () => {
+        if (!isSettled) {
+          countFrames(frames);
+        }
+      },
+      (error: unknown) => {
+        settle();
+        // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- The helper passes on the value that `action` threw.
+        reject(error);
+      },
+    );
+  });
+}
+
+/**
+ * Waits for the next event of a type on a target. It fails when none comes in 180 frames of the
+ * page, so a missing animation gives a message and not a timeout of the test.
  * With `after`, an event of the type counts only when an event of the type `after` came first.
- * With `action`, the function runs after the listeners are attached, and the 3 seconds start when
- * it ends. A command of the browser, such as a real click, can take more than 3 seconds on a busy
- * machine.
+ * With `action`, the function runs after the listeners are attached, and the count of frames
+ * starts when it ends. A command of the browser, such as a real click, can take some seconds on a
+ * busy machine, and the page renders frames during that time.
  * Attach the listeners before the action, so that the document has a listener of the end event
  * when the transition starts. A late frame can end a transition in the update that starts it, and
  * Chromium then sends no `transitionend` to a listener that comes later.
@@ -14,80 +77,61 @@ export function nextEvent(
   type: string,
   { after, action }: { after?: string; action?: () => unknown } = {},
 ): Promise<Event> {
-  return new Promise((resolve, reject) => {
-    let hasAfterEvent = after === undefined;
-    let isSettled = false;
-    let timer: ReturnType<typeof setTimeout> | undefined;
+  const message =
+    after === undefined
+      ? `No ${type} event came in ${EVENT_FRAMES} frames of the page.`
+      : `No ${type} event came after a ${after} event in ${EVENT_FRAMES} frames of the page.`;
 
-    function settle() {
-      isSettled = true;
-      clearTimeout(timer);
-      target.removeEventListener(type, handleEvent);
-      if (after !== undefined) {
-        target.removeEventListener(after, handleAfterEvent);
-      }
-    }
+  return waitWithFrameLimit({ frames: EVENT_FRAMES, message, action }, (resolve) => {
+    let hasAfterEvent = after === undefined;
     function handleAfterEvent() {
       hasAfterEvent = true;
     }
     function handleEvent(event: Event) {
       if (hasAfterEvent) {
-        settle();
         resolve(event);
       }
-    }
-    function startTimer() {
-      if (isSettled) {
-        return;
-      }
-      timer = setTimeout(() => {
-        settle();
-        reject(
-          new Error(
-            after === undefined
-              ? `No ${type} event came in 3 seconds.`
-              : `No ${type} event came after a ${after} event in 3 seconds.`,
-          ),
-        );
-      }, 3000);
     }
 
     if (after !== undefined) {
       target.addEventListener(after, handleAfterEvent);
     }
     target.addEventListener(type, handleEvent);
-    (async () => action?.())().then(startTimer, (error: unknown) => {
-      settle();
-      reject(error);
-    });
+    return () => {
+      target.removeEventListener(type, handleEvent);
+      if (after !== undefined) {
+        target.removeEventListener(after, handleAfterEvent);
+      }
+    };
   });
 }
-
-const GUARD_DURATION = 10_000;
 
 /**
  * Resolves with the list that the next `getAnimations()` call on the element returns. A part makes
  * that call when it starts to wait for the animations of the element. It then waits for the
  * animations of that list, and it attaches to each of them before the test continues.
- * It fails when no call comes in 10 seconds. A busy machine can stall the page for some seconds,
- * and a part that is right makes its call after the stall. The time starts when the function is
- * called, so start the action in a timer task or with an event. A command of the browser can take
- * longer.
- * Call it before the action. With three or more elements in one frame, a part can get the
- * animations of an element from the root of the tree. This function does not see that read.
+ * It fails when no call comes in 600 frames of the page. With `action`, the function runs after
+ * this function replaced `getAnimations` of the element, and the count of frames starts when it
+ * ends, as in `nextEvent`.
+ * Call it before the action, or give it the action. With three or more elements in one frame, a
+ * part can get the animations of an element from the root of the tree. This function does not see
+ * that read.
  */
-export function nextAnimationsRead(element: Element): Promise<Animation[]> {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => {
-      Reflect.deleteProperty(element, 'getAnimations');
-      reject(new Error('No part read the animations of the element in 10 seconds.'));
-    }, GUARD_DURATION);
+export function nextAnimationsRead(
+  element: Element,
+  { action }: { action?: () => unknown } = {},
+): Promise<Animation[]> {
+  const message = `No part read the animations of the element in ${GUARD_FRAMES} frames of the page.`;
+
+  return waitWithFrameLimit({ frames: GUARD_FRAMES, message, action }, (resolve) => {
     element.getAnimations = (options) => {
       Reflect.deleteProperty(element, 'getAnimations');
-      clearTimeout(timer);
       const animations = element.getAnimations(options);
       resolve(animations);
       return animations;
+    };
+    return () => {
+      Reflect.deleteProperty(element, 'getAnimations');
     };
   });
 }
@@ -154,27 +198,29 @@ export async function probeFrameAfterExit(
     animation.currentTime = endTimes[index] - SEEK_MARGIN;
   });
 
-  return new Promise<FrameProbeResult>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      reject(new Error('The exit animation did not end in 10 seconds.'));
-    }, GUARD_DURATION);
-    Promise.all(animations.map((animation) => animation.finished)).then(
-      () => {
-        clearTimeout(timer);
-        const endTime = Number(document.timeline.currentTime);
-        requestAnimationFrame((frameTime) => {
-          resolve({ isGone: isGone(), isSameFrame: Math.abs(frameTime - endTime) < 0.5 });
-        });
-      },
-      () => {
-        clearTimeout(timer);
-        reject(
-          new Error(
-            'The browser canceled the exit animation. The panel went before the end of the exit.',
+  await waitWithFrameLimit<void>(
+    {
+      frames: GUARD_FRAMES,
+      message: `The exit animation did not end in ${GUARD_FRAMES} frames of the page.`,
+    },
+    (resolve, reject) => {
+      Promise.all(animations.map((animation) => animation.finished)).then(
+        () => resolve(),
+        () =>
+          reject(
+            new Error(
+              'The browser canceled the exit animation. The panel went before the end of the exit.',
+            ),
           ),
-        );
-      },
-    );
+      );
+      return () => {};
+    },
+  );
+  const endTime = Number(document.timeline.currentTime);
+  return new Promise<FrameProbeResult>((resolve) => {
+    requestAnimationFrame((frameTime) => {
+      resolve({ isGone: isGone(), isSameFrame: Math.abs(frameTime - endTime) < 0.5 });
+    });
   });
 }
 

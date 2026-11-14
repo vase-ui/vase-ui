@@ -6,9 +6,11 @@ export function getDecimalPrecision(num: number) {
   // This handles the case when num is very small (0.00000001), js will turn this into 1e-8.
   // When num is bigger than 1 or less than -1 it won't get converted to this notation so it's fine.
   if (Math.abs(num) < 1) {
+    /* eslint-disable @typescript-eslint/no-non-null-assertion -- A number below 1 has an exponent that starts with `e-`, so the split has two parts. */
     const parts = num.toExponential().split('e-');
-    const matissaDecimalPart = parts[0].split('.')[1];
-    return (matissaDecimalPart ? matissaDecimalPart.length : 0) + parseInt(parts[1], 10);
+    const matissaDecimalPart = parts[0]!.split('.')[1];
+    return (matissaDecimalPart ? matissaDecimalPart.length : 0) + parseInt(parts[1]!, 10);
+    /* eslint-enable @typescript-eslint/no-non-null-assertion */
   }
 
   const decimalPart = num.toString().split('.')[1];

@@ -338,7 +338,7 @@ describe('<Popover.Popup />', () => {
 
   it('has no transition while it starts', async () => {
     // The start lasts one frame, so an observer records the popup when the portal adds it.
-    const starts: Array<{ isStarting: boolean; transition: string }> = [];
+    const starts: { isStarting: boolean; transition: string }[] = [];
     const observer = new MutationObserver((records) => {
       for (const record of records) {
         for (const node of record.addedNodes) {

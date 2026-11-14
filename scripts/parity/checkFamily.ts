@@ -103,7 +103,8 @@ function coverRank(target: Target, row: TestRow): number {
       return startsWith(row.describe, target.describe) ? 1 + target.describe.length : -1;
     case 'file':
       return 0;
-    default:
+    case 'entry':
+    case 'prop':
       return -1;
   }
 }
@@ -163,7 +164,8 @@ function targetExists(target: Target, extract: FamilyExtract): boolean {
     case 'case':
     case 'suite':
       return rows?.some((row) => coverRank(target, row) === 1000) === true;
-    default:
+    case 'entry':
+    case 'prop':
       return true;
   }
 }

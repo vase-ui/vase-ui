@@ -111,6 +111,7 @@ if (rootStore === undefined && props.handle === undefined) {
   );
 }
 // The store of a detached trigger changes when a root attaches to its handle.
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The check above throws when the trigger has neither a root nor a handle.
 const store = computed<PopoverHandleStore<any>>(() => handleStore.value ?? rootStore!);
 
 const triggerId = useVaseUiId(() => props.id);

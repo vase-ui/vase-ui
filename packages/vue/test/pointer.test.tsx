@@ -40,7 +40,7 @@ describe('firePointer', () => {
   // shim once dropped `pointerId` and `pointerType` with no failure: each consumer keys on
   // `'touch'` and `'pen'`, so `undefined` falls the same way as `'mouse'`.
   it('delivers the rest of the init alongside the timeStamp', async () => {
-    const seen: Array<Record<string, unknown>> = [];
+    const seen: Record<string, unknown>[] = [];
     await render(
       <Target
         onEvent={(event) =>

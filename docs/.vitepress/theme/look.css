@@ -2,6 +2,14 @@
    and docs/src/app/(docs)/layout.css. A rule here sets what a variable of the default theme cannot. */
 
 /* `.Layout` is the root of the site. A popup of a demo is outside it, in the portal container. */
+
+/* The quick start of Base UI gives this style to the root of an app. `.Layout` is then one stacking
+   context, and the popup shows above each element in it. Without the style, a code block of
+   VitePress, which has a `z-index`, shows above the popup. */
+.Layout {
+  isolation: isolate;
+}
+
 .Layout ::selection {
   background-color: var(--vase-color-selection);
 }

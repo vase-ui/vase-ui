@@ -4,145 +4,35 @@
     "docs/src/app/(docs)/react/components/alert-dialog/**"
   ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
-  "exceptions": [
+  "exceptions": [],
+  "surfaceAdditions": [
     {
-      "upstream": "packages/react/src/alert-dialog/index.ts",
-      "kind": "waits-on",
-      "reason": "The file is the entry point of Alert Dialog. Until each Base UI case of the family has a counterpart, the tests import `index.parts.ts`."
-    },
-    {
-      "upstream": "packages/react/src/alert-dialog/root/AlertDialogRoot.spec.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/alert-dialog/index.ts",
-      "reason": "The type test imports the entry point of Alert Dialog, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/alert-dialog/root/AlertDialogRoot.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/alert-dialog/index.ts",
-      "reason": "The file imports the entry point of Alert Dialog, which Vase UI does not have. The suite calls `dialogRootSharedTests` and `detachedTriggersConformanceTests` have no counterpart."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
-      "entry": "Root",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/alert-dialog/index.ts",
-      "reason": "The entry point of Alert Dialog exports `AlertDialog.Root`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
       "entry": "Trigger",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/alert-dialog/index.ts",
-      "reason": "The entry point of Alert Dialog exports `AlertDialog.Trigger`. Vase UI does not have that entry point."
+      "prop": "disabled",
+      "reason": "The part gives `disabled` to `Dialog.Trigger`, which reads it for its state and for `useButton`, so it is a declared prop. Base UI reads it from the native attributes of the trigger, and `types.md` has no row for a native attribute."
     },
     {
-      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
-      "entry": "Portal",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/alert-dialog/index.ts",
-      "reason": "The entry point of Alert Dialog exports `AlertDialog.Portal`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
-      "entry": "Backdrop",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/alert-dialog/index.ts",
-      "reason": "The entry point of Alert Dialog exports `AlertDialog.Backdrop`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
-      "entry": "Popup",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/alert-dialog/index.ts",
-      "reason": "The entry point of Alert Dialog exports `AlertDialog.Popup`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
       "entry": "Title",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/alert-dialog/index.ts",
-      "reason": "The entry point of Alert Dialog exports `AlertDialog.Title`. Vase UI does not have that entry point."
+      "prop": "id",
+      "reason": "The part gives `id` to the root for `aria-labelledby` of the popup and follows a change of it, so it is a declared prop. Base UI reads it from the native attributes of the title, and `types.md` has no row for a native attribute."
     },
     {
-      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
       "entry": "Description",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/alert-dialog/index.ts",
-      "reason": "The entry point of Alert Dialog exports `AlertDialog.Description`. Vase UI does not have that entry point."
+      "prop": "id",
+      "reason": "The part gives `id` to the root for `aria-describedby` of the popup and follows a change of it, so it is a declared prop. Base UI reads it from the native attributes of the description, and `types.md` has no row for a native attribute."
     },
     {
-      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
       "entry": "Close",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/alert-dialog/index.ts",
-      "reason": "The entry point of Alert Dialog exports `AlertDialog.Close`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
-      "entry": "Viewport",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/alert-dialog/index.ts",
-      "reason": "The entry point of Alert Dialog exports `AlertDialog.Viewport`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
-      "entry": "createHandle",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/alert-dialog/index.ts",
-      "reason": "The entry point of Alert Dialog exports `AlertDialog.createHandle`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
-      "entry": "Handle",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/alert-dialog/index.ts",
-      "reason": "The entry point of Alert Dialog exports `AlertDialog.Handle`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
-      "entry": "AlertDialogBackdropDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/alert-dialog/index.ts",
-      "reason": "The entry point of Alert Dialog exports the attribute names of `AlertDialog.Backdrop`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
-      "entry": "AlertDialogCloseDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/alert-dialog/index.ts",
-      "reason": "The entry point of Alert Dialog exports the attribute names of `AlertDialog.Close`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
-      "entry": "AlertDialogPopupCssVariables",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/alert-dialog/index.ts",
-      "reason": "The entry point of Alert Dialog exports the CSS variable names of `AlertDialog.Popup`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
-      "entry": "AlertDialogPopupDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/alert-dialog/index.ts",
-      "reason": "The entry point of Alert Dialog exports the attribute names of `AlertDialog.Popup`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
-      "entry": "AlertDialogTriggerDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/alert-dialog/index.ts",
-      "reason": "The entry point of Alert Dialog exports the attribute names of `AlertDialog.Trigger`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
-      "entry": "AlertDialogViewportDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/alert-dialog/index.ts",
-      "reason": "The entry point of Alert Dialog exports the attribute names of `AlertDialog.Viewport`. Vase UI does not have that entry point."
+      "prop": "disabled",
+      "reason": "The part reads `disabled` for its state and for `useButton`, so it is a declared prop. Base UI reads it from the native attributes of the button, and `types.md` has no row for a native attribute."
     }
   ],
-  "surfaceAdditions": [],
-  "returnTypeDifferences": [],
+  "returnTypeDifferences": [
+    {
+      "entry": "createHandle",
+      "returns": "AlertDialogHandle<Payload>",
+      "reason": "`AlertDialog.Handle` is the class `AlertDialogHandle`. The declaration of the function names the class, and Base UI documents the same class by its name in the namespace."
+    }
+  ],
   "notApplicableCommits": []
 }

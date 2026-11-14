@@ -59,6 +59,6 @@ export interface ItemCollection<Item = any, Value = any> {
   label(
     valueOrItem: Value,
     isEqual: ItemEqualityComparer<Value>,
-    fallback?: ((valueOrItem: Value) => string) | undefined,
+    fallback?: (valueOrItem: Value) => string,
   ): string;
 }
