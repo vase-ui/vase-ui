@@ -471,6 +471,39 @@ describe('useHoverPopupInteraction', () => {
 
         expect(document.body.style.pointerEvents).toBe('');
       });
+
+      it('gives back the pointer events that a trigger of the old store blocked', async () => {
+        const { StoreChangeApp, moved, stores } = createStoreChangeApp();
+        await render(<StoreChangeApp />);
+        // The first store stays closed, so the block effect holds no pointer events. Only the stop
+        // effect can give them back.
+        getHoverIntent(stores.first).blockOutsidePointerEvents({
+          scopeElement: document.body,
+          triggerElement: screen.getByTestId('trigger'),
+          positionerElement: screen.getByTestId('popup'),
+        });
+        expect(document.body.style.pointerEvents).toBe('none');
+
+        moved.value = true;
+        await flushMicrotasks();
+
+        expect(document.body.style.pointerEvents).toBe('');
+      });
+
+      it('blocks the pointer events for the new store', async () => {
+        const { StoreChangeApp, moved, stores } = createStoreChangeApp();
+        await render(<StoreChangeApp />);
+        // Only the second store asks to block. The part blocks nothing until it follows that store.
+        getHoverIntent(stores.second).handleCloseOptions = { blockPointerEvents: true };
+        await openByHover(stores.first);
+        await openByHover(stores.second);
+        expect(document.body.style.pointerEvents).toBe('');
+
+        moved.value = true;
+        await flushMicrotasks();
+
+        expect(document.body.style.pointerEvents).toBe('none');
+      });
     });
 
     describe('the popup tree', () => {
