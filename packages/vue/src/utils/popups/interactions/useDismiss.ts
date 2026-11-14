@@ -73,7 +73,6 @@ function getEscapeLayers(): EscapeLayers {
   return holder[ESCAPE_LAYERS_KEY];
 }
 
-// Each mounted `useDismiss` call adds a getter of the positioner element of its popup.
 const positionerElementGetters = new Set<() => Element | null>();
 
 /** Whether the shadow tree of `target` holds the positioner element of a popup, at any depth. */

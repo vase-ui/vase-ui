@@ -1247,25 +1247,51 @@ describe('<Popover.Root />', () => {
       });
     });
 
+  });
+
+  describe('VUE-75: an outside button that toggles the popover', () => {
     it.each([
-      { name: 'toggles it', cancel: false, open: true },
-      { name: 'cancels the outside press', cancel: true, open: false },
-    ])('VUE-75: an outside button that $name', async ({ cancel, open: openAfter }) => {
+      { name: 'opens it again: v-model', withHandle: false, cancel: false },
+      { name: 'opens it again: handle', withHandle: true, cancel: false },
+      { name: 'closes it with details.cancel(): v-model', withHandle: false, cancel: true },
+      { name: 'closes it with details.cancel(): handle', withHandle: true, cancel: true },
+    ])('$name', async ({ withHandle, cancel }) => {
+      const handle = Popover.createHandle();
       const open = shallowRef(false);
+      const isOpen = () => (withHandle ? handle.isOpen : open.value);
+
+      function toggle() {
+        if (!withHandle) {
+          open.value = !open.value;
+        } else if (handle.isOpen) {
+          handle.close();
+        } else {
+          handle.open('trigger');
+        }
+      }
+
       const Test = defineComponent(() => () => (
         <div>
+          <Popover.Trigger handle={handle} id="trigger">
+            Trigger
+          </Popover.Trigger>
           <Popover.Root
-            open={open.value}
-            triggerId="trigger"
-            onOpenChange={(nextOpen: boolean, details: Popover.Root.ChangeEventDetails) => {
-              if (cancel && details.event.target === toggle()) {
+            handle={handle}
+            {...(withHandle
+              ? {}
+              : {
+                  open: open.value,
+                  triggerId: 'trigger',
+                  'onUpdate:open': (value: boolean) => {
+                    open.value = value;
+                  },
+                })}
+            onOpenChange={(_open: boolean, details: Popover.Root.ChangeEventDetails) => {
+              if (cancel && details.event.target === toggleButton()) {
                 details.cancel();
-                return;
               }
-              open.value = nextOpen;
             }}
           >
-            <Popover.Trigger id="trigger">Trigger</Popover.Trigger>
             <Popover.Portal>
               <Popover.Positioner>
                 <Popover.Popup data-testid="popup" initialFocus={false}>
@@ -1274,34 +1300,29 @@ describe('<Popover.Root />', () => {
               </Popover.Positioner>
             </Popover.Portal>
           </Popover.Root>
-          <button
-            type="button"
-            onClick={() => {
-              open.value = !open.value;
-            }}
-          >
+          <button type="button" onClick={toggle}>
             Toggle
           </button>
         </div>
       ));
-      const toggle = () => screen.getByRole('button', { name: 'Toggle' });
+      const toggleButton = () => screen.getByRole('button', { name: 'Toggle' });
 
       const { user } = await render(<Test />);
-      await user.click(toggle());
+      await user.click(toggleButton());
       await waitFor(() => {
         expect(screen.getByTestId('popup')).toBeVisible();
       });
 
-      await user.click(toggle());
+      await user.click(toggleButton());
 
-      expect(open.value).toBe(openAfter);
-      if (openAfter) {
+      expect(isOpen()).toBe(!cancel);
+      if (cancel) {
         await waitFor(() => {
-          expect(screen.getByTestId('popup')).toBeVisible();
+          expect(screen.queryByTestId('popup')).toBe(null);
         });
       } else {
         await waitFor(() => {
-          expect(screen.queryByTestId('popup')).toBe(null);
+          expect(screen.getByTestId('popup')).toBeVisible();
         });
       }
     });
