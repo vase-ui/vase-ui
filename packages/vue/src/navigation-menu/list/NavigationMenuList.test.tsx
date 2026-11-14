@@ -1,8 +1,10 @@
 import { vi, describe, it, expect } from 'vitest';
+import { defineComponent } from 'vue';
 import {
   createRenderer,
   describeConformance,
   fireEvent,
+  flushMicrotasks,
   screen,
   takeReportedMessages,
 } from '#test-utils';
@@ -143,6 +145,82 @@ describe('<NavigationMenu.List />', () => {
 
       await user.keyboard('[ArrowRight]');
       expect(screen.getByRole('link', { name: 'After' })).toHaveFocus();
+    });
+  });
+
+  it('stops vertical navigation keys from escaping the list', async () => {
+    const handleKeyDown = vi.fn();
+
+    await render(
+      <div onKeydown={handleKeyDown}>
+        <NavigationMenu.Root orientation="vertical">
+          <NavigationMenu.List data-testid="list">
+            <NavigationMenu.Item>
+              <NavigationMenu.Trigger>Item</NavigationMenu.Trigger>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+        </NavigationMenu.Root>
+      </div>,
+    );
+
+    const trigger = screen.getByRole('button', { name: 'Item' });
+    trigger.focus();
+    await fireEvent.keyDown(trigger, { key: 'ArrowUp' });
+    await fireEvent.keyDown(trigger, { key: 'ArrowDown' });
+
+    expect(handleKeyDown.mock.calls.length).toBe(0);
+
+    await fireEvent.keyDown(trigger, { key: 'PageDown' });
+
+    expect(handleKeyDown.mock.calls.length).toBe(1);
+  });
+
+  describe('item removal', () => {
+    const App = defineComponent({
+      props: { showFirst: { type: Boolean, required: true } },
+      setup(props) {
+        return () => (
+          <NavigationMenu.Root>
+            <NavigationMenu.List>
+              {props.showFirst && (
+                <NavigationMenu.Item>
+                  <NavigationMenu.Trigger data-testid="first">One</NavigationMenu.Trigger>
+                </NavigationMenu.Item>
+              )}
+              <NavigationMenu.Item>
+                <NavigationMenu.Trigger data-testid="middle">Two</NavigationMenu.Trigger>
+              </NavigationMenu.Item>
+              <NavigationMenu.Item>
+                <NavigationMenu.Trigger data-testid="last">Three</NavigationMenu.Trigger>
+              </NavigationMenu.Item>
+            </NavigationMenu.List>
+          </NavigationMenu.Root>
+        );
+      },
+    });
+
+    it('navigates from the focused trigger after an earlier item is removed', async () => {
+      const { setProps } = await render(<App showFirst />);
+
+      const first = screen.getByTestId('first');
+      first.focus();
+
+      await fireEvent.keyDown(first, { key: 'ArrowRight' });
+      await flushMicrotasks();
+
+      const middle = screen.getByTestId('middle');
+      await fireEvent.keyDown(middle, { key: 'ArrowRight' });
+      await flushMicrotasks();
+
+      const last = screen.getByTestId('last');
+      expect(last).toHaveFocus();
+
+      await setProps({ showFirst: false });
+
+      await fireEvent.keyDown(last, { key: 'ArrowLeft' });
+      await flushMicrotasks();
+
+      expect(middle).toHaveFocus();
     });
   });
 
