@@ -43,7 +43,7 @@
       "upstream": "packages/react/src/dialog/root/DialogRoot.detached-triggers.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. The case `does not warn for a detached payload open in production` renders no part. It needs a production build, so its counterpart is a case of the Node project."
+      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. The case `closes a nonmodal dialog on Escape from an inactive trigger inside a popover on every open` also renders `Popover.Popup`, which Vase UI does not have. The case `does not warn for a detached payload open in production` renders no part. It needs a production build, so its counterpart is a case of the Node project."
     },
     {
       "upstream": "packages/react/src/dialog/root/DialogRoot.spec.tsx",
@@ -55,7 +55,7 @@
       "upstream": "packages/react/src/dialog/root/DialogRoot.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Some cases also render Menu, Popover, Select, Number Field or `AlertDialog.Popup`, which Vase UI does not have."
+      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. The cases that have no counterpart render Menu, `Popover.Popup` or `AlertDialog.Popup`, which Vase UI does not have. For the same reason, the list of `closed shadow root` › `nested $name` has no `alert dialog` kind."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",

@@ -1960,7 +1960,6 @@ describe('<Dialog.Root />', () => {
 
           // Spans the external unlock at 200ms: there must be no gap where the page scrolls.
           for (const at of [0, 120, 260, 400]) {
-            // eslint-disable-next-line no-await-in-loop
             await wait(at === 0 ? 0 : 140);
             expect(`t${at}: ${isPageLocked()}`).toBe(`t${at}: true`);
           }
