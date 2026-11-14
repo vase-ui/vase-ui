@@ -39,23 +39,26 @@ defineSlots<{
 }>();
 
 const store = useComboboxRootContext();
-const { chipsRef } = useComboboxChipsContext()!;
+const chipsContext = useComboboxChipsContext();
+if (chipsContext === undefined) {
+  throw new Error(
+    'Vase UI: <Combobox.Chip> must be inside <Combobox.Chips>. Without the chips part the chip cannot find the other chips for the arrow keys. Put the chip inside <Combobox.Chips>.',
+  );
+}
+const { chipsRef } = chipsContext;
 const direction = useDirection();
 
 const disabled = computed(() => store.select('disabled'));
 const readOnly = computed(() => store.select('readOnly'));
 
-const { ref, index } = useCompositeListItem();
+const listItem = useCompositeListItem();
 
-/**
- * Handles the key and focuses the next element: another chip, or the input.
- */
 async function handleKeydown(event: KeyboardEvent) {
   if (disabled.value || readOnly.value) {
     return;
   }
 
-  const currentIndex = index.value;
+  const currentIndex = listItem.index.value;
   const { selectedValue } = toRaw(store.state);
   const [previousChipKey, nextChipKey] = getChipNavigationKeys(direction.value);
   let nextIndex: number | undefined = currentIndex;
@@ -114,7 +117,7 @@ const state = computed<ComboboxChipState>(() => ({ disabled: disabled.value }));
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: [ref],
+  ref: [listItem.ref],
   props: (attrs) => [
     {
       tabindex: -1,
@@ -126,7 +129,7 @@ const { element, elementProps } = useRenderElement('div', props, {
   ],
 });
 
-provide(ComboboxChipContext, { index });
+provide(ComboboxChipContext, { index: listItem.index });
 
 defineExpose({ element });
 </script>

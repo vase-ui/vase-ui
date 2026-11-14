@@ -1,7 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
-import { createRenderer, describeConformance, flushMicrotasks, screen, waitFor } from '#test-utils';
+import {
+  createRenderer,
+  describeConformance,
+  flushMicrotasks,
+  screen,
+  takeReportedMessages,
+  waitFor,
+} from '#test-utils';
 import * as Combobox from '../index.parts';
 
 describe('<Combobox.Chip />', () => {
@@ -607,5 +614,29 @@ describe('<Combobox.Chip />', () => {
       await user.click(chip);
       expect(input).toHaveFocus();
     });
+  });
+
+  // A case that throws in `setup` is the last case of its file.
+  it('throws a descriptive error when rendered outside <Combobox.Chips>', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    try {
+      await expect(
+        render(
+          <Combobox.Root multiple>
+            <Combobox.Chip />
+          </Combobox.Root>,
+        ),
+      ).rejects.toThrow(
+        'Vase UI: <Combobox.Chip> must be inside <Combobox.Chips>. Without the chips part the chip cannot find the other chips for the arrow keys. Put the chip inside <Combobox.Chips>.',
+      );
+    } finally {
+      errorSpy.mockRestore();
+    }
+
+    // Vue also warns about the error of `setup`.
+    expect(takeReportedMessages()).toEqual([
+      expect.stringContaining('Unhandled error during execution of setup function'),
+    ]);
   });
 });

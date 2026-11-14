@@ -10,7 +10,7 @@
       "describe": ["<Combobox.Chips />"],
       "title": "does not focus the input when pressing content in a nested React portal",
       "kind": "not-applicable",
-      "reason": "React sends a press in a portal up the React tree, so the chips get it. Vue sends a press only up the DOM, and a `Teleport` puts its content outside the chips. The chips get no such press."
+      "reason": "React sends the press of a portal up the React tree, so the chips get it. A Vue press goes up the DOM only, and a `Teleport` puts its content outside the chips. The chips thus get no such press."
     },
     {
       "upstream": "packages/react/src/combobox/clear/ComboboxClear.test.tsx",

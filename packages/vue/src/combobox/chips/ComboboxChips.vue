@@ -33,7 +33,7 @@ const store = useComboboxRootContext();
 
 const hasSelectionChips = computed(() => store.select('hasSelectionChips'));
 
-const chipsRef = shallowRef<Array<HTMLButtonElement | null>>([]);
+const chipsRef = shallowRef<(HTMLButtonElement | null)[]>([]);
 useCompositeList({ elementsRef: chipsRef });
 provide(ComboboxChipsContext, { chipsRef });
 

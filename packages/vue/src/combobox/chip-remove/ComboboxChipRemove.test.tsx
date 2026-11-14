@@ -44,6 +44,28 @@ describe('<Combobox.ChipRemove />', () => {
       expect(remove).toHaveAttribute('aria-disabled', 'true');
     });
 
+    it('does not remove the chip when it has the prop disabled', async () => {
+      const handleValueChange = vi.fn();
+      const { user } = await render(
+        <Combobox.Root multiple defaultValue={['apple']} onValueChange={handleValueChange}>
+          <Combobox.Chips>
+            <Combobox.Chip>
+              apple
+              <Combobox.ChipRemove data-testid="remove" disabled />
+            </Combobox.Chip>
+          </Combobox.Chips>
+        </Combobox.Root>,
+      );
+
+      const remove = screen.getByTestId('remove');
+      expect(remove).toHaveAttribute('aria-disabled', 'true');
+      expect(remove).toHaveAttribute('data-disabled');
+
+      await user.click(remove);
+
+      expect(handleValueChange).not.toHaveBeenCalled();
+    });
+
     it('should not remove chip when disabled', async () => {
       const handleValueChange = vi.fn();
       const { user } = await render(
