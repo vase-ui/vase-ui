@@ -55,6 +55,14 @@ describe('layout', () => {
 
       expect(Object.keys(layout)).toEqual([id, 'b']);
       expect(Object.values(layout)).toEqual([50, 50]);
+      // The requested layout does not name the panel, so the panel takes the space that is left.
+      expect(Object.values(resolveLayout([panel(id), panel('b')], { b: 30 }))).toEqual([70, 30]);
+      expect(hasSamePanels({ [id]: 50, b: 50 }, { b: 50, c: 50 })).toBe(false);
+      expect(toRequestedLayout({ a: 50, b: 50 }, { [id]: 20, a: 40, b: 40 })).toEqual({
+        [id]: 20,
+        a: 40,
+        b: 40,
+      });
     },
   );
 
@@ -132,9 +140,9 @@ describe('layout', () => {
       false,
     );
     // The sums allow 100, but no size of the first panel is inside its constraints.
-    expect(
-      areConstraintsFeasible([panel('a', { minSize: 60, maxSize: 40 }), panel('b')]),
-    ).toBe(false);
+    expect(areConstraintsFeasible([panel('a', { minSize: 60, maxSize: 40 }), panel('b')])).toBe(
+      false,
+    );
   });
 
   it('fit: a new panel takes its default and the others keep their ratio', () => {

@@ -543,6 +543,31 @@ describe('<Resizable.Root />', () => {
       });
     });
 
+    it('emits a change for a panel that mounts late with the id constructor', async () => {
+      const showLate = shallowRef(false);
+      const onLayoutChange = vi.fn();
+      await render(() => (
+        <div style={{ width: '1000px' }}>
+          <Resizable.Root defaultLayout={{ a: 50, b: 50 }} onLayoutChange={onLayoutChange}>
+            <Resizable.Panel id="a" />
+            <Resizable.Panel id="b" />
+            {showLate.value ? <Resizable.Panel id="constructor" /> : null}
+          </Resizable.Root>
+        </div>
+      ));
+
+      showLate.value = true;
+      await nextTick();
+      await flushMicrotasks();
+
+      // An object has a `constructor` key, but the layout does not name the panel.
+      expect(onLayoutChange).toHaveBeenCalledTimes(1);
+      expect(onLayoutChange).toHaveBeenCalledWith(
+        { a: 33.334, b: 33.333, constructor: 33.333 },
+        expect.objectContaining({ reason: REASONS.none }),
+      );
+    });
+
     it('lets a listener cancel the change of a panel that mounts', async () => {
       const showMiddle = shallowRef(false);
       const onUpdate = vi.fn();
