@@ -52,7 +52,7 @@ The root emits `valueCommitted` when a press or a drag ends, and when the user p
 
 ## Hour cycle
 
-A 12-hour face has the hours 1 to 12. `TimeClock.DayPeriod` selects the half of the day, and it keeps the minutes and the seconds. A 24-hour face has the hours 1 to 12 on an outer ring, and the hours 13 to 23 and 00 on an inner ring. A press that is near the center selects the inner ring. `TimeClock.DayPeriod` renders nothing on a 24-hour face.
+A 12-hour face has the hours 1 to 12. `TimeClock.DayPeriod` moves the time to the other half of the day and keeps the rest of the time. A 24-hour face has the hours 1 to 12 on an outer ring, and the hours 13 to 23 and 00 on an inner ring. A press that is near the center selects the inner ring. `TimeClock.DayPeriod` renders nothing on a 24-hour face.
 
 The `hourCycle` prop sets the hour cycle. With no prop, the hour cycle of the locale applies.
 
@@ -97,7 +97,7 @@ Set `hourCycle="24"` for a face with an inner ring.
 
 ### Seconds
 
-Set `granularity="second"` to show the seconds after the minutes.
+Set `granularity="second"` to go on to the seconds after the minutes.
 
 <DemoFrame>
   <DemoTimeClockSeconds />
@@ -161,3 +161,25 @@ A key goes over a disabled number. The Left Arrow and the Right Arrow do not cha
 ## API reference
 
 <ApiReference />
+
+## Additional types
+
+### TimeClockView
+
+<ApiReference name="TimeClockView" />
+
+### TimeClockFaceNumber
+
+<ApiReference name="TimeClockFaceNumber" />
+
+### TimeClockDayPeriodValue
+
+<ApiReference name="TimeClockDayPeriodValue" />
+
+### TimeClock.Root.ChangeEventReason
+
+<ApiReference name="TimeClock.Root.ChangeEventReason" />
+
+### TimeClock.Root.CommitEventReason
+
+<ApiReference name="TimeClock.Root.CommitEventReason" />
