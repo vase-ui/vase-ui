@@ -812,6 +812,8 @@ The focus helpers of a popup are in `src/utils/popups/focus`.
 - It renders no element. It reads the popup element from `positionerElement` of the store with `getFloatingFocusElement`, and the reference from `anchorElement`.
 - It renders two inside guards around its content, unless it is disabled. A modal popup has them. A popup that is not modal has them only in a `FloatingPortal`.
 - `Combobox.Popup` disables its focus manager when the popup closes, not when it unmounts. During an exit animation, the popup then has no guards, and the focus returns at the close (`BUG-5519`).
+- A popup part renders its element in the default slot of `FloatingFocusManager`. A change of a value that only `elementProps()` reads renders the focus manager again. It does not render the part again, so `onUpdated` of the part does not run.
+- `Combobox.Popup` writes the rendered `id` of its element to the store in `onMounted` and `onUpdated`. A `watch` of its default id with `flush: 'post'` does the same, because only `elementProps()` reads that id.
 - A modal popup has no guards when `initialFocus` is `false` and its reference is a typeable element with `role="combobox"`. The focus stays in the reference then.
 - A `keydown` listener on the document stops the Tab key while the focus is in a modal popup that has no tabbable element. The guards have nothing to focus then.
 - `previousFocusableElement` and `nextFocusableElement` take an element, a ref or a getter. They name the element that gets the focus when the Tab key leaves a popup that is not modal. When the value is `null`, or the ref or the getter gives no element, the focus goes to the outside guard of the portal.
