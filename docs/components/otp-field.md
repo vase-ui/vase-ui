@@ -55,7 +55,7 @@ To announce a supporting text with the field, give the root `aria-describedby`.
 
 <<< ./otp-field/NativeLabel.vue{7,9}
 
-In the server HTML, a native `<label>` names only the first input, through `for`. The group gets the name of the label after the page hydrates, because a server has no DOM. In a `Field`, the server HTML names the group and each input with `Field.Label`.
+In the server HTML, a native `<label>` names only the first input, through `for`. The group gets the name of the label after the page hydrates, because a server has no DOM. In a `Field`, the server HTML names the group with `Field.Label`. It also names each input that has no `aria-label` of its own.
 
 ### Submitting on completion
 
