@@ -25,7 +25,7 @@ export interface FilterDropdownRootPartProps {
   /** The id of a trigger outside the root. */
   triggerId?: string | null | undefined;
   /** The item elements of the host, in the order of the document. */
-  listRef: Readonly<Ref<ReadonlyArray<HTMLElement | null>>>;
+  listRef: Readonly<Ref<readonly (HTMLElement | null)[]>>;
   /** Reads the highlighted index of the host. */
   getActiveIndex: () => number | null;
   /** Moves the highlight of the host. */

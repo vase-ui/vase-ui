@@ -38,7 +38,7 @@ export interface FilterDropdownItemContext {
   parent: FilterDropdownItemContext | null;
   store: FilterDropdownStore;
   registerItem: (id: symbol, registration: FilterDropdownItemRegistration) => () => void;
-  listRef: Readonly<Ref<ReadonlyArray<HTMLElement | null>>>;
+  listRef: Readonly<Ref<readonly (HTMLElement | null)[]>>;
 }
 
 function throwMissingFilterRoot(): never {
@@ -50,7 +50,6 @@ function throwMissingFilterRoot(): never {
 export const FilterDropdownItemContext: InjectionKey<FilterDropdownItemContext> = Symbol();
 
 export function useFilterDropdownItemContext(optional?: false): FilterDropdownItemContext;
-export function useFilterDropdownItemContext(optional: true): FilterDropdownItemContext | null;
 export function useFilterDropdownItemContext(optional: boolean): FilterDropdownItemContext | null;
 export function useFilterDropdownItemContext(optional = false) {
   const context = inject(FilterDropdownItemContext, null);
@@ -63,7 +62,6 @@ export function useFilterDropdownItemContext(optional = false) {
 export const FilterDropdownRootContext: InjectionKey<FilterDropdownRootContext> = Symbol();
 
 export function useFilterDropdownRootContext(optional?: false): FilterDropdownRootContext;
-export function useFilterDropdownRootContext(optional: true): FilterDropdownRootContext | null;
 export function useFilterDropdownRootContext(optional: boolean): FilterDropdownRootContext | null;
 export function useFilterDropdownRootContext(optional = false) {
   const context = inject(FilterDropdownRootContext, null);
@@ -77,13 +75,14 @@ export function useFilterDropdownRootContext(optional = false) {
  * Finds the dropdown that owns the given item list, walking out through nested roots.
  */
 export function useFilterContextForList(
-  listRef: Readonly<Ref<ReadonlyArray<HTMLElement | null>>> | null,
+  listRef: Readonly<Ref<readonly (HTMLElement | null)[]>> | null,
 ) {
   let context = inject(FilterDropdownItemContext, null);
   if (listRef === null) {
     return null;
   }
 
+  // eslint-disable-next-line vue/no-ref-as-operand -- The walk compares the ref objects, as Base UI does. Each root puts the list ref of its host in its item context.
   while (context !== null && context.listRef !== listRef) {
     context = context.parent;
   }
