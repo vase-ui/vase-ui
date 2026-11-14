@@ -241,6 +241,38 @@ describe('Drawer snap point composition', () => {
     });
   });
 
+  it('measures a viewport that mounts after the part, and the document again when the viewport unmounts', async () => {
+    const shown = shallowRef(false);
+    await render(() => (
+      <Drawer.Root open modal={false} snapPoints={[0.5]}>
+        <SnapPointProbe />
+        <PopupHeightReport height={100_000} />
+        {shown.value && <TestViewport height={120} />}
+      </Drawer.Root>
+    ));
+
+    const documentHeight = document.documentElement.clientHeight / 2;
+    await waitFor(() => {
+      expect(readProbe().resolvedSnapPoints).toEqual([
+        { value: 0.5, height: documentHeight, offset: 100_000 - documentHeight },
+      ]);
+    });
+    await flushMicrotasks();
+
+    shown.value = true;
+    await waitFor(() => {
+      expect(readProbe().resolvedSnapPoints).toEqual([{ value: 0.5, height: 60, offset: 99_940 }]);
+    });
+    await flushMicrotasks();
+
+    shown.value = false;
+    await waitFor(() => {
+      expect(readProbe().resolvedSnapPoints).toEqual([
+        { value: 0.5, height: documentHeight, offset: 100_000 - documentHeight },
+      ]);
+    });
+  });
+
   it('VUE-5: stops measuring the viewport while KeepAlive holds the part, and measures it again at the activation', async () => {
     const shown = shallowRef(true);
     const viewportHeight = shallowRef(400);

@@ -21,10 +21,13 @@ export type VaseUIRenderResult = BoundFunctions<typeof queries> & {
   setProps: (props: Record<string, unknown>) => Promise<void>;
 };
 
-// Vue stamps an event with `Date.now()` in the first listener that gets it. It skips each later
-// listener that was attached in that millisecond or after it. An event that comes right after a
-// mount would lose its bubble listener.
-async function waitForLaterMillisecond() {
+/**
+ * Waits until `Date.now()` gives a later millisecond. Vue stamps an event with `Date.now()` in the
+ * first listener that gets it. It skips each later listener that was attached in that millisecond
+ * or after it. An event that comes right after a mount, or after an action that mounts its target,
+ * would lose its bubble listener.
+ */
+export async function waitForLaterMillisecond() {
   if (vi.isFakeTimers()) {
     // The fake clock does not move by itself, so the loop below would not end.
     vi.setSystemTime(Date.now() + 1);

@@ -197,7 +197,7 @@ function enableDismissAfterRelease() {
   // assistive tech) is distinguishable from a physical release. This is deterministic, unlike
   // re-enabling on a timer that can race the synthesized click and dismiss at random.
   //
-  // `restore` runs in document capture, ahead of floating-ui's own outside-press check (which
+  // `restore` runs in document capture, ahead of the outside-press check of `useDismiss` (which
   // happens on the event target, after capture), so the triggering press still dismisses.
   releaseGuardCleanup = restore;
   doc.addEventListener('pointerdown', restore, true);

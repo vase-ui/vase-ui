@@ -247,6 +247,13 @@ A part that Base UI writes as another part renders that part and no element of i
 - Declare each event of that part with `defineEmits`. Vue then takes the listener out of `$attrs`. Listen to the event on that part. Emit it again at once with the same arguments. That part reads `details.isCanceled` after its emit returns, so a `details.cancel()` still stops `update:x`.
 - Expose the `element` of that part.
 
+A root that Base UI writes as the root of another family renders that root. `ContextMenu.Root` renders `Menu.Root`:
+
+- The root renders no element, so it does not set `inheritAttrs`, and it has no `#render` slot.
+- Its props interface extends an `Omit` of the props interface of the other root. The template binds each prop on the other root by name.
+- The rule above for events applies to the events of the other root.
+- It exposes the actions of the other root. Each exposed function calls the function of the same name on that root.
+
 Base UI can also give a part of another family a new name and new types, such as `DrawerTitle = DialogTitle as DrawerTitle`. That part is then the part of the other family:
 
 - Its file is a `.ts` file at the mapped path. It exports the SFC of the other part with the type `typeof` that SFC, and no wrapper component.
@@ -647,6 +654,7 @@ A root gives values to its parts with `provide` and `inject`. Use `progress/root
 - The context of Dialog is its store, as in Base UI. The root provides it, and `useDialogRootContext()` returns it. A part reads the state with `store.select(key)`. See [Popup store](#popup-store).
 - A part can provide the context of another family, where Base UI does this. `Accordion.Item` calls `useCollapsibleRoot` and provides `CollapsibleRootContext`. The trigger and the panel of the Accordion then read `useCollapsibleRootContext()`, and the panel uses `useCollapsiblePanel` with no change.
 - Such a part gives the context the members that the root of that family gives: the result of the composable, `onOpenChange` and `state`.
+- A root can provide `undefined` for the context of another family, to hide a provider above it. `ContextMenu.Root` does this for `MenuRootContext`, so its menu is not a part of a menu above it.
 
 ### Popup store
 
@@ -723,6 +731,7 @@ A popup tree holds one node for each popup below one root. The code is in `src/u
 - The tree that a part provides can change. `useFloatingTree()` then gives the new tree at once. Each node below moves to it with its `context` in the next flush. Read `.value` of the tree in a handler, a hook or a `watch`. Do not keep the store in a variable of `setup`. `FloatingTree` of Base UI keeps the tree of its first render.
 - Base UI sometimes calls a hook in a component below the `FloatingTree` of the same file, as `PopoverRoot.tsx` and `Menubar.tsx` do. Give the result of `provideFloatingTree()` to that composable as `externalTree`.
 - A root that starts a tree only when no root of its family is above it reads its own context with `use<Root>Context(true)` before it provides the context.
+- Such a root calls `provideFloatingTree()` only in that case. A root inside another root then uses the tree of the outer root. `preview-card/root/PreviewCardRoot.vue` is the model.
 - A node registers in `onBeforeMount`. A server render does not call that hook, so a tree gets no node on a server.
 - The hook runs before the `setup` of the parts below. Each of them thus finds the node when it is mounted.
 - The nodes are in the order of those hooks: a node comes before the nodes below it. In Base UI, it comes after them. Find a node by its id. Do not use its position in the list.
@@ -737,6 +746,7 @@ The positioning of a popup is in `src/internals/useAnchorPositioning.ts` and in 
 - A positioner part of a popup family calls `usePopupPositioner(store, props, options)` in `setup`. It takes the reactive props of the part, so do not destructure them. The result has `element`, `elementProps`, `state`, `positioning`, `open` and `mounted`.
 - `usePopupPositioner` calls `useAnchorPositioning`, `useVaseUIFloating` and `usePositioner`. `options.positioning` replaces the positioning parameters that come from the props. It can also have `nodeId` and `externalTree`.
 - A part that registers a node in the popup tree calls `useFloatingNodeId()` before `usePopupPositioner`, and gives the id as `positioning: { nodeId }`. The positioning context then finds the node. `Tooltip.Positioner` registers no node, as in Base UI.
+- Where Base UI renders `FloatingNode` around the positioner, the part also calls `provideFloatingNode(nodeId)`. A popup below the part then registers its node as a child of this node. `preview-card/positioner/PreviewCardPositioner.vue` is the model.
 - `nodeId` and `externalTree` are each a value, a ref or a getter. A part whose popup can move to the node of another part gives getters. The context then moves to the new node, and the old node loses it (`VUE-43`).
 - `usePositioner` makes the props of the positioner element: `role="presentation"`, `hidden`, the styles, and `transition: none` while the transition status is `starting`. With `inert`, it adds `pointer-events: none`. The `style` of the consumer wins over these styles.
 - A positioner part that `usePopupPositioner` does not fit calls `useAnchorPositioning`, `useVaseUIFloating` and `usePositioner` itself. `test/fixtures/PositionerPart.vue` is the model for `useAnchorPositioning`.
@@ -853,7 +863,7 @@ The portal of a popup is in `src/utils/popups/portal`. `useFloatingPortalNode()`
 - The portal part of a family, such as `Dialog.Portal`, renders `FloatingPortal` or `FloatingPortalLite`, as Base UI does, and no element of its own. It follows the rules for a part that Base UI writes as another part. See [Parts that render an element](#parts-that-render-an-element).
 - That part renders nothing while the popup is not mounted, unless its `keepMounted` prop is `true`. It provides `keepMounted` to the parts in it.
 - `Dialog.Portal` gives `FloatingPortal` a default slot that renders `DialogPortalChildren.vue`. That component renders `InternalBackdrop.vue` before the default slot of the consumer, while a dialog with `modal` set to `true` is mounted. The backdrop is `inert` while the dialog closes. `DialogPortalChildren.vue` writes the element of the backdrop to `internalBackdropRef` of the store context.
-- The `#render` slot of `FloatingPortal` gets `children`. The component is `FloatingPortalChildren.vue`, which renders only its default slot. A portal part that has nodes of its own gives its own component: `Dialog.Portal` gives `DialogPortalChildren.vue`. See [Parts with nodes of their own](#parts-with-nodes-of-their-own).
+- The `#render` slots of `FloatingPortal` and `FloatingPortalLite` get `children`. The component is `FloatingPortalChildren.vue`, which renders only its default slot. A portal part that has nodes of its own gives its own component: `Dialog.Portal` gives `DialogPortalChildren.vue`. A portal part with no nodes of its own, such as `Tooltip.Portal`, gives each slot prop of the portal to its own `#render` slot. See [Parts with nodes of their own](#parts-with-nodes-of-their-own).
 
 ### Popup interactions
 
@@ -1025,6 +1035,14 @@ The composite root:
 - The highlighted index goes through `useControlled`. A root with `onHighlightedIndexChange` and no `highlightedIndex` also writes its own state. Base UI writes no state in that case.
 - A root part whose selected item can be hidden or natively disabled gives `highlightedIndex` and `onHighlightedIndexChange` to `useCompositeRoot`, as `Tabs.List` does. An uncontrolled root moves the tab stop off that item. The item moves it back. A development build of Vue then stops with `Maximum recursive updates exceeded`.
 - The composable adds no attribute to the element of the root.
+- When the active item changes while the focus is outside the element of the root, the root moves the highlighted index to that item. The Tab key then enters the composite on the active item, as it does for a native radio group. Base UI does this only in `Tabs.Tab`.
+- If that change leaves no active item, or an active item that is disabled or hidden, the root moves the highlighted index to the first item that is not disabled or hidden. An active item that becomes disabled is also such a change. The APG radio pattern gives the focus to the first radio of a group with no checked radio. `Tabs.Tab` then gives the highlighted index back to a selected tab that is hidden, as in Base UI.
+- When a search finds no active item, or one that is disabled or hidden, and nothing changed since the search before it, the highlighted index stays where the user put it.
+- An active item that leaves the list is a removal. The rule of `onMapChange` for a removal then sets the highlighted index, as in Base UI.
+- When the focus leaves the element of the root, the root moves the highlighted index to the active item. The APG radio and tabs patterns give the focus to the active item when the focus enters the composite. A composite with no active item keeps the item that had the focus last, as Base UI does in each composite.
+- The root finds the active item by `data-composite-item-active`. A `MutationObserver` on the element of the root tells it when that attribute, `disabled` or `aria-disabled` changes on an item. A new map also starts the search, for an item that mounts late and for the items of a `KeepAlive` that is active again.
+- While the focus is in the element of the root, the highlighted index stays on the item that the user chose.
+- In these moves, an active item that is disabled or hidden does not take the highlighted index. At the first map it takes it, as in Base UI. A change of a style or of `hidden` starts no search, so an active item that becomes visible takes the highlighted index only at the next search.
 - The check of `disabledIndices` reads the elements of the list, so `elementsRef` is a source of its watcher. Under `KeepAlive`, the list sorts after the `onActivated` hooks, and the check must run after that sort.
 - The composable returns `props`, `rootRef` and `highlightedIndex`. A part below the root reads `onHighlightedIndexChange` and `relayKeyboardEvent` from `useCompositeRootContext()`. Base UI's hook also returns them, for its `CompositeRoot` component.
 
@@ -1103,7 +1121,7 @@ The tab stop on a server:
 - An item can be mounted after its root: an item in an async component, or below a `<Suspense>` inside the root. Its element keeps the `tabindex` of the server HTML until the item is mounted.
 - While such an element has `tabindex="0"`, the mounted items do not take the tab stop. The list then has one tab stop. That element has no listeners of its own until its item is mounted.
 - While an item hydrates, it also gives the attribute `data-vase-ui-hydrating-composite-item` with the id of its root. The root finds the element by that attribute. Thus it does not wait for an item of a nested composite or for an element of a consumer.
-- The wait ends when the item is mounted or its element leaves the document. The tab stop is then the item at the highlighted index.
+- The wait ends when the item is mounted or its element leaves the document. The tab stop is then the item at the highlighted index. If the item that was mounted is active, the new map moves the highlighted index to it, so the item keeps the tab stop.
 - The root searches its own element only. It does not find an item whose element is outside it, for example in a `Teleport`. If the server HTML gives that item the tab stop, the list can have two tab stops until the item is mounted.
 - A `<Suspense>` outside the root holds the mount of the root. Until it resolves, the list keeps the tab stop of the server HTML.
 - The server HTML has no tab stop in three cases:
@@ -1148,6 +1166,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - `useAnimationsFinished` uses this form for each completion that is not batched. Only microtasks wait, so the browser does not paint before the completion runs.
 - An error of a completion goes to `reportError`. The later completions still run.
 - An effect of upstream (`useEffect` or `useIsoLayoutEffect`) becomes a `watch` with a callback and no `immediate`. A server render does not run such a `watch`, except one with `flush: 'sync'`.
+- React runs the effects of an update from a discrete event, such as `pointerdown`, before the next event. A program can dispatch the next event in the same task, before the Vue flush. Where that event must get a listener that an effect adds, the effect is a `watch` with `flush: 'sync'`. `NumberField.ScrubArea` adds its `pointermove` and `pointerup` listeners in this way.
 - An effect that reads the DOM uses `onMounted(run)` plus `watch(sources, run, { flush: 'post' })`. `run` then runs at mount and after each DOM update that follows a change of a source. `useTransitionStatus`, `useOpenChangeComplete` and `useCollapsiblePanel` do this.
 - An effect that needs the element of the part, such as an observer, is a `watch` of the `element` of `useRenderElement` with `flush: 'post'`. Start the observer in the callback. Stop it in `onCleanup`. Vue runs the cleanup when the element changes and when the part unmounts. `scroll-area/viewport/ScrollAreaViewport.vue` is the model.
 - An effect of Base UI with no dependency list runs after each commit, so it also sees a DOM change of another component. A Vue component with the same props does not render again when its parent renders.
@@ -1218,6 +1237,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - A listener that Base UI adds with `{ passive: true }` also goes in the props, with the suffix `Passive` on its key. An example is `onTouchstartPassive` of `Slider.Control`. Vue reads the suffix and adds the listener with that option.
 - React adds the listener of `onTouchStart` as a passive listener. A part gives such a handler the suffix `Passive` too: `usePressAndHold` binds `onTouchstartPassive`. Without the suffix, the browser waits for the handler before it starts a scroll.
 - React adds the listener of `onTouchMove` as a passive listener also. A composable gives such a listener the suffix `Passive` when the listener calls no `preventDefault()`. `touchProps` of `useSwipeDismiss` has `onTouchstartPassive` and `onTouchmovePassive`.
+- `ContextMenu.Trigger` also binds `onTouchstartPassive` and `onTouchmovePassive`. A listener of the consumer stops such a handler with `event.preventVaseUIHandler()` only when it has the `.passive` modifier. A listener with no modifier has another key, so the handler of the part still runs.
 - An `<input>` part gives an uncontrolled default value with the key `value` on a server and with the key `defaultValue` in a browser. A server needs the key `value` to write the `value` attribute. In a browser, Vue sets the DOM property `value` again on each render, and that replaces the text that the user typed. The DOM property `defaultValue` is the `value` attribute, and Vue sets it only when its value changes. The key `^value` does not help, because a server of Vue 3.5.12 writes the attribute `^value`. `Toolbar.Input` and `Field.Control` are the examples.
 - A controlled `<input>` part writes the value of its prop to the input in `nextTick` after an event, when the two differ. Vue writes the DOM value only when the part renders. The part does not render when a listener cancels the change or the consumer keeps its value. React writes the prop back after each event. `Field.Control` is the example. The hidden input of `OTPField.Root` does this for the value of the root, also when the root is not controlled.
 - The wait for that write starts after the change that the event makes. A wait that starts before the change can end before the flush of a parent that takes the new value. The part then writes the old value to the input. A slot of `OTPField.Input` keeps this order for its character.
@@ -1383,7 +1403,14 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 | `useTestInteractions([useX(…)])`, where `useX` returns listeners with no `reference`, such as `useFocus`   | Call `useX(…)` in `setup`, and spread the object that it returns on the trigger: `<button {...props} />`. The object has the listeners and no `reference` member.                                                                                         |
 | `<CompositeList>`, `<CompositeRoot>` or `<CompositeItem>` in a test                                        | The fixture part of `packages/vue/test/fixtures`, imported with the upstream name                                                                                                                                                                         |
 | `useFloating` of `test/floating-ui-tests`                                                                  | No change. Some ports import `test/fixtures/useFloating.ts`, which re-exports the helper. Import the helper by its path.                                                                                                                                  |
+| `floatingStyles` and `middleware` of that `useFloating`                                                    | No counterpart. The helper returns no styles and takes no middleware. Remove the `style` binding and the option.                                                                                                                                          |
 | A component of `test/floating-ui-tests`, such as `Grid`                                                    | A component in the test file that renders it. It keeps only what the cases read.                                                                                                                                                                          |
+| `Navigation.tsx` of `test/floating-ui-tests`                                                               | The same path, because the family `focus` ports the file. Its style sheet is a set of style objects, because the package has no type for a CSS module.                                                                                                    |
+| A direct call of `userEvent`, such as `userEvent.hover(element)`, where each call needs a new pointer      | Keep the direct call. It makes a new instance, so its pointer does not leave the element of the call before.                                                                                                                                              |
+| `{Esc}` in a `keyboard` call of user-event                                                                 | `{Escape}`. user-event sends the key `Esc` for `{Esc}`. React changes that key to `Escape`. Vue gives the event of the browser, and the parts compare the key with `Escape`.                                                                              |
+| A `beforeEach` hook at the top of a file that also has cases of Vase UI's own                              | The same hook in each `describe` block of the Base UI cases. A hook at the top runs for each case of the file.                                                                                                                                            |
+| A `beforeEach` hook that gives `HTMLElement.prototype` the property `inert`                                | No counterpart. jsdom has no `inert`, and a browser has it.                                                                                                                                                                                               |
+| A read directly after a `fireEvent` call, before the effects of the part run                               | Keep the promise of `fireEvent`, make the read, then `await` the promise. An `await` before the read lets the effects run first.                                                                                                                          |
 | `renderToString` of the renderer, with no `hydrate()`                                                      | A case in the `.node.test.tsx` file of the same folder, with `renderToString` of `vue/server-renderer`. Give the upstream case a `replaced` row.                                                                                                          |
 | `renderToString` of the renderer, then `hydrate()`                                                         | The case stays in the ported test file with the same title, so it needs no row. Use `renderOnServer` and `hydrate`, which need a browser. A case that acts between the server render and `hydrate()` hydrates by hand. See [Test helpers](#test-helpers). |
 | A `React.Suspense` around a part, so that the part hydrates after its root                                 | A fixture SFC with `defineAsyncComponent(() => Promise.resolve(Part))` inside `<Suspense>`. Hydrate it by hand. See [Test helpers](#test-helpers).                                                                                                        |
@@ -1443,6 +1470,8 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 - A module namespace is read-only. A test that must change a flag of `platform` mocks the module, as `utils/popups/event.test.ts` does.
 - Vue calls a function ref again on each patch. A case that asserts the calls of a ref gives the ref to `useRenderElement`, which calls it only when the element changes.
 - Where Base UI polls a state that exists only while an animation runs, a ported case can record that state in a listener. It can also set `VASE_UI_ANIMATIONS_DISABLED` to `false`. The titles stay. See [Test rules](#test-rules).
+- Vue makes each element with the `document` of the page, also in an app that it mounts in the document of a frame. Such an element has the classes of the window of the page, and the DOM matchers refuse it. Assert `isConnected` in place of `toBeInTheDocument()`.
+- Where the Base UI cases of a file declare the same test component, the ported file can declare that component one time. A prop of the component gives a difference between the cases.
 
 ### Test helpers
 
@@ -1455,6 +1484,7 @@ This section is the contract of the test helpers. Each helper must obey it. The 
 - `user` is `userEvent.setup({ document })` of `@testing-library/user-event`, at the version that upstream pins.
 - After a mount, a `rerender` or a `setProps`, the helper waits until `Date.now()` gives a later millisecond. Vue skips the second and later listeners of an event that occurs in the millisecond when Vue attached them.
 - Under fake timers, the helper does not wait. It moves the fake clock by 1 ms and runs no timer, because a fake clock does not move by itself.
+- `waitForLaterMillisecond()` waits until `Date.now()` gives a later millisecond, as `render` does after a mount. `#test-utils` exports it. A test calls it after an action that mounts the target of the next event, such as a click that opens a popup. Without the wait, Vue can skip the listener of the target, because the event comes in the millisecond when Vue attached that listener.
 - `fireEvent` is a function of the test helpers. It dispatches the event, waits for `nextTick()` and returns the result of the dispatch. Upstream tests read that result, which is `false` when a listener prevents the default action.
 - `fireTouch.start`, `move`, `end` and `cancel` dispatch a touch event with `touches`, `targetTouches` and `changedTouches` through `fireEvent`. A point needs only `clientX` and `clientY`. The event is a `TouchEvent` where the browser can construct one. Firefox on a desktop has no `Touch` and no `TouchEvent`, and WebKit on a desktop cannot construct a `Touch`. There the event is an `Event` with the three lists.
 - `flushMicrotasks` resolves in the next task. Each flush that Vue queued is then complete.
@@ -1551,6 +1581,7 @@ The hydration helpers:
 - A case that changes the source of a cached image first waits for the `load` event of that image. Firefox does not cancel the event when the source changes, so the new image gets it.
 - Assert the start state before the action when the end state can be true already.
 - Use the `firePointer` test helper when a test depends on the time of an event.
+- A case that presses a key or clicks in a popup in the millisecond of the open first waits for a later millisecond with `waitForLaterMillisecond()`, as `render` does after a mount. The portal of a popup that is not modal and the popup element of `useDismiss` have capture listeners, so an event of such a press reaches a second listener. See [Test helpers](#test-helpers).
 - A pointer call of `user` throws when the element has or inherits `pointer-events: none`. A case that clicks an element through `user` renders the element with no such style.
 - Use `it.each` with object rows and `$name` titles for tests that differ only in data.
 - A test of the order in which a template mounts a new part and unmounts the old part uses a `.test.vue` fixture. A render function in TSX reuses the component, so it does not show this order.
@@ -1665,6 +1696,7 @@ A family that Base UI documents in `docs/src/app/(docs)/react/utils/`, such as `
 - The page has the title and one intro line. It has the sections of the Base UI page, with the code in Vue. It also has each demo of the family and the API reference.
 - The front matter has `order: 1`. The group then shows its pages in the sequence of their titles.
 - A demo is `docs/demos/<family>/<demo>/css-modules/index.vue`. It keeps the elements, the text and the attributes of the Base UI file `demos/<demo>/css-modules/index.tsx`. Vase UI does not port the Tailwind demos.
+- A Base UI demo can import a file of `demos/<demo>` that is outside `css-modules`, such as `custom-sanitize/useInvalidFeedback.ts` of OTP Field. Port that file to the same path in `docs/demos/<family>`.
 - The style sheet of a demo is the Base UI file, byte for byte. Do not edit it. Prettier does not format it, because `.prettierignore` names `docs/demos/**/*.module.css`. The same CSS then proves that the data attributes and the CSS variables are those of Base UI. A demo has no `<style>` block, and ESLint refuses one.
 - `docs/demos/<family>/upstream.json` records the Base UI commit and the SHA-256 of each Base UI demo file at that commit. `pnpm docs:demos --upstream <path> <family>` writes the record and the style sheets. Do not edit the record.
 - A demo can import another entry point of Base UI, such as `@base-ui/react/toggle`. The record then has the key `entryPoints`. It has one row for each such demo: the folder of the demo and the sorted names of the entry points, as `"hero": ["slider"]`. A demo with no such import has no row.
