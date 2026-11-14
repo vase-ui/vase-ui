@@ -4,6 +4,7 @@ import type { PropType } from 'vue';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import { Switch } from '@vase-ui/vue/switch';
+import { AlertDialog } from '@vase-ui/vue/alert-dialog';
 import { Toggle } from '@vase-ui/vue/toggle';
 import { ToggleGroup } from '@vase-ui/vue/toggle-group';
 import { createRenderer, describeConformance, isJSDOM, screen, waitFor } from '#test-utils';
@@ -636,6 +637,94 @@ describe('<Toolbar.Button />', () => {
 
         expect(screen.getByRole('dialog')).toHaveFocus();
         expect(screen.getByRole('button', { name: 'empty' })).not.toHaveFocus();
+      });
+    });
+
+    describe('AlertDialog', () => {
+      // AlertDialog.Trigger renders Dialog.Trigger, so the Dialog block covers rendering and the
+      // disabled state. That block uses `modal={false}`, so the modal cases live here: opening
+      // moves focus into a modal popup, and closing must return it to the Toolbar.Button trigger.
+      it('handles interactions', async () => {
+        const onOpenChange = vi.fn();
+        const { user } = await render(
+          <Toolbar.Root>
+            <AlertDialog.Root onOpenChange={onOpenChange}>
+              <Toolbar.Button
+                v-slots={{
+                  render: ({ props }: { props: Record<string, unknown> }) => (
+                    <AlertDialog.Trigger {...props} />
+                  ),
+                }}
+              />
+              <AlertDialog.Portal>
+                <AlertDialog.Backdrop />
+                <AlertDialog.Popup>
+                  <AlertDialog.Title>title text</AlertDialog.Title>
+                </AlertDialog.Popup>
+              </AlertDialog.Portal>
+            </AlertDialog.Root>
+          </Toolbar.Root>,
+        );
+
+        expect(screen.queryByText('title text')).toBe(null);
+
+        const trigger = screen.getByRole('button');
+        await user.keyboard('[Tab]');
+        expect(trigger).toHaveFocus();
+        expect(onOpenChange).toHaveBeenCalledTimes(0);
+
+        await user.keyboard('[Enter]');
+        expect(screen.queryByText('title text')).not.toBe(null);
+        expect(onOpenChange).toHaveBeenCalledTimes(1);
+        expect(onOpenChange).toHaveBeenNthCalledWith(1, true, expect.anything());
+
+        await waitFor(() => {
+          expect(screen.getByRole('alertdialog')).toHaveFocus();
+        });
+
+        await user.keyboard('[Escape]');
+        expect(screen.queryByText('title text')).toBe(null);
+        expect(onOpenChange).toHaveBeenCalledTimes(2);
+        expect(onOpenChange).toHaveBeenNthCalledWith(2, false, expect.anything());
+
+        await waitFor(() => {
+          expect(trigger).toHaveFocus();
+        });
+      });
+
+      it('prevents composite keydowns from escaping', async () => {
+        const { user } = await render(
+          <Toolbar.Root>
+            <AlertDialog.Root>
+              <Toolbar.Button
+                v-slots={{
+                  render: ({ props }: { props: Record<string, unknown> }) => (
+                    <AlertDialog.Trigger {...props}>dialog</AlertDialog.Trigger>
+                  ),
+                }}
+              />
+              <AlertDialog.Portal>
+                <AlertDialog.Popup />
+              </AlertDialog.Portal>
+            </AlertDialog.Root>
+
+            <Toolbar.Button>empty</Toolbar.Button>
+          </Toolbar.Root>,
+        );
+
+        expect(screen.queryByRole('alertdialog')).toBe(null);
+
+        const trigger = screen.getByRole('button', { name: 'dialog' });
+        await user.click(trigger);
+
+        await waitFor(() => {
+          expect(screen.queryByRole('alertdialog')).toHaveFocus();
+        });
+
+        await user.keyboard('{ArrowRight}');
+
+        expect(screen.getByRole('alertdialog')).toHaveFocus();
+        expect(screen.getByRole('button', { name: 'empty', hidden: true })).not.toHaveFocus();
       });
     });
 
