@@ -12,6 +12,7 @@ import { createVaseProject } from './vaseSurface.ts';
 const FIXTURES = join(import.meta.dirname, 'fixtures');
 const ENTRY_FILE = 'packages/vue/src/sample/index.ts';
 const ENTRY = join(FIXTURES, ENTRY_FILE);
+const PARTS = join(FIXTURES, 'packages/vue/src/sample/index.parts.ts');
 
 const project = createVaseProject(join(FIXTURES, 'tsconfig.json'));
 
@@ -57,6 +58,17 @@ test('a record whose names each have an export of the right kind has no problem'
 test('a record with no functions and no types has no problem', () => {
   const record = makeRecord({ functions: undefined, types: undefined });
   assert.deepEqual(checkOwnComponent('sample', record, context), []);
+});
+
+test('a type in a namespace of a namespace, and a union of strings in a namespace, have no problem', () => {
+  const original = readFileSync(PARTS, 'utf8');
+  project.updateFile(PARTS, `${original}\nexport type Reason = 'open' | 'close';\n`);
+  try {
+    const record = makeRecord({ types: ['Sample.Root.Props', 'Sample.Reason'] });
+    assert.deepEqual(checkOwnComponent('sample', record, context), []);
+  } finally {
+    project.updateFile(PARTS, original);
+  }
 });
 
 test('a name that a Base UI component has is a problem', () => {

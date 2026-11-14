@@ -238,9 +238,7 @@ export function buildApiTypes(
   file: { types: readonly Named[]; additionalTypes: readonly Named[] },
 ): ApiType[] {
   return [...file.types, ...file.additionalTypes].flatMap(({ name }) => {
-    const match = project
-      .findExports(entryFile, name.slice(name.lastIndexOf('.') + 1))
-      .find(({ path }) => path === name);
+    const match = project.findExportAt(entryFile, name);
     // TypeScript gives the properties of a mapped type, such as an `Omit`, in an order that changes
     // with the order in which it reads the program.
     const properties = ((match && project.readProperties(match)) ?? []).sort((a, b) =>

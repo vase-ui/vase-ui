@@ -73,7 +73,7 @@ export interface OwnComponent {
   reason: string;
   /** The titles of the parts, such as `Root`. */
   parts: string[];
-  /** The paths of the functions and classes, such as `Dialog.createHandle`. */
+  /** The titles of the functions and classes, such as `createHandle`. */
   functions?: string[];
   /** The paths of the types, such as `useRender.Parameters`. */
   types?: string[];

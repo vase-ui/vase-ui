@@ -132,22 +132,23 @@ Each family also has an extract, `parity/families/<family>.upstream.json`. It ho
 
 ## Components that Base UI does not have
 
-Vase UI can add a component that Base UI does not have. This is a component of Vase UI's own. It is not a family: it has no family file, no extract and no exception row. It has one record, `parity/own/<family>.json`. `pnpm parity:check` refuses a record that lacks a required key or has another key:
+Vase UI can add a component that Base UI does not have. This is a component of Vase UI's own. It is not a family: it has no family file, no extract and no exception row. It has one record, `parity/own/<name>.json`. `pnpm parity:check` refuses a record that lacks a required key or has another key:
 
 | Key         | Content                                                                                                                                              |
 | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `standard`  | The links to the standards that the behavior follows, such as a pattern of the WAI-ARIA Authoring Practices Guide. Each link starts with `https://`. |
 | `reason`    | Why Vase UI has the component.                                                                                                                       |
 | `parts`     | The titles of the parts, in the sequence of the API reference, such as `Root`. Each title is a component that the entry point exports.               |
-| `functions` | Optional. The paths of the functions and classes that the entry point exports, such as `Dialog.createHandle`.                                        |
+| `functions` | Optional. The titles of the functions and classes that the entry point exports, such as `createHandle`.                                              |
 | `types`     | Optional. The paths of the types that the entry point exports, such as `useRender.Parameters`.                                                       |
 
 - The component is not a port, so no file of Base UI is its source. The sources are the standards in `standard`, the code and documentation of Vue, and the libraries that Vase UI depends on.
 - The API follows the [API convention](#api-convention), as in each other component. The entry point exports the four things of [Entry points](#entry-points).
 - Each list has at least one item, and no item twice.
-- The name of the file is the name of the folder `packages/vue/src/<family>`.
+- `<name>` is the name of the folder of the component, `packages/vue/src/<name>`.
 - A record and a family file cannot have the same name. A record cannot have the name of a component in `components` of `parity/upstream.json`, because that component is a port.
-- `pnpm parity:check` reads `packages/vue/src/<family>/index.ts`. It fails when the file does not exist, and when a name in the record has no export of its kind. The API reference leaves out such a name.
+- `pnpm parity:check` reads `packages/vue/src/<name>/index.ts`. It fails when the file does not exist.
+- It also fails when a name in the record has no export of its kind, or when a title matches more than one export. It also fails on a type that has no property and is not a union of strings. The API reference leaves out each such name.
 - Add the record in the pull request that adds the `index.ts` of the component.
 
 ## Layout and names

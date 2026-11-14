@@ -81,20 +81,18 @@ export function checkOwnComponent(
       );
     }
   }
-  for (const title of record.types ?? []) {
-    const match = project
-      .findExports(entry, title.slice(title.lastIndexOf('.') + 1))
-      .find(({ path }) => path === title);
+  for (const path of record.types ?? []) {
+    const match = project.findExportAt(entry, path);
     if (!match) {
       problems.push(
-        `${name}: type ${inlineCode(title)} has no export in ${entryFile}. Export it, or remove it ${from('type')}.`,
+        `${name}: type ${inlineCode(path)} has no export in ${entryFile}. Export it, or remove it ${from('type')}.`,
       );
     } else if (
       (project.readProperties(match) ?? []).length === 0 &&
-      (project.readUnionValues(entry, title) ?? []).length === 0
+      (project.readUnionValues(entry, path) ?? []).length === 0
     ) {
       problems.push(
-        `${name}: type ${inlineCode(title)} has no property and is not a union of strings, so the API reference shows nothing for it. Remove it ${from('type')}.`,
+        `${name}: type ${inlineCode(path)} has no property and is not a union of strings, so the API reference shows nothing for it. Remove it ${from('type')}.`,
       );
     }
   }

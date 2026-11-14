@@ -285,6 +285,24 @@ test('the types are the types and then the additional types of the types.md that
   );
 });
 
+test('a type can be in a namespace of a namespace, and a union of strings in a namespace has its values', () => {
+  const reference = withTexts(
+    [[PARTS, CREATE_HANDLE, `export type Reason = 'open' | 'close';\n\n${CREATE_HANDLE}`]],
+    () =>
+      buildApiTypes(project, ENTRY, {
+        types: [{ name: 'Sample.Root.Props' }, { name: 'Sample.Reason' }],
+        additionalTypes: [],
+      }),
+  );
+  assert.deepEqual(
+    reference.map(({ name, properties, values }) => [name, properties.length > 0, values]),
+    [
+      ['Sample.Root.Props', true, []],
+      ['Sample.Reason', false, ['open', 'close']],
+    ],
+  );
+});
+
 function makeOwnComponent(changes: Partial<OwnComponent> = {}): OwnComponent {
   return {
     standard: ['https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/'],
