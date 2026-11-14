@@ -1149,7 +1149,7 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 - TypeScript cannot infer the type of the parameter of a `v-slots` function.
 - A render function of Base UI can return nothing, because the case only records the state. The slot of a Vue part must return an element: `<div {...props} />`. Without an element, the part gives a warning.
 - Vue's JSX types declare no `Capture` attribute. Vue reads the suffix at run time.
-- Give the props of a helper component of a test that spreads them on a part the props type of the instance, such as `InstanceType<typeof NumberField.Root>['$props']`. The type `NumberField.Root.Props` has no listener of an emit, such as `onValueChange`.
+- A helper component of a test can spread its props on a part. Give these props the type of the props of the instance, such as `InstanceType<typeof NumberField.Root>['$props']`. The type `NumberField.Root.Props` has no listener of an emit, such as `onValueChange`.
 - A Vue handler gets the DOM event. It has no `nativeEvent`.
 - Vue binds a `ref` to the component whose render function makes the vnode. A vnode from the body of a test has no such component, so Vue drops its `ref`.
 - Vue has no ref forwarding. `resolveElement` reads the `element` that the `Wrapper` exposes.
