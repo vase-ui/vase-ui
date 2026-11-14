@@ -80,7 +80,7 @@ const SnapPointsCase = defineComponent({
 
 function readProbe() {
   return JSON.parse(screen.getByTestId('snap-point-probe').textContent || '{}') as {
-    resolvedSnapPoints: Array<{ value: DrawerSnapPoint; height: number; offset: number }>;
+    resolvedSnapPoints: { value: DrawerSnapPoint; height: number; offset: number }[];
     activeSnapPointOffset: number | null;
   };
 }

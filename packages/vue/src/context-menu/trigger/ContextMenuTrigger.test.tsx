@@ -17,7 +17,7 @@ import type { ContextMenuRootContext } from '../root/ContextMenuRootContext';
 /** Reads the context and the Menu store that a part below the root gets. */
 function createProbe() {
   const contexts: ContextMenuRootContext[] = [];
-  const stores: Array<MenuStore<unknown>> = [];
+  const stores: MenuStore<unknown>[] = [];
   const Probe = defineComponent({
     setup() {
       contexts.push(useContextMenuRootContext(false));
@@ -50,7 +50,7 @@ function createContextMenuEvent(init: MouseEventInit = {}) {
 function fireTouch(
   element: Element,
   type: 'touchstart' | 'touchmove' | 'touchend' | 'touchcancel',
-  points: Array<{ clientX: number; clientY: number }> = [],
+  points: { clientX: number; clientY: number }[] = [],
 ) {
   const event = new Event(type, { bubbles: true, cancelable: true });
   Object.defineProperty(event, 'touches', { value: points });
