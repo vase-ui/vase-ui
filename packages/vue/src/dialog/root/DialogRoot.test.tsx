@@ -7,9 +7,13 @@ import {
   hydrate,
   renderOnServer,
   screen,
+  wait,
+  waitFor,
 } from '#test-utils';
 import DialogPopupPart from '../../../test/fixtures/DialogPopupPart.vue';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
+import { createScrollDocument, isPageLocked } from '../../../test/fixtures/scrollDocument';
+import type { ScrollDocument } from '../../../test/fixtures/scrollDocument';
 import { REASONS } from '../../internals/reasons';
 import * as Dialog from '../index.parts';
 import { DialogStore } from '../store/DialogStore';
@@ -526,6 +530,64 @@ describe('<Dialog.Root />', () => {
       show.value = true;
       await flushMicrotasks();
       expect(parent.select('nestedOpenDialogCount')).toBe(1);
+    });
+  });
+
+  describe('scroll lock', () => {
+    // The lock and the unlock each wait for a timer of 0 ms. The observers of `waitFor` do not see a
+    // document in a frame, so it polls.
+    const POLL = { interval: 5, timeout: 3000 };
+
+    function renderModalDialog(scrollDocument: ScrollDocument, rootProps: object = {}) {
+      return (
+        <Dialog.Root defaultOpen {...rootProps}>
+          <Dialog.Portal container={scrollDocument.body}>
+            <DialogPopupPart />
+          </Dialog.Portal>
+        </Dialog.Root>
+      );
+    }
+
+    it('locks the page while a modal dialog is open, and unlocks it when the dialog closes', async () => {
+      const scrollDocument = await createScrollDocument();
+      const handle = Dialog.createHandle();
+      await render(() => renderModalDialog(scrollDocument, { handle }));
+      await waitFor(() => expect(isPageLocked(scrollDocument)).toBe(true), POLL);
+
+      handle.close();
+      await waitFor(() => expect(isPageLocked(scrollDocument)).toBe(false), POLL);
+    });
+
+    it.each([
+      { name: 'modal false', modal: false },
+      { name: "modal 'trap-focus'", modal: 'trap-focus' as const },
+    ])('does not lock the page for $name', async ({ modal }) => {
+      const scrollDocument = await createScrollDocument();
+      await render(() => renderModalDialog(scrollDocument, { modal }));
+
+      await wait(0);
+
+      expect(isPageLocked(scrollDocument)).toBe(false);
+    });
+
+    it('releases the lock while KeepAlive holds the dialog, and takes it back after', async () => {
+      const scrollDocument = await createScrollDocument();
+      const show = shallowRef(true);
+      const ModalDialog = defineComponent({
+        name: 'ModalDialog',
+        setup: () => () => renderModalDialog(scrollDocument),
+      });
+      const Other = defineComponent({ name: 'Other', setup: () => () => <p>other</p> });
+      await render(() => (
+        <KeepAlive>{show.value ? <ModalDialog key="dialog" /> : <Other key="other" />}</KeepAlive>
+      ));
+      await waitFor(() => expect(isPageLocked(scrollDocument)).toBe(true), POLL);
+
+      show.value = false;
+      await waitFor(() => expect(isPageLocked(scrollDocument)).toBe(false), POLL);
+
+      show.value = true;
+      await waitFor(() => expect(isPageLocked(scrollDocument)).toBe(true), POLL);
     });
   });
 

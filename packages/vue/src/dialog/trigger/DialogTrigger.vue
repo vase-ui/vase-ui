@@ -77,7 +77,7 @@ const rootStore = useDialogRootContext(true);
 const handleStore = usePopupHandleStore(() => props.handle);
 if (rootStore === undefined && props.handle === undefined) {
   throw new Error(
-    'Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>, or it must have a `handle`. Without a root the trigger has no dialog to open. Put the trigger inside <Dialog.Root>, or pass a `handle`.',
+    'Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>. Without a root the trigger has no dialog to open. Put the trigger inside <Dialog.Root>, or pass a `handle`.',
   );
 }
 const store = computed<DialogHandleStore<any>>(() => handleStore.value ?? rootStore!);
