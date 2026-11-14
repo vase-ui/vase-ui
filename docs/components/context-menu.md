@@ -39,8 +39,6 @@ Import the component and assemble its parts:
 
 ## Examples
 
-[Menu](/components/menu#examples) shows more examples. Many of them also apply to the context menu.
-
 ### Nested menu
 
 To make a submenu, put a `ContextMenu.SubmenuRoot` in the parent context menu. Use `ContextMenu.SubmenuTrigger` for the item that opens the nested menu.

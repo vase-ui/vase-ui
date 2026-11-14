@@ -23,7 +23,7 @@ import { ContextMenu } from '@vase-ui/vue/context-menu';
           </ContextMenu.Group>
 
           <ContextMenu.RadioGroup>
-            <ContextMenu.RadioItem>
+            <ContextMenu.RadioItem value="">
               <ContextMenu.RadioItemIndicator />
             </ContextMenu.RadioItem>
           </ContextMenu.RadioGroup>
