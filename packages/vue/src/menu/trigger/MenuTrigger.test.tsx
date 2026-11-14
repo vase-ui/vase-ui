@@ -288,17 +288,18 @@ describe('<Menu.Trigger />', () => {
         </div>,
       );
       const rootTree = probe.store.select('floatingTreeRoot');
+      const rootNodeId = probe.store.select('floatingNodeId');
       expect(trees.at(-1)).toBe(rootTree);
 
       handle.open('detached');
       await flushMicrotasks();
 
       const detachedTree = probe.store.select('floatingTreeRoot');
+      const nodeId = probe.store.select('floatingNodeId');
       expect(detachedTree).not.toBe(rootTree);
       expect(trees.at(-1)).toBe(detachedTree);
-      expect(detachedTree.nodesRef.value.map((node) => node.id)).toContain(
-        probe.store.select('floatingNodeId'),
-      );
+      expect(nodeId).not.toBe(rootNodeId);
+      expect(detachedTree.nodesRef.value.map((node) => node.id)).toContain(nodeId);
     });
 
     it('gives the parent node of a detached trigger to the menu', async () => {

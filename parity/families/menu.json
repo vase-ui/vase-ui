@@ -402,7 +402,7 @@
       "describe": ["<Menu.Item />"],
       "title": "perf: does not rerender menu items unnecessarily",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/utils/getHighlightReason.ts",
+      "waitsOn": "packages/react/src/utils/getHighlightReason.ts",
       "reason": "The case moves the highlight with the keys. Vase UI has no list navigation for Menu yet."
     },
     {
@@ -417,7 +417,7 @@
       "describe": ["<Menu.Item />", "disabled state"],
       "title": "skips a natively disabled item during keyboard navigation",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/utils/getHighlightReason.ts",
+      "waitsOn": "packages/react/src/utils/getHighlightReason.ts",
       "reason": "The case moves the highlight with the keys. Vase UI has no list navigation for Menu yet."
     },
     {
@@ -437,7 +437,7 @@
       "describe": ["<Menu.Popup />"],
       "title": "enters the items at the list boundary when an arrow key leaves custom popup content",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/utils/getHighlightReason.ts",
+      "waitsOn": "packages/react/src/utils/getHighlightReason.ts",
       "reason": "The case moves the highlight with the keys. Vase UI has no list navigation for Menu yet."
     },
     {
@@ -445,7 +445,7 @@
       "describe": ["<Menu.Popup />"],
       "title": "moves focus into the items when the boundary item is already highlighted",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/utils/getHighlightReason.ts",
+      "waitsOn": "packages/react/src/utils/getHighlightReason.ts",
       "reason": "The case moves the highlight with the keys. Vase UI has no list navigation for Menu yet."
     },
     {
@@ -453,7 +453,7 @@
       "describe": ["<Menu.Popup />"],
       "title": "moves focus into the items when the last item is already highlighted",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/utils/getHighlightReason.ts",
+      "waitsOn": "packages/react/src/utils/getHighlightReason.ts",
       "reason": "The case moves the highlight with the keys. Vase UI has no list navigation for Menu yet."
     },
     {
@@ -682,7 +682,7 @@
       "upstream": "packages/react/src/menu/trigger/MenuTrigger.test.tsx",
       "describe": ["<Menu.Trigger />", "keyboard navigation"],
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/utils/getHighlightReason.ts",
+      "waitsOn": "packages/react/src/utils/getHighlightReason.ts",
       "reason": "The case moves the highlight with the keys. Vase UI has no list navigation for Menu yet."
     },
     {
