@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, test, vi } from 'vitest';
 import { KeepAlive, defineComponent, onMounted, onUpdated, shallowRef } from 'vue';
-import type { MaybeRefOrGetter, PropType } from 'vue';
+import type { CSSProperties, MaybeRefOrGetter, PropType } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
 import { useFloating } from '../../../../test/fixtures/useFloating';
 import { getDelay } from '../interactions/useHoverShared';
@@ -10,6 +10,10 @@ import type { Delay } from '../types';
 import { provideFloatingDelayGroup, useDelayGroup } from './FloatingDelayGroup';
 
 type DelayGroup = ReturnType<typeof useDelayGroup>;
+
+// The real pointer of the browser stays where an earlier test left it. It sends trusted hover
+// events to a trigger or a popup under it. A dispatched event still reaches the listeners.
+const NO_POINTER_EVENTS: CSSProperties = { pointerEvents: 'none' };
 
 // A tooltip of a group. It opens on hover, and the group gives it the delay. Its trigger and its
 // popup show the instant phase. The counter holds the number of renders since the mount.
@@ -57,7 +61,7 @@ const Tooltip = defineComponent({
     });
 
     return () => (
-      <>
+      <div style={NO_POINTER_EVENTS}>
         <button
           data-testid={`reference-${props.label}`}
           data-instant-phase={group.isInstantPhase.value ? '' : undefined}
@@ -74,7 +78,7 @@ const Tooltip = defineComponent({
             {props.label}
           </div>
         )}
-      </>
+      </div>
     );
   },
 });
