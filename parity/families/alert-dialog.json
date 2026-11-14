@@ -1,0 +1,158 @@
+{
+  "upstreamPaths": [
+    "packages/react/src/alert-dialog/**",
+    "docs/src/app/(docs)/react/components/alert-dialog/**"
+  ],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/alert-dialog/index.ts",
+      "kind": "waits-on",
+      "reason": "The file is the entry point of Alert Dialog. It exports the parts of Dialog under the names of Alert Dialog, and Vase UI does not have those parts."
+    },
+    {
+      "upstream": "packages/react/src/alert-dialog/root/AlertDialogRoot.spec.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/alert-dialog/index.ts",
+      "reason": "The type test imports the entry point of Alert Dialog, which Vase UI does not have. It renders `AlertDialog.Trigger` and `AlertDialog.Portal`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/alert-dialog/root/AlertDialogRoot.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/alert-dialog/index.ts",
+      "reason": "The file imports the entry point of Alert Dialog, which Vase UI does not have. Each case and each suite call renders `AlertDialog.Trigger`, `AlertDialog.Portal` or `AlertDialog.Popup`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/alert-dialog/trigger/AlertDialogTrigger.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `AlertDialog.Trigger`."
+    },
+    {
+      "upstream": "packages/react/src/alert-dialog/trigger/AlertDialogTriggerDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `AlertDialog.Trigger`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "Root",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/alert-dialog/index.ts",
+      "reason": "The entry point of Alert Dialog exports `AlertDialog.Root`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "Trigger",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/alert-dialog/index.ts",
+      "reason": "The entry point of Alert Dialog exports `AlertDialog.Trigger`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "Portal",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/alert-dialog/index.ts",
+      "reason": "The entry point of Alert Dialog exports `AlertDialog.Portal`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "Backdrop",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/alert-dialog/index.ts",
+      "reason": "The entry point of Alert Dialog exports `AlertDialog.Backdrop`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "Popup",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/alert-dialog/index.ts",
+      "reason": "The entry point of Alert Dialog exports `AlertDialog.Popup`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "Title",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/alert-dialog/index.ts",
+      "reason": "The entry point of Alert Dialog exports `AlertDialog.Title`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "Description",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/alert-dialog/index.ts",
+      "reason": "The entry point of Alert Dialog exports `AlertDialog.Description`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "Close",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/alert-dialog/index.ts",
+      "reason": "The entry point of Alert Dialog exports `AlertDialog.Close`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "Viewport",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/alert-dialog/index.ts",
+      "reason": "The entry point of Alert Dialog exports `AlertDialog.Viewport`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "createHandle",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/alert-dialog/index.ts",
+      "reason": "The entry point of Alert Dialog exports `AlertDialog.createHandle`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "Handle",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/alert-dialog/index.ts",
+      "reason": "The entry point of Alert Dialog exports `AlertDialog.Handle`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "AlertDialogBackdropDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/alert-dialog/index.ts",
+      "reason": "The entry point of Alert Dialog exports the attribute names of `AlertDialog.Backdrop`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "AlertDialogCloseDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/alert-dialog/index.ts",
+      "reason": "The entry point of Alert Dialog exports the attribute names of `AlertDialog.Close`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "AlertDialogPopupCssVariables",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/alert-dialog/index.ts",
+      "reason": "The entry point of Alert Dialog exports the CSS variable names of `AlertDialog.Popup`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "AlertDialogPopupDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/alert-dialog/index.ts",
+      "reason": "The entry point of Alert Dialog exports the attribute names of `AlertDialog.Popup`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "AlertDialogTriggerDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/alert-dialog/index.ts",
+      "reason": "The entry point of Alert Dialog exports the attribute names of `AlertDialog.Trigger`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "AlertDialogViewportDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/alert-dialog/index.ts",
+      "reason": "The entry point of Alert Dialog exports the attribute names of `AlertDialog.Viewport`. Vase UI does not have that entry point."
+    }
+  ],
+  "surfaceAdditions": [],
+  "returnTypeDifferences": [],
+  "notApplicableCommits": []
+}
