@@ -1,0 +1,12 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/preview-card/demos",
+  "files": {
+    "detached-triggers-controlled/css-modules/index.tsx": "654378e245e87f2481329f432046ebae7ae69c59b3f1f8053c38907ff47a5ad0",
+    "detached-triggers-full/css-modules/index.module.css": "b41e748ebf13f1666a0157d667ef34932688eafe12caa1acb281e69b2fd059da",
+    "detached-triggers-full/css-modules/index.tsx": "eaefd0209f8804b4a073f341195852f891d91f8ee18b3c6b3694049739eb4ea6",
+    "detached-triggers-simple/css-modules/index.tsx": "9c58d3489aa07878eb7604df0ab93013f2977ba36d762869b58a110c8c8d7873",
+    "hero/css-modules/index.tsx": "362f845d6643b74ac89d04858c52c92b4e1066f31ffd64b2f82548cf986b6eeb",
+    "index.module.css": "cc47d887f45c81391140399b206170ee1754da7b9373cdac433855f5be8d29bd"
+  }
+}

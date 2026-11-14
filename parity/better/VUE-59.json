@@ -1,0 +1,8 @@
+{
+  "id": "VUE-59",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/autocomplete/root/AutocompleteRoot.tsx#L92-L98"
+  ],
+  "behavior": "A `valueChange` listener that calls `details.cancel()` stops the change of an uncontrolled `Autocomplete.Root`. The input and `Autocomplete.Value` keep the old text, and the root emits no `update:value`. Base UI writes its state before it calls `onValueChange`, so a canceled change still changes an uncontrolled autocomplete.",
+  "dueWith": "packages/react/src/autocomplete/root/AutocompleteRoot.tsx"
+}

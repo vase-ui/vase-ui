@@ -1,0 +1,500 @@
+/* The rules come from the style sheets of the Base UI docs, in docs/src/css, docs/src/components
+   and docs/src/app/(docs)/layout.css. A rule here sets what a variable of the default theme cannot. */
+
+/* `.Layout` is the root of the site. A popup of a demo is outside it, in the portal container. */
+.Layout ::selection {
+  background-color: var(--vase-color-selection);
+}
+
+.Layout :focus-visible {
+  outline: 2px solid var(--vase-gray-t2);
+  outline-offset: 2px;
+}
+
+/* Header */
+
+.VPNavBar .divider {
+  visibility: hidden;
+}
+
+.VPNavBar .VPNavBarTitle .title {
+  font-weight: 700;
+}
+
+.VPNav .VPNavBar .VPNavBarMenuLink {
+  font-size: var(--vase-font-size-15);
+  font-weight: 400;
+}
+
+@media (hover: hover) {
+  .VPNav .VPNavBar .VPNavBarMenuLink:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+  }
+}
+
+.VPLocalNav .menu,
+.VPLocalNav .VPLocalNavOutlineDropdown button {
+  font-size: var(--vase-font-size-14);
+  font-weight: 400;
+  color: var(--vase-gray-t2);
+}
+
+/* Side navigation */
+
+.VPSidebar .group + .group {
+  border-top: 0;
+}
+
+.VPSidebar .VPSidebarItem.level-0 {
+  padding-bottom: 1rem;
+}
+
+.VPSidebar .VPSidebarItem .item .text {
+  padding-block: 0.1875rem;
+  line-height: 1.375rem;
+  font-size: var(--vase-font-size-14);
+  font-weight: 400;
+}
+
+.VPSidebar .VPSidebarItem.level-0 > .item > .text,
+.VPSidebar .VPSidebarItem.level-0.has-active > .item > .text {
+  color: var(--vase-gray-t1);
+}
+
+.VPSidebar .VPSidebarItem.level-1 .item .text {
+  color: var(--vase-gray-t2);
+}
+
+.VPSidebar .VPSidebarItem .item > .link {
+  margin-block: 1px;
+  margin-inline-start: -0.5rem;
+  border-radius: var(--vase-radius-6);
+  padding-inline: 0.5rem;
+}
+
+.VPSidebar .VPSidebarItem.is-active > .item > .link {
+  outline: 1px solid var(--vase-gray-c2);
+  outline-offset: -1px;
+  background-color: var(--vase-gray-s2);
+}
+
+.VPSidebar .VPSidebarItem .item > .link:focus-visible {
+  outline: 2px solid var(--vase-gray-t2);
+  outline-offset: -2px;
+}
+
+@media (hover: hover) {
+  .VPSidebar .VPSidebarItem .item > .link:hover .text {
+    text-decoration: underline;
+    text-decoration-color: var(--vase-gray-t2);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+  }
+}
+
+/* Page column and on-page navigation */
+
+.VPContent .VPDoc.has-aside .content .content-container {
+  max-width: 48rem;
+}
+
+@media (min-width: 60rem) {
+  .VPContent .VPDoc {
+    padding-top: 0.5rem;
+  }
+
+  .VPContent .VPDoc .aside .aside-container {
+    padding-top: calc(var(--vp-nav-height) + var(--vp-layout-top-height, 0px) + 0.5rem);
+  }
+}
+
+.VPDoc .VPDocAsideOutline .content {
+  border-inline-start: 0;
+  padding-inline-start: 0;
+}
+
+.VPDoc .VPDocAsideOutline .outline-marker {
+  display: none;
+}
+
+.VPDoc .VPDocAsideOutline .outline-title,
+.VPDoc .VPDocAsideOutline .outline-link {
+  padding-block: 0.1875rem;
+  line-height: 1.375rem;
+  font-size: var(--vase-font-size-14);
+  font-weight: 400;
+}
+
+.VPDoc .VPDocAsideOutline .outline-link {
+  color: var(--vase-gray-t1);
+}
+
+.VPDoc .VPDocAsideOutline .outline-link.active {
+  color: var(--vase-gray-t2);
+}
+
+.VPDoc .VPDocAsideOutline .nested {
+  padding-inline: 0.75rem 0;
+}
+
+@media (hover: hover) {
+  .VPDoc .VPDocAsideOutline .outline-link:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+  }
+}
+
+.VPDocFooter .pager-link {
+  border-color: var(--vase-color-border);
+  border-radius: var(--vase-radius-12);
+}
+
+/* Text */
+
+.vp-doc h1,
+.vp-doc h2,
+.vp-doc h3,
+.vp-doc h4,
+.vp-doc h5,
+.vp-doc h6 {
+  width: fit-content;
+  font-weight: 700;
+  letter-spacing: normal;
+  text-wrap: balance;
+}
+
+.vp-doc h1 {
+  margin-bottom: 1rem;
+  line-height: 2.7rem;
+  font-size: var(--vase-font-size-34);
+}
+
+.vp-doc h2 {
+  margin: 2.5rem 0 1rem;
+  border-top: 0;
+  padding-top: 0;
+  line-height: 1.625rem;
+  font-size: var(--vase-font-size-21);
+}
+
+.vp-doc h3 {
+  margin: 2rem 0 0.375rem;
+  line-height: 1.75rem;
+  font-size: var(--vase-font-size-18);
+}
+
+.vp-doc h4,
+.vp-doc h5,
+.vp-doc h6 {
+  margin: 2rem 0 0.375rem;
+  line-height: 1.5rem;
+  font-size: 1rem;
+}
+
+/* The intro line under the title is the subtitle of a Base UI page. */
+.vp-doc h1 + p {
+  margin: -0.75rem 0 1.5rem;
+  line-height: 1.75rem;
+  font-size: var(--vase-font-size-18);
+  color: var(--vase-gray-t1);
+  text-wrap: pretty;
+}
+
+.vp-doc h1 + p + h2 {
+  margin-top: 0;
+}
+
+.vp-doc p {
+  margin: 0 0 1rem;
+  line-height: 1.5;
+}
+
+.vp-doc ul,
+.vp-doc ol {
+  margin: 0 0 1rem;
+}
+
+.vp-doc ul {
+  padding-inline-start: 1.125rem;
+}
+
+.vp-doc ol {
+  padding-inline-start: 1.75rem;
+}
+
+.vp-doc li + li {
+  margin-top: 0.125rem;
+}
+
+.vp-doc strong {
+  font-weight: 700;
+}
+
+/* As in Base UI, a heading of level 2 or 3 is the link to its own section, and no other heading
+   is a link. The anchor of VitePress covers the heading. */
+.vp-doc :is(h1, h4, h5, h6) .header-anchor {
+  display: none;
+}
+
+.vp-doc :is(h2, h3) .header-anchor {
+  inset: -0.25rem -0.5rem;
+  margin: 0;
+  border-radius: var(--vase-radius-6);
+  opacity: 1;
+}
+
+.vp-doc .header-anchor::before {
+  content: none;
+}
+
+.vp-doc .header-anchor:focus-visible {
+  outline: 2px solid var(--vase-gray-t2);
+  outline-offset: -2px;
+}
+
+@media (hover: hover) {
+  .vp-doc :is(h2, h3):has(> .header-anchor:hover) {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+  }
+}
+
+.vp-doc a:not(.header-anchor) {
+  font-weight: inherit;
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+.vp-doc a:not(.header-anchor):has(code) {
+  text-decoration-color: var(--vase-color-blue);
+}
+
+@media (hover: hover) {
+  .vp-doc a:not(.header-anchor):hover {
+    color: inherit;
+    text-decoration: none;
+  }
+}
+
+.vp-doc a:not(.header-anchor):active {
+  background-color: var(--vase-gray-t2);
+  color: var(--vase-gray-s1);
+}
+
+.vp-doc a:not(.header-anchor):focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+  border-radius: var(--vase-radius-4);
+}
+
+.vp-doc :not(pre) > code {
+  margin-inline: 0.1em;
+  border-radius: 0;
+  padding: 0.05em 0.2em;
+}
+
+/* Code blocks */
+
+.vp-doc div[class*='language-'],
+.vp-doc li div[class*='language-'] {
+  margin: 1.25rem 0;
+  border: 1px solid var(--vase-color-border);
+  border-radius: var(--vase-radius-12);
+}
+
+.vp-doc [class*='language-'] pre {
+  padding: 0.5rem 0;
+}
+
+.vp-doc [class*='language-'] code {
+  padding: 0 0.75rem;
+  line-height: 1.25rem;
+  font-size: 0.78125rem;
+}
+
+.vp-doc [class*='language-'] code .highlighted {
+  margin: 0 -0.75rem;
+  padding: 0 0.75rem;
+  width: calc(100% + 1.5rem);
+}
+
+/* On the highlight color of the light theme, the comment color gray-t1 has 4.2:1 contrast. */
+:root:not(.dark) .vp-doc [class*='language-'] code .highlighted {
+  --vase-syntax-comment: var(--vase-gray-t2);
+}
+
+.vp-doc [class*='language-'] > button.copy {
+  top: 0.25rem;
+  inset-inline-end: 0.25rem;
+  border-radius: var(--vase-radius-6);
+  width: 2rem;
+  height: 2rem;
+  background-size: 1rem;
+}
+
+.vp-doc [class*='language-'] > button.copy.copied::before {
+  height: 2rem;
+}
+
+.vp-doc [class*='language-'] > span.lang {
+  top: 0.25rem;
+  inset-inline-end: 0.75rem;
+  font-weight: 400;
+}
+
+.vp-doc .vp-code-group {
+  margin: 1.25rem 0;
+  border: 1px solid var(--vase-color-border);
+  border-radius: var(--vase-radius-12);
+  overflow: hidden;
+  background-color: var(--vp-code-block-bg);
+}
+
+.vp-doc .vp-code-group .tabs {
+  margin: 0;
+  border-radius: 0;
+  padding: 0;
+  background-color: transparent;
+}
+
+.vp-doc .vp-code-group .tabs label {
+  border-inline: 1px solid transparent;
+  border-bottom: 0;
+  padding: 0 0.75rem;
+  line-height: 2.25rem;
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.78125rem;
+  font-weight: 400;
+  color: var(--vase-gray-t2);
+}
+
+.vp-doc .vp-code-group .tabs label::after {
+  inset-inline: 0;
+  bottom: 0;
+  border-radius: 0;
+  height: 1px;
+}
+
+.vp-doc .vp-code-group .tabs input:checked + label {
+  border-inline-color: var(--vase-color-border);
+}
+
+.vp-doc .vp-code-group .tabs input:first-child + label {
+  border-inline-start-color: transparent;
+}
+
+.vp-doc .vp-code-group .tabs input:checked + label::after {
+  background-color: var(--vp-code-block-bg);
+}
+
+.vp-doc .vp-code-group .tabs input:focus-visible + label {
+  outline: 2px solid var(--vase-gray-t2);
+  outline-offset: -2px;
+}
+
+@media (hover: hover) {
+  .vp-doc .vp-code-group .tabs input:not(:checked) + label:hover {
+    background-color: var(--vase-gray-s2);
+  }
+}
+
+.vp-doc .vp-code-group div[class*='language-'] {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+/* A demo and the code group under it make one card, as on a Base UI page. */
+.vp-doc .demo-frame + .vp-code-group {
+  margin: 0 0 1.5rem;
+  border-top: 0;
+  border-start-start-radius: 0;
+  border-start-end-radius: 0;
+}
+
+/* Tables */
+
+/* The table keeps the scroll box of VitePress, so a wide table does not widen the page. */
+.vp-doc table {
+  margin: 1.25rem 0;
+  border: 1px solid var(--vase-color-border);
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: var(--vase-radius-12);
+  width: fit-content;
+  max-width: 100%;
+  line-height: 1.25rem;
+  font-size: var(--vase-font-size-14);
+  color: var(--vase-gray-t1);
+}
+
+/* A table of the API reference fills the column, as in Base UI. When the column is narrower than
+   40rem, the frame scrolls the table, so that each column keeps a width that is easy to read. */
+.vp-doc .api-table {
+  margin: 1.25rem 0;
+  border: 1px solid var(--vase-color-border);
+  border-radius: var(--vase-radius-12);
+  overflow-x: auto;
+}
+
+.vp-doc .api-table table {
+  display: table;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  width: 100%;
+  min-width: 40rem;
+  max-width: none;
+}
+
+.vp-doc tr,
+.vp-doc tr:nth-child(2n) {
+  border-top: 0;
+  background-color: transparent;
+}
+
+.vp-doc th,
+.vp-doc td {
+  border: 0;
+  padding: 0.625rem 0.75rem;
+  vertical-align: top;
+  font-size: inherit;
+}
+
+.vp-doc thead th,
+.vp-doc tr:not(:last-child) > td {
+  border-bottom: 1px solid var(--vase-color-border);
+}
+
+.vp-doc th {
+  font-weight: 400;
+  color: var(--vase-gray-t2);
+  background-color: var(--vase-gray-s2);
+}
+
+.vp-doc thead th:first-child {
+  border-start-start-radius: calc(var(--vase-radius-12) - 1px);
+}
+
+.vp-doc thead th:last-child {
+  border-start-end-radius: calc(var(--vase-radius-12) - 1px);
+}
+
+.vp-doc td code {
+  margin: 0;
+  padding: 0;
+  background-color: transparent;
+  line-height: 1.25rem;
+  font-size: 0.78125rem;
+  overflow-wrap: break-word;
+}
+
+.vp-doc td:first-child code {
+  color: var(--vase-color-navy);
+}

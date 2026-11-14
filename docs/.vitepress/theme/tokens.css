@@ -1,0 +1,120 @@
+/* The values come from the Base UI docs: docs/src/css/index.css and docs/src/css/syntax.css. */
+
+:root {
+  --vase-gray-s1: hsl(0deg 0% 99%);
+  --vase-gray-s2: hsl(0deg 0% 97.5%);
+  --vase-gray-c1: hsl(0deg 0% 95.25%);
+  --vase-gray-c2: hsl(0deg 0% 94%);
+  --vase-gray-t1: hsl(0deg 0% 46.4%);
+  --vase-gray-t2: hsl(0deg 0% 18%);
+
+  --vase-color-content: white;
+  --vase-color-popup: white;
+  --vase-color-border: hsl(0deg 0% 0% / 8%);
+  --vase-color-selection: hsl(0deg 0% 92%);
+  --vase-color-line-highlight: hsl(205deg 100% 96%);
+
+  --vase-color-blue: oklch(45% 50% 264deg);
+  --vase-color-red: oklch(50% 55% 31deg);
+  --vase-color-navy: oklch(31% 25% 264deg);
+  --vase-color-green: oklch(46% 30% 150deg);
+  --vase-color-violet: oklch(40% 60% 300deg);
+
+  --vase-font-size-14: 0.875rem;
+  --vase-font-size-15: 0.9375rem;
+  --vase-font-size-18: 1.125rem;
+  --vase-font-size-21: 1.3125rem;
+  --vase-font-size-34: 2.125rem;
+
+  --vase-radius-4: 0.25rem;
+  --vase-radius-6: 0.375rem;
+  --vase-radius-12: 0.75rem;
+}
+
+.dark {
+  --vase-gray-s1: hsl(0deg 0% 7.5%);
+  --vase-gray-s2: hsl(0deg 0% 10%);
+  --vase-gray-c1: hsl(0deg 0% 13%);
+  --vase-gray-c2: hsl(0deg 0% 16%);
+  --vase-gray-t1: hsl(0deg 0% 70%);
+  --vase-gray-t2: hsl(0deg 0% 90%);
+
+  --vase-color-content: black;
+  --vase-color-popup: var(--vase-gray-s1);
+  --vase-color-border: hsl(0deg 0% 100% / 24%);
+  --vase-color-selection: hsl(0deg 0% 18%);
+  --vase-color-line-highlight: hsl(205deg 45% 12%);
+
+  --vase-color-blue: oklch(69% 50% 264deg);
+  --vase-color-red: oklch(80% 55% 31deg);
+  --vase-color-navy: oklch(85% 25% 264deg);
+  --vase-color-green: oklch(75% 25% 150deg);
+  --vase-color-violet: oklch(80% 60% 280deg);
+}
+
+:root {
+  --vp-font-family-base: 'Hanken Grotesk Variable', system-ui, sans-serif;
+  --vp-font-family-mono:
+    'Geist Mono Variable', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
+
+  --vp-c-bg: var(--vase-color-content);
+  --vp-c-bg-alt: var(--vase-gray-s2);
+  --vp-c-bg-elv: var(--vase-color-popup);
+  --vp-c-bg-soft: var(--vase-gray-s2);
+  --vp-c-border: var(--vase-color-border);
+  --vp-c-divider: var(--vase-color-border);
+  --vp-c-gutter: var(--vase-color-border);
+  --vp-c-text-1: var(--vase-gray-t2);
+  --vp-c-text-2: var(--vase-gray-t1);
+  /* Base UI uses its lighter grays only for marks, so text stays at gray-t1 for AA contrast. */
+  --vp-c-text-3: var(--vase-gray-t1);
+  --vp-c-default-soft: var(--vase-gray-c1);
+
+  /* Base UI has no brand color: links and active items use the text color. */
+  --vp-c-brand-1: var(--vase-gray-t2);
+  --vp-c-brand-2: var(--vase-gray-t1);
+  --vp-c-brand-3: var(--vase-gray-t2);
+  --vp-c-brand-soft: var(--vase-gray-c1);
+
+  --vp-layout-max-width: 89rem;
+  --vp-sidebar-width: 17.5rem;
+  --vp-sidebar-bg-color: var(--vp-c-bg);
+  --vp-nav-bg-color: var(--vp-c-bg);
+  --vp-nav-divider-color: transparent;
+  --vp-local-nav-divider-color: var(--vase-color-border);
+
+  /* Base UI scales its code font to 13.5/14 of the size.
+     Each code size in this folder includes that scale. */
+  --vp-code-font-size: 0.9375em;
+  --vp-code-color: var(--vase-color-blue);
+  --vp-code-link-color: var(--vase-color-blue);
+  --vp-code-link-hover-color: var(--vase-color-blue);
+  --vp-code-bg: var(--vase-color-line-highlight);
+  --vp-code-block-color: var(--vase-gray-t2);
+  /* Base UI gives the code of a demo the background gray-s1, where comments have 4.4:1 contrast. */
+  --vp-code-block-bg: var(--vase-color-content);
+  --vp-code-line-highlight-color: var(--vase-color-line-highlight);
+  --vp-code-lang-color: var(--vase-gray-t1);
+  --vp-code-copy-code-border-color: transparent;
+  --vp-code-copy-code-bg: var(--vase-color-content);
+  --vp-code-copy-code-hover-border-color: var(--vase-color-border);
+  --vp-code-copy-code-hover-bg: var(--vase-gray-s2);
+
+  --vase-syntax-text: var(--vase-gray-t2);
+  --vase-syntax-comment: var(--vase-gray-t1);
+  --vase-syntax-constant: var(--vase-color-blue);
+  --vase-syntax-entity: var(--vase-color-violet);
+  --vase-syntax-tag: var(--vase-color-green);
+  --vase-syntax-keyword: var(--vase-color-red);
+  --vase-syntax-string: var(--vase-color-navy);
+  --vase-syntax-variable: var(--vase-color-red);
+  --vase-syntax-invalid: var(--vase-color-red);
+}
+
+/* The header of Base UI is 3rem high until the side navigation shows. */
+@media (width < 60rem) {
+  :root {
+    --vp-nav-height: 3rem;
+  }
+}
