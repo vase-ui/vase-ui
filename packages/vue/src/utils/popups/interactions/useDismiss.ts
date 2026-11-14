@@ -73,6 +73,23 @@ function getEscapeLayers(): EscapeLayers {
   return holder[ESCAPE_LAYERS_KEY];
 }
 
+// Each mounted `useDismiss` call gives the positioner element of its popup.
+const positionerElementGetters = new Set<() => Element | null>();
+
+/** Whether the shadow tree of `target` holds the positioner element of a popup, at any depth. */
+function hostsPopup(target: EventTarget) {
+  for (const getPositionerElement of positionerElementGetters) {
+    let root = getPositionerElement()?.getRootNode();
+    while (isShadowRoot(root)) {
+      if (root.host === target) {
+        return true;
+      }
+      root = root.host.getRootNode();
+    }
+  }
+  return false;
+}
+
 interface DismissParent {
   markInsideComponentTree(): void;
   markInsidePortal(portal: Element): void;
@@ -738,14 +755,28 @@ export function useDismiss(
 
       markPressInFrame(event);
 
+      // React runs the listeners of the pressed element at its root, after this listener. A
+      // capture listener of the target runs before the bubble listeners of the target. Thus the
+      // press closes the popup first, and a listener of the pressed element can open it again.
+      // Two targets keep a bubble listener. A capture listener that the document gets while it
+      // runs its capture listeners does not run for this event. A press in a closed shadow root
+      // has the host as its target here. The capture listeners of a popup element in that tree
+      // must mark the press before this listener runs.
+      const capture = target !== event.currentTarget && !hostsPopup(target);
+
       // If propagation stops before the target, this runs on the next event of the type to reach
       // it instead, which must not be handled as the stopped one.
-      const unsubscribe = addEventListener(target, event.type, (currentEvent) => {
-        unsubscribe();
-        if (currentEvent === event) {
-          listener(event);
-        }
-      });
+      const unsubscribe = addEventListener(
+        target,
+        event.type,
+        (currentEvent) => {
+          unsubscribe();
+          if (currentEvent === event) {
+            listener(event);
+          }
+        },
+        capture,
+      );
     }
 
     function handleTouchStartCapture(event: TouchEvent) {
@@ -975,9 +1006,14 @@ export function useDismiss(
     { flush: 'post' },
   );
 
+  const getPositionerElement = () => getStore().select('positionerElement');
+
   // A server calls no `onMounted` hook and runs no such `watch`, so a server render adds no
   // listener to a document or to a store that a module shares.
-  onMounted(update);
+  onMounted(() => {
+    positionerElementGetters.add(getPositionerElement);
+    update();
+  });
   onDeactivated(() => {
     deactivated = true;
     update();
@@ -990,6 +1026,7 @@ export function useDismiss(
     }
   });
   onScopeDispose(() => {
+    positionerElementGetters.delete(getPositionerElement);
     listenedStore?.context.events.off('openchange', handleOpenChange);
     cleanup?.();
     clearInsideComponentTree();

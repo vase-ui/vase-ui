@@ -1125,4 +1125,185 @@ describe('<Popover.Root />', () => {
       });
     });
   });
+
+  // The outside press closes the popover before the click listener of the outside button runs.
+  // The listener then opens the popover again.
+  describe('an outside button that opens the open popover', () => {
+    const actions = ['move', 'same trigger', 'handle.open'] as const;
+    const rows = actions.flatMap((action) =>
+      [false, true].flatMap((child) =>
+        [false, true].map((initialFocus) => ({
+          name: `${action} (${child ? 'child' : 'text'}, initialFocus ${initialFocus})`,
+          action,
+          child,
+          initialFocus,
+        })),
+      ),
+    );
+
+    it.each(rows)('keeps it open: $name', async ({ action, child, initialFocus }) => {
+      const handle = Popover.createHandle<number>();
+      const open = shallowRef(false);
+      const triggerId = shallowRef<string | null>(null);
+      const target = action === 'same trigger' ? 1 : 2;
+
+      function openFor(id: string) {
+        if (action === 'handle.open') {
+          handle.open(id);
+        } else {
+          open.value = true;
+          triggerId.value = id;
+        }
+      }
+
+      const Test = defineComponent(() => () => (
+        <div style={{ margin: '50px' }}>
+          <Popover.Trigger handle={handle} id="trigger-1" payload={1}>
+            Trigger 1
+          </Popover.Trigger>
+          <Popover.Trigger
+            handle={handle}
+            id="trigger-2"
+            payload={2}
+            style={{ marginLeft: '200px' }}
+          >
+            Trigger 2
+          </Popover.Trigger>
+          <Popover.Root
+            handle={handle}
+            {...(action === 'handle.open'
+              ? {}
+              : {
+                  open: open.value,
+                  triggerId: triggerId.value,
+                  onOpenChange: (nextOpen: boolean, details: Popover.Root.ChangeEventDetails) => {
+                    triggerId.value = details.trigger?.id ?? null;
+                    open.value = nextOpen;
+                  },
+                })}
+          >
+            {{
+              default: ({ payload }: { payload: number | undefined }) => (
+                <Popover.Portal>
+                  <Popover.Positioner data-testid="positioner" side="bottom" align="start">
+                    <Popover.Popup data-testid="popup" initialFocus={initialFocus}>
+                      <span data-testid="content">{String(payload)}</span>
+                      <button type="button">Inside</button>
+                    </Popover.Popup>
+                  </Popover.Positioner>
+                </Popover.Portal>
+              ),
+            }}
+          </Popover.Root>
+          <button type="button" onClick={() => openFor('trigger-1')}>
+            Open Trigger 1
+          </button>
+          <button
+            type="button"
+            style={{ padding: '0' }}
+            onClick={() => openFor(`trigger-${target}`)}
+          >
+            {child ? (
+              <span data-testid="child" style={{ display: 'inline-block', padding: '4px' }}>
+                Open target
+              </span>
+            ) : (
+              'Open target'
+            )}
+          </button>
+        </div>
+      ));
+
+      const { user } = await render(<Test />);
+      await user.click(screen.getByRole('button', { name: 'Open Trigger 1' }));
+      await waitFor(() => {
+        expect(screen.getByTestId('content').textContent).toBe('1');
+      });
+      // A person presses the next button after the frame of the initial focus.
+      if (initialFocus) {
+        await waitFor(() => {
+          expect(screen.getByTestId('popup').contains(document.activeElement)).toBe(true);
+        });
+      } else {
+        await waitSingleFrame();
+      }
+
+      await user.click(
+        child ? screen.getByTestId('child') : screen.getByRole('button', { name: 'Open target' }),
+      );
+
+      const trigger = screen.getByRole('button', { name: `Trigger ${target}` });
+      await waitFor(() => {
+        expect(screen.getByTestId('content').textContent).toBe(String(target));
+      });
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      await waitFor(() => {
+        expect(
+          Math.abs(
+            screen.getByTestId('positioner').getBoundingClientRect().left -
+              trigger.getBoundingClientRect().left,
+          ),
+        ).toBeLessThanOrEqual(1);
+      });
+    });
+
+    it.each([
+      { name: 'toggles it', cancel: false, open: true },
+      { name: 'cancels the outside press', cancel: true, open: false },
+    ])('VUE-75: an outside button that $name', async ({ cancel, open: openAfter }) => {
+      const open = shallowRef(false);
+      const Test = defineComponent(() => () => (
+        <div>
+          <Popover.Root
+            open={open.value}
+            triggerId="trigger"
+            onOpenChange={(nextOpen: boolean, details: Popover.Root.ChangeEventDetails) => {
+              if (cancel && details.event.target === toggle()) {
+                details.cancel();
+                return;
+              }
+              open.value = nextOpen;
+            }}
+          >
+            <Popover.Trigger id="trigger">Trigger</Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Positioner>
+                <Popover.Popup data-testid="popup" initialFocus={false}>
+                  Content
+                </Popover.Popup>
+              </Popover.Positioner>
+            </Popover.Portal>
+          </Popover.Root>
+          <button
+            type="button"
+            onClick={() => {
+              open.value = !open.value;
+            }}
+          >
+            Toggle
+          </button>
+        </div>
+      ));
+      const toggle = () => screen.getByRole('button', { name: 'Toggle' });
+
+      const { user } = await render(<Test />);
+      await user.click(toggle());
+      await waitFor(() => {
+        expect(screen.getByTestId('popup')).toBeVisible();
+      });
+
+      await user.click(toggle());
+
+      expect(open.value).toBe(openAfter);
+      if (openAfter) {
+        await waitFor(() => {
+          expect(screen.getByTestId('popup')).toBeVisible();
+        });
+      } else {
+        await waitFor(() => {
+          expect(screen.queryByTestId('popup')).toBe(null);
+        });
+      }
+    });
+  });
 });

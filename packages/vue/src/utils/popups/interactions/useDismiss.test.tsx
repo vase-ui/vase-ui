@@ -2534,6 +2534,52 @@ describe('useDismiss', () => {
 
       expect(changes).toEqual([{ open: false, reason: REASONS.outsidePress, eventType }]);
     });
+
+    it.each([
+      { name: 'click on a button', mode: 'intentional', eventType: 'click', child: false },
+      {
+        name: 'click on a child of a button',
+        mode: 'intentional',
+        eventType: 'click',
+        child: true,
+      },
+      { name: 'pointerdown on a button', mode: 'sloppy', eventType: 'pointerdown', child: false },
+      {
+        name: 'pointerdown on a child of a button',
+        mode: 'sloppy',
+        eventType: 'pointerdown',
+        child: true,
+      },
+    ] as const)(
+      'closes before a listener of the pressed button runs: $name',
+      async ({ mode, eventType, child }) => {
+        const order: string[] = [];
+        await render(
+          <>
+            <Popup
+              name="popup"
+              dismiss={{ outsidePressEvent: mode }}
+              onChange={(change: Change) => order.push(`${change.reason} ${change.eventType}`)}
+            />
+            <button
+              type="button"
+              {...{
+                [eventType === 'click' ? 'onClick' : 'onPointerdown']: () => order.push('listener'),
+              }}
+            >
+              {child ? <span data-testid="child">outside</span> : 'outside'}
+            </button>
+          </>,
+        );
+
+        await userEvent.click(
+          child ? screen.getByTestId('child') : screen.getByRole('button', { name: 'outside' }),
+        );
+        await flushMicrotasks();
+
+        expect(order).toEqual([`${REASONS.outsidePress} ${eventType}`, 'listener']);
+      },
+    );
   });
 
   describe('popups below the popup in the component tree', () => {
@@ -2907,6 +2953,37 @@ describe('useDismiss', () => {
       await userEvent.click(outside);
       await flushMicrotasks();
       expect(isOpenInShadow()).toBe(false);
+    });
+
+    it('takes a press in a popup in a closed shadow root in another closed shadow root for a press inside', async () => {
+      const outerHost = document.createElement('div');
+      document.body.append(outerHost);
+      onTestFinished(() => outerHost.remove());
+      const host = document.createElement('div');
+      outerHost.attachShadow({ mode: 'closed' }).append(host);
+      const shadowRoot = host.attachShadow({ mode: 'closed' });
+      await render(
+        <Teleport to={shadowRoot as unknown as HTMLElement}>
+          <Popup name="popup">
+            <button data-testid="inside">inside</button>
+          </Popup>
+        </Teleport>,
+      );
+      const outerHostRect = outerHost.getBoundingClientRect();
+      const insideRect = shadowRoot
+        .querySelector('[data-testid="inside"]')!
+        .getBoundingClientRect();
+
+      // Outside both shadow roots, the target of the press is the outer host.
+      await userEvent.click(outerHost, {
+        position: {
+          x: insideRect.left - outerHostRect.left + 5,
+          y: insideRect.top - outerHostRect.top + 5,
+        },
+      });
+      await flushMicrotasks();
+
+      expect(shadowRoot.querySelector('[data-testid="popup"]')).not.toBe(null);
     });
   });
 
