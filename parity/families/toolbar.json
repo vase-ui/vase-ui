@@ -9,8 +9,8 @@
       "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
       "describe": ["<Toolbar.Button />", "rendering other Base UI components", "Menu"],
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/trigger/MenuTrigger.tsx",
-      "reason": "Each case of the block renders `Menu.Trigger` and the other parts of Menu, which Vase UI does not have."
+      "waitsOn": "packages/react/src/menu/item/MenuItem.tsx",
+      "reason": "Each case of the block renders `Menu.Item`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",

@@ -684,6 +684,7 @@ The state of a popup is in a store. The code is in `src/utils/popups`. `tooltip/
 - `getEmptyRootStore()` gives a closed `NullStore`, so a module that all requests share can hold it.
 - Take the innermost registered trigger that contains an event target, because an inner trigger can register after its outer trigger.
 - A trigger part calls `useTriggerDataForwarding(triggerId, store, () => ({ payload: props.payload }))` in `setup`. It gives the `registerTrigger` that the call returns to `useRenderElement` as a `ref`. A trigger that gives no data to the store calls `useTriggerRegistration(triggerId, store)` in the same way.
+- A trigger of a family with a popup tree, such as `Menu.Trigger`, forwards `parent`, `floatingTreeRoot`, `floatingNodeId`, `floatingParentNodeId` and `keyboardEventRelay` with its payload. A trigger with no tree above it makes a tree of its own, one time in `setup`.
 - `registerTrigger` only writes a `shallowRef`. One `watch` with `flush: 'post'` adds the element to the trigger map. It removes the entry when the element, the id or the store changes and when the part unmounts, but only an entry that holds its element.
 - The registration follows the store that a handle gives. A detached trigger moves from the inert store to the store of a root when the root attaches, and back when the root detaches.
 - A server render calls no `ref` callback, so it registers no trigger.
@@ -722,6 +723,8 @@ A popup tree holds one node for each popup below one root. The code is in `src/u
 - `provide` follows the components and not the DOM. A part in a `Teleport` thus gets the tree and the node of the part around it.
 - `inject` gives a part the tree and the node of the part above it, also when the part provides a tree or a node itself.
 - The tree that a part provides can change. `useFloatingTree()` then gives the new tree at once. Each node below moves to it with its `context` in the next flush. Read `.value` of the tree in a handler, a hook or a `watch`. Do not keep the store in a variable of `setup`. `FloatingTree` of Base UI keeps the tree of its first render.
+- A part that listens to an event of `tree.events` adds its listener in a `watch` that has the tree as a source and the option `immediate`. The cleanup of the `watch` removes the listener, so the part listens to the new tree after a change. `Menu.Positioner` and `Menu.Popup` do this.
+- A `Menu.Root` that starts a tree provides the tree of its store. A part below the root thus reads the tree that a detached trigger gave to the store (`VUE-55`).
 - Base UI sometimes calls a hook in a component below the `FloatingTree` of the same file, as `PopoverRoot.tsx` and `Menubar.tsx` do. Give the result of `provideFloatingTree()` to that composable as `externalTree`.
 - A root that starts a tree only when no root of its family is above it reads its own context with `use<Root>Context(true)` before it provides the context.
 - A node registers in `onBeforeMount`. A server render does not call that hook, so a tree gets no node on a server.
@@ -739,6 +742,7 @@ The positioning of a popup is in `src/internals/useAnchorPositioning.ts` and in 
 - `usePopupPositioner` calls `useAnchorPositioning`, `useVaseUIFloating` and `usePositioner`. `options.positioning` replaces the positioning parameters that come from the props. It can also have `nodeId` and `externalTree`.
 - A part that registers a node in the popup tree calls `useFloatingNodeId()` before `usePopupPositioner`, and gives the id as `positioning: { nodeId }`. The positioning context then finds the node. `Tooltip.Positioner` registers no node, as in Base UI.
 - `nodeId` and `externalTree` are each a value, a ref or a getter. A part whose popup can move to the node of another part gives getters. The context then moves to the new node, and the old node loses it (`VUE-43`).
+- `Menu.Positioner` registers no node of its own. The root registers the node, and a detached trigger can give another node. The positioner gives the `floatingNodeId` of the store as `nodeId`, and it provides the same id with `provideFloatingNode`.
 - `usePositioner` makes the props of the positioner element: `role="presentation"`, `hidden`, the styles, and `transition: none` while the transition status is `starting`. With `inert`, it adds `pointer-events: none`. The `style` of the consumer wins over these styles.
 - A positioner part that `usePopupPositioner` does not fit calls `useAnchorPositioning`, `useVaseUIFloating` and `usePositioner` itself. `test/fixtures/PositionerPart.vue` is the model for `useAnchorPositioning`.
 - A positioner part provides the `positioning` of the result as the context of its popup and its arrow. `tooltip/positioner/TooltipPositioner.vue` is the model.
@@ -1285,6 +1289,7 @@ Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>. Without a root the trigg
 - In this package, vue-tsc reports no unknown prop on a generic SFC, in a `.spec.vue` file also. The files that are not strict give each generic SFC a type that accepts each unknown prop. For such a part, write a line that must fail: `<!-- @vue-expect-error -->` before an element that gives the prop a value of a wrong type.
 - The tests of `fixtures/nuxt` run in Node. They start the Nuxt app with `@nuxt/test-utils` and read its pages in Chromium. They are not part of `pnpm test`. The job `test-nuxt` of CI runs them, and `required` needs that job.
 - The job `test-nuxt` also runs `pnpm --filter @vase-ui/nuxt-fixture typecheck`. vue-tsc then checks the templates of the fixture against the built package, as it does in the project of a consumer.
+- A page that imports a part by its path, while no entry point exports it, also makes vue-tsc read the source of the package. The fixture turns off the Nuxt options `noUncheckedIndexedAccess` and `noImplicitOverride` for this reason, because the source does not follow them.
 
 ### How to port a test
 
