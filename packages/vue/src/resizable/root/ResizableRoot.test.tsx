@@ -620,7 +620,33 @@ describe('<Resizable.Root />', () => {
       expect(grows('a', 'b', 'c')).toEqual(['68', '12', '20']);
     });
 
-    it('gives the layout of the panels that stay after the last panel unmounts', async () => {
+    it('emits no change when a panel that the layout names unmounts and mounts again', async () => {
+      const showC = shallowRef(true);
+      const onLayoutChange = vi.fn();
+      await render(() => (
+        <div style={{ width: '1000px' }}>
+          <Resizable.Root
+            defaultLayout={{ a: 33.334, b: 33.333, c: 33.333 }}
+            onLayoutChange={onLayoutChange}
+          >
+            <Resizable.Panel id="a" data-testid="a" />
+            <Resizable.Panel id="b" data-testid="b" />
+            {showC.value ? <Resizable.Panel id="c" data-testid="c" /> : null}
+          </Resizable.Root>
+        </div>
+      ));
+
+      showC.value = false;
+      await nextTick();
+      expect(grows('a', 'b')).toEqual(['50.001', '49.999']);
+      showC.value = true;
+      await nextTick();
+
+      expect(grows('a', 'b', 'c')).toEqual(['33.334', '33.333', '33.333']);
+      expect(onLayoutChange).not.toHaveBeenCalled();
+    });
+
+    it('emits no change when a panel unmounts, and one change when a panel that the layout does not name mounts', async () => {
       const showC = shallowRef(true);
       const onLayoutChange = vi.fn();
       await render(() => (
@@ -635,12 +661,72 @@ describe('<Resizable.Root />', () => {
 
       showC.value = false;
       await nextTick();
-
       expect(grows('a', 'b')).toEqual(['50', '50']);
+      expect(onLayoutChange).not.toHaveBeenCalled();
+      showC.value = true;
+      await nextTick();
+
+      expect(onLayoutChange).toHaveBeenCalledTimes(1);
       expect(onLayoutChange).toHaveBeenCalledWith(
-        { a: 50, b: 50 },
+        { a: 33.334, b: 33.333, c: 33.333 },
         expect.objectContaining({ reason: REASONS.none }),
       );
+    });
+
+    it('emits no change when a handle mounts, and one change for each panel that the layout does not name', async () => {
+      const showHandle = shallowRef(false);
+      const showPanel = shallowRef(false);
+      const onLayoutChange = vi.fn();
+      await render(() => (
+        <div style={{ width: '1000px' }}>
+          <Resizable.Root defaultLayout={{ a: 60, b: 40 }} onLayoutChange={onLayoutChange}>
+            <Resizable.Panel id="a" />
+            {showHandle.value ? <Resizable.Handle /> : null}
+            <Resizable.Panel id="b" />
+            {showPanel.value ? <Resizable.Panel id="c" /> : null}
+          </Resizable.Root>
+        </div>
+      ));
+
+      showHandle.value = true;
+      await nextTick();
+      await flushMicrotasks();
+      expect(onLayoutChange).not.toHaveBeenCalled();
+
+      showPanel.value = true;
+      await nextTick();
+      await flushMicrotasks();
+
+      expect(onLayoutChange).toHaveBeenCalledTimes(1);
+      expect(onLayoutChange).toHaveBeenCalledWith(
+        { a: 40, b: 26.667, c: 33.333 },
+        expect.objectContaining({ reason: REASONS.none }),
+      );
+    });
+
+    it('sees a panel whose id changes as a panel that mounts', async () => {
+      const id = shallowRef('a');
+      const onLayoutChange = vi.fn();
+      await render(() => (
+        <div style={{ width: '1000px' }}>
+          <Resizable.Root defaultLayout={{ a: 70, b: 30 }} onLayoutChange={onLayoutChange}>
+            <Resizable.Panel id={id.value} data-testid="first" />
+            <Resizable.Panel id="b" data-testid="b" />
+          </Resizable.Root>
+        </div>
+      ));
+      expect(screen.getByTestId('first').style.flexGrow).toBe('70');
+
+      id.value = 'renamed';
+      await nextTick();
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('first')).toHaveAttribute('id', 'renamed');
+      expect(onLayoutChange).toHaveBeenCalledTimes(1);
+      // The panel with the new id has no entry. The old entry stays for a panel that comes back,
+      // and the panels that are mounted share the rest.
+      expect(onLayoutChange.mock.calls[0]?.[0]).toEqual({ a: 70, renamed: 21, b: 9 });
+      expect(onLayoutChange.mock.calls[0]?.[1].reason).toBe(REASONS.none);
     });
 
     it('mounts and unmounts a handle with its panel', async () => {

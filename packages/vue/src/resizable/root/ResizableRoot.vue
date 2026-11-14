@@ -92,12 +92,7 @@ import { createChangeEventDetails } from '../../internals/createBaseUIEventDetai
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import {
-  areConstraintsFeasible,
-  areLayoutsEqual,
-  resolveLayout,
-  toRequestedLayout,
-} from '../utils/layout';
+import { areConstraintsFeasible, resolveLayout, toRequestedLayout } from '../utils/layout';
 import type { PanelConstraints } from '../utils/layout';
 import { parseSize } from '../utils/parseSize';
 import { ResizableRootContext } from './ResizableRootContext';
@@ -210,16 +205,18 @@ if (process.env.NODE_ENV !== 'production') {
 // The panels register in `setup`, before the mount. The layout of that first state is the layout
 // that the consumer asked for, so it has no change event.
 let mounted = false;
+let knownIds = new Set<string>();
 
 // Each panel and handle gets its place among the others from this list. A server gives the places
-// in the order of `setup`. After the mount, the list calls this function when a panel or a handle
-// comes or goes, and after it sorted them. The layout of the consumer then names the panels that
-// the root shows, and the panels that are not mounted keep their entries.
+// in the order of `setup`. The list calls this function when a panel or a handle comes or goes,
+// and after it sorted them. A panel that mounts with no entry in the layout of the consumer gets a
+// size, and the others make room for it. The layout then names that panel. A panel that goes keeps
+// its entry, so it comes back at its size.
 function syncLayoutWithPanels() {
-  if (
-    mounted &&
-    !areLayoutsEqual(toRequestedLayout(shown.value, requested.value), requested.value)
-  ) {
+  const ids = constraints.value.map((panel) => panel.id);
+  const isNew = ids.some((id) => !knownIds.has(id) && !Object.hasOwn(requested.value, id));
+  knownIds = new Set(ids);
+  if (mounted && isNew) {
     changeLayout(shown.value, createChangeEventDetails(REASONS.none));
   }
 }

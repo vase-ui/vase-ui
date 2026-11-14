@@ -107,15 +107,16 @@ export function resolveLayout(panels: readonly PanelConstraints[], requested: La
   const room = keepsRequested
     ? keptTotal
     : Math.max(100 - defaultTotal - share * unsized.length, 0);
-  const layout: Layout = {};
-  for (const panel of added) {
-    layout[panel.id] = panel.defaultSize ?? share;
-  }
-  for (const panel of kept) {
-    const size = sizeOf(requested, panel);
-    layout[panel.id] = keptTotal > 0 ? (size / keptTotal) * room : room / kept.length;
-  }
-  return validateLayout(panels, layout);
+  return validateLayout(
+    panels,
+    Object.fromEntries([
+      ...added.map((panel) => [panel.id, panel.defaultSize ?? share]),
+      ...kept.map((panel) => [
+        panel.id,
+        keptTotal > 0 ? (sizeOf(requested, panel) / keptTotal) * room : room / kept.length,
+      ]),
+    ]),
+  );
 }
 
 /**
@@ -196,8 +197,8 @@ export function toRequestedLayout(shown: Layout, requested: Layout): Layout {
     return shown;
   }
   const scale = (100 - unmountedTotal) / 100;
-  return {
-    ...Object.fromEntries(unmounted),
-    ...Object.fromEntries(Object.entries(shown).map(([id, size]) => [id, round(size * scale)])),
-  };
+  return toLayout([
+    ...unmounted.map(([id, size]) => ({ id, size })),
+    ...Object.entries(shown).map(([id, size]) => ({ id, size: size * scale })),
+  ]);
 }

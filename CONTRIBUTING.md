@@ -675,6 +675,7 @@ A part that binds the id of a part that comes after it:
 A part whose style or attribute depends on the parts beside it:
 
 - Such a part calls `useDeferredServerRender()`, and each part that it reads registers in `setup`. The server HTML then has the values that all the parts give. `Resizable.Panel` and `Resizable.Handle` do this.
+- A part that registers too late, such as a panel below an async `setup`, gives the parts beside it other values after the page hydrates.
 - The first client render of such a part knows only the parts that registered before it, so its `style` can differ from the server HTML. The part binds `data-allow-mismatch="style"` to its element while `useIsHydrating()` is `true`, and the next render gives the style of all the parts. `Resizable.Panel` does this. `Resizable.Handle` needs no such attribute, because Vue does not compare `aria-*` and `data-*`.
 
 The label of a root:

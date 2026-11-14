@@ -180,7 +180,12 @@ function onKeydown(event: KeyboardEvent) {
 function onPointerdown(event: PointerEvent) {
   if (drag.start(event)) {
     // The `mousedown` of the press does not focus the handle, as the next function says.
-    handleElement?.focus({ preventScroll: true });
+    handleElement?.focus({
+      preventScroll: true,
+      // Prevent a focus ring that a pointer press gives in browsers that support this option.
+      // Chrome 144 and later support it.
+      focusVisible: false,
+    } as FocusOptions);
   }
 }
 

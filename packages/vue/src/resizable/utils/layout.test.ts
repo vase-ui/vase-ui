@@ -48,12 +48,15 @@ describe('layout', () => {
     expect(resolveLayout([], { a: 100 })).toEqual({});
   });
 
-  it('initial: a panel id that an object also has is an id', () => {
-    expect(resolveLayout([panel('constructor'), panel('toString')])).toEqual({
-      constructor: 50,
-      toString: 50,
-    });
-  });
+  it.each([{ id: 'constructor' }, { id: 'toString' }, { id: '__proto__' }])(
+    'initial: a panel id that an object also has, $id, is an id',
+    ({ id }) => {
+      const layout = resolveLayout([panel(id), panel('b')]);
+
+      expect(Object.keys(layout)).toEqual([id, 'b']);
+      expect(Object.values(layout)).toEqual([50, 50]);
+    },
+  );
 
   it('adjust: grows the pivot and shrinks the next panel', () => {
     const panels = [panel('a'), panel('b')];
@@ -177,6 +180,13 @@ describe('layout', () => {
       b: 16,
       c: 20,
     });
+  });
+
+  it('requested: the layout sums to 100 after the rounding of each entry', () => {
+    const requested = toRequestedLayout({ a: 50, b: 50 }, { a: 33.334, b: 33.333, c: 33.333 });
+
+    expect(Object.values(requested).reduce((total, size) => total + size, 0)).toBe(100);
+    expect(requested.c).toBe(33.333);
   });
 
   it('requested: the shown layout stays when no entry is left over', () => {

@@ -76,7 +76,10 @@ const hydrating = useIsHydrating();
 const id = useVaseUiId(() => props.id);
 // The size at the start: a later change of the prop has no effect.
 const defaultSize = props.defaultSize;
-const { ref: listItemRef, index } = useCompositeListItem();
+// The list publishes its map again when the id changes, so the root sees a panel with a new id.
+const { ref: listItemRef, index } = useCompositeListItem({
+  metadata: computed(() => ({ id: id.value })),
+});
 
 const size = computed(
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The panel registers in `setup`, so the layout has an entry for its id.
