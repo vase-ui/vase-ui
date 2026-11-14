@@ -42,7 +42,7 @@ test('the top-level pages are in the sequence of order, then of text', () => {
   assert.deepEqual(readNavigation(root), { nav: items, sidebar: [{ text: 'Overview', items }] });
 });
 
-test('each folder that has pages is one group, in the sequence of the folder names', () => {
+test('each folder that has pages is one group, with its pages in the sequence of order', () => {
   const root = makeDocs({
     'start.md': page('Start', 1),
     'guides/index.md': page('Guides', 1),
@@ -69,6 +69,20 @@ test('each folder that has pages is one group, in the sequence of the folder nam
       ],
     },
   ]);
+});
+
+test('the groups Handbook, Components and Utils come first, and each other group follows in the sequence of its folder name', () => {
+  const root = makeDocs({
+    'utils/merge.md': page('Merge', 1),
+    'guides/use.md': page('Use', 1),
+    'components/button.md': page('Button', 1),
+    'blog/post.md': page('Post', 1),
+    'handbook/animation.md': page('Animation', 1),
+  });
+  assert.deepEqual(
+    readNavigation(root).sidebar.map(({ text }) => text),
+    ['Handbook', 'Components', 'Utils', 'Blog', 'Guides'],
+  );
 });
 
 test('a docs folder with groups only has no group Overview', () => {

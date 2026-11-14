@@ -17,6 +17,12 @@ interface Page extends PageLink {
 
 const NOT_GROUP_FOLDERS = new Set(['node_modules', 'public']);
 
+/**
+ * The sidebar shows these groups first, in the sequence of the Base UI docs. Each other group
+ * follows them, in the sequence of its folder name.
+ */
+const GROUP_SEQUENCE = ['handbook', 'components', 'utils'];
+
 function firstMatch(lines: string[], pattern: RegExp): string | undefined {
   for (const line of lines) {
     const found = pattern.exec(line);
@@ -68,6 +74,11 @@ function capitalize(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
+function groupRank(folder: string): number {
+  const index = GROUP_SEQUENCE.indexOf(folder);
+  return index === -1 ? GROUP_SEQUENCE.length : index;
+}
+
 export function readNavigation(docsRoot: string): { nav: PageLink[]; sidebar: PageGroup[] } {
   const nav = readPages(docsRoot);
   const groups = readdirSync(docsRoot, { withFileTypes: true })
@@ -76,7 +87,7 @@ export function readNavigation(docsRoot: string): { nav: PageLink[]; sidebar: Pa
         entry.isDirectory() && !entry.name.startsWith('.') && !NOT_GROUP_FOLDERS.has(entry.name),
     )
     .map((entry) => entry.name)
-    .sort((a, b) => a.localeCompare(b, 'en'))
+    .sort((a, b) => groupRank(a) - groupRank(b) || a.localeCompare(b, 'en'))
     .map((folder) => ({ text: capitalize(folder), items: readPages(docsRoot, folder) }))
     .filter((group) => group.items.length > 0);
   return {
