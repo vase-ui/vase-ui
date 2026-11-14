@@ -45,7 +45,7 @@ describe('<Calendar.Root /> state', () => {
     it.each([
       { name: 'today', props: {}, expected: ['2026-11-14'] },
       {
-        name: 'the first day, when today is not in the page',
+        name: 'the first day, with today off the page',
         props: { defaultMonth: Temporal.PlainYearMonth.from('2026-12') },
         expected: ['2026-12-01'],
       },
@@ -65,7 +65,7 @@ describe('<Calendar.Root /> state', () => {
         expected: ['2026-11-20'],
       },
       {
-        name: 'the selected day, when the focused day is off',
+        name: 'the selected day, focused day disabled',
         props: {
           defaultValue: day('2026-11-10'),
           defaultFocusedDate: day('2026-11-20'),

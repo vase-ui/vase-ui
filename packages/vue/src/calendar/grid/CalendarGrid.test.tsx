@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createRenderer,
   describeConformance,
+  flushMicrotasks,
   screen,
   takeReportedMessages,
   waitFor,
@@ -32,9 +33,10 @@ describe('<Calendar.Grid />', () => {
       </CalendarAncestors>,
     );
 
-    await waitFor(() => {
-      expect(screen.getByRole('grid')).not.toHaveAttribute('aria-labelledby');
-    });
+    // The grid assumes a caption until it is mounted, and the first flush after the mount drops it.
+    await flushMicrotasks();
+
+    expect(screen.getByRole('grid')).not.toHaveAttribute('aria-labelledby');
     expect(screen.getByRole('grid')).toHaveAccessibleName(monthName);
   });
 
