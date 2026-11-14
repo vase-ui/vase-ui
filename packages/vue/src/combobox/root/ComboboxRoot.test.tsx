@@ -20,6 +20,7 @@ import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import { Input } from '@vase-ui/vue/input';
+import { Popover } from '@vase-ui/vue/popover';
 import {
   createFormDataSpy,
   createRenderer,
@@ -48,7 +49,6 @@ import { useTimeout } from '../../common/useTimeout';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import type { HTMLProps } from '../../internals/types';
 import { REASONS } from '../../internals/reasons';
-import * as Popover from '../../popover/index.parts';
 import type { ComboboxStore } from '../store';
 import { useComboboxInputValueContext, useComboboxRootContext } from './ComboboxRootContext';
 import type { ComboboxInputElementValue } from './ComboboxRootContext';
@@ -9632,8 +9632,10 @@ describe('<Combobox.Root />', () => {
         expect(screen.getByRole('status')).toHaveTextContent('No matches');
         expect(screen.queryByText('apple')).toBe(null);
 
-        // The animation of 100 s still runs after `animationstart`, so the case ends it. A busy
-        // machine can stall the page for some seconds, so the wait for the end has no time limit.
+        // The first read of the animations of the popup after the close gives an empty list, and
+        // `nextAnimationsRead` would resolve with it. The animation of 100 s still runs after
+        // `animationstart`, so the case reads the list itself. A busy machine can stall the page
+        // for some seconds, so the wait for the end has no time limit.
         const animations = popup.getAnimations();
         for (const animation of animations) {
           animation.finish();

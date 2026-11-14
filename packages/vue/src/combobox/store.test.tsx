@@ -160,7 +160,7 @@ describe('combobox store synchronization', () => {
     // reason.
     const { setProps } = await render(<InlineOwnershipFixture inline={false} />);
 
-    // A watcher with the default flush runs one time for the writes of one update.
+    // A watcher with the default flush does not run between two writes of one function.
     const snapshots: { inline: boolean; inputOwnsFormValue: boolean }[] = [];
     const stop = watch(
       () => ({ inline: store.state.inline, inputOwnsFormValue: store.state.inputOwnsFormValue }),
