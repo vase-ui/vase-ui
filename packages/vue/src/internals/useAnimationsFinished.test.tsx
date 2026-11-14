@@ -21,6 +21,7 @@ function mockAnimations(element: Element, getAnimations: () => Animation[]) {
     Array.from(mockedAnimations, ([target, getTargetAnimations]) =>
       getTargetAnimations().map(
         (animation) =>
+          // eslint-disable-next-line @typescript-eslint/no-misused-spread -- The mock copies each `Animation` into a plain object on purpose.
           ({ ...animation, effect: { ...animation.effect, target } }) as unknown as Animation,
       ),
     ).flat();

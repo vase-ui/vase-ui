@@ -771,7 +771,7 @@ describe('<Form />', () => {
               const nextErrors = Object.create(null) as Errors;
               nextErrors.first = 'First error';
               nextErrors.second = 'Second error';
-              Promise.resolve().then(() => {
+              void Promise.resolve().then(() => {
                 errors.value = nextErrors;
               });
             }}

@@ -56,8 +56,10 @@ export function nextEvent(
       target.addEventListener(after, handleAfterEvent);
     }
     target.addEventListener(type, handleEvent);
+    // eslint-disable-next-line @typescript-eslint/require-await -- The async function turns a throw of `action` into a rejection.
     (async () => action?.())().then(startTimer, (error: unknown) => {
       settle();
+      // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- The helper passes on the value that `action` threw.
       reject(error);
     });
   });

@@ -645,7 +645,7 @@ describe('useHoverTriggerInteraction', () => {
         },
         {
           name: 'KeepAlive deactivates the trigger',
-          release: (view: Release) => view.toggle(false),
+          release: (view: Release) => void view.toggle(false),
         },
         {
           name: 'the popup closes for another reason',

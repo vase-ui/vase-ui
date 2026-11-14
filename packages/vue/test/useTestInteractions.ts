@@ -92,7 +92,7 @@ function mutablyMergeProps(
 
     let handlers = eventHandlers.get(key);
     if (!handlers) {
-      const newHandlers: ((...args: unknown[]) => void)[] = [];
+      const newHandlers: ((...args: unknown[]) => unknown)[] = [];
       handlers = newHandlers;
       eventHandlers.set(key, handlers);
 

@@ -25,10 +25,10 @@ function createState(reference: Rect, overflow: SideObject): MiddlewareState {
       floating: floatingRect,
     },
     platform: {
-      detectOverflow: vi.fn(async () => overflow),
-      getElementRects: vi.fn(async () => ({ reference, floating: floatingRect })),
-      getClippingRect: vi.fn(async () => reference),
-      getDimensions: vi.fn(async () => ({ width: 5, height: 5 })),
+      detectOverflow: vi.fn(() => Promise.resolve(overflow)),
+      getElementRects: vi.fn(() => Promise.resolve({ reference, floating: floatingRect })),
+      getClippingRect: vi.fn(() => Promise.resolve(reference)),
+      getDimensions: vi.fn(() => Promise.resolve({ width: 5, height: 5 })),
     },
   };
 }

@@ -1592,12 +1592,12 @@ describe('<Field.Root />', () => {
       });
 
       let calls = 0;
-      const validate = async () => {
+      const validate = () => {
         calls += 1;
         if (calls === 2) {
-          throw new Error('network');
+          return Promise.reject(new Error('network'));
         }
-        return 'Username is taken';
+        return Promise.resolve('Username is taken');
       };
 
       await render(

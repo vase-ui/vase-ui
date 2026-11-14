@@ -113,7 +113,7 @@ describe('ToastStore', () => {
     const store = createStore([{ id: 'a', title: 'Draft', data: { name: 'Draft', count: 1 } }]);
 
     store.updateToast('a', (prevToast) => ({
-      title: `${prevToast.title} (saved)`,
+      title: `${String(prevToast.title)} (saved)`,
       data: { ...prevToast.data, count: 2 },
     }));
     const toast = selectors.toast(store.state, 'a');

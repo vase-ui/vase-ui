@@ -288,14 +288,14 @@ describe('<PreviewCard.Root />', () => {
       await render(() => (
         <PreviewCard.Root open>
           {{
-            default: ({ payload }: { payload: unknown }) => (
+            default: ({ payload }: { payload: string | undefined }) => (
               <>
                 {linkMounted.value ? (
                   <PreviewCard.Trigger id="link" href="#link" payload="First">
                     Link
                   </PreviewCard.Trigger>
                 ) : null}
-                <span data-testid="payload">{String(payload ?? 'none')}</span>
+                <span data-testid="payload">{payload ?? 'none'}</span>
               </>
             ),
           }}

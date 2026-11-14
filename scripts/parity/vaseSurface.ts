@@ -155,9 +155,12 @@ function readPropNames(source: string, file: string): string[] {
   const { descriptor } = parse(source, { filename: file });
   try {
     const { bindings } = compileScript(descriptor, { id: file });
-    return Object.entries(bindings ?? {})
-      .filter(([, type]) => type === 'props')
-      .map(([name]) => name);
+    return (
+      Object.entries(bindings ?? {})
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison -- `vue/compiler-sfc` does not export the enum `BindingTypes`, so the code compares its value.
+        .filter(([, type]) => type === 'props')
+        .map(([name]) => name)
+    );
   } catch (error) {
     throw new Error(
       `${file}: the SFC compiler cannot read the props: ${error instanceof Error ? error.message : String(error)}`,

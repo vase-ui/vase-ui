@@ -51,7 +51,7 @@ describe('hydrate', () => {
     // Vue does not compare `aria-*`, and it does not patch an attribute of a `v-bind` object.
     const error = await hydrate(HydrationFixture, {
       serverHtml: serverHtml.replace('aria-pressed="false"', 'aria-pressed="true"'),
-    }).catch((caught: Error) => caught);
+    }).catch((caught: unknown) => caught);
 
     expect(error).toBeInstanceOf(Error);
     expect((error as Error).message).toMatch(/The hydrated DOM differs from a client-only render/);
@@ -63,7 +63,7 @@ describe('hydrate', () => {
 
     // Vue does not compare `data-*`.
     const error = await hydrate(PlainPart, { serverHtml, props: { active: false } }).catch(
-      (caught: Error) => caught,
+      (caught: unknown) => caught,
     );
 
     expect(error).toBeInstanceOf(Error);
@@ -120,7 +120,7 @@ describe('hydrate', () => {
     const error = await hydrate(StyledElement, {
       serverHtml,
       props: { elementStyle: clientStyle },
-    }).catch((caught: Error) => caught);
+    }).catch((caught: unknown) => caught);
 
     expect(error).toBeInstanceOf(Error);
     expect((error as Error).message).toMatch(/The hydrated DOM differs from a client-only render/);
