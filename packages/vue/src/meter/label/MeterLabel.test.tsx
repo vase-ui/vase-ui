@@ -1,10 +1,11 @@
 import { expect, describe, it } from 'vitest';
-import { defineComponent, shallowRef } from 'vue';
+import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import { Meter } from '@vase-ui/vue/meter';
 import {
   createRenderer,
   describeConformance,
   fireEvent,
+  flushMicrotasks,
   screen,
   takeReportedMessages,
 } from '#test-utils';
@@ -59,6 +60,31 @@ describe('<Meter.Label />', () => {
 
     await fireEvent.click(screen.getByRole('button', { name: 'Remove label' }));
     expect(meter).not.toHaveAttribute('aria-labelledby');
+  });
+
+  it('names the meter with the label only while KeepAlive shows the label', async () => {
+    const visible = shallowRef(true);
+    const App = defineComponent(() => () => (
+      <Meter.Root value={50}>
+        <KeepAlive>
+          {visible.value ? <Meter.Label data-testid="label">Battery level</Meter.Label> : null}
+        </KeepAlive>
+      </Meter.Root>
+    ));
+    await render(<App />);
+    const meter = screen.getByRole('meter');
+    const label = screen.getByTestId('label');
+    expect(meter).toHaveAttribute('aria-labelledby', label.id);
+
+    visible.value = false;
+    await flushMicrotasks();
+    expect(meter).not.toHaveAttribute('aria-labelledby');
+
+    visible.value = true;
+    await flushMicrotasks();
+    // The same element proves that `KeepAlive` kept the label and did not mount a new one.
+    expect(screen.getByTestId('label')).toBe(label);
+    expect(meter).toHaveAttribute('aria-labelledby', label.id);
   });
 
   it('throws a descriptive error when rendered outside <Meter.Root>', async () => {
