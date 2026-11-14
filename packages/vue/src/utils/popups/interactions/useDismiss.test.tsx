@@ -207,6 +207,33 @@ const Tree = defineComponent({
   },
 });
 
+/**
+ * A popup that a button opens. `dismiss` is `useDismiss`, or the function of a second copy of the
+ * module.
+ */
+function createLayer(dismiss: typeof useDismiss, name: string) {
+  return defineComponent({
+    setup() {
+      const open = shallowRef(false);
+      const { refs, context } = useFloating({
+        open,
+        onOpenChange(nextOpen) {
+          open.value = nextOpen;
+        },
+      });
+      const { floating } = dismiss(context.rootStore);
+      return () => (
+        <>
+          <button data-testid={`open-${name}`} onClick={() => (open.value = true)} />
+          {open.value && (
+            <div data-testid={name} {...mergeProps(floating, { ref: refs.setFloating })} />
+          )}
+        </>
+      );
+    },
+  });
+}
+
 function isOpen(name: string) {
   return screen.queryByTestId(name) !== null;
 }
@@ -2761,28 +2788,6 @@ describe('useDismiss', () => {
       const copy: typeof import('./useDismiss') = await import('./useDismiss?copy' as string);
       expect(copy.useDismiss).not.toBe(useDismiss);
 
-      function createLayer(dismiss: typeof useDismiss, name: string) {
-        return defineComponent({
-          setup() {
-            const open = shallowRef(false);
-            const { refs, context } = useFloating({
-              open,
-              onOpenChange(nextOpen) {
-                open.value = nextOpen;
-              },
-            });
-            const { floating } = dismiss(context.rootStore);
-            return () => (
-              <>
-                <button data-testid={`open-${name}`} onClick={() => (open.value = true)} />
-                {open.value && (
-                  <div data-testid={name} {...mergeProps(floating, { ref: refs.setFloating })} />
-                )}
-              </>
-            );
-          },
-        });
-      }
       const First = createLayer(useDismiss, 'first');
       const Second = createLayer(copy.useDismiss, 'second');
       const Third = createLayer(useDismiss, 'third');
@@ -3261,30 +3266,6 @@ describe('useDismiss', () => {
 
     it('keeps the popup open for a press in a newer popup of a second copy of the module', async () => {
       const copy: typeof import('./useDismiss') = await import('./useDismiss?copy' as string);
-      const closed: string[] = [];
-      function createLayer(dismiss: typeof useDismiss, name: string) {
-        return defineComponent({
-          setup() {
-            const open = shallowRef(false);
-            const { refs, context } = useFloating({
-              open,
-              onOpenChange(nextOpen) {
-                open.value = nextOpen;
-                closed.push(name);
-              },
-            });
-            const { floating } = dismiss(context.rootStore);
-            return () => (
-              <>
-                <button data-testid={`open-${name}`} onClick={() => (open.value = true)} />
-                {open.value && (
-                  <div data-testid={name} {...mergeProps(floating, { ref: refs.setFloating })} />
-                )}
-              </>
-            );
-          },
-        });
-      }
       const First = createLayer(useDismiss, 'first');
       const Second = createLayer(copy.useDismiss, 'second');
       await render(
@@ -3298,7 +3279,10 @@ describe('useDismiss', () => {
 
       await fireEvent.pointerDown(screen.getByTestId('second'), mouse);
 
-      expect(closed).toEqual([]);
+      expect({ first: isOpen('first'), second: isOpen('second') }).toEqual({
+        first: true,
+        second: true,
+      });
     });
   });
 });

@@ -762,8 +762,8 @@ describe('useVaseUIFloating', () => {
           return () => null;
         },
       });
-      // The popup opens before the parent popup. A press in a popup that opened after the parent
-      // popup belongs to that popup, and the parent popup then stays open.
+      // `Moved` renders before `Parent`, so its popup opens first. A press in a popup that opened
+      // after the parent popup belongs to that popup, and the parent popup then stays open.
       await render(
         <>
           <Moved />
