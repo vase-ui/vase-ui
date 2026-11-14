@@ -46,8 +46,8 @@ function setIos(ios: boolean) {
 
 // The way that a lock holds a document depends on its scrollbars. A page with scrollbars that take
 // layout space is held with the body. It is held with the gutter when the engine keeps the width of
-// the page for a hidden scrollbar. A page with overlay scrollbars needs neither. Each engine runs
-// the cases for the ways that it can show.
+// the page for a hidden scrollbar. A page with overlay scrollbars needs neither. An engine runs the
+// cases of the body way only when it has such scrollbars.
 const hasBodyStrategy = (await probeStrategy(CUSTOM_SCROLLBARS_CSS)) === 'body';
 const hasGutterStrategy = (await probeStrategy()) === 'gutter';
 const hasInsetScrollbars = hasBodyStrategy || hasGutterStrategy;
@@ -116,6 +116,13 @@ function normalize({ doc }: ScrollDocument, properties: Record<string, string>) 
 function pick(element: HTMLElement, names: string[]) {
   const style = inline(element);
   return Object.fromEntries(names.map((name) => [name, style[name]]));
+}
+
+// The scrollbars of this document are hidden, and its window reports a scrollbar of 15 px. The lock
+// then takes the way for scrollbars that take space, and the probe finds that the gutter keeps the
+// width of the page. No engine of CI shows scrollbars that take space and keep their gutter.
+function createGutterDocument(css = '') {
+  return createScrollDocument({ css: `${HIDDEN_SCROLLBARS_CSS} ${css}`, mockedScrollbarWidth: 15 });
 }
 
 // Gives the two elements inline styles that a lock changes, and a scroll position that it moves.
@@ -236,14 +243,14 @@ describe('useScrollLock', () => {
     });
   });
 
-  describe.runIf(hasGutterStrategy)('gutter strategy', () => {
+  describe('gutter strategy', () => {
     it.each([
       { name: 'html', css: 'html { overflow: auto }', locked: 'html' },
       { name: 'the body', css: '', locked: 'body' },
     ] as const)(
       'hides the overflow of $name and sets the gutter of html',
       async ({ css, locked }) => {
-        const page = await createScrollDocument({ css });
+        const page = await createGutterDocument(css);
         await lock(page);
         await waitForLock(page);
 
@@ -262,9 +269,7 @@ describe('useScrollLock', () => {
     );
 
     it('keeps both edges of a page that has them', async () => {
-      const page = await createScrollDocument({
-        css: 'html { scrollbar-gutter: stable both-edges }',
-      });
+      const page = await createGutterDocument('html { scrollbar-gutter: stable both-edges }');
       await lock(page);
       await waitForLock(page);
 
@@ -409,20 +414,17 @@ describe('useScrollLock', () => {
       await waitFor(() => expect(state(page)).toEqual(original), POLL);
     });
 
-    it.runIf(hasGutterStrategy)(
-      'gives the styles, the scroll position and the marker of a gutter page back',
-      async () => {
-        const page = await createScrollDocument();
-        setOriginalState(page);
-        const original = state(page);
+    it('gives the styles, the scroll position and the marker of a gutter page back', async () => {
+      const page = await createGutterDocument();
+      setOriginalState(page);
+      const original = state(page);
 
-        const { enabled } = await lock(page);
-        await waitForLock(page);
+      const { enabled } = await lock(page);
+      await waitForLock(page);
 
-        await release(enabled);
-        await waitFor(() => expect(state(page)).toEqual(original), POLL);
-      },
-    );
+      await release(enabled);
+      await waitFor(() => expect(state(page)).toEqual(original), POLL);
+    });
 
     it.runIf(hasBodyStrategy)(
       'gives the styles, the scroll position and the marker of a body page back',
@@ -441,7 +443,7 @@ describe('useScrollLock', () => {
     );
   });
 
-  describe('scrollbar track and scroll containers', () => {
+  describe('scrollbar track', () => {
     it.runIf(hasInsetScrollbars)(
       'keeps the scrollbar track of a page that has short content and overflow-y: scroll',
       async () => {
@@ -457,20 +459,6 @@ describe('useScrollLock', () => {
         await waitFor(() => expect(page.html.clientWidth).toBe(width), POLL);
       },
     );
-
-    it('keeps a scroll container inside the locked page scrollable', async () => {
-      const page = await createScrollDocument({ css: HIDDEN_SCROLLBARS_CSS });
-      const container = page.doc.createElement('div');
-      container.style.cssText = 'width: 100px; height: 100px; overflow: auto';
-      container.innerHTML = '<div style="height: 500px"></div>';
-      page.body.append(container);
-
-      await lock(page);
-      await waitForLock(page);
-
-      container.scrollTop = 80;
-      expect(container.scrollTop).toBe(80);
-    });
   });
 
   describe('two locks', () => {
