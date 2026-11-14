@@ -822,6 +822,17 @@ The interaction composables of a popup are in `src/utils/popups/interactions`.
 - A component calls `useListNavigation` one time. A second call in the same component replaces the function that the first call provides.
 - `KeepAlive` takes the list out of the document, and the active item loses the focus. While `KeepAlive` holds the list, the composable stops its frames. At the activation, the active item gets the focus again, and the highlight does not change.
 
+### Popup typeahead
+
+`useTypeahead(store, options)` highlights the first item whose label starts with the typed text. The code is in `src/utils/popups/interactions/useTypeahead.ts`.
+
+- A root calls it one time in `setup`.
+- The result is one plain object with `reference` and `floating`. The two members are one object of listeners, which `setup` makes one time. Base UI gives an empty object while `enabled` is `false`. Here each handler does nothing in that state.
+- `listRef` is a ref of the array of the labels, such as `labelsRef` of the item registry. `elementsRef` is a ref of the array of the item elements. The composable reads the two refs only in a handler.
+- `onMatch` and `onTyping` are plain functions. `disabledIndices` is a plain member, and the composable reads it one time, so a function is the form that follows a change. Each other option is a value, a ref or a getter.
+- A `watch` of `open` and of `selectedIndex` ends the session, as the effect of Base UI does. A server runs no such `watch`, so a server render starts no timer.
+- `KeepAlive` can take the list out of the document with no `focusout`. Thus the deactivation ends the session, and `onTyping` gets `false`.
+
 ### Toast store
 
 The toasts of one `Toast.Provider` are in a `ToastStore`. The code is in `src/toast/store.ts`.
@@ -1188,6 +1199,7 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 | `useTestInteractions([useX(…)])`, where `useX` returns listeners with no `reference`, such as `useFocus`   | Call `useX(…)` in `setup`, and spread the object that it returns on the trigger: `<button {...props} />`. The object has the listeners and no `reference` member.                                                                                         |
 | `<CompositeList>`, `<CompositeRoot>` or `<CompositeItem>` in a test                                        | The fixture part of `packages/vue/test/fixtures`, imported with the upstream name                                                                                                                                                                         |
 | `useFloating` of `test/floating-ui-tests`                                                                  | `useFloating` of `test/fixtures`. It makes a `FloatingRootStore` and writes the positioning context that a positioner writes.                                                                                                                             |
+| A component of `test/floating-ui-tests`, such as `Grid`                                                    | A component in the test file that renders it. It keeps only what the cases read.                                                                                                                                                                          |
 | `renderToString` of the renderer, with no `hydrate()`                                                      | A case in the `.node.test.tsx` file of the same folder, with `renderToString` of `vue/server-renderer`. Give the upstream case a `replaced` row.                                                                                                          |
 | `renderToString` of the renderer, then `hydrate()`                                                         | The case stays in the ported test file with the same title, so it needs no row. Use `renderOnServer` and `hydrate`, which need a browser. A case that acts between the server render and `hydrate()` hydrates by hand. See [Test helpers](#test-helpers). |
 | A `React.Suspense` around a part, so that the part hydrates after its root                                 | A fixture SFC with `defineAsyncComponent(() => Promise.resolve(Part))` inside `<Suspense>`. Hydrate it by hand. See [Test helpers](#test-helpers).                                                                                                        |

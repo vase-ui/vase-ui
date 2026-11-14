@@ -1150,11 +1150,11 @@ describe('useListNavigation', () => {
         return (
           <>
             <input
+              value={inputValue.value}
+              placeholder="Enter fruit"
               {...getReferenceProps({
                 ref: refs.setReference,
                 onInput,
-                value: inputValue.value,
-                placeholder: 'Enter fruit',
                 'aria-autocomplete': 'list',
               })}
               data-testid="reference"
