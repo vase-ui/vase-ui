@@ -17,8 +17,8 @@ import type {
 
 export type SelectItems =
   | Record<string, ItemLabel>
-  | ReadonlyArray<{ label: ItemLabel; value: any }>
-  | ReadonlyArray<Group<any>>
+  | readonly { label: ItemLabel; value: any }[]
+  | readonly Group[]
   | undefined;
 
 export type State = ValuePopupState & {
