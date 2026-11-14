@@ -13,7 +13,7 @@
       "title": "re-associates the label when a CheckboxGroup is replaced by another control",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
-      "reason": "The case renders a `CheckboxGroup` with `allValues`, which Vase UI does not have. `useCheckboxGroupParent.ts` comes last, so the row names its file."
+      "reason": "The case renders `allValues`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
@@ -61,7 +61,7 @@
       "title": "keeps the group label suppressed while its subtree is hidden",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
-      "reason": "The case renders a `CheckboxGroup` with `allValues` and a parent checkbox, which Vase UI does not have. `useCheckboxGroupParent.ts` comes last, so the row names its file."
+      "reason": "The case renders `allValues` and a parent checkbox, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
@@ -69,7 +69,7 @@
       "title": "receives all form values as the 2nd argument",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/select/root/SelectRoot.tsx",
-      "reason": "The case renders `CheckboxGroup`, `Slider` and `Select`, which Vase UI does not have. `Select` comes last, so the row names its file."
+      "reason": "The case renders `Slider` and `Select`, which Vase UI does not have. `Select` comes last, so the row names its file."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
@@ -78,14 +78,6 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/select/root/SelectRoot.tsx",
       "reason": "The case renders `Slider` and `Select`, which Vase UI does not have. `Select` comes last, so the row names its file."
-    },
-    {
-      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
-      "describe": ["<Field.Root />", "prop: validate"],
-      "title": "excludes registration-gated controls from onFormSubmit when their field name is removed",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox-group/CheckboxGroup.tsx",
-      "reason": "The case renders `CheckboxGroup`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
@@ -111,19 +103,11 @@
     },
     {
       "upstream": "packages/react/src/field/item/FieldItem.test.tsx",
-      "describe": ["<Field.Item />", "prop: disabled"],
-      "title": "disables a wrapped checkbox",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox-group/CheckboxGroup.tsx",
-      "reason": "The case renders `CheckboxGroup`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/field/item/FieldItem.test.tsx",
       "describe": ["<Field.Item />"],
       "title": "associates a Field.Item label with a parent checkbox",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
-      "reason": "The case renders a `CheckboxGroup` with `allValues` and a parent checkbox, which Vase UI does not have. `useCheckboxGroupParent.ts` comes last, so the row names its file."
+      "reason": "The case renders `allValues` and a parent checkbox, which Vase UI does not have."
     }
   ],
   "surfaceAdditions": [
