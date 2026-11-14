@@ -34,7 +34,7 @@ const falsyNavigationMenuValueCases = [
   ['0', 0],
   ['empty string', ''],
   ['false', false],
-] as const satisfies ReadonlyArray<[string, FalsyNavigationMenuValue]>;
+] as const satisfies readonly [string, FalsyNavigationMenuValue][];
 
 type TestNavigationMenuProps = NavigationMenu.Root.Props & {
   keepMountedPortal?: boolean;
@@ -1853,7 +1853,7 @@ describe('<NavigationMenu.Root />', () => {
         expect(positioner.style.getPropertyValue('--positioner-width')).toBe('675px');
         expect(positioner.style.getPropertyValue('--positioner-height')).toBe('220px');
 
-        animations.finish();
+        void animations.finish();
         await flushMicrotasks();
       } finally {
         globalThis.VASE_UI_ANIMATIONS_DISABLED = previousAnimationsDisabled;
@@ -1909,7 +1909,7 @@ describe('<NavigationMenu.Root />', () => {
         expect(exitingContent).toHaveAttribute('data-ending-style');
         expect(exitingContent).not.toHaveAttribute('data-activation-direction');
 
-        animations.finish();
+        void animations.finish();
         await flushMicrotasks();
       } finally {
         globalThis.VASE_UI_ANIMATIONS_DISABLED = previousAnimationsDisabled;
@@ -2298,7 +2298,7 @@ describe('<NavigationMenu.Root />', () => {
 
         expect(screen.queryByTestId('popup-root')).toBe(null);
 
-        animations.finish(closingAnimation);
+        void animations.finish(closingAnimation);
         await flushMicrotasks();
       } finally {
         globalThis.VASE_UI_ANIMATIONS_DISABLED = previousAnimationsDisabled;
@@ -3623,7 +3623,7 @@ describe('<NavigationMenu.Root />', () => {
             ),
           ).toBe(true);
 
-          animations.finish();
+          void animations.finish();
           await flushMicrotasks();
 
           await waitFor(() => {
@@ -3777,7 +3777,7 @@ describe('<NavigationMenu.Root />', () => {
           expect(positioner.style.getPropertyValue('--positioner-width')).toBe('500px');
           expect(positioner.style.getPropertyValue('--positioner-height')).toBe('180px');
 
-          animations.finish();
+          void animations.finish();
           await flushMicrotasks();
 
           await waitFor(() => {
@@ -3969,7 +3969,7 @@ describe('<NavigationMenu.Root />', () => {
           await flushMicrotasks();
 
           const popupWidthCalls = (
-            popupWidthSpy.mock.calls as Array<[property: string, value: string, priority?: string]>
+            popupWidthSpy.mock.calls as [property: string, value: string, priority?: string][]
           )
             .filter((call) => call[0] === '--popup-width')
             .map((call) => call[1]);

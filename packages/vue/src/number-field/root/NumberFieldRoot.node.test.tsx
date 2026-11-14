@@ -25,7 +25,7 @@ function getHiddenInput(html: string) {
 
 // The server writes the empty string as the attribute `value` with no text.
 function getValueAttribute(input: string) {
-  const match = input.match(/ value(?:="([^"]*)")?(?=[ >])/);
+  const match = / value(?:="([^"]*)")?(?=[ >])/.exec(input);
   return match ? (match[1] ?? '') : undefined;
 }
 
@@ -34,7 +34,7 @@ function getStepper(html: string, name: 'increment' | 'decrement') {
 }
 
 function getText(html: string) {
-  return html.match(/<span data-testid="text">([^<]*)<\/span>/)?.[1];
+  return /<span data-testid="text">([^<]*)<\/span>/.exec(html)?.[1];
 }
 
 describe('<NumberField.Root />', () => {

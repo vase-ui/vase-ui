@@ -10,6 +10,7 @@ export function createEventEmitter(): PopupEvents {
       if (!map.has(event)) {
         map.set(event, new Set());
       }
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The check above makes the set of the event.
       map.get(event)!.add(listener);
     },
     off(event: string, listener: (data: any) => void) {

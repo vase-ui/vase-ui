@@ -2827,8 +2827,8 @@ describe('FloatingFocusManager', () => {
           writable: true,
           value(options: any) {
             // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-            options && options.preventScroll;
-            return originalFocus.call(this, options);
+            options?.preventScroll;
+            originalFocus.call(this, options);
           },
         });
         onTestFinished(() => {
@@ -3094,6 +3094,7 @@ describe('FloatingFocusManager', () => {
               const iframeDoc = iframe.contentWindow?.document;
               if (iframeDoc) {
                 iframeDoc.open();
+                // eslint-disable-next-line @typescript-eslint/no-deprecated -- The test keeps the text of Base UI, which writes the document of the iframe with `write`.
                 iframeDoc.write(`<div id="rootIframe"></div>`);
                 iframeDoc.close();
               }
@@ -3124,7 +3125,7 @@ describe('FloatingFocusManager', () => {
         await render(<IframeApp />);
 
         const iframe: HTMLIFrameElement = await screen.findByTestId('iframe');
-        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+        const iframeDoc = iframe.contentDocument ?? iframe.contentWindow?.document;
         const iframeWithin = iframeDoc ? within(iframeDoc.body) : screen;
 
         // The popover renders inside an iframe and the renderer's `user` is bound to the
@@ -3148,7 +3149,7 @@ describe('FloatingFocusManager', () => {
         await render(<IframeApp />);
 
         const iframe: HTMLIFrameElement = await screen.findByTestId('iframe');
-        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+        const iframeDoc = iframe.contentDocument ?? iframe.contentWindow?.document;
         const iframeWithin = iframeDoc ? within(iframeDoc.body) : screen;
 
         // The popover renders inside an iframe and the renderer's `user` is bound to the
