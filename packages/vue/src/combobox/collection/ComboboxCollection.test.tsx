@@ -1,5 +1,5 @@
 import { expect, describe, it } from 'vitest';
-import { createRenderer, screen } from '#test-utils';
+import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
 import * as Combobox from '../index.parts';
 
 describe('<Combobox.Collection />', () => {
@@ -90,6 +90,47 @@ describe('<Combobox.Collection />', () => {
       await renderNestedGroups(innerItems);
 
       expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([expected]);
+    });
+
+    it('keeps the element of an item when the filter moves the item', async () => {
+      await render(
+        <Combobox.Root items={['apple', 'banana', 'cherry']} defaultOpen>
+          <Combobox.Input />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List>
+                  <Combobox.Group>
+                    <Combobox.Collection>
+                      {({ item }: { item: string }) => (
+                        <Combobox.Item key={item} value={item}>
+                          {item}
+                        </Combobox.Item>
+                      )}
+                    </Combobox.Collection>
+                  </Combobox.Group>
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+      const cherry = screen.getByRole('option', { name: 'cherry' });
+
+      await fireEvent.input(screen.getByRole('combobox'), {
+        target: { value: 'cherry' },
+        inputType: 'insertText',
+      });
+      await flushMicrotasks();
+      expect(screen.getAllByRole('option')).toEqual([cherry]);
+
+      await fireEvent.input(screen.getByRole('combobox'), {
+        target: { value: '' },
+        inputType: 'deleteContentBackward',
+      });
+      await flushMicrotasks();
+      expect(screen.getAllByRole('option')).toHaveLength(3);
+      expect(screen.getByRole('option', { name: 'cherry' })).toBe(cherry);
     });
 
     it('renders the filtered items of the root in a group with no items', async () => {

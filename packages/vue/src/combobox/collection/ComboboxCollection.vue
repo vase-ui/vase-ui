@@ -26,10 +26,14 @@ const itemsToRender = computed<readonly any[]>((previous) => {
 function haveSameItems(previous: readonly any[], next: readonly any[]) {
   return previous.length === next.length && previous.every((item, index) => item === next[index]);
 }
+
+// The item is the key of its nodes, as the consumer of Base UI writes `key={item}`. An item then
+// keeps its element when the filter moves it. A key of the index would give the element to another
+// item. A `key` in the slot does not help, because the template puts the slot in a fragment.
 </script>
 
 <template>
-  <template v-for="(item, index) in itemsToRender" :key="index"
+  <template v-for="(item, index) in itemsToRender" :key="item"
     ><slot :item="item" :index="index"
   /></template>
 </template>
