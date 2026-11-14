@@ -234,7 +234,12 @@ export function useMenuFilterKeyDown(
           store.state.activeTriggerElement;
         const details = createChangeEventDetails(REASONS.focusOut, event);
         store.setOpen(false, details);
-        if (!details.isCanceled && isHTMLElement(returnElement)) {
+        // A canceled close keeps the popup open, and the focus still returns. The popup of a root
+        // context menu is modal, and a modal popup that stays open keeps the focus.
+        if (details.isCanceled && store.state.parent.type === 'context-menu') {
+          break;
+        }
+        if (isHTMLElement(returnElement)) {
           returnElement.focus();
         }
         break;

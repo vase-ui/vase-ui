@@ -817,8 +817,15 @@ export function useListNavigation(
       const details = createChangeEventDetails(REASONS.focusOut, event);
       store.setOpen(false, details);
 
+      // A canceled close keeps the popup open. The key still moves the focus out of the popup, as
+      // Tab does through the guards. A list that closes for Tab is in a modal popup, and a modal
+      // popup that stays open keeps the focus.
+      if (details.isCanceled && shouldCloseOnTab()) {
+        return;
+      }
+
       const returnElement = toValue(props.nestedReturnFocusRef) ?? anchorElement;
-      if (!details.isCanceled && isHTMLElement(returnElement)) {
+      if (isHTMLElement(returnElement)) {
         returnElement.focus();
       }
 
