@@ -504,6 +504,22 @@ describe('useHoverPopupInteraction', () => {
 
         expect(document.body.style.pointerEvents).toBe('none');
       });
+
+      it('forgets what the hover intent of a closed new store holds', async () => {
+        const { StoreChangeApp, moved, stores } = createStoreChangeApp();
+        await render(<StoreChangeApp />);
+        getHoverIntent(stores.second).blockOutsidePointerEvents({
+          scopeElement: document.body,
+          triggerElement: screen.getByTestId('trigger'),
+          positionerElement: screen.getByTestId('popup'),
+        });
+        expect(document.body.style.pointerEvents).toBe('none');
+
+        moved.value = true;
+        await flushMicrotasks();
+
+        expect(document.body.style.pointerEvents).toBe('');
+      });
     });
 
     describe('the popup tree', () => {
