@@ -538,14 +538,6 @@
     {
       "upstream": "packages/react/src/menu/positioner/MenuPositioner.test.tsx",
       "describe": ["<Menu.Positioner />", "collision avoidance"],
-      "title": "uses the dropdown default for a menubar menu",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menubar/Menubar.tsx",
-      "reason": "The case renders `Menubar`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/menu/positioner/MenuPositioner.test.tsx",
-      "describe": ["<Menu.Positioner />", "collision avoidance"],
       "title": "uses the popup default for a submenu",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/submenu-root/MenuSubmenuRoot.tsx",
@@ -587,13 +579,6 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
       "reason": "The case presses the trigger to open or close the menu. The trigger of Vase UI has no press yet."
-    },
-    {
-      "upstream": "packages/react/src/menu/positioner/MenuPositioner.test.tsx",
-      "describe": ["<Menu.Positioner />", "Menubar parent"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menubar/Menubar.tsx",
-      "reason": "The case renders `Menubar`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/menu/radio-group/MenuRadioGroup.test.tsx",
@@ -721,16 +706,16 @@
       "describe": ["<Menu.Trigger />"],
       "title": "does not have role prop inside a Popover",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/root/PopoverRoot.tsx",
-      "reason": "The case renders `Popover`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/popover/popup/PopoverPopup.tsx",
+      "reason": "The case renders `Popover.Popup` and the parts around it, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/menu/trigger/MenuTrigger.test.tsx",
       "describe": ["<Menu.Trigger />"],
       "title": "has a role prop inside a Popover when not a native button",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/root/PopoverRoot.tsx",
-      "reason": "The case renders `Popover`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/popover/popup/PopoverPopup.tsx",
+      "reason": "The case renders `Popover.Popup` and the parts around it, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/menu/viewport/MenuViewport.test.tsx",

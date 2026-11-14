@@ -1,12 +1,14 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { computed, defineComponent, shallowRef, toValue } from 'vue';
 import type { FunctionalComponent } from 'vue';
+import { Menubar } from '@vase-ui/vue/menubar';
 import * as Menu from '../index.parts';
 import {
   createRenderer,
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  isJSDOM,
   positionerConformanceTests,
   screen,
   takeReportedMessages,
@@ -176,6 +178,33 @@ describe('<Menu.Positioner />', () => {
     });
   });
 
+  describe('collision avoidance', () => {
+    function lastCallFor(positioner: HTMLElement) {
+      const calls = useAnchorPositioningSpy.mock.calls.filter(
+        ([params]) => toValue(params.positionerElement) === positioner,
+      );
+      return calls[calls.length - 1]?.[0] as UseAnchorPositioningParameters | undefined;
+    }
+
+    it('uses the dropdown default for a menubar menu', async () => {
+      await render(
+        <Menubar>
+          <Menu.Root open>
+            <Menu.Trigger>File</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner data-testid="positioner">
+                <Menu.Popup />
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menubar>,
+      );
+
+      const options = lastCallFor(screen.getByTestId('positioner'));
+      expect(toValue(options?.collisionAvoidance)).toEqual(DROPDOWN_COLLISION_AVOIDANCE);
+    });
+  });
+
   describe('defaults of the parent', () => {
     function renderMenu(parent: 'menubar' | 'context-menu' | undefined, positioner = {}) {
       const menu = (
@@ -202,7 +231,6 @@ describe('<Menu.Positioner />', () => {
 
     it.each([
       { name: 'no parent', parent: undefined },
-      { name: 'a menubar', parent: 'menubar' as const },
       { name: 'a context menu', parent: 'context-menu' as const },
     ])('uses the dropdown collision avoidance for a menu in $name', async ({ parent }) => {
       await renderMenu(parent);
@@ -218,30 +246,22 @@ describe('<Menu.Positioner />', () => {
       expect(readLastOptions().collisionAvoidance).toBe(collisionAvoidance);
     });
 
-    it.each([
-      { name: 'horizontal', orientation: 'horizontal' as const, side: 'bottom' },
-      { name: 'vertical', orientation: 'vertical' as const, side: 'inline-end' },
-    ])(
-      'uses the side of a $name menubar and aligns to its start',
-      async ({ orientation, side }) => {
-        useAnchorPositioningSpy.mockClear();
-        await render(
-          <MenubarProvider
-            context={createMenubarContext({ orientation: computed(() => orientation) })}
-          >
-            <Menu.Root open>
-              <Menu.Portal>
-                <Menu.Positioner>
-                  <Menu.Popup />
-                </Menu.Positioner>
-              </Menu.Portal>
-            </Menu.Root>
-          </MenubarProvider>,
-        );
+    it('aligns a menu in a menubar to its start', async () => {
+      useAnchorPositioningSpy.mockClear();
+      await render(
+        <MenubarProvider context={createMenubarContext()}>
+          <Menu.Root open>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup />
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </MenubarProvider>,
+      );
 
-        expect(readLastOptions()).toMatchObject({ side, align: 'start' });
-      },
-    );
+      expect(readLastOptions().align).toBe('start');
+    });
 
     it('uses the anchor, the offsets and the fixed method of a context menu', async () => {
       const context = createContextMenuContext();
@@ -558,6 +578,59 @@ describe('<Menu.Positioner />', () => {
 
     expect(screen.getByTestId('positioner')).toHaveAttribute('data-instant', 'dismiss');
     expect(screen.getByTestId('popup')).toHaveAttribute('data-instant', 'dismiss');
+  });
+
+  const triggerStyle = { width: '72px', height: '36px' };
+  const popupStyle = { width: '52px', height: '24px' };
+
+  describe.skipIf(isJSDOM)('Menubar parent', () => {
+    it('uses bottom as the default side when the menubar is horizontal', async () => {
+      let side = 'none';
+
+      await render(
+        <Menubar>
+          <Menu.Root open>
+            <Trigger style={triggerStyle}>File</Trigger>
+            <Menu.Portal>
+              <Menu.Positioner
+                sideOffset={(data) => {
+                  side = data.side;
+                  return 0;
+                }}
+              >
+                <Menu.Popup style={popupStyle}>Open</Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menubar>,
+      );
+
+      expect(side).toBe('bottom');
+    });
+
+    it('uses inline-end as the default side when the menubar is vertical', async () => {
+      let side = 'none';
+
+      await render(
+        <Menubar orientation="vertical">
+          <Menu.Root open>
+            <Trigger style={triggerStyle}>File</Trigger>
+            <Menu.Portal>
+              <Menu.Positioner
+                sideOffset={(data) => {
+                  side = data.side;
+                  return 0;
+                }}
+              >
+                <Menu.Popup style={popupStyle}>Open</Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menubar>,
+      );
+
+      expect(side).toBe('inline-end');
+    });
   });
 
   positionerConformanceTests({
