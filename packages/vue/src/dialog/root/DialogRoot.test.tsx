@@ -1595,73 +1595,76 @@ describe('<Dialog.Root />', () => {
 
   it.each([
     { name: 'the parent that has the focus', focusInParent: true },
-    { name: 'the newer popover, with no focus', focusInParent: false },
-  ])('BUG-6037: closes $name on Escape after a nested dialog closes', async ({ focusInParent }) => {
-    const onParentOpenChange = vi.fn();
-    const onPopoverOpenChange = vi.fn();
+    { name: 'the popover when no popup has the focus', focusInParent: false },
+  ])(
+    'BUG-6037: on Escape after a nested dialog closes, closes $name',
+    async ({ focusInParent }) => {
+      const onParentOpenChange = vi.fn();
+      const onPopoverOpenChange = vi.fn();
 
-    const Test = defineComponent({
-      props: {
-        nestedOpen: { type: Boolean, required: true },
-        popoverOpen: { type: Boolean, required: true },
-      },
-      setup(props) {
-        // The parent dialog stops handling Escape while its nested dialog is open.
-        return () => (
-          <>
-            <Dialog.Root defaultOpen modal={false} onOpenChange={onParentOpenChange}>
-              <Dialog.Portal>
-                <Dialog.Popup initialFocus={false} data-testid="parent">
-                  <Dialog.Root open={props.nestedOpen} modal={false}>
-                    <Dialog.Portal>
-                      <Dialog.Popup initialFocus={false} data-testid="nested" />
-                    </Dialog.Portal>
-                  </Dialog.Root>
-                </Dialog.Popup>
-              </Dialog.Portal>
-            </Dialog.Root>
-            <Popover.Root open={props.popoverOpen} onOpenChange={onPopoverOpenChange}>
-              <Popover.Portal>
-                <Popover.Positioner>
-                  <Popover.Popup data-testid="popover" />
-                </Popover.Positioner>
-              </Popover.Portal>
-            </Popover.Root>
-          </>
-        );
-      },
-    });
+      const Test = defineComponent({
+        props: {
+          nestedOpen: { type: Boolean, required: true },
+          popoverOpen: { type: Boolean, required: true },
+        },
+        setup(props) {
+          // The parent dialog stops handling Escape while its nested dialog is open.
+          return () => (
+            <>
+              <Dialog.Root defaultOpen modal={false} onOpenChange={onParentOpenChange}>
+                <Dialog.Portal>
+                  <Dialog.Popup initialFocus={false} data-testid="parent">
+                    <Dialog.Root open={props.nestedOpen} modal={false}>
+                      <Dialog.Portal>
+                        <Dialog.Popup initialFocus={false} data-testid="nested" />
+                      </Dialog.Portal>
+                    </Dialog.Root>
+                  </Dialog.Popup>
+                </Dialog.Portal>
+              </Dialog.Root>
+              <Popover.Root open={props.popoverOpen} onOpenChange={onPopoverOpenChange}>
+                <Popover.Portal>
+                  <Popover.Positioner>
+                    <Popover.Popup data-testid="popover" />
+                  </Popover.Positioner>
+                </Popover.Portal>
+              </Popover.Root>
+            </>
+          );
+        },
+      });
 
-    const { setProps, user } = await render(<Test nestedOpen popoverOpen={false} />);
-    expect(screen.getByTestId('nested')).not.toBe(null);
+      const { setProps, user } = await render(<Test nestedOpen popoverOpen={false} />);
+      expect(screen.getByTestId('nested')).not.toBe(null);
 
-    await setProps({ nestedOpen: true, popoverOpen: true });
-    expect(screen.getByTestId('popover')).not.toBe(null);
+      await setProps({ nestedOpen: true, popoverOpen: true });
+      expect(screen.getByTestId('popover')).not.toBe(null);
 
-    await setProps({ nestedOpen: false, popoverOpen: true });
-    await waitFor(() => {
-      expect(screen.queryByTestId('nested')).toBe(null);
-    });
-    // The parent popup has no tabbable element, so it takes the focus itself.
-    const parent = screen.getByTestId('parent');
-    await waitFor(() => {
-      expect(parent).toHaveFocus();
-    });
-    if (!focusInParent) {
-      parent.blur();
-      expect(document.activeElement).toBe(document.body);
-    }
+      await setProps({ nestedOpen: false, popoverOpen: true });
+      await waitFor(() => {
+        expect(screen.queryByTestId('nested')).toBe(null);
+      });
+      // The parent popup has no tabbable element, so it takes the focus itself.
+      const parent = screen.getByTestId('parent');
+      await waitFor(() => {
+        expect(parent).toHaveFocus();
+      });
+      if (!focusInParent) {
+        parent.blur();
+        expect(document.activeElement).toBe(document.body);
+      }
 
-    await user.keyboard('[Escape]');
+      await user.keyboard('[Escape]');
 
-    const [closed, open] = focusInParent
-      ? [onParentOpenChange, onPopoverOpenChange]
-      : [onPopoverOpenChange, onParentOpenChange];
-    expect(closed.mock.calls.length).toBe(1);
-    expect(closed.mock.calls[0][0]).toBe(false);
-    expect(closed.mock.calls[0][1].reason).toBe(REASONS.escapeKey);
-    expect(open).not.toHaveBeenCalled();
-  });
+      const [closed, open] = focusInParent
+        ? [onParentOpenChange, onPopoverOpenChange]
+        : [onPopoverOpenChange, onParentOpenChange];
+      expect(closed.mock.calls.length).toBe(1);
+      expect(closed.mock.calls[0][0]).toBe(false);
+      expect(closed.mock.calls[0][1].reason).toBe(REASONS.escapeKey);
+      expect(open).not.toHaveBeenCalled();
+    },
+  );
 
   describe('closed shadow root', () => {
     let host: HTMLElement;

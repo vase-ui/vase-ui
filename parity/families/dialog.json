@@ -49,7 +49,7 @@
       "describe": ["<Dialog.Root />", "handle-backed root ownership"],
       "title": "does not attach a replacement root store from an abandoned transition render",
       "kind": "not-applicable",
-      "reason": "The case tests a render that React starts in a transition and then drops. Vue has no transitions of this kind, so it does not drop a render that it started."
+      "reason": "The case tests a render that React starts with `startTransition` and then drops. Vue has no `startTransition`."
     },
     {
       "upstream": "packages/react/src/dialog/root/DialogRoot.detached-triggers.test.tsx",
@@ -84,7 +84,7 @@
       "title": "closes a popover opened during a nested dialog, not the parent, on Escape after the nested dialog closes",
       "kind": "replaced",
       "test": "packages/vue/src/dialog/root/DialogRoot.test.tsx",
-      "reason": "The case expects the focus on `<body>` after the nested dialog closes. Vase UI moves it into the parent popup (BUG-6037), so Escape there closes the parent. The case `BUG-6037: closes $name on Escape after a nested dialog closes` tests Escape with that focus, and the popover that closes when no popup has the focus."
+      "reason": "The case expects the focus on `<body>` after the nested dialog closes. Vase UI moves it into the parent popup (BUG-6037), so Escape there closes the parent. The case `BUG-6037: on Escape after a nested dialog closes, closes $name` tests Escape with that focus, and with no focus in a popup, where the popover closes as in Base UI."
     },
     {
       "upstream": "packages/react/src/dialog/root/DialogRoot.test.tsx",
