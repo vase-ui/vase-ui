@@ -295,6 +295,20 @@ test('the reference of progress has its parts in the sequence of the Base UI pag
   );
 });
 
+test('the reference of radio-group has the parts that its types.md repeats from radio, in the sequence of the Base UI page', () => {
+  const { parts } = read('radio-group');
+  assert.deepEqual(
+    parts.map(({ name }) => name),
+    ['RadioGroup', 'Radio.Root', 'Radio.Indicator'],
+  );
+  const [, root] = parts;
+  assert.equal(root.props.find(({ name }) => name === 'value')?.required, true);
+  assert.equal(
+    root.dataAttributes.some(({ name }) => name === 'data-checked'),
+    true,
+  );
+});
+
 test('the reference of separator has data-orientation with its type', () => {
   const [separator] = read('separator').parts;
   assert.deepEqual(separator.dataAttributes, [
