@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import * as Select from '../index.parts';
+import { Select } from '@vase-ui/vue/select';
 
 defineProps<{
   id?: string | undefined;
