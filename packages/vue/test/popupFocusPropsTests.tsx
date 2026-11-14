@@ -7,7 +7,7 @@ import type { FocusOption } from '../src/utils/popups/focus/FloatingFocusManager
 import type { createRenderer } from './createRenderer';
 import { fireEvent } from './fireEvent';
 import { flushMicrotasks } from './flushMicrotasks';
-import { waitSingleFrame } from './wait';
+import { wait, waitSingleFrame } from './wait';
 
 /**
  * Value resolution of the `initialFocus` and `finalFocus` popup props: elements, refs, functions
@@ -86,6 +86,9 @@ export function popupFocusPropsTests(config: PopupFocusPropsTestsConfig) {
     await waitFor(() => {
       expect(getComputedStyle(close).pointerEvents).not.toBe('none');
     });
+    // Vue skips the later listeners of an event that comes in the millisecond when Vue attached
+    // them. The open mounts the control, and its click listener is such a listener.
+    await wait(1);
     return close;
   }
 
