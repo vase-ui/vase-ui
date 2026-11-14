@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { defineComponent, nextTick, shallowRef } from 'vue';
+import { defineComponent, h, nextTick, shallowRef } from 'vue';
+import type { Ref } from 'vue';
 import {
   createRenderer,
   describeConformance,
@@ -10,6 +11,10 @@ import {
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import NavigationMenuViewportScoped from './NavigationMenuViewportScoped.test.vue';
+
+type ViewportRenderSlotProps = Parameters<
+  NonNullable<InstanceType<typeof NavigationMenu.Viewport>['$slots']['render']>
+>[0];
 
 describe('<NavigationMenu.Viewport />', () => {
   const { render } = createRenderer();
@@ -162,13 +167,34 @@ describe('<NavigationMenu.Viewport />', () => {
       expect(screen.getByTestId('content').parentElement).toBe(viewport);
     });
 
-    it('gives its guards to the root, and clears them when it unmounts', async () => {
+    it.each([
+      {
+        name: 'it unmounts',
+        renderViewport: (shown: Readonly<Ref<boolean>>) =>
+          shown.value ? <NavigationMenu.Viewport data-testid="viewport" /> : null,
+      },
+      {
+        name: 'its render slot drops its element',
+        renderViewport: (shown: Readonly<Ref<boolean>>) => (
+          <NavigationMenu.Viewport
+            v-slots={{
+              render: ({ props, children }: ViewportRenderSlotProps) =>
+                shown.value ? (
+                  <div {...props} data-testid="viewport">
+                    {h(children)}
+                  </div>
+                ) : null,
+            }}
+          />
+        ),
+      },
+    ])('gives its guards to the root, and clears them when $name', async ({ renderViewport }) => {
       let rootContext!: ReturnType<typeof useNavigationMenuRootContext>;
       const RootContextReader = defineComponent(() => {
         rootContext = useNavigationMenuRootContext();
         return () => null;
       });
-      const hasViewport = shallowRef(true);
+      const shown = shallowRef(true);
       await render(() => (
         <NavigationMenu.Root>
           <RootContextReader />
@@ -183,7 +209,7 @@ describe('<NavigationMenu.Viewport />', () => {
           <NavigationMenu.Portal>
             <NavigationMenu.Positioner>
               <NavigationMenu.Popup data-testid="popup">
-                {hasViewport.value ? <NavigationMenu.Viewport data-testid="viewport" /> : null}
+                {renderViewport(shown)}
               </NavigationMenu.Popup>
             </NavigationMenu.Positioner>
           </NavigationMenu.Portal>
@@ -195,7 +221,7 @@ describe('<NavigationMenu.Viewport />', () => {
       expect(rootContext.beforeInsideRef.value).toBe(viewport.previousElementSibling);
       expect(rootContext.afterInsideRef.value).toBe(viewport.nextElementSibling);
 
-      hasViewport.value = false;
+      shown.value = false;
       await flushMicrotasks();
 
       expect(rootContext.beforeInsideRef.value).toBe(null);
