@@ -51,10 +51,10 @@ createApp(App).mount('#app');
 
 The entry `temporal-polyfill/global` has the ISO and Gregorian calendars only. For each other calendar, import `temporal-polyfill/full/global`.
 
-In a Nuxt app, import the polyfill in a plugin. A plugin runs on the server and in the browser before the app mounts:
+In a Nuxt app, import the polyfill in a plugin. A plugin runs on the server and in the browser before the app mounts. In Nuxt 3, the folder is `plugins` and not `app/plugins`:
 
 ```ts
-// plugins/temporal.ts
+// app/plugins/temporal.ts
 import 'temporal-polyfill/global';
 
 export default defineNuxtPlugin(() => {});
