@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { defineComponent, h, nextTick, shallowRef } from 'vue';
+import type { Ref } from 'vue';
 import {
   createRenderer,
   describeConformance,
@@ -7,6 +9,12 @@ import {
   screen,
 } from '#test-utils';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
+import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
+import NavigationMenuViewportScoped from './NavigationMenuViewportScoped.test.vue';
+
+type ViewportRenderSlotProps = Parameters<
+  NonNullable<InstanceType<typeof NavigationMenu.Viewport>['$slots']['render']>
+>[0];
 
 describe('<NavigationMenu.Viewport />', () => {
   const { render } = createRenderer();
@@ -43,6 +51,22 @@ describe('<NavigationMenu.Viewport />', () => {
 
   function getOwner(trigger: HTMLElement) {
     return trigger.parentElement!.querySelector('[aria-owns]');
+  }
+
+  function isFocusGuard(element: Element | null) {
+    return element?.hasAttribute('data-vase-ui-focus-guard') ?? false;
+  }
+
+  function expectGuardsBeside(element: HTMLElement) {
+    expect([element.previousElementSibling, element.nextElementSibling].map(isFocusGuard)).toEqual([
+      true,
+      true,
+    ]);
+  }
+
+  async function openMenu() {
+    await fireEvent.click(screen.getByTestId('trigger'));
+    await flushMicrotasks();
   }
 
   it('has an id that the owner element of the active trigger names', async () => {
@@ -141,6 +165,115 @@ describe('<NavigationMenu.Viewport />', () => {
       expect(middle).toBe(viewport);
       expect(after).toHaveAttribute('data-vase-ui-focus-guard');
       expect(screen.getByTestId('content').parentElement).toBe(viewport);
+    });
+
+    it.each([
+      {
+        name: 'it unmounts',
+        renderViewport: (shown: Readonly<Ref<boolean>>) =>
+          shown.value ? <NavigationMenu.Viewport data-testid="viewport" /> : null,
+      },
+      {
+        name: 'its render slot drops its element',
+        renderViewport: (shown: Readonly<Ref<boolean>>) => (
+          <NavigationMenu.Viewport
+            v-slots={{
+              render: ({ props, children }: ViewportRenderSlotProps) =>
+                shown.value ? (
+                  <div {...props} data-testid="viewport">
+                    {h(children)}
+                  </div>
+                ) : null,
+            }}
+          />
+        ),
+      },
+    ])('gives its guards to the root, and clears them when $name', async ({ renderViewport }) => {
+      let rootContext!: ReturnType<typeof useNavigationMenuRootContext>;
+      const RootContextReader = defineComponent(() => {
+        rootContext = useNavigationMenuRootContext();
+        return () => null;
+      });
+      const shown = shallowRef(true);
+      await render(() => (
+        <NavigationMenu.Root>
+          <RootContextReader />
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="one">
+              <NavigationMenu.Trigger data-testid="trigger">One</NavigationMenu.Trigger>
+              <NavigationMenu.Content>
+                <NavigationMenu.Link href="#first">First link</NavigationMenu.Link>
+              </NavigationMenu.Content>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          <NavigationMenu.Portal>
+            <NavigationMenu.Positioner>
+              <NavigationMenu.Popup data-testid="popup">
+                {renderViewport(shown)}
+              </NavigationMenu.Popup>
+            </NavigationMenu.Positioner>
+          </NavigationMenu.Portal>
+        </NavigationMenu.Root>
+      ));
+      await openMenu();
+      const viewport = screen.getByTestId('viewport');
+      expectGuardsBeside(viewport);
+      expect(rootContext.beforeInsideRef.value).toBe(viewport.previousElementSibling);
+      expect(rootContext.afterInsideRef.value).toBe(viewport.nextElementSibling);
+
+      shown.value = false;
+      await flushMicrotasks();
+
+      expect(rootContext.beforeInsideRef.value).toBe(null);
+      expect(rootContext.afterInsideRef.value).toBe(null);
+      expect(
+        screen.getByTestId('popup').querySelectorAll('[data-vase-ui-focus-guard]'),
+      ).toHaveLength(0);
+    });
+  });
+
+  describe('VUE-60: the viewport in a positioner has one root node', () => {
+    it('gives the scope id of the consumer to its element', async () => {
+      await render(<NavigationMenuViewportScoped mode="scoped" />);
+      await openMenu();
+      const viewport = screen.getByTestId('viewport');
+
+      expect(getComputedStyle(viewport).outlineStyle).toBe('dashed');
+      expectGuardsBeside(viewport);
+    });
+
+    it('gives a custom directive of the consumer to its element', async () => {
+      await render(<NavigationMenuViewportScoped mode="directive" />);
+      await openMenu();
+      const viewport = screen.getByTestId('viewport');
+
+      expect(viewport).toHaveAttribute('data-mark', 'marked');
+      expectGuardsBeside(viewport);
+    });
+
+    it('hides its element with v-show', async () => {
+      const shown = shallowRef(true);
+      await render(() => <NavigationMenuViewportScoped mode="show" shown={shown.value} />);
+      await openMenu();
+      // An ancestor can have `opacity: 0` until the first position, so the case reads the display
+      // of the element itself.
+      const viewport = screen.getByTestId('viewport');
+      expect(getComputedStyle(viewport).display).toBe('block');
+
+      shown.value = false;
+      await nextTick();
+
+      expect(getComputedStyle(viewport).display).toBe('none');
+      expectGuardsBeside(viewport);
+    });
+
+    it('renders in a Transition', async () => {
+      // The test setup fails the case on the warning that Vue gives for a part with more than one
+      // root node in a `Transition`.
+      await render(<NavigationMenuViewportScoped mode="transition" />);
+      await openMenu();
+
+      expectGuardsBeside(screen.getByTestId('viewport'));
     });
   });
 });
