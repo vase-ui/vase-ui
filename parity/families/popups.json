@@ -31,8 +31,8 @@
       "upstream": "packages/react/src/utils/popups/popupHandle.test.ts",
       "describe": ["concrete popup handles"],
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/store/MenuHandle.ts",
-      "reason": "The cases run for the handles of Alert Dialog, Dialog, Menu, Popover, Preview Card and Tooltip. Vase UI does not have all of them. Menu comes last, so the row names its file."
+      "waitsOn": "packages/react/src/popover/store/PopoverHandle.ts",
+      "reason": "The cases run for the handles of six families, and Vase UI does not have the handle that the row names."
     },
     {
       "upstream": "packages/react/src/utils/popups/inlineRect.test.ts",

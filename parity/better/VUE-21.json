@@ -5,9 +5,10 @@
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/field/control/FieldControl.tsx#L123-L143",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/switch/root/SwitchRoot.tsx#L102-L107",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/checkbox/root/CheckboxRoot.tsx#L186-L195",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/checkbox-group/CheckboxGroup.tsx#L129-L141",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/number-field/root/NumberFieldRoot.tsx#L508-L553",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/radio-group/RadioGroup.tsx#L171-L183"
   ],
-  "behavior": "A native form reset removes the error of the field. `Field.Control`, `Switch.Root`, `Checkbox.Root`, `NumberField.Root` and `RadioGroup` do this after each reset that they follow, also when their value does not change. Each part cancels the pending validation and removes the message that the field put on the input. Each part also clears the validity of the field and the error of the form for the field. The change of a reset starts no validation. Base UI keeps the error that the field showed before the reset. Its controls do not listen for a reset, and a reset sends no `input` event.",
+  "behavior": "A native form reset removes the error of the field. `Field.Control`, `Switch.Root`, `Checkbox.Root`, `CheckboxGroup`, `NumberField.Root` and `RadioGroup` do this after each reset that they follow, also when their value does not change. Each part cancels the pending validation and removes the message that the field put on the input. Each part also clears the validity of the field and the error of the form for the field. The change of a reset starts no validation. Base UI keeps the error that the field showed before the reset. Its controls do not listen for a reset, and a reset sends no `input` event.",
   "dueWith": "packages/react/src/field/control/FieldControl.tsx"
 }

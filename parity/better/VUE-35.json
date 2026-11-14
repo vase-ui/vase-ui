@@ -1,0 +1,9 @@
+{
+  "id": "VUE-35",
+  "evidence": [
+    "https://vuejs.org/guide/essentials/reactivity-fundamentals.html#deep-reactivity",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/checkbox-group/CheckboxGroup.tsx#L62-L67"
+  ],
+  "behavior": "`CheckboxGroup` follows a change that the consumer makes in place to a reactive `value` array, such as `push` or `splice`. The checkboxes, the state of the field and the validation get the new value. Base UI sees only a new array. The part reads a copy of the array, and the copy reads each item.",
+  "dueWith": "packages/react/src/checkbox-group/CheckboxGroup.tsx"
+}
