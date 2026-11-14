@@ -21,8 +21,8 @@ function getText() {
   return screen.getByTestId<HTMLInputElement>('text');
 }
 
-// The parts of Number Field read the context of the root. These cases use a fixture part in place
-// of the input, and they test what the root gives to each part.
+// The parts of Number Field read the context of the root. These cases read it through a fixture
+// part, and they test what the root gives to each part.
 describe('the context of the root of Number Field', () => {
   const { render } = createRenderer();
 
