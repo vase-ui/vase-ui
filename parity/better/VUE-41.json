@@ -1,0 +1,8 @@
+{
+  "id": "VUE-41",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/utils/src/useAnimationFrame.ts#L66-L68"
+  ],
+  "behavior": "Each request of the frame scheduler runs its callback when `requestAnimationFrame` calls back at once. The scheduler sets its flag before it calls `requestAnimationFrame`. Base UI sets the flag after the call. `tick` clears the flag inside the call, and Base UI then sets it again. Each later request finds the flag set and never runs its callback.",
+  "dueWith": "packages/utils/src/useAnimationFrame.ts"
+}
