@@ -26,8 +26,8 @@
       <li><NuxtLink to="/use-render">useRender</NuxtLink></li>
       <li><NuxtLink to="/unstable-use-media-query">useMediaQuery</NuxtLink></li>
       <li><NuxtLink to="/portal">Portal</NuxtLink></li>
-      <li><NuxtLink to="/menu">Menu</NuxtLink></li>
       <li><NuxtLink to="/select">Select</NuxtLink></li>
+      <li><NuxtLink to="/menu">Menu</NuxtLink></li>
     </ul>
   </main>
 </template>

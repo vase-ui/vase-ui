@@ -908,7 +908,9 @@ describe('<Menu.Positioner />', () => {
         </Menubar>,
       );
 
-      expect(side).toBe('bottom');
+      await waitFor(() => {
+        expect(side).toBe('bottom');
+      });
     });
 
     it('uses inline-end as the default side when the menubar is vertical', async () => {
@@ -932,7 +934,9 @@ describe('<Menu.Positioner />', () => {
         </Menubar>,
       );
 
-      expect(side).toBe('inline-end');
+      await waitFor(() => {
+        expect(side).toBe('inline-end');
+      });
     });
   });
 

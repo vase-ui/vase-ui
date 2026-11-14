@@ -901,6 +901,28 @@ async function expectHydratedPortalPage(page: Page) {
   expect(await page.locator('[data-vase-ui-portal]').count()).toBe(3);
 }
 
+// The server HTML has the label of the value before any item exists, the hidden inputs of the
+// form, and no popup: a portal renders after the mount.
+async function expectSelectPage(page: Page) {
+  const triggerAttributes = ['id', 'role', 'aria-expanded', 'aria-haspopup', 'aria-labelledby'];
+  expect(await readAttributes(page.getByTestId('font-trigger'), triggerAttributes)).toEqual({
+    id: 'font',
+    role: 'combobox',
+    'aria-expanded': 'false',
+    'aria-haspopup': 'listbox',
+    'aria-labelledby': null,
+  });
+  expect(await page.getByTestId('font-value').textContent()).toBe('Serif');
+
+  const labelId = await page.getByTestId('size-label').getAttribute('id');
+  expect(labelId).toBeTruthy();
+  expect(await page.getByTestId('size-trigger').getAttribute('aria-labelledby')).toBe(labelId);
+
+  expect(await page.getByTestId('tags-value').textContent()).toBe('b');
+  expect(await readFormData(page)).toEqual(['font=serif', 'size=', 'tags=b']);
+  expect(await page.getByRole('listbox').count()).toBe(0);
+}
+
 // A server renders no popup and no portal. The trigger of an open root has the open state. The
 // trigger of a handle has the closed form, because a server attaches no store to a handle.
 async function expectMenuPageOnServer(page: Page) {
@@ -950,28 +972,6 @@ async function expectHydratedMenuPage(page: Page) {
   expect(await page.getByTestId('detached').getAttribute('aria-expanded')).toBe('false');
   expect(await page.getByTestId('closed-popup').count()).toBe(0);
   expect(await page.getByTestId('detached-popup').count()).toBe(0);
-}
-
-// The server HTML has the label of the value before any item exists, the hidden inputs of the
-// form, and no popup: a portal renders after the mount.
-async function expectSelectPage(page: Page) {
-  const triggerAttributes = ['id', 'role', 'aria-expanded', 'aria-haspopup', 'aria-labelledby'];
-  expect(await readAttributes(page.getByTestId('font-trigger'), triggerAttributes)).toEqual({
-    id: 'font',
-    role: 'combobox',
-    'aria-expanded': 'false',
-    'aria-haspopup': 'listbox',
-    'aria-labelledby': null,
-  });
-  expect(await page.getByTestId('font-value').textContent()).toBe('Serif');
-
-  const labelId = await page.getByTestId('size-label').getAttribute('id');
-  expect(labelId).toBeTruthy();
-  expect(await page.getByTestId('size-trigger').getAttribute('aria-labelledby')).toBe(labelId);
-
-  expect(await page.getByTestId('tags-value').textContent()).toBe('b');
-  expect(await readFormData(page)).toEqual(['font=serif', 'size=', 'tags=b']);
-  expect(await page.getByRole('listbox').count()).toBe(0);
 }
 
 interface PageCase {
@@ -1041,8 +1041,8 @@ const PAGES: PageCase[] = [
     expectPage: expectPortalPageOnServer,
     expectHydratedPage: expectHydratedPortalPage,
   },
-  { path: '/menu', expectPage: expectMenuPageOnServer, expectHydratedPage: expectHydratedMenuPage },
   { path: '/select', expectPage: expectSelectPage },
+  { path: '/menu', expectPage: expectMenuPageOnServer, expectHydratedPage: expectHydratedMenuPage },
 ];
 
 const MODES = [

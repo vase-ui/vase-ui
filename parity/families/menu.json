@@ -168,7 +168,7 @@
       "title": "sets `pointer-events: none` style on backdrop if opened by hover",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The case opens the menu on hover and releases the mouse button. The trigger and the popup of Vase UI have no hover and no press yet."
+      "reason": "The case opens the menu on hover. The trigger of Vase UI has no hover yet."
     },
     {
       "upstream": "packages/react/src/menu/backdrop/MenuBackdrop.test.tsx",

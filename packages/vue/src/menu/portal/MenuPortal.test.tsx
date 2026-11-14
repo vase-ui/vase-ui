@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { defineComponent, shallowRef } from 'vue';
+import { defineComponent, h, shallowRef } from 'vue';
+import type { Component } from 'vue';
 import * as Menu from '../index.parts';
 import { createRenderer, describeConformance, screen } from '#test-utils';
 import { MenubarProvider, createMenubarContext } from '../../../test/fixtures/MenuParentFixture';
 import FocusManagerPart from '../../../test/fixtures/FocusManagerPart.vue';
 import { createAttribute } from '../../utils/popups/createAttribute';
+
+type RenderSlotProps = { props: Record<string, unknown>; children: Component };
 
 // The owner element is the `span` that is not a focus guard.
 function getOwner(host: HTMLElement) {
@@ -22,6 +25,30 @@ describe('<Menu.Portal />', () => {
       return render(<Menu.Root>{node}</Menu.Root>);
     },
   }));
+
+  describe('slot: render', () => {
+    it('puts the content of children in the element of the slot', async () => {
+      await render(
+        <Menu.Root open>
+          <Menu.Portal
+            v-slots={{
+              render: ({ props, children }: RenderSlotProps) => (
+                <section {...props} data-testid="portal">
+                  {h(children, null, () => (
+                    <Menu.Positioner>
+                      <Menu.Popup data-testid="popup">Content</Menu.Popup>
+                    </Menu.Positioner>
+                  ))}
+                </section>
+              ),
+            }}
+          />
+        </Menu.Root>,
+      );
+
+      expect(screen.getByTestId('portal')).toContainElement(screen.getByTestId('popup'));
+    });
+  });
 
   describe('prop: container', () => {
     it('keeps a closed menu inside an ancestor ref when opening', async () => {
