@@ -86,14 +86,6 @@
     },
     {
       "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
-      "describe": ["<Select.Root />", "conformance"],
-      "suite": "popupListConformanceTests",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "Vase UI does not have the shared suite `popupListConformanceTests`."
-    },
-    {
-      "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
       "describe": ["<Select.Root />", "scroll locking", "interaction type tracking (openMethod)"],
       "title": "recomputes positioning before the popup becomes visible again after touch dismiss",
       "kind": "waits-on",

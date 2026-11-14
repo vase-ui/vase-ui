@@ -415,7 +415,7 @@ describe('<Menu.SubmenuTrigger />', () => {
     expect(storeRef.current!.context.triggerElements.size).toBe(1);
   });
 
-  function TestComponent({ direction = 'ltr' }: { direction: TextDirection }) {
+  function TestComponent({ direction }: { direction: TextDirection }) {
     return (
       <DirectionProvider direction={direction}>
         <Menu.Root open>
