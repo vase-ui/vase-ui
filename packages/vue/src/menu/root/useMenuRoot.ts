@@ -441,6 +441,13 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
     },
   };
 
+  // The props of an inactive trigger depend on no state. One object keeps each inactive trigger from
+  // a render when the menu opens.
+  const inactiveTriggerProps = mergeProps(dismiss.trigger, interactionTypeProps, {
+    'aria-haspopup': 'menu',
+    'aria-expanded': false,
+  });
+
   usePopupInteractionProps(store, () => ({
     activeTriggerProps: mergeProps(
       dismiss.reference,
@@ -451,10 +458,7 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
         'aria-expanded': open.value,
       },
     ),
-    inactiveTriggerProps: mergeProps(dismiss.trigger, interactionTypeProps, {
-      'aria-haspopup': 'menu',
-      'aria-expanded': false,
-    }),
+    inactiveTriggerProps,
     popupProps: mergeProps(FOCUSABLE_POPUP_PROPS, popupListeners, dismiss.floating),
   }));
 

@@ -197,19 +197,86 @@ describe('<Menu.Item />', () => {
     });
   });
 
-  describe('closing the menu', () => {
-    it.each([
-      { name: 'by default', closeOnClick: undefined, closes: true },
-      { name: 'with closeOnClick', closeOnClick: true, closes: true },
-      { name: 'with closeOnClick false', closeOnClick: false, closes: false },
-    ])('closes the menu for a click $name only when it must', async (testCase) => {
+  it('does not close the menu when onClick prevents Base UI handler', async () => {
+    const onClick = vi.fn((event) => event.preventVaseUIHandler());
+    const { user } = await render(
+      <Menu.Root>
+        <Menu.Trigger>Open</Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup>
+              <Menu.Item onClick={onClick}>Item</Menu.Item>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>,
+    );
+
+    const trigger = screen.getByRole('button', { name: 'Open' });
+    await user.click(trigger);
+
+    const item = await screen.findByRole('menuitem');
+    await user.click(item);
+
+    expect(onClick.mock.calls.length).toBe(1);
+    expect(screen.queryByRole('menu')).not.toBe(null);
+  });
+
+  describe('prop: closeOnClick', () => {
+    it('closes the menu when the item is clicked by default', async () => {
+      const { user } = await render(
+        <Menu.Root>
+          <Menu.Trigger>Open</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.Item>Item</Menu.Item>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>,
+      );
+
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      await user.click(trigger);
+
+      const item = await screen.findByRole('menuitem');
+      await user.click(item);
+
+      expect(screen.queryByRole('menu')).toBe(null);
+    });
+
+    it('when `closeOnClick=false` does not close the menu when the item is clicked', async () => {
+      const { user } = await render(
+        <Menu.Root>
+          <Menu.Trigger>Open</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.Item closeOnClick={false}>Item</Menu.Item>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>,
+      );
+
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      await user.click(trigger);
+
+      const item = await screen.findByRole('menuitem');
+      await user.click(item);
+
+      expect(screen.queryByRole('menu')).not.toBe(null);
+    });
+
+    it('reports the item press as the reason of the close', async () => {
       const onOpenChange = vi.fn();
       const { user } = await render(
         <Menu.Root defaultOpen onOpenChange={onOpenChange}>
           <Menu.Portal>
             <Menu.Positioner>
               <Menu.Popup>
-                <Menu.Item closeOnClick={testCase.closeOnClick}>Item</Menu.Item>
+                <Menu.Item closeOnClick>Item</Menu.Item>
               </Menu.Popup>
             </Menu.Positioner>
           </Menu.Portal>
@@ -218,33 +285,9 @@ describe('<Menu.Item />', () => {
 
       await user.click(screen.getByRole('menuitem'));
 
-      if (testCase.closes) {
-        expect(onOpenChange).toHaveBeenCalledTimes(1);
-        expect(onOpenChange.mock.lastCall?.[0]).toBe(false);
-        expect(onOpenChange.mock.lastCall?.[1].reason).toBe(REASONS.itemPress);
-        expect(screen.queryByRole('menu')).toBe(null);
-      } else {
-        expect(onOpenChange).not.toHaveBeenCalled();
-        expect(screen.queryByRole('menu')).not.toBe(null);
-      }
-    });
-
-    it('keeps the menu open when a click listener calls preventVaseUIHandler', async () => {
-      const { user } = await render(
-        <Menu.Root defaultOpen>
-          <Menu.Portal>
-            <Menu.Positioner>
-              <Menu.Popup>
-                <Menu.Item onClick={(event) => event.preventVaseUIHandler()}>Item</Menu.Item>
-              </Menu.Popup>
-            </Menu.Positioner>
-          </Menu.Portal>
-        </Menu.Root>,
-      );
-
-      await user.click(screen.getByRole('menuitem'));
-
-      expect(screen.queryByRole('menu')).not.toBe(null);
+      expect(onOpenChange).toHaveBeenCalledTimes(1);
+      expect(onOpenChange.mock.lastCall?.[0]).toBe(false);
+      expect(onOpenChange.mock.lastCall?.[1].reason).toBe(REASONS.itemPress);
     });
   });
 

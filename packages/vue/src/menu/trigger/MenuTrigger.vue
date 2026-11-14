@@ -70,7 +70,6 @@ import {
   onMounted,
   onScopeDispose,
   shallowRef,
-  toRaw,
   watch,
 } from 'vue';
 import { ownerDocument } from '../../common/owner';
@@ -254,7 +253,7 @@ function followHoverOpen() {
 
   if (
     isOpenedByThisTrigger.value &&
-    toRaw(store.value.state).lastOpenChangeReason === REASONS.triggerHover
+    store.value.select('lastOpenChangeReason') === REASONS.triggerHover
   ) {
     listensAfterHoverOpen = true;
     listenForMouseUp(ownerDocument(triggerElement.value));
@@ -267,7 +266,9 @@ function stopListening() {
 }
 
 onMounted(followHoverOpen);
-watch([store, isOpenedByThisTrigger], followHoverOpen, { flush: 'post' });
+// The default flush runs before the `post` watcher of `useDismiss` in the root, as the effect of
+// Base UI runs before the effect of its parent.
+watch([store, isOpenedByThisTrigger], followHoverOpen);
 onActivated(followHoverOpen);
 onDeactivated(stopListening);
 onScopeDispose(stopListening);
@@ -337,7 +338,7 @@ function useStickIfOpen() {
   const value = shallowRef(false);
 
   watch(isOpenedByThisTrigger, (open) => {
-    if (open && toRaw(store.value.state).lastOpenChangeReason === REASONS.triggerHover) {
+    if (open && store.value.select('lastOpenChangeReason') === REASONS.triggerHover) {
       // Only allow "patient" clicks to close the menu if it's open.
       // If they clicked within 500ms of the menu opening, keep it open.
       value.value = true;

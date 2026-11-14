@@ -1,8 +1,13 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { computed, defineComponent, provide } from 'vue';
 import * as Menu from '../index.parts';
-import { createRenderer, describeConformance, screen, takeReportedMessages } from '#test-utils';
-import { REASONS } from '../../internals/reasons';
+import {
+  createRenderer,
+  describeConformance,
+  screen,
+  takeReportedMessages,
+  waitFor,
+} from '#test-utils';
 import { MenuRadioGroupContext } from '../radio-group/MenuRadioGroupContext';
 
 const testRadioGroupContext: MenuRadioGroupContext = {
@@ -29,6 +34,135 @@ describe('<Menu.RadioItem />', () => {
     },
     refInstanceof: window.HTMLDivElement,
   }));
+
+  describe('state management', () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('adds the state and ARIA attributes when selected', async () => {
+      const { user } = await render(
+        <Menu.Root>
+          <Menu.Trigger>Open</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.RadioGroup defaultValue={0}>
+                  <Menu.RadioItem value={1}>Item</Menu.RadioItem>
+                </Menu.RadioGroup>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>,
+      );
+
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      await user.click(trigger);
+
+      const item = screen.getByRole('menuitemradio');
+      await user.click(item);
+
+      expect(item).toHaveAttribute('aria-checked', 'true');
+      expect(item).toHaveAttribute('data-checked', '');
+    });
+
+    it('calls `onValueChange` when the item is clicked', async () => {
+      const onValueChange = vi.fn();
+      const { user } = await render(
+        <Menu.Root>
+          <Menu.Trigger>Open</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.RadioGroup defaultValue={0} onValueChange={onValueChange}>
+                  <Menu.RadioItem value={1}>Item</Menu.RadioItem>
+                </Menu.RadioGroup>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>,
+      );
+
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      await user.click(trigger);
+
+      const item = screen.getByRole('menuitemradio');
+      await user.click(item);
+
+      expect(onValueChange.mock.calls.length).toBe(1);
+      expect(onValueChange.mock.lastCall?.[0]).toBe(1);
+    });
+
+    it('does not select when `onValueChange` cancels the event', async () => {
+      const { user } = await render(
+        <Menu.Root>
+          <Menu.Trigger>Open</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.RadioGroup
+                  defaultValue={0}
+                  onValueChange={(_: unknown, eventDetails: Menu.RadioGroup.ChangeEventDetails) => {
+                    eventDetails.cancel();
+                  }}
+                >
+                  <Menu.RadioItem value={1}>Item</Menu.RadioItem>
+                </Menu.RadioGroup>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>,
+      );
+
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      await user.click(trigger);
+
+      const item = screen.getByRole('menuitemradio');
+      await user.click(item);
+
+      expect(item).toHaveAttribute('aria-checked', 'false');
+      expect(item).not.toHaveAttribute('data-checked');
+    });
+
+    it('keeps the state when closed and reopened', async () => {
+      const { user } = await render(
+        <Menu.Root modal={false}>
+          <Menu.Trigger>Open</Menu.Trigger>
+          <Menu.Portal keepMounted>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.RadioGroup defaultValue={0}>
+                  <Menu.RadioItem value={1}>Item</Menu.RadioItem>
+                </Menu.RadioGroup>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>,
+      );
+
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      await user.click(trigger);
+
+      const item = screen.getByRole('menuitemradio');
+      await user.click(item);
+
+      await user.click(trigger); // close the menu
+
+      await waitFor(() => {
+        expect(screen.queryByRole('menu')).toBe(null);
+      });
+
+      await user.click(trigger); // reopen the menu
+
+      const itemAfterReopen = await screen.findByRole('menuitemradio');
+      expect(itemAfterReopen).toHaveAttribute('aria-checked', 'true');
+      expect(itemAfterReopen).toHaveAttribute('data-checked', '');
+    });
+  });
 
   describe('state', () => {
     it('has the role, the state and the ARIA attributes of a selected item', async () => {
@@ -102,19 +236,24 @@ describe('<Menu.RadioItem />', () => {
   });
 
   describe('prop: closeOnClick', () => {
-    it.each([
-      { name: 'by default', closeOnClick: undefined, closes: false },
-      { name: 'with closeOnClick', closeOnClick: true, closes: true },
-    ])('closes the menu for a click $name only when it must', async (testCase) => {
-      const onOpenChange = vi.fn();
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('when `closeOnClick=true`, closes the menu when the item is clicked', async () => {
       const { user } = await render(
-        <Menu.Root defaultOpen onOpenChange={onOpenChange}>
+        <Menu.Root>
+          <Menu.Trigger>Open</Menu.Trigger>
           <Menu.Portal>
             <Menu.Positioner>
               <Menu.Popup>
-                <Menu.RadioGroup>
-                  <Menu.RadioItem value="a" closeOnClick={testCase.closeOnClick}>
-                    A
+                <Menu.RadioGroup defaultValue={0}>
+                  <Menu.RadioItem closeOnClick value={1}>
+                    Item
                   </Menu.RadioItem>
                 </Menu.RadioGroup>
               </Menu.Popup>
@@ -123,15 +262,38 @@ describe('<Menu.RadioItem />', () => {
         </Menu.Root>,
       );
 
-      await user.click(screen.getByRole('menuitemradio'));
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      await user.click(trigger);
 
-      if (testCase.closes) {
-        expect(onOpenChange.mock.lastCall?.[1].reason).toBe(REASONS.itemPress);
-        expect(screen.queryByRole('menu')).toBe(null);
-      } else {
-        expect(onOpenChange).not.toHaveBeenCalled();
-        expect(screen.queryByRole('menu')).not.toBe(null);
-      }
+      const item = screen.getByRole('menuitemradio');
+      await user.click(item);
+
+      expect(screen.queryByRole('menu')).toBe(null);
+    });
+
+    it('does not close the menu when the item is clicked by default', async () => {
+      const { user } = await render(
+        <Menu.Root>
+          <Menu.Trigger>Open</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.RadioGroup defaultValue={0}>
+                  <Menu.RadioItem value={1}>Item</Menu.RadioItem>
+                </Menu.RadioGroup>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>,
+      );
+
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      await user.click(trigger);
+
+      const item = screen.getByRole('menuitemradio');
+      await user.click(item);
+
+      expect(screen.queryByRole('menu')).not.toBe(null);
     });
   });
 

@@ -2,26 +2,32 @@ import { describe, expect, it } from 'vitest';
 import { defineComponent } from 'vue';
 import type { PropType } from 'vue';
 import * as Menu from '../index.parts';
-import { createRenderer, describeConformance, screen } from '#test-utils';
+import { createRenderer, describeConformance, screen, waitFor } from '#test-utils';
 
-// A menu that is open on the first render, with its trigger as the active trigger.
 const PlainMenu = defineComponent({
   props: {
-    listId: { type: String, default: undefined },
-    showList: { type: Boolean, default: true },
     orientation: { type: String as PropType<Menu.Root.Orientation>, default: undefined },
+    listId: { type: String, default: undefined },
+    // The cases of Vase UI's own render the menu open, with its trigger as the active trigger.
+    defaultOpen: { type: Boolean, default: false },
+    showList: { type: Boolean, default: true },
   },
   setup(props) {
     return () => (
-      <Menu.Root defaultOpen defaultTriggerId="first" orientation={props.orientation}>
-        <Menu.Trigger id="first">Actions</Menu.Trigger>
-        <Menu.Trigger id="second">More</Menu.Trigger>
+      <Menu.Root
+        orientation={props.orientation}
+        defaultOpen={props.defaultOpen}
+        defaultTriggerId={props.defaultOpen ? 'actions' : null}
+      >
+        <Menu.Trigger id="actions">Actions</Menu.Trigger>
         <Menu.Portal>
           <Menu.Positioner>
             <Menu.Popup data-testid="popup">
+              <div>Header</div>
               {props.showList ? (
                 <Menu.List data-testid="list" id={props.listId}>
-                  <Menu.Item>Rename</Menu.Item>
+                  <Menu.Item data-testid="item-1">Rename</Menu.Item>
+                  <Menu.Item data-testid="item-2">Delete</Menu.Item>
                 </Menu.List>
               ) : (
                 <Menu.Item>Rename</Menu.Item>
@@ -51,11 +57,13 @@ describe('<Menu.List /> in a plain menu', () => {
       ),
   }));
 
-  it('takes the menu role and the label of the trigger from the popup', async () => {
-    await render(<PlainMenu />);
+  it('takes the menu role and label from the popup', async () => {
+    const { user } = await render(<PlainMenu />);
     const trigger = screen.getByRole('button', { name: 'Actions' });
 
-    const list = screen.getByTestId('list');
+    await user.click(trigger);
+
+    const list = await screen.findByTestId('list');
     expect(list).toHaveAttribute('role', 'menu');
     expect(list).toHaveAttribute('aria-labelledby', trigger.id);
     expect(screen.getByTestId('popup')).toHaveAttribute('role', 'presentation');
@@ -63,8 +71,109 @@ describe('<Menu.List /> in a plain menu', () => {
     expect(trigger).toHaveAttribute('aria-controls', list.id);
   });
 
+  it('updates the trigger when the open list changes its id', async () => {
+    const { user, setProps } = await render(() => <PlainMenu listId="old-list" />);
+    const trigger = screen.getByRole('button', { name: 'Actions' });
+
+    await user.click(trigger);
+    await screen.findByTestId('list');
+    expect(trigger).toHaveAttribute('aria-controls', 'old-list');
+
+    await setProps({ listId: 'new-list' });
+    await waitFor(() => {
+      expect(trigger).toHaveAttribute('aria-controls', 'new-list');
+    });
+  });
+
+  it('renders the orientation on the list', async () => {
+    const { user } = await render(<PlainMenu orientation="horizontal" />);
+
+    await user.click(screen.getByRole('button', { name: 'Actions' }));
+
+    const list = await screen.findByTestId('list');
+    expect(list).toHaveAttribute('aria-orientation', 'horizontal');
+    expect(screen.getByTestId('popup')).not.toHaveAttribute('aria-orientation');
+  });
+
+  it('does not point an inactive trigger at the list', async () => {
+    const TwoTriggers = defineComponent(() => {
+      const handle = Menu.createHandle();
+      return () => (
+        <>
+          <Menu.Trigger handle={handle}>First</Menu.Trigger>
+          <Menu.Trigger handle={handle}>Second</Menu.Trigger>
+          <Menu.Root handle={handle}>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.List data-testid="list">
+                    <Menu.Item>Rename</Menu.Item>
+                  </Menu.List>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </>
+      );
+    });
+
+    const { user } = await render(<TwoTriggers />);
+    const first = screen.getByRole('button', { name: 'First' });
+    const second = screen.getByRole('button', { name: 'Second' });
+
+    await user.click(first);
+
+    const list = await screen.findByTestId('list');
+    expect(first).toHaveAttribute('aria-controls', list.id);
+    expect(second).not.toHaveAttribute('aria-controls');
+  });
+
+  it('does not re-render an inactive trigger when the list mounts', async () => {
+    let secondTriggerPasses = 0;
+    const TwoTriggers = defineComponent(() => {
+      const handle = Menu.createHandle();
+      return () => (
+        <>
+          <Menu.Trigger handle={handle}>First</Menu.Trigger>
+          <Menu.Trigger
+            handle={handle}
+            v-slots={{
+              render: ({ props }: { props: Record<string, unknown> }) => {
+                secondTriggerPasses += 1;
+                return <button {...props}>Second</button>;
+              },
+            }}
+          />
+          <Menu.Root handle={handle}>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.List data-testid="list">
+                    <Menu.Item>Rename</Menu.Item>
+                  </Menu.List>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </>
+      );
+    });
+
+    const { user } = await render(<TwoTriggers />);
+    const first = screen.getByRole('button', { name: 'First' });
+    const passesBeforeOpen = secondTriggerPasses;
+
+    await user.click(first);
+    const list = await screen.findByTestId('list');
+    await waitFor(() => {
+      expect(first).toHaveAttribute('aria-controls', list.id);
+    });
+
+    expect(secondTriggerPasses).toBe(passesBeforeOpen);
+  });
+
   it('gives the menu role back to the popup when the list unmounts', async () => {
-    const { setProps } = await render(() => <PlainMenu />);
+    const { setProps } = await render(() => <PlainMenu defaultOpen />);
     const trigger = screen.getByRole('button', { name: 'Actions' });
 
     await setProps({ showList: false });
@@ -73,17 +182,6 @@ describe('<Menu.List /> in a plain menu', () => {
     expect(popup).toHaveAttribute('role', 'menu');
     expect(popup).toHaveAttribute('aria-labelledby', trigger.id);
     expect(trigger).toHaveAttribute('aria-controls', popup.id);
-  });
-
-  it('gives a new id of the list to aria-controls of the trigger', async () => {
-    const { setProps } = await render(() => <PlainMenu listId="old-list" />);
-    const trigger = screen.getByRole('button', { name: 'Actions' });
-
-    expect(trigger).toHaveAttribute('aria-controls', 'old-list');
-
-    await setProps({ listId: 'new-list' });
-
-    expect(trigger).toHaveAttribute('aria-controls', 'new-list');
   });
 
   it('keeps the element of a newer list when an older list unmounts', async () => {
@@ -116,23 +214,5 @@ describe('<Menu.List /> in a plain menu', () => {
     await setProps({ lists: 'new' });
     expect(trigger).toHaveAttribute('aria-controls', 'new-list');
     expect(screen.getByTestId('popup')).toHaveAttribute('role', 'presentation');
-  });
-
-  it('puts aria-orientation on the list and not on the popup', async () => {
-    await render(<PlainMenu orientation="horizontal" />);
-
-    expect(screen.getByTestId('list')).toHaveAttribute('aria-orientation', 'horizontal');
-    expect(screen.getByTestId('popup')).not.toHaveAttribute('aria-orientation');
-  });
-
-  it('points only the active trigger at the list', async () => {
-    await render(<PlainMenu />);
-
-    const list = screen.getByTestId('list');
-    expect(screen.getByRole('button', { name: 'Actions' })).toHaveAttribute(
-      'aria-controls',
-      list.id,
-    );
-    expect(screen.getByRole('button', { name: 'More' })).not.toHaveAttribute('aria-controls');
   });
 });
