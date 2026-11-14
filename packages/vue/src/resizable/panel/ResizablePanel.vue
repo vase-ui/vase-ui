@@ -90,8 +90,9 @@ export interface ResizablePanelActions {
   collapse: () => void;
   /**
    * Gives a collapsed panel the size that it had before it collapsed, or its `minSize` when it has
-   * no such size. The panel gets less when the other panels cannot give the room without a
-   * collapse.
+   * no such size. After a drag, that size is the size at the start of the drag. The panel gets less
+   * when the other panels cannot give the room without a collapse, and it stays collapsed when they
+   * cannot give its `minSize`.
    * No other panel collapses for it. It does nothing when the panel is not collapsed.
    */
   expand: () => void;
@@ -109,7 +110,7 @@ export interface ResizablePanelActions {
 </script>
 
 <script setup lang="ts">
-import { computed, onActivated, onDeactivated, onMounted, provide, shallowRef } from 'vue';
+import { computed, onActivated, onDeactivated, provide, shallowRef } from 'vue';
 import type { InjectionKey } from 'vue';
 import { useIsHydrating } from '../../common/hydration';
 import { CompositeListContext } from '../../internals/composite/list/CompositeListContext';
@@ -164,15 +165,16 @@ const { ref: listItemRef, index } = useCompositeListItem({
   metadata: computed(() => ({ id: id.value })),
 });
 
-// A panel that `KeepAlive` holds is not in the layout. It keeps its last size until it shows again.
+// A panel that `KeepAlive` holds is not in the layout. It keeps its last size and its last
+// `collapsed` state until it shows again.
 const size = computed<number>(
   (previous) =>
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The panel registers in `setup`, so the layout of the first computation has an entry for its id.
     root.shown.value[id.value] ?? previous!,
 );
-const collapsed = computed(() => {
+const collapsed = computed<boolean>((previous) => {
   const constraints = root.constraints.value.find((panel) => panel.id === id.value);
-  return constraints !== undefined && isCollapsed(constraints, size.value);
+  return constraints === undefined ? (previous ?? false) : isCollapsed(constraints, size.value);
 });
 
 const state = computed<ResizablePanelState>(() => ({
@@ -183,12 +185,16 @@ const state = computed<ResizablePanelState>(() => ({
 }));
 
 // The panels beside this panel register in `setup` too, so the layout is known only when they all
-// have registered. The change starts at the mount, so the state at the mount has no event.
-onMounted(() => {
-  useValueChanged(collapsed, () => {
-    emit('collapsedChange', collapsed.value);
-  });
-});
+// have registered. The value is `undefined` until the mount, so the state at the mount has no
+// event.
+useValueChanged(
+  () => (hydrating.value ? undefined : collapsed.value),
+  (previous) => {
+    if (previous !== undefined) {
+      emit('collapsedChange', collapsed.value);
+    }
+  },
+);
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,

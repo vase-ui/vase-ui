@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { defineComponent, nextTick, shallowRef } from 'vue';
+import { KeepAlive, defineComponent, nextTick, shallowRef } from 'vue';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import {
   createRenderer,
@@ -630,20 +630,23 @@ describe('<Resizable.Panel />', () => {
     });
 
     it.each([
-      { name: 'in one move', distances: [-400], expected: ['40', '60'] },
-      { name: 'in two moves', distances: [-250, -400], expected: ['20', '80'] },
+      { name: 'a drag in one move', drags: [[-400]], expected: ['40', '60'] },
+      { name: 'a drag in two moves', drags: [[-250, -400]], expected: ['40', '60'] },
+      { name: 'a drag from the least size', drags: [[-200], [-400]], expected: ['20', '80'] },
     ])(
-      'gives back the size before the change that collapsed it with expand(), after a drag $name',
-      async ({ distances, expected }) => {
+      'gives back the size from the start of the drag that collapsed it with expand(), $name',
+      async ({ drags, expected }) => {
         await renderPanels({ panels: [{ ...collapsible, defaultSize: 40 }, withRef('b')] });
         const handle = screen.getByTestId('handle-1');
         const pointer = { pointerId: 1, pointerType: 'mouse', buttons: 1 };
 
-        await fireEvent.pointerDown(handle, { ...pointer, clientX: 0 });
-        for (const distance of distances) {
-          await fireEvent.pointerMove(handle, { ...pointer, clientX: distance });
+        for (const distances of drags) {
+          await fireEvent.pointerDown(handle, { ...pointer, clientX: 0 });
+          for (const distance of distances) {
+            await fireEvent.pointerMove(handle, { ...pointer, clientX: distance });
+          }
+          await fireEvent.pointerUp(handle, { pointerId: 1, pointerType: 'mouse' });
         }
-        await fireEvent.pointerUp(handle, { pointerId: 1, pointerType: 'mouse' });
         expect([flexOf(0), flexOf(1)]).toEqual(['0', '100']);
         instances.a.expand();
         await nextTick();
@@ -651,6 +654,39 @@ describe('<Resizable.Panel />', () => {
         expect([flexOf(0), flexOf(1)]).toEqual(expected);
       },
     );
+
+    it('gives back the size before a change of the layout of the app collapsed it with expand()', async () => {
+      const layout = shallowRef<Record<string, number>>({ a: 40, b: 60 });
+      await render(() => (
+        <div style={{ width: '1000px' }}>
+          <Resizable.Root
+            layout={layout.value}
+            {...{
+              'onUpdate:layout': (next: Record<string, number>) => {
+                layout.value = next;
+              },
+            }}
+          >
+            <Resizable.Panel {...collapsible} data-testid="panel-0" />
+            <Resizable.Panel {...withRef('b')} data-testid="panel-1" />
+          </Resizable.Root>
+        </div>
+      ));
+      instances.a.collapse();
+      await nextTick();
+      instances.a.expand();
+      await nextTick();
+      expect([flexOf(0), flexOf(1)]).toEqual(['40', '60']);
+
+      layout.value = { a: 30, b: 70 };
+      await nextTick();
+      layout.value = { a: 0, b: 100 };
+      await nextTick();
+      instances.a.expand();
+      await nextTick();
+
+      expect([flexOf(0), flexOf(1)]).toEqual(['30', '70']);
+    });
 
     it('gives the least size with expand() when the panel has no size from before', async () => {
       await renderPanels({ panels: [{ ...collapsible, defaultSize: 0 }, withRef('b')] });
@@ -852,6 +888,28 @@ describe('<Resizable.Panel />', () => {
       await nextTick();
 
       expect(onLayoutChange).not.toHaveBeenCalled();
+    });
+
+    it('keeps the collapsed state of a panel while KeepAlive holds it', async () => {
+      const Side = defineComponent({
+        setup: () => () => <Resizable.Panel {...collapsible} defaultSize={0} />,
+      });
+      const show = shallowRef(true);
+      await render(() => (
+        <div style={{ width: '1000px' }}>
+          <Resizable.Root>
+            <KeepAlive>{show.value ? <Side /> : null}</KeepAlive>
+            <Resizable.Handle />
+            <Resizable.Panel id="b" />
+          </Resizable.Root>
+        </div>
+      ));
+      expect(instances.a.isCollapsed()).toBe(true);
+
+      show.value = false;
+      await nextTick();
+
+      expect(instances.a.isCollapsed()).toBe(true);
     });
 
     it('does nothing for a panel that is alone in its root', async () => {

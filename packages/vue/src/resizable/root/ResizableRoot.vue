@@ -110,7 +110,7 @@ export interface ResizableRootActions {
    */
   setLayout: (layout: ResizableRootLayout) => void;
   /**
-   * Gives the panels the layout that they had at the start: the `defaultLayout` of the root.
+   * Gives the panels the layout of the `defaultLayout` prop, also in a controlled root.
    * A panel that it does not name takes its `defaultSize`, or an equal share of the space that is
    * left.
    * The change has the reason `'imperative-action'`. It does nothing when the root has that layout
@@ -132,6 +132,7 @@ import {
   watch,
 } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
+import { useIsHydrated } from '../../common/hydration';
 import { ownerWindow } from '../../common/owner';
 import { useControlled } from '../../common/useControlled';
 import { warn } from '../../common/warn';
@@ -339,21 +340,38 @@ function registerPanel(panel: ResizablePanelRegistration) {
 
 // The size that each panel had before a change collapsed it. `expand()` gives it back.
 const sizesBeforeCollapse = new Map<string, number>();
+// The layout at the start of the drag that runs. Each move of a drag starts from this layout, so a
+// panel that a drag collapses gets the size from the start of the drag, for any number of moves.
+let layoutBeforeDrag: ResizableRootLayout | undefined;
 
-function rememberSizesBeforeCollapse(before: ResizableRootLayout, after: ResizableRootLayout) {
-  for (const panel of constraints.value) {
-    const sizeBefore = before[panel.id];
-    const sizeAfter = after[panel.id];
-    if (
-      sizeBefore !== undefined &&
-      sizeAfter !== undefined &&
-      !isCollapsed(panel, sizeBefore) &&
-      isCollapsed(panel, sizeAfter)
-    ) {
-      sizesBeforeCollapse.set(panel.id, sizeBefore);
+// Before the mount, the panels register one at a time. A layout of only some of them is not a
+// change of the user or of the app, so the watcher below starts at the mount.
+const isHydrated = useIsHydrated();
+
+// A watcher, and not the change path, sees each collapse: also a collapse that the `layout` prop of
+// the consumer gives. It is `sync`, so an `expand()` right after a `collapse()` finds the size.
+watch(
+  () => (isHydrated.value ? shown.value : undefined),
+  (after, before) => {
+    if (after === undefined || before === undefined || deactivated) {
+      return;
     }
-  }
-}
+    const start = layoutBeforeDrag ?? before;
+    for (const panel of constraints.value) {
+      const sizeBefore = start[panel.id];
+      const sizeAfter = after[panel.id];
+      if (
+        sizeBefore !== undefined &&
+        sizeAfter !== undefined &&
+        !isCollapsed(panel, sizeBefore) &&
+        isCollapsed(panel, sizeAfter)
+      ) {
+        sizesBeforeCollapse.set(panel.id, sizeBefore);
+      }
+    }
+  },
+  { flush: 'sync' },
+);
 
 // `base` is the layout that the new layout replaces: its entries for panels that are not mounted
 // stay in the layout.
@@ -367,7 +385,6 @@ function changeLayout(
   if (details.isCanceled) {
     return undefined;
   }
-  rememberSizesBeforeCollapse(shown.value, layout);
   emit('update:layout', next);
   setRequested(next);
   return next;
@@ -391,6 +408,7 @@ function startDragging() {
   if (dragging.value) {
     return false;
   }
+  layoutBeforeDrag = shown.value;
   dragging.value = true;
   emit('draggingChange', true);
   return true;
@@ -398,6 +416,7 @@ function startDragging() {
 
 function stopDragging() {
   if (dragging.value) {
+    layoutBeforeDrag = undefined;
     dragging.value = false;
     emit('draggingChange', false);
   }
