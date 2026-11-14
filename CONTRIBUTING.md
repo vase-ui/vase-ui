@@ -131,6 +131,13 @@ Each family also has an extract, `parity/families/<family>.upstream.json`. It ho
 - Run the command after each change of `upstreamPaths` or `matchedCommit`. Commit the extract in the same pull request as the family file.
 - CI has no copy of Base UI, so `pnpm parity:check` reads the committed extract.
 
+A Base UI commit that changes a path of a family is queued for the family while `matchedCommit` is older than the commit. The parity page shows this state. To mirror a queued commit in a family:
+
+1. Port the changes of the commit to the source and the tests at the mapped paths.
+2. Set `matchedCommit` to the newest commit of `parity/upstream.json` at which the family matches Base UI.
+3. Run `pnpm parity:extract` for the family.
+4. Run `pnpm docs:demos` for a family that has a page or a demo folder.
+
 ## Components that Base UI does not have
 
 Vase UI can add a component that Base UI does not have. This is a component of Vase UI's own. It is not a family: it has no family file, no extract and no exception row. It has one record, `parity/own/<name>.json`. `pnpm parity:check` refuses a record that lacks a required key or has another key:
