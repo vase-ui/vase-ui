@@ -67,20 +67,16 @@ export type PreviewCardRootChangeEventDetails =
 
 <script setup lang="ts" generic="Payload = unknown">
 import { provide, watch } from 'vue';
-import type { HTMLAttributes } from 'vue';
-import type { HTMLProps } from '../../internals/types';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
 import { usePopupRoot } from '../../utils/popups/popupRoot';
 import { usePopupInteractionProps } from '../../utils/popups/popupStoreUtils';
-import type { InteractionProps } from '../../utils/popups/types';
+import { provideFloatingTree } from '../../utils/popups/tree/FloatingTree';
 import { PreviewCardStore } from '../store/PreviewCardStore';
-import { PreviewCardRootContext } from './PreviewCardContext';
+import { PreviewCardRootContext, usePreviewCardRootContext } from './PreviewCardContext';
 
-// The store types its props keys as `HTMLProps`, which has a required `ref`. The props of an
-// interaction composable have no `ref`.
-function toStoreProps(props: InteractionProps) {
-  return props as HTMLAttributes as HTMLProps;
-}
+// A root inside another root uses the tree of that root. A component cannot inject a value that it
+// provides, so the outer root gives its own tree to `useDismiss`.
+const tree = usePreviewCardRootContext(true) ? undefined : provideFloatingTree();
 
 const props = withDefaults(defineProps<PreviewCardRootProps<Payload>>(), {
   open: undefined,
@@ -139,11 +135,11 @@ watch([isOpen, () => store.select('activeTriggerId')], ([openNow, activeTriggerI
   }
 });
 
-const dismiss = useDismiss(store);
+const dismiss = useDismiss(store, { externalTree: tree });
 usePopupInteractionProps(store, () => ({
-  activeTriggerProps: toStoreProps(dismiss.reference),
-  inactiveTriggerProps: toStoreProps(dismiss.trigger),
-  popupProps: toStoreProps(dismiss.floating),
+  activeTriggerProps: dismiss.reference,
+  inactiveTriggerProps: dismiss.trigger,
+  popupProps: dismiss.floating,
 }));
 
 provide(PreviewCardRootContext, store);

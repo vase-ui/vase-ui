@@ -48,9 +48,9 @@ defineSlots<{
 
 const { hasChosenTab, orientation, setTabMap, tabActivationDirection } = useTabsRootContext();
 
-// The list controls the index, as Base UI does. The composite then does not move the tab stop off a
-// disabled tab. Without this, the composite moves the tab stop off a selected tab that is hidden or
-// natively disabled. The tab moves it back. The two moves repeat.
+// The list controls the highlighted index, as Base UI does. The check of `disabledIndices` in the
+// composite then does not run. With an uncontrolled index, that check moves the tab stop off a
+// selected tab that is hidden or natively disabled. `Tabs.Tab` moves it back. The two moves repeat.
 const highlightedTabIndex = shallowRef(0);
 
 const { props: compositeProps, rootRef } = useCompositeRoot<TabsTabMetadata>({

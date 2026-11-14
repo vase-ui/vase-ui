@@ -36,6 +36,68 @@ describe('<Toast.Content />', () => {
     },
   }));
 
+  const App = defineComponent({
+    setup() {
+      const { toasts, add } = Toast.useToastManager();
+      const count = shallowRef(0);
+      return () => (
+        <>
+          <button
+            type="button"
+            onClick={() => {
+              const next = count.value + 1;
+              count.value = next;
+              add({ title: `toast-${next}` });
+            }}
+          >
+            add
+          </button>
+          <Toast.Viewport data-testid="viewport" style={noRealPointer}>
+            {toasts.value.map((toastItem) => (
+              <Toast.Root key={toastItem.id} toast={toastItem}>
+                <Toast.Content data-testid={`content-${toastItem.title}`}>
+                  <Toast.Title />
+                </Toast.Content>
+              </Toast.Root>
+            ))}
+          </Toast.Viewport>
+        </>
+      );
+    },
+  });
+
+  it('marks content behind the frontmost toast with data-behind', async () => {
+    await render(
+      <Toast.Provider>
+        <App />
+      </Toast.Provider>,
+    );
+
+    const addButton = screen.getByRole('button', { name: 'add' });
+    await fireEvent.click(addButton);
+    await fireEvent.click(addButton);
+
+    // The newest toast is at the front; the older one sits behind it.
+    expect(screen.getByTestId('content-toast-2')).not.toHaveAttribute('data-behind');
+    expect(screen.getByTestId('content-toast-1')).toHaveAttribute('data-behind');
+  });
+
+  it('reflects the expanded state when the viewport is hovered', async () => {
+    await render(
+      <Toast.Provider>
+        <App />
+      </Toast.Provider>,
+    );
+
+    await fireEvent.click(screen.getByRole('button', { name: 'add' }));
+
+    const content = screen.getByTestId('content-toast-1');
+    expect(content).not.toHaveAttribute('data-expanded');
+
+    await fireEvent.mouseEnter(screen.getByTestId('viewport'));
+    expect(content).toHaveAttribute('data-expanded');
+  });
+
   const ContentList = defineComponent({
     setup() {
       const { toasts } = Toast.useToastManager();
@@ -61,31 +123,6 @@ describe('<Toast.Content />', () => {
     );
     return manager;
   }
-
-  it('sets data-behind on the content of each toast except the frontmost', async () => {
-    const manager = await renderContents();
-
-    manager.add({ id: 'first', title: 'First', timeout: 0 });
-    manager.add({ id: 'second', title: 'Second', timeout: 0 });
-    await flushMicrotasks();
-
-    // The newest toast is at the front; the older one sits behind it.
-    expect(screen.getByTestId('content-second')).not.toHaveAttribute('data-behind');
-    expect(screen.getByTestId('content-first')).toHaveAttribute('data-behind');
-  });
-
-  it('sets data-expanded on the content while the viewport is hovered', async () => {
-    const manager = await renderContents();
-    manager.add({ id: 'toast', title: 'Toast', timeout: 0 });
-    await flushMicrotasks();
-    const content = screen.getByTestId('content-toast');
-
-    expect(content).not.toHaveAttribute('data-expanded');
-
-    await fireEvent.mouseEnter(screen.getByTestId('viewport'));
-
-    expect(content).toHaveAttribute('data-expanded');
-  });
 
   it('measures its toast again when its content changes size', async () => {
     const height = shallowRef(10);
