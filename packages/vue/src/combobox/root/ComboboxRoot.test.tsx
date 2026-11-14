@@ -5796,6 +5796,49 @@ describe('<Combobox.Root />', () => {
 
       expect(onOuterKeyDown.mock.calls.length).toBe(1);
     });
+
+    it('does not bubble Escape key when Empty component is present', async () => {
+      const onOuterKeyDown = vi.fn();
+
+      const { user } = await render(
+        <div
+          onKeydown={(event) => {
+            if (event.key === 'Escape') {
+              onOuterKeyDown();
+            }
+          }}
+        >
+          <Combobox.Root defaultOpen items={[]}>
+            <Combobox.Input />
+            <Combobox.Portal>
+              <Combobox.Positioner data-testid="positioner">
+                <Combobox.Popup>
+                  <Combobox.List>
+                    {{
+                      item: ({ item }: { item: string }) => (
+                        <Combobox.Item key={item} value={item}>
+                          {item}
+                        </Combobox.Item>
+                      ),
+                    }}
+                  </Combobox.List>
+                  <Combobox.Empty>No results.</Combobox.Empty>
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>
+        </div>,
+      );
+
+      const positioner = await screen.findByTestId('positioner');
+      positioner.style.display = 'none';
+
+      const input = screen.getByRole('combobox');
+      await user.click(input);
+      await user.keyboard('{Escape}');
+
+      expect(onOuterKeyDown.mock.calls.length).toBe(0);
+    });
   });
 
   describe('aria attributes', () => {
