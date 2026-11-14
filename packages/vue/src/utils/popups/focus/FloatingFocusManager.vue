@@ -408,8 +408,13 @@ function resolveFocusOption(option: FocusOption, interactionType: InteractionTyp
   return resolveElement(value) as FocusableElement | null;
 }
 
+// A popup part that renders no element leaves the positioner as the popup element, and the guards
+// of this part are in the positioner. A guard that counts as content gets the focus from the other
+// guard, and the two then pass the focus to each other with no end.
 function getTabbableContent(container: Element | null = floatingFocusElement.value) {
-  return container ? tabbable(container) : [];
+  return container
+    ? tabbable(container).filter((element) => !element.hasAttribute(createAttribute('focus-guard')))
+    : [];
 }
 
 function getResolvedInsideElements() {
