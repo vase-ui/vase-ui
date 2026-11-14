@@ -1,5 +1,5 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import { KeepAlive, Teleport, computed, defineComponent, shallowRef, toValue } from 'vue';
+import { KeepAlive, Teleport, computed, defineComponent, nextTick, shallowRef, toValue } from 'vue';
 import type { FunctionalComponent } from 'vue';
 import { Menubar } from '@vase-ui/vue/menubar';
 import * as Menu from '../index.parts';
@@ -34,6 +34,7 @@ import { createChangeEventDetails } from '../../internals/createBaseUIEventDetai
 import type { UseAnchorPositioningParameters } from '../../internals/useAnchorPositioning';
 import { REASONS } from '../../internals/reasons';
 import { provideFloatingNode, useFloatingParentNodeId } from '../../utils/popups/tree/FloatingTree';
+import MenuPositionerScoped from './MenuPositionerScoped.test.vue';
 
 const useAnchorPositioningSpy = vi.hoisted(() => vi.fn());
 
@@ -816,6 +817,24 @@ describe('<Menu.Positioner />', () => {
 
       show.value = true;
       await waitFor(() => expect(isPageLocked(page)).toBe(true), POLL);
+    });
+  });
+
+  describe('VUE-61: the positioner of a modal menu has one root node', () => {
+    it('gives the scope id, v-show and a custom directive of the consumer to the positioner', async () => {
+      const shown = shallowRef(true);
+      await render(() => <MenuPositionerScoped shown={shown.value} />);
+      const positioner = screen.getByTestId('positioner');
+
+      expect(positioner.previousElementSibling).toHaveAttribute('role', 'presentation');
+      expect(getComputedStyle(positioner).outlineStyle).toBe('dashed');
+      expect(positioner).toHaveAttribute('data-mark', 'marked');
+      expect(positioner.style.display).not.toBe('none');
+
+      shown.value = false;
+      await nextTick();
+
+      expect(positioner.style.display).toBe('none');
     });
   });
 
