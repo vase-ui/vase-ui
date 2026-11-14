@@ -878,9 +878,7 @@ describe('<PreviewCard.Positioner />', () => {
                     side="top"
                     sideOffset={sideOffset}
                   >
-                    <PreviewCard.Popup
-                      style={{ width: '80px', height: `${inlinePopupHeight}px` }}
-                    >
+                    <PreviewCard.Popup style={{ width: '80px', height: `${inlinePopupHeight}px` }}>
                       Preview Content
                     </PreviewCard.Popup>
                   </PreviewCard.Positioner>

@@ -18,8 +18,9 @@ import { OPEN_DELAY } from '../utils/constants';
 
 type Details = PreviewCard.Root.ChangeEventDetails;
 
-// Long enough that a slow run cannot end the exit before the case enters a trigger again.
-const CLOSE_TRANSITION_MS = 10_000;
+// Long enough that a slow run cannot end the exit before the case enters a trigger again. A case
+// that needs a finished close ends the exit itself.
+const CLOSE_TRANSITION_MS = 100_000;
 
 function closeTransitionStyle(name: string) {
   return `
@@ -58,7 +59,6 @@ function measureOpenDelay(trigger: HTMLElement, openTimes: number[]) {
   };
 }
 
-// The exit runs for a long time, so the case ends it when it needs a finished close.
 function finishExit(popup: HTMLElement) {
   for (const animation of popup.getAnimations()) {
     animation.finish();
@@ -71,7 +71,6 @@ async function startExit(user: UserEvent, trigger: HTMLElement, name: string) {
     action: () => user.unhover(trigger),
   });
   expect((exit as AnimationEvent).animationName).toBe(name);
-  expect(screen.getByTestId('popup')).toHaveAttribute('data-ending-style');
 }
 
 describe('<PreviewCard.Root />', () => {

@@ -145,6 +145,38 @@ describe('<PreviewCard.Trigger />', () => {
     });
   });
 
+  describe('focus', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it.each([
+      { name: 'the default delay', props: {}, delay: OPEN_DELAY },
+      { name: 'the `delay` prop', props: { delay: 100 }, delay: 100 },
+    ])('opens after $name when the link gets the focus', async ({ props, delay }) => {
+      const { link, onOpenChange } = await renderCard(props);
+
+      link.focus();
+      await flushMicrotasks();
+      vi.advanceTimersByTime(delay - 1);
+      await flushMicrotasks();
+      expect(link).not.toHaveAttribute('data-popup-open');
+
+      vi.advanceTimersByTime(1);
+      await flushMicrotasks();
+      expect(link).toHaveAttribute('data-popup-open');
+      expect(onOpenChange).toHaveBeenCalledTimes(1);
+      expect(onOpenChange).toHaveBeenLastCalledWith(
+        true,
+        expect.objectContaining({ reason: REASONS.triggerFocus, trigger: link }),
+      );
+    });
+  });
+
   it('closes a card that the pointer opened when `KeepAlive` deactivates the link', async () => {
     const onOpenChange = vi.fn();
     const visible = shallowRef(true);
