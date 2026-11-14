@@ -170,6 +170,8 @@ function setScrollSize(element: HTMLElement, clientHeight: number, scrollHeight:
 }
 
 // Applies the scroll of the provider at once, so that an assertion does not wait on a smooth scroll.
+// A case that reads the scroll position focuses its fields with `preventScroll`. Chromium reveals a
+// field in `focus()`, but Firefox and WebKit can reveal it after the case sets the position.
 function scrollInstantly(element: HTMLElement) {
   element.scrollTo = ((options?: ScrollToOptions | number) => {
     if (typeof options === 'object' && options !== null && options.top !== undefined) {
@@ -303,7 +305,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
     scrollInstantly(scroll);
 
     const keyboardViewportHeight = 500;
-    input.focus();
+    input.focus({ preventScroll: true });
     scroll.scrollTop = 0;
     visualViewport.resize(keyboardViewportHeight);
     await flushMicrotasks();
@@ -412,7 +414,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
     scrollInstantly(scroll);
 
     const keyboardViewportHeight = 500;
-    input.focus();
+    input.focus({ preventScroll: true });
     scroll.scrollTop = 0;
     visualViewport.resize(keyboardViewportHeight);
     await flushMicrotasks();
@@ -628,7 +630,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
     const scroll = screen.getByTestId('scroll');
     const input = screen.getByTestId('input');
 
-    input.focus();
+    input.focus({ preventScroll: true });
     scroll.scrollTop = 0;
     visualViewport.resize(500);
     await flushMicrotasks();
@@ -843,7 +845,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
     const scroll = screen.getByTestId('scroll');
     const input = screen.getByTestId('input');
 
-    input.focus();
+    input.focus({ preventScroll: true });
     scroll.scrollTop = 0;
     visualViewport.setScale(1.5);
     visualViewport.resize(500);
@@ -1402,13 +1404,13 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
     scrollInstantly(scroll);
 
     const keyboardViewportHeight = 500;
-    first.focus();
+    first.focus({ preventScroll: true });
     scroll.scrollTop = 0;
     visualViewport.resize(keyboardViewportHeight);
     await flushMicrotasks();
 
     // Simulates the iOS keyboard's next-field arrow: focus moves with no touch events.
-    second.focus();
+    second.focus({ preventScroll: true });
     await flushMicrotasks();
 
     await waitFor(() => {
@@ -1447,13 +1449,13 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
     const scrollToSpy = vi.fn();
     scroll.scrollTo = scrollToSpy as unknown as typeof scroll.scrollTo;
 
-    first.focus();
+    first.focus({ preventScroll: true });
     visualViewport.resize(500);
     await flushMicrotasks();
 
     scrollToSpy.mockClear();
 
-    second.focus();
+    second.focus({ preventScroll: true });
     vi.advanceTimersToNextFrame();
     vi.advanceTimersToNextFrame();
     await flushMicrotasks();
@@ -1681,7 +1683,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
     visualViewport.resize(500);
     await flushMicrotasks();
 
-    input.focus();
+    input.focus({ preventScroll: true });
     await flushMicrotasks();
 
     // Let the first alignment check measure the squeezed geometry, then settle it.
@@ -2609,7 +2611,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
       scrollInstantly(scroll);
 
       // The visual viewport shrinks first; the layout viewport follows a frame later.
-      input.focus();
+      input.focus({ preventScroll: true });
       scroll.scrollTop = 0;
       visualViewport.resize(500);
       vi.advanceTimersToNextFrame();
@@ -2638,7 +2640,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
       mockScrollGeometry(scroll, input);
       const scrollToSpy = vi.spyOn(scroll, 'scrollTo').mockImplementation(() => {});
 
-      input.focus();
+      input.focus({ preventScroll: true });
       smallViewport.set(500);
       visualViewport.resize(500);
       vi.advanceTimersToNextFrame();
@@ -2675,7 +2677,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
       mockScrollGeometry(scroll, input);
       const scrollToSpy = vi.spyOn(scroll, 'scrollTo').mockImplementation(() => {});
 
-      input.focus();
+      input.focus({ preventScroll: true });
       smallViewport.set(500);
       visualViewport.resize(500);
       vi.advanceTimersToNextFrame();
