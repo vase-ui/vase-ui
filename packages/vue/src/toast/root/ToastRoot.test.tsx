@@ -19,7 +19,8 @@ const toast: Toast.Root.ToastObject = {
   title: 'Toast title',
 };
 
-// A label part registers its id with the root by source. This stand-in does it as a label part does.
+// A label part registers its id with the root by source. This test component registers as a label
+// part does.
 const RegisteredId = defineComponent({
   props: {
     kind: { type: String as PropType<'title' | 'description'>, required: true },

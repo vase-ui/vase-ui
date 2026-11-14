@@ -233,7 +233,7 @@
       "describe": ["useToast", "in dialog"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "Each case renders `Dialog.Portal`, `Dialog.Backdrop` and `Dialog.Popup`, which Vase UI does not have. `index.ts` of Dialog comes last, so the row names its file."
+      "reason": "The file imports `Dialog` from the entry point of Dialog, which Vase UI does not have. Each case renders parts of `Dialog`."
     },
     {
       "upstream": "packages/react/src/toast/useToastManager.test.tsx",
