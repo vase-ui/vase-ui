@@ -2,6 +2,7 @@ import { expect, describe, it } from 'vitest';
 import { computed, defineComponent, provide } from 'vue';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
+import { NumberField } from '@vase-ui/vue/number-field';
 import {
   createRenderer,
   describeConformance,
@@ -293,6 +294,22 @@ describe('<Toolbar.Input />', () => {
       expect(screen.getByTestId('button')).toHaveFocus();
       expect(input).toHaveAttribute('tabindex', '-1');
       expect(input.value).toBe(typedValue);
+    });
+  });
+
+  describe('rendering NumberField', () => {
+    it('renders NumberField.Input', async () => {
+      await render(
+        <Toolbar.Root>
+          <NumberField.Root>
+            <NumberField.Group>
+              <Toolbar.Input as={NumberField.Input} />
+            </NumberField.Group>
+          </NumberField.Root>
+        </Toolbar.Root>,
+      );
+
+      expect(screen.getByRole('textbox')).toHaveAttribute('aria-roledescription', 'Number field');
     });
   });
 

@@ -1,7 +1,6 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { renderToString } from 'vue/server-renderer';
 import { NumberField } from '@vase-ui/vue/number-field';
-import { defineNumberFieldContextProbe } from '../../../test/fixtures/numberFieldContextProbe';
 import { platform } from '../../common/platform';
 import NumberFieldRootHydration from './NumberFieldRootHydration.test.vue';
 
@@ -125,11 +124,10 @@ describe('<NumberField.Root />', () => {
       onTestFinished(() => {
         Object.defineProperty(platform.os, 'ios', { value: false, configurable: true });
       });
-      const { Probe } = defineNumberFieldContextProbe();
 
       const html = await renderToString(
         <NumberField.Root min={0}>
-          <Probe />
+          <NumberField.Input data-testid="text" />
         </NumberField.Root>,
       );
 

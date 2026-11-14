@@ -2,6 +2,7 @@ import { shallowRef } from 'vue';
 import type { ShallowRef } from 'vue';
 import { NOOP } from '../../common/empty';
 import type { InteractionType } from '../../common/useEnhancedClickHandler';
+import type { RegisterId } from '../../internals/labelable-provider/LabelableContext';
 import { NullStore } from '../../utils/popups/NullStore';
 import {
   BasePopupStore,
@@ -34,6 +35,8 @@ type Context = PopupStoreContext<DialogRootChangeEventDetails> & {
   readonly internalBackdropRef: ShallowRef<HTMLDivElement | null>;
   readonly outsidePressEnabledRef: ShallowRef<boolean>;
   onNestedDialogOpen?: ((dialogCount: number, drawerCount: number) => void) | undefined;
+  registerTitleId: RegisterId;
+  registerDescriptionId: RegisterId;
 };
 
 const selectors = {
@@ -122,5 +125,7 @@ function createInitialContext(): Context {
     backdropRef: shallowRef<HTMLDivElement | null>(null),
     internalBackdropRef: shallowRef<HTMLDivElement | null>(null),
     outsidePressEnabledRef: shallowRef(true),
+    registerTitleId: NOOP,
+    registerDescriptionId: NOOP,
   };
 }

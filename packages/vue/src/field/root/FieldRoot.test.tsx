@@ -2,8 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import type { PropType, VNode } from 'vue';
 import { Checkbox } from '@vase-ui/vue/checkbox';
+import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
+import { NumberField } from '@vase-ui/vue/number-field';
 import { Radio } from '@vase-ui/vue/radio';
 import { RadioGroup } from '@vase-ui/vue/radio-group';
 import { Switch } from '@vase-ui/vue/switch';
@@ -765,6 +767,51 @@ describe('<Field.Root />', () => {
       expect(onSubmit).toHaveBeenCalledTimes(2);
     });
 
+    it('excludes registration-gated controls from onFormSubmit when their field name is removed', async () => {
+      const handleSubmit = vi.fn();
+
+      const App = defineComponent(() => {
+        const name = shallowRef<string | undefined>('fruits');
+
+        return () => (
+          <Form onFormSubmit={handleSubmit}>
+            <Field.Root name={name.value}>
+              <CheckboxGroup defaultValue={['apple']}>
+                <Field.Item>
+                  <Checkbox.Root value="apple" />
+                </Field.Item>
+                <Field.Item>
+                  <Checkbox.Root value="banana" />
+                </Field.Item>
+              </CheckboxGroup>
+            </Field.Root>
+            <button
+              type="button"
+              onClick={() => {
+                name.value = undefined;
+              }}
+            >
+              Clear name
+            </button>
+            <button type="submit">submit</button>
+          </Form>
+        );
+      });
+
+      await render(<App />);
+
+      await fireEvent.click(screen.getByText('submit'));
+
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+      expect(handleSubmit.mock.lastCall?.[0]).toEqual({ fruits: ['apple'] });
+
+      await fireEvent.click(screen.getByText('Clear name'));
+      await fireEvent.click(screen.getByText('submit'));
+
+      expect(handleSubmit).toHaveBeenCalledTimes(2);
+      expect(handleSubmit.mock.lastCall?.[0]).toEqual({});
+    });
+
     it('uses the Field.Control name for form submission and form validation values', async () => {
       const handleSubmit = vi.fn();
       const validate = vi.fn((_value: unknown, _formValues: Form.Values) => null);
@@ -872,6 +919,54 @@ describe('<Field.Root />', () => {
 
       expect(screen.getByRole('textbox')).toHaveAttribute('aria-invalid', 'true');
       expect(screen.getByTestId('default-error')).toHaveTextContent('Email is already taken');
+    });
+
+    it('updates field-aware control name fallbacks when the name changes', async () => {
+      const handleSubmit = vi.fn();
+
+      const App = defineComponent(() => {
+        const name = shallowRef<string | undefined>('quantity');
+
+        return () => (
+          <Form onFormSubmit={handleSubmit}>
+            <Field.Root>
+              <NumberField.Root name={name.value} defaultValue={13}>
+                <NumberField.Input />
+              </NumberField.Root>
+            </Field.Root>
+            <button
+              type="button"
+              onClick={() => {
+                name.value = 'amount';
+              }}
+            >
+              Change name
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                name.value = undefined;
+              }}
+            >
+              Clear name
+            </button>
+            <button type="submit">submit</button>
+          </Form>
+        );
+      });
+
+      await render(<App />);
+
+      await fireEvent.click(screen.getByText('submit'));
+      expect(handleSubmit.mock.lastCall?.[0]).toEqual({ quantity: 13 });
+
+      await fireEvent.click(screen.getByText('Change name'));
+      await fireEvent.click(screen.getByText('submit'));
+      expect(handleSubmit.mock.lastCall?.[0]).toEqual({ amount: 13 });
+
+      await fireEvent.click(screen.getByText('Clear name'));
+      await fireEvent.click(screen.getByText('submit'));
+      expect(handleSubmit.mock.lastCall?.[0]).toEqual({});
     });
   });
 
@@ -2165,6 +2260,27 @@ describe('<Field.Root />', () => {
         expect(description).not.toHaveAttribute('data-dirty');
       });
 
+      it('should clear [data-dirty] when a null-valued control returns to its empty initial value', async () => {
+        await render(
+          <Field.Root data-testid="root">
+            <NumberField.Root>
+              <NumberField.Input data-testid="control" />
+            </NumberField.Root>
+          </Field.Root>,
+        );
+
+        const root = screen.getByTestId('root');
+        const control = screen.getByTestId('control');
+
+        expect(root).not.toHaveAttribute('data-dirty');
+
+        await fireEvent.input(control, { target: { value: '5' } });
+        expect(root).toHaveAttribute('data-dirty', '');
+
+        await fireEvent.input(control, { target: { value: '' } });
+        expect(root).not.toHaveAttribute('data-dirty');
+      });
+
       it('keeps [data-dirty] on a RadioGroup when returning to the first picked value', async () => {
         const App = defineComponent(() => {
           const value = shallowRef<string | null>(null);
@@ -2221,6 +2337,31 @@ describe('<Field.Root />', () => {
     });
 
     describe('control remount', () => {
+      it('clears dirty after an empty text control returns to empty following a null-valued control', async () => {
+        await render(
+          <SwappableField
+            data-testid="root"
+            firstControl={
+              <NumberField.Root>
+                <NumberField.Input />
+              </NumberField.Root>
+            }
+            secondControl={<Field.Control data-testid="control" defaultValue="" />}
+          />,
+        );
+        const root = screen.getByTestId('root');
+
+        await fireEvent.click(screen.getByText('swap'));
+        const control = screen.getByTestId('control');
+        expect(root).not.toHaveAttribute('data-dirty');
+
+        await fireEvent.input(control, { target: { value: 'x' } });
+        expect(root).toHaveAttribute('data-dirty', '');
+
+        await fireEvent.input(control, { target: { value: '' } });
+        expect(root).not.toHaveAttribute('data-dirty');
+      });
+
       it('keeps the original baseline when a controlled control remounts', async () => {
         const App = defineComponent(() => {
           const value = shallowRef('a');
@@ -2283,6 +2424,24 @@ describe('<Field.Root />', () => {
 
         // The baseline is still the field's original value, not the swapped-in control's default.
         await fireEvent.input(control, { target: { value: 'a' } });
+        expect(root).not.toHaveAttribute('data-dirty');
+      });
+
+      it('captures the baseline only once in StrictMode', async () => {
+        await render(
+          <Field.Root data-testid="root">
+            <NumberField.Root>
+              <NumberField.Input data-testid="control" />
+            </NumberField.Root>
+          </Field.Root>,
+        );
+        const root = screen.getByTestId('root');
+        const control = screen.getByTestId('control');
+
+        await fireEvent.input(control, { target: { value: '5' } });
+        expect(root).toHaveAttribute('data-dirty', '');
+
+        await fireEvent.input(control, { target: { value: '' } });
         expect(root).not.toHaveAttribute('data-dirty');
       });
     });
