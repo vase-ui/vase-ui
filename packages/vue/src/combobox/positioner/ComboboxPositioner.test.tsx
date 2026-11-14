@@ -143,9 +143,7 @@ describe('<Combobox.Positioner />', () => {
           {content(
             <Combobox.Portal>
               <Combobox.Positioner sideOffset={recordAnchorWidth}>
-                <Combobox.Popup>
-                  {inputInPopup ? <Combobox.Input /> : null}
-                </Combobox.Popup>
+                <Combobox.Popup>{inputInPopup ? <Combobox.Input /> : null}</Combobox.Popup>
               </Combobox.Positioner>
             </Combobox.Portal>,
           )}
