@@ -34,7 +34,7 @@ const PlainMenu = defineComponent({
   },
 });
 
-describe('<Menu.List />', () => {
+describe('<Menu.List /> in a plain menu', () => {
   const { render } = createRenderer();
 
   describeConformance(<Menu.List />, () => ({
