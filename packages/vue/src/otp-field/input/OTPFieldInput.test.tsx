@@ -10,13 +10,19 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  hydrateAfter,
   pasteText,
   renderOnServer,
   screen,
   takeReportedMessages,
+  waitFor,
+  within,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
 import OTPFieldRootHydration from '../root/OTPFieldRootHydration.test.vue';
+import OTPFieldInputBeforeHydration from './OTPFieldInputBeforeHydration.test.vue';
+
+const BEFORE_HYDRATION_FIXTURE = 'src/otp-field/input/OTPFieldInputBeforeHydration.test.vue';
 
 describe('<OTPField.Input />', () => {
   const { render } = createRenderer();
@@ -1373,6 +1379,87 @@ describe('<OTPField.Input />', () => {
       );
 
       await hydrate(OTPFieldRootHydration, { serverHtml, props: fixtureProps });
+    });
+  });
+
+  describe('VUE-74: text that the user typed before the hydration', () => {
+    async function hydrateTyped(
+      props: Record<string, unknown>,
+      { typed, focus }: { typed: string[]; focus: string },
+    ) {
+      const serverHtml = await renderOnServer(BEFORE_HYDRATION_FIXTURE, props);
+      const { container } = await hydrateAfter(OTPFieldInputBeforeHydration, {
+        serverHtml,
+        props,
+        before(serverContainer) {
+          typed.forEach((text, index) => {
+            within(serverContainer).getByTestId<HTMLInputElement>(`slot-${index}`).value = text;
+          });
+          within(serverContainer).getByTestId(focus).focus();
+        },
+      });
+      const fixture = within(container);
+      return {
+        fixture,
+        slots: [0, 1, 2, 3].map((index) => fixture.getByTestId<HTMLInputElement>(`slot-${index}`)),
+        field: fixture.getByTestId('field'),
+        root: fixture.getByTestId('root'),
+        model: fixture.getByTestId('model'),
+      };
+    }
+
+    it('moves the focus from the focused first slot to the next slot', async () => {
+      const { slots, model } = await hydrateTyped({}, { typed: ['1'], focus: 'slot-0' });
+      await flushMicrotasks();
+
+      expect(model.textContent).toBe('1');
+      expect(document.activeElement).toBe(slots[1]);
+    });
+
+    it('fills each slot from a full code in the first slot', async () => {
+      const { fixture, slots, model } = await hydrateTyped(
+        {},
+        { typed: ['1234'], focus: 'slot-0' },
+      );
+      await flushMicrotasks();
+
+      expect(slots.map((slot) => slot.value)).toEqual(['1', '2', '3', '4']);
+      expect(model.textContent).toBe('1234');
+      expect(fixture.getByTestId('completes').textContent).toBe('1234 (input-change)');
+    });
+
+    it('keeps the focus on a button outside, and touches the field', async () => {
+      const { fixture, field, model } = await hydrateTyped({}, { typed: ['1'], focus: 'outside' });
+
+      await waitFor(() => expect(field).toHaveAttribute('data-touched', ''));
+      expect(model.textContent).toBe('1');
+      expect(fixture.getByTestId('changes').textContent).toBe('1 (input-change)');
+      expect(field).toHaveAttribute('data-dirty', '');
+      expect(document.activeElement).toBe(fixture.getByTestId('outside'));
+    });
+
+    it('keeps the root focused while the focus is in the third slot', async () => {
+      const { fixture, field, root, model } = await hydrateTyped(
+        { validationMode: 'onBlur' },
+        { typed: ['1', '2'], focus: 'slot-2' },
+      );
+      await flushMicrotasks();
+
+      expect(model.textContent).toBe('12');
+      expect(root).toHaveAttribute('data-focused', '');
+      expect(field).not.toHaveAttribute('data-touched');
+      expect(fixture.queryByTestId('error')).toBeNull();
+    });
+
+    it('validates a partial code when the focus is outside', async () => {
+      const { fixture, field } = await hydrateTyped(
+        { validationMode: 'onBlur' },
+        { typed: ['1', '2'], focus: 'outside' },
+      );
+
+      await waitFor(() => expect(fixture.queryByTestId('error')).not.toBeNull());
+      expect(field).toHaveAttribute('data-touched', '');
+      expect(field).toHaveAttribute('data-invalid', '');
     });
   });
 

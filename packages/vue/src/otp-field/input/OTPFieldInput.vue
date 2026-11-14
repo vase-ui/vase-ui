@@ -33,7 +33,10 @@ export interface OTPFieldInputProps
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUpdated, shallowRef, useAttrs, watch } from 'vue';
+import { useValueBeforeHydration } from '../../common/hydration';
+import { ownerDocument } from '../../common/owner';
 import { platform } from '../../common/platform';
+import { activeElement } from '../../common/shadowDom';
 import { warn } from '../../common/warn';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
 import {
@@ -95,6 +98,8 @@ const direction = useDirection();
 // `d`, then `dd`, then `ddd`. A commit of each value would take it as bulk input and fill too many
 // slots. The slot thus buffers the text and commits it one time at `compositionend`.
 const composingValue = shallowRef<string | null>(null);
+
+const writesValue = useValueBeforeHydration(props, () => element.value);
 
 const slotValue = computed(() => value.value[index.value] ?? '');
 const inputState = computed(() => getOTPFieldInputState(state.value, slotValue.value, index.value));
@@ -195,7 +200,12 @@ function commitValue(
     createChangeEventDetails(reason, event as never),
   );
 
-  if (committedValue != null) {
+  // Until the hydration ends, the event can be for text that the user typed before the page was
+  // ready. The focus then moves only from the slot that has it.
+  if (
+    committedValue != null &&
+    (writesValue.value || activeElement(ownerDocument(input)) === input)
+  ) {
     queueFocusInput(Math.min(index.value + nextDigits.length, length.value - 1), committedValue);
   }
 }
@@ -351,7 +361,7 @@ const { element, elementProps } = useRenderElement('input', props, {
     return [
       {
         id: getInputId(slotIndex),
-        value: composingValue.value ?? slotValue.value,
+        ...(writesValue.value ? { value: composingValue.value ?? slotValue.value } : undefined),
         type: mask.value ? 'password' : 'text',
         inputmode: inputMode.value,
         autocomplete: slotIndex === 0 ? autoComplete.value : 'off',
