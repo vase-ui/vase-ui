@@ -1494,6 +1494,31 @@ describe('<Combobox.Trigger />', () => {
       expect(input).not.toHaveAttribute('aria-invalid');
     });
 
+    it('stays valid when the focus leaves a trigger beside an input outside the popup', async () => {
+      const { user } = await render(
+        <div>
+          <Field.Root validationMode="onBlur" data-testid="field">
+            <Combobox.Root required>
+              <Combobox.Input data-testid="input" />
+              <Combobox.Trigger data-testid="trigger" />
+            </Combobox.Root>
+            <Field.Error match="valueMissing" data-testid="error">
+              required
+            </Field.Error>
+          </Field.Root>
+          <button type="button">After</button>
+        </div>,
+      );
+
+      screen.getByTestId('trigger').focus();
+      await user.tab();
+
+      expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
+      expect(screen.getByTestId('field')).toHaveAttribute('data-touched', '');
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(screen.getByTestId('input')).not.toHaveAttribute('aria-invalid');
+    });
+
     it('stays valid when the focus leaves the trigger, with the default validation mode', async () => {
       const { user } = await render(
         <div>
@@ -1580,6 +1605,44 @@ describe('<Combobox.Trigger />', () => {
       await flushMicrotasks();
 
       expect(screen.getByTestId('trigger')).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    it('stops the timer of the focus while KeepAlive holds the combobox', async () => {
+      const active = shallowRef(true);
+      let store!: ComboboxStore;
+      const StoreProbe = defineComponent(() => {
+        store = useComboboxRootContext();
+        return () => null;
+      });
+      await render(() => (
+        <KeepAlive>
+          {active.value ? (
+            <Combobox.Root key="combobox">
+              <StoreProbe />
+              <Combobox.Trigger data-testid="trigger" />
+            </Combobox.Root>
+          ) : null}
+        </KeepAlive>
+      ));
+      const trigger = screen.getByTestId('trigger');
+
+      // The focus starts a timer of 0 ms that mounts the items.
+      trigger.focus();
+      active.value = false;
+      await flushMicrotasks();
+      expect(trigger.isConnected).toBe(false);
+      // A timer of 20 ms ends after a timer of 0 ms that started before it.
+      await wait(20);
+
+      expect(store.select('forceMounted')).toBe(false);
+
+      active.value = true;
+      await flushMicrotasks();
+      screen.getByTestId('trigger').focus();
+
+      await waitFor(() => {
+        expect(store.select('forceMounted')).toBe(true);
+      });
     });
   });
 
