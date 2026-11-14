@@ -1,5 +1,7 @@
 import { afterAll, describe, expect, it, vi } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { defineComponent, onMounted, onUnmounted, shallowRef } from 'vue';
+import type { CSSProperties } from 'vue';
 import { createRenderer, screen, takeReportedMessages, waitSingleFrame } from '#test-utils';
 
 describe('test setup', () => {
@@ -94,5 +96,33 @@ describe('task boundary between tests', () => {
     it('keeps the fake timers of the last test', () => {
       expect(vi.isFakeTimers()).toBe(true);
     });
+  });
+});
+
+describe('real pointer between tests', () => {
+  // Vitest runs the tests of a file in order. The first test only moves the real pointer onto an
+  // element. The element of the second test is at the same place.
+  const { render } = createRenderer();
+  const SPOT: CSSProperties = {
+    position: 'fixed',
+    left: '0px',
+    top: '0px',
+    width: '100px',
+    height: '100px',
+  };
+
+  it('moves the real pointer onto an element and ends', async () => {
+    await render(<div data-testid="spot" style={SPOT} />);
+    await userEvent.hover(screen.getByTestId('spot'));
+  });
+
+  it('gets no hover event from the real pointer of the last test', async () => {
+    const onPointerover = vi.fn();
+    await render(<div style={SPOT} onPointerover={onPointerover} />);
+    // The browser sends the hover events of a pointer that does not move in the next frame.
+    await waitSingleFrame();
+    await waitSingleFrame();
+
+    expect(onPointerover).not.toHaveBeenCalled();
   });
 });
