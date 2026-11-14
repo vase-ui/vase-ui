@@ -1,0 +1,26 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/dialog/demos",
+  "files": {
+    "_index.module.css": "c390fd14f5d7c652d02e028465f5213afc02dd353b37fe207da463aa378c8abb",
+    "detached-triggers-controlled/css-modules/index.tsx": "d791498234f2ee87957852533ff6ac2d0bc76a9f91b409be9cd5cc20d7c1a200",
+    "detached-triggers-simple/css-modules/index.tsx": "363a7817633d0d468179568e06d27d62d974b3351a70a9ead857cf8599258b57",
+    "focus-management/css-modules/index.module.css": "0fb9789d1685a6683a1daec5a53c0455df5eab2516abc2fca068c34e284712d2",
+    "focus-management/css-modules/index.tsx": "6d6e378bcd217cc0db74d614d01aca2dea9d8d13ee6863b76ac5aae991cc4b1f",
+    "hero/css-modules/index.module.css": "1ce8d7ea2f99a80e76d7824748422e4c94ba38eed007e28664bf153c8975cdd3",
+    "hero/css-modules/index.tsx": "77d8c24bae688b36363a57557ef9cdc67de8e3745879336a70b282a2c3f14280",
+    "inside-scroll/css-modules/index.module.css": "308f4523f781ff3b4413cd1efa8360ca8d0ec478430d229e1affcde0096b8035",
+    "inside-scroll/css-modules/index.tsx": "8822decc9eb66d256f0ef0bd41ac6d5d5693285d0d20519f6570b4522e1f0f27",
+    "nested/css-modules/index.module.css": "29770ca1166b429e78f780df7c837654bf650d3648c313caaae3189eb9c3dfd4",
+    "nested/css-modules/index.tsx": "de9dfb1ffc634fc6640e6f6e8a4a87b08d3b916e7f966759eaf22b6b1a0b8194",
+    "open-from-menu/css-modules/index.module.css": "730782d830de0dac2485d2ab4f61d4f071703e327e19779ecd97f31474583154",
+    "open-from-menu/css-modules/index.tsx": "845547b99e0e041ebb2c02621deed49c3dcc3f9ebc28ccaeb23a9360e8ca8adc",
+    "outside-scroll/css-modules/index.module.css": "0595737262bde0adddb10b02009477e826f58b2b3c5e7d379da6bfaec735d29c",
+    "outside-scroll/css-modules/index.tsx": "3bc3eefd924f3a7e869e400aeca92d101b80c295e37d2b4f15d89f97bae17454",
+    "uncontained/css-modules/index.module.css": "7089c9ecd0174bab96e27780a4d20cbd7ee7795ac894efdfde6c46239c4fc489",
+    "uncontained/css-modules/index.tsx": "af1382e339009346977972e56d36afc3d9ee976e645772ed629489ac720447d5"
+  },
+  "entryPoints": {
+    "open-from-menu": ["menu"]
+  }
+}

@@ -136,7 +136,7 @@ export interface FloatingFocusManagerProps {
    * Additional elements that should be treated as part of the floating subtree
    * even if they are rendered outside the floating element itself.
    */
-  getInsideElements?: (() => Array<Element | null | undefined>) | undefined;
+  getInsideElements?: (() => (Element | null | undefined)[]) | undefined;
 }
 
 // The floating element of the focus manager above. A popup that has no node in the popup tree, such
@@ -198,7 +198,8 @@ function addPreviouslyFocusedElement(element: Element | null | undefined) {
 function getPreviouslyFocusedElement(skipHidden?: boolean) {
   clearDisconnectedPreviouslyFocusedElements();
   for (let i = previouslyFocusedElements.length - 1; i >= 0; i -= 1) {
-    const element = previouslyFocusedElements[i].deref();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The loop runs from the last index to 0.
+    const element = previouslyFocusedElements[i]!.deref();
     // The marker skips elements outside an open popup, such as behind a modal.
     if (!skipHidden || !closest(element, `[hidden],[${createAttribute('inert')}]`)) {
       return element;
@@ -222,7 +223,7 @@ function getFirstTabbableElement(container: Element | null) {
 // The first candidate that can take the focus. A candidate that is not in the document, or that is
 // hidden, can't take it. A hidden element is, for example, an item in a closed Select or in a
 // `keepMounted` Menu. `skippedHidden` tells the caller that the search passed such an element.
-function findReturnElement(candidates: Array<Element | null | undefined>) {
+function findReturnElement(candidates: (Element | null | undefined)[]) {
   let skippedHidden = false;
   for (const candidate of candidates) {
     if (candidate?.isConnected) {
@@ -438,7 +439,8 @@ const readSources = () => effects.map((item) => item.sources());
 
 function update(sourceLists: unknown[][]) {
   effects.forEach((item, index) => {
-    const sources = sourceLists[index];
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- `sourceLists` has one list for each effect.
+    const sources = sourceLists[index]!;
     const lastSources = item.lastSources;
     if (
       !lastSources ||
@@ -486,7 +488,7 @@ effect(
         return;
       }
 
-      let focusableElements: Array<FocusableElement> | null = null;
+      let focusableElements: FocusableElement[] | null = null;
       const getDefaultFocusElement = () => {
         if (focusableElements == null) {
           focusableElements = getTabbableContent(floatingFocusEl);
@@ -501,7 +503,7 @@ effect(
       } else {
         elToFocus = resolvedInitialFocus;
       }
-      elToFocus = elToFocus || getDefaultFocusElement();
+      elToFocus ||= getDefaultFocusElement();
 
       const hadFocusInside = contains(floatingFocusEl, activeElement(doc));
 
@@ -979,7 +981,7 @@ effect(
         }
       }
 
-      const tabbableContent = getTabbableContent(floatingFocusEl) as Array<Element | null>;
+      const tabbableContent = getTabbableContent(floatingFocusEl) as (Element | null)[];
       const prevTabbable = lastFocusedTabbable;
       const nodeToFocus =
         (prevTabbable && tabbableContent.includes(prevTabbable) ? prevTabbable : null) ||
@@ -1251,7 +1253,7 @@ function handleBeforeGuardFocusin(event: FocusEvent) {
   const portalNode = portalContext?.portalNode.value;
   if (props.modal) {
     const els = getTabbableContent();
-    els[els.length - 1]?.focus();
+    els.at(-1)?.focus();
   } else if (portalNode) {
     preventReturnFocus = false;
     if (isOutsideEvent(event, portalNode)) {

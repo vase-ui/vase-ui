@@ -313,7 +313,7 @@ describe('useRenderElement', () => {
 
   describe('prop: render', () => {
     it('accepts render as a function that receives props and state', async () => {
-      const renderCalls: Array<[HTMLProps, ActiveState]> = [];
+      const renderCalls: [HTMLProps, ActiveState][] = [];
       const renderFn: ComponentRenderFn<HTMLProps, ActiveState> = ({ props, state }) => {
         renderCalls.push([props, state]);
         return <span {...props} data-active={String(state.active)} />;

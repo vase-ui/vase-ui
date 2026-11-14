@@ -1130,9 +1130,7 @@ describe('<Drawer.Root />', () => {
           const { setDrawerOpen, removeDrawer } = providerContext;
 
           providerContext.setDrawerOpen = (...args) => {
-            if (mountedBeforeTask === null) {
-              mountedBeforeTask = !taskAfterMountRan;
-            }
+            mountedBeforeTask ??= !taskAfterMountRan;
             setDrawerOpen(...args);
           };
           providerContext.removeDrawer = (...args) => {

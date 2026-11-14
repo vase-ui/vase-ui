@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { h, shallowRef } from 'vue';
 import type { Component } from 'vue';
+import { Dialog } from '@vase-ui/vue/dialog';
 import {
   createRenderer,
   describeConformance,
@@ -13,7 +14,6 @@ import {
 } from '#test-utils';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import { REASONS } from '../../internals/reasons';
-import * as Dialog from '../index.parts';
 import type { DialogStore } from '../store/DialogStore';
 import DialogPortalHydration from './DialogPortalHydration.test.vue';
 

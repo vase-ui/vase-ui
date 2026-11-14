@@ -56,6 +56,7 @@ export function useElementSiblings(
     // thus makes no mutation, and the observer does not call it again.
     let reference: ChildNode = target;
     for (let index = before.length - 1; index >= 0; index -= 1) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The loop runs from the last index to 0.
       const node = before[index]!;
       if (reference.previousSibling !== node) {
         reference.before(node);

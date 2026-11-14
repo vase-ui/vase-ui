@@ -6,7 +6,9 @@ import {
   flushMicrotasks,
   screen,
   takeReportedMessages,
+  waitForLaterMillisecond,
 } from '#test-utils';
+import { Dialog } from '@vase-ui/vue/dialog';
 import { Toast } from '@vase-ui/vue/toast';
 import { ToastContext } from './provider/ToastProviderContext';
 import { ToastStore } from './store';
@@ -853,7 +855,7 @@ describe('useToast', () => {
           return () => (
             <button
               onClick={() => {
-                promise(
+                void promise(
                   new Promise((res) => {
                     setTimeout(() => {
                       res('success');
@@ -947,13 +949,13 @@ describe('useToast', () => {
           return () => (
             <button
               onClick={() =>
-                promise(
+                void promise(
                   new Promise((res) => {
                     res('test success');
                   }),
                   {
                     loading: 'loading',
-                    success: (data) => `${data}`,
+                    success: (data) => String(data),
                     error: 'error',
                   },
                 )
@@ -992,7 +994,7 @@ describe('useToast', () => {
           return () => (
             <button
               onClick={() =>
-                promise(
+                void promise(
                   new Promise<string>((res) => {
                     res('everything');
                   }),
@@ -1048,7 +1050,7 @@ describe('useToast', () => {
           return () => (
             <button
               onClick={() =>
-                promise(
+                void promise(
                   new Promise((res, rej) => {
                     rej(new Error('test error'));
                   }),
@@ -1095,7 +1097,7 @@ describe('useToast', () => {
           return () => (
             <button
               onClick={() =>
-                promise(
+                void promise(
                   new Promise((res) => {
                     res('success');
                   }),
@@ -1150,7 +1152,7 @@ describe('useToast', () => {
                   resolvePromise = resolve;
                 });
 
-                promise(pendingPromise, {
+                void promise(pendingPromise, {
                   loading: 'loading',
                   success: 'success',
                   error: 'error',
@@ -1192,7 +1194,7 @@ describe('useToast', () => {
             return () => (
               <button
                 onClick={() => {
-                  promise(
+                  void promise(
                     new Promise((res) => {
                       setTimeout(() => {
                         res('success');
@@ -1293,7 +1295,7 @@ describe('useToast', () => {
             return () => (
               <button
                 onClick={() => {
-                  promise(
+                  void promise(
                     new Promise((res) => {
                       setTimeout(() => {
                         res('success');
@@ -1401,7 +1403,7 @@ describe('useToast', () => {
             return () => (
               <button
                 onClick={() => {
-                  promise(
+                  void promise(
                     new Promise((res) => {
                       setTimeout(() => {
                         res('success');
@@ -1448,7 +1450,7 @@ describe('useToast', () => {
             return () => (
               <button
                 onClick={() => {
-                  promise(
+                  void promise(
                     new Promise((res) => {
                       setTimeout(() => {
                         res('success');
@@ -1497,7 +1499,7 @@ describe('useToast', () => {
             return () => (
               <button
                 onClick={() => {
-                  promise(
+                  void promise(
                     new Promise((res) => {
                       setTimeout(() => {
                         res('success');
@@ -1547,7 +1549,7 @@ describe('useToast', () => {
             return () => (
               <button
                 onClick={() => {
-                  promise(
+                  void promise(
                     new Promise((res) => {
                       setTimeout(() => {
                         res('success');
@@ -1978,7 +1980,7 @@ describe('useToast', () => {
           <>
             {toasts.value.map((t) => (
               <Toast.Root key={t.id} toast={t} data-testid={t.title}>
-                <Toast.Close data-testid={`close-${t.title}`} />
+                <Toast.Close data-testid={`close-${String(t.title)}`} />
               </Toast.Root>
             ))}
             <button
@@ -2142,6 +2144,139 @@ describe('useToast', () => {
       // Lowering it again re-limits it.
       await setProps({ limit: 1 });
       expect(toast1).toHaveAttribute('data-limited');
+    });
+  });
+
+  describe('in dialog', () => {
+    const { render } = createRenderer();
+
+    const DialogToastExample = defineComponent({
+      setup() {
+        const { add } = useToastManager();
+        const isOpen = shallowRef(false);
+
+        return () => (
+          <>
+            <button
+              onClick={() => {
+                isOpen.value = true;
+              }}
+            >
+              open dialog
+            </button>
+            <Dialog.Root
+              open={isOpen.value}
+              onOpenChange={(open: boolean) => {
+                isOpen.value = open;
+              }}
+            >
+              <Dialog.Portal>
+                <Dialog.Backdrop />
+                <Dialog.Popup>
+                  <button
+                    onClick={() =>
+                      add({
+                        title: 'Toast in dialog',
+                        description: 'This toast is in a dialog',
+                      })
+                    }
+                  >
+                    add
+                  </button>
+                  <Dialog.Close />
+                </Dialog.Popup>
+              </Dialog.Portal>
+            </Dialog.Root>
+          </>
+        );
+      },
+    });
+
+    const ToastInDialogList = defineComponent({
+      setup() {
+        const { toasts } = useToastManager();
+        return () =>
+          toasts.value.map((toast) => (
+            <Toast.Root key={toast.id} toast={toast} data-testid="toast-root">
+              <Toast.Title data-testid="toast-title">{toast.title}</Toast.Title>
+              <Toast.Description data-testid="toast-description">
+                {toast.description}
+              </Toast.Description>
+              <Toast.Close data-testid="toast-close" aria-label="close" />
+            </Toast.Root>
+          ));
+      },
+    });
+
+    it('toasts in dialogs are accessible and not aria-hidden', async () => {
+      await render(
+        <Toast.Provider>
+          <Toast.Viewport>
+            <ToastInDialogList />
+          </Toast.Viewport>
+          <DialogToastExample />
+        </Toast.Provider>,
+      );
+
+      const openDialogButton = screen.getByRole('button', { name: 'open dialog' });
+      await fireEvent.click(openDialogButton);
+
+      expect(screen.getByRole('dialog')).not.toBe(null);
+      await waitForLaterMillisecond();
+
+      const addToastButton = screen.getByRole('button', { name: 'add' });
+      await fireEvent.click(addToastButton);
+
+      const toastRoot = screen.getByTestId('toast-root');
+      expect(toastRoot).not.toBe(null);
+      expect(screen.getByTestId('toast-title')).toHaveTextContent('Toast in dialog');
+      expect(screen.getByTestId('toast-description')).toHaveTextContent(
+        'This toast is in a dialog',
+      );
+    });
+
+    it('high priority toasts in dialogs have correct accessibility structure', async () => {
+      const HighPriorityToastInDialog = defineComponent({
+        setup() {
+          const { add } = useToastManager();
+          return () => (
+            <Dialog.Root open>
+              <Dialog.Portal>
+                <Dialog.Backdrop />
+                <Dialog.Popup>
+                  <button
+                    onClick={() => {
+                      add({
+                        title: 'High priority toast',
+                        description: 'This is urgent',
+                        priority: 'high',
+                      });
+                    }}
+                  >
+                    add
+                  </button>
+                </Dialog.Popup>
+              </Dialog.Portal>
+            </Dialog.Root>
+          );
+        },
+      });
+
+      await render(
+        <Toast.Provider>
+          <Toast.Viewport>
+            <ToastInDialogList />
+          </Toast.Viewport>
+          <HighPriorityToastInDialog />
+        </Toast.Provider>,
+      );
+
+      const addToastButton = screen.getByRole('button', { name: 'add' });
+      await fireEvent.click(addToastButton);
+
+      const toastRoot = screen.getByTestId('toast-root');
+      expect(toastRoot).toHaveAttribute('aria-hidden', 'true');
+      expect(screen.queryByRole('alert')).not.toBe(null);
     });
   });
 });

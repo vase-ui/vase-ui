@@ -34,7 +34,7 @@ describe('fireEvent', () => {
         count.value += 1;
       }
       return () => (
-        <button type="button" onClick={increment}>
+        <button type="button" onClick={() => void increment()}>
           {count.value}
         </button>
       );

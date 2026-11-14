@@ -23,7 +23,7 @@ const { render } = createRenderer();
 
 const App = defineComponent(() => {
   const open = shallowRef(false);
-  const listRef = shallowRef<Array<HTMLLIElement | null>>([]);
+  const listRef = shallowRef<(HTMLLIElement | null)[]>([]);
   const activeIndex = shallowRef<null | number>(null);
   const { refs, context } = useFloating({
     open,
