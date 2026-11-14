@@ -1,11 +1,18 @@
 import { inject } from 'vue';
-import type { InjectionKey } from 'vue';
-import type { UseAnchorPositioningReturnValue } from '../../internals/useAnchorPositioning';
+import type { ComputedRef, InjectionKey } from 'vue';
+import type { Side, UseAnchorPositioningReturnValue } from '../../internals/useAnchorPositioning';
 
-export type SelectPositionerContext = Pick<
+export interface SelectPositionerContext extends Pick<
   UseAnchorPositioningReturnValue,
-  'side' | 'align' | 'arrowRef' | 'arrowUncentered' | 'arrowStyles'
->;
+  'align' | 'arrowRef' | 'arrowUncentered' | 'arrowStyles' | 'isPositioned'
+> {
+  /**
+   * The side of the popup. It is `'none'` while the popup is placed over the trigger.
+   */
+  side: ComputedRef<Side | 'none'>;
+  alignItemWithTriggerActive: ComputedRef<boolean>;
+  setControlledAlignItemWithTrigger: (alignItemWithTrigger: boolean) => void;
+}
 
 export const SelectPositionerContext: InjectionKey<SelectPositionerContext> = Symbol();
 

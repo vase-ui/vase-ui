@@ -1,3 +1,8 @@
+import ContextMenuPositioner from './positioner/ContextMenuPositioner.vue';
+import type {
+  ContextMenuPositionerProps,
+  ContextMenuPositionerState,
+} from './positioner/ContextMenuPositioner.vue';
 import ContextMenuRoot from './root/ContextMenuRoot.vue';
 import type {
   ContextMenuRootActions,
@@ -33,4 +38,16 @@ export const Trigger: typeof ContextMenuTrigger = ContextMenuTrigger;
 export namespace Trigger {
   export type State = ContextMenuTriggerState;
   export type Props = ContextMenuTriggerProps;
+}
+
+export { Arrow, Backdrop, Popup, Portal } from '../menu/index.parts';
+
+/**
+ * Positions the context menu popup against the pointer or a custom anchor.
+ * Renders a `<div>` element.
+ */
+export const Positioner: typeof ContextMenuPositioner = ContextMenuPositioner;
+export namespace Positioner {
+  export type State = ContextMenuPositionerState;
+  export type Props = ContextMenuPositionerProps;
 }

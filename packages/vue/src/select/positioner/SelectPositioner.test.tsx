@@ -5,8 +5,10 @@ import {
   createRenderer,
   describeConformance,
   flushMicrotasks,
+  isJSDOM,
   positionerConformanceTests,
   screen,
+  waitFor,
 } from '#test-utils';
 
 describe('<Select.Positioner />', () => {
@@ -25,6 +27,9 @@ describe('<Select.Positioner />', () => {
     },
   }));
 
+  const triggerStyle = { width: '72px', height: '36px' };
+  const popupStyle = { width: '52px', height: '24px' };
+
   positionerConformanceTests({
     render,
     stableState: false,
@@ -39,6 +44,7 @@ describe('<Select.Positioner />', () => {
         <Select.Portal>
           <Select.Positioner
             align="center"
+            alignItemWithTrigger={false}
             {...positioner}
             v-slots={renderPositioner ? { render: renderPositioner } : undefined}
           >
@@ -47,6 +53,85 @@ describe('<Select.Positioner />', () => {
         </Select.Portal>
       </Select.Root>
     ),
+  });
+
+  describe.skipIf(isJSDOM)('kept-mounted positioner', () => {
+    it('does not retain stale coordinates while closed', async () => {
+      const { user } = await render(
+        <Select.Root defaultOpen>
+          <Select.Trigger style={triggerStyle}>Trigger</Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner data-testid="positioner" alignItemWithTrigger={false}>
+              <Select.Popup style={popupStyle}>Popup</Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+      await flushMicrotasks();
+
+      const positioner = screen.getByTestId('positioner');
+      expect(positioner.style.transform).not.toBe('');
+
+      await user.keyboard('{Escape}');
+
+      // The portal can remount around the close, so re-query the kept-mounted node.
+      await waitFor(() => {
+        expect(screen.getByTestId('positioner').hidden).toBe(true);
+      });
+
+      // Rendering the full-size popup at coordinates computed for the hidden (zero-size)
+      // positioner can overflow the layout viewport on the next open, making mobile Chrome
+      // zoom the page out. The positioner must sit at the viewport origin until positioned.
+      const closedPositioner = screen.getByTestId('positioner');
+      await waitFor(() => {
+        expect(closedPositioner.style.position).toBe('fixed');
+      });
+      expect(closedPositioner.style.transform).toBe('');
+      expect(closedPositioner.style.top).toBe('0px');
+      expect(closedPositioner.style.left).toBe('0px');
+    });
+  });
+
+  it('places the selected item over the trigger again after an open that fell back to the anchored placement', async () => {
+    const paddingTop = shallowRef('0px');
+    // With no portal, the same positioner stays mounted from one open to the next.
+    const { user } = await render(() => (
+      <div style={{ paddingTop: paddingTop.value, minHeight: '600px' }}>
+        <Select.Root defaultValue="a">
+          <Select.Trigger data-testid="trigger">
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Positioner data-testid="positioner">
+            <Select.Popup>
+              <Select.Item value="a">a</Select.Item>
+              <Select.Item value="b">b</Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Root>
+      </div>
+    ));
+    const trigger = screen.getByTestId('trigger');
+    const positioner = screen.getByTestId('positioner');
+    const readPlacement = () => [positioner.hasAttribute('data-open'), positioner.dataset.side];
+
+    // A trigger at the top of the viewport has no room for the placement over it.
+    await user.click(trigger);
+    await waitFor(() => {
+      expect(readPlacement()).toEqual([true, 'bottom']);
+    });
+
+    await user.keyboard('{Escape}');
+    await waitFor(() => {
+      expect(positioner).toHaveAttribute('hidden');
+    });
+
+    paddingTop.value = '200px';
+    await flushMicrotasks();
+    await user.click(trigger);
+
+    await waitFor(() => {
+      expect(readPlacement()).toEqual([true, 'none']);
+    });
   });
 
   describe('items that change', () => {
