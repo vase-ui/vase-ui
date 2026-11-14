@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { Dialog } from '@vase-ui/vue/dialog';
 import {
   createRenderer,
   describeConformance,
@@ -11,7 +12,6 @@ import {
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import { CLICK_TRIGGER_IDENTIFIER } from '../../internals/constants';
 import { REASONS } from '../../internals/reasons';
-import * as Dialog from '../index.parts';
 import type { DialogStore } from '../store/DialogStore';
 import DialogTriggerHydration from './DialogTriggerHydration.test.vue';
 
