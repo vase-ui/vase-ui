@@ -22,7 +22,7 @@
       "title": "respects finalFocus when initialFocus points outside the popup",
       "kind": "replaced",
       "test": "packages/vue/src/dialog/popup/DialogPopup.test.tsx",
-      "reason": "With `modal` set to `true`, the elements outside the popup are inert (BUG-4678), so `initialFocus` cannot focus an element outside the popup. The case `BUG-4678: hides the page outside $name` tests the marks."
+      "reason": "With `modal` set to `true`, the elements outside the popup are inert (BUG-4678), so `initialFocus` cannot focus an element outside the popup. The case `BUG-4678: keeps the initial focus off an inert element, and returns the focus to $name` tests this, and the return of the focus."
     },
     {
       "upstream": "packages/react/src/dialog/popup/DialogPopup.test.tsx",
@@ -30,7 +30,7 @@
       "title": "moves final focus to trigger if initialFocus points outside the popup and finalFocus is not specified",
       "kind": "replaced",
       "test": "packages/vue/src/dialog/popup/DialogPopup.test.tsx",
-      "reason": "With `modal` set to `true`, the elements outside the popup are inert (BUG-4678), so `initialFocus` cannot focus an element outside the popup. The case `BUG-4678: hides the page outside $name` tests the marks."
+      "reason": "With `modal` set to `true`, the elements outside the popup are inert (BUG-4678), so `initialFocus` cannot focus an element outside the popup. The case `BUG-4678: keeps the initial focus off an inert element, and returns the focus to $name` tests this, and the return of the focus."
     },
     {
       "upstream": "packages/react/src/dialog/portal/DialogPortal.test.tsx",
