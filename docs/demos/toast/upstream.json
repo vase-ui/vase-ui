@@ -1,0 +1,25 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/toast/demos",
+  "files": {
+    "anchored/css-modules/index.module.css": "2572e2a4971f1f80449efff14777ef1818b03ad0736e78b656efe19e9626bce3",
+    "anchored/css-modules/index.tsx": "6863453c257929a36d90935c77b8a214f93522450cc5879e3ab278dee5be7d9e",
+    "custom/css-modules/index.module.css": "e669d694213da2138c7e6a27e8a8182c00f99302c4c26a67695a2b2fceb539ca",
+    "custom/css-modules/index.tsx": "979c8126b547565991e54b069f5826087d09228ce1bc53097316fcb40a8f0261",
+    "deduplicate/css-modules/index.module.css": "cc05f0677871de6c434674e9e2159243e99429c9c033f01eef6d66d03f8151ab",
+    "deduplicate/css-modules/index.tsx": "e7bc1c149c7d6154eecd462142a42817e0f47b9678520120f5db8f62a9b06f41",
+    "hero/css-modules/index.module.css": "e669d694213da2138c7e6a27e8a8182c00f99302c4c26a67695a2b2fceb539ca",
+    "hero/css-modules/index.tsx": "d8795b82dde3ab155a4a1bb357d48a04fe54f562c3b4308ae010297fc8e8a9b9",
+    "position/css-modules/index.module.css": "27dff2046862a2da11059e54dde544641ae85b3b6aacc66eeb064492c3593531",
+    "position/css-modules/index.tsx": "17e6f17f8fc248bcb1d31ce06277765ce528cf0e2d345992f369a9952f2e6d6d",
+    "promise/css-modules/index.module.css": "627aa1006ee8aff4990e931831abbf7ea62d9eb36445e1f888cde2576658178d",
+    "promise/css-modules/index.tsx": "7991c0185330160351d9e91c7c11511ac43c6ad6538e51fdb594cbb00121c425",
+    "undo/css-modules/index.module.css": "8cd0cc652cbecc76b211d2318edbea9efd505db2f2a00dd9068350f2428c86f0",
+    "undo/css-modules/index.tsx": "543bacb00e9e30f7616330c7d7b9a2d234299c2b1216e200d3d4ff5429deb135",
+    "varying-heights/css-modules/index.module.css": "719b7ab849ee50036cb0e54537f89c6819142e6dd2b0ea78b2c19afd8a63a40f",
+    "varying-heights/css-modules/index.tsx": "fe7a8a88c3cf8873735af9a63dedbd575072a82d7c2f93d6f2dde560760dd8ae"
+  },
+  "entryPoints": {
+    "anchored": ["button"]
+  }
+}

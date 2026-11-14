@@ -2,8 +2,9 @@ export type InteractionType = 'mouse' | 'touch' | 'pen' | 'keyboard' | '';
 
 /**
  * Gives the type of the input that made a click: a pointer type, or `'keyboard'`. Safari and Firefox
- * give a `MouseEvent` to a click handler, and a `MouseEvent` has no pointer type. In that case, the
- * type is the one that the last `pointerdown` had.
+ * give a `MouseEvent` to a click handler, and a `MouseEvent` has no pointer type. A `PointerEvent`
+ * that a script or a test tool made can also have an empty pointer type. In both cases, the type is
+ * the one that the last `pointerdown` had.
  *
  * Call it in `setup`. Bind `onClick` and `onPointerdown` on the element.
  *
@@ -31,12 +32,9 @@ export function useEnhancedClickHandler(
       return;
     }
 
-    if ('pointerType' in event) {
-      // Chrome and Edge give a `PointerEvent`.
-      handler(event, event.pointerType as InteractionType);
-    } else {
-      handler(event, lastClickInteractionType);
-    }
+    // Chrome and Edge give a `PointerEvent`.
+    const pointerType = 'pointerType' in event ? (event.pointerType as InteractionType) : '';
+    handler(event, pointerType || lastClickInteractionType);
     lastClickInteractionType = '';
   }
 
