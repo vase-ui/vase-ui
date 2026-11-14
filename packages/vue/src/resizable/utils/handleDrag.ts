@@ -79,7 +79,8 @@ export function createHandleDrag(
   }
 
   function end(event?: PointerEvent) {
-    if (!dragging.value) {
+    // A lifecycle change gives no event. The event of another pointer does not end the drag.
+    if (!dragging.value || (event && event.pointerId !== pointerId)) {
       return;
     }
     dragging.value = false;

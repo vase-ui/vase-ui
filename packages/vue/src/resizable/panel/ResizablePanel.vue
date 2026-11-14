@@ -26,6 +26,7 @@ export interface ResizablePanelProps
    * The size of the panel at the start, in percent of the panel space.
    * A size is a number, or a string of a number with an optional `%`.
    * The panels that have no size share the space that is left in equal parts.
+   * A later change of the prop has no effect. To change the size, change the layout of the root.
    */
   defaultSize?: number | string | undefined;
   /**
@@ -73,6 +74,8 @@ useDeferredServerRender();
 
 const hydrating = useIsHydrating();
 const id = useVaseUiId(() => props.id);
+// The size at the start: a later change of the prop has no effect.
+const defaultSize = props.defaultSize;
 const { ref: listItemRef, index } = useCompositeListItem();
 
 const size = computed(
@@ -110,7 +113,7 @@ root.registerPanel({
   index,
   minSize: () => props.minSize,
   maxSize: () => props.maxSize,
-  defaultSize: () => props.defaultSize,
+  defaultSize,
   element,
 });
 

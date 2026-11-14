@@ -24,6 +24,6 @@ describe('parseSize', () => {
     { name: 'a number that is not finite', value: Number.NaN },
     { name: 'infinity', value: Number.POSITIVE_INFINITY },
   ])('throws for $name', ({ value }) => {
-    expect(() => parseSize(value)).toThrowError(/^Vase UI: The size .* is not valid\./);
+    expect(() => parseSize(value)).toThrow(/^Vase UI: The size .* is not valid\./);
   });
 });

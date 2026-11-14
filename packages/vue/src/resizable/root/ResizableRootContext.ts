@@ -3,7 +3,10 @@ import type { ComputedRef, InjectionKey, ShallowRef } from 'vue';
 import type { TextDirection } from '../../internals/direction-context/DirectionContext';
 import type { Orientation } from '../../internals/types';
 import type { Layout, PanelConstraints } from '../utils/layout';
-import type { ResizableRootChangeEventDetails, ResizableRootCommitEventDetails } from './ResizableRoot.vue';
+import type {
+  ResizableRootChangeEventDetails,
+  ResizableRootCommitEventDetails,
+} from './ResizableRoot.vue';
 
 export interface ResizablePanelRegistration {
   /**
@@ -19,7 +22,7 @@ export interface ResizablePanelRegistration {
    */
   minSize: () => number | string;
   maxSize: () => number | string;
-  defaultSize: () => number | string | undefined;
+  defaultSize: number | string | undefined;
   element: Readonly<ShallowRef<HTMLElement | null>>;
 }
 

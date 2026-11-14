@@ -31,7 +31,7 @@ export interface ResizableRootState {
 export interface ResizableRootProps
   extends
     VaseUIComponentProps<ResizableRootState>,
-    /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
+    /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes>, 'layout'> {
   /**
    * The orientation of the panels. A horizontal root puts the panels in a row.
    * @default 'horizontal'
@@ -85,12 +85,18 @@ export type ResizableRootCommitEventDetails =
 import { computed, onMounted, onScopeDispose, provide, shallowRef, watch } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { useControlled } from '../../common/useControlled';
+import { warn } from '../../common/warn';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { areLayoutsEqual, resolveLayout, toRequestedLayout } from '../utils/layout';
+import {
+  areConstraintsFeasible,
+  areLayoutsEqual,
+  resolveLayout,
+  toRequestedLayout,
+} from '../utils/layout';
 import type { PanelConstraints } from '../utils/layout';
 import { parseSize } from '../utils/parseSize';
 import { ResizableRootContext } from './ResizableRootContext';
@@ -166,21 +172,43 @@ const [requested, setRequested] = useControlled<ResizableRootLayout>({
 useCompositeList({ elementsRef: shallowRef([]) });
 
 const registered = shallowRef<readonly ResizablePanelRegistration[]>([]);
-const panels = computed(() =>
-  registered.value.toSorted((a, b) => a.index.value - b.index.value),
-);
+const panels = computed(() => registered.value.toSorted((a, b) => a.index.value - b.index.value));
 const constraints = computed<PanelConstraints[]>(() =>
-  panels.value.map((panel) => {
-    const defaultSize = panel.defaultSize();
-    return {
-      id: panel.id.value,
-      minSize: parseSize(panel.minSize()),
-      maxSize: parseSize(panel.maxSize()),
-      defaultSize: defaultSize === undefined ? undefined : parseSize(defaultSize),
-    };
-  }),
+  panels.value.map((panel) => ({
+    id: panel.id.value,
+    minSize: parseSize(panel.minSize()),
+    maxSize: parseSize(panel.maxSize()),
+    defaultSize: panel.defaultSize === undefined ? undefined : parseSize(panel.defaultSize),
+  })),
 );
 const shown = computed(() => resolveLayout(constraints.value, requested.value));
+
+if (process.env.NODE_ENV !== 'production') {
+  // The first renders see only the panels that registered before them, so the check waits for the
+  // render that follows the registrations.
+  watch(
+    constraints,
+    (current) => {
+      const ids = current.map((panel) => panel.id);
+      const duplicate = ids.find((id, index) => ids.indexOf(id) !== index);
+      if (duplicate !== undefined) {
+        warn(
+          `Two panels of one root have the id "${duplicate}".`,
+          'The layout has one size for each id, so the panels cannot have sizes of their own.',
+          'Give each panel an id of its own.',
+        );
+      }
+      if (!areConstraintsFeasible(current)) {
+        warn(
+          'The sizes of the panels cannot sum to 100.',
+          'The minimum and maximum sizes of the panels leave no layout that fills the root.',
+          'Raise a `maxSize` or lower a `minSize`.',
+        );
+      }
+    },
+    { flush: 'post' },
+  );
+}
 
 // The panels register in `setup`, before the mount. The layout of that first state is the layout
 // that the consumer asked for, so it has no change event.

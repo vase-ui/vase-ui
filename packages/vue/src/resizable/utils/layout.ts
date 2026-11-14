@@ -1,5 +1,4 @@
 import { clamp } from '../../common/clamp';
-import { warn } from '../../common/warn';
 
 /**
  * The size of each panel in percent of the panel space, by panel id. The sizes of a layout sum to 100.
@@ -70,14 +69,18 @@ export function validateLayout(panels: readonly PanelConstraints[], layout: Layo
     remainder -= next - entry.size;
     entry.size = next;
   }
-  if (Math.abs(remainder) > EPSILON) {
-    warn(
-      'The sizes of the panels cannot sum to 100.',
-      'The minimum and maximum sizes of the panels leave no layout that fills the root.',
-      'Raise a `maxSize` or lower a `minSize`.',
-    );
-  }
   return toLayout(entries.map(({ panel, size }) => ({ id: panel.id, size })));
+}
+
+/**
+ * Whether a layout of the panels sums to 100 inside their constraints.
+ */
+export function areConstraintsFeasible(panels: readonly PanelConstraints[]): boolean {
+  return (
+    panels.length === 0 ||
+    (sum(panels.map((panel) => panel.minSize)) <= 100 + EPSILON &&
+      sum(panels.map((panel) => panel.maxSize)) >= 100 - EPSILON)
+  );
 }
 
 /**
@@ -129,7 +132,7 @@ export function adjustLayout(
 ): Layout {
   const growing = panels[delta > 0 ? pivot : pivot + 1];
   const shrinking = delta > 0 ? panels.slice(pivot + 1) : panels.slice(0, pivot + 1).reverse();
-  if (delta === 0 || growing === undefined || shrinking.length === 0) {
+  if (!Number.isFinite(delta) || delta === 0 || growing === undefined || shrinking.length === 0) {
     return start;
   }
   const growingStart = sizeOf(start, growing);

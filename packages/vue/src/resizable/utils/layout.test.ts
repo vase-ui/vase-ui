@@ -1,7 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { reset } from '../../common/warn';
+import { describe, expect, it } from 'vitest';
 import {
   adjustLayout,
+  areConstraintsFeasible,
   areLayoutsEqual,
   getHandleRange,
   hasSamePanels,
@@ -20,14 +20,6 @@ const panel = (id: string, rest: Partial<PanelConstraints> = {}): PanelConstrain
 });
 
 describe('layout', () => {
-  beforeEach(() => {
-    reset();
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
   it('initial: equal shares, defaults, and a mix', () => {
     expect(resolveLayout([panel('a'), panel('b')])).toEqual({ a: 50, b: 50 });
     expect(resolveLayout([panel('a'), panel('b'), panel('c')])).toEqual({
@@ -87,6 +79,13 @@ describe('layout', () => {
     expect(adjustLayout(panels, start, 0, 0)).toBe(start);
   });
 
+  it('adjust: a delta that is not a finite number moves nothing', () => {
+    const panels = [panel('a'), panel('b')];
+    const start = { a: 50, b: 50 };
+    expect(adjustLayout(panels, start, 0, Number.NaN)).toBe(start);
+    expect(adjustLayout(panels, start, 0, Number.POSITIVE_INFINITY)).toBe(start);
+  });
+
   it('adjust: a handle with no panel on one side moves nothing', () => {
     const panels = [panel('a'), panel('b')];
     const start = { a: 50, b: 50 };
@@ -112,19 +111,23 @@ describe('layout', () => {
     expect(validateLayout(panels, { a: 10, b: 80, c: 10 })).toEqual({ a: 40, b: 50, c: 10 });
   });
 
-  it('validate: constraints that cannot sum to 100 give one warning', () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  it('validate: constraints that cannot sum to 100 give the sizes that come nearest', () => {
     const panels = [panel('a', { maxSize: 40 }), panel('b', { maxSize: 40 })];
     expect(validateLayout(panels, { a: 50, b: 50 })).toEqual({ a: 60, b: 40 });
-    validateLayout(panels, { a: 50, b: 50 });
-    expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn).toHaveBeenCalledWith(expect.stringMatching(/^Vase UI: .*cannot sum to 100/));
   });
 
-  it('validate: constraints that can sum to 100 give no warning', () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    validateLayout([panel('a', { maxSize: 60 }), panel('b', { minSize: 40 })], { a: 50, b: 50 });
-    expect(warn).not.toHaveBeenCalled();
+  it('feasible: the minimum sizes and the maximum sizes allow a layout that sums to 100', () => {
+    expect(areConstraintsFeasible([panel('a', { maxSize: 60 }), panel('b', { minSize: 40 })])).toBe(
+      true,
+    );
+    expect(areConstraintsFeasible([panel('a', { minSize: 100 })])).toBe(true);
+    expect(areConstraintsFeasible([])).toBe(true);
+    expect(areConstraintsFeasible([panel('a', { maxSize: 40 }), panel('b', { maxSize: 40 })])).toBe(
+      false,
+    );
+    expect(areConstraintsFeasible([panel('a', { minSize: 60 }), panel('b', { minSize: 60 })])).toBe(
+      false,
+    );
   });
 
   it('fit: a new panel takes its default and the others keep their ratio', () => {
@@ -169,9 +172,11 @@ describe('layout', () => {
       c: 20,
     });
     // The panel that mounts again gets its size back.
-    expect(
-      resolveLayout([panel('a'), panel('b'), panel('c')], { a: 64, b: 16, c: 20 }),
-    ).toEqual({ a: 64, b: 16, c: 20 });
+    expect(resolveLayout([panel('a'), panel('b'), panel('c')], { a: 64, b: 16, c: 20 })).toEqual({
+      a: 64,
+      b: 16,
+      c: 20,
+    });
   });
 
   it('requested: the shown layout stays when no entry is left over', () => {

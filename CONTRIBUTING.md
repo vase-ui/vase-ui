@@ -168,6 +168,7 @@ Vase UI can add a component that Base UI does not have. This is a component of V
 - The vocabulary is that of upstream's `GLOSSARY.md`: Popup, Root, Trigger, Anchor, Positioner.
 - A family is one upstream folder.
 - State attributes (`data-open`) and CSS variables keep upstream's names and values. Upstream CSS then works with no change.
+- A family that Base UI does not have names a state attribute with `data-` and the name of the state in kebab case: `data-dragging`. It names a CSS variable with `--`, the family, the part and the value, in kebab case: `--resizable-panel-size`.
 - Internal names change `base-ui` to `vase-ui`: `data-vase-ui-*`, `event.preventVaseUIHandler()`, `VASE_UI_ANIMATIONS_DISABLED`, `new Event('vase-ui')`, the class `vase-ui-disable-scrollbar`.
 - A page can then hold the two libraries, and they do not share markers.
 - Messages start with `Vase UI:`.
@@ -461,7 +462,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - To stop a change, call `details.cancel()` before the listener returns. The part reads `isCanceled` at that time, so a call after an `await` has no effect.
 - An item whose change also changes its group, such as `Toggle` in `ToggleGroup`, emits in this order: `pressedChange` of the item, `valueChange` and `update:value` of the group, and `update:pressed` of the item. Both change events get the same `details` object. A `details.cancel()` in `pressedChange` stops each later event. A `details.cancel()` in `valueChange` stops `update:value` and `update:pressed`.
 - Do not throw to stop a change. A listener that throws stops `update:x` only where Vue throws the error again. Vue throws the error again only in a development build, or in a production build where `app.config.throwUnhandledErrorInProduction` is `true`. Vue does not throw it again when `app.config.errorHandler` or an ancestor `errorCaptured` hook that returns `false` handles the error. Where Vue does not throw the error again, the part emits `update:x`.
-- A consumer writes `v-model:open`, `v-model:value`, `v-model:checked`, `v-model:pressed` or `v-model:snapPoint`. There is no `modelValue` alias.
+- A consumer writes `v-model:open`, `v-model:value`, `v-model:checked`, `v-model:pressed`, `v-model:snapPoint` or `v-model:layout`. There is no `modelValue` alias.
 - One composable does this: `useControlled({ controlled: () => props.x, default: () => props.defaultX, name })`.
 - `default` is a getter. A development build then shows a warning when the default of an uncontrolled part changes.
 - Do not use `defineModel`. It writes the value before a parent can cancel the change.
@@ -670,6 +671,11 @@ A part that binds the id of a part that comes after it:
 - A later part that is below an async `setup`, or below a component that defers, registers too late for the server HTML. The part that binds the id gets it after the page hydrates.
 - A popup trigger does not call it. Each value that the trigger lacks on a server comes from a registration, an attachment or an element. A server has none of them. A deferral adds none of them.
 - `Select.Trigger` and `Combobox.Trigger` are the exceptions, because each can be the control of a field. Each binds the id of the label part of its family, and the ids of the label and the messages of a field. Each calls `useDeferredServerRender()`, so the server HTML has these ids in each order of the parts.
+
+A part whose style or attribute depends on the parts beside it:
+
+- Such a part calls `useDeferredServerRender()`, and each part that it reads registers in `setup`. The server HTML then has the values that all the parts give. `Resizable.Panel` and `Resizable.Handle` do this.
+- The first client render of such a part knows only the parts that registered before it, so its `style` can differ from the server HTML. The part binds `data-allow-mismatch="style"` to its element while `useIsHydrating()` is `true`, and the next render gives the style of all the parts. `Resizable.Panel` does this. `Resizable.Handle` needs no such attribute, because Vue does not compare `aria-*` and `data-*`.
 
 The label of a root:
 
