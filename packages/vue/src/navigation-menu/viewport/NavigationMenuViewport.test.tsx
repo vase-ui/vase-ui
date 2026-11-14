@@ -6,7 +6,7 @@ import {
   flushMicrotasks,
   screen,
 } from '#test-utils';
-import * as NavigationMenu from '../index.parts';
+import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 
 describe('<NavigationMenu.Viewport />', () => {
   const { render } = createRenderer();
