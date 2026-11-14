@@ -87,17 +87,21 @@ describe('<Tooltip.Trigger />', () => {
     });
 
     it('closes when the pointer stops in the gap, also when another tooltip closes at the same move', async () => {
+      // Tooltips with no provider share one delay group, which keeps one of them open. Each
+      // provider makes a group of its own, so both tooltips can be open.
       const renderTriggerWithTooltip = (name: string, style?: CSSProperties) => (
-        <Tooltip.Root>
-          <Tooltip.Trigger delay={0} closeDelay={0} style={style}>
-            {name}
-          </Tooltip.Trigger>
-          <Tooltip.Portal>
-            <Tooltip.Positioner side="bottom" sideOffset={20} data-testid={name}>
-              <Tooltip.Popup style={{ width: '200px', height: '100px' }}>Content</Tooltip.Popup>
-            </Tooltip.Positioner>
-          </Tooltip.Portal>
-        </Tooltip.Root>
+        <Tooltip.Provider>
+          <Tooltip.Root>
+            <Tooltip.Trigger delay={0} closeDelay={0} style={style}>
+              {name}
+            </Tooltip.Trigger>
+            <Tooltip.Portal>
+              <Tooltip.Positioner side="bottom" sideOffset={20} data-testid={name}>
+                <Tooltip.Popup style={{ width: '200px', height: '100px' }}>Content</Tooltip.Popup>
+              </Tooltip.Positioner>
+            </Tooltip.Portal>
+          </Tooltip.Root>
+        </Tooltip.Provider>
       );
       await render(
         <div>

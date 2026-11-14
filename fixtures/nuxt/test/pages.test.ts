@@ -1032,6 +1032,8 @@ async function expectSelectPage(page: Page) {
   expect(await page.getByTestId('tags-value').textContent()).toBe('b');
   expect(await readFormData(page)).toEqual(['font=serif', 'size=', 'tags=b']);
   expect(await page.getByRole('listbox').count()).toBe(0);
+}
+
 const TOOLTIP_TRIGGERS = ['closed', 'open', 'kept', 'detached'];
 
 function readTooltipTriggers(page: Page) {

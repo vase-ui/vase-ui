@@ -5,9 +5,6 @@ import { Tooltip } from '@vase-ui/vue/tooltip';
 // An enabled trigger has the attribute that marks it for the rule of nested triggers.
 const triggerAttribute = 'data-vase-ui-tooltip-trigger';
 
-// An enabled trigger has the attribute that marks it for the rule of nested triggers.
-const triggerAttribute = 'data-vase-ui-tooltip-trigger';
-
 function button(id: string, attributes: string) {
   return `<button ${attributes} type="button"><!--[-->${id}<!--]--></button>`;
 }

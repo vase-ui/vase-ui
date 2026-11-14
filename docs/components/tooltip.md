@@ -73,7 +73,7 @@ A trigger can be inside or outside `<Tooltip.Root>`. For a simple tooltip, put `
 
 If the content of the tooltip cannot be next to its trigger, use a detached trigger. Put `<Tooltip.Trigger>` outside `<Tooltip.Root>`, and connect the two with a handle from `Tooltip.createHandle()`.
 
-The methods of the handle, `open()` and `close()`, need a mounted `<Tooltip.Root>` with the same handle. A call while no root uses the handle has no effect: before a root mounts, and after it unmounts. Each root that mounts starts with a new state. It does not replay an earlier call, and it does not keep the open state of an earlier root.
+The methods of the handle, `open()` and `close()`, need a mounted `<Tooltip.Root>` with the same handle. The handle ignores a call while no root uses it: before a root mounts, and after it unmounts. A development build then shows a warning. Each root that mounts starts with a new state. It does not replay an earlier call, and it does not keep the open state of an earlier root.
 
 <<< ./tooltip/DetachedTriggers.vue{4,8,10}
 
@@ -166,7 +166,7 @@ Use `Tooltip.Viewport` only when one popup has more than one trigger, the conten
 
 `Tooltip.createHandle()` returns a `Tooltip.Handle`. Give it to the `handle` prop of the root and of each trigger outside the root.
 
-- `open(triggerId)` opens the tooltip for the trigger with that `id`.
+- `open(triggerId)` opens the tooltip for the trigger with that `id`. It throws when no trigger has that `id`.
 - `close()` closes the tooltip.
 - `isOpen` is `true` while the tooltip is open. A `computed`, a `watch` or a template that reads it follows the open state.
 
