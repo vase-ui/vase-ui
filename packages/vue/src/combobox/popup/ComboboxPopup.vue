@@ -71,6 +71,7 @@ import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
 import FloatingFocusManager from '../../utils/popups/focus/FloatingFocusManager.vue';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
+import { useKeepAliveElementRef } from '../../utils/popups/useKeepAliveElementRef';
 import { useComboboxPositionerContext } from '../positioner/ComboboxPositionerContext';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
 import { getComboboxPopupId } from '../root/utils';
@@ -146,7 +147,7 @@ function handleFocusin(event: FocusEvent) {
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: setPopupElement,
+  ref: useKeepAliveElementRef(setPopupElement),
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
     store.select('popupProps'),

@@ -64,6 +64,7 @@ import { useToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
 import FloatingFocusManager from '../../utils/popups/focus/FloatingFocusManager.vue';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { useDomEffect } from '../../utils/popups/useDomEffect';
+import { useKeepAliveElementRef } from '../../utils/popups/useKeepAliveElementRef';
 import { getMaxScrollOffset, SCROLL_EDGE_TOLERANCE_PX } from '../../utils/scrollEdges';
 import StyleDisableScrollbar from '../../utils/StyleDisableScrollbar.vue';
 import { styleDisableScrollbar, useStyleDisableScrollbar } from '../../utils/styles';
@@ -490,7 +491,7 @@ let popupElement: HTMLElement | null = null;
 const { element, elementProps } = useRenderElement('div', props, {
   state,
   ref: [
-    (popup) => {
+    useKeepAliveElementRef((popup) => {
       // A compiled template can mount a new popup before it unmounts the old one. The old one then
       // must not clear the element of the new one.
       if (popup !== null || store.context.popupRef.value === popupElement) {
@@ -498,7 +499,7 @@ const { element, elementProps } = useRenderElement('div', props, {
         store.set('popupElement', popup);
       }
       popupElement = popup;
-    },
+    }),
   ],
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => {

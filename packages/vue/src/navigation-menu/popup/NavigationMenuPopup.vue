@@ -47,6 +47,7 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
+import { useKeepAliveElementRef } from '../../utils/popups/useKeepAliveElementRef';
 import { useNavigationMenuPositionerContext } from '../positioner/NavigationMenuPositionerContext';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import { createElementSetter } from '../utils/createElementSetter';
@@ -95,7 +96,7 @@ const originSideStyle = computed<CSSProperties | undefined>(() => {
 const { element, elementProps } = useRenderElement('nav', props, {
   state,
   stateAttributesMapping: popupTransitionStateMapping,
-  ref: createElementSetter(popupElement),
+  ref: useKeepAliveElementRef(createElementSetter(popupElement)),
   props: (attrs) => [
     { id: popupId.value, tabindex: -1, style: originSideStyle.value },
     getDisabledMountTransitionStyles(transitionStatus.value),

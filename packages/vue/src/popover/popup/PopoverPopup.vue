@@ -70,6 +70,7 @@ import { useToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
 import FloatingFocusManager from '../../utils/popups/focus/FloatingFocusManager.vue';
 import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
+import { useKeepAliveElementRef } from '../../utils/popups/useKeepAliveElementRef';
 import {
   FOCUSABLE_POPUP_PROPS,
   createDefaultInitialFocus,
@@ -155,7 +156,7 @@ let popupElement: HTMLElement | null = null;
 const { element, elementProps } = useRenderElement('div', props, {
   state,
   ref: [
-    (popup) => {
+    useKeepAliveElementRef((popup) => {
       // A compiled template can mount a new popup before it unmounts the old one. The old one then
       // must not clear the element of the new one.
       if (popup !== null || store.context.popupRef.value === popupElement) {
@@ -163,7 +164,7 @@ const { element, elementProps } = useRenderElement('div', props, {
         store.set('popupElement', popup);
       }
       popupElement = popup;
-    },
+    }),
   ],
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [

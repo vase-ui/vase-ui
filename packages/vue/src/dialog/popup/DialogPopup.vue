@@ -63,6 +63,7 @@ import {
   FOCUSABLE_POPUP_PROPS,
   createDefaultInitialFocus,
 } from '../../utils/popups/popupStoreUtils';
+import { useKeepAliveElementRef } from '../../utils/popups/useKeepAliveElementRef';
 import { useDialogPortalContext } from '../portal/DialogPortalContext';
 import { useDialogRootContext } from '../root/DialogRootContext';
 import { dialogStateAttributesMapping } from '../utils/stateAttributesMapping';
@@ -141,7 +142,7 @@ function handleKeydown(event: KeyboardEvent) {
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: setPopupElement,
+  ref: useKeepAliveElementRef(setPopupElement),
   stateAttributesMapping: dialogStateAttributesMapping,
   props: (attrs) => [
     store.select('popupProps'),

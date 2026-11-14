@@ -176,6 +176,7 @@ import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
 import FloatingFocusManager from '../../utils/popups/focus/FloatingFocusManager.vue';
 import { FOCUSABLE_POPUP_PROPS } from '../../utils/popups/popupStoreUtils';
+import { useKeepAliveElementRef } from '../../utils/popups/useKeepAliveElementRef';
 import { useDrawerRootContext } from '../root/DrawerRootContext';
 import { getSnapPointSwipeMovement, useDrawerSnapPoints } from '../root/useDrawerSnapPoints';
 import { useDrawerViewportContext } from '../viewport/DrawerViewportContext';
@@ -442,7 +443,7 @@ function setPopup(popup: HTMLElement | null) {
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: setPopup,
+  ref: useKeepAliveElementRef(setPopup),
   stateAttributesMapping,
   props: (attrs) => [
     store.select('popupProps'),
