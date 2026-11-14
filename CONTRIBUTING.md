@@ -905,8 +905,8 @@ The toasts of one `Toast.Provider` are in a `ToastStore`. The code is in `src/to
 - `Toast.Root` catches the error of `setPointerCapture`. Firefox throws `NotFoundError` for a pointer that is not active, such as the pointer id of a dispatched event. The swipe then goes on with no capture (`VUE-50`).
 - `Toast.Title` and `Toast.Description` render only while they have content: their default slot, or the label of their toast. Base UI also counts the children of the element of `render`. A part cannot read what its `#render` slot renders, so that content does not count.
 - In the `#render` slot of a label part, mount `children` for the label of the toast. To show content of your own in another element, give the content in the default slot and the element in `as`.
-- `Toast.Action` shows the `children` of `actionProps` when the toast has them, as Base UI does. Without them, it shows its default slot. It renders only while the content that it shows is not empty.
-- A label part reads `$slots.default` again before each render, because `$slots` is not reactive. A parent that adds or removes the slot renders the part again.
+- `Toast.Action` shows the `children` of `actionProps` when the toast has them, as Base UI does. Without them, it shows its default slot. It renders only while it has content: `children` that are not empty, or a default slot.
+- A label part and `Toast.Action` read `$slots.default` again before each render, because `$slots` is not reactive. A parent that adds or removes the slot renders the part again.
 - A label that is `undefined` or `''` is empty. A function is a label with content. `<component :is>` renders it, so no part calls it in `setup` or in a `computed`.
 - `Toast.Close` has `aria-hidden` until the viewport expands or the button has the focus, as in Base UI.
 
