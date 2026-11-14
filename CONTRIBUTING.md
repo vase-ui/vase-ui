@@ -186,6 +186,8 @@ A family can land in more than one pull request. Its `index.ts` then comes in th
 
 A part that Base UI takes from another family is exported again and not copied: `export { Separator } from '../separator'` in `index.parts.ts`. `index.ts` exports the component, the props type, the state type and the data attributes of that part under the prefix of the family: `OTPFieldSeparator`, `OTPFieldSeparatorProps`, `OTPFieldSeparatorState` and `OTPFieldSeparatorDataAttributes`. `pnpm parity:check` needs the last two, because the `types.md` of the family names them.
 
+Where Base UI gives such a part a file of its own, that file exports the part under the new name with `typeof`. `drawer/close/DrawerClose.ts` is the model. The state type of that file omits the keys that the Base UI type leaves out: `AutocompleteItemState` omits `selected`.
+
 ## API convention
 
 ### Parts that render an element

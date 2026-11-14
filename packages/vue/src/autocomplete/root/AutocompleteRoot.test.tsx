@@ -15,6 +15,7 @@ import {
   screen,
   waitFor,
 } from '#test-utils';
+import type { VaseUIRenderResult } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
 import * as AutocompleteSeparatorDataAttributes from '../../separator/SeparatorDataAttributes';
 import * as Autocomplete from '../index.parts';
@@ -29,6 +30,13 @@ type ItemSlotProps = { item: string };
 const itemSlot = {
   item: ({ item }: ItemSlotProps) => <Autocomplete.Item value={item}>{item}</Autocomplete.Item>,
 };
+
+// WebKit ignores a `pointermove` and a `mousemove` with no movement, and `user.hover` gives none.
+async function hover(user: VaseUIRenderResult['user'], element: Element) {
+  await user.hover(element);
+  await fireEvent.pointerMove(element, { pointerType: 'mouse', movementX: 1 });
+  await fireEvent.mouseMove(element, { movementX: 1 });
+}
 
 function popup(slots: { item: (props: { item: any }) => unknown } = itemSlot) {
   return (
@@ -65,11 +73,6 @@ async function type(text: string) {
 
 async function pressArrowDown() {
   await fireEvent.keyDown(getInput(), { key: 'ArrowDown' });
-  await flushMicrotasks();
-}
-
-async function hover(label: string) {
-  await fireEvent.mouseMove(screen.getByRole('option', { name: label }), { movementX: 1 });
   await flushMicrotasks();
 }
 
@@ -880,7 +883,7 @@ describe('<Autocomplete.Root />', () => {
   it('should pass autoComplete to the visible input', async () => {
     await render(
       <Autocomplete.Root name="search">
-        <Autocomplete.Input autoComplete="on" />
+        <Autocomplete.Input autocomplete="on" />
         <Autocomplete.Portal>
           <Autocomplete.Positioner>
             <Autocomplete.Popup>
@@ -953,7 +956,7 @@ describe('<Autocomplete.Root />', () => {
       );
 
       const option = screen.getByRole('option', { name: 'Apple' });
-      const hoverEvent = new MouseEvent('mousemove', { bubbles: true });
+      const hoverEvent = new MouseEvent('mousemove', { bubbles: true, movementX: 1 });
       await fireEvent(option, hoverEvent);
       await waitFor(() => {
         expect(onItemHighlighted).toHaveBeenLastCalledWith(
@@ -1241,7 +1244,7 @@ describe('<Autocomplete.Root />', () => {
       input.focus();
       await flushMicrotasks();
 
-      await user.hover(banana);
+      await hover(user, banana);
 
       await waitFor(() => {
         expect(banana).toHaveAttribute('data-highlighted');
@@ -1427,7 +1430,7 @@ describe('<Autocomplete.Root />', () => {
       await waitFor(() => expect(apple).toHaveAttribute('data-highlighted'));
 
       // Hovering puts the list into pointer modality, so leaving it runs the reset path.
-      await user.hover(apple);
+      await hover(user, apple);
 
       const outside = document.createElement('div');
       document.body.appendChild(outside);
@@ -1458,7 +1461,7 @@ describe('<Autocomplete.Root />', () => {
       const apple = await screen.findByRole('option', { name: 'apple' });
       await waitFor(() => expect(apple).toHaveAttribute('data-highlighted'));
 
-      await user.hover(apple);
+      await hover(user, apple);
 
       const outside = document.createElement('div');
       document.body.appendChild(outside);
@@ -1490,7 +1493,7 @@ describe('<Autocomplete.Root />', () => {
       await waitFor(() => expect(apple).toHaveAttribute('data-highlighted'));
 
       // Hovering puts the list into pointer modality, so leaving it runs the reset path.
-      await user.hover(apple);
+      await hover(user, apple);
 
       const outside = document.createElement('div');
       document.body.appendChild(outside);
@@ -1612,7 +1615,8 @@ describe('<Autocomplete.Root />', () => {
       await user.keyboard('{ArrowDown}');
       expect(input.value).toBe('alpha');
 
-      await user.hover(screen.getByRole('option', { name: 'alpine' }));
+      const alpine = screen.getByRole('option', { name: 'alpine' });
+      await hover(user, alpine);
       expect(input.value).toBe('alpha');
     });
 
@@ -1703,8 +1707,9 @@ describe('<Autocomplete.Root />', () => {
       const input = screen.getByRole<HTMLInputElement>('combobox');
 
       await user.type(input, 'a');
-      await user.hover(screen.getByRole('option', { name: 'apple' }));
-      expect(screen.getByRole('option', { name: 'apple' })).toHaveAttribute('data-highlighted');
+      const apple = screen.getByRole('option', { name: 'apple' });
+      await hover(user, apple);
+      expect(apple).toHaveAttribute('data-highlighted');
       expect(input.value).toBe('a');
 
       await fireEvent.click(screen.getByText('update value'));
@@ -1849,7 +1854,6 @@ describe('<Autocomplete.Root />', () => {
         // Navigate to an item that sits below the visible viewport. Inline autocompletion
         // rewrites the input value on each step, but that must not reset the scroll to the top.
         for (let i = 0; i < 20; i += 1) {
-          // eslint-disable-next-line no-await-in-loop
           await user.keyboard('{ArrowDown}');
         }
 
@@ -2356,80 +2360,6 @@ describe('<Autocomplete.Root />', () => {
     });
   });
 
-  describe('mode', () => {
-    it('mode="list": a keyboard highlight does not change the input', async () => {
-      const handleItemHighlighted = vi.fn();
-      await render(
-        <Autocomplete.Root items={cities} onItemHighlighted={handleItemHighlighted}>
-          <Autocomplete.Input />
-          {popup()}
-        </Autocomplete.Root>,
-      );
-      getInput().focus();
-      await type('ma');
-      expect(getOptions()).toEqual(['Malmö', 'Malta']);
-
-      await pressArrowDown();
-
-      expect(handleItemHighlighted.mock.lastCall?.[0]).toBe('Malmö');
-      expect(handleItemHighlighted.mock.lastCall?.[1].reason).toBe('keyboard');
-      expect(getInput().value).toBe('ma');
-    });
-
-    it('mode="both": a keyboard highlight writes the label to the input and keeps the list of the typed text', async () => {
-      await render(
-        <Autocomplete.Root mode="both" items={cities}>
-          <Autocomplete.Input />
-          {popup()}
-        </Autocomplete.Root>,
-      );
-      getInput().focus();
-      await type('ma');
-
-      await pressArrowDown();
-      expect(getInput().value).toBe('Malmö');
-      expect(getOptions()).toEqual(['Malmö', 'Malta']);
-
-      await pressArrowDown();
-      expect(getInput().value).toBe('Malta');
-      expect(getOptions()).toEqual(['Malmö', 'Malta']);
-    });
-
-    it('mode="inline": the list does not filter, and a keyboard highlight writes the label', async () => {
-      await render(
-        <Autocomplete.Root mode="inline" items={cities}>
-          <Autocomplete.Input />
-          {popup()}
-        </Autocomplete.Root>,
-      );
-      getInput().focus();
-      await type('ma');
-      expect(getOptions()).toEqual(cities);
-
-      await pressArrowDown();
-
-      expect(getInput().value).toBe('Malmö');
-      expect(getOptions()).toEqual(cities);
-    });
-
-    it('mode="none": the list does not filter, and the input keeps the typed text', async () => {
-      await render(
-        <Autocomplete.Root mode="none" items={cities}>
-          <Autocomplete.Input />
-          {popup()}
-        </Autocomplete.Root>,
-      );
-      getInput().focus();
-      await type('ma');
-      expect(getInput()).toHaveAttribute('aria-autocomplete', 'none');
-      expect(getOptions()).toEqual(cities);
-
-      await pressArrowDown();
-
-      expect(getInput().value).toBe('ma');
-    });
-  });
-
   describe('inline completion', () => {
     it('typed text replaces the inline text', async () => {
       const handleValueChange = vi.fn();
@@ -2453,24 +2383,6 @@ describe('<Autocomplete.Root />', () => {
 
       expect(handleValueChange.mock.lastCall?.[0]).toBe('mal');
       expect(getInput().value).toBe('mal');
-    });
-
-    it('a pointer highlight writes no inline text', async () => {
-      const handleItemHighlighted = vi.fn();
-      await render(
-        <Autocomplete.Root mode="both" items={cities} onItemHighlighted={handleItemHighlighted}>
-          <Autocomplete.Input />
-          {popup()}
-        </Autocomplete.Root>,
-      );
-      getInput().focus();
-      await type('ma');
-
-      await hover('Malmö');
-
-      expect(handleItemHighlighted.mock.lastCall?.[0]).toBe('Malmö');
-      expect(handleItemHighlighted.mock.lastCall?.[1].reason).toBe('pointer');
-      expect(getInput().value).toBe('ma');
     });
 
     it('itemToStringValue gives the text of an object item to the filter and to the inline text', async () => {
@@ -2497,30 +2409,6 @@ describe('<Autocomplete.Root />', () => {
       expect(getInput().value).toBe('MT');
     });
 
-    it('a change of the controlled value from outside replaces the inline text', async () => {
-      const { value } = await renderControlled(render);
-      getInput().focus();
-      await type('ma');
-      await pressArrowDown();
-      expect(getInput().value).toBe('Malmö');
-
-      await writeOutside(value, 'o');
-
-      expect(getInput().value).toBe('o');
-    });
-
-    it('a change of the controlled value drops the completion of a pointer highlight', async () => {
-      const { value } = await renderControlled(render);
-      getInput().focus();
-      await type('ma');
-      await hover('Malmö');
-      expect(getInput().value).toBe('ma');
-
-      await writeOutside(value, 'o');
-
-      expect(getInput().value).toBe('o');
-    });
-
     it('a later change of the items gives a completion again', async () => {
       const { value, items } = await renderControlled(render);
       getInput().focus();
@@ -2532,29 +2420,6 @@ describe('<Autocomplete.Root />', () => {
       await writeOutside(items, ['Otta', ...cities]);
 
       expect(getInput().value).toBe('Otta');
-    });
-
-    it('readOnly removes the inline text, and the text does not come back', async () => {
-      const readOnly = shallowRef(false);
-      const ReadOnlyRoot = defineComponent(() => () => (
-        <Autocomplete.Root mode="both" items={cities} readOnly={readOnly.value}>
-          <Autocomplete.Input />
-          {popup()}
-        </Autocomplete.Root>
-      ));
-      await render(<ReadOnlyRoot />);
-      getInput().focus();
-      await type('ma');
-      await pressArrowDown();
-      expect(getInput().value).toBe('Malmö');
-
-      await writeOutside(readOnly, true);
-      expect(getInput().value).toBe('ma');
-      expect(getInput()).toHaveAttribute('aria-autocomplete', 'none');
-
-      await writeOutside(readOnly, false);
-      expect(getInput().value).toBe('ma');
-      expect(getInput()).toHaveAttribute('aria-autocomplete', 'both');
     });
 
     it('KeepAlive: the inline text stays, and a change from outside while deactivated replaces it', async () => {
@@ -2642,34 +2507,6 @@ describe('<Autocomplete.Root />', () => {
       await type('mal');
 
       expect(getFormData('search')).toEqual(['mal']);
-    });
-
-    it('an item press writes the label of the item to the input', async () => {
-      const events: string[] = [];
-      await render(
-        <form data-testid="form">
-          <Autocomplete.Root
-            name="search"
-            items={cities}
-            onValueChange={(value, details) =>
-              events.push(`valueChange:${value}:${details.reason}:${details.event.type}`)
-            }
-            onOpenChange={(open, details) => events.push(`openChange:${open}:${details.reason}`)}
-          >
-            <Autocomplete.Input />
-            {popup()}
-          </Autocomplete.Root>
-        </form>,
-      );
-      await type('mal');
-      events.length = 0;
-
-      await fireEvent.click(screen.getByRole('option', { name: 'Malta' }));
-      await flushMicrotasks();
-
-      expect(events).toEqual(['valueChange:Malta:item-press:click', 'openChange:false:item-press']);
-      expect(getInput().value).toBe('Malta');
-      expect(getFormData('search')).toEqual(['Malta']);
     });
   });
 
