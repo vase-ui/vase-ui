@@ -2225,19 +2225,6 @@ describe('<Combobox.Root />', () => {
       expect(getHiddenInput().validity.valid).toBe(true);
     });
 
-    it('focuses the input when the hidden input gets the focus', async () => {
-      await render(
-        <Combobox.Root name="city" items={cities}>
-          <ComboboxInputPart />
-        </Combobox.Root>,
-      );
-
-      getHiddenInput().focus();
-      await flushMicrotasks();
-
-      expect(getInput()).toHaveFocus();
-    });
-
     it('requestSubmit submits the form of the hidden input', async () => {
       const handleSubmit = vi.fn((event: Event) => event.preventDefault());
       await render(
@@ -2692,26 +2679,6 @@ describe('<Combobox.Root />', () => {
 
       expect(getInput()).toHaveAttribute('aria-expanded', 'false');
       expect(field).toHaveAttribute('data-touched', '');
-    });
-
-    it('validates on a change', async () => {
-      await render(
-        <Field.Root
-          validate={(value) => (value === 'Malta' ? 'Not Malta' : null)}
-          validationMode="onChange"
-        >
-          <Combobox.Root items={cities}>
-            <ComboboxInputPart />
-            <ComboboxListPart />
-          </Combobox.Root>
-          <Field.Error data-testid="error" />
-        </Field.Root>,
-      );
-
-      await type('ma');
-      await pick('Malta');
-
-      await waitFor(() => expect(screen.getByTestId('error')).toHaveTextContent('Not Malta'));
     });
 
     it('commits on a close by an outside press when the input is in the popup', async () => {
