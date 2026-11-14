@@ -20,6 +20,10 @@ import TooltipOwnershipHydration from './TooltipOwnershipHydration.test.vue';
 
 type Details = Tooltip.Root.ChangeEventDetails;
 
+// The real pointer of the browser can rest on a trigger and open the tooltip with hover events of
+// its own. A trigger that the case does not hover with `user` ignores it.
+const ignoreRealPointer = { pointerEvents: 'none' } as const;
+
 async function insertServerHtml(file: string) {
   const container = document.createElement('div');
   container.innerHTML = await renderOnServer(file, {});
@@ -122,15 +126,28 @@ describe('<Tooltip.Root />', () => {
 
       await render(
         <div>
-          <Tooltip.Trigger handle={handle} id="trigger-1" delay={0} closeDelay={0}>
+          <Tooltip.Trigger
+            handle={handle}
+            id="trigger-1"
+            delay={0}
+            closeDelay={0}
+            style={ignoreRealPointer}
+          >
             Trigger 1
           </Tooltip.Trigger>
-          <Tooltip.Trigger handle={handle} id="trigger-2" delay={0} closeDelay={0}>
+          <Tooltip.Trigger
+            handle={handle}
+            id="trigger-2"
+            delay={0}
+            closeDelay={0}
+            style={ignoreRealPointer}
+          >
             Trigger 2
           </Tooltip.Trigger>
           <Tooltip.Trigger
             handle={handle}
             id="trigger-3"
+            style={ignoreRealPointer}
             v-slots={{
               render: ({ props }: { props: HTMLProps }) => {
                 bystander.renders += 1;
@@ -258,7 +275,7 @@ describe('<Tooltip.Root />', () => {
               </Tooltip.Positioner>
             </Tooltip.Portal>
           </Tooltip.Root>
-          <Tooltip.Trigger handle={handle} id="trigger">
+          <Tooltip.Trigger handle={handle} id="trigger" style={ignoreRealPointer}>
             Trigger
           </Tooltip.Trigger>
         </>,
@@ -283,19 +300,14 @@ describe('<Tooltip.Root />', () => {
           {{
             default: ({ payload }: NumberPayload) => (
               <>
-                <Tooltip.Trigger
-                  payload={1}
-                  delay={0}
-                  closeDelay={0}
-                  style={{ pointerEvents: 'none' }}
-                >
+                <Tooltip.Trigger payload={1} delay={0} closeDelay={0} style={ignoreRealPointer}>
                   Trigger 1
                 </Tooltip.Trigger>
                 <Tooltip.Trigger
                   payload={2}
                   delay={0}
                   closeDelay={0}
-                  style={{ pointerEvents: 'none' }}
+                  style={ignoreRealPointer}
                   v-slots={{
                     render: ({ props }: { props: HTMLProps }) => (
                       <button {...props} id="custom-button" type="button">
@@ -345,11 +357,16 @@ describe('<Tooltip.Root />', () => {
                 <>
                   <div style={{ display: 'flex', gap: '120px' }}>
                     {showFirstTrigger.value && (
-                      <Tooltip.Trigger id="trigger-1" payload={1} delay={0}>
+                      <Tooltip.Trigger
+                        id="trigger-1"
+                        payload={1}
+                        delay={0}
+                        style={ignoreRealPointer}
+                      >
                         Trigger 1
                       </Tooltip.Trigger>
                     )}
-                    <Tooltip.Trigger id="trigger-2" payload={2} delay={0}>
+                    <Tooltip.Trigger id="trigger-2" payload={2} delay={0} style={ignoreRealPointer}>
                       Trigger 2
                     </Tooltip.Trigger>
                   </div>
@@ -439,10 +456,10 @@ describe('<Tooltip.Root />', () => {
       const testTooltip = Tooltip.createHandle<number>();
       await render(
         <div>
-          <Tooltip.Trigger handle={testTooltip} payload={1}>
+          <Tooltip.Trigger handle={testTooltip} payload={1} style={ignoreRealPointer}>
             Trigger 1
           </Tooltip.Trigger>
-          <Tooltip.Trigger handle={testTooltip} payload={2} disabled>
+          <Tooltip.Trigger handle={testTooltip} payload={2} disabled style={ignoreRealPointer}>
             Trigger 2
           </Tooltip.Trigger>
 
@@ -475,11 +492,23 @@ describe('<Tooltip.Root />', () => {
         <div style={{ padding: '50px' }}>
           <div style={{ display: 'flex', gap: '120px' }}>
             {showFirstTrigger.value && (
-              <Tooltip.Trigger handle={testTooltip} id="trigger-1" payload={1} delay={0}>
+              <Tooltip.Trigger
+                handle={testTooltip}
+                id="trigger-1"
+                payload={1}
+                delay={0}
+                style={ignoreRealPointer}
+              >
                 Trigger 1
               </Tooltip.Trigger>
             )}
-            <Tooltip.Trigger handle={testTooltip} id="trigger-2" payload={2} delay={0}>
+            <Tooltip.Trigger
+              handle={testTooltip}
+              id="trigger-2"
+              payload={2}
+              delay={0}
+              style={ignoreRealPointer}
+            >
               Trigger 2
             </Tooltip.Trigger>
           </div>
@@ -520,20 +549,10 @@ describe('<Tooltip.Root />', () => {
       const testTooltip = Tooltip.createHandle<number>();
       await render(
         <div>
-          <Tooltip.Trigger
-            handle={testTooltip}
-            payload={1}
-            delay={0}
-            style={{ pointerEvents: 'none' }}
-          >
+          <Tooltip.Trigger handle={testTooltip} payload={1} delay={0} style={ignoreRealPointer}>
             Trigger 1
           </Tooltip.Trigger>
-          <Tooltip.Trigger
-            handle={testTooltip}
-            payload={2}
-            disabled
-            style={{ pointerEvents: 'none' }}
-          >
+          <Tooltip.Trigger handle={testTooltip} payload={2} disabled style={ignoreRealPointer}>
             Trigger 2
           </Tooltip.Trigger>
 
@@ -563,19 +582,14 @@ describe('<Tooltip.Root />', () => {
       const testTooltip = Tooltip.createHandle<number>();
       await render(
         <div>
-          <Tooltip.Trigger
-            handle={testTooltip}
-            payload={1}
-            delay={0}
-            style={{ pointerEvents: 'none' }}
-          >
+          <Tooltip.Trigger handle={testTooltip} payload={1} delay={0} style={ignoreRealPointer}>
             Trigger 1
           </Tooltip.Trigger>
           <Tooltip.Trigger
             handle={testTooltip}
             payload={2}
             delay={0}
-            style={{ pointerEvents: 'none' }}
+            style={ignoreRealPointer}
             v-slots={{
               render: ({ props }: { props: HTMLProps }) => (
                 <button {...props} type="button" disabled>

@@ -206,7 +206,9 @@ describe('<Tooltip.Root />', () => {
   it('marks the popup data-instant dismiss when Escape closes it', async () => {
     await render(
       <Tooltip.Root>
-        <Tooltip.Trigger delay={0}>Toggle</Tooltip.Trigger>
+        <Tooltip.Trigger delay={0} style={ignoreRealPointer}>
+          Toggle
+        </Tooltip.Trigger>
         <Tooltip.Portal keepMounted>
           <Tooltip.Positioner>
             <Tooltip.Popup data-testid="popup">Content</Tooltip.Popup>

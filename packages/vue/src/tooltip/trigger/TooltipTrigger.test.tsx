@@ -229,7 +229,8 @@ describe('<Tooltip.Trigger />', () => {
     it('stays closed when focus returns to the trigger after leaving the window', async () => {
       const { user } = await render(
         <Tooltip.Root>
-          <Tooltip.Trigger>Trigger</Tooltip.Trigger>
+          {/* The real pointer of the browser can rest on the trigger and open the tooltip. */}
+          <Tooltip.Trigger style={{ pointerEvents: 'none' }}>Trigger</Tooltip.Trigger>
           <Tooltip.Portal>
             <Tooltip.Positioner>
               <Tooltip.Popup data-testid="popup">Content</Tooltip.Popup>
@@ -282,7 +283,10 @@ describe('<Tooltip.Trigger />', () => {
               }}
             >
               <Tooltip.Trigger delay={50}>Trigger</Tooltip.Trigger>
-              <Tooltip.Trigger delay={50}>Other trigger</Tooltip.Trigger>
+              {/* The real pointer of the browser can rest on this trigger and open the tooltip. */}
+              <Tooltip.Trigger delay={50} style={{ pointerEvents: 'none' }}>
+                Other trigger
+              </Tooltip.Trigger>
               <Tooltip.Portal>
                 <Tooltip.Positioner>
                   <Tooltip.Popup data-testid="popup">Content</Tooltip.Popup>
