@@ -1,0 +1,6 @@
+{
+  "id": "BUG-5577",
+  "evidence": ["https://github.com/mui/base-ui/issues/5577"],
+  "behavior": "A popup that opens in a container that the marks of an earlier popup cover lifts `aria-hidden`, `inert` and `data-vase-ui-inert` from its own elements and their ancestors while it is open. The other children of those ancestors keep the marks, and the release of the later popup puts the marks back.",
+  "dueWith": "packages/react/src/utils/popups/focus/markOthers.ts"
+}

@@ -8,48 +8,44 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/utils/popups/interactions/gridNavigation.ts",
-      "kind": "waits-on",
-      "reason": "The pull request that adds the list navigation ports the file."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useListNavigation.ts",
-      "kind": "waits-on",
-      "reason": "The pull request that adds the list navigation ports the file."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useTypeahead.ts",
-      "kind": "waits-on",
-      "reason": "The pull request that adds the typeahead ports the file."
-    },
-    {
-      "upstream": "packages/react/test/floating-ui-tests/useFloating.ts",
-      "kind": "waits-on",
-      "reason": "The pull request that ports the Base UI cases of `useDismiss` adds the test helper."
+      "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
+      "describe": ["useDismiss", "default options"],
+      "title": "does not dismiss with the escape key that ends a composition spanning a reopen",
+      "kind": "replaced",
+      "test": "packages/vue/src/utils/popups/interactions/useDismiss.test.tsx",
+      "reason": "The case asserts that Escape directly after `compositionend` keeps the popup open. Only WebKit sends `compositionend` before the `keydown` that ends a composition, so only WebKit needs that window. In the other engines Vase UI closes the popup (`BUG-6158`). The case \"ignores Escape for 5 ms after compositionend in WebKit\" tests the window in WebKit."
     },
     {
       "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/floating-ui-tests/useFloating.ts",
-      "reason": "The file makes each popup with the test helper `useFloating` of Base UI, which Vase UI does not have. The pull request that adds `useFloating` ports the cases."
+      "describe": ["useDismiss", "options set to false"],
+      "title": "does not dismiss when clicking portaled children",
+      "kind": "replaced",
+      "test": "packages/vue/src/utils/popups/interactions/useDismiss.test.tsx",
+      "reason": "The case presses a plain button in a portal in the popup. Vue gives that event to no listener of the popup element, so that button is outside the popup. A press in a child popup that `Teleport` moved is inside (`VUE-4`). The case \"VUE-4: a press in a child popup that Teleport moved does not close the parent popup\" tests that press."
     },
     {
       "upstream": "packages/react/src/utils/popups/interactions/useListNavigation.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/interactions/useListNavigation.ts",
-      "reason": "The file tests `useListNavigation.ts`."
+      "describe": ["useListNavigation"],
+      "title": "focus management in nested lists",
+      "kind": "replaced",
+      "test": "packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx",
+      "reason": "Base UI runs the case only in jsdom. jsdom does not focus the first item at the open, and a browser does, so the keys of the case reach other items in a browser. In the block `lists below the list in the component tree`, the cases open a list below with its key, in a browser, and the first item of that list gets the focus."
     },
     {
-      "upstream": "packages/react/src/utils/popups/interactions/useListNavigation.webkit.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/interactions/useListNavigation.ts",
-      "reason": "The file tests `useListNavigation.ts`."
+      "upstream": "packages/react/src/utils/popups/interactions/useListNavigation.test.tsx",
+      "describe": ["useListNavigation"],
+      "title": "keyboard navigation in nested menus lists",
+      "kind": "replaced",
+      "test": "packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx",
+      "reason": "Base UI runs the case only in jsdom. jsdom does not focus the first item at the open, and a browser does, so the keys of the case reach other items in a browser. The case `moves in a grid of a list below, and closes that list for Escape` of the block `lists below the list in the component tree` makes the same moves in a browser."
     },
     {
-      "upstream": "packages/react/src/utils/popups/interactions/useTypeahead.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/interactions/useTypeahead.ts",
-      "reason": "The file tests `useTypeahead.ts`."
+      "upstream": "packages/react/src/utils/popups/interactions/useListNavigation.test.tsx",
+      "describe": ["useListNavigation"],
+      "title": "keyboard navigation in nested menus with different orientation",
+      "kind": "replaced",
+      "test": "packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx",
+      "reason": "Base UI runs the case only in jsdom. jsdom does not focus the first item at the open, and a browser does, so the keys of the case reach other items in a browser. The cases of `VUE-46` in the block `lists below the list in the component tree` press the close key of a list below a horizontal list, in a browser. The list below closes, and the list above moves its highlight."
     },
     {
       "upstream": "packages/react/test/useTestInteractions.test.tsx",

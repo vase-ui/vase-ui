@@ -37,6 +37,7 @@
     "packages/react/src/internals/useAnimationsFinished.test.tsx",
     "packages/react/src/internals/useBaseUiId.ts",
     "packages/react/src/internals/useOpenChangeComplete.tsx",
+    "packages/react/src/internals/usePressAndHold.ts",
     "packages/react/src/internals/useRenderElement.tsx",
     "packages/react/src/internals/useRenderElement.test.tsx",
     "packages/react/src/internals/useRenderElement.spec.tsx",
@@ -56,7 +57,9 @@
     "packages/react/test/mockRuntimeLocale.ts",
     "packages/react/test/pointer.ts",
     "packages/react/test/pointer.test.tsx",
-    "packages/react/test/wait.ts"
+    "packages/react/test/positionerConformanceTests.tsx",
+    "packages/react/test/wait.ts",
+    "packages/react/test/waitForPositioned.ts"
   ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [

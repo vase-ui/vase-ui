@@ -1,5 +1,6 @@
 import { toValue } from 'vue';
 import type { CSSProperties, MaybeRefOrGetter } from 'vue';
+import { DISABLED_TRANSITIONS_STYLE } from '../../../internals/constants';
 import { useRenderElement } from '../../../internals/useRenderElement';
 import type {
   UseRenderElementComponentProps,
@@ -8,9 +9,6 @@ import type {
 } from '../../../internals/useRenderElement';
 import type { TransitionStatus } from '../../../internals/useTransitionStatus';
 import { popupStateMapping } from '../popupStateMapping';
-
-// The first position of a popup must not animate.
-const DISABLED_TRANSITIONS_STYLE = { style: { transition: 'none' } };
 
 export interface UsePositionerOptions<State> {
   /**

@@ -52,7 +52,9 @@ function rootProps() {
       <NumberField.Root data-testid="root" v-bind="rootProps()">
         <template #default="{ state }">
           <NumberField.Group data-testid="group">
+            <NumberField.Decrement data-testid="decrement" />
             <span data-testid="text">{{ state.inputValue }}</span>
+            <NumberField.Increment data-testid="increment" />
           </NumberField.Group>
         </template>
       </NumberField.Root>

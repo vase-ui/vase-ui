@@ -7,8 +7,8 @@
       "describe": ["<Tabs.Root />", "popups"],
       "title": "works inside Popover",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/root/PopoverRoot.tsx",
-      "reason": "The case renders `Popover`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/popover/index.ts",
+      "reason": "The case renders the root, the trigger, the portal, the positioner and the popup of Popover from the entry point of Popover. Vase UI does not have that entry point."
     },
     {
       "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
