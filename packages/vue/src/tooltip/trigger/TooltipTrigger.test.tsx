@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { KeepAlive, defineComponent, h, shallowRef } from 'vue';
+import type { CSSProperties } from 'vue';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import * as Tooltip from '../index.parts';
 import {
@@ -85,6 +86,107 @@ describe('<Tooltip.Trigger />', () => {
       await tick(OPEN_DELAY);
 
       expect(onOpenChange).not.toHaveBeenCalled();
+    });
+
+    it('closes when the pointer stops in the gap, also when another tooltip closes at the same move', async () => {
+      const renderTriggerWithTooltip = (name: string, style?: CSSProperties) => (
+        <Tooltip.Root>
+          <Tooltip.Trigger delay={0} closeDelay={0} style={style}>
+            {name}
+          </Tooltip.Trigger>
+          <Tooltip.Portal>
+            <Tooltip.Positioner side="bottom" sideOffset={20} data-testid={name}>
+              <Tooltip.Popup style={{ width: '200px', height: '100px' }}>Content</Tooltip.Popup>
+            </Tooltip.Positioner>
+          </Tooltip.Portal>
+        </Tooltip.Root>
+      );
+      await render(
+        <div>
+          {renderTriggerWithTooltip('First')}
+          {renderTriggerWithTooltip('Second', { display: 'block', marginTop: '300px' })}
+        </div>,
+      );
+      const first = screen.getByRole('button', { name: 'First' });
+      const second = screen.getByRole('button', { name: 'Second' });
+      await enter(first);
+      await enter(second);
+      await flushMicrotasks();
+
+      const firstRect = first.getBoundingClientRect();
+      const secondRect = second.getBoundingClientRect();
+      expect(screen.getByTestId('First').getBoundingClientRect().top).toBeGreaterThan(
+        firstRect.bottom + 15,
+      );
+      expect(screen.getByTestId('Second').getBoundingClientRect().top).toBeGreaterThan(
+        secondRect.bottom + 15,
+      );
+
+      await fireEvent.mouseLeave(first, {
+        clientX: firstRect.left + firstRect.width / 2,
+        clientY: firstRect.bottom + 1,
+      });
+      await fireEvent.mouseLeave(second, {
+        clientX: secondRect.left + secondRect.width / 2,
+        clientY: secondRect.bottom + 1,
+      });
+      // The point is in the safe polygon of the first tooltip, beside the trigger, and outside the
+      // safe polygon of the second tooltip.
+      await fireEvent.mouseMove(document, {
+        clientX: firstRect.right + 10,
+        clientY: firstRect.bottom + 15,
+      });
+      await tick(39);
+      expect(first).toHaveAttribute('data-popup-open');
+      expect(second).not.toHaveAttribute('data-popup-open');
+
+      // A safe polygon closes its tooltip 40 ms after the last move in it.
+      await tick(1);
+      expect(first).not.toHaveAttribute('data-popup-open');
+    });
+
+    it('starts no reopen of an outer tooltip after `KeepAlive` deactivates its trigger', async () => {
+      const delay = 100;
+      const show = shallowRef(true);
+      const Page = defineComponent({
+        setup: () => () => (
+          <Tooltip.Root>
+            <Tooltip.Trigger as="span" delay={delay} data-testid="outer-trigger">
+              <span data-testid="outer-area">Outer</span>
+              <Tooltip.Root>
+                <Tooltip.Trigger>Inner</Tooltip.Trigger>
+              </Tooltip.Root>
+            </Tooltip.Trigger>
+            <Tooltip.Portal>
+              <Tooltip.Positioner>
+                <Tooltip.Popup data-testid="outer-popup">Outer tooltip</Tooltip.Popup>
+              </Tooltip.Positioner>
+            </Tooltip.Portal>
+          </Tooltip.Root>
+        ),
+      });
+      const App = defineComponent({
+        setup: () => () => h(KeepAlive, null, { default: () => (show.value ? h(Page) : null) }),
+      });
+      await render(<App />);
+      const outerTrigger = screen.getByTestId('outer-trigger');
+      const outerArea = screen.getByTestId('outer-area');
+      const innerTrigger = screen.getByRole('button', { name: 'Inner' });
+
+      await fireEvent.pointerEnter(outerTrigger, { pointerType: 'mouse' });
+      await fireEvent.mouseEnter(outerTrigger);
+      await fireEvent.mouseOver(innerTrigger);
+      // The move from the nested trigger to the area of the outer trigger starts the reopen.
+      await fireEvent.mouseOut(innerTrigger, { relatedTarget: outerArea });
+      await fireEvent.mouseOver(outerArea);
+
+      show.value = false;
+      await flushMicrotasks();
+      await tick(delay);
+      show.value = true;
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('outer-popup')).toBe(null);
     });
   });
 
@@ -323,6 +425,66 @@ describe('<Tooltip.Trigger />', () => {
 
       expect(onOpenChange).not.toHaveBeenCalled();
     });
+  });
+
+  it('opens only the tooltip of a nested trigger that gets the focus', async () => {
+    await render(
+      <Tooltip.Root>
+        <Tooltip.Trigger as="span">
+          Outer
+          <Tooltip.Root>
+            <Tooltip.Trigger>Inner</Tooltip.Trigger>
+            <Tooltip.Portal>
+              <Tooltip.Positioner>
+                <Tooltip.Popup data-testid="inner-popup">Inner tooltip</Tooltip.Popup>
+              </Tooltip.Positioner>
+            </Tooltip.Portal>
+          </Tooltip.Root>
+        </Tooltip.Trigger>
+        <Tooltip.Portal>
+          <Tooltip.Positioner>
+            <Tooltip.Popup data-testid="outer-popup">Outer tooltip</Tooltip.Popup>
+          </Tooltip.Positioner>
+        </Tooltip.Portal>
+      </Tooltip.Root>,
+    );
+
+    screen.getByRole('button', { name: 'Inner' }).focus();
+    await flushMicrotasks();
+
+    expect(screen.getByTestId('inner-popup')).toHaveAttribute('data-open');
+    expect(screen.queryByTestId('outer-popup')).toBe(null);
+  });
+
+  it('keeps a tooltip that follows the cursor open when a trigger with `closeOnClick` false is pressed', async () => {
+    const handle = Tooltip.createHandle();
+    await render(
+      <>
+        <Tooltip.Trigger handle={handle} id="first">
+          First
+        </Tooltip.Trigger>
+        <Tooltip.Trigger handle={handle} id="second" closeOnClick={false}>
+          Second
+        </Tooltip.Trigger>
+        <Tooltip.Root handle={handle} trackCursorAxis="both">
+          <Tooltip.Portal>
+            <Tooltip.Positioner>
+              <Tooltip.Popup data-testid="popup">Content</Tooltip.Popup>
+            </Tooltip.Positioner>
+          </Tooltip.Portal>
+        </Tooltip.Root>
+      </>,
+    );
+
+    handle.open('first');
+    await screen.findByTestId('popup');
+
+    const second = screen.getByRole('button', { name: 'Second' });
+    await fireEvent.pointerDown(second, { pointerType: 'mouse' });
+    await fireEvent.click(second);
+    await flushMicrotasks();
+
+    expect(screen.getByTestId('popup')).toHaveAttribute('data-open');
   });
 
   it('throws a descriptive error when rendered without a root or a handle', async () => {

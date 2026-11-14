@@ -115,11 +115,8 @@ export namespace Content {
 /**
  * Opens the navigation menu popup when hovered or clicked, revealing the
  * associated content.
- * Renders a `<button>` element. While its item is active, it also renders two focus guards and
- * an owner `<span>` beside the button.
- *
- * The part has more than one root node. A rule of `<style scoped>` thus does not match its element,
- * and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
+ * Renders a `<button>` element. While its item is active, two focus guards and an owner `<span>`
+ * are after the button in the DOM.
  */
 export const Trigger: typeof NavigationMenuTrigger = NavigationMenuTrigger;
 export namespace Trigger {

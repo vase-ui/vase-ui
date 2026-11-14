@@ -98,12 +98,14 @@ describe('<PreviewCard.Positioner />', () => {
 
   positionerConformanceTests({
     render,
+    viewport: true,
     defaultCollisionAvoidance: 'popup',
     createComponent: ({
       root,
       trigger,
       positioner: { render: renderPositioner, ...positioner },
       popup,
+      viewport,
     }) => (
       <PreviewCard.Root {...root}>
         <Trigger {...trigger}>Trigger</Trigger>
@@ -112,7 +114,9 @@ describe('<PreviewCard.Positioner />', () => {
             {...positioner}
             v-slots={renderPositioner ? { render: renderPositioner } : undefined}
           >
-            <PreviewCard.Popup {...popup}>Popup</PreviewCard.Popup>
+            <PreviewCard.Popup {...popup}>
+              {viewport ? <PreviewCard.Viewport>Popup</PreviewCard.Viewport> : 'Popup'}
+            </PreviewCard.Popup>
           </PreviewCard.Positioner>
         </PreviewCard.Portal>
       </PreviewCard.Root>
@@ -851,6 +855,135 @@ describe('<PreviewCard.Positioner />', () => {
 
       await waitFor(() => {
         expectWithin(positioner.getBoundingClientRect().y, 55);
+      });
+    });
+
+    it('positions the popup relative to the side-aligned rect when opened via focus', async () => {
+      const sideOffset = 5;
+      const inlinePopupHeight = 40;
+      const { user } = await render(
+        <div style={{ ...multilineWrapperStyle, marginTop: '100px' }}>
+          <PreviewCard.Root>
+            <PreviewCard.Trigger
+              delay={0}
+              data-testid="trigger"
+              tabindex={0}
+              style={multilineTriggerStyle}
+            >
+              This is a long text that will wrap across multiple lines in the trigger element
+            </PreviewCard.Trigger>
+            <PreviewCard.Portal>
+              <PreviewCard.Positioner data-testid="positioner" side="top" sideOffset={sideOffset}>
+                <PreviewCard.Popup style={{ width: '80px', height: `${inlinePopupHeight}px` }}>
+                  Preview Content
+                </PreviewCard.Popup>
+              </PreviewCard.Positioner>
+            </PreviewCard.Portal>
+          </PreviewCard.Root>
+        </div>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+      const triggerRects = trigger.getClientRects();
+
+      expect(triggerRects.length).toBeGreaterThan(1);
+
+      const targetRect = triggerRects[0];
+      const expectedY = targetRect.top - inlinePopupHeight - sideOffset;
+
+      await user.tab();
+
+      const positioner = await screen.findByTestId('positioner');
+
+      await waitFor(() => {
+        expect(positioner).toBeVisible();
+      });
+
+      await waitFor(() => {
+        expectWithin(positioner.getBoundingClientRect().y, expectedY);
+      });
+
+      const { x: positionerX } = positioner.getBoundingClientRect();
+      expect(positionerX).toBeGreaterThanOrEqual(targetRect.left - 10);
+      expect(positionerX).toBeLessThanOrEqual(targetRect.right + 10);
+    });
+
+    it('clears hovered-line coords when opened via focus', async () => {
+      const sideOffset = 5;
+      const inlinePopupHeight = 40;
+
+      const Test = defineComponent({
+        setup() {
+          const open = shallowRef(false);
+          const triggerId = shallowRef<string | null>(null);
+
+          return () => (
+            <div style={{ ...multilineWrapperStyle, marginTop: '100px' }}>
+              <PreviewCard.Root
+                open={open.value}
+                triggerId={triggerId.value}
+                onOpenChange={(
+                  nextOpen: boolean,
+                  eventDetails: PreviewCard.Root.ChangeEventDetails,
+                ) => {
+                  if (eventDetails.reason === 'trigger-focus') {
+                    open.value = nextOpen;
+                    triggerId.value = eventDetails.trigger?.id ?? null;
+                  }
+                }}
+              >
+                <PreviewCard.Trigger
+                  delay={0}
+                  data-testid="trigger"
+                  id="trigger"
+                  tabindex={0}
+                  style={multilineTriggerStyle}
+                >
+                  This is a long text that will wrap across multiple lines in the trigger element
+                </PreviewCard.Trigger>
+                <PreviewCard.Portal keepMounted>
+                  <PreviewCard.Positioner
+                    data-testid="positioner"
+                    side="top"
+                    sideOffset={sideOffset}
+                  >
+                    <PreviewCard.Popup style={{ width: '80px', height: `${inlinePopupHeight}px` }}>
+                      Preview Content
+                    </PreviewCard.Popup>
+                  </PreviewCard.Positioner>
+                </PreviewCard.Portal>
+              </PreviewCard.Root>
+            </div>
+          );
+        },
+      });
+
+      const { user } = await render(<Test />);
+      const trigger = screen.getByTestId('trigger');
+      const triggerRects = trigger.getClientRects();
+
+      expect(triggerRects.length).toBeGreaterThan(2);
+
+      const secondLineRect = triggerRects[1];
+      await hoverAt(
+        trigger,
+        secondLineRect.left + secondLineRect.width / 2,
+        secondLineRect.top + secondLineRect.height / 2,
+      );
+
+      const targetRect = triggerRects[0];
+      const expectedY = targetRect.top - inlinePopupHeight - sideOffset;
+
+      await user.tab();
+
+      const positioner = screen.getByTestId('positioner');
+
+      await waitFor(() => {
+        expect(positioner).toBeVisible();
+      });
+
+      await waitFor(() => {
+        expectWithin(positioner.getBoundingClientRect().y, expectedY);
       });
     });
   });
