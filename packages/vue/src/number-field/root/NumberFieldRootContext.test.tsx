@@ -1,7 +1,8 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { shallowRef } from 'vue';
 import { NumberField } from '@vase-ui/vue/number-field';
 import { createRenderer, flushMicrotasks, screen } from '#test-utils';
-import { defineNumberFieldContextProbe } from '../../../test/fixtures/numberFieldContextProbe';
+import NumberFieldContextProbe from '../../../test/fixtures/NumberFieldContextProbe.vue';
 import { platform } from '../../common/platform';
 import {
   createChangeEventDetails,
@@ -28,7 +29,7 @@ describe('the context of the root of Number Field', () => {
   async function renderRoot(props: Record<string, unknown> = {}) {
     const handleChange = vi.fn();
     const handleCommit = vi.fn();
-    const { Probe, getContext } = defineNumberFieldContextProbe();
+    const probe = shallowRef<InstanceType<typeof NumberFieldContextProbe> | null>(null);
     const result = await render(
       <NumberField.Root
         data-testid="root"
@@ -36,10 +37,10 @@ describe('the context of the root of Number Field', () => {
         onValueCommitted={handleCommit}
         {...props}
       >
-        <Probe />
+        <NumberFieldContextProbe ref={probe} />
       </NumberField.Root>,
     );
-    return { ...result, getContext, handleChange, handleCommit };
+    return { ...result, getContext: () => probe.value!.context, handleChange, handleCommit };
   }
 
   describe('the text of the input', () => {
