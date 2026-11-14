@@ -54,7 +54,7 @@ export interface ApiPart {
   /** `Button`, or `Dialog.Root` for a part of a namespace. */
   name: string;
   description: string;
-  /** Whether the `#render` slot of the part has the `children` slot prop, which the slot must mount. */
+  /** Whether the `#render` slot of the part gets the `children` slot prop, which the slot must mount in its element. */
   hasChildren: boolean;
   props: ApiProp[];
   events: ApiMember[];

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createSSRApp, defineComponent, h } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import ToastTextList from '../../../test/fixtures/ToastTextList.vue';
-import * as Toast from '../index.parts';
+import { Toast } from '@vase-ui/vue/toast';
 
 describe('<Toast.Viewport /> on a server', () => {
   it('renders the region of the viewport, and no focus guard and no alert region', async () => {

@@ -1,33 +1,34 @@
 import { describe, expect, it } from 'vitest';
 import { KeepAlive, defineComponent, shallowRef } from 'vue';
 import { createRenderer, describeConformance, flushMicrotasks, screen } from '#test-utils';
-import DialogPopupPart from '../../../test/fixtures/DialogPopupPart.vue';
 import * as Dialog from '../index.parts';
 import DialogTitleReplacement from './DialogTitleReplacement.test.vue';
 
 describe('<Dialog.Title />', () => {
   const { render } = createRenderer();
 
-  describe('with a test popup', () => {
-    describeConformance(<Dialog.Title />, () => ({
-      refInstanceof: window.HTMLHeadingElement,
-      render: (node) => {
-        return render(
-          <Dialog.Root open modal={false}>
-            <DialogPopupPart>{node}</DialogPopupPart>
-          </Dialog.Root>,
-        );
-      },
-    }));
-  });
+  describeConformance(<Dialog.Title />, () => ({
+    refInstanceof: window.HTMLHeadingElement,
+    render: (node) => {
+      return render(
+        <Dialog.Root open modal={false}>
+          <Dialog.Portal>
+            <Dialog.Popup>{node}</Dialog.Popup>
+          </Dialog.Portal>
+        </Dialog.Root>,
+      );
+    },
+  }));
 
   describe('aria-labelledby of the popup', () => {
     it('names the popup with the generated id of the title', async () => {
       await render(
         <Dialog.Root open modal={false}>
-          <DialogPopupPart>
-            <Dialog.Title data-testid="title">Title</Dialog.Title>
-          </DialogPopupPart>
+          <Dialog.Portal>
+            <Dialog.Popup>
+              <Dialog.Title data-testid="title">Title</Dialog.Title>
+            </Dialog.Popup>
+          </Dialog.Portal>
         </Dialog.Root>,
       );
 
@@ -39,9 +40,11 @@ describe('<Dialog.Title />', () => {
     it('names the popup with the id prop of the title', async () => {
       await render(
         <Dialog.Root open modal={false}>
-          <DialogPopupPart>
-            <Dialog.Title id="custom-title">Title</Dialog.Title>
-          </DialogPopupPart>
+          <Dialog.Portal>
+            <Dialog.Popup>
+              <Dialog.Title id="custom-title">Title</Dialog.Title>
+            </Dialog.Popup>
+          </Dialog.Portal>
         </Dialog.Root>,
       );
 
@@ -53,9 +56,11 @@ describe('<Dialog.Title />', () => {
       const mounted = shallowRef(false);
       await render(() => (
         <Dialog.Root open modal={false}>
-          <DialogPopupPart>
-            {mounted.value ? <Dialog.Title data-testid="title" /> : null}
-          </DialogPopupPart>
+          <Dialog.Portal>
+            <Dialog.Popup>
+              {mounted.value ? <Dialog.Title data-testid="title" /> : null}
+            </Dialog.Popup>
+          </Dialog.Portal>
         </Dialog.Root>
       ));
       const popup = screen.getByRole('dialog');
@@ -74,10 +79,12 @@ describe('<Dialog.Title />', () => {
       const secondMounted = shallowRef(true);
       await render(() => (
         <Dialog.Root open modal={false}>
-          <DialogPopupPart>
-            <Dialog.Title data-testid="first" />
-            {secondMounted.value ? <Dialog.Title data-testid="second" /> : null}
-          </DialogPopupPart>
+          <Dialog.Portal>
+            <Dialog.Popup>
+              <Dialog.Title data-testid="first" />
+              {secondMounted.value ? <Dialog.Title data-testid="second" /> : null}
+            </Dialog.Popup>
+          </Dialog.Portal>
         </Dialog.Root>
       ));
       const popup = screen.getByRole('dialog');
@@ -93,10 +100,12 @@ describe('<Dialog.Title />', () => {
       const firstMounted = shallowRef(true);
       await render(() => (
         <Dialog.Root open modal={false}>
-          <DialogPopupPart>
-            {firstMounted.value ? <Dialog.Title data-testid="first" /> : null}
-            <Dialog.Title data-testid="second" />
-          </DialogPopupPart>
+          <Dialog.Portal>
+            <Dialog.Popup>
+              {firstMounted.value ? <Dialog.Title data-testid="first" /> : null}
+              <Dialog.Title data-testid="second" />
+            </Dialog.Popup>
+          </Dialog.Portal>
         </Dialog.Root>
       ));
       const popup = screen.getByRole('dialog');
@@ -125,9 +134,11 @@ describe('<Dialog.Title />', () => {
       const visible = shallowRef(true);
       const App = defineComponent(() => () => (
         <Dialog.Root open modal={false}>
-          <DialogPopupPart>
-            <KeepAlive>{visible.value ? <Dialog.Title data-testid="title" /> : null}</KeepAlive>
-          </DialogPopupPart>
+          <Dialog.Portal>
+            <Dialog.Popup>
+              <KeepAlive>{visible.value ? <Dialog.Title data-testid="title" /> : null}</KeepAlive>
+            </Dialog.Popup>
+          </Dialog.Portal>
         </Dialog.Root>
       ));
       await render(<App />);

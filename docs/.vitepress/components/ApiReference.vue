@@ -123,8 +123,9 @@ function idOf(name: string): string {
     <h3 :id="idOf(part.name)">{{ part.name }}</h3>
     <p v-if="part.description"><TextWithCode :text="part.description" /></p>
     <p v-if="part.hasChildren">
-      A <code>#render</code> slot must mount the <code>children</code> slot prop in its element.
-      Without it, the element does not have the content of the part.
+      A <code>#render</code> slot must mount the <code>children</code> slot prop in its element,
+      with the content in it. <code>children</code> adds the nodes of the part itself, where the
+      part has such nodes.
     </p>
     <template v-if="part.props.length > 0">
       <h4>Props</h4>

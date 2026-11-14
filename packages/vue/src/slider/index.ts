@@ -1,12 +1,14 @@
 export * as Slider from './index.parts';
 
 export { default as SliderRoot } from './root/SliderRoot.vue';
+export { default as SliderLabel } from './label/SliderLabel.vue';
 export { default as SliderControl } from './control/SliderControl.vue';
 export { default as SliderTrack } from './track/SliderTrack.vue';
 export { default as SliderThumb } from './thumb/SliderThumb.vue';
 export { default as SliderIndicator } from './indicator/SliderIndicator.vue';
 
 export type * from './root/SliderRoot.vue';
+export type * from './label/SliderLabel.vue';
 export type * from './control/SliderControl.vue';
 export type * from './track/SliderTrack.vue';
 export type * from './thumb/SliderThumb.vue';
