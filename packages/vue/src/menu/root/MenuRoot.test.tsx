@@ -822,6 +822,7 @@ describe('<Menu.Root />', () => {
           const submenuTrigger = screen.getByTestId('submenu-trigger');
 
           submenuTrigger.focus();
+          await flushMicrotasks();
 
           // This check fails in JSDOM
           await waitFor(() => {
@@ -851,6 +852,7 @@ describe('<Menu.Root />', () => {
 
         const trigger = screen.getByRole('button', { name: 'Toggle' });
         trigger.focus();
+        await flushMicrotasks();
 
         await user.keyboard('[ArrowDown]');
 
@@ -868,6 +870,7 @@ describe('<Menu.Root />', () => {
         const trigger = screen.getByRole('button', { name: 'Toggle' });
 
         trigger.focus();
+        await flushMicrotasks();
 
         await user.keyboard('[ArrowUp]');
 
@@ -889,6 +892,7 @@ describe('<Menu.Root />', () => {
 
         const trigger = screen.getByRole('button', { name: 'Toggle' });
         trigger.focus();
+        await flushMicrotasks();
 
         await user.keyboard('[ArrowDown]');
         await waitFor(() => {
@@ -930,6 +934,7 @@ describe('<Menu.Root />', () => {
 
         const trigger = screen.getByRole('button', { name: 'Toggle' });
         trigger.focus();
+        await flushMicrotasks();
 
         await user.keyboard('[ArrowDown]');
         await waitFor(() => {
@@ -965,6 +970,7 @@ describe('<Menu.Root />', () => {
 
         const trigger = screen.getByRole('button', { name: 'Toggle' });
         trigger.focus();
+        await flushMicrotasks();
 
         await user.keyboard('[ArrowDown]');
         await waitFor(() => {
@@ -1158,6 +1164,7 @@ describe('<Menu.Root />', () => {
         const trigger = screen.getByRole('button', { name: 'Toggle' });
 
         trigger.focus();
+        await flushMicrotasks();
 
         await enterWithMouse(trigger);
 
@@ -1298,6 +1305,7 @@ describe('<Menu.Root />', () => {
         const trigger = screen.getByRole('button', { name: 'Toggle' });
 
         trigger.focus();
+        await flushMicrotasks();
 
         await userEvent.hover(trigger);
 
@@ -1346,6 +1354,7 @@ describe('<Menu.Root />', () => {
         const trigger = screen.getByRole('button', { name: 'Toggle' });
 
         trigger.focus();
+        await flushMicrotasks();
 
         await userEvent.hover(trigger);
 
