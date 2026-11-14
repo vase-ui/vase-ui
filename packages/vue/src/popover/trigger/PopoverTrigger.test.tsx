@@ -530,9 +530,12 @@ describe('<Popover.Trigger />', () => {
 
   describe('opened by hover', () => {
     async function renderOpenedByHover(tabindex?: number) {
+      // WebKit on macOS skips a button for the Tab key unless the button has a `tabindex`.
       await render(
         <div>
-          <button data-testid="before">Before</button>
+          <button data-testid="before" tabindex={0}>
+            Before
+          </button>
           <Popover.Root>
             <Popover.Trigger openOnHover delay={0} tabindex={tabindex}>
               Toggle
@@ -545,7 +548,9 @@ describe('<Popover.Trigger />', () => {
               </Popover.Positioner>
             </Popover.Portal>
           </Popover.Root>
-          <button data-testid="after">After</button>
+          <button data-testid="after" tabindex={0}>
+            After
+          </button>
         </div>,
       );
 
