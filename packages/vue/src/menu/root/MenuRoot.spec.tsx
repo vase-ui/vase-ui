@@ -1,5 +1,5 @@
-import { Menu } from '@vase-ui/vue/menu';
 import { expectType } from '#test-utils';
+import * as Menu from '../index.parts';
 
 <Menu.Root
   onItemHighlighted={(item, details) => {
