@@ -1,0 +1,9 @@
+{
+  "id": "VUE-43",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/positioning/useFloating.ts#L109-L116",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/interactions/useDismiss.ts#L185-L194"
+  ],
+  "behavior": "The node of a popup in the popup tree has the positioning context of the popup only while the popup is at that node. The node loses the context when the popup moves to another node or to another tree, when the positioner of the popup unmounts, and while `KeepAlive` holds the positioner. Base UI leaves the context of the last render on the node. A popup above that node then takes the popup for an open child, also after the popup closed or moved.",
+  "dueWith": "packages/react/src/utils/popups/positioning/useFloating.ts"
+}
