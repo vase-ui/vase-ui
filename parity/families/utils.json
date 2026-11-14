@@ -5,6 +5,7 @@
     "packages/react/src/utils/formatRangeValue.ts",
     "packages/react/src/utils/getCssDimensions.test.ts",
     "packages/react/src/utils/getCssDimensions.ts",
+    "packages/react/src/utils/getElementAtPoint.ts",
     "packages/react/src/utils/getElementTransform.ts",
     "packages/react/src/utils/getFiniteAnimations.ts",
     "packages/react/src/utils/getPseudoElementBounds.test.ts",
@@ -32,6 +33,8 @@
     "packages/react/src/utils/useIsHydrating.ts",
     "packages/react/src/utils/useRegisteredLabelId.test.tsx",
     "packages/react/src/utils/useRegisteredLabelId.ts",
+    "packages/react/src/utils/useSwipeDismiss.test.tsx",
+    "packages/react/src/utils/useSwipeDismiss.ts",
     "packages/react/src/utils/valueToPercent.ts"
   ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",

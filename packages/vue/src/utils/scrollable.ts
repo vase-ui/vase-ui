@@ -13,9 +13,9 @@ export function isScrollableY(element: HTMLElement, allowOverflowIntent = false)
   if (overflowY !== 'auto' && overflowY !== 'scroll') {
     return false;
   }
-  // When `allowOverflowIntent` is true, a container that overflows only once extra space is
-  // added (e.g. drawer keyboard scroll slack) still counts, as long as it has layout size on
-  // the axis.
+  // With `allowOverflowIntent`, a container that has a size on the axis counts, also when it
+  // overflows only after space is added. An example is the scroll space that a drawer adds for
+  // the virtual keyboard.
   return allowOverflowIntent
     ? element.clientHeight > 0
     : element.scrollHeight > element.clientHeight;
@@ -45,9 +45,9 @@ export function findScrollableAncestor(
   axis: ScrollAxis,
   allowOverflowIntent = false,
 ): HTMLElement | null {
-  // `getParentNode` crosses shadow boundaries (and slots), so a target inside a shadow root
-  // still walks up to scrollable ancestors in the light DOM. Non-HTML targets (SVG, MathML)
-  // can't scroll, but their HTML ancestors can.
+  // `getParentNode` crosses shadow roots and slots. A target in a shadow root thus walks up to
+  // the scrollable ancestors in the light DOM. A target that is not HTML (SVG, MathML) cannot
+  // scroll, but its HTML ancestors can.
   let node: EventTarget | null = target;
   while (isElement(node) && node !== root && !isLastTraversableNode(node)) {
     if (isHTMLElement(node) && isScrollable(node, axis, allowOverflowIntent)) {
