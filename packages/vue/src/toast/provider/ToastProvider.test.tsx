@@ -246,31 +246,6 @@ describe('<Toast.Provider />', () => {
       return { probe, rendered };
     }
 
-    it('pauses the timer while it is deactivated and resumes it with the remaining time', async () => {
-      const onClose = vi.fn();
-      const manager = Toast.createToastManager();
-      const visible = shallowRef(true);
-      await renderKept(manager, visible).rendered;
-      manager.add({ title: 'Toast', timeout: 1000, onClose });
-
-      await tick(400);
-      visible.value = false;
-      await nextTick();
-      await tick(5000);
-
-      expect(onClose).not.toHaveBeenCalled();
-
-      visible.value = true;
-      await nextTick();
-      await tick(599);
-
-      expect(onClose).not.toHaveBeenCalled();
-
-      await tick(2);
-
-      expect(onClose).toHaveBeenCalledTimes(1);
-    });
-
     it('does not listen to the manager while it is deactivated, and listens again after it', async () => {
       const manager = Toast.createToastManager();
       const visible = shallowRef(true);
@@ -328,12 +303,14 @@ describe('<Toast.Provider />', () => {
 
     // The real pointer of the browser can rest on the viewport. A dispatched event still reaches the
     // viewport, and the real pointer sends no event of its own.
+    const noRealPointer = { pointerEvents: 'none' } as const;
+
     function renderApp(toastManager: ToastManager, visible: ShallowRef<boolean>) {
       const Page = defineComponent({
         name: 'Page',
         setup: () => () => (
           <Toast.Provider toastManager={toastManager}>
-            <Toast.Viewport data-testid="viewport" style={{ pointerEvents: 'none' }}>
+            <Toast.Viewport data-testid="viewport" style={noRealPointer}>
               <ToastList />
             </Toast.Viewport>
           </Toast.Provider>

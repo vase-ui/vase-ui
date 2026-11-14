@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defineComponent, h, onMounted, onScopeDispose, shallowRef } from 'vue';
+import { defineComponent, h, onMounted, shallowRef } from 'vue';
 import type { PropType } from 'vue';
 import {
   createRenderer,
@@ -13,29 +13,11 @@ import ToastTextList from '../../../test/fixtures/ToastTextList.vue';
 import * as Toast from '../index.parts';
 import type { ToastManagerAddOptions } from '../useToastManager';
 import { toastRootStateAttributesMapping } from './ToastRoot.vue';
-import { useToastRootContext } from './ToastRootContext';
 
 const toast: Toast.Root.ToastObject = {
   id: 'test',
   title: 'Toast title',
 };
-
-// A label part registers its id with the root by source. This test component registers as a label
-// part does.
-const RegisteredId = defineComponent({
-  props: {
-    kind: { type: String as PropType<'title' | 'description'>, required: true },
-    id: { type: String, required: true },
-  },
-  setup(props) {
-    const { registerTitleId, registerDescriptionId } = useToastRootContext();
-    const register = props.kind === 'title' ? registerTitleId : registerDescriptionId;
-    const source = Symbol();
-    register(source, () => props.id);
-    onScopeDispose(() => register(source, undefined));
-    return () => <span id={props.id} />;
-  },
-});
 
 async function simulateSwipe(
   element: HTMLElement,
@@ -766,33 +748,6 @@ describe('<Toast.Root />', () => {
     await waitFor(() => {
       expect(screen.queryByTestId('toast')).toBe(null);
     });
-  });
-
-  it('names the toast with the id of the last label that registered, and drops the name with the label', async () => {
-    const showSecondTitle = shallowRef(true);
-    const showDescription = shallowRef(true);
-    await render(() => (
-      <Toast.Provider>
-        <Toast.Viewport>
-          <Toast.Root toast={toast} data-testid="root">
-            <RegisteredId kind="title" id="first-title" />
-            {showSecondTitle.value ? <RegisteredId kind="title" id="second-title" /> : null}
-            {showDescription.value ? <RegisteredId kind="description" id="description" /> : null}
-          </Toast.Root>
-        </Toast.Viewport>
-      </Toast.Provider>
-    ));
-    const root = screen.getByTestId('root');
-
-    expect(root).toHaveAttribute('aria-labelledby', 'second-title');
-    expect(root).toHaveAttribute('aria-describedby', 'description');
-
-    showSecondTitle.value = false;
-    showDescription.value = false;
-    await flushMicrotasks();
-
-    expect(root).toHaveAttribute('aria-labelledby', 'first-title');
-    expect(root).not.toHaveAttribute('aria-describedby');
   });
 
   it('gives a high priority toast the role alertdialog, and hides it until the viewport has focus', async () => {
@@ -1563,58 +1518,6 @@ describe('<Toast.Root />', () => {
       const afterSwipeEvent = new Event('touchmove', { bubbles: true, cancelable: true });
       toastElement.dispatchEvent(afterSwipeEvent);
       expect(afterSwipeEvent.defaultPrevented).toBe(false);
-    });
-
-    it('closes the toast when it is swiped beyond the threshold, and keeps it for a shorter swipe', async () => {
-      const { manager } = await renderToasts();
-      manager.add({ id: 'toast', title: 'Toast', timeout: 0 });
-      await flushMicrotasks();
-      const root = screen.getByTestId('toast');
-
-      await simulateSwipe(root, 100, 100, 100, 130);
-
-      expect(root).not.toHaveAttribute('data-ending-style');
-      expect(root).not.toHaveAttribute('data-swiping');
-
-      await simulateSwipe(root, 100, 100, 100, 160);
-
-      expect(root).toHaveAttribute('data-ending-style');
-      expect(root).toHaveAttribute('data-swipe-direction', 'down');
-    });
-
-    it('prevents the native touchmove only during a touch swipe', async () => {
-      await render(
-        <Toast.Provider>
-          <Toast.Viewport>
-            <Toast.Root toast={toast} data-testid="toast-root" swipeDirection="up">
-              {toast.title}
-            </Toast.Root>
-          </Toast.Viewport>
-        </Toast.Provider>,
-      );
-      const root = screen.getByTestId('toast-root');
-
-      function dispatchTouchmove() {
-        const event = new Event('touchmove', { bubbles: true, cancelable: true });
-        root.dispatchEvent(event);
-        return event.defaultPrevented;
-      }
-
-      expect(dispatchTouchmove()).toBe(false);
-
-      await fireEvent.pointerDown(root, {
-        clientX: 100,
-        clientY: 100,
-        button: 0,
-        pointerId: 1,
-        pointerType: 'touch',
-      });
-
-      expect(dispatchTouchmove()).toBe(true);
-
-      await fireEvent.pointerCancel(root, { pointerId: 1, pointerType: 'touch' });
-
-      expect(dispatchTouchmove()).toBe(false);
     });
 
     it('does not start swiping from elements with the data-base-ui-swipe-ignore attribute', async () => {

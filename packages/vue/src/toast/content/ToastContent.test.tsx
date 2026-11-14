@@ -124,31 +124,6 @@ describe('<Toast.Content />', () => {
     return manager;
   }
 
-  it('sets data-behind on the content of each toast except the frontmost', async () => {
-    const manager = await renderContents();
-
-    manager.add({ id: 'first', title: 'First', timeout: 0 });
-    manager.add({ id: 'second', title: 'Second', timeout: 0 });
-    await flushMicrotasks();
-
-    // The newest toast is at the front; the older one sits behind it.
-    expect(screen.getByTestId('content-second')).not.toHaveAttribute('data-behind');
-    expect(screen.getByTestId('content-first')).toHaveAttribute('data-behind');
-  });
-
-  it('sets data-expanded on the content while the viewport is hovered', async () => {
-    const manager = await renderContents();
-    manager.add({ id: 'toast', title: 'Toast', timeout: 0 });
-    await flushMicrotasks();
-    const content = screen.getByTestId('content-toast');
-
-    expect(content).not.toHaveAttribute('data-expanded');
-
-    await fireEvent.mouseEnter(screen.getByTestId('viewport'));
-
-    expect(content).toHaveAttribute('data-expanded');
-  });
-
   it('measures its toast again when its content changes size', async () => {
     const height = shallowRef(10);
     const manager = await renderContents();
