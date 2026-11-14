@@ -1,6 +1,6 @@
 import { inject } from 'vue';
 import type { ComputedRef, InjectionKey } from 'vue';
-import type { LabelIdSetter } from '../../utils/useRegisteredLabelId';
+import type { LabelIdRoot } from '../../utils/useRegisteredLabelId';
 import type { ProgressRootState } from './ProgressRoot.vue';
 
 export interface ProgressRootContext {
@@ -19,8 +19,7 @@ export interface ProgressRootContext {
    * Value of the component.
    */
   value: ComputedRef<number | null>;
-  setLabelId: LabelIdSetter;
-  defaultLabelId: ComputedRef<string>;
+  labelRoot: LabelIdRoot;
   state: ComputedRef<ProgressRootState>;
 }
 

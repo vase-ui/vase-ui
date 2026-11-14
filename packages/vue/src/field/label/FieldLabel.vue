@@ -52,7 +52,11 @@ const state = computed<FieldLabelState>(() => ({
   disabled: (fieldRootContext.disabled.value ?? false) || fieldItemContext.disabled.value,
 }));
 
-const labelProps = useLabel({ id: () => props.id, native: () => props.nativeLabel });
+const labelProps = useLabel({
+  id: () => props.id,
+  native: () => props.nativeLabel,
+  element: () => element.value,
+});
 
 const { element, elementProps } = useRenderElement('label', props, {
   state,
