@@ -301,8 +301,8 @@
       "describe": ["<Menu.Popup />"],
       "suite": "popupFocusPropsTests",
       "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupFocusPropsTests.tsx",
-      "reason": "The shared suite is not in Vase UI yet."
+      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
+      "reason": "The suite gives `finalFocus` to the popup and presses the trigger. The popup of Vase UI has no focus management yet, and the trigger has no press."
     },
     {
       "upstream": "packages/react/src/menu/popup/MenuPopup.test.tsx",
