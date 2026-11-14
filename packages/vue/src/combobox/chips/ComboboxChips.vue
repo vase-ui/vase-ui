@@ -39,10 +39,10 @@ provide(ComboboxChipsContext, { chipsRef });
 
 // A template can mount the chips part that replaces this part before it unmounts this part. The
 // part then clears the container of the root only when the root holds its own container.
-let ownContainer: HTMLElement | null = null;
-function setChipsContainer(container: HTMLElement | null) {
+let ownContainer: HTMLDivElement | null = null;
+function setChipsContainer(container: HTMLDivElement | null) {
   if (container !== null || store.context.chipsContainerRef.value === ownContainer) {
-    store.context.chipsContainerRef.value = container as HTMLDivElement | null;
+    store.context.chipsContainerRef.value = container;
   }
   ownContainer = container;
 }
