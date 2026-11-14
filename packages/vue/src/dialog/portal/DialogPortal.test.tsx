@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { shallowRef } from 'vue';
+import { h, shallowRef } from 'vue';
+import type { Component } from 'vue';
 import {
   createRenderer,
   describeConformance,
@@ -19,11 +20,14 @@ import DialogPortalHydration from './DialogPortalHydration.test.vue';
 
 const INTERNAL_BACKDROP_SELECTOR = '[data-vase-ui-inert]';
 
+type RenderSlotProps = { props: Record<string, unknown>; children: Component };
+
 describe('<Dialog.Portal />', () => {
   const { render } = createRenderer();
 
   describeConformance(<Dialog.Portal />, () => ({
     refInstanceof: window.HTMLDivElement,
+    childrenSelector: INTERNAL_BACKDROP_SELECTOR,
     render(node) {
       return render(<Dialog.Root open>{node}</Dialog.Root>);
     },
@@ -77,6 +81,39 @@ describe('<Dialog.Portal />', () => {
         );
 
         const backdrop = screen.getByTestId('portal').querySelector(INTERNAL_BACKDROP_SELECTOR);
+        expect(backdrop !== null).toBe(hasBackdrop);
+        expect(screen.getByRole('dialog').previousElementSibling).toBe(backdrop);
+        expect(store.context.internalBackdropRef.value).toBe(backdrop);
+      },
+    );
+
+    it.each([
+      { name: 'modal true', modal: true, hasBackdrop: true },
+      { name: 'modal false', modal: false, hasBackdrop: false },
+    ])(
+      'renders it before the content in the element of the #render slot, only for a modal dialog: $name',
+      async ({ modal, hasBackdrop }) => {
+        let store!: DialogStore<unknown>;
+        await render(
+          <Dialog.Root defaultOpen modal={modal}>
+            <DialogStoreProbe onStore={(value) => (store = value)} />
+            <Dialog.Portal
+              v-slots={{
+                render: ({ props, children }: RenderSlotProps) => (
+                  <section {...props} data-testid="portal">
+                    {h(children, null, () => (
+                      <DialogPopupPart />
+                    ))}
+                  </section>
+                ),
+              }}
+            />
+          </Dialog.Root>,
+        );
+
+        const portal = screen.getByTestId('portal');
+        const backdrop = portal.querySelector(INTERNAL_BACKDROP_SELECTOR);
+        expect(portal.localName).toBe('section');
         expect(backdrop !== null).toBe(hasBackdrop);
         expect(screen.getByRole('dialog').previousElementSibling).toBe(backdrop);
         expect(store.context.internalBackdropRef.value).toBe(backdrop);

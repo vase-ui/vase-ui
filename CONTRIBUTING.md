@@ -819,8 +819,8 @@ The portal of a popup is in `src/utils/popups/portal`. `useFloatingPortalNode()`
 - The portal restores those elements when the focus comes back from outside, and when the popup opens. Until then, the Tab key skips them, and it enters the popup only through a guard.
 - The portal part of a family, such as `Dialog.Portal`, renders `FloatingPortal` or `FloatingPortalLite`, as Base UI does, and no element of its own. It follows the rules for a part that Base UI writes as another part. See [Parts that render an element](#parts-that-render-an-element).
 - That part renders nothing while the popup is not mounted, unless its `keepMounted` prop is `true`. It provides `keepMounted` to the parts in it.
-- `Dialog.Portal` gives `FloatingPortal` a default slot that renders `InternalBackdrop.vue` before the default slot of the consumer, while a dialog with `modal` set to `true` is mounted. The backdrop is `inert` while the dialog closes. The portal writes the element of the backdrop to `internalBackdropRef` of the store context.
-- Under `#render`, `FloatingPortal` does not render its default slot. A dialog whose `Dialog.Portal` has a `#render` slot thus has no internal backdrop.
+- `Dialog.Portal` gives `FloatingPortal` a default slot that renders `DialogPortalChildren.vue`. That component renders `InternalBackdrop.vue` before the default slot of the consumer, while a dialog with `modal` set to `true` is mounted. The backdrop is `inert` while the dialog closes. `DialogPortalChildren.vue` writes the element of the backdrop to `internalBackdropRef` of the store context.
+- The `#render` slot of `FloatingPortal` gets `children`. The component is `FloatingPortalChildren.vue`, which renders only its default slot. A portal part that has nodes of its own gives its own component: `Dialog.Portal` gives `DialogPortalChildren.vue`. See [Parts with nodes of their own](#parts-with-nodes-of-their-own).
 
 ### Popup interactions
 

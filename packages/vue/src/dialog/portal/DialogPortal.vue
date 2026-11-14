@@ -22,11 +22,12 @@ export interface DialogPortalProps
 </script>
 
 <script setup lang="ts">
-import { computed, onScopeDispose, provide, useTemplateRef, watch } from 'vue';
-import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import InternalBackdrop from '../../utils/popups/InternalBackdrop.vue';
+import { computed, provide, useTemplateRef } from 'vue';
+import type { Component } from 'vue';
+import type { HTMLProps } from '../../internals/types';
 import FloatingPortal from '../../utils/popups/portal/FloatingPortal.vue';
 import { useDialogRootContext } from '../root/DialogRootContext';
+import DialogPortalChildren from './DialogPortalChildren.vue';
 import { DialogPortalContext } from './DialogPortalContext';
 
 defineOptions({ inheritAttrs: false });
@@ -35,14 +36,12 @@ const props = withDefaults(defineProps<DialogPortalProps>(), { as: 'div', keepMo
 
 defineSlots<{
   default(props: { state: DialogPortalState }): unknown;
-  render: ComponentRenderFn<HTMLProps, DialogPortalState>;
+  render(props: { props: HTMLProps; state: DialogPortalState; children: Component }): unknown;
 }>();
 
 const store = useDialogRootContext();
 
 const mounted = computed(() => store.select('mounted'));
-const modal = computed(() => store.select('modal'));
-const open = computed(() => store.select('open'));
 
 provide(
   DialogPortalContext,
@@ -58,43 +57,16 @@ const portalProps = computed(() => {
 const portal = useTemplateRef('portal');
 const element = computed(() => portal.value?.element ?? null);
 
-const internalBackdrop = useTemplateRef('internalBackdrop');
-let internalBackdropElement: HTMLDivElement | null = null;
-
-function releaseInternalBackdrop() {
-  const internalBackdropRef = store.context.internalBackdropRef;
-  if (internalBackdropElement !== null && internalBackdropRef.value === internalBackdropElement) {
-    internalBackdropRef.value = null;
-  }
-  internalBackdropElement = null;
-}
-
-watch(
-  () => internalBackdrop.value?.element ?? null,
-  (backdrop) => {
-    releaseInternalBackdrop();
-    if (backdrop) {
-      internalBackdropElement = backdrop;
-      store.context.internalBackdropRef.value = backdrop;
-    }
-  },
-  { flush: 'sync' },
-);
-
-// Vue stops the watcher before it unmounts the backdrop with the portal.
-onScopeDispose(releaseInternalBackdrop);
-
 defineExpose({ element });
 </script>
 
 <template>
   <FloatingPortal v-if="mounted || keepMounted" ref="portal" v-bind="{ ...$attrs, ...portalProps }">
     <template v-if="$slots.render" #render="slotProps">
-      <slot name="render" v-bind="slotProps" />
+      <slot name="render" v-bind="slotProps" :children="DialogPortalChildren" />
     </template>
     <template #default="slotProps">
-      <InternalBackdrop v-if="mounted && modal === true" ref="internalBackdrop" :inert="!open" />
-      <slot v-bind="slotProps" />
+      <DialogPortalChildren><slot v-bind="slotProps" /></DialogPortalChildren>
     </template>
   </FloatingPortal>
 </template>

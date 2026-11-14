@@ -1,7 +1,7 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { defineComponent, KeepAlive, nextTick, shallowRef } from 'vue';
-import type { VNode } from 'vue';
+import { defineComponent, h, KeepAlive, nextTick, shallowRef } from 'vue';
+import type { Component, VNode } from 'vue';
 import { createRenderer, describeConformance, hydrate, renderOnServer, screen } from '#test-utils';
 import FocusManagerPart from '../../../../test/fixtures/FocusManagerPart.vue';
 import { REASONS } from '../../../internals/reasons';
@@ -13,7 +13,7 @@ import FloatingPortalHydration from './FloatingPortalHydration.test.vue';
 
 const HYDRATION_FILE = 'src/utils/popups/portal/FloatingPortalHydration.test.vue';
 
-type RenderSlotProps = { props: Record<string, unknown> };
+type RenderSlotProps = { props: Record<string, unknown>; children: Component };
 
 // The elements that the portal renders in the place of the part, in document order. The owner
 // element is the `span` that is not a guard. The portal element is in the container, so it is not
@@ -327,9 +327,11 @@ describe('FloatingPortal', () => {
           create: () => (
             <FloatingPortal
               v-slots={{
-                render: ({ props }: RenderSlotProps) => (
+                render: ({ props, children }: RenderSlotProps) => (
                   <div {...props} id="rendered-portal" data-testid="portal">
-                    <FocusManagerPart />
+                    {h(children, null, () => (
+                      <FocusManagerPart />
+                    ))}
                   </div>
                 ),
               }}
@@ -369,9 +371,11 @@ describe('FloatingPortal', () => {
           <div data-testid="host">
             <FloatingPortal
               v-slots={{
-                render: ({ props }: RenderSlotProps) => (
+                render: ({ props, children }: RenderSlotProps) => (
                   <div {...props} id={undefined}>
-                    <FocusManagerPart />
+                    {h(children, null, () => (
+                      <FocusManagerPart />
+                    ))}
                   </div>
                 ),
               }}
