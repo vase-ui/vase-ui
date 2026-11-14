@@ -3622,7 +3622,7 @@ describe('<NavigationMenu.Root />', () => {
             ),
           ).toBe(true);
 
-          animations.finish();
+          void animations.finish();
           await flushMicrotasks();
 
           await waitFor(() => {
@@ -3776,7 +3776,7 @@ describe('<NavigationMenu.Root />', () => {
           expect(positioner.style.getPropertyValue('--positioner-width')).toBe('500px');
           expect(positioner.style.getPropertyValue('--positioner-height')).toBe('180px');
 
-          animations.finish();
+          void animations.finish();
           await flushMicrotasks();
 
           await waitFor(() => {
