@@ -17,6 +17,8 @@ import SliderThumb from './thumb/SliderThumb.vue';
 import type { SliderThumbProps, SliderThumbState } from './thumb/SliderThumb.vue';
 import SliderTrack from './track/SliderTrack.vue';
 import type { SliderTrackProps, SliderTrackState } from './track/SliderTrack.vue';
+import SliderValue from './value/SliderValue.vue';
+import type { SliderValueProps, SliderValueState } from './value/SliderValue.vue';
 
 /**
  * Groups all parts of the slider.
@@ -41,6 +43,16 @@ export const Label: typeof SliderLabel = SliderLabel;
 export namespace Label {
   export type State = SliderLabelState;
   export type Props = SliderLabelProps;
+}
+
+/**
+ * Displays the current value of the slider as text.
+ * Renders an `<output>` element.
+ */
+export const Value: typeof SliderValue = SliderValue;
+export namespace Value {
+  export type State = SliderValueState;
+  export type Props = SliderValueProps;
 }
 
 /**

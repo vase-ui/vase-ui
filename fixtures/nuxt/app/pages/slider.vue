@@ -17,6 +17,7 @@ const volume = ref(30);
       <form data-testid="form">
         <Slider.Root v-model:value="volume" data-testid="volume" name="volume">
           <Slider.Label data-testid="volume-label">Volume</Slider.Label>
+          <Slider.Value data-testid="volume-value" />
           <Slider.Control data-testid="volume-control" :style="CONTROL_STYLE">
             <Slider.Track :style="TRACK_STYLE">
               <Slider.Indicator data-testid="volume-indicator" />

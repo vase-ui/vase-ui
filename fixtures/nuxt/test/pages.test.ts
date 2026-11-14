@@ -894,7 +894,8 @@ async function readSliderPage(page: Page) {
     return {
       volumeRoot: read(all('volume')[0], ['role', 'aria-labelledby']),
       volumeLabelId: all('volume-label')[0].id,
-      volumeInput: read(input(volumeThumb), ['aria-labelledby', 'aria-valuenow', 'name']),
+      volumeInput: read(input(volumeThumb), ['id', 'aria-labelledby', 'aria-valuenow', 'name']),
+      volumeValue: [all('volume-value')[0].textContent, all('volume-value')[0].getAttribute('for')],
       priceRoot: read(all('price')[0], ['aria-labelledby']),
       priceLabelId: all('price-label')[0].id,
       priceInputs: all('price-thumb').map((thumb) =>
@@ -940,6 +941,8 @@ async function expectSliderPage(page: Page) {
   expect(result.priceRoot['aria-labelledby']).toBe(result.priceLabelId);
   // A thumb that has a name of its own does not use the label.
   expect(result.priceInputs.map((input) => input['aria-labelledby'])).toEqual([null, null]);
+  // The output names the inputs only after the mount, as in Base UI.
+  expect(result.volumeValue).toEqual(['30', null]);
   expect(result.formData).toEqual(['volume=30', 'price=25', 'price=75']);
 }
 
@@ -952,6 +955,7 @@ async function expectHydratedSliderPage(page: Page) {
   ]);
   expect(result.priceIndicator).toEqual(['', '30%', '40%']);
   expect(result.scripts).toEqual([]);
+  expect(result.volumeValue).toEqual(['30', result.volumeInput.id]);
   expect(result.formData).toEqual(['volume=30', 'price=25', 'price=75']);
 }
 
@@ -1517,6 +1521,7 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     await page.keyboard.press('Shift+ArrowRight');
 
     expect(await page.getByTestId('volume-model').textContent()).toBe('41');
+    expect(await page.getByTestId('volume-value').textContent()).toBe('41');
 
     const box = (await page.getByTestId('volume-control').boundingBox())!;
     await page.mouse.click(box.x + box.width * 0.75, box.y + box.height / 2);
