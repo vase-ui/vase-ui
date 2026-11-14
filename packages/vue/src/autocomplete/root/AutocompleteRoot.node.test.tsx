@@ -14,6 +14,11 @@ function mockRuntimeCollatorLocale(locale: string) {
   onTestFinished(() => collatorSpy.mockRestore());
 }
 
+// Vue writes a comment around each fragment and slot.
+function removeComments(html: string) {
+  return html.replace(/<!--.*?-->/g, '');
+}
+
 function getOptions(html: string) {
   return [...html.matchAll(/role="option"[^>]*>([^<]*)</g)].map(([, text]) => text.trim());
 }
@@ -44,7 +49,7 @@ describe('<Autocomplete.Root /> on a server', () => {
 
     expect(getNamedInputs(html)).toEqual([expect.stringContaining('role="combobox"')]);
     expect(getNamedInputs(html)[0]).toContain('value="Oslo"');
-    expect(html).toContain('<span data-testid="value">Oslo</span>');
+    expect(removeComments(html)).toContain('<span data-testid="value">Oslo</span>');
   });
 
   it('gives no named input while the root has no input outside the popup', async () => {

@@ -3,7 +3,7 @@ import { computed, defineComponent, nextTick, shallowRef } from 'vue';
 import { createRenderer, hydrate, renderOnServer, screen, within } from '#test-utils';
 import { getFilter } from '../../../internals/filter';
 import UseFilterProbe from './UseFilterProbe.test.vue';
-import { useComboboxFilter } from './useFilter';
+import { useComboboxFilter, useCoreFilter } from './useFilter';
 import type { Filter } from './useFilter';
 
 // Counts the collators that the test makes. A call with no locale uses `runtimeLocale`.
@@ -204,5 +204,71 @@ describe('VUE-44: filters with en-US until the component is mounted when it has 
     const { container } = await hydrate(UseFilterProbe, { serverHtml, props });
 
     expect(within(container).queryByText('Malmö')).not.toBe(null);
+  });
+});
+
+describe('useCoreFilter', () => {
+  const { render } = createRenderer();
+
+  it('matches the start, the end and a part of an item label', async () => {
+    let filter!: Filter;
+    const TestFilter = defineComponent(() => {
+      filter = useCoreFilter({ locale: 'en' });
+      return () => null;
+    });
+
+    await render(<TestFilter />);
+
+    expect(filter.contains('Crème brûlée', 'BRUL')).toBe(true);
+    expect(filter.contains('Crème brûlée', 'tea')).toBe(false);
+    expect(filter.contains({ label: 'Banana' }, 'nan', (item) => item.label)).toBe(true);
+    expect(filter.startsWith('Éclair', 'ec')).toBe(true);
+    expect(filter.startsWith('Éclair', 'clair')).toBe(false);
+    expect(filter.endsWith('Crème brûlée', 'brulee')).toBe(true);
+    expect(filter.endsWith('Crème brûlée', 'creme')).toBe(false);
+  });
+
+  it('a computed of the consumer follows a change of the locale', async () => {
+    const locale = shallowRef('en');
+
+    const TestFilter = defineComponent(() => {
+      const filter = useCoreFilter(() => ({ locale: locale.value }));
+      const matches = computed(() =>
+        [
+          filter.contains('Malmö', 'malmo'),
+          filter.startsWith('Malmö', 'malmo'),
+          filter.endsWith('Malmö', 'malmo'),
+        ].join(),
+      );
+      return () => <span data-testid="matches">{matches.value}</span>;
+    });
+
+    await render(<TestFilter />);
+
+    expect(screen.getByTestId('matches').textContent).toBe('true,true,true');
+
+    locale.value = 'sv';
+    await nextTick();
+
+    expect(screen.getByTestId('matches').textContent).toBe('false,false,false');
+  });
+
+  it('VUE-44: uses en-US until the component is mounted when it has no locale', async () => {
+    spyOnCollator('sv');
+    const results: boolean[] = [];
+
+    // `caseFirst` keeps the filter of this case apart from the filters for no locale that other
+    // cases of the file keep.
+    const TestFilter = defineComponent(() => {
+      const filter = useCoreFilter({ caseFirst: 'lower' });
+      return () => {
+        results.push(filter.contains('Malmö', 'malmo'));
+        return null;
+      };
+    });
+
+    await render(<TestFilter />);
+
+    expect(results).toEqual([true, false]);
   });
 });
