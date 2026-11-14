@@ -1,0 +1,22 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/drawer/demos",
+  "files": {
+    "hero/css-modules/index.module.css": "9eeb84dbfaca0f316dc71adbf3f1f471370ceab4bce4ba0c6002a33fce2e08e0",
+    "hero/css-modules/index.tsx": "41ba160eb9b7b1f5b75a40707cda73c73f796a39671811540e6882b4459ef0bd",
+    "indent-provider/css-modules/index.module.css": "d0547681c185bfc1dc103173d296bc02861d6ca3ba39efeb7f65cb7f59a691f5",
+    "indent-provider/css-modules/index.tsx": "af994e070f911c5dacf6857699fb16945e616d1355fc46edd77cafae687a0d4a",
+    "nested/css-modules/index.module.css": "5855c344191f4674b5c9c81f92f9c3cb05f12410cc32bd8fc29c4992ee2a44f4",
+    "nested/css-modules/index.tsx": "9e9f86c40cb3aea0667e0dd8da5dd3a91de63128f01e48e5a248c707d4b9b8bf",
+    "non-modal/css-modules/index.module.css": "2a135e71a0fe5ccca0b5d9ac0e8a039a9463eac849d4335ddeb157f08adf2269",
+    "non-modal/css-modules/index.tsx": "04ad25a3dffea8c7d5ce50c6a8abe889006218e57d83b1b3aaf76dcfdf065e81",
+    "position/css-modules/index.module.css": "24f9214a08bcc6472601f5139b7d960a2591737dc4b31689cec3ccf174be2f99",
+    "position/css-modules/index.tsx": "952ba5dde328cd84218b683ddf0c13839f098bdc025a5791d1cda26772294202",
+    "snap-points/css-modules/index.module.css": "8b8cce21f4190b81b1e430cca26c6a7ba791b70d43c068cb9589ac2373c2103f",
+    "snap-points/css-modules/index.tsx": "4f97445c9d558e1273107af9de2ac557609374ed01f70a4e9b4cea0d60f18a1c",
+    "swipe-area/css-modules/index.module.css": "1e97362bf16ceef6aebe075c43bb8e9a264b11aeb98a29000799cca9fccdb6bf",
+    "swipe-area/css-modules/index.tsx": "47d3835310cf6a078800ce64317dce45f2556d527d326e62a44865a6425fb4fa",
+    "virtual-keyboard-aware/css-modules/index.module.css": "f6913b4f52df3ea507731f8c5a21d8fde1e337f8296060e14787bf7e1c2390e0",
+    "virtual-keyboard-aware/css-modules/index.tsx": "dddae1aea9004e374d8b6ff3f09390336205bd880850d2b2f68112faafea59b7"
+  }
+}
