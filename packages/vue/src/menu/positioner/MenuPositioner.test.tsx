@@ -1,5 +1,5 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import { defineComponent, shallowRef, toValue } from 'vue';
+import { KeepAlive, Teleport, computed, defineComponent, nextTick, shallowRef, toValue } from 'vue';
 import type { FunctionalComponent } from 'vue';
 import { Menubar } from '@vase-ui/vue/menubar';
 import * as Menu from '../index.parts';
@@ -21,11 +21,20 @@ import {
   createMenubarContext,
 } from '../../../test/fixtures/MenuParentFixture';
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
+import {
+  HIDDEN_SCROLLBARS_CSS,
+  createScrollDocument,
+  getScrollLockRegistry,
+  isPageLocked,
+} from '../../../test/fixtures/scrollDocument';
+import type { ScrollDocument } from '../../../test/fixtures/scrollDocument';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
 import { DROPDOWN_COLLISION_AVOIDANCE, POPUP_COLLISION_AVOIDANCE } from '../../internals/constants';
+import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import type { UseAnchorPositioningParameters } from '../../internals/useAnchorPositioning';
 import { REASONS } from '../../internals/reasons';
 import { provideFloatingNode, useFloatingParentNodeId } from '../../utils/popups/tree/FloatingTree';
+import MenuPositionerScoped from './MenuPositionerScoped.test.vue';
 
 const useAnchorPositioningSpy = vi.hoisted(() => vi.fn());
 
@@ -674,6 +683,159 @@ describe('<Menu.Positioner />', () => {
 
     expect(screen.getByTestId('positioner')).toHaveAttribute('data-instant', 'dismiss');
     expect(screen.getByTestId('popup')).toHaveAttribute('data-instant', 'dismiss');
+  });
+
+  describe('scroll lock', () => {
+    // The lock and the unlock each wait for a timer of 0 ms. The observers of `waitFor` do not see a
+    // document in a frame, so it polls.
+    const POLL = { interval: 5, timeout: 3000 };
+
+    function lockCount() {
+      return getScrollLockRegistry()?.lockCount ?? 0;
+    }
+
+    // The trigger and the portal are in the document of a frame, so the lock changes no style of
+    // the test page.
+    function createMenu(
+      page: ScrollDocument,
+      { root = {}, positioner = {} }: { root?: object; positioner?: object } = {},
+    ) {
+      const probe = createMenuStoreProbe();
+      const handle = Menu.createHandle();
+      const ModalMenu = defineComponent({
+        name: 'ModalMenu',
+        setup: () => () => (
+          <Menu.Root handle={handle} {...root}>
+            <probe.Probe />
+            <Teleport to={page.body}>
+              <Menu.Trigger id="trigger">Open</Menu.Trigger>
+            </Teleport>
+            <Menu.Portal container={page.body}>
+              <Menu.Positioner {...positioner}>
+                <Menu.Popup />
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        ),
+      });
+      return { probe, handle, ModalMenu };
+    }
+
+    it('locks the page while a modal menu is open, and unlocks it when the menu closes', async () => {
+      const page = await createScrollDocument();
+      const { handle, ModalMenu } = createMenu(page);
+      await render(<ModalMenu />);
+
+      handle.open('trigger');
+      await waitFor(() => expect(isPageLocked(page)).toBe(true), POLL);
+
+      handle.close();
+      await waitFor(() => expect(isPageLocked(page)).toBe(false), POLL);
+      expect(lockCount()).toBe(0);
+    });
+
+    it.each([
+      { name: 'modal false', root: { modal: false }, reason: REASONS.triggerPress },
+      { name: 'a hover open', root: {}, reason: REASONS.triggerHover },
+    ])('does not lock the page for $name', async ({ root, reason }) => {
+      const page = await createScrollDocument();
+      const { probe, ModalMenu } = createMenu(page, { root });
+      await render(<ModalMenu />);
+
+      const trigger = page.doc.getElementById('trigger')!;
+      probe.store.setOpen(
+        true,
+        createChangeEventDetails(reason, new MouseEvent('mousedown'), trigger),
+      );
+      await flushMicrotasks();
+
+      expect(probe.store.select('open')).toBe(true);
+      expect(lockCount()).toBe(0);
+    });
+
+    it.each([
+      { name: 'as wide as the viewport', width: 'calc(100vw - 10px)', locks: 1 },
+      { name: 'narrower than the viewport', width: '240px', locks: 0 },
+    ])('locks the page for a touch open only when the popup is $name', async ({ width, locks }) => {
+      const page = await createScrollDocument({ css: HIDDEN_SCROLLBARS_CSS });
+      const { probe, handle, ModalMenu } = createMenu(page, { positioner: { style: { width } } });
+      await render(<ModalMenu />);
+      probe.store.set('openMethod', 'touch');
+
+      handle.open('trigger');
+      await flushMicrotasks();
+
+      expect(probe.store.select('positionerElement')).not.toBe(null);
+      expect(lockCount()).toBe(locks);
+    });
+
+    // A trigger in a menubar is an item of the composite of the menubar. The menu thus opens from
+    // its store, with an element of the frame as the trigger.
+    it.each([
+      { name: 'a modal menubar', modal: true, locks: 1 },
+      { name: 'a menubar that is not modal', modal: false, locks: 0 },
+    ])('follows the modal state of $name', async ({ modal, locks }) => {
+      const page = await createScrollDocument();
+      const probe = createMenuStoreProbe();
+      await render(
+        <MenubarProvider context={createMenubarContext({ modal: computed(() => modal) })}>
+          <Menu.Root>
+            <probe.Probe />
+            <Menu.Portal container={page.body}>
+              <Menu.Positioner>
+                <Menu.Popup />
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </MenubarProvider>,
+      );
+
+      probe.store.setOpen(
+        true,
+        createChangeEventDetails(REASONS.triggerPress, undefined, page.reference),
+      );
+      await flushMicrotasks();
+
+      expect(probe.store.select('modal')).toBe(false);
+      expect(lockCount()).toBe(locks);
+    });
+
+    it('VUE-5: releases the lock while KeepAlive holds the menu, and takes it back after', async () => {
+      const page = await createScrollDocument();
+      const show = shallowRef(true);
+      const { ModalMenu } = createMenu(page, {
+        root: { defaultOpen: true, defaultTriggerId: 'trigger' },
+      });
+      const Other = defineComponent({ name: 'Other', setup: () => () => <p>other</p> });
+      await render(() => (
+        <KeepAlive>{show.value ? <ModalMenu key="menu" /> : <Other key="other" />}</KeepAlive>
+      ));
+      await waitFor(() => expect(isPageLocked(page)).toBe(true), POLL);
+
+      show.value = false;
+      await waitFor(() => expect(isPageLocked(page)).toBe(false), POLL);
+
+      show.value = true;
+      await waitFor(() => expect(isPageLocked(page)).toBe(true), POLL);
+    });
+  });
+
+  describe('VUE-61: the positioner of a modal menu has one root node', () => {
+    it('gives the scope id, v-show and a custom directive of the consumer to the positioner', async () => {
+      const shown = shallowRef(true);
+      await render(() => <MenuPositionerScoped shown={shown.value} />);
+      const positioner = screen.getByTestId('positioner');
+
+      expect(positioner.previousElementSibling).toHaveAttribute('role', 'presentation');
+      expect(getComputedStyle(positioner).outlineStyle).toBe('dashed');
+      expect(positioner).toHaveAttribute('data-mark', 'marked');
+      expect(positioner.style.display).not.toBe('none');
+
+      shown.value = false;
+      await nextTick();
+
+      expect(positioner.style.display).toBe('none');
+    });
   });
 
   const triggerStyle = { width: '72px', height: '36px' };
