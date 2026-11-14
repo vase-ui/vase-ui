@@ -1,0 +1,17 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/checkbox-group/demos",
+  "files": {
+    "hero/css-modules/index.module.css": "cacf490276c318569c5ec2c64888a3aaa63a25cfedc7a4568a1a064a5ec88d73",
+    "hero/css-modules/index.tsx": "549ecbcbf2580d05ba1361b1381a05c5cd7647eb2474c403a32ad27c15935649",
+    "nested/css-modules/index.module.css": "cacf490276c318569c5ec2c64888a3aaa63a25cfedc7a4568a1a064a5ec88d73",
+    "nested/css-modules/index.tsx": "c3b7f9a4a7f31316520662b96afeb4e82353fd4d6c1d38fbf450229320439753",
+    "parent/css-modules/index.module.css": "cacf490276c318569c5ec2c64888a3aaa63a25cfedc7a4568a1a064a5ec88d73",
+    "parent/css-modules/index.tsx": "3ceb80b4efb7bdd274c4ff4b1f7875488b00226612258de1c3cc2343c7a34718"
+  },
+  "entryPoints": {
+    "hero": ["checkbox"],
+    "nested": ["checkbox"],
+    "parent": ["checkbox"]
+  }
+}
