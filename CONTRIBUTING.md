@@ -1435,7 +1435,7 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 - A module namespace is read-only. A test that must change a flag of `platform` mocks the module, as `utils/popups/event.test.ts` does.
 - Vue calls a function ref again on each patch. A case that asserts the calls of a ref gives the ref to `useRenderElement`, which calls it only when the element changes.
 - Where Base UI polls a state that exists only while an animation runs, a ported case can record that state in a listener. It can also set `VASE_UI_ANIMATIONS_DISABLED` to `false`. The titles stay. See [Test rules](#test-rules).
-- Vitest fakes `requestAnimationFrame` with the other timers. Under fake timers with `VASE_UI_ANIMATIONS_DISABLED` set to `false`, a part thus stays in its exit until the test moves the clock. A jsdom case that asserts a part in its exit uses this.
+- Vitest fakes `requestAnimationFrame` with the other timers. With fake timers and `VASE_UI_ANIMATIONS_DISABLED` set to `false`, a closed part stays in its exit until the test moves the clock. A ported jsdom case that asserts a part in its exit thus sets the flag to `false`. With `true`, the part leaves at once.
 
 ### Test helpers
 
