@@ -663,7 +663,7 @@ A popup tree holds one node for each popup below one root. The code is in `src/u
 - The nodes are in the order of those hooks: a node comes before the nodes below it. In Base UI, it comes after them. Find a node by its id. Do not use its position in the list.
 - `nodesRef` is a `shallowRef`. The tree gives it a new array for each node that it adds or removes.
 - `parentId` of a node gives the id that the part above provides at the time of the read. When that id changes, the node keeps its place and its `context`.
-- `KeepAlive` leaves a node in its place. While the part of the node is deactivated, the `context` of the node is `undefined`. `getNodeChildren` then does not count the node as open.
+- `KeepAlive` leaves a node in its place. While the part of the node is deactivated, the `context` of the node is `undefined`. `getNodeChildren` then does not count the node as open. `removeNodeContext(node, context)` still removes the context of a popup that leaves the node. It keeps the context of another popup.
 
 ### Popup positioning
 

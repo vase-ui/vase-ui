@@ -6,6 +6,7 @@ import type { FloatingNodeType, FloatingTreeType, PopupPositioningContext } from
 import {
   provideFloatingNode,
   provideFloatingTree,
+  removeNodeContext,
   useFloatingNodeId,
   useFloatingParentNodeId,
   useFloatingTree,
@@ -190,6 +191,38 @@ describe('FloatingTree', () => {
 
     expect(namesOf(tree.nodesRef.value)).toEqual(order);
     expect(openNodesBelowTop()).toEqual(['before', 'parent', 'child', 'after']);
+  });
+
+  it('removes a context from a node only when the node holds it, also while its part is deactivated', async () => {
+    const tree = new FloatingTreeStore();
+    const another = { open: true } as PopupPositioningContext;
+    const plain: FloatingNodeType = { id: 'plain', parentId: null, context: OPEN_CONTEXT };
+    const showPart = shallowRef(true);
+    await render(() => (
+      <TreeScope tree={tree}>
+        <KeepAlive>
+          {showPart.value ? <NodePart key="part" name="part" /> : <span key="other" />}
+        </KeepAlive>
+      </TreeScope>
+    ));
+    const [kept] = tree.nodesRef.value;
+    expect(kept.context).toBe(OPEN_CONTEXT);
+
+    showPart.value = false;
+    await nextTick();
+    removeNodeContext(kept, another);
+    removeNodeContext(plain, another);
+    showPart.value = true;
+    await nextTick();
+    expect([kept.context, plain.context]).toEqual([OPEN_CONTEXT, OPEN_CONTEXT]);
+
+    showPart.value = false;
+    await nextTick();
+    removeNodeContext(kept, OPEN_CONTEXT);
+    removeNodeContext(plain, OPEN_CONTEXT);
+    showPart.value = true;
+    await nextTick();
+    expect([kept.context, plain.context]).toEqual([undefined, undefined]);
   });
 
   it('gives a node the parent id that the part above provides at the time of the read', async () => {
