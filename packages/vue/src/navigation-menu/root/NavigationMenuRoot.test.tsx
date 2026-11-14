@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import type { TextDirection } from '@vase-ui/vue/direction-provider';
+import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import type { HTMLProps } from '@vase-ui/vue/types';
 import {
   createRenderer,
@@ -17,7 +18,6 @@ import {
   within,
 } from '#test-utils';
 import { PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
-import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { OPEN_DELAY } from '../utils/constants';
 import NavigationMenuRootHydration from './NavigationMenuRootHydration.test.vue';
 import { useNavigationMenuRootContext } from './NavigationMenuRootContext';
