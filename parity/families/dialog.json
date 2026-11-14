@@ -46,13 +46,6 @@
     },
     {
       "upstream": "packages/react/src/dialog/root/DialogRoot.detached-triggers.test.tsx",
-      "describe": ["<Dialog.Root />", "handle-backed root ownership"],
-      "title": "does not attach a replacement root store from an abandoned transition render",
-      "kind": "not-applicable",
-      "reason": "The case tests a render that React starts with `startTransition` and drops. Vue has no `startTransition`. In the nearest Vue form, a second root with the same handle in a pending `<Suspense>` branch attaches its store in `onBeforeMount`. Until Vue resolves or drops the branch, `handle.isOpen` and the trigger read that store."
-    },
-    {
-      "upstream": "packages/react/src/dialog/root/DialogRoot.detached-triggers.test.tsx",
       "describe": [
         "<Dialog.Root />",
         "handle-backed root ownership",
