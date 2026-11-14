@@ -13,6 +13,7 @@ import {
   screen,
   takeReportedMessages,
   waitFor,
+  waitForLaterMillisecond,
   within,
 } from '#test-utils';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
@@ -182,6 +183,7 @@ describe('<AlertDialog.Root />', () => {
 
     async function openAndClose() {
       await user.click(trigger);
+      await waitForLaterMillisecond();
       expect(await screen.findByTestId('popup')).not.toBe(null);
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
       await user.click(screen.getByRole('button', { name: 'Close' }));
@@ -265,6 +267,7 @@ describe('<AlertDialog.Root />', () => {
 
       const trigger = screen.getByRole('button', { name: 'Open' });
       await user.click(trigger);
+      await waitForLaterMillisecond();
 
       await screen.findByRole('alertdialog');
       expect(trigger).toHaveAttribute('data-popup-open');
@@ -316,6 +319,7 @@ describe('<AlertDialog.Root />', () => {
       const trigger = screen.getByRole('button', { name: 'Trigger' });
 
       await user.click(trigger);
+      await waitForLaterMillisecond();
 
       let popup = await screen.findByRole('alertdialog');
       expect(trigger.getAttribute('aria-controls')).toBe(popup.getAttribute('id'));
