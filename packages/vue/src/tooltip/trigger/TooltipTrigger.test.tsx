@@ -1,14 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { KeepAlive, defineComponent, h, shallowRef } from 'vue';
+import { Toolbar } from '@vase-ui/vue/toolbar';
 import * as Tooltip from '../index.parts';
 import {
   createRenderer,
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  isJSDOM,
   screen,
   takeReportedMessages,
 } from '#test-utils';
+import type { HTMLProps } from '../../internals/types';
 import { OPEN_DELAY } from '../utils/constants';
 
 describe('<Tooltip.Trigger />', () => {
@@ -178,6 +181,119 @@ describe('<Tooltip.Trigger />', () => {
     ]);
     expect(screen.getByRole('button', { name: 'Trigger' })).not.toHaveAttribute('data-popup-open');
   });
+
+  it('removes `data-popup-open` as soon as `open` becomes false', async () => {
+    const open = shallowRef(false);
+    const TooltipWithPreventedUnmount = defineComponent({
+      setup: () => () => (
+        <Tooltip.Root
+          open={open.value}
+          onOpenChange={(nextOpen: boolean, eventDetails: Tooltip.Root.ChangeEventDetails) => {
+            if (!nextOpen) {
+              eventDetails.preventUnmountOnClose();
+            }
+            open.value = nextOpen;
+          }}
+        >
+          <Tooltip.Trigger
+            data-testid="trigger"
+            delay={0}
+            closeDelay={0}
+            style={{ pointerEvents: 'none' }}
+          >
+            Trigger
+          </Tooltip.Trigger>
+          <Tooltip.Portal>
+            <Tooltip.Positioner>
+              <Tooltip.Popup>Content</Tooltip.Popup>
+            </Tooltip.Positioner>
+          </Tooltip.Portal>
+        </Tooltip.Root>
+      ),
+    });
+
+    await render(<TooltipWithPreventedUnmount />);
+    const trigger = screen.getByTestId('trigger');
+
+    await fireEvent.mouseEnter(trigger);
+    await fireEvent.mouseMove(trigger);
+    await flushMicrotasks();
+    expect(trigger).toHaveAttribute('data-popup-open');
+    expect(screen.getByText('Content')).not.toBe(null);
+
+    await fireEvent.mouseLeave(trigger);
+    await flushMicrotasks();
+    expect(trigger).not.toHaveAttribute('data-popup-open');
+    expect(screen.getByText('Content')).not.toBe(null);
+  });
+
+  it('opens when the rendered trigger element has its own id', async () => {
+    const { user } = await render(
+      <Tooltip.Root>
+        <Tooltip.Trigger
+          delay={0}
+          closeDelay={0}
+          v-slots={{
+            render: ({ props }: { props: HTMLProps }) => (
+              <button {...props} id="custom-button" data-testid="trigger" type="button">
+                Trigger
+              </button>
+            ),
+          }}
+        />
+        <Tooltip.Portal>
+          <Tooltip.Positioner>
+            <Tooltip.Popup data-testid="popup">Content</Tooltip.Popup>
+          </Tooltip.Positioner>
+        </Tooltip.Portal>
+      </Tooltip.Root>,
+    );
+
+    const trigger = screen.getByTestId('trigger');
+
+    expect(trigger).toHaveAttribute('id', 'custom-button');
+
+    await user.hover(trigger);
+
+    await screen.findByTestId('popup');
+    expect(trigger).toHaveAttribute('data-popup-open');
+  });
+
+  it.skipIf(isJSDOM)(
+    'opens on delayed hover when rendered as a disabled toolbar button',
+    async () => {
+      const { user } = await render(
+        <Toolbar.Root>
+          <Tooltip.Root>
+            <Tooltip.Trigger
+              delay={20}
+              v-slots={{
+                render: ({ props }: { props: HTMLProps }) => (
+                  <Toolbar.Button {...props} disabled data-testid="trigger">
+                    Push
+                  </Toolbar.Button>
+                ),
+              }}
+            />
+            <Tooltip.Portal>
+              <Tooltip.Positioner>
+                <Tooltip.Popup data-testid="popup">Nothing to push</Tooltip.Popup>
+              </Tooltip.Positioner>
+            </Tooltip.Portal>
+          </Tooltip.Root>
+        </Toolbar.Root>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+
+      expect(trigger).not.toHaveAttribute('disabled');
+      expect(trigger).toHaveAttribute('aria-disabled', 'true');
+
+      await user.hover(trigger);
+
+      await screen.findByTestId('popup');
+    },
+  );
 
   it('throws a descriptive error when rendered without a root or a handle', async () => {
     await expect(render(<Tooltip.Trigger>Trigger</Tooltip.Trigger>)).rejects.toThrow(
