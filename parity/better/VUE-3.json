@@ -1,6 +1,9 @@
 {
   "id": "VUE-3",
-  "evidence": ["https://github.com/mui/base-ui/issues/5821"],
-  "behavior": "The server HTML of a panel with `hiddenUntilFound` has `hidden=\"until-found\"`.",
+  "evidence": [
+    "https://github.com/mui/base-ui/issues/5821",
+    "https://github.com/vuejs/core/pull/13125"
+  ],
+  "behavior": "With Vue 3.5.41 or later on the server, the server HTML of a closed panel with `hiddenUntilFound` has `hidden=\"until-found\"`. A server with an earlier Vue writes a bare `hidden`, and the part writes `hidden=\"until-found\"` to the element at mount.",
   "dueWith": "packages/react/src/collapsible/panel/CollapsiblePanel.tsx"
 }
