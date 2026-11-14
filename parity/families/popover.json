@@ -6,13 +6,6 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/popover/root/PopoverRoot.test.tsx",
-      "describe": ["<Popover.Root />"],
-      "title": "keeps the popover open when Escape closes a nested dialog after a backdrop press",
-      "kind": "not-applicable",
-      "reason": "React sends the press of a portal up the React tree, so the popover counts a press on the backdrop of the nested dialog as inside. A Vue press goes up the DOM only. Vase UI counts a press in a child popup as inside through the capture listeners of the popup element of the child, and `Dialog.Backdrop` has no such listeners. The portal of the dialog puts the backdrop outside the popup of the popover, so a press on it closes the popover."
-    },
-    {
       "upstream": "packages/react/src/popover/root/PopoverRoot.detached-triggers.test.tsx",
       "describe": ["<Popover.Root />"],
       "title": "hands off hover between detached triggers when the rendered component retains a stale ref",
