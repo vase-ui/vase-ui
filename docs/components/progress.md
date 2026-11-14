@@ -31,6 +31,8 @@ Import the component and assemble its parts:
 
 <<< ./progress/Anatomy.vue
 
+In the server HTML, the root already has the id of `Progress.Label` in `aria-labelledby`, when the label has no `id` prop. A label that has an `id` prop names the root only after the root is mounted. To name the root in the server HTML too, give the root an `aria-labelledby` with that id. A root with no label has an `aria-labelledby` with an id that no element has, until the root is mounted. Give such a root an `aria-label`, and the server HTML has no `aria-labelledby`.
+
 ## API reference
 
 <ApiReference />
