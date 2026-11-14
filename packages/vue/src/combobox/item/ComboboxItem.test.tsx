@@ -1,5 +1,7 @@
 import { expect, vi, describe, it, onTestFinished } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
+import { Autocomplete } from '@vase-ui/vue/autocomplete';
+import { Combobox } from '@vase-ui/vue/combobox';
 import {
   createRenderer,
   describeConformance,
@@ -10,8 +12,6 @@ import {
   waitFor,
 } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
-import * as Autocomplete from '../../autocomplete/index.parts';
-import * as Combobox from '../index.parts';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
 import ComboboxItemRenders from './ComboboxItemRenders.test.vue';
 

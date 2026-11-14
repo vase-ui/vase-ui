@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import * as Combobox from '../index.parts';
+import { Combobox } from '@vase-ui/vue/combobox';
 
 // A compiled template, as in an app. The `#item` slot runs on each render of the list.
 defineProps<{ items: string[]; onItemRender: (item: string) => void }>();

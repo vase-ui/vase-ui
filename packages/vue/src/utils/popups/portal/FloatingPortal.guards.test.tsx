@@ -111,6 +111,24 @@ describe('FloatingPortal', () => {
       expect(listPlaceOfPortal(screen.getByTestId('host'))).toEqual([]);
     });
 
+    it('renders the owner element and no guards while the focus manager has a next focusable element, and the guards again when it has none', async () => {
+      const nextFocusableElement = shallowRef<HTMLElement | null>(appendUntabbableReference());
+      await render(() => (
+        <div data-testid="host">
+          <FloatingPortal>
+            <FocusManagerPart nextFocusableElement={nextFocusableElement.value} />
+          </FloatingPortal>
+        </div>
+      ));
+      const host = screen.getByTestId('host');
+      expect(listPlaceOfPortal(host)).toEqual(['owner']);
+
+      nextFocusableElement.value = null;
+      await nextTick();
+
+      expect(listPlaceOfPortal(host)).toEqual(['guard outside', 'owner', 'guard outside']);
+    });
+
     it('sends the Tab key from the trigger to the first field of the popup, and Shift+Tab from the next field to the last one', async () => {
       await render(
         <div>

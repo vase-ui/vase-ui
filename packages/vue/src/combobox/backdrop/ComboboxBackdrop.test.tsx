@@ -1,6 +1,6 @@
 import { describe } from 'vitest';
+import { Combobox } from '@vase-ui/vue/combobox';
 import { createRenderer, describeConformance, flushMicrotasks } from '#test-utils';
-import * as Combobox from '../index.parts';
 
 describe('<Combobox.Backdrop />', () => {
   const { render } = createRenderer();

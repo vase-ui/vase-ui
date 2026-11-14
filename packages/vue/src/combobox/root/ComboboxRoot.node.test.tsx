@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { renderToString } from 'vue/server-renderer';
+import { Autocomplete } from '@vase-ui/vue/autocomplete';
+import { Combobox } from '@vase-ui/vue/combobox';
 import ComboboxInputPart from '../../../test/fixtures/ComboboxInputPart.vue';
 import ComboboxListPart from '../../../test/fixtures/ComboboxListPart.vue';
-import * as Autocomplete from '../../autocomplete/index.parts';
-import * as Combobox from '../index.parts';
 
 // Vue writes a comment around each fragment and slot. The style of a hidden input is long.
 function normalize(html: string) {

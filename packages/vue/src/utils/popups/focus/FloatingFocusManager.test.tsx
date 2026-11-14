@@ -874,6 +874,16 @@ describe('FloatingFocusManager', () => {
       await fireEvent.click(screen.getByTestId('reference'));
       expect(guardRef.value).toBe(null);
     });
+
+    it('writes the last guard to afterContentFocusGuardRef, and clears it at the unmount', async () => {
+      const guardRef: ShallowRef<HTMLSpanElement | null> = shallowRef(null);
+      await renderPortalPopup({ afterContentFocusGuardRef: guardRef });
+
+      expect(guardRef.value).toBe(getInsideGuards()[1]);
+
+      await fireEvent.click(screen.getByTestId('reference'));
+      expect(guardRef.value).toBe(null);
+    });
   });
 
   describe('two focus managers in one portal', () => {
@@ -886,11 +896,17 @@ describe('FloatingFocusManager', () => {
         },
       });
       const guardRef: ShallowRef<HTMLSpanElement | null> = shallowRef(null);
+      const afterGuardRef: ShallowRef<HTMLSpanElement | null> = shallowRef(null);
       const Manager = defineComponent({
         setup() {
           const store = useFloatingRootStore({ open: true });
           return () => (
-            <FloatingFocusManager store={store} modal={false} beforeContentFocusGuardRef={guardRef}>
+            <FloatingFocusManager
+              store={store}
+              modal={false}
+              beforeContentFocusGuardRef={guardRef}
+              afterContentFocusGuardRef={afterGuardRef}
+            >
               <input />
             </FloatingFocusManager>
           );
@@ -913,6 +929,7 @@ describe('FloatingFocusManager', () => {
       await nextTick();
       const [secondBefore, secondAfter] = getInsideGuards().slice(2);
       expect(guardRef.value).toBe(secondBefore);
+      expect(afterGuardRef.value).toBe(secondAfter);
       expect(portalContext!.beforeInsideRef.value).toBe(secondBefore);
       expect(portalContext!.afterInsideRef.value).toBe(secondAfter);
 
@@ -921,6 +938,7 @@ describe('FloatingFocusManager', () => {
 
       expect(getInsideGuards()).toHaveLength(2);
       expect(guardRef.value).toBe(secondBefore);
+      expect(afterGuardRef.value).toBe(secondAfter);
       expect(portalContext!.beforeInsideRef.value).toBe(secondBefore);
       expect(portalContext!.afterInsideRef.value).toBe(secondAfter);
     });

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
+import { Combobox } from '@vase-ui/vue/combobox';
 import { Field } from '@vase-ui/vue/field';
 import { createRenderer, describeConformance, fireEvent, screen, waitFor } from '#test-utils';
-import * as Combobox from '../index.parts';
 import type { ComboboxStore } from '../store';
 import ComboboxChipsReplacement from './ComboboxChipsReplacement.test.vue';
 

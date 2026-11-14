@@ -12,6 +12,12 @@ export interface FocusManagerState {
   onOpenChange(open: boolean, eventDetails: VaseUIChangeEventDetails<string>): void;
   domReference: Element | null;
   closeOnFocusOut: boolean;
+  /**
+   * Whether the focus manager has an element that gets the focus when the Tab key leaves the popup
+   * forward. A popup part gives the guard after its trigger. The popup then has one place in the
+   * tab order, and the portal renders no guards of its own.
+   */
+  hasNextFocusableElement: boolean;
 }
 
 export interface PortalContextValue {
