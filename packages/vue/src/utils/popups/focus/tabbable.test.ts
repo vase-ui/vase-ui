@@ -422,6 +422,35 @@ it('does not choose a destination when the anchor is absent from the composed tr
 });
 
 it.each([
+  { name: 'after the anchor', direction: 1 as const },
+  { name: 'before the anchor', direction: -1 as const },
+])('skips the elements that `exclude` accepts, $name', ({ direction }) => {
+  const farBefore = document.createElement('button');
+  const nearBefore = document.createElement('button');
+  const anchor = document.createElement('button');
+  const nearAfter = document.createElement('button');
+  const farAfter = document.createElement('button');
+  document.body.append(farBefore, nearBefore, anchor, nearAfter, farAfter);
+
+  const target = getTabbableNearElement(
+    anchor,
+    direction,
+    (element) => element === nearBefore || element === nearAfter,
+  );
+
+  expect(target).toBe(direction === 1 ? farAfter : farBefore);
+});
+
+it('gives the anchor when `exclude` accepts each other element', () => {
+  const anchor = document.createElement('button');
+  const other = document.createElement('button');
+  document.body.append(anchor, other);
+
+  expect(getTabbableNearElement(anchor, 1, (element) => element === other)).toBe(anchor);
+  expect(getTabbableNearElement(anchor, -1, (element) => element === other)).toBe(anchor);
+});
+
+it.each([
   [false, 1],
   [false, -1],
   [true, 1],
