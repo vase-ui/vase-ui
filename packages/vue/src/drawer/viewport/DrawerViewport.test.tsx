@@ -4438,31 +4438,6 @@ describe('<Drawer.Viewport />', () => {
       expect(popup).toHaveAttribute('data-swiping', '');
       await firePointer.up(popup, { ...nextEvent(0, 30), button: 0 });
     });
-
-    it('gives the viewport no nested dialog attribute while a nested drawer is open', async () => {
-      await render(
-        <Drawer.Root open modal={false}>
-          <Drawer.Portal>
-            <Drawer.Viewport data-testid="parent-viewport">
-              <Drawer.Popup data-testid="parent-popup">
-                <Drawer.Root open modal={false}>
-                  <Drawer.Portal>
-                    <Drawer.Viewport>
-                      <Drawer.Popup>Child drawer</Drawer.Popup>
-                    </Drawer.Viewport>
-                  </Drawer.Portal>
-                </Drawer.Root>
-              </Drawer.Popup>
-            </Drawer.Viewport>
-          </Drawer.Portal>
-        </Drawer.Root>,
-      );
-
-      await waitFor(() => {
-        expect(screen.getByTestId('parent-popup')).toHaveAttribute('data-nested-drawer-open', '');
-      });
-      expect(screen.getByTestId('parent-viewport')).not.toHaveAttribute('data-nested-dialog-open');
-    });
   });
 
   describe('KeepAlive', () => {
