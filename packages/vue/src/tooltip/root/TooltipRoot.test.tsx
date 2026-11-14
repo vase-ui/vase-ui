@@ -100,7 +100,13 @@ describe('<Tooltip.Root />', () => {
       const App = defineComponent({
         setup: () => () => (
           <>
-            <Tooltip.Trigger handle={tooltip} id="trigger" delay={0}>
+            {/* The real pointer of the browser can rest on the trigger and open the tooltip. */}
+            <Tooltip.Trigger
+              handle={tooltip}
+              id="trigger"
+              delay={0}
+              style={{ pointerEvents: 'none' }}
+            >
               Toggle
             </Tooltip.Trigger>
             <button type="button" onClick={() => tooltip.open('trigger')}>
