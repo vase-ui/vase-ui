@@ -42,6 +42,12 @@ defineSlots<{
 }>();
 
 // As in Base UI, this part renders `SelectScrollArrow` and makes no element of its own.
+// The template has one form for `#render`, one for the content and one for no slot. A `v-if` on a
+// slot template makes the slots of `SelectScrollArrow` dynamic. Vue then renders
+// `SelectScrollArrow` again each time this part renders. It also renders again each part in that
+// slot that has slot content.
+// `SelectScrollArrow` shows the arrow only when it gets no default slot. The form for no slot
+// keeps that behavior.
 const arrow = useTemplateRef('arrow');
 const element = computed(() => arrow.value?.element ?? null);
 
@@ -49,12 +55,25 @@ defineExpose({ element });
 </script>
 
 <template>
-  <SelectScrollArrow ref="arrow" v-bind="{ ...$attrs, ...props }" direction="down">
-    <template v-if="$slots.render" #render="slotProps">
+  <SelectScrollArrow
+    v-if="$slots.render"
+    ref="arrow"
+    v-bind="{ ...$attrs, ...props }"
+    direction="down"
+  >
+    <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
     </template>
-    <template v-if="$slots.default" #default="slotProps">
+  </SelectScrollArrow>
+  <SelectScrollArrow
+    v-else-if="$slots.default"
+    ref="arrow"
+    v-bind="{ ...$attrs, ...props }"
+    direction="down"
+  >
+    <template #default="slotProps">
       <slot v-bind="slotProps" />
     </template>
   </SelectScrollArrow>
+  <SelectScrollArrow v-else ref="arrow" v-bind="{ ...$attrs, ...props }" direction="down" />
 </template>
