@@ -24,7 +24,7 @@ import type { UseMenuRootOptions } from './useMenuRoot';
 /** Reads the context and the tree that a part below a root gets. */
 function createProbe() {
   const contexts: MenuRootContext[] = [];
-  const trees: Array<FloatingTreeType | null> = [];
+  const trees: (FloatingTreeType | null)[] = [];
   const Probe = defineComponent({
     setup() {
       contexts.push(useMenuRootContext());

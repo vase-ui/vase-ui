@@ -186,7 +186,7 @@ function getFirstTabbableElement(container: Element | null) {
 // The first candidate that can take the focus. A candidate that is not in the document, or that is
 // hidden, can't take it. A hidden element is, for example, an item in a closed Select or in a
 // `keepMounted` Menu. `skippedHidden` tells the caller that the search passed such an element.
-function findReturnElement(candidates: Array<Element | null | undefined>) {
+function findReturnElement(candidates: (Element | null | undefined)[]) {
   let skippedHidden = false;
   for (const candidate of candidates) {
     if (candidate?.isConnected) {
