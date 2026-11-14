@@ -1163,15 +1163,12 @@ describe('<NumberField />', () => {
   });
 
   describe('KeepAlive', () => {
-    beforeEach(() => {
-      vi.useFakeTimers();
-    });
-
-    afterEach(() => {
-      vi.useRealTimers();
-    });
-
     it('keeps its state, and a reset of the form does not change a field that is not shown', async () => {
+      // A real click does not end under fake timers, so only this case of the block uses them.
+      vi.useFakeTimers();
+      onTestFinished(() => {
+        vi.useRealTimers();
+      });
       const App = defineComponent({
         props: { shown: { type: Boolean, default: true } },
         setup(props) {

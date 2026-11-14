@@ -4,12 +4,27 @@ import type { VNode } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import { createRenderer, flushMicrotasks, screen } from '#test-utils';
+import { NOOP } from '../noop';
+import { useFieldInput } from './useFieldInput';
 
 describe('useFieldInput', () => {
   const { render } = createRenderer();
 
+  // All apps share the default context of a field, so it must hold no input.
+  it('keeps no input of a control that has no field', async () => {
+    let setInput: ReturnType<typeof useFieldInput> | undefined;
+    const Control = defineComponent(() => {
+      setInput = useFieldInput();
+      return () => null;
+    });
+
+    await render(<Control />);
+
+    expect(setInput).toBe(NOOP);
+  });
+
   // Each case submits the form with a real click and returns what the field and the form did.
-  async function renderForm(controls: () => VNode[]) {
+  async function renderForm(controls: () => (VNode | null)[]) {
     const handleSubmit = vi.fn();
     const { user } = await render(() => (
       <Form onFormSubmit={handleSubmit}>
