@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { defineComponent, KeepAlive, shallowRef } from 'vue';
+import { defineComponent, KeepAlive, nextTick, shallowRef, Teleport } from 'vue';
 import * as Select from '../index.parts';
 import {
   createRenderer,
@@ -10,6 +10,13 @@ import {
   screen,
   waitFor,
 } from '#test-utils';
+import {
+  createScrollDocument,
+  getScrollLockRegistry,
+  isPageLocked,
+} from '../../../test/fixtures/scrollDocument';
+import type { ScrollDocument } from '../../../test/fixtures/scrollDocument';
+import SelectPositionerScoped from './SelectPositionerScoped.test.vue';
 
 describe('<Select.Positioner />', () => {
   const { render } = createRenderer();
@@ -294,6 +301,138 @@ describe('<Select.Positioner />', () => {
       expect(handleValueChange).not.toHaveBeenCalled();
       expect(screen.getByRole('option', { name: 'd' })).toHaveAttribute('aria-selected', 'false');
       expect(screen.getByRole('option', { name: 'b' })).toHaveAttribute('aria-selected', 'true');
+    });
+  });
+
+  describe('scroll lock', () => {
+    // The lock and the unlock each wait for a timer of 0 ms. The observers of `waitFor` do not see a
+    // document in a frame, so it polls.
+    const POLL = { interval: 5, timeout: 3000 };
+
+    function lockCount() {
+      return getScrollLockRegistry()?.lockCount ?? 0;
+    }
+
+    // The trigger and the portal are in the document of a frame, so the lock changes no style of
+    // the test page. The trigger has room for the placement over it.
+    function createSelect(
+      page: ScrollDocument,
+      { root = {}, positioner = {} }: { root?: object; positioner?: object } = {},
+    ) {
+      const open = shallowRef(false);
+      const ModalSelect = defineComponent({
+        name: 'ModalSelect',
+        setup: () => () => (
+          <Select.Root defaultValue="a" open={open.value} {...root}>
+            <Teleport to={page.body}>
+              <Select.Trigger style={{ position: 'fixed', top: '120px', left: '120px' }}>
+                <Select.Value />
+              </Select.Trigger>
+            </Teleport>
+            <Select.Portal container={page.body}>
+              <Select.Positioner data-testid="positioner" {...positioner}>
+                <Select.Popup>
+                  <Select.Item value="a">a</Select.Item>
+                  <Select.Item value="b">b</Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        ),
+      });
+      return { open, ModalSelect };
+    }
+
+    function getPositioner(page: ScrollDocument) {
+      return page.doc.querySelector<HTMLElement>('[data-testid="positioner"]');
+    }
+
+    it('locks the page while a modal select is open, and unlocks it when the select closes', async () => {
+      const page = await createScrollDocument();
+      let actions!: Select.Root.Actions;
+      const { open, ModalSelect } = createSelect(page, {
+        root: {
+          ref: (instance: unknown) => {
+            if (instance) {
+              actions = instance as Select.Root.Actions;
+            }
+          },
+          // The popup stays mounted after the close, so only the close can release the lock.
+          onOpenChange: (nextOpen: boolean, details: Select.Root.OpenChangeEventDetails) => {
+            details.preventUnmountOnClose();
+            open.value = nextOpen;
+          },
+        },
+        positioner: { alignItemWithTrigger: false },
+      });
+      await render(<ModalSelect />);
+
+      open.value = true;
+      await waitFor(() => expect(isPageLocked(page)).toBe(true), POLL);
+
+      actions.close();
+      await waitFor(() => expect(isPageLocked(page)).toBe(false), POLL);
+      expect(lockCount()).toBe(0);
+      expect(getPositioner(page)?.isConnected).toBe(true);
+    });
+
+    it.each([
+      { name: 'over the trigger', alignItemWithTrigger: true, side: 'none', locks: 1 },
+      { name: 'beside the trigger', alignItemWithTrigger: false, side: 'bottom', locks: 0 },
+    ])(
+      'locks the page for a select that is not modal only while its popup is $name',
+      async ({ alignItemWithTrigger, side, locks }) => {
+        const page = await createScrollDocument();
+        const { open, ModalSelect } = createSelect(page, {
+          root: { modal: false },
+          positioner: { alignItemWithTrigger },
+        });
+        await render(<ModalSelect />);
+
+        open.value = true;
+        await waitFor(() => expect(getPositioner(page)?.dataset.side).toBe(side), POLL);
+
+        expect(lockCount()).toBe(locks);
+      },
+    );
+
+    it('VUE-5: releases the lock while KeepAlive holds the select, and takes it back after', async () => {
+      const page = await createScrollDocument();
+      const show = shallowRef(true);
+      const { open, ModalSelect } = createSelect(page, {
+        positioner: { alignItemWithTrigger: false },
+      });
+      open.value = true;
+      const Other = defineComponent({ name: 'Other', setup: () => () => <p>other</p> });
+      await render(() => (
+        <KeepAlive>{show.value ? <ModalSelect key="select" /> : <Other key="other" />}</KeepAlive>
+      ));
+      await waitFor(() => expect(isPageLocked(page)).toBe(true), POLL);
+
+      show.value = false;
+      await waitFor(() => expect(isPageLocked(page)).toBe(false), POLL);
+
+      show.value = true;
+      await waitFor(() => expect(isPageLocked(page)).toBe(true), POLL);
+    });
+  });
+
+  describe('VUE-61: the positioner of a modal select has one root node', () => {
+    it('gives the scope id, v-show and a custom directive of the consumer to the positioner', async () => {
+      const shown = shallowRef(true);
+      await render(() => <SelectPositionerScoped shown={shown.value} />);
+      await flushMicrotasks();
+      const positioner = screen.getByTestId('positioner');
+
+      expect(positioner.previousElementSibling).toHaveAttribute('role', 'presentation');
+      expect(getComputedStyle(positioner).outlineStyle).toBe('dashed');
+      expect(positioner).toHaveAttribute('data-mark', 'marked');
+      expect(positioner.style.display).not.toBe('none');
+
+      shown.value = false;
+      await nextTick();
+
+      expect(positioner.style.display).toBe('none');
     });
   });
 });

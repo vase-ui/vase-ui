@@ -73,16 +73,40 @@
     {
       "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "Many cases and the suite calls need the modal state or the scroll arrows of Select, or the shared suite `popupListConformanceTests`, which Vase UI does not have. The scroll arrows are the last part of the family, so the row names their file."
+      "waitsOn": "packages/react/src/select/index.ts",
+      "reason": "The file imports the entry point of Select, which Vase UI does not have."
     },
     {
-      "upstream": "packages/react/src/select/store.test.tsx",
-      "describe": ["select store synchronization"],
-      "title": "publishes synchronized values in a single store transaction",
+      "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
+      "describe": ["<Select.Root />"],
+      "title": "does not dismiss when pressing portalled content inside the popup but outside the list",
+      "kind": "replaced",
+      "test": "packages/vue/src/utils/popups/interactions/useDismiss.test.tsx",
+      "reason": "The case presses a plain element in a portal in the popup. Vue gives that event to no listener of the popup element, so that element is outside the popup. A press in a child popup that `Teleport` moved is inside (`VUE-4`). The case \"VUE-4: a press in a child popup that Teleport moved does not close the parent popup\" tests that press."
+    },
+    {
+      "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
+      "describe": ["<Select.Root />", "conformance"],
+      "suite": "popupListConformanceTests",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
+      "reason": "Vase UI does not have the shared suite `popupListConformanceTests`."
+    },
+    {
+      "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
+      "describe": ["<Select.Root />", "scroll locking", "interaction type tracking (openMethod)"],
+      "title": "recomputes positioning before the popup becomes visible again after touch dismiss",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case sets the `modal` prop of `Select.Root`, which comes with the modal state of Select. The scroll arrows are the last part of the family, so the row names their file."
+      "reason": "The case renders `Select.ScrollUpArrow` and `Select.ScrollDownArrow`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
+      "describe": ["<Select.Root />", "prop: actionsRef"],
+      "title": "clears scroll arrow visibility when manually unmounted (strict: %s)",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
+      "reason": "The case renders `Select.ScrollUpArrow` and `Select.ScrollDownArrow`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/select/group-label/SelectGroupLabel.test.tsx",
