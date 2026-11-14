@@ -347,10 +347,12 @@ describe('FloatingDelayGroup', () => {
   });
 
   // A member that uses the first store, and the second store after `useSecond` becomes `true`.
-  // `closed` lists the stores that the group asked to close.
+  // `closed` lists the stores that the group asked to close. After the render, `member` has the
+  // group of the member and the popup id of the second store.
   function createMemberWithChangingStore(open: MaybeRefOrGetter<boolean>) {
     const closed: string[] = [];
     const useSecond = shallowRef(false);
+    const member: { group?: DelayGroup; secondId?: string } = {};
     const Member = defineComponent({
       setup() {
         function useStore(name: string) {
@@ -359,11 +361,12 @@ describe('FloatingDelayGroup', () => {
         }
         const first = useStore('first');
         const second = useStore('second');
-        useDelayGroup(() => (useSecond.value ? second : first), { open });
+        member.group = useDelayGroup(() => (useSecond.value ? second : first), { open });
+        member.secondId = second.select('defaultPopupId');
         return () => null;
       },
     });
-    return { Member, closed, useSecond };
+    return { Member, closed, useSecond, member };
   }
 
   describe('rules with no Base UI case', () => {
@@ -689,8 +692,8 @@ describe('FloatingDelayGroup', () => {
       expect(closed).toEqual(['second']);
     });
 
-    it('does not close its own popup when its store changes while the popup is open', async () => {
-      const { Member, closed, useSecond } = createMemberWithChangingStore(true);
+    it('keeps the group for its own popup when its store changes while the popup is open', async () => {
+      const { Member, closed, useSecond, member } = createMemberWithChangingStore(true);
       await render(
         <Group delay={{ open: 1000, close: 0 }}>
           <Member />
@@ -701,6 +704,9 @@ describe('FloatingDelayGroup', () => {
       await flushMicrotasks();
 
       expect(closed).toEqual([]);
+      // The id is a string, so the next check cannot pass with two `undefined` values.
+      expect(member.secondId).toEqual(expect.any(String));
+      expect(member.group?.activeId()).toBe(member.secondId);
     });
 
     it('starts the timer of the group when its popup closes after a change of its store', async () => {
