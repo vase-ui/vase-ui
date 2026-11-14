@@ -45,9 +45,9 @@ function setIos(ios: boolean) {
 }
 
 // The way that a lock holds a document depends on its scrollbars. A page with scrollbars that take
-// layout space is held with the body, or with the gutter when the engine keeps the width of the
-// page for a hidden scrollbar. A page with overlay scrollbars needs neither. Each engine runs the
-// cases for the ways that it can show.
+// layout space is held with the body. It is held with the gutter when the engine keeps the width of
+// the page for a hidden scrollbar. A page with overlay scrollbars needs neither. Each engine runs
+// the cases for the ways that it can show.
 const hasBodyStrategy = (await probeStrategy(CUSTOM_SCROLLBARS_CSS)) === 'body';
 const hasGutterStrategy = (await probeStrategy()) === 'gutter';
 const hasInsetScrollbars = hasBodyStrategy || hasGutterStrategy;
@@ -77,9 +77,9 @@ const Locker = createLocker(useScrollLock);
 // The observers of `waitFor` do not see a document in a frame, so it polls.
 const POLL = { interval: 5, timeout: 3000 };
 
-// A lock and an unlock each wait for a timer of 0 ms, and a page that has scrollbars that take
-// space can send `resize` events that put the lock again in a later frame. Thus a case waits for the
-// state that stays. For a state that must not come, a case waits one timer first.
+// A lock and an unlock each wait for a timer of 0 ms. A page that has scrollbars that take space can
+// send `resize` events, and each event puts the lock again in a later frame. Thus a case waits for
+// the state that stays. For a state that must not come, a case waits one timer first.
 function waitForLock(page: ScrollDocument) {
   return waitFor(() => expect(isPageLocked(page)).toBe(true), POLL);
 }
@@ -352,7 +352,7 @@ describe('useScrollLock', () => {
   });
 
   describe('layout', () => {
-    // The content has no margin and no width of its own, so the lock can keep the scrollbar track,
+    // The content has no margin and no width of its own. The lock can then keep the scrollbar track,
     // and the content stays where it is.
     const LAYOUT_CSS = 'body { margin: 0 } #content { width: auto; height: 2000px }';
 

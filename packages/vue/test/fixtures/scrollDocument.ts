@@ -111,7 +111,7 @@ export async function createScrollDocument({ css = '' }: { css?: string } = {}) 
 /**
  * Says which way the scroll lock takes in a new document that has the style sheet `css`. It reads
  * the scrollbar as the lock does. A case that needs a scrollbar that takes layout space, or a
- * gutter that works, asks this function and runs only for the way that it needs.
+ * gutter that works, asks this function. It runs only for the way that it needs.
  */
 export async function probeStrategy(css = ''): Promise<ScrollLockStrategy> {
   const { frame, scrollDocument } = await mountFrame(css);

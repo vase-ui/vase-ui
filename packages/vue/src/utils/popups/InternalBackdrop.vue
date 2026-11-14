@@ -15,11 +15,11 @@ import { autoUpdate } from '@floating-ui/vue';
 import { computed, onActivated, onDeactivated, shallowRef, watch } from 'vue';
 import type { CSSProperties } from 'vue';
 
-// As in Base UI, an attribute of a consumer wins over the role and the marker, and the style of the
+// As in Base UI, an attribute of a consumer wins over the role and the marker. The style of the
 // part replaces a `style` of the consumer.
-// While the page has an element with `data-vase-ui-inert`, the outside press check of `useDismiss`
-// ignores a press on an element whose root ancestor holds none. It takes that element for one that
-// a script added after the popup rendered. The marker keeps a press on the backdrop out of that rule.
+// The outside press check of `useDismiss` ignores a press on an element that a script added after
+// the popup rendered. It takes an element for such an addition when none of the marked elements is
+// in the root ancestor of that element. The marker keeps a press on the backdrop out of that rule.
 defineOptions({ inheritAttrs: false });
 const props = defineProps<InternalBackdropProps>();
 
