@@ -826,6 +826,7 @@ The portal of a popup is in `src/utils/popups/portal`. `useFloatingPortalNode()`
 - The portal part of a family, such as `Dialog.Portal`, renders `FloatingPortal` or `FloatingPortalLite`, as Base UI does, and no element of its own. It follows the rules for a part that Base UI writes as another part. See [Parts that render an element](#parts-that-render-an-element).
 - That part renders nothing while the popup is not mounted, unless its `keepMounted` prop is `true`. It provides `keepMounted` to the parts in it.
 - `Dialog.Portal` gives `FloatingPortal` a default slot that renders `InternalBackdrop.vue` before the default slot of the consumer, while a dialog with `modal` set to `true` is mounted. The backdrop is `inert` while the dialog closes. The portal writes the element of the backdrop to `internalBackdropRef` of the store context.
+- Under `#render`, `FloatingPortal` does not render its default slot. A dialog whose `Dialog.Portal` has a `#render` slot thus has no internal backdrop.
 - `Dialog.Popup` gives that backdrop to its focus manager in `getInsideElements`, so the modal marks do not touch it. The release of the marks would remove the `inert` of the backdrop of a closing dialog.
 
 ### Popup interactions
@@ -892,7 +893,7 @@ The scroll lock stops the scroll of the page under a modal popup. The code is in
 - The probe for `scrollbar-gutter` writes styles and reads the layout. In WebKit, that can stop a transition that runs on the page. Thus each document gets one probe, and `stableGutter` keeps the result (`BUG-6119`).
 - `InternalBackdrop.vue` has the form of `FocusGuard.vue`: `inheritAttrs: false`, no `as`, no `#render` slot and no default slot. It exposes `element`.
 - The clip path of the backdrop follows its `cutout` through `autoUpdate`. React measures the cutout when the positioner renders. A Vue child does not render with its parent.
-- A test of the lock uses a document of its own from `createScrollDocument` in `test/fixtures/scrollDocument.ts`. A case that needs scrollbars that take space, or a gutter that works, asks `probeStrategy`. It runs only in an engine that has them.
+- A test of the lock uses a document of its own from `createScrollDocument` in `test/fixtures/scrollDocument.ts`. A case that needs scrollbars that take space asks `probeStrategy`. It runs only in an engine that has them. A case of the gutter way sets `mockedScrollbarWidth`, so that the window reports a scrollbar. It then runs in each engine.
 
 ### Popup click
 

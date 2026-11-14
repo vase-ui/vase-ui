@@ -101,17 +101,31 @@ async function mountFrame(css: string) {
  * Appends a same-origin `<iframe>` whose document has content taller and wider than the frame, and
  * the style sheet `css`. A case locks this document, so it changes no style of the test page. The
  * frame goes away when the test ends.
+ *
+ * With `mockedScrollbarWidth`, the window reports an `innerWidth` that is that many pixels above
+ * `clientWidth` of `<html>`. A window with a real scrollbar of that width does the same. The layout
+ * does not change.
  */
-export async function createScrollDocument({ css = '' }: { css?: string } = {}) {
+export async function createScrollDocument({
+  css = '',
+  mockedScrollbarWidth,
+}: { css?: string; mockedScrollbarWidth?: number } = {}) {
   const { frame, scrollDocument } = await mountFrame(css);
   onTestFinished(() => frame.remove());
+  if (mockedScrollbarWidth !== undefined) {
+    const { win, html } = scrollDocument;
+    Object.defineProperty(win, 'innerWidth', {
+      value: html.clientWidth + mockedScrollbarWidth,
+      configurable: true,
+    });
+  }
   return scrollDocument;
 }
 
 /**
  * Says which way the scroll lock takes in a new document that has the style sheet `css`. It reads
- * the scrollbar as the lock does. A case that needs a scrollbar that takes layout space, or a
- * gutter that works, asks this function. It runs only for the way that it needs.
+ * the scrollbar as the lock does. A case that needs scrollbars that take layout space asks this
+ * function. It runs only in an engine that has them.
  */
 export async function probeStrategy(css = ''): Promise<ScrollLockStrategy> {
   const { frame, scrollDocument } = await mountFrame(css);
