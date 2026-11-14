@@ -4,8 +4,10 @@ import { OTPField } from '@vase-ui/vue/otp-field';
 
 const props = withDefaults(
   defineProps<{
-    label?: 'none' | 'before' | 'after';
+    label?: 'none' | 'before' | 'after' | 'native';
     description?: boolean;
+    inputs?: number;
+    mask?: boolean;
     defaultValue?: string | undefined;
     value?: string | undefined;
     disabled?: boolean;
@@ -17,6 +19,7 @@ const props = withDefaults(
   }>(),
   {
     label: 'none',
+    inputs: 0,
     defaultValue: undefined,
     value: undefined,
     name: undefined,
@@ -32,6 +35,7 @@ function rootProps() {
     value: props.value,
     disabled: props.disabled,
     readOnly: props.readOnly,
+    mask: props.mask,
     required: props.required,
     name: props.name,
     id: props.id,
@@ -44,7 +48,15 @@ function rootProps() {
   <form data-testid="form">
     <Field.Root>
       <Field.Label v-if="label === 'before'" data-testid="label">Code</Field.Label>
-      <OTPField.Root data-testid="root" v-bind="rootProps()" />
+      <label v-if="label === 'native'" data-testid="label">
+        Code
+        <OTPField.Root data-testid="root" v-bind="rootProps()">
+          <OTPField.Input v-for="index in inputs" :key="index" />
+        </OTPField.Root>
+      </label>
+      <OTPField.Root v-else data-testid="root" v-bind="rootProps()">
+        <OTPField.Input v-for="index in inputs" :key="index" />
+      </OTPField.Root>
       <Field.Label v-if="label === 'after'" data-testid="label">Code</Field.Label>
       <Field.Description v-if="description" data-testid="description">Enter it.</Field.Description>
     </Field.Root>

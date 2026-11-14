@@ -1,5 +1,6 @@
 import { expect, describe, it, onTestFinished } from 'vitest';
-import { shallowRef } from 'vue';
+import { h, shallowRef } from 'vue';
+import type { Component } from 'vue';
 import * as Tooltip from '../index.parts';
 import {
   createRenderer,
@@ -10,6 +11,8 @@ import {
   waitFor,
   waitForPositioned,
 } from '#test-utils';
+
+type RenderSlotProps = { props: Record<string, unknown>; children: Component };
 
 describe('<Tooltip.Portal />', () => {
   const { render } = createRenderer();
@@ -22,6 +25,31 @@ describe('<Tooltip.Portal />', () => {
       return result;
     },
   }));
+
+  describe('slot: render', () => {
+    it('puts the content of children in the element of the slot', async () => {
+      await render(
+        <Tooltip.Root open>
+          <Tooltip.Portal
+            v-slots={{
+              render: ({ props, children }: RenderSlotProps) => (
+                <section {...props} data-testid="portal">
+                  {h(children, null, () => (
+                    <Tooltip.Positioner>
+                      <Tooltip.Popup data-testid="popup">Content</Tooltip.Popup>
+                    </Tooltip.Positioner>
+                  ))}
+                </section>
+              ),
+            }}
+          />
+        </Tooltip.Root>,
+      );
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('portal')).toContainElement(screen.getByTestId('popup'));
+    });
+  });
 
   describe('prop: container', () => {
     it('renders the portal element into the container', async () => {
