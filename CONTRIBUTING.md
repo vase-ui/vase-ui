@@ -77,6 +77,8 @@ The site imports the built package. Run `pnpm build` before `pnpm docs:typecheck
 - When a release of `vue-component-meta` has the same correction, run `pnpm patch-remove vue-component-meta@3.3.14`. Then install that release. The test of `pnpm test:parity` for the exposed members of a generic SFC fails when the release lacks the correction.
 - `@vue/language-core` has a pnpm patch in `patches`. Without the patch, the package changes `//` in an attribute value of a component into a comment in the generated code. The type check of that template then fails.
 - The patch is the correction of [vuejs/language-tools#6241](https://github.com/vuejs/language-tools/pull/6241). When a release of `@vue/language-core` has the correction, run `pnpm patch-remove @vue/language-core@3.3.14`. Then install the `vue-tsc` and `vue-component-meta` of that release. The sample `docs/examples/type-check/AbsoluteUrlAttribute.vue` fails `pnpm docs:typecheck` when the release lacks the correction.
+- `rolldown-plugin-dts` has a pnpm patch in `patches`. `tsdown` uses it to bundle the declarations. Without the patch, it does not keep a `/// <reference lib="…" />` line at the start of a bundled declaration file. A date or time entry point then loses the line that gives a consumer the `Temporal` types.
+- The patch adds `lib` to the expression `REFERENCE_RE` of `rolldown-plugin-dts`, which keeps only `path` and `types`. When a release of `tsdown` uses a `rolldown-plugin-dts` that keeps the `lib` line, run `pnpm patch-remove rolldown-plugin-dts@0.30.1`. Then install that release of `tsdown`. The step "Check the declarations that name Temporal" of `pnpm check:package` fails when the release lacks the correction.
 - `vitepress` stays at exactly `2.0.0-alpha.21`, a prerelease. The stable release, 1.6.4, installs a second Vite from the 5.x line. `pnpm audit` lists advisories for that line, and no 5.x release corrects them. The prerelease uses the Vite of `packages/vue`. Install the stable 2.0 release when VitePress publishes it.
 - The workspace denies the install script of `esbuild` with the `allowBuilds` entry `esbuild: false`. The release job `stage` also installs `esbuild`, as an optional peer of `vite` in `packages/vue`. That job can get an OIDC token. Keep the entry `false`.
 - The workspace also denies the install script of `vue-demi` with the entry `vue-demi: false`. `@tanstack/vue-form` of the docs depends on `vue-demi` through `@tanstack/vue-store`. The script only selects the build for Vue 2 or for Vue 3, and the package ships the build for Vue 3.
@@ -186,6 +188,8 @@ The package is `@vase-ui/vue`. It is ESM only.
 - No list names the entry points. `package.json` has the one pattern `./*`. The build and `pnpm typecheck` write the barrel `src/index.ts`. Do not commit the barrel.
 - `internals`, `utils` and `common` are not entry points.
 - A folder with a name that starts with `unstable-` is an entry point, but the barrel does not include it.
+- A folder whose `index.ts` starts with the Temporal reference line, `/// <reference lib="esnext.temporal" preserve="true" />`, is an entry point, but the barrel does not include it. Its declarations name `Temporal` types, so a consumer needs TypeScript 6.0, or `skipLibCheck`.
+- A project that imports only the barrel then needs no `Temporal` types. `pnpm check:package` fails when a declaration that the barrel reaches names `Temporal`. It also fails when an entry point reaches a declaration that names `Temporal` and no declaration that it reaches starts with the reference line.
 
 The entry point of a family exports:
 
@@ -542,6 +546,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - `noPropertyAccessFromIndexSignature` is off. A bundler replaces `process.env.NODE_ENV` only in that form. The Vue documentation and the parts write `slots.default` and `$slots.render`.
 - `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes` are also off in the root project and in `docs`, because the scripts do not obey them.
 - `lib` and `target` of the package are ES2024. Each API of ES2024 is Baseline Widely Available, except a resizable `ArrayBuffer`, a growable `SharedArrayBuffer` and `Atomics.waitAsync`. Do not use these three, `using` or `Symbol.dispose`.
+- `Temporal` is the one API above ES2024 that the source needs. `weekInfo` of `internals/date-time/format.ts` also reads `getWeekInfo` of `Intl.Locale`, but only where the engine has it. Only the date and time families and `internals/date-time` use it. Its types come from `lib.esnext.temporal`, which the Temporal reference line of [Entry points](#entry-points) loads. That line is the first line of `internals/date-time/temporal.ts`.
 - `erasableSyntaxOnly` is on. Do not write an `enum`, a parameter property or a namespace that has a value. A namespace of types is correct.
 
 ### ESLint
@@ -579,6 +584,7 @@ A disable comment has the form `// eslint-disable-next-line <rule> -- <reason>`.
 - `packages/vue/src` has no TSX. Tests use TSX.
 - `vue` is a peer dependency. The package can have only two run-time dependencies: `@floating-ui/vue` and `@floating-ui/utils`.
 - `motion-v` is a development dependency of the package and of the docs. The source does not import it. `pnpm check:package` fails when a public entry imports it.
+- `temporal-polyfill` is a development dependency of the package and of the docs. The tests and the site load it, and the source does not import it. `pnpm check:package` fails when a public entry imports it.
 - `packages/vue/test/motion-v.test.tsx` shows that a popup waits for the exit animation of a `motion-v` component.
 - Import the middleware, `computePosition`, `autoUpdate` and the types of Floating UI from `@floating-ui/vue`. Do not import `@floating-ui/dom` or `@floating-ui/core`. They are not dependencies of the package, so pnpm does not link them.
 - `@floating-ui/vue` does not export the type `Derivable`. Declare it in the file that needs it: `type Derivable<T> = (state: MiddlewareState) => T`.
@@ -770,6 +776,19 @@ A root gives values to its parts with `provide` and `inject`. Use `progress/root
 - A part can provide the context of another family, where Base UI does this. `Accordion.Item` calls `useCollapsibleRoot` and provides `CollapsibleRootContext`. The trigger and the panel of the Accordion then read `useCollapsibleRootContext()`, and the panel uses `useCollapsiblePanel` with no change.
 - Such a part gives the context the members that the root of that family gives: the result of the composable, `onOpenChange` and `state`.
 - A root can provide `undefined` for the context of another family, to hide a provider above it. `ContextMenu.Root` does this for `MenuRootContext`, so its menu is not a part of a menu above it.
+
+### Dates and times
+
+The date and time families call `Temporal` and `Intl` directly, through the functions of `internals/date-time`. They have no adapter and no provider.
+
+- Tell the kind of a value with `kindOf` or `isKind`. Do not use `instanceof`: it is `false` for an object that another realm or another implementation of `Temporal` made.
+- Format a value only through `formatter()`. `Intl` gets a number, a zone and a calendar, and never a `Temporal` object. Do not call `toLocaleString`.
+- No module reads `Temporal` when it loads: no constant and no default of a prop. The first read is in a function that a part calls, after `assertTemporal` in `setup`.
+- Compare two values with `compareDates`, `Temporal.PlainTime.compare` or `equals`.
+- Make an emitted value with `withDate` or `withTime`. `withDate` keeps the kind, the calendar, the time and the zone of the value. `withTime` keeps the kind, the calendar, the date and the zone.
+- `displayCalendar` gives the calendar in which a part shows a value: the `calendar` prop, else the calendar of the value when it is not ISO, else the calendar of the locale. A year and month shows in that calendar only where the calendar has the same months.
+- `Intl` and `Temporal` do not have the same calendars. A part reads the calendar of a locale only through `localeCalendar`, which gives `gregory` when `Temporal` has no such calendar.
+- `today(timeZone)` gives today, and the `today` prop wins over it. The `timeZone` prop wins over the zone of a zoned value, and that zone wins over the zone of the runtime.
 
 ### Popup store
 
@@ -1800,6 +1819,8 @@ This section is the contract of the test helpers. Each helper must obey it. The 
 - `popupFocusPropsTests({ render, createComponent })` is the shared suite for `initialFocus` and `finalFocus` of a popup. `createComponent` gets `{ initialFocus, finalFocus, children }` and returns the popup with a trigger "Open" and a control "Close". Set `outsideElementsInert` for a popup that sets `inert` outside it. The suite then does not expect the trigger to keep the focus.
 - `mockRuntimeLocale(locale)` makes `Intl.NumberFormat` use `locale` when a call gives no locale, until the test ends. `getFormatter` keeps each formatter by locale and options. Thus format with options that no earlier test of the file formatted with no locale.
 - A `.node.test` file imports `mockRuntimeLocale` by a relative path to `test/mockRuntimeLocale`.
+- `useTemporalPolyfill()` replaces the global `Temporal` with `temporal-polyfill`, with all its calendars, until the test file ends. A `.node.test` file imports it by a relative path to `test/temporalPolyfill`.
+- `internals/date-time/temporal.polyfill.node.test.ts` runs the cases of the `.test` files of the helpers on the polyfill. It calls `useTemporalPolyfill()` and then imports those files with `await import()`. A static import runs before the call, so a case table that reads `Temporal` when its file loads would get the native `Temporal`.
 - `test/animation.ts` has the helpers for a test of a transition or an animation. `nextEvent(target, type, { after, action })` resolves with the next event of that type. With `after`, it ignores each event of that type that comes before the next event of the type `after`. With `action`, it runs the function after it attached its listeners, and the count of frames starts when the function ends. It rejects when no event comes in 180 frames of the page. `nextAnimationsRead(element, { action })` resolves with the list that the next `getAnimations()` call on the element returns, and it rejects when no call comes in 600 frames of the page. A part makes that call when it starts to wait for the animations of the element. The `action` of `nextAnimationsRead` works as the `action` of `nextEvent`. `createTransitionRunCounter(isOpen)` returns `counts` and the handler `onTransitionrun`. The handler counts the `transitionrun` events of the element itself. An event counts as an enter when `isOpen()` is `true` at the event, and as an exit when it is `false`. `probeFrameAfterExit(panel, isGone, close)` calls `close` and waits until the part reads the animations of the panel. Then it moves each animation to 50 ms before its end. It tells if the panel was gone in the frame callback of the frame in which the exit ended. The exit must last 100 s. The probe rejects when the part finds no animation, and when the panel goes before the end of the exit. `openInTimerTask(open)` and `closeInTimerTask(open)` change a ref in a timer task.
 - Each limit of the helpers of `test/animation.ts` is a count of the frames that the page renders, not a time. A busy machine can stall the page for some seconds. The page renders no frame during the stall, so the stall uses no frame of a limit. The browser ends a transition or an animation only in a frame.
 - `useTestInteractions(propsList)` merges the props that the interaction composables return. It returns `getReferenceProps`, `getFloatingProps`, `getItemProps` and `getTriggerProps`.
@@ -1986,7 +2007,7 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - The build fails when a page in the navigation has no `order` or no first-level heading.
 - A code sample is a Vue file. A page shows its source with `<<<`. `pnpm docs:typecheck` checks the file against the built package.
 - A page that is not a component page has its samples in `docs/examples/<page>`. `docs/quick-start.md` imports each sample and renders it.
-- The folder `docs/handbook` holds the handbook pages. Their `order` follows the Base UI handbook: Styling 1, Animation 2, Composition 3, Customization 4, Forms 5, TypeScript 6.
+- The folder `docs/handbook` holds the handbook pages. Their `order` follows the Base UI handbook: Styling 1, Animation 2, Composition 3, Customization 4, Forms 5, TypeScript 6. Dates and times has no Base UI page, and its `order` is 7.
 - A handbook page shows the source of a sample and does not render it.
 - A handbook page renders each demo inside `<DemoFrame>`. A demo that is a port of a Base UI handbook demo is in the family `handbook-<page>`, at `docs/demos/handbook-<page>/<demo>/css-modules/index.vue`. A demo that Vase UI writes, for a block where Base UI shows only code, is `docs/examples/<page>/demos/<demo>/index.vue`. The manual unmount demo of the Animation page is an example. A style block of such a demo sets no fixed color, such as `white`, because the copied style sheets follow the color scheme of the system.
 - The family of a handbook page, when it has one, is `handbook-<page>`. Its `upstreamPaths` name `docs/src/app/(docs)/react/handbook/<page>/**`. The rules of [Component pages](#component-pages) apply to its record, its style sheets and a demo that waits.
@@ -2003,6 +2024,7 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - T is the number of names in `components` of `parity/upstream.json`. The parity page lists each of these names that no family has in its `upstreamPaths`.
 - A component of Vase UI's own is in neither N nor T. The parity page lists it under Components of Vase UI's own.
 - The site extends the default theme of VitePress with the look of the Base UI docs. The folder `docs/.vitepress/theme` holds that extension and nothing else. Do not add a layout or a component there. A page imports its components from `docs/.vitepress/components`.
+- `docs/.vitepress/theme/index.ts` imports `temporal-polyfill/full/global`, so that a browser with no `Temporal` can run the demos of the date and time components. Its line `/// <reference lib="esnext.temporal" />` gives the samples and the demos of the docs project the `Temporal` types.
 - `docs/.vitepress/theme/tokens.css` sets the variables of the default theme. `docs/.vitepress/theme/look.css` holds each rule that a variable cannot give.
 - `look.css` gives `.Layout`, the root of the site, `isolation: isolate`, as the quick start of Base UI tells an app to do. A popup of a demo is outside `.Layout`, so it shows above each element of the page, the navigation bar included. Without the rule, a code block of VitePress, which has a `z-index`, shows above the popup.
 - Take each color, size and space from the style sheets of the Base UI docs, in `docs/src/css`, `docs/src/components` and `docs/src/app/(docs)/layout.css`. Where a Base UI value gives text less than the AA contrast of WCAG, use the nearest Base UI value that passes.
