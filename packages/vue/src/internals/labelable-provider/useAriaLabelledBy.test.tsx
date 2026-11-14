@@ -372,6 +372,36 @@ describe('useAriaLabelledBy', () => {
 
       expect(control).not.toHaveAttribute('aria-labelledby');
     });
+
+    it('follows a change of the id of the label around a control that mounted while held', async () => {
+      const shown = shallowRef(true);
+      const extra = shallowRef(false);
+      const labelId = shallowRef('label-1');
+      const Branch = defineComponent(() => () => (
+        <div>
+          {extra.value ? (
+            <label key="label" id={labelId.value}>
+              <HiddenInputControl data-testid="control" />
+            </label>
+          ) : null}
+        </div>
+      ));
+      await render(() => <KeepAlive>{shown.value ? <Branch /> : null}</KeepAlive>);
+      shown.value = false;
+      await flushMicrotasks();
+      extra.value = true;
+      await flushMicrotasks();
+      shown.value = true;
+      await flushMicrotasks();
+
+      const control = screen.getByTestId('control');
+      expect(control).toHaveAttribute('aria-labelledby', 'label-1');
+
+      labelId.value = 'label-2';
+      await flushMicrotasks();
+
+      expect(control).toHaveAttribute('aria-labelledby', 'label-2');
+    });
   });
 
   describe('observer', () => {

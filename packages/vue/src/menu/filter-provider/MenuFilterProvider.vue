@@ -33,6 +33,10 @@ const emit = defineEmits<{
    * Event handler called when the filter query changes.
    */
   valueChange: [value: string, eventDetails: MenuFilterProviderChangeEventDetails];
+  /**
+   * Event handler called after `valueChange` with the new value, unless a listener cancels the
+   * change. `v-model:value` uses it.
+   */
   'update:value': [value: string];
 }>();
 
