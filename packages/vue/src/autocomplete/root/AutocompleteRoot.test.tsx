@@ -1899,7 +1899,7 @@ describe('<Autocomplete.Root />', () => {
       'mode="%s": uses a custom filter instead of the locale-aware default',
       async (mode) => {
         const items = ['Isparta', 'İzmir'];
-        const filter = (item: string, query: string) => item[0] === query.toUpperCase();
+        const filter = (item: string, query: string) => item.startsWith(query.toUpperCase());
 
         const { user } = await render(
           <Autocomplete.Root mode={mode} items={items} locale="tr" filter={filter}>

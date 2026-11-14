@@ -107,7 +107,7 @@ describe('<Autocomplete.Value />', () => {
           <Autocomplete.Value
             v-slots={{
               default: ({ value }: { value: string }) => (
-                <div data-testid="value">{value === '' ? 'empty' : String(value)}</div>
+                <div data-testid="value">{value === '' ? 'empty' : value}</div>
               ),
             }}
           />
