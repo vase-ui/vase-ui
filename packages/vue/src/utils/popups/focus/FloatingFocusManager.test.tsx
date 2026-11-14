@@ -1794,6 +1794,32 @@ describe('FloatingFocusManager', () => {
 
         expect(handleOpenChange.mock.calls).toEqual([[false, 'focus-out']]);
       });
+
+      it('keeps the popup open when the focus leaves it in a press on another element of its portal', async () => {
+        const handleOpenChange = vi.fn();
+        await render(() => (
+          <div>
+            <Popup portal manager={{ modal: false }} onOpenChange={handleOpenChange}>
+              {{
+                default: () => [
+                  <input data-testid="one" />,
+                  <FloatingPortal>
+                    <input data-testid="nested" />
+                  </FloatingPortal>,
+                ],
+              }}
+            </Popup>
+            <input data-testid="outside" />
+          </div>
+        ));
+        await openPopup();
+        await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+
+        await fireEvent.pointerDown(screen.getByTestId('nested'));
+        await moveFocusTo('outside');
+
+        expect(handleOpenChange).not.toHaveBeenCalled();
+      });
     });
   });
 

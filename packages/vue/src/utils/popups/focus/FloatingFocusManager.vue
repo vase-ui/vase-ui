@@ -1101,9 +1101,7 @@ effect(
     }
 
     function markInsideComponentTree() {
-      // A closed store that a module shares has a frozen context, so only an open popup writes
-      // the marker.
-      if (pointerDownOutside || !store.select('open')) {
+      if (pointerDownOutside) {
         return;
       }
       storeContext.insideComponentTree = true;
