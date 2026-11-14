@@ -1442,7 +1442,8 @@ describe('<Autocomplete.Root />', () => {
       document.body.appendChild(outside);
       await fireEvent.pointerLeave(apple, { pointerType: 'mouse', relatedTarget: outside });
 
-      await waitFor(() => expect(apple).not.toHaveAttribute('data-highlighted'));
+      await flushMicrotasks();
+      expect(apple).not.toHaveAttribute('data-highlighted');
       outside.remove();
     });
 
@@ -2282,290 +2283,6 @@ describe('<Autocomplete.Root />', () => {
 
       expect(handleSubmit).toHaveBeenCalledTimes(1);
       expect(handleSubmit.mock.results.at(-1)?.value).toBe('alpha');
-    });
-  });
-
-  describe('events', () => {
-    it('emits valueChange, then update:value, then openChange for typed text', async () => {
-      const events: string[] = [];
-      await render(
-        <Autocomplete.Root
-          items={cities}
-          onValueChange={(value, details) => events.push(`valueChange:${value}:${details.reason}`)}
-          {...{ 'onUpdate:value': (value: string) => events.push(`update:value:${value}`) }}
-          onOpenChange={(open, details) => events.push(`openChange:${open}:${details.reason}`)}
-          {...{ 'onUpdate:open': (open: boolean) => events.push(`update:open:${open}`) }}
-        >
-          <Autocomplete.Input />
-          {popupWithList()}
-        </Autocomplete.Root>,
-      );
-
-      await type('ma');
-
-      expect(events).toEqual([
-        'valueChange:ma:input-change',
-        'update:value:ma',
-        'openChange:true:input-change',
-        'update:open:true',
-      ]);
-    });
-
-    it('a canceled openChange emits no update:open and keeps the popup closed', async () => {
-      const events: string[] = [];
-      await render(
-        <Autocomplete.Root
-          items={cities}
-          onOpenChange={(open, details) => {
-            events.push(`openChange:${open}`);
-            details.cancel();
-          }}
-          {...{ 'onUpdate:open': (open: boolean) => events.push(`update:open:${open}`) }}
-        >
-          <Autocomplete.Input />
-          {popupWithList()}
-        </Autocomplete.Root>,
-      );
-
-      await type('ma');
-
-      expect(events).toEqual(['openChange:true']);
-      expect(getInput()).toHaveAttribute('aria-expanded', 'false');
-      expect(getInput().value).toBe('ma');
-    });
-  });
-
-  describe('inline completion', () => {
-    it('typed text replaces the inline text', async () => {
-      const handleValueChange = vi.fn();
-      await render(
-        <Autocomplete.Root
-          mode="both"
-          autoHighlight
-          items={cities}
-          onValueChange={handleValueChange}
-        >
-          <Autocomplete.Input />
-          {popupWithList()}
-        </Autocomplete.Root>,
-      );
-      getInput().focus();
-      await type('ma');
-      expect(getInput().value).toBe('Malmö');
-
-      // The highlight stays on `Malmö`, so no new highlight writes the inline text again.
-      await type('mal');
-
-      expect(handleValueChange.mock.lastCall?.[0]).toBe('mal');
-      expect(getInput().value).toBe('mal');
-    });
-
-    it('itemToStringValue gives the text of an object item to the filter and to the inline text', async () => {
-      const countries = [
-        { code: 'SE', label: 'Sweden' },
-        { code: 'MT', label: 'Malta' },
-      ];
-      await render(
-        <Autocomplete.Root mode="both" items={countries} itemToStringValue={(item) => item.code}>
-          <Autocomplete.Input />
-          {popupWithList({
-            item: ({ item }: { item: (typeof countries)[number] }) => (
-              <Autocomplete.Item value={item}>{item.label}</Autocomplete.Item>
-            ),
-          })}
-        </Autocomplete.Root>,
-      );
-      getInput().focus();
-      await type('mt');
-      expect(getOptions()).toEqual(['Malta']);
-
-      await pressArrowDown();
-
-      expect(getInput().value).toBe('MT');
-    });
-
-    it('KeepAlive: the inline text stays, and a change from outside while deactivated replaces it', async () => {
-      const show = shallowRef(true);
-      const value = shallowRef('');
-      const KeptRoot = defineComponent(() => () => (
-        <KeepAlive>
-          {show.value ? (
-            <Autocomplete.Root
-              key="root"
-              mode="both"
-              items={cities}
-              value={value.value}
-              onValueChange={(next) => {
-                value.value = next;
-              }}
-            >
-              <Autocomplete.Input />
-              {popupWithList()}
-            </Autocomplete.Root>
-          ) : null}
-        </KeepAlive>
-      ));
-      await render(<KeptRoot />);
-      getInput().focus();
-      await type('ma');
-      await pressArrowDown();
-      expect(getInput().value).toBe('Malmö');
-
-      await writeOutside(show, false);
-      await writeOutside(show, true);
-      expect(getInput().value).toBe('Malmö');
-
-      await writeOutside(show, false);
-      await writeOutside(value, 'o');
-      await writeOutside(show, true);
-
-      expect(getInput().value).toBe('o');
-    });
-  });
-
-  describe('VUE-59: a canceled change', () => {
-    it('VUE-59: a canceled valueChange keeps the value of an uncontrolled root', async () => {
-      const events: string[] = [];
-      await render(
-        <Autocomplete.Root
-          items={cities}
-          defaultValue="m"
-          onValueChange={(value, details) => {
-            events.push(`valueChange:${value}`);
-            details.cancel();
-          }}
-          {...{ 'onUpdate:value': (value: string) => events.push(`update:value:${value}`) }}
-        >
-          <Autocomplete.Input />
-          <span data-testid="value">
-            <Autocomplete.Value />
-          </span>
-        </Autocomplete.Root>,
-      );
-
-      await type('ma');
-
-      expect(events).toEqual(['valueChange:ma']);
-      expect(getInput().value).toBe('m');
-      expect(screen.getByTestId('value').textContent).toBe('m');
-    });
-  });
-
-  describe('form', () => {
-    it('the visible input has the name and the hidden input has none', async () => {
-      await render(
-        <form data-testid="form">
-          <Autocomplete.Root name="search" items={cities} defaultValue="ma">
-            <Autocomplete.Input />
-          </Autocomplete.Root>
-        </form>,
-      );
-
-      expect(getFormData('search')).toEqual(['ma']);
-      expect(getInput()).toHaveAttribute('name', 'search');
-      expect(getHiddenInput()).not.toHaveAttribute('name');
-      expect(getHiddenInput().type).toBe('text');
-
-      await type('mal');
-
-      expect(getFormData('search')).toEqual(['mal']);
-    });
-  });
-
-  describe('VUE-21: a native reset', () => {
-    beforeEach(() => {
-      vi.useFakeTimers();
-    });
-
-    afterEach(() => {
-      vi.useRealTimers();
-    });
-
-    async function reset() {
-      screen.getByTestId<HTMLFormElement>('form').reset();
-      vi.advanceTimersByTime(0);
-      await flushMicrotasks();
-    }
-
-    it('VUE-21: a native reset puts the default value back through valueChange', async () => {
-      const handleValueChange = vi.fn();
-      await render(
-        <form data-testid="form">
-          <Autocomplete.Root
-            name="search"
-            items={cities}
-            defaultValue="ma"
-            onValueChange={handleValueChange}
-          >
-            <Autocomplete.Input />
-          </Autocomplete.Root>
-        </form>,
-      );
-      await type('mal');
-      handleValueChange.mockClear();
-
-      await reset();
-
-      expect(handleValueChange).toHaveBeenCalledTimes(1);
-      expect(handleValueChange.mock.lastCall?.[0]).toBe('ma');
-      expect(handleValueChange.mock.lastCall?.[1].reason).toBe('none');
-      expect(handleValueChange.mock.lastCall?.[1].event.type).toBe('reset');
-      expect(getInput().value).toBe('ma');
-      expect(getFormData('search')).toEqual(['ma']);
-    });
-
-    it('VUE-21: a native reset does not change a controlled root', async () => {
-      const handleValueChange = vi.fn();
-      const value = shallowRef('ma');
-      const Controlled = defineComponent(() => () => (
-        <form data-testid="form">
-          <Autocomplete.Root
-            name="search"
-            items={cities}
-            value={value.value}
-            onValueChange={(next) => {
-              handleValueChange(next);
-              value.value = next;
-            }}
-          >
-            <Autocomplete.Input />
-          </Autocomplete.Root>
-        </form>
-      ));
-      await render(<Controlled />);
-      await type('mal');
-      handleValueChange.mockClear();
-
-      await reset();
-
-      expect(handleValueChange).toHaveBeenCalledTimes(0);
-      expect(getInput().value).toBe('mal');
-      expect(getFormData('search')).toEqual(['mal']);
-    });
-
-    it('VUE-21: the change of a reset starts no validation and removes the error of the field', async () => {
-      const validate = vi.fn(() => null);
-      await render(
-        <form data-testid="form">
-          <Field.Root name="search" validate={validate} validationMode="onChange">
-            <Autocomplete.Root items={cities} required defaultValue="ma">
-              <Autocomplete.Input />
-            </Autocomplete.Root>
-            <Field.Error data-testid="error" />
-          </Field.Root>
-        </form>,
-      );
-      await type('');
-      vi.advanceTimersByTime(0);
-      await flushMicrotasks();
-      expect(screen.getByTestId('error')).toBeInTheDocument();
-      const validateCalls = validate.mock.calls.length;
-
-      await reset();
-
-      expect(getInput().value).toBe('ma');
-      expect(screen.queryByTestId('error')).toBe(null);
-      expect(validate).toHaveBeenCalledTimes(validateCalls);
     });
   });
 
@@ -3444,6 +3161,290 @@ describe('<Autocomplete.Root />', () => {
         'aria-describedby',
         screen.getByTestId('description').id,
       );
+    });
+  });
+
+  describe('events', () => {
+    it('emits valueChange, then update:value, then openChange for typed text', async () => {
+      const events: string[] = [];
+      await render(
+        <Autocomplete.Root
+          items={cities}
+          onValueChange={(value, details) => events.push(`valueChange:${value}:${details.reason}`)}
+          {...{ 'onUpdate:value': (value: string) => events.push(`update:value:${value}`) }}
+          onOpenChange={(open, details) => events.push(`openChange:${open}:${details.reason}`)}
+          {...{ 'onUpdate:open': (open: boolean) => events.push(`update:open:${open}`) }}
+        >
+          <Autocomplete.Input />
+          {popupWithList()}
+        </Autocomplete.Root>,
+      );
+
+      await type('ma');
+
+      expect(events).toEqual([
+        'valueChange:ma:input-change',
+        'update:value:ma',
+        'openChange:true:input-change',
+        'update:open:true',
+      ]);
+    });
+
+    it('a canceled openChange emits no update:open and keeps the popup closed', async () => {
+      const events: string[] = [];
+      await render(
+        <Autocomplete.Root
+          items={cities}
+          onOpenChange={(open, details) => {
+            events.push(`openChange:${open}`);
+            details.cancel();
+          }}
+          {...{ 'onUpdate:open': (open: boolean) => events.push(`update:open:${open}`) }}
+        >
+          <Autocomplete.Input />
+          {popupWithList()}
+        </Autocomplete.Root>,
+      );
+
+      await type('ma');
+
+      expect(events).toEqual(['openChange:true']);
+      expect(getInput()).toHaveAttribute('aria-expanded', 'false');
+      expect(getInput().value).toBe('ma');
+    });
+  });
+
+  describe('inline completion', () => {
+    it('typed text replaces the inline text', async () => {
+      const handleValueChange = vi.fn();
+      await render(
+        <Autocomplete.Root
+          mode="both"
+          autoHighlight
+          items={cities}
+          onValueChange={handleValueChange}
+        >
+          <Autocomplete.Input />
+          {popupWithList()}
+        </Autocomplete.Root>,
+      );
+      getInput().focus();
+      await type('ma');
+      expect(getInput().value).toBe('Malmö');
+
+      // The highlight stays on `Malmö`, so no new highlight writes the inline text again.
+      await type('mal');
+
+      expect(handleValueChange.mock.lastCall?.[0]).toBe('mal');
+      expect(getInput().value).toBe('mal');
+    });
+
+    it('itemToStringValue gives the text of an object item to the filter and to the inline text', async () => {
+      const countries = [
+        { code: 'SE', label: 'Sweden' },
+        { code: 'MT', label: 'Malta' },
+      ];
+      await render(
+        <Autocomplete.Root mode="both" items={countries} itemToStringValue={(item) => item.code}>
+          <Autocomplete.Input />
+          {popupWithList({
+            item: ({ item }: { item: (typeof countries)[number] }) => (
+              <Autocomplete.Item value={item}>{item.label}</Autocomplete.Item>
+            ),
+          })}
+        </Autocomplete.Root>,
+      );
+      getInput().focus();
+      await type('mt');
+      expect(getOptions()).toEqual(['Malta']);
+
+      await pressArrowDown();
+
+      expect(getInput().value).toBe('MT');
+    });
+
+    it('KeepAlive: the inline text stays, and a change from outside while deactivated replaces it', async () => {
+      const show = shallowRef(true);
+      const value = shallowRef('');
+      const KeptRoot = defineComponent(() => () => (
+        <KeepAlive>
+          {show.value ? (
+            <Autocomplete.Root
+              key="root"
+              mode="both"
+              items={cities}
+              value={value.value}
+              onValueChange={(next) => {
+                value.value = next;
+              }}
+            >
+              <Autocomplete.Input />
+              {popupWithList()}
+            </Autocomplete.Root>
+          ) : null}
+        </KeepAlive>
+      ));
+      await render(<KeptRoot />);
+      getInput().focus();
+      await type('ma');
+      await pressArrowDown();
+      expect(getInput().value).toBe('Malmö');
+
+      await writeOutside(show, false);
+      await writeOutside(show, true);
+      expect(getInput().value).toBe('Malmö');
+
+      await writeOutside(show, false);
+      await writeOutside(value, 'o');
+      await writeOutside(show, true);
+
+      expect(getInput().value).toBe('o');
+    });
+  });
+
+  describe('VUE-59: a canceled change', () => {
+    it('VUE-59: a canceled valueChange keeps the value of an uncontrolled root', async () => {
+      const events: string[] = [];
+      await render(
+        <Autocomplete.Root
+          items={cities}
+          defaultValue="m"
+          onValueChange={(value, details) => {
+            events.push(`valueChange:${value}`);
+            details.cancel();
+          }}
+          {...{ 'onUpdate:value': (value: string) => events.push(`update:value:${value}`) }}
+        >
+          <Autocomplete.Input />
+          <span data-testid="value">
+            <Autocomplete.Value />
+          </span>
+        </Autocomplete.Root>,
+      );
+
+      await type('ma');
+
+      expect(events).toEqual(['valueChange:ma']);
+      expect(getInput().value).toBe('m');
+      expect(screen.getByTestId('value').textContent).toBe('m');
+    });
+  });
+
+  describe('form', () => {
+    it('the visible input has the name and the hidden input has none', async () => {
+      await render(
+        <form data-testid="form">
+          <Autocomplete.Root name="search" items={cities} defaultValue="ma">
+            <Autocomplete.Input />
+          </Autocomplete.Root>
+        </form>,
+      );
+
+      expect(getFormData('search')).toEqual(['ma']);
+      expect(getInput()).toHaveAttribute('name', 'search');
+      expect(getHiddenInput()).not.toHaveAttribute('name');
+      expect(getHiddenInput().type).toBe('text');
+
+      await type('mal');
+
+      expect(getFormData('search')).toEqual(['mal']);
+    });
+  });
+
+  describe('VUE-21: a native reset', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    async function reset() {
+      screen.getByTestId<HTMLFormElement>('form').reset();
+      vi.advanceTimersByTime(0);
+      await flushMicrotasks();
+    }
+
+    it('VUE-21: a native reset puts the default value back through valueChange', async () => {
+      const handleValueChange = vi.fn();
+      await render(
+        <form data-testid="form">
+          <Autocomplete.Root
+            name="search"
+            items={cities}
+            defaultValue="ma"
+            onValueChange={handleValueChange}
+          >
+            <Autocomplete.Input />
+          </Autocomplete.Root>
+        </form>,
+      );
+      await type('mal');
+      handleValueChange.mockClear();
+
+      await reset();
+
+      expect(handleValueChange).toHaveBeenCalledTimes(1);
+      expect(handleValueChange.mock.lastCall?.[0]).toBe('ma');
+      expect(handleValueChange.mock.lastCall?.[1].reason).toBe('none');
+      expect(handleValueChange.mock.lastCall?.[1].event.type).toBe('reset');
+      expect(getInput().value).toBe('ma');
+      expect(getFormData('search')).toEqual(['ma']);
+    });
+
+    it('VUE-21: a native reset does not change a controlled root', async () => {
+      const handleValueChange = vi.fn();
+      const value = shallowRef('ma');
+      const Controlled = defineComponent(() => () => (
+        <form data-testid="form">
+          <Autocomplete.Root
+            name="search"
+            items={cities}
+            value={value.value}
+            onValueChange={(next) => {
+              handleValueChange(next);
+              value.value = next;
+            }}
+          >
+            <Autocomplete.Input />
+          </Autocomplete.Root>
+        </form>
+      ));
+      await render(<Controlled />);
+      await type('mal');
+      handleValueChange.mockClear();
+
+      await reset();
+
+      expect(handleValueChange).toHaveBeenCalledTimes(0);
+      expect(getInput().value).toBe('mal');
+      expect(getFormData('search')).toEqual(['mal']);
+    });
+
+    it('VUE-21: the change of a reset starts no validation and removes the error of the field', async () => {
+      const validate = vi.fn(() => null);
+      await render(
+        <form data-testid="form">
+          <Field.Root name="search" validate={validate} validationMode="onChange">
+            <Autocomplete.Root items={cities} required defaultValue="ma">
+              <Autocomplete.Input />
+            </Autocomplete.Root>
+            <Field.Error data-testid="error" />
+          </Field.Root>
+        </form>,
+      );
+      await type('');
+      vi.advanceTimersByTime(0);
+      await flushMicrotasks();
+      expect(screen.getByTestId('error')).toBeInTheDocument();
+      const validateCalls = validate.mock.calls.length;
+
+      await reset();
+
+      expect(getInput().value).toBe('ma');
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(validate).toHaveBeenCalledTimes(validateCalls);
     });
   });
 });
