@@ -5,7 +5,7 @@ import { Field } from '@vase-ui/vue/field';
 const form = useForm({ defaultValues: { username: '' } });
 
 async function checkUsername({ value: username }: { value: string }) {
-  const result = await fetch(`https://api.example.com/usernames/${username}`);
+  const result = await fetch(`https://api.example.com/usernames/${encodeURIComponent(username)}`);
   return result.ok ? undefined : `${username} is not available.`;
 }
 </script>

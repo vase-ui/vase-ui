@@ -488,11 +488,7 @@ const SERVER_TYPES = [
               <Fieldset.Legend :class="fieldStyles.Label">Storage type</Fieldset.Legend>
               <Field.Item v-for="storageType in storageTypes" :key="storageType">
                 <Field.Label :class="[radioGroupStyles.Item, layout.Uppercase]">
-                  <Radio.Root
-                    :value="storageType"
-                    :class="radioGroupStyles.Radio"
-                    @blur="field.handleBlur"
-                  >
+                  <Radio.Root :value="storageType" :class="radioGroupStyles.Radio">
                     <Radio.Indicator :class="radioGroupStyles.Indicator" />
                   </Radio.Root>
                   {{ storageType }}

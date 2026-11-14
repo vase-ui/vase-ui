@@ -450,9 +450,6 @@ const protocols = ['http', 'https', 'ssh'];
             </Slider.Root>
           </template>
         </Fieldset.Root>
-        <Field.Error :match="!!errorMessage" :class="fieldStyles.Error">
-          {{ errorMessage }}
-        </Field.Error>
       </Field.Root>
     </VeeField>
 
@@ -495,9 +492,6 @@ const protocols = ['http', 'https', 'ssh'];
             </RadioGroup>
           </template>
         </Fieldset.Root>
-        <Field.Error :match="!!errorMessage" :class="fieldStyles.Error">
-          {{ errorMessage }}
-        </Field.Error>
       </Field.Root>
     </VeeField>
 
@@ -523,9 +517,6 @@ const protocols = ['http', 'https', 'ssh'];
             <Switch.Thumb :class="switchStyles.Thumb" />
           </Switch.Root>
         </Field.Label>
-        <Field.Error :match="!!errorMessage" :class="fieldStyles.Error">
-          {{ errorMessage }}
-        </Field.Error>
       </Field.Root>
     </VeeField>
 
@@ -570,9 +561,6 @@ const protocols = ['http', 'https', 'ssh'];
             </CheckboxGroup>
           </template>
         </Fieldset.Root>
-        <Field.Error :match="!!errorMessage" :class="fieldStyles.Error">
-          {{ errorMessage }}
-        </Field.Error>
       </Field.Root>
     </VeeField>
 

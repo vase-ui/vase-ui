@@ -172,7 +172,7 @@ Initialize the form with the `useForm` function. Give the initial value of each 
 
 ### Integrate components
 
-Put the `<Field>` component of VeeValidate around `<Field.Root>`. Its default slot gives the state of the field. Give each slot prop to the matching part:
+Put the `<Field>` component of VeeValidate around `<Field.Root>`. Its default slot gives the state of the field. Give the slot props to these parts:
 
 - `field.name` goes to the `name` prop of `<Field.Root>`.
 - `errorMessage` is the text of `<Field.Error>`. `!!errorMessage` goes to `invalid` of `<Field.Root>` and to `match` of `<Field.Error>`.
@@ -193,7 +193,7 @@ VeeValidate gives the function a value of the type `unknown`. Check the type in 
 
 ### Submitting data
 
-Wrap your submit function with `handleSubmit`. It validates the form, and then calls your function with the values as an object. Bind the result to the `submit` event of a native `<form>`:
+Wrap your submit function with `handleSubmit`. It validates the form. When the form is valid, it calls your function with the values as an object. Bind the result to the `submit` event of a native `<form>`:
 
 <<< ../examples/forms/VeeValidateSubmit.vue{16,20}
 
@@ -201,7 +201,7 @@ Do not use `Form` here. A field that shows an error stops the `submit` event of 
 
 ## TanStack Form
 
-[TanStack Form](https://tanstack.com/form/latest/docs/framework/vue/quick-start) is a form library with a function-based API for orchestrating validations. It also works with Vase UI.
+[TanStack Form](https://tanstack.com/form/latest/docs/framework/vue/quick-start) is a form library with a function-based API for validation. It also works with Vase UI.
 
 <DemoFrame>
   <DemoTanstackForm />
@@ -223,7 +223,7 @@ Create a form instance with the `useForm` function. Give the initial value of ea
 
 ### Integrate components
 
-Use the `<form.Field>` component of the form instance. Its default slot gives `field`. Give its members to the matching parts:
+Use the `<form.Field>` component of the form instance. Its default slot gives `field`. Give its members to these parts:
 
 - `field.name` goes to the `name` prop of `<Field.Root>`.
 - `field.state.meta.isValid`, `isDirty` and `isTouched` go to `invalid`, `dirty` and `touched` of `<Field.Root>`. `invalid` takes the opposite of `isValid`.
@@ -257,4 +257,4 @@ To submit the form:
 1. Give a submit function to `onSubmit` in `useForm`.
 2. Call `form.handleSubmit()` from an event listener, such as `@submit.prevent` on the form or `@click` on a button.
 
-<<< ../examples/forms/TanstackSubmit.vue{4-12,16}
+<<< ../examples/forms/TanstackSubmit.vue{6-11,16,18}

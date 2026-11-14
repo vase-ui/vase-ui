@@ -9,7 +9,7 @@ interface FormValues {
 const { handleSubmit } = useForm<FormValues>();
 
 async function submitForm(data: FormValues) {
-  // transform the object and/or submit it to a server
+  // Change the object, or send it to a server.
   await fetch('https://api.example.com/users', { method: 'POST', body: JSON.stringify(data) });
 }
 
