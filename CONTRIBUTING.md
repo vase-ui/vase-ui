@@ -296,6 +296,7 @@ Some upstream parts render a hidden `<input>` beside their element. `Switch.Root
 - A `v-if` on that input has the same effect. A part that renders the input only in some states puts the `v-if` on an internal SFC with the template `<input v-bind="inputProps" />`. `OTPFieldRootHiddenInput.vue` is the model.
 - A part with more than one root node gets no scope id from the component that renders it. A rule of `<style scoped>` thus does not match the element of the part, and `v-show` on the part has no effect. The JSDoc of the part says this. It names `:deep()`, a CSS module, a `style` binding and `v-if`.
 - A part can also render a node of its own before its element. `Combobox.Input` renders its dismiss button in this way, and its `#render` slot gets the element only.
+- Such a node can also come after the element. `Combobox.Popup` renders its dismiss button after its element.
 - A part that is its own control declares `aria-label` and `aria-labelledby` as props, because `useAriaLabelledBy` watches them. Each prop gets a `surfaceAdditions` row. A root whose control is another part, such as `NumberField.Root`, declares neither. `OTPField.Root` declares `aria-labelledby` only, because the root of Base UI reads no `aria-label`. [Props](#props) gives the form of each prop.
 - Vue writes `checked` to an input only when the value changes between two renders. Hydration does not write it. The part thus writes its state to the input after the mount and on each `pageshow` event of the window. Chromium restores the form state of a page after `load`.
 - The part also writes its state to the input in the tick after a click that it accepted. A parent that controls the part can keep the old value.
@@ -757,6 +758,7 @@ The positioning of a popup is in `src/internals/useAnchorPositioning.ts` and in 
 - `usePositioner` makes the props of the positioner element: `role="presentation"`, `hidden`, the styles, and `transition: none` while the transition status is `starting`. With `inert`, it adds `pointer-events: none`. The `style` of the consumer wins over these styles.
 - A positioner part that `usePopupPositioner` does not fit calls `useAnchorPositioning`, `useVaseUIFloating` and `usePositioner` itself. `test/fixtures/PositionerPart.vue` is the model for `useAnchorPositioning`.
 - `Select.Positioner` is such a part, because its state has no `instant`. It has `keepMounted: true` and no portal context, so it works outside `Select.Portal`.
+- `Combobox.Positioner` calls `usePopupPositioner` with a state type that adds `instant: undefined`, as Base UI does. Its exported state type has no `instant`.
 - A positioner part provides the `positioning` of the result as the context of its popup and its arrow. `tooltip/positioner/TooltipPositioner.vue` is the model.
 - The positioning context is `store.context.positioning`. The `context` of the node of the popup in the tree is the same object.
 - The context is one plain object with five members: `open`, `placement`, `nodeId`, `elements` and `rootStore`. `elements` has `reference`, `floating` and `domReference`.
@@ -797,6 +799,7 @@ The focus helpers of a popup are in `src/utils/popups/focus`.
 - `FloatingFocusManager.vue` moves the focus into a popup when it opens, and it returns the focus when the popup closes. It keeps the Tab key in a modal popup. A popup part renders it around its popup element, in the portal.
 - It renders no element. It reads the popup element from `positionerElement` of the store with `getFloatingFocusElement`, and the reference from `anchorElement`.
 - It renders two inside guards around its content, unless it is disabled. A modal popup has them. A popup that is not modal has them only in a `FloatingPortal`.
+- `Combobox.Popup` disables its focus manager when the popup closes, not when it unmounts. During an exit animation, the popup then has no guards, and the focus returns at the close (`BUG-5519`).
 - A modal popup has no guards when `initialFocus` is `false` and its reference is a typeable element with `role="combobox"`. The focus stays in the reference then.
 - A `keydown` listener on the document stops the Tab key while the focus is in a modal popup that has no tabbable element. The guards have nothing to focus then.
 - `previousFocusableElement` and `nextFocusableElement` take an element, a ref or a getter. They name the element that gets the focus when the Tab key leaves a popup that is not modal. When the value is `null`, or the ref or the getter gives no element, the focus goes to the outside guard of the portal.
@@ -859,6 +862,7 @@ The portal of a popup is in `src/utils/popups/portal`. `useFloatingPortalNode()`
 - `FloatingPortalLite` does not provide `PortalContext`, so a portal inside it does not render in the portal element of the Lite portal.
 - The portal part of a family renders `FloatingPortalLite` or `FloatingPortal` while the popup is mounted or its `keepMounted` prop is set. It provides `keepMounted` as a `ComputedRef<boolean>`, and the positioner gives it to `usePopupPositioner`. `tooltip/portal/TooltipPortal.vue` is the model.
 - `Select.Portal` has no `keepMounted` prop. It renders `FloatingPortal` while the popup is mounted or `forceMounted` of the store is set, and it provides no context.
+- `Combobox.Portal` has the `keepMounted` prop and provides it. It also renders while `forceMounted` of the store is set.
 - `FloatingPortal` provides `PortalContext`. The context holds the portal element, four guards and `setFocusManagerState()`.
 - The focus manager of the popup calls `setFocusManagerState()` with its state, and with `null` when it goes away. It gives a new object for each change, because the portal does not see a change in an object.
 - While the state says that the popup is open and not modal, the portal renders two guards and an owner element. The sequence in the place of the part is guard, owner element, `Teleport`, guard. `KeepAlive` takes the guards and the owner element out of the document with the part.

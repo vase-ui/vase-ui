@@ -13,6 +13,7 @@ import {
 } from '#test-utils';
 import ComboboxTriggerPart from '../../../test/fixtures/ComboboxTriggerPart.vue';
 import * as Combobox from '../index.parts';
+import { useComboboxRootContext } from '../root/ComboboxRootContext';
 
 describe('<Combobox.Popup />', () => {
   const { render } = createRenderer();
@@ -83,6 +84,35 @@ describe('<Combobox.Popup />', () => {
     await waitFor(() => {
       expect(popup).toHaveAttribute('role', 'dialog');
     });
+  });
+
+  it('gives the rendered id of the popup to the store', async () => {
+    const Probe = defineComponent(() => {
+      const store = useComboboxRootContext();
+      return () => <span data-testid="probe" data-popup-id={store.select('popupElementId')} />;
+    });
+    const id = shallowRef<string | undefined>(undefined);
+    await render(() => (
+      <Combobox.Root defaultOpen>
+        <Probe />
+        <Combobox.Portal>
+          <Combobox.Positioner>
+            <Combobox.Popup data-testid="popup" {...(id.value ? { id: id.value } : {})}>
+              <Combobox.Input />
+            </Combobox.Popup>
+          </Combobox.Positioner>
+        </Combobox.Portal>
+      </Combobox.Root>
+    ));
+    await flushMicrotasks();
+    const popupId = screen.getByTestId('popup').id;
+    expect(popupId).not.toBe('');
+    expect(screen.getByTestId('probe')).toHaveAttribute('data-popup-id', popupId);
+
+    id.value = 'fruits';
+    await flushMicrotasks();
+
+    expect(screen.getByTestId('probe')).toHaveAttribute('data-popup-id', 'fruits');
   });
 
   describe('the focus', () => {
@@ -282,51 +312,61 @@ describe('<Combobox.Popup />', () => {
         .filter((element) => element.tabIndex >= 0);
     }
 
-    it.each([
-      { name: 'an input in the popup', inputInPopup: true },
-      { name: 'an input outside the popup', inputInPopup: false },
-    ])(
-      'BUG-5519: keeps no focusable content under aria-hidden during the exit ($name)',
-      async ({ inputInPopup }) => {
-        globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
-        const open = shallowRef(true);
-        await render(() => (
-          <div>
-            <style>{EXIT_CSS}</style>
-            <button type="button">Outside</button>
-            <Combobox.Root open={open.value}>
-              {inputInPopup ? null : <Combobox.Input />}
-              <Combobox.Portal>
-                <Combobox.Positioner>
-                  <Combobox.Popup class="popup" data-testid="popup">
-                    {inputInPopup ? <Combobox.Input /> : null}
-                  </Combobox.Popup>
-                </Combobox.Positioner>
-              </Combobox.Portal>
-            </Combobox.Root>
-          </div>
-        ));
-        await waitFor(() => {
-          expect(getFocusableUnderAriaHidden().length).toBeGreaterThan(0);
-        });
-        const popup = screen.getByTestId('popup');
-        const animationsRead = nextAnimationsRead(popup);
+    // Opens the popup with its trigger and closes it with the Escape key. The callback records the
+    // document when the exit animation starts. The function resolves after the popup unmounts.
+    async function recordExit(record: () => void) {
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+      const { user } = await render(
+        <div>
+          <style>{EXIT_CSS}</style>
+          <Combobox.Root>
+            <ComboboxTriggerPart data-testid="trigger">Open</ComboboxTriggerPart>
+            <Combobox.Portal>
+              <Combobox.Positioner>
+                <Combobox.Popup class="popup" data-testid="popup">
+                  <Combobox.Input data-testid="input" />
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>
+        </div>,
+      );
+      await user.click(screen.getByTestId('trigger'));
+      await waitFor(() => {
+        expect(screen.getByTestId('input')).toHaveFocus();
+      });
+      expect(getFocusableUnderAriaHidden().length).toBeGreaterThan(0);
+      const popup = screen.getByTestId('popup');
+      const animationsRead = nextAnimationsRead(popup);
 
-        await nextEvent(popup, 'animationstart', {
-          action: () => {
-            open.value = false;
-          },
-        });
-        const focusableDuringExit = getFocusableUnderAriaHidden();
-        for (const animation of await animationsRead) {
-          animation.finish();
-        }
-        await waitFor(() => {
-          expect(popup.isConnected).toBe(false);
-        });
+      await nextEvent(popup, 'animationstart', { action: () => user.keyboard('{Escape}') });
+      record();
+      for (const animation of await animationsRead) {
+        animation.finish();
+      }
+      await waitFor(() => {
+        expect(popup.isConnected).toBe(false);
+      });
+    }
 
-        expect(focusableDuringExit).toEqual([]);
-      },
-    );
+    it('BUG-5519: keeps no focusable content under aria-hidden during the exit animation', async () => {
+      let focusableDuringExit: HTMLElement[] = [];
+
+      await recordExit(() => {
+        focusableDuringExit = getFocusableUnderAriaHidden();
+      });
+
+      expect(focusableDuringExit).toEqual([]);
+    });
+
+    it('BUG-5519: returns the focus to the trigger when the exit animation starts', async () => {
+      let focusedDuringExit: Element | null = null;
+
+      await recordExit(() => {
+        focusedDuringExit = document.activeElement;
+      });
+
+      expect(focusedDuringExit).toBe(screen.getByTestId('trigger'));
+    });
   });
 });

@@ -198,9 +198,9 @@ const resolvedFinalFocus = computed(() => {
 });
 
 const focusManagerModal = computed(() => !inputInsidePopup.value || store.select('modal'));
-// Base UI stops the focus manager when the popup unmounts. It then keeps its guards and its
-// `aria-hidden` marks during an exit animation, and the Tab key can reach a guard or an element
-// under the marks (BUG-5519). This part stops it when the popup closes.
+// Base UI stops the focus manager when the popup unmounts. Its focus guards have `aria-hidden`, and
+// during an exit animation the Tab key can still reach them (BUG-5519). This part stops the focus
+// manager when the popup closes.
 const focusManagerDisabled = computed(() => !open.value);
 
 function getInsideElements() {
