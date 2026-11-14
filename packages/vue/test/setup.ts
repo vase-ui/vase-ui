@@ -14,10 +14,6 @@ if (typeof document !== 'undefined') {
 if (typeof document !== 'undefined') {
   // Fake timers replace the global `setTimeout`. This reference stays the timer of the browser.
   const browserSetTimeout = globalThis.setTimeout;
-  const nextBrowserTask = () =>
-    new Promise<void>((resolve) => {
-      browserSetTimeout(resolve, 0);
-    });
   const { userEvent } = await import('vitest/browser');
 
   // The browser keeps its real pointer where a test leaves it. Some frames later, an element that a
@@ -44,17 +40,13 @@ if (typeof document !== 'undefined') {
   beforeEach(() => {
     onTestFinished(async () => {
       if (isPointerInPage) {
+        isPointerInPage = false;
         // A point outside the page.
         await userEvent.pointer({ coords: { x: -1, y: -1 } });
-        // Firefox can handle this move after the command resolves. Until then, the page keeps the
-        // pointer at its last point in the page. With two Firefox windows, Firefox can give the
-        // move to the other window, and this wait does not end. Firefox runs one file at a time.
-        while (document.querySelector(':hover') !== null) {
-          await nextBrowserTask();
-        }
-        isPointerInPage = false;
       }
-      await nextBrowserTask();
+      await new Promise<void>((resolve) => {
+        browserSetTimeout(resolve, 0);
+      });
     });
   });
 }

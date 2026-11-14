@@ -130,3 +130,30 @@ describe('real pointer between tests', () => {
     expect(onPointerover).not.toHaveBeenCalled();
   });
 });
+
+describe('pointer lock', () => {
+  // With a pointer lock, Firefox puts a second pointer in the page. The move of the setup does not
+  // take that pointer off the page, so it gives hover events to each later test of the page. The
+  // Vitest config turns the pointer lock off in Firefox. Chromium and WebKit refuse a lock in the
+  // page of a test.
+  const { render } = createRenderer();
+
+  it('gets no pointer lock for a real press', async () => {
+    let refusal: Promise<unknown> | undefined;
+    await render(
+      <button
+        data-testid="button"
+        onPointerdown={() => {
+          refusal = document.body.requestPointerLock().then(
+            () => null,
+            (error: unknown) => error,
+          );
+        }}
+      />,
+    );
+    await userEvent.click(screen.getByTestId('button'));
+
+    expect(await refusal).toBeInstanceOf(DOMException);
+    expect(document.pointerLockElement).toBe(null);
+  });
+});
