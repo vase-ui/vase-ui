@@ -3427,5 +3427,88 @@ describe('<RadioGroup />', () => {
 
       expect(group.value?.inputElement).toBe(inputB);
     });
+
+    it.each([
+      { name: 'b after a', before: false },
+      { name: 'b before a', before: true },
+    ])('keeps a radio that mounts while held out of the form: $name', async ({ before }) => {
+      const visible = shallowRef(true);
+      const extra = shallowRef(false);
+      const group = shallowRef<RadioGroupInstance | null>(null);
+      const handleSubmit = vi.fn();
+      const Radios = defineComponent(() => () => (
+        <>
+          {extra.value && before ? <Radio.Root key="b" value="b" data-testid="b" /> : null}
+          <Radio.Root key="a" value="a" data-testid="a" />
+          {extra.value && !before ? <Radio.Root key="b" value="b" data-testid="b" /> : null}
+        </>
+      ));
+      const App = defineComponent(() => () => (
+        <Form onFormSubmit={handleSubmit}>
+          <Field.Root name="fruit">
+            <RadioGroup ref={group} required>
+              <KeepAlive>{visible.value ? <Radios /> : <Placeholder />}</KeepAlive>
+            </RadioGroup>
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>
+      ));
+      const { user } = await render(<App />);
+      const inputA = getInput('a');
+
+      visible.value = false;
+      await flushMicrotasks();
+      extra.value = true;
+      await flushMicrotasks();
+
+      expect(group.value?.inputElement).toBe(null);
+
+      await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(group.value?.inputElement).toBe(inputA);
+
+      await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+      expect(screen.getByTestId('a')).toHaveFocus();
+    });
+
+    // A radio that mounts in a held group registers its input, because the group is held too.
+    it('registers the inputs in the order of the radios when KeepAlive shows a held group', async () => {
+      const visible = shallowRef(true);
+      const extra = shallowRef(false);
+      const handleSubmit = vi.fn();
+      const Group = defineComponent(() => () => (
+        <RadioGroup required>
+          <Radio.Root key="a" value="a" data-testid="a" />
+          {extra.value ? <Radio.Root key="b" value="b" data-testid="b" /> : null}
+        </RadioGroup>
+      ));
+      const App = defineComponent(() => () => (
+        <Form onFormSubmit={handleSubmit}>
+          <Field.Root name="fruit">
+            <KeepAlive>{visible.value ? <Group /> : <Placeholder />}</KeepAlive>
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>
+      ));
+      const { user } = await render(<App />);
+
+      visible.value = false;
+      await flushMicrotasks();
+      extra.value = true;
+      await flushMicrotasks();
+      visible.value = true;
+      await flushMicrotasks();
+      await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+      expect(handleSubmit).not.toHaveBeenCalled();
+      expect(screen.getByTestId('a')).toHaveFocus();
+    });
   });
 });
