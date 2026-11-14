@@ -5,7 +5,8 @@
     "packages/react/src/utils/popups/floating-root/**",
     "packages/react/src/utils/popups/value-popup/**",
     "packages/react/test/popupStoreTestUtils.tsx",
-    "packages/react/test/popupConformanceTests.tsx"
+    "packages/react/test/popupConformanceTests.tsx",
+    "packages/react/test/popupFocusPropsTests.tsx"
   ],
   "sources": [
     "packages/react/src/utils/popups/CommonPopupDataAttributes.ts",
@@ -35,6 +36,7 @@
     "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
     "packages/react/src/utils/popups/value-popup/ValuePopupStore.ts",
     "packages/react/test/popupConformanceTests.tsx",
+    "packages/react/test/popupFocusPropsTests.tsx",
     "packages/react/test/popupStoreTestUtils.tsx"
   ],
   "typeTests": [
@@ -1345,6 +1347,77 @@
           "conditions": [
             "skipIf(isJSDOM || !exitAnimation)"
           ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/test/popupFocusPropsTests.tsx",
+      "rows": [
+        {
+          "describe": [
+            "prop: initialFocus"
+          ],
+          "title": "focuses the first focusable element by default"
+        },
+        {
+          "describe": [
+            "prop: initialFocus"
+          ],
+          "title": "focuses the element of a ref"
+        },
+        {
+          "describe": [
+            "prop: initialFocus"
+          ],
+          "title": "focuses the right element when a function returns $name"
+        },
+        {
+          "describe": [
+            "prop: initialFocus"
+          ],
+          "title": "does not move focus when `false`"
+        },
+        {
+          "describe": [
+            "prop: initialFocus"
+          ],
+          "title": "passes the interaction type to a function, and does nothing when it returns undefined"
+        },
+        {
+          "describe": [
+            "prop: initialFocus"
+          ],
+          "title": "is not called again when the popup closes"
+        },
+        {
+          "describe": [
+            "prop: finalFocus"
+          ],
+          "title": "focuses the trigger by default"
+        },
+        {
+          "describe": [
+            "prop: finalFocus"
+          ],
+          "title": "focuses the element of a ref"
+        },
+        {
+          "describe": [
+            "prop: finalFocus"
+          ],
+          "title": "focuses the right element when a function returns $name"
+        },
+        {
+          "describe": [
+            "prop: finalFocus"
+          ],
+          "title": "does not move focus when `false`"
+        },
+        {
+          "describe": [
+            "prop: finalFocus"
+          ],
+          "title": "passes the close type to a function"
         }
       ]
     }

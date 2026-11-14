@@ -4,7 +4,8 @@
     "packages/react/src/utils/popups/floating-root/**",
     "packages/react/src/utils/popups/value-popup/**",
     "packages/react/test/popupStoreTestUtils.tsx",
-    "packages/react/test/popupConformanceTests.tsx"
+    "packages/react/test/popupConformanceTests.tsx",
+    "packages/react/test/popupFocusPropsTests.tsx"
   ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
