@@ -14,8 +14,8 @@ import {
   waitFor,
   within,
 } from '#test-utils';
+import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { REASONS } from '../../internals/reasons';
-import * as NavigationMenu from '../index.parts';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import NavigationMenuTriggerHydration from './NavigationMenuTriggerHydration.test.vue';
 import NavigationMenuTriggerScoped from './NavigationMenuTriggerScoped.test.vue';
@@ -785,7 +785,7 @@ describe('<NavigationMenu.Trigger />', () => {
     });
   });
 
-  describe('VUE-57: the trigger has one root node', () => {
+  describe('VUE-60: the trigger has one root node', () => {
     it.each([
       { name: 'a closed item', defaultValue: null },
       { name: 'an active item', defaultValue: 'one' },

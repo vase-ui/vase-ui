@@ -23,7 +23,8 @@ export interface NavigationMenuPortalProps
 
 <script setup lang="ts">
 import { computed, provide, useTemplateRef } from 'vue';
-import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import type { Component } from 'vue';
+import type { HTMLProps } from '../../internals/types';
 import FloatingPortal from '../../utils/popups/portal/FloatingPortal.vue';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import { NavigationMenuPortalContext } from './NavigationMenuPortalContext';
@@ -37,7 +38,11 @@ const props = withDefaults(defineProps<NavigationMenuPortalProps>(), {
 
 defineSlots<{
   default(props: { state: NavigationMenuPortalState }): unknown;
-  render: ComponentRenderFn<HTMLProps, NavigationMenuPortalState>;
+  render(props: {
+    props: HTMLProps;
+    state: NavigationMenuPortalState;
+    children: Component;
+  }): unknown;
 }>();
 
 const { mounted } = useNavigationMenuRootContext();
