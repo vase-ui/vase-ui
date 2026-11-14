@@ -210,8 +210,12 @@ describe('<AlertDialog.Root />', () => {
       const fromDialog: AlertDialog.Handle<number> = dialogHandle;
       const forDialog: Dialog.Handle<number> = alertDialogHandle;
 
+      // @ts-expect-error A root of Alert Dialog takes no handle of Dialog.
+      const rootWithDialogHandle = <AlertDialog.Root handle={dialogHandle} />;
+
       expect(fromDialog).toBeInstanceOf(Dialog.Handle);
       expect(forDialog).toBeInstanceOf(AlertDialog.Handle);
+      expect(rootWithDialogHandle.props?.handle).toBe(dialogHandle);
       expect(Object.keys(alertDialogHandle)).toEqual(Object.keys(dialogHandle));
     });
   });
