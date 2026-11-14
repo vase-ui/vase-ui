@@ -1,11 +1,22 @@
+import ToastAction from './action/ToastAction.vue';
+import type { ToastActionProps, ToastActionState } from './action/ToastAction.vue';
+import ToastClose from './close/ToastClose.vue';
+import type { ToastCloseProps, ToastCloseState } from './close/ToastClose.vue';
 import ToastContent from './content/ToastContent.vue';
 import type { ToastContentProps, ToastContentState } from './content/ToastContent.vue';
+import ToastDescription from './description/ToastDescription.vue';
+import type {
+  ToastDescriptionProps,
+  ToastDescriptionState,
+} from './description/ToastDescription.vue';
 import ToastPortal from './portal/ToastPortal.vue';
 import type { ToastPortalProps, ToastPortalState } from './portal/ToastPortal.vue';
 import ToastProvider from './provider/ToastProvider.vue';
 import type { ToastProviderProps, ToastProviderState } from './provider/ToastProvider.vue';
 import ToastRoot from './root/ToastRoot.vue';
 import type { ToastRootProps, ToastRootState, ToastRootToastObject } from './root/ToastRoot.vue';
+import ToastTitle from './title/ToastTitle.vue';
+import type { ToastTitleProps, ToastTitleState } from './title/ToastTitle.vue';
 import ToastViewport from './viewport/ToastViewport.vue';
 import type { ToastViewportProps, ToastViewportState } from './viewport/ToastViewport.vue';
 
@@ -51,6 +62,47 @@ export const Content: typeof ToastContent = ToastContent;
 export namespace Content {
   export type State = ToastContentState;
   export type Props = ToastContentProps;
+}
+
+/**
+ * A description that describes the toast.
+ * Can be used as the default message for the toast when no title is provided.
+ * Renders a `<p>` element.
+ */
+export const Description: typeof ToastDescription = ToastDescription;
+export namespace Description {
+  export type State = ToastDescriptionState;
+  export type Props = ToastDescriptionProps;
+}
+
+/**
+ * A title that labels the toast.
+ * Renders an `<h2>` element.
+ */
+export const Title: typeof ToastTitle = ToastTitle;
+export namespace Title {
+  export type State = ToastTitleState;
+  export type Props = ToastTitleProps;
+}
+
+/**
+ * Closes the toast when clicked.
+ * Renders a `<button>` element.
+ */
+export const Close: typeof ToastClose = ToastClose;
+export namespace Close {
+  export type State = ToastCloseState;
+  export type Props = ToastCloseProps;
+}
+
+/**
+ * Performs an action when clicked.
+ * Renders a `<button>` element.
+ */
+export const Action: typeof ToastAction = ToastAction;
+export namespace Action {
+  export type State = ToastActionState;
+  export type Props = ToastActionProps;
 }
 
 /**
