@@ -1386,7 +1386,7 @@ The hydration helpers:
 - Give a real click to `nextEvent` as its `action`. The click is a command of the browser, and on a busy machine it can take more than 3 seconds. The 3 seconds of a wait that started before the click then end before the transition starts.
 - In a new or changed case, do not poll for a state that exists only while an animation runs. Record the state in a listener of `animationstart`, `animationend`, `transitionrun` or `transitionend`, or in a `MutationObserver`. Then wait for a state that stays. Then assert on the record.
 - In a listener of `animationstart` or `transitionrun`, read the fields of the event or a state that stays. Do not read `getAnimations()`. A late frame can end the animation before the browser sends the event, and the list is then empty.
-- A case that needs the animations that a part waits for gets them from `nextAnimationsRead`. The case calls it before the action.
+- In a new or changed case that needs the animations that a part waits for, get them from `nextAnimationsRead`. Call it before the action.
 - In a new or changed case that ends an animation with its own call (a seek or `finish()`), give that animation a duration of 100 s. A part reads its animations some frames after the close, and a late frame can end a short animation before that read.
 - A new case that asserts the frame in which a part removes an element uses `probeFrameAfterExit`. It also has a control case in which the removal is late, as `AnimatedPanel.test.tsx` has.
 - In Firefox, a dispatched `submit` event that no listener prevents submits the form and loads the test page again. Chromium and WebKit do not. A case that submits a valid form has a listener that calls `preventDefault()`. `observeSubmit` of `Form.test.tsx` is the model.
