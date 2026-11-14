@@ -261,7 +261,7 @@ Some upstream parts put nodes of their own in the element. Examples are the rang
 - A consumer writes `<a v-bind="props"><component :is="children">…</component></a>`.
 - A development build shows a warning when the `#render` slot does not mount `children`. The part makes this check together with the check for the element of the slot.
 - The part passes `children: true` to `useRenderElement`. `<Part>Children.vue` calls `markChildrenMounted()` in setup. The warning needs the two calls.
-- The Viewport part of a popup family has no `<Part>Children.vue`. Its `children` is `utils/popups/viewport/PopupViewportChildren.vue`. `test/fixtures/PopupViewportPart.vue` is the model.
+- The Viewport part of a popup family that calls `usePopupViewport` has no `<Part>Children.vue`. Its `children` is `utils/popups/viewport/PopupViewportChildren.vue`. `test/fixtures/PopupViewportPart.vue` is the model. `NavigationMenu.Viewport` does not call `usePopupViewport`, so `NavigationMenuViewportChildren.vue` renders the two focus guards and the target element of the content.
 
 <!-- prettier-ignore -->
 ```vue
@@ -300,6 +300,7 @@ Some upstream parts render a hidden `<input>` beside their element. `Switch.Root
 - A group that has one input for each item, such as `RadioGroup` and `CheckboxGroup`, does not call `useFormReset` itself. The input that `RadioGroup` exposes changes with the value, and it can be absent. `CheckboxGroup` exposes no input. `useFormReset` also drops a reset that waits when its input changes. Each item thus calls `useFormReset` with its own input. The group handles the first call for each `reset` event.
 - `CheckboxGroup` follows the reset of each form that has an input of one of its items. An uncontrolled item whose state the group does not hold goes back to its default value through its own change event. A checkbox with no `value`, and with no `name` of its own or of its field, is such an item. The group clears the error of the field, so such an item does not. When an uncontrolled group goes back to its default value, its parent checkbox goes back to the state that it has at the mount.
 - A part inside a root can validate each change of the value of the root. The root then sets a flag in its context for the change of a reset, and the part starts no validation while the flag is set. `NumberField.Root` does this with `isResetChangePending`. The root clears the error of the field itself.
+- A field counts `valueMissing` only after it is marked dirty. A value that differs from its initial value marks the field. A call of `validate()` on the field or on the form marks it too, and a submit calls `validate()` for each field. The `dirty` prop with the value `true` also marks it. A part that the user cannot empty, such as `RadioGroup`, gives `true` as the second argument of `validation.commit` at its blur. The field then counts `valueMissing` with no mark.
 
 ```vue
 <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
@@ -517,6 +518,7 @@ If a line must break a rule, put a disable comment on that line and give the rea
 - The SFC writes `<component :is="'style'">`, because the Vue compiler removes a `<style>` tag from a template. It binds the nonce of `CSPProvider` with `:nonce.attr`. Without `.attr`, a client render sets the DOM property, and the element has no `nonce` attribute.
 - After the mount, `useStyleDisableScrollbar(element)` keeps one shared style element for each document or shadow root. The last part that uses the element removes it. With `disableStyleElements` of `CSPProvider`, no such element exists, and the consumer writes the rule of the class `vase-ui-disable-scrollbar` in a style sheet.
 - A portal renders after mount. It does not render while the popup is closed, unless `keepMounted` is set. The server HTML thus has one comment in its place, also for an open popup. See [Popup portal](#popup-portal).
+- `NavigationMenu.Content` teleports into its viewport, and the root gets the element of the viewport only after the mount. The server HTML thus has no content, also for an open item. With `keepMounted`, the content is in its item, hidden.
 - The server render of some families depends on an id, a locale, a prehydration script or a portal. It can also depend on a state that a server cannot know, such as the loading status of an image. Such a family adds a page and its cases to the Nuxt fixture, `fixtures/nuxt`. While no entry point exports a part, the page imports it by its path in `packages/vue/src`, as the page `portal.vue` does.
 
 The hydration state:
@@ -798,6 +800,7 @@ The focus helpers of a popup are in `src/utils/popups/focus`.
 - The deactivation moves the focus to `<body>`, so the initial focus moves again at the activation. The popup keeps its open state.
 - The deactivation returns no focus. The reference usually leaves the document with the popup, and an older element of the list would get the focus.
 - The state for the portal and the guards do not read the flag. `KeepAlive` takes the guards of the portal out of the document with the part, and the same guards must return.
+- `enqueueFocus(element, options)` focuses an element in the next animation frame, or at once with `sync`. The call returns a function that cancels its frame. The module keeps one pending focus for the page, so a later call cancels the frame of an earlier call. The focus manager and the list navigation share it. Do not copy it.
 
 ### Popup portal
 
@@ -833,6 +836,8 @@ The interaction composables of a popup are in `src/utils/popups/interactions`.
 - Base UI listens for the first `mousemove` of a hover trigger with `{ once: true }`. The composable keeps a flag instead. A change of `enabled`, `move`, `mouseOnly`, the tree or the store sets the flag again.
 - A composable reads the hover intent in a `computed`. A server render reads it in no hook. It thus makes no intent and adds no listener to a store that all requests share.
 - A trigger stops its open timer, its rest timer and its safe polygon when it unmounts, when its store changes, when it gets disabled, and when `KeepAlive` deactivates it.
+- A trigger that blocks pointer events itself, as `NavigationMenuTrigger.vue` does, calls `restoreOutsidePointerEvents()` of the hover intent at each change of `open`, when it unmounts and when `KeepAlive` deactivates it.
+- A trigger that opens on hover reads `:hover` in `onMounted`, because a browser sends no enter event for a pointer that is already over the trigger when the hydration ends. When the trigger matches, hover is enabled and the menu is closed, it calls `onMouseenter` and then `onMousemove` of its hover props, each with a new event. The first call lets a move open the popup. The second call starts the rest timer. Under `KeepAlive`, the trigger reads `:hover` again in `onActivated`, after a deactivation only. This follows the `KeepAlive` rules of [What differs from the React source](#what-differs-from-the-react-source).
 - Chromium sends `focusout` when Vue removes the focused trigger, after the scope of the part stopped. A handler that starts a timer thus starts none after the scope stopped.
 - A popup that hover or focus opened closes with the reason `trigger-hover` or `trigger-focus` when `KeepAlive` deactivates its trigger. This is the exception to the open state that a popup keeps under `KeepAlive`.
 - `useHoverPopupInteraction` takes `store` as a store, a ref or a getter, because a part can get its store after `setup`. A change of the store runs each effect of the part again for the new store.
@@ -886,6 +891,26 @@ The interaction composables of a popup are in `src/utils/popups/interactions`.
 - The frame and the touch timer stop when the part unmounts and when `KeepAlive` deactivates the part. A frame or a touch timer that waits still opens its popup when `enabled` becomes `false` or the store changes, as in Base UI.
 - `useOpenInteractionType(open)` returns `openMethod` as a `Readonly<Ref>` and `triggerProps`, a plain object of listeners. `open` is a ref or a getter.
 - A store that keeps the type uses `useOpenMethodTriggerProps(open, setOpenMethod)`.
+
+### Popup list navigation
+
+`useListNavigation(store, options)` moves the highlight of a list with the arrow keys, with real focus or with virtual focus. The code is in `src/utils/popups/interactions/useListNavigation.ts`.
+
+- A root calls it one time in `setup`. It also works while the popup is closed, because a key of the reference opens the popup.
+- The result is a `ComputedRef` of one object with `reference`, `floating`, `item` and `trigger`. `reference` and `floating` can hold `aria-activedescendant`, which changes. `item` and `trigger` hold only listeners, and each is one object for the life of the composable. An item part that gets `item` as a prop thus renders again only when its own state changes.
+- Base UI gives an empty object while `enabled` is `false`. Here each handler does nothing in that state, except that the `keydown` handler of the popup still gives a key to the list above. The result has no `aria-activedescendant`.
+- The composable does not write the active index. It calls `onNavigate`, and the consumer writes the index or declines. The next key starts from the index of the consumer.
+- `listRef` is a ref of the array of the item elements, such as `elementsRef` of the item registry. The composable reads it only in a handler and after a DOM update, so it does not follow a change of the list. A family that must follow the list does that itself, as in Base UI.
+- `onNavigate` is a plain function. `disabledIndices` is a plain member, because `toValue` calls a function. The composable reads it one time, so a function is the form that follows a change.
+- `grid` is a ref or a getter of the navigator: `grid: () => (props.grid ? gridNavigation : undefined)`. A family can then change the navigator with a prop. The composable imports the navigator only as a type, so a family with no grid does not hold the grid code. Each other option is a value, a ref or a getter.
+- The navigator is `gridNavigation` of `src/utils/popups/interactions`. It is not `gridNavigation` of the composite, which uses a cell map.
+- Six effects of Base UI are the blocks of one function, in the sequence of Base UI. The function runs in `onMounted` and in one `watch` with `flush: 'post'`. Separate post watchers run in the sequence of the writes, so they lose the sequence of Base UI ([Focus helpers](#focus-helpers)). Five blocks keep the values of their last run and run when one of them changed. The sixth block records the open state and the mounted state for the next run.
+- The orientation goes to `context.orientation` of the store in `onBeforeMount`, and a `watch` follows a change. A list below reads it through the popup tree. A server render writes nothing to the store. A store with a frozen context, such as `getEmptyRootStore()`, throws at that write, so give the composable the store of the root.
+- The popup element of a list above does not get the `keydown` of a list below that `Teleport` moved. Thus each `useListNavigation` call provides one function with a plain `Symbol()` key, and it injects the function of the call above it.
+- The `keydown` handler of the popup element gives a key that no handler stopped to the function of the list above (`VUE-46`). The list above does nothing when its popup element holds the target, because the DOM gives it the event. A list that is not enabled also gives the list above a key that it gets from below.
+- The list above is the nearest call of `useListNavigation` above the component in the component tree, and not the popup element around it in the DOM. A popup between the two lists that has no list navigation takes no part.
+- A component calls `useListNavigation` one time. A second call in the same component replaces the function that the first call provides.
+- `KeepAlive` takes the list out of the document, and the active item loses the focus. While `KeepAlive` holds the list, the composable stops its frames. At the activation, the active item gets the focus again, and the highlight does not change.
 
 ### Toast store
 
@@ -1050,7 +1075,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - `useFloating` sets `isPositioned` from the `open` option that it read when the position pass started. A pass can start while the popup is open and end after the popup closed. `useFloating` then gives `true` for a closed popup, and the part shows an old position.
 - The composable keeps its own `isPositioned` in a `shallowRef`. One `watch` on `middlewareData` and on the `isPositioned` of `useFloating` writes it. The value is `true` only when the `isPositioned` of `useFloating` is `true` and `open` is not `false` at that time.
 - Each reader of `isPositioned` reads this ref. A reader outside a render, such as the microtask of a function ref, needs the value in the write that ends the pass.
-- Where a handler of Base UI reads the state of the last render after a state write, keep that value in a variable that a `watch` with the default flush writes. A direct read in the handler gives the value after the write. `useFieldValidation` does this for the validity of the field: `renderedValid`. `useMenuRoot` does this for the open state, and it gives the state to the store only while the root is mounted.
+- Where a handler of Base UI reads the state of the last render after a state write, keep that value in a variable that a `watch` with the default flush writes. A direct read in the handler gives the value after the write. `useFieldValidation` does this for the validity of the field: `renderedValid`. `useMenuRoot` does this for the open state, and it gives the state to the store only while the root is mounted. `NavigationMenuTrigger.vue` does this for the active state of its item, because its own `click` handler writes the item before the handler of `useClick` reads `toggle`.
 - `useValueAsRef(value)` of Base UI becomes a variable that a `watch` of the value writes with `flush: 'sync'`. A handler then reads the value of the last change. `SliderControl.vue` does this for `values`.
 - `useValueChanged` calls its callback after the DOM update, because the callback of a field control reads the validity of the input. Under `KeepAlive` it waits for the activation and gives the value before the deactivation.
 - A consumer can change an object prop in place, because a `ref` of the consumer gives a reactive proxy. `errors` of `Form` is such a prop. A `computed` that reads the proxy with `Object.hasOwn` does not see a new key, because Vue tracks no `Object.hasOwn` of a proxy.
@@ -1115,7 +1140,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - The listener ignores an event whose target is not the form of the input. The callback runs in a 0 ms timeout, because the browser resets the controls after the listeners of the event. It does not run when a listener prevented the event.
 - After a reset the error of the field is out of date. The function that `useClearFieldError` returns cancels the pending validation and removes the message that the field put on the input. It also clears the validity of the field, and the error of the form for the name of the field.
 - Base UI can decide in a microtask that runs after the handlers of the ancestors. React runs all its handlers in one native listener, so its microtask comes after them. For a real key press, the browser runs the microtasks after each listener. Use a 0 ms timeout. `Checkbox.Root` does this for Enter. Its handler keeps the default prevented, and it gives the event own properties `defaultPrevented` and `preventDefault` until the timeout. A listener of an ancestor then reads `false`, and it can still prevent the submit.
-- A teleported child popup has two links to its parent: the popup tree and the `provide` chain of `useDismiss`. See [Popup dismissal](#popup-dismissal).
+- A teleported child popup has three links to its parent: the popup tree, the `provide` chain of `useDismiss` and the `provide` chain of `useListNavigation`. See [Popup dismissal](#popup-dismissal) and [Popup list navigation](#popup-list-navigation).
 - An outside press and a focus-out treat the popup of a descendant node as inside.
 - `KeepAlive` is the counterpart of `React.Activity`. Under `KeepAlive`, a part keeps its state. In `onDeactivated` it releases the scroll lock, the modal marks, the document listeners and the timers. In `onActivated` it takes them back.
 - A dialog reports its open state to the dialog above it. While `KeepAlive` holds the dialog, it reports that it is closed. The dialog above is then the top dialog again, so Escape closes it. The report comes back at the activation.

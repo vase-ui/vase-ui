@@ -319,8 +319,9 @@ const { element, elementProps } = useRenderElement('div', props, {
           setFieldTouched(true);
           setFocused(false);
 
+          // A user cannot empty a group, so a missing value counts with no earlier change.
           if (validationMode.value === 'onBlur') {
-            void validation.commit(checkedValue.value);
+            void validation.commit(checkedValue.value, true);
           }
         }
       },
