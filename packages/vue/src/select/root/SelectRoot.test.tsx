@@ -11,6 +11,7 @@ import {
   hydrate,
   renderOnServer,
   screen,
+  wait,
   waitFor,
 } from '#test-utils';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -407,15 +408,18 @@ describe('<Select.Root />', () => {
 
     it('does not open while disabled', async () => {
       const handleOpenChange = vi.fn();
-      const { user } = await render(
+      await render(
         <Select.Root disabled onOpenChange={handleOpenChange}>
-          <Select.Trigger data-testid="trigger" />
+          <Select.Trigger data-testid="trigger" nativeButton={false} as="div" />
         </Select.Root>,
       );
+      const trigger = screen.getByTestId('trigger');
 
-      await user.click(screen.getByTestId('trigger'));
+      await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+      await fireEvent.mouseDown(trigger, { button: 0 });
+      await wait(20);
 
-      expect(screen.getByTestId('trigger')).toHaveAttribute('aria-expanded', 'false');
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
       expect(handleOpenChange).toHaveBeenCalledTimes(0);
     });
 

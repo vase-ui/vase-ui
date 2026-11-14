@@ -588,8 +588,6 @@ function inputProps() {
         focusVisible: true,
       } as FocusOptions);
     },
-    // The select keeps its value. The autofill of a value comes with the items, which give the
-    // values to match.
     onInput: () => void nextTick(writeValueToInput),
     onChange: () => void nextTick(writeValueToInput),
   };

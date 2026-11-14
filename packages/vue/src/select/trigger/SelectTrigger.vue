@@ -138,7 +138,7 @@ function setTriggerElement(trigger: HTMLElement | null) {
   }
 }
 
-// The document keeps the listener of the press that opens the popup until the release.
+// The cleanup also runs on a server, so it removes the listener only from the document that got it.
 let mouseUpDocument: Document | null = null;
 
 function removeMouseUpListener() {
@@ -147,7 +147,6 @@ function removeMouseUpListener() {
 }
 
 function handleMouseUp(mouseEvent: MouseEvent) {
-  mouseUpDocument = null;
   const trigger = element.value;
   if (!trigger) {
     return;

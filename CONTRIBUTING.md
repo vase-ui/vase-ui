@@ -283,6 +283,8 @@ Some upstream parts render a hidden `<input>` beside their element. `Switch.Root
 - The part also writes its state to the input in the tick after a click that it accepted. A parent that controls the part can keep the old value.
 - A part with an `indeterminate` state writes that property to the input in the same function as `checked`, and again after each change of `indeterminate`. A click on the input clears the property, and the write in the tick after an accepted click sets it again. A script that writes `checked` does not clear the property. A server cannot write it, because HTML has no attribute for it.
 - A part with a `value` input does not write its state after the mount, because hydration writes `value`. It writes its state on each `pageshow` event, and in the tick after each `input` and `change` event of the input. `NumberField.Root` does this.
+- The input of a control with no native input, such as `Select.Root`, has the type that `getHiddenInputType` of `src/internals` gives. It is `type="hidden"` while the control has no `name`, no `autoComplete`, no `required` and no field. A password manager then skips the input.
+- Base UI also keeps a text input when the consumer gives `inputRef`. A part cannot know if a consumer reads its exposed `inputElement`, so `getHiddenInputType` has no parameter for it.
 - Such a part handles an `input` or a `change` event only when the value of the input is new. A program can send both events in one task, and the part then handles the first one. [What differs from the React source](#what-differs-from-the-react-source) says when a value is new.
 - For a change that a listener cancels, the part calls `preventDefault` on the click of the input. The browser then puts the old state back.
 - In a group with one input for each item, each item writes its state to its input after each change that no listener cancels. A browser unchecks the other inputs of a named group when one input gets checked. A parent that controls the group can also keep the old value.
@@ -368,6 +370,7 @@ Rules:
 - A generic SFC is not assignable to `as` of another part. vue-tsc types it as a function that `as` does not accept, so `<Toolbar.Button :as="ToggleGroup">` fails the type check.
 - A part that a consumer must be able to give to `as`, such as `Toggle`, is not a generic SFC. It keeps the type parameter on its exported props interface: `ToggleProps<Value extends string = string>`, with `defineProps<ToggleProps>()`. `ToggleGroup` is a generic SFC, because the type of its `valueChange` event follows `Value`.
 - A popup trigger is the exception. It is a generic SFC, because its `payload` must have the type of its `handle`. Give another part to its `as` or to its `#render` slot. Do not give the trigger to the `as` of another part.
+- `Select.Trigger` has no handle and no payload. It is a generic SFC for the type of the value in its state.
 - Base UI takes a `React.ReactNode` as the label of an item. A label comes from an `items` record, from an `items` list, or from an object value that has a `label`. Vase UI takes an `ItemLabel`, which `src/internals/resolveValueLabel.ts` exports.
 - An `ItemLabel` is a string, a number, `null`, `undefined`, or a function that returns the content of the label. It is not a vnode. A vnode must be unique in the tree, and a label shows in the value part and in its item at the same time. See [Vnodes Must Be Unique](https://vuejs.org/guide/extras/render-function.html#vnodes-must-be-unique).
 - On a page that Vue hydrated, a component in a vnode that mounts a second time renders nothing.
@@ -535,6 +538,7 @@ A part that binds the id of a part that comes after it:
 - A part that defers assumes nothing. With no registered id, it has no attribute.
 - A later part that is below an async `setup`, or below a component that defers, registers too late for the server HTML. The part that binds the id gets it after the page hydrates.
 - A popup trigger does not call it. Each value that the trigger lacks on a server comes from a registration, an attachment or an element. A server has none of them. A deferral adds none of them.
+- `Select.Trigger` is the exception, because it is also the control of a field. It binds the id of `Select.Label`, and the ids of the label and the messages of a field. It calls `useDeferredServerRender()`, so the server HTML has these ids in each order of the parts.
 
 The label of a root:
 
@@ -550,6 +554,7 @@ The label of a root:
 - An `aria-labelledby` of the consumer on the root wins, because the attributes of the consumer merge last.
 - Two labels with no `id` in one root get the same id.
 - `Slider.Root` is the exception, as in Base UI: its label always has the id `<id>-label`, and `<id>` is the `id` of the root. The root thus calls `createLabelIdRegistry()` and not `useLabelId()`. It assumes that id until it is mounted, under the rules above.
+- `Select.Label` also has the id `<id>-label`, as in Base UI. `Select.Root` calls `createLabelIdRegistry()` and puts the registry in the context of its store. `Select.Trigger` reads the registry and defers its server render, so it assumes no label.
 
 The label, the control and the messages of a field:
 
@@ -1036,7 +1041,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - Where a handler of Base UI reads the state of the last render after a state write, keep that value in a variable that a `watch` with the default flush writes. A direct read in the handler gives the value after the write. `useFieldValidation` does this for the validity of the field: `renderedValid`. `useMenuRoot` does this for the open state, and it gives the state to the store only while the root is mounted.
 - `useValueAsRef(value)` of Base UI becomes a variable that a `watch` of the value writes with `flush: 'sync'`. A handler then reads the value of the last change. `SliderControl.vue` does this for `values`.
 - `useValueChanged` calls its callback after the DOM update, because the callback of a field control reads the validity of the input. Under `KeepAlive` it waits for the activation and gives the value before the deactivation.
-- A consumer can change an object prop in place, because a `ref` of the consumer gives a reactive proxy. `errors` of `Form` is such a prop. A `computed` that reads the proxy with `Object.hasOwn` does not see a new key, because Vue tracks no `Object.hasOwn` of a proxy.
+- A consumer can change an object prop in place, because a `ref` of the consumer gives a reactive proxy. `errors` of `Form` and `items` of `Select.Root` are such props. A `computed` that reads the proxy with `Object.hasOwn` does not see a new key, because Vue tracks no `Object.hasOwn` of a proxy.
 - Watch such a prop with `deep: true`, and keep a plain copy of it in a `shallowRef`. Each change then gives a new object, and a `computed` that reads the copy runs again.
 - `CheckboxGroup` gives a copy of its `value` to `useControlled`: `controlled: () => props.value?.slice()`. The copy reads each item. A change in place thus gives the watchers of the part a new array.
 - Do not use `watchPostEffect` for an effect. It runs again for each value that the effect reads, and an effect of upstream runs again only for the dependencies that it names. A dependency that the effect does not read, such as `restartKey` in `useOpenChangeComplete`, then starts no run.
@@ -1323,6 +1328,7 @@ This section is the contract of the test helpers. Each helper must obey it. The 
 - The call for `ScrollArea.Corner` waits for the first measurement of the viewport, because the corner has no element before it. Its `render` option calls `await flushMicrotasks()`.
 - `createFormDataSpy(name)` returns a `vi.fn` for a `submit` listener. The spy calls `preventDefault()` on the event. It returns the entry of the form for `name`, or `null` when the form has no such entry. Read the last result with `spy.mock.results.at(-1)?.value`.
 - `hiddenInputSizeTests({ render, createComponent })` is a shared suite for a part with a hidden input that has no `name`. `createComponent` gets `{ required }` and returns a vnode. The suite makes the input invalid and asserts that it has zero size. After `reportValidity()` and `await flushMicrotasks()`, it asserts that the input is 1px by 1px.
+- `hiddenInputTypeTests({ render, createComponent })` is a shared suite for a part with a hidden input that `getHiddenInputType` types. `createComponent` gets `{ name, autoComplete, required }` and returns a vnode. The suite asserts that the input is `type="hidden"` only while the part has none of them and no field.
 - `mockRuntimeLocale(locale)` makes `Intl.NumberFormat` use `locale` when a call gives no locale, until the test ends. `getFormatter` keeps each formatter by locale and options. Thus format with options that no earlier test of the file formatted with no locale.
 - A `.node.test` file imports `mockRuntimeLocale` by a relative path to `test/mockRuntimeLocale`.
 - `test/animation.ts` has the helpers for a test of a transition or an animation. `nextEvent(target, type, { after, action })` resolves with the next event of that type. With `after`, it ignores each event of that type that comes before the next event of the type `after`. With `action`, it runs the function after it attached its listeners, and the 3 seconds start when the function ends. It rejects after 3 seconds with no event. `createTransitionRunCounter(isOpen)` returns `counts` and the handler `onTransitionrun`. The handler counts the `transitionrun` events of the element itself. An event counts as an enter when `isOpen()` is `true` at the event, and as an exit when it is `false`. `probeFrameAfterExit(panel, isGone)` tells if a frame ran between the end of the exit and the removal of the panel. It rejects when the animation is over before it starts, so a late frame can fail it. `openInTimerTask(open)` and `closeInTimerTask(open)` change a ref in a timer task.
