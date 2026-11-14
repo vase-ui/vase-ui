@@ -6,7 +6,7 @@ export interface SelectValueContext {
   /**
    * The value of the select. The default slot of the consumer gets it.
    */
-  value: ComputedRef<any>;
+  value: ComputedRef;
   /**
    * The labels that the part shows when the consumer gives no default slot: the placeholder, the
    * label of the value, or the labels of the values with `', '` between them. No label is empty.

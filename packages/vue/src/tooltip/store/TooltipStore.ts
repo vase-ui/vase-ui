@@ -130,7 +130,7 @@ export function createNullTooltipStore<Payload>(): TooltipHandleStore<Payload> {
 
 function createInitialState<Payload>(
   initialState: Partial<State<Payload>> | undefined,
-  defaultPopupId?: string | undefined,
+  defaultPopupId?: string,
 ): State<Payload> {
   return {
     ...createInitialPopupStoreState<Payload>(defaultPopupId),

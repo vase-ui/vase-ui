@@ -80,6 +80,7 @@ if (rootStore === undefined && props.handle === undefined) {
     'Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>. Without a root the trigger has no dialog to open. Put the trigger inside <Dialog.Root>, or pass a `handle`.',
   );
 }
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The check above throws when the trigger has neither a root nor a handle.
 const store = computed<DialogHandleStore<any>>(() => handleStore.value ?? rootStore!);
 
 const thisTriggerId = useVaseUiId(() => props.id);

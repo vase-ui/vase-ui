@@ -34,7 +34,7 @@ import type { UseMenuRootOptions } from './useMenuRoot';
 /** Reads the context and the tree that a part below a root gets. */
 function createProbe() {
   const contexts: MenuRootContext[] = [];
-  const trees: Array<FloatingTreeType | null> = [];
+  const trees: (FloatingTreeType | null)[] = [];
   const Probe = defineComponent({
     setup() {
       contexts.push(useMenuRootContext());
@@ -106,10 +106,6 @@ const TestPopup = defineComponent({
 });
 
 const imperativeActionDetails = () => createChangeEventDetails(REASONS.imperativeAction);
-
-// The real pointer of the browser can rest on an element. A dispatched event still reaches the
-// element, and the real pointer sends no event of its own.
-const noRealPointer = { pointerEvents: 'none' } as const;
 
 function useFakeTimers() {
   vi.useFakeTimers();
@@ -717,7 +713,7 @@ describe('<Menu.Root />', () => {
       const { getByTestId } = await render(
         <Menu.Root defaultOpen>
           <probe.Probe />
-          <TestPopup style={noRealPointer} />
+          <TestPopup />
         </Menu.Root>,
       );
       const { store } = probe;
@@ -742,7 +738,7 @@ describe('<Menu.Root />', () => {
       const { getByRole } = await render(
         <Menu.Root defaultOpen defaultTriggerId="trigger">
           <probe.Probe />
-          <TestTrigger id="trigger" style={noRealPointer} />
+          <TestTrigger id="trigger" />
         </Menu.Root>,
       );
       const { store } = probe;
@@ -766,7 +762,7 @@ describe('<Menu.Root />', () => {
           <Menu.Root>
             <Part>
               <probe.Probe />
-              <TestPopup style={noRealPointer} />
+              <TestPopup />
             </Part>
           </Menu.Root>,
         );

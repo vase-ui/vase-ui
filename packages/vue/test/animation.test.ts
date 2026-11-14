@@ -51,8 +51,8 @@ describe('the limits of the motion helpers', () => {
           new Promise<void>((resolve) => {
             endAction = resolve;
           }),
-      ).catch((error: Error) => {
-        rejection = error.message;
+      ).catch((error: unknown) => {
+        rejection = (error as Error).message;
       });
 
       await runFrames(frames);

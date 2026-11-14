@@ -1,5 +1,5 @@
 import { defineComponent, shallowRef } from 'vue';
-import type { CSSProperties, VNode } from 'vue';
+import type { VNode } from 'vue';
 import type { UserEvent } from '@testing-library/user-event';
 import { expect, vi, describe, it, afterEach, beforeEach, onTestFinished } from 'vitest';
 import { isInaccessible, screen, waitFor } from '@testing-library/dom';
@@ -32,9 +32,8 @@ export function popupConformanceTests(config: PopupTestConfig) {
       ...props,
       trigger: {
         'data-testid': 'trigger',
-        // Hover-opened popups open right away, so the tests don't depend on timers. The trigger
-        // ignores the real pointer of the browser, which can rest on it and open the popup.
-        ...(triggerMouseAction === 'hover' ? { delay: 0, style: { pointerEvents: 'none' } } : {}),
+        // Hover-opened popups open right away, so the tests don't depend on timers.
+        ...(triggerMouseAction === 'hover' ? { delay: 0 } : {}),
         ...props.trigger,
       },
       popup: {
@@ -468,6 +467,7 @@ export function popupConformanceTests(config: PopupTestConfig) {
                   root: {
                     open: open.value,
                     onOpenChangeComplete,
+                    // eslint-disable-next-line @typescript-eslint/no-misused-promises -- The case tests a handler that waits before it prevents the unmount.
                     onOpenChange: async (nextOpen, eventDetails) => {
                       if (nextOpen) {
                         open.value = true;
@@ -710,6 +710,7 @@ export function popupConformanceTests(config: PopupTestConfig) {
                 root: {
                   defaultOpen: true,
                   onOpenChangeComplete,
+                  // eslint-disable-next-line @typescript-eslint/no-misused-promises -- The case tests a handler that waits before it prevents the unmount.
                   onOpenChange: async (nextOpen, eventDetails) => {
                     if (!nextOpen) {
                       await Promise.resolve();
@@ -763,7 +764,7 @@ export function popupConformanceTests(config: PopupTestConfig) {
             expect(onOpenChangeComplete).toHaveBeenCalled();
           });
           onOpenChangeComplete.mockClear();
-          const exitStarts: Array<{ isEnding: boolean; calls: number }> = [];
+          const exitStarts: { isEnding: boolean; calls: number }[] = [];
           recordAnimationStarts((popup) => {
             exitStarts.push({
               isEnding: popup.hasAttribute('data-ending-style'),
@@ -835,7 +836,7 @@ export function popupConformanceTests(config: PopupTestConfig) {
             );
           }
 
-          const exitStarts: Array<{ isEnding: boolean; isInaccessible: boolean }> = [];
+          const exitStarts: { isEnding: boolean; isInaccessible: boolean }[] = [];
           const listener = (event: Event) => {
             const popup = event.target as HTMLElement;
             if (popup === getPopup()) {
@@ -949,7 +950,6 @@ interface RootProps {
 interface TriggerProps {
   'data-testid'?: string;
   delay?: number;
-  style?: CSSProperties;
 }
 
 interface PopupProps {

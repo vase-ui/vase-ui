@@ -127,7 +127,7 @@ export function useTriggerRegistration<State extends PopupStoreState<unknown>>(
 
   return {
     element: element as Readonly<ShallowRef<Element | null>>,
-    registerTrigger(next: Element | null) {
+    registerTrigger: (next: Element | null) => {
       element.value = next;
     },
   };
@@ -236,6 +236,6 @@ export function usePopupInteractionProps<
       activeTriggerProps: EMPTY_OBJECT as HTMLProps,
       inactiveTriggerProps: EMPTY_OBJECT as HTMLProps,
       popupProps: EMPTY_OBJECT as HTMLProps,
-    } as Pick<Readonly<State>, PopupInteractionPropKey>);
+    });
   });
 }

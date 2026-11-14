@@ -3,7 +3,7 @@ import { shallowRef } from 'vue';
 import CompositeListItemPart from '../../../../test/fixtures/CompositeListItemPart.vue';
 import { useCompositeList } from './useCompositeList';
 
-const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
+const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
 
 useCompositeList({ elementsRef });
 </script>

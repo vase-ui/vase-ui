@@ -3,8 +3,19 @@ import { dirname } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { ESLint } from 'eslint';
+import tseslint from 'typescript-eslint';
 
-const eslint = new ESLint({ cwd: dirname(fileURLToPath(import.meta.url)) });
+// The samples are not files, so no TypeScript project has them. The tests are for rules that read
+// only the syntax. Many samples have one path. With `CI` set, typescript-eslint takes the second
+// sample of a path for a step of a fix, and it gives that sample a program. A rule of the Vue
+// plugin then reads types and fails.
+const eslint = new ESLint({
+  cwd: dirname(fileURLToPath(import.meta.url)),
+  overrideConfig: [
+    tseslint.configs.disableTypeChecked,
+    { languageOptions: { parserOptions: { disallowAutomaticSingleRunInference: true } } },
+  ],
+});
 
 async function lint(filePath, code) {
   const [{ messages }] = await eslint.lintText(code, { filePath });

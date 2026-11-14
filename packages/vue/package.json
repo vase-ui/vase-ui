@@ -45,7 +45,7 @@
   },
   "scripts": {
     "build": "tsdown",
-    "typecheck": "node scripts/writeBarrel.ts && vue-tsc --noEmit",
+    "typecheck": "node scripts/writeBarrel.ts && vue-tsc --noEmit --project tsconfig.build.json && vue-tsc --noEmit --project tsconfig.test.json",
     "check:package": "node scripts/checkPackage.ts",
     "test": "vitest run",
     "test:node": "vitest run --project node",
@@ -67,6 +67,7 @@
     "@testing-library/dom": "10.4.2",
     "@testing-library/jest-dom": "7.0.1",
     "@testing-library/user-event": "14.6.8",
+    "@tsconfig/strictest": "2.0.9",
     "@types/node": "26.6.6",
     "@vitejs/plugin-vue": "6.0.10",
     "@vitejs/plugin-vue-jsx": "5.1.6",

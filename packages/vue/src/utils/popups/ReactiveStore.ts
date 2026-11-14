@@ -38,7 +38,7 @@ export class ReactiveStore<
    * make it reactive.
    */
   constructor(state: State, context: Context = {} as Context, selectors?: Selectors) {
-    this.state = shallowReactive(state) as State;
+    this.state = shallowReactive(state);
     this.context = context;
     this.selectors = selectors;
   }
@@ -51,7 +51,8 @@ export class ReactiveStore<
     key: Key,
     ...args: SelectorArgs<Selectors[Key]>
   ): ReturnType<Selectors[Key]> {
-    return this.selectors![key](this.state, ...args);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- A call of `select` needs the selectors and one of their keys.
+    return this.selectors![key]!(this.state, ...args);
   }
 
   /**

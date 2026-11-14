@@ -8,7 +8,7 @@ import { createEventEmitter } from '../createEventEmitter';
  * `provideFloatingTree` gives one to the parts below a root.
  */
 export class FloatingTreeStore {
-  public readonly nodesRef: ShallowRef<Array<FloatingNodeType>> = shallowRef([]);
+  public readonly nodesRef: ShallowRef<FloatingNodeType[]> = shallowRef([]);
 
   public readonly events: PopupEvents = createEventEmitter();
 
