@@ -1243,7 +1243,7 @@ The hydration helpers:
 - In a listener of `animationstart` or `transitionrun`, read the fields of the event or a state that stays. Do not read `getAnimations()`. A late frame can end the animation before the browser sends the event, and the list is then empty.
 - A case that needs the animations that a part waits for gets them from `nextAnimationsRead`. The case calls it before the action.
 - In a new or changed case that ends an animation with its own call (a seek or `finish()`), give that animation a duration of 100 s. A part reads its animations some frames after the close, and a late frame can end a short animation before that read.
-- A case that asserts the frame in which a part removes an element uses `probeFrameAfterExit`. The fixture has a control case in which the removal is late, so the probe is known to see a late removal.
+- A new case that asserts the frame in which a part removes an element uses `probeFrameAfterExit`. It also has a control case in which the removal is late, as `AnimatedPanel.test.tsx` has.
 - In Firefox, a dispatched `submit` event that no listener prevents submits the form and loads the test page again. Chromium and WebKit do not. A case that submits a valid form has a listener that calls `preventDefault()`. `observeSubmit` of `Form.test.tsx` is the model.
 - A case that changes the source of a cached image first waits for the `load` event of that image. Firefox does not cancel the event when the source changes, so the new image gets it.
 - Assert the start state before the action when the end state can be true already.
