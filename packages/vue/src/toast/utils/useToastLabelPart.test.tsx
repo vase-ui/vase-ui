@@ -209,18 +209,12 @@ describe('useToastLabelPart', () => {
     });
   });
 
-  // A case that throws in `setup` is the last case of its file.
+  // These cases are the last ones of the file. In Vue 3.5.12, a `setup` that throws leaves the
+  // current instance set, and a later case that renders a slot gets a warning about that slot. Each
+  // case thus renders the part alone, with no slot.
   describe.each(cases)('<$name />', ({ Part }) => {
     it('throws a descriptive error when rendered outside <Toast.Root>', async () => {
-      await expect(
-        render(
-          <Toast.Provider>
-            <Toast.Viewport>
-              <Part />
-            </Toast.Viewport>
-          </Toast.Provider>,
-        ),
-      ).rejects.toThrow(
+      await expect(render(<Part />)).rejects.toThrow(
         'Vase UI: A part of a toast must be inside <Toast.Root>. Without a root the part has no toast to show. Put the part inside <Toast.Root>.',
       );
 
