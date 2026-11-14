@@ -231,6 +231,10 @@ The template of each such part has two lines and no wrapper component:
 - When the attributes start empty, a spread reads no key. A `computed` then does not see an attribute that comes later.
 - The render function runs again on each change of the attributes.
 - A part with a void default tag (`img`, `input`) has no default slot.
+- A part whose default tag depends on its context, such as `NavigationMenu.Root`, has no default for `as`.
+- It decides the tag one time in `setup`. It gives the tag to `useRenderElement` as the first argument.
+- Its template binds `:is="as ?? defaultTag"` in the second line.
+- Base UI documents the default tag. When the family has an entry point, the family file needs a `not-applicable` exception row for the prop row `render`.
 - A part that renders no element has only `<slot />`. It does not set `inheritAttrs`. Vue then shows a warning in a development build when the part gets an attribute or a listener. With `inheritAttrs: false`, Vue drops them and shows nothing.
 
 A part that Base UI writes as another part renders that part and no element of its own. `Toolbar.Separator` and `Input` are the examples:
@@ -637,6 +641,8 @@ The state of a popup is in a store. The code is in `src/utils/popups`. `tooltip/
 - When two roots take one handle, the newest root controls it. When the newest root unmounts, control returns to the older root. A development build warns when two roots are still attached one frame later.
 - `BasePopupHandle` calls `markRaw(this)`. Vue then makes no reactive proxy of a handle. A proxy, from `ref()` or the `data` option, would unwrap the pointer ref and fail at the next write to it.
 - A family makes a subclass of `BasePopupStore`. The subclass overrides only the steps where it differs: `isOpenChangeIgnored`, `getCloseTrigger`, `prepareOpenChange`, `prepareUnmount` and `anchorsToActiveTrigger`.
+- A family that picks a value from a list makes a subclass of `ValuePopupStore` from `utils/popups/value-popup`. The subclass gives `getAnchorElement`. The store writes that element to `anchorElement` in each write that changes the anchor, the open state or the positioner element.
+- A selector of a family that replaces a selector of `popupStoreSelectors` has the parameter type `PopupStoreState<unknown>`. With the state type of the family, the store does not fit a root composable.
 - `BasePopupStore` has no `isCommittedSynchronously` step, because Vue has no `flushSync`. A caller that reads the DOM after `setOpen` awaits `nextTick()`.
 - A function that works with the store of any family types its parameter as `PopupTriggerDataStore<State>`, or as a `ReactiveStore<State, PopupStoreContext<never>, PopupStoreSelectors>` plus the members that it calls. A parameter of the type `BasePopupStore<…>` refuses a family store with other change event details. It also refuses a family store with a step that returns only keys that the family adds.
 - A part with no popup store calls `useFloatingRootStore` in `setup` and gives it `open`, because `setOpen` of the store only calls `onOpenChange`.
@@ -664,7 +670,8 @@ The state of a popup is in a store. The code is in `src/utils/popups`. `tooltip/
 - `useImplicitActiveTrigger` keeps the trigger map and the state in step after each DOM update. It does not run while `KeepAlive` holds the root. With `closeOnActiveTriggerUnmount`, the popup closes with the reason `none` when the active trigger unregisters. The close waits one microtask, so that a trigger with the same id can register first.
 - When triggers join an open popup that has no active trigger and none claims it, the root picks the first trigger of the trigger map that is in the document. The result is the same as at the mount. `KeepAlive` runs the hooks from the last part to the first part, so a claim by each trigger would pick the last trigger.
 - `KeepAlive` detaches the store of a deactivated root from its handle. The store attaches again at the activation.
-- `popupRoot.ts` has `usePopupRoot`, `useImplicitActiveTrigger` and `usePopupRootSync`. The pull request that first needs `usePopupRootWithPopupId` or `useSingleAnchorPopupRoot` adds it with its cases.
+- A root of a popup with one anchor and no trigger registry, such as Select and Combobox, calls `useSingleAnchorPopupRoot(props, createStore, options)` in `setup`. The call returns `store`, `open`, `mounted`, `transitionStatus` and `actions`. Such a root has no handle, no payload and no trigger id.
+- `popupRoot.ts` has `usePopupRoot`, `useSingleAnchorPopupRoot`, `useImplicitActiveTrigger` and `usePopupRootSync`. The pull request that first needs `usePopupRootWithPopupId` adds it with its cases.
 - `usePopupRootSync(store, open)` clears `openMethod` of the store when `open` becomes `false` and when the root unmounts. A root whose store has the key `openMethod` calls it in `setup`.
 - `types.ts` has a part of the types of Base UI. The pull request that first needs a type adds it.
 
@@ -672,17 +679,18 @@ The state of a popup is in a store. The code is in `src/utils/popups`. `tooltip/
 
 A popup tree holds one node for each popup below one root. The code is in `src/utils/popups/tree`.
 
-- `provideFloatingTree()` makes a `FloatingTreeStore`, provides it and returns it. `provideFloatingNode(id)` provides the id of a node. Base UI has the components `FloatingTree` and `FloatingNode` for this.
+- `provideFloatingTree(externalTree)` provides a tree to the parts below and returns it as a `ComputedRef`. `externalTree` is a store, a ref or a getter. With no tree, the part provides one `FloatingTreeStore` of its own. `provideFloatingNode(id)` provides the id of a node. Base UI has the components `FloatingTree` and `FloatingNode` for this.
 - `useFloatingNodeId()` registers a node in the tree and returns its id. `useFloatingParentNodeId()` gives the id of the node above the part, or `null`. `useFloatingTree()` gives the tree above the part, or `null`.
 - `provide` follows the components and not the DOM. A part in a `Teleport` thus gets the tree and the node of the part around it.
 - `inject` gives a part the tree and the node of the part above it, also when the part provides a tree or a node itself.
+- The tree that a part provides can change. `useFloatingTree()` then gives the new tree at once. Each node below moves to it with its `context` in the next flush. Read `.value` of the tree in a handler, a hook or a `watch`. Do not keep the store in a variable of `setup`. `FloatingTree` of Base UI keeps the tree of its first render.
 - Base UI sometimes calls a hook in a component below the `FloatingTree` of the same file, as `PopoverRoot.tsx` and `Menubar.tsx` do. Give the result of `provideFloatingTree()` to that composable as `externalTree`.
 - A node registers in `onBeforeMount`. A server render does not call that hook, so a tree gets no node on a server.
 - The hook runs before the `setup` of the parts below. Each of them thus finds the node when it is mounted.
 - The nodes are in the order of those hooks: a node comes before the nodes below it. In Base UI, it comes after them. Find a node by its id. Do not use its position in the list.
 - `nodesRef` is a `shallowRef`. The tree gives it a new array for each node that it adds or removes.
 - `parentId` of a node gives the id that the part above provides at the time of the read. When that id changes, the node keeps its place and its `context`.
-- `KeepAlive` leaves a node in its place. While the part of the node is deactivated, the `context` of the node is `undefined`. `getNodeChildren` then does not count the node as open.
+- `KeepAlive` leaves a node in its place. While the part of the node is deactivated, the `context` of the node is `undefined`. `getNodeChildren` then does not count the node as open. `removeNodeContext(node, context)` removes `context` from a node, also while the part of the node is deactivated. It keeps the context of another popup. Do not compare `node.context` for this, because a deactivated part hides it.
 
 ### Popup positioning
 
@@ -691,6 +699,7 @@ The positioning of a popup is in `src/internals/useAnchorPositioning.ts` and in 
 - A positioner part of a popup family calls `usePopupPositioner(store, props, options)` in `setup`. It takes the reactive props of the part, so do not destructure them. The result has `element`, `elementProps`, `state`, `positioning`, `open` and `mounted`.
 - `usePopupPositioner` calls `useAnchorPositioning`, `useVaseUIFloating` and `usePositioner`. `options.positioning` replaces the positioning parameters that come from the props. It can also have `nodeId` and `externalTree`.
 - The part calls `useFloatingNodeId()` before `usePopupPositioner`, and gives the id as `positioning: { nodeId }`. The positioning context then finds the node.
+- `nodeId` and `externalTree` are each a value, a ref or a getter. A part whose popup can move to the node of another part gives getters. The context then moves to the new node, and the old node loses it (`VUE-43`).
 - `usePositioner` makes the props of the positioner element: `role="presentation"`, `hidden`, the styles, and `transition: none` while the transition status is `starting`. With `inert`, it adds `pointer-events: none`. The `style` of the consumer wins over these styles.
 - A positioner part that `usePopupPositioner` does not fit calls `useAnchorPositioning`, `useVaseUIFloating` and `usePositioner` itself. `test/fixtures/PositionerPart.vue` is the model for `useAnchorPositioning`.
 - The positioning context is `store.context.positioning`. The `context` of the node of the popup in the tree is the same object.
@@ -700,7 +709,7 @@ The positioning of a popup is in `src/internals/useAnchorPositioning.ts` and in 
 - `floating` and `domReference` come from the store: its positioner element and its `anchorElement`. `reference` is the element that the popup is positioned against. It is the `anchor` of the positioner, or else the anchor of the store.
 - The context has no position (`x`, `y`, `isPositioned`, `update`) and no `refs`. A reader that needs the position uses the return value of `useAnchorPositioning`.
 - `useVaseUIFloating` writes the context in `onBeforeMount`. A server render thus writes nothing, and each part below the positioner finds the context in `setup`.
-- The composable removes its context from the store when the part unmounts and while `KeepAlive` holds the part. It never removes the context of another positioner. The tree hides the context of a deactivated node by itself.
+- The composable removes its context from the store and from the node when the part unmounts and while `KeepAlive` holds the part. It never removes the context of another positioner. The tree also hides the context of a node whose own part is deactivated.
 - While the popup is not mounted, the composable calls `clearPositioning()` of the store. A kept popup then forgets its anchor override, and a `FloatingRootStore` forgets its anchor and its positioner element.
 - `rootStore` can be a getter. A part that gets its store after it has mounted gives a getter, and the context moves to the new store.
 
@@ -868,6 +877,7 @@ A part that is in a composite only in some trees:
 
 - `Toggle` is a composite item only in a `ToggleGroup`. `ToggleGroup` is a composite root only outside a `Toolbar.Root`. In a toolbar, the toggles register with the root of the toolbar. `toggle/Toggle.vue` and `toggle-group/ToggleGroup.vue` are the models.
 - `Radio.Root` is an item only in a `RadioGroup`.
+- `NavigationMenu.List` is a composite root only when its root is not nested. A nested list also leaves out its key handler, so that the arrow keys reach the outer root. `navigation-menu/list/NavigationMenuList.vue` is the model.
 - The part reads the context that decides with `inject`, in `setup`. It calls `useCompositeItem` or `useCompositeRoot` only when that context allows it: `const compositeItem = groupContext ? useCompositeItem({ … }) : undefined`.
 - The choice is made one time, because a component keeps its provider chain from the moment that Vue makes it. `KeepAlive` and `Teleport` do not change that chain.
 - `useCompositeItem` throws when it has no composite root, so a part cannot call it in each tree.

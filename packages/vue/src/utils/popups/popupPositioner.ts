@@ -51,7 +51,8 @@ export interface UsePopupPositionerOptions<State extends PopupPositionerState> {
   keepMounted: MaybeRefOrGetter<boolean>;
   /**
    * Positioning parameters that replace the props, such as values from the parent of the popup.
-   * `nodeId` and `externalTree` are for the positioning context.
+   * `nodeId` and `externalTree` are for the positioning context. Each of them is a value, a ref or
+   * a getter.
    */
   positioning?:
     | (Partial<
