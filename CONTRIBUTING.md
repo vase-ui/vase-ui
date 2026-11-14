@@ -775,7 +775,7 @@ The state of a popup is in a store. The code is in `src/utils/popups`. `tooltip/
 - A selector of a child store can read the store of its parent. A `computed` that reads the selector follows the parent, so the child store needs no subscription.
 - A selector that reads a property of an element in the state, such as its `id`, does not follow a change of that property. The part that owns the element thus also writes the value to a state key. `Menu.List` writes its id to `listElementId`, and the selector `triggerControlsId` reads that key. Base UI calls `store.notifyAll()` in its place.
 - The id of the popup element is the exception. It can come from a prop, an attribute or the `#render` slot of the popup part, so the part does not write it. `BasePopupStore` copies the `id` of a new popup element to `popupElementId`. A `MutationObserver` copies each later change of the attribute. The selector `popupId` reads that key.
-- `Combobox.Trigger` reads `popupElementId` and not `popupId`, because `defaultPopupId` of Combobox is the id of the list. While the popup element has no id, and while no popup is mounted, the trigger has no `aria-controls` (`VUE-73`).
+- `Combobox.Trigger` reads `popupElementId` and not `popupId`, because `defaultPopupId` of Combobox is the id of the list. A trigger that is the control has no `aria-controls` while no popup is mounted, and while the popup element has no id (`VUE-73`).
 - The store makes no `computed` and no watcher. The `computed` of a part stops with the part. Thus code can make a store outside a component, with no `effectScope`.
 - Write with `set`, `update` or `setState`. Do not assign to `state`.
 - `set` and `update` call `setState` with the full state, so a subclass that overrides `setState` sees each write.
