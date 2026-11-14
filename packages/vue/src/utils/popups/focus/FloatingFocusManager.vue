@@ -586,11 +586,13 @@ effect(
     }
 
     const doc = ownerDocument(floatingFocusEl);
-    // A browser moves the focus off an inert element only at its next rendering update. Until then,
-    // such an element counts as the body. At the open, this effect runs before the effect that sets
-    // `inert`, so the element that opened the popup stays a target.
-    const focusTarget = activeElement(doc);
-    const elementFocusedBeforeOpen = closest(focusTarget, '[inert]') ? doc.body : focusTarget;
+    // A browser moves the focus off an inert element only at its next rendering update, so the record
+    // counts a focused inert element as the body. At the open, this effect runs before the effect
+    // that sets `inert`. The element that had the focus before the open thus stays a target.
+    const currentActiveElement = activeElement(doc);
+    const elementFocusedBeforeOpen = closest(currentActiveElement, '[inert]')
+      ? doc.body
+      : currentActiveElement;
     // Only an explicit `null` interaction type represents a programmatic open.
     // `undefined` is normalized to `''` by the prop default, so it never reaches
     // here as nullish and is intentionally not treated as programmatic.

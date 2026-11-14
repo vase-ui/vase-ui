@@ -373,6 +373,7 @@ describe('<Dialog.Root />', () => {
     triggerId.value = 'trigger-2';
     await nextTick();
 
+    await waitForLaterMillisecond();
     await user.click(screen.getByRole('button', { name: 'Close' }));
     await waitFor(() => {
       expect(trigger2).toHaveFocus();
