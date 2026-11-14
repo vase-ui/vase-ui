@@ -8,9 +8,9 @@ import { createChangeEventDetails } from '../../src/internals/createBaseUIEventD
 import { REASONS } from '../../src/internals/reasons';
 import { mergeProps } from '../../src/merge-props';
 
-// The tests use this part in place of `Combobox.Input`. It writes the input to the store, gives it
-// the props of the root and the input value, and handles the `input` event. It has no
-// composition, no keys and no chips.
+// The cases of the root use this part in place of `Combobox.Input`, so that they test the root
+// alone. It writes the input to the store, gives it the props of the root and the input value, and
+// handles the `input` event. It has no composition, no keys of its own and no chips.
 const props = defineProps<{ insidePopup?: boolean | undefined }>();
 
 const store = useComboboxRootContext();

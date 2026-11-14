@@ -8,6 +8,7 @@
     "packages/react/src/utils/getElementAtPoint.ts",
     "packages/react/src/utils/getElementTransform.ts",
     "packages/react/src/utils/getFiniteAnimations.ts",
+    "packages/react/src/utils/getHighlightReason.ts",
     "packages/react/src/utils/getPseudoElementBounds.test.ts",
     "packages/react/src/utils/getPseudoElementBounds.ts",
     "packages/react/src/utils/popups/positioning/adaptiveOriginConstants.ts",

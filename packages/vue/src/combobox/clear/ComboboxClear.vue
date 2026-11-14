@@ -59,10 +59,7 @@ import { useRenderElement } from '../../internals/useRenderElement';
 import { useTransitionStatus } from '../../internals/useTransitionStatus';
 import { getHighlightReason } from '../../utils/getHighlightReason';
 import { triggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
-import {
-  useComboboxInputValueContext,
-  useComboboxRootContext,
-} from '../root/ComboboxRootContext';
+import { useComboboxInputValueContext, useComboboxRootContext } from '../root/ComboboxRootContext';
 import ComboboxClearChildren from './ComboboxClearChildren.vue';
 
 defineOptions({ inheritAttrs: false });

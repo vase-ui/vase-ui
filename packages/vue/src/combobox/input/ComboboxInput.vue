@@ -66,10 +66,7 @@ import { getHighlightReason } from '../../utils/getHighlightReason';
 import { stopEvent } from '../../utils/popups/event';
 import { useComboboxChipsContext } from '../chips/ComboboxChipsContext';
 import { useComboboxPositionerContext } from '../positioner/ComboboxPositionerContext';
-import {
-  useComboboxInputValueContext,
-  useComboboxRootContext,
-} from '../root/ComboboxRootContext';
+import { useComboboxInputValueContext, useComboboxRootContext } from '../root/ComboboxRootContext';
 import ComboboxInternalDismissButton from '../utils/ComboboxInternalDismissButton.vue';
 import {
   clickHighlightedItem,
@@ -144,6 +141,13 @@ const state = computed<ComboboxInputState>(() => ({
 const composingValue = shallowRef<string | null>(null);
 let isComposing = false;
 let lastActiveIndex: number | null = null;
+
+// The input does not write the input value while a composition runs. A write of the root then
+// comes from outside the input, such as a pick with the mouse, and its text replaces the composed
+// text.
+watch(inputValue, () => {
+  composingValue.value = null;
+});
 
 // Restore the saved highlight on refocus only within the same open cycle.
 watch(open, (nextOpen) => {
@@ -249,11 +253,12 @@ function handleCompositionend(event: CompositionEvent) {
   compositionTimeout.start(0, writeStateToInput);
 }
 
+// React calls `onChange` of a text input for an `input` event and for a `change` event, when the
+// value is new. Some programs that fill a form send only `change`, and some send both events for
+// one change. WebKit sends the last `input` event of a composition after `compositionend`.
 function handleInput(event: Event) {
   const input = event.currentTarget as HTMLInputElement;
   const value = input.value;
-  // React handles a value one time. A program can send `input` and `change` for one change, and
-  // WebKit sends the last `input` event of a composition after `compositionend`.
   if (!isComposing && value === handledValue) {
     return;
   }
@@ -334,14 +339,6 @@ function handleInput(event: Event) {
   // cleared).
   if (isOpen && toRaw(store.state).activeIndex !== null && !autoHighlightEnabled) {
     clearHighlight(event);
-  }
-}
-
-// React calls `onChange` of a text input for an `input` event and for a `change` event, when the
-// value is new. Some programs that fill a form send only `change`.
-function handleChange(event: Event) {
-  if ((event.currentTarget as HTMLInputElement).value !== handledValue) {
-    handleInput(event);
   }
 }
 
@@ -470,8 +467,7 @@ function handleKeydown(event: KeyboardEvent) {
     selectedValue.length > 0
   ) {
     const renderedChipsCount = chipsContext.chipsRef.value.length;
-    const removalIndex =
-      renderedChipsCount > 0 ? renderedChipsCount - 1 : selectedValue.length - 1;
+    const removalIndex = renderedChipsCount > 0 ? renderedChipsCount - 1 : selectedValue.length - 1;
 
     const newValue = selectedValue.filter((_: any, index: number) => index !== removalIndex);
     // If the removed item was also the active (highlighted) item, clear highlight
@@ -549,7 +545,7 @@ const { element, elementProps } = useRenderElement('input', props, {
         onCompositionstart: handleCompositionstart,
         onCompositionend: handleCompositionend,
         onInput: handleInput,
-        onChange: handleChange,
+        onChange: handleInput,
         onKeydown: handleKeydown,
       },
       autocorrect === undefined ? undefined : { autoCorrect: autocorrect },

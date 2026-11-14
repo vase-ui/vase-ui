@@ -1314,7 +1314,8 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     if (pendingHighlight) {
       // A directly rendered list remains visible when the popup state is closed, while a
       // kept-mounted Positioner is hidden and should stay inert.
-      const listIsNavigable = open.value || inline.value || state.positionerElement?.hidden === false;
+      const listIsNavigable =
+        open.value || inline.value || state.positionerElement?.hidden === false;
       if (pendingHighlight.hasQuery) {
         const input = inputRef.value;
         // Keep the request while results or a controlled popup opening are pending,
@@ -1449,7 +1450,15 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     syncHighlight();
   });
   watch(
-    [open, closeQuery, selectedValue, selectionMode, hasItems, flatFilteredValues, isItemEqualToValue],
+    [
+      open,
+      closeQuery,
+      selectedValue,
+      selectionMode,
+      hasItems,
+      flatFilteredValues,
+      isItemEqualToValue,
+    ],
     syncSelectedIndex,
     { flush: 'post' },
   );
