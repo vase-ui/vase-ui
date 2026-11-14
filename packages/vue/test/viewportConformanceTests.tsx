@@ -418,9 +418,13 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
         await activateTrigger(trigger1, user);
         await activateTrigger(screen.getByTestId('trigger2'), user);
         await activateTrigger(screen.getByTestId('trigger3'), user);
+        // A trigger that opens on `mousedown`, such as `Menu.Trigger`, changes the popup in the
+        // frame after the press. On a busy page, the clicks can end before that frame. Wait for
+        // `Content 3`, so that `Content 1` comes only from the last click.
+        await screen.findByText('Content 3', { selector: '[data-current]' });
         await activateTrigger(trigger1, user);
 
-        const content = await screen.findByText('Content 1');
+        const content = await screen.findByText('Content 1', { selector: '[data-current]' });
         finishAnimations();
         await waitFor(() => {
           expect(content).toBeVisible();
