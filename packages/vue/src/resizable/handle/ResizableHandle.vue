@@ -201,8 +201,8 @@ function onMousedown(event: MouseEvent) {
   }
 }
 
-// Firefox and Safari keep the focus on an element that becomes disabled. The handle also leaves
-// the focus when it loses the panel on one side.
+// Firefox and Safari keep the focus on an element that loses its tab stop: a handle that becomes
+// disabled, or that loses the panel on one side.
 watch(isFocusable, (focusable) => {
   if (focusable) {
     return;
