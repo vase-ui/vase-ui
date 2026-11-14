@@ -31,9 +31,11 @@
       <li><NuxtLink to="/select">Select</NuxtLink></li>
       <li><NuxtLink to="/navigation-menu">Navigation Menu</NuxtLink></li>
       <li><NuxtLink to="/menu">Menu</NuxtLink></li>
+      <li><NuxtLink to="/context-menu">Context Menu</NuxtLink></li>
       <li><NuxtLink to="/preview-card">Preview Card</NuxtLink></li>
       <li><NuxtLink to="/alert-dialog">Alert Dialog</NuxtLink></li>
       <li><NuxtLink to="/tooltip">Tooltip</NuxtLink></li>
+      <li><NuxtLink to="/drawer">Drawer</NuxtLink></li>
       <li><NuxtLink to="/dialog">Dialog</NuxtLink></li>
     </ul>
   </main>

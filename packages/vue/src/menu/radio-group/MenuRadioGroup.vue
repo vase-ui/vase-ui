@@ -68,7 +68,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, MenuRadioGroupState>;
 }>();
 
-const [value, setValueUnwrapped] = useControlled({
+const [checkedValue, setValueUnwrapped] = useControlled({
   controlled: () => props.value,
   default: () => props.defaultValue,
   name: 'MenuRadioGroup',
@@ -85,12 +85,12 @@ function setValue(newValue: any, eventDetails: MenuRadioGroupChangeEventDetails)
   setValueUnwrapped(newValue);
 }
 
-const disabled = computed(() => props.disabled);
+const isDisabled = computed(() => props.disabled);
 
 // Each label registers by source, so a label that unmounts does not clear the id of a newer one.
 const labelIds = createIdRegistry();
 provide(MenuGroupContext, labelIds.registerId);
-provide(MenuRadioGroupContext, { value, setValue, disabled });
+provide(MenuRadioGroupContext, { value: checkedValue, setValue, disabled: isDisabled });
 
 const state = computed<MenuRadioGroupState>(() => ({ disabled: props.disabled }));
 

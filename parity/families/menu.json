@@ -257,14 +257,6 @@
       "reason": "The case renders `Menu.FilterProvider`, which Vase UI does not have."
     },
     {
-      "upstream": "packages/react/src/menu/positioner/MenuPositioner.test.tsx",
-      "describe": ["<Menu.Positioner />", "layout viewport"],
-      "title": "uses the visual viewport for a context menu submenu",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/index.ts",
-      "reason": "The case renders `ContextMenu.SubmenuRoot`. The entry point of Context Menu exports that part. Vase UI does not have that entry point."
-    },
-    {
       "upstream": "packages/react/src/menu/root/MenuRoot.detached-triggers.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/test/popupListConformanceTests.tsx",

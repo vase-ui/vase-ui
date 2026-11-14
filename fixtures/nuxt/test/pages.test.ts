@@ -1120,6 +1120,41 @@ async function expectHydratedMenuPage(page: Page) {
   expect(await page.getByTestId('detached-popup').count()).toBe(0);
 }
 
+// A server renders no popup and no portal. Each trigger has the declaration that stops the callout
+// of a long press in Safari on iOS. The trigger of the open root has the open state.
+async function expectContextMenuPageOnServer(page: Page) {
+  const attributeNames = ['style', 'data-popup-open', 'data-pressed'];
+  const read = (testId: string) => readAttributes(page.getByTestId(testId), attributeNames);
+
+  expect(await read('closed')).toEqual({
+    style: '-webkit-touch-callout:none;',
+    'data-popup-open': null,
+    'data-pressed': null,
+  });
+  expect(await read('open')).toEqual({
+    style: '-webkit-touch-callout:none;',
+    'data-popup-open': '',
+    'data-pressed': '',
+  });
+  expect(await page.locator('[data-vase-ui-portal], [role="menu"]').count()).toBe(0);
+}
+
+// After the mount, the open root renders its popup in `<body>`.
+async function expectHydratedContextMenuPage(page: Page) {
+  const popup = page.getByTestId('open-popup');
+  expect(await popup.count()).toBe(1);
+  expect(
+    await popup.evaluate(
+      (element) => element.closest('[data-vase-ui-portal]')?.parentElement?.localName,
+    ),
+  ).toBe('body');
+  expect(await popup.getAttribute('role')).toBe('menu');
+  expect(await popup.getAttribute('data-open')).toBe('');
+  expect(await page.getByTestId('open').getAttribute('data-popup-open')).toBe('');
+  expect(await page.getByTestId('closed').getAttribute('data-popup-open')).toBeNull();
+  expect(await page.getByTestId('closed-popup').count()).toBe(0);
+}
+
 const PREVIEW_CARD_LINK_ATTRIBUTES = [
   'href',
   'data-popup-open',
@@ -1249,6 +1284,58 @@ async function expectHydratedTooltipPage(page: Page) {
   expect(await readPopup('kept-popup')).toEqual({ parent: 'body', isVisible: false });
   expect(await readPopup('detached-popup')).toEqual({ parent: 'body', isVisible: true });
   expect(await readTooltipTriggers(page)).toEqual([null, '', null, '']);
+}
+
+async function expectDrawerPageOnServer(page: Page) {
+  const triggerAttributes = ['aria-haspopup', 'aria-expanded', 'data-popup-open'];
+  expect(await readAttributes(page.getByTestId('closed-trigger'), triggerAttributes)).toEqual({
+    'aria-haspopup': 'dialog',
+    'aria-expanded': 'false',
+    'data-popup-open': null,
+  });
+  expect(await readAttributes(page.getByTestId('open-trigger'), triggerAttributes)).toEqual({
+    'aria-haspopup': 'dialog',
+    'aria-expanded': 'true',
+    'data-popup-open': '',
+  });
+  expect(
+    await readAttributes(page.getByTestId('swipe-area'), [
+      'role',
+      'aria-hidden',
+      'data-closed',
+      'data-swipe-direction',
+    ]),
+  ).toEqual({
+    role: 'presentation',
+    'aria-hidden': 'true',
+    'data-closed': '',
+    'data-swipe-direction': 'up',
+  });
+  // A server render reports no drawer to the provider, so the indent is not active.
+  expect(
+    await readAttributes(page.getByTestId('indent'), ['data-active', 'data-inactive']),
+  ).toEqual({ 'data-active': null, 'data-inactive': '' });
+  expect(await page.locator('[data-vase-ui-portal], [role="dialog"]').count()).toBe(0);
+}
+
+// After the mount, the open drawer renders its popup in `<body>` and reports to the provider.
+async function expectHydratedDrawerPage(page: Page) {
+  const popup = page.getByTestId('open-popup');
+  expect(await popup.count()).toBe(1);
+  expect(
+    await popup.evaluate(
+      (element) => element.closest('[data-vase-ui-portal]')?.parentElement?.localName,
+    ),
+  ).toBe('body');
+  expect(await popup.getAttribute('role')).toBe('dialog');
+  expect(await popup.getAttribute('data-open')).toBe('');
+  expect(await popup.textContent()).toBe('Open title');
+  expect(
+    await readAttributes(page.getByTestId('indent'), ['data-active', 'data-inactive']),
+  ).toEqual({ 'data-active': '', 'data-inactive': null });
+  expect(await page.getByTestId('open-trigger').getAttribute('aria-expanded')).toBe('true');
+  expect(await page.getByTestId('closed-trigger').getAttribute('aria-expanded')).toBe('false');
+  expect(await page.getByTestId('closed-popup').count()).toBe(0);
 }
 
 // A server renders no popup and no portal. The trigger of an open root has the open state. The
@@ -1388,6 +1475,11 @@ const PAGES: PageCase[] = [
   },
   { path: '/menu', expectPage: expectMenuPageOnServer, expectHydratedPage: expectHydratedMenuPage },
   {
+    path: '/context-menu',
+    expectPage: expectContextMenuPageOnServer,
+    expectHydratedPage: expectHydratedContextMenuPage,
+  },
+  {
     path: '/preview-card',
     expectPage: expectPreviewCardPageOnServer,
     expectHydratedPage: expectHydratedPreviewCardPage,
@@ -1401,6 +1493,11 @@ const PAGES: PageCase[] = [
     path: '/tooltip',
     expectPage: expectTooltipPageOnServer,
     expectHydratedPage: expectHydratedTooltipPage,
+  },
+  {
+    path: '/drawer',
+    expectPage: expectDrawerPageOnServer,
+    expectHydratedPage: expectHydratedDrawerPage,
   },
   {
     path: '/dialog',
@@ -1915,6 +2012,27 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(messages).toEqual([]);
   });
 
+  it('opens a context menu for a right click on its trigger after hydration', async () => {
+    const page = await createPage('/context-menu');
+    const messages = collectMessages(page);
+    const trigger = page.getByTestId('closed');
+    const popup = page.getByTestId('closed-popup');
+
+    // The open menu is modal. Its backdrop covers the page until Escape closes the menu.
+    await page.getByTestId('open-popup').waitFor();
+    await page.keyboard.press('Escape');
+    await page.getByTestId('open-popup').waitFor({ state: 'detached' });
+    expect(await popup.count()).toBe(0);
+
+    await trigger.click({ button: 'right' });
+    await popup.waitFor();
+
+    expect(await trigger.getAttribute('data-popup-open')).toBe('');
+    expect(await popup.getAttribute('role')).toBe('menu');
+    expect(await popup.evaluate((element) => element.closest('main') === null)).toBe(true);
+    expect(messages).toEqual([]);
+  });
+
   it('opens the card of /preview-card on a hover of its link after hydration', async () => {
     const page = await createPage('/preview-card');
     const messages = collectMessages(page);
@@ -1925,6 +2043,19 @@ describe.each(MODES)('in $name', async ({ dev }) => {
 
     expect(await link.getAttribute('data-popup-open')).toBe('');
     expect(await page.getByTestId('closed-popup').textContent()).toBe('Closed preview');
+    expect(messages).toEqual([]);
+  });
+
+  it('opens the closed drawer of /drawer on a click of its trigger after hydration', async () => {
+    const page = await createPage('/drawer');
+    const messages = collectMessages(page);
+    const trigger = page.getByTestId('closed-trigger');
+
+    await trigger.click();
+    await page.getByTestId('closed-popup').waitFor();
+
+    expect(await trigger.getAttribute('aria-expanded')).toBe('true');
+    expect(await page.getByTestId('closed-popup').getAttribute('data-open')).toBe('');
     expect(messages).toEqual([]);
   });
 
