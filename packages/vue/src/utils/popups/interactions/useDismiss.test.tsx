@@ -2571,6 +2571,7 @@ describe('useDismiss', () => {
             </button>
           </>,
         );
+        expect(isOpen('popup')).toBe(true);
 
         await userEvent.click(
           child ? screen.getByTestId('child') : screen.getByRole('button', { name: 'outside' }),
@@ -2969,6 +2970,7 @@ describe('useDismiss', () => {
           </Popup>
         </Teleport>,
       );
+      expect(shadowRoot.querySelector('[data-testid="popup"]')).not.toBe(null);
       const outerHostRect = outerHost.getBoundingClientRect();
       const insideRect = shadowRoot
         .querySelector('[data-testid="inside"]')!
