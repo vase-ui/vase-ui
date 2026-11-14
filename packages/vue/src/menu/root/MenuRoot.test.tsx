@@ -877,7 +877,8 @@ describe('<Menu.Root />', () => {
       await focusItem('One');
       await user.keyboard('[ArrowDown]');
       await flushMicrotasks();
-      // A movement of zero is the scroll of the list under a pointer that rests in WebKit.
+      // In WebKit, the list ignores a move with no movement: the browser sends it when the list
+      // scrolls under the pointer.
       await fireEvent.mouseMove(getItem('Three'), { movementX: 1, movementY: 1 });
       await flushMicrotasks();
 
@@ -1048,7 +1049,6 @@ describe('<Menu.Root />', () => {
       expect(plain.store.state.inputProps).toEqual({});
       expect(virtual.store.state.inputProps).toHaveProperty('onKeydown');
       expect(plain.store.select('triggerProps', true)).toHaveProperty('onFocusin');
-      // A focus of the trigger must not start the highlight of a virtual list.
       expect(virtual.store.select('triggerProps', true)).not.toHaveProperty('onFocusin');
       expect(virtual.store.select('triggerProps', true)).toHaveProperty('onKeydown');
     });
@@ -1165,8 +1165,8 @@ describe('<Menu.Root />', () => {
       );
       probe.store.set('keyboardEventRelay', relay);
 
-      // The list navigation and the typeahead of a vertical menu leave the horizontal arrow keys
-      // to the menubar.
+      // The list navigation and the typeahead of a vertical menu do not stop the horizontal arrow
+      // keys. The menubar gets these keys.
       await fireEvent.keyDown(getByTestId('popup'), { key: 'ArrowRight' });
 
       expect(relay).toHaveBeenCalledTimes(1);

@@ -143,6 +143,9 @@ describe('<Menu.Popup />', () => {
 
     const three = await screen.findByRole('menuitem', { name: 'Three' });
     await waitFor(() => expect(three).toHaveAttribute('data-highlighted'));
+    // The open gives the focus to the item in an animation frame. That frame would take the focus
+    // back from the link.
+    await waitFor(() => expect(three).toHaveFocus());
     screen.getByRole('link', { name: 'Profile' }).focus();
     await flushMicrotasks();
     expect(three).toHaveAttribute('data-highlighted');
