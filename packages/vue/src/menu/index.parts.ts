@@ -82,6 +82,8 @@ import type {
 } from './submenu-trigger/MenuSubmenuTrigger.vue';
 import MenuTrigger from './trigger/MenuTrigger.vue';
 import type { MenuTriggerProps, MenuTriggerState } from './trigger/MenuTrigger.vue';
+import MenuViewport from './viewport/MenuViewport.vue';
+import type { MenuViewportProps, MenuViewportState } from './viewport/MenuViewport.vue';
 
 /**
  * Displays an element positioned against the menu anchor.
@@ -332,6 +334,18 @@ export const Trigger: typeof MenuTrigger = MenuTrigger;
 export namespace Trigger {
   export type Props<Payload = unknown> = MenuTriggerProps<Payload>;
   export type State = MenuTriggerState;
+}
+
+/**
+ * A viewport for displaying content transitions.
+ * This component is only required if one popup can be opened by multiple triggers, its content
+ * changes based on the trigger, and switching between them is animated.
+ * Renders a `<div>` element.
+ */
+export const Viewport: typeof MenuViewport = MenuViewport;
+export namespace Viewport {
+  export type State = MenuViewportState;
+  export type Props = MenuViewportProps;
 }
 
 export { getFilter as useFilter } from '../internals/filter';

@@ -114,7 +114,7 @@ const base = import.meta.env.BASE_URL;
 const RELATED_LINKS = [
   { href: `${base}components/scroll-area`, label: 'Scroll Area' },
   { href: `${base}components/drawer`, label: 'Drawer' },
-  { href: `${base}components/preview-card`, label: 'Preview Card' },
+  { href: `${base}components/popover`, label: 'Popover' },
 ] as const;
 </script>
 

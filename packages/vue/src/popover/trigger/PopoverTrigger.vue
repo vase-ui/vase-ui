@@ -85,7 +85,6 @@ import { usePopupHandleStore } from '../../utils/popups/usePopupHandleStore';
 import { useTriggerFocusGuards } from '../../utils/popups/useTriggerFocusGuards';
 import { usePopoverRootContext } from '../root/PopoverRootContext';
 import type { PopoverHandleStore } from '../store/PopoverStore';
-import { OPEN_DELAY } from '../utils/constants';
 
 defineOptions({ inheritAttrs: false });
 
@@ -94,7 +93,7 @@ const props = withDefaults(defineProps<PopoverTriggerProps<Payload>>(), {
   disabled: false,
   nativeButton: true,
   openOnHover: false,
-  delay: OPEN_DELAY,
+  delay: 300,
   closeDelay: 0,
 });
 
