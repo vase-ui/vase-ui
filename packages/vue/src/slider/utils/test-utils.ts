@@ -1,4 +1,4 @@
-type Touches = Array<Pick<Touch, 'identifier' | 'clientX' | 'clientY'>>;
+type Touches = Pick<Touch, 'identifier' | 'clientX' | 'clientY'>[];
 
 interface LegacyTouchDocument {
   createTouch: (
