@@ -416,8 +416,12 @@ describe('useTypeahead', () => {
 
   describe('options and the session', () => {
     const List = defineComponent(
-      (props: { options: Omit<Partial<UseTypeaheadProps>, 'listRef'>; list: Array<string> }) => {
-        const { refs, context } = useFloating({ open: true });
+      (props: {
+        options: Omit<Partial<UseTypeaheadProps>, 'listRef'>;
+        list: Array<string>;
+        open?: boolean;
+      }) => {
+        const { refs, context } = useFloating({ open: () => props.open ?? true });
         const activeIndex = shallowRef<number | null>(null);
         const typeahead = useTypeahead(context.rootStore, {
           ...props.options,
@@ -441,7 +445,7 @@ describe('useTypeahead', () => {
           </>
         );
       },
-      { props: ['options', 'list'] },
+      { props: ['options', 'list', 'open'] },
     );
 
     const press = (key: string, init: KeyboardEventInit = {}) =>
@@ -497,6 +501,11 @@ describe('useTypeahead', () => {
       await press('a');
       expect(matches).toEqual([0]);
 
+      // The session ended after 100 ms, so `v` starts a session and matches no label.
+      vi.advanceTimersByTime(100);
+      await press('v');
+      expect(matches).toEqual([0]);
+
       vi.advanceTimersByTime(100);
       disabled.value = [1];
       await press('a');
@@ -508,6 +517,29 @@ describe('useTypeahead', () => {
       vi.advanceTimersByTime(100);
       await press('v');
       expect(matches).toEqual([0, 2, 0, 2]);
+    });
+
+    it('keeps the session when the selected index changes while the popup is closed', async () => {
+      const selectedIndex = shallowRef<number | null>(0);
+      const matches: number[] = [];
+      await render(
+        <List
+          open={false}
+          list={['apple', 'banana', 'blueberry']}
+          options={{
+            selectedIndex,
+            onMatch(index) {
+              selectedIndex.value = index;
+              matches.push(index);
+            },
+          }}
+        />,
+      );
+
+      await press('b');
+      await press('l');
+
+      expect(matches).toEqual([1, 2]);
     });
 
     it('ends the session when the focus leaves the reference and the popup', async () => {
