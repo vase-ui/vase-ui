@@ -77,8 +77,8 @@ function createNativeTouchMove(target: EventTarget, point: Point) {
 }
 
 // The speed of a swipe comes from the `timeStamp` of its events. A browser stamps a touch event
-// with its own clock, so a stalled run makes a fast swipe slow. This gives each event that the
-// element dispatches a stamp 16 ms after the stamp before it, as `firePointer` does for a pointer.
+// with its own clock, so a stalled run makes a fast swipe slow. The function gives each event that
+// the element dispatches a stamp 16 ms after the stamp before it.
 function stampEventTimes(element: Element) {
   let timeStamp = 0;
   const dispatchEvent = element.dispatchEvent.bind(element);
