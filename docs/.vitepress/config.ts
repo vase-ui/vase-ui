@@ -41,7 +41,7 @@ export default defineConfig({
   lang: 'en-US',
   title: 'Vase UI',
   description: manifest.description,
-  base: '/vase-ui/',
+  base: '/',
   cleanUrls: true,
   // A demo is inside an element with the class `vp-raw`. This plugin keeps the styles of the theme
   // out of it, so the style sheet of the demo is the only one that styles it.
@@ -62,6 +62,8 @@ export default defineConfig({
     return family === undefined ? undefined : { apiReference: readApiReference(family) };
   },
   themeConfig: {
+    logo: { light: '/wordmark-light.svg', dark: '/wordmark-dark.svg', alt: 'Vase UI' },
+    siteTitle: false,
     nav,
     sidebar,
     outline: { level: [2, 3] },
