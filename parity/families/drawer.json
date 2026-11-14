@@ -28,12 +28,6 @@
     },
     {
       "upstream": "packages/react/src/drawer/swipe-area/DrawerSwipeArea.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The file imports the entry point of Drawer, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/drawer/swipe-area/DrawerSwipeArea.test.tsx",
       "describe": ["<Drawer.SwipeArea />"],
       "title": "works before a generated swipe area id is available",
       "kind": "not-applicable",
