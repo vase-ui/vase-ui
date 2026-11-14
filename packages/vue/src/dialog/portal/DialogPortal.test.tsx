@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { shallowRef } from 'vue';
+import { h, shallowRef } from 'vue';
+import type { Component } from 'vue';
 import {
   createRenderer,
   describeConformance,
@@ -18,11 +19,14 @@ import DialogPortalHydration from './DialogPortalHydration.test.vue';
 
 const INTERNAL_BACKDROP_SELECTOR = '[role="presentation"][data-vase-ui-inert]';
 
+type RenderSlotProps = { props: Record<string, unknown>; children: Component };
+
 describe('<Dialog.Portal />', () => {
   const { render } = createRenderer();
 
   describeConformance(<Dialog.Portal />, () => ({
     refInstanceof: window.HTMLDivElement,
+    childrenSelector: INTERNAL_BACKDROP_SELECTOR,
     render(node) {
       return render(<Dialog.Root open>{node}</Dialog.Root>);
     },
@@ -77,6 +81,40 @@ describe('<Dialog.Portal />', () => {
 
         const portal = screen.getByTestId('portal');
         const backdrop = portal.querySelector(INTERNAL_BACKDROP_SELECTOR);
+        expect(backdrop !== null).toBe(hasBackdrop);
+        // The focus guards of the popup come before the popup, so the backdrop is the first child.
+        expect(portal.firstElementChild === backdrop).toBe(hasBackdrop);
+        expect(store.context.internalBackdropRef.value).toBe(backdrop);
+      },
+    );
+
+    it.each([
+      { name: 'modal true', modal: true, hasBackdrop: true },
+      { name: 'modal false', modal: false, hasBackdrop: false },
+    ])(
+      'renders it before the content in the element of the #render slot, only for a modal dialog: $name',
+      async ({ modal, hasBackdrop }) => {
+        let store!: DialogStore<unknown>;
+        await render(
+          <Dialog.Root defaultOpen modal={modal}>
+            <DialogStoreProbe onStore={(value) => (store = value)} />
+            <Dialog.Portal
+              v-slots={{
+                render: ({ props, children }: RenderSlotProps) => (
+                  <section {...props} data-testid="portal">
+                    {h(children, null, () => (
+                      <Dialog.Popup />
+                    ))}
+                  </section>
+                ),
+              }}
+            />
+          </Dialog.Root>,
+        );
+
+        const portal = screen.getByTestId('portal');
+        const backdrop = portal.querySelector(INTERNAL_BACKDROP_SELECTOR);
+        expect(portal.localName).toBe('section');
         expect(backdrop !== null).toBe(hasBackdrop);
         // The focus guards of the popup come before the popup, so the backdrop is the first child.
         expect(portal.firstElementChild === backdrop).toBe(hasBackdrop);
@@ -191,7 +229,7 @@ describe('<Dialog.Portal />', () => {
 
     await hydrate(DialogPortalHydration, { serverHtml });
 
-    expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
