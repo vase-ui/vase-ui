@@ -255,6 +255,7 @@ Some upstream parts put nodes of their own in the element. Examples are the rang
 - A consumer writes `<a v-bind="props"><component :is="children">…</component></a>`.
 - A development build shows a warning when the `#render` slot does not mount `children`. The part makes this check together with the check for the element of the slot.
 - The part passes `children: true` to `useRenderElement`. `<Part>Children.vue` calls `markChildrenMounted()` in setup. The warning needs the two calls.
+- The Viewport part of a popup family has no `<Part>Children.vue`. Its `children` is `utils/popups/viewport/PopupViewportChildren.vue`. `test/fixtures/PopupViewportPart.vue` is the model.
 
 <!-- prettier-ignore -->
 ```vue
@@ -712,6 +713,22 @@ The positioning of a popup is in `src/internals/useAnchorPositioning.ts` and in 
 - The composable removes its context from the store and from the node when the part unmounts and while `KeepAlive` holds the part. It never removes the context of another positioner. The tree also hides the context of a node whose own part is deactivated.
 - While the popup is not mounted, the composable calls `clearPositioning()` of the store. A kept popup then forgets its anchor override, and a `FloatingRootStore` forgets its anchor and its positioner element.
 - `rootStore` can be a getter. A part that gets its store after it has mounted gives a getter, and the context moves to the new store.
+
+### Popup viewport
+
+The viewport of a popup, in `src/utils/popups/viewport`, shows the old content while the popup moves to another trigger.
+
+- A viewport part calls `usePopupViewport({ store, side })` in `setup` and gets `state`.
+- The container `data-current="true"` holds the content, and the container `data-previous="true"` comes first while the old content shows.
+- The old container has `inert` and `position: absolute`, and it has the old size of the popup in `--popup-width` and `--popup-height` when the payload changes.
+- The new container has `data-starting-style` in the first DOM update and loses it one frame later, when the old container gets `data-ending-style`.
+- The old content is a DOM clone that the composable takes when the trigger changes, before Vue renders the change.
+- The clone has no `id` on an HTML element and no `name` on a control.
+- The content mounts one time for a change of the trigger, and one more time when the payload of the trigger comes later.
+- The composable writes `adaptiveOrigin` in `onBeforeMount` and in `onMounted`, and a server render writes nothing.
+- The resize writes the size variables to the popup element and the positioner element, and their rendered style has none of them.
+- A `style` of the consumer on the popup replaces an anchoring declaration that has the same property at the next render.
+- While `KeepAlive` holds the part, the resize measures nothing and a morph in progress ends.
 
 ### Focus helpers
 
