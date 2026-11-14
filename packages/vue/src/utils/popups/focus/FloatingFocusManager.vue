@@ -162,7 +162,8 @@ function addPreviouslyFocusedElement(element: Element | null | undefined) {
 function getPreviouslyFocusedElement(skipHidden?: boolean) {
   clearDisconnectedPreviouslyFocusedElements();
   for (let i = previouslyFocusedElements.length - 1; i >= 0; i -= 1) {
-    const element = previouslyFocusedElements[i].deref();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The loop runs from the last index to 0.
+    const element = previouslyFocusedElements[i]!.deref();
     // The marker skips elements outside an open popup, such as behind a modal.
     if (!skipHidden || !closest(element, `[hidden],[${createAttribute('inert')}]`)) {
       return element;

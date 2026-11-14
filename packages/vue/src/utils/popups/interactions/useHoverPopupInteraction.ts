@@ -49,7 +49,7 @@ function useDomEffect(sources: WatchSource[], run: () => (() => void) | void) {
   let cleanup: (() => void) | undefined;
   function update() {
     cleanup?.();
-    cleanup = run() || undefined;
+    cleanup = run() ?? undefined;
   }
   onMounted(update);
   watch(sources, update, { flush: 'post' });

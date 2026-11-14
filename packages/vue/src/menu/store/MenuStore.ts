@@ -267,6 +267,7 @@ export class MenuStore<Payload> extends BasePopupStore<
   protected override getCloseTrigger() {
     // Reports the trigger the root last rendered, which repeated requests are compared against.
     // The store can already hold a newer trigger from a request that hasn't rendered yet.
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- `isOpenChangeIgnored` drops each request while the root has not set `getCommittedOpenState`.
     return this.context.getCommittedOpenState!().activeTriggerElement;
   }
 
