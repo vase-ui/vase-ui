@@ -159,7 +159,7 @@ function getNewValue(
   return clamp(roundedValue, min, max);
 }
 
-type Handler = ((event: Event) => void) | Array<(event: Event) => void> | false | null | undefined;
+type Handler = ((event: Event) => void) | ((event: Event) => void)[] | false | null | undefined;
 
 function callHandler(handler: Handler, event: Event) {
   if (Array.isArray(handler)) {

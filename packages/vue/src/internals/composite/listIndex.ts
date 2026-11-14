@@ -8,26 +8,26 @@ import { isElementDisabled } from '../../common/isElementDisabled';
 import { stopEvent } from '../../utils/popups/event';
 import { ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT, ARROW_UP } from '../../utils/popups/constants';
 
-export type DisabledIndices = ReadonlyArray<number> | ((index: number) => boolean);
+export type DisabledIndices = readonly number[] | ((index: number) => boolean);
 
 export function isDifferentGridRow(index: number, cols: number, prevRow: number) {
   return Math.floor(index / cols) !== prevRow;
 }
 
-export function isIndexOutOfListBounds(list: ReadonlyArray<HTMLElement | null>, index: number) {
+export function isIndexOutOfListBounds(list: readonly (HTMLElement | null)[], index: number) {
   return index < 0 || index >= list.length;
 }
 
 export function getMinListIndex(
-  listRef: Readonly<Ref<ReadonlyArray<HTMLElement | null>>>,
-  disabledIndices?: DisabledIndices | undefined,
+  listRef: Readonly<Ref<readonly (HTMLElement | null)[]>>,
+  disabledIndices?: DisabledIndices,
 ) {
   return findNonDisabledListIndex(listRef.value, { disabledIndices });
 }
 
 export function getMaxListIndex(
-  listRef: Readonly<Ref<ReadonlyArray<HTMLElement | null>>>,
-  disabledIndices?: DisabledIndices | undefined,
+  listRef: Readonly<Ref<readonly (HTMLElement | null)[]>>,
+  disabledIndices?: DisabledIndices,
 ) {
   return findNonDisabledListIndex(listRef.value, {
     decrement: true,
@@ -55,7 +55,7 @@ export interface ListStepOptions {
  * `wrapped` is `true` when the step jumps from one end of the list to the other.
  */
 export function getNextListIndex(
-  list: ReadonlyArray<HTMLElement | null>,
+  list: readonly (HTMLElement | null)[],
   currentIndex: number,
   options: ListStepOptions,
 ): { index: number; wrapped: boolean } {
@@ -86,7 +86,7 @@ export function getNextListIndex(
 }
 
 export function findNonDisabledListIndex(
-  list: ReadonlyArray<HTMLElement | null>,
+  list: readonly (HTMLElement | null)[],
   {
     startingIndex = -1,
     decrement = false,
@@ -112,7 +112,7 @@ export function findNonDisabledListIndex(
 }
 
 export function getGridNavigatedIndex(
-  list: Array<HTMLElement | null>,
+  list: (HTMLElement | null)[],
   {
     event,
     orientation,
@@ -542,7 +542,7 @@ export function getGridCellIndices(
 }
 
 export function isListIndexDisabled(
-  list: ReadonlyArray<HTMLElement | null>,
+  list: readonly (HTMLElement | null)[],
   index: number,
   disabledIndices?: DisabledIndices,
 ) {

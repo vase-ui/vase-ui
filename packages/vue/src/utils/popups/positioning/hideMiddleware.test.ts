@@ -40,7 +40,7 @@ describe('hideMiddleware', () => {
     [{ top: 19, right: 10, bottom: 19, left: 9 }, true],
     [{ top: 19, right: 9, bottom: 20, left: 9 }, true],
     [{ top: 19, right: 9, bottom: 19, left: 10 }, true],
-  ] satisfies Array<[SideObject, boolean]>)(
+  ] satisfies [SideObject, boolean][])(
     'matches Floating UI hide() for reference overflow %#',
     async (overflow, expected) => {
       const state = createState({ x: 1, y: 2, width: 10, height: 20 }, overflow);

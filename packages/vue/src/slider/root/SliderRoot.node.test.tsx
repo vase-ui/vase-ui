@@ -8,7 +8,7 @@ function tag(html: string, pattern: RegExp) {
 }
 
 function readId(html: string, testId: string) {
-  return tag(html, new RegExp(`<[^>]*data-testid="${testId}"[^>]*>`)).match(/ id="([^"]+)"/)?.[1];
+  return / id="([^"]+)"/.exec(tag(html, new RegExp(`<[^>]*data-testid="${testId}"[^>]*>`)))?.[1];
 }
 
 const GROUP = /<div[^>]*role="group"[^>]*>/;
@@ -43,7 +43,7 @@ describe('<Slider.Root /> on a server', () => {
     async ({ attributes, labelledBy }) => {
       const html = await renderToString(<Slider.Root id="volume" {...attributes} />);
 
-      expect(tag(html, GROUP).match(/aria-labelledby="([^"]*)"/)?.[1]).toBe(labelledBy);
+      expect(/aria-labelledby="([^"]*)"/.exec(tag(html, GROUP))?.[1]).toBe(labelledBy);
     },
   );
 

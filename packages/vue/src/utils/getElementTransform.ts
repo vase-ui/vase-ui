@@ -14,7 +14,7 @@ export function getElementTransform(element: HTMLElement, computedStyle?: CSSSty
   let scale = 1;
 
   if (transform && transform !== 'none') {
-    const matrix = transform.match(/matrix(?:3d)?\(([^)]+)\)/);
+    const matrix = /matrix(?:3d)?\(([^)]+)\)/.exec(transform);
     if (matrix) {
       const values = matrix[1].split(', ').map(parseFloat);
       if (values.length === 6) {

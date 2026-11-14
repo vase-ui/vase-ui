@@ -179,7 +179,7 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
     };
   };
 
-  removeToast(toastId: string, skipOnRemove: boolean = false) {
+  removeToast(toastId: string, skipOnRemove = false) {
     const index = selectors.toastIndex(this.current, toastId);
     if (index === -1) {
       return;
@@ -260,8 +260,8 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
   updateToastInternal = <Data extends object>(
     id: string,
     updates: ToastInternalUpdateOptions<Data>,
-    resetTimer: boolean = false,
-    markUpdated: boolean = false,
+    resetTimer = false,
+    markUpdated = false,
   ) => {
     const { timeout, toasts } = this.current;
     const prevToast = selectors.toast(this.current, id);
@@ -387,7 +387,7 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
 
     // Private API used exclusively by `Manager` to handoff the promise
     // back to the manager after it's handled here.
-    if ({}.hasOwnProperty.call(options, 'setPromise')) {
+    if (Object.hasOwn(options, 'setPromise')) {
       (options as any).setPromise(handledPromise);
     }
 

@@ -62,8 +62,8 @@ export function useCompositeList<Metadata>(params: UseCompositeListParameters<Me
   function syncRefs(items: readonly CompositeListItem<Metadata>[]) {
     const nextMap = new Map<Element, CompositeMetadata<Metadata>>();
     // An explicit index can leave an empty slot.
-    const elements: Array<HTMLElement | null> = [];
-    const labels: Array<string | null> = [];
+    const elements: (HTMLElement | null)[] = [];
+    const labels: (string | null)[] = [];
 
     items.forEach((item) => {
       nextMap.set(item.element, {
@@ -304,12 +304,12 @@ export interface UseCompositeListParameters<Metadata> {
    * Explicit indexes can leave empty slots in the array.
    * The list gives the ref a new array on each sort.
    */
-  elementsRef: ShallowRef<Array<HTMLElement | null>>;
+  elementsRef: ShallowRef<(HTMLElement | null)[]>;
   /**
    * The labels of the items, ordered by their index.
    * The list gives the ref a new array on each sort.
    */
-  labelsRef?: ShallowRef<Array<string | null>> | undefined;
+  labelsRef?: ShallowRef<(string | null)[]> | undefined;
   /**
    * Called with the new map when an index, an element, an explicit index or a metadata value
    * changes.

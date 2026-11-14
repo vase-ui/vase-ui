@@ -291,7 +291,7 @@ describe('useHoverTriggerInteraction', () => {
       secondTrigger,
       ...options
     }: UseHoverTriggerInteractionProps & { secondTrigger?: boolean } = {}) {
-      const calls: Array<{ open: boolean; reason: string; trigger: string | undefined }> = [];
+      const calls: { open: boolean; reason: string; trigger: string | undefined }[] = [];
       const open = shallowRef(false);
       let store!: FloatingRootStore;
 
@@ -738,7 +738,7 @@ describe('useHoverTriggerInteraction', () => {
     });
 
     it('VUE-25: opens for the innermost trigger that contains the target', async () => {
-      const triggers: Array<string | undefined> = [];
+      const triggers: (string | undefined)[] = [];
       const App = defineComponent({
         setup() {
           const outer = shallowRef<HTMLElement | null>(null);

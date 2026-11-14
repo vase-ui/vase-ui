@@ -751,7 +751,7 @@ describe('NumberField parse', () => {
           }
 
           const text = formatter.format(value);
-          const inputs: Array<[string, number]> = [[text, expected]];
+          const inputs: [string, number][] = [[text, expected]];
           // A typed minus sign negates a positive value, unless the text already shows a sign
           const hasSign = formatter.formatToParts(value).some((part) => part.type === 'plusSign');
           if (value > 0 && !hasSign) {

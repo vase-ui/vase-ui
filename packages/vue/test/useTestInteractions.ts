@@ -22,7 +22,7 @@ export interface UseTestInteractionsReturn {
 }
 
 export function useTestInteractions(
-  propsList: Array<MaybeRefOrGetter<TestElementProps | void>> = [],
+  propsList: MaybeRefOrGetter<TestElementProps | void>[] = [],
 ): UseTestInteractionsReturn {
   return {
     getReferenceProps: (userProps) => mergeProps(userProps, propsList, 'reference'),
@@ -34,10 +34,10 @@ export function useTestInteractions(
 
 function mergeProps<Key extends keyof TestElementProps>(
   userProps: (UserProps & ExtendedUserProps) | undefined,
-  propsList: Array<MaybeRefOrGetter<TestElementProps | void>>,
+  propsList: MaybeRefOrGetter<TestElementProps | void>[],
   elementKey: Key,
 ): Record<string, unknown> {
-  const eventHandlers = new Map<string, Array<(...args: unknown[]) => void>>();
+  const eventHandlers = new Map<string, ((...args: unknown[]) => void)[]>();
   const isItem = elementKey === 'item';
 
   const outputProps = {} as Record<string, unknown>;
@@ -72,7 +72,7 @@ function mutablyMergeProps(
   outputProps: Record<string, unknown>,
   props: any,
   isItem: boolean,
-  eventHandlers: Map<string, Array<(...args: unknown[]) => void>>,
+  eventHandlers: Map<string, ((...args: unknown[]) => void)[]>,
 ) {
   for (const key in props) {
     const value = props[key];
@@ -92,7 +92,7 @@ function mutablyMergeProps(
 
     let handlers = eventHandlers.get(key);
     if (!handlers) {
-      const newHandlers: Array<(...args: unknown[]) => void> = [];
+      const newHandlers: ((...args: unknown[]) => void)[] = [];
       handlers = newHandlers;
       eventHandlers.set(key, handlers);
 

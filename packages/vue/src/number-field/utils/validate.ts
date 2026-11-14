@@ -63,7 +63,7 @@ export function removeFloatingPointErrors(value: number, format?: NumberFormatOp
     currencySign: 'standard',
     notation: format.notation === 'compact' ? 'standard' : format.notation,
     useGrouping: false,
-  } as NumberFormatOptionsWithRounding);
+  });
   const roundedText = formatter.format(value);
   const roundedValue = parseNumber(roundedText, 'en-US', format);
 

@@ -17,7 +17,7 @@ import type { UseRenderPartState } from './UseRenderPart.test.vue';
 
 const result = useRender({});
 
-expectType<useRender.ReturnValue<HTMLElement>, typeof result>(result);
+expectType<useRender.ReturnValue, typeof result>(result);
 expectType<ShallowRef<HTMLElement | null>, typeof result.element>(result.element);
 expectType<() => HTMLProps, typeof result.elementProps>(result.elementProps);
 expectType<ComputedRef<string | Component>, typeof result.tag>(result.tag);

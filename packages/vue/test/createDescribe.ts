@@ -1,6 +1,6 @@
 import { describe } from 'vitest';
 
-type Describe = typeof describe | typeof describe.skip | typeof describe.only;
+type Describe = typeof describe | typeof describe.skip;
 
 export function createDescribe<Args extends unknown[]>(
   message: string,

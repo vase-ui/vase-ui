@@ -439,7 +439,7 @@ describe('<Field.Root />', () => {
       it.each(['onChange', 'onBlur'] as const)(
         'retires a previously valid result to neutral while revalidating in %s mode',
         async (validationMode) => {
-          const resolvers: Array<(value: string | null) => void> = [];
+          const resolvers: ((value: string | null) => void)[] = [];
           const validate = vi.fn(
             () =>
               new Promise<string | null>((resolve) => {
@@ -489,7 +489,7 @@ describe('<Field.Root />', () => {
       it.each(['onChange', 'onBlur'] as const)(
         'keeps a previously resolved error while revalidating in %s mode',
         async (validationMode) => {
-          const resolvers: Array<(value: string | null) => void> = [];
+          const resolvers: ((value: string | null) => void)[] = [];
           const validate = vi.fn(
             () =>
               new Promise<string | null>((resolve) => {
@@ -554,7 +554,7 @@ describe('<Field.Root />', () => {
 
       it('retires a stale native error to neutral once the constraint passes again', async () => {
         const onSubmit = vi.fn(preventDefault);
-        const resolvers: Array<(value: string | null) => void> = [];
+        const resolvers: ((value: string | null) => void)[] = [];
         const validate = vi.fn(
           () =>
             new Promise<string | null>((resolve) => {
@@ -641,7 +641,7 @@ describe('<Field.Root />', () => {
 
       it('retires a resolved async error to neutral while revalidating in onSubmit mode', async () => {
         const onSubmit = vi.fn(preventDefault);
-        const resolvers: Array<(value: string | null) => void> = [];
+        const resolvers: ((value: string | null) => void)[] = [];
         const validate = vi.fn(
           () =>
             new Promise<string | null>((resolve) => {

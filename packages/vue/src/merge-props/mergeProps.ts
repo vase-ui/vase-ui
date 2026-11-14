@@ -134,7 +134,7 @@ export function mergeProps(a: any, b: any, c?: any, d?: any, e?: any) {
  */
 export function mergePropsN<T extends ElementType>(props: InputProps<T>[]): MergedProps<T> {
   if (props.length === 0) {
-    return EMPTY_PROPS as MergedProps<T>;
+    return EMPTY_PROPS;
   }
   if (props.length === 1) {
     return createInitialMergedProps(props[0]) as MergedProps<T>;
@@ -153,7 +153,7 @@ export function mergePropsN<T extends ElementType>(props: InputProps<T>[]): Merg
 function createInitialMergedProps<T extends ElementType>(inputProps: InputProps<T>) {
   if (isPropsGetter(inputProps)) {
     // The code does not wrap a handler that a props getter returns. Such a handler keeps its rules.
-    return { ...inputProps(EMPTY_PROPS as MergedProps<T>) };
+    return { ...inputProps(EMPTY_PROPS) };
   }
 
   return copyInitialProps(inputProps);

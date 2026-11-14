@@ -341,7 +341,7 @@ export function createVaseProject(tsconfig: string): VaseProject {
       const type = typeChecker().getDeclaredTypeOfSymbol(resolve(symbol));
       const members = type.isUnion() ? type.types : [type];
       return members.every((member) => member.isStringLiteral())
-        ? members.map((member) => (member as ts.StringLiteralType).value)
+        ? members.map((member) => member.value)
         : undefined;
     },
 

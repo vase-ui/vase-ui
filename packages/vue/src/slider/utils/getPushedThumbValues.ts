@@ -15,7 +15,7 @@ export function getPushedThumbValues(
   max: number,
   step: number,
   minStepsBetweenValues: number,
-  initialValues?: readonly number[] | undefined,
+  initialValues?: readonly number[],
 ): number[] {
   const nextValues = values.slice();
   const minValueDifference = step * minStepsBetweenValues;

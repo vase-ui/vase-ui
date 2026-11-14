@@ -19,7 +19,7 @@ export class Interval extends Timeout {
 
   clear = () => {
     if (this.currentId !== EMPTY) {
-      clearInterval(this.currentId as IntervalId);
+      clearInterval(this.currentId);
       this.currentId = EMPTY;
     }
   };

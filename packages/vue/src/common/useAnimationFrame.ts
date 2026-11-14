@@ -109,7 +109,7 @@ export class AnimationFrame {
   }
 
   static cancel(id: AnimationFrameId) {
-    return scheduler.cancel(id);
+    scheduler.cancel(id);
   }
 
   currentId: AnimationFrameId | null = EMPTY;

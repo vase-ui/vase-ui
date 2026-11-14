@@ -38,7 +38,7 @@ export class ReactiveStore<
    * make it reactive.
    */
   constructor(state: State, context: Context = {} as Context, selectors?: Selectors) {
-    this.state = shallowReactive(state) as State;
+    this.state = shallowReactive(state);
     this.context = context;
     this.selectors = selectors;
   }

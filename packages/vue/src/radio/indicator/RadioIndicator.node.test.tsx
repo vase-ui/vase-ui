@@ -5,7 +5,7 @@ import RadioIndicatorHydration from './RadioIndicatorHydration.test.vue';
 // The data attributes of the indicator in the HTML, or `null` when the HTML has no indicator.
 // The order of the attributes is not part of the test.
 function readDataAttributes(html: string, testId: string) {
-  const tag = html.match(new RegExp(`<span[^>]*data-testid="${testId}"[^>]*>`))?.[0];
+  const tag = new RegExp(`<span[^>]*data-testid="${testId}"[^>]*>`).exec(html)?.[0];
   if (tag === undefined) {
     return null;
   }

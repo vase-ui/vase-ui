@@ -268,7 +268,7 @@ effect(
         return;
       }
 
-      let focusableElements: Array<FocusableElement> | null = null;
+      let focusableElements: FocusableElement[] | null = null;
       const getDefaultFocusElement = () => {
         if (focusableElements == null) {
           focusableElements = getTabbableContent(floatingFocusEl);
@@ -283,7 +283,7 @@ effect(
       } else {
         elToFocus = resolvedInitialFocus;
       }
-      elToFocus = elToFocus || getDefaultFocusElement();
+      elToFocus ||= getDefaultFocusElement();
 
       const hadFocusInside = contains(floatingFocusEl, activeElement(doc));
 

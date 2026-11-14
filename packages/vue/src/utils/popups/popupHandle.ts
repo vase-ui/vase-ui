@@ -93,7 +93,7 @@ export class BasePopupHandle<
   constructor(
     protected readonly fallbackStore: HandleStore,
     private readonly componentName: string,
-    private readonly throwOnMissingTrigger: boolean = true,
+    private readonly throwOnMissingTrigger = true,
   ) {
     // A reactive proxy of the handle, for example from `ref()` or from the `data` option, unwraps
     // `attachedStoreRef`. The next write to the pointer then fails.

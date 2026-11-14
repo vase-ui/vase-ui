@@ -1,5 +1,5 @@
-import { queries, within } from '@testing-library/dom';
-import type { BoundFunctions } from '@testing-library/dom';
+import { within } from '@testing-library/dom';
+import type { BoundFunctions, queries } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
 import { afterEach, vi } from 'vitest';
 import { createApp, nextTick, shallowRef } from 'vue';

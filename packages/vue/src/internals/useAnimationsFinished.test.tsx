@@ -528,7 +528,7 @@ describe('useAnimationsFinished', () => {
       { props: ['onFinished', 'animate', 'signal'] },
     );
 
-    function createWatchedElements(timings: Array<KeyframeAnimationOptions | null>) {
+    function createWatchedElements(timings: (KeyframeAnimationOptions | null)[]) {
       const animations: Animation[] = [];
       const elements: WatchedElement[] = timings.map((timing, index) => ({
         onFinished: vi.fn(),

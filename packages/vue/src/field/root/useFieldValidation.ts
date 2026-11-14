@@ -17,7 +17,7 @@ import { mergeProps } from '../../merge-props';
 
 export type { RegisteredInput, RegisteredInputs, UseFieldValidationReturnValue };
 
-const validityKeys = Object.keys(DEFAULT_VALIDITY_STATE) as Array<keyof ValidityState>;
+const validityKeys = Object.keys(DEFAULT_VALIDITY_STATE) as (keyof ValidityState)[];
 
 type ValidateResult = string | string[] | null | void;
 

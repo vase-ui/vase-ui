@@ -106,7 +106,7 @@ export function useCollapsiblePanel(
   );
 
   // A keyframe close uses the last measured size. `false` only clears the current dimensions.
-  function setDimensions(nextDimensions: Dimensions, shouldCacheMeasurement: boolean = true) {
+  function setDimensions(nextDimensions: Dimensions, shouldCacheMeasurement = true) {
     if (shouldCacheMeasurement) {
       lastMeasuredDimensions.value = nextDimensions;
     }

@@ -22,8 +22,8 @@ describe('<Slider.Thumb /> on a server', () => {
       ([, index]) => index,
     );
     const inputs = [...html.matchAll(/<input [^>]*>/g)].map(([input]) => ({
-      value: input.match(/ aria-valuenow="([^"]*)"/)?.[1],
-      text: input.match(/ aria-valuetext="([^"]*)"/)?.[1],
+      value: / aria-valuenow="([^"]*)"/.exec(input)?.[1],
+      text: / aria-valuetext="([^"]*)"/.exec(input)?.[1],
     }));
 
     expect(indexes).toEqual(['0', '1']);
@@ -50,7 +50,7 @@ describe('<Slider.Thumb /> on a server', () => {
         </Slider.Root>
       </Field.Root>,
     );
-    const labelId = tag(html, /<[^>]*data-testid="label"[^>]*>/).match(/ id="([^"]+)"/)?.[1];
+    const labelId = / id="([^"]+)"/.exec(tag(html, /<[^>]*data-testid="label"[^>]*>/))?.[1];
 
     expect(labelId).toBeTruthy();
     expect(tag(html, /<input [^>]*>/)).toContain(` aria-labelledby="${labelId}"`);

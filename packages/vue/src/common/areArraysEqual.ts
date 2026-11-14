@@ -2,8 +2,8 @@
 type ItemComparer<Item> = (a: Item, b: Item) => boolean;
 
 export function areArraysEqual<Item>(
-  array1: ReadonlyArray<Item>,
-  array2: ReadonlyArray<Item>,
+  array1: readonly Item[],
+  array2: readonly Item[],
   itemComparer: ItemComparer<Item> = Object.is,
 ): boolean {
   const { length } = array1;

@@ -718,7 +718,7 @@ export function useDismiss(
         if (targetEvent.type === 'pointerdown') {
           handlePointerDown(targetEvent as PointerEvent);
         } else {
-          closeOnPressOutside(targetEvent as MouseEvent);
+          closeOnPressOutside(targetEvent);
         }
       });
     }
@@ -762,7 +762,7 @@ export function useDismiss(
       }
 
       // Avoid suppressing when outsidePress explicitly ignores this target.
-      if (typeof outsidePress === 'function' && !outsidePress(event as MouseEvent)) {
+      if (typeof outsidePress === 'function' && !outsidePress(event)) {
         return;
       }
 

@@ -763,11 +763,11 @@ describe('<RadioGroup />', () => {
     describe.each([
       { direction: 'ltr', horizontalNextKey: 'ArrowRight', horizontalPrevKey: 'ArrowLeft' },
       { direction: 'rtl', horizontalNextKey: 'ArrowLeft', horizontalPrevKey: 'ArrowRight' },
-    ] satisfies Array<{
+    ] satisfies {
       direction: TextDirection;
       horizontalNextKey: string;
       horizontalPrevKey: string;
-    }>)('direction: $direction', ({ direction, horizontalNextKey, horizontalPrevKey }) => {
+    }[])('direction: $direction', ({ direction, horizontalNextKey, horizontalPrevKey }) => {
       it.skipIf(isJSDOM && direction === 'rtl')('moves focus with arrow keys and Tab', async () => {
         const { user } = await render(
           <DirectionProvider direction={direction}>

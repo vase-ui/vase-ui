@@ -552,7 +552,7 @@ export class HoverIntent {
       return false;
     }
 
-    const targetElement = target as Element;
+    const targetElement = target;
     return (
       allTriggers.hasMatchingElement((trigger) => contains(trigger, targetElement)) &&
       (!currentDomReference || !contains(currentDomReference, targetElement))

@@ -1,7 +1,7 @@
-import * as vaseUi from '@vase-ui/vue';
-import { MultiPart, MultiPartRoot } from '@vase-ui/vue/multi-part';
+import type * as vaseUi from '@vase-ui/vue';
+import type { MultiPart, MultiPartRoot } from '@vase-ui/vue/multi-part';
 import type { MultiPartRootProps } from '@vase-ui/vue/multi-part';
-import { SinglePart, SinglePartDataAttributes } from '@vase-ui/vue/single-part';
+import type { SinglePart, SinglePartDataAttributes } from '@vase-ui/vue/single-part';
 import type { SinglePartProps } from '@vase-ui/vue/single-part';
 
 type Equal<Left, Right> =

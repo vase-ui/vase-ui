@@ -10,7 +10,7 @@ import {
   isListIndexDisabled,
 } from '../listIndex';
 
-type CompositeGridElementsRef = Readonly<Ref<ReadonlyArray<HTMLElement | null>>>;
+type CompositeGridElementsRef = Readonly<Ref<readonly (HTMLElement | null)[]>>;
 type CompositeGridOnLoop = (event: KeyboardEvent, prevIndex: number, nextIndex: number) => number;
 
 /** The number of columns (`width`) and of rows (`height`) that an item covers. */
