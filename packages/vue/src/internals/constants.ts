@@ -3,6 +3,14 @@ import type { CSSProperties } from 'vue';
 export const DISABLED_TRANSITIONS_STYLE = { style: { transition: 'none' } };
 
 /**
+ * The collision avoidance of a dropdown. A dropdown prefers the top and bottom sides, and it limits
+ * its height with `var(--available-height)`.
+ */
+export const DROPDOWN_COLLISION_AVOIDANCE = {
+  fallbackAxisSide: 'none',
+} as const;
+
+/**
  * The collision avoidance of a regular popup. Such a popup is usually not scrollable, so it can
  * flip to each axis of placement.
  */
