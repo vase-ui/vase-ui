@@ -128,14 +128,6 @@
     {
       "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
       "describe": ["<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>"],
-      "title": "releases the highlight when the query is cleared",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The case presses the trigger to open the menu. The trigger of Vase UI has no press yet."
-    },
-    {
-      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
-      "describe": ["<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>"],
       "title": "keeps the query when the popup-close reset is canceled",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/index.ts",
@@ -160,34 +152,10 @@
     {
       "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
       "describe": ["<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>"],
-      "title": "re-filters an item whose rendered text changes while it is hidden",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The case presses the trigger to open the menu. The trigger of Vase UI has no press yet."
-    },
-    {
-      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
-      "describe": ["<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>"],
-      "title": "preserves modifiers when the input activates a link item",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The case presses the trigger to open the menu. The trigger of Vase UI has no press yet."
-    },
-    {
-      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
-      "describe": ["<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>"],
       "title": "leaves modified editing keys to the input while an item is highlighted",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/index.ts",
       "reason": "The file imports the entry point of Menu, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
-      "describe": ["<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>"],
-      "title": "does not open a highlighted submenu with a modified cross-axis key from the input",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/filter-submenu-root/MenuFilterSubmenuRoot.tsx",
-      "reason": "The case renders a filterable submenu, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
@@ -245,14 +213,14 @@
       ],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The cases press the trigger to open the menu. The trigger of Vase UI has no press yet."
+      "reason": "The case presses the trigger to open the menu. The trigger of Vase UI has no press yet."
     },
     {
       "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
       "describe": ["<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>", "filtering"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/filter-submenu-root/MenuFilterSubmenuRoot.tsx",
-      "reason": "Most cases render a filterable submenu, which Vase UI does not have."
+      "reason": "Many cases render a submenu in a filterable menu. Vase UI does not have the filterable submenu, so such a submenu is a plain submenu with no focus handoff."
     },
     {
       "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
@@ -262,14 +230,7 @@
       ],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The cases press the trigger to open the menu. The trigger of Vase UI has no press yet."
-    },
-    {
-      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
-      "describe": ["<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>", "typeahead"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/filter-submenu-root/MenuFilterSubmenuRoot.tsx",
-      "reason": "Each case renders a filterable submenu, which Vase UI does not have."
+      "reason": "The other cases of the block press the trigger to open the menu. The trigger of Vase UI has no press yet."
     },
     {
       "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",

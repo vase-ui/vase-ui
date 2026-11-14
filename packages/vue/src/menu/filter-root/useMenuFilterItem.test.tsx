@@ -59,9 +59,11 @@ describe('filtered Menu items', () => {
       const label = shallowRef('Loading');
       const AsyncLabel = defineComponent(() => () => label.value);
 
+      // A positioner shows only after its first position, and it needs an anchor for that.
       const { user } = await render(
         <Menu.FilterProvider>
           <Menu.Root open>
+            <Menu.Trigger>Actions</Menu.Trigger>
             <Menu.Portal>
               <Menu.Positioner>
                 <Menu.Popup>
@@ -81,14 +83,16 @@ describe('filtered Menu items', () => {
 
       label.value = 'Rename';
       await flushMicrotasks();
-      expect(screen.getByRole('menuitem', { name: 'Rename' })).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByRole('menuitem', { name: 'Rename' })).toBeVisible();
+      });
 
       await user.type(screen.getByRole('searchbox', { name: 'Filter actions' }), 'rename');
 
       await waitFor(() => {
         expect(screen.queryByRole('menuitem', { name: 'Delete' })).toBe(null);
       });
-      expect(screen.getByRole('menuitem', { name: 'Rename' })).toBeInTheDocument();
+      expect(screen.getByRole('menuitem', { name: 'Rename' })).toBeVisible();
     });
 
     it('stops matching text that a descendant no longer renders', async () => {
@@ -175,6 +179,7 @@ describe('filtered Menu items', () => {
         setup: (props) => () => (
           <Menu.FilterProvider value={props.value}>
             <Menu.Root open>
+              <Menu.Trigger>Actions</Menu.Trigger>
               <Menu.Portal>
                 <Menu.Positioner>
                   <Menu.Popup data-tick={props.tick}>
@@ -204,7 +209,7 @@ describe('filtered Menu items', () => {
       await setProps({ value: 'usu', tick: 1 });
 
       await setProps({ value: 'zmie', tick: 1 });
-      expect(screen.getByRole('menuitem', { name: 'Zmień nazwę' })).toBeInTheDocument();
+      expect(screen.getByRole('menuitem', { name: 'Zmień nazwę' })).toBeVisible();
       expect(screen.queryByRole('menuitem', { name: 'Usuń' })).toBe(null);
     });
 
@@ -217,6 +222,7 @@ describe('filtered Menu items', () => {
         setup: (props) => () => (
           <Menu.FilterProvider value={props.value}>
             <Menu.Root open>
+              <Menu.Trigger>Actions</Menu.Trigger>
               <Menu.Portal>
                 <Menu.Positioner>
                   <Menu.Popup>
@@ -239,7 +245,7 @@ describe('filtered Menu items', () => {
       await setProps({ value: 'del', label: 'Duplicate' });
       await setProps({ value: 'dup', label: 'Duplicate' });
 
-      expect(screen.getByRole('menuitem', { name: 'Duplicate' })).toBeInTheDocument();
+      expect(screen.getByRole('menuitem', { name: 'Duplicate' })).toBeVisible();
     });
 
     const RenderElementTest = defineComponent({
@@ -247,6 +253,7 @@ describe('filtered Menu items', () => {
       setup: (props) => () => (
         <Menu.FilterProvider value={props.value}>
           <Menu.Root open>
+            <Menu.Trigger>Actions</Menu.Trigger>
             <Menu.Portal>
               <Menu.Positioner>
                 <Menu.Popup>
@@ -275,7 +282,7 @@ describe('filtered Menu items', () => {
       await setProps({ value: '', name: 'Two' });
       await setProps({ value: 'two', name: 'Two' });
 
-      expect(screen.getByRole('menuitem', { name: 'Two' })).toBeInTheDocument();
+      expect(screen.getByRole('menuitem', { name: 'Two' })).toBeVisible();
     });
 
     it('matches a render element whose text changed while the item was filtered out', async () => {
@@ -284,7 +291,7 @@ describe('filtered Menu items', () => {
 
       await setProps({ value: 'two', name: 'Two' });
 
-      expect(screen.getByRole('menuitem', { name: 'Two' })).toBeInTheDocument();
+      expect(screen.getByRole('menuitem', { name: 'Two' })).toBeVisible();
     });
   });
 

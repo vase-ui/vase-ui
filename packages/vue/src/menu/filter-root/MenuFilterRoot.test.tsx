@@ -56,6 +56,209 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     });
   });
 
+  describe('typeahead', () => {
+    it('does not move the highlight while typing into the input', async () => {
+      const { user } = await render(
+        <Menu.FilterProvider>
+          <Menu.Root defaultOpen>
+            <Menu.Trigger>Actions</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Input aria-label="Filter actions" />
+                  <Menu.List>
+                    <Menu.Item>Rename</Menu.Item>
+                    <Menu.Item>Duplicate</Menu.Item>
+                  </Menu.List>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menu.FilterProvider>,
+      );
+
+      const input = screen.getByRole('searchbox', { name: 'Filter actions' });
+      await waitFor(() => {
+        expect(input).toHaveFocus();
+      });
+
+      await user.keyboard('d');
+      await waitFor(() => {
+        expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
+      });
+      expect(input).not.toHaveAttribute('aria-activedescendant');
+    });
+  });
+
+  it('releases the highlight when the query is cleared', async () => {
+    const onClick = vi.fn();
+    const { user } = await render(
+      <Menu.FilterProvider>
+        <Menu.Root defaultOpen>
+          <Menu.Trigger>Actions</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.Input aria-label="Filter actions" />
+                <Menu.Clear aria-label="Clear filter" />
+                <Menu.List>
+                  <Menu.Item onClick={onClick}>Apple</Menu.Item>
+                  <Menu.Item>Banana</Menu.Item>
+                </Menu.List>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      </Menu.FilterProvider>,
+    );
+
+    const input = screen.getByRole('searchbox', { name: 'Filter actions' });
+    await user.type(input, 'ban');
+    await waitFor(() => {
+      expect(screen.queryByRole('menuitem', { name: 'Apple' })).toBe(null);
+    });
+
+    // Banana is now index 0.
+    await user.keyboard('[ArrowDown]');
+    expect(input).toHaveAttribute(
+      'aria-activedescendant',
+      screen.getByRole('menuitem', { name: 'Banana' }).id,
+    );
+
+    await user.click(screen.getByLabelText('Clear filter'));
+
+    // Apple takes index 0 back, so a kept highlight would activate the wrong item.
+    await waitFor(() => {
+      expect(input).not.toHaveAttribute('aria-activedescendant');
+    });
+    await user.keyboard('[Enter]');
+    expect(onClick).toHaveBeenCalledTimes(0);
+  });
+
+  it('re-filters an item whose rendered text changes while it is hidden', async () => {
+    const App = defineComponent(() => {
+      const label = shallowRef('Archive');
+
+      // The button is inside the popup, so a press on it does not dismiss the menu.
+      return () => (
+        <Menu.FilterProvider>
+          <Menu.Root defaultOpen>
+            <Menu.Trigger>Actions</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Input aria-label="Filter actions" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      label.value = 'Rename';
+                    }}
+                  >
+                    rename
+                  </button>
+                  <Menu.List>
+                    <Menu.Item>{label.value}</Menu.Item>
+                    <Menu.Item>Delete</Menu.Item>
+                  </Menu.List>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menu.FilterProvider>
+      );
+    });
+
+    const { user } = await render(<App />);
+
+    await user.type(screen.getByRole('searchbox', { name: 'Filter actions' }), 'rename');
+    await waitFor(() => {
+      expect(screen.queryByRole('menuitem', { name: 'Archive' })).toBe(null);
+    });
+
+    // The item is unmounted, so its text can only come from the rendered children.
+    await user.click(screen.getByRole('button', { name: 'rename' }));
+    await waitFor(() => {
+      expect(screen.getByRole('menuitem', { name: 'Rename' })).toBeVisible();
+    });
+  });
+
+  it('preserves modifiers when the input activates a link item', async () => {
+    const onClick = vi.fn((event: MouseEvent) => event.preventDefault());
+    const { user } = await render(
+      <Menu.FilterProvider>
+        <Menu.Root defaultOpen>
+          <Menu.Trigger>Actions</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.Input aria-label="Filter actions" />
+                <Menu.List>
+                  <Menu.LinkItem href="#docs" onClick={onClick}>
+                    Docs
+                  </Menu.LinkItem>
+                </Menu.List>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      </Menu.FilterProvider>,
+    );
+
+    const input = screen.getByRole('searchbox', { name: 'Filter actions' });
+    await waitFor(() => {
+      expect(input).toHaveFocus();
+    });
+    await user.keyboard('[ArrowDown]{Control>}[Enter]{/Control}');
+
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(onClick.mock.calls[0]?.[0]).toHaveProperty('ctrlKey', true);
+  });
+
+  it('does not open a highlighted submenu with a modified cross-axis key from the input', async () => {
+    const { user } = await render(
+      <Menu.FilterProvider>
+        <Menu.Root defaultOpen>
+          <Menu.Trigger>Actions</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.Input aria-label="Filter actions" />
+                <Menu.List>
+                  <Menu.SubmenuRoot>
+                    <Menu.SubmenuTrigger delay={0}>Share</Menu.SubmenuTrigger>
+                    <Menu.Portal>
+                      <Menu.Positioner>
+                        <Menu.Popup data-testid="submenu-list">
+                          <Menu.Item>Email</Menu.Item>
+                        </Menu.Popup>
+                      </Menu.Positioner>
+                    </Menu.Portal>
+                  </Menu.SubmenuRoot>
+                </Menu.List>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      </Menu.FilterProvider>,
+    );
+
+    const input = screen.getByRole('searchbox', { name: 'Filter actions' });
+    await waitFor(() => {
+      expect(input).toHaveFocus();
+    });
+
+    await user.keyboard('[ArrowDown]');
+    await waitFor(() => {
+      expect(screen.getByRole('menuitem', { name: 'Share' })).toHaveAttribute('data-highlighted');
+    });
+
+    await fireEvent.keyDown(input, { key: 'ArrowRight', metaKey: true });
+    expect(screen.queryByTestId('submenu-list')).toBe(null);
+
+    await user.keyboard('[ArrowRight]');
+    await screen.findByTestId('submenu-list');
+  });
+
   describe('server-side rendering', () => {
     it('shows the empty state after hydration when no items are rendered', async () => {
       const serverHtml = await renderOnServer(
@@ -241,9 +444,11 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
   describe('IME composition', () => {
     it('filters on the committed text, not the composition in progress', async () => {
       const onValueChange = vi.fn();
+      // A positioner shows only after its first position, and it needs an anchor for that.
       await render(
         <Menu.FilterProvider onValueChange={onValueChange}>
           <Menu.Root open>
+            <Menu.Trigger>Actions</Menu.Trigger>
             <Menu.Portal>
               <Menu.Positioner>
                 <Menu.Popup>
@@ -266,7 +471,9 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       expect(input).toHaveValue('にほ');
       expect(onValueChange).not.toHaveBeenCalled();
-      expect(screen.getByRole('menuitem', { name: 'Rename' })).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByRole('menuitem', { name: 'Rename' })).toBeVisible();
+      });
       expect(screen.queryByText('No actions found.')).toBe(null);
 
       await fireEvent.input(input, { target: { value: '日本' } });
@@ -277,7 +484,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       await waitFor(() => {
         expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
       });
-      expect(screen.getByRole('menuitem', { name: '日本語' })).toBeInTheDocument();
+      expect(screen.getByRole('menuitem', { name: '日本語' })).toBeVisible();
     });
   });
 
