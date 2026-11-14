@@ -37,6 +37,25 @@ export interface MenuTriggerProps<Payload = unknown>
    */
   payload?: Payload | undefined;
   /**
+   * How long to wait before the menu may be opened on hover. Specified in milliseconds.
+   *
+   * Requires the `openOnHover` prop.
+   * @default 100
+   */
+  delay?: number | undefined;
+  /**
+   * How long to wait before closing the menu that was opened on hover.
+   * Specified in milliseconds.
+   *
+   * Requires the `openOnHover` prop.
+   * @default 0
+   */
+  closeDelay?: number | undefined;
+  /**
+   * Whether the menu should also open when the trigger is hovered.
+   */
+  openOnHover?: boolean | undefined;
+  /**
    * The id of the trigger. `triggerId` of the root and `open()` of a handle name a trigger by it.
    */
   id?: string | undefined;
@@ -44,7 +63,7 @@ export interface MenuTriggerProps<Payload = unknown>
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
-import { computed } from 'vue';
+import { computed, shallowRef } from 'vue';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
 import { useCompositeRootContext } from '../../internals/composite/root/CompositeRootContext';
 import { useButton } from '../../internals/use-button';
@@ -52,6 +71,9 @@ import { useMenubarContext } from '../../internals/menubar-context/MenubarContex
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { safePolygon } from '../../utils/popups/interactions/safePolygon';
+import { useFocus } from '../../utils/popups/interactions/useFocus';
+import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
 import { pressableTriggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
 import { useTriggerDataForwarding } from '../../utils/popups/popupStoreUtils';
 import {
@@ -72,6 +94,9 @@ const props = withDefaults(defineProps<MenuTriggerProps<Payload>>(), {
   as: 'button',
   disabled: false,
   nativeButton: true,
+  delay: 100,
+  closeDelay: 0,
+  openOnHover: undefined,
 });
 
 defineSlots<{
@@ -107,11 +132,14 @@ const floatingTreeRoot = computed(() => floatingTreeRootFromContext.value ?? own
 const floatingNodeId = useFloatingNodeId(floatingTreeRoot);
 const floatingParentNodeId = useFloatingParentNodeId();
 
+const triggerElement = shallowRef<Element | null>(null);
+
 const { registerTrigger, isMountedByThisTrigger } = useTriggerDataForwarding(
   thisTriggerId,
   store,
   () => ({
     payload: props.payload,
+    closeDelay: props.closeDelay,
     parent,
     floatingTreeRoot: floatingTreeRoot.value,
     floatingNodeId,
@@ -120,6 +148,7 @@ const { registerTrigger, isMountedByThisTrigger } = useTriggerDataForwarding(
   }),
 );
 
+const isTriggerActive = computed(() => store.value.select('isTriggerActive', thisTriggerId.value));
 const isOpenedByThisTrigger = computed(() =>
   store.value.select('isOpenedByTrigger', thisTriggerId.value),
 );
@@ -138,6 +167,30 @@ const { getButtonProps, buttonRef } = useButton({
 // In a menubar the trigger is an item of the composite of the menubar.
 const compositeItem = isInMenubar ? useCompositeItem() : undefined;
 
+const parentMenubarHasSubmenuOpen = computed(() => menubarContext?.hasSubmenuOpen.value ?? false);
+
+// The handlers that one safe polygon makes share its timer, so each trigger has its own.
+const handleClose = safePolygon({ blockPointerEvents: !isInMenubar });
+
+const hoverProps = useHoverTriggerInteraction(store, {
+  enabled: () =>
+    (props.openOnHover ?? parentMenubarHasSubmenuOpen.value) &&
+    !isDisabled.value &&
+    (!isInMenubar || (parentMenubarHasSubmenuOpen.value && !isMountedByThisTrigger.value)),
+  handleClose: () => handleClose,
+  mouseOnly: true,
+  move: false,
+  restMs: () => (parent.type === undefined ? props.delay : undefined),
+  delay: () => ({ close: props.closeDelay }),
+  triggerElement,
+  externalTree: floatingTreeRoot,
+  isActiveTrigger: isTriggerActive,
+});
+
+const focusProps = useFocus(store, {
+  enabled: () => !isDisabled.value && parentMenubarHasSubmenuOpen.value,
+});
+
 const rootTriggerProps = computed(() =>
   store.value.select('triggerProps', isMountedByThisTrigger.value),
 );
@@ -152,9 +205,18 @@ const state = computed<MenuTriggerState>(() => ({
 const { element, elementProps } = useRenderElement('button', props, {
   state,
   stateAttributesMapping: pressableTriggerOpenStateMapping,
-  ref: [compositeItem?.compositeRef, buttonRef, registerTrigger],
+  ref: [
+    compositeItem?.compositeRef,
+    buttonRef,
+    registerTrigger,
+    (trigger) => {
+      triggerElement.value = trigger;
+    },
+  ],
   props: (attrs) => [
     compositeItem?.compositeProps.value,
+    focusProps,
+    hoverProps,
     rootTriggerProps.value,
     {
       'aria-haspopup': 'menu',

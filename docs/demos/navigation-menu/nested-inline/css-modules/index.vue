@@ -6,6 +6,7 @@ import { useMediaQuery } from '@vase-ui/vue/unstable-use-media-query';
 import { audienceMenus, guideLinks, guidesPanel } from '../data';
 import styles from './index.module.css';
 
+const base = import.meta.env.BASE_URL;
 const isDesktop = useMediaQuery('(min-width: 700px)', { defaultMatches: true });
 
 const CaretDownIcon: FunctionalComponent = () =>
@@ -99,13 +100,13 @@ const CaretDownIcon: FunctionalComponent = () =>
       </NavigationMenu.Item>
 
       <NavigationMenu.Item>
-        <NavigationMenu.Link :class="styles.Trigger" href="/react/overview/releases">
-          Releases
+        <NavigationMenu.Link :class="styles.Trigger" :href="`${base}parity`">
+          Parity
         </NavigationMenu.Link>
       </NavigationMenu.Item>
 
       <NavigationMenu.Item>
-        <NavigationMenu.Link :class="styles.Trigger" href="https://github.com/mui/base-ui">
+        <NavigationMenu.Link :class="styles.Trigger" href="https://github.com/vase-ui/vase-ui">
           GitHub
         </NavigationMenu.Link>
       </NavigationMenu.Item>
