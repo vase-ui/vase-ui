@@ -1,16 +1,16 @@
 <script setup lang="ts">
+import { Combobox } from '@vase-ui/vue/combobox';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
-import { NumberField } from '@vase-ui/vue/number-field';
 </script>
 
 <template>
   <Form>
-    <Field.Root name="quantity">
-      <Field.Label>Quantity</Field.Label>
-      <NumberField.Root>
-        <NumberField.Input />
-      </NumberField.Root>
+    <Field.Root name="country">
+      <Field.Label>Country of residence</Field.Label>
+      <Combobox.Root>
+        <Combobox.Input />
+      </Combobox.Root>
     </Field.Root>
   </Form>
 </template>
