@@ -1,0 +1,9 @@
+{
+  "id": "VUE-50",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/toast/root/ToastRoot.tsx#L291",
+    "https://w3c.github.io/pointerevents/#dom-element-setpointercapture"
+  ],
+  "behavior": "A toast swipe reports no error when the browser refuses to capture the pointer. Firefox throws `NotFoundError` from `setPointerCapture` when the pointer id is not an active pointer, such as the pointer id of a dispatched event. Vase UI catches the error, and the swipe goes on. In Base UI the error leaves the `pointerdown` handler.",
+  "dueWith": "packages/react/src/toast/root/ToastRoot.tsx"
+}

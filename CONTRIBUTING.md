@@ -957,6 +957,15 @@ The toasts of one `Toast.Provider` are in a `ToastStore`. The code is in `src/to
 - `actionProps` of a toast has the attributes of a `<button>` and `children`, which is the content of the button.
 - `ref` of a toast object is a Vue ref of an element. Read it as `.value`.
 
+### Toast parts
+
+- `Toast.Provider` makes its store in `setup` and holds the timers of the store from `onMounted`. A toast that a `setup` adds on a server thus gets no timer.
+- The provider subscribes to its `toastManager` in `onMounted`. A manager that all server requests share thus gets no subscriber from a server render, and a toast of one request does not reach another request.
+- While `KeepAlive` holds the provider, it releases its timers and the subscription to its manager. The activation takes them back, and each timer continues with the time that was left.
+- The provider follows `timeout` and `limit` with a `watch` that has the default flush. A part that adds a toast in the same update thus sees the new values.
+- `Toast.Viewport` resumes the timers when the focus goes into a frame of the page (`BUG-6174`). The window gets `blur` for that move, so the viewport checks in a 0 ms timer after the event if the page has focus and a frame is the active element. Firefox reports no focus in the event itself.
+- `Toast.Root` catches the error of `setPointerCapture`. Firefox throws `NotFoundError` for a pointer that is not active, such as the pointer id of a dispatched event. The swipe then goes on with no capture (`VUE-50`).
+
 ### Composite
 
 A composite is a group of items with one tab stop, such as a toolbar or a list of tabs. Its code is in `src/internals/composite`.
