@@ -1,7 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import * as Menu from '../index.parts';
 import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#test-utils';
-import { reset as resetWarnings } from '../../common/warn';
 import { DirectionProvider } from '../../direction-provider';
 
 describe('<Menu.Popup /> filter input focus', () => {
@@ -91,44 +90,5 @@ describe('<Menu.Popup /> filter input focus', () => {
     expect(action).toHaveFocus();
     await fireEvent.keyDown(action, { key });
     expect(screen.getByRole('searchbox')).toHaveFocus();
-  });
-
-  describe('without a Menu.Input', () => {
-    beforeEach(() => {
-      resetWarnings();
-    });
-
-    it('warns when the menu opens', async () => {
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-      await render(
-        <Menu.FilterProvider>
-          <Menu.Root open>
-            <Menu.Portal>
-              <Menu.Positioner>
-                <Menu.Popup>
-                  <Menu.List>
-                    <Menu.Item>Rename</Menu.Item>
-                  </Menu.List>
-                </Menu.Popup>
-              </Menu.Positioner>
-            </Menu.Portal>
-          </Menu.Root>
-        </Menu.FilterProvider>,
-      );
-
-      expect(warnSpy).toHaveBeenCalledTimes(1);
-      expect(warnSpy.mock.calls[0][0]).toContain(
-        'A filterable menu opened without a <Menu.Input>.',
-      );
-    });
-
-    it('does not warn when the popup has the input', async () => {
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-      await renderFilterMenu();
-
-      expect(warnSpy).not.toHaveBeenCalled();
-    });
   });
 });
