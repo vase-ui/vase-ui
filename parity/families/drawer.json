@@ -14,7 +14,7 @@
       "upstream": "packages/react/src/drawer/popup/DrawerPopup.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The file imports the entry point of Drawer, which Vase UI does not have. The case that has no counterpart renders `AlertDialog.Popup`, which Vase UI does not have."
+      "reason": "The file imports the entry point of Drawer, which Vase UI does not have. The case that has no counterpart renders the parts of Alert Dialog from the entry point of Alert Dialog. Vase UI does not have that entry point."
     },
     {
       "upstream": "packages/react/src/drawer/popup/DrawerPopup.test.tsx",
@@ -68,22 +68,6 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/drawer/index.ts",
       "reason": "The file imports the entry point of Drawer, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/drawer/virtual-keyboard-provider/DrawerVirtualKeyboardContext.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Drawer.VirtualKeyboardProvider`."
-    },
-    {
-      "upstream": "packages/react/src/drawer/virtual-keyboard-provider/DrawerVirtualKeyboardProvider.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The file imports the entry point of Drawer, which Vase UI does not have. Its cases render `Drawer.VirtualKeyboardProvider`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/drawer/virtual-keyboard-provider/DrawerVirtualKeyboardProvider.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Drawer.VirtualKeyboardProvider`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",

@@ -71,6 +71,13 @@ describe('<Popover.Root /> on a server', () => {
     expect(readTriggers(await renderRoot(props))).toEqual(triggers);
   });
 
+  it('writes one comment in the place of the portal of an open root', async () => {
+    const html = await renderRoot({ defaultOpen: true, defaultTriggerId: 'inside' });
+
+    expect(html).toMatch(/<\/button><!---->/);
+    expect(html).not.toContain('role=');
+  });
+
   it('leaves the handle inert after a render of an open root', async () => {
     const handle = createPopoverHandle<unknown>();
 

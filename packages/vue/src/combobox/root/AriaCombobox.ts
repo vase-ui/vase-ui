@@ -1948,7 +1948,6 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     } else {
       clearFieldError(fieldRawValue.value);
     }
-    void nextTick(writeValueToInput);
   });
 
   // `KeepAlive` takes the hidden input out of the document. The flag is a source of the `watch`,

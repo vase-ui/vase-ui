@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { computed, defineComponent } from 'vue';
 import { renderToString } from 'vue/server-renderer';
+import CompositeRootPart from '../../../test/fixtures/CompositeRootPart.vue';
 import { MenubarProvider, createMenubarContext } from '../../../test/fixtures/MenuParentFixture';
 import { reset as resetWarnings } from '../../common/warn';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -43,6 +44,56 @@ describe('<Menu.Root /> on a server', () => {
     expect(html).toBe(
       '<!--[--><button id="trigger" aria-haspopup="menu" aria-expanded="true"></button><!--]-->',
     );
+  });
+
+  it('renders the trigger of an open root with its attributes and its state', async () => {
+    const html = await renderToString(
+      <Menu.Root defaultOpen defaultTriggerId="trigger">
+        <Menu.Trigger id="trigger">Open</Menu.Trigger>
+      </Menu.Root>,
+    );
+
+    expect(html).toMatch(
+      /^<!--\[--><button data-popup-open data-pressed type="button" tabindex="0" aria-haspopup="menu" aria-expanded="true" aria-controls="[^"]+" id="trigger"><!--\[-->Open<!--\]--><\/button><!--\]-->$/,
+    );
+  });
+
+  it('renders the trigger of a handle in its closed form, and attaches no store to the handle', async () => {
+    const handle = Menu.createHandle();
+
+    const html = await renderToString(
+      <div>
+        <Menu.Trigger handle={handle} id="detached">
+          Detached
+        </Menu.Trigger>
+        <Menu.Root handle={handle} defaultOpen defaultTriggerId="detached" />
+      </div>,
+    );
+
+    expect(html).toContain('aria-haspopup="menu"');
+    expect(html).not.toContain('aria-expanded');
+    expect(html).not.toContain('data-popup-open');
+    expect(handle.isOpen).toBe(false);
+    expect(handle.store).toBe(handle.serverStore);
+  });
+
+  it('renders the trigger in a menubar with the menuitem role and the tab stop of its menubar', async () => {
+    const html = await renderToString(
+      <MenubarProvider context={createMenubarContext()}>
+        <CompositeRootPart>
+          <Menu.Root>
+            <Menu.Trigger>File</Menu.Trigger>
+          </Menu.Root>
+          <Menu.Root>
+            <Menu.Trigger>Edit</Menu.Trigger>
+          </Menu.Root>
+        </CompositeRootPart>
+      </MenubarProvider>,
+    );
+
+    expect(html.match(/role="menuitem"/g)).toHaveLength(2);
+    expect(html.match(/tabindex="0"/g)).toHaveLength(1);
+    expect(html.match(/tabindex="-1"/g)).toHaveLength(1);
   });
 
   it('drops an open change on a server, and leaves the handle and the tree with nothing', async () => {

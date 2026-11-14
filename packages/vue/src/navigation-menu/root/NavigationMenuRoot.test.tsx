@@ -19,6 +19,7 @@ import {
 } from '#test-utils';
 import * as Dialog from '../../dialog/index.parts';
 import { PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
+import * as Popover from '../../popover/index.parts';
 import { CLOSE_DELAY, OPEN_DELAY } from '../utils/constants';
 import NavigationMenuRootHydration from './NavigationMenuRootHydration.test.vue';
 import { useNavigationMenuRootContext } from './NavigationMenuRootContext';
@@ -4257,6 +4258,30 @@ describe('<NavigationMenu.Root />', () => {
       );
     }
 
+    function TestNavigationMenuWithPopover() {
+      return (
+        <TestNavigationMenuWithNestedPopup>
+          <Popover.Root>
+            <Popover.Trigger data-testid="popover-trigger">Open popover</Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Positioner>
+                <Popover.Popup
+                  data-testid="popover-popup"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                  }}
+                >
+                  <button type="button" data-testid="popover-button">
+                    Popover button
+                  </button>
+                </Popover.Popup>
+              </Popover.Positioner>
+            </Popover.Portal>
+          </Popover.Root>
+        </TestNavigationMenuWithNestedPopup>
+      );
+    }
+
     it('keeps a hover-open menu open when pointerdown happens on a nested dialog trigger', async () => {
       const { user } = await render(<TestNavigationMenuWithDialog />);
       const trigger = screen.getByTestId('trigger-1');
@@ -4298,6 +4323,30 @@ describe('<NavigationMenu.Root />', () => {
       expect(await screen.findByTestId('dialog-popup')).not.toBe(null);
 
       await user.click(screen.getByTestId('dialog-button'));
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('popup-1')).not.toBe(null);
+      });
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    it('keeps the menu open when interacting with a nested popover', async () => {
+      const { user } = await render(<TestNavigationMenuWithPopover />);
+      const trigger = screen.getByTestId('trigger-1');
+
+      await user.click(trigger);
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('popup-1')).not.toBe(null);
+      });
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+
+      const popoverTrigger = screen.getByTestId('popover-trigger');
+      await user.click(popoverTrigger);
+
+      expect(await screen.findByTestId('popover-popup')).not.toBe(null);
+
+      await user.click(screen.getByTestId('popover-button'));
 
       await waitFor(() => {
         expect(screen.queryByTestId('popup-1')).not.toBe(null);

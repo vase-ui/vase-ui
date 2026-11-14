@@ -5,7 +5,7 @@ import * as Popover from '../index.parts';
 const numberPayloadHandle = Popover.createHandle<number>();
 
 <Popover.Root handle={numberPayloadHandle}>
-  <Popover.Trigger />
+  <Popover.Portal />
 </Popover.Root>;
 
 <Popover.Root

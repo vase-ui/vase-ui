@@ -166,7 +166,7 @@ describe('<PreviewCard.Popup />', () => {
         </PreviewCard.Root>,
       ),
     ).rejects.toThrow(
-      'Vase UI: A popup or an arrow of PreviewCard must be inside <PreviewCard.Positioner>.',
+      'Vase UI: A popup, an arrow or a viewport of PreviewCard must be inside <PreviewCard.Positioner>.',
     );
     // The portal renders its content in an update after the mount, so Vue also warns about it.
     expect(takeReportedMessages()).toHaveLength(2);

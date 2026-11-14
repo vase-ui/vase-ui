@@ -296,6 +296,7 @@ import {
   useDrawerSnapPoints,
 } from '../root/useDrawerSnapPoints';
 import type { ResolvedDrawerSnapPoint } from '../root/useDrawerSnapPoints';
+import { useDrawerVirtualKeyboardContext } from '../virtual-keyboard-provider/DrawerVirtualKeyboardContext';
 import { DrawerViewportContext } from './DrawerViewportContext';
 
 defineOptions({ inheritAttrs: false });
@@ -355,6 +356,8 @@ let lastPointerType = '';
 let ignoreNextTouchStartFromPen = false;
 let ignoreTouchSwipe = false;
 let touchScrollState: TouchScrollState | null = null;
+
+const virtualKeyboard = useDrawerVirtualKeyboardContext();
 
 const snapPointRange = computed(() => {
   const points = snapPoints.value;
@@ -1011,6 +1014,12 @@ function listenToTouchMove() {
   const doc = ownerDocument(resolvedRootElement);
 
   function handleNativeTouchMove(event: TouchEvent) {
+    // The virtual keyboard provider observes the move to tell a tap apart from a drag.
+    // It must run even when the swipe gesture below claims the event with
+    // `stopPropagation()`, which would otherwise prevent the touch listeners of the elements
+    // (and the provider) from ever seeing the move.
+    virtualKeyboard?.onTouchmove(event);
+
     if (ignoreTouchSwipe) {
       return;
     }
@@ -1209,6 +1218,8 @@ const viewportHandlers = {
       return;
     }
 
+    virtualKeyboard?.onTouchstart(event);
+
     // `x`/`y` hand touch drags along that axis to the element. Any value other than the
     // cross-axis one ignores the swipe outright; a cross-axis element is arbitrated like a
     // native cross-axis scroller below.
@@ -1255,10 +1266,12 @@ const viewportHandlers = {
     swipe.touchProps.onTouchstartPassive(event);
   },
   onTouchend(event: TouchEvent) {
+    virtualKeyboard?.onTouchend(event);
     resetTouchTrackingState();
     swipe.touchProps.onTouchend(event);
   },
   onTouchcancel(event: TouchEvent) {
+    virtualKeyboard?.onTouchcancel();
     resetTouchTrackingState();
     swipe.touchProps.onTouchcancel(event);
   },
