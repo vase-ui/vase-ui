@@ -18,6 +18,7 @@ export { waitForPositioned } from './waitForPositioned';
 export * from './animation';
 export { describeConformance } from './describeConformance';
 export { hiddenInputSizeTests } from './hiddenInputSizeTests';
+export { hiddenInputTypeTests } from './hiddenInputTypeTests';
 export { popupConformanceTests } from './popupConformanceTests';
 export { positionerConformanceTests } from './positionerConformanceTests';
 export { isInaccessible, screen, waitFor, within } from '@testing-library/dom';

@@ -11,65 +11,41 @@
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
       "describe": ["<Field.Root />"],
       "title": "does not set `aria-labelledby` during SSR when Field.Label is absent",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/root/SelectRoot.tsx",
-      "reason": "The case renders `Select`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
-      "describe": ["<Field.Root />"],
-      "title": "keeps `aria-labelledby` valid when toggling from Checkbox.Root to Select.Root after hydration",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/root/SelectRoot.tsx",
-      "reason": "The case renders `Select`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
-      "describe": ["<Field.Root />"],
-      "title": "removes `aria-labelledby` when Field.Label is removed after hydration",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/root/SelectRoot.tsx",
-      "reason": "The case renders `Select`, which Vase UI does not have."
+      "kind": "replaced",
+      "test": "packages/vue/src/field/root/FieldRoot.node.test.tsx",
+      "reason": "A server render with no `hydrate()` runs in Node with no DOM. The case with the same title renders a select in a field with no label, and asserts that the server HTML of the trigger has no `aria-labelledby`."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
       "describe": ["<Field.Root />"],
       "title": "preserves label association without looping when a control is unmounted and remounted",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/root/SelectRoot.tsx",
-      "reason": "The case renders `Select`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
-      "describe": ["<Field.Root />"],
-      "title": "preserves a non-native label association when a control is unmounted and remounted",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/root/SelectRoot.tsx",
-      "reason": "The case renders `Select`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/select/item/SelectItem.tsx",
+      "reason": "The case renders `Select.Portal`, `Select.Positioner`, `Select.Popup` and `Select.Item`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
       "describe": ["<Field.Root />", "prop: validate"],
       "title": "receives all form values as the 2nd argument",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/root/SelectRoot.tsx",
-      "reason": "The case renders `Select`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/select/item/SelectItem.tsx",
+      "reason": "The case renders `Select.Portal`, `Select.Positioner`, `Select.Popup` and `Select.Item`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
       "describe": ["<Field.Root />", "prop: validate"],
       "title": "submits the replacement control value when swapping field-aware controls",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/root/SelectRoot.tsx",
-      "reason": "The case renders `Select`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/select/item/SelectItem.tsx",
+      "reason": "The case renders `Select.Portal`, `Select.Positioner`, `Select.Popup` and `Select.Item`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
       "describe": ["<Field.Root />", "style hooks", "dirty"],
       "title": "should clear [data-dirty] when a Select returns to its null initial value",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/root/SelectRoot.tsx",
-      "reason": "The case renders `Select`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/select/item/SelectItem.tsx",
+      "reason": "The case renders `Select.Portal`, `Select.Positioner`, `Select.Popup` and `Select.Item`, which Vase UI does not have."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/field/types.md",
