@@ -21,7 +21,7 @@ import NavigationMenuTriggerHydration from './NavigationMenuTriggerHydration.tes
 const HYDRATION_FIXTURE = 'src/navigation-menu/trigger/NavigationMenuTriggerHydration.test.vue';
 
 // The real pointer of the browser can rest where a trigger renders, and it then sends events of its
-// own. The `Menu` fixture and each menu of the `hover` block render in a wrapper with this style. A
+// own. A case that dispatches hover events renders its menu in a wrapper with this style. A
 // dispatched event still reaches the trigger. The style is not on the trigger or on the list,
 // because the hover intent writes and removes `pointer-events` on both.
 const NO_REAL_POINTER: CSSProperties = { pointerEvents: 'none' };
