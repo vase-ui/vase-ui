@@ -21,6 +21,9 @@ export type VaseUIRenderResult = BoundFunctions<typeof queries> & {
   setProps: (props: Record<string, unknown>) => Promise<void>;
 };
 
+// The fake clock of Vitest runs a frame each 16 ms from the time when fake timers start.
+const FAKE_FRAME_DURATION = 16;
+
 /**
  * Waits until `Date.now()` gives a later millisecond. Vue stamps an event with `Date.now()` in the
  * first listener that gets it. It skips each later listener that was attached in that millisecond
@@ -28,12 +31,15 @@ export type VaseUIRenderResult = BoundFunctions<typeof queries> & {
  * would lose its bubble listener.
  */
 export async function waitForLaterMillisecond() {
-  if (vi.isFakeTimers()) {
-    // The fake clock does not move by itself, so the loop below would not end.
-    vi.setSystemTime(Date.now() + 1);
-    return;
-  }
   const start = Date.now();
+  const mockedTime = vi.getMockedSystemTime();
+  if (mockedTime) {
+    // A mocked clock does not move by itself, so the loop below would not end. `vi.setSystemTime`
+    // runs no timer and moves each pending timer with the clock, but the frames stay at their
+    // times. A move of one whole frame thus keeps each frame callback in its frame.
+    vi.setSystemTime(mockedTime.getTime() + FAKE_FRAME_DURATION);
+  }
+  // Fake timers can leave `Date` real.
   while (Date.now() === start) {
     await Promise.resolve();
   }
