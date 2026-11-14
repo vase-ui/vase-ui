@@ -5,6 +5,6 @@
     "https://vuejs.org/guide/reusability/custom-directives.html#usage-on-components",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/menu/positioner/MenuPositioner.tsx#L242-L254"
   ],
-  "behavior": "`Menu.Positioner` has one root node, also while its menu is modal: `Menu.Portal` renders the internal backdrop of a modal menu. A rule of `<style scoped>`, `v-show` and a custom directive of the consumer thus apply to the element of the positioner. In Base UI, the positioner renders the backdrop beside its element.",
+  "behavior": "`Menu.Positioner` has one root node, also while its menu is modal: `Menu.Portal` renders the internal backdrop of a modal menu. A rule of `<style scoped>`, `v-show` and a custom directive of the consumer thus apply to the element of the positioner. `Combobox.Portal` renders the internal backdrop of a modal combobox in the same way, so `Combobox.Positioner` has one root node too. In Base UI, the positioner renders the backdrop beside its element.",
   "dueWith": "packages/react/src/menu/positioner/MenuPositioner.tsx"
 }
