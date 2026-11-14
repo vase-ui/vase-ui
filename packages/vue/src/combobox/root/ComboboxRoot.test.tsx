@@ -2047,9 +2047,9 @@ describe('<Combobox.Root />', () => {
               <Combobox.Popup>
                 <Combobox.List>
                   {{
-                    item: ({ item }: { item: (typeof items)[number] }) => (
-                      <Combobox.Item key={item.code} value={item}>
-                        {item.country}
+                    item: ({ item }: { item: string }) => (
+                      <Combobox.Item key={item} value={item}>
+                        {item}
                       </Combobox.Item>
                     ),
                   }}
@@ -2082,9 +2082,9 @@ describe('<Combobox.Root />', () => {
               <Combobox.Popup>
                 <Combobox.List>
                   {{
-                    item: ({ item }: { item: (typeof items)[number] }) => (
-                      <Combobox.Item key={item.code} value={item}>
-                        {item.country}
+                    item: ({ item }: { item: string }) => (
+                      <Combobox.Item key={item} value={item}>
+                        {item}
                       </Combobox.Item>
                     ),
                   }}
@@ -3629,11 +3629,9 @@ describe('<Combobox.Root />', () => {
     });
 
     it('"single" keeps the popup open when selection is canceled', async () => {
-      const onValueChange = vi.fn(
-        (value: string | null, details: Combobox.Root.ChangeEventDetails) => {
-          details.cancel();
-        },
-      );
+      const onValueChange = vi.fn((value, details: Combobox.Root.ChangeEventDetails) => {
+        details.cancel();
+      });
       const { user } = await render(
         <Combobox.Root defaultOpen onValueChange={onValueChange}>
           <Combobox.Input data-testid="input" />
@@ -3688,13 +3686,11 @@ describe('<Combobox.Root />', () => {
 
     it('keeps the active item when the post-selection input clear is canceled', async () => {
       const items = ['apple', 'apricot', 'banana'];
-      const onInputValueChange = vi.fn(
-        (_value: string, details: Combobox.Root.ChangeEventDetails) => {
-          if (details.reason === REASONS.inputClear) {
-            details.cancel();
-          }
-        },
-      );
+      const onInputValueChange = vi.fn((_value, details: Combobox.Root.ChangeEventDetails) => {
+        if (details.reason === REASONS.inputClear) {
+          details.cancel();
+        }
+      });
 
       const { user } = await render(
         <Combobox.Root multiple defaultOpen items={items} onInputValueChange={onInputValueChange}>
@@ -4023,13 +4019,11 @@ describe('<Combobox.Root />', () => {
     });
 
     it('keeps the filter text when a drag-select release commits the selection', async () => {
-      const onInputValueChange = vi.fn(
-        (_value: string, eventDetails: Combobox.Root.ChangeEventDetails) => {
-          if (eventDetails.isItemPress) {
-            eventDetails.cancel();
-          }
-        },
-      );
+      const onInputValueChange = vi.fn((_value, eventDetails: Combobox.Root.ChangeEventDetails) => {
+        if (eventDetails.isItemPress) {
+          eventDetails.cancel();
+        }
+      });
 
       const { user } = await render(
         <Combobox.Root multiple defaultOpen onInputValueChange={onInputValueChange}>
@@ -4069,7 +4063,7 @@ describe('<Combobox.Root />', () => {
         globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
 
         const onInputValueChange = vi.fn(
-          (_value: string, eventDetails: Combobox.Root.ChangeEventDetails) => {
+          (_value, eventDetails: Combobox.Root.ChangeEventDetails) => {
             if (eventDetails.isItemPress) {
               eventDetails.cancel();
             }
@@ -4420,7 +4414,7 @@ describe('<Combobox.Root />', () => {
 
     it('does not clear popup input after canceled multiple value changes', async () => {
       const onInputValueChange = vi.fn();
-      const onValueChange = vi.fn((value: string[], details: Combobox.Root.ChangeEventDetails) => {
+      const onValueChange = vi.fn((value, details: Combobox.Root.ChangeEventDetails) => {
         details.cancel();
       });
 
