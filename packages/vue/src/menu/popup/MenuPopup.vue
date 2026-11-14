@@ -47,6 +47,7 @@ import { computed, onScopeDispose, toRaw, watch } from 'vue';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
+import { resolvePopupLabel } from '../../internals/resolvePopupLabel';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -117,25 +118,6 @@ const state = computed<MenuPopupState>(() => ({
   instant: store.select('instantType'),
 }));
 
-// An `aria-label` or an `aria-labelledby` of the part replaces the label from the trigger. The part
-// reads only its own attributes. An `aria-labelledby` on the element of a `#render` slot also
-// replaces the label, because the element sets it after the props. An `aria-label` on that element
-// does not, because the part does not see it. The popup then keeps the `aria-labelledby` of the
-// trigger.
-function getAriaLabelledBy(attrs: Record<string, unknown>) {
-  const ariaLabelledBy = attrs['aria-labelledby'] as string | undefined;
-  if (ariaLabelledBy != null || attrs['aria-label']) {
-    return ariaLabelledBy;
-  }
-
-  // Prefer the live id of the element: the own `id` of an element from a `#render` slot wins over
-  // the registered one.
-  const activeTriggerElement = store.select('activeTriggerElement');
-  return (
-    (activeTriggerElement ? activeTriggerElement.id : store.select('activeTriggerId')) || undefined
-  );
-}
-
 let popupElement: HTMLElement | null = null;
 
 const { element, elementProps } = useRenderElement('div', props, {
@@ -156,10 +138,19 @@ const { element, elementProps } = useRenderElement('div', props, {
     store.select('popupProps'),
     {
       id: popupId.value,
-      role: 'menu',
-      // `menu` is implicitly vertical, so only the non-default value needs to be rendered.
-      'aria-orientation': orientation.value === 'horizontal' ? 'horizontal' : undefined,
-      'aria-labelledby': getAriaLabelledBy(attrs),
+      // A rendered `Menu.List` carries the `menu` semantics instead.
+      ...(store.select('listElement')
+        ? { role: 'presentation' }
+        : {
+            role: 'menu',
+            // `menu` is implicitly vertical, so only the non-default value needs to be rendered.
+            'aria-orientation': orientation.value === 'horizontal' ? 'horizontal' : undefined,
+            'aria-labelledby': resolvePopupLabel(
+              attrs,
+              store.select('activeTriggerElement'),
+              store.select('activeTriggerId'),
+            ),
+          }),
       onKeydown(event: KeyboardEvent) {
         if (insideToolbar && COMPOSITE_KEYS.has(event.key)) {
           event.stopPropagation();
