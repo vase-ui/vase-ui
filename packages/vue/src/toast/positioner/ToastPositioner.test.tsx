@@ -211,8 +211,8 @@ describe('<Toast.Positioner />', () => {
 
   it('takes a Boolean prop that the positioner does not set from the toast', async () => {
     const manager = Toast.createToastManager();
-    // Vue gives an absent Boolean prop the value `false`, and a prop that is `undefined` keeps it.
-    // The positioner of `untracked` thus gets no `disableAnchorTracking` key at all.
+    // Vue gives an absent Boolean prop the value `false`. It does not change a prop that is set to
+    // `undefined`. The positioner of `untracked` thus gets no `disableAnchorTracking` key at all.
     const List = defineComponent({
       setup() {
         const { toasts } = Toast.useToastManager();
@@ -262,6 +262,8 @@ describe('<Toast.Positioner />', () => {
     const firstCenter = centerOf(anchor);
     await waitFor(() => {
       expect(centerOf(untracked)).toBeCloseTo(firstCenter, 0);
+    });
+    await waitFor(() => {
       expect(centerOf(tracking)).toBeCloseTo(firstCenter, 0);
     });
 
