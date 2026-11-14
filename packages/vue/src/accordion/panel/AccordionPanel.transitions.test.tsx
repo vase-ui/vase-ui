@@ -108,11 +108,10 @@ describe('<Accordion.Panel /> transitions', () => {
         }
 
         // The last exit is the exit of panel b. The browser can send its `transitionrun` after the
-        // panel is hidden.
+        // panel is gone.
         await waitFor(() => {
           expect(counters.b.counts.exit).toBe(3);
         });
-        // Each panel enters 3 times and exits 3 times.
         expect(counters.a.counts).toEqual({ enter: 3, exit: 3 });
         expect(counters.b.counts).toEqual({ enter: 3, exit: 3 });
       },
