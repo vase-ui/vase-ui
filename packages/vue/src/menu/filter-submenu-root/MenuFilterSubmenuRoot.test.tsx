@@ -669,10 +669,8 @@ describe('closing a filtered submenu from the keyboard', () => {
 describe('nested popups of a filterable menu', () => {
   const { render } = createRenderer();
 
-  // A popup that `Teleport` moved sends no event to the popup of its parent. The popups of a
-  // filterable menu give each other these events through the popup tree.
-  it('keeps the focus in the submenu input while the pointer moves over the popup of the parent', async () => {
-    const { user } = await render(
+  function FilterableMenuWithFilterableSubmenu() {
+    return (
       <Menu.FilterProvider>
         <Menu.Root defaultOpen>
           <Menu.Trigger>Actions</Menu.Trigger>
@@ -702,8 +700,14 @@ describe('nested popups of a filterable menu', () => {
             </Menu.Positioner>
           </Menu.Portal>
         </Menu.Root>
-      </Menu.FilterProvider>,
+      </Menu.FilterProvider>
     );
+  }
+
+  // A popup that `Teleport` moved sends no event to the popup of its parent. The popups of a
+  // filterable menu give each other these events through the popup tree.
+  it('keeps the focus in the submenu input while the pointer moves over the popup of the parent', async () => {
+    const { user } = await render(<FilterableMenuWithFilterableSubmenu />);
 
     await waitFor(() => {
       expect(screen.getByRole('searchbox', { name: 'Filter actions' })).toHaveFocus();
@@ -717,6 +721,30 @@ describe('nested popups of a filterable menu', () => {
     await fireEvent.mouseMove(screen.getByTestId('parent-popup'));
 
     expect(submenuInput).toHaveFocus();
+  });
+
+  it('returns the focus and the highlight to the parent input when Escape closes the submenu', async () => {
+    const { user } = await render(<FilterableMenuWithFilterableSubmenu />);
+
+    const parentInput = screen.getByRole('searchbox', { name: 'Filter actions' });
+    await waitFor(() => {
+      expect(parentInput).toHaveFocus();
+    });
+    await user.keyboard('[ArrowDown][ArrowDown][ArrowRight]');
+    await waitFor(() => {
+      expect(screen.getByRole('searchbox', { name: 'Filter folders' })).toHaveFocus();
+    });
+
+    await user.keyboard('[Escape]');
+
+    await waitFor(() => {
+      expect(screen.queryByRole('searchbox', { name: 'Filter folders' })).toBe(null);
+    });
+    expect(parentInput).toHaveFocus();
+    expect(parentInput).toHaveAttribute(
+      'aria-activedescendant',
+      screen.getByRole('menuitem', { name: 'Move to' }).id,
+    );
   });
 
   it('moves the highlight of a horizontal parent on when a plain submenu closes with the main-axis key', async () => {
