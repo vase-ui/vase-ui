@@ -188,6 +188,7 @@ settings:
   excludeLinksFromLockfile: false
 
 patchedDependencies:
+  '@vitest/browser-playwright@5.1.0': 3aceb4fa638d57552fb9515c58179b74bf1e3a2b88f6be68dbcbaa07d86c8bd0
   '@vue/language-core@3.3.14': b0600b610df34c0755af5559e7235d0c942a659d0a7401de99303091f7e27d48
   rolldown-plugin-dts@0.30.1: cf1d1a226d8a5d9c9674460fe7e6577c94b941be8d70a66f9ad6daf7c5429a3e
   vue-component-meta@3.3.14: bd0e33f045984d61a55ca71d28d763fc7d62b9d8af52876b8acdd2a3986c302d
@@ -353,7 +354,7 @@ importers:
         version: 5.1.6(supports-color@7.2.0)(vite@8.3.7(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2))(vue@3.5.45(typescript@6.0.3))
       '@vitest/browser-playwright':
         specifier: 5.1.0
-        version: 5.1.0(playwright@1.65.0)(vite@8.3.7(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2))(vitest@5.1.0)
+        version: 5.1.0(patch_hash=3aceb4fa638d57552fb9515c58179b74bf1e3a2b88f6be68dbcbaa07d86c8bd0)(playwright@1.65.0)(vite@8.3.7(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2))(vitest@5.1.0)
       axe-core:
         specifier: 4.14.0
         version: 4.14.0
@@ -6391,7 +6392,7 @@ snapshots:
       vite: 8.3.7(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)
       vue: 3.5.45(typescript@6.0.3)
 
-  '@vitest/browser-playwright@5.1.0(playwright@1.65.0)(vite@8.3.7(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2))(vitest@5.1.0)':
+  '@vitest/browser-playwright@5.1.0(patch_hash=3aceb4fa638d57552fb9515c58179b74bf1e3a2b88f6be68dbcbaa07d86c8bd0)(playwright@1.65.0)(vite@8.3.7(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2))(vitest@5.1.0)':
     dependencies:
       '@vitest/browser': 5.1.0(vite@8.3.7(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2))(vitest@5.1.0)
       '@vitest/mocker': 5.1.0(vite@8.3.7(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2))
@@ -9343,7 +9344,7 @@ snapshots:
       why-is-node-running: 3.2.1
     optionalDependencies:
       '@types/node': 26.6.6
-      '@vitest/browser-playwright': 5.1.0(playwright@1.65.0)(vite@8.3.7(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2))(vitest@5.1.0)
+      '@vitest/browser-playwright': 5.1.0(patch_hash=3aceb4fa638d57552fb9515c58179b74bf1e3a2b88f6be68dbcbaa07d86c8bd0)(playwright@1.65.0)(vite@8.3.7(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2))(vitest@5.1.0)
       '@vitest/ui': 5.1.0(vitest@5.1.0)
     transitivePeerDependencies:
       - msw
