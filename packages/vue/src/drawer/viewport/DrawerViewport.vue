@@ -280,6 +280,7 @@ import { createChangeEventDetails } from '../../internals/createBaseUIEventDetai
 import { REASONS } from '../../internals/reasons';
 import * as TransitionStatusDataAttributes from '../../internals/TransitionStatusDataAttributes';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { isInHeldBranch } from '../../internals/useKeepAliveState';
 import { mergeProps } from '../../merge-props';
 import { getElementAtPoint } from '../../utils/getElementAtPoint';
 import { findScrollableTouchTarget } from '../../utils/scrollable';
@@ -997,7 +998,7 @@ function processTouchMove(
 
 // `KeepAlive` takes the viewport out of the document. The listener on the document then stops
 // until the activation.
-let deactivated = false;
+let deactivated = isInHeldBranch();
 let removeTouchMoveListener = NOOP;
 
 function listenToTouchMove() {
