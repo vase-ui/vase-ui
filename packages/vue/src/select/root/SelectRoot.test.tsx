@@ -323,6 +323,9 @@ describe('<Select.Root />', () => {
       await flushMicrotasks();
 
       expect(animations).toHaveLength(1);
+      // The animations run for one frame before the case ends them. A close in a frame before the
+      // end thus shows.
+      await waitSingleFrame();
       expect(positioner).not.toHaveAttribute('hidden');
 
       animations.forEach((animation) => {
@@ -366,6 +369,9 @@ describe('<Select.Root />', () => {
       await flushMicrotasks();
 
       expect(animations).toHaveLength(1);
+      // The animations run for one frame before the case ends them. A close in a frame before the
+      // end thus shows.
+      await waitSingleFrame();
       expect(positioner).not.toHaveAttribute('hidden');
 
       animations.forEach((animation) => {
