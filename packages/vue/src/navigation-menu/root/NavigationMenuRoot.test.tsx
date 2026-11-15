@@ -1567,6 +1567,55 @@ describe('<NavigationMenu.Root />', () => {
       expect(trigger).toHaveFocus();
     });
 
+    it('VUE-92: returns the focus to the trigger after Escape when a v-if of the consumer removes the portal part', async () => {
+      const onOpenChangeComplete = vi.fn();
+      const value = shallowRef<string | null>(null);
+      const { user } = await render(() => (
+        <NavigationMenu.Root
+          value={value.value}
+          onValueChange={(nextValue: string | null) => {
+            value.value = nextValue;
+          }}
+          onOpenChangeComplete={onOpenChangeComplete}
+        >
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="item-1">
+              <NavigationMenu.Trigger data-testid="trigger-1">Item 1</NavigationMenu.Trigger>
+              <NavigationMenu.Content>
+                <NavigationMenu.Link href="#link-1">Link 1</NavigationMenu.Link>
+              </NavigationMenu.Content>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          {value.value != null && (
+            <NavigationMenu.Portal>
+              <NavigationMenu.Positioner data-testid="positioner">
+                <NavigationMenu.Popup>
+                  <NavigationMenu.Viewport />
+                </NavigationMenu.Popup>
+              </NavigationMenu.Positioner>
+            </NavigationMenu.Portal>
+          )}
+        </NavigationMenu.Root>
+      ));
+      const trigger = screen.getByTestId('trigger-1');
+
+      await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        await flushMicrotasks();
+      });
+      const link = screen.getByRole('link', { name: 'Link 1' });
+      link.focus();
+      await flushMicrotasks();
+      expect(link).toHaveFocus();
+
+      const closed = nextCall(onOpenChangeComplete);
+      await user.keyboard('{Escape}');
+      await closed;
+
+      expect(screen.queryByTestId('positioner')).toBe(null);
+      expect(trigger).toHaveFocus();
+    });
+
     it('respects focus outside when clicking menu', async () => {
       const { user } = await render(
         <div>

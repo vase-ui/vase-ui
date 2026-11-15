@@ -1,0 +1,12 @@
+{
+  "id": "VUE-92",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/internals/useAnimationsFinished.ts#L110-L113",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/internals/useUnmountAfterClose.ts#L129-L157",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/navigation-menu/root/NavigationMenuRoot.tsx#L140-L148",
+    "https://vuejs.org/guide/essentials/template-refs.html#function-refs",
+    "https://www.w3.org/WAI/WCAG22/Understanding/focus-order.html"
+  ],
+  "behavior": "A `v-if` of the consumer can remove the part of the popup element during a close, for example on the portal part. The root then waits for the animations of the last element that attached. An element out of the document has no CSS animations, so the close ends after one frame. A `<Transition>` that keeps the element in the document ends the close with the animations of the element. The root then unmounts the popup and emits `openChangeComplete` with `false`. A close that starts before the element attaches still waits for it. When the focus was in the removed part, a Navigation Menu returns it to its trigger, as after a close with no `v-if`. Base UI waits only for an element that is attached. Its popup then stays mounted, and its root emits no `false`. Its Navigation Menu returns the focus only while the popup element exists.",
+  "dueWith": "packages/react/src/internals/useUnmountAfterClose.ts"
+}
