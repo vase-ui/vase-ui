@@ -28,89 +28,160 @@
     "virtualized/tailwind/index.tsx": "251d23ae74ffab9ded146516e8c0404ab5ef0d178529079ebb87a98c750d6344"
   },
   "classes": {
-    "async/tailwind": [
-      "flex flex-col gap-1 text-sm font-bold text-neutral-950 dark:text-white",
-      "flex items-center gap-2 py-1 pr-8 pl-2 text-sm text-neutral-500 dark:text-neutral-400",
-      "flex w-full flex-col gap-1",
-      "font-bold leading-5",
-      "group flex cursor-default py-2 pr-2 pl-2 text-sm leading-4 outline-hidden select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-white data-highlighted:before:absolute data-highlighted:before:inset-x-0 data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-950 dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white",
-      "h-8 w-[16rem] border border-neutral-950 bg-white dark:bg-neutral-950 px-2 text-sm any-pointer-coarse:text-base font-normal text-neutral-950 placeholder:text-neutral-500 dark:placeholder:text-neutral-400 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white",
-      "inline-block size-3 animate-spin rounded-full border border-current border-r-transparent rtl:border-r-current rtl:border-l-transparent",
-      "max-h-[min(var(--available-height),22.5rem)] overflow-y-auto overscroll-contain py-1 scroll-pt-1 scroll-pb-1",
-      "outline-hidden",
-      "text-sm leading-4 text-neutral-500 dark:text-neutral-400 group-data-highlighted:text-neutral-300 dark:group-data-highlighted:text-neutral-500",
-      "w-[var(--anchor-width)] max-w-[var(--available-width)] border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
-    ],
-    "auto-highlight/tailwind": [
-      "flex cursor-default items-center gap-2 py-2 pr-2 pl-2 text-sm leading-4 outline-hidden select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-white data-highlighted:before:absolute data-highlighted:before:inset-x-0 data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-950 dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white",
-      "flex flex-col gap-1 text-sm font-bold text-neutral-950 dark:text-white",
-      "h-8 w-[16rem] border border-neutral-950 bg-white dark:bg-neutral-950 px-2 text-sm any-pointer-coarse:text-base font-normal text-neutral-950 placeholder:text-neutral-500 dark:placeholder:text-neutral-400 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white",
-      "outline-0 overflow-y-auto scroll-py-[0.25rem] py-1 overscroll-contain max-h-[min(22.5rem,var(--available-height))] data-empty:p-0",
-      "outline-hidden",
-      "py-4 pr-4 pl-2 text-sm leading-4 text-neutral-500 dark:text-neutral-400",
-      "w-[var(--anchor-width)] max-w-[var(--available-width)] border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
-    ],
-    "fuzzy-matching/tailwind": [
-      "bg-transparent font-bold text-blue-800 dark:text-blue-500",
-      "flex cursor-default py-3 pr-2 pl-2 text-sm leading-6 outline-hidden select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:before:absolute data-highlighted:before:inset-x-0 data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-100 dark:data-highlighted:before:bg-neutral-800",
-      "flex flex-col gap-1 text-sm font-bold text-neutral-950 dark:text-white",
-      "flex items-center justify-between gap-3",
-      "flex max-h-[min(var(--available-height),28rem)] flex-col overflow-y-auto overscroll-contain py-1 scroll-pt-1 scroll-pb-1 empty:p-0",
-      "flex w-full flex-col gap-1",
-      "flex-1 font-bold leading-5",
-      "h-8 w-[16rem] border border-neutral-950 bg-white dark:bg-neutral-950 px-2 text-sm any-pointer-coarse:text-base font-normal text-neutral-950 placeholder:text-neutral-500 dark:placeholder:text-neutral-400 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white",
-      "outline-hidden",
-      "py-3 pr-4 pl-2 text-sm leading-4 text-neutral-500 dark:text-neutral-400",
-      "text-sm text-neutral-500 dark:text-neutral-400",
-      "w-(--anchor-width) max-w-(--available-width) border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
-    ],
-    "grouped/tailwind": [
-      "block pb-2 last:pb-0",
-      "flex cursor-default items-center gap-2 py-2 pr-2 pl-2 text-sm leading-4 outline-hidden select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-white data-highlighted:before:absolute data-highlighted:before:inset-x-0 data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-950 dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white",
-      "flex flex-col gap-1 text-sm font-bold text-neutral-950 dark:text-white",
-      "h-8 w-[16rem] border border-neutral-950 bg-white dark:bg-neutral-950 px-2 text-sm any-pointer-coarse:text-base font-normal text-neutral-950 placeholder:text-neutral-500 dark:placeholder:text-neutral-400 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white",
-      "outline-0 overflow-y-auto py-1 scroll-py-1 overscroll-contain max-h-[min(22.5rem,var(--available-height))] data-empty:p-0",
-      "outline-hidden",
-      "p-2 text-sm leading-4 text-neutral-500 select-none dark:text-neutral-400",
-      "py-4 pr-4 pl-2 text-sm leading-4 text-neutral-500 dark:text-neutral-400",
-      "w-[var(--anchor-width)] max-w-[var(--available-width)] border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
-    ],
-    "hero/tailwind": [
-      "flex cursor-default items-center gap-2 py-2 pr-2 pl-2 text-sm leading-4 outline-hidden select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-white data-highlighted:before:absolute data-highlighted:before:inset-x-0 data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-950 dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white",
-      "flex flex-col gap-1 text-sm font-bold text-neutral-950 dark:text-white",
-      "h-8 w-[16rem] border border-neutral-950 bg-white dark:bg-neutral-950 px-2 text-sm any-pointer-coarse:text-base font-normal text-neutral-950 placeholder:opacity-100 placeholder:text-neutral-500 placeholder:[-webkit-text-fill-color:var(--color-neutral-500)] dark:placeholder:text-neutral-400 dark:placeholder:[-webkit-text-fill-color:var(--color-neutral-400)] focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white",
-      "outline-0 overflow-y-auto scroll-py-[0.25rem] py-1 overscroll-contain max-h-[min(22.5rem,var(--available-height))] data-empty:p-0",
-      "outline-hidden",
-      "py-4 pr-4 pl-2 text-sm leading-4 text-neutral-500 dark:text-neutral-400",
-      "w-[var(--anchor-width)] max-w-[var(--available-width)] border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
-    ],
-    "inline/tailwind": [
-      "flex cursor-default items-center gap-2 py-2 pr-2 pl-2 text-sm leading-4 outline-hidden select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-white data-highlighted:before:absolute data-highlighted:before:inset-x-0 data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-950 dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white",
-      "flex flex-col gap-1 text-sm font-bold text-neutral-950 dark:text-white",
-      "h-8 w-[16rem] border border-neutral-950 bg-white dark:bg-neutral-950 px-2 text-sm any-pointer-coarse:text-base font-normal text-neutral-950 placeholder:text-neutral-500 dark:placeholder:text-neutral-400 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white",
-      "outline-0 overflow-y-auto scroll-py-[0.25rem] py-1 overscroll-contain max-h-[min(22.5rem,var(--available-height))] data-empty:p-0",
-      "outline-hidden data-empty:hidden",
-      "w-[var(--anchor-width)] max-w-[var(--available-width)] border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
-    ],
-    "limit/tailwind": [
-      "flex cursor-default py-2 pr-2 pl-2 text-sm leading-4 outline-hidden select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-white data-highlighted:before:absolute data-highlighted:before:inset-x-0 data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-950 dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white",
-      "flex flex-col gap-1 text-sm font-bold text-neutral-950 dark:text-white",
-      "h-8 w-[16rem] border border-neutral-950 bg-white dark:bg-neutral-950 px-2 text-sm any-pointer-coarse:text-base font-normal text-neutral-950 placeholder:text-neutral-500 dark:placeholder:text-neutral-400 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white",
-      "outline-hidden",
-      "py-2 pr-4 pl-2 text-sm leading-4 text-neutral-500 dark:text-neutral-400",
-      "py-2 pr-4 pl-2 text-sm text-neutral-500 dark:text-neutral-400",
-      "w-[var(--anchor-width)] max-h-[min(var(--available-height),22.5rem)] max-w-[var(--available-width)] overflow-y-auto scroll-pt-1 scroll-pb-1 overscroll-contain border border-neutral-950 bg-white py-1 text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
-    ],
-    "virtualized/tailwind": [
-      "flex cursor-default py-2 pr-2 pl-2 text-sm leading-4 outline-hidden select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-white data-highlighted:before:absolute data-highlighted:before:inset-x-0 data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-950 dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white",
-      "flex flex-col gap-1 text-sm font-bold text-neutral-950 dark:text-white",
-      "h-8 w-[16rem] border border-neutral-950 bg-white dark:bg-neutral-950 px-2 text-sm any-pointer-coarse:text-base font-normal text-neutral-950 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white",
-      "h-[min(22.5rem,var(--total-size))] max-h-[var(--available-height)] overflow-auto overscroll-contain scroll-py-1",
-      "outline-hidden",
-      "p-0",
-      "py-3 px-2 text-sm leading-4 text-neutral-500 dark:text-neutral-400",
-      "relative w-full",
-      "w-[var(--anchor-width)] max-w-[var(--available-width)] border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
-    ]
-  }
+    "async/tailwind": {
+      "Autocomplete.Input": [
+        "h-8 w-[16rem] border border-neutral-950 bg-white dark:bg-neutral-950 px-2 text-sm any-pointer-coarse:text-base font-normal text-neutral-950 placeholder:text-neutral-500 dark:placeholder:text-neutral-400 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white"
+      ],
+      "Autocomplete.Item": [
+        "group flex cursor-default py-2 pr-2 pl-2 text-sm leading-4 outline-hidden select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-white data-highlighted:before:absolute data-highlighted:before:inset-x-0 data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-950 dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white"
+      ],
+      "Autocomplete.Popup": [
+        "w-[var(--anchor-width)] max-w-[var(--available-width)] border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
+      ],
+      "Autocomplete.Positioner": ["outline-hidden"],
+      "div": [
+        "flex items-center gap-2 py-1 pr-8 pl-2 text-sm text-neutral-500 dark:text-neutral-400",
+        "max-h-[min(var(--available-height),22.5rem)] overflow-y-auto overscroll-contain py-1 scroll-pt-1 scroll-pb-1"
+      ],
+      "label": ["flex flex-col gap-1 text-sm font-bold text-neutral-950 dark:text-white"],
+      "span": [
+        "flex w-full flex-col gap-1",
+        "font-bold leading-5",
+        "inline-block size-3 animate-spin rounded-full border border-current border-r-transparent rtl:border-r-current rtl:border-l-transparent",
+        "text-sm leading-4 text-neutral-500 dark:text-neutral-400 group-data-highlighted:text-neutral-300 dark:group-data-highlighted:text-neutral-500"
+      ]
+    },
+    "auto-highlight/tailwind": {
+      "Autocomplete.Input": [
+        "h-8 w-[16rem] border border-neutral-950 bg-white dark:bg-neutral-950 px-2 text-sm any-pointer-coarse:text-base font-normal text-neutral-950 placeholder:text-neutral-500 dark:placeholder:text-neutral-400 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white"
+      ],
+      "Autocomplete.Item": [
+        "flex cursor-default items-center gap-2 py-2 pr-2 pl-2 text-sm leading-4 outline-hidden select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-white data-highlighted:before:absolute data-highlighted:before:inset-x-0 data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-950 dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white"
+      ],
+      "Autocomplete.List": [
+        "outline-0 overflow-y-auto scroll-py-[0.25rem] py-1 overscroll-contain max-h-[min(22.5rem,var(--available-height))] data-empty:p-0"
+      ],
+      "Autocomplete.Popup": [
+        "w-[var(--anchor-width)] max-w-[var(--available-width)] border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
+      ],
+      "Autocomplete.Positioner": ["outline-hidden"],
+      "div": ["py-4 pr-4 pl-2 text-sm leading-4 text-neutral-500 dark:text-neutral-400"],
+      "label": ["flex flex-col gap-1 text-sm font-bold text-neutral-950 dark:text-white"]
+    },
+    "fuzzy-matching/tailwind": {
+      "Autocomplete.Input": [
+        "h-8 w-[16rem] border border-neutral-950 bg-white dark:bg-neutral-950 px-2 text-sm any-pointer-coarse:text-base font-normal text-neutral-950 placeholder:text-neutral-500 dark:placeholder:text-neutral-400 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white"
+      ],
+      "Autocomplete.Item": [
+        "flex cursor-default py-3 pr-2 pl-2 text-sm leading-6 outline-hidden select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:before:absolute data-highlighted:before:inset-x-0 data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-100 dark:data-highlighted:before:bg-neutral-800"
+      ],
+      "Autocomplete.List": [
+        "flex max-h-[min(var(--available-height),28rem)] flex-col overflow-y-auto overscroll-contain py-1 scroll-pt-1 scroll-pb-1 empty:p-0"
+      ],
+      "Autocomplete.Popup": [
+        "w-(--anchor-width) max-w-(--available-width) border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
+      ],
+      "Autocomplete.Positioner": ["outline-hidden"],
+      "div": ["py-3 pr-4 pl-2 text-sm leading-4 text-neutral-500 dark:text-neutral-400"],
+      "label": ["flex flex-col gap-1 text-sm font-bold text-neutral-950 dark:text-white"],
+      "mark": ["bg-transparent font-bold text-blue-800 dark:text-blue-500"],
+      "span": [
+        "flex items-center justify-between gap-3",
+        "flex w-full flex-col gap-1",
+        "flex-1 font-bold leading-5",
+        "text-sm text-neutral-500 dark:text-neutral-400"
+      ]
+    },
+    "grouped/tailwind": {
+      "Autocomplete.Group": ["block pb-2 last:pb-0"],
+      "Autocomplete.GroupLabel": [
+        "p-2 text-sm leading-4 text-neutral-500 select-none dark:text-neutral-400"
+      ],
+      "Autocomplete.Input": [
+        "h-8 w-[16rem] border border-neutral-950 bg-white dark:bg-neutral-950 px-2 text-sm any-pointer-coarse:text-base font-normal text-neutral-950 placeholder:text-neutral-500 dark:placeholder:text-neutral-400 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white"
+      ],
+      "Autocomplete.Item": [
+        "flex cursor-default items-center gap-2 py-2 pr-2 pl-2 text-sm leading-4 outline-hidden select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-white data-highlighted:before:absolute data-highlighted:before:inset-x-0 data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-950 dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white"
+      ],
+      "Autocomplete.List": [
+        "outline-0 overflow-y-auto py-1 scroll-py-1 overscroll-contain max-h-[min(22.5rem,var(--available-height))] data-empty:p-0"
+      ],
+      "Autocomplete.Popup": [
+        "w-[var(--anchor-width)] max-w-[var(--available-width)] border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
+      ],
+      "Autocomplete.Positioner": ["outline-hidden"],
+      "div": ["py-4 pr-4 pl-2 text-sm leading-4 text-neutral-500 dark:text-neutral-400"],
+      "label": ["flex flex-col gap-1 text-sm font-bold text-neutral-950 dark:text-white"]
+    },
+    "hero/tailwind": {
+      "Autocomplete.Input": [
+        "h-8 w-[16rem] border border-neutral-950 bg-white dark:bg-neutral-950 px-2 text-sm any-pointer-coarse:text-base font-normal text-neutral-950 placeholder:opacity-100 placeholder:text-neutral-500 placeholder:[-webkit-text-fill-color:var(--color-neutral-500)] dark:placeholder:text-neutral-400 dark:placeholder:[-webkit-text-fill-color:var(--color-neutral-400)] focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white"
+      ],
+      "Autocomplete.Item": [
+        "flex cursor-default items-center gap-2 py-2 pr-2 pl-2 text-sm leading-4 outline-hidden select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-white data-highlighted:before:absolute data-highlighted:before:inset-x-0 data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-950 dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white"
+      ],
+      "Autocomplete.List": [
+        "outline-0 overflow-y-auto scroll-py-[0.25rem] py-1 overscroll-contain max-h-[min(22.5rem,var(--available-height))] data-empty:p-0"
+      ],
+      "Autocomplete.Popup": [
+        "w-[var(--anchor-width)] max-w-[var(--available-width)] border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
+      ],
+      "Autocomplete.Positioner": ["outline-hidden"],
+      "div": ["py-4 pr-4 pl-2 text-sm leading-4 text-neutral-500 dark:text-neutral-400"],
+      "label": ["flex flex-col gap-1 text-sm font-bold text-neutral-950 dark:text-white"]
+    },
+    "inline/tailwind": {
+      "Autocomplete.Input": [
+        "h-8 w-[16rem] border border-neutral-950 bg-white dark:bg-neutral-950 px-2 text-sm any-pointer-coarse:text-base font-normal text-neutral-950 placeholder:text-neutral-500 dark:placeholder:text-neutral-400 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white"
+      ],
+      "Autocomplete.Item": [
+        "flex cursor-default items-center gap-2 py-2 pr-2 pl-2 text-sm leading-4 outline-hidden select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-white data-highlighted:before:absolute data-highlighted:before:inset-x-0 data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-950 dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white"
+      ],
+      "Autocomplete.List": [
+        "outline-0 overflow-y-auto scroll-py-[0.25rem] py-1 overscroll-contain max-h-[min(22.5rem,var(--available-height))] data-empty:p-0"
+      ],
+      "Autocomplete.Popup": [
+        "w-[var(--anchor-width)] max-w-[var(--available-width)] border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
+      ],
+      "Autocomplete.Positioner": ["outline-hidden data-empty:hidden"],
+      "label": ["flex flex-col gap-1 text-sm font-bold text-neutral-950 dark:text-white"]
+    },
+    "limit/tailwind": {
+      "Autocomplete.Input": [
+        "h-8 w-[16rem] border border-neutral-950 bg-white dark:bg-neutral-950 px-2 text-sm any-pointer-coarse:text-base font-normal text-neutral-950 placeholder:text-neutral-500 dark:placeholder:text-neutral-400 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white"
+      ],
+      "Autocomplete.Item": [
+        "flex cursor-default py-2 pr-2 pl-2 text-sm leading-4 outline-hidden select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-white data-highlighted:before:absolute data-highlighted:before:inset-x-0 data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-950 dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white"
+      ],
+      "Autocomplete.Popup": [
+        "w-[var(--anchor-width)] max-h-[min(var(--available-height),22.5rem)] max-w-[var(--available-width)] overflow-y-auto scroll-pt-1 scroll-pb-1 overscroll-contain border border-neutral-950 bg-white py-1 text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
+      ],
+      "Autocomplete.Positioner": ["outline-hidden"],
+      "div": [
+        "py-2 pr-4 pl-2 text-sm leading-4 text-neutral-500 dark:text-neutral-400",
+        "py-2 pr-4 pl-2 text-sm text-neutral-500 dark:text-neutral-400"
+      ],
+      "label": ["flex flex-col gap-1 text-sm font-bold text-neutral-950 dark:text-white"]
+    },
+    "virtualized/tailwind": {
+      "Autocomplete.Input": [
+        "h-8 w-[16rem] border border-neutral-950 bg-white dark:bg-neutral-950 px-2 text-sm any-pointer-coarse:text-base font-normal text-neutral-950 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white"
+      ],
+      "Autocomplete.Item": [
+        "flex cursor-default py-2 pr-2 pl-2 text-sm leading-4 outline-hidden select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-white data-highlighted:before:absolute data-highlighted:before:inset-x-0 data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-950 dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white"
+      ],
+      "Autocomplete.List": ["p-0"],
+      "Autocomplete.Popup": [
+        "w-[var(--anchor-width)] max-w-[var(--available-width)] border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
+      ],
+      "Autocomplete.Positioner": ["outline-hidden"],
+      "div": [
+        "h-[min(22.5rem,var(--total-size))] max-h-[var(--available-height)] overflow-auto overscroll-contain scroll-py-1",
+        "py-3 px-2 text-sm leading-4 text-neutral-500 dark:text-neutral-400",
+        "relative w-full"
+      ],
+      "label": ["flex flex-col gap-1 text-sm font-bold text-neutral-950 dark:text-white"]
+    }
+  },
+  "differentVariants": ["fuzzy-matching"]
 }
