@@ -80,7 +80,7 @@ describe('<ContextMenu.Root />', () => {
         </ContextMenu.Portal>
       </ContextMenu.Root>
     ),
-    createPopup: () => <ContextMenu.Popup>Popup</ContextMenu.Popup>,
+    createPopup: () => <ContextMenu.Popup data-testid="popup">Popup</ContextMenu.Popup>,
     render,
   });
 

@@ -120,7 +120,7 @@ describe('<Autocomplete.Root />', () => {
         </Autocomplete.Portal>
       </Autocomplete.Root>
     ),
-    createPopup: () => <Autocomplete.Popup>Popup</Autocomplete.Popup>,
+    createPopup: () => <Autocomplete.Popup data-testid="popup">Popup</Autocomplete.Popup>,
     render,
   });
 

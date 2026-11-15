@@ -240,7 +240,7 @@ describe('<Dialog.Root />', () => {
         </Dialog.Portal>
       </Dialog.Root>
     ),
-    createPopup: () => <Dialog.Popup>Popup</Dialog.Popup>,
+    createPopup: () => <Dialog.Popup data-testid="popup">Popup</Dialog.Popup>,
     render,
   });
 

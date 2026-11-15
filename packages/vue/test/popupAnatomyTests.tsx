@@ -11,7 +11,7 @@ export interface PopupAnatomyTestProps {
   /** The controlled open state of the root. */
   open: boolean;
   onOpenChangeComplete: (open: boolean) => void;
-  /** What the shown part holds, or what renders beside it when it holds no popup. */
+  /** The popup part after it attaches, or `null`. Put it where the popup part goes. */
   content: VNodeChild;
 }
 
@@ -21,7 +21,10 @@ export interface PopupAnatomyTestConfig {
    * class `shown`.
    */
   createComponent: (props: PopupAnatomyTestProps) => VNode;
-  /** Returns the popup part, for the case of a popup part that attaches after the open. */
+  /**
+   * Returns the popup part with `data-testid="popup"`, for the case of a popup part that attaches
+   * after the open.
+   */
   createPopup?: (() => VNode) | undefined;
   render: ReturnType<typeof createRenderer>['render'];
   /**
@@ -31,16 +34,22 @@ export interface PopupAnatomyTestConfig {
   reportsOpen?: boolean | undefined;
 }
 
-// Resolves at the next call of the listener. The promise has no time limit, so a missing completion
-// fails the test at its time limit.
-function nextCompletion(onOpenChangeComplete: Mock) {
+/**
+ * Resolves at the next call of `mock`. The promise has no time limit, so a call that does not come
+ * fails the test at the time limit of the test.
+ */
+export function nextCall(mock: Mock) {
   return new Promise<void>((resolve) => {
-    onOpenChangeComplete.mockImplementationOnce(() => resolve());
+    mock.mockImplementationOnce(() => resolve());
   });
 }
 
 function getShownPart() {
   return document.querySelector<HTMLElement>('[data-testid="shown"]');
+}
+
+function getPopup() {
+  return document.querySelector<HTMLElement>('[data-testid="popup"]');
 }
 
 function isShown(part: HTMLElement | null) {
@@ -54,7 +63,7 @@ function isShown(part: HTMLElement | null) {
 export function popupAnatomyTests(config: PopupAnatomyTestConfig) {
   const { createComponent, createPopup, render, reportsOpen = true } = config;
 
-  function renderAnatomy() {
+  function createAnatomy() {
     const open = shallowRef(false);
     const withPopup = shallowRef(false);
     const onOpenChangeComplete = vi.fn();
@@ -75,19 +84,19 @@ export function popupAnatomyTests(config: PopupAnatomyTestConfig) {
       await flushMicrotasks();
       return;
     }
-    const completion = nextCompletion(onOpenChangeComplete);
+    const completion = nextCall(onOpenChangeComplete);
     open.value = true;
     await completion;
   }
 
   describe('VUE-72: an anatomy with no popup part', () => {
     it('hides the shown part after the close and reports each completion one time', async () => {
-      const { App, open, onOpenChangeComplete } = renderAnatomy();
+      const { App, open, onOpenChangeComplete } = createAnatomy();
       await render(<App />);
 
       await openAnatomy(open, onOpenChangeComplete);
       expect(isShown(getShownPart())).toBe(true);
-      const completion = nextCompletion(onOpenChangeComplete);
+      const completion = nextCall(onOpenChangeComplete);
       open.value = false;
       await completion;
 
@@ -97,7 +106,7 @@ export function popupAnatomyTests(config: PopupAnatomyTestConfig) {
 
     it('waits for the exit animation of the shown part', async () => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
-      const { App, open, onOpenChangeComplete } = renderAnatomy();
+      const { App, open, onOpenChangeComplete } = createAnatomy();
       await render(
         <>
           <style>{`@keyframes popup-anatomy-exit { to { opacity: 0.5 } } .shown[data-closed] { animation: popup-anatomy-exit 100s }`}</style>
@@ -117,7 +126,7 @@ export function popupAnatomyTests(config: PopupAnatomyTestConfig) {
       expect(isShown(part)).toBe(true);
       expect(onOpenChangeComplete).not.toHaveBeenCalledWith(false);
 
-      const completion = nextCompletion(onOpenChangeComplete);
+      const completion = nextCall(onOpenChangeComplete);
       for (const animation of animations) {
         animation.finish();
       }
@@ -130,7 +139,7 @@ export function popupAnatomyTests(config: PopupAnatomyTestConfig) {
     it.skipIf(createPopup === undefined)(
       'reports one open completion when the popup part attaches after it',
       async () => {
-        const { App, open, withPopup, onOpenChangeComplete } = renderAnatomy();
+        const { App, open, withPopup, onOpenChangeComplete } = createAnatomy();
         await render(<App />);
         await openAnatomy(open, onOpenChangeComplete);
 
@@ -138,9 +147,10 @@ export function popupAnatomyTests(config: PopupAnatomyTestConfig) {
         await waitSingleFrame();
         await waitSingleFrame();
         await flushMicrotasks();
+        expect(isShown(getPopup())).toBe(true);
         expect(onOpenChangeComplete.mock.calls).toEqual([[true]]);
 
-        const completion = nextCompletion(onOpenChangeComplete);
+        const completion = nextCall(onOpenChangeComplete);
         open.value = false;
         await completion;
         expect(onOpenChangeComplete.mock.calls).toEqual([[true], [false]]);

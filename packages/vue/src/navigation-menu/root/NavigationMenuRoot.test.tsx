@@ -11,6 +11,7 @@ import {
   flushMicrotasks,
   hydrate,
   isJSDOM,
+  nextCall,
   popupAnatomyTests,
   renderOnServer,
   screen,
@@ -1529,18 +1530,9 @@ describe('<NavigationMenu.Root />', () => {
     });
 
     it('VUE-72: returns the focus to the trigger after Escape closes a positioner with no popup part', async () => {
-      let resolveClose = () => {};
-      const closed = new Promise<void>((resolve) => {
-        resolveClose = resolve;
-      });
+      const onOpenChangeComplete = vi.fn();
       const { user } = await render(
-        <NavigationMenu.Root
-          onOpenChangeComplete={(open: boolean) => {
-            if (!open) {
-              resolveClose();
-            }
-          }}
-        >
+        <NavigationMenu.Root onOpenChangeComplete={onOpenChangeComplete}>
           <NavigationMenu.List>
             <NavigationMenu.Item value="item-1">
               <NavigationMenu.Trigger data-testid="trigger-1">Item 1</NavigationMenu.Trigger>
@@ -1565,6 +1557,7 @@ describe('<NavigationMenu.Root />', () => {
       await flushMicrotasks();
       expect(link).toHaveFocus();
 
+      const closed = nextCall(onOpenChangeComplete);
       await user.keyboard('{Escape}');
       await closed;
 

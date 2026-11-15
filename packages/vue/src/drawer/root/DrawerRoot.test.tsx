@@ -681,7 +681,7 @@ describe('<Drawer.Root />', () => {
     ),
     createPopup: () => (
       <Drawer.Viewport>
-        <Drawer.Popup>Popup</Drawer.Popup>
+        <Drawer.Popup data-testid="popup">Popup</Drawer.Popup>
       </Drawer.Viewport>
     ),
     render,

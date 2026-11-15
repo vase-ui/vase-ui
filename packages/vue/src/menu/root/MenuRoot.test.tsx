@@ -282,7 +282,7 @@ describe('<Menu.Root />', () => {
         </Menu.Portal>
       </Menu.Root>
     ),
-    createPopup: () => <Menu.Popup>Popup</Menu.Popup>,
+    createPopup: () => <Menu.Popup data-testid="popup">Popup</Menu.Popup>,
     render,
   });
 

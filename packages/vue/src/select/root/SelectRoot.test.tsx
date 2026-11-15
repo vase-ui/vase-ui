@@ -95,7 +95,7 @@ describe('<Select.Root />', () => {
         </Select.Portal>
       </Select.Root>
     ),
-    createPopup: () => <Select.Popup>Popup</Select.Popup>,
+    createPopup: () => <Select.Popup data-testid="popup">Popup</Select.Popup>,
     render,
   });
 

@@ -8,6 +8,7 @@ import {
   hydrate,
   isInaccessible,
   isJSDOM,
+  nextCall,
   nextEvent,
   popupAnatomyTests,
   popupConformanceTests,
@@ -138,7 +139,7 @@ describe('<Tooltip.Root />', () => {
         </Tooltip.Portal>
       </Tooltip.Root>
     ),
-    createPopup: () => <Tooltip.Popup>Popup</Tooltip.Popup>,
+    createPopup: () => <Tooltip.Popup data-testid="popup">Popup</Tooltip.Popup>,
     render,
   });
 
@@ -962,27 +963,21 @@ describe('<Tooltip.Root />', () => {
 
       it('reports the open completion again when it toggles on an open tooltip that is not kept mounted', async () => {
         const onOpenChangeComplete = vi.fn();
-        function nextCompletion() {
-          return new Promise<void>((resolve) => {
-            onOpenChangeComplete.mockImplementationOnce(() => resolve());
-          });
-        }
-
-        let completion = nextCompletion();
+        let completion = nextCall(onOpenChangeComplete);
         const { setProps } = await render(
           <TestTooltip rootProps={{ open: true, disabled: false, onOpenChangeComplete }} />,
         );
         await completion;
 
-        completion = nextCompletion();
+        completion = nextCall(onOpenChangeComplete);
         await setProps({ rootProps: { open: true, disabled: true, onOpenChangeComplete } });
         await completion;
-        completion = nextCompletion();
+        completion = nextCall(onOpenChangeComplete);
         await setProps({ rootProps: { open: true, disabled: false, onOpenChangeComplete } });
         await completion;
         expect(onOpenChangeComplete.mock.calls).toEqual([[true], [false], [true]]);
 
-        completion = nextCompletion();
+        completion = nextCall(onOpenChangeComplete);
         await setProps({ rootProps: { open: false, disabled: false, onOpenChangeComplete } });
         await completion;
         expect(onOpenChangeComplete.mock.calls).toEqual([[true], [false], [true], [false]]);

@@ -112,7 +112,7 @@ describe('<PreviewCard.Root />', () => {
         </PreviewCard.Portal>
       </PreviewCard.Root>
     ),
-    createPopup: () => <PreviewCard.Popup>Popup</PreviewCard.Popup>,
+    createPopup: () => <PreviewCard.Popup data-testid="popup">Popup</PreviewCard.Popup>,
     render,
   });
 

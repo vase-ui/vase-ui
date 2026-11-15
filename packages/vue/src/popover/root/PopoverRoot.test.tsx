@@ -235,7 +235,7 @@ describe('<Popover.Root />', () => {
         </Popover.Portal>
       </Popover.Root>
     ),
-    createPopup: () => <Popover.Popup>Popup</Popover.Popup>,
+    createPopup: () => <Popover.Popup data-testid="popup">Popup</Popover.Popup>,
     render,
   });
 

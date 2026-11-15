@@ -1,5 +1,4 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import type { Mock } from 'vitest';
 import {
   KeepAlive,
   Suspense,
@@ -18,6 +17,7 @@ import {
   flushMicrotasks,
   hydrate,
   nextAnimationsRead,
+  nextCall,
   randomStringValue,
   renderOnServer,
   takeReportedMessages,
@@ -624,14 +624,6 @@ interface RootInstance {
   open: boolean;
   mounted: boolean;
   transitionStatus: TransitionStatus;
-}
-
-// Resolves at the next call of the listener. The promise has no time limit, so a missing completion
-// fails the test at its time limit.
-function nextCompletion(onOpenChangeComplete: Mock) {
-  return new Promise<void>((resolve) => {
-    onOpenChangeComplete.mockImplementationOnce(() => resolve());
-  });
 }
 
 // A ref on a part gives its exposed members. Vue sets the ref to `null` when the root unmounts, so
@@ -2075,7 +2067,7 @@ describe('useSingleAnchorPopupRoot', () => {
       animationsAtCompletion.push([open, animated!.getAnimations().length]);
       completed();
     }
-    let completion = nextCompletion(completed);
+    let completion = nextCall(completed);
     const { getByText, queryByRole, container } = await render(() => (
       <>
         <style>{`.${className} { transition: opacity 50ms; opacity: 1 } .${className}[data-ending-style] { opacity: 0 }`}</style>
@@ -2092,7 +2084,7 @@ describe('useSingleAnchorPopupRoot', () => {
     // the close finds that style.
     expect(getComputedStyle(animated!).opacity).toBe('1');
 
-    completion = nextCompletion(completed);
+    completion = nextCall(completed);
     await fireEvent.click(getByText('trigger'));
     await completion;
 
@@ -2130,7 +2122,7 @@ describe('useSingleAnchorPopupRoot', () => {
     await flushMicrotasks();
     expect(onOpenChangeComplete.mock.calls).toEqual([]);
 
-    const completion = nextCompletion(onOpenChangeComplete);
+    const completion = nextCall(onOpenChangeComplete);
     for (const animation of popup.getAnimations()) {
       animation.finish();
     }
@@ -2150,7 +2142,7 @@ describe('useSingleAnchorPopupRoot', () => {
       </>
     ));
 
-    let completion = nextCompletion(onOpenChangeComplete);
+    let completion = nextCall(onOpenChangeComplete);
     await fireEvent.click(getByText('trigger'));
     await completion;
     const exitAnimations = await nextAnimationsRead(getByRole('dialog'), {
@@ -2158,7 +2150,7 @@ describe('useSingleAnchorPopupRoot', () => {
     });
     expect(exitAnimations).toHaveLength(1);
 
-    completion = nextCompletion(onOpenChangeComplete);
+    completion = nextCall(onOpenChangeComplete);
     await fireEvent.click(getByText('trigger'));
     await completion;
 

@@ -58,7 +58,7 @@ describe('<AlertDialog.Root />', () => {
         </AlertDialog.Portal>
       </AlertDialog.Root>
     ),
-    createPopup: () => <AlertDialog.Popup>Popup</AlertDialog.Popup>,
+    createPopup: () => <AlertDialog.Popup data-testid="popup">Popup</AlertDialog.Popup>,
     render,
   });
 

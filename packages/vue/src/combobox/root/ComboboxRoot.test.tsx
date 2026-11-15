@@ -277,7 +277,7 @@ describe('<Combobox.Root />', () => {
         </Combobox.Portal>
       </Combobox.Root>
     ),
-    createPopup: () => <Combobox.Popup>Popup</Combobox.Popup>,
+    createPopup: () => <Combobox.Popup data-testid="popup">Popup</Combobox.Popup>,
     render,
   });
 
