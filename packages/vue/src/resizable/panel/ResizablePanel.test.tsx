@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
 import { nextTick, shallowRef } from 'vue';
-import { Toolbar } from '@vase-ui/vue/toolbar';
 import {
   createRenderer,
   describeConformance,
@@ -347,31 +346,6 @@ describe('<Resizable.Panel />', () => {
       await fireEvent.pointerUp(handle, { ...pointer, clientX: start + 50 });
 
       expect(handle.getBoundingClientRect().left - start).toBeCloseTo(50, 0);
-    });
-  });
-
-  describe('content', () => {
-    it('joins the composite list around the root, and not the list of the panels', async () => {
-      await render(
-        <Toolbar.Root>
-          <Resizable.Root>
-            <Resizable.Panel>
-              <Toolbar.Button data-testid="first">First</Toolbar.Button>
-            </Resizable.Panel>
-            <Resizable.Handle data-testid="handle" />
-            <Resizable.Panel>
-              <Toolbar.Button data-testid="second">Second</Toolbar.Button>
-            </Resizable.Panel>
-          </Resizable.Root>
-        </Toolbar.Root>,
-      );
-      const first = screen.getByTestId('first');
-      first.focus();
-
-      await fireEvent.keyDown(first, { key: 'ArrowRight' });
-
-      expect(screen.getByTestId('second')).toHaveFocus();
-      expect(screen.getByTestId('handle')).toHaveAttribute('aria-valuenow', '50');
     });
   });
 

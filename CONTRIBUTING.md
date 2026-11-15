@@ -568,6 +568,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - In the source of the package, use only a JavaScript built-in that each browser of that list has. The compatibility table on the MDN page of the built-in gives the versions. `Temporal` is the exception: the bullet below gives its rule.
 - `Temporal` is the one API above ES2024 that the source needs. `weekInfo` of `internals/date-time/format.ts` also reads `getWeekInfo` of `Intl.Locale`, but only where the engine has it. Only the date and time families and `internals/date-time` use it. Its types come from `lib.esnext.temporal`, which the Temporal reference line of [Entry points](#entry-points) loads. That line is the first line of `internals/date-time/temporal.ts`.
 - Each browser of the list has `Array.prototype.at`, `Array.prototype.findLast`, `Object.hasOwn` and `String.prototype.replaceAll`. Firefox 114 does not have the array methods `toSorted`, `toReversed`, `toSpliced` and `with`. No browser of the list has `Map.groupBy`, `Object.groupBy` or `Promise.withResolvers`.
+- ESLint refuses `toSorted`, `toReversed` and `toSpliced` in the source of the package. It does not refuse `with`, because the source calls the method `with` of `Temporal`.
 - Do not use `using` or `Symbol.dispose`.
 - The scripts and the tests are not in the built package. A file that runs in Node.js, such as a script or a `.node.test` file, can use each built-in of the Node.js version in `.node-version`. A test file that runs in the browsers can use only a built-in that each of the three engines of Playwright has. In both cases, the `lib` of the project must have the types of the built-in.
 - `erasableSyntaxOnly` is on. Do not write an `enum`, a parameter property or a namespace that has a value. A namespace of types is correct.
@@ -1280,6 +1281,7 @@ A composite is a group of items with one tab stop, such as a toolbar or a list o
 
 - A root part calls `useCompositeRoot` in `setup`, and an item part calls `useCompositeItem`. Each part gives the result to `useRenderElement`.
 - `useCompositeRoot` makes the item registry with `useCompositeList`. `useCompositeItem` registers the item with `useCompositeListItem`. A part that needs only the registry calls those two composables.
+- `useCompositeList` returns the list, and it provides the list to the parts below its caller. With `provide: false`, it provides nothing. `useCompositeListItem` registers with the list that it gets as `list`, or with the nearest list above the item.
 - Base UI also has the components `CompositeList`, `CompositeRoot` and `CompositeItem`. Vase UI has no counterpart of them, because a Vue part renders its own element. Thus `as` and `#render` work with no change, and the DOM has no wrapper element.
 
 The composite root:
@@ -1344,7 +1346,7 @@ The item registry:
 - `elementsRef` and `labelsRef` are `shallowRef` values. The list gives each a new array on each sort. An explicit index can leave an empty slot in the array.
 - An item with no list is valid. Its index is its explicit index, or `-1`.
 - A family can use the registry only for the index of its items. `Accordion.Root` calls `useCompositeList`, and `Accordion.Item` calls `useCompositeListItem`. The root does not call `useCompositeRoot`, so the items have no roving tab stop and no arrow keys. Base UI removed the arrow keys of the Accordion to follow the APG.
-- `Resizable.Root` also uses the registry only for the index of its panels and handles. The root reads the list around it with `useCompositeListContext()`, and each panel provides that list, or `undefined`, to its content. An item in a panel then joins the list around the root, such as the list of a toolbar around the root.
+- `Resizable.Root` also uses the registry only for the index of its panels and handles. Its slot can also hold the items of a list around the root, such as the buttons of a toolbar. The root thus gives `provide: false` to `useCompositeList`, and it gives the list to its panels and handles through its context. Each panel and each handle gives that list to `useCompositeListItem` as `list`. An item of the list around the root then joins that list, in a panel and as a child of the root.
 - `Select.Positioner` calls `useCompositeList` for the items of Select. Each item writes its value to `itemValues` of the context in its first `ref` callback, before the `ref` of `useCompositeListItem`. The key is the element of the item.
 - An item writes a new value to `itemValues` and to `valuesRef` in a `watch` with the default flush. The root reads `valuesRef` in a `watch` with `flush: 'post'`. That `watch` can run before the `watch` calls of the items that have `flush: 'post'`.
 - In `onMapChange`, the positioner first reads the value of each item from its element. Vue can run `onMapChange` before the `onMounted` hooks of the items that an update adds, so a value that the item writes at its mount comes too late.

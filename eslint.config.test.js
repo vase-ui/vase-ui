@@ -124,6 +124,13 @@ const reported = [
     ruleId: 'no-restricted-properties',
     hint: 'provide',
   },
+  ...['toSorted', 'toReversed', 'toSpliced'].map((method) => ({
+    name: `a call of ${method}`,
+    file: `${SRC}/useRoot.ts`,
+    code: `export const copy = (items: number[]) => items.${method}();\n`,
+    ruleId: 'no-restricted-properties',
+    hint: 'Firefox 114',
+  })),
   {
     name: 'a read of $parent in resolveElement.ts',
     file: 'packages/vue/src/internals/resolveElement.ts',
