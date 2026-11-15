@@ -1967,8 +1967,10 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
       // A browser restores only the text of the input, without the line breaks of the value.
       return valuesRef.value.findIndex(
         (candidate) =>
-          sanitizeValue(input, stringifyAsValue(candidate, props.itemToStringValue)).toLowerCase() ===
-          nextValueLower,
+          sanitizeValue(
+            input,
+            stringifyAsValue(candidate, props.itemToStringValue),
+          ).toLowerCase() === nextValueLower,
       );
     };
 

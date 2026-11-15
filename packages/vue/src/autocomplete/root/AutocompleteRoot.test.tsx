@@ -3594,9 +3594,7 @@ describe('<Autocomplete.Root />', () => {
       await flushMicrotasks();
       await flushMicrotasks();
 
-      expect(handleValueChange.mock.calls.map((call) => call[0])).toEqual([
-        'Main Street 1Flat 2',
-      ]);
+      expect(handleValueChange.mock.calls.map((call) => call[0])).toEqual(['Main Street 1Flat 2']);
       expect(getFormData('address')).toEqual(['Main Street 1Flat 2']);
     });
   });

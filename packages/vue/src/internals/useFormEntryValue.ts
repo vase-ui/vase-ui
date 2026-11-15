@@ -4,7 +4,8 @@ import { addEventListener } from '../common/addEventListener';
 import { isTextControl } from '../common/hydration';
 
 // A disabled control, and a checkbox or a radio that is not checked, add no entry to a form.
-const NO_ENTRY_SELECTOR = ':disabled, input:is([type="checkbox" i], [type="radio" i]):not(:checked)';
+const NO_ENTRY_SELECTOR =
+  ':disabled, input:is([type="checkbox" i], [type="radio" i]):not(:checked)';
 
 /**
  * Gives the value that `control` has after a write of `value`. The value sanitization of a text
@@ -40,7 +41,7 @@ export function useFormEntryValue(
     }
 
     const { form, name, value: text } = element;
-    if (form === null || event.target !== form || name === '' || element.matches(':disabled')) {
+    if (form === null || event.target !== form) {
       return;
     }
 
@@ -51,7 +52,8 @@ export function useFormEntryValue(
 
     // An entry does not refer to its control. Each control of this name whose value gives this
     // text after the sanitization adds one entry, in the order of the controls. The listener of
-    // another part can already have given its entry its value.
+    // another part can already have given its entry its value. A disabled input is not in the
+    // list. An input with no name adds no entry, so the counts below differ.
     const controls = Array.from(form.elements).filter(
       (control) =>
         isTextControl(control) &&
@@ -68,8 +70,7 @@ export function useFormEntryValue(
     );
     // Another control, such as a `<select>`, or a listener of the consumer can add or remove such
     // an entry. The entry of the input is then not certain.
-    const index =
-      places.length === controls.length ? places[controls.indexOf(element)] : undefined;
+    const index = places.length === controls.length ? places[controls.indexOf(element)] : undefined;
     if (index === undefined) {
       return;
     }
@@ -93,13 +94,17 @@ export function useFormEntryValue(
   watch(input, readRootNode, { flush: 'post' });
   onActivated(readRootNode);
 
-  watch(rootNode, (node, _previous, onCleanup) => {
-    if (node === null) {
-      return;
-    }
+  watch(
+    rootNode,
+    (node, _previous, onCleanup) => {
+      if (node === null) {
+        return;
+      }
 
-    // A `formdata` event does not leave a shadow root, so the listener is on the root node. In the
-    // capture phase, it changes the entry before the listeners of the consumer on the form.
-    onCleanup(addEventListener(node, 'formdata', handleFormData, { capture: true }));
-  }, { flush: 'sync' });
+      // A `formdata` event does not leave a shadow root, so the listener is on the root node. In the
+      // capture phase, it changes the entry before the listeners of the consumer on the form.
+      onCleanup(addEventListener(node, 'formdata', handleFormData, { capture: true }));
+    },
+    { flush: 'sync' },
+  );
 }
