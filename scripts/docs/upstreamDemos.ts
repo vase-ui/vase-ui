@@ -441,9 +441,9 @@ export function loadDemoFamilies(root: string): DemoFamily[] {
 }
 
 /**
- * A family has the record of its Tailwind demos when a demo folder in `docs/demos/<family>` has a
- * `tailwind` folder. A family with no such folder has not got its Tailwind demos yet, and the
- * check does not ask for them.
+ * A family has the record of its Tailwind demos when a demo folder of `docs/demos/<family>` has a
+ * `tailwind` folder. Without it, the record has no Tailwind row, and the check does not ask for the
+ * Tailwind demos of the family.
  */
 function hasTailwindFolder(folder: string): boolean {
   return (

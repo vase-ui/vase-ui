@@ -24,7 +24,7 @@ const modules = import.meta.glob<{ default: Component }>(
 );
 
 const demos = Object.entries(modules).map(([path, { default: Demo }]) => ({
-  name: /\/docs\/(?:demos\/)?(.+)\/index\.vue$/.exec(path)![1],
+  name: /\/docs\/(?:demos\/)?(.+?)(?:\/(?:css-modules|tailwind))?\/index\.vue$/.exec(path)![1],
   variant: path.endsWith('/tailwind/index.vue') ? 'tailwind' : 'css-modules',
   // The server command takes a path from the root of this package. A key of the glob is relative
   // to this file.
@@ -44,7 +44,9 @@ function sourcesThatMatch(pattern: RegExp) {
     .map(([path]) => path);
 }
 
-describe.each(demos)('$name', ({ file, variant, Demo }) => {
+// Vitest cuts a `$name` value after 40 characters. The variant has its own value, so the two titles
+// of a long name stay different.
+describe.each(demos)('$name ($variant)', ({ file, variant, Demo }) => {
   const { render } = createRenderer();
 
   it('mounts with no Vue warning and has no axe violation', async () => {
