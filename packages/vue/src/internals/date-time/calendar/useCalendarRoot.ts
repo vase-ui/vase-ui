@@ -616,7 +616,8 @@ export function useCalendarRoot({
     const details = createChangeEventDetails(REASONS.monthChange, event);
     const visible = duration.value;
     if (visible) {
-      // The month of the root stays `target`, also when the limits move the start of the page.
+      // The month of the root stays `target`, so that the select shows the month that the user
+      // picked. The limits can move the start of the page to an earlier month.
       const first = target.toPlainDate({ day: 1 });
       setPageStart(
         clampPageStart(alignPageStart(first, visible, firstDay.value, 'start'), visible),

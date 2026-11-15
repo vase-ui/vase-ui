@@ -77,20 +77,40 @@ describe('<Calendar.Root /> pages at minDate and maxDate', () => {
       expect(onMonthChange).not.toHaveBeenCalled();
     });
 
-    it('shows defaultMonth as the consumer gives it', async () => {
-      await renderCalendar({ ...shortRange(), defaultMonth: yearMonth('2026-11') });
+    it.each([
+      {
+        name: 'in a calendar of months',
+        props: { ...shortRange(), defaultMonth: yearMonth('2026-11') },
+        grids: ['2026-11-01', '2026-12-01', '2027-01-01'].map(monthName),
+      },
+      {
+        name: 'in a calendar of weeks',
+        props: {
+          visibleDuration: { weeks: 4 },
+          minDate: day('2026-11-05'),
+          maxDate: day('2026-11-18'),
+          defaultMonth: yearMonth('2026-12'),
+        },
+        grids: [range('2026-11-29', '2026-12-26')],
+      },
+    ])('shows defaultMonth as the consumer gives it, $name', async ({ props, grids }) => {
+      await renderCalendar(props);
 
-      expect(gridNames()).toEqual(['2026-11-01', '2026-12-01', '2027-01-01'].map(monthName));
+      expect(gridNames()).toEqual(grids);
     });
 
     it('ends a page of weeks with the week of maxDate', async () => {
       await renderCalendar({
+        selects: true,
+        today: day('2027-01-10'),
         visibleDuration: { weeks: 4 },
         minDate: day('2026-11-05'),
         maxDate: day('2026-11-18'),
       });
 
       expect(gridNames()).toEqual([range('2026-10-25', '2026-11-21')]);
+      // Today is after maxDate, so the month of the page is the month of maxDate.
+      expect(screen.getByTestId('month-select')).toHaveValue('M11');
     });
   });
 
@@ -228,17 +248,23 @@ describe('<Calendar.Root /> pages at minDate and maxDate', () => {
     });
 
     it('stops at the week of maxDate for the month select', async () => {
+      const onMonthChange = vi.fn();
       const { user } = await renderCalendar({
         selects: true,
         visibleDuration: { weeks: 4 },
         minDate: day('2026-11-05'),
         maxDate: day('2026-12-02'),
+        defaultMonth: yearMonth('2026-11'),
+        onMonthChange,
       });
+      expect(gridNames()).toEqual([range('2026-11-01', '2026-11-28')]);
 
       await user.selectOptions(screen.getByTestId('month-select'), 'M12');
 
-      // The page ends with the week of 2026-12-02.
+      // The page ends with the week of 2026-12-02. The month is the month that the user picked.
       expect(gridNames()).toEqual([range('2026-11-08', '2026-12-05')]);
+      expect(months(onMonthChange)).toEqual(['2026-12']);
+      expect(screen.getByTestId('month-select')).toHaveValue('M12');
     });
   });
 });
