@@ -390,8 +390,8 @@ watch([inputElement, thumbValue, min, max, step], syncHandledInputValue, { flush
 
 useFormRestoreAsInput(inputElement, () => handledInputValue, false);
 
-// The thumb follows the reset with its own input. The list of the root has no thumb while `KeepAlive`
-// holds the slider.
+// The thumb follows the reset with its own input. The composite list of the root has no thumb
+// while `KeepAlive` holds the slider.
 useFormReset(inputElement, reset);
 
 function onNativeChange(event: Event) {
