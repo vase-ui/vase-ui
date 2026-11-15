@@ -123,11 +123,12 @@ onMounted(restoreDemoVariant);
   color: oklch(80.8% 0.114 19.571deg);
 }
 
-/* The site gives a selection a gray highlight, and that highlight reaches the demos. A Date Field
-   and a Time Field select the text of a segment when it gets the focus, and the sheets give a
-   focused segment inverted colors. The highlight then hides the text: the contrast is 1.19:1 in
-   the light theme and 1.46:1 in the dark theme. This rule takes the highlight from the focused
-   segment, so the inverted colors show. */
+/* The site gives a selection a gray highlight. In Chromium and WebKit, that highlight reaches the
+   demos, because a highlight gets the style of the highlight of its parent. A Date Field and a
+   Time Field select the text of a segment when it gets the focus, and the sheets give a focused
+   segment inverted colors. The highlight then hides the text: the contrast is 1.19:1 in the light
+   theme and 1.46:1 in the dark theme. This rule takes the highlight from the focused segment, so
+   the inverted colors show. */
 .demo-frame :deep([class*='_Segment_']:focus)::selection {
   background-color: transparent;
 }
