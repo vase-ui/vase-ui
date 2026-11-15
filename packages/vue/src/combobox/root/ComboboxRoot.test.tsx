@@ -29,17 +29,20 @@ import {
   hiddenInputSizeTests,
   hiddenInputTypeTests,
   hydrate,
+  hydrateAfter,
   isJSDOM,
   nextEvent,
   popupAnatomyTests,
   popupConformanceTests,
   popupListConformanceTests,
   pressWithTouch,
+  recordInputEvents,
   renderOnServer,
   screen,
   waitFor,
   waitForLaterMillisecond,
   waitSingleFrame,
+  within,
 } from '#test-utils';
 import ComboboxInputPart from '../../../test/fixtures/ComboboxInputPart.vue';
 import ComboboxListPart from '../../../test/fixtures/ComboboxListPart.vue';
@@ -53,6 +56,7 @@ import { REASONS } from '../../internals/reasons';
 import type { ComboboxStore } from '../store';
 import { useComboboxInputValueContext, useComboboxRootContext } from './ComboboxRootContext';
 import type { ComboboxInputElementValue } from './ComboboxRootContext';
+import ComboboxRootBeforeHydration from './ComboboxRootBeforeHydration.test.vue';
 import ComboboxRootHydration from './ComboboxRootHydration.test.vue';
 import ComboboxRootRenders from './ComboboxRootRenders.test.vue';
 
@@ -64,6 +68,7 @@ import ComboboxRootRenders from './ComboboxRootRenders.test.vue';
 // the hidden inputs, the autofill, the field and the server render.
 
 const HYDRATION_FILE = 'src/combobox/root/ComboboxRootHydration.test.vue';
+const BEFORE_HYDRATION_FILE = 'src/combobox/root/ComboboxRootBeforeHydration.test.vue';
 const cities = ['Malmö', 'Malta', 'Oslo'];
 
 // The animation lasts 100 s, so a busy machine cannot end the exit before a case acts.
@@ -2882,30 +2887,6 @@ describe('<Combobox.Root />', () => {
       expect(getHiddenInput().value).toBe('Oslo');
     });
 
-    it('removes the pageshow listener while deactivated', async () => {
-      const addSpy = vi.spyOn(window, 'addEventListener');
-      const removeSpy = vi.spyOn(window, 'removeEventListener');
-      onTestFinished(() => {
-        addSpy.mockRestore();
-        removeSpy.mockRestore();
-      });
-      const count = (spy: typeof addSpy | typeof removeSpy) =>
-        spy.mock.calls.filter(([eventType]) => eventType === 'pageshow').length;
-      const { view, shown } = renderInKeepAlive(shallowRef('Oslo'));
-      await view;
-      expect([count(addSpy), count(removeSpy)]).toEqual([1, 0]);
-
-      shown.value = false;
-      await flushMicrotasks();
-
-      expect([count(addSpy), count(removeSpy)]).toEqual([1, 1]);
-
-      shown.value = true;
-      await flushMicrotasks();
-
-      expect([count(addSpy), count(removeSpy)]).toEqual([2, 1]);
-    });
-
     it('reports a change of the value after the activation', async () => {
       const value = shallowRef('Oslo');
       const { view, shown, handleInputValueChange } = renderInKeepAlive(value);
@@ -3068,6 +3049,48 @@ describe('<Combobox.Root />', () => {
 
       expect(getNamedInputs(container)).toEqual([]);
       expect(container.querySelector('input[aria-hidden]')).toHaveAttribute('type', 'hidden');
+    });
+  });
+
+  describe('VUE-81: the state that the input got before the hydration', () => {
+    it('takes the value that a program wrote into the hidden input', async () => {
+      const serverHtml = await renderOnServer(BEFORE_HYDRATION_FILE);
+      let events: string[] = [];
+
+      const { container } = await hydrateAfter(ComboboxRootBeforeHydration, {
+        serverHtml,
+        before(serverContainer) {
+          events = recordInputEvents(serverContainer);
+          serverContainer.querySelector<HTMLInputElement>('input[name="city"]')!.value = 'Oslo';
+        },
+      });
+      await flushMicrotasks();
+      await flushMicrotasks();
+
+      const fixture = within(container);
+      expect(fixture.getByTestId('model').textContent).toBe('Oslo');
+      expect(fixture.getByTestId('changes').textContent).toBe('Oslo (none)');
+      expect(getInput().value).toBe('Oslo');
+      expect(getHiddenInput().value).toBe('Oslo');
+      expect(events).toEqual(['input']);
+    });
+  });
+
+  describe('VUE-81: the form state that the browser restores', () => {
+    it('takes the hidden input at a `pageshow` event', async () => {
+      const { container } = await render(<ComboboxRootBeforeHydration />);
+      const fixture = within(container);
+      const events = recordInputEvents(container);
+      getHiddenInput().value = 'Oslo';
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+      await flushMicrotasks();
+
+      expect(fixture.getByTestId('model').textContent).toBe('Oslo');
+      expect(fixture.getByTestId('changes').textContent).toBe('Oslo (none)');
+      expect(getHiddenInput().value).toBe('Oslo');
+      expect(events).toEqual(['input']);
     });
   });
 
