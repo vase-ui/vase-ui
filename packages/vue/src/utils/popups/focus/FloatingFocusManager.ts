@@ -105,7 +105,8 @@ export interface FloatingFocusManagerProps {
    * When `openInteractionType` is `null`, the element that had the focus comes before the reference.
    * An element that is not in the document, or that has the `hidden` attribute or an ancestor with
    * it, cannot take the focus. No focus moves when the element is in the closed floating element of
-   * a disabled focus manager above, because that focus manager returned the focus at its close.
+   * a disabled focus manager above. That focus manager returns no focus at its unmount, so the focus
+   * would stay in the closed element.
    *
    * - `false`: Do not move the focus.
    * - `true`: Move the focus based on the default behavior.
@@ -205,7 +206,7 @@ interface ParentFocusManager {
   // Adds the test of a focus manager below. The result removes the test.
   addPopupBelow: (isInClosedPopup: (element: Element | null) => boolean) => () => void;
   // Whether the element is in a closed popup of a disabled focus manager, here or above. That focus
-  // manager returned the focus at its close.
+  // manager returns no focus at its unmount, so a focus there would stay in a closed popup.
   isInDisabledClosedPopup: (element: Element | null) => boolean;
 }
 
@@ -857,7 +858,6 @@ export function useFloatingFocusManager(
             !job.cancelled &&
             !preventReturnFocus &&
             isHTMLElement(returnElement) &&
-            // A popup above that closed with this popup returned the focus at its close.
             parentFocusManager?.isInDisabledClosedPopup(returnElement) !== true &&
             // If the focus moved somewhere else after mount, avoid returning focus
             // since it likely entered a different element which should be
