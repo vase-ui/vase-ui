@@ -533,3 +533,63 @@ The root reads the direction from [`DirectionProvider`](/utils/direction-provide
 ## API reference
 
 <ApiReference />
+
+### Resizable.useParentPanel
+
+Gives the id, the state and the methods of the nearest panel above the caller, or `null` outside a panel. Call it in `setup`.
+
+<ApiReference name="Resizable.useParentPanel" />
+
+### Resizable.useParentRoot
+
+Gives the orientation and the methods of the nearest root above the caller, or `null` outside a root. Call it in `setup`.
+
+<ApiReference name="Resizable.useParentRoot" />
+
+### Resizable.useLayoutStorage
+
+Keeps the layout of a root in a storage. Call it in `setup`. See [Save the layout](#save-the-layout).
+
+<ApiReference name="Resizable.useLayoutStorage" />
+
+## Additional types
+
+### Resizable.Root.ResizeMode
+
+<ApiReference name="Resizable.Root.ResizeMode" />
+
+### Resizable.Root.ChangeEventReason
+
+<ApiReference name="Resizable.Root.ChangeEventReason" />
+
+### Resizable.Root.CommitEventReason
+
+<ApiReference name="Resizable.Root.CommitEventReason" />
+
+### Resizable.Root.Actions
+
+<ApiReference name="Resizable.Root.Actions" />
+
+### Resizable.Panel.Size
+
+<ApiReference name="Resizable.Panel.Size" />
+
+### Resizable.Panel.Actions
+
+<ApiReference name="Resizable.Panel.Actions" />
+
+### ResizableParentPanel
+
+<ApiReference name="ResizableParentPanel" />
+
+### ResizableParentRoot
+
+<ApiReference name="ResizableParentRoot" />
+
+### ResizableLayoutStorageOptions
+
+<ApiReference name="ResizableLayoutStorageOptions" />
+
+### ResizableLayoutStorageReturnValue
+
+<ApiReference name="ResizableLayoutStorageReturnValue" />

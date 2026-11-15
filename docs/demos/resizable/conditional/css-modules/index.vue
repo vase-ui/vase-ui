@@ -3,7 +3,7 @@ import { shallowRef } from 'vue';
 import { Resizable } from '@vase-ui/vue/resizable';
 import styles from './index.module.css';
 
-const showPreview = shallowRef(true);
+const showPreview = shallowRef(false);
 </script>
 
 <template>
