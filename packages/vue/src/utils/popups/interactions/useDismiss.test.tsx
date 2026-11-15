@@ -3288,9 +3288,10 @@ describe('useDismiss', () => {
           <Second />
         </>,
       );
-      await fireEvent.click(screen.getByTestId('open-first'));
-      await fireEvent.click(screen.getByTestId('open-second'));
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.click(screen.getByTestId('open-first'));
+        await fireEvent.click(screen.getByTestId('open-second'));
+      });
 
       await fireEvent.pointerDown(screen.getByTestId('second'), mouse);
 
