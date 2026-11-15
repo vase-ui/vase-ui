@@ -59,12 +59,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, AccordionTriggerState>;
 }>();
 
-const {
-  panelId,
-  open,
-  handleTrigger,
-  disabled: contextDisabled,
-} = useCollapsibleRootContext();
+const { panelId, open, handleTrigger, disabled: contextDisabled } = useCollapsibleRootContext();
 
 // The panel registers its id in `setup`, and it can come after the trigger.
 useDeferredServerRender();

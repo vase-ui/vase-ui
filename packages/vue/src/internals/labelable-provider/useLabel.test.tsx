@@ -1,5 +1,5 @@
 import { expect, describe, it, onTestFinished, vi } from 'vitest';
-import { Teleport, defineComponent, shallowRef } from 'vue';
+import { Teleport, defineComponent } from 'vue';
 import type { ComponentPublicInstance } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import {

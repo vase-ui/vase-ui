@@ -8,7 +8,8 @@ import { useKeepAliveState } from './useKeepAliveState';
 describe('useKeepAliveState', () => {
   const { render } = createRenderer();
 
-  type Mount = 'with the branch' | 'while held' | 'in a show from a state' | 'in a show from a prop';
+  type Mount =
+    'with the branch' | 'while held' | 'in a show from a state' | 'in a show from a prop';
 
   // Mounts the part of `renderPart` in a `KeepAlive` branch as `mount` tells, and shows the branch.
   async function mountInBranch(renderPart: () => VNodeChild, mount: Mount) {
