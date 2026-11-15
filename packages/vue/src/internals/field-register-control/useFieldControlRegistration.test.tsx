@@ -979,8 +979,6 @@ describe('useFieldControlRegistration', () => {
       },
     );
 
-    // The browser loads the lazy control one time for each page, so this is the only case of the
-    // file that uses `LazyFieldControlHydration`.
     it('hydrates a lazy control with no mismatch, then gives the field the name of the control', async () => {
       const props = { controlName: 'a', errors: { a: 'taken' } };
       // A server has the module of a lazy component after its first render. A browser loads the
