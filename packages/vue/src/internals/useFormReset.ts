@@ -47,9 +47,10 @@ export function useFormReset(
       }
 
       // A `reset` event does not leave a shadow root, so a shown part listens on the root node.
-      // `KeepAlive` calls no `ref` setter when it moves the input, so `shown` reads that node again.
-      // A leave transition keeps a held input in the document until it ends, and no hook runs at
-      // that end. The form of the input moves with it, so a held part listens on that form.
+      // `KeepAlive` calls no `ref` setter when it moves the input, so the `watch` also runs at each
+      // activation. A leave transition keeps a held input in the document until it ends, and no
+      // hook runs at that end. A form in the held branch moves with the input, so a held part
+      // listens on the form of the input.
       const target = held ? (element as HTMLInputElement).form : element.getRootNode();
       if (target) {
         onCleanup(addEventListener(target, 'reset', handleReset));

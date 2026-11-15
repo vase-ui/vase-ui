@@ -9,6 +9,7 @@ import {
   screen,
   waitFor,
 } from '#test-utils';
+import { useFormReset } from './useFormReset';
 
 // `Switch.Root` calls the composable.
 function renderSwitchForm() {
@@ -24,6 +25,41 @@ describe('useFormReset', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+  });
+
+  it('drops a reset that waits when its input changes', async () => {
+    const onReset = vi.fn();
+    const inputKey = shallowRef('first');
+    const Control = defineComponent(() => {
+      const input = shallowRef<HTMLInputElement | null>(null);
+      useFormReset(input, onReset);
+      return () => (
+        <input
+          key={inputKey.value}
+          name="comment"
+          ref={(element) => {
+            input.value = element as HTMLInputElement | null;
+          }}
+        />
+      );
+    });
+    await render(
+      <form data-testid="form">
+        <Control />
+      </form>,
+    );
+    const form = screen.getByTestId<HTMLFormElement>('form');
+
+    vi.useFakeTimers();
+    form.reset();
+    inputKey.value = 'second';
+    await flushMicrotasks();
+    vi.advanceTimersByTime(0);
+    expect(onReset).not.toHaveBeenCalled();
+
+    form.reset();
+    vi.advanceTimersByTime(0);
+    expect(onReset).toHaveBeenCalledTimes(1);
   });
 
   describe('BUG-6206: a native reset under KeepAlive', () => {
@@ -128,6 +164,7 @@ describe('useFormReset', () => {
       await waitFor(() => {
         expect(form).not.toBeInTheDocument();
       });
+      expect(screen.queryByTestId('form')).toBeNull();
       vi.useFakeTimers();
       form.reset();
       vi.advanceTimersByTime(0);
