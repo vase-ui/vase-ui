@@ -40,6 +40,43 @@ type RenderSlotProps = { props: Record<string, unknown> };
 describe('<Combobox.Input />', () => {
   const { render } = createRenderer();
 
+  function itemList() {
+    return (
+      <Combobox.List>
+        {{
+          item: ({ item }: { item: string }) => (
+            <Combobox.Item key={item} value={item}>
+              {item}
+            </Combobox.Item>
+          ),
+        }}
+      </Combobox.List>
+    );
+  }
+
+  // A real key: a dispatched key moves no caret.
+  async function pressKeys(
+    element: HTMLInputElement | HTMLTextAreaElement,
+    keys: string,
+    caret: number,
+  ) {
+    element.focus();
+    element.setSelectionRange(caret, caret);
+    const keydowns: KeyboardEvent[] = [];
+    function recordKeydown(event: KeyboardEvent) {
+      keydowns.push(event);
+    }
+    window.addEventListener('keydown', recordKeydown, { capture: true });
+    await userEvent.keyboard(keys);
+    window.removeEventListener('keydown', recordKeydown, { capture: true });
+    await waitSingleFrame();
+    await flushMicrotasks();
+    return {
+      selection: [element.selectionStart, element.selectionEnd],
+      prevented: keydowns.map((event) => event.defaultPrevented),
+    };
+  }
+
   describeConformance(<Combobox.Input />, () => ({
     refInstanceof: window.HTMLInputElement,
     render(node) {
@@ -222,38 +259,6 @@ describe('<Combobox.Input />', () => {
     describe('VUE-97: the caret keys of a textarea', () => {
       const TEXT = 'one\ntwo';
 
-      function itemList() {
-        return (
-          <Combobox.List>
-            {{
-              item: ({ item }: { item: string }) => (
-                <Combobox.Item key={item} value={item}>
-                  {item}
-                </Combobox.Item>
-              ),
-            }}
-          </Combobox.List>
-        );
-      }
-
-      async function pressKeys(textarea: HTMLTextAreaElement, keys: string, caret: number) {
-        textarea.focus();
-        textarea.setSelectionRange(caret, caret);
-        const keydowns: KeyboardEvent[] = [];
-        function recordKeydown(event: KeyboardEvent) {
-          keydowns.push(event);
-        }
-        window.addEventListener('keydown', recordKeydown, { capture: true });
-        await userEvent.keyboard(keys);
-        window.removeEventListener('keydown', recordKeydown, { capture: true });
-        await waitSingleFrame();
-        await flushMicrotasks();
-        return {
-          caret: textarea.selectionStart,
-          prevented: keydowns.map((event) => event.defaultPrevented),
-        };
-      }
-
       it.each([
         { name: 'ArrowDown', caret: 0 },
         { name: 'ArrowUp', caret: 7 },
@@ -285,7 +290,7 @@ describe('<Combobox.Input />', () => {
           caret,
         );
 
-        expect(result).toEqual({ caret: plain.caret, prevented: [false] });
+        expect(result).toEqual({ selection: plain.selection, prevented: [false] });
         expect(screen.queryByRole('listbox')).toBe(null);
       });
 
@@ -355,7 +360,7 @@ describe('<Combobox.Input />', () => {
 
         const result = await pressKeys(textarea, '{ArrowDown}', 1);
 
-        expect(result).toEqual({ caret: 1, prevented: [true] });
+        expect(result).toEqual({ selection: [1, 1], prevented: [true] });
         expect(textarea).toHaveAttribute(
           'aria-activedescendant',
           screen.getByRole('option', { name: 'apple' }).id,
@@ -375,7 +380,7 @@ describe('<Combobox.Input />', () => {
 
         const result = await pressKeys(textarea, '{ArrowDown}', 0);
 
-        expect(result).toEqual({ caret: 0, prevented: [true] });
+        expect(result).toEqual({ selection: [0, 0], prevented: [true] });
         expect(textarea).toHaveAttribute(
           'aria-activedescendant',
           screen.getByRole('option', { name: 'apple' }).id,
@@ -784,6 +789,95 @@ describe('<Combobox.Input />', () => {
         expect(Math.abs(input.scrollLeft - expectedScroll)).toBeLessThanOrEqual(2);
       },
     );
+
+    describe('VUE-100: Home and End in an input that is not the reference', () => {
+      const ITEMS = ['apple', 'apricot', 'banana'];
+
+      // When the input is in the popup or the list is inline, the input is not the reference of the
+      // list navigation. The input of the first root is not in a popup, and it shows what the keys
+      // do in the text.
+      function renderInputs(inline: boolean, readOnly: boolean) {
+        return render(
+          <div>
+            <Combobox.Root readOnly={readOnly} defaultInputValue="ap">
+              <Combobox.Input data-testid="reference" />
+            </Combobox.Root>
+            {inline ? (
+              <Combobox.Root inline readOnly={readOnly} items={ITEMS} defaultInputValue="ap">
+                <Combobox.Input data-testid="input" />
+                {itemList()}
+              </Combobox.Root>
+            ) : (
+              <Combobox.Root readOnly={readOnly} items={ITEMS} defaultInputValue="ap">
+                <Combobox.Trigger>Open</Combobox.Trigger>
+                <Combobox.Portal>
+                  <Combobox.Positioner>
+                    <Combobox.Popup>
+                      <Combobox.Input data-testid="input" />
+                      {itemList()}
+                    </Combobox.Popup>
+                  </Combobox.Positioner>
+                </Combobox.Portal>
+              </Combobox.Root>
+            )}
+          </div>,
+        );
+      }
+
+      it.each([
+        { name: 'Home in the popup', keys: '{Home}', inline: false, readOnly: false },
+        { name: 'End in the popup', keys: '{End}', inline: false, readOnly: false },
+        {
+          name: 'Shift+Home in the popup',
+          keys: '{Shift>}{Home}{/Shift}',
+          inline: false,
+          readOnly: false,
+        },
+        {
+          name: 'Shift+End in the popup',
+          keys: '{Shift>}{End}{/Shift}',
+          inline: false,
+          readOnly: false,
+        },
+        { name: 'Home in an inline list', keys: '{Home}', inline: true, readOnly: false },
+        { name: 'End in an inline list', keys: '{End}', inline: true, readOnly: false },
+        {
+          name: 'Shift+Home in an inline list',
+          keys: '{Shift>}{Home}{/Shift}',
+          inline: true,
+          readOnly: false,
+        },
+        {
+          name: 'Shift+End in an inline list',
+          keys: '{Shift>}{End}{/Shift}',
+          inline: true,
+          readOnly: false,
+        },
+        { name: 'Home in a read-only popup', keys: '{Home}', inline: false, readOnly: true },
+      ])('gives $name to the text', async ({ keys, inline, readOnly }) => {
+        const { user } = await renderInputs(inline, readOnly);
+
+        const reference = await pressKeys(
+          screen.getByTestId<HTMLInputElement>('reference'),
+          keys,
+          1,
+        );
+        if (!inline) {
+          await waitForLaterMillisecond(async () => {
+            await user.click(screen.getByText('Open'));
+            await screen.findByRole('listbox');
+          });
+        }
+        const input = screen.getByTestId<HTMLInputElement>('input');
+        expect(input.value).toBe('ap');
+        expect(input).not.toHaveAttribute('aria-activedescendant');
+
+        const result = await pressKeys(input, keys, 1);
+
+        expect(result).toEqual(reference);
+        expect(input).not.toHaveAttribute('aria-activedescendant');
+      });
+    });
 
     it('preserves caret position when controlled and inserting in the middle', async () => {
       const Controlled = defineComponent(() => {

@@ -1,0 +1,12 @@
+{
+  "id": "VUE-100",
+  "evidence": [
+    "https://www.w3.org/WAI/ARIA/apg/patterns/combobox/#keyboardinteraction",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/combobox/store.ts#L178-L181",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/combobox/input/ComboboxInput.tsx#L113-L125",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/combobox/input/ComboboxInput.tsx#L315-L346",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/interactions/useListNavigation.ts#L608-L620"
+  ],
+  "behavior": "When `Combobox.Input` or `Autocomplete.Input` is in the popup, or the list is inline, Home and End edit the text, also with a modifier key. They do what they do in an input outside the popup: Home and End move the caret to the start or the end, and Shift+Home and Shift+End select the text. The highlight does not move. In Base UI, the list navigation also takes the two keys in that state, because the input is then not its reference. It moves the highlight to the first or the last item and prevents the default action. Shift+Home and Shift+End thus select no text. With `mode=\"both\"` of Autocomplete, the input then also shows the text of that item.",
+  "dueWith": "packages/react/src/combobox/input/ComboboxInput.tsx"
+}
