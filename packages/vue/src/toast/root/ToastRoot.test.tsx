@@ -3,9 +3,11 @@ import { defineComponent, h, KeepAlive, onMounted, shallowRef, Teleport } from '
 import type { PropType } from 'vue';
 import {
   createRenderer,
+  createTransitionRunCounter,
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  nextEvent,
   screen,
   waitFor,
 } from '#test-utils';
@@ -1958,9 +1960,16 @@ describe('<Toast.Root />', () => {
   });
 
   describe('KeepAlive', () => {
+    const TOAST_STYLE = `
+      [data-testid="toast"] { transition: opacity 1s; }
+      [data-testid="toast"][data-starting-style] { opacity: 0; }
+    `;
+
     // The provider is outside `KeepAlive`, so it keeps the subscription to its manager while the
     // viewport is held.
-    function renderKeptViewport() {
+    function renderKeptViewport(
+      options: { withContent?: boolean; onTransitionrun?: (event: Event) => void } = {},
+    ) {
       const manager = Toast.createToastManager();
       const visible = shallowRef(true);
       const ToastList = defineComponent({
@@ -1968,8 +1977,19 @@ describe('<Toast.Root />', () => {
           const { toasts } = Toast.useToastManager();
           return () =>
             toasts.value.map((toastItem) => (
-              <Toast.Root key={toastItem.id} toast={toastItem} data-testid="toast">
-                <div style={{ height: '40px' }} />
+              <Toast.Root
+                key={toastItem.id}
+                toast={toastItem}
+                data-testid="toast"
+                onTransitionrun={options.onTransitionrun}
+              >
+                {options.withContent ? (
+                  <Toast.Content>
+                    <div style={{ height: '40px' }} />
+                  </Toast.Content>
+                ) : (
+                  <div style={{ height: '40px' }} />
+                )}
               </Toast.Root>
             ));
         },
@@ -1985,26 +2005,42 @@ describe('<Toast.Root />', () => {
       const Other = defineComponent({ name: 'Other', setup: () => () => <p /> });
       const rendered = render(() => (
         <Toast.Provider toastManager={manager}>
+          <style>{TOAST_STYLE}</style>
           <KeepAlive>{visible.value ? <Page key="page" /> : <Other key="other" />}</KeepAlive>
         </Toast.Provider>
       ));
       return { manager, visible, rendered };
     }
 
-    it('measures a toast that mounts in the flush of the deactivation, at the show', async () => {
-      const { manager, visible, rendered } = renderKeptViewport();
-      await rendered;
+    // The observers of `Toast.Content` correct the height at the show. With them, only the enter
+    // transition shows a measure in the flush of the deactivation.
+    it.each([
+      { name: 'the root alone', withContent: false },
+      { name: 'a root with Toast.Content', withContent: true },
+    ])(
+      'measures a toast that mounts in the flush of the deactivation, at the show: $name',
+      async ({ withContent }) => {
+        globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+        const counter = createTransitionRunCounter(() => true);
+        const { manager, visible, rendered } = renderKeptViewport({
+          withContent,
+          onTransitionrun: counter.onTransitionrun,
+        });
+        const { container } = await rendered;
+        manager.add({ title: 'kept', timeout: 0 });
+        visible.value = false;
+        await flushMicrotasks();
 
-      manager.add({ title: 'kept', timeout: 0 });
-      visible.value = false;
-      await flushMicrotasks();
-      visible.value = true;
-      await flushMicrotasks();
+        await nextEvent(container, 'transitionrun', {
+          action: () => {
+            visible.value = true;
+          },
+        });
 
-      await waitFor(() => {
+        expect(counter.counts).toEqual({ enter: 1, exit: 0 });
         expect(screen.getByTestId('toast').style.getPropertyValue('--toast-height')).toBe('40px');
-      });
-    });
+      },
+    );
 
     it('ends a swipe with no dismissal when KeepAlive deactivates the toast', async () => {
       const { manager, visible, rendered } = renderKeptViewport();
