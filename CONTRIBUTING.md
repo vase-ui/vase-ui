@@ -674,6 +674,8 @@ If a line must break a rule, put a disable comment on that line and give the rea
 
 The project `vapor` of the tests checks the parts in a Vapor app. See [Where a test runs](#where-a-test-runs).
 
+A function component that calls `h` is not an SFC, so Vapor mode does not compile it. `DateTimeFieldLiteralElement` is the one such component, for the reason in [Server render](#server-render).
+
 ### Server render
 
 - Each part must render with `renderToString` in Node with no DOM.
@@ -723,7 +725,7 @@ The hydration state:
 - A composable that filters text with a locale calls `useFormatLocale` too. The first client render then gives the list that the server HTML has. `Combobox.useFilter` and `Autocomplete.useFilter` are examples.
 - A composable that reads another value of the browser obeys the same rule. It gives the server value in the first client render, and it reads the real value in `onMounted`. `useMediaQuery` does this. A client-only mount thus renders again when the two values differ.
 - A part that measures the layout gives no measurement on a server and in the first client render. `Tabs.Indicator` reads the layout in a `computed` that gives `null` while `useIsHydrating()` is `true`. The server HTML and the first client render are then equal.
-- `useValueBeforeHydration(props, control)` is in `src/common/hydration.ts` too. A part that renders a text input and gives it a `value` key calls it in `setup`. `Field.Control`, `NumberField.Input`, `OTPField.Input`, `Combobox.Input` and `Toolbar.Input` call it.
+- `useValueBeforeHydration(props, control)` is in `src/common/hydration.ts` too. A part that renders a text input and gives it a `value` key calls it in `setup`. `Field.Control`, `NumberField.Input`, `OTPField.Input`, `Combobox.Input` and `Toolbar.Input` call it. `useDateTimeFieldSegment` calls it for each segment of a date or time field, with the props of the segment part.
 - Vue writes the `value` key of an `<input>` when it hydrates the input. That write replaces the text that the user typed before the hydration.
 - While Vue hydrates the part from server HTML, the result is `false`. While the result is `false`, the element of the part gets no `value` key, and no watcher of the part writes a value to it. The handler of the `input` event can still write the text of the state, as for a change that the part refuses.
 - After the flush of the mount, a control whose value differs from a new control with the same attributes gets one `input` event. Then the result is `true`, also for a control that got no event. A handler for that event reads `false`, because the composable sets the result after the dispatch.
@@ -806,6 +808,9 @@ A date or time field and the `Intl` data of the server:
 - Vue changes the text of a literal itself. While it hydrates, it writes no attribute that a `v-bind` object or `h()` gives, but the `value` of an input. A server element that Vue reuses for another segment thus keeps its attributes.
 - After the mount, the root compares the `data-type` and the attributes that `getSegmentAttributes` gives with the DOM. On a difference, it changes `listKey`, and the parts make the elements again.
 - For a fragment with another number of items than on the server, such as the fragment of `v-for`, Vue logs `Hydration completed but contains mismatches` also under `data-allow-mismatch`. The test part renders the items of the layout as direct children of its input element, so it gives no such message.
+- `TimeField.Input` renders the layout in a list of `MAX_LAYOUT_ITEMS` iterations, and each iteration renders an item of the layout, or the comment of `v-if`. A list of a fixed length has the same length in the server HTML and in the browser, so Vue logs no message when the layouts have another number of items. A layout has at most five items that are not literals, and it joins two literals in a row. A layout thus has at most 11 items. The `children` component of the `#render` slot renders the same list.
+- Vue lets `data-allow-mismatch="text"` allow the text of an element that has a string as its one child. It does not let the attribute allow a text node in a list of children, and a template gives the text of a dynamic element as such a node. `TimeField.Literal` thus renders `DateTimeFieldLiteralElement`, which gives the text as a string with `h`.
+- Do not bind the text of a literal as the prop `textContent`. Vue before 3.5.39 does not write that prop while it hydrates, so the text of the server stays.
 
 ### What Vue replaces
 
