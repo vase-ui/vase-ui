@@ -121,8 +121,8 @@ const primary = computed(() =>
     : root.constraints.value[pivot.value + (props.primaryPanel === 'next' ? 1 : 0)],
 );
 
-// Before the first measurement, a panel whose size is a length has no size in percent, so the sizes
-// of the other panels are not exact either. Until then, no handle of the root has a value.
+// A panel whose size is a length has no size in percent before the first measurement. The sizes of
+// the other panels are not exact either. Until then, no handle of the root has a value.
 const hasPendingLengths = computed(() => Object.keys(root.lengthPanels.value).length > 0);
 
 const valueAttributes = computed(() => {

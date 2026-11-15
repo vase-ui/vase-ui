@@ -15,7 +15,7 @@ const measurement: RootMeasurement = {
 describe('isSameMeasurement', () => {
   it.each([
     {
-      name: 'a space that differs by a fraction of a pixel',
+      name: 'a space that differs a little',
       change: { space: 1000.04 },
       same: true,
     },

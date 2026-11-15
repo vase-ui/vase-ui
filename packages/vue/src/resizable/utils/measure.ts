@@ -37,8 +37,8 @@ interface MeasuredPanel {
   element: HTMLElement | null;
 }
 
-// The rectangle of an element has fractions of a pixel, and two reads of a layout that did not
-// change can differ by a few of them.
+// The rectangle of an element has fractions of a pixel. Two reads of a layout that did not change
+// can differ by a few of them.
 const SPACE_TOLERANCE = 0.05;
 
 /**
@@ -55,8 +55,8 @@ export function readMeasurement(
   const rootRect = rootElement.getBoundingClientRect();
   const screenSize = horizontal ? rootRect.width : rootRect.height;
   const layoutSize = horizontal ? rootElement.offsetWidth : rootElement.offsetHeight;
-  // `offsetWidth` is a whole number, so a root with a fraction in its size differs from its
-  // rectangle by less than 1 px with no scale.
+  // `offsetWidth` is a whole number. A root with a fraction in its size then differs from its
+  // rectangle by less than 1 px, with no scale.
   const scale =
     layoutSize === 0 || Math.abs(screenSize - layoutSize) < 1 ? 1 : screenSize / layoutSize;
   const rootFontSize = Number.parseFloat(win.getComputedStyle(rootElement).fontSize);
@@ -68,8 +68,8 @@ export function readMeasurement(
     }
     const rect = element.getBoundingClientRect();
     const style = win.getComputedStyle(element);
-    // A panel adds its padding and its border to the share that its size gives, so they are not
-    // in the room that the panels share.
+    // A panel adds its padding and its border to the share that its size gives. They are not in the
+    // room that the panels share.
     const edges = (
       horizontal
         ? [style.paddingLeft, style.paddingRight, style.borderLeftWidth, style.borderRightWidth]

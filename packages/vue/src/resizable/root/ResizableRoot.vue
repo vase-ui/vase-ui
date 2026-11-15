@@ -15,9 +15,9 @@ import type { LayoutSnapshot } from '../utils/parseSize';
 export type ResizableRootLayout = Layout;
 
 /**
- * The size of each panel by panel `id`. A size is a number, or a string of a number with a unit:
- * `'30'` and `'30%'` are percent of the panel space, and `'200px'`, `'12em'`, `'12rem'`, `'30vh'`
- * and `'30vw'` are lengths.
+ * The size of each panel by panel `id`. A size is a number, or a string of a number with a unit.
+ * `'30'` and `'30%'` are percent of the panel space. `'200px'`, `'12em'`, `'12rem'`, `'30vh'` and
+ * `'30vw'` are lengths.
  */
 export type ResizableRootLayoutSnapshot = LayoutSnapshot;
 
@@ -54,9 +54,9 @@ export interface ResizableRootProps
    * The controlled layout: the size of each panel by panel `id`.
    * A size is a number, or a string of a number with a unit. A number, and a string with no unit or
    * with `%`, are percent of the panel space. A length (`px`, `em`, `rem`, `vh` or `vw`) turns into
-   * percent of the panel space at the moment that the root reads it, and a fixed panel keeps the
-   * pixels. The root reads a length when it has a measurement, so the size of a length shows after
-   * the mount. The change events give percent.
+   * percent of the panel space when the root reads it. A fixed panel keeps the pixels.
+   * The root reads a length when it has a measurement, so the size of a length shows after the
+   * mount. The change events give percent.
    * The panels show the layout as far as their constraints allow.
    * An entry for a panel that is not mounted stays in the layout, and the panel gets its size back
    * when it mounts.
@@ -365,9 +365,9 @@ function takePinsFrom(layout: ResizableRootLayout, exact: Readonly<Record<string
   }
 }
 
-// A length turns into percent when the root reads `input`, and a percent stays as it is. The root
-// reads `input` at the first measurement and at each change of it, so a size change of the root
-// does not move a panel that is not fixed, and a fixed panel takes its pixels again.
+// A length turns into percent when the root reads `input`. The root reads it at the first measurement
+// and at each change of it. So a size change of the root does not move a panel that is not fixed.
+// A fixed panel takes its pixels again.
 function acceptInput() {
   const { layout, pins: exact } = normalize(input.value);
   requested.value = layout;
@@ -637,7 +637,7 @@ function stopDragging() {
 }
 
 // A root with no room for its panels, such as a root with `display: none`, keeps its last
-// measurement, so it has its pixels again when it shows.
+// measurement. It then has its pixels again when it shows.
 function measure() {
   const rootElement = element.value;
   if (rootElement === null) {
@@ -662,8 +662,8 @@ function measure() {
   return measurement.value;
 }
 
-// A panel whose first size is a length has no size before the first measurement, so a method
-// cannot change the layout of such a root yet.
+// A panel whose first size is a length has no size before the first measurement. A method cannot
+// change the layout of such a root until then.
 function canChange() {
   measure();
   return Object.keys(lengthPanels.value).length === 0;
@@ -744,8 +744,8 @@ function resizePanel(id: string, size: number | string) {
   }
 }
 
-// The layout at the start, as the panels show it now: a length has the percent that it has in the
-// present panel space, and a fixed panel has the pixels of that layout.
+// The layout at the start, as the panels show it now. A length has the percent that it has in the
+// present panel space. A fixed panel has the pixels of that layout.
 function getFirstLayout(): ResizableRootLayout {
   const { layout, pins: exact } = normalize(firstSnapshot);
   const first = resolveLayout(constraints.value, layout);

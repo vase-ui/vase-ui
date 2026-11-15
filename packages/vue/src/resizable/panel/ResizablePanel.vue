@@ -45,8 +45,8 @@ export interface ResizablePanelProps
   /**
    * The size of the panel at the start.
    * A size is a number, or a string of a number with a unit. A number, and a string with no unit or
-   * with `%`, are percent of the panel space. A length is `px`, `em`, `rem`, `vh` or `vw`: `em` is
-   * the font size of the panel, and `rem` is the font size of the root element of the document.
+   * with `%`, are percent of the panel space. A length is `px`, `em`, `rem`, `vh` or `vw`. `em` is
+   * the font size of the panel. `rem` is the font size of the root element of the document.
    * The panels that have no size share the space that is left in equal parts.
    * A later change of the prop has no effect. To change the size, change the layout of the root.
    */
@@ -196,10 +196,10 @@ const emit = defineEmits<{
    */
   collapsedChange: [collapsed: boolean];
   /**
-   * Event handler called after the DOM update when the size of the panel changes, in percent or in
-   * pixels: after the first measurement, after a change of the layout, and after a size change of
-   * the root, which changes the pixels. Receives the new size and the size at the last event, which
-   * is `undefined` at the first event.
+   * Event handler called after the DOM update when the size of the panel changes in percent or in
+   * pixels. The first call comes after the first measurement. A size change of the root changes the
+   * pixels, so it also calls the handler.
+   * Receives the new size and the size at the last call. At the first call, that size is `undefined`.
    * It is not called on a server, and not while the root has no room for its panels.
    */
   resize: [size: ResizablePanelSize, previousSize: ResizablePanelSize | undefined];
@@ -314,8 +314,8 @@ root.registerPanel({
   deactivated,
 });
 
-// The watcher reads the size only after the mount, so that a size that is not valid fails in the
-// render and not in the watcher.
+// The watcher reads the size only after the mount. A size that is not valid then fails in the
+// render, and not in the watcher.
 let lastSize: ResizablePanelSize | undefined;
 watch(
   () =>

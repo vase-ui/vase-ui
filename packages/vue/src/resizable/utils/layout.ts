@@ -27,8 +27,8 @@ export interface PanelConstraints {
   /** Whether the panel keeps its size in pixels when the root changes size. */
   fixed?: boolean | undefined;
   /**
-   * Among the fixed panels, the panel with the greater number gives way first when the other panels
-   * cannot take a change of the size of the root.
+   * When the other panels cannot take a size change of the root, the fixed panel with the greater
+   * number gives way first.
    */
   priority?: number | undefined;
   /** In percent. A drag that comes within `snapTolerance` of a point gives the panel that size. */
@@ -341,8 +341,8 @@ export function takePins(
 
 /**
  * Gives `total` percent to the panels in the ratio that they have in `layout`, as CSS flexbox
- * does: a panel that a least or a greatest size holds keeps that size, and the other panels share
- * what is left. A collapsed panel keeps its collapsed size.
+ * does. A panel that a least or a greatest size holds keeps that size. The other panels share what
+ * is left. A collapsed panel keeps its collapsed size.
  */
 function shareInRatio(panels: readonly PanelConstraints[], layout: Layout, total: number): Layout {
   const shares: Layout = {};
@@ -431,11 +431,11 @@ export function applyFixedSizes(
 }
 
 /**
- * The delta of a drag after the drag step and the snap points, in percent. With a drag step, the
- * delta is the nearest multiple of it. Then the panel before the handle, and after it the panel
- * behind the handle, can snap: the nearest snap point of the panel that is inside its tolerance gives
- * the panel that size. A snap point that is outside the least and the greatest size of the panel is
- * not used, and a locked panel does not snap, because its size does not change.
+ * The delta of a drag, in percent, after the drag step and the snap points. With a drag step, the
+ * delta is the nearest multiple of it. Then the panel before the handle can snap. If it does not,
+ * the panel after the handle can snap. The nearest snap point that is inside the tolerance of the
+ * panel gives the panel that size. A snap point outside the least and the greatest size of the panel
+ * is not used. A locked panel does not snap, because its size does not change.
  */
 export function snapDelta(
   panels: readonly PanelConstraints[],

@@ -11,6 +11,7 @@ import {
   screen,
   takeReportedMessages,
   waitFor,
+  waitSingleFrame,
   within,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
@@ -1754,8 +1755,11 @@ describe('<Resizable.Root />', () => {
           </div>
         ));
         expect(widthOf('a')).toBeCloseTo(300, 0);
+        // The observer reads the page once after the mount. The handle must change size after that
+        // read, so that only the observer of the handle gives the new panel space.
+        await waitSingleFrame();
+        await waitSingleFrame();
 
-        await flushMicrotasks();
         handleWidth.value = 100;
         await nextTick();
 
@@ -1824,8 +1828,8 @@ describe('<Resizable.Root />', () => {
         expect(screen.getByTestId('handle')).not.toHaveAttribute('aria-valuenow');
         expect(onResize).not.toHaveBeenCalled();
 
-        // A change of the layout after the end of a `waitFor` can fall in the checkpoint of an
-        // observer, so each change waits for the microtasks first.
+        // A change of the layout after a `waitFor` can fall in the checkpoint of an observer. So each
+        // change waits for the microtasks first.
         await flushMicrotasks();
         visible.value = true;
         await nextTick();
