@@ -13,6 +13,9 @@ interface ReasonToEventMap {
   [REASONS.closePress]: MouseEvent | KeyboardEvent | PointerEvent;
   [REASONS.linkPress]: MouseEvent | PointerEvent;
   [REASONS.clearPress]: PointerEvent | MouseEvent | KeyboardEvent;
+  [REASONS.dayPress]: MouseEvent | KeyboardEvent | PointerEvent;
+  [REASONS.monthPress]: MouseEvent | KeyboardEvent | PointerEvent;
+  [REASONS.yearPress]: MouseEvent | KeyboardEvent | PointerEvent;
   [REASONS.chipRemovePress]: PointerEvent | MouseEvent | KeyboardEvent;
   [REASONS.trackPress]: PointerEvent | MouseEvent | TouchEvent;
   [REASONS.incrementPress]: PointerEvent | MouseEvent | TouchEvent;
@@ -27,6 +30,7 @@ interface ReasonToEventMap {
   [REASONS.focusOut]: FocusEvent | KeyboardEvent;
   [REASONS.escapeKey]: KeyboardEvent;
   [REASONS.closeWatcher]: Event;
+  [REASONS.monthChange]: Event;
   [REASONS.listNavigation]: KeyboardEvent;
   [REASONS.keyboard]: KeyboardEvent;
 

@@ -20,6 +20,8 @@ const MESSAGES = {
   slotCall: 'Vapor mode cannot call a slot in script. Render the slot in the template.',
   $el: 'A Vapor ref has no `$el`. Use `resolveElement` or the exposed `element`.',
   $parent: 'Vapor mode has no `$parent`. Use `provide` and `inject`.',
+  arrayCopyMethod:
+    'The build supports Firefox 114, and Firefox 114 does not have this array method. Use `sort`, `reverse` or `splice` on a copy. See "Compiler flags" in CONTRIBUTING.md.',
   customDirective: 'A custom directive has another signature in Vapor mode. Use a composable.',
   vMemo: 'Vapor mode has no `v-memo`. Remove it.',
   defineComponent:
@@ -57,9 +59,12 @@ const RESTRICTED_GLOBALS = {
   checkGlobalObject: true,
 };
 
+const ARRAY_COPY_METHODS = ['toSorted', 'toReversed', 'toSpliced'];
+
 const RESTRICTED_PROPERTIES = [
   { property: '$el', message: MESSAGES.$el },
   { property: '$parent', message: MESSAGES.$parent },
+  ...ARRAY_COPY_METHODS.map((property) => ({ property, message: MESSAGES.arrayCopyMethod })),
 ];
 
 // The rule uses a fixed list of names. A pattern for a second capital also matches a
@@ -182,6 +187,10 @@ const RESTRICTED_TEMPLATE_SYNTAX = [
   },
   { selector: "Identifier[name='$el']", message: MESSAGES.$el },
   { selector: "Identifier[name='$parent']", message: MESSAGES.$parent },
+  {
+    selector: `MemberExpression[computed=false][property.name=/^(?:${ARRAY_COPY_METHODS.join('|')})$/]`,
+    message: MESSAGES.arrayCopyMethod,
+  },
 ];
 
 // The sinks of the Trusted Types API that take `TrustedHTML`, and the methods of the HTML Sanitizer

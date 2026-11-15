@@ -50,11 +50,9 @@ function parse(html: string) {
 
 // The focus of the next trigger opens its menu only when the trigger matches `:focus-visible`. After a
 // real click of an earlier case, a script focus does not match it. A real Tab sets it, and each later
-// script focus keeps it. WebKit does not tab to a button, so the call also focuses the trigger.
+// script focus keeps it.
 async function focusTriggerWithKeyboard(trigger: HTMLElement) {
   await userEvent.tab();
-  trigger.focus();
-  await flushMicrotasks();
   expect(trigger).toHaveFocus();
 }
 

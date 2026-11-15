@@ -9,6 +9,9 @@ import type { FieldControlRegistration } from './useFieldControlRegistration';
  * from one getter. The getter returns the values of the moment of the read. The control registers
  * the getter again when its `id`, its `name`, its value or `enabled` changes. The field then uses
  * this control.
+ * @param element The element that shows whether `KeepAlive` holds the control. It is `controlRef` by
+ * default. A control gives its own element when `controlRef` can name the element of another
+ * control, such as `validation.inputRef`.
  */
 export function useRegisterFieldControl(
   controlRef: FieldControlRegistration['controlRef'],
@@ -17,13 +20,14 @@ export function useRegisterFieldControl(
   getFormValueOverride?: FieldControlRegistration['getValue'],
   enabled: MaybeRefOrGetter<boolean> = true,
   name?: MaybeRefOrGetter<FieldControlRegistration['name']>,
+  element: MaybeRefOrGetter<Element | null | undefined> = controlRef,
 ): void {
   const { registerFieldControl, reaches } = useFieldRootContext();
   const source = Symbol();
   // The getter reads the state, and the entry keeps its place. `KeepAlive` runs the `onActivated`
   // hooks of one branch from the last part to the first part. A new entry in that hook would
   // reverse the order of the controls.
-  const { isHeld } = useKeepAliveState(controlRef, reaches);
+  const { isHeld } = useKeepAliveState(element, reaches);
 
   const getId = () => toValue(id);
   const getName = () => toValue(name);
