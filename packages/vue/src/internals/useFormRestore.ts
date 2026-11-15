@@ -8,8 +8,9 @@ import { ownerWindow } from '../common/owner';
  * Calls `onRestore` at each `pageshow` event of the window of `input` that does not come from the
  * back/forward cache. Call it in `setup`.
  *
- * Chromium restores the form state of a page after `load`, with no event on the input. A page from
- * the back/forward cache keeps its script state, so the part has nothing to take.
+ * Chromium can restore the form state of a page after the app is mounted, before `pageshow`, with
+ * no event on the input. A page from the back/forward cache keeps its script state, so the part
+ * has nothing to take.
  * @param input The element of a control. A ref that a `ref` setter writes.
  * @param onRestore Gets the `pageshow` event.
  */

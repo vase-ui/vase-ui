@@ -187,9 +187,9 @@ function useControlValueBeforeHydration(
  * value that it got before the hydration: typed text, an autofill or a value that the browser
  * restored.
  *
- * After the flush of the mount, a control whose value differs from its server HTML gets one
- * `input` event, and then the result is `true`. The handler of the part thus reads `false` for
- * that event. One tick later, such a control that does not have the focus also gets `change`,
+ * A control that equals its server HTML gives `true` from the mount. After the flush of the mount,
+ * a control whose value differs from its server HTML gets one `input` event, and then the result
+ * is `true`. The handler of the part thus reads `false` for that event. One tick later, such a control that does not have the focus also gets `change`,
  * `blur` and `focusout`, because the user left it before the listeners existed.
  *
  * In a client-only mount, and for a component in `as`, the result is `true` from the start.

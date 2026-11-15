@@ -45,6 +45,8 @@ Import the component and assemble its parts:
 
 Bind the value with `v-model:value`. The root emits `valueChange` with the new value and `eventDetails`, and then `update:value`. To stop the change, call `eventDetails.cancel()` before the `valueChange` listener returns. The root then emits no `update:value` and keeps its value.
 
+The root takes a value that a program or the browser writes into its hidden input before the page hydrates, as it takes an autofill. It also takes a value that the browser restores after a move back in the history or a reload. The root then emits `valueChange` and `update:value` one time. A `valueChange` listener can thus run after a move back with no action of the visitor. A select with no `name`, no field, no `autoComplete` and no `required` keeps its value, because its input is `type="hidden"`.
+
 ## Positioning
 
 `<Select.Positioner>` has the prop `alignItemWithTrigger`. By default, it makes the popup overlap the trigger, so that the text of the selected item is over the value text of the trigger.
