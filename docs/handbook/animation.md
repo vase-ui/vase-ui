@@ -147,7 +147,7 @@ A popup stays in the DOM while it is closed when its portal has `keepMounted`. T
 
 ### Animate a Select popup
 
-The popup of [Select](/components/select) is not in the DOM until the select is open, gets the focus, or reads a value from its hidden input. After that, the popup stays in the DOM, and it is hidden while the select is closed. `Select.Portal` has no `keepMounted` prop. The same code animates the popup.
+The popup of [Select](/components/select) is not in the DOM until the select is open, gets the focus, or reads a value from its hidden input. After that, the popup stays in the DOM, and it is hidden while the select is closed. `Select.Portal` has no `keepMounted` prop. The code of [Animate a popup with motion-v](#animate-a-popup-with-motion-v) animates the popup. The popup can enter the DOM open, so `initial` is the closed style.
 
 <DemoFrame>
   <MotionSelect />
