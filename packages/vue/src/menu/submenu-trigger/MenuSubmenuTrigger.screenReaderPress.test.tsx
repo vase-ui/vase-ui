@@ -77,10 +77,11 @@ describe.skipIf(isJSDOM)('<Menu.SubmenuTrigger /> with a screen reader press', (
       return screen.findByTestId('submenu-trigger');
     });
 
-    await pressWithScreenReader(submenuTrigger);
-
+    await waitForLaterMillisecond(async () => {
+      await pressWithScreenReader(submenuTrigger);
+      await screen.findByTestId('submenu');
+    });
     // Let opening focus settle before activating again.
-    await screen.findByTestId('submenu');
     await waitForFrames();
 
     await pressWithScreenReader(submenuTrigger);

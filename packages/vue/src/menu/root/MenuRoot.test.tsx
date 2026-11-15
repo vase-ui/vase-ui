@@ -385,7 +385,10 @@ describe('<Menu.Root />', () => {
 
     const { user } = await render(<TestMenu />);
     const trigger = screen.getByRole('button', { name: 'Toggle' });
-    await user.click(trigger);
+    await waitForLaterMillisecond(async () => {
+      await user.click(trigger);
+      await screen.findByRole('menu');
+    });
     await waitFor(() => {
       expect(screen.getByRole('menu')).toHaveFocus();
     });
@@ -522,9 +525,11 @@ describe('<Menu.Root />', () => {
       );
 
       const trigger = screen.getByTestId('trigger');
-      await enterWithMouse(trigger);
-      await waitFor(() => {
-        expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      await waitForLaterMillisecond(async () => {
+        await enterWithMouse(trigger);
+        await waitFor(() => {
+          expect(trigger).toHaveAttribute('aria-expanded', 'true');
+        });
       });
       await waitSingleFrame();
       await waitSingleFrame();
@@ -665,15 +670,17 @@ describe('<Menu.Root />', () => {
         // The virtual cursor moves to the trigger without moving DOM focus off the previous control.
         screen.getByRole('button', { name: 'Before' }).focus();
         await flushMicrotasks();
-        await pressWithScreenReader(trigger);
-
-        const item = await screen.findByRole('menuitem', { name: 'Delete' });
+        const item = await waitForLaterMillisecond(async () => {
+          await pressWithScreenReader(trigger);
+          return screen.findByRole('menuitem', { name: 'Delete' });
+        });
         await waitFor(() => {
           expect(item).toHaveFocus();
         });
-        await pressWithScreenReader(item);
-
-        const cancel = await screen.findByRole('button', { name: 'Cancel' });
+        const cancel = await waitForLaterMillisecond(async () => {
+          await pressWithScreenReader(item);
+          return screen.findByRole('button', { name: 'Cancel' });
+        });
         await waitFor(() => {
           expect(cancel).toHaveFocus();
         });
@@ -776,7 +783,7 @@ describe('<Menu.Root />', () => {
         trigger.focus();
         await flushMicrotasks();
 
-        await user.keyboard('[Enter]');
+        await waitForLaterMillisecond(() => user.keyboard('[Enter]'));
 
         const item1 = screen.getByTestId('item-1');
         const item2 = screen.getByTestId('item-2');
@@ -824,7 +831,7 @@ describe('<Menu.Root />', () => {
         const trigger = screen.getByRole('button', { name: 'Toggle' });
         trigger.focus();
         await flushMicrotasks();
-        await user.keyboard('[Enter]');
+        await waitForLaterMillisecond(() => user.keyboard('[Enter]'));
 
         const apple = screen.getByRole('menuitem', { name: 'Apple' });
         const banana = screen.getByRole('menuitem', { name: 'Banana' });
@@ -859,7 +866,7 @@ describe('<Menu.Root />', () => {
         trigger.focus();
         await flushMicrotasks();
 
-        await user.keyboard('[Enter]');
+        await waitForLaterMillisecond(() => user.keyboard('[Enter]'));
 
         const item1 = screen.getByTestId('item-1');
         await waitFor(() => {
@@ -885,7 +892,7 @@ describe('<Menu.Root />', () => {
         trigger.focus();
         await flushMicrotasks();
 
-        await user.keyboard('[Enter]');
+        await waitForLaterMillisecond(() => user.keyboard('[Enter]'));
         const item1 = screen.getByTestId('item-1');
         const item5 = screen.getByTestId('item-5');
 
@@ -911,7 +918,7 @@ describe('<Menu.Root />', () => {
         trigger.focus();
         await flushMicrotasks();
 
-        await user.keyboard('[Enter]');
+        await waitForLaterMillisecond(() => user.keyboard('[Enter]'));
 
         const item1 = screen.getByTestId('item-1');
         const item2 = screen.getByTestId('item-2');
@@ -957,7 +964,7 @@ describe('<Menu.Root />', () => {
         trigger.focus();
         await flushMicrotasks();
 
-        await user.keyboard('[Enter]');
+        await waitForLaterMillisecond(() => user.keyboard('[Enter]'));
 
         const hiddenItem = screen.getByTestId('item-1');
         const item2 = screen.getByTestId('item-2');
@@ -1105,8 +1112,10 @@ describe('<Menu.Root />', () => {
           const { user } = await render(<TestMenu popupProps={{ children: () => itemElements }} />);
 
           const trigger = screen.getByRole('button', { name: 'Toggle' });
-          await user.click(trigger);
-          const items = await screen.findAllByRole('menuitem');
+          const items = await waitForLaterMillisecond(async () => {
+            await user.click(trigger);
+            return screen.findAllByRole('menuitem');
+          });
           // A pointer open gives the focus to the popup one frame later. A key before that frame
           // goes to the trigger.
           await waitFor(() => {
@@ -1423,9 +1432,10 @@ describe('<Menu.Root />', () => {
             expect(submenuTrigger).toHaveFocus();
           });
 
-          await user.keyboard(`[${openKey}]`);
-
-          await screen.findByTestId('submenu');
+          await waitForLaterMillisecond(async () => {
+            await user.keyboard(`[${openKey}]`);
+            await screen.findByTestId('submenu');
+          });
 
           const submenuItem1 = screen.getByTestId('item-4_1');
           await waitFor(() => {
@@ -1443,9 +1453,10 @@ describe('<Menu.Root />', () => {
         const { user } = await render(<TestMenu submenuTriggerProps={{ openOnHover: false }} />);
 
         const mainTrigger = screen.getByRole('button', { name: 'Toggle' });
-        await user.click(mainTrigger);
-
-        const menu = await screen.findByTestId('menu');
+        const menu = await waitForLaterMillisecond(async () => {
+          await user.click(mainTrigger);
+          return screen.findByTestId('menu');
+        });
         expect(screen.queryByTestId('submenu')).toBe(null);
 
         const submenuTrigger = await screen.findByTestId('submenu-trigger');
@@ -1475,9 +1486,10 @@ describe('<Menu.Root />', () => {
         const { user } = await render(<TestMenu submenuTriggerProps={{ openOnHover: false }} />);
 
         const mainTrigger = screen.getByRole('button', { name: 'Toggle' });
-        await user.click(mainTrigger);
-
-        const menu = await screen.findByTestId('menu');
+        const menu = await waitForLaterMillisecond(async () => {
+          await user.click(mainTrigger);
+          return screen.findByTestId('menu');
+        });
         const submenuTrigger = await screen.findByTestId('submenu-trigger');
         await user.click(submenuTrigger);
 
@@ -1509,9 +1521,10 @@ describe('<Menu.Root />', () => {
         );
 
         const mainTrigger = screen.getByRole('button', { name: 'Toggle' });
-        await user.click(mainTrigger);
-
-        await screen.findByTestId('menu');
+        await waitForLaterMillisecond(async () => {
+          await user.click(mainTrigger);
+          await screen.findByTestId('menu');
+        });
 
         const submenuTrigger = await screen.findByTestId('submenu-trigger');
         await user.click(submenuTrigger);
@@ -1529,16 +1542,18 @@ describe('<Menu.Root />', () => {
         const { user } = await render(<TestMenu />);
 
         const mainTrigger = screen.getByRole('button', { name: 'Toggle' });
-        await user.click(mainTrigger);
-
-        await screen.findByTestId('menu');
+        await waitForLaterMillisecond(async () => {
+          await user.click(mainTrigger);
+          await screen.findByTestId('menu');
+        });
         expect(screen.queryByTestId('submenu')).toBe(null);
 
         const submenuTrigger = await screen.findByTestId('submenu-trigger');
-        await user.hover(submenuTrigger);
-
-        await waitFor(() => {
-          expect(screen.queryByTestId('submenu')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.hover(submenuTrigger);
+          await waitFor(() => {
+            expect(screen.queryByTestId('submenu')).not.toBe(null);
+          });
         });
 
         const submenuItem = await screen.findByTestId('item-4_1');
@@ -1569,9 +1584,10 @@ describe('<Menu.Root />', () => {
         );
 
         const trigger = screen.getByRole('button', { name: 'Toggle' });
-        await user.click(trigger);
-
-        const menu = await screen.findByTestId('menu');
+        const menu = await waitForLaterMillisecond(async () => {
+          await user.click(trigger);
+          return screen.findByTestId('menu');
+        });
         // The menu focuses itself a frame after opening; keys sent earlier go to the trigger.
         await waitFor(() => {
           expect(menu).toHaveFocus();
@@ -1587,8 +1603,10 @@ describe('<Menu.Root />', () => {
           expect(submenuTrigger1).toHaveFocus();
         });
 
-        await user.keyboard('[ArrowRight]');
-        await screen.findByTestId('submenu');
+        await waitForLaterMillisecond(async () => {
+          await user.keyboard('[ArrowRight]');
+          await screen.findByTestId('submenu');
+        });
         await waitFor(() => {
           expect(screen.getByTestId('item-4_1')).toHaveFocus();
         });
@@ -1601,8 +1619,10 @@ describe('<Menu.Root />', () => {
           expect(submenuTrigger2).toHaveFocus();
         });
 
-        await user.keyboard('[ArrowRight]');
-        await screen.findByTestId('nested-submenu');
+        await waitForLaterMillisecond(async () => {
+          await user.keyboard('[ArrowRight]');
+          await screen.findByTestId('nested-submenu');
+        });
 
         const outside = screen.getByTestId('outside');
         await user.click(outside);
@@ -1628,14 +1648,17 @@ describe('<Menu.Root />', () => {
             />,
           );
 
-          await user.click(screen.getByRole('button', { name: 'Toggle' }));
-          await screen.findByTestId('menu');
+          await waitForLaterMillisecond(async () => {
+            await user.click(screen.getByRole('button', { name: 'Toggle' }));
+            await screen.findByTestId('menu');
+          });
 
           const submenuTrigger = await screen.findByTestId('submenu-trigger');
-          await user.hover(submenuTrigger);
-
-          await waitFor(() => {
-            expect(screen.queryByTestId('submenu')).not.toBe(null);
+          await waitForLaterMillisecond(async () => {
+            await user.hover(submenuTrigger);
+            await waitFor(() => {
+              expect(screen.queryByTestId('submenu')).not.toBe(null);
+            });
           });
 
           // Schedule a delayed hover close, then click the item before it fires.
@@ -1668,9 +1691,10 @@ describe('<Menu.Root />', () => {
           const { user } = await render(<TestMenu />);
 
           const trigger = screen.getByRole('button', { name: 'Toggle' });
-          await user.click(trigger);
-
-          const menu = await screen.findByTestId('menu');
+          const menu = await waitForLaterMillisecond(async () => {
+            await user.click(trigger);
+            return screen.findByTestId('menu');
+          });
           // The menu focuses itself a frame after opening; keys sent earlier go to the trigger.
           await waitFor(() => {
             expect(menu).toHaveFocus();
@@ -1686,9 +1710,10 @@ describe('<Menu.Root />', () => {
             expect(submenuTrigger).toHaveFocus();
           });
 
-          await user.keyboard('[ArrowRight]');
-
-          const nestedSubmenuTrigger = await screen.findByTestId('nested-submenu-trigger');
+          const nestedSubmenuTrigger = await waitForLaterMillisecond(async () => {
+            await user.keyboard('[ArrowRight]');
+            return screen.findByTestId('nested-submenu-trigger');
+          });
           await waitFor(() => {
             expect(screen.getByTestId('item-4_1')).toHaveFocus();
           });
@@ -1699,8 +1724,10 @@ describe('<Menu.Root />', () => {
             expect(nestedSubmenuTrigger).toHaveFocus();
           });
 
-          await user.keyboard('[ArrowRight]');
-          await screen.findByTestId('nested-submenu');
+          await waitForLaterMillisecond(async () => {
+            await user.keyboard('[ArrowRight]');
+            await screen.findByTestId('nested-submenu');
+          });
           await waitFor(() => {
             expect(screen.getByTestId('item-4_3_1')).toHaveFocus();
           });
@@ -2061,9 +2088,10 @@ describe('<Menu.Root />', () => {
         );
 
         const button = screen.getByRole('button', { name: 'Toggle' });
-        await user.click(button);
-
-        const menuItem = await screen.findAllByRole('menuitem');
+        const menuItem = await waitForLaterMillisecond(async () => {
+          await user.click(button);
+          return screen.findAllByRole('menuitem');
+        });
         await user.click(menuItem[0]!);
 
         expect(button).toHaveFocus();
@@ -2095,9 +2123,10 @@ describe('<Menu.Root />', () => {
           );
 
           const button = screen.getByRole('button', { name: 'Toggle' });
-          await user.click(button);
-
-          const firstItem = await screen.findByTestId('item-1');
+          const firstItem = await waitForLaterMillisecond(async () => {
+            await user.click(button);
+            return screen.findByTestId('item-1');
+          });
           await user.hover(firstItem);
           // In WebKit, a list ignores a move with no movement.
           await fireEvent.mouseMove(firstItem, { movementX: 1 });
@@ -2162,9 +2191,10 @@ describe('<Menu.Root />', () => {
         );
 
         const trigger = screen.getByRole('button', { name: 'Toggle' });
-        await user.click(trigger);
-
-        await screen.findByTestId('menu');
+        await waitForLaterMillisecond(async () => {
+          await user.click(trigger);
+          await screen.findByTestId('menu');
+        });
 
         const menuItem = screen.getByTestId('item-1');
         menuItem.focus();
@@ -2188,9 +2218,10 @@ describe('<Menu.Root />', () => {
         );
 
         const trigger = screen.getByRole('button', { name: 'Toggle' });
-        await user.click(trigger);
-
-        await screen.findByTestId('menu');
+        await waitForLaterMillisecond(async () => {
+          await user.click(trigger);
+          await screen.findByTestId('menu');
+        });
 
         const menuItem = screen.getByTestId('item-1');
         menuItem.focus();
@@ -2216,7 +2247,7 @@ describe('<Menu.Root />', () => {
         trigger.focus();
         await flushMicrotasks();
 
-        await user.keyboard('[ArrowDown]');
+        await waitForLaterMillisecond(() => user.keyboard('[ArrowDown]'));
         await waitFor(() => {
           expect(screen.getByTestId('item-1')).toHaveFocus();
         });
@@ -2236,7 +2267,7 @@ describe('<Menu.Root />', () => {
           expect(screen.getByTestId('submenu-trigger')).toHaveFocus();
         });
 
-        await user.keyboard('[ArrowRight]');
+        await waitForLaterMillisecond(() => user.keyboard('[ArrowRight]'));
         await waitFor(() => {
           expect(screen.getByTestId('item-4_1')).toHaveFocus();
         });
@@ -2258,7 +2289,7 @@ describe('<Menu.Root />', () => {
         trigger.focus();
         await flushMicrotasks();
 
-        await user.keyboard('[ArrowDown]');
+        await waitForLaterMillisecond(() => user.keyboard('[ArrowDown]'));
         await waitFor(() => {
           expect(screen.getByTestId('item-1')).toHaveFocus();
         });
@@ -2270,7 +2301,7 @@ describe('<Menu.Root />', () => {
           expect(screen.getByTestId('submenu-trigger')).toHaveFocus();
         });
 
-        await user.keyboard('[ArrowRight]');
+        await waitForLaterMillisecond(() => user.keyboard('[ArrowRight]'));
         await waitFor(() => {
           expect(screen.getByTestId('item-4_1')).toHaveFocus();
         });
@@ -2294,7 +2325,7 @@ describe('<Menu.Root />', () => {
         trigger.focus();
         await flushMicrotasks();
 
-        await user.keyboard('[ArrowDown]');
+        await waitForLaterMillisecond(() => user.keyboard('[ArrowDown]'));
         await waitFor(() => {
           expect(screen.getByTestId('item-1')).toHaveFocus();
         });
@@ -2314,7 +2345,7 @@ describe('<Menu.Root />', () => {
           expect(screen.getByTestId('submenu-trigger')).toHaveFocus();
         });
 
-        await user.keyboard('[ArrowRight]');
+        await waitForLaterMillisecond(() => user.keyboard('[ArrowRight]'));
         await waitFor(() => {
           expect(screen.getByRole('menuitem', { name: 'Item 4.1' })).toHaveFocus();
         });
@@ -2427,10 +2458,11 @@ describe('<Menu.Root />', () => {
         const { user } = await render(<Test />);
 
         const opener = screen.getByRole('button', { name: 'Open menu programmatically' });
-        await user.click(opener);
-
-        await waitFor(() => {
-          expect(screen.queryByRole('menu')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.click(opener);
+          await waitFor(() => {
+            expect(screen.queryByRole('menu')).not.toBe(null);
+          });
         });
 
         await user.click(screen.getByRole('menuitem', { name: 'Close menu' }));
@@ -2940,10 +2972,11 @@ describe('<Menu.Root />', () => {
         trigger.focus();
         await flushMicrotasks();
 
-        await userEvent.hover(trigger);
-
-        await waitFor(() => {
-          expect(screen.getByTestId('menu')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await userEvent.hover(trigger);
+          await waitFor(() => {
+            expect(screen.getByTestId('menu')).not.toBe(null);
+          });
         });
 
         const menu = screen.getByTestId('menu');
@@ -2989,18 +3022,20 @@ describe('<Menu.Root />', () => {
         trigger.focus();
         await flushMicrotasks();
 
-        await userEvent.hover(trigger);
-
-        await waitFor(() => {
-          expect(screen.getByTestId('menu')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await userEvent.hover(trigger);
+          await waitFor(() => {
+            expect(screen.getByTestId('menu')).not.toBe(null);
+          });
         });
 
         // Open first-level submenu
         const level1Trigger = screen.getByRole('menuitem', { name: 'Item 4' });
-        await userEvent.hover(level1Trigger);
-
-        await waitFor(() => {
-          expect(screen.getByTestId('submenu')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await userEvent.hover(level1Trigger);
+          await waitFor(() => {
+            expect(screen.getByTestId('submenu')).not.toBe(null);
+          });
         });
 
         // Open second-level submenu
@@ -3153,10 +3188,11 @@ describe('<Menu.Root />', () => {
 
         const trigger = screen.getByRole('button');
 
-        await fireEvent.mouseEnter(trigger);
-        await fireEvent.mouseMove(trigger);
-
-        await flushMicrotasks();
+        await waitForLaterMillisecond(async () => {
+          await fireEvent.mouseEnter(trigger);
+          await fireEvent.mouseMove(trigger);
+          await flushMicrotasks();
+        });
 
         // Open the submenu by hovering its trigger
         const submenuTrigger = screen.getByRole('menuitem', { name: 'Item 4' });
@@ -3190,10 +3226,11 @@ describe('<Menu.Root />', () => {
 
         const trigger = screen.getByRole('button');
 
-        await fireEvent.mouseEnter(trigger);
-        await fireEvent.mouseMove(trigger);
-
-        await flushMicrotasks();
+        await waitForLaterMillisecond(async () => {
+          await fireEvent.mouseEnter(trigger);
+          await fireEvent.mouseMove(trigger);
+          await flushMicrotasks();
+        });
 
         // Open the submenu by hovering its trigger
         const submenuTrigger = screen.getByRole('menuitem', { name: 'Item 4' });
@@ -3329,10 +3366,11 @@ describe('<Menu.Root />', () => {
 
         const trigger = screen.getByRole('button', { name: 'Toggle' });
 
-        await fireEvent.mouseDown(trigger, clientCenter(trigger));
-
-        await waitFor(() => {
-          expect(screen.queryByTestId('menu')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await fireEvent.mouseDown(trigger, clientCenter(trigger));
+          await waitFor(() => {
+            expect(screen.queryByTestId('menu')).not.toBe(null);
+          });
         });
 
         await wait(200);
@@ -3372,9 +3410,10 @@ describe('<Menu.Root />', () => {
         );
 
         const trigger = screen.getByRole('button', { name: 'Toggle' });
-        await fireEvent.mouseDown(trigger, clientCenter(trigger));
-
-        const firstItem = await screen.findByRole('menuitem', { name: 'One' });
+        const firstItem = await waitForLaterMillisecond(async () => {
+          await fireEvent.mouseDown(trigger, clientCenter(trigger));
+          return screen.findByRole('menuitem', { name: 'One' });
+        });
         const checkboxItem = screen.getByRole('menuitemcheckbox', { name: 'Two' });
         const thirdItem = screen.getByRole('menuitem', { name: 'Three' });
         await waitFor(() => {
@@ -3416,9 +3455,10 @@ describe('<Menu.Root />', () => {
         );
 
         const trigger = screen.getByRole('button', { name: 'Toggle' });
-        await fireEvent.mouseDown(trigger, clientCenter(trigger));
-
-        const firstItem = await screen.findByRole('menuitem', { name: 'One' });
+        const firstItem = await waitForLaterMillisecond(async () => {
+          await fireEvent.mouseDown(trigger, clientCenter(trigger));
+          return screen.findByRole('menuitem', { name: 'One' });
+        });
         const disabledItem = screen.getByRole('menuitem', { name: 'Two' });
         await waitFor(() => {
           expect(firstItem).toHaveFocus();
@@ -3493,9 +3533,11 @@ describe('<Menu.Root />', () => {
 
         const trigger = screen.getByRole('button', { name: 'Toggle' });
 
-        await user.click(trigger);
-        await waitFor(() => {
-          expect(screen.queryByRole('menu')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.click(trigger);
+          await waitFor(() => {
+            expect(screen.queryByRole('menu')).not.toBe(null);
+          });
         });
 
         await user.click(trigger);
@@ -4126,8 +4168,10 @@ describe('<Menu.Root />', () => {
         />,
       );
 
-      await user.click(screen.getByRole('button', { name: 'Toggle' }));
-      await screen.findByRole('menu');
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Toggle' }));
+        await screen.findByRole('menu');
+      });
       await flushMicrotasks();
 
       triggerRenders = 0;
@@ -4176,7 +4220,7 @@ describe('<Menu.Root />', () => {
       const trigger = screen.getByRole('button', { name: 'Toggle' });
       trigger.focus();
       await flushMicrotasks();
-      await user.keyboard('[Enter]');
+      await waitForLaterMillisecond(() => user.keyboard('[Enter]'));
       await waitFor(() => {
         expect(screen.getByRole('menuitem', { name: 'One' })).toHaveFocus();
       });
@@ -4199,7 +4243,7 @@ describe('<Menu.Root />', () => {
       const trigger = screen.getByRole('button', { name: 'Toggle' });
       trigger.focus();
       await flushMicrotasks();
-      await user.keyboard('[Enter]');
+      await waitForLaterMillisecond(() => user.keyboard('[Enter]'));
       await waitFor(() => {
         expect(screen.getByRole('menuitem', { name: 'One' })).toHaveFocus();
       });
@@ -4219,8 +4263,10 @@ describe('<Menu.Root />', () => {
       const onItemHighlighted = vi.fn();
       await render(<HighlightMenu onItemHighlighted={onItemHighlighted} />);
 
-      await fireEvent.click(screen.getByRole('button', { name: 'Toggle' }));
-      const item = await screen.findByRole('menuitem', { name: 'Two' });
+      const item = await waitForLaterMillisecond(async () => {
+        await fireEvent.click(screen.getByRole('button', { name: 'Toggle' }));
+        return screen.findByRole('menuitem', { name: 'Two' });
+      });
       // In WebKit, a list ignores a move with no movement.
       const hoverEvent = new MouseEvent('mousemove', { bubbles: true, movementX: 1 });
       await fireEvent(item, hoverEvent);
@@ -4287,7 +4333,7 @@ describe('<Menu.Root />', () => {
         const trigger = screen.getByRole('button', { name: 'Toggle' });
         trigger.focus();
         await flushMicrotasks();
-        await user.keyboard('[Enter]');
+        await waitForLaterMillisecond(() => user.keyboard('[Enter]'));
         await waitFor(() => {
           expect(screen.getByRole('menuitem', { name: 'One' })).toHaveFocus();
         });
@@ -4346,8 +4392,10 @@ describe('<Menu.Root />', () => {
         const onItemHighlighted = vi.fn();
         const { setProps, user } = await render(<ReportingMenu />);
 
-        await user.click(screen.getByRole('button', { name: 'Toggle' }));
-        const one = await screen.findByRole('menuitem', { name: 'One' });
+        const one = await waitForLaterMillisecond(async () => {
+          await user.click(screen.getByRole('button', { name: 'Toggle' }));
+          return screen.findByRole('menuitem', { name: 'One' });
+        });
         await user.hover(one);
         // In WebKit, a list ignores a move with no movement.
         await fireEvent.mouseMove(one, { movementX: 1 });
@@ -5639,10 +5687,14 @@ describe('<Menu.Root />', () => {
         </div>,
       );
 
-      middleHandle.open('middle-trigger');
-      await findByTestId('middle-menu');
-      innerHandle.open('inner-trigger');
-      await findByTestId('inner-menu');
+      await waitForLaterMillisecond(async () => {
+        middleHandle.open('middle-trigger');
+        await findByTestId('middle-menu');
+      });
+      await waitForLaterMillisecond(async () => {
+        innerHandle.open('inner-trigger');
+        await findByTestId('inner-menu');
+      });
 
       await fireEvent.pointerDown(getByRole('menuitem', { name: 'Beta' }));
       await flushMicrotasks();
@@ -5864,7 +5916,7 @@ describe('<Menu.Root />', () => {
       );
       await focusItem('More');
 
-      await user.keyboard('[ArrowDown]');
+      await waitForLaterMillisecond(() => user.keyboard('[ArrowDown]'));
       await waitFor(() => {
         expect(getItem('Monthly')).toHaveFocus();
       });

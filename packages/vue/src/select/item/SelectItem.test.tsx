@@ -152,11 +152,12 @@ describe('<Select.Item />', () => {
       </Select.Root>,
     );
 
-    await fireEvent.click(screen.getByTestId('trigger'));
-    await flushMicrotasks();
-
-    await waitFor(() => {
-      expect(screen.getByRole('listbox')).not.toBe(null);
+    await waitForLaterMillisecond(async () => {
+      await fireEvent.click(screen.getByTestId('trigger'));
+      await flushMicrotasks();
+      await waitFor(() => {
+        expect(screen.getByRole('listbox')).not.toBe(null);
+      });
     });
     await waitFor(() => {
       expect(screen.getByText('one')).toHaveFocus();
@@ -190,8 +191,10 @@ describe('<Select.Item />', () => {
       </Select.Root>,
     );
 
-    await fireEvent.click(screen.getByTestId('trigger'));
-    await flushMicrotasks();
+    await waitForLaterMillisecond(async () => {
+      await fireEvent.click(screen.getByTestId('trigger'));
+      await flushMicrotasks();
+    });
     await waitFor(() => {
       expect(screen.getByRole('option', { name: 'one' })).toHaveFocus();
     });
@@ -226,7 +229,7 @@ describe('<Select.Item />', () => {
 
     screen.getByTestId('trigger').focus();
     await flushMicrotasks();
-    await user.keyboard('{ArrowDown}');
+    await waitForLaterMillisecond(() => user.keyboard('{ArrowDown}'));
 
     await waitFor(() => {
       expect(screen.getByRole('option', { name: 'one' })).toHaveFocus();
@@ -292,7 +295,7 @@ describe('<Select.Item />', () => {
 
     screen.getByTestId('trigger').focus();
     await flushMicrotasks();
-    await user.keyboard('{ArrowDown}');
+    await waitForLaterMillisecond(() => user.keyboard('{ArrowDown}'));
 
     await waitFor(() => {
       expect(screen.getByRole('option', { name: 'one' })).toHaveFocus();
@@ -361,8 +364,10 @@ describe('<Select.Item />', () => {
       </Select.Root>,
     );
 
-    await fireEvent.click(screen.getByTestId('trigger'));
-    await flushMicrotasks();
+    await waitForLaterMillisecond(async () => {
+      await fireEvent.click(screen.getByTestId('trigger'));
+      await flushMicrotasks();
+    });
 
     await fireEvent.click(screen.getByRole('option', { name: 'one' }));
     await flushMicrotasks();
@@ -1236,8 +1241,10 @@ describe('<Select.Item />', () => {
         </Select.Root>,
       );
 
-      await fireEvent.click(screen.getByTestId('trigger'));
-      await flushMicrotasks();
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.click(screen.getByTestId('trigger'));
+        await flushMicrotasks();
+      });
 
       expect(screen.getByRole('option', { name: 'a' })).toHaveAttribute('data-highlighted', '');
       expect(screen.getByRole('option', { name: 'b' })).not.toHaveAttribute('data-highlighted');
@@ -1267,8 +1274,10 @@ describe('<Select.Item />', () => {
         </Select.Root>,
       );
 
-      await fireEvent.click(screen.getByTestId('trigger'));
-      await flushMicrotasks();
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.click(screen.getByTestId('trigger'));
+        await flushMicrotasks();
+      });
 
       await fireEvent.click(screen.getByRole('option', { name: 'a' }));
       await flushMicrotasks();

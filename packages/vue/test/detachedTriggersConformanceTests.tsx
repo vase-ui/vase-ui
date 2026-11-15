@@ -446,13 +446,17 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
             const openTrigger2 = screen.getByRole('button', { name: 'Open Trigger 2' });
             const closeExternally = screen.getByRole('button', { name: 'Close externally' });
 
-            await waitForLaterMillisecond(() => user.click(openTrigger1));
-            await waitForContent('1');
+            await waitForLaterMillisecond(async () => {
+              await user.click(openTrigger1);
+              await waitForContent('1');
+            });
             expectActiveTrigger(1);
             await expectPositionerAlignedWith(getTrigger(1));
 
-            await user.click(openTrigger2);
-            await waitForContent('2');
+            await waitForLaterMillisecond(async () => {
+              await user.click(openTrigger2);
+              await waitForContent('2');
+            });
             expectActiveTrigger(2);
             await expectPositionerAlignedWith(getTrigger(2));
 

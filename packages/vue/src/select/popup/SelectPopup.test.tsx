@@ -115,9 +115,10 @@ describe('<Select.Popup />', () => {
 
     screen.getByTestId('trigger').focus();
     await flushMicrotasks();
-    await user.keyboard('[Enter]');
-
-    const a = await screen.findByRole('option', { name: 'a' });
+    const a = await waitForLaterMillisecond(async () => {
+      await user.keyboard('[Enter]');
+      return screen.findByRole('option', { name: 'a' });
+    });
     await waitFor(() => expect(a).toHaveAttribute('data-highlighted'));
     screen.getByRole('button', { name: 'Select all' }).focus();
     await flushMicrotasks();
@@ -608,14 +609,18 @@ describe('<Select.Popup />', () => {
       });
     }
 
-    await user.click(trigger);
-    await expectItemAligned('first-item-text');
+    await waitForLaterMillisecond(async () => {
+      await user.click(trigger);
+      await expectItemAligned('first-item-text');
+    });
 
     await user.keyboard('{Escape}');
     await waitFor(() => expect(trigger).toHaveAttribute('aria-expanded', 'false'));
 
-    await user.click(trigger);
-    await expectItemAligned('first-item-text');
+    await waitForLaterMillisecond(async () => {
+      await user.click(trigger);
+      await expectItemAligned('first-item-text');
+    });
 
     await user.click(screen.getByTestId('selected-item-text'));
     await waitFor(() => expect(trigger).toHaveAttribute('aria-expanded', 'false'));
@@ -1767,8 +1772,10 @@ describe('<Select.Popup />', () => {
     const trigger = screen.getByTestId('trigger');
     trigger.focus();
     await flushMicrotasks();
-    await user.keyboard('{ArrowDown}');
-    await screen.findByRole('listbox');
+    await waitForLaterMillisecond(async () => {
+      await user.keyboard('{ArrowDown}');
+      await screen.findByRole('listbox');
+    });
     await waitFor(() => {
       expect(screen.getByRole('option', { name: 'a' })).toHaveFocus();
     });

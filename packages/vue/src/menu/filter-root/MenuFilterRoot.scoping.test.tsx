@@ -14,6 +14,7 @@ import {
   screen,
   takeReportedMessages,
   waitFor,
+  waitForLaterMillisecond,
 } from '#test-utils';
 
 describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
@@ -234,9 +235,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     await user.keyboard('[ArrowDown][ArrowDown][ArrowDown][ArrowDown]');
     expect(input).toHaveAttribute('aria-activedescendant', submenuTrigger.id);
 
-    await user.keyboard('[ArrowRight]');
-
-    const submenuInput = await screen.findByRole('searchbox', { name: 'Filter folders' });
+    const submenuInput = await waitForLaterMillisecond(async () => {
+      await user.keyboard('[ArrowRight]');
+      return screen.findByRole('searchbox', { name: 'Filter folders' });
+    });
     await waitFor(() => {
       expect(submenuInput).toHaveFocus();
     });
@@ -432,7 +434,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         await waitFor(() => {
           expect(input).toHaveFocus();
         });
-        await user.keyboard('[ArrowDown][ArrowDown][ArrowRight]');
+        await waitForLaterMillisecond(() => user.keyboard('[ArrowDown][ArrowDown][ArrowRight]'));
         await waitFor(() => {
           expect(screen.getByRole('menuitem', { name: 'Email' })).toHaveFocus();
         });
@@ -454,7 +456,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       await waitFor(() => {
         expect(input).toHaveFocus();
       });
-      await user.keyboard('[ArrowDown][ArrowDown][ArrowRight]');
+      await waitForLaterMillisecond(() => user.keyboard('[ArrowDown][ArrowDown][ArrowRight]'));
       await waitFor(() => {
         expect(screen.getByRole('menuitem', { name: 'Email' })).toHaveFocus();
       });
@@ -472,8 +474,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       // The bare instance skips the pointer-events check of user-event, which a popup that a hover
       // opened fails while it transitions in.
-      await userEvent.hover(screen.getByRole('menuitem', { name: 'Share' }));
-      const email = await screen.findByRole('menuitem', { name: 'Email' });
+      const email = await waitForLaterMillisecond(async () => {
+        await userEvent.hover(screen.getByRole('menuitem', { name: 'Share' }));
+        return screen.findByRole('menuitem', { name: 'Email' });
+      });
       // In WebKit, a list ignores a pointer move with no movement, and the bare instance gives
       // none.
       await userEvent.hover(email);
@@ -521,8 +525,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       const trigger = screen.getByRole('button', { name: 'Actions' });
       trigger.focus();
       await flushMicrotasks();
-      await user.hover(trigger);
-      const input = await screen.findByRole('searchbox', { name: 'Filter actions' });
+      const input = await waitForLaterMillisecond(async () => {
+        await user.hover(trigger);
+        return screen.findByRole('searchbox', { name: 'Filter actions' });
+      });
       // A hover open shows the popup without moving focus off the trigger.
       expect(trigger).toHaveFocus();
       return { trigger, input };
@@ -864,7 +870,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       trigger.focus();
       await flushMicrotasks();
-      await user.keyboard('[Enter]');
+      await waitForLaterMillisecond(() => user.keyboard('[Enter]'));
       await waitFor(() => {
         expect(screen.getByRole('searchbox', { name: 'Filter actions' })).toHaveFocus();
       });
@@ -876,7 +882,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         expect(trigger).toHaveFocus();
       });
 
-      await user.keyboard('[Enter]');
+      await waitForLaterMillisecond(() => user.keyboard('[Enter]'));
       const input = screen.getByRole('searchbox', { name: 'Filter actions' });
       await waitFor(() => {
         expect(input).toHaveFocus();

@@ -31,6 +31,7 @@ import {
   screen,
   wait,
   waitFor,
+  waitForLaterMillisecond,
   waitSingleFrame,
 } from '#test-utils';
 import { actOnElement } from '../../../test/fixtures/actOnElement';
@@ -1092,8 +1093,11 @@ describe('<Select.Root />', () => {
       const trigger = screen.getByTestId('trigger');
       expect(trigger).toHaveTextContent('a');
 
-      await user.click(trigger);
-      await user.click(await screen.findByRole('option', { name: 'b' }));
+      const optionB = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        return screen.findByRole('option', { name: 'b' });
+      });
+      await user.click(optionB);
 
       expect(onValueChange).toHaveBeenCalledOnce();
       expect(onValueChange.mock.calls[0][0]).toBe('b');
@@ -2401,10 +2405,11 @@ describe('<Select.Root />', () => {
 
         const trigger = screen.getByRole('combobox');
 
-        await pressWithTouch(trigger);
-
-        await waitFor(() => {
-          expect(screen.getByRole('listbox')).toBeInTheDocument();
+        await waitForLaterMillisecond(async () => {
+          await pressWithTouch(trigger);
+          await waitFor(() => {
+            expect(screen.getByRole('listbox')).toBeInTheDocument();
+          });
         });
 
         const optionB = screen.getByRole('option', { name: 'b' });
@@ -2553,11 +2558,12 @@ describe('<Select.Root />', () => {
           expect(screen.getByTestId('positioner').style.opacity).toBe('0');
         });
 
-        await pressWithTouch(trigger);
-
-        // The positioner has no opacity of its own once the position is ready.
-        await waitFor(() => {
-          expect(screen.getByTestId('positioner').style.opacity).toBe('');
+        await waitForLaterMillisecond(async () => {
+          await pressWithTouch(trigger);
+          // The positioner has no opacity of its own once the position is ready.
+          await waitFor(() => {
+            expect(screen.getByTestId('positioner').style.opacity).toBe('');
+          });
         });
 
         const reopenedPositioner = screen.getByTestId('positioner');
@@ -2717,9 +2723,10 @@ describe('<Select.Root />', () => {
         </Select.Root>
       ));
 
-      await user.click(screen.getByRole('combobox'));
-
-      const list = await screen.findByRole('listbox');
+      const list = await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('combobox'));
+        return screen.findByRole('listbox');
+      });
       await fireEvent.scroll(list);
 
       const upArrow = screen.getByText('▲');
@@ -2769,9 +2776,10 @@ describe('<Select.Root />', () => {
       );
 
       const trigger = screen.getByRole('combobox');
-      await user.click(trigger);
-
-      const option = await screen.findByRole('option', { name: '1' });
+      const option = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        return screen.findByRole('option', { name: '1' });
+      });
       option.focus();
       await flushMicrotasks();
       await waitFor(() => {
@@ -3007,11 +3015,11 @@ describe('<Select.Root />', () => {
         </div>,
       );
 
-      await user.pointer({ keys: '[MouseLeft>]', target: screen.getByTestId('select-trigger') });
-      await user.pointer({
-        keys: '[/MouseLeft]',
-        target: await screen.findByRole('option', { name: 'Gala' }),
+      const gala = await waitForLaterMillisecond(async () => {
+        await user.pointer({ keys: '[MouseLeft>]', target: screen.getByTestId('select-trigger') });
+        return screen.findByRole('option', { name: 'Gala' });
       });
+      await user.pointer({ keys: '[/MouseLeft]', target: gala });
       await user.click(await screen.findByRole('option', { name: 'Fuji' }));
 
       await waitFor(() => {
@@ -3059,8 +3067,10 @@ describe('<Select.Root />', () => {
         </Popover.Root>,
       );
 
-      await user.click(screen.getByRole('button', { name: 'Open popover' }));
-      await screen.findByTestId('popover-popup');
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Open popover' }));
+        await screen.findByTestId('popover-popup');
+      });
 
       await user.click(screen.getByTestId('select-trigger'));
       await user.click(await screen.findByRole('option', { name: 'Gala' }));
@@ -3112,8 +3122,10 @@ describe('<Select.Root />', () => {
         </Popover.Root>,
       );
 
-      await user.click(screen.getByTestId('select-trigger'));
-      await screen.findByRole('listbox');
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('select-trigger'));
+        await screen.findByRole('listbox');
+      });
 
       await user.click(screen.getByRole('option', { name: 'Two' }));
 
@@ -3208,10 +3220,11 @@ describe('<Select.Root />', () => {
       const selectOpener = screen.getByRole('button', {
         name: 'Open select programmatically',
       });
-      await user.click(selectOpener);
-
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).not.toBe(null);
+      await waitForLaterMillisecond(async () => {
+        await user.click(selectOpener);
+        await waitFor(() => {
+          expect(screen.queryByRole('listbox')).not.toBe(null);
+        });
       });
 
       await user.click(screen.getByRole('option', { name: 'Two' }));
@@ -3254,21 +3267,22 @@ describe('<Select.Root />', () => {
       const startX = rect.left + rect.width / 2;
       const startY = rect.top + rect.height / 2;
 
-      await fireEvent.pointerDown(selectTrigger, {
-        button: 0,
-        buttons: 1,
-        clientX: startX,
-        clientY: startY,
-        pointerType: 'mouse',
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.pointerDown(selectTrigger, {
+          button: 0,
+          buttons: 1,
+          clientX: startX,
+          clientY: startY,
+          pointerType: 'mouse',
+        });
+        await fireEvent.mouseDown(selectTrigger, {
+          button: 0,
+          buttons: 1,
+          clientX: startX,
+          clientY: startY,
+        });
+        await screen.findByRole('listbox');
       });
-      await fireEvent.mouseDown(selectTrigger, {
-        button: 0,
-        buttons: 1,
-        clientX: startX,
-        clientY: startY,
-      });
-
-      await screen.findByRole('listbox');
 
       const endX = 400;
       const endY = 20;
@@ -3547,9 +3561,10 @@ describe('<Select.Root />', () => {
         </Select.Root>,
       );
 
-      await user.click(screen.getByTestId('trigger'));
-
-      const optionB = await screen.findByRole('option', { name: 'b' });
+      const optionB = await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('trigger'));
+        return screen.findByRole('option', { name: 'b' });
+      });
       await user.click(optionB);
 
       expect(handleValueChange.mock.calls.length).toBe(0);
@@ -4574,9 +4589,10 @@ describe('<Select.Root />', () => {
       const outside = screen.getByTestId('outside');
 
       await fireEvent.focusIn(trigger);
-      await fireEvent.click(trigger);
-
-      await flushMicrotasks();
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.click(trigger);
+        await flushMicrotasks();
+      });
 
       const listbox = screen.getByRole('listbox');
 
@@ -5997,7 +6013,7 @@ describe('<Select.Root />', () => {
 
       screen.getByTestId('trigger').focus();
       await flushMicrotasks();
-      await user.keyboard('{ArrowDown}');
+      await waitForLaterMillisecond(() => user.keyboard('{ArrowDown}'));
       await waitFor(() => {
         expect(screen.getByRole('option', { name: 'Option 1' })).toHaveFocus();
       });
@@ -6556,10 +6572,11 @@ describe('<Select.Root />', () => {
 
       const trigger = screen.getByTestId('trigger');
 
-      await user.click(trigger);
-      await flushMicrotasks();
-
-      const optionA = await screen.findByRole('option', { name: 'a' });
+      const optionA = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        await flushMicrotasks();
+        return screen.findByRole('option', { name: 'a' });
+      });
       await user.click(optionA);
       await flushMicrotasks();
 
@@ -6663,10 +6680,11 @@ describe('<Select.Root />', () => {
 
       const trigger = screen.getByTestId('trigger');
 
-      await user.click(trigger);
-      await flushMicrotasks();
-
-      const optionA = await screen.findByRole('option', { name: 'a' });
+      const optionA = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        await flushMicrotasks();
+        return screen.findByRole('option', { name: 'a' });
+      });
       const optionB = screen.getByRole('option', { name: 'b' });
 
       expect(optionA).toHaveAttribute('data-selected', '');
@@ -6732,9 +6750,10 @@ describe('<Select.Root />', () => {
 
       const trigger = screen.getByTestId('trigger');
 
-      await user.click(trigger);
-
-      const optionB = await screen.findByRole('option', { name: 'b' });
+      const optionB = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        return screen.findByRole('option', { name: 'b' });
+      });
 
       await user.click(optionB);
 
@@ -7018,8 +7037,10 @@ describe('<Select.Root />', () => {
         </Select.Root>,
       );
 
-      await user.click(screen.getByTestId('trigger'));
-      const optionB = await screen.findByRole('option', { name: 'b' });
+      const optionB = await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('trigger'));
+        return screen.findByRole('option', { name: 'b' });
+      });
       await waitFor(() => {
         expect(optionB).toHaveAttribute('data-highlighted');
       });
@@ -7058,8 +7079,10 @@ describe('<Select.Root />', () => {
         </Select.Root>,
       );
 
-      await user.click(screen.getByTestId('trigger'));
-      const optionB = await screen.findByRole('option', { name: 'b' });
+      const optionB = await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('trigger'));
+        return screen.findByRole('option', { name: 'b' });
+      });
       await waitFor(() => {
         expect(optionB).toHaveAttribute('data-highlighted');
       });
@@ -7313,14 +7336,14 @@ describe('<Select.Root />', () => {
 
       const trigger = screen.getByTestId('trigger');
 
-      await user.click(trigger);
-      await flushMicrotasks();
-
-      await waitFor(() => {
-        expect(screen.getByRole('listbox')).not.toBe(null);
+      const optionA = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        await flushMicrotasks();
+        await waitFor(() => {
+          expect(screen.getByRole('listbox')).not.toBe(null);
+        });
+        return screen.findByRole('option', { name: 'a' });
       });
-
-      const optionA = await screen.findByRole('option', { name: 'a' });
       await user.click(optionA);
       await flushMicrotasks();
 
@@ -7353,14 +7376,14 @@ describe('<Select.Root />', () => {
 
       const trigger = screen.getByTestId('trigger');
 
-      await user.click(trigger);
-      await flushMicrotasks();
-
-      await waitFor(() => {
-        expect(screen.getByRole('listbox')).not.toBe(null);
+      const optionA = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        await flushMicrotasks();
+        await waitFor(() => {
+          expect(screen.getByRole('listbox')).not.toBe(null);
+        });
+        return screen.findByRole('option', { name: 'a' });
       });
-
-      const optionA = await screen.findByRole('option', { name: 'a' });
       await user.click(optionA);
       await flushMicrotasks();
 
@@ -7684,7 +7707,7 @@ describe('<Select.Root />', () => {
       );
 
       await focusTrigger(screen.getByTestId('trigger'));
-      await user.keyboard('{ArrowDown}');
+      await waitForLaterMillisecond(() => user.keyboard('{ArrowDown}'));
       await waitFor(() => {
         expect(screen.getByRole('option', { name: 'apple' })).toHaveFocus();
       });
@@ -7743,7 +7766,10 @@ describe('<Select.Root />', () => {
 
     it('does not move the popup or its list when hovering items at its edges', async () => {
       const { user } = await render(<AlignedSelect />);
-      await user.click(screen.getByTestId('trigger'));
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('trigger'));
+        await screen.findByRole('listbox');
+      });
       await waitFor(() => {
         expect(screen.getByRole('option', { name: 'Item 15' })).toHaveFocus();
       });
@@ -7798,7 +7824,7 @@ describe('<Select.Root />', () => {
           </Select.Root>
         </div>,
       );
-      await focusTrigger(screen.getByTestId('trigger'));
+      await waitForLaterMillisecond(() => focusTrigger(screen.getByTestId('trigger')));
       await user.keyboard('{ArrowDown}');
       await waitFor(() => {
         expect(screen.getByRole('option', { name: 'Item 1' })).toHaveFocus();
@@ -7875,7 +7901,7 @@ describe('<Select.Root />', () => {
       const { user } = await render(<Test />);
       const trigger = screen.getByTestId('trigger');
       await focusTrigger(trigger);
-      await user.keyboard('{ArrowUp}');
+      await waitForLaterMillisecond(() => user.keyboard('{ArrowUp}'));
       await waitFor(() => {
         expect(screen.getByRole('option', { name: 'b' })).toHaveFocus();
       });
@@ -8072,8 +8098,10 @@ describe('<Select.Root />', () => {
         );
 
         await focusTrigger(screen.getByTestId('trigger'));
-        await user.keyboard('{ArrowDown}');
-        const optionA = await screen.findByRole('option', { name: 'a' });
+        const optionA = await waitForLaterMillisecond(async () => {
+          await user.keyboard('{ArrowDown}');
+          return screen.findByRole('option', { name: 'a' });
+        });
         const optionB = screen.getByRole('option', { name: 'b' });
         await waitFor(() => {
           expect(optionA).toHaveFocus();
@@ -8130,9 +8158,11 @@ describe('<Select.Root />', () => {
         </Select.Root>,
       );
 
-      await user.click(screen.getByRole('combobox'));
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).not.toBe(null);
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('combobox'));
+        await waitFor(() => {
+          expect(screen.queryByRole('listbox')).not.toBe(null);
+        });
       });
       await flushMicrotasks();
 

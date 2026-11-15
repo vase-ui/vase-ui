@@ -1101,10 +1101,11 @@ describe('<Menubar />', () => {
 
         // First click to open the file menu
         const fileTrigger = screen.getByTestId('file-trigger');
-        await userEvent.click(fileTrigger);
-
-        await waitFor(() => {
-          expect(screen.getByTestId('file-menu')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await userEvent.click(fileTrigger);
+          await waitFor(() => {
+            expect(screen.getByTestId('file-menu')).not.toBe(null);
+          });
         });
         await waitFor(() => {
           expect(screen.getByRole('menubar')).toHaveAttribute('data-has-submenu-open');
@@ -1127,10 +1128,11 @@ describe('<Menubar />', () => {
 
         // First click to open the file menu
         const fileTrigger = screen.getByTestId('file-trigger');
-        await userEvent.click(fileTrigger);
-
-        await waitFor(() => {
-          expect(screen.getByTestId('file-menu')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await userEvent.click(fileTrigger);
+          await waitFor(() => {
+            expect(screen.getByTestId('file-menu')).not.toBe(null);
+          });
         });
         await waitFor(() => {
           expect(screen.getByRole('menubar')).toHaveAttribute('data-has-submenu-open');
@@ -1138,11 +1140,12 @@ describe('<Menubar />', () => {
 
         // Now hover over the share submenu trigger
         const shareTrigger = await screen.findByTestId('share-trigger');
-        await hoverSubmenuTrigger(shareTrigger);
-
         // The share submenu should open
-        await waitFor(() => {
-          expect(screen.queryByTestId('share-menu')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await hoverSubmenuTrigger(shareTrigger);
+          await waitFor(() => {
+            expect(screen.queryByTestId('share-menu')).not.toBe(null);
+          });
         });
 
         // Hover over the first item in the share submenu
@@ -1188,13 +1191,16 @@ describe('<Menubar />', () => {
 
         const viewTrigger = screen.getByTestId('view-trigger');
 
-        await userEvent.click(viewTrigger, { delay: 30 });
-        await screen.findByTestId('view-menu');
+        await waitForLaterMillisecond(async () => {
+          await userEvent.click(viewTrigger, { delay: 30 });
+          await screen.findByTestId('view-menu');
+        });
 
         const layoutTrigger = screen.getByTestId('layout-trigger');
-        await hoverSubmenuTrigger(layoutTrigger);
-
-        await screen.findByTestId('layout-menu');
+        await waitForLaterMillisecond(async () => {
+          await hoverSubmenuTrigger(layoutTrigger);
+          await screen.findByTestId('layout-menu');
+        });
 
         const layoutItem2 = screen.getByTestId('layout-item-2');
         await userEvent.click(layoutItem2, { delay: 30 });
@@ -1212,16 +1218,21 @@ describe('<Menubar />', () => {
         const fileTrigger = screen.getByTestId('file-trigger');
         const viewTrigger = screen.getByTestId('view-trigger');
 
-        await userEvent.click(fileTrigger, { delay: 30 });
-        await screen.findByTestId('file-menu');
+        await waitForLaterMillisecond(async () => {
+          await userEvent.click(fileTrigger, { delay: 30 });
+          await screen.findByTestId('file-menu');
+        });
 
-        await userEvent.hover(viewTrigger);
-        await screen.findByTestId('view-menu');
+        await waitForLaterMillisecond(async () => {
+          await userEvent.hover(viewTrigger);
+          await screen.findByTestId('view-menu');
+        });
 
         const layoutTrigger = screen.getByTestId('layout-trigger');
-        await hoverSubmenuTrigger(layoutTrigger);
-
-        await screen.findByTestId('layout-menu');
+        await waitForLaterMillisecond(async () => {
+          await hoverSubmenuTrigger(layoutTrigger);
+          await screen.findByTestId('layout-menu');
+        });
 
         const layoutItem2 = screen.getByTestId('layout-item-2');
         await userEvent.click(layoutItem2, { delay: 30 });
@@ -1302,11 +1313,12 @@ describe('<Menubar />', () => {
         // Focus and open file menu
         fileTrigger.focus();
         await flushMicrotasks();
-        await user.keyboard('{Enter}');
-
-        // File menu should be open
-        await waitFor(() => {
-          expect(screen.queryByTestId('file-menu')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.keyboard('{Enter}');
+          // File menu should be open
+          await waitFor(() => {
+            expect(screen.queryByTestId('file-menu')).not.toBe(null);
+          });
         });
 
         // First item should be focused automatically
@@ -1337,9 +1349,11 @@ describe('<Menubar />', () => {
         // Focus and open file menu
         fileTrigger.focus();
         await flushMicrotasks();
-        await user.keyboard('{Enter}');
-        await waitFor(() => {
-          expect(screen.queryByTestId('file-menu')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.keyboard('{Enter}');
+          await waitFor(() => {
+            expect(screen.queryByTestId('file-menu')).not.toBe(null);
+          });
         });
 
         await waitFor(() => {
@@ -1379,11 +1393,12 @@ describe('<Menubar />', () => {
         fileTrigger.focus();
         await flushMicrotasks();
 
-        await user.keyboard('{Enter}');
-
-        // Menu should be open
-        await waitFor(() => {
-          expect(screen.queryByTestId('file-menu')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.keyboard('{Enter}');
+          // Menu should be open
+          await waitFor(() => {
+            expect(screen.queryByTestId('file-menu')).not.toBe(null);
+          });
         });
 
         // Press Escape to close
@@ -1402,7 +1417,7 @@ describe('<Menubar />', () => {
         // Focus and open file menu
         fileTrigger.focus();
         await flushMicrotasks();
-        await user.keyboard('{Enter}');
+        await waitForLaterMillisecond(() => user.keyboard('{Enter}'));
         await waitFor(() => {
           expect(screen.getByTestId('file-item-1')).toHaveFocus();
         });
@@ -1421,9 +1436,11 @@ describe('<Menubar />', () => {
         });
 
         // Open submenu
-        await user.keyboard('{ArrowRight}');
-        await waitFor(() => {
-          expect(screen.queryByTestId('share-menu')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.keyboard('{ArrowRight}');
+          await waitFor(() => {
+            expect(screen.queryByTestId('share-menu')).not.toBe(null);
+          });
         });
         // The submenu focuses its first item a frame after opening.
         await waitFor(() => {
@@ -1488,8 +1505,10 @@ describe('<Menubar />', () => {
         const fileTrigger = screen.getByTestId('menubar-file-trigger');
 
         await focusTriggerWithKeyboard(fileTrigger);
-        await user.keyboard('{Enter}');
-        await screen.findByTestId('menubar-file-menu');
+        await waitForLaterMillisecond(async () => {
+          await user.keyboard('{Enter}');
+          await screen.findByTestId('menubar-file-menu');
+        });
 
         await waitFor(() => {
           expect(screen.getByTestId('menubar-file-item')).toHaveFocus();
@@ -1501,8 +1520,10 @@ describe('<Menubar />', () => {
           expect(submenuTrigger).toHaveFocus();
         });
 
-        await user.keyboard('{ArrowRight}');
-        await screen.findByTestId('menubar-submenu-menu');
+        await waitForLaterMillisecond(async () => {
+          await user.keyboard('{ArrowRight}');
+          await screen.findByTestId('menubar-submenu-menu');
+        });
 
         await waitFor(() => {
           expect(screen.getByTestId('menubar-submenu-item')).toHaveFocus();
@@ -1531,11 +1552,12 @@ describe('<Menubar />', () => {
 
         // Focus and open file menu
         await focusTriggerWithKeyboard(fileTrigger);
-        await user.keyboard('{Enter}');
-
-        // File menu should be open
-        await waitFor(() => {
-          expect(screen.queryByTestId('file-menu')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.keyboard('{Enter}');
+          // File menu should be open
+          await waitFor(() => {
+            expect(screen.queryByTestId('file-menu')).not.toBe(null);
+          });
         });
 
         // Navigate right to edit menu
@@ -1557,11 +1579,12 @@ describe('<Menubar />', () => {
 
         // Open the menu with a mouse click
         const fileTrigger = screen.getByTestId('file-trigger');
-        await user.click(fileTrigger);
-
-        // Menu should be open
-        await waitFor(() => {
-          expect(screen.queryByTestId('file-menu')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.click(fileTrigger);
+          // Menu should be open
+          await waitFor(() => {
+            expect(screen.queryByTestId('file-menu')).not.toBe(null);
+          });
         });
 
         // Navigate with keyboard
@@ -1614,9 +1637,10 @@ describe('<Menubar />', () => {
         );
 
         const fileTrigger = screen.getByTestId('file-trigger');
-        await pressWithTouch(fileTrigger);
-
-        await screen.findByTestId('file-menu');
+        await waitForLaterMillisecond(async () => {
+          await pressWithTouch(fileTrigger);
+          await screen.findByTestId('file-menu');
+        });
 
         const shareTrigger = await screen.findByTestId('share-trigger');
         await pressWithTouch(shareTrigger);
@@ -1728,9 +1752,10 @@ describe('<Menubar />', () => {
         const editTrigger = screen.getByTestId('edit-trigger');
         const doc = fileTrigger.ownerDocument;
 
-        await pressWithTouch(fileTrigger);
-
-        await screen.findByTestId('file-menu');
+        await waitForLaterMillisecond(async () => {
+          await pressWithTouch(fileTrigger);
+          await screen.findByTestId('file-menu');
+        });
 
         await waitFor(() => {
           expect(isScrollLocked(doc)).toBe(true);

@@ -12,6 +12,7 @@ import {
   isJSDOM,
   wait,
   waitFor,
+  waitForLaterMillisecond,
 } from '#test-utils';
 import type { SelectStore } from '../store';
 import SelectTriggerReplacement from './SelectTriggerReplacement.test.vue';
@@ -146,13 +147,15 @@ describe('<Select.Trigger />', () => {
       trigger.getBoundingClientRect = () =>
         DOMRect.fromRect({ x: 100, y: 100, width: 100, height: 40 });
 
-      await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-      await fireEvent.mouseDown(trigger, { button: 0 });
-      if (options.release) {
-        await fireEvent.mouseUp(trigger, { button: 0, clientX: 150, clientY: 120 });
-      }
-      await waitFor(() => {
-        expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+        await fireEvent.mouseDown(trigger, { button: 0 });
+        if (options.release) {
+          await fireEvent.mouseUp(trigger, { button: 0, clientX: 150, clientY: 120 });
+        }
+        await waitFor(() => {
+          expect(trigger).toHaveAttribute('aria-expanded', 'true');
+        });
       });
       return trigger;
     }
@@ -213,10 +216,12 @@ describe('<Select.Trigger />', () => {
       trigger.getBoundingClientRect = () =>
         DOMRect.fromRect({ x: 100, y: 100, width: 100, height: 40 });
 
-      await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-      await fireEvent.mouseDown(trigger, { button: 0, clientX: 150, clientY: 120 });
-      await waitFor(() => {
-        expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+        await fireEvent.mouseDown(trigger, { button: 0, clientX: 150, clientY: 120 });
+        await waitFor(() => {
+          expect(trigger).toHaveAttribute('aria-expanded', 'true');
+        });
       });
       trigger.getBoundingClientRect = () =>
         DOMRect.fromRect({ x: 100, y: 300, width: 100, height: 40 });
