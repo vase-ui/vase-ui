@@ -8638,6 +8638,68 @@ describe('<Select.Root />', () => {
     });
   });
 
+  describe('VUE-102: a value with a line break', () => {
+    it.each([
+      { name: 'a line feed', value: 'Main Street 1\nFlat 2' },
+      { name: 'a carriage return', value: 'Main Street 1\rFlat 2' },
+      { name: 'a carriage return and a line feed', value: 'Main Street 1\r\nFlat 2' },
+    ])('submits the value with $name', async ({ value }) => {
+      await render(
+        <form data-testid="form">
+          <Select.Root name="address" items={{ [value]: 'Home' }} defaultValue={value}>
+            <Select.Trigger>
+              <Select.Value />
+            </Select.Trigger>
+          </Select.Root>
+        </form>,
+      );
+
+      expect(getHiddenInput().value).toBe('Main Street 1Flat 2');
+      expect(getFormData('address')).toEqual([value]);
+    });
+
+    it('selects the item whose value gives the text that the browser restores', async () => {
+      const handleValueChange = vi.fn();
+      const { container } = await render(
+        <form data-testid="form">
+          <Select.Root
+            name="address"
+            items={ADDRESSES}
+            defaultValue="Box 1"
+            onValueChange={handleValueChange}
+          >
+            <Select.Trigger data-testid="trigger">
+              <Select.Value />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  {Object.entries(ADDRESSES).map(([value, label]) => (
+                    <Select.Item key={value} value={value}>
+                      <Select.ItemText>{label}</Select.ItemText>
+                    </Select.Item>
+                  ))}
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        </form>,
+      );
+      const events = recordInputEvents(container);
+      getHiddenInput().value = 'Main Street 1Flat 2';
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(handleValueChange.mock.calls.map((call) => [call[0], call[1].reason])).toEqual([
+        ['Main Street 1\nFlat 2', 'none'],
+      ]);
+      expect(screen.getByTestId('trigger').textContent).toBe('Home');
+      expect(getFormData('address')).toEqual(['Main Street 1\nFlat 2']);
+      expect(events).toEqual(['input']);
+    });
+  });
+
   describe('autofill', () => {
     it('selects the item whose text the browser fills into the input of a closed select', async () => {
       const handleValueChange = vi.fn();

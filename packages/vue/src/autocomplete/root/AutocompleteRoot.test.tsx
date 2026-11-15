@@ -3534,6 +3534,73 @@ describe('<Autocomplete.Root />', () => {
     });
   });
 
+  describe('VUE-102: a value with a line break', () => {
+    const addresses = ['Main Street 1\nFlat 2', 'Box 1'];
+
+    function renderInPopup(defaultValue: string, onValueChange?: (value: string) => void) {
+      return render(
+        <form data-testid="form">
+          <Autocomplete.Root
+            name="address"
+            items={addresses}
+            defaultValue={defaultValue}
+            onValueChange={onValueChange}
+          >
+            <Autocomplete.Trigger>
+              <Autocomplete.Value />
+            </Autocomplete.Trigger>
+            <Autocomplete.Portal>
+              <Autocomplete.Positioner>
+                <Autocomplete.Popup>
+                  <Autocomplete.Input />
+                  <Autocomplete.List v-slots={itemSlot} />
+                </Autocomplete.Popup>
+              </Autocomplete.Positioner>
+            </Autocomplete.Portal>
+          </Autocomplete.Root>
+        </form>,
+      );
+    }
+
+    it.each([
+      {
+        name: 'an input outside the popup',
+        renderAutocomplete: () =>
+          render(
+            <form data-testid="form">
+              <Autocomplete.Root name="address" defaultValue={'Main Street 1\nFlat 2'}>
+                <Autocomplete.Input />
+              </Autocomplete.Root>
+            </form>,
+          ),
+      },
+      {
+        name: 'an input inside the popup',
+        renderAutocomplete: () => renderInPopup('Main Street 1\nFlat 2'),
+      },
+    ])('submits the value from $name', async ({ renderAutocomplete }) => {
+      await renderAutocomplete();
+
+      expect(getFormData('address')).toEqual(['Main Street 1\nFlat 2']);
+    });
+
+    it('keeps the text that the browser restores', async () => {
+      const handleValueChange = vi.fn();
+      await renderInPopup('Box 1', handleValueChange);
+      const input = document.querySelector<HTMLInputElement>('input[name="address"]')!;
+      input.value = 'Main Street 1Flat 2';
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+      await flushMicrotasks();
+
+      expect(handleValueChange.mock.calls.map((call) => call[0])).toEqual([
+        'Main Street 1Flat 2',
+      ]);
+      expect(getFormData('address')).toEqual(['Main Street 1Flat 2']);
+    });
+  });
+
   describe('VUE-21: a native reset', () => {
     beforeEach(() => {
       vi.useFakeTimers();

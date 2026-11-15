@@ -44,7 +44,7 @@ export interface ComboboxInputProps
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, provide, shallowRef, toRaw, watch } from 'vue';
-import { useValueBeforeHydration } from '../../common/hydration';
+import { isTextControl, useValueBeforeHydration } from '../../common/hydration';
 import { platform } from '../../common/platform';
 import { useTimeout } from '../../common/useTimeout';
 import { addInputFocusListeners } from '../../filter-dropdown/input/FilterDropdownInput';
@@ -61,6 +61,7 @@ import { useDeferredServerRender, useLabelableContext } from '../../internals/la
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
+import { sanitizeValue, useFormEntryValue } from '../../internals/useFormEntryValue';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { getHighlightReason } from '../../utils/getHighlightReason';
 import { stopEvent } from '../../utils/popups/event';
@@ -221,9 +222,12 @@ function syncHandledValue() {
   handledValue = (element.value as HTMLInputElement | null)?.value;
 }
 // At the mount the input can hold text that the user typed before the hydration, also in a
-// component in `as`. The last write of Vue, and the server HTML, have the text of the state.
+// component in `as`. The last write of Vue, and the server HTML, have the text of the state. The
+// browser removes the line breaks of that text from an input.
 onMounted(() => {
-  handledValue = displayText(inputValue.value);
+  const input = element.value;
+  const text = displayText(inputValue.value);
+  handledValue = isTextControl(input) ? sanitizeValue(input, text) : text;
 });
 watch(() => composingValue.value ?? inputValue.value, syncHandledValue, { flush: 'post' });
 
@@ -574,6 +578,8 @@ const { element, elementProps } = useRenderElement('input', props, {
   },
   stateAttributesMapping: triggerStateAttributesMapping,
 });
+
+useFormEntryValue(element, () => displayText(inputValue.value));
 
 const dismissButton = useDismissButton(
   element,
