@@ -76,6 +76,19 @@ describe('<Collapsible.Root />', () => {
       expect(trigger).toHaveAttribute('aria-controls', screen.getByTestId('panel').id);
     });
 
+    it('VUE-80: has no aria-controls while the root has no panel', async () => {
+      await render(
+        <Collapsible.Root defaultOpen>
+          <Collapsible.Trigger />
+        </Collapsible.Root>,
+      );
+
+      const trigger = screen.getByRole('button');
+
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+    });
+
     it('follows a change of the panel id', async () => {
       function App({ panelId }: { panelId: string | undefined }) {
         return (

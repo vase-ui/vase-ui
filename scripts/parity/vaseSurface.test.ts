@@ -219,6 +219,11 @@ test('a class has its public properties and methods, in the sequence of the decl
     [
       'class PopupHandle {',
       '  protected readonly fallback = 0;',
+      '  readonly #stores: number[] = [];',
+      '  get #newest(): number | undefined {',
+      '    return this.#stores.at(-1);',
+      '  }',
+      '  #detach(): void {}',
       '  /** @internal */',
       '  attach(): void {}',
       '  /** Whether the sample is open. */',

@@ -5,6 +5,7 @@ import { expect, vi, describe, it } from 'vitest';
 import { screen, waitFor } from '@testing-library/dom';
 import { isJSDOM } from '../src/common/testUtils';
 import { REASONS } from '../src/internals/reasons';
+import { waitForLaterMillisecond } from './createRenderer';
 import type { createRenderer } from './createRenderer';
 import { fireEvent } from './fireEvent';
 import { flushMicrotasks } from './flushMicrotasks';
@@ -165,7 +166,7 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
 
   async function openWith(interaction: OpenInteraction, user: UserEvent, trigger: HTMLElement) {
     if (interaction === 'click') {
-      await user.click(trigger);
+      await waitForLaterMillisecond(() => user.click(trigger));
     } else if (interaction === 'hover') {
       await fireEvent.mouseEnter(trigger);
       await fireEvent.mouseMove(trigger);
@@ -445,7 +446,7 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
             const openTrigger2 = screen.getByRole('button', { name: 'Open Trigger 2' });
             const closeExternally = screen.getByRole('button', { name: 'Close externally' });
 
-            await user.click(openTrigger1);
+            await waitForLaterMillisecond(() => user.click(openTrigger1));
             await waitForContent('1');
             expectActiveTrigger(1);
             await expectPositionerAlignedWith(getTrigger(1));

@@ -27,6 +27,17 @@ describe('<Fieldset.Legend /> on a server', () => {
     expect(html).toBe(`<fieldset aria-labelledby="${id}"><!--[--><!--]--></fieldset>`);
   });
 
+  it('renders the generated id in the aria-labelledby of a root whose legend has an id of its own', async () => {
+    const html = await renderToString(
+      <Fieldset.Root>
+        <Fieldset.Legend id="own">Legend</Fieldset.Legend>
+      </Fieldset.Root>,
+    );
+
+    expect(/aria-labelledby="([^"]*)"/.exec(html)?.[1]).toMatch(/^vase-ui-./);
+    expect(html).toContain('<div id="own">');
+  });
+
   it.each([
     { name: 'an aria-label', attributes: { 'aria-label': 'Billing' }, labelledBy: undefined },
     {
