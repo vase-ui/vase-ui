@@ -145,9 +145,8 @@ describe('<Select.Root />', () => {
       await waitFor(() => {
         expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
       });
-      // A closed select keeps its list mounted and hidden, as after any other close. The focus
-      // goes to the trigger, and the trigger mounts the list in a 0 ms timer.
-      expect(await screen.findByRole('listbox', { hidden: true })).not.toHaveAttribute(
+      // A closed select keeps its list mounted and hidden, as after any other close.
+      expect(screen.getByRole('listbox', { hidden: true })).not.toHaveAttribute(
         'data-ending-style',
       );
     });
@@ -8627,8 +8626,13 @@ describe('<Select.Root />', () => {
       const value = shallowRef('a');
       const open = shallowRef(true);
       const showPortal = shallowRef(true);
+      const handleOpenChangeComplete = vi.fn();
       await render(() => (
-        <Select.Root value={value.value} open={open.value}>
+        <Select.Root
+          value={value.value}
+          open={open.value}
+          onOpenChangeComplete={handleOpenChangeComplete}
+        >
           <StoreProbe />
           <Select.Trigger />
           {showPortal.value ? (
@@ -8648,10 +8652,11 @@ describe('<Select.Root />', () => {
 
       open.value = false;
       await waitFor(() => {
-        expect(screen.queryByRole('option')).toBe(null);
+        expect(handleOpenChangeComplete).toHaveBeenLastCalledWith(false);
       });
       showPortal.value = false;
       await flushMicrotasks();
+      expect(screen.queryAllByRole('option', { hidden: true })).toEqual([]);
       value.value = 'b';
       await flushMicrotasks();
 
