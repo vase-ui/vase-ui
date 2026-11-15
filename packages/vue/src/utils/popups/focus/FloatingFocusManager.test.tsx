@@ -4529,7 +4529,9 @@ describe('FloatingFocusManager', () => {
 
       test('closes when unhovering floating element even when focus is inside it', async () => {
         await render(<Navigation />);
-        await waitForLaterMillisecond(() => testingLibraryUserEvent.hover(screen.getByText('Product')));
+        await waitForLaterMillisecond(() =>
+          testingLibraryUserEvent.hover(screen.getByText('Product')),
+        );
         await testingLibraryUserEvent.click(screen.getByTestId('subnavigation'));
         await testingLibraryUserEvent.unhover(screen.getByTestId('subnavigation'));
         await testingLibraryUserEvent.hover(screen.getByText('Product'));

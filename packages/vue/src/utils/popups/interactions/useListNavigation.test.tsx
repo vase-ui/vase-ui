@@ -2572,7 +2572,9 @@ describe('useListNavigation', () => {
       await keyDown(part('menu-root'), toEnd);
       expect(part('trigger-more')).toHaveFocus();
       // The key that opens a list below: the cross axis of the list above.
-      await waitForLaterMillisecond(() => keyDown(part('trigger-more'), orientation === 'vertical' ? 'ArrowRight' : 'ArrowDown'));
+      await waitForLaterMillisecond(() =>
+        keyDown(part('trigger-more'), orientation === 'vertical' ? 'ArrowRight' : 'ArrowDown'),
+      );
       await waitFor(() => expect(item('x')).toHaveFocus());
     }
 

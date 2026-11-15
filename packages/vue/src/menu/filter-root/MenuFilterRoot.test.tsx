@@ -5300,7 +5300,9 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       const onValueChange = vi.fn();
       const { user } = await renderReasonMenu(onValueChange);
 
-      await waitForLaterMillisecond(() => user.type(screen.getByRole('searchbox', { name: 'Filter actions' }), 'r'));
+      await waitForLaterMillisecond(() =>
+        user.type(screen.getByRole('searchbox', { name: 'Filter actions' }), 'r'),
+      );
       await user.click(screen.getByLabelText('Clear filter'));
 
       expect(onValueChange).toHaveBeenLastCalledWith('', 'clear-press');
