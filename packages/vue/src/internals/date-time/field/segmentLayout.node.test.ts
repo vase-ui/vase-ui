@@ -85,6 +85,19 @@ describe('getSegmentLayout in Node.js', () => {
         expected: 'year "-" month',
       })),
       { name: 'sc-IT gregory', locale: 'sc-IT', options: YEAR_MONTH, expected: 'month "/" year' },
+      // The field asks for the era of a value in another era than its reference date.
+      {
+        name: 'ksh japanese with an era',
+        locale: 'ksh',
+        options: { ...YEAR_MONTH, era: true, calendar: 'japanese' },
+        expected: 'era " " year "-" month',
+      },
+      {
+        name: 'sc-IT gregory with an era',
+        locale: 'sc-IT',
+        options: { ...YEAR_MONTH, era: true },
+        expected: 'month "/" year " " era',
+      },
     ];
 
     const results = printSegmentLayouts(cases);

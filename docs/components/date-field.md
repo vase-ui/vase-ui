@@ -159,7 +159,7 @@ Digits that a visitor types, or that the browser fills, before the page hydrates
 
 On a Node.js version before 26, load a `Temporal` polyfill before the server starts. See the [guide](/handbook/dates-and-times#servers).
 
-In three languages, the field uses another layout because of a fault of Node.js 22, 24 and 26. See the same [guide](/handbook/dates-and-times#servers).
+In three languages, the field takes its layout from another format because of a fault of Node.js 22, 24 and 26. See the same [guide](/handbook/dates-and-times#servers).
 
 ## Keyboard
 

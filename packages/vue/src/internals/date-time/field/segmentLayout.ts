@@ -164,8 +164,8 @@ export function getSegmentLayout(
   const hasTime = options.time !== undefined;
   const sample = getSample(options.calendar);
   const layoutWithEra = () => {
-    const formatOptions = intlOptions(options, true);
-    return layoutOf(...formatter(sample, formatOptions, locale), hasTime, formatOptions);
+    const eraOptions = intlOptions(options, true);
+    return layoutOf(...formatter(sample, eraOptions, locale), hasTime, eraOptions);
   };
   const formatOptions = intlOptions(options, false);
   const [format, epoch] = formatter(sample, formatOptions, locale);
