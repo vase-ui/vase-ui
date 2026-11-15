@@ -534,3 +534,12 @@
 :root:not(.dark) [class*='_SubmenuHint_'] {
   color: oklch(43.9% 0 0deg);
 }
+
+/* The Tailwind variant of the Navigation Menu demos gives the link description and the submenu hint
+   the class `text-neutral-500`. The link card or the submenu trigger around that text has the
+   class `hover:bg-neutral-100`. In the light theme, this rule gives the text the color of the rule
+   above. `~=` matches a whole class name, so `data-disabled:text-neutral-500` does not match. A
+   rule outside a layer wins over a utility of Tailwind. */
+:root:not(.dark) [class~='hover:bg-neutral-100'] [class~='text-neutral-500'] {
+  color: oklch(43.9% 0 0deg);
+}
