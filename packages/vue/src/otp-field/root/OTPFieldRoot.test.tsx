@@ -9,6 +9,7 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountListTests,
   hiddenInputSizeTests,
   hydrate,
   hydrateAfter,
@@ -53,6 +54,23 @@ async function fillHiddenInput(
 describe('<OTPField.Root />', () => {
   const { render } = createRenderer();
   const OTP_LENGTH = 6;
+
+  heldMountListTests({
+    render,
+    renderList: (withLastItem) => (
+      <OTPFieldBase.Root length={3}>
+        <OTPFieldBase.Input />
+        <OTPFieldBase.Input />
+        {withLastItem ? <OTPFieldBase.Input /> : null}
+      </OTPFieldBase.Root>
+    ),
+    async check() {
+      const [first, second] = screen.getAllByRole<HTMLInputElement>('textbox');
+      first.focus();
+      await fireEvent.input(first, { target: { value: '1' } });
+      expect(second).toHaveFocus();
+    },
+  });
 
   describeConformance(<OTPFieldBase.Root length={1} />, () => ({
     refInstanceof: window.HTMLDivElement,

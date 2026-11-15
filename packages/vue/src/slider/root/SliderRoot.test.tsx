@@ -21,6 +21,7 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountListTests,
   hydrate,
   isJSDOM,
   renderOnServer,
@@ -146,6 +147,24 @@ describe('<Slider.Root />', () => {
   });
 
   const { render } = createRenderer();
+
+  heldMountListTests({
+    render,
+    renderList: (withLastItem) => (
+      <Slider.Root defaultValue={20}>
+        <Slider.Control data-testid="control">
+          <Slider.Track>{withLastItem ? <Slider.Thumb /> : null}</Slider.Track>
+        </Slider.Control>
+      </Slider.Root>
+    ),
+    async check() {
+      const control = screen.getByTestId('control');
+      vi.spyOn(control, 'getBoundingClientRect').mockImplementation(getHorizontalSliderRect);
+      await fireEvent.pointerDown(control, { buttons: 1, clientX: 80 });
+      await fireEvent.pointerUp(control, { buttons: 1, clientX: 80 });
+      expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', '80');
+    },
+  });
 
   describeConformance(<Slider.Root defaultValue={50} />, () => ({
     render,

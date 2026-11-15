@@ -23,12 +23,14 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountListTests,
   hydrate,
   hydrateAfter,
   isJSDOM,
   renderOnServer,
   screen,
   takeReportedMessages,
+  waitFor,
   within,
 } from '#test-utils';
 import RadioGroupBeforeHydration from './RadioGroupBeforeHydration.test.vue';
@@ -90,6 +92,24 @@ function parse(html: string) {
 
 describe('<RadioGroup />', () => {
   const { render } = createRenderer();
+
+  heldMountListTests({
+    render,
+    renderList: (withLastItem) => (
+      <RadioGroup defaultValue="a">
+        <Radio.Root value="a" aria-label="a" />
+        {withLastItem ? <Radio.Root value="b" aria-label="b" /> : null}
+      </RadioGroup>
+    ),
+    async check(user) {
+      screen.getByRole('radio', { name: 'a' }).focus();
+      await user.keyboard('[ArrowDown]');
+      await waitFor(() => {
+        expect(screen.getByRole('radio', { name: 'b' })).toHaveFocus();
+      });
+      expect(screen.getByRole('radio', { name: 'b' })).toHaveAttribute('aria-checked', 'true');
+    },
+  });
 
   describeConformance(<RadioGroup />, () => ({
     refInstanceof: window.HTMLDivElement,

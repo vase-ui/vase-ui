@@ -6,6 +6,7 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountListTests,
   hydrate,
   renderOnServer,
   screen,
@@ -20,6 +21,28 @@ import ResizableRootLatePanel from './ResizableRootLatePanel.test.vue';
 
 describe('<Resizable.Root />', () => {
   const { render } = createRenderer();
+
+  heldMountListTests({
+    render,
+    renderList: (withLastItem) => (
+      <div style={{ width: '1000px', height: '400px' }}>
+        <Resizable.Root style={{ height: '100%' }} defaultLayout={{ a: 40, b: 60 }}>
+          <Resizable.Panel id="a" />
+          {withLastItem
+            ? [
+                <Resizable.Handle key="handle" data-testid="handle" />,
+                <Resizable.Panel key="b" id="b" />,
+              ]
+            : null}
+        </Resizable.Root>
+      </div>
+    ),
+    check() {
+      const handle = screen.getByTestId('handle');
+      expect(handle).toHaveAttribute('aria-controls', 'a');
+      expect(handle).toHaveAttribute('aria-valuenow', '40');
+    },
+  });
 
   const pointer = { pointerId: 1, pointerType: 'mouse' };
 
