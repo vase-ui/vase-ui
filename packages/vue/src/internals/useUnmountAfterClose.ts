@@ -59,14 +59,22 @@ export function useUnmountAfterClose(parameters: UseUnmountAfterCloseParameters)
   const preventUnmountingOnClose = computed(() =>
     isOpen() ? false : toValue(preventUnmountOnClose),
   );
+
+  // A `v-if` of the consumer can remove the part of the element in the flush of the close. Vue then
+  // sets the ref to `null`, so the wait uses the last element. An element out of the document has
+  // no CSS animations, and the close ends after one frame. A `<Transition>` of the consumer can
+  // keep the element in the document. The close then ends when the animations of the element end.
+  let lastElement: HTMLElement | null = null;
+  const closeElement = () => toValue(ref) ?? lastElement;
+
   watch(isOpen, (nextOpen) => {
     if (nextOpen) {
       setPreventUnmountOnClose(false);
+      // The unmount clears the last element. An element can stay in the document after the
+      // unmount, as with `keepMounted`.
+      lastElement = toValue(ref) ?? lastElement;
     }
   });
-
-  let lastElement: HTMLElement | null = null;
-  const closeElement = () => toValue(ref) ?? lastElement;
 
   function unmount() {
     lastElement = null;
@@ -102,11 +110,7 @@ export function useUnmountAfterClose(parameters: UseUnmountAfterCloseParameters)
     () => mounted.value && !isOpen() && !preventUnmountingOnClose.value,
   );
 
-  // The wait starts again only when the element attaches. A `v-if` of the consumer can remove the
-  // part of the element in the flush of the close. Vue then sets the ref to `null`, so the wait
-  // uses the last element. An element out of the document has no CSS animations, and the close
-  // ends after one frame. A `<Transition>` of the consumer can keep the element in the document.
-  // The close then ends when the animations of the element end.
+  // The wait starts again only when the element attaches.
   const attachCount = shallowRef(0);
   watch(
     () => toValue(ref),

@@ -61,6 +61,11 @@ interface HostProps {
    * `<Transition>`.
    */
   transitionName?: string | undefined;
+  /**
+   * Whether the element stays in the document after the unmount, as with `keepMounted` of a portal
+   * part.
+   */
+  keepMounted?: boolean | undefined;
 }
 
 function createHost() {
@@ -93,7 +98,7 @@ function createHost() {
       );
 
       const renderElement = () =>
-        result.mounted.value && props.showElement !== false ? (
+        (result.mounted.value || props.keepMounted) && props.showElement !== false ? (
           <div
             ref={element}
             class={props.popupClass}
@@ -110,7 +115,16 @@ function createHost() {
           <Transition name={props.transitionName}>{renderElement()}</Transition>
         );
     },
-    { props: ['open', 'showElement', 'animateInitialOpen', 'popupClass', 'transitionName'] },
+    {
+      props: [
+        'open',
+        'showElement',
+        'animateInitialOpen',
+        'popupClass',
+        'transitionName',
+        'keepMounted',
+      ],
+    },
   );
 
   return {
@@ -557,6 +571,34 @@ describe('useUnmountAfterClose', () => {
       await flushMicrotasks();
 
       expect(host.onUnmount).toHaveBeenCalledTimes(2);
+      expect(host.result.mounted.value).toBe(false);
+    });
+
+    it('ends the close when the element that stayed after the last close detaches', async () => {
+      const host = createHost();
+      const { setProps } = await render(<host.Host open keepMounted />);
+      await setProps({ open: false });
+      expect(host.onUnmount).toHaveBeenCalledTimes(1);
+      expect(screen.getByTestId('popup')).toBeInTheDocument();
+
+      await setProps({ open: true });
+      await setProps({ open: false, showElement: false });
+
+      expect(host.onUnmount).toHaveBeenCalledTimes(2);
+      expect(host.result.mounted.value).toBe(false);
+    });
+
+    it('ends the close of a reopen that comes after the element detached', async () => {
+      const host = createHost();
+      const { setProps } = await render(<host.Host open />);
+      host.preventUnmountOnClose.value = true;
+      await setProps({ open: false, showElement: false });
+      expect(host.result.mounted.value).toBe(true);
+
+      await setProps({ open: true, showElement: false });
+      await setProps({ open: false, showElement: false });
+
+      expect(host.onUnmount).toHaveBeenCalledTimes(1);
       expect(host.result.mounted.value).toBe(false);
     });
 
