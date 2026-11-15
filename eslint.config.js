@@ -34,6 +34,8 @@ const MESSAGES = {
     'A dynamic argument can be `innerHTML`, which renders a string as HTML. Write the name of the attribute.',
   waitLimit:
     'This wait has a limit in seconds, and a busy machine can stall the page for longer. Use `waitFor`, `screen` or `within` of `#test-utils`. Their limit is a count of frames.',
+  privateKeyword:
+    'The `private` keyword is only a check of the compiler. Write an ECMAScript private member: `#name`.',
   reactEventProp: (reactKey, vueKey) =>
     `Vue makes the event name from the key, so \`${reactKey}\` listens to an event that no browser sends. Use \`${vueKey}\`.`,
 };
@@ -164,6 +166,13 @@ const RESTRICTED_SYNTAX = [
     selector:
       "BinaryExpression[operator='instanceof'][right.name=/^(?:Node|Text|Comment|Document|DocumentFragment|ShadowRoot|Window|Range|Selection|[A-Za-z]*Element|[A-Za-z]*Event)$/]",
     message: MESSAGES.domInstanceof,
+  },
+  {
+    // A `declare` field and a member of a `declare class` have no code at run time. TypeScript
+    // refuses `declare` on a `#` member, and a constructor cannot have a `#` name.
+    selector:
+      ":not(ClassDeclaration[declare=true] > ClassBody) > [accessibility='private']:not([declare=true])",
+    message: MESSAGES.privateKeyword,
   },
   ...RESTRICTED_REACT_EVENT_PROP_SYNTAX,
 ];
@@ -488,6 +497,8 @@ export default defineConfig([
       'no-restricted-globals': ['error', RESTRICTED_GLOBALS],
       'no-restricted-properties': ['error', ...RESTRICTED_PROPERTIES],
       'no-restricted-syntax': ['error', ...RESTRICTED_SYNTAX],
+      // `public` is the default of a class member, so the keyword says nothing.
+      '@typescript-eslint/explicit-member-accessibility': ['error', { accessibility: 'no-public' }],
       'vue/component-api-style': ['error', ['script-setup']],
       'vue/block-lang': ['error', { script: { lang: 'ts' } }],
       'vue/no-restricted-syntax': ['error', ...RESTRICTED_TEMPLATE_SYNTAX],
