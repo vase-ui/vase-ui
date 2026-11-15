@@ -37,6 +37,24 @@ defineProps<{
       <span v-else-if="tag === 'span'" v-bind="props" :ref="props.ref">
         <component :is="children" v-if="children" />
       </span>
+      <table v-else-if="tag === 'table'" v-bind="props" :ref="props.ref">
+        <component :is="children" v-if="children" />
+      </table>
+      <thead v-else-if="tag === 'thead'" v-bind="props" :ref="props.ref">
+        <component :is="children" v-if="children" />
+      </thead>
+      <tbody v-else-if="tag === 'tbody'" v-bind="props" :ref="props.ref">
+        <component :is="children" v-if="children" />
+      </tbody>
+      <tr v-else-if="tag === 'tr'" v-bind="props" :ref="props.ref">
+        <component :is="children" v-if="children" />
+      </tr>
+      <th v-else-if="tag === 'th'" v-bind="props" :ref="props.ref">
+        <component :is="children" v-if="children" />
+      </th>
+      <td v-else-if="tag === 'td'" v-bind="props" :ref="props.ref">
+        <component :is="children" v-if="children" />
+      </td>
       <div v-else v-bind="props" :ref="props.ref">
         <component :is="children" v-if="children" />
       </div>
