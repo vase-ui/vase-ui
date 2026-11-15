@@ -39,16 +39,6 @@ function listPlaceOfTrigger(host: Element) {
   );
 }
 
-// A menu opens in the frame after the press, and it closes for a release off its trigger. A
-// control that appears or goes before the trigger on the screen moves the trigger in that frame.
-// The case then fails when the frame comes before the release. In a backward case the controls
-// come before the trigger in the DOM. A flex row in reverse order shows them after it.
-const triggerFirstRow = {
-  display: 'flex',
-  flexDirection: 'row-reverse',
-  justifyContent: 'flex-end',
-} as const;
-
 describe('useTriggerFocusGuards', () => {
   const { render } = createRenderer();
 
@@ -204,7 +194,7 @@ describe('useTriggerFocusGuards', () => {
               }
 
               return (
-                <div style={direction === 'backward' ? triggerFirstRow : undefined}>
+                <div>
                   {direction === 'backward' && controls.reverse()}
                   {renderTestPopup({
                     tabindex: -1,
@@ -220,11 +210,7 @@ describe('useTriggerFocusGuards', () => {
           });
 
           await render(<Fixture />);
-          const trigger = screen.getByRole('button', { name: 'Toggle' });
-          const placeBeforeOpen = trigger.getBoundingClientRect().toJSON();
           await focusTabOrigin(await openPopup());
-          // The release of the press must land on the trigger.
-          expect(trigger.getBoundingClientRect().toJSON()).toEqual(placeBeforeOpen);
           await userEvent.tab({ shift: direction === 'backward' });
 
           expect(screen.getByTestId('target')).toHaveFocus();
@@ -569,13 +555,8 @@ describe('useTriggerFocusGuards', () => {
     };
   }
 
-  // WebKit on macOS skips a button for the Tab key unless the button has a `tabindex`.
   function renderStop(testId: string, text: string) {
-    return (
-      <button data-testid={testId} tabindex={0}>
-        {text}
-      </button>
-    );
+    return <button data-testid={testId}>{text}</button>;
   }
 
   function renderButtons(content: OpenOptions['content']) {

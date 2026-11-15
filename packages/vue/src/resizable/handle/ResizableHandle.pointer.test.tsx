@@ -1,4 +1,4 @@
-import { describe, expect, it, onTestFinished } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { createRenderer, screen, waitFor } from '#test-utils';
 import * as Resizable from '../index.parts';
@@ -14,12 +14,16 @@ function releasePointerAfterTest() {
 describe('<Resizable.Handle /> with the pointer of the browser', () => {
   const { render } = createRenderer();
 
-  async function renderPanels(content?: unknown) {
+  async function renderPanels(content?: unknown, handleProps: Record<string, unknown> = {}) {
     await render(
       <div style={{ width: '400px', height: '100px' }}>
         <Resizable.Root style={{ height: '100%' }}>
           <Resizable.Panel data-testid="first" />
-          <Resizable.Handle data-testid="handle" style={{ flex: 'none', width: '8px' }} />
+          <Resizable.Handle
+            data-testid="handle"
+            style={{ flex: 'none', width: '8px' }}
+            {...handleProps}
+          />
           <Resizable.Panel data-testid="second">{content}</Resizable.Panel>
         </Resizable.Root>
       </div>,
@@ -124,5 +128,29 @@ describe('<Resizable.Handle /> with the pointer of the browser', () => {
 
     expect(first.getBoundingClientRect().width - before).toBeCloseTo(150, 0);
     expect(window.getSelection()?.toString()).toBe('');
+  });
+
+  it('runs a click listener of the consumer after a press with no move, and not after a drag', async () => {
+    const onClick = vi.fn();
+    const { at } = await renderPanels(undefined, { onClick });
+    releasePointerAfterTest();
+
+    await userEvent.pointer({ coords: at, keys: '[MouseLeft>]' });
+    await userEvent.pointer({ keys: '[/MouseLeft]' });
+    expect(onClick).toHaveBeenCalledTimes(1);
+
+    await userEvent.pointer({ coords: at, keys: '[MouseLeft>]' });
+    await userEvent.pointer({ coords: { x: at.x + 60, y: at.y } });
+    await userEvent.pointer({ keys: '[/MouseLeft]' });
+    expect(onClick).toHaveBeenCalledTimes(1);
+
+    // The next press clears the rule, so a press and a release with no move give a click again.
+    const moved = screen.getByTestId('handle').getBoundingClientRect();
+    await userEvent.pointer({
+      coords: { x: moved.left + moved.width / 2, y: moved.top + moved.height / 2 },
+      keys: '[MouseLeft>]',
+    });
+    await userEvent.pointer({ keys: '[/MouseLeft]' });
+    expect(onClick).toHaveBeenCalledTimes(2);
   });
 });

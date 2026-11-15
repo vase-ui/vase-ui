@@ -8,8 +8,8 @@ import {
   firePointer,
   flushMicrotasks,
   nestedPopupCloseTests,
-  nextAnimationsRead,
   nextEvent,
+  nextAnimationsRead,
   screen,
   takeReportedMessages,
   waitFor,
@@ -724,10 +724,11 @@ describe('<Drawer.Popup />', () => {
     );
 
     const parentPopup = screen.getByTestId('parent-popup');
-    screen.getByRole('button', { name: 'Open nested drawer' }).click();
-    await flushMicrotasks();
     // The open mounts the close button. Vue skips its listener for a click in that millisecond.
-    await waitForLaterMillisecond();
+    await waitForLaterMillisecond(async () => {
+      screen.getByRole('button', { name: 'Open nested drawer' }).click();
+      await flushMicrotasks();
+    });
 
     await waitFor(() => {
       expect(parentPopup).toHaveAttribute('data-nested-drawer-open', '');
@@ -825,10 +826,11 @@ describe('<Drawer.Popup />', () => {
     );
 
     const parentPopup = screen.getByTestId('parent-popup');
-    screen.getByRole('button', { name: 'Open nested drawer' }).click();
-    await flushMicrotasks();
     // The open mounts the close button. Vue skips its listener for a click in that millisecond.
-    await waitForLaterMillisecond();
+    await waitForLaterMillisecond(async () => {
+      screen.getByRole('button', { name: 'Open nested drawer' }).click();
+      await flushMicrotasks();
+    });
 
     await waitFor(() => {
       expect(parentPopup).toHaveAttribute('data-nested-drawer-open', '');

@@ -146,7 +146,7 @@ const parent = useCheckboxGroupParent({
 
 // The group is the control of the field and takes its name from `aria-labelledby`, so `Field.Label`
 // must not point `for` at one checkbox of the group.
-useLabelableId({ id: null });
+useLabelableId({ id: null, element: () => element.value });
 
 const fieldControlId = useVaseUiId(() => props.id);
 

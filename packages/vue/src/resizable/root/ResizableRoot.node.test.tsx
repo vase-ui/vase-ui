@@ -85,6 +85,32 @@ describe('<Resizable.Root /> on a server', () => {
     expect(growsIn(html)).toEqual([30, 70]);
   });
 
+  it('renders the state of a collapsed panel and of the handle at the end of its travel', async () => {
+    const html = await renderToString(
+      createSSRApp(ResizableRootHydration, { composition: 'collapsed' }),
+    );
+
+    expect(growsIn(html)).toEqual([0, 100]);
+    expect(html.match(/data-collapsed/g)).toHaveLength(1);
+    expect(html.match(/data-at-min/g)).toHaveLength(1);
+    expect(html).not.toContain('data-at-max');
+    expect(valuesIn(html)).toEqual([0]);
+  });
+
+  it('renders no state of an end of the travel for a handle that is disabled', async () => {
+    const html = await renderToString(
+      <Resizable.Root>
+        <Resizable.Panel id="a" collapsible minSize={20} defaultSize={0} disabled />
+        <Resizable.Handle disabled />
+        <Resizable.Panel id="b" />
+      </Resizable.Root>,
+    );
+
+    expect(html).not.toContain('data-at-min');
+    expect(html).not.toContain('data-at-max');
+    expect(html).toContain('data-collapsed');
+  });
+
   it('renders a handle that is disabled with no tab stop and no value', async () => {
     const html = await renderToString(
       <Resizable.Root>

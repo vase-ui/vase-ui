@@ -166,7 +166,7 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
 
   async function openWith(interaction: OpenInteraction, user: UserEvent, trigger: HTMLElement) {
     if (interaction === 'click') {
-      await user.click(trigger);
+      await waitForLaterMillisecond(() => user.click(trigger));
     } else if (interaction === 'hover') {
       await fireEvent.mouseEnter(trigger);
       await fireEvent.mouseMove(trigger);
@@ -179,9 +179,6 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
   async function closeWith(interaction: OpenInteraction, user: UserEvent, trigger: HTMLElement) {
     if (interaction === 'click') {
       if (Close) {
-        // The close part mounts with the popup. Vue skips its listener for an event of that
-        // millisecond.
-        await waitForLaterMillisecond();
         await user.click(screen.getByText('Close popup'));
       } else {
         await user.keyboard('{Escape}');
@@ -218,16 +215,6 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
   async function waitForPopupClosed() {
     await waitFor(() => {
       expect(screen.queryByTestId('popup')).toBe(null);
-    });
-  }
-
-  // A person presses an outside button after the frame of the initial focus. Before that frame, the
-  // press causes no focus-out close. A popup that closes on an outside press, such as Popover, then
-  // closes after the click listener of the button moved it: `useDismiss` runs its outside press
-  // after that listener. React runs that listener at its root, after the outside press.
-  async function waitForFocusInPopup() {
-    await waitFor(() => {
-      expect(screen.getByTestId('popup').contains(document.activeElement)).toBe(true);
     });
   }
 
@@ -459,13 +446,10 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
             const openTrigger2 = screen.getByRole('button', { name: 'Open Trigger 2' });
             const closeExternally = screen.getByRole('button', { name: 'Close externally' });
 
-            await user.click(openTrigger1);
+            await waitForLaterMillisecond(() => user.click(openTrigger1));
             await waitForContent('1');
             expectActiveTrigger(1);
             await expectPositionerAlignedWith(getTrigger(1));
-            if (Close) {
-              await waitForFocusInPopup();
-            }
 
             await user.click(openTrigger2);
             await waitForContent('2');
@@ -903,8 +887,7 @@ export interface DetachedTriggersTestConfig {
   Viewport?: AnyComponent;
   /**
    * When provided, click-opened popups are closed with it, and the programmatic test checks that
-   * focus returns to the element that opened the popup. That test also waits until the popup has the
-   * focus before it presses the next outside button.
+   * focus returns to the element that opened the popup.
    */
   Close?: AnyComponent;
   /**

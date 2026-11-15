@@ -12,6 +12,7 @@ import {
   flushMicrotasks,
   hydrate,
   isJSDOM,
+  nextEvent,
   pressWithTouch,
   renderOnServer,
   screen,
@@ -50,11 +51,17 @@ function parse(html: string) {
 
 // The focus of the next trigger opens its menu only when the trigger matches `:focus-visible`. After a
 // real click of an earlier case, a script focus does not match it. A real Tab sets it, and each later
-// script focus keeps it. WebKit does not tab to a button, so the call also focuses the trigger.
+// script focus keeps it.
 async function focusTriggerWithKeyboard(trigger: HTMLElement) {
   await userEvent.tab();
-  trigger.focus();
-  await flushMicrotasks();
+  expect(trigger).toHaveFocus();
+}
+
+// A menu focuses a hovered submenu trigger in an animation frame, and a user reaches the submenu
+// after that frame. A pointer that reaches a submenu item before that frame moves the focus from
+// the menubar trigger to the item. `useFocus` of the menubar trigger then closes the menu.
+async function hoverSubmenuTrigger(trigger: HTMLElement) {
+  await nextEvent(trigger, 'focusin', { action: () => userEvent.hover(trigger) });
   expect(trigger).toHaveFocus();
 }
 
@@ -959,10 +966,11 @@ describe('<Menubar />', () => {
     // active when the item is clicked.
     vi.useFakeTimers();
     try {
-      screen.getByTestId('edit-trigger').focus();
-      await flushMicrotasks();
-      // The item mounts with the menu. Vue skips its listener for an event of that millisecond.
-      await waitForLaterMillisecond();
+      // The focus opens the menu, and the item mounts with it.
+      await waitForLaterMillisecond(() => {
+        screen.getByTestId('edit-trigger').focus();
+        return flushMicrotasks();
+      });
 
       await fireEvent(
         screen.getByTestId('edit-item-1'),
@@ -1130,7 +1138,7 @@ describe('<Menubar />', () => {
 
         // Now hover over the share submenu trigger
         const shareTrigger = await screen.findByTestId('share-trigger');
-        await userEvent.hover(shareTrigger);
+        await hoverSubmenuTrigger(shareTrigger);
 
         // The share submenu should open
         await waitFor(() => {
@@ -1184,7 +1192,7 @@ describe('<Menubar />', () => {
         await screen.findByTestId('view-menu');
 
         const layoutTrigger = screen.getByTestId('layout-trigger');
-        await userEvent.hover(layoutTrigger);
+        await hoverSubmenuTrigger(layoutTrigger);
 
         await screen.findByTestId('layout-menu');
 
@@ -1211,7 +1219,7 @@ describe('<Menubar />', () => {
         await screen.findByTestId('view-menu');
 
         const layoutTrigger = screen.getByTestId('layout-trigger');
-        await userEvent.hover(layoutTrigger);
+        await hoverSubmenuTrigger(layoutTrigger);
 
         await screen.findByTestId('layout-menu');
 

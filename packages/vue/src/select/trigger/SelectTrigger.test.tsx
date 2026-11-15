@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { KeepAlive, shallowRef } from 'vue';
+import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Select } from '@vase-ui/vue/select';
 import {
@@ -189,6 +189,41 @@ describe('<Select.Trigger />', () => {
       await waitFor(() => {
         expect(trigger).toHaveAttribute('aria-expanded', 'false');
       });
+    });
+
+    it.each([
+      { name: '5px right and 5px down', dx: 5, dy: 5, open: true },
+      { name: '6px right', dx: 6, dy: 0, open: false },
+      { name: '6px down', dx: 0, dy: 6, open: false },
+    ])('VUE-68: a trigger that moved, a release $name of the press', async ({ dx, dy, open }) => {
+      const onOpenChange = vi.fn();
+      await render(
+        <Select.Root onOpenChange={onOpenChange}>
+          <Select.Trigger data-testid="trigger">Fruit</Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner alignItemWithTrigger={false}>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+      const trigger = screen.getByTestId('trigger');
+      trigger.getBoundingClientRect = () =>
+        DOMRect.fromRect({ x: 100, y: 100, width: 100, height: 40 });
+
+      await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+      await fireEvent.mouseDown(trigger, { button: 0, clientX: 150, clientY: 120 });
+      await waitFor(() => {
+        expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      });
+      trigger.getBoundingClientRect = () =>
+        DOMRect.fromRect({ x: 100, y: 300, width: 100, height: 40 });
+      await fireEvent.mouseUp(document.body, { button: 0, clientX: 150 + dx, clientY: 120 + dy });
+
+      expect(trigger).toHaveAttribute('aria-expanded', String(open));
+      expect(onOpenChange).toHaveBeenCalledTimes(open ? 1 : 2);
     });
 
     it('keeps the popup open when the press is released inside a popup in a shadow root', async () => {
@@ -601,6 +636,40 @@ describe('<Select.Trigger />', () => {
       expect(field).toHaveAttribute('data-touched', '');
       expect(validate).toHaveBeenCalledTimes(1);
       expect(validate.mock.lastCall?.[0]).toBe('sans');
+    });
+
+    it('the label does not name a trigger that mounts while KeepAlive holds it', async () => {
+      const visible = shallowRef(true);
+      const extra = shallowRef(false);
+      const Branch = defineComponent(() => () => (
+        <div>
+          {extra.value ? (
+            <Select.Root key="held">
+              <Select.Trigger id="held-trigger" />
+            </Select.Root>
+          ) : null}
+        </div>
+      ));
+      await render(() => (
+        <Field.Root>
+          <Field.Label data-testid="label">Font</Field.Label>
+          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+        </Field.Root>
+      ));
+      const label = screen.getByTestId('label');
+      const providerId = label.getAttribute('for');
+
+      visible.value = false;
+      await flushMicrotasks();
+      extra.value = true;
+      await flushMicrotasks();
+
+      expect(label.getAttribute('for')).toBe(providerId);
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(label).toHaveAttribute('for', 'held-trigger');
     });
   });
 
