@@ -99,7 +99,9 @@ const direction = useDirection();
 // slots. The slot thus buffers the text and commits it one time at `compositionend`.
 const composingValue = shallowRef<string | null>(null);
 
-const writesValue = useValueBeforeHydration(props, () => element.value);
+// After a move in the history or a reload, the browser can restore the code of an earlier visit to
+// the first slot. The slot takes nothing, so the root does not complete and submit an old code.
+const writesValue = useValueBeforeHydration(props, () => element.value, { restorable: false });
 
 const slotValue = computed(() => value.value[index.value] ?? '');
 const inputState = computed(() => getOTPFieldInputState(state.value, slotValue.value, index.value));

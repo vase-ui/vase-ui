@@ -1,4 +1,4 @@
-import { expect, vi, describe, it } from 'vitest';
+import { expect, vi, describe, it, onTestFinished } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { nextTick, shallowRef } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
@@ -1383,10 +1383,31 @@ describe('<OTPField.Input />', () => {
   });
 
   describe('VUE-74: text that the user typed before the hydration', () => {
+    // The slots take no text after a move in the history or a reload. Each case gives the type of
+    // the navigation, so that no case depends on how the runner loaded the page.
+    function mockNavigationType(type: NavigationTimingType) {
+      const getEntriesByType = performance.getEntriesByType.bind(performance);
+      const spy = vi
+        .spyOn(performance, 'getEntriesByType')
+        .mockImplementation((entryType) =>
+          entryType === 'navigation'
+            ? [{ type } as PerformanceNavigationTiming]
+            : getEntriesByType(entryType),
+        );
+      onTestFinished(() => {
+        spy.mockRestore();
+      });
+    }
+
     async function hydrateTyped(
       props: Record<string, unknown>,
-      { typed, focus }: { typed: string[]; focus: string },
+      {
+        typed,
+        focus,
+        navigation = 'navigate',
+      }: { typed: string[]; focus: string; navigation?: NavigationTimingType },
     ) {
+      mockNavigationType(navigation);
       const serverHtml = await renderOnServer(BEFORE_HYDRATION_FIXTURE, props);
       const { container } = await hydrateAfter(OTPFieldInputBeforeHydration, {
         serverHtml,
@@ -1426,6 +1447,25 @@ describe('<OTPField.Input />', () => {
       expect(slots.map((slot) => slot.value)).toEqual(['1', '2', '3', '4']);
       expect(model.textContent).toBe('1234');
       expect(fixture.getByTestId('completes').textContent).toBe('1234 (input-change)');
+      expect(fixture.getByTestId('submits').textContent).toBe('1');
+    });
+
+    it.each([
+      { name: 'a move in the history', navigation: 'back_forward' },
+      { name: 'a reload', navigation: 'reload' },
+    ] as const)('takes no code from before the hydration after $name', async ({ navigation }) => {
+      const { fixture, slots, field, model } = await hydrateTyped(
+        {},
+        { typed: ['1234'], focus: 'outside', navigation },
+      );
+      await flushMicrotasks();
+
+      expect(slots.map((slot) => slot.value)).toEqual(['', '', '', '']);
+      expect(model.textContent).toBe('');
+      expect(fixture.getByTestId('changes').textContent).toBe('');
+      expect(fixture.getByTestId('completes').textContent).toBe('');
+      expect(fixture.getByTestId('submits').textContent).toBe('0');
+      expect(field).not.toHaveAttribute('data-touched');
     });
 
     it('keeps the focus on a button outside, and touches the field', async () => {

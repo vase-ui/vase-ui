@@ -1,8 +1,8 @@
 import { computed, nextTick, onMounted, shallowRef, useSlots, watch } from 'vue';
 // eslint-disable-next-line no-restricted-imports -- Vue sets `vnode.el` before `setup` only when it hydrates the component from server HTML. Vue has no public API for this fact, and Nuxt reads the same field. In Vapor mode the instance is `null`, and the part then writes its value as in a client-only mount.
 import { getCurrentInstance } from 'vue';
-import type { ComputedRef, Ref } from 'vue';
-import { ownerDocument } from './owner';
+import type { ComputedRef, Ref, RendererNode } from 'vue';
+import { ownerDocument, ownerWindow } from './owner';
 import { activeElement } from './shadowDom';
 
 // Vue has no public API that tells a hydration from a client-only mount in `setup`.
@@ -72,10 +72,18 @@ function getUnchangedValue(control: TextControl): string {
   return fresh.value;
 }
 
+// A browser restores the form state of the page on these navigations, with no event.
+function isHistoryTraversalOrReload(serverNode: RendererNode) {
+  const navigation = ownerWindow(serverNode).performance.getEntriesByType('navigation')[0] as
+    PerformanceNavigationTiming | undefined;
+  return navigation?.type === 'back_forward' || navigation?.type === 'reload';
+}
+
 /**
  * For a part that renders a text control. While Vue hydrates the part from server HTML, the
  * result is `false`, and the part gives its element no `value` key. The control then keeps a
- * value that it got before the hydration: typed text or an autofill.
+ * value that it got before the hydration: typed text, an autofill or a value that the browser
+ * restored.
  *
  * After the flush of the mount, a control whose value differs from its server HTML gets one
  * `input` event, and then the result is `true`. The handler of the part thus reads `false` for
@@ -85,13 +93,22 @@ function getUnchangedValue(control: TextControl): string {
  * In a client-only mount, and for a component in `as`, the result is `true` from the start.
  * @param componentProps The props of the part. The composable reads `as`.
  * @param control Gives the element of the part.
+ * @param options With `restorable: false`, the result is also `true` from the start after a move
+ * in the history or a reload. Vue then writes the value of the part over a value that the browser
+ * restored.
  */
 export function useValueBeforeHydration(
   componentProps: { as?: unknown },
   control: () => Element | null,
+  { restorable = true }: { restorable?: boolean } = {},
 ): Readonly<Ref<boolean>> {
   const rendersElement = typeof componentProps.as === 'string' || useSlots().render !== undefined;
-  if (!rendersElement || getCurrentInstance()?.vnode.el == null) {
+  const serverNode = getCurrentInstance()?.vnode.el;
+  if (
+    !rendersElement ||
+    serverNode == null ||
+    (!restorable && isHistoryTraversalOrReload(serverNode))
+  ) {
     return shallowRef(true);
   }
 

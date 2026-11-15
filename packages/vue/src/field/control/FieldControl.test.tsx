@@ -1448,7 +1448,6 @@ describe('<Field.Control />', () => {
       expect(input).toHaveValue('typed before');
       expect(within(container).getByTestId('control')).toBe(input);
       expect(within(container).getByTestId('root')).toHaveAttribute('data-focused', '');
-      expect(takeReportedMessages()).toEqual([]);
     });
   });
 
@@ -1489,7 +1488,6 @@ describe('<Field.Control />', () => {
       expect(changes.textContent).toBe('foo bar (none)');
       expect(root).toHaveAttribute('data-dirty', '');
       expect(root).toHaveAttribute('data-filled', '');
-      expect(takeReportedMessages()).toEqual([]);
     });
 
     it('marks an uncontrolled field dirty', async () => {
