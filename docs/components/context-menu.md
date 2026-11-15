@@ -6,8 +6,11 @@ description: An unstyled Vue context menu component that appears at the pointer 
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoContextMenuHero from '../demos/context-menu/hero/css-modules/index.vue';
+import DemoContextMenuHeroTailwind from '../demos/context-menu/hero/tailwind/index.vue';
 import DemoContextMenuSubmenu from '../demos/context-menu/submenu/css-modules/index.vue';
+import DemoContextMenuSubmenuTailwind from '../demos/context-menu/submenu/tailwind/index.vue';
 </script>
 
 # Context Menu
@@ -16,7 +19,12 @@ A menu that appears at the pointer on right click or long press.
 
 <DemoFrame>
   <DemoContextMenuHero />
+  <template #tailwind>
+    <DemoContextMenuHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -25,6 +33,18 @@ A menu that appears at the pointer on right click or long press.
 <<< ../demos/context-menu/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/context-menu/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Usage guidelines
 
@@ -47,7 +67,12 @@ To make a submenu, put a `ContextMenu.SubmenuRoot` in the parent context menu. U
 
 <DemoFrame>
   <DemoContextMenuSubmenu />
+  <template #tailwind>
+    <DemoContextMenuSubmenuTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -56,6 +81,18 @@ To make a submenu, put a `ContextMenu.SubmenuRoot` in the parent context menu. U
 <<< ../demos/context-menu/submenu/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/context-menu/submenu/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## API reference
 
