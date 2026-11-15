@@ -4,6 +4,7 @@ import { playwright } from '@vitest/browser-playwright';
 import { configDefaults, defineConfig } from 'vitest/config';
 import { renderOnServer } from './test/server/renderOnServer.ts';
 import { probeLog } from './test/server/probe.ts';
+import { collectGarbage } from './test/server/collectGarbage.ts';
 
 const contextOptions = { timezoneId: 'UTC' };
 
@@ -34,7 +35,7 @@ export default defineConfig({
       hooks: 'list',
     },
     retry: 0,
-    setupFiles: ['./test/setup.ts'],
+    setupFiles: ['./test/setup.ts', ...(process.env.PROBE_COLLECT ? ['./test/server/probeCollect.ts'] : [])],
     projects: [
       {
         extends: true,
@@ -55,7 +56,7 @@ export default defineConfig({
             provider: playwright({ contextOptions }),
             headless: true,
             screenshotFailures: false,
-            commands: { renderOnServer, probeLog },
+            commands: { renderOnServer, probeLog, collectGarbage },
             instances: [
               { browser: 'chromium', name: 'chromium' },
               {
