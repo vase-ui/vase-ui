@@ -4,6 +4,6 @@
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/navigation-menu/root/NavigationMenuRoot.tsx#L140-L148",
     "https://www.w3.org/WAI/WCAG22/Understanding/focus-order.html"
   ],
-  "behavior": "A Navigation Menu root with an inline viewport has no popup, positioner or backdrop element. When it closes with the focus in its viewport, it returns the focus to its trigger. A nested root with an inline viewport is such a root, and its parent menu stays open. Base UI returns the focus only when a popup element exists. Its focus thus does not return to the trigger.",
+  "behavior": "A Navigation Menu root with an inline viewport has no popup, positioner or backdrop element. When it closes with the focus in its viewport, it returns the focus to its trigger, as a root with a popup element does. A nested root with an inline viewport is such a root, and its parent menu stays open. Base UI returns the focus only when a popup element exists. Thus a Base UI root with an inline viewport does not return the focus to its trigger.",
   "dueWith": "packages/react/src/navigation-menu/root/NavigationMenuRoot.tsx"
 }
