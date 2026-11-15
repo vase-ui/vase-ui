@@ -70,6 +70,7 @@ import ComboboxRootRenders from './ComboboxRootRenders.test.vue';
 const HYDRATION_FILE = 'src/combobox/root/ComboboxRootHydration.test.vue';
 const BEFORE_HYDRATION_FILE = 'src/combobox/root/ComboboxRootBeforeHydration.test.vue';
 const cities = ['Malmö', 'Malta', 'Oslo'];
+const addresses = ['Main Street 1\nFlat 2', 'Box 1'];
 
 // The animation lasts 100 s, so a busy machine cannot end the exit before a case acts.
 const closeAnimationStyle = `
@@ -269,6 +270,24 @@ function MultiplePopupCombobox(props: {
 
 describe('<Combobox.Root />', () => {
   const { render } = createRenderer();
+
+  async function renderAddresses(defaultValue: string) {
+    const handleValueChange = vi.fn();
+    const { container } = await render(
+      <form data-testid="form">
+        <Combobox.Root
+          name="address"
+          items={addresses}
+          defaultValue={defaultValue}
+          onValueChange={handleValueChange}
+        >
+          <ComboboxInputPart />
+          <ComboboxListPart />
+        </Combobox.Root>
+      </form>,
+    );
+    return { handleValueChange, events: recordInputEvents(container) };
+  }
 
   popupAnatomyTests({
     createComponent: ({ open, onOpenChangeComplete, content }) => (
@@ -2744,6 +2763,17 @@ describe('<Combobox.Root />', () => {
       expect(handleInputValueChange).toHaveBeenCalledTimes(1);
       expect(getInput().value).toBe('Oslo');
     });
+
+    it('handles no change event for the value that the hidden input has', async () => {
+      const { handleValueChange } = await renderAddresses('Main Street 1\nFlat 2');
+      expect(getHiddenInput().value).toBe('Main Street 1Flat 2');
+
+      getHiddenInput().dispatchEvent(new Event('change', { bubbles: true }));
+      await flushMicrotasks();
+
+      expect(handleValueChange).not.toHaveBeenCalled();
+      expect(getOptions()).toEqual([]);
+    });
   });
 
   describe('Field', () => {
@@ -3150,6 +3180,98 @@ describe('<Combobox.Root />', () => {
       expect(fixture.getByTestId('changes').textContent).toBe('Oslo (none)');
       expect(getHiddenInput().value).toBe('Oslo');
       expect(events).toEqual(['input']);
+    });
+
+    it('sends no event at a `pageshow` event for a value with a line feed', async () => {
+      const { handleValueChange, events } = await renderAddresses('Main Street 1\nFlat 2');
+      expect(getHiddenInput().value).toBe('Main Street 1Flat 2');
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(events).toEqual([]);
+      expect(handleValueChange).not.toHaveBeenCalled();
+      expect(getOptions()).toEqual([]);
+      expect(getHiddenInput().value).toBe('Main Street 1Flat 2');
+    });
+
+    it('takes an item that the browser restores into a combobox whose value has a line feed', async () => {
+      const { handleValueChange, events } = await renderAddresses('Main Street 1\nFlat 2');
+      getHiddenInput().value = 'Box 1';
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+      await flushMicrotasks();
+
+      expect(handleValueChange.mock.calls.map((call) => [call[0], call[1].reason])).toEqual([
+        ['Box 1', 'none'],
+      ]);
+      expect(getInput().value).toBe('Box 1');
+      expect(getHiddenInput().value).toBe('Box 1');
+      expect(events).toEqual(['input']);
+    });
+
+    it('sends no event at a `pageshow` event after a change of the controlled value', async () => {
+      const value = shallowRef<string | null>('Main Street 1\nFlat 2');
+      const { container } = await render(() => (
+        <Combobox.Root name="address" items={addresses} value={value.value}>
+          <ComboboxInputPart />
+          <ComboboxListPart />
+        </Combobox.Root>
+      ));
+      value.value = 'Box 1';
+      await flushMicrotasks();
+      const events = recordInputEvents(container);
+      expect(getHiddenInput().value).toBe('Box 1');
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(events).toEqual([]);
+      expect(getOptions()).toEqual([]);
+    });
+
+    it('sends no event at a `pageshow` event after an autofill that matches no item', async () => {
+      const { container } = await render(
+        <Combobox.Root name="address" items={addresses} defaultValue="Box 1">
+          <ComboboxInputPart />
+          <ComboboxListPart />
+        </Combobox.Root>,
+      );
+      getHiddenInput().value = 'Nowhere';
+      getHiddenInput().dispatchEvent(new Event('input', { bubbles: true }));
+      await flushMicrotasks();
+      expect(getHiddenInput().value).toBe('Box 1');
+      const events = recordInputEvents(container);
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(events).toEqual([]);
+    });
+
+    it('keeps the text of an autocomplete with a line feed at a `pageshow` event', async () => {
+      const handleValueChange = vi.fn();
+      const { container } = await render(
+        <form data-testid="form">
+          <Autocomplete.Root
+            name="address"
+            items={addresses}
+            defaultValue={'Main Street 1\nFlat 2'}
+            onValueChange={handleValueChange}
+          >
+            <ComboboxInputPart />
+          </Autocomplete.Root>
+        </form>,
+      );
+      const events = recordInputEvents(container);
+      expect(getHiddenInput().value).toBe('Main Street 1Flat 2');
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(events).toEqual([]);
+      expect(handleValueChange).not.toHaveBeenCalled();
     });
   });
 
