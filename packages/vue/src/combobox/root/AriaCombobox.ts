@@ -718,7 +718,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
       name: 'Combobox',
       onOpenChange: (nextOpen, eventDetails) => handleOpenChange(nextOpen, eventDetails),
       onOpenChangeComplete: (nextOpen) => callbacks.onOpenChangeComplete(nextOpen),
-      getTransitionElement: (comboboxStore) => getTransitionElement(comboboxStore),
+      getTransitionElement,
     },
   );
   // A function of `setup` reads the current props, so the root assigns each command one time. A
@@ -1253,10 +1253,6 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     }
   }
 
-  function getResolvedPopup() {
-    return getTransitionElement(store);
-  }
-
   // The blocks below are the layout effects of Base UI, in the sequence of its source.
   function syncSelectedIndex() {
     const closeQueryReleased = previousCloseQuery !== null && closeQuery.value === null;
@@ -1315,7 +1311,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   function syncHighlight(settled = false) {
     // A kept-mounted dialog hides its inline list on close. Discard query-clear restoration
     // before it can overwrite the cleared highlight or report an item from the unfiltered list.
-    if (!open.value && inline.value && getResolvedPopup()) {
+    if (!open.value && inline.value && getTransitionElement(store)) {
       pendingQueryHighlight = null;
       return;
     }
@@ -1371,7 +1367,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
           queueMicrotask(() => {
             const current = toRaw(store.state);
             if (
-              (!open.value && (!current.inline || getResolvedPopup())) ||
+              (!open.value && (!current.inline || getTransitionElement(store))) ||
               (inputRef.value && inputRef.value.value.trim() !== '')
             ) {
               return;

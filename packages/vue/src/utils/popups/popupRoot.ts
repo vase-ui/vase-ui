@@ -378,8 +378,8 @@ function usePopupRootTransitions(
   // a disabled root. A disabled root that stays mounted thus reports no second open completion when
   // it shows again.
   const storeOpen = () => store.select('open');
-  // The guard resets at a close, where the open wait does nothing. The result thus does not depend
-  // on the order of the watchers.
+  // `openCompleted` resets at a close, where the open wait does nothing. The result thus does not
+  // depend on the order of the watchers.
   watch(storeOpen, (isOpen) => {
     if (!isOpen) {
       openCompleted = false;
