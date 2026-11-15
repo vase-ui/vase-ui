@@ -1,13 +1,6 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import {
-  createRenderer,
-  flushMicrotasks,
-  screen,
-  touchDrag,
-  waitFor,
-  waitSingleFrame,
-} from '#test-utils';
+import { createRenderer, screen, touchDrag, waitFor } from '#test-utils';
 import { platform } from '../../common/platform';
 import * as Resizable from '../index.parts';
 
@@ -118,7 +111,6 @@ describe('<Resizable.Root /> with the pointer of the browser', () => {
 
     it('lets a click reach the element, and starts no drag', async () => {
       const { onClick, root } = await renderBetween();
-      releasePointerAfterTest();
 
       await userEvent.pointer({
         coords: centerOf(screen.getByTestId('between')),
@@ -239,9 +231,6 @@ describe('<Resizable.Root /> with the pointer of the browser', () => {
       const before = widthOf('first');
 
       await touchDrag(at, { x: at.x + 60, y: at.y });
-      // A touch drag ends in a frame after the last move.
-      await waitSingleFrame();
-      await flushMicrotasks();
 
       expect(widthOf('first') - before).toBeCloseTo(60, 0);
       expect(onPointercancel).not.toHaveBeenCalled();

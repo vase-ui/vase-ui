@@ -101,7 +101,7 @@ function getStyle(box: EdgeBox): CSSProperties {
     height: `${box.height}px`,
     zIndex: 1,
     touchAction: 'none',
-    // Safari has only the prefixed property.
+    // Safari 16.4, a target of the build, has only the prefixed property.
     '-webkit-user-select': 'none',
     userSelect: 'none',
     [ResizableHandleCssVariables.resizableHandlePreviewOffset]: previewOffset.value,

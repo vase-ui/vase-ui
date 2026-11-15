@@ -116,7 +116,7 @@ describe('getBoundaries', () => {
       handles: [],
       expected: ['a|b', 'b|c'],
     },
-  ])('finds $expected.length boundaries for $name', ({ panels, handles, expected }) => {
+  ])('finds the boundaries of $name', ({ panels, handles, expected }) => {
     expect(idsOf(getBoundaries(panels, handles, false))).toEqual(expected);
   });
 

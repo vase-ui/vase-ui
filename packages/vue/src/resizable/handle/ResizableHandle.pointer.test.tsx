@@ -222,7 +222,6 @@ describe('<Resizable.Handle /> with the pointer of the browser', () => {
         </div>,
       );
       const handle = screen.getByTestId('handle').getBoundingClientRect();
-      releasePointerAfterTest();
 
       await userEvent.pointer({
         coords: { x: handle.right + 3, y: handle.top + handle.height / 2 },
@@ -312,7 +311,6 @@ describe('<Resizable.Handle /> with the pointer of the browser', () => {
 
     it('sets data-crossing on the handle under a pointer with no button at the junction', async () => {
       const { outer, inner, junction } = await renderCrossing();
-      releasePointerAfterTest();
 
       await userEvent.pointer({ coords: junction });
 

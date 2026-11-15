@@ -311,7 +311,7 @@ function onDblclick(event: MouseEvent) {
 
 function onPointerdown(event: PointerEvent) {
   if (press.start(event)) {
-    // The `mousedown` of the press does not focus the handle, as the press says.
+    // The `mousedown` of the press does not focus the handle, as `onMousedown` of the press says.
     element.value?.focus({
       preventScroll: true,
       // Prevent a focus ring that a pointer press gives in browsers that support this option.
