@@ -11,8 +11,10 @@ export {
   firePointer,
   holdPress,
   moveMouse,
+  penDrag,
   pressWithScreenReader,
   pressWithTouch,
+  touchDrag,
 } from './pointer';
 export { fireTouch } from './touch';
 export { useTestInteractions } from './useTestInteractions';
