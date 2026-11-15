@@ -37,7 +37,15 @@ import { useValueChanged } from '../../useValueChanged';
 import { displayCalendar } from '../displayCalendar';
 import { digits as getDigits, formatter } from '../format';
 import type { DateMatcher } from '../matchers';
-import { isKind, kindOf, parseInputText, toInputText, toPlainDate, today } from '../temporal';
+import {
+  isKind,
+  kindOf,
+  parseInputText,
+  toInputText,
+  toPlainDate,
+  today,
+  yearMonthInCalendar,
+} from '../temporal';
 import type { DateValue, TemporalKind, TemporalValue } from '../temporal';
 import { DateTimeFieldContext } from './DateTimeFieldContext';
 import type {
@@ -341,7 +349,15 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
       return source;
     }
     if (kind.value === 'yearMonth') {
-      return midnight.value.toPlainDate().toPlainYearMonth();
+      const date = midnight.value.toPlainDate();
+      const isoMonth = date.toPlainYearMonth();
+      const calendar = toValue(parameters.calendar);
+      // An ISO year and month does not show in a calendar that has other months, so
+      // `displayCalendar` ignores such a `calendar` prop for an ISO template. The template is thus
+      // in that calendar.
+      return calendar === undefined || yearMonthInCalendar(isoMonth, calendar)
+        ? isoMonth
+        : date.withCalendar(calendar).toPlainYearMonth();
     }
     if (kind.value === 'date') {
       return midnight.value.toPlainDate();
@@ -806,7 +822,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
 
   // A field can have more than one input, such as two date fields of a range. The input goes to the
   // registry of the field and not to `validation.inputRef`. The registry gives the field the first
-  // input that is invalid.
+  // invalid input in the document.
   function updateInputRegistration() {
     unregisterInput?.();
     unregisterInput = heldInput
@@ -840,8 +856,8 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     isDeactivated.value = false;
   });
 
-  // `KeepAlive` runs the `onActivated` hooks from the last part to the first part. A registration
-  // in the hook would reverse the order of the inputs. A watcher runs in the order of the parts.
+  // `KeepAlive` calls no `ref` setter at an activation, so the root registers the input again. The
+  // release before the registration keeps one cleanup for each registration.
   watch(isDeactivated, (deactivated) => {
     if (!deactivated) {
       updateInputRegistration();

@@ -4,7 +4,7 @@ import { Meter } from '@vase-ui/vue/meter';
 import { mockRuntimeLocale } from '../../../test/mockRuntimeLocale';
 
 describe('<Meter.Root /> on a server', () => {
-  it('renders the label id, the width of the indicator and the hidden node', async () => {
+  it('VUE-89: renders the label id, the width of the indicator and the hidden node', async () => {
     const html = await renderToString(
       <Meter.Root value={30}>
         <Meter.Label>Battery Level</Meter.Label>
@@ -47,6 +47,17 @@ describe('<Meter.Root /> on a server', () => {
         '<!--]--></div>',
       ].join(''),
     );
+  });
+
+  it('renders the generated id in the aria-labelledby of a root whose label has an id of its own', async () => {
+    const html = await renderToString(
+      <Meter.Root value={30}>
+        <Meter.Label id="own">Battery Level</Meter.Label>
+      </Meter.Root>,
+    );
+
+    expect(/aria-labelledby="([^"]*)"/.exec(html)?.[1]).toMatch(/^vase-ui-./);
+    expect(html).toContain('<span id="own" role="presentation">');
   });
 
   it.each([

@@ -32,7 +32,7 @@ import { REASONS } from '../../../internals/reasons';
 import { mergeProps } from '../../../merge-props/mergeProps';
 import { FOCUSABLE_ATTRIBUTE } from '../constants';
 import type { FloatingRootStore } from '../floating-root/FloatingRootStore';
-import FloatingFocusManager from '../focus/FloatingFocusManager.vue';
+import { FloatingFocusManager } from '../../../../test/fixtures/floatingFocusManagerHarness';
 import FloatingPortal from '../portal/FloatingPortal.vue';
 import {
   provideFloatingNode,

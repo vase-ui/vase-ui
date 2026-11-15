@@ -32,7 +32,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, MenuGroupLabelState>;
 }>();
 
-const registerLabelId = useMenuGroupRootContext();
+const { registerLabelId, reaches } = useMenuGroupRootContext();
 
 const labelId = useVaseUiId(() => props.id);
 
@@ -41,6 +41,8 @@ const source = Symbol();
 useRegisteredId(
   () => labelId.value,
   (getId) => registerLabelId(source, getId),
+  () => element.value,
+  reaches,
 );
 
 const state: MenuGroupLabelState = EMPTY_OBJECT;

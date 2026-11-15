@@ -20,6 +20,7 @@ import { EMPTY_OBJECT } from '../../common/empty';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
+import { isInTreeOf } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { usePopoverRootContext } from '../root/PopoverRootContext';
 
@@ -41,6 +42,8 @@ const source = Symbol();
 useRegisteredId(
   () => descriptionId.value,
   (getId) => store.context.registerDescriptionId(source, getId),
+  () => element.value,
+  (target) => isInTreeOf(store.select('popupElement'), target),
 );
 
 const state: PopoverDescriptionState = EMPTY_OBJECT;

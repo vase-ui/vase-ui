@@ -26,10 +26,6 @@ export interface AccordionTriggerProps
   /**
    * The id of the trigger. The panel uses it for `aria-labelledby`.
    * If the id is absent or empty, the trigger has the id that the item generates.
-   * If the panel comes before the trigger in the template, a server render writes the panel first.
-   * The `aria-labelledby` of the panel in the server HTML then names the id that the item generates
-   * until the page hydrates. It does not name a trigger that has an `id` of its own until then.
-   * To correct this, set `aria-labelledby` on `Accordion.Panel` to the same id.
    */
   id?: string | undefined;
 }
@@ -43,6 +39,7 @@ const stateAttributesMapping: StateAttributesMapping<AccordionItemState> = {
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useCollapsibleRootContext } from '../../collapsible/root/CollapsibleRootContext';
+import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
@@ -62,7 +59,16 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, AccordionTriggerState>;
 }>();
 
-const { panelId, open, handleTrigger, disabled: contextDisabled } = useCollapsibleRootContext();
+const {
+  panelId,
+  open,
+  handleTrigger,
+  disabled: contextDisabled,
+  reaches,
+} = useCollapsibleRootContext();
+
+// The panel registers its id in `setup`, and it can come after the trigger.
+useDeferredServerRender();
 
 const isDisabled = computed(() => props.disabled || contextDisabled.value);
 
@@ -80,6 +86,8 @@ const source = Symbol();
 useRegisteredId(
   () => triggerId.value,
   (getId) => registerTriggerId(source, getId),
+  () => element.value,
+  reaches,
 );
 
 const state = computed<AccordionTriggerState>(() => ({

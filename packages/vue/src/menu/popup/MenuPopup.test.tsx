@@ -4,10 +4,12 @@ import { KeepAlive, computed, defineComponent, provide, shallowRef } from 'vue';
 import { Menubar } from '@vase-ui/vue/menubar';
 import * as Menu from '../index.parts';
 import {
+  clientCenter,
   createRenderer,
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  nextEvent,
   popupFocusPropsTests,
   screen,
   takeReportedMessages,
@@ -284,8 +286,11 @@ describe('<Menu.Popup />', () => {
 
       const { user } = await render(<App />);
       const dialogTrigger = screen.getByRole('button', { name: 'Create' });
-      await user.click(dialogTrigger);
-      await user.click(await screen.findByRole('button', { name: 'Template' }));
+      const menuTrigger = await waitForLaterMillisecond(async () => {
+        await user.click(dialogTrigger);
+        return screen.findByRole('button', { name: 'Template' });
+      });
+      await user.click(menuTrigger);
       await user.click(await screen.findByRole('menuitem', { name: 'Blank' }));
 
       await waitFor(() => {
@@ -403,10 +408,11 @@ describe('<Menu.Popup />', () => {
 
       const trigger = screen.getByText('Open');
 
-      await user.click(trigger);
-      const item = await screen.findByText('Close');
       // The item mounts with the menu. Vue skips its listener for an event of that millisecond.
-      await waitForLaterMillisecond();
+      const item = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        return screen.findByText('Close');
+      });
       await fireEvent.pointerDown(item, { pointerType: 'mouse' });
       await fireEvent.click(item, { detail: 1 });
       await waitFor(() => {
@@ -440,7 +446,7 @@ describe('<Menu.Popup />', () => {
       );
 
       const trigger = screen.getByText('Open');
-      await fireEvent.mouseDown(trigger);
+      await fireEvent.mouseDown(trigger, clientCenter(trigger));
       const item = await screen.findByText('Close');
 
       // Drag-release selection is only armed 200ms after the trigger press.
@@ -1081,6 +1087,44 @@ describe('<Menu.Popup />', () => {
     expect(screen.getByTestId('popup')).toBe(popup);
     expect(popup.closest('[data-vase-ui-portal]')?.parentElement).toBe(document.body);
     expect(popup).toHaveAttribute('data-open');
+  });
+
+  it('VUE-82: keeps the focus on an item whose keydown listener calls preventVaseUIHandler()', async () => {
+    const { user } = await render(
+      <Menu.Root>
+        <Menu.Trigger>Open</Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup>
+              <Menu.Item
+                onKeydown={(event) => {
+                  if (event.key === 'ArrowDown') {
+                    event.preventVaseUIHandler();
+                  }
+                }}
+              >
+                One
+              </Menu.Item>
+              <Menu.Item>Two</Menu.Item>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>,
+    );
+
+    screen.getByRole('button', { name: 'Open' }).focus();
+    await flushMicrotasks();
+    // The item takes the focus in an animation frame after the open.
+    await waitForLaterMillisecond(() =>
+      nextEvent(document, 'focusin', { action: () => user.keyboard('[ArrowDown]') }),
+    );
+    const one = screen.getByRole('menuitem', { name: 'One' });
+    expect(one).toHaveFocus();
+
+    await user.keyboard('[ArrowDown]');
+    await waitSingleFrame();
+
+    expect(one).toHaveFocus();
   });
 
   it('BUG-5410: closes the menu for a press in a same-origin iframe', async () => {

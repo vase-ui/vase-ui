@@ -4,7 +4,7 @@ import { Fieldset } from '@vase-ui/vue/fieldset';
 import FieldsetLegendIdPart from '../../../test/fixtures/FieldsetLegendIdPart.vue';
 
 describe('<Fieldset.Legend /> on a server', () => {
-  it('renders the id of the legend in the aria-labelledby of the root', async () => {
+  it('VUE-89: renders the id of the legend in the aria-labelledby of the root', async () => {
     const html = await renderToString(
       <Fieldset.Root>
         <Fieldset.Legend>Legend</Fieldset.Legend>
@@ -25,6 +25,17 @@ describe('<Fieldset.Legend /> on a server', () => {
     const id = /aria-labelledby="([^"]*)"/.exec(html)?.[1];
     expect(id).toMatch(/^vase-ui-./);
     expect(html).toBe(`<fieldset aria-labelledby="${id}"><!--[--><!--]--></fieldset>`);
+  });
+
+  it('renders the generated id in the aria-labelledby of a root whose legend has an id of its own', async () => {
+    const html = await renderToString(
+      <Fieldset.Root>
+        <Fieldset.Legend id="own">Legend</Fieldset.Legend>
+      </Fieldset.Root>,
+    );
+
+    expect(/aria-labelledby="([^"]*)"/.exec(html)?.[1]).toMatch(/^vase-ui-./);
+    expect(html).toContain('<div id="own">');
   });
 
   it.each([

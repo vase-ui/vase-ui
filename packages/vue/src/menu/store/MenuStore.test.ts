@@ -177,6 +177,16 @@ describe('MenuStore (Vase UI)', () => {
     expect(relay.value).toBe(parentRelay);
   });
 
+  it('VUE-84: reads the trigger press of its parent menu', () => {
+    const parent = new MenuStore<unknown>();
+    const child = new MenuStore<unknown>({ parent: { type: 'menu', store: parent } });
+    const press = new MouseEvent('mousedown');
+
+    parent.context.triggerPressRef.value = press;
+
+    expect(child.context.triggerPressRef.value).toBe(press);
+  });
+
   it('shares the mouse-up ref of a parent that a write gives', () => {
     const store = new MenuStore<unknown>();
     const context = createMenubarContext();

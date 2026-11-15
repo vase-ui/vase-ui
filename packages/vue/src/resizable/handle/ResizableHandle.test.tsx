@@ -8,6 +8,7 @@ import {
   fireEvent,
   screen,
 } from '#test-utils';
+import { REASONS } from '../../internals/reasons';
 import * as Resizable from '../index.parts';
 
 describe('<Resizable.Handle />', () => {
@@ -747,6 +748,515 @@ describe('<Resizable.Handle />', () => {
       expect(handle).toHaveAttribute('aria-disabled', 'true');
       expect(handle).toHaveAttribute('data-disabled');
       expect(handle).not.toHaveAttribute('tabindex');
+    });
+  });
+
+  describe('collapse', () => {
+    // The container is 1000 px wide, so 10 px are 1%. The first panel is 40% and collapses to 0.
+    const collapsible = { id: 'a', collapsible: true, minSize: 20, defaultSize: 40 };
+    const grow = (index: number) => screen.getByTestId(`panel-${index}`).style.flexGrow;
+
+    it('collapses with Enter and gives back its size with the next Enter', async () => {
+      const onLayoutChange = vi.fn();
+      const onLayoutCommitted = vi.fn();
+      await renderPanels({
+        root: { onLayoutChange, onLayoutCommitted },
+        panels: [collapsible, { id: 'b' }],
+      });
+      const handle = screen.getByTestId('handle-1');
+      handle.focus();
+
+      expect(await fireEvent.keyDown(handle, { key: 'Enter' })).toBe(false);
+      expect(handle).toHaveAttribute('aria-valuenow', '0');
+      expect(screen.getByTestId('panel-0')).toHaveAttribute('data-collapsed');
+      expect([grow(0), grow(1)]).toEqual(['0', '100']);
+
+      await fireEvent.keyDown(handle, { key: 'Enter' });
+      expect(handle).toHaveAttribute('aria-valuenow', '40');
+      expect(screen.getByTestId('panel-0')).not.toHaveAttribute('data-collapsed');
+      expect([grow(0), grow(1)]).toEqual(['40', '60']);
+
+      expect(onLayoutChange.mock.calls.map(([, details]) => details.reason)).toEqual([
+        REASONS.keyboard,
+        REASONS.keyboard,
+      ]);
+      expect(onLayoutChange.mock.calls[0]?.[1].event.type).toBe('keydown');
+      expect(onLayoutCommitted.mock.calls.map(([, details]) => details.reason)).toEqual([
+        REASONS.keyboard,
+        REASONS.keyboard,
+      ]);
+    });
+
+    it('gives back the least size with Enter when the panel has no size from before', async () => {
+      await renderPanels({ panels: [{ ...collapsible, defaultSize: 0 }, { id: 'b' }] });
+      const handle = screen.getByTestId('handle-1');
+      handle.focus();
+
+      await fireEvent.keyDown(handle, { key: 'Enter' });
+
+      expect([grow(0), grow(1)]).toEqual(['20', '80']);
+    });
+
+    it.each([
+      { name: 'pushes the next panel', pushPanels: true, expected: ['20', '20', '60'] },
+      { name: 'stops at the next panel', pushPanels: false, expected: ['0', '20', '80'] },
+    ])('expands with Enter and a root that $name', async ({ pushPanels, expected }) => {
+      await renderPanels({
+        root: { pushPanels, defaultLayout: { a: 0, b: 20, c: 80 } },
+        panels: [
+          { id: 'a', collapsible: true, minSize: 20 },
+          { id: 'b', minSize: 20 },
+          { id: 'c' },
+        ],
+      });
+      const handle = screen.getByTestId('handle-1');
+      handle.focus();
+
+      await fireEvent.keyDown(handle, { key: 'Enter' });
+
+      expect([grow(0), grow(1), grow(2)]).toEqual(expected);
+    });
+
+    it('ignores Enter while the handle drags', async () => {
+      const onLayoutChange = vi.fn();
+      await renderPanels({ root: { onLayoutChange }, panels: [collapsible, { id: 'b' }] });
+      const handle = screen.getByTestId('handle-1');
+      await fireEvent.pointerDown(handle, pointerInit({ clientX: 0, buttons: 1 }));
+      await fireEvent.pointerMove(handle, pointerInit({ clientX: 100, buttons: 1 }));
+      onLayoutChange.mockClear();
+
+      expect(await fireEvent.keyDown(handle, { key: 'Enter' })).toBe(false);
+
+      expect(onLayoutChange).not.toHaveBeenCalled();
+      expect([grow(0), grow(1)]).toEqual(['50', '50']);
+    });
+
+    it('collapses the panel after the handle with Enter and primaryPanel="next"', async () => {
+      await renderPanels({
+        handle: { primaryPanel: 'next' },
+        panels: [{ id: 'a' }, { id: 'b', collapsible: true, minSize: 20, defaultSize: 30 }],
+      });
+      const handle = screen.getByTestId('handle-1');
+      handle.focus();
+
+      await fireEvent.keyDown(handle, { key: 'Enter' });
+      expect([grow(0), grow(1)]).toEqual(['100', '0']);
+      expect(handle).toHaveAttribute('aria-valuenow', '0');
+
+      await fireEvent.keyDown(handle, { key: 'Enter' });
+      expect([grow(0), grow(1)]).toEqual(['70', '30']);
+    });
+
+    it('leaves Enter to the browser when the primary panel is not collapsible', async () => {
+      const onLayoutChange = vi.fn();
+      await renderPanels({ root: { onLayoutChange } });
+      const handle = screen.getByTestId('handle-1');
+      handle.focus();
+
+      expect(await fireEvent.keyDown(handle, { key: 'Enter' })).toBe(true);
+
+      expect(onLayoutChange).not.toHaveBeenCalled();
+    });
+
+    it('collapses a collapsible primary panel with Home', async () => {
+      const { user } = await renderPanels({ panels: [collapsible, { id: 'b' }] });
+      const handle = screen.getByTestId('handle-1');
+      handle.focus();
+      expect(handle).toHaveAttribute('aria-valuemin', '0');
+
+      await user.keyboard('{Home}');
+
+      expect([grow(0), grow(1)]).toEqual(['0', '100']);
+      expect(handle).toHaveAttribute('aria-valuenow', '0');
+    });
+
+    it('collapses at once from the least size with an arrow key, and expands at once', async () => {
+      const { user } = await renderPanels({
+        panels: [{ ...collapsible, defaultSize: 20 }, { id: 'b' }],
+      });
+      const handle = screen.getByTestId('handle-1');
+      handle.focus();
+
+      await user.keyboard('{ArrowLeft}');
+      expect([grow(0), grow(1)]).toEqual(['0', '100']);
+
+      await user.keyboard('{ArrowRight}');
+      expect([grow(0), grow(1)]).toEqual(['20', '80']);
+    });
+
+    it('collapses the panel before the second handle with Enter, and gives its space to the next', async () => {
+      const { user } = await renderPanels({
+        root: { defaultLayout: { a: 30, b: 30, c: 40 } },
+        panels: [{ id: 'a' }, { id: 'b', collapsible: true, minSize: 20 }, { id: 'c' }],
+      });
+      const second = screen.getByTestId('handle-2');
+      second.focus();
+
+      // The second handle is after the panel b, so it moves b to the left with its space going
+      // to the panel c.
+      await user.keyboard('{Enter}');
+      expect([grow(0), grow(1), grow(2)]).toEqual(['30', '0', '70']);
+      expect(screen.getByTestId('handle-1')).toHaveAttribute('aria-valuenow', '30');
+      expect(second).toHaveAttribute('aria-valuenow', '0');
+    });
+
+    it('follows a method of the panel with its values', async () => {
+      const instance: { a?: InstanceType<typeof Resizable.Panel> } = {};
+      await render(() => (
+        <div style={{ width: '1000px', height: '400px' }}>
+          <Resizable.Root>
+            <Resizable.Panel
+              id="a"
+              data-testid="panel-0"
+              collapsible
+              minSize={20}
+              defaultSize={40}
+              ref={(value) => {
+                instance.a = value as InstanceType<typeof Resizable.Panel>;
+              }}
+            />
+            <Resizable.Handle data-testid="handle-1" />
+            <Resizable.Panel id="b" data-testid="panel-1" />
+          </Resizable.Root>
+        </div>
+      ));
+      const handle = screen.getByTestId('handle-1');
+      expect(handle).toHaveAttribute('aria-valuenow', '40');
+
+      instance.a?.collapse();
+      await nextTick();
+
+      expect(handle).toHaveAttribute('aria-valuenow', '0');
+      expect(handle).toHaveAttribute('data-at-min');
+    });
+  });
+
+  describe('double click', () => {
+    it.each([
+      {
+        name: 'the size of the panel at the start',
+        root: {},
+        handle: {},
+        panels: [{ id: 'a', defaultSize: 30 }, { id: 'b' }],
+        expected: ['30', '70'],
+      },
+      {
+        name: 'the default layout',
+        root: { defaultLayout: { a: 20, b: 80 } },
+        handle: {},
+        panels: [{ id: 'a' }, { id: 'b' }],
+        expected: ['20', '80'],
+      },
+      {
+        name: 'the share of a panel with no size',
+        root: {},
+        handle: {},
+        panels: [{ id: 'a' }, { id: 'b' }, { id: 'c' }],
+        expected: ['33.334', '33.333', '33.333'],
+      },
+      {
+        name: 'the panel after the handle',
+        root: {},
+        handle: { primaryPanel: 'next' },
+        panels: [{ id: 'a' }, { id: 'b', defaultSize: 30 }],
+        expected: ['70', '30'],
+      },
+    ])(
+      'gives the primary panel its first size with a double click: $name',
+      async ({ root, handle: handleProps, panels, expected }) => {
+        const onLayoutChange = vi.fn();
+        const onLayoutCommitted = vi.fn();
+        await renderPanels({
+          root: { ...root, onLayoutChange, onLayoutCommitted },
+          handle: handleProps,
+          panels,
+        });
+        const handle = screen.getByTestId('handle-1');
+        await drag(handle, 0, 100);
+        onLayoutChange.mockClear();
+        onLayoutCommitted.mockClear();
+
+        expect(await fireEvent.dblClick(handle)).toBe(false);
+
+        const grows = panels.map(
+          (_panel, index) => screen.getByTestId(`panel-${index}`).style.flexGrow,
+        );
+        expect(grows).toEqual(expected);
+        expect(onLayoutChange).toHaveBeenCalledTimes(1);
+        expect(onLayoutChange.mock.calls[0]?.[1].reason).toBe('reset');
+        expect(onLayoutChange.mock.calls[0]?.[1].event.type).toBe('dblclick');
+        expect(onLayoutCommitted).toHaveBeenCalledTimes(1);
+        expect(onLayoutCommitted.mock.calls[0]?.[1].reason).toBe('reset');
+        expect(onLayoutCommitted.mock.calls[0]?.[1].event.type).toBe('dblclick');
+        expect(onLayoutCommitted.mock.calls[0]?.[0]).toEqual(onLayoutChange.mock.calls[0]?.[0]);
+      },
+    );
+
+    it.each([
+      { name: 'pushes the next panel', pushPanels: true, called: 1 },
+      { name: 'stops at the next panel', pushPanels: false, called: 0 },
+    ])('gives the first size with a root that $name', async ({ pushPanels, called }) => {
+      const onLayoutChange = vi.fn();
+      // The panel b has its least size, so only a push gives the panel a its size from the start.
+      await renderPanels({
+        root: {
+          pushPanels,
+          layout: { a: 30, b: 20, c: 50 },
+          defaultLayout: { a: 50, b: 20, c: 30 },
+          onLayoutChange,
+        },
+        panels: [{ id: 'a' }, { id: 'b', minSize: 20 }, { id: 'c' }],
+      });
+
+      await fireEvent.dblClick(screen.getByTestId('handle-1'));
+
+      expect(onLayoutChange).toHaveBeenCalledTimes(called);
+      if (called > 0) {
+        expect(onLayoutChange.mock.calls[0]?.[0]).toEqual({ a: 50, b: 20, c: 30 });
+      }
+    });
+
+    it('does nothing for a second double click, and leaves the event to the browser', async () => {
+      const onLayoutChange = vi.fn();
+      await renderPanels({
+        root: { onLayoutChange },
+        panels: [{ id: 'a', defaultSize: 30 }, { id: 'b' }],
+      });
+      const handle = screen.getByTestId('handle-1');
+      await drag(handle, 0, 100);
+      await fireEvent.dblClick(handle);
+      onLayoutChange.mockClear();
+
+      expect(await fireEvent.dblClick(handle)).toBe(true);
+
+      expect(onLayoutChange).not.toHaveBeenCalled();
+    });
+
+    it('gives only the primary panel and the panel beside it their first sizes', async () => {
+      await renderPanels({
+        root: { defaultLayout: { a: 20, b: 30, c: 50 } },
+        panels: [{ id: 'a' }, { id: 'b' }, { id: 'c' }],
+      });
+      await drag(screen.getByTestId('handle-2'), 0, 100);
+      expect([0, 1, 2].map((index) => screen.getByTestId(`panel-${index}`).style.flexGrow)).toEqual(
+        ['20', '40', '40'],
+      );
+
+      await fireEvent.dblClick(screen.getByTestId('handle-2'));
+
+      expect([0, 1, 2].map((index) => screen.getByTestId(`panel-${index}`).style.flexGrow)).toEqual(
+        ['20', '30', '50'],
+      );
+    });
+
+    it('does nothing for a disabled handle', async () => {
+      const onLayoutChange = vi.fn();
+      await renderPanels({
+        root: { defaultLayout: { a: 40, b: 60 }, onLayoutChange },
+        handle: { disabled: true },
+        panels: [{ id: 'a', defaultSize: 30 }, { id: 'b' }],
+      });
+
+      expect(await fireEvent.dblClick(screen.getByTestId('handle-1'))).toBe(true);
+
+      expect(onLayoutChange).not.toHaveBeenCalled();
+    });
+
+    it('does not run after a listener calls preventVaseUIHandler()', async () => {
+      const onLayoutChange = vi.fn();
+      await renderPanels({
+        root: { onLayoutChange },
+        handle: {
+          onDblclick: (event: MouseEvent & { preventVaseUIHandler: () => void }) => {
+            event.preventVaseUIHandler();
+          },
+        },
+        panels: [{ id: 'a', defaultSize: 30 }, { id: 'b' }],
+      });
+      const handle = screen.getByTestId('handle-1');
+      await drag(handle, 0, 100);
+      onLayoutChange.mockClear();
+
+      await fireEvent.dblClick(handle);
+
+      expect(onLayoutChange).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('ends of the travel', () => {
+    const bounded = [
+      { id: 'a', minSize: 20, maxSize: 60 },
+      { id: 'b', minSize: 30 },
+    ];
+    const ends = (handle: HTMLElement) =>
+      ['data-at-min', 'data-at-max'].filter((name) => handle.hasAttribute(name));
+
+    it.each([
+      { name: 'at the least size', layout: { a: 20, b: 80 }, expected: ['data-at-min'] },
+      { name: 'between the ends', layout: { a: 40, b: 60 }, expected: [] },
+      { name: 'at the greatest size', layout: { a: 60, b: 40 }, expected: ['data-at-max'] },
+    ])('has the attribute of the end when the handle is $name', async ({ layout, expected }) => {
+      await renderPanels({ root: { defaultLayout: layout }, panels: bounded });
+
+      expect(ends(screen.getByTestId('handle-1'))).toEqual(expected);
+    });
+
+    it.each([
+      {
+        name: 'at the top of a vertical root',
+        root: { orientation: 'vertical' },
+        direction: 'ltr',
+        handle: {},
+        expected: ['data-at-min'],
+      },
+      {
+        name: 'at the right of a right-to-left root',
+        root: {},
+        direction: 'rtl',
+        handle: {},
+        expected: ['data-at-max'],
+      },
+      {
+        name: 'with the panel after the handle',
+        root: {},
+        direction: 'ltr',
+        handle: { primaryPanel: 'next' },
+        expected: ['data-at-min'],
+      },
+    ] as const)(
+      'has the attribute of the side of the screen, $name',
+      async ({ root, direction, handle, expected }) => {
+        await renderPanels({
+          root: { ...root, defaultLayout: { a: 20, b: 80 } },
+          direction,
+          handle,
+          panels: bounded,
+        });
+
+        expect(ends(screen.getByTestId('handle-1'))).toEqual(expected);
+      },
+    );
+
+    it('has neither attribute for a collapsible panel at its least size', async () => {
+      await renderPanels({
+        root: { defaultLayout: { a: 20, b: 80 } },
+        panels: [{ id: 'a', collapsible: true, minSize: 20 }, { id: 'b' }],
+      });
+
+      expect(ends(screen.getByTestId('handle-1'))).toEqual([]);
+    });
+
+    it('has the attribute of the least end when a collapsible panel is collapsed', async () => {
+      await renderPanels({
+        root: { defaultLayout: { a: 0, b: 100 } },
+        panels: [{ id: 'a', collapsible: true, minSize: 20 }, { id: 'b' }],
+      });
+
+      expect(ends(screen.getByTestId('handle-1'))).toEqual(['data-at-min']);
+    });
+
+    it('has neither attribute when the handle is disabled', async () => {
+      await renderPanels({
+        root: { defaultLayout: { a: 20, b: 80 } },
+        handle: { disabled: true },
+        panels: bounded,
+      });
+
+      expect(ends(screen.getByTestId('handle-1'))).toEqual([]);
+    });
+
+    it('has both attributes when the handle cannot move', async () => {
+      await renderPanels({ panels: [{ id: 'a', disabled: true }, { id: 'b' }] });
+
+      expect(ends(screen.getByTestId('handle-1'))).toEqual(['data-at-min', 'data-at-max']);
+    });
+
+    it('follows a drag and gives the state to stateClass', async () => {
+      await renderPanels({
+        panels: bounded,
+        handle: {
+          stateClass: (state: { atMin: boolean; atMax: boolean }) =>
+            `${String(state.atMin)}-${String(state.atMax)}`,
+        },
+      });
+      const handle = screen.getByTestId('handle-1');
+      expect(ends(handle)).toEqual([]);
+      expect(handle).toHaveClass('false-false');
+
+      await drag(handle, 0, -400);
+      expect(ends(handle)).toEqual(['data-at-min']);
+      expect(handle).toHaveClass('true-false');
+
+      await drag(handle, 0, 800);
+      expect(ends(handle)).toEqual(['data-at-max']);
+      expect(handle).toHaveClass('false-true');
+    });
+
+    it('counts only the next panel when the root does not push', async () => {
+      await renderPanels({
+        root: { pushPanels: false, defaultLayout: { a: 30, b: 30, c: 40 } },
+        panels: [{ id: 'a' }, { id: 'b', minSize: 30 }, { id: 'c' }],
+      });
+
+      expect(ends(screen.getByTestId('handle-1'))).toEqual(['data-at-max']);
+    });
+  });
+
+  describe('click after a drag', () => {
+    it('stops the click that follows a drag in which the pointer moved', async () => {
+      const onClick = vi.fn();
+      await renderPanels({ handle: { onClick } });
+      const handle = screen.getByTestId('handle-1');
+
+      await drag(handle, 0, 100);
+
+      expect(await fireEvent.click(handle)).toBe(false);
+      expect(onClick).not.toHaveBeenCalled();
+    });
+
+    it('lets the click that follows a press with no move go on', async () => {
+      const onClick = vi.fn();
+      await renderPanels({ handle: { onClick } });
+      const handle = screen.getByTestId('handle-1');
+
+      await drag(handle, 0, 0);
+
+      expect(await fireEvent.click(handle)).toBe(true);
+      expect(onClick).toHaveBeenCalledTimes(1);
+    });
+
+    it('stops one click only', async () => {
+      const onClick = vi.fn();
+      await renderPanels({ handle: { onClick } });
+      const handle = screen.getByTestId('handle-1');
+
+      await drag(handle, 0, 100);
+      await fireEvent.click(handle);
+      await fireEvent.click(handle);
+
+      expect(onClick).toHaveBeenCalledTimes(1);
+    });
+
+    it.each([
+      {
+        name: 'a press with no move',
+        press: (handle: HTMLElement) => drag(handle, 5, 5),
+      },
+      {
+        name: 'a press that starts no drag',
+        press: (handle: HTMLElement) =>
+          fireEvent.pointerDown(handle, pointerInit({ button: 2, buttons: 2 })),
+      },
+    ])('clears the rule with $name', async ({ press }) => {
+      const onClick = vi.fn();
+      await renderPanels({ handle: { onClick } });
+      const handle = screen.getByTestId('handle-1');
+      await drag(handle, 0, 100);
+
+      await press(handle);
+      await fireEvent.click(handle);
+
+      expect(onClick).toHaveBeenCalledTimes(1);
     });
   });
 

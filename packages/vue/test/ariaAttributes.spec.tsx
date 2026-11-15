@@ -4,6 +4,7 @@ import * as Radio from '../src/radio/index.parts';
 import * as Slider from '../src/slider/index.parts';
 import * as Switch from '../src/switch/index.parts';
 import * as TimeClock from '../src/time-clock/index.parts';
+import * as TimeField from '../src/time-field/index.parts';
 
 <Checkbox.Root aria-label="x" aria-labelledby="id" />;
 <Checkbox.Root ariaLabel="x" ariaLabelledby="id" />;
@@ -55,3 +56,8 @@ import * as TimeClock from '../src/time-clock/index.parts';
 <TimeClock.Face aria-labelledby={5} />;
 // @ts-expect-error `aria-describedby` is a string
 <TimeClock.Face aria-describedby={5} />;
+
+<TimeField.Root aria-labelledby="id" />;
+<TimeField.Root ariaLabelledby="id" />;
+// @ts-expect-error `aria-labelledby` is a string
+<TimeField.Root aria-labelledby={5} />;

@@ -8,6 +8,7 @@ import { Dialog } from '@vase-ui/vue/dialog';
 import { ScrollArea } from '@vase-ui/vue/scroll-area';
 import * as Menu from '../index.parts';
 import {
+  clientCenter,
   createRenderer,
   fireEvent,
   firePointer,
@@ -63,7 +64,8 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       </Menu.FilterProvider>,
     );
 
-    await fireEvent.mouseDown(screen.getByRole('button', { name: 'Actions' }));
+    const trigger = screen.getByRole('button', { name: 'Actions' });
+    await fireEvent.mouseDown(trigger, clientCenter(trigger));
 
     const input = await screen.findByRole('searchbox', { name: 'Filter actions' });
     const checkbox = screen.getByRole('menuitemcheckbox', { name: 'Two' });

@@ -1,7 +1,13 @@
 import { expect, describe, it } from 'vitest';
 import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import { Accordion } from '@vase-ui/vue/accordion';
-import { describeConformance, createRenderer, flushMicrotasks, screen } from '#test-utils';
+import {
+  describeConformance,
+  createHeldBranch,
+  createRenderer,
+  flushMicrotasks,
+  screen,
+} from '#test-utils';
 import { useAccordionItemContext } from '../item/AccordionItemContext';
 import type { AccordionItemContext } from '../item/AccordionItemContext';
 import AccordionTriggerReplacement from './AccordionTriggerReplacement.test.vue';
@@ -291,6 +297,44 @@ describe('<Accordion.Trigger />', () => {
       await flushMicrotasks();
 
       expect(panel).toHaveAttribute('aria-labelledby', trigger.id);
+    });
+
+    it('is not the id of a trigger that mounts while KeepAlive holds its branch', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Accordion.Header key="header">
+          <Accordion.Trigger id="held-trigger">A</Accordion.Trigger>
+        </Accordion.Header>
+      ));
+      await render(() => (
+        <Accordion.Root defaultValue={['a']}>
+          <Accordion.Item value="a">
+            <HeldBranch />
+            <Accordion.Panel data-testid="panel">Panel</Accordion.Panel>
+          </Accordion.Item>
+        </Accordion.Root>
+      ));
+      const panel = screen.getByTestId('panel');
+
+      await mountWhileHeld();
+      expect(panel).not.toHaveAttribute('aria-labelledby', 'held-trigger');
+
+      await show();
+      expect(panel).toHaveAttribute('aria-labelledby', 'held-trigger');
+    });
+
+    it('VUE-80: is no id while the item has no trigger', async () => {
+      await render(
+        <Accordion.Root defaultValue={['a']}>
+          <Accordion.Item value="a">
+            <Accordion.Panel data-testid="panel">Panel</Accordion.Panel>
+          </Accordion.Item>
+        </Accordion.Root>,
+      );
+
+      const panel = screen.getByTestId('panel');
+
+      expect(panel).toHaveAttribute('data-open');
+      expect(panel).not.toHaveAttribute('aria-labelledby');
     });
   });
 });

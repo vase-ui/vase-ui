@@ -32,10 +32,7 @@ export interface CollapsiblePanelProps
   keepMounted?: boolean | undefined;
   /**
    * The id of the panel. The trigger uses it for `aria-controls`.
-   * A server render writes the trigger before it renders the panel.
-   * The `aria-controls` of an open trigger in the server HTML then names a generated id until the
-   * page hydrates. It does not name a panel that has an `id` of its own until then.
-   * To correct this, set `aria-controls` on `Collapsible.Trigger` to the same id.
+   * If the id is absent or empty, the panel has the id that the root generates.
    */
   id?: string | undefined;
 }
@@ -85,6 +82,7 @@ const {
   mounted,
   onOpenChange,
   open,
+  reaches,
   registerPanelId,
   setMounted,
   setOpen,
@@ -99,6 +97,8 @@ const source = Symbol();
 useRegisteredId(
   () => panelId.value,
   (getId) => registerPanelId(source, getId),
+  () => element.value,
+  reaches,
 );
 
 const {

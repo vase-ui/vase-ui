@@ -851,6 +851,37 @@ describe('<Combobox.Trigger />', () => {
       expect(listbox.isConnected).toBe(true);
     });
 
+    it('keeps the popup open for a release up to 5px off the trigger, away from the point of the press', async () => {
+      const onOpenChange = vi.fn();
+      await render(
+        <Combobox.Root onOpenChange={onOpenChange}>
+          <Combobox.Trigger data-testid="trigger">Open</Combobox.Trigger>
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List>
+                  <Combobox.Item value="alpha">Alpha</Combobox.Item>
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+      trigger.getBoundingClientRect = () =>
+        DOMRect.fromRect({ x: 100, y: 100, width: 100, height: 40 });
+
+      await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+      await fireEvent.mouseDown(trigger, { button: 0, clientX: 110, clientY: 120 });
+      await screen.findByRole('listbox');
+
+      await fireEvent.mouseUp(document.body, { button: 0, clientX: 205, clientY: 120 });
+
+      expect(onOpenChange.mock.calls.map(([open]) => open)).toEqual([true]);
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    });
+
     it('closes the popup when the release is more than 5px outside the trigger bounds', async () => {
       await render(
         <Combobox.Root>
@@ -1805,6 +1836,42 @@ describe('<Combobox.Trigger />', () => {
       await waitFor(() => {
         expect(store.select('forceMounted')).toBe(true);
       });
+    });
+
+    it('the label does not name a trigger that mounts while KeepAlive holds it', async () => {
+      const visible = shallowRef(true);
+      const extra = shallowRef(false);
+      // With no `Combobox.Input` beside the trigger, the input is in the popup and the trigger is
+      // the control of the field.
+      const Branch = defineComponent(() => () => (
+        <div>
+          {extra.value ? (
+            <Combobox.Root key="held" items={['apple']}>
+              <Combobox.Trigger id="held-trigger" />
+            </Combobox.Root>
+          ) : null}
+        </div>
+      ));
+      await render(() => (
+        <Field.Root>
+          <Field.Label data-testid="label">Fruit</Field.Label>
+          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+        </Field.Root>
+      ));
+      const label = screen.getByTestId('label');
+      const providerId = label.getAttribute('for');
+
+      visible.value = false;
+      await flushMicrotasks();
+      extra.value = true;
+      await flushMicrotasks();
+
+      expect(label.getAttribute('for')).toBe(providerId);
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(label).toHaveAttribute('for', 'held-trigger');
     });
   });
 

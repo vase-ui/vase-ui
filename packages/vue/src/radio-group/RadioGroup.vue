@@ -73,6 +73,7 @@ import { contains } from '../common/shadowDom';
 import { useControlled } from '../common/useControlled';
 import { isEligibleInput } from '../field/root/useFieldValidation';
 import { useFieldsetRootContext } from '../fieldset/root/FieldsetRootContext';
+import { comesBeforeInSameTree } from '../internals/comesBeforeInSameTree';
 import { SHIFT } from '../internals/composite/composite';
 import { useCompositeRoot } from '../internals/composite/root/useCompositeRoot';
 import { createChangeEventDetails } from '../internals/createBaseUIEventDetails';
@@ -176,30 +177,51 @@ function setCheckedValue(value: Value, eventDetails: RadioGroupChangeEventDetail
   inputSyncRequest.value += 1;
 }
 
-// The exposed input is the checked input, or else the first enabled input. The field validates
-// each registered input, so the group does not write `validation.inputRef`. A stale input of an
-// unmounted radio there would block the submit of the form.
-const inputElement = shallowRef<HTMLInputElement | null>(null);
-let firstEnabledInput: HTMLInputElement | null = null;
+// The exposed input is the checked input, or else the first enabled input in the document. The
+// field validates each registered input, so the group does not write `validation.inputRef`. A stale
+// input of an unmounted radio there would block the submit of the form.
+const exposedInput = shallowRef<HTMLInputElement | null>(null);
+const radioInputs = new Set<HTMLInputElement>();
 
-function registerInputRef(input: HTMLInputElement) {
-  if (!input.disabled) {
-    firstEnabledInput ??= input;
-
-    const currentInput = inputElement.value;
-    if (input.checked || currentInput == null || currentInput.disabled) {
-      inputElement.value = input;
+function findFirstEnabledInput() {
+  let firstInput: HTMLInputElement | null = null;
+  for (const input of radioInputs) {
+    if (!input.disabled && (!firstInput || comesBeforeInSameTree(input, firstInput))) {
+      firstInput = input;
     }
   }
+  return firstInput;
+}
 
-  // A later call can make this input the exposed input, so the cleanup checks both.
+// A keyed move runs no registration. An exposed input that is not checked thus reads as the first
+// enabled input in the document at each read.
+function getExposedInput() {
+  const input = exposedInput.value;
+  return input == null || input.checked ? input : (findFirstEnabledInput() ?? input);
+}
+
+function registerInputRef(input: HTMLInputElement) {
+  radioInputs.add(input);
+
+  // The read also finds the first enabled input. This write makes a `computed` that reads
+  // `inputElement` follow a registration.
+  const currentInput = exposedInput.value;
+  if (
+    !input.disabled &&
+    (input.checked ||
+      currentInput == null ||
+      currentInput.disabled ||
+      (!currentInput.checked && input === findFirstEnabledInput()))
+  ) {
+    exposedInput.value = input;
+  }
+
+  // `inputElement` is `null` after the radio of the input that it gives unmounts, as in Base UI.
+  // After a keyed move, that input can differ from `exposedInput`.
   return () => {
-    if (firstEnabledInput === input) {
-      firstEnabledInput = null;
-    }
-    if (inputElement.value === input) {
-      inputElement.value = null;
-    }
+    const givenInput = getExposedInput();
+    radioInputs.delete(input);
+    exposedInput.value = givenInput === input ? null : givenInput;
   };
 }
 
@@ -245,9 +267,9 @@ useValueChanged(checkedValue, () => {
     validation.change(checkedValue.value);
   }
 
-  const fallbackInput = firstEnabledInput;
-  if (checkedValue.value == null && fallbackInput && !fallbackInput.disabled) {
-    inputElement.value = fallbackInput;
+  const fallbackInput = checkedValue.value == null ? findFirstEnabledInput() : null;
+  if (fallbackInput) {
+    exposedInput.value = fallbackInput;
   }
 });
 
@@ -342,7 +364,12 @@ const { element, elementProps } = useRenderElement('div', props, {
   ],
 });
 
-defineExpose({ element, inputElement });
+defineExpose({
+  element,
+  get inputElement() {
+    return getExposedInput();
+  },
+});
 </script>
 
 <template>

@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { defineComponent, shallowRef } from 'vue';
+import { userEvent } from 'vitest/browser';
+import { defineComponent, h, nextTick, shallowRef, Transition, vShow, withDirectives } from 'vue';
+import type { Directive, VNode } from 'vue';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { Field } from '@vase-ui/vue/field';
@@ -9,6 +11,7 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  hydrateAfter,
   isJSDOM,
   renderOnServer,
   screen,
@@ -17,14 +20,18 @@ import {
 } from '#test-utils';
 import ComboboxListPart from '../../../test/fixtures/ComboboxListPart.vue';
 import ComboboxPartsReplacement from '../../../test/fixtures/ComboboxPartsReplacement.vue';
+import PopupRootNodeScoped from '../../utils/popups/focus/PopupRootNodeScoped.test.vue';
 import { REASONS } from '../../internals/reasons';
 import type { VaseUIEvent } from '../../internals/types';
+import { useComboboxRootContext } from '../root/ComboboxRootContext';
 import type { ComboboxStore } from '../store';
+import ComboboxInputBeforeHydration from './ComboboxInputBeforeHydration.test.vue';
 import ComboboxInputHydration from './ComboboxInputHydration.test.vue';
 import ComboboxInputTriggerHydration from './ComboboxInputTriggerHydration.test.vue';
 
 const HYDRATION_FIXTURE = 'src/combobox/input/ComboboxInputHydration.test.vue';
 const TRIGGER_HYDRATION_FIXTURE = 'src/combobox/input/ComboboxInputTriggerHydration.test.vue';
+const BEFORE_HYDRATION_FIXTURE = 'src/combobox/input/ComboboxInputBeforeHydration.test.vue';
 
 type RenderSlotProps = { props: Record<string, unknown> };
 
@@ -1546,6 +1553,35 @@ describe('<Combobox.Input />', () => {
       expect(store.context.startDismissRef.value).toHaveAttribute('aria-label', 'Dismiss');
     });
 
+    it('keeps the dismiss button of a newer input when an older input unmounts later', async () => {
+      let store!: ComboboxStore;
+      const StoreProbe = defineComponent(() => {
+        store = useComboboxRootContext();
+        return () => null;
+      });
+      const showsOlder = shallowRef(true);
+      const showsNewer = shallowRef(false);
+      await render(() => (
+        <Combobox.Root open>
+          <StoreProbe />
+          {showsOlder.value && <Combobox.Input data-testid="older-input" />}
+          {showsNewer.value && <Combobox.Input data-testid="newer-input" />}
+        </Combobox.Root>
+      ));
+
+      showsNewer.value = true;
+      await flushMicrotasks();
+      const input = screen.getByTestId('newer-input');
+      expect(store.context.startDismissRef.value).toBe(input.previousElementSibling);
+
+      showsOlder.value = false;
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('older-input')).toBe(null);
+      expect(store.context.startDismissRef.value).toBe(input.previousElementSibling);
+      expect(store.context.startDismissRef.value).toHaveAttribute('aria-label', 'Dismiss');
+    });
+
     it.each([
       { name: 'the label first, the description last', parts: ['label', 'input', 'description'] },
       { name: 'the input first', parts: ['input', 'label', 'description'] },
@@ -1685,6 +1721,132 @@ describe('<Combobox.Input />', () => {
 
       expect(handleFocusout).toHaveBeenCalledTimes(1);
       expect(screen.getByTestId('field')).not.toHaveAttribute('data-touched');
+    });
+  });
+
+  describe('VUE-60: Combobox.Input has one root node', () => {
+    const vMark: Directive<HTMLElement, string> = {
+      mounted(element, binding) {
+        element.setAttribute('data-mark', binding.value);
+      },
+    };
+    const attributes = { class: 'part', 'data-testid': 'part' };
+
+    it.each([
+      { name: 'scoped style' },
+      { name: 'custom directive' },
+      { name: 'v-show' },
+      { name: 'Transition' },
+    ])('applies a $name to the input of an open popup', async ({ name }) => {
+      const shown = shallowRef(true);
+
+      function renderInput(): VNode {
+        switch (name) {
+          case 'scoped style':
+            return h(PopupRootNodeScoped, { part: Combobox.Input });
+          case 'custom directive':
+            return withDirectives(h(Combobox.Input, attributes), [[vMark, 'marked']]);
+          case 'v-show':
+            return withDirectives(h(Combobox.Input, attributes), [[vShow, shown.value]]);
+          default:
+            return h(Transition, null, () => h(Combobox.Input, attributes));
+        }
+      }
+
+      await render(() => (
+        <Combobox.Root defaultOpen items={['a']}>
+          {renderInput()}
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup />
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>
+      ));
+      const input = await screen.findByTestId('part');
+
+      expect(input.previousElementSibling).toHaveAttribute('role', 'button');
+      expect(input.previousElementSibling).toHaveAttribute('aria-label', 'Dismiss');
+      if (name === 'scoped style') {
+        expect(getComputedStyle(input).outlineStyle).toBe('dashed');
+      } else if (name === 'custom directive') {
+        expect(input).toHaveAttribute('data-mark', 'marked');
+      } else if (name === 'v-show') {
+        shown.value = false;
+        await nextTick();
+        expect(getComputedStyle(input).display).toBe('none');
+      }
+    });
+  });
+
+  describe('VUE-74: text that the user typed before the hydration', () => {
+    async function hydrateTyped(
+      props: Record<string, unknown>,
+      { typed, focus }: { typed: string; focus: 'input' | 'outside' },
+    ) {
+      const serverHtml = await renderOnServer(BEFORE_HYDRATION_FIXTURE, props);
+      const { container } = await hydrateAfter(ComboboxInputBeforeHydration, {
+        serverHtml,
+        props,
+        before(serverContainer) {
+          within(serverContainer).getByTestId<HTMLInputElement>('input').value = typed;
+          within(serverContainer).getByTestId(focus).focus();
+        },
+      });
+      const fixture = within(container);
+      return {
+        fixture,
+        input: fixture.getByTestId<HTMLInputElement>('input'),
+        inputValue: fixture.getByTestId('input-value'),
+        changes: fixture.getByTestId('changes'),
+      };
+    }
+
+    it('writes the text to v-model:input-value, and the next key opens the list', async () => {
+      const { fixture, input, inputValue, changes } = await hydrateTyped(
+        {},
+        { typed: 'Mal', focus: 'input' },
+      );
+      await flushMicrotasks();
+
+      expect(input).toHaveValue('Mal');
+      expect(inputValue.textContent).toBe('Mal');
+      expect(changes.textContent).toBe('Mal (input-change)');
+      expect(input).toHaveAttribute('aria-expanded', 'false');
+      expect(fixture.queryAllByRole('option')).toHaveLength(0);
+
+      await userEvent.keyboard('t');
+
+      await waitFor(() =>
+        expect(fixture.getAllByRole('option').map((option) => option.textContent)).toEqual([
+          'Malta',
+        ]),
+      );
+    });
+
+    it('handles the text of an `Input` in `as` one time', async () => {
+      const { input, inputValue, changes } = await hydrateTyped(
+        { rendersInput: true },
+        { typed: 'Mal', focus: 'input' },
+      );
+      await flushMicrotasks();
+
+      expect(input).toHaveValue('Mal');
+      expect(inputValue.textContent).toBe('Mal');
+      expect(changes.textContent).toBe('Mal (input-change)');
+    });
+
+    it('touches the field and keeps the list closed when the focus is outside', async () => {
+      const { fixture, input, changes } = await hydrateTyped(
+        {},
+        { typed: 'Mal', focus: 'outside' },
+      );
+
+      await waitFor(() => expect(fixture.getByTestId('field')).toHaveAttribute('data-touched', ''));
+      await flushMicrotasks();
+      expect(changes.textContent).toBe('Mal (input-change)');
+      expect(input).toHaveAttribute('aria-expanded', 'false');
+      expect(fixture.queryAllByRole('option')).toHaveLength(0);
     });
   });
 });
