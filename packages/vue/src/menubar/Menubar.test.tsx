@@ -11,6 +11,7 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountListTests,
   hydrate,
   isJSDOM,
   nextEvent,
@@ -397,6 +398,29 @@ describe('filterable menubar menus', () => {
 
 describe('<Menubar />', () => {
   const { render } = createRenderer();
+
+  heldMountListTests({
+    render,
+    renderList: (withLastItem) => (
+      <Menubar>
+        <Menu.Root>
+          <Menu.Trigger>File</Menu.Trigger>
+        </Menu.Root>
+        {withLastItem ? (
+          <Menu.Root>
+            <Menu.Trigger>Edit</Menu.Trigger>
+          </Menu.Root>
+        ) : null}
+      </Menubar>
+    ),
+    async check(user) {
+      screen.getByRole('menuitem', { name: 'File' }).focus();
+      await user.keyboard('[ArrowRight]');
+      await waitFor(() => {
+        expect(screen.getByRole('menuitem', { name: 'Edit' })).toHaveFocus();
+      });
+    },
+  });
 
   describeConformance(<Menubar />, () => ({
     render: (node) => render(<Menubar>{node}</Menubar>),
