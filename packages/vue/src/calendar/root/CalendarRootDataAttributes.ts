@@ -14,3 +14,16 @@ export const invalid = 'data-invalid';
  * Present when no day is selected.
  */
 export const empty = 'data-empty';
+/**
+ * Present when the grid shows more than one month.
+ */
+export const multipleMonths = 'data-multiple-months';
+/**
+ * Indicates the side of the last change of the page. It is `none` until the page changes.
+ * @type {'previous' | 'next' | 'none'}
+ */
+export const navigationDirection = 'data-navigation-direction';
+/**
+ * Present when the grid shows the broadcast calendar.
+ */
+export const broadcastCalendar = 'data-broadcast-calendar';

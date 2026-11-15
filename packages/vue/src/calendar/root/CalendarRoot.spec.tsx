@@ -67,7 +67,9 @@ const zoned = Temporal.ZonedDateTime.from('2026-11-14T09:30[Asia/Tokyo]');
   month={Temporal.PlainYearMonth.from('2026-11')}
   onMonthChange={(month, details) => {
     expectType<Temporal.PlainYearMonth, typeof month>(month);
-    expectType<'day-press' | 'keyboard' | 'none', typeof details.reason>(details.reason);
+    expectType<'day-press' | 'keyboard' | 'month-change' | 'none', typeof details.reason>(
+      details.reason,
+    );
   }}
   focusedDate={date}
   onFocusedDateChange={(focused) => {
@@ -79,6 +81,8 @@ const zoned = Temporal.ZonedDateTime.from('2026-11-14T09:30[Asia/Tokyo]');
 <Calendar.Root
   disabledDates={[date, { start: date, end: date }, { dayOfWeek: [6, 7] }, (day) => day.day === 1]}
   unavailableDates={{ before: date }}
+  hiddenDates={{ after: dateTime }}
+  modifiers={{ holiday: date, work: { dayOfWeek: 1 } }}
   minDate={zoned}
   maxDate={dateTime}
   today={date}
@@ -97,6 +101,9 @@ const rootState: Calendar.Root.State = {
   readOnly: false,
   invalid: false,
   empty: true,
+  multipleMonths: false,
+  navigationDirection: 'none',
+  broadcastCalendar: false,
 };
 const weekday: Calendar.Weekday.Props = { weekday: 1, format: 'narrow' };
 const dayState: Calendar.Day.State = {
@@ -107,4 +114,37 @@ const dayState: Calendar.Day.State = {
   today: false,
   outsideMonth: false,
   weekend: false,
+  modifiers: { holiday: true },
 };
+
+// The pages: months, a broadcast month, and a duration of weeks or days.
+<Calendar.Root
+  numberOfMonths={2}
+  pagedNavigation
+  fixedWeeks
+  showOutsideDays
+  isoWeek
+  firstWeekContainsDate={4}
+  broadcastCalendar
+  visibleDuration={{ weeks: 2 }}
+/>;
+<Calendar.Root visibleDuration={{ days: 5 }} />;
+
+// @ts-expect-error A duration has weeks or days.
+<Calendar.Root visibleDuration={{ months: 1 }} />;
+
+// @ts-expect-error The day of January is from 1 to 7.
+<Calendar.Root firstWeekContainsDate={8} />;
+
+const monthsState: Calendar.Months.State = { ...rootState, navigationDirection: 'next' };
+const captionProps: Calendar.Caption.Props = { id: 'caption', format: { month: 'short' } };
+const monthSelectProps: Calendar.MonthSelect.Props = { format: 'short' };
+const yearSelectProps: Calendar.YearSelect.Props = { format: '2-digit', order: 'desc' };
+const weekNumberProps: Calendar.WeekNumber.Props = {
+  week: { start: date, days: [date] },
+};
+const weekNumberState: Calendar.WeekNumber.State = { ...rootState, weekNumber: 45 };
+const buttonProps: Calendar.PreviousButton.Props = { disabled: true, nativeButton: false };
+
+// @ts-expect-error The order of the years is asc or desc.
+const yearOrder: Calendar.YearSelect.Props = { order: 'random' };

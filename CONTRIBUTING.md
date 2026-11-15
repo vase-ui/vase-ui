@@ -364,6 +364,8 @@ A part whose own node is text, such as `Progress.Value`, has four more rules:
 
 A part of a component that Base UI does not have, whose own node is text, has no `<Part>Children.vue`. Its default slot and its `#render` slot get the text as the slot prop `text`. The text is the content of the part when the consumer gives no default slot. `Calendar.Weekday` and `Calendar.DayButton` do this.
 
+A part of a component that Base UI does not have follows the same rules for its other nodes. `Calendar.MonthSelect` and `Calendar.YearSelect` have a `<Part>Children.vue` for their `option` nodes. The part provides the options in `CalendarSelectContext`.
+
 ### Parts with a hidden input
 
 Some upstream parts render a hidden `<input>` beside their element. `Switch.Root` is the model. The input gives the part the form behavior of a native control.
@@ -546,6 +548,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - Handles are upstream's objects, with no change: `Dialog.createHandle<Payload>()`, `handle`, `payload`, `triggerId`, `open()`, `openWithPayload()`, `close()`, `isOpen`.
 - Function children become a default scoped slot with named props: `{ payload }` on a root, `{ validity }` on `Field.Validity`, `{ item, index }` on `Combobox.Collection`, `{ value }` on `Select.Value`.
 - A part that renders a list has a slot that has the name of its item, as `Combobox.List` has the slot `item`: `#month` of `Calendar.Months`, `#weekday` of `Calendar.GridHeaderRow`, `#week` of `Calendar.GridBody` and `#day` of `Calendar.Week`. Its props are the item and its `index`, such as `{ day, index }`.
+- A list part of a component that Base UI does not have can have a default slot. The default slot holds the nodes before the items. `Calendar.WeekNumber` is in the default slot of `Calendar.Week`, and `Calendar.WeekNumberHeader` is in that of `Calendar.GridHeaderRow`. The `#render` slot does not render the default slot.
 - A part can take nodes or a function that renders each item as its children, such as `Combobox.List`. Its default slot holds the nodes, and the slot `item` with `{ item, index }` is the function. A slot does not show at run time if it takes slot props, so one slot cannot be both.
 - `Combobox.Collection` uses each item as the `key` of its nodes. An item then keeps its element when the filter changes the list, as in React with `key={item}`. An item that the consumer replaces with a new object gets a new element. The items of one collection must be unique, because equal items give the same key.
 - Type the slots with `defineSlots`. Write each slot except `#render` as a method, as the Vue documentation does: `default(props: { state: ButtonState }): unknown`. A slot with no slot props is `default(): unknown`. A root with a value type uses `generic="Value"`.
@@ -690,6 +693,7 @@ A function component that calls `h` is not an SFC, so Vapor mode does not compil
 - A portal renders its popup after the mount, so the server HTML has no `Dialog.Popup` and no `Popover.Popup`. Each of these popups reads `aria-labelledby` and `aria-describedby` from the store. A `watch` writes the ids of the title and the description there after the title and the description render. The first render of a popup that holds them thus has neither attribute.
 - Hydration must give no warning. The hydrated DOM must be equal to a client-only render. Vue does not compare `aria-*`, `role` or `data-*`.
 - A part that writes a date as text can write another text on a server than in a browser, because the data of `Intl` can differ. While it hydrates, the part binds `data-allow-mismatch` with the category `text`. `Calendar.Weekday` and `Calendar.DayButton` do this.
+- Vue allows a text mismatch only for an element whose only child is a text. In a template, that is a static element with an interpolation as its child, and not a `<component :is>`. `Calendar.Caption` and `Calendar.WeekNumber` write their default text as the child of a static element. A consumer that gives a default slot or `as` gets the text in a `<component :is>`.
 - The element gets no `style` key while the merged style has no value, because Vue writes `style=""` for an empty key on a server. After a render that wrote a `style` key, the key stays. Vue removes the whole `style` attribute when the key goes away, and with it each declaration that a part writes to the DOM.
 - One internal SFC, `internals/PrehydrationScript.vue`, renders each prehydration script. A part renders `<PrehydrationScript :script="script" />` where its script expects it. A script that follows its element finds the element with `document.currentScript.previousElementSibling`.
 - The SFC renders the script element only while the part hydrates. It writes `<component :is="'script'">`, because the Vue compiler removes a `<script>` tag from a template.
@@ -885,6 +889,9 @@ The date and time families call `Temporal` and `Intl` directly, through the func
 - `Intl` and `Temporal` do not have the same calendars. A part reads the calendar of a locale only through `localeCalendar`, which gives `gregory` when `Temporal` has no such calendar.
 - `today(timeZone)` gives today, and the `today` prop wins over it. The `timeZone` prop wins over the zone of a zoned value, and that zone wins over the zone of the runtime.
 - The root of a calendar holds the focused day and the month of the page. Each part derives its page from these two values, and no part keeps a page of its own.
+- A calendar of weeks or days (`visibleDuration`) also keeps the first day of its page in its root, with the month for that page. That day applies only while the root has that month. Else the page starts with the week or the day that holds the first day of the month. A calendar with no `month` and no `defaultMonth` starts from the focused day, else the selected day, else today, until its month changes.
+- A move to a page of another month waits for that month. The page then changes one time, and it stays when the consumer keeps its `month`.
+- A page that the user leaves stays in the pages that `Calendar.Months` renders until its animations end. It has `data-ending-style` and `inert`, and no tab stop. A new calendar or first day of the week, such as those of the runtime locale after a hydration, gives other pages for the same place. It is not a move, so no page stays and the side of the move does not change.
 - Make a list of days by adding days, and never by adding 24 hours. A change of the clock in a time zone then does not repeat a day and does not skip a day.
 - `getSegmentLayout` gives the order of the segments and the text of the literals of a date or time field. It reads the parts that `Intl` gives for a fixed sample. The digits come from `Intl.NumberFormat`, and the padding and the placeholders come from the code.
 - A date or time field has a value only when each segment has a number.
