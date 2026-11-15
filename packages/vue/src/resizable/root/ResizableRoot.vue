@@ -54,7 +54,8 @@ export interface ResizableRootProps
    * The controlled layout: the size of each panel by panel `id`.
    * A size is a number, or a string of a number with a unit. A number, and a string with no unit or
    * with `%`, are percent of the panel space. A length (`px`, `em`, `rem`, `vh` or `vw`) turns into
-   * percent of the panel space when the root reads it. A fixed panel keeps the pixels.
+   * percent of the panel space when the root reads it. A fixed panel keeps the pixels. In an entry,
+   * `em` is the font size of the panel.
    * The root reads a length when it has a measurement, so the size of a length shows after the
    * mount. The change events give percent.
    * The panels show the layout as far as their constraints allow.
@@ -232,6 +233,8 @@ const emit = defineEmits<{
    * - `'keyboard'` for a key on a handle
    * - `'reset'` for a double click on a handle
    * - `'imperative-action'` for a method of a panel or of the root
+   *
+   * The `eventDetails.snapshot` is the layout with the size of each fixed panel in pixels.
    */
   layoutCommitted: [layout: ResizableRootLayout, eventDetails: ResizableRootCommitEventDetails];
   /**
@@ -269,7 +272,7 @@ const registered = shallowRef<readonly ResizablePanelRegistration[]>([]);
 const panels = computed(() =>
   registered.value
     .filter((panel) => !panel.deactivated.value)
-    .toSorted((a, b) => a.index.value - b.index.value),
+    .sort((a, b) => a.index.value - b.index.value),
 );
 
 // What the root read from the page. A server, the first render of a client and a root that has had
@@ -283,9 +286,10 @@ function measurementFor(id?: string) {
   return measurement.value === undefined ? undefined : getMeasurement(measurement.value, id);
 }
 
-// The percent of a `defaultSize` that is a length, as it was at the first measurement. The panel
-// keeps that percent, so it scales with the root as a panel with a default size in percent does.
-// A method that gives the first sizes back uses the length again, so it gives the pixels.
+// The percent of a `defaultSize` that is a length, as it was at the first measurement after the
+// mount of its panel. The panel keeps that percent, so it scales with the root as a panel with a
+// default size in percent does. A method that gives the first sizes back uses the length again, so
+// it gives the pixels.
 const firstDefaultSizes = new WeakMap<ResizablePanelRegistration, number>();
 
 function buildConstraints(useFirstDefaultSizes: boolean): PanelConstraints[] {
@@ -496,15 +500,14 @@ let mounted = false;
 // activation. The panels are then the same, so the root keeps the ids that it knows.
 let deactivated = false;
 let knownIds = new Set<string>();
+// The panels and the handles, in the order of the document.
+const listItems = shallowRef<readonly Element[]>([]);
 
 // Each panel and handle gets its place among the others from this list. A server gives the places
 // in the order of `setup`. The list calls this function when a panel or a handle comes or goes,
 // and after it sorted them. A panel that mounts with no entry in the layout of the consumer gets a
 // size, and the others make room for it. The layout then names that panel. A panel that goes keeps
 // its entry, so it comes back at its size.
-// The panels and the handles, in the order of the document.
-const listItems = shallowRef<readonly Element[]>([]);
-
 function syncLayoutWithPanels(map: ReadonlyMap<Element, unknown>) {
   listItems.value = [...map.keys()];
   if (deactivated) {
@@ -665,15 +668,13 @@ function measure() {
   if (next === undefined) {
     return undefined;
   }
-  const previous = measurement.value;
-  if (previous === undefined) {
-    for (const panel of panels.value) {
-      const size = panel.defaultSize;
-      if (size !== undefined && isLength(size)) {
-        firstDefaultSizes.set(panel, parseSize(size, getMeasurement(next, panel.id.value)) ?? 0);
-      }
+  for (const panel of panels.value) {
+    const size = panel.defaultSize;
+    if (size !== undefined && isLength(size) && !firstDefaultSizes.has(panel)) {
+      firstDefaultSizes.set(panel, parseSize(size, getMeasurement(next, panel.id.value)) ?? 0);
     }
   }
+  const previous = measurement.value;
   if (previous === undefined || !isSameMeasurement(previous, next)) {
     measurement.value = next;
   }

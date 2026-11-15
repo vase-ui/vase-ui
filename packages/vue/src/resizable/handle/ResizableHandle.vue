@@ -207,6 +207,10 @@ function onKeydown(event: KeyboardEvent) {
   }
   // The steps and the constraints can be lengths, and the page can have changed since the last read.
   root.measure();
+  // A root that waits for a length has no layout to move: a move would lose the length.
+  if (hasPendingLengths.value) {
+    return;
+  }
   const delta = getKeyDelta(event);
   if (delta === undefined) {
     return;

@@ -48,9 +48,9 @@ export interface ResizablePanelProps
    * with `%`, are percent of the panel space. A length is `px`, `em`, `rem`, `vh` or `vw`. `em` is
    * the font size of the panel. `rem` is the font size of the root element of the document.
    * The panels that have no size share the space that is left in equal parts.
-   * A length gives the size at the first measurement. The panel then has that size in percent, so it
-   * scales with the root, unless it is fixed. `reset()` and a double click on a handle give the
-   * length back.
+   * A length gives the size at the first measurement after the mount. The panel then has that size in
+   * percent, so it scales with the root, unless it is fixed. `reset()` and a double click on a handle
+   * give the length back.
    * A later change of the prop has no effect. To change the size, change the layout of the root.
    */
   defaultSize?: number | string | undefined;
@@ -113,7 +113,7 @@ export interface ResizablePanelProps
   rootResizePriority?: number | undefined;
   /**
    * The sizes that a drag snaps to. A drag that comes within `snapTolerance` of one of them gives the
-   * panel that size. Each size takes the same sizes as `defaultSize`. A snap point that is less than
+   * panel that size. A snap point takes the same sizes as `defaultSize`. A snap point that is less than
    * `minSize` or greater than `maxSize` is not used. A key and a method do not snap.
    */
   snapPoints?: readonly (number | string)[] | undefined;
@@ -203,7 +203,7 @@ const emit = defineEmits<{
    * pixels. The first call comes after the first measurement. A size change of the root changes the
    * pixels, so it also calls the handler.
    * Receives the new size and the size at the last call. At the first call, that size is `undefined`.
-   * It is not called on a server, and not while the root has no room for its panels.
+   * It is not called on a server, and not before the root first has room for its panels.
    */
   resize: [size: ResizablePanelSize, previousSize: ResizablePanelSize | undefined];
 }>();

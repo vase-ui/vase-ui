@@ -1613,6 +1613,27 @@ describe('<Resizable.Root />', () => {
         });
         expect(widthOf('a')).toBeCloseTo(200, 0);
       });
+
+      it('scales a panel that mounts later with a length when the app does not write the layout', async () => {
+        const width = shallowRef(1000);
+        const panels = shallowRef<Record<string, unknown>[]>([{ id: 'a' }, { id: 'b' }]);
+        await render(() => (
+          <Sized width={width} root={{ layout: { a: 50, b: 50 } }} panels={panels.value} />
+        ));
+
+        panels.value = [...panels.value, { id: 'late', defaultSize: '200px' }];
+        await nextTick();
+        await waitFor(() => {
+          expect(widthOf('late')).toBeCloseTo(200, 0);
+        });
+        await changeWidth(width, 2000);
+
+        // The panel keeps the percent that its length gave, as a panel of the first render does.
+        await waitFor(() => {
+          expect(widthOf('a')).toBeCloseTo(800, 0);
+        });
+        expect(widthOf('late')).toBeCloseTo(400, 0);
+      });
     });
 
     describe('details.snapshot', () => {
@@ -1972,7 +1993,7 @@ describe('<Resizable.Root />', () => {
         expect(onLayoutChange).not.toHaveBeenCalled();
       });
 
-      it('starts no drag and does nothing for a method while the root has no room', async () => {
+      it('starts no drag and does nothing for a key or a method while the root has no room', async () => {
         const instance: { current?: InstanceType<typeof Resizable.Root> } = {};
         const onLayoutChange = vi.fn();
         await render(() => (
@@ -1991,6 +2012,7 @@ describe('<Resizable.Root />', () => {
         ));
 
         await drag('handle', 100);
+        await fireEvent.keyDown(screen.getByTestId('handle'), { key: 'ArrowRight' });
         instance.current?.setLayout({ nav: 40, main: 60 });
         instance.current?.reset();
         await nextTick();

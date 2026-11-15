@@ -415,7 +415,7 @@ export function applyFixedSizes(
     ),
   );
   let remainder = 100 - sum(panels.map((panel) => sizeOf(wanted, panel)));
-  for (const panel of fixed.toSorted((a, b) => (b.priority ?? 0) - (a.priority ?? 0))) {
+  for (const panel of [...fixed].sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0))) {
     if (Math.abs(remainder) <= EPSILON) {
       break;
     }
@@ -460,7 +460,7 @@ export function snapDelta(
         point <= panel.maxSize &&
         Math.abs(size - point) <= (panel.snapTolerance ?? 0),
     );
-    const nearest = points.toSorted((a, b) => Math.abs(size - a) - Math.abs(size - b))[0];
+    const nearest = points.sort((a, b) => Math.abs(size - a) - Math.abs(size - b))[0];
     if (nearest !== undefined) {
       return stepped + sign * (nearest - size);
     }
