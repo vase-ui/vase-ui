@@ -15,9 +15,15 @@ const TEXT_ATTRIBUTES: ReadonlySet<string> = new Set([
 ]);
 
 export interface VariantDifference {
-  /** The first element, text or script token that the two variants do not share. */
+  /**
+   * The first element, text or script token that the two variants do not share. It is `undefined`
+   * when the forms are equal.
+   */
   form: string | undefined;
-  /** The first text that differs. It is `undefined` when the two variants have another number of texts. */
+  /**
+   * The first text that differs. It is `undefined` when the texts are equal, and when the two
+   * variants have another number of texts.
+   */
   text: string | undefined;
 }
 

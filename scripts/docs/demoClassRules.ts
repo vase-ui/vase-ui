@@ -29,7 +29,7 @@ export const CLASS_NAMES_WITHOUT_RULE: ReadonlySet<string> = new Set([
   'group/item',
   // A marker of the demo. The class `has-[.combobox-clear]` of another element names it.
   'combobox-clear',
-  // The theme of the Base UI docs has only the colors `red-400` and `red-700`, so the item gets no
+  // The theme of the Base UI docs has no red other than `red-400` and `red-700`, so the item has no
   // red text there. The CSS-module demo has no red text on that item either.
   'text-red-600',
   // Base UI has the name, and Tailwind has no such utility. The look equals the CSS-module demo.

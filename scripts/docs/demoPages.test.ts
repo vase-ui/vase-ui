@@ -296,7 +296,7 @@ const FORMS_FAILURES: {
     files: FORMS_FILES,
     problems: [
       'docs/handbook/forms.md: the #tailwind slot of the frame of DemoFormsHero must show a Tailwind demo.',
-      'docs/demos/handbook-forms/hero/tailwind/index.vue is in the #tailwind slot of 0 frames. Show it one time, in the frame of its CSS-module demo.',
+      'docs/demos/handbook-forms/hero/tailwind/index.vue is in the #tailwind slot of 0 frames. Show it one time, in a frame on the page of its family.',
     ],
   },
   {
@@ -353,6 +353,20 @@ test('a frame in another form is a problem that names the page to use as the mod
     `${PATH}: a <DemoFrame> has another form than the frames of ${MODEL}.`,
   ]);
 });
+
+const FRAME_OPENINGS: { name: string; frame: string }[] = [
+  { name: 'an attribute', frame: FRAME.replace('<DemoFrame>', '<DemoFrame title="Hero">') },
+  { name: 'an indent', frame: FRAME.replaceAll(/^(?=.)/gm, '  ') },
+];
+
+for (const { name, frame } of FRAME_OPENINGS) {
+  test(`a frame whose opening tag has ${name} is a problem that names the page to use as the model`, () => {
+    assert.deepEqual(problemsOf([makePage({ frame })]), [
+      `${PATH}: a <DemoFrame> has another form than the frames of ${MODEL}.`,
+      `docs/demos/${TAILWIND} is in the #tailwind slot of 0 frames. Show it one time, in the frame of its CSS-module demo.`,
+    ]);
+  });
+}
 
 const roots: string[] = [];
 

@@ -5,7 +5,7 @@ import { CLASS_NAMES_WITHOUT_RULE, classNamesWithoutRule } from './demoClassRule
 import { loadDemoFamilies } from './upstreamDemos.ts';
 
 test('a class name of a color in the theme has a rule, and a class name of another color has none', async () => {
-  assert.deepEqual(await classNamesWithoutRule(['text-red-300', 'text-red-400']), ['text-red-300']);
+  assert.deepEqual(await classNamesWithoutRule(['text-red-400', 'text-red-300']), ['text-red-300']);
 });
 
 test('the class names of the Tailwind demos that have no rule are the names of the list, and no other', async () => {

@@ -501,7 +501,7 @@ const failures: { name: string; family: DemoFamily; problem: string }[] = [
     problem: `docs/demos/button/hero/tailwind has classes that differ from Base UI. div: extra "${CLASS_A}". Copy each class string from the Base UI file to the same element. Do not change it.`,
   },
   {
-    name: 'the class strings of two elements in each other place',
+    name: 'the class strings of two elements that change places',
     family: makeTailwindFamily({
       record: {
         ...TAILWIND_RECORD,

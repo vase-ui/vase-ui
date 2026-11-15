@@ -76,7 +76,7 @@ const BASE_UI_DIFFERENT_CASES: { name: string; cssModules: DemoFile[]; tailwind:
   {
     name: 'a file that only one variant has',
     cssModules: [file('index.tsx', '<div />')],
-    tailwind: [file('index.tsx', '<div />'), file('classes.ts', "export const a = 'b';")],
+    tailwind: [file('index.tsx', '<div />'), file('utils.ts', "export const a = 'b';")],
   },
   {
     name: 'the code of a file that both variants have',

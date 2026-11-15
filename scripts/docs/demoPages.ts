@@ -12,6 +12,7 @@ export interface DemoPage {
 
 const IMPORT = /^import (\w+) from '\.\.\/demos\/([^']+)';$/gm;
 const FRAME = /^<DemoFrame>\n([\s\S]*?)^<\/DemoFrame>\n/gm;
+const FRAME_OPENING = /^[ \t]*<DemoFrame\b/gm;
 const BOTH_VARIANTS =
   /^ {2}<(\w+) \/>\n {2}<template #tailwind>\n {4}<(\w+) \/>\n {2}<\/template>\n$/;
 const CSS_MODULES_ONLY = /^ {2}<(\w+) \/>\n$/;
@@ -25,6 +26,10 @@ const BARE_CODE_GROUP = new RegExp(`^\\n${CODE_GROUP}`);
 const MODEL_PAGE = 'docs/components/button.md';
 const CSS_MODULES_DEMO = '/css-modules/index.vue';
 const TAILWIND_DEMO = '/tailwind/index.vue';
+
+function anotherForm(page: DemoPage): string {
+  return `${page.path}: a <DemoFrame> has another form than the frames of ${MODEL_PAGE}.`;
+}
 
 /** The files of a code group, by their paths from `docs/demos`. */
 function shownFiles(group: string): string[] {
@@ -138,13 +143,7 @@ function checkFrame(frame: Frame, demoFiles: ReadonlySet<string>): FrameCheck {
   if (tailwindOnly !== null) {
     return checkTailwindOnly(frame, tailwindOnly[1], demoFiles);
   }
-  return CSS_MODULES_ONLY.test(frame.body)
-    ? { problems: [] }
-    : {
-        problems: [
-          `${frame.page.path}: a <DemoFrame> has another form than the frames of ${MODEL_PAGE}.`,
-        ],
-      };
+  return { problems: CSS_MODULES_ONLY.test(frame.body) ? [] : [anotherForm(frame.page)] };
 }
 
 /**
@@ -157,7 +156,8 @@ export function checkDemoPages(pages: DemoPage[], demoFiles: ReadonlySet<string>
   const framedOn = new Map<string, DemoPage[]>();
   for (const page of pages) {
     const imports = new Map([...page.text.matchAll(IMPORT)].map(([, name, path]) => [name, path]));
-    for (const match of page.text.matchAll(FRAME)) {
+    const frames = [...page.text.matchAll(FRAME)];
+    for (const match of frames) {
       const frame: Frame = {
         page,
         imports,
@@ -170,6 +170,12 @@ export function checkDemoPages(pages: DemoPage[], demoFiles: ReadonlySet<string>
         framedOn.set(check.tailwind, [...(framedOn.get(check.tailwind) ?? []), page]);
       }
     }
+    const starts = new Set(frames.map(({ index }) => index));
+    for (const { index } of page.text.matchAll(FRAME_OPENING)) {
+      if (!starts.has(index)) {
+        problems.push(anotherForm(page));
+      }
+    }
   }
   const tailwindDemos = [...demoFiles]
     .filter((file) => /^[^/]+\/[^/]+\/tailwind\/index\.vue$/.test(file))
@@ -180,8 +186,11 @@ export function checkDemoPages(pages: DemoPage[], demoFiles: ReadonlySet<string>
     if (framed.length !== 1) {
       const pages = [...new Set(framed.map(({ path }) => path))].join(', ');
       const where = framed.length > 0 ? ` (${pages})` : '';
+      const frame = demoFiles.has(`${file.slice(0, -TAILWIND_DEMO.length)}${CSS_MODULES_DEMO}`)
+        ? 'the frame of its CSS-module demo'
+        : 'a frame on the page of its family';
       problems.push(
-        `docs/demos/${file} is in the #tailwind slot of ${framed.length} frames${where}. Show it one time, in the frame of its CSS-module demo.`,
+        `docs/demos/${file} is in the #tailwind slot of ${framed.length} frames${where}. Show it one time, in ${frame}.`,
       );
     } else if (framed[0].family !== family) {
       problems.push(
