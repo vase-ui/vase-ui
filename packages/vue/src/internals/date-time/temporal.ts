@@ -170,18 +170,28 @@ export function today(timeZone?: string): Temporal.PlainDate {
   return Temporal.Now.plainDateISO(timeZone);
 }
 
+// The calendars of one list have the same months. Other calendars can have one month with the same
+// days, such as the ISO month 2027-11 and the Hebrew month 5788-M02. A test of the days of one
+// month thus gives a wrong answer for such a month.
+const SAME_MONTHS: readonly (readonly string[])[] = [
+  ['iso8601', 'gregory', 'buddhist', 'japanese', 'roc'],
+  ['coptic', 'ethiopic', 'ethioaa'],
+];
+
 /**
  * `month` in another calendar, or `null` when the two calendars do not have the same months. A
  * Buddhist month is a Gregorian month, and a Persian month is not. A year and month has no
- * `withCalendar`, so the conversion goes through its first and last day.
+ * `withCalendar`, so the conversion goes through its first day.
  */
 export function yearMonthInCalendar(
   month: Temporal.PlainYearMonth,
   calendar: string,
 ): Temporal.PlainYearMonth | null {
   const first = month.toPlainDate({ day: 1 }).withCalendar(calendar);
-  const last = month.toPlainDate({ day: month.daysInMonth }).withCalendar(calendar);
   const hasSameMonths =
-    first.day === 1 && last.day === last.daysInMonth && first.monthCode === last.monthCode;
+    first.calendarId === month.calendarId ||
+    SAME_MONTHS.some(
+      (calendars) => calendars.includes(first.calendarId) && calendars.includes(month.calendarId),
+    );
   return hasSameMonths ? first.toPlainYearMonth() : null;
 }
