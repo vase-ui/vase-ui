@@ -9,7 +9,10 @@ export interface TimeClockFaceState extends TimeClockRootState {}
 export interface TimeClockFaceProps
   extends
     VaseUIComponentProps<TimeClockFaceState>,
-    /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
+    /* @vue-ignore */ WithVaseUIEvent<
+      HTMLAttributes,
+      'aria-describedby' | 'aria-label' | 'aria-labelledby'
+    > {
   /**
    * A string value forwarded to the `aria-label` attribute of the `input`.
    * It replaces the default name, which is the name of the view (such as "hour").

@@ -23,7 +23,7 @@ export type DateFieldRootChangeEventDetails = DateTimeFieldChangeEventDetails;
 export interface DateFieldRootProps<Value extends DateFieldRootValue = DateFieldRootValue>
   extends
     VaseUIComponentProps<DateFieldRootState>,
-    /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes>, 'id'> {
+    /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes, 'aria-labelledby'>, 'id'> {
   /**
    * The id of the first segment.
    * Each other segment derives its id from it (`{id}-2`, `{id}-3`, and so on).

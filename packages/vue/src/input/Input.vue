@@ -23,7 +23,7 @@ export interface InputProps
   extends
     VaseUIComponentProps<InputState>,
     /* @vue-ignore */ Omit<
-      WithVaseUIEvent<InputHTMLAttributes>,
+      WithVaseUIEvent<InputHTMLAttributes, 'id' | 'name'>,
       'autocomplete' | 'disabled' | 'value'
     >,
     /* @vue-ignore */ InputAutocomplete {

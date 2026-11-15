@@ -357,8 +357,11 @@ const { element, elementProps } = useRenderElement('input', props, {
     } = attrs;
     const slotIndex = index.value;
     const ariaLabel = slotIndex === 0 ? undefined : (externalAriaLabel as string | undefined);
+    // `null` of the consumer removes the label of the field (VUE-103).
     const inheritedLabel =
-      (externalAriaLabelledBy as string | undefined) ?? inputAriaLabelledBy.value;
+      externalAriaLabelledBy === undefined
+        ? inputAriaLabelledBy.value
+        : (externalAriaLabelledBy as string | null);
 
     return [
       {

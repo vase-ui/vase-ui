@@ -36,16 +36,19 @@ describe('<Select.GroupLabel />', () => {
     expect(screen.getByText('Fruits')).toHaveAttribute('aria-hidden', 'true');
   });
 
-  it('allows overriding aria-hidden', async () => {
+  it.each([
+    { name: 'undefined', value: undefined, expected: 'true' },
+    { name: 'null', value: null, expected: null },
+  ])('VUE-103: aria-hidden of the consumer is $name', async ({ value, expected }) => {
     await render(
       <Select.Root open>
         <Select.Group>
-          <Select.GroupLabel aria-hidden={undefined}>Fruits</Select.GroupLabel>
+          <Select.GroupLabel aria-hidden={value}>Fruits</Select.GroupLabel>
         </Select.Group>
       </Select.Root>,
     );
 
-    expect(screen.getByText('Fruits')).not.toHaveAttribute('aria-hidden');
+    expect(screen.getByText('Fruits').getAttribute('aria-hidden')).toBe(expected);
   });
 
   it('removes the group aria-labelledby attribute when unmounted', async () => {

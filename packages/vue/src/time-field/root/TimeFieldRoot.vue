@@ -21,7 +21,7 @@ export type TimeFieldRootChangeEventDetails = DateTimeFieldChangeEventDetails;
 export interface TimeFieldRootProps<Value extends TimeFieldRootValue = Temporal.PlainTime>
   extends
     VaseUIComponentProps<TimeFieldRootState>,
-    /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes>, 'id'> {
+    /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes, 'aria-labelledby'>, 'id'> {
   /**
    * The value of the field, or `null` when the field is empty.
    * The field gives back a value of the same kind: a time, a date and time, or a date and time in

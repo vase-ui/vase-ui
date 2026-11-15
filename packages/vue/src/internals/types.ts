@@ -25,12 +25,12 @@ type WithPreventVaseUIHandler<T> = T extends (event: infer E) => any
 /**
  * WAI-ARIA 1.3 defines `aria-description` for each element. The types of Vue do not list it.
  */
-interface AriaDescriptionAttribute {
+interface AriaDescriptionAttribute<Value> {
   /**
    * Defines a string value that describes or annotates the current element.
    * @see aria-describedby
    */
-  'aria-description'?: string | undefined;
+  'aria-description'?: Value | undefined;
 }
 
 /**
@@ -38,10 +38,27 @@ interface AriaDescriptionAttribute {
  * The type omits the key `as`. A part declares `as` itself, and a library can add `as` to the
  * attributes of each element.
  * The type adds the attribute `aria-description`.
+ * The type adds `null` to each attribute: `null` removes the value of the part.
+ * `PropKeys` names each attribute that reaches a declared prop, such as `aria-label` for the prop
+ * `ariaLabel`. Vue gives such a value to the prop, and a prop takes no `null`, so the type adds no
+ * `null` to it.
  */
-export type WithVaseUIEvent<T> = {
+export type WithVaseUIEvent<T, PropKeys extends keyof T = never> = {
+  [K in keyof T as K extends 'as' ? never : K]: K extends `on${Capitalize<string>}`
+    ? WithPreventVaseUIHandler<T[K]>
+    : K extends PropKeys
+      ? T[K]
+      : T[K] | null;
+} & AriaDescriptionAttribute<string | null>;
+
+/**
+ * `WithVaseUIEvent` with the attribute types of Vue, which have no `null`.
+ * The sets of `mergeProps` use it. `mergeProps` copies a `null` value to its result, and the type
+ * of the result is the type of Vue.
+ */
+export type WithVaseUIEventHandlers<T> = {
   [K in keyof T as K extends 'as' ? never : K]: WithPreventVaseUIHandler<T[K]>;
-} & AriaDescriptionAttribute;
+} & AriaDescriptionAttribute<string>;
 
 /**
  * vue-tsc types a generic SFC as a function of its props and its context. `Component` refuses that
