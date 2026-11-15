@@ -6,6 +6,7 @@ import { testPropForwarding } from './conformanceTests/propForwarding';
 import { testRefForwarding } from './conformanceTests/refForwarding';
 import { testRenderProp } from './conformanceTests/renderProp';
 import { testRenderSlot } from './conformanceTests/renderSlot';
+import { testVaporConsumer } from './conformanceTests/vaporConsumer';
 import { createDescribe } from './createDescribe';
 import type { VaseUIRenderResult } from './createRenderer';
 
@@ -61,6 +62,7 @@ function describeConformanceFn(
   testClassName(minimalElement, getOptions);
   testAsProp(minimalElement, getOptions);
   testRenderSlot(minimalElement, getOptions);
+  testVaporConsumer(minimalElement, getOptions);
 
   const { button = false, testRenderPropWith } = getOptions();
   if (button && testRenderPropWith === 'button') {
