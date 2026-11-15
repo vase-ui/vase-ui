@@ -352,8 +352,9 @@ describe('<Popover.Root />', () => {
       expect(popup).toHaveAttribute('data-ending-style');
       expect(onOpenChangeComplete).not.toHaveBeenCalledWith(false);
 
-      // The popup reads its animations in the frames after it attaches. The animation lasts 100 s,
-      // so the popup can complete only when the case ends the animation.
+      // The root reads the animations of the popup in a frame after the popup attaches. The
+      // animation lasts 100 s, so the root can complete the close only when the case ends the
+      // animation.
       await waitSingleFrame();
       await waitSingleFrame();
       expect(onOpenChangeComplete).not.toHaveBeenCalledWith(false);
@@ -1918,8 +1919,8 @@ describe('<Popover.Root />', () => {
           const trigger = screen.getByTestId('trigger');
           await user.click(trigger);
           const popup = await screen.findByTestId('popover-popup');
-          // The popup reads its animations in a frame after the open. That read must not be the
-          // read that the close takes.
+          // The root reads the animations of the popup in a frame after the open. The wait for
+          // the read of the close must start after that read.
           await waitSingleFrame();
           await waitSingleFrame();
           const animations = await nextAnimationsRead(popup, { action: () => user.click(trigger) });

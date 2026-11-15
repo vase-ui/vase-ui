@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, onMounted, watch } from 'vue';
 import type { PropType } from 'vue';
 import * as Popover from '../index.parts';
-import { createRenderer, nextAnimationsRead, screen, waitFor, waitSingleFrame } from '#test-utils';
+import { createRenderer, nextAnimationsRead, screen, waitFor } from '#test-utils';
 
 type PopupState = Pick<Popover.Popup.State, 'open' | 'transitionStatus'>;
 
@@ -80,10 +80,6 @@ describe('Popover popup transition state', () => {
     );
     const trigger = screen.getByRole('button', { name: 'Toggle' });
     const popup = await screen.findByTestId('popup');
-    // The popup reads its animations in a frame after the mount. That read must not be the read
-    // that the first phase takes.
-    await waitSingleFrame();
-    await waitSingleFrame();
 
     // The transition lasts longer than any phase of the test, so it cannot end before it is
     // observed on a busy runner. Each phase is finished explicitly instead of waited out.
