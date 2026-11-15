@@ -279,19 +279,18 @@ const measurement = shallowRef<RootMeasurement | undefined>();
 // the other panels share the rest.
 const pins = shallowRef<Readonly<Record<string, number>>>(EMPTY_OBJECT);
 
-// The numbers that change a size into percent: those of a panel, or those of the root.
-function getSizeBasis(id?: string) {
+function measurementFor(id?: string) {
   return measurement.value === undefined ? undefined : getMeasurement(measurement.value, id);
 }
 
 const constraints = computed<PanelConstraints[]>(() =>
   panels.value.map((panel) => {
     const id = panel.id.value;
-    const basis = getSizeBasis(id);
+    const panelMeasurement = measurementFor(id);
     // A length has no percent before the first measurement. The panel then has the size that it has
     // with no such constraint.
     const toPercent = (size: number | string | undefined) =>
-      size === undefined ? undefined : parseSize(size, basis);
+      size === undefined ? undefined : parseSize(size, panelMeasurement);
     return {
       id,
       minSize: toPercent(panel.minSize()) ?? 0,
@@ -313,7 +312,7 @@ function normalize(snapshot: ResizableRootLayoutSnapshot) {
   const fixedIds = new Set(
     constraints.value.filter((panel) => panel.fixed).map((panel) => panel.id),
   );
-  return normalizeLayout(snapshot, fixedIds, getSizeBasis);
+  return normalizeLayout(snapshot, fixedIds, measurementFor);
 }
 
 // The layout in percent. A length of `input` has no percent before the first measurement, so the
@@ -348,7 +347,6 @@ const resolved = computed<ResizableRootLayout>(() => {
   return Object.fromEntries(constraints.value.map((panel) => [panel.id, layout[panel.id] ?? 0]));
 });
 
-// The layout that the panels show: the fixed panels have their pixels in the present panel space.
 const shown = computed<ResizableRootLayout>(() =>
   measurement.value === undefined
     ? resolved.value
@@ -424,7 +422,6 @@ const constraintsUseLengths = computed(() =>
   ),
 );
 
-// A size in `vh` or `vw` follows the window.
 const usesViewportLengths = computed(
   () =>
     panels.value.some((panel) => getSizes(panel).some(isViewportLength)) ||
@@ -510,9 +507,8 @@ function syncLayoutWithPanels() {
 }
 
 const outerList = useCompositeListContext();
-// The elements of the panels and of the handles, in the order of the document.
-const items = shallowRef<(HTMLElement | null)[]>([]);
-useCompositeList({ elementsRef: items, onMapChange: syncLayoutWithPanels });
+const itemElements = shallowRef<(HTMLElement | null)[]>([]);
+useCompositeList({ elementsRef: itemElements, onMapChange: syncLayoutWithPanels });
 
 onMounted(() => {
   mounted = true;
@@ -640,10 +636,8 @@ function stopDragging() {
   }
 }
 
-// Reads the page again. The root does it after the mount, when the root or a handle changes size,
-// when the window changes size and a size has `vh` or `vw`, and before a drag, a key or a method. A
-// root with no room for its panels, such as a root with `display: none`, keeps the last measurement:
-// it then has its pixels when it shows again.
+// A root with no room for its panels, such as a root with `display: none`, keeps its last
+// measurement, so it has its pixels again when it shows.
 function measure() {
   const rootElement = element.value;
   if (rootElement === null) {
@@ -744,7 +738,7 @@ function resizePanel(id: string, size: number | string) {
     return;
   }
   const found = findPanel(id);
-  const percent = parseSize(size, getSizeBasis(id));
+  const percent = parseSize(size, measurementFor(id));
   if (found && percent !== undefined) {
     resizeWithHandle(found.index, percent, found.index, undefined);
   }
@@ -816,10 +810,10 @@ provide(ResizableRootContext, {
   direction,
   outerList,
   disabled: computed(() => props.disabled),
-  step: computed(() => parseSize(props.step, getSizeBasis()) ?? 1),
-  largeStep: computed(() => parseSize(props.largeStep, getSizeBasis()) ?? 10),
+  step: computed(() => parseSize(props.step, measurementFor()) ?? 1),
+  largeStep: computed(() => parseSize(props.largeStep, measurementFor()) ?? 10),
   dragStep: computed(() =>
-    props.dragStep === undefined ? undefined : parseSize(props.dragStep, getSizeBasis()),
+    props.dragStep === undefined ? undefined : parseSize(props.dragStep, measurementFor()),
   ),
   pushPanels: computed(() => props.pushPanels),
   panels,
@@ -856,7 +850,7 @@ const { element, elementProps } = useRenderElement('div', props, {
 // The root and each handle change the room of the panels when they change size. The panels do not:
 // a transition of `flex-grow` moves a panel and leaves the sum of the panels as it is.
 watch(
-  [element, items],
+  [element, itemElements],
   ([rootElement, elements], _previous, onCleanup) => {
     if (rootElement === null || typeof ResizeObserver === 'undefined') {
       return;

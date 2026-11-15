@@ -314,8 +314,8 @@ root.registerPanel({
   deactivated,
 });
 
-// The size at the last event. The source has no value before the mount, so the first event comes
-// after the first measurement, and a size that is not valid shows in the render.
+// The watcher reads the size only after the mount, so that a size that is not valid fails in the
+// render and not in the watcher.
 let lastSize: ResizablePanelSize | undefined;
 watch(
   () =>

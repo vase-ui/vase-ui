@@ -162,17 +162,6 @@ const drag = createHandleDrag(root, {
   element: () => element.value,
 });
 
-const MOVE_KEYS: ReadonlySet<string> = new Set([
-  ARROW_DOWN,
-  ARROW_LEFT,
-  ARROW_RIGHT,
-  ARROW_UP,
-  END,
-  HOME,
-  PAGE_DOWN,
-  PAGE_UP,
-]);
-
 // A positive delta grows the panel before the handle.
 function getKeyDelta(event: KeyboardEvent) {
   const horizontal = root.orientation.value === 'horizontal';
@@ -214,9 +203,6 @@ function onKeydown(event: KeyboardEvent) {
   }
   if (event.key === 'Enter') {
     toggleCollapse(event);
-    return;
-  }
-  if (!MOVE_KEYS.has(event.key)) {
     return;
   }
   // The steps and the constraints can be lengths, and the page can have changed since the last read.

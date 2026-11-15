@@ -42,7 +42,7 @@ function readSize(value: number | string): { amount: number; unit: '%' | Length 
     }
   }
   throw new Error(
-    `Vase UI: The size ${typeof value === 'string' ? `"${value}"` : value} is not valid. A size cannot take it. Use a number of 0 or more, or a string of such a number with an optional unit: "%", "px", "em", "rem", "vh" or "vw". Examples are 30, "30%" and "200px".`,
+    `Vase UI: The size ${typeof value === 'string' ? `"${value}"` : value} is not valid. Resizable cannot use it as a size. Use a number of 0 or more, or a string of such a number with an optional unit: "%", "px", "em", "rem", "vh" or "vw". Examples are 30, "30%" and "200px".`,
   );
 }
 

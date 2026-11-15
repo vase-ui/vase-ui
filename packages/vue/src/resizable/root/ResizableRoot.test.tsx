@@ -1486,6 +1486,26 @@ describe('<Resizable.Root />', () => {
         expect(widthOf('a')).toBeCloseTo(240, 0);
       });
 
+      it('gives a fixed panel the exact pixels of the size in the layout', async () => {
+        // A percent has three decimals, and at 100,000 px one thousandth of a percent is 1 px. The
+        // percent of 300.4 px is then 300 px, and the pixels of the layout are the pixels of the panel.
+        const width = shallowRef(100_000);
+        await render(
+          <Sized
+            width={width}
+            root={{ defaultLayout: { a: '300.4px' } }}
+            panels={[{ id: 'a', rootResizeBehavior: 'fixed' }, { id: 'b' }]}
+          />,
+        );
+
+        await changeWidth(width, 50_000);
+
+        await waitFor(() => {
+          expect(widthOf('b')).toBeCloseTo(50_000 - 300.4, -1);
+        });
+        expect(Math.abs(widthOf('a') - 300.4)).toBeLessThan(0.2);
+      });
+
       it('keeps the percent of a panel that is not fixed when the root changes size', async () => {
         const width = shallowRef(1000);
         await render(<Sized width={width} root={{ defaultLayout: { a: '240px' } }} />);
@@ -1721,6 +1741,32 @@ describe('<Resizable.Root />', () => {
       });
     });
 
+    describe('a handle that changes size', () => {
+      it('changes the panel space, so a length has another percent', async () => {
+        const handleWidth = shallowRef(0);
+        await render(() => (
+          <div style={{ width: '1000px' }}>
+            <Resizable.Root>
+              <Resizable.Panel id="a" data-testid="a" minSize="300px" defaultSize={10} />
+              <Resizable.Handle style={{ width: `${handleWidth.value}px` }} />
+              <Resizable.Panel id="b" data-testid="b" />
+            </Resizable.Root>
+          </div>
+        ));
+        expect(widthOf('a')).toBeCloseTo(300, 0);
+
+        await flushMicrotasks();
+        handleWidth.value = 100;
+        await nextTick();
+
+        // The panels share 900 px, and 300 px is a third of them.
+        await waitFor(() => {
+          expect(widthOf('b')).toBeCloseTo(600, 0);
+        });
+        expect(widthOf('a')).toBeCloseTo(300, 0);
+      });
+    });
+
     describe('props: step and largeStep', () => {
       it('moves a key by a step in pixels', async () => {
         const { user } = await render(
@@ -1805,6 +1851,33 @@ describe('<Resizable.Root />', () => {
         });
         expect(widthOf('nav')).toBeCloseTo(200, 0);
         expect(screen.getByTestId('handle')).toHaveAttribute('aria-valuenow', '13');
+      });
+
+      it('gives no layout event for a panel with a length that mounts while the root has no room', async () => {
+        const show = shallowRef(false);
+        const onLayoutChange = vi.fn();
+        await render(() => (
+          <div style={{ display: 'none', width: '1000px' }}>
+            <Resizable.Root onLayoutChange={onLayoutChange}>
+              <Resizable.Panel id="a" />
+              <Resizable.Handle />
+              <Resizable.Panel id="b" />
+              {show.value ? (
+                <>
+                  <Resizable.Handle />
+                  <Resizable.Panel id="late" data-testid="late" defaultSize="200px" />
+                </>
+              ) : null}
+            </Resizable.Root>
+          </div>
+        ));
+
+        show.value = true;
+        await nextTick();
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('late').style.flex).toBe('0 0 200px');
+        expect(onLayoutChange).not.toHaveBeenCalled();
       });
 
       it('starts no drag and does nothing for a method while the root has no room', async () => {

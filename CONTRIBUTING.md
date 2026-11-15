@@ -495,7 +495,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 
 - `actionsRef` becomes methods that the part exposes. A consumer reads them through a template ref.
 - Popup roots expose `close()` and `unmount()`. `Field.Root` exposes `validate()`. Its prop `validate` is the validator function. `Form` exposes `validate(name?)`. The types are `DialogRootActions` and so on.
-- A part that Base UI does not have exposes its methods in the same way. `Resizable.Panel` exposes `collapse()`, `expand()`, `resize()` and `isCollapsed()`, and `Resizable.Root` exposes `getLayout()`, `setLayout()` and `reset()`. Their types are `Resizable.Panel.Actions` and `Resizable.Root.Actions`.
+- A part that Base UI does not have exposes its methods in the same way. `Resizable.Panel` exposes `collapse()`, `expand()`, `resize()`, `isCollapsed()` and `getSize()`, and `Resizable.Root` exposes `getLayout()`, `setLayout()` and `reset()`. Their types are `Resizable.Panel.Actions` and `Resizable.Root.Actions`.
 - A ref prop of upstream (`inputRef`) becomes an exposed element (`inputElement`) beside `element`.
 - Handles are upstream's objects, with no change: `Dialog.createHandle<Payload>()`, `handle`, `payload`, `triggerId`, `open()`, `openWithPayload()`, `close()`, `isOpen`.
 - Function children become a default scoped slot with named props: `{ payload }` on a root, `{ validity }` on `Field.Validity`, `{ item, index }` on `Combobox.Collection`, `{ value }` on `Select.Value`.

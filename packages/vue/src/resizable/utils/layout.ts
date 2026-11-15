@@ -365,8 +365,8 @@ function shareInRatio(panels: readonly PanelConstraints[], layout: Layout, total
     const violation = sum(
       proposals.map(({ panel, size }) => clamp(size, panel.minSize, panel.maxSize) - size),
     );
-    // With a violation, only the panels that the constraint of that kind holds are done. The
-    // other panels share what is left, because the done panels changed it.
+    // As flexbox does, hold only the panels that break the kind of constraint with the larger total.
+    // The other panels then share the rest again.
     const held = proposals.filter(({ panel, size }) =>
       Math.abs(violation) <= EPSILON
         ? true

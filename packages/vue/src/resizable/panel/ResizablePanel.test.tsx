@@ -10,6 +10,7 @@ import {
   screen,
   takeReportedMessages,
   waitFor,
+  waitSingleFrame,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
 import * as Resizable from '../index.parts';
@@ -1136,7 +1137,7 @@ describe('<Resizable.Panel />', () => {
     const units = [
       { name: 'px', size: '200px', style: undefined, pixels: () => 200 },
       { name: 'em', size: '10em', style: { fontSize: '20px' }, pixels: () => 200 },
-      { name: 'rem', size: '12rem', style: undefined, pixels: () => 12 * rem() },
+      { name: 'rem', size: '12rem', style: { fontSize: '24px' }, pixels: () => 12 * rem() },
       { name: 'vw', size: '20vw', style: undefined, pixels: () => window.innerWidth * 0.2 },
       { name: 'vh', size: '20vh', style: undefined, pixels: () => window.innerHeight * 0.2 },
     ] as const;
@@ -1238,12 +1239,20 @@ describe('<Resizable.Panel />', () => {
     });
 
     it('follows the size of the window for a size in vw', async () => {
-      const innerWidth = window.innerWidth;
+      const descriptor = Object.getOwnPropertyDescriptor(window, 'innerWidth');
       onTestFinished(() => {
-        Object.defineProperty(window, 'innerWidth', { configurable: true, value: innerWidth });
+        if (descriptor) {
+          Object.defineProperty(window, 'innerWidth', descriptor);
+        } else {
+          Reflect.deleteProperty(window, 'innerWidth');
+        }
       });
       await renderPanels({ panels: [{ minSize: '10vw', defaultSize: 5 }, {}] });
-      expect(widthOf(0)).toBeCloseTo(Math.max(innerWidth * 0.1, 50), 0);
+      expect(widthOf(0)).toBeCloseTo(Math.max(window.innerWidth * 0.1, 50), 0);
+      // The observer of the root reads the page once after the mount. The size of the window
+      // must change after that read, so that only the event of the window gives the new size.
+      await waitSingleFrame();
+      await waitSingleFrame();
 
       Object.defineProperty(window, 'innerWidth', { configurable: true, value: 3000 });
       window.dispatchEvent(new Event('resize'));
@@ -1278,6 +1287,31 @@ describe('<Resizable.Panel />', () => {
       await drag(screen.getByTestId('handle'), -150);
 
       expect(panel.getBoundingClientRect().width).toBeCloseTo(300, 0);
+    });
+
+    it('does not warn when the lengths of the panels cannot fit in a small root', async () => {
+      // A window can be too small for a length, so this is not a mistake of the code.
+      await renderPanels({ panels: [{ minSize: '700px' }, { minSize: '700px' }] });
+
+      expect(takeReportedMessages()).toEqual([]);
+    });
+
+    it('does not warn for a collapsible panel whose least size is a length', async () => {
+      await renderPanels({
+        panels: [{ collapsible: true, minSize: '12rem', collapsedSize: '48px' }, {}],
+      });
+
+      expect(takeReportedMessages()).toEqual([]);
+    });
+
+    it('warns once when a collapsible panel cannot collapse with lengths', async () => {
+      await renderPanels({
+        panels: [{ collapsible: true, minSize: '40px', collapsedSize: '48px' }, {}],
+      });
+
+      expect(takeReportedMessages()).toEqual([
+        expect.stringMatching(/^console\.warn: Vase UI: The panel ".*" is collapsible/),
+      ]);
     });
 
     it('resizes with a length', async () => {
@@ -1454,8 +1488,10 @@ describe('<Resizable.Panel />', () => {
 
     it('does not take new pixels when the app gives the layout that it has', async () => {
       const width = shallowRef(1000);
+      const renders = shallowRef(0);
       await render(() => (
-        <div style={{ width: `${width.value}px` }}>
+        <div style={{ width: `${width.value}px` }} data-renders={renders.value}>
+          {/* A new object with the same sizes at each render, as a template literal gives. */}
           <Resizable.Root layout={{ nav: 20, editor: 50, preview: 30 }}>
             <Resizable.Panel id="nav" data-testid="panel-0" rootResizeBehavior="fixed" />
             <Resizable.Panel id="editor" data-testid="panel-1" />
@@ -1463,14 +1499,17 @@ describe('<Resizable.Panel />', () => {
           </Resizable.Root>
         </div>
       ));
-
-      // A new object with the same sizes, as a template literal makes at each render of the parent.
       await changeWidth(width, 1500);
-
       await waitFor(() => {
         expect(widthOf(1)).toBeCloseTo(812.5, 0);
       });
+
+      // The parent renders again with the same layout, and the root has read the new width.
+      renders.value += 1;
+      await nextTick();
+
       expect(widthOf(0)).toBeCloseTo(200, 0);
+      expect(widthOf(1)).toBeCloseTo(812.5, 0);
     });
 
     it('gives a fixed panel that mounts later its pixels', async () => {
