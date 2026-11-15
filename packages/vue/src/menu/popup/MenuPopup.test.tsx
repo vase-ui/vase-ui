@@ -1111,10 +1111,11 @@ describe('<Menu.Popup />', () => {
     screen.getByRole('button', { name: 'Open' }).focus();
     await flushMicrotasks();
     // The item takes the focus in an animation frame after the open.
-    await nextEvent(document, 'focusin', { action: () => user.keyboard('[ArrowDown]') });
+    await waitForLaterMillisecond(() =>
+      nextEvent(document, 'focusin', { action: () => user.keyboard('[ArrowDown]') }),
+    );
     const one = screen.getByRole('menuitem', { name: 'One' });
     expect(one).toHaveFocus();
-    await waitForLaterMillisecond();
 
     await user.keyboard('[ArrowDown]');
     await waitSingleFrame();

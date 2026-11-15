@@ -2086,10 +2086,11 @@ describe('<Select.Popup />', () => {
     screen.getByTestId('trigger').focus();
     await flushMicrotasks();
     // The item takes the focus in an animation frame after the open.
-    await nextEvent(document, 'focusin', { action: () => user.keyboard('[Enter]') });
+    await waitForLaterMillisecond(() =>
+      nextEvent(document, 'focusin', { action: () => user.keyboard('[Enter]') }),
+    );
     const a = screen.getByRole('option', { name: 'a' });
     expect(a).toHaveFocus();
-    await waitForLaterMillisecond();
 
     await user.keyboard('[ArrowDown]');
     await waitSingleFrame();
