@@ -337,7 +337,7 @@ describe('createToastManager', () => {
     });
   });
 
-  describe('VUE-89: one manager in more than one provider', () => {
+  describe('VUE-90: one manager in more than one provider', () => {
     async function renderProviders(toastManager: ToastManager, count: number) {
       await render(
         <Fragment>
@@ -352,26 +352,22 @@ describe('createToastManager', () => {
     // the case comes after the action, so its report comes after each report of the action.
     async function rejectionsWithNoHandler(action: () => void) {
       const reported: Promise<unknown>[] = [];
+      const last = Promise.withResolvers<never>();
+      const lastReported = Promise.withResolvers<void>();
       const record = ({ promise }: PromiseRejectionEvent) => {
         reported.push(promise);
+        if (promise === last.promise) {
+          lastReported.resolve();
+        }
       };
       window.addEventListener('unhandledrejection', record);
       onTestFinished(() => window.removeEventListener('unhandledrejection', record));
 
       action();
       await flushMicrotasks();
-      const last = Promise.reject(new Error('The last rejection of the case.'));
-      await new Promise<void>((resolve) => {
-        const resolveAtLast = ({ promise }: PromiseRejectionEvent) => {
-          if (promise === last) {
-            window.removeEventListener('unhandledrejection', resolveAtLast);
-            resolve();
-          }
-        };
-        window.addEventListener('unhandledrejection', resolveAtLast);
-      });
+      last.reject(new Error('The last rejection of the case.'));
+      await lastReported.promise;
 
-      expect(reported.at(-1)).toBe(last);
       // Vitest writes each report to the console while a test has a listener for the report.
       expect(takeReportedMessages()).toEqual(
         reported.map(() => 'console.error: [object PromiseRejectionEvent]'),
@@ -421,6 +417,35 @@ describe('createToastManager', () => {
         expect(reported.map((promise) => promise === returned)).toEqual([true]);
       },
     );
+
+    it.each([
+      { name: 'no provider', count: 0 },
+      { name: 'one provider', count: 1 },
+      { name: 'two providers', count: 2 },
+    ])('resolves with the value of the given promise: $name', async ({ count }) => {
+      const toastManager = Toast.createToastManager();
+      await renderProviders(toastManager, count);
+
+      await expect(toastManager.promise(Promise.resolve('value'), options)).resolves.toBe('value');
+    });
+
+    it.each([
+      { name: 'one provider', count: 1 },
+      { name: 'two providers', count: 2 },
+    ])('rejects with the error that the success function throws: $name', async ({ count }) => {
+      const toastManager = Toast.createToastManager();
+      await renderProviders(toastManager, count);
+      const error = new Error('success');
+
+      await expect(
+        toastManager.promise(Promise.resolve('value'), {
+          ...options,
+          success: () => {
+            throw error;
+          },
+        }),
+      ).rejects.toBe(error);
+    });
   });
 
   describe('update', () => {
