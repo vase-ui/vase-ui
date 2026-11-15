@@ -3,6 +3,7 @@ import { defineComponent, nextTick, shallowRef } from 'vue';
 import type { Ref } from 'vue';
 import { Resizable } from '@vase-ui/vue/resizable';
 import type {
+  ResizableLayoutStorage,
   ResizableLayoutStorageOptions,
   ResizableRootLayoutSnapshot,
 } from '@vase-ui/vue/resizable';
@@ -134,12 +135,21 @@ describe('Resizable.useLayoutStorage', () => {
     { name: 'a record with a bad size', item: '{"a":"1fr","b":70}' },
   ])('ignores a stored item that is $name', async ({ item }) => {
     const storage = createStorage({ layout: item });
-    const Layout = createLayout({ key: 'layout', storage });
+    let layout: Ref<ResizableRootLayoutSnapshot> | undefined;
+    const Layout = createLayout(
+      { key: 'layout', storage },
+      {
+        onSetup: (result) => {
+          ({ layout } = result);
+        },
+      },
+    );
 
     await render(<Layout />);
     await flushMicrotasks();
 
     expect(storage.getItem).toHaveBeenCalledWith('layout');
+    expect(layout?.value).toEqual({});
     expect(grows()).toEqual(['50', '50']);
   });
 
@@ -237,6 +247,22 @@ describe('Resizable.useLayoutStorage', () => {
 
     expect(storage.getItem).toHaveBeenLastCalledWith('z');
     expect(grows()).toEqual(['50', '50']);
+  });
+
+  it('reads again when the storage changes', async () => {
+    const storage = shallowRef<ResizableLayoutStorage>(
+      createStorage({ layout: '{"a":25,"b":75}' }),
+    );
+    const Layout = createLayout({ key: 'layout', storage });
+    await render(<Layout />);
+
+    expect(grows()).toEqual(['25', '75']);
+
+    storage.value = createStorage({ layout: '{"a":70,"b":30}' });
+    await nextTick();
+    await nextTick();
+
+    expect(grows()).toEqual(['70', '30']);
   });
 
   it.each([
