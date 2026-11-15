@@ -1066,6 +1066,40 @@ describe('<Resizable.Root />', () => {
       expect(button('Moved A')).toHaveFocus();
     });
 
+    it('wraps in a root that is in an element of the outer root that is not a panel', async () => {
+      const prevented = recordPrevented();
+      await render(
+        <div style={{ width: '1000px' }}>
+          <Resizable.Root>
+            <Resizable.Panel id="a">
+              <button type="button">A</button>
+            </Resizable.Panel>
+            <Resizable.Handle aria-label="Resize a" />
+            <Resizable.Panel id="b">
+              <button type="button">B</button>
+            </Resizable.Panel>
+            <div style={{ width: '400px' }}>
+              <Resizable.Root>
+                <Resizable.Panel id="side-a">
+                  <button type="button">Side A</button>
+                </Resizable.Panel>
+                <Resizable.Handle aria-label="Resize side a" />
+                <Resizable.Panel id="side-b">
+                  <button type="button">Side B</button>
+                </Resizable.Panel>
+              </Resizable.Root>
+            </div>
+          </Resizable.Root>
+        </div>,
+      );
+      button('Side B').focus();
+
+      await userEvent.keyboard('{F6}');
+
+      expect(button('Side A')).toHaveFocus();
+      expect(prevented).toEqual([true]);
+    });
+
     it('does not prevent the key when no pane has a control', async () => {
       const prevented = await renderPanes({ a: 'A', b: 'B', c: 'C' });
       const handle = screen.getByTestId('handle-a');

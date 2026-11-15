@@ -922,7 +922,7 @@ const hitAreaSize = computed(() => {
   return typeof size === 'number' ? size : isCoarse.value ? size.coarse : size.fine;
 });
 
-// The root of the panel that holds this root. `provide` below does not change what `inject` gives.
+// The nearest root around this root. `provide` below does not change what `inject` gives.
 const outerRoot = inject(ResizableRootContext, null);
 
 // The first control of the first panel in `items` that shows and has a control.
@@ -940,8 +940,9 @@ function findPanelControl(items: readonly Element[]) {
 
 // F6 moves the focus to the next panel, and Shift+F6 to the previous one, as the window splitter
 // pattern describes. A root in a panel of another root gives the key to that root at its last
-// panel. A root that a `Teleport` moves out of that panel gets no such bubble, so it goes on from
-// its other end, as the outermost root does.
+// panel. A root that is not in a panel of another root goes on from its other end: the root around
+// it does not move the focus for a key from outside its panels, such as from a root that a
+// `Teleport` moves out.
 function onKeydown(event: KeyboardEvent) {
   if (
     event.key !== 'F6' ||
@@ -960,7 +961,8 @@ function onKeydown(event: KeyboardEvent) {
   }
   const forward = !event.shiftKey;
   const next = findPanelControl(forward ? items.slice(from + 1) : items.slice(0, from).reverse());
-  const isNested = outerRoot !== null && contains(outerRoot.element.value, element.value);
+  const isNested =
+    outerRoot?.panels.value.some((panel) => contains(panel.element.value, element.value)) ?? false;
   const control =
     next ??
     (isNested
@@ -972,26 +974,7 @@ function onKeydown(event: KeyboardEvent) {
   }
 }
 
-const { element, elementProps } = useRenderElement('div', props, {
-  state,
-  children: true,
-  // The listener of the consumer runs first, so `event.preventVaseUIHandler()` stops F6.
-  props: (attrs) => [
-    {
-      style: {
-        display: 'flex',
-        flexDirection: props.orientation === 'horizontal' ? 'row' : 'column',
-        // The root is the containing block of the edge nodes, and the offset parent of the panels.
-        ...(props.dragEdges ? { position: 'relative' } : undefined),
-      },
-      onKeydown,
-    },
-    attrs,
-  ],
-});
-
 provide(ResizableRootContext, {
-  element,
   orientation,
   direction,
   list,
@@ -1023,6 +1006,24 @@ provide(ResizableRootContext, {
   resizePanel,
   resetPanel,
   actions: { orientation, getLayout, setLayout, reset },
+});
+
+const { element, elementProps } = useRenderElement('div', props, {
+  state,
+  children: true,
+  // The listener of the consumer runs first, so `event.preventVaseUIHandler()` stops F6.
+  props: (attrs) => [
+    {
+      style: {
+        display: 'flex',
+        flexDirection: props.orientation === 'horizontal' ? 'row' : 'column',
+        // The root is the containing block of the edge nodes, and the offset parent of the panels.
+        ...(props.dragEdges ? { position: 'relative' } : undefined),
+      },
+      onKeydown,
+    },
+    attrs,
+  ],
 });
 
 const edges = useEdges({
