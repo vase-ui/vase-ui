@@ -1496,6 +1496,31 @@ describe('usePopupRoot', () => {
         await show();
         expect(handle.store).toBe(root.current.store);
       });
+
+      it('attaches a root in a branch that KeepAlive shows only when the branch resolves', async () => {
+        const handle = createPopupFixtureHandle<string>();
+        const root = createRootRef();
+        const gate = createGate();
+        const Pending = createPendingPart(gate.promise);
+        const { HeldBranch } = createHeldBranch(
+          () => (
+            <Suspense>
+              <PopupRootPart ref={root.ref} handle={handle} defaultOpen>
+                <CloseOnHook hook={onMounted} handle={handle} />
+                <Pending />
+              </PopupRootPart>
+            </Suspense>
+          ),
+          { mounted: true },
+        );
+        await render(() => <HeldBranch />);
+        expect(handle.store).toBe(handle.serverStore);
+
+        gate.open();
+        await flushMicrotasks();
+        expect(handle.store).toBe(root.current.store);
+        expect(root.current.open).toBe(false);
+      });
     });
   });
 

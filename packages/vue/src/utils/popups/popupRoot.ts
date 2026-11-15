@@ -246,9 +246,12 @@ export function usePopupRootWithPopupId<Store extends PopupRootStore>(
   // handle. The trigger would then register in the store of the held root.
   // When `KeepAlive` shows the branch in the flush of the mount, `onActivated` can come after that
   // detach. The `watch` then gets the same handle as in its last run and does not call
-  // `setAttachedHandle`, so `onActivated` calls it.
+  // `setAttachedHandle`, so `onActivated` calls it. A root in a pending `<Suspense>` branch gets
+  // `onActivated` before its mount, so only the `watch` attaches it.
   const { isHeld } = useKeepAliveState();
+  let isMounted = false;
   onMounted(() => {
+    isMounted = true;
     if (isHeld.value) {
       isActive.value = false;
       setAttachedHandle(undefined);
@@ -259,7 +262,9 @@ export function usePopupRootWithPopupId<Store extends PopupRootStore>(
   });
   onActivated(() => {
     isActive.value = true;
-    setAttachedHandle(toValue(options.handle));
+    if (isMounted) {
+      setAttachedHandle(toValue(options.handle));
+    }
   });
 
   return { store, open, mounted, payload, transitionStatus, actions };
