@@ -60,6 +60,12 @@ interface Run {
   variant: Variant;
 }
 
+interface ConsoleMessage {
+  type(): string;
+  text(): string;
+  location(): { url: string };
+}
+
 // The functions that run in the page read these globals. The root project has no DOM types.
 declare const document: {
   querySelector(selector: string): (object & { __vue_app__?: unknown }) | null;
@@ -126,9 +132,10 @@ async function main(): Promise<void> {
         problems.push(`${name}: the page threw ${String(error)}`);
       });
       // A production build of Vue does not throw an error of a component or a hydration mismatch.
-      // It logs them with `console.error`.
-      tab.on('console', (message: { type(): string; text(): string }) => {
-        if (message.type() === 'error') {
+      // It logs them with `console.error`. Some demos show images from other sites. The browser
+      // logs a failed load with the address of the image, and the check does not test other sites.
+      tab.on('console', (message: ConsoleMessage) => {
+        if (message.type() === 'error' && message.location().url.startsWith(origin)) {
           problems.push(`${name}: the page logged the error ${message.text()}`);
         }
       });
