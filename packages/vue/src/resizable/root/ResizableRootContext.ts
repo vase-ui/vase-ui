@@ -71,7 +71,8 @@ export interface ResizableRootContext {
   outerList: CompositeListContextValue<any> | undefined;
   disabled: ComputedRef<boolean>;
   /**
-   * The sizes of a key, and of a drag step, in percent of the panel space.
+   * The sizes that a key and a drag move by, in percent of the panel space. `dragStep` is
+   * `undefined` when the root has no drag step.
    */
   step: ComputedRef<number>;
   largeStep: ComputedRef<number>;

@@ -376,8 +376,9 @@ function acceptInput() {
   takePinsFrom(resolved.value, exact);
 }
 
-// The sync watcher keeps `requested` right between a write and the next read. An object with the
-// same sizes, such as the one that a template literal makes at each render, is no change.
+// The watcher is `sync`, so `requested` is right when a drag reads the layout after a move. An
+// object with the same sizes, such as the one that a template literal makes at each render, is no
+// change.
 watch(
   input,
   (next, previous) => {
