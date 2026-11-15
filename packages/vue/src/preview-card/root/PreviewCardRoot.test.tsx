@@ -113,6 +113,14 @@ describe('<PreviewCard.Root />', () => {
       </PreviewCard.Root>
     ),
     createPopup: () => <PreviewCard.Popup data-testid="popup">Popup</PreviewCard.Popup>,
+    createBackdropComponent: ({ open, onOpenChangeComplete }) => (
+      <PreviewCard.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <PreviewCard.Trigger href="#">Open</PreviewCard.Trigger>
+        <PreviewCard.Portal>
+          <PreviewCard.Backdrop data-testid="shown" class="shown" />
+        </PreviewCard.Portal>
+      </PreviewCard.Root>
+    ),
     render,
   });
 

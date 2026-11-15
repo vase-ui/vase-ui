@@ -543,3 +543,33 @@
 :root:not(.dark) [class~='hover:bg-neutral-100'] [class~='text-neutral-500'] {
   color: oklch(43.9% 0 0deg);
 }
+
+/* The Autocomplete and Combobox sheets give the secondary text of an item `oklch(55.6% 0 0)`. On
+   the light highlight of an item, `oklch(97% 0 0)`, that text has 4.35:1 contrast. This rule uses
+   `oklch(43.9% 0 0)`, which has 7.17:1 there. `:where()` keeps the first two selectors at the
+   weight of two classes. A sheet that gives the part another color in a highlighted item has
+   three classes and wins. A Select sheet does this for its dark highlight. The last selector is
+   the Tailwind variant: the text has the class `text-neutral-500`, in an item with the light
+   highlight class. */
+:where(:root:not(.dark)) [data-vase-ui-portal] [class*='_ItemDescription_'],
+:where(:root:not(.dark)) [data-vase-ui-portal] [class*='_ItemSubtitle_'],
+:root:not(.dark)
+  [data-vase-ui-portal]
+  [class*='data-highlighted:before:bg-neutral-100']
+  [class~='text-neutral-500'] {
+  color: oklch(43.9% 0 0deg);
+}
+
+/* The Autocomplete sheet gives the matched letters of an item `oklch(62.3% 0.214 259.815)` in the
+   dark theme. On the highlight of an item, `oklch(26.9% 0 0)`, that text has 4.02:1 contrast. The
+   sheets have no lighter blue, so this rule uses the next lighter blue of the Tailwind palette,
+   which has 5.74:1 there. */
+.dark [data-vase-ui-portal] mark {
+  color: oklch(70.7% 0.165 254.624deg);
+}
+
+/* The red button rule of `DemoFrame.vue`, for a button in a popup. */
+.dark [data-vase-ui-portal] [class*='_Button_'][data-color='red']:active:not([data-disabled]),
+.dark [data-vase-ui-portal] [class*='_DangerButton_']:active:not([data-disabled]) {
+  color: oklch(80.8% 0.114 19.571deg);
+}

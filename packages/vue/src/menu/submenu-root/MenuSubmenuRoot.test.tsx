@@ -2,7 +2,14 @@ import { describe, expect, it, vi } from 'vitest';
 import { userEvent as browserUserEvent } from 'vitest/browser';
 import { defineComponent, shallowRef } from 'vue';
 import * as Menu from '../index.parts';
-import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#test-utils';
+import {
+  createRenderer,
+  fireEvent,
+  flushMicrotasks,
+  screen,
+  waitFor,
+  waitForLaterMillisecond,
+} from '#test-utils';
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
 import { REASONS } from '../../internals/reasons';
 import type { MenuRootActions } from '../root/MenuRoot.vue';
@@ -171,7 +178,7 @@ describe('<Menu.SubmenuRoot />', () => {
     );
 
     screen.getByRole('button', { name: 'Open' }).focus();
-    await browserUserEvent.keyboard('[ArrowDown]');
+    await waitForLaterMillisecond(() => browserUserEvent.keyboard('[ArrowDown]'));
     await waitFor(() => {
       expect(screen.getByRole('menuitem', { name: 'Alpha' })).toHaveFocus();
     });
@@ -180,7 +187,7 @@ describe('<Menu.SubmenuRoot />', () => {
     await waitFor(() => {
       expect(submenuTrigger).toHaveFocus();
     });
-    await browserUserEvent.keyboard('[ArrowRight]');
+    await waitForLaterMillisecond(() => browserUserEvent.keyboard('[ArrowRight]'));
     await waitFor(() => {
       expect(screen.getByRole('menuitem', { name: 'Beta' })).toHaveFocus();
     });

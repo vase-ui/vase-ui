@@ -157,7 +157,7 @@ export interface FrameProbeResult {
   isSameFrame: boolean;
 }
 
-const MINIMUM_EXIT_DURATION = 10_000;
+const MINIMUM_ANIMATION_DURATION = 10_000;
 const SEEK_MARGIN = 50;
 const EARLY_END_MARGIN = 1;
 
@@ -186,22 +186,26 @@ export async function probeFrameAfterExit(
   const read = nextAnimationsRead(panel);
   close();
   const animations = await read;
-  seekBeforeEnd(animations, SEEK_MARGIN, 'The part found no exit animation on the panel.');
+  seekBeforeEnd(animations, SEEK_MARGIN);
 
   return readFrameOfEnd(animations, isGone);
 }
 
-function seekBeforeEnd(animations: Animation[], margin: number, noAnimationMessage: string) {
+/**
+ * Moves each animation to `margin` ms before its end, so the next frame ends it. The browser ends
+ * the animation in a frame, as it does for a user, and no call of the test ends it. It throws when
+ * the list is empty, and when an animation lasts less than 10 s: a short animation can end before
+ * the seek. Give the animation a duration of 100 s.
+ */
+export function seekBeforeEnd(animations: Animation[], margin: number) {
   if (animations.length === 0) {
-    throw new Error(noAnimationMessage);
+    throw new Error('There is no animation to move.');
   }
   const endTimes = animations.map((animation) =>
     Number(animation.effect!.getComputedTiming().endTime),
   );
-  if (endTimes.some((endTime) => endTime < MINIMUM_EXIT_DURATION)) {
-    throw new Error(
-      'The exit animation of the panel lasts less than 10 seconds. Give the exit a duration of 100 s.',
-    );
+  if (endTimes.some((endTime) => endTime < MINIMUM_ANIMATION_DURATION)) {
+    throw new Error('An animation lasts less than 10 seconds. Give it a duration of 100 s.');
   }
   animations.forEach((animation, index) => {
     animation.currentTime = endTimes[index] - margin;
@@ -282,7 +286,7 @@ export async function probeFrameAfterExitBeforeRead(
   );
 
   const animations = panel.getAnimations();
-  seekBeforeEnd(animations, EARLY_END_MARGIN, 'The panel has no exit animation.');
+  seekBeforeEnd(animations, EARLY_END_MARGIN);
   let isReadBeforeEnd = false;
   let hasEnded = false;
   panel.getAnimations = (options) => {

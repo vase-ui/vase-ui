@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   flushMicrotasks,
@@ -288,43 +289,34 @@ describe('<Field.Label />', () => {
     ])(
       'names the control with a label that mounts while held only after the show: $name',
       async ({ outside, expected }) => {
-        const visible = shallowRef(true);
-        const extra = shallowRef(false);
-        const Branch = defineComponent(() => () => (
-          <div>
-            <Field.Label key="a" id="label-a">
-              A
+        const { HeldBranch, hide, mountWhileHeld, show } = createHeldBranch(
+          () => (
+            <Field.Label key="b" id="label-b">
+              B
             </Field.Label>
-            {extra.value ? (
-              <Field.Label key="b" id="label-b">
-                B
-              </Field.Label>
-            ) : null}
-          </div>
-        ));
+          ),
+          {
+            renderBranch: (part) => (
+              <div>
+                <Field.Label key="a" id="label-a">
+                  A
+                </Field.Label>
+                {part}
+              </div>
+            ),
+          },
+        );
         await render(() => (
           <Field.Root>
             <Field.Control data-testid="control" />
-            <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+            <HeldBranch />
             {outside ? <Field.Label id="label-c">C</Field.Label> : null}
           </Field.Root>
         ));
         const control = screen.getByTestId('control');
         const seen = [control.getAttribute('aria-labelledby')];
-        const changes = [
-          () => {
-            visible.value = false;
-          },
-          () => {
-            extra.value = true;
-          },
-          () => {
-            visible.value = true;
-          },
-        ];
-        for (const change of changes) {
-          change();
-          await flushMicrotasks();
+        for (const change of [hide, mountWhileHeld, show]) {
+          await change();
           seen.push(control.getAttribute('aria-labelledby'));
         }
 

@@ -99,18 +99,20 @@ export function useMenuItemCommonProps(
       if (contextMenuContext) {
         const initialCursorPoint = contextMenuContext.initialCursorPointRef.value;
         contextMenuContext.initialCursorPointRef.value = null;
+        // The popup opens at the pointer, so an item can start a few pixels from it (`VUE-84`).
         if (
-          isContextMenu &&
           initialCursorPoint &&
-          Math.abs(event.clientX - initialCursorPoint.x) <= 1 &&
-          Math.abs(event.clientY - initialCursorPoint.y) <= 1
+          isReleaseAtPressPoint(
+            { clientX: initialCursorPoint.x, clientY: initialCursorPoint.y },
+            event,
+          )
         ) {
           return;
         }
 
         // On non-macOS platforms, this mouseup belongs to the right-click gesture
         // that opened the context menu, so it must not activate an item.
-        if (isContextMenu && !platform.os.mac && event.button === 2) {
+        if (!platform.os.mac && event.button === 2) {
           return;
         }
       }

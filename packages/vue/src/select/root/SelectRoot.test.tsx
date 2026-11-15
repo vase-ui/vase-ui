@@ -1,19 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  defineComponent,
-  KeepAlive,
-  onBeforeUnmount,
-  onMounted,
-  reactive,
-  shallowRef,
-  watch,
-} from 'vue';
+import { defineComponent, onBeforeUnmount, onMounted, reactive, shallowRef, watch } from 'vue';
 import type { PropType } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import { Select } from '@vase-ui/vue/select';
 import {
   createFormDataSpy,
+  createHeldBranch,
   createRenderer,
   fireEvent,
   flushMicrotasks,
@@ -50,6 +43,8 @@ import SelectRootBeforeHydration from './SelectRootBeforeHydration.test.vue';
 import SelectRootHydration from './SelectRootHydration.test.vue';
 
 const BEFORE_HYDRATION_FIXTURE = 'src/select/root/SelectRootBeforeHydration.test.vue';
+
+const ADDRESSES = { 'Main Street 1\nFlat 2': 'Home', 'Box 1': 'Office' };
 
 type ChangeDetails = Select.Root.ChangeEventDetails;
 type OpenChangeDetails = Select.Root.OpenChangeEventDetails;
@@ -108,6 +103,32 @@ describe('<Select.Root />', () => {
       </Select.Root>
     ),
     createPopup: () => <Select.Popup data-testid="popup">Popup</Select.Popup>,
+    createBackdropComponent: ({ open, onOpenChangeComplete }) => (
+      <Select.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Select.Trigger>
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Backdrop data-testid="shown" class="shown" />
+        </Select.Portal>
+      </Select.Root>
+    ),
+    createPendingPositionerComponent: ({ Pending, onOpenChange }) => (
+      <Select.Root defaultOpen onOpenChange={onOpenChange}>
+        <Select.Trigger>
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Portal>
+          <Pending>
+            <Select.Positioner data-testid="shown" alignItemWithTrigger={false}>
+              <Select.Popup>
+                <Select.Item value="a">A</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Pending>
+        </Select.Portal>
+      </Select.Root>
+    ),
     render,
   });
 
@@ -145,9 +166,8 @@ describe('<Select.Root />', () => {
       await waitFor(() => {
         expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
       });
-      // A closed select keeps its list mounted and hidden, as after any other close. The focus
-      // goes to the trigger, and the trigger mounts the list in a 0 ms timer.
-      expect(await screen.findByRole('listbox', { hidden: true })).not.toHaveAttribute(
+      // A closed select keeps its list mounted and hidden, as after any other close.
+      expect(screen.getByRole('listbox', { hidden: true })).not.toHaveAttribute(
         'data-ending-style',
       );
     });
@@ -1117,8 +1137,11 @@ describe('<Select.Root />', () => {
       const trigger = screen.getByTestId('trigger');
       expect(trigger).toHaveTextContent('a');
 
-      await user.click(trigger);
-      await user.click(await screen.findByRole('option', { name: 'b' }));
+      const optionB = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        return screen.findByRole('option', { name: 'b' });
+      });
+      await user.click(optionB);
 
       expect(onValueChange).toHaveBeenCalledOnce();
       expect(onValueChange.mock.calls[0][0]).toBe('b');
@@ -2521,10 +2544,11 @@ describe('<Select.Root />', () => {
 
         const trigger = screen.getByRole('combobox');
 
-        await pressWithTouch(trigger);
-
-        await waitFor(() => {
-          expect(screen.getByRole('listbox')).toBeInTheDocument();
+        await waitForLaterMillisecond(async () => {
+          await pressWithTouch(trigger);
+          await waitFor(() => {
+            expect(screen.getByRole('listbox')).toBeInTheDocument();
+          });
         });
 
         const optionB = screen.getByRole('option', { name: 'b' });
@@ -2673,11 +2697,12 @@ describe('<Select.Root />', () => {
           expect(screen.getByTestId('positioner').style.opacity).toBe('0');
         });
 
-        await pressWithTouch(trigger);
-
-        // The positioner has no opacity of its own once the position is ready.
-        await waitFor(() => {
-          expect(screen.getByTestId('positioner').style.opacity).toBe('');
+        await waitForLaterMillisecond(async () => {
+          await pressWithTouch(trigger);
+          // The positioner has no opacity of its own once the position is ready.
+          await waitFor(() => {
+            expect(screen.getByTestId('positioner').style.opacity).toBe('');
+          });
         });
 
         const reopenedPositioner = screen.getByTestId('positioner');
@@ -2837,9 +2862,10 @@ describe('<Select.Root />', () => {
         </Select.Root>
       ));
 
-      await user.click(screen.getByRole('combobox'));
-
-      const list = await screen.findByRole('listbox');
+      const list = await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('combobox'));
+        return screen.findByRole('listbox');
+      });
       await fireEvent.scroll(list);
 
       const upArrow = screen.getByText('▲');
@@ -2889,9 +2915,10 @@ describe('<Select.Root />', () => {
       );
 
       const trigger = screen.getByRole('combobox');
-      await user.click(trigger);
-
-      const option = await screen.findByRole('option', { name: '1' });
+      const option = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        return screen.findByRole('option', { name: '1' });
+      });
       option.focus();
       await flushMicrotasks();
       await waitFor(() => {
@@ -3127,11 +3154,11 @@ describe('<Select.Root />', () => {
         </div>,
       );
 
-      await user.pointer({ keys: '[MouseLeft>]', target: screen.getByTestId('select-trigger') });
-      await user.pointer({
-        keys: '[/MouseLeft]',
-        target: await screen.findByRole('option', { name: 'Gala' }),
+      const gala = await waitForLaterMillisecond(async () => {
+        await user.pointer({ keys: '[MouseLeft>]', target: screen.getByTestId('select-trigger') });
+        return screen.findByRole('option', { name: 'Gala' });
       });
+      await user.pointer({ keys: '[/MouseLeft]', target: gala });
       await user.click(await screen.findByRole('option', { name: 'Fuji' }));
 
       await waitFor(() => {
@@ -3179,11 +3206,16 @@ describe('<Select.Root />', () => {
         </Popover.Root>,
       );
 
-      await user.click(screen.getByRole('button', { name: 'Open popover' }));
-      await screen.findByTestId('popover-popup');
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Open popover' }));
+        await screen.findByTestId('popover-popup');
+      });
 
-      await user.click(screen.getByTestId('select-trigger'));
-      await user.click(await screen.findByRole('option', { name: 'Gala' }));
+      const gala = await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('select-trigger'));
+        return screen.findByRole('option', { name: 'Gala' });
+      });
+      await user.click(gala);
 
       await waitFor(() => {
         expect(screen.queryByRole('listbox')).toBe(null);
@@ -3232,8 +3264,10 @@ describe('<Select.Root />', () => {
         </Popover.Root>,
       );
 
-      await user.click(screen.getByTestId('select-trigger'));
-      await screen.findByRole('listbox');
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('select-trigger'));
+        await screen.findByRole('listbox');
+      });
 
       await user.click(screen.getByRole('option', { name: 'Two' }));
 
@@ -3328,10 +3362,11 @@ describe('<Select.Root />', () => {
       const selectOpener = screen.getByRole('button', {
         name: 'Open select programmatically',
       });
-      await user.click(selectOpener);
-
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).not.toBe(null);
+      await waitForLaterMillisecond(async () => {
+        await user.click(selectOpener);
+        await waitFor(() => {
+          expect(screen.queryByRole('listbox')).not.toBe(null);
+        });
       });
 
       await user.click(screen.getByRole('option', { name: 'Two' }));
@@ -3374,21 +3409,22 @@ describe('<Select.Root />', () => {
       const startX = rect.left + rect.width / 2;
       const startY = rect.top + rect.height / 2;
 
-      await fireEvent.pointerDown(selectTrigger, {
-        button: 0,
-        buttons: 1,
-        clientX: startX,
-        clientY: startY,
-        pointerType: 'mouse',
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.pointerDown(selectTrigger, {
+          button: 0,
+          buttons: 1,
+          clientX: startX,
+          clientY: startY,
+          pointerType: 'mouse',
+        });
+        await fireEvent.mouseDown(selectTrigger, {
+          button: 0,
+          buttons: 1,
+          clientX: startX,
+          clientY: startY,
+        });
+        await screen.findByRole('listbox');
       });
-      await fireEvent.mouseDown(selectTrigger, {
-        button: 0,
-        buttons: 1,
-        clientX: startX,
-        clientY: startY,
-      });
-
-      await screen.findByRole('listbox');
 
       const endX = 400;
       const endY = 20;
@@ -3667,9 +3703,10 @@ describe('<Select.Root />', () => {
         </Select.Root>,
       );
 
-      await user.click(screen.getByTestId('trigger'));
-
-      const optionB = await screen.findByRole('option', { name: 'b' });
+      const optionB = await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('trigger'));
+        return screen.findByRole('option', { name: 'b' });
+      });
       await user.click(optionB);
 
       expect(handleValueChange.mock.calls.length).toBe(0);
@@ -3697,8 +3734,10 @@ describe('<Select.Root />', () => {
 
       await focusTrigger(screen.getByTestId('trigger'));
 
-      await user.keyboard('{ArrowDown}');
-      await screen.findByRole('listbox');
+      await waitForLaterMillisecond(async () => {
+        await user.keyboard('{ArrowDown}');
+        await screen.findByRole('listbox');
+      });
       await user.keyboard('{Enter}');
 
       expect(handleValueChange.mock.calls.length).toBe(0);
@@ -3960,7 +3999,7 @@ describe('<Select.Root />', () => {
 
     const { user } = await render(<App />);
 
-    await user.click(screen.getByText('initial'));
+    await waitForLaterMillisecond(() => user.click(screen.getByText('initial')));
 
     await user.click(screen.getByRole('button', { name: '1' }));
     expect(screen.getByTestId('value')).toHaveTextContent('1');
@@ -4693,9 +4732,10 @@ describe('<Select.Root />', () => {
       const outside = screen.getByTestId('outside');
 
       await fireEvent.focusIn(trigger);
-      await fireEvent.click(trigger);
-
-      await flushMicrotasks();
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.click(trigger);
+        await flushMicrotasks();
+      });
 
       const listbox = screen.getByRole('listbox');
 
@@ -5232,31 +5272,25 @@ describe('<Select.Root />', () => {
       'a held required select does not block the submit of its form: $name',
       async ({ name }) => {
         const handleSubmit = vi.fn();
-        const visible = shallowRef(true);
-        const extra = shallowRef(name === 'deactivated');
-        const Branch = defineComponent(() => () => (
-          <div>
-            {extra.value ? (
-              <Select.Root key="held" required>
-                <Select.Trigger />
-              </Select.Root>
-            ) : null}
-          </div>
-        ));
+        const { HeldBranch, mountWhileHeld } = createHeldBranch(
+          () => (
+            <Select.Root key="held" required>
+              <Select.Trigger />
+            </Select.Root>
+          ),
+          { mounted: name === 'deactivated' },
+        );
         const { user } = await render(() => (
           <Form onFormSubmit={handleSubmit}>
             <Field.Root name="fruit" data-testid="field">
               <Field.Control defaultValue="shown" />
-              <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+              <HeldBranch />
             </Field.Root>
             <button type="submit">Submit</button>
           </Form>
         ));
 
-        visible.value = false;
-        await flushMicrotasks();
-        extra.value = true;
-        await flushMicrotasks();
+        await mountWhileHeld();
         await user.click(screen.getByRole('button', { name: 'Submit' }));
 
         expect(handleSubmit).toHaveBeenCalledTimes(1);
@@ -5265,35 +5299,25 @@ describe('<Select.Root />', () => {
     );
 
     it('the label does not name a select that mounts while KeepAlive holds it', async () => {
-      const visible = shallowRef(true);
-      const extra = shallowRef(false);
-      const Branch = defineComponent(() => () => (
-        <div>
-          {extra.value ? (
-            <Select.Root key="held" id="held-select">
-              <Select.Trigger />
-            </Select.Root>
-          ) : null}
-        </div>
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Select.Root key="held" id="held-select">
+          <Select.Trigger />
+        </Select.Root>
       ));
       await render(() => (
         <Field.Root>
           <Field.Label data-testid="label">Fruit</Field.Label>
-          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+          <HeldBranch />
         </Field.Root>
       ));
       const label = screen.getByTestId('label');
       const providerId = label.getAttribute('for');
 
-      visible.value = false;
-      await flushMicrotasks();
-      extra.value = true;
-      await flushMicrotasks();
+      await mountWhileHeld();
 
       expect(label.getAttribute('for')).toBe(providerId);
 
-      visible.value = true;
-      await flushMicrotasks();
+      await show();
 
       expect(label).toHaveAttribute('for', 'held-select');
     });
@@ -6116,7 +6140,7 @@ describe('<Select.Root />', () => {
 
       screen.getByTestId('trigger').focus();
       await flushMicrotasks();
-      await user.keyboard('{ArrowDown}');
+      await waitForLaterMillisecond(() => user.keyboard('{ArrowDown}'));
       await waitFor(() => {
         expect(screen.getByRole('option', { name: 'Option 1' })).toHaveFocus();
       });
@@ -6553,10 +6577,11 @@ describe('<Select.Root />', () => {
       const { user } = await render(<Test />);
 
       const trigger = screen.getByTestId('trigger');
-      await user.click(trigger);
-
-      await waitFor(() => {
-        expect(screen.getByRole('option', { name: 'a' })).toHaveAttribute('data-selected', '');
+      await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        await waitFor(() => {
+          expect(screen.getByRole('option', { name: 'a' })).toHaveAttribute('data-selected', '');
+        });
       });
       expect(screen.getByRole('option', { name: 'c' })).toHaveAttribute('data-selected', '');
 
@@ -6675,10 +6700,11 @@ describe('<Select.Root />', () => {
 
       const trigger = screen.getByTestId('trigger');
 
-      await user.click(trigger);
-      await flushMicrotasks();
-
-      const optionA = await screen.findByRole('option', { name: 'a' });
+      const optionA = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        await flushMicrotasks();
+        return screen.findByRole('option', { name: 'a' });
+      });
       await user.click(optionA);
       await flushMicrotasks();
 
@@ -6782,10 +6808,11 @@ describe('<Select.Root />', () => {
 
       const trigger = screen.getByTestId('trigger');
 
-      await user.click(trigger);
-      await flushMicrotasks();
-
-      const optionA = await screen.findByRole('option', { name: 'a' });
+      const optionA = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        await flushMicrotasks();
+        return screen.findByRole('option', { name: 'a' });
+      });
       const optionB = screen.getByRole('option', { name: 'b' });
 
       expect(optionA).toHaveAttribute('data-selected', '');
@@ -6851,9 +6878,10 @@ describe('<Select.Root />', () => {
 
       const trigger = screen.getByTestId('trigger');
 
-      await user.click(trigger);
-
-      const optionB = await screen.findByRole('option', { name: 'b' });
+      const optionB = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        return screen.findByRole('option', { name: 'b' });
+      });
 
       await user.click(optionB);
 
@@ -7014,9 +7042,11 @@ describe('<Select.Root />', () => {
 
       const { user, setProps } = await render(<App value={[{ id: 2 }, { id: 3 }]} />);
 
-      await user.click(screen.getByTestId('trigger'));
-      await waitFor(() => {
-        expect(screen.getByRole('option', { name: 'opt-2' })).toHaveAttribute('data-highlighted');
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('trigger'));
+        await waitFor(() => {
+          expect(screen.getByRole('option', { name: 'opt-2' })).toHaveAttribute('data-highlighted');
+        });
       });
       await user.keyboard('{Escape}');
       await waitFor(() => {
@@ -7137,8 +7167,10 @@ describe('<Select.Root />', () => {
         </Select.Root>,
       );
 
-      await user.click(screen.getByTestId('trigger'));
-      const optionB = await screen.findByRole('option', { name: 'b' });
+      const optionB = await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('trigger'));
+        return screen.findByRole('option', { name: 'b' });
+      });
       await waitFor(() => {
         expect(optionB).toHaveAttribute('data-highlighted');
       });
@@ -7177,8 +7209,10 @@ describe('<Select.Root />', () => {
         </Select.Root>,
       );
 
-      await user.click(screen.getByTestId('trigger'));
-      const optionB = await screen.findByRole('option', { name: 'b' });
+      const optionB = await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('trigger'));
+        return screen.findByRole('option', { name: 'b' });
+      });
       await waitFor(() => {
         expect(optionB).toHaveAttribute('data-highlighted');
       });
@@ -7432,14 +7466,14 @@ describe('<Select.Root />', () => {
 
       const trigger = screen.getByTestId('trigger');
 
-      await user.click(trigger);
-      await flushMicrotasks();
-
-      await waitFor(() => {
-        expect(screen.getByRole('listbox')).not.toBe(null);
+      const optionA = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        await flushMicrotasks();
+        await waitFor(() => {
+          expect(screen.getByRole('listbox')).not.toBe(null);
+        });
+        return screen.findByRole('option', { name: 'a' });
       });
-
-      const optionA = await screen.findByRole('option', { name: 'a' });
       await user.click(optionA);
       await flushMicrotasks();
 
@@ -7472,14 +7506,14 @@ describe('<Select.Root />', () => {
 
       const trigger = screen.getByTestId('trigger');
 
-      await user.click(trigger);
-      await flushMicrotasks();
-
-      await waitFor(() => {
-        expect(screen.getByRole('listbox')).not.toBe(null);
+      const optionA = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        await flushMicrotasks();
+        await waitFor(() => {
+          expect(screen.getByRole('listbox')).not.toBe(null);
+        });
+        return screen.findByRole('option', { name: 'a' });
       });
-
-      const optionA = await screen.findByRole('option', { name: 'a' });
       await user.click(optionA);
       await flushMicrotasks();
 
@@ -7803,7 +7837,7 @@ describe('<Select.Root />', () => {
       );
 
       await focusTrigger(screen.getByTestId('trigger'));
-      await user.keyboard('{ArrowDown}');
+      await waitForLaterMillisecond(() => user.keyboard('{ArrowDown}'));
       await waitFor(() => {
         expect(screen.getByRole('option', { name: 'apple' })).toHaveFocus();
       });
@@ -7862,7 +7896,10 @@ describe('<Select.Root />', () => {
 
     it('does not move the popup or its list when hovering items at its edges', async () => {
       const { user } = await render(<AlignedSelect />);
-      await user.click(screen.getByTestId('trigger'));
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('trigger'));
+        await screen.findByRole('listbox');
+      });
       await waitFor(() => {
         expect(screen.getByRole('option', { name: 'Item 15' })).toHaveFocus();
       });
@@ -7913,7 +7950,7 @@ describe('<Select.Root />', () => {
           </Select.Root>
         </div>,
       );
-      await focusTrigger(screen.getByTestId('trigger'));
+      await waitForLaterMillisecond(() => focusTrigger(screen.getByTestId('trigger')));
       await user.keyboard('{ArrowDown}');
       await waitFor(() => {
         expect(screen.getByRole('option', { name: 'Item 1' })).toHaveFocus();
@@ -7990,7 +8027,7 @@ describe('<Select.Root />', () => {
       const { user } = await render(<Test />);
       const trigger = screen.getByTestId('trigger');
       await focusTrigger(trigger);
-      await user.keyboard('{ArrowUp}');
+      await waitForLaterMillisecond(() => user.keyboard('{ArrowUp}'));
       await waitFor(() => {
         expect(screen.getByRole('option', { name: 'b' })).toHaveFocus();
       });
@@ -8187,8 +8224,10 @@ describe('<Select.Root />', () => {
         );
 
         await focusTrigger(screen.getByTestId('trigger'));
-        await user.keyboard('{ArrowDown}');
-        const optionA = await screen.findByRole('option', { name: 'a' });
+        const optionA = await waitForLaterMillisecond(async () => {
+          await user.keyboard('{ArrowDown}');
+          return screen.findByRole('option', { name: 'a' });
+        });
         const optionB = screen.getByRole('option', { name: 'b' });
         await waitFor(() => {
           expect(optionA).toHaveFocus();
@@ -8245,9 +8284,11 @@ describe('<Select.Root />', () => {
         </Select.Root>,
       );
 
-      await user.click(screen.getByRole('combobox'));
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).not.toBe(null);
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('combobox'));
+        await waitFor(() => {
+          expect(screen.queryByRole('listbox')).not.toBe(null);
+        });
       });
       await flushMicrotasks();
 
@@ -8526,6 +8567,78 @@ describe('<Select.Root />', () => {
       expect(getHiddenInput().value).toBe(expected.model);
       expect(events).toEqual(['input']);
     });
+
+    it.each([
+      { name: 'a line feed', value: 'Main Street 1\nFlat 2', text: 'Main Street 1Flat 2' },
+      { name: 'a carriage return', value: 'Main Street 1\rFlat 2', text: 'Main Street 1Flat 2' },
+    ])('sends no event at a `pageshow` event for a value with $name', async ({ value, text }) => {
+      const handleValueChange = vi.fn();
+      const { container } = await render(
+        <form data-testid="form">
+          <Select.Root
+            name="address"
+            items={{ [value]: 'Home' }}
+            defaultValue={value}
+            onValueChange={handleValueChange}
+          >
+            <Select.Trigger data-testid="trigger">
+              <Select.Value />
+            </Select.Trigger>
+          </Select.Root>
+        </form>,
+      );
+      const events = recordInputEvents(container);
+      expect(getHiddenInput().value).toBe(text);
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(events).toEqual([]);
+      expect(handleValueChange).not.toHaveBeenCalled();
+      expect(getHiddenInput().value).toBe(text);
+      expect(screen.getByTestId('trigger').textContent).toBe('Home');
+    });
+
+    it('takes an item that the browser restores into a select whose value has a line feed', async () => {
+      const handleValueChange = vi.fn();
+      const { container } = await render(
+        <form data-testid="form">
+          <Select.Root
+            name="address"
+            items={ADDRESSES}
+            defaultValue={'Main Street 1\nFlat 2'}
+            onValueChange={handleValueChange}
+          >
+            <Select.Trigger data-testid="trigger">
+              <Select.Value />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  {Object.entries(ADDRESSES).map(([value, label]) => (
+                    <Select.Item key={value} value={value}>
+                      <Select.ItemText>{label}</Select.ItemText>
+                    </Select.Item>
+                  ))}
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        </form>,
+      );
+      const events = recordInputEvents(container);
+      getHiddenInput().value = 'Box 1';
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(handleValueChange.mock.calls.map((call) => [call[0], call[1].reason])).toEqual([
+        ['Box 1', 'none'],
+      ]);
+      expect(screen.getByTestId('trigger').textContent).toBe('Office');
+      expect(getHiddenInput().value).toBe('Box 1');
+      expect(events).toEqual(['input']);
+    });
   });
 
   describe('autofill', () => {
@@ -8629,19 +8742,26 @@ describe('<Select.Root />', () => {
     it('is null for a new value after the items unmount', async () => {
       const value = shallowRef('a');
       const open = shallowRef(true);
+      const showPortal = shallowRef(true);
+      const handleOpenChangeComplete = vi.fn();
       await render(() => (
-        <Select.Root value={value.value} open={open.value}>
+        <Select.Root
+          value={value.value}
+          open={open.value}
+          onOpenChangeComplete={handleOpenChangeComplete}
+        >
           <StoreProbe />
           <Select.Trigger />
-          <Select.Portal>
-            <Select.Positioner>
-              {/* The trigger mounts the items when it gets the focus back. */}
-              <Select.Popup finalFocus={false}>
-                <Select.Item value="a">a</Select.Item>
-                <Select.Item value="b">b</Select.Item>
-              </Select.Popup>
-            </Select.Positioner>
-          </Select.Portal>
+          {showPortal.value ? (
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  <Select.Item value="a">a</Select.Item>
+                  <Select.Item value="b">b</Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          ) : null}
         </Select.Root>
       ));
       await flushMicrotasks();
@@ -8649,8 +8769,11 @@ describe('<Select.Root />', () => {
 
       open.value = false;
       await waitFor(() => {
-        expect(screen.queryByRole('option')).toBe(null);
+        expect(handleOpenChangeComplete).toHaveBeenLastCalledWith(false);
       });
+      showPortal.value = false;
+      await flushMicrotasks();
+      expect(screen.queryAllByRole('option', { hidden: true })).toEqual([]);
       value.value = 'b';
       await flushMicrotasks();
 

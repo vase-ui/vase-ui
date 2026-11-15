@@ -52,7 +52,9 @@ export function useFormRestore(
  * event. At a restore, an `<input>` or a `<textarea>` whose value is not the value that the part
  * handled last gets the events of {@link dispatchTakeEvents}.
  * @param input The element of the control.
- * @param getHandledValue Gives the value that the part handled last.
+ * @param getHandledValue Gives the value that the input had after the last event that the part
+ * handled, or after the last write of Vue or of the part. The value sanitization of the input type
+ * can change the text of the state of the part, so the part does not give that text.
  * @param leaves Passed to {@link dispatchTakeEvents}. `false` for an input that the user cannot
  * focus.
  */

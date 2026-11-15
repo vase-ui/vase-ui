@@ -7,6 +7,7 @@ import {
   isVaporApp,
   nextEvent,
   screen,
+  waitForLaterMillisecond,
   waitSingleFrame,
 } from '#test-utils';
 import { getScrollLockRegistry } from '../../../../test/fixtures/scrollDocument';
@@ -377,7 +378,7 @@ describe('VUE-5: a popup whose root mounts while KeepAlive holds its branch', ()
       </div>,
     );
     await held.mountWhileHeld();
-    await held.show();
+    await waitForLaterMillisecond(() => held.show());
     const afterShow = await measurePopupOffset();
     unmount();
 

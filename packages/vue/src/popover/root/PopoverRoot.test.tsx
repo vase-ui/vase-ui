@@ -19,6 +19,7 @@ import {
   screen,
   wait,
   waitFor,
+  waitForLaterMillisecond,
   waitSingleFrame,
 } from '#test-utils';
 import * as Combobox from '../../combobox/index.parts';
@@ -237,6 +238,37 @@ describe('<Popover.Root />', () => {
       </Popover.Root>
     ),
     createPopup: () => <Popover.Popup data-testid="popup">Popup</Popover.Popup>,
+    createBackdropComponent: ({ open, onOpenChangeComplete }) => (
+      <Popover.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Popover.Trigger>Open</Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Backdrop data-testid="shown" class="shown" />
+        </Popover.Portal>
+      </Popover.Root>
+    ),
+    createBackdropAndPositionerComponent: ({ open, onOpenChangeComplete }) => (
+      <Popover.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Popover.Trigger>Open</Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Backdrop />
+          <Popover.Positioner data-testid="shown" class="shown">
+            Content
+          </Popover.Positioner>
+        </Popover.Portal>
+      </Popover.Root>
+    ),
+    createPendingPositionerComponent: ({ Pending, onOpenChange }) => (
+      <Popover.Root defaultOpen modal onOpenChange={onOpenChange}>
+        <Popover.Trigger>Open</Popover.Trigger>
+        <Popover.Portal>
+          <Pending>
+            <Popover.Positioner data-testid="shown">
+              <Popover.Popup>Popup</Popover.Popup>
+            </Popover.Positioner>
+          </Pending>
+        </Popover.Portal>
+      </Popover.Root>
+    ),
     render,
   });
 
@@ -457,8 +489,10 @@ describe('<Popover.Root />', () => {
       await render(renderApp());
       const trigger = screen.getByRole('button', { name: 'Toggle' });
 
-      await hoverOpen(trigger);
-      await flushMicrotasks();
+      await waitForLaterMillisecond(async () => {
+        await hoverOpen(trigger);
+        await flushMicrotasks();
+      });
       expect(screen.queryByRole('dialog')).not.toBe(null);
 
       await fireEvent.pointerDown(screen.getByRole('button', { name: 'More' }), {
@@ -537,9 +571,11 @@ describe('<Popover.Root />', () => {
 
         const trigger = screen.getByTestId('trigger');
 
-        await user.click(trigger);
-        await waitFor(() => {
-          expect(screen.queryByRole('dialog')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.click(trigger);
+          await waitFor(() => {
+            expect(screen.queryByRole('dialog')).not.toBe(null);
+          });
         });
 
         await user.keyboard('{Escape}');
@@ -840,8 +876,10 @@ describe('<Popover.Root />', () => {
         popoverTrigger.focus();
         await flushMicrotasks();
 
-        await user.keyboard('{Enter}');
-        await screen.findByTestId('popover-popup');
+        await waitForLaterMillisecond(async () => {
+          await user.keyboard('{Enter}');
+          await screen.findByTestId('popover-popup');
+        });
 
         const nestedTrigger = await screen.findByRole('button', { name: 'Open nested' });
 
@@ -891,12 +929,16 @@ describe('<Popover.Root />', () => {
         const { user } = await render(<Test />);
 
         const popoverTrigger = screen.getByRole('button', { name: 'Toggle' });
-        await user.click(popoverTrigger);
-        await screen.findByTestId('popover-popup');
+        await waitForLaterMillisecond(async () => {
+          await user.click(popoverTrigger);
+          await screen.findByTestId('popover-popup');
+        });
 
         const nestedTrigger = await screen.findByRole('button', { name: 'Open nested' });
-        await user.click(nestedTrigger);
-        await screen.findByTestId('menu-popup');
+        await waitForLaterMillisecond(async () => {
+          await user.click(nestedTrigger);
+          await screen.findByTestId('menu-popup');
+        });
 
         const item = await screen.findByText('Item');
         // In WebKit, a list ignores a pointer move with no movement, so the item has no focus when
@@ -1091,8 +1133,10 @@ describe('<Popover.Root />', () => {
         );
 
         const trigger = screen.getByRole('button', { name: 'Toggle' });
-        await fireEvent.click(trigger);
-        await flushMicrotasks();
+        await waitForLaterMillisecond(async () => {
+          await fireEvent.click(trigger);
+          await flushMicrotasks();
+        });
 
         await fireEvent.click(screen.getByTestId('close'));
 
@@ -1825,9 +1869,10 @@ describe('<Popover.Root />', () => {
             </div>,
           );
 
-          await user.click(screen.getByRole('button', { name: 'Menu' }));
-
-          const menu = await screen.findByRole('menu');
+          const menu = await waitForLaterMillisecond(async () => {
+            await user.click(screen.getByRole('button', { name: 'Menu' }));
+            return screen.findByRole('menu');
+          });
           await waitFor(() => {
             expect(menu).toHaveFocus();
           });
@@ -2750,19 +2795,21 @@ describe('<Popover.Root />', () => {
         const { user } = await render(<Test />);
 
         const parentTrigger = screen.getByRole('button', { name: 'Parent trigger' });
-        await user.click(parentTrigger);
-
-        await waitFor(() => {
-          expect(screen.queryByTestId('parent-popup')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.click(parentTrigger);
+          await waitFor(() => {
+            expect(screen.queryByTestId('parent-popup')).not.toBe(null);
+          });
         });
 
         const childOpener = screen.getByRole('button', {
           name: 'Open child programmatically',
         });
-        await user.click(childOpener);
-
-        await waitFor(() => {
-          expect(screen.queryByTestId('child-popup')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.click(childOpener);
+          await waitFor(() => {
+            expect(screen.queryByTestId('child-popup')).not.toBe(null);
+          });
         });
 
         await user.click(screen.getByRole('button', { name: 'Close child' }));
@@ -2818,9 +2865,10 @@ describe('<Popover.Root />', () => {
 
         const childTrigger = screen.getByRole('button', { name: 'Child' });
 
-        await fireEvent.click(childTrigger);
-
-        const childPopup = await screen.findByTestId('child-popup');
+        const childPopup = await waitForLaterMillisecond(async () => {
+          await fireEvent.click(childTrigger);
+          return screen.findByTestId('child-popup');
+        });
         const outside = screen.getByTestId('outside');
 
         await fireEvent.pointerDown(childPopup, { pointerType: 'mouse', button: 0 });
@@ -2912,8 +2960,10 @@ describe('<Popover.Root />', () => {
         expect(screen.queryByTestId('child-popup')).toBe(null);
 
         const parentTrigger = screen.getByTestId('parent-trigger');
-        await user.click(parentTrigger);
-        await flushMicrotasks();
+        await waitForLaterMillisecond(async () => {
+          await user.click(parentTrigger);
+          await flushMicrotasks();
+        });
 
         const parentPopup = screen.getByTestId('parent-popup');
 
@@ -2921,8 +2971,10 @@ describe('<Popover.Root />', () => {
         expect(screen.queryByTestId('child-popup')).toBe(null);
 
         const childTrigger = screen.getByTestId('child-trigger');
-        await user.click(childTrigger);
-        await flushMicrotasks();
+        await waitForLaterMillisecond(async () => {
+          await user.click(childTrigger);
+          await flushMicrotasks();
+        });
 
         expect(parentPopup).not.toBe(null);
         expect(screen.getByTestId('child-popup')).not.toBe(null);
@@ -3029,9 +3081,11 @@ describe('<Popover.Root />', () => {
           </>,
         );
 
-        await user.click(screen.getByRole('button', { name: 'Open dialog' }));
-        await waitFor(() => {
-          expect(screen.queryByTestId('dialog')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.click(screen.getByRole('button', { name: 'Open dialog' }));
+          await waitFor(() => {
+            expect(screen.queryByTestId('dialog')).not.toBe(null);
+          });
         });
         expect(screen.queryByTestId('popover')).not.toBe(null);
         await waitFor(() => {

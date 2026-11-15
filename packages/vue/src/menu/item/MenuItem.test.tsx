@@ -10,6 +10,7 @@ import {
   screen,
   takeReportedMessages,
   waitFor,
+  waitForLaterMillisecond,
 } from '#test-utils';
 import {
   ContextMenuProvider,
@@ -319,8 +320,10 @@ describe('<Menu.Item />', () => {
         </>,
       );
 
-      await user.click(screen.getByRole('button', { name: 'Open' }));
-      const item = await screen.findByRole('menuitem');
+      const item = await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Open' }));
+        return screen.findByRole('menuitem');
+      });
       expect(screen.getByRole('textbox')).not.toHaveFocus();
 
       if (press === 'Enter') {
@@ -352,9 +355,10 @@ describe('<Menu.Item />', () => {
     );
 
     const trigger = screen.getByRole('button', { name: 'Open' });
-    await user.click(trigger);
-
-    const item = await screen.findByRole('menuitem');
+    const item = await waitForLaterMillisecond(async () => {
+      await user.click(trigger);
+      return screen.findByRole('menuitem');
+    });
     await user.click(item);
 
     expect(onClick.mock.calls.length).toBe(1);
@@ -377,9 +381,10 @@ describe('<Menu.Item />', () => {
       );
 
       const trigger = screen.getByRole('button', { name: 'Open' });
-      await user.click(trigger);
-
-      const item = await screen.findByRole('menuitem');
+      const item = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        return screen.findByRole('menuitem');
+      });
       await user.click(item);
 
       expect(screen.queryByRole('menu')).toBe(null);
@@ -400,9 +405,10 @@ describe('<Menu.Item />', () => {
       );
 
       const trigger = screen.getByRole('button', { name: 'Open' });
-      await user.click(trigger);
-
-      const item = await screen.findByRole('menuitem');
+      const item = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        return screen.findByRole('menuitem');
+      });
       await user.click(item);
 
       expect(screen.queryByRole('menu')).not.toBe(null);
@@ -621,6 +627,40 @@ describe('<Menu.Item />', () => {
       expect(onClick).not.toHaveBeenCalled();
       expect(context.initialCursorPointRef.value).toBe(null);
     });
+
+    it.each([
+      { name: '8px right and 8px down', dx: 8, dy: 8, clicks: 0 },
+      { name: '9px right', dx: 9, dy: 0, clicks: 1 },
+      { name: '9px down', dx: 0, dy: 9, clicks: 1 },
+    ])(
+      'VUE-84: in a context menu, a release $name of the open point',
+      async ({ dx, dy, clicks }) => {
+        setMac(true);
+        const context = createContextMenuContext();
+        const probe = createMenuStoreProbe();
+        const onClick = vi.fn();
+        await render(
+          <ContextMenuProvider context={context}>
+            <Menu.Root open>
+              <probe.Probe />
+              <Menu.Item closeOnClick={false} onClick={onClick}>
+                Item
+              </Menu.Item>
+            </Menu.Root>
+          </ContextMenuProvider>,
+        );
+
+        probe.store.context.allowMouseUpTriggerRef.value = true;
+        context.initialCursorPointRef.value = { x: 100, y: 50 };
+        await fireEvent.mouseUp(screen.getByRole('menuitem'), {
+          button: 2,
+          clientX: 100 + dx,
+          clientY: 50 + dy,
+        });
+
+        expect(onClick).toHaveBeenCalledTimes(clicks);
+      },
+    );
 
     // On a platform that is not macOS, the release of the right button belongs to the gesture that
     // opened the context menu.

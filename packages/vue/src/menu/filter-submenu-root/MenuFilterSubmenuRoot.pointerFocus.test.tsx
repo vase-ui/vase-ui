@@ -6,6 +6,7 @@ import {
   firePointer,
   screen,
   waitFor,
+  waitForLaterMillisecond,
   waitSingleFrame,
 } from '#test-utils';
 
@@ -52,15 +53,17 @@ async function waitForParentFocus(filteredParent: boolean) {
 }
 
 async function press(trigger: HTMLElement, pointerType: string) {
-  await firePointer.down(trigger, {
-    pointerType,
-    timeStamp: 10,
-    width: 10,
-    height: 10,
-    pressure: 0.5,
+  await waitForLaterMillisecond(async () => {
+    await firePointer.down(trigger, {
+      pointerType,
+      timeStamp: 10,
+      width: 10,
+      height: 10,
+      pressure: 0.5,
+    });
+    await fireEvent.mouseDown(trigger, { detail: 1 });
+    await waitSingleFrame();
   });
-  await fireEvent.mouseDown(trigger, { detail: 1 });
-  await waitSingleFrame();
   await firePointer.up(trigger, { pointerType, timeStamp: 20 });
   await fireEvent.mouseUp(trigger, { detail: 1 });
   await fireEvent.click(trigger, { detail: 1 });
@@ -115,8 +118,10 @@ describe.each([false, true])('submenu pointer focus with filteredParent=%s', (fi
     const { user } = await render(<Test filteredParent={filteredParent} />);
     await waitForParentFocus(filteredParent);
     const trigger = screen.getByRole('menuitem', { name: 'More' });
-    await user.hover(trigger);
-    const input = await screen.findByRole('searchbox', { name: 'Filter more actions' });
+    const input = await waitForLaterMillisecond(async () => {
+      await user.hover(trigger);
+      return screen.findByRole('searchbox', { name: 'Filter more actions' });
+    });
     await waitSingleFrame();
     expect(input).not.toHaveFocus();
     await fireEvent.click(trigger, { detail: 0 });

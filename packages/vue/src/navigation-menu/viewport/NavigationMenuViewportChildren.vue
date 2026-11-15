@@ -3,7 +3,7 @@ import { markChildrenMounted } from '../../internals/useRenderElement';
 import FocusGuard from '../../utils/popups/focus/FocusGuard.vue';
 import { useNavigationMenuPositionerContext } from '../positioner/NavigationMenuPositionerContext';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
-import { createElementSetter } from '../utils/createElementSetter';
+import { createElementSetter } from '../../utils/popups/createElementSetter';
 import { useNavigationMenuViewportGuards } from './useNavigationMenuViewportGuards';
 
 defineSlots<{

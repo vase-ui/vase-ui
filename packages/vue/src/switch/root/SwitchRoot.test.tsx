@@ -5,6 +5,7 @@ import { Form } from '@vase-ui/vue/form';
 import { Switch } from '@vase-ui/vue/switch';
 import {
   createFormDataSpy,
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -2240,25 +2241,21 @@ describe('<Switch.Root />', () => {
       'a held required switch does not block the submit of its form: $name',
       async ({ name }) => {
         const handleSubmit = vi.fn();
-        const visible = shallowRef(true);
-        const extra = shallowRef(name === 'deactivated');
-        const Branch = defineComponent(() => () => (
-          <div>{extra.value ? <Switch.Root key="held" required /> : null}</div>
-        ));
+        const { HeldBranch, mountWhileHeld } = createHeldBranch(
+          () => <Switch.Root key="held" required />,
+          { mounted: name === 'deactivated' },
+        );
         const { user } = await render(() => (
           <Form onFormSubmit={handleSubmit}>
             <Field.Root name="email" data-testid="field">
               <Field.Control defaultValue="shown" />
-              <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+              <HeldBranch />
             </Field.Root>
             <button type="submit">Submit</button>
           </Form>
         ));
 
-        visible.value = false;
-        await flushMicrotasks();
-        extra.value = true;
-        await flushMicrotasks();
+        await mountWhileHeld();
         await user.click(screen.getByRole('button', { name: 'Submit' }));
 
         expect(handleSubmit).toHaveBeenCalledTimes(1);
@@ -2267,29 +2264,23 @@ describe('<Switch.Root />', () => {
     );
 
     it('the label does not name a switch that mounts while KeepAlive holds it', async () => {
-      const visible = shallowRef(true);
-      const extra = shallowRef(false);
-      const Branch = defineComponent(() => () => (
-        <div>{extra.value ? <Switch.Root key="held" id="held-switch" /> : null}</div>
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Switch.Root key="held" id="held-switch" />
       ));
       await render(() => (
         <Field.Root>
           <Field.Label data-testid="label">Notifications</Field.Label>
-          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+          <HeldBranch />
         </Field.Root>
       ));
       const label = screen.getByTestId('label');
       const providerId = label.getAttribute('for');
 
-      visible.value = false;
-      await flushMicrotasks();
-      extra.value = true;
-      await flushMicrotasks();
+      await mountWhileHeld();
 
       expect(label.getAttribute('for')).toBe(providerId);
 
-      visible.value = true;
-      await flushMicrotasks();
+      await show();
 
       expect(label).toHaveAttribute('for', 'held-switch');
     });

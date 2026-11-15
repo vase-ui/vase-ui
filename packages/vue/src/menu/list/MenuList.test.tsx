@@ -9,6 +9,7 @@ import {
   flushMicrotasks,
   screen,
   waitFor,
+  waitForLaterMillisecond,
 } from '#test-utils';
 
 const PlainMenu = defineComponent({
@@ -497,7 +498,7 @@ describe('<Menu.List /> in a plain menu', () => {
 
     trigger.focus();
     await flushMicrotasks();
-    await user.keyboard('[Enter]');
+    await waitForLaterMillisecond(() => user.keyboard('[Enter]'));
 
     await waitFor(() => {
       expect(screen.getByTestId('item-1')).toHaveFocus();

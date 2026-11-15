@@ -6,6 +6,7 @@ import {
   createRenderer,
   describeConformance,
   fireEvent,
+  heldMountListTests,
   hydrate,
   isJSDOM,
   renderOnServer,
@@ -71,6 +72,20 @@ function readNames(root: ParentNode) {
 
 describe('<Accordion.Root />', () => {
   const { render } = createRenderer();
+
+  heldMountListTests({
+    render,
+    renderList: (withLastItem) => (
+      <Accordion.Root>
+        <Accordion.Item value="a" data-testid="item-a" />
+        {withLastItem ? <Accordion.Item value="b" data-testid="item-b" /> : null}
+      </Accordion.Root>
+    ),
+    check() {
+      expect(screen.getByTestId('item-a')).toHaveAttribute('data-index', '0');
+      expect(screen.getByTestId('item-b')).toHaveAttribute('data-index', '1');
+    },
+  });
 
   describeConformance(<Accordion.Root />, () => ({
     render,
