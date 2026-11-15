@@ -37,6 +37,8 @@ Import the component and assemble its parts:
 
 <<< ./toolbar/Anatomy.vue
 
+Text that a visitor types, or that the browser fills, before the page hydrates stays in `Toolbar.Input`. After the hydration, an `input` listener of `Toolbar.Input` runs with that text. When the visitor left the input before the page hydrated, the input then also gets `change`, `blur` and `focusout`.
+
 ## Examples
 
 ### Using with other components

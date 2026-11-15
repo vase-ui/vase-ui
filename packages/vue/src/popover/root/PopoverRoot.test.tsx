@@ -3521,7 +3521,7 @@ describe('<Popover.Root />', () => {
         <Popover.Trigger id="trigger">Open</Popover.Trigger>
       </Popover.Root>,
     );
-    const trigger = screen.getByRole('button');
+    const trigger = screen.getByRole('button', { name: 'Open' });
 
     await user.keyboard('[Escape]');
 
@@ -3799,7 +3799,7 @@ describe('<Popover.Root />', () => {
     const { user } = await render(() => (
       <KeepAlive>{visible.value ? <Page key="page" /> : <p key="other">other</p>}</KeepAlive>
     ));
-    const trigger = screen.getByRole('button');
+    const trigger = screen.getByRole('button', { name: 'Open' });
     const popup = await screen.findByTestId('popup');
 
     visible.value = false;
@@ -3811,7 +3811,7 @@ describe('<Popover.Root />', () => {
 
     visible.value = true;
     await flushMicrotasks();
-    expect(screen.getByRole('button')).toBe(trigger);
+    expect(screen.getByRole('button', { name: 'Open' })).toBe(trigger);
     expect(trigger).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByTestId('popup')).toBe(popup);
     expect(popup).toHaveAttribute('data-open');
