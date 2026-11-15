@@ -3,8 +3,8 @@ import type { Orientation } from '../../internals/types';
 import type { Measurement } from './parseSize';
 
 /**
- * What the root reads from the page after the mount. A pixel is a layout pixel: a CSS `zoom` or a
- * scale transform around the root does not change a length, a pin or a reported size.
+ * What the root reads from the page after the mount. A pixel is a layout pixel: a scale transform
+ * around the root does not change a length, a pin or a reported size.
  */
 export interface RootMeasurement {
   /**
