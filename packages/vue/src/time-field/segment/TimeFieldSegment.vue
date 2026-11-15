@@ -41,7 +41,11 @@ defineSlots<{
   render: ComponentRenderFn<InputHTMLAttributes & Pick<HTMLProps, 'ref'>, TimeFieldSegmentState>;
 }>();
 
-const { state, props: segmentProps, setElement } = useDateTimeFieldSegment(() => props.segment);
+const {
+  state,
+  props: segmentProps,
+  setElement,
+} = useDateTimeFieldSegment(() => props.segment, props);
 
 const { element, elementProps } = useRenderElement('input', props, {
   state,

@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { TimeField } from '@vase-ui/vue/time-field';
-import { createRenderer, describeConformance } from '#test-utils';
+import { createRenderer, describeConformance, hydrateAfter, renderOnServer } from '#test-utils';
+import TimeFieldRootHydration from '../root/TimeFieldRootHydration.test.vue';
+
+const FIXTURE = 'src/time-field/root/TimeFieldRootHydration.test.vue';
 
 const segmentOf = (container: Element, type: string) =>
   container.querySelector<HTMLInputElement>(`input[data-type="${type}"]`)!;
@@ -161,6 +164,32 @@ describe('<TimeField.Segment />', () => {
 
       expect(segmentOf(container, 'minute')).toBeDisabled();
       expect(segmentOf(container, 'minute')).toHaveAttribute('data-disabled');
+    });
+  });
+  describe('text before the hydration', () => {
+    it.each([
+      { name: 'the segment that has the focus', focus: true },
+      { name: 'a segment that has no focus', focus: false },
+    ])('takes a number that the user typed into $name', async ({ focus }) => {
+      const props = { defaultValue: '15:04', locale: 'de-DE', name: 'alarm' };
+      const serverHtml = await renderOnServer(FIXTURE, props);
+
+      const { container } = await hydrateAfter(TimeFieldRootHydration, {
+        serverHtml,
+        props,
+        before(serverContainer) {
+          const hour = segmentOf(serverContainer, 'hour');
+          hour.value = '9';
+          if (focus) {
+            hour.focus();
+          }
+        },
+      });
+
+      expect(segmentOf(container, 'hour').value).toBe('09');
+      expect(container.querySelector<HTMLInputElement>('input[name="alarm"]')!.value).toBe('09:04');
+      // A full segment gives the focus to the next segment only when it has the focus itself.
+      expect(document.activeElement).toBe(focus ? segmentOf(container, 'minute') : document.body);
     });
   });
 });
