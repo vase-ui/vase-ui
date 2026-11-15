@@ -3,6 +3,13 @@
   "upstream": "docs/src/app/(docs)/react/components/input/demos",
   "files": {
     "hero/css-modules/index.module.css": "63b5db4f73545e5ad1345476af062bba7dfee3c071fc94b11eb569fcea56bdf3",
-    "hero/css-modules/index.tsx": "2ed68231cc076bbbcef33bfa0fcfdabf6a465123d8e7160aca4a3e1c8d6651d9"
+    "hero/css-modules/index.tsx": "2ed68231cc076bbbcef33bfa0fcfdabf6a465123d8e7160aca4a3e1c8d6651d9",
+    "hero/tailwind/index.tsx": "5291fa0c14c473baf26868e3755b5b93168ea0d9b55885535c89b491f4848fa4"
+  },
+  "classes": {
+    "hero/tailwind": [
+      "flex flex-col items-start gap-1 text-sm font-bold text-neutral-950 dark:text-white",
+      "h-8 w-40 border border-neutral-950 dark:border-white bg-white dark:bg-neutral-950 px-2 text-sm any-pointer-coarse:text-base font-normal text-neutral-950 dark:text-white placeholder:text-neutral-500 dark:placeholder:text-neutral-400 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white"
+    ]
   }
 }

@@ -535,6 +535,15 @@
   color: oklch(43.9% 0 0deg);
 }
 
+/* The Tailwind variant of the Navigation Menu demos gives the link description and the submenu hint
+   the class `text-neutral-500`. The link card or the submenu trigger around that text has the
+   class `hover:bg-neutral-100`. In the light theme, this rule gives the text the color of the rule
+   above. `~=` matches a whole class name, so `data-disabled:text-neutral-500` does not match. A
+   rule outside a layer wins over a utility of Tailwind. */
+:root:not(.dark) [class~='hover:bg-neutral-100'] [class~='text-neutral-500'] {
+  color: oklch(43.9% 0 0deg);
+}
+
 /* The Autocomplete and Combobox sheets give the secondary text of an item `oklch(55.6% 0 0)`. On
    the light highlight of an item, `oklch(97% 0 0)`, that text has 4.35:1 contrast. This rule uses
    `oklch(43.9% 0 0)`, which has 7.17:1 there. `:where()` keeps the first two selectors at the

@@ -6,7 +6,9 @@ description: An unstyled Vue switch component that indicates whether a setting i
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoSwitchHero from '../demos/switch/hero/css-modules/index.vue';
+import DemoSwitchHeroTailwind from '../demos/switch/hero/tailwind/index.vue';
 </script>
 
 # Switch
@@ -15,7 +17,12 @@ A control that indicates whether a setting is on or off.
 
 <DemoFrame>
   <DemoSwitchHero />
+  <template #tailwind>
+    <DemoSwitchHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -24,6 +31,18 @@ A control that indicates whether a setting is on or off.
 <<< ../demos/switch/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/switch/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Usage guidelines
 
