@@ -73,6 +73,11 @@ export type ComboboxStoreContext = ValuePopupContext<AriaCombobox.OpenChangeEven
   /** The native event of the selection in progress. */
   readonly selectionEventRef: ShallowRef<MouseEvent | PointerEvent | KeyboardEvent | null>;
   /**
+   * The `mousedown` event of the press that opened the popup, until the next press. An item reads
+   * it to ignore a release at the point of the press, and the trigger reads it for its release.
+   */
+  readonly openPressRef: ShallowRef<MouseEvent | null>;
+  /**
    * The id of the last `Combobox.Label` that has one. A label registers in `setup`, so the trigger
    * has the id in the server HTML. The state gets it only in a watcher, which a server does not run.
    */

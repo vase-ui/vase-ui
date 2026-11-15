@@ -4,6 +4,7 @@ import {
   onActivated,
   onDeactivated,
   onMounted,
+  onScopeDispose,
   provide,
   shallowRef,
   toRaw,
@@ -620,6 +621,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   const chipsContainerRef = shallowRef<HTMLDivElement | null>(null);
   const pointerDownItemRef = shallowRef<Element | null>(null);
   const selectionEventRef = shallowRef<MouseEvent | PointerEvent | KeyboardEvent | null>(null);
+  const openPressRef = shallowRef<MouseEvent | null>(null);
 
   // Support composing the Dialog component around an inline combobox: its transitions wait for
   // the dialog's animations. The root composable takes the element as a ref, and a `post` watcher
@@ -699,6 +701,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
           valuesRef,
           pointerDownItemRef,
           selectionEventRef,
+          openPressRef,
           labelId,
           registerLabelId,
         },
@@ -1036,6 +1039,32 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     }
   }
 
+  // The open can put an item under a pointer that does not move. Thus an item ignores a release at
+  // the point of the press that opened the popup (`VUE-84`). The trigger opens its popup in the
+  // frame after the press, and the press can end before that frame. Thus the next press clears the
+  // event, not the release.
+  let removeOpenPressListener: (() => void) | null = null;
+
+  function clearOpenPress() {
+    removeOpenPressListener?.();
+    removeOpenPressListener = null;
+    openPressRef.value = null;
+  }
+
+  function keepOpenPress(press: MouseEvent) {
+    clearOpenPress();
+    openPressRef.value = press;
+    removeOpenPressListener = addEventListener(
+      ownerWindow(getTarget(press)),
+      'mousedown',
+      clearOpenPress,
+      { capture: true },
+    );
+  }
+
+  onScopeDispose(clearOpenPress);
+  onDeactivated(clearOpenPress);
+
   // Calls `onOpenChange` for every open change that isn't ignored, with the combobox's own handling
   // around it, before the store commits the change.
   function handleOpenChange(nextOpen: boolean, eventDetails: AriaCombobox.OpenChangeEventDetails) {
@@ -1064,6 +1093,10 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
 
     if (eventDetails.isCanceled) {
       return;
+    }
+
+    if (nextOpen && eventDetails.event?.type === 'mousedown') {
+      keepOpenPress(eventDetails.event as MouseEvent);
     }
 
     if (nextOpen && closeQuery.value !== null) {
