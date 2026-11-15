@@ -53,7 +53,6 @@ export function useAriaLabelledBy(
 
   // `KeepAlive` moves the DOM of a held control into a detached element. The input has no label
   // there, and its root node is that element. The lookup and the observer wait for the activation.
-  // A control that mounts in a held branch observes that element until its first activation.
   const { isHeld, shown } = useKeepAliveState();
 
   // Base UI runs this lookup after each commit. A Vue component with the same props does not render
