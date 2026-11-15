@@ -66,7 +66,7 @@ if (process.env.NODE_ENV !== 'production' && !nested && !inPositioner) {
   onMounted(() => {
     warn(
       '<NavigationMenu.Viewport> of a top-level <NavigationMenu.Root> is not inside <NavigationMenu.Positioner>.',
-      'The menu then does not close on Escape, on a click outside or on a second click on its trigger.',
+      'A top-level root with no positioner does not close on Escape, on a click outside or on a second click on its trigger.',
       'Put the viewport inside <NavigationMenu.Portal>, <NavigationMenu.Positioner> and <NavigationMenu.Popup>. Only a nested root can have a viewport with no positioner.',
     );
   });

@@ -25,8 +25,9 @@ describe('<NavigationMenu.Viewport />', () => {
     refInstanceof: window.HTMLDivElement,
     childrenSelector: 'div',
     render(node) {
-      // The inner root is nested, so the viewport with no positioner gives no warning. A warning
-      // fails each case of this suite.
+      // Some cases of the suite count the calls of their own `console.warn` spy, so
+      // `allowTopLevelViewportWarning()` cannot take the warning here. The inner root is nested, so
+      // the viewport with no positioner gives no warning.
       return render(
         <NavigationMenu.Root>
           <NavigationMenu.Root>{node}</NavigationMenu.Root>
