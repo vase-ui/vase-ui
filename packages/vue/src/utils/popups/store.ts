@@ -197,7 +197,9 @@ const openSelector = (state: S) => state.openProp ?? state.open;
 const activeTriggerElementSelector = (state: S) =>
   state.mounted ? state.activeTriggerElement : null;
 
-const popupIdSelector = (state: S) => (state.popupElementId ?? state.defaultPopupId) || undefined;
+// A trigger names only an id that an element has now. No popup element, or one with an empty `id`,
+// gives no id.
+const popupIdSelector = (state: S) => state.popupElementId || undefined;
 
 function triggerOwnsOpenPopup(state: S, triggerId: string | undefined) {
   return (

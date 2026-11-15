@@ -164,6 +164,7 @@ import {
   onMounted,
   onScopeDispose,
   shallowRef,
+  toRaw,
   watch,
 } from 'vue';
 import { EMPTY_OBJECT, NOOP } from '../../common/empty';
@@ -176,6 +177,7 @@ import { isInHeldBranch } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
 import { FOCUSABLE_POPUP_PROPS } from '../../utils/popups/popupStoreUtils';
+import { useKeepAliveElementRef } from '../../utils/popups/useKeepAliveElementRef';
 import { useDrawerRootContext } from '../root/DrawerRootContext';
 import { getSnapPointSwipeMovement, useDrawerSnapPoints } from '../root/useDrawerSnapPoints';
 import { useDrawerViewportContext } from '../viewport/DrawerViewportContext';
@@ -435,7 +437,7 @@ function setPopup(popup: HTMLElement | null) {
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: setPopup,
+  ref: useKeepAliveElementRef(setPopup, () => toRaw(store.state).activeTriggerElement),
   stateAttributesMapping,
   props: (attrs) => [
     store.select('popupProps'),
