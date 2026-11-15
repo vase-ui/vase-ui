@@ -154,6 +154,15 @@ async function press(element: Element) {
   return element;
 }
 
+async function openWithKeyboard(trigger: HTMLElement) {
+  trigger.focus();
+  await userEvent.keyboard('{ArrowDown}');
+  await waitFor(() => {
+    expect(trigger).toHaveAttribute('data-pressed');
+  });
+  return trigger;
+}
+
 async function typeInto(input: HTMLElement, text: string) {
   input.focus();
   await userEvent.keyboard(text);
@@ -168,15 +177,15 @@ interface Row {
   reach: () => Promise<Element>;
 }
 
-function redButtonRows(buttonName: string, demo: string): Row[] {
+function redButtonRows(buttonKind: string, demo: string): Row[] {
   return [
     {
-      name: `${buttonName} in the frame while pressed`,
+      name: `${buttonKind} in the frame while pressed`,
       demo,
       reach: () => press(screen.getByRole('button', { name: 'Discard draft' })),
     },
     {
-      name: `${buttonName} in a popup while pressed`,
+      name: `${buttonKind} in a popup while pressed`,
       demo,
       async reach() {
         await waitForLaterMillisecond(() =>
@@ -202,6 +211,16 @@ const rows: Row[] = [
     name: 'placeholder of Combobox on hover',
     demo: 'combobox/input-inside-popup',
     reach: () => hover(screen.getByRole('combobox')),
+  },
+  {
+    name: 'placeholder of Select while open',
+    demo: 'select/hero',
+    reach: () => openWithKeyboard(screen.getByRole('combobox')),
+  },
+  {
+    name: 'placeholder of Combobox while open',
+    demo: 'combobox/input-inside-popup',
+    reach: () => openWithKeyboard(screen.getByRole('combobox')),
   },
   {
     name: 'description of a highlighted item',
