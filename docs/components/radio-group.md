@@ -64,7 +64,7 @@ Bind the value with `v-model:value`. The group emits `valueChange` with the new 
 
 The group takes the radio whose input is checked when the visitor presses a native label before the page hydrates. It also takes the radio that the browser checks after a move back in the history or a reload. The group then emits `valueChange` and `update:value` one time, and the inputs follow the value. A `valueChange` listener can thus run after a move back with no action of the visitor.
 
-The group exposes `element` and `inputElement` through a template ref. `inputElement` is the input of the checked radio, or else the first input. A disabled input does not count.
+The group exposes `element` and `inputElement` through a template ref. `inputElement` is the input of the checked radio, or else the first input of the group in the document. The input of a disabled radio does not count, with two exceptions. The checked radio keeps its input in `inputElement` when the radio becomes disabled. When no radio is enabled, `inputElement` can give the input of a disabled radio. After the radio of the input in `inputElement` unmounts, `inputElement` is `null`, also when the group has other radios.
 
 The group has one tab stop. A group with `disabled` has none. In the server HTML, the tab stop is on the checked radio. With no value, it is on the first radio that is not disabled.
 
