@@ -21,6 +21,12 @@ export type ResizableRootLayout = Layout;
  */
 export type ResizableRootLayoutSnapshot = LayoutSnapshot;
 
+/**
+ * When a drag changes the layout. `'live'`: at each move of the pointer. `'on-release'`: one time,
+ * at the release.
+ */
+export type ResizableRootResizeMode = 'live' | 'on-release';
+
 export interface ResizableRootState {
   /**
    * The orientation of the panels.
@@ -99,6 +105,32 @@ export interface ResizableRootProps
    * @default true
    */
   pushPanels?: boolean | undefined;
+  /**
+   * The least size of the area that takes a press on a handle, in pixels, on the axis of the move.
+   * A number is the size for each pointer. With an object, the root uses `coarse` while the main
+   * pointer of the device is coarse, such as a finger, and `fine` for another pointer.
+   * The size is also the size of an edge and the reach of a crossing.
+   * The root reads the pointer after the mount, so the server HTML has the `fine` size.
+   * @default { fine: 10, coarse: 24 }
+   */
+  hitAreaSize?: number | { fine: number; coarse: number } | undefined;
+  /**
+   * When a drag changes the layout. With `'live'`, each move of the pointer changes the layout.
+   * With `'on-release'`, the layout stays as it is during the drag, and the release changes it one
+   * time. Each handle and edge that the drag moves then has the CSS variable
+   * `--resizable-handle-preview-offset`: the distance to the place that the release gives it.
+   * A key, a double click and a method change the layout at once in both modes.
+   * @default 'live'
+   */
+  resizeMode?: ResizableRootResizeMode | undefined;
+  /**
+   * Whether the user can drag the boundary of two panels that have no handle between them. The
+   * root then renders edge nodes that take the press at each such boundary, and it gets
+   * `position: relative`. An edge has no key and no ARIA role, so give a boundary a
+   * `Resizable.Handle` where you can.
+   * @default false
+   */
+  dragEdges?: boolean | undefined;
 }
 
 export type ResizableRootChangeEventReason =
@@ -159,6 +191,7 @@ import {
   shallowRef,
   watch,
 } from 'vue';
+import type { Component } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { useIsHydrated } from '../../common/hydration';
@@ -171,8 +204,9 @@ import {
   createGenericEventDetails,
 } from '../../internals/createBaseUIEventDetails';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
-import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import type { HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { useMediaQuery } from '../../unstable-use-media-query';
 import {
   adjustLayoutToSize,
   applyFixedSizes,
@@ -187,8 +221,15 @@ import type { PanelConstraints } from '../utils/layout';
 import { getMeasurement, isSameMeasurement, readMeasurement } from '../utils/measure';
 import type { RootMeasurement } from '../utils/measure';
 import { isLength, isViewportLength, normalizeLayout, parseSize } from '../utils/parseSize';
+import { useEdges } from '../utils/useEdges';
+import ResizableRootChildren from './ResizableRootChildren.vue';
 import { ResizableRootContext } from './ResizableRootContext';
-import type { ResizableHandleMove, ResizablePanelRegistration } from './ResizableRootContext';
+import type {
+  ResizableHandleMove,
+  ResizableHandleRegistration,
+  ResizablePanelRegistration,
+} from './ResizableRootContext';
+import { ResizableRootEdgesContext } from './ResizableRootEdgesContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -202,6 +243,9 @@ const props = withDefaults(defineProps<ResizableRootProps>(), {
   largeStep: 10,
   dragStep: undefined,
   pushPanels: true,
+  hitAreaSize: () => ({ fine: 10, coarse: 24 }),
+  resizeMode: 'live',
+  dragEdges: false,
 });
 
 const emit = defineEmits<{
@@ -244,7 +288,7 @@ const emit = defineEmits<{
 
 defineSlots<{
   default(props: { state: ResizableRootState }): unknown;
-  render: ComponentRenderFn<HTMLProps, ResizableRootState>;
+  render(props: { props: HTMLProps; state: ResizableRootState; children: Component }): unknown;
 }>();
 
 const direction = useDirection();
@@ -549,6 +593,15 @@ function registerPanel(panel: ResizablePanelRegistration) {
   });
 }
 
+const registeredHandles = shallowRef<readonly ResizableHandleRegistration[]>([]);
+
+function registerHandle(handle: ResizableHandleRegistration) {
+  registeredHandles.value = [...registeredHandles.value, handle];
+  onScopeDispose(() => {
+    registeredHandles.value = registeredHandles.value.filter((entry) => entry !== handle);
+  });
+}
+
 // The size that each panel had before a change collapsed it. `expand()` gives it back.
 const sizesBeforeCollapse = new Map<string, number>();
 // The layout at the start of the drag that runs. Each move of a drag starts from this layout, so a
@@ -637,6 +690,9 @@ function commitLayout(
   );
 }
 
+// The layout that the release of the drag gives, while a drag in the mode `'on-release'` runs.
+const pendingLayout = shallowRef<ResizableRootLayout | undefined>();
+
 function startDragging() {
   if (dragging.value) {
     return false;
@@ -650,9 +706,14 @@ function startDragging() {
 function stopDragging() {
   if (dragging.value) {
     layoutBeforeDrag = undefined;
+    pendingLayout.value = undefined;
     dragging.value = false;
     emit('draggingChange', false);
   }
+}
+
+function setPendingLayout(layout: ResizableRootLayout) {
+  pendingLayout.value = layout;
 }
 
 // A root with no room for its panels, such as a root with `display: none`, keeps its last
@@ -830,6 +891,15 @@ function reset() {
 
 const orientation = computed(() => props.orientation);
 
+// The first client render must equal the server HTML, so the composable gives `false` until the
+// mount, and the server HTML has the `fine` size. The call comes also for a number, so a change of
+// the prop to an object needs no new call in `setup`.
+const isCoarse = useMediaQuery('(pointer: coarse)', {});
+const hitAreaSize = computed(() => {
+  const size = props.hitAreaSize;
+  return typeof size === 'number' ? size : isCoarse.value ? size.coarse : size.fine;
+});
+
 provide(ResizableRootContext, {
   orientation,
   direction,
@@ -841,15 +911,20 @@ provide(ResizableRootContext, {
     props.dragStep === undefined ? undefined : parseSize(props.dragStep, measurementFor()),
   ),
   pushPanels: computed(() => props.pushPanels),
+  hitAreaSize,
+  resizeMode: computed(() => props.resizeMode),
+  pendingLayout,
   panels,
   constraints,
   shown,
   lengthPanels,
   measurement,
   registerPanel,
+  registerHandle,
   measure,
   startDragging,
   stopDragging,
+  setPendingLayout,
   changeLayout,
   commitLayout,
   collapsePanel,
@@ -861,16 +936,32 @@ provide(ResizableRootContext, {
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
+  children: true,
   props: (attrs) => [
     {
       style: {
         display: 'flex',
         flexDirection: props.orientation === 'horizontal' ? 'row' : 'column',
+        // The root is the containing block of the edge nodes, and the offset parent of the panels.
+        ...(props.dragEdges ? { position: 'relative' } : undefined),
       },
     },
     attrs,
   ],
 });
+
+const edges = useEdges({
+  enabled: () => props.dragEdges,
+  disabled: () => props.disabled,
+  orientation,
+  hitAreaSize,
+  panels,
+  handles: registeredHandles,
+  measurement,
+  shown,
+});
+
+provide(ResizableRootEdgesContext, { edges });
 
 // The root and each handle change the room of the panels when they change size. The panels do not:
 // a transition of `flex-grow` moves a panel and leaves the sum of the panels as it is.
@@ -916,7 +1007,8 @@ watch(
 defineExpose({ element, getLayout, setLayout, reset });
 </script>
 
+<!-- prettier-ignore -->
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="ResizableRootChildren" />
+  <component :is="as" v-else v-bind="elementProps()"><ResizableRootChildren><slot :state="state" /></ResizableRootChildren></component>
 </template>

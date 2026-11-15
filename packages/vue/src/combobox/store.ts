@@ -151,7 +151,6 @@ export const selectors = {
   inputProps: (state: State) => state.inputProps,
   itemRoot: (state: State) => state.itemRoot,
 
-  popupElementId: (state: State) => state.popupElementId,
   listElementId: (state: State) => state.listElementId,
   inputElement: (state: State) => state.inputElement,
   inputGroupElement: (state: State) => state.inputGroupElement,

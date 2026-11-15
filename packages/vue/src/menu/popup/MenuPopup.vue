@@ -66,6 +66,7 @@ import { useRenderElement } from '../../internals/useRenderElement';
 import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
 import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
+import { useKeepAliveElementRef } from '../../utils/popups/useKeepAliveElementRef';
 import { useToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
 import { MenuFilterImplContext, useMenuFilterImpl } from '../filter-root/MenuFilterContext';
 import { useMenuPositionerContext } from '../positioner/MenuPositionerContext';
@@ -162,19 +163,19 @@ const state = computed<MenuPopupState>(() => ({
 
 let popupElement: HTMLElement | null = null;
 
+function setPopupElement(popup: HTMLElement | null) {
+  // A compiled template can mount a new popup before it unmounts the old one. The old popup
+  // then must not clear the element of the new one.
+  if (popup !== null || toRaw(store.state).popupElement === popupElement) {
+    store.context.popupRef.value = popup;
+    store.set('popupElement', popup);
+  }
+  popupElement = popup;
+}
+
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: [
-    (popup) => {
-      // A compiled template can mount a new popup before it unmounts the old one. The old popup
-      // then must not clear the element of the new one.
-      if (popup !== null || toRaw(store.state).popupElement === popupElement) {
-        store.context.popupRef.value = popup;
-        store.set('popupElement', popup);
-      }
-      popupElement = popup;
-    },
-  ],
+  ref: useKeepAliveElementRef(setPopupElement, () => toRaw(store.state).activeTriggerElement),
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
     // This listener runs after each other listener of the popup.

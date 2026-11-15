@@ -12,6 +12,12 @@ export const disabled = 'data-disabled';
  */
 export const dragging = 'data-dragging';
 /**
+ * Present while a press at the pointer drags this handle and a handle or an edge of another root
+ * together: the pointer is at the crossing of the two. The attribute is also present while the
+ * pointer, with no button down, is at such a crossing.
+ */
+export const crossing = 'data-crossing';
+/**
  * Present when the handle cannot move to the left, or up in a vertical root. The side is a side of
  * the screen.
  */

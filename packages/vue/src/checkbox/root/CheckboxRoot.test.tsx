@@ -12,6 +12,7 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountFormResetTests,
   hiddenInputSizeTests,
   hydrate,
   hydrateAfter,
@@ -2617,6 +2618,15 @@ describe('<Checkbox.Root />', () => {
         expect(screen.getByRole('checkbox')).toHaveAttribute('aria-checked', 'mixed');
       });
     });
+
+    heldMountFormResetTests({
+      render,
+      renderControl: () => <Checkbox.Root name="notifications" defaultChecked />,
+      change: () => fireEvent.click(screen.getByRole('checkbox')),
+      readState: () => screen.getByRole('checkbox').getAttribute('aria-checked'),
+      defaultState: 'true',
+      changedState: 'false',
+    });
   });
 
   describe('in a field', () => {
@@ -3245,9 +3255,13 @@ describe('<Checkbox.Root />', () => {
       const fixture = within(container);
       expect(getHiddenInput(fixture).checked).toBe(true);
       expect(fixture.getByTestId('changes').textContent).toBe('');
-      expect(takeReportedMessages()).toEqual([
+      // Vue writes `Hydration completed but contains mismatches.` one time for each page, so only the
+      // first mismatch of a test file has it.
+      const messages = takeReportedMessages().filter(
+        (message) => message !== 'console.error: Hydration completed but contains mismatches.',
+      );
+      expect(messages).toEqual([
         expect.stringMatching(/^console\.warn: .*Hydration attribute mismatch[\s\S]*checked/),
-        'console.error: Hydration completed but contains mismatches.',
       ]);
     });
   });

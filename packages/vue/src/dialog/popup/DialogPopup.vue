@@ -53,7 +53,7 @@ export interface DialogPopupProps
 </script>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, toRaw } from 'vue';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -62,6 +62,7 @@ import {
   FOCUSABLE_POPUP_PROPS,
   createDefaultInitialFocus,
 } from '../../utils/popups/popupStoreUtils';
+import { useKeepAliveElementRef } from '../../utils/popups/useKeepAliveElementRef';
 import { useDialogPortalContext } from '../portal/DialogPortalContext';
 import { useDialogRootContext } from '../root/DialogRootContext';
 import { dialogStateAttributesMapping } from '../utils/stateAttributesMapping';
@@ -134,7 +135,7 @@ function handleKeydown(event: KeyboardEvent) {
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: setPopupElement,
+  ref: useKeepAliveElementRef(setPopupElement, () => toRaw(store.state).activeTriggerElement),
   stateAttributesMapping: dialogStateAttributesMapping,
   props: (attrs) => [
     store.select('popupProps'),

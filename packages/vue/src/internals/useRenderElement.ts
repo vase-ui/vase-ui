@@ -1,4 +1,6 @@
 import {
+  callWithAsyncErrorHandling,
+  ErrorCodes,
   inject,
   normalizeStyle,
   onBeforeUnmount,
@@ -11,6 +13,8 @@ import {
   useAttrs,
   useSlots,
 } from 'vue';
+// eslint-disable-next-line no-restricted-imports -- The second focus listener gives an error of a handler to the error handler of the app, as a Vue listener does. Vue needs the instance of the part for that. A Vapor component gets `null`. Vue's listener on an element of a Vapor template skips no event, so there the second listener calls no handler.
+import { getCurrentInstance } from 'vue';
 import type {
   ComponentPublicInstance,
   CSSProperties,
@@ -18,6 +22,7 @@ import type {
   MaybeRefOrGetter,
   ShallowRef,
 } from 'vue';
+import { addEventListener } from '../common/addEventListener';
 import { EMPTY_OBJECT } from '../common/empty';
 import { mergeObjects } from '../common/mergeObjects';
 import { warn } from '../common/warn';
@@ -53,6 +58,33 @@ export function markChildrenMounted(): void {
       });
     }
   }
+}
+
+// Vue skips a Vue listener that it attached in the millisecond of an event when an earlier Vue
+// listener got the event. `focus` and `blur` do not bubble, and no part has a Vue listener for them
+// in the capture phase. The Vue listener of the target thus gets each of them first.
+const FOCUS_KEYS = {
+  onFocusin: { type: 'focusin', capture: false },
+  onFocusout: { type: 'focusout', capture: false },
+  onFocusinCapture: { type: 'focusin', capture: true },
+  onFocusoutCapture: { type: 'focusout', capture: true },
+} as const;
+
+type FocusKey = keyof typeof FOCUS_KEYS;
+
+const FOCUS_KEY_LIST = Object.keys(FOCUS_KEYS) as FocusKey[];
+
+type FocusHandler = (event: FocusEvent) => unknown;
+
+interface FocusListeners {
+  // The handler of the last `elementProps()` call, or `undefined` when its props had no such key.
+  handler: FocusHandler | undefined;
+  // It replaces the handler in the props, and it marks each event that Vue runs.
+  readonly vueListener: FocusHandler;
+  // It runs the handler for an event that Vue skipped.
+  readonly nativeListener: (event: FocusEvent) => void;
+  element: Element | null;
+  remove: (() => void) | undefined;
 }
 
 // A list of fallback values for one property counts, because a client applies each value.
@@ -97,8 +129,53 @@ export function useRenderElement<
   // Vue calls the setter during that render.
   let heldElement: RenderedElementType | null = null;
 
+  const instance = getCurrentInstance();
+  const focusListeners = new Map<FocusKey, FocusListeners>();
+
+  function createFocusListeners(): FocusListeners {
+    const ran = new WeakSet<Event>();
+    const listeners: FocusListeners = {
+      handler: undefined,
+      vueListener(event) {
+        // The mark comes first, so a handler that throws does not run again.
+        ran.add(event);
+        return listeners.handler?.(event);
+      },
+      nativeListener(event) {
+        if (listeners.handler && !ran.has(event)) {
+          callWithAsyncErrorHandling(listeners.handler, instance, ErrorCodes.NATIVE_EVENT_HANDLER, [
+            event,
+          ]);
+        }
+      },
+      element: null,
+      remove: undefined,
+    };
+    return listeners;
+  }
+
+  // Vue adds the listeners of the props during the patch, before it calls the function ref. The
+  // native listener thus runs after the Vue listener of its element and phase, and the mark tells
+  // it whether Vue ran the handler.
+  function syncFocusListeners(element: Element | null) {
+    for (const [key, listeners] of focusListeners) {
+      const listenerElement = listeners.handler ? element : null;
+      if (listenerElement === listeners.element) {
+        continue;
+      }
+      listeners.remove?.();
+      const { type, capture } = FOCUS_KEYS[key];
+      listeners.remove = listenerElement
+        ? addEventListener(listenerElement, type, listeners.nativeListener, capture)
+        : undefined;
+      listeners.element = listenerElement;
+    }
+  }
+
   function update() {
     const resolved = resolveElement(target) as RenderedElementType | null;
+    // A render can add or remove a focus key and keep the element.
+    syncFocusListeners(resolved);
     // Vue calls a function ref again on each patch, with the same value.
     if (resolved === heldElement) {
       return;
@@ -135,6 +212,21 @@ export function useRenderElement<
 
     // The result is always a new object, so the writes below do not change a shared object.
     const outProps: Record<string, any> = mergeObjects(stateProps, resolvedProps) ?? {};
+
+    for (const key of FOCUS_KEY_LIST) {
+      const handler: unknown = outProps[key];
+      let listeners = focusListeners.get(key);
+      if (typeof handler === 'function') {
+        if (!listeners) {
+          listeners = createFocusListeners();
+          focusListeners.set(key, listeners);
+        }
+        listeners.handler = handler as FocusHandler;
+        outProps[key] = listeners.vueListener;
+      } else if (listeners) {
+        listeners.handler = undefined;
+      }
+    }
 
     outProps.ref = setRef;
 

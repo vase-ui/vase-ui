@@ -126,6 +126,22 @@ describe('<Calendar.Root /> navigation on a server', () => {
     );
   });
 
+  it('ends the pages with the month of maxDate when fewer months are between the limits', async () => {
+    const html = await renderToString(
+      <CalendarNavigationHydration
+        {...props}
+        numberOfMonths={3}
+        minDate="2026-11-05"
+        maxDate="2026-12-20"
+      />,
+    );
+
+    const captions = [...html.matchAll(/ aria-live="polite"[^>]*>(?:<!--[[\]]-->)*([^<]+)</g)].map(
+      (caption) => caption[1],
+    );
+    expect(captions).toEqual(['2026-10-01', '2026-11-01', '2026-12-01'].map(monthName));
+  });
+
   it('writes a day that two grids hold once, with a button', async () => {
     const html = await renderToString(
       <CalendarNavigationHydration {...props} numberOfMonths={2} showOutsideDays />,

@@ -18,6 +18,7 @@ import {
   wait,
   waitFor,
   waitForLaterMillisecond,
+  waitSingleFrame,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
@@ -486,17 +487,41 @@ describe('<Combobox.Trigger />', () => {
 
     it('does not open on ArrowDown/ArrowUp when reference is a textarea', async () => {
       const { user } = await render(
-        <Combobox.Root>
+        <Combobox.Root items={['alpha', 'beta']}>
           <Combobox.Trigger>Open</Combobox.Trigger>
-          <textarea aria-label="notes" />
+          <Combobox.Input as="textarea" aria-label="notes" />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List>
+                  {{
+                    item: ({ item }: ItemSlotProps) => (
+                      <Combobox.Item key={item} value={item}>
+                        {item}
+                      </Combobox.Item>
+                    ),
+                  }}
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
         </Combobox.Root>,
       );
 
-      const trigger = screen.getByRole('combobox');
-      await user.click(trigger);
-      await user.keyboard('{ArrowDown}');
+      // A press of the trigger opens the popup. The keys thus go to the textarea while the popup
+      // is closed.
+      screen.getByRole('textbox', { name: 'notes' }).focus();
+      await flushMicrotasks();
       expect(screen.queryByRole('listbox')).toBe(null);
+
+      await user.keyboard('{ArrowDown}');
+      await waitSingleFrame();
+      await flushMicrotasks();
+      expect(screen.queryByRole('listbox')).toBe(null);
+
       await user.keyboard('{ArrowUp}');
+      await waitSingleFrame();
+      await flushMicrotasks();
       expect(screen.queryByRole('listbox')).toBe(null);
     });
 
@@ -1143,6 +1168,79 @@ describe('<Combobox.Trigger />', () => {
 
         expect(popup.id).not.toBe('');
         expect(screen.getByTestId('trigger')).toHaveAttribute('aria-controls', popup.id);
+      });
+
+      it('has no aria-controls while KeepAlive holds the popup', async () => {
+        const Popup = defineComponent({
+          setup: () => () => (
+            <Combobox.Portal>
+              <Combobox.Positioner>
+                <Combobox.Popup data-testid="popup">
+                  <Combobox.Input />
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          ),
+        });
+        const Other = defineComponent({ setup: () => () => <span /> });
+        const visible = shallowRef(true);
+        await render(() => (
+          <Combobox.Root defaultOpen>
+            <Combobox.Trigger data-testid="trigger" />
+            <KeepAlive>{visible.value ? <Popup key="popup" /> : <Other key="other" />}</KeepAlive>
+          </Combobox.Root>
+        ));
+        await flushMicrotasks();
+        const trigger = screen.getByTestId('trigger');
+        const popup = screen.getByTestId('popup');
+        expect(popup.id).not.toBe('');
+        expect(trigger).toHaveAttribute('aria-controls', popup.id);
+
+        visible.value = false;
+        await flushMicrotasks();
+
+        expect(popup.isConnected).toBe(false);
+        expect(trigger).toHaveAttribute('aria-expanded', 'true');
+        expect(trigger).not.toHaveAttribute('aria-controls');
+
+        visible.value = true;
+        await flushMicrotasks();
+
+        expect(popup.isConnected).toBe(true);
+        expect(trigger).toHaveAttribute('aria-controls', popup.id);
+      });
+
+      it('has no aria-controls while the popup mounts in a branch that KeepAlive holds', async () => {
+        const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
+          () => (
+            <Combobox.Popup data-testid="popup">
+              <Combobox.Input />
+            </Combobox.Popup>
+          ),
+          { renderBranch: (part) => part },
+        );
+        await render(() => (
+          <Combobox.Root defaultOpen>
+            <Combobox.Trigger data-testid="trigger" />
+            <Combobox.Portal>
+              <Combobox.Positioner>
+                <HeldBranch />
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>
+        ));
+
+        await mountWhileHeld();
+
+        const trigger = screen.getByTestId('trigger');
+        expect(trigger).toHaveAttribute('aria-expanded', 'true');
+        expect(trigger).not.toHaveAttribute('aria-controls');
+
+        await show();
+
+        const popup = screen.getByTestId('popup');
+        expect(popup.id).not.toBe('');
+        expect(trigger).toHaveAttribute('aria-controls', popup.id);
       });
     });
 

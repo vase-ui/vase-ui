@@ -3,6 +3,7 @@ import { defineComponent, KeepAlive, nextTick, onMounted, shallowRef } from 'vue
 import type { PropType } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -918,6 +919,101 @@ describe('<NavigationMenu.Trigger />', () => {
       await flushMicrotasks();
 
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    });
+  });
+
+  describe('VUE-73: aria-controls names only an element in the document', () => {
+    function renderMenu(popupParts: () => unknown) {
+      return render(() => (
+        <NavigationMenu.Root defaultValue="one">
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="one">
+              <NavigationMenu.Trigger data-testid="trigger">One</NavigationMenu.Trigger>
+              <NavigationMenu.Content>Content</NavigationMenu.Content>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          {popupParts()}
+        </NavigationMenu.Root>
+      ));
+    }
+
+    function popupParts(popupProps: { id?: string } = {}) {
+      return (
+        <NavigationMenu.Portal>
+          <NavigationMenu.Positioner>
+            <NavigationMenu.Popup {...popupProps} data-testid="popup">
+              <NavigationMenu.Viewport />
+            </NavigationMenu.Popup>
+          </NavigationMenu.Positioner>
+        </NavigationMenu.Portal>
+      );
+    }
+
+    it('has no aria-controls while the popup has an empty id', async () => {
+      await renderMenu(() => popupParts({ id: '' }));
+      await flushMicrotasks();
+
+      const trigger = screen.getByTestId('trigger');
+      expect(screen.getByTestId('popup').id).toBe('');
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+    });
+
+    it('has no aria-controls while KeepAlive holds the popup', async () => {
+      const Popup = defineComponent({ setup: () => () => popupParts() });
+      const Other = defineComponent({ setup: () => () => <span /> });
+      const visible = shallowRef(true);
+      await renderMenu(() => (
+        <KeepAlive>{visible.value ? <Popup key="popup" /> : <Other key="other" />}</KeepAlive>
+      ));
+      await flushMicrotasks();
+      const trigger = screen.getByTestId('trigger');
+      const popup = screen.getByTestId('popup');
+      expect(popup.id).not.toBe('');
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
+
+      visible.value = false;
+      await flushMicrotasks();
+
+      expect(popup.isConnected).toBe(false);
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(popup.isConnected).toBe(true);
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
+    });
+
+    it('has no aria-controls while the popup mounts in a branch that KeepAlive holds', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
+        () => (
+          <NavigationMenu.Popup data-testid="popup">
+            <NavigationMenu.Viewport />
+          </NavigationMenu.Popup>
+        ),
+        { renderBranch: (part) => part },
+      );
+      await renderMenu(() => (
+        <NavigationMenu.Portal>
+          <NavigationMenu.Positioner>
+            <HeldBranch />
+          </NavigationMenu.Positioner>
+        </NavigationMenu.Portal>
+      ));
+
+      await mountWhileHeld();
+
+      const trigger = screen.getByTestId('trigger');
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+
+      await show();
+
+      const popup = screen.getByTestId('popup');
+      expect(popup.id).not.toBe('');
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
     });
   });
 

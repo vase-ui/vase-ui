@@ -330,6 +330,8 @@ function TestInlineNestedNavigationMenu(
     nestedItem1Value?: string | number | boolean;
     keepMountedContent?: boolean;
     nestedLinkCloseOnClick?: boolean;
+    nestedRootRef?: (instance: RootInstance | null) => void;
+    onNestedOpenChangeComplete?: (open: boolean) => void;
   } = {},
 ) {
   const {
@@ -337,6 +339,8 @@ function TestInlineNestedNavigationMenu(
     nestedItem1Value = 'nested-item-1',
     keepMountedContent = false,
     nestedLinkCloseOnClick = false,
+    nestedRootRef,
+    onNestedOpenChangeComplete,
   } = props;
   const nestedRootProps =
     nestedDefaultValue == null ? undefined : { defaultValue: nestedDefaultValue };
@@ -349,7 +353,11 @@ function TestInlineNestedNavigationMenu(
 
           <NavigationMenu.Content data-testid="popup-1" keepMounted={keepMountedContent}>
             <NavigationMenu.Link href="#link-1">Link 1</NavigationMenu.Link>
-            <NavigationMenu.Root {...nestedRootProps}>
+            <NavigationMenu.Root
+              ref={(instance) => nestedRootRef?.(instance as unknown as RootInstance | null)}
+              onOpenChangeComplete={onNestedOpenChangeComplete}
+              {...nestedRootProps}
+            >
               <NavigationMenu.List data-testid="inline-nested-list">
                 <NavigationMenu.Item value={nestedItem1Value}>
                   <NavigationMenu.Trigger data-testid="nested-trigger-1">
@@ -1018,6 +1026,41 @@ describe('<NavigationMenu.Root />', () => {
           </NavigationMenu.Item>
         </NavigationMenu.List>
         <NavigationMenu.Portal>
+          <NavigationMenu.Positioner data-testid="shown" class="shown">
+            <NavigationMenu.Viewport />
+          </NavigationMenu.Positioner>
+        </NavigationMenu.Portal>
+      </NavigationMenu.Root>
+    ),
+    createBackdropComponent: ({ open, onOpenChangeComplete }) => (
+      <NavigationMenu.Root
+        value={open ? 'item-1' : null}
+        onOpenChangeComplete={onOpenChangeComplete}
+      >
+        <NavigationMenu.List>
+          <NavigationMenu.Item value="item-1">
+            <NavigationMenu.Trigger>Item 1</NavigationMenu.Trigger>
+            <NavigationMenu.Content>Content</NavigationMenu.Content>
+          </NavigationMenu.Item>
+        </NavigationMenu.List>
+        <NavigationMenu.Portal>
+          <NavigationMenu.Backdrop data-testid="shown" class="shown" />
+        </NavigationMenu.Portal>
+      </NavigationMenu.Root>
+    ),
+    createBackdropAndPositionerComponent: ({ open, onOpenChangeComplete }) => (
+      <NavigationMenu.Root
+        value={open ? 'item-1' : null}
+        onOpenChangeComplete={onOpenChangeComplete}
+      >
+        <NavigationMenu.List>
+          <NavigationMenu.Item value="item-1">
+            <NavigationMenu.Trigger>Item 1</NavigationMenu.Trigger>
+            <NavigationMenu.Content>Content</NavigationMenu.Content>
+          </NavigationMenu.Item>
+        </NavigationMenu.List>
+        <NavigationMenu.Portal>
+          <NavigationMenu.Backdrop />
           <NavigationMenu.Positioner data-testid="shown" class="shown">
             <NavigationMenu.Viewport />
           </NavigationMenu.Positioner>
@@ -3178,6 +3221,44 @@ describe('<NavigationMenu.Root />', () => {
         expect(screen.queryByTestId('nested-popup-1')).toBe(null);
         expect(trigger1).toHaveAttribute('aria-expanded', 'false');
       });
+
+      it.each([
+        { name: 'removed content', keepMountedContent: false },
+        { name: 'kept mounted content', keepMountedContent: true },
+      ])(
+        'VUE-98: returns the focus to the nested trigger when an inline viewport closes with the focus in it: $name',
+        async ({ keepMountedContent }) => {
+          const onNestedOpenChangeComplete = vi.fn();
+          const nestedRoot = shallowRef<RootInstance | null>(null);
+          const { user } = await render(() => (
+            <TestInlineNestedNavigationMenu
+              keepMountedContent={keepMountedContent}
+              nestedRootRef={(instance) => {
+                nestedRoot.value = instance;
+              }}
+              onNestedOpenChangeComplete={onNestedOpenChangeComplete}
+            />
+          ));
+
+          await waitForLaterMillisecond(async () => {
+            await user.click(screen.getByTestId('trigger-1'));
+            await flushMicrotasks();
+          });
+          const nestedTrigger = screen.getByTestId('nested-trigger-1');
+          const nestedLink = screen.getByRole('link', { name: 'Nested Link 1' });
+          nestedLink.focus();
+          await flushMicrotasks();
+          expect(nestedLink).toHaveFocus();
+
+          const closed = nextCall(onNestedOpenChangeComplete);
+          nestedRoot.value?.close();
+          await closed;
+
+          expect(nestedTrigger).toHaveFocus();
+          expect(nestedTrigger).toHaveAttribute('aria-expanded', 'false');
+          expect(screen.getByTestId('trigger-1')).toHaveAttribute('aria-expanded', 'true');
+        },
+      );
 
       it('maintains inline viewport state when hovering between triggers and content', async () => {
         await render(<TestInlineNestedNavigationMenu />);

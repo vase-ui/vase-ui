@@ -10,6 +10,8 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountFormResetTests,
+  heldMountListTests,
   hiddenInputSizeTests,
   hydrate,
   hydrateAfter,
@@ -54,6 +56,23 @@ async function fillHiddenInput(
 describe('<OTPField.Root />', () => {
   const { render } = createRenderer();
   const OTP_LENGTH = 6;
+
+  heldMountListTests({
+    render,
+    renderList: (withLastItem) => (
+      <OTPFieldBase.Root length={3}>
+        <OTPFieldBase.Input />
+        <OTPFieldBase.Input />
+        {withLastItem ? <OTPFieldBase.Input /> : null}
+      </OTPFieldBase.Root>
+    ),
+    async check() {
+      const [first, second] = screen.getAllByRole<HTMLInputElement>('textbox');
+      first.focus();
+      await fireEvent.input(first, { target: { value: '1' } });
+      expect(second).toHaveFocus();
+    },
+  });
 
   describeConformance(<OTPFieldBase.Root length={1} />, () => ({
     refInstanceof: window.HTMLDivElement,
@@ -1892,6 +1911,19 @@ describe('<OTPField.Root />', () => {
           expect(screen.queryByTestId('error')).toBe(null);
         });
       });
+    });
+
+    heldMountFormResetTests({
+      render,
+      renderControl: () => <OTPField name="otp" defaultValue="12" />,
+      change: () => fireEvent.input(getHiddenInput(document.body), { target: { value: '123456' } }),
+      readState: () =>
+        screen
+          .getAllByRole<HTMLInputElement>('textbox')
+          .map((input) => input.value)
+          .join(''),
+      defaultState: '12',
+      changedState: '123456',
     });
 
     describe('autofill', () => {

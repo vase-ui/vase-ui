@@ -17,14 +17,17 @@ export interface CalendarBaseProps {
   /**
    * The month that the grid shows. With `numberOfMonths`, it is the first month. With
    * `visibleDuration`, the page starts on a day of this month, or with the week that holds its
-   * first day, and a move of the page gives the month of its first day. When the grid has another
-   * calendar than this month, the grid shows the month that holds the first day of this month.
-   * Use it when controlled.
+   * first day, and a move of the page gives the month of its first day. A month or year select can
+   * start the page earlier, so that the page ends with the week or the day of `maxDate`. When the
+   * grid has another calendar than this month, the grid shows the month that holds the first day of
+   * this month. Use it when controlled.
    */
   month?: Temporal.PlainYearMonth | undefined;
   /**
    * The month that the grid shows when it first renders, as `month` describes it. With no value, the
-   * month of the focused day, else of the selected day, else of today.
+   * month of the focused day, else of the selected day, else of today. The root applies `minDate`
+   * and `maxDate` to that month, as it does for a move of the page. It shows a value of this prop
+   * as it is.
    */
   defaultMonth?: Temporal.PlainYearMonth | undefined;
   /**
@@ -93,11 +96,13 @@ export interface CalendarBaseProps {
    */
   visibleDuration?: VisibleDuration | undefined;
   /**
-   * The first day that the user can select. An earlier day is disabled.
+   * The first day that the user can select. An earlier day is disabled. A page that the root picks
+   * or moves to does not start before the page of this day, unless `maxDate` does not allow it.
    */
   minDate?: DateValue | undefined;
   /**
-   * The last day that the user can select. A later day is disabled.
+   * The last day that the user can select. A later day is disabled. A page that the root picks or
+   * moves to does not end after the page of this day. This rule wins over `minDate`.
    */
   maxDate?: DateValue | undefined;
   /**

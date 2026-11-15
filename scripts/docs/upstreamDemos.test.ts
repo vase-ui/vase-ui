@@ -45,11 +45,15 @@ const BUTTON = makeFamily([
   'docs/src/app/(docs)/react/components/button/**',
 ]);
 
-function read(family: FamilyFile, paths: string[], tailwind = false) {
-  return readUpstreamDemos('button', family, paths, (path) => `text of ${path}`, tailwind);
+function read(family: FamilyFile, paths: string[]) {
+  return readUpstreamDemos('button', family, paths, (path) => `text of ${path}`);
 }
 
-test('with no Tailwind demos, the record keeps the files of the demos and leaves out the Tailwind files and index.ts', () => {
+function readTexts(texts: Map<string, string>) {
+  return readUpstreamDemos('button', BUTTON, [...texts.keys()], (path) => texts.get(path)!);
+}
+
+test('the record has the files of each demo, the Tailwind files too, and leaves out index.ts', () => {
   const { record, styles } = read(BUTTON, [
     'docs/src/app/(docs)/react/components/button/page.mdx',
     `${DEMOS}/_index.module.css`,
@@ -57,7 +61,6 @@ test('with no Tailwind demos, the record keeps the files of the demos and leaves
     `${DEMOS}/hero/css-modules/index.tsx`,
     `${DEMOS}/hero/css-modules/index.module.css`,
     `${DEMOS}/hero/tailwind/index.tsx`,
-    `${DEMOS}/hero/tailwind/index.module.css`,
     `${DEMOS}/loading/css-modules/index.tsx`,
     `${DEMOS}/loading/css-modules/helper.ts`,
     `${DEMOS}-old/hero/css-modules/index.tsx`,
@@ -66,46 +69,75 @@ test('with no Tailwind demos, the record keeps the files of the demos and leaves
     '_index.module.css',
     'hero/css-modules/index.tsx',
     'hero/css-modules/index.module.css',
+    'hero/tailwind/index.tsx',
     'loading/css-modules/index.tsx',
     'loading/css-modules/helper.ts',
   ]);
   assert.equal(record.files['_index.module.css'], sha256(`text of ${DEMOS}/_index.module.css`));
+  assert.equal(record.files[TAILWIND_TSX_PATH], sha256(`text of ${DEMOS}/${TAILWIND_TSX_PATH}`));
   assert.equal(record.commit, COMMIT);
   assert.equal(record.upstream, DEMOS);
   assert.deepEqual([...styles.keys()], ['_index.module.css', STYLE_PATH]);
   assert.equal(Object.hasOwn(record, 'classes'), false);
 });
 
-test('with Tailwind demos, the record also has the hashes of the Tailwind files and the class strings of each folder', () => {
-  const texts = new Map([
-    [`${DEMOS}/hero/index.ts`, "const noClass = 'index';"],
-    [`${DEMOS}/hero/css-modules/index.tsx`, '<Button className={styles.Button} />'],
-    [`${DEMOS}/hero/tailwind/index.tsx`, '<Button className="flex  h-8" />'],
-    [`${DEMOS}/loading/tailwind/index.tsx`, '<Button className="b" />;\n<Button className="a" />'],
-    [`${DEMOS}/loading/tailwind/helper.ts`, "const rowClass = 'b';"],
-    [`${DEMOS}/_utils.ts`, "const x = { rootClass: 'no' }, itemClass = 'root';"],
-  ]);
-  const { record } = readUpstreamDemos(
-    'button',
-    BUTTON,
-    [...texts.keys()],
-    (path) => texts.get(path)!,
-    true,
+test('the record has the class strings of each folder by element name', () => {
+  const { record } = readTexts(
+    new Map([
+      [`${DEMOS}/hero/index.ts`, "const noClass = 'index';"],
+      [`${DEMOS}/hero/css-modules/index.tsx`, '<Button className={styles.Button} />'],
+      [`${DEMOS}/hero/tailwind/index.tsx`, '<Button className="flex  h-8" />'],
+      [
+        `${DEMOS}/loading/tailwind/index.tsx`,
+        '<Button className={rowClass} />;\n<Button className="a" />;\n<span className="b" />',
+      ],
+      [`${DEMOS}/loading/tailwind/helper.ts`, "export const rowClass = 'b';"],
+      [`${DEMOS}/_utils.ts`, "const x = { rootClass: 'no' }, itemClass = 'root';"],
+    ]),
   );
-  assert.deepEqual(Object.keys(record.files), [
-    'hero/css-modules/index.tsx',
-    'hero/tailwind/index.tsx',
-    'loading/tailwind/index.tsx',
-    'loading/tailwind/helper.ts',
-    '_utils.ts',
-  ]);
-  assert.equal(record.files[TAILWIND_TSX_PATH], sha256('<Button className="flex  h-8" />'));
   assert.deepEqual(record.classes, {
-    '.': ['root'],
-    'hero/tailwind': ['flex h-8'],
-    'loading/tailwind': ['a', 'b', 'b'],
+    '.': { itemClass: ['root'] },
+    'hero/tailwind': { Button: ['flex h-8'] },
+    'loading/tailwind': { Button: ['a', 'b'], span: ['b'] },
   });
   assert.deepEqual(Object.keys(record), ['commit', 'upstream', 'files', 'classes']);
+});
+
+const VARIANT_FILES = (demo: string, cssModules: string, tailwind: string): [string, string][] => [
+  [`${DEMOS}/${demo}/css-modules/index.tsx`, cssModules],
+  [`${DEMOS}/${demo}/tailwind/index.tsx`, tailwind],
+];
+
+test('the record lists, sorted, the demos whose two variants differ in more than their classes and their text', () => {
+  const { record } = readTexts(
+    new Map([
+      ...VARIANT_FILES('equal', '<p className={styles.P}>Open</p>', '<p className="a">Close</p>'),
+      ...VARIANT_FILES('other-element', '<div />', '<span />'),
+      ...VARIANT_FILES('another-element', '<div />', '<section />'),
+      [`${DEMOS}/other-file/css-modules/index.tsx`, '<div />'],
+      [`${DEMOS}/other-file/tailwind/index.tsx`, '<div />'],
+      [`${DEMOS}/other-file/tailwind/classes.ts`, "export const boxClass = 'a';"],
+      [`${DEMOS}/tailwind-only/tailwind/index.tsx`, '<div />'],
+      [`${DEMOS}/css-modules-only/css-modules/index.tsx`, '<div />'],
+    ]),
+  );
+  assert.deepEqual(record.differentVariants, ['another-element', 'other-element', 'other-file']);
+  assert.deepEqual(Object.keys(record), [
+    'commit',
+    'upstream',
+    'files',
+    'classes',
+    'differentVariants',
+  ]);
+});
+
+test('a record with no demo whose variants differ has no key for them', () => {
+  const { record } = readTexts(
+    new Map(
+      VARIANT_FILES('hero', '<p className={styles.P}>Open</p>', '<p className="a">Close</p>'),
+    ),
+  );
+  assert.equal(Object.hasOwn(record, 'differentVariants'), false);
 });
 
 test('an upstream folder with no demos gives a record with no files', () => {
@@ -144,22 +176,7 @@ test('the record names the other entry points that each demo imports, sorted and
     [`${DEMOS}/loading/css-modules/index.tsx`, "import { Button } from '@base-ui/react/button';"],
     [`${DEMOS}/loading/css-modules/index.module.css`, '.Button {}\n'],
   ]);
-  const { record } = readUpstreamDemos(
-    'button',
-    BUTTON,
-    [...texts.keys()],
-    (path) => texts.get(path)!,
-    false,
-  );
-  assert.deepEqual(record.entryPoints, { hero: ['checkbox', 'slider', 'toggle'] });
-  const withTailwind = readUpstreamDemos(
-    'button',
-    BUTTON,
-    [...texts.keys()],
-    (path) => texts.get(path)!,
-    true,
-  );
-  assert.deepEqual(withTailwind.record.entryPoints, {
+  assert.deepEqual(readTexts(texts).record.entryPoints, {
     hero: ['checkbox', 'menu', 'slider', 'toggle'],
   });
 });
@@ -171,7 +188,6 @@ test('a record whose demos import only their own entry point has no key for entr
     BUTTON,
     [path],
     () => "import { Button } from '@base-ui/react/button';",
-    false,
   );
   assert.equal(Object.hasOwn(record, 'entryPoints'), false);
 });
@@ -184,7 +200,11 @@ test('the record file has a short array on one line, a long array on lines of it
     upstream: DEMOS,
     files: { [TSX_PATH]: sha256('tsx') },
     entryPoints: { hero: ['slider', 'toggle'] },
-    classes: { 'hero/tailwind': [classes], loading: ['a', 'b'] },
+    classes: {
+      'hero/tailwind': { 'Switch.Root': [classes], div: ['a', 'b'] },
+      loading: { p: ['c'] },
+    },
+    differentVariants: ['hero', 'loading'],
   };
   const files = await expectedFiles('button', { record, styles: new Map() });
   assert.equal(
@@ -200,11 +220,17 @@ test('the record file has a short array on one line, a long array on lines of it
       '    "hero": ["slider", "toggle"]',
       '  },',
       '  "classes": {',
-      '    "hero/tailwind": [',
-      `      "${classes}"`,
-      '    ],',
-      '    "loading": ["a", "b"]',
-      '  }',
+      '    "hero/tailwind": {',
+      '      "Switch.Root": [',
+      `        "${classes}"`,
+      '      ],',
+      '      "div": ["a", "b"]',
+      '    },',
+      '    "loading": {',
+      '      "p": ["c"]',
+      '    }',
+      '  },',
+      '  "differentVariants": ["hero", "loading"]',
       '}',
       '',
     ].join('\n'),
@@ -230,6 +256,7 @@ function makeDemoFamily(overrides: Partial<DemoFamily> = {}): DemoFamily {
       [VUE_PATH, sha256('vue')],
     ]),
     vueClasses: new Map(),
+    vueVariants: new Map(),
     ...overrides,
   };
 }
@@ -242,7 +269,7 @@ const CSS_MODULES_FILES = makeDemoFamily().files;
 const TAILWIND_RECORD: DemoRecord = {
   ...makeRecord(),
   files: { ...makeRecord().files, [TAILWIND_TSX_PATH]: sha256('tailwind') },
-  classes: { 'hero/tailwind': [CLASS_A, CLASS_B, CLASS_B] },
+  classes: { 'hero/tailwind': { Button: [CLASS_A, CLASS_B, CLASS_B] } },
 };
 
 /** The state of the family before its Vue file of the Tailwind demo exists. */
@@ -252,7 +279,7 @@ function makeTailwindFamily(overrides: Partial<DemoFamily> = {}): DemoFamily {
   return makeDemoFamily({
     record: TAILWIND_RECORD,
     files: new Map([...CSS_MODULES_FILES, [TAILWIND_VUE_PATH, sha256('tailwind vue')]]),
-    vueClasses: new Map([['hero/tailwind', [CLASS_B, CLASS_A, CLASS_B]]]),
+    vueClasses: new Map([['hero/tailwind', { Button: [CLASS_B, CLASS_A, CLASS_B] }]]),
     ...overrides,
   });
 }
@@ -261,7 +288,7 @@ test('a family with a record, the copies and the Vue file of each demo has no pr
   assert.deepEqual(checkDemos([makeDemoFamily()], ENTRY_POINTS), []);
 });
 
-test('a family whose Tailwind demos have the class strings of Base UI, in any sequence, has no problem', () => {
+test('a family whose Tailwind demos have the class strings of Base UI on the same elements, in any sequence, has no problem', () => {
   assert.deepEqual(checkDemos([makeTailwindFamily()], ENTRY_POINTS), []);
 });
 
@@ -309,13 +336,14 @@ function makeFormsFamily(overrides: Partial<DemoFamily> = {}): DemoFamily {
       commit: COMMIT,
       upstream: FORMS_DEMOS,
       files: { 'react-hook-form/tailwind/index.tsx': sha256('tailwind') },
-      classes: { 'react-hook-form/tailwind': [CLASS_A] },
+      classes: { 'react-hook-form/tailwind': { Field: [CLASS_A] } },
     },
     files: new Map([
       ['upstream.json', sha256('record')],
       ['vee-validate/tailwind/index.vue', sha256('vue')],
     ]),
-    vueClasses: new Map([['react-hook-form/tailwind', [CLASS_A, FORM_CLASS]]]),
+    vueClasses: new Map([['react-hook-form/tailwind', { Field: [CLASS_A], form: [FORM_CLASS] }]]),
+    vueVariants: new Map(),
     ...overrides,
   };
 }
@@ -334,23 +362,65 @@ test('the check names the Vue folder of a demo that has another name in Base UI'
   ]);
   assert.deepEqual(
     checkDemos(
-      [makeFormsFamily({ vueClasses: new Map([['react-hook-form/tailwind', []]]) })],
+      [makeFormsFamily({ vueClasses: new Map([['react-hook-form/tailwind', {}]]) })],
       ENTRY_POINTS,
     ),
     [
-      `docs/demos/handbook-forms/vee-validate/tailwind has class strings that differ from Base UI. Absent: "${CLASS_A}", "${FORM_CLASS}". Copy each class string from the Base UI file. Do not change it.`,
+      `docs/demos/handbook-forms/vee-validate/tailwind has classes that differ from Base UI. Field: absent "${CLASS_A}". form: absent "${FORM_CLASS}". Copy each class string from the Base UI file to the same element. Do not change it.`,
     ],
   );
 });
 
-test('the Vue demo of another library has the class string of the element that it needs, one time', () => {
-  const withClasses = (strings: string[]): DemoFamily =>
-    makeFormsFamily({ vueClasses: new Map([['react-hook-form/tailwind', strings]]) });
-  assert.deepEqual(checkDemos([withClasses([CLASS_A])], ENTRY_POINTS), [
-    `docs/demos/handbook-forms/vee-validate/tailwind has class strings that differ from Base UI. Absent: "${FORM_CLASS}". Copy each class string from the Base UI file. Do not change it.`,
+test('the Vue demo of another library has the class string of the element that it needs, one time, on that element', () => {
+  const withForm = (form: string[]): DemoFamily =>
+    makeFormsFamily({
+      vueClasses: new Map([['react-hook-form/tailwind', { Field: [CLASS_A], form }]]),
+    });
+  const problem = (differences: string): string =>
+    `docs/demos/handbook-forms/vee-validate/tailwind has classes that differ from Base UI. ${differences} Copy each class string from the Base UI file to the same element. Do not change it.`;
+  assert.deepEqual(checkDemos([withForm([])], ENTRY_POINTS), [
+    problem(`form: absent "${FORM_CLASS}".`),
   ]);
-  assert.deepEqual(checkDemos([withClasses([CLASS_A, FORM_CLASS, FORM_CLASS])], ENTRY_POINTS), [
-    `docs/demos/handbook-forms/vee-validate/tailwind has class strings that differ from Base UI. Extra: "${FORM_CLASS}". Copy each class string from the Base UI file. Do not change it.`,
+  assert.deepEqual(checkDemos([withForm([FORM_CLASS, FORM_CLASS])], ENTRY_POINTS), [
+    problem(`form: extra "${FORM_CLASS}".`),
+  ]);
+  const onAnotherElement = makeFormsFamily({
+    vueClasses: new Map([['react-hook-form/tailwind', { Field: [CLASS_A, FORM_CLASS] }]]),
+  });
+  assert.deepEqual(checkDemos([onAnotherElement], ENTRY_POINTS), [
+    problem(`Field: extra "${FORM_CLASS}". form: absent "${FORM_CLASS}".`),
+  ]);
+});
+
+const FORM_DIFFERENCE =
+  'css-modules/index.vue has "Font weight" where tailwind/index.vue has "Playback speed"';
+const TEXT_DIFFERENCE =
+  'css-modules/index.vue has aria-label="Trigger 1" where tailwind/index.vue has aria-label="Controlled tooltip"';
+
+test('two Vue variants with no difference have no problem', () => {
+  const family = makeTailwindFamily({
+    vueVariants: new Map([['hero', { form: undefined, text: undefined }]]),
+  });
+  assert.deepEqual(checkDemos([family], ENTRY_POINTS), []);
+});
+
+test('two Vue variants whose Base UI variants differ are compared by their texts only', () => {
+  const family = makeTailwindFamily({
+    record: { ...TAILWIND_RECORD, differentVariants: ['hero'] },
+    vueVariants: new Map([['hero', { form: FORM_DIFFERENCE, text: undefined }]]),
+  });
+  assert.deepEqual(checkDemos([family], ENTRY_POINTS), []);
+});
+
+test('the demo of the Vue variants is listed with its name in Base UI', () => {
+  const variants = new Map([['vee-validate', { form: FORM_DIFFERENCE, text: undefined }]]);
+  const listed = makeFormsFamily({
+    record: { ...makeFormsFamily().record!, differentVariants: ['react-hook-form'] },
+    vueVariants: variants,
+  });
+  assert.deepEqual(checkDemos([listed], ENTRY_POINTS), []);
+  assert.deepEqual(checkDemos([makeFormsFamily({ vueVariants: variants })], ENTRY_POINTS), [
+    `docs/demos/handbook-forms/vee-validate: the Tailwind demo differs from the CSS-module demo in more than its classes, and the two Base UI files do not. ${FORM_DIFFERENCE}. Make the two demos equal apart from the classes.`,
   ]);
 });
 
@@ -410,16 +480,53 @@ const failures: { name: string; family: DemoFamily; problem: string }[] = [
   {
     name: 'a class string that the demo lacks and a class string that Base UI lacks',
     family: makeTailwindFamily({
-      vueClasses: new Map([['hero/tailwind', [CLASS_A, CLASS_B, 'flex h-9']]]),
+      vueClasses: new Map([['hero/tailwind', { Button: [CLASS_A, CLASS_B, 'flex h-9'] }]]),
     }),
-    problem: `docs/demos/button/hero/tailwind has class strings that differ from Base UI. Absent: "${CLASS_B}". Extra: "flex h-9". Copy each class string from the Base UI file. Do not change it.`,
+    problem: `docs/demos/button/hero/tailwind has classes that differ from Base UI. Button: absent "${CLASS_B}", extra "flex h-9". Copy each class string from the Base UI file to the same element. Do not change it.`,
   },
   {
     name: 'a class string that Base UI repeats and the demo does not',
     family: makeTailwindFamily({
-      vueClasses: new Map([['hero/tailwind', [CLASS_A, CLASS_B]]]),
+      vueClasses: new Map([['hero/tailwind', { Button: [CLASS_A, CLASS_B] }]]),
     }),
-    problem: `docs/demos/button/hero/tailwind has class strings that differ from Base UI. Absent: "${CLASS_B}". Copy each class string from the Base UI file. Do not change it.`,
+    problem: `docs/demos/button/hero/tailwind has classes that differ from Base UI. Button: absent "${CLASS_B}". Copy each class string from the Base UI file to the same element. Do not change it.`,
+  },
+  {
+    name: 'a class string on an element that Base UI gives no class',
+    family: makeTailwindFamily({
+      vueClasses: new Map([
+        ['hero/tailwind', { Button: [CLASS_A, CLASS_B, CLASS_B], div: [CLASS_A] }],
+      ]),
+    }),
+    problem: `docs/demos/button/hero/tailwind has classes that differ from Base UI. div: extra "${CLASS_A}". Copy each class string from the Base UI file to the same element. Do not change it.`,
+  },
+  {
+    name: 'the class strings of two elements that change places',
+    family: makeTailwindFamily({
+      record: {
+        ...TAILWIND_RECORD,
+        classes: { 'hero/tailwind': { 'Switch.Root': [CLASS_A], 'Switch.Thumb': [CLASS_B] } },
+      },
+      vueClasses: new Map([
+        ['hero/tailwind', { 'Switch.Root': [CLASS_B], 'Switch.Thumb': [CLASS_A] }],
+      ]),
+    }),
+    problem: `docs/demos/button/hero/tailwind has classes that differ from Base UI. Switch.Root: absent "${CLASS_A}", extra "${CLASS_B}". Switch.Thumb: absent "${CLASS_B}", extra "${CLASS_A}". Copy each class string from the Base UI file to the same element. Do not change it.`,
+  },
+  {
+    name: 'two Vue variants that differ in more than their classes while the two Base UI variants do not',
+    family: makeTailwindFamily({
+      vueVariants: new Map([['hero', { form: FORM_DIFFERENCE, text: undefined }]]),
+    }),
+    problem: `docs/demos/button/hero: the Tailwind demo differs from the CSS-module demo in more than its classes, and the two Base UI files do not. ${FORM_DIFFERENCE}. Make the two demos equal apart from the classes.`,
+  },
+  {
+    name: 'two Vue variants with other texts while the two Base UI variants differ',
+    family: makeTailwindFamily({
+      record: { ...TAILWIND_RECORD, differentVariants: ['hero'] },
+      vueVariants: new Map([['hero', { form: FORM_DIFFERENCE, text: TEXT_DIFFERENCE }]]),
+    }),
+    problem: `docs/demos/button/hero: the Tailwind demo has other texts than the CSS-module demo. ${TEXT_DIFFERENCE}. Give the Tailwind demo the texts of the CSS-module demo.`,
   },
   {
     name: 'a Tailwind folder of a demo for which the record has no Tailwind file',
@@ -516,12 +623,16 @@ test('a page with neither a family file nor an own record is a demo family, so t
   ]);
 });
 
-test('the class strings of a Vue demo come with the family, by the folder of each row of the record', () => {
+test('the class strings of a Vue demo come with the family, by the folder of each row of the record and by element name', () => {
   const record = {
     commit: COMMIT,
     upstream: DEMOS,
     files: {},
-    classes: { '.': ['d'], 'hero/tailwind': ['a b', 'c'], 'loading/tailwind': ['e'] },
+    classes: {
+      '.': { li: ['d'] },
+      'hero/tailwind': { div: ['a b'], rowClass: ['c'] },
+      'loading/tailwind': { p: ['e'] },
+    },
   };
   const root = makeRoot({
     'docs/demos/sample/upstream.json': JSON.stringify(record),
@@ -534,8 +645,8 @@ test('the class strings of a Vue demo come with the family, by the folder of eac
   assert.deepEqual(
     family?.vueClasses,
     new Map([
-      ['.', ['d']],
-      ['hero/tailwind', ['a b', 'c']],
+      ['.', { itemClass: ['d'] }],
+      ['hero/tailwind', { div: ['a b'], rowClass: ['c'] }],
     ]),
   );
 });
@@ -545,7 +656,7 @@ test('the class strings of a demo with another name in Base UI come from the Vue
     commit: COMMIT,
     upstream: FORMS_DEMOS,
     files: {},
-    classes: { 'react-hook-form/tailwind': ['a b'] },
+    classes: { 'react-hook-form/tailwind': { div: ['a b'] } },
   };
   const root = makeRoot({
     'docs/demos/handbook-forms/upstream.json': JSON.stringify(record),
@@ -553,7 +664,32 @@ test('the class strings of a demo with another name in Base UI come from the Vue
       '<template><div class="a b" /></template>\n',
   });
   const family = loadDemoFamilies(root).find(({ name }) => name === 'handbook-forms');
-  assert.deepEqual(family?.vueClasses, new Map([['react-hook-form/tailwind', ['a b']]]));
+  assert.deepEqual(family?.vueClasses, new Map([['react-hook-form/tailwind', { div: ['a b'] }]]));
+});
+
+test('the first difference between the Vue variants of a demo comes with the family, for each demo that has both', () => {
+  const root = makeRoot({
+    'docs/demos/sample/loading/css-modules/index.vue': '<template><p>Open</p></template>\n',
+    'docs/demos/sample/same/css-modules/index.vue': '<template><p>Open</p></template>\n',
+    'docs/demos/sample/same/tailwind/index.vue': '<template><p class="a">Open</p></template>\n',
+    'docs/demos/sample/other/css-modules/index.vue': '<template><p>Open</p></template>\n',
+    'docs/demos/sample/other/tailwind/index.vue': '<template><p>Close</p></template>\n',
+    'docs/demos/sample/tailwind-only/tailwind/index.vue': '<template><p>Open</p></template>\n',
+  });
+  const [family] = loadDemoFamilies(root);
+  assert.deepEqual(
+    family?.vueVariants,
+    new Map([
+      [
+        'other',
+        {
+          form: 'css-modules/index.vue has "Open" where tailwind/index.vue has "Close"',
+          text: 'css-modules/index.vue has "Open" where tailwind/index.vue has "Close"',
+        },
+      ],
+      ['same', { form: undefined, text: undefined }],
+    ]),
+  );
 });
 
 test('each demo and each copied style sheet of the repository match the record', () => {

@@ -285,6 +285,28 @@ describe('<Menu.Root />', () => {
       </Menu.Root>
     ),
     createPopup: () => <Menu.Popup data-testid="popup">Popup</Menu.Popup>,
+    createBackdropComponent: ({ open, onOpenChangeComplete }) => (
+      <Menu.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Menu.Trigger>Open</Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Backdrop data-testid="shown" class="shown" />
+        </Menu.Portal>
+      </Menu.Root>
+    ),
+    createPendingPositionerComponent: ({ Pending, onOpenChange }) => (
+      <Menu.Root defaultOpen onOpenChange={onOpenChange}>
+        <Menu.Trigger>Open</Menu.Trigger>
+        <Menu.Portal>
+          <Pending>
+            <Menu.Positioner data-testid="shown">
+              <Menu.Popup>
+                <Menu.Item>Item</Menu.Item>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Pending>
+        </Menu.Portal>
+      </Menu.Root>
+    ),
     render,
   });
 
@@ -5500,25 +5522,21 @@ describe('<Menu.Root />', () => {
     const { context, store } = probe;
     const generated = context.generatedPopupId;
 
-    expect(store.select('popupId')).toBe(generated);
     expect(store.select('defaultPopupId')).toBe(generated);
 
     context.setRenderedPopupId('custom');
     await flushMicrotasks();
 
-    expect(store.select('popupId')).toBe('custom');
     expect(store.select('defaultPopupId')).toBe('custom');
 
     context.setRenderedPopupId('');
     await flushMicrotasks();
 
-    expect(store.select('popupId')).toBe(undefined);
     expect(store.select('defaultPopupId')).toBe(undefined);
 
     context.setRenderedPopupId(undefined);
     await flushMicrotasks();
 
-    expect(store.select('popupId')).toBe(generated);
     expect(store.select('defaultPopupId')).toBe(generated);
   });
 

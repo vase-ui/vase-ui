@@ -158,6 +158,14 @@ export class SelectStore extends ValuePopupStore<
     return state.triggerElement;
   }
 
+  // The focus of the trigger and an autofill of the hidden input also set `forceMounted`. When
+  // neither comes before the end of a close, the popup leaves the DOM without this write (`VUE-95`).
+  override setState(newState: Readonly<State>): void {
+    super.setState(
+      newState.mounted && !newState.forceMounted ? { ...newState, forceMounted: true } : newState,
+    );
+  }
+
   protected override prepareUnmount() {
     return {
       activeIndex: null,

@@ -19,38 +19,45 @@
     "password/tailwind/index.tsx": "2f3643c3fddb7f5471105276de55a48bba4391349bf9249f40ecaa9ebb162411"
   },
   "classes": {
-    "alphanumeric/tailwind": [
-      "flex w-full gap-2",
-      "flex w-full max-w-80 flex-col items-start gap-1",
-      "font-mono",
-      "m-0 h-10 w-10 rounded-none border border-neutral-950 bg-white dark:bg-neutral-950 text-center font-inherit text-base font-normal text-neutral-950 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white",
-      "m-0 text-sm text-neutral-600 dark:text-neutral-400",
-      "text-sm font-bold text-neutral-950 dark:text-white"
-    ],
-    "grouped/tailwind": [
-      "flex gap-2",
-      "flex gap-2",
-      "flex w-full items-center gap-2",
-      "flex w-full max-w-80 flex-col items-start gap-1",
-      "h-px w-4 bg-current text-neutral-950 dark:text-white",
-      "m-0 h-10 w-10 rounded-none border border-neutral-950 bg-white dark:bg-neutral-950 text-center font-inherit text-base font-normal text-neutral-950 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white",
-      "m-0 h-10 w-10 rounded-none border border-neutral-950 bg-white dark:bg-neutral-950 text-center font-inherit text-base font-normal text-neutral-950 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white",
-      "text-sm font-bold text-neutral-950 dark:text-white"
-    ],
-    "hero/tailwind": [
-      "flex w-full gap-2",
-      "flex w-full max-w-80 flex-col items-start gap-1",
-      "m-0 h-10 w-10 rounded-none border border-neutral-950 bg-white dark:bg-neutral-950 text-center font-inherit text-base font-normal text-neutral-950 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white",
-      "m-0 text-sm text-neutral-600 dark:text-neutral-400",
-      "text-sm font-bold text-neutral-950 dark:text-white"
-    ],
-    "password/tailwind": [
-      "flex w-full gap-2",
-      "flex w-full max-w-80 flex-col items-start gap-1",
-      "font-mono",
-      "m-0 h-10 w-10 rounded-none border border-neutral-950 bg-white dark:bg-neutral-950 text-center font-inherit text-base font-normal text-neutral-950 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white",
-      "m-0 text-sm text-neutral-600 dark:text-neutral-400",
-      "text-sm font-bold text-neutral-950 dark:text-white"
-    ]
-  }
+    "alphanumeric/tailwind": {
+      "OTPField.Input": [
+        "m-0 h-10 w-10 rounded-none border border-neutral-950 bg-white dark:bg-neutral-950 text-center font-inherit text-base font-normal text-neutral-950 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white"
+      ],
+      "OTPField.Root": ["flex w-full gap-2"],
+      "code": ["font-mono"],
+      "div": ["flex w-full max-w-80 flex-col items-start gap-1"],
+      "label": ["text-sm font-bold text-neutral-950 dark:text-white"],
+      "p": ["m-0 text-sm text-neutral-600 dark:text-neutral-400"]
+    },
+    "grouped/tailwind": {
+      "OTPField.Input": [
+        "m-0 h-10 w-10 rounded-none border border-neutral-950 bg-white dark:bg-neutral-950 text-center font-inherit text-base font-normal text-neutral-950 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white",
+        "m-0 h-10 w-10 rounded-none border border-neutral-950 bg-white dark:bg-neutral-950 text-center font-inherit text-base font-normal text-neutral-950 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white"
+      ],
+      "OTPField.Root": ["flex w-full items-center gap-2"],
+      "OTPField.Separator": ["h-px w-4 bg-current text-neutral-950 dark:text-white"],
+      "div": ["flex gap-2", "flex gap-2", "flex w-full max-w-80 flex-col items-start gap-1"],
+      "label": ["text-sm font-bold text-neutral-950 dark:text-white"]
+    },
+    "hero/tailwind": {
+      "OTPField.Input": [
+        "m-0 h-10 w-10 rounded-none border border-neutral-950 bg-white dark:bg-neutral-950 text-center font-inherit text-base font-normal text-neutral-950 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white"
+      ],
+      "OTPField.Root": ["flex w-full gap-2"],
+      "div": ["flex w-full max-w-80 flex-col items-start gap-1"],
+      "label": ["text-sm font-bold text-neutral-950 dark:text-white"],
+      "p": ["m-0 text-sm text-neutral-600 dark:text-neutral-400"]
+    },
+    "password/tailwind": {
+      "OTPField.Input": [
+        "m-0 h-10 w-10 rounded-none border border-neutral-950 bg-white dark:bg-neutral-950 text-center font-inherit text-base font-normal text-neutral-950 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white"
+      ],
+      "OTPField.Root": ["flex w-full gap-2"],
+      "code": ["font-mono"],
+      "div": ["flex w-full max-w-80 flex-col items-start gap-1"],
+      "label": ["text-sm font-bold text-neutral-950 dark:text-white"],
+      "p": ["m-0 text-sm text-neutral-600 dark:text-neutral-400"]
+    }
+  },
+  "differentVariants": ["alphanumeric", "password"]
 }

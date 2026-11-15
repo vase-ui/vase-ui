@@ -11,6 +11,7 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountFormResetTests,
   hydrate,
   hydrateAfter,
   isJSDOM,
@@ -1296,6 +1297,19 @@ describe('<Field.Control />', () => {
       expect(input).toHaveValue('');
       expect(root).not.toHaveAttribute('data-filled');
     });
+  });
+
+  heldMountFormResetTests({
+    render,
+    renderControl: () => (
+      <Field.Root data-testid="root">
+        <Field.Control name="comment" defaultValue="" />
+      </Field.Root>
+    ),
+    change: () => fireEvent.input(screen.getByRole('textbox'), { target: { value: 'typed' } }),
+    readState: () => screen.getByTestId('root').hasAttribute('data-filled'),
+    defaultState: false,
+    changedState: true,
   });
 
   describe('replacing the control', () => {

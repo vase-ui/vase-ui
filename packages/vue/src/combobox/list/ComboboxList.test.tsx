@@ -8,7 +8,9 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountListTests,
   screen,
+  waitFor,
 } from '#test-utils';
 import ComboboxListReplacement from '../../../test/fixtures/ComboboxListReplacement.vue';
 import type { HTMLProps } from '../../internals/types';
@@ -17,6 +19,27 @@ import type { ComboboxStore } from '../store';
 
 describe('<Combobox.List />', () => {
   const { render } = createRenderer();
+
+  heldMountListTests({
+    render,
+    renderList: (withLastItem) => (
+      <Combobox.Root inline>
+        <Combobox.Input />
+        <Combobox.List>
+          <Combobox.Item value="a">a</Combobox.Item>
+          {withLastItem ? <Combobox.Item value="b">b</Combobox.Item> : null}
+        </Combobox.List>
+      </Combobox.Root>
+    ),
+    async check(user) {
+      screen.getByRole('combobox').focus();
+      await user.keyboard('[ArrowDown]');
+      await user.keyboard('[ArrowDown]');
+      await waitFor(() => {
+        expect(screen.getByRole('option', { name: 'b' })).toHaveAttribute('data-highlighted');
+      });
+    },
+  });
 
   describeConformance(<Combobox.List />, () => ({
     refInstanceof: window.HTMLDivElement,

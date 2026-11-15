@@ -68,6 +68,7 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
+import { useKeepAliveElementRef } from '../../utils/popups/useKeepAliveElementRef';
 import { useComboboxPositionerContext } from '../positioner/ComboboxPositionerContext';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
 import { getComboboxPopupId } from '../root/utils';
@@ -133,7 +134,7 @@ function handleFocusin(event: FocusEvent) {
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: setPopupElement,
+  ref: useKeepAliveElementRef(setPopupElement, () => toRaw(store.state).triggerElement),
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
     store.select('popupProps'),

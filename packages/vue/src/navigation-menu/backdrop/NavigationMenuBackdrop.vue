@@ -26,6 +26,7 @@ const BACKDROP_STYLE = { 'user-select': 'none', '-webkit-user-select': 'none' };
 import { computed } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { createElementSetter } from '../../utils/popups/createElementSetter';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 
@@ -38,7 +39,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, NavigationMenuBackdropState>;
 }>();
 
-const { open, mounted, transitionStatus } = useNavigationMenuRootContext();
+const { open, mounted, transitionStatus, backdropElement } = useNavigationMenuRootContext();
 
 const state = computed<NavigationMenuBackdropState>(() => ({
   open: open.value,
@@ -47,6 +48,7 @@ const state = computed<NavigationMenuBackdropState>(() => ({
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
+  ref: createElementSetter(backdropElement),
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
     { role: 'presentation', hidden: mounted.value ? undefined : true, style: BACKDROP_STYLE },

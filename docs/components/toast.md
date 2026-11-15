@@ -391,6 +391,8 @@ The `title` and the `description` are a text, a number, or a function that retur
 
 For a toast with the priority `high`, a screen reader announces the `title` and the `description`. A screen reader does not announce other content of `<Toast.Root>`, the content of `<Toast.Title>` and `<Toast.Description>` included, unless the user moves to the toast viewport.
 
+`<Toast.Title>` gives the toast its accessible name, and `<Toast.Description>` gives its description. A toast with no title gets its name from `<Toast.Description>`. To give such a toast another name, set `aria-label` on `<Toast.Root>`. A toast with no title and no description needs that `aria-label`.
+
 ### `update` method
 
 Changes the options of the toast.

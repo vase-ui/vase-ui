@@ -75,7 +75,7 @@ export interface CalendarRootController {
   canPrevious: ComputedRef<boolean>;
   /** Whether `maxDate` allows a page after the last one. */
   canNext: ComputedRef<boolean>;
-  /** The first and the last month that a page can show, by `minDate` and `maxDate`. */
+  /** The month of `minDate` and the month of `maxDate`. */
   monthLimits: ComputedRef<{
     min: Temporal.PlainYearMonth | undefined;
     max: Temporal.PlainYearMonth | undefined;
@@ -86,8 +86,8 @@ export interface CalendarRootController {
    */
   navigate: (step: 1 | -1, event?: Event) => boolean;
   /**
-   * Makes `month` the month of the page at `pageIndex`. The month stays between the months of
-   * `minDate` and `maxDate`.
+   * Makes `month` the month of the page at `pageIndex`. The pages then obey `minDate` and
+   * `maxDate`, as for each other move, so the page can show another month.
    */
   showMonth: (month: Temporal.PlainYearMonth, pageIndex: number, event?: Event) => void;
   /** The number of the week, by `isoWeek` and `firstWeekContainsDate`. */
@@ -177,12 +177,17 @@ export function useCalendarRoot({
     return toPlainDate(date).withCalendar(calendar.value);
   }
 
-  // The first page holds this day until the month changes. It is a day and not a month, because
-  // the calendar of the grid can change after the mount: the locale of the runtime replaces
-  // `en-US`, and its calendar can have other months.
+  // The root picks the first page from this day until the month changes. It is a day and not a
+  // month, because the calendar of the grid can change after the mount: the locale of the runtime
+  // replaces `en-US`, and its calendar can have other months.
   const initialDate = toPlainDate(
     props.focusedDate ?? props.defaultFocusedDate ?? selection.values.value[0] ?? todayDate.value,
   );
+
+  const monthLimits = computed(() => ({
+    min: props.minDate && monthOfDate(toGridDate(props.minDate)),
+    max: props.maxDate && monthOfDate(toGridDate(props.maxDate)),
+  }));
 
   const [monthState, setMonthState] = useControlled<Temporal.PlainYearMonth | undefined>({
     controlled: () => props.month,
@@ -190,8 +195,12 @@ export function useCalendarRoot({
     name: 'Calendar',
     state: 'month',
   });
+  // The limits apply only to a first page that the root picks. The root shows a month of the
+  // consumer as it is: a change of a controlled `month` needs an event, and the mount emits none.
   const visibleMonth = computed(() =>
-    toGridDate(monthState.value ?? initialDate).toPlainYearMonth(),
+    monthState.value
+      ? toGridDate(monthState.value).toPlainYearMonth()
+      : clampMonth(toGridDate(initialDate).toPlainYearMonth()),
   );
 
   const [focusedDateState, setFocusedDateState] = useControlled<Temporal.PlainDate | null>({
@@ -224,7 +233,8 @@ export function useCalendarRoot({
     const anchor = monthState.value
       ? visibleMonth.value.toPlainDate({ day: 1 })
       : toGridDate(initialDate);
-    return alignPageStart(anchor, visible, firstDay.value, 'start');
+    const first = alignPageStart(anchor, visible, firstDay.value, 'start');
+    return monthState.value ? first : clampPageStart(first, visible);
   });
 
   function createMonthPage(month: Temporal.PlainYearMonth) {
@@ -358,7 +368,10 @@ export function useCalendarRoot({
     const visible = duration.value;
     if (visible && pageStart.value) {
       const edge = compareDates(date, pageStart.value) < 0 ? 'end' : 'start';
-      return setPageStart(alignPageStart(date, visible, firstDay.value, edge), createDetails());
+      return setPageStart(
+        clampPageStart(alignPageStart(date, visible, firstDay.value, edge), visible),
+        createDetails(),
+      );
     }
     const month = monthOfDate(date);
     const first = pages.value[0];
@@ -558,19 +571,23 @@ export function useCalendarRoot({
     );
   });
 
-  const monthLimits = computed(() => ({
-    min: props.minDate && monthOfDate(toGridDate(props.minDate)),
-    max: props.maxDate && monthOfDate(toGridDate(props.maxDate)),
-  }));
-
-  // The first month that a calendar of months can show keeps its last page at or before `maxDate`.
+  // When fewer months than the pages are between the limits, `maxDate` wins, as in React Aria's
+  // calendar. The first pages then start before `minDate`.
   function clampMonth(month: Temporal.PlainYearMonth) {
     const { min, max } = monthLimits.value;
     const last = max?.subtract({ months: duration.value ? 0 : monthCount.value - 1 });
-    if (min && Temporal.PlainYearMonth.compare(month, min) < 0) {
-      return min;
-    }
-    return last && Temporal.PlainYearMonth.compare(month, last) > 0 ? last : month;
+    const first = min && Temporal.PlainYearMonth.compare(month, min) < 0 ? min : month;
+    return last && Temporal.PlainYearMonth.compare(first, last) > 0 ? last : first;
+  }
+
+  // The rule of `clampMonth` for the first day of a page of weeks or days.
+  function clampPageStart(start: Temporal.PlainDate, visible: VisibleDuration) {
+    const min =
+      props.minDate && alignPageStart(toGridDate(props.minDate), visible, firstDay.value, 'start');
+    const max =
+      props.maxDate && alignPageStart(toGridDate(props.maxDate), visible, firstDay.value, 'end');
+    const first = min && compareDates(start, min) < 0 ? min : start;
+    return max && compareDates(first, max) > 0 ? max : first;
   }
 
   function navigate(step: 1 | -1, event?: Event) {
@@ -579,7 +596,10 @@ export function useCalendarRoot({
     const start = pageStart.value;
     const canContinue = () => (step === 1 ? canNext : canPrevious).value;
     if (visible && start) {
-      const next = step === 1 ? start.add(visible) : start.subtract(visible);
+      const next = clampPageStart(
+        step === 1 ? start.add(visible) : start.subtract(visible),
+        visible,
+      );
       return setPageStart(next, createDetails()) && canContinue();
     }
     const target = clampMonth(
@@ -596,9 +616,14 @@ export function useCalendarRoot({
     const details = createChangeEventDetails(REASONS.monthChange, event);
     const visible = duration.value;
     if (visible) {
-      // The page starts with the week or the day of the first day of the month.
+      // The month of the root stays `target`, so that the select shows the month that the user
+      // picked. The limits can move the start of the page to an earlier month.
       const first = target.toPlainDate({ day: 1 });
-      setPageStart(alignPageStart(first, visible, firstDay.value, 'start'), details, target);
+      setPageStart(
+        clampPageStart(alignPageStart(first, visible, firstDay.value, 'start'), visible),
+        details,
+        target,
+      );
       return;
     }
     setMonth(target, details);

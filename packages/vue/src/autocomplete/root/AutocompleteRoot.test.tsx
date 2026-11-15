@@ -10,6 +10,7 @@ import {
   createRenderer,
   fireEvent,
   flushMicrotasks,
+  heldMountFormResetTests,
   hydrate,
   hydrateAfter,
   isJSDOM,
@@ -123,6 +124,14 @@ describe('<Autocomplete.Root />', () => {
       </Autocomplete.Root>
     ),
     createPopup: () => <Autocomplete.Popup data-testid="popup">Popup</Autocomplete.Popup>,
+    createBackdropComponent: ({ open, onOpenChangeComplete }) => (
+      <Autocomplete.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Autocomplete.Input />
+        <Autocomplete.Portal>
+          <Autocomplete.Backdrop data-testid="shown" class="shown" />
+        </Autocomplete.Portal>
+      </Autocomplete.Root>
+    ),
     render,
   });
 
@@ -3621,5 +3630,122 @@ describe('<Autocomplete.Root />', () => {
       expect(screen.queryByTestId('error')).toBe(null);
       expect(validate).toHaveBeenCalledTimes(validateCalls);
     });
+
+    it.each([
+      { name: 'mode="inline"', mode: 'inline' },
+      { name: 'mode="both"', mode: 'both' },
+    ] as const)(
+      'BUG-6206: puts back the default text while the input shows it as an inline completion, $name',
+      async ({ mode }) => {
+        const events: string[] = [];
+        await render(
+          <form data-testid="form">
+            <Autocomplete.Root
+              name="search"
+              mode={mode}
+              items={cities}
+              defaultValue="Malmö"
+              onValueChange={(value, details) =>
+                events.push(`valueChange:${value}:${details.reason}:${details.event.type}`)
+              }
+              {...{ 'onUpdate:value': (value: string) => events.push(`update:value:${value}`) }}
+            >
+              <Autocomplete.Input />
+              {popupWithList()}
+            </Autocomplete.Root>
+          </form>,
+        );
+        getInput().focus();
+        await type('');
+        await pressArrowDown();
+        await pressArrowDown();
+        expect(getInput().value).toBe('Malmö');
+        events.length = 0;
+
+        await reset();
+
+        expect(events).toEqual(['valueChange:Malmö:none:reset', 'update:value:Malmö']);
+        expect(getFormData('search')).toEqual(['Malmö']);
+        await fireEvent.keyDown(getInput(), { key: 'Escape' });
+        await flushMicrotasks();
+        expect(getInput().value).toBe('Malmö');
+      },
+    );
+
+    it('VUE-21: a canceled change of a reset that removes an inline completion starts no validation', async () => {
+      const validate = vi.fn(() => null);
+      await render(
+        <form data-testid="form">
+          <Field.Root name="search" validate={validate} validationMode="onChange">
+            <Autocomplete.Root
+              mode="inline"
+              items={cities}
+              defaultValue="Malmö"
+              onValueChange={(_value, details) => {
+                if (details.event.type === 'reset') {
+                  details.cancel();
+                }
+              }}
+            >
+              <Autocomplete.Input />
+              {popupWithList()}
+            </Autocomplete.Root>
+          </Field.Root>
+        </form>,
+      );
+      getInput().focus();
+      await type('x');
+      await pressArrowDown();
+      await pressArrowDown();
+      expect(getInput().value).toBe('Malta');
+      vi.advanceTimersByTime(0);
+      await flushMicrotasks();
+      const validateCalls = validate.mock.calls.length;
+
+      await reset();
+
+      expect(getInput().value).toBe('x');
+      expect(validate).toHaveBeenCalledTimes(validateCalls);
+    });
+
+    it('VUE-21: the next typed change after a reset of an inline completion starts a validation', async () => {
+      const validate = vi.fn(() => null);
+      await render(
+        <form data-testid="form">
+          <Field.Root name="search" validate={validate} validationMode="onChange">
+            <Autocomplete.Root mode="inline" items={cities} defaultValue="Malmö">
+              <Autocomplete.Input />
+              {popupWithList()}
+            </Autocomplete.Root>
+          </Field.Root>
+        </form>,
+      );
+      getInput().focus();
+      await type('');
+      await pressArrowDown();
+      await pressArrowDown();
+      expect(getInput().value).toBe('Malmö');
+      await reset();
+      const validateCalls = validate.mock.calls.length;
+
+      await type('z');
+      vi.advanceTimersByTime(0);
+      await flushMicrotasks();
+
+      expect(validate).toHaveBeenCalledTimes(validateCalls + 1);
+    });
+  });
+
+  heldMountFormResetTests({
+    render,
+    renderControl: () => (
+      <Autocomplete.Root name="search" items={cities} defaultValue="ma">
+        <Autocomplete.Input />
+      </Autocomplete.Root>
+    ),
+    change: () => type('mal'),
+    readState: () => getInput().value,
+    defaultState: 'ma',
+    changedState: 'mal',
   });
 });

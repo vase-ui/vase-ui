@@ -112,8 +112,8 @@ export interface UsePopupRootOptions<Store extends PopupRootStore> {
    */
   disabled?: MaybeRefOrGetter<boolean | undefined>;
   /**
-   * Gives the element whose animations end an open change. The default is the popup element, or
-   * the positioner element when no popup part renders.
+   * Gives the element whose animations end an open change. The default is the popup element, else
+   * the positioner element, else the backdrop element.
    */
   getTransitionElement?: ((store: Store) => HTMLElement | null) | undefined;
 }
@@ -129,11 +129,13 @@ export type UseSingleAnchorPopupRootOptions<Store extends PopupRootStore> = Pick
 >;
 
 /**
- * Gives the element whose animations end an open change: the popup element, or the positioner
- * element when no popup part renders.
+ * Gives the element whose animations end an open change: the popup element, else the positioner
+ * element, else the backdrop element.
  */
-function getTransitionElement(store: PopupRootStore) {
-  return store.context.popupRef.value ?? store.state.positionerElement;
+export function getPopupTransitionElement(store: PopupRootStore) {
+  return (
+    store.context.popupRef.value ?? store.state.positionerElement ?? store.context.backdropRef.value
+  );
 }
 
 /**
@@ -202,7 +204,7 @@ export function usePopupRootWithPopupId<Store extends PopupRootStore>(
   const { mounted, transitionStatus, actions } = usePopupRootTransitions(
     store,
     open,
-    () => (options.getTransitionElement ?? getTransitionElement)(store),
+    () => (options.getTransitionElement ?? getPopupTransitionElement)(store),
     options.animateInitialOpen,
   );
 
@@ -269,7 +271,7 @@ export function useSingleAnchorPopupRoot<Store extends PopupRootStore>(
 
   const open = computed(() => store.select('open'));
   const { mounted, transitionStatus, actions } = usePopupRootTransitions(store, open, () =>
-    (options.getTransitionElement ?? getTransitionElement)(store),
+    (options.getTransitionElement ?? getPopupTransitionElement)(store),
   );
 
   return { store, open, mounted, transitionStatus, actions };

@@ -6,6 +6,7 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountListTests,
   screen,
   waitFor,
   waitSingleFrame,
@@ -13,6 +14,25 @@ import {
 
 describe('<Tabs.List />', () => {
   const { render } = createRenderer();
+
+  heldMountListTests({
+    render,
+    renderList: (withLastItem) => (
+      <Tabs.Root defaultValue={0}>
+        <Tabs.List>
+          <Tabs.Tab value={0}>A</Tabs.Tab>
+          {withLastItem ? <Tabs.Tab value={1}>B</Tabs.Tab> : null}
+        </Tabs.List>
+      </Tabs.Root>
+    ),
+    async check(user) {
+      screen.getByRole('tab', { name: 'A' }).focus();
+      await user.keyboard('[ArrowRight]');
+      await waitFor(() => {
+        expect(screen.getByRole('tab', { name: 'B' })).toHaveFocus();
+      });
+    },
+  });
 
   describeConformance(<Tabs.List />, () => ({
     render: (node) => render(<Tabs.Root>{node}</Tabs.Root>),

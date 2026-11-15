@@ -238,6 +238,37 @@ describe('<Popover.Root />', () => {
       </Popover.Root>
     ),
     createPopup: () => <Popover.Popup data-testid="popup">Popup</Popover.Popup>,
+    createBackdropComponent: ({ open, onOpenChangeComplete }) => (
+      <Popover.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Popover.Trigger>Open</Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Backdrop data-testid="shown" class="shown" />
+        </Popover.Portal>
+      </Popover.Root>
+    ),
+    createBackdropAndPositionerComponent: ({ open, onOpenChangeComplete }) => (
+      <Popover.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Popover.Trigger>Open</Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Backdrop />
+          <Popover.Positioner data-testid="shown" class="shown">
+            Content
+          </Popover.Positioner>
+        </Popover.Portal>
+      </Popover.Root>
+    ),
+    createPendingPositionerComponent: ({ Pending, onOpenChange }) => (
+      <Popover.Root defaultOpen modal onOpenChange={onOpenChange}>
+        <Popover.Trigger>Open</Popover.Trigger>
+        <Popover.Portal>
+          <Pending>
+            <Popover.Positioner data-testid="shown">
+              <Popover.Popup>Popup</Popover.Popup>
+            </Popover.Positioner>
+          </Pending>
+        </Popover.Portal>
+      </Popover.Root>
+    ),
     render,
   });
 
@@ -321,8 +352,9 @@ describe('<Popover.Root />', () => {
       expect(popup).toHaveAttribute('data-ending-style');
       expect(onOpenChangeComplete).not.toHaveBeenCalledWith(false);
 
-      // The popup reads its animations in the frames after it attaches. The animation lasts 100 s,
-      // so the popup can complete only when the case ends the animation.
+      // The root reads the animations of the popup in a frame after the popup attaches. The
+      // animation lasts 100 s, so the root can complete the close only when the case ends the
+      // animation.
       await waitSingleFrame();
       await waitSingleFrame();
       expect(onOpenChangeComplete).not.toHaveBeenCalledWith(false);
@@ -1887,8 +1919,8 @@ describe('<Popover.Root />', () => {
           const trigger = screen.getByTestId('trigger');
           await user.click(trigger);
           const popup = await screen.findByTestId('popover-popup');
-          // The popup reads its animations in a frame after the open. That read must not be the
-          // read that the close takes.
+          // The root reads the animations of the popup in a frame after the open. The wait for
+          // the read of the close must start after that read.
           await waitSingleFrame();
           await waitSingleFrame();
           const animations = await nextAnimationsRead(popup, { action: () => user.click(trigger) });
@@ -3502,7 +3534,8 @@ describe('<Popover.Root />', () => {
     const second = screen.getByRole('button', { name: 'Second' });
     expect(first).toHaveAttribute('aria-expanded', 'true');
     expect(first).toHaveAttribute('data-popup-open');
-    expect(first.getAttribute('aria-controls')).toMatch(/^vase-ui-/);
+    // No popup is mounted, so the trigger names none.
+    expect(first).not.toHaveAttribute('aria-controls');
     expect(second).toHaveAttribute('aria-expanded', 'false');
     expect(second).not.toHaveAttribute('data-popup-open');
     expect(second).not.toHaveAttribute('aria-controls');
@@ -3980,6 +4013,9 @@ describe('<Popover.Root />', () => {
       controls: expect.stringMatching(/^vase-ui-/) as string,
       open: true,
     };
+    // A portal renders the popup after the mount, so an open trigger of the server HTML names no
+    // popup.
+    const openOnServer: TriggerValues = { expanded: 'true', controls: null, open: true };
 
     // A server registers no trigger and attaches no store to a handle. Vue does not patch an
     // attribute of a bound object when it hydrates, so the first render of each trigger must have
@@ -3999,7 +4035,7 @@ describe('<Popover.Root />', () => {
       {
         name: 'open with defaultTriggerId',
         props: { defaultOpen: true, defaultTriggerId: 'inside' },
-        server: [open],
+        server: [openOnServer],
         client: [open],
       },
       {

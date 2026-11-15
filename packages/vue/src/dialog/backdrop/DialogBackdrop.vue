@@ -30,6 +30,7 @@ export interface DialogBackdropProps
 import { computed } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { createElementSetter } from '../../utils/popups/createElementSetter';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { useDialogRootContext } from '../root/DialogRootContext';
 
@@ -52,20 +53,9 @@ const state = computed<DialogBackdropState>(() => ({
   transitionStatus: store.select('transitionStatus'),
 }));
 
-// A template can mount the backdrop that replaces this backdrop before it unmounts this backdrop.
-// The backdrop then clears the ref of the root only when the ref holds its own element.
-let ownBackdrop: HTMLDivElement | null = null;
-function setBackdrop(element: HTMLElement | null) {
-  const backdrop = element as HTMLDivElement | null;
-  if (backdrop !== null || store.context.backdropRef.value === ownBackdrop) {
-    store.context.backdropRef.value = backdrop;
-  }
-  ownBackdrop = backdrop;
-}
-
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: setBackdrop,
+  ref: createElementSetter(store.context.backdropRef),
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
     {
