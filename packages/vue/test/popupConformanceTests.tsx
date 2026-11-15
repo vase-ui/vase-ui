@@ -750,20 +750,16 @@ export function popupConformanceTests(config: PopupTestConfig) {
 
           await setProps({ open: true });
           // The popup mounts at the open. The part reads its animations in a later frame.
-          const popup = await waitFor(() => {
-            const element = getPopup();
-            expect(element).not.toBe(null);
-            return element!;
-          });
+          const popup = await screen.findByTestId('popup');
           const animations = await nextAnimationsRead(popup);
+          expect(animations.map((animation) => animation.playState)).toContain('running');
+          expect(onOpenChangeComplete).not.toHaveBeenCalled();
           const callsAtEnd: number[] = [];
           const finished = Promise.all(animations.map((animation) => animation.finished)).then(
             () => {
               callsAtEnd.push(onOpenChangeComplete.mock.calls.length);
             },
           );
-          expect(animations.map((animation) => animation.playState)).toContain('running');
-          expect(onOpenChangeComplete).not.toHaveBeenCalled();
 
           seekBeforeEnd(animations);
           await finished;
@@ -789,15 +785,15 @@ export function popupConformanceTests(config: PopupTestConfig) {
           const animations = await nextAnimationsRead(popup, {
             action: () => setProps({ open: false }),
           });
+          expect(popup).toHaveAttribute('data-ending-style');
+          expect(animations.map((animation) => animation.playState)).toContain('running');
+          expect(onOpenChangeComplete).not.toHaveBeenCalled();
           const callsAtEnd: number[] = [];
           const finished = Promise.all(animations.map((animation) => animation.finished)).then(
             () => {
               callsAtEnd.push(onOpenChangeComplete.mock.calls.length);
             },
           );
-          expect(popup).toHaveAttribute('data-ending-style');
-          expect(animations.map((animation) => animation.playState)).toContain('running');
-          expect(onOpenChangeComplete).not.toHaveBeenCalled();
 
           seekBeforeEnd(animations);
           await finished;
@@ -870,11 +866,11 @@ export function popupConformanceTests(config: PopupTestConfig) {
           const animations = await nextAnimationsRead(popup, {
             action: () => setProps({ open: false }),
           });
-          // A hide before the end cancels the animation, and `finished` then rejects.
-          const finished = Promise.all(animations.map((animation) => animation.finished));
           expect(popup).toHaveAttribute('data-ending-style');
           expect(animations).not.toHaveLength(0);
           expect(isInaccessible(popup)).toBe(false);
+          // A hide before the end cancels the animation, and `finished` then rejects.
+          const finished = Promise.all(animations.map((animation) => animation.finished));
 
           // ...and is hidden once it finishes.
           seekBeforeEnd(animations);
@@ -899,11 +895,11 @@ function getPopup() {
 }
 
 // A part reads the animations of the popup in a frame after the open or the close. A late frame
-// can end a short animation before that read, so these animations last 100 s. This function moves
-// each animation to 50 ms before its end, and the browser ends it in a frame.
+// can end a short animation before that read, so these animations last 100 s. A seek, and not
+// `finish()`, lets the browser end each animation in a frame, as it does for a user.
 function seekBeforeEnd(animations: Animation[]) {
   for (const animation of animations) {
-    animation.currentTime = Number(animation.effect?.getComputedTiming().endTime) - 50;
+    animation.currentTime = Number(animation.effect!.getComputedTiming().endTime) - 50;
   }
 }
 
