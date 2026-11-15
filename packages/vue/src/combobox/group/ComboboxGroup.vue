@@ -21,6 +21,7 @@ import { computed, provide } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { isInTreeOf } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { provideGroupCollectionContext } from '../collection/GroupCollectionContext';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
@@ -46,6 +47,7 @@ provide(ComboboxGroupContext, {
   labelId,
   registerLabelId: registerId,
   items: computed(() => props.items),
+  reaches: (target) => isInTreeOf(element.value, target),
 });
 provideGroupCollectionContext(() => props.items);
 

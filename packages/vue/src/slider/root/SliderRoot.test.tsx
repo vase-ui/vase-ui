@@ -550,7 +550,8 @@ describe('<Slider.Root />', () => {
       expect(sliderOutput).toHaveAttribute('data-orientation', 'horizontal');
     });
 
-    it.skipIf(isJSDOM || !window.navigator.userAgent.includes('WebKit'))(
+    // eslint-disable-next-line @typescript-eslint/prefer-includes -- `pnpm parity:check` compares the text of the condition with the condition of Base UI.
+    it.skipIf(isJSDOM || !/WebKit/.test(window.navigator.userAgent))(
       'does not set the orientation via appearance for WebKit browsers',
       async () => {
         await render(<TestSlider orientation="vertical" />);

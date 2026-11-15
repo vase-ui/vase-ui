@@ -18,7 +18,11 @@ const ProbeSegment = defineComponent({
     segment: { type: Object as PropType<EditableDateTimeFieldSegment>, required: true },
   },
   setup(props) {
-    const { state, props: segmentProps, setElement } = useDateTimeFieldSegment(() => props.segment);
+    const {
+      state,
+      props: segmentProps,
+      setElement,
+    } = useDateTimeFieldSegment(() => props.segment, { as: 'input' });
     const { elementProps } = useRenderElement(
       'input',
       {},

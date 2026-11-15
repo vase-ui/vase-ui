@@ -5,8 +5,13 @@
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/internals/useAnimationsFinished.ts#L110-L113",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/popupRoot.tsx#L509",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/select/popup/SelectPopup.tsx#L458",
-    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/select/positioner/SelectPositioner.tsx#L133"
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/select/positioner/SelectPositioner.tsx#L133",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/popupRoot.tsx#L522-L535",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/popover/popup/PopoverPopup.tsx#L59-L67",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/dialog/popup/DialogPopup.tsx#L49-L57",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/navigation-menu/root/NavigationMenuRoot.tsx#L127-L129",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/navigation-menu/root/NavigationMenuRoot.tsx#L140-L145"
   ],
-  "behavior": "A select with no `Select.Popup` waits for the animations of `Select.Positioner` when it closes. It then hides the positioner and emits `openChangeComplete` with `false`. Base UI waits for the animations of a popup element only. With no popup element, the wait does not start, and the select stays mounted.",
-  "dueWith": "packages/react/src/select/root/SelectRoot.tsx"
+  "behavior": "An open change of a popup ends on the animations of one element: the popup element, or the positioner element when no popup part renders. For Dialog, Alert Dialog and Drawer, the element with no popup part is the backdrop. A popup with no popup part thus hides and unmounts after a close. The root emits `openChangeComplete` with `true` one time after each open and with `false` one time after each close, for each anatomy. A popup part that attaches after the open completion starts no second completion. `NavigationMenu.Root` emits only `false`, as in Base UI. It uses the same element for its close and for the return of the focus to the trigger. Base UI reports the open completion from the popup part only, and its close waits for a popup element only. With no popup element, Base UI reports no completion and the popup stays mounted.",
+  "dueWith": "packages/react/src/utils/popups/popupRoot.tsx"
 }

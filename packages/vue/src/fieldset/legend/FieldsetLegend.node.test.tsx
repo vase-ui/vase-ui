@@ -4,7 +4,7 @@ import { Fieldset } from '@vase-ui/vue/fieldset';
 import FieldsetLegendIdPart from '../../../test/fixtures/FieldsetLegendIdPart.vue';
 
 describe('<Fieldset.Legend /> on a server', () => {
-  it('renders the id of the legend in the aria-labelledby of the root', async () => {
+  it('VUE-89: renders the id of the legend in the aria-labelledby of the root', async () => {
     const html = await renderToString(
       <Fieldset.Root>
         <Fieldset.Legend>Legend</Fieldset.Legend>

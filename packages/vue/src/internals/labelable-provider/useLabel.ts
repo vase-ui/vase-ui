@@ -25,6 +25,7 @@ export function useLabel(params: UseLabelParameters = {}): ComputedRef<UseLabelR
 
   const source = Symbol();
 
+  const rootReaches = params.reaches;
   useRegisteredId(
     () => id.value,
     (getId) => {
@@ -32,7 +33,7 @@ export function useLabel(params: UseLabelParameters = {}): ComputedRef<UseLabelR
       params.registerLabelId?.(source, getId);
     },
     params.element,
-    reaches,
+    rootReaches ? (target) => reaches(target) && rootReaches(target) : reaches,
   );
 
   const resolveControlId = () => contextControlId.value ?? toValue(params.fallbackControlId);
@@ -115,8 +116,13 @@ export interface UseLabelParameters {
    */
   registerLabelId?: RegisterId | undefined;
   /**
-   * The element of the label. With it, the getter of the labelable context also returns
-   * `undefined` for a label that mounts in a branch that `KeepAlive` holds.
+   * Whether an id reference of the root of `registerLabelId` reaches an element. With `element`,
+   * the getters return `undefined` for a label that mounts in a branch that `KeepAlive` holds.
+   */
+  reaches?: ((element: Element) => boolean) | undefined;
+  /**
+   * The element of the label. With it, the getters also return `undefined` for a label that mounts
+   * in a branch that `KeepAlive` holds.
    */
   element?: MaybeRefOrGetter<Element | null | undefined> | undefined;
   /**

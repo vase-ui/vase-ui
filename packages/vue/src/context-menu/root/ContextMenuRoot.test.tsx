@@ -7,11 +7,13 @@ import {
   flushMicrotasks,
   hydrate,
   nextEvent,
+  popupAnatomyTests,
   renderOnServer,
   screen,
   waitFor,
   waitForLaterMillisecond,
 } from '#test-utils';
+import * as Dialog from '../../dialog/index.parts';
 import { REASONS } from '../../internals/reasons';
 import * as Menu from '../../menu/index.parts';
 import { useMenuRootContext } from '../../menu/root/MenuRootContext';
@@ -67,6 +69,22 @@ interface RootActions {
 
 describe('<ContextMenu.Root />', () => {
   const { render } = createRenderer();
+
+  popupAnatomyTests({
+    createComponent: ({ open, onOpenChangeComplete, content }) => (
+      <ContextMenu.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <ContextMenu.Trigger>Open</ContextMenu.Trigger>
+        <ContextMenu.Portal>
+          <ContextMenu.Positioner data-testid="shown" class="shown">
+            Content
+            {content}
+          </ContextMenu.Positioner>
+        </ContextMenu.Portal>
+      </ContextMenu.Root>
+    ),
+    createPopup: () => <ContextMenu.Popup data-testid="popup">Popup</ContextMenu.Popup>,
+    render,
+  });
 
   describe('interactions', () => {
     beforeEach(() => {
@@ -670,6 +688,78 @@ describe('<ContextMenu.Root />', () => {
       );
 
       expect(probe.store.state.parent.type).toBe(undefined);
+    });
+  });
+
+  describe('nested popups', () => {
+    it('keeps the context menu and a nested dialog open when Tab leaves a menu in the dialog', async () => {
+      const { user } = await render(
+        <ContextMenu.Root>
+          <ContextMenu.Trigger as="button" data-testid="surface">
+            Surface
+          </ContextMenu.Trigger>
+          <ContextMenu.Portal>
+            <ContextMenu.Positioner>
+              <ContextMenu.Popup data-testid="context-popup">
+                <Dialog.Root>
+                  <ContextMenu.Item
+                    as={Dialog.Trigger}
+                    closeOnClick={false}
+                    nativeButton
+                    data-testid="dialog-trigger"
+                  >
+                    Settings
+                  </ContextMenu.Item>
+                  <Dialog.Portal>
+                    <Dialog.Popup data-testid="dialog-popup">
+                      <Menu.Root>
+                        <Menu.Trigger data-testid="inner-trigger">Options</Menu.Trigger>
+                        <Menu.Portal>
+                          <Menu.Positioner>
+                            <Menu.Popup data-testid="inner-popup">
+                              <Menu.Item data-testid="inner-item">Rename</Menu.Item>
+                            </Menu.Popup>
+                          </Menu.Positioner>
+                        </Menu.Portal>
+                      </Menu.Root>
+                      <Dialog.Close data-testid="dialog-close">Close</Dialog.Close>
+                    </Dialog.Popup>
+                  </Dialog.Portal>
+                </Dialog.Root>
+              </ContextMenu.Popup>
+            </ContextMenu.Positioner>
+          </ContextMenu.Portal>
+        </ContextMenu.Root>,
+      );
+
+      const surface = screen.getByTestId('surface');
+      surface.focus();
+      await waitForLaterMillisecond(() =>
+        nextEvent(document, 'focusin', {
+          action: () => fireEvent.contextMenu(surface, { clientX: 10, clientY: 10, button: 2 }),
+        }),
+      );
+      expect(screen.getByTestId('context-popup')).toHaveFocus();
+
+      await user.keyboard('{ArrowDown}');
+      expect(screen.getByTestId('dialog-trigger')).toHaveFocus();
+      await waitForLaterMillisecond(() =>
+        nextEvent(document, 'focusin', { action: () => user.keyboard('{Enter}') }),
+      );
+      expect(screen.getByTestId('inner-trigger')).toHaveFocus();
+
+      await waitForLaterMillisecond(() =>
+        nextEvent(document, 'focusin', { action: () => user.keyboard('{ArrowDown}') }),
+      );
+      expect(screen.getByTestId('inner-item')).toHaveFocus();
+
+      await user.keyboard('{Tab}');
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('dialog-close')).toHaveFocus();
+      expect(screen.queryByTestId('inner-popup')).toBe(null);
+      expect(screen.getByTestId('dialog-popup')).toBeInTheDocument();
+      expect(screen.getByTestId('context-popup')).toBeInTheDocument();
     });
   });
 

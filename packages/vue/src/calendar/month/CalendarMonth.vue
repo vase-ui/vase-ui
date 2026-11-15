@@ -2,13 +2,20 @@
 import type { HTMLAttributes } from 'vue';
 import type { CalendarPage } from '../../internals/date-time/calendar/monthGrid';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
-import type { CalendarRootState } from '../root/CalendarRoot.vue';
+import type { TransitionStatus } from '../../internals/useTransitionStatus';
+import type { CalendarState } from '../root/CalendarRoot.vue';
 
-export interface CalendarMonthState extends CalendarRootState {
+export interface CalendarMonthState extends CalendarState {
   /**
-   * The position of the month in the months of the calendar, from `0`.
+   * The position of the month in the months of the calendar, from `0`. It is `-1` while the month
+   * leaves the calendar.
    */
   index: number;
+  /**
+   * The status of the month while it enters or leaves the calendar. A month that leaves stays until
+   * its animations end.
+   */
+  transitionStatus: TransitionStatus;
 }
 
 export interface CalendarMonthProps
@@ -24,10 +31,15 @@ export interface CalendarMonthProps
 
 <script setup lang="ts">
 import { computed, provide } from 'vue';
-import { formatText } from '../../internals/date-time/calendar/formatText';
+import { formatPage } from '../../internals/date-time/calendar/formatText';
+import { getPageKey } from '../../internals/date-time/calendar/monthGrid';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
+import { transitionStatusMapping } from '../../internals/stateAttributesMapping';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { useTransitionStatus } from '../../internals/useTransitionStatus';
+import { useLabelId } from '../../utils/useRegisteredLabelId';
 import { useCalendarRootContext } from '../root/CalendarRootContext';
 import { CalendarMonthContext } from './CalendarMonthContext';
 import * as CalendarMonthDataAttributes from './CalendarMonthDataAttributes';
@@ -41,30 +53,63 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, CalendarMonthState>;
 }>();
 
-const { state: rootState, pages, locale } = useCalendarRootContext();
+const {
+  state: rootState,
+  pages,
+  locale,
+  navigationDirection,
+  isLeaving: isPageLeaving,
+  finishLeaving,
+} = useCalendarRootContext();
+const { labelRoot, getAriaLabelledBy } = useLabelId(() => element.value);
 
 const month = computed(() => props.month);
+const isLeaving = computed(() => isPageLeaving(props.month));
+
+// A month that mounts after the page changed starts its enter transition. The first render of a
+// calendar has none.
+const { transitionStatus } = useTransitionStatus(
+  () => !isLeaving.value,
+  false,
+  false,
+  navigationDirection.value !== 'none',
+  () => element.value,
+);
 
 const state = computed<CalendarMonthState>(() => ({
   ...rootState.value,
-  index: pages.value.findIndex((page) => page.yearMonth.equals(props.month.yearMonth)),
+  index: pages.value.findIndex((page) => getPageKey(page) === getPageKey(props.month)),
+  transitionStatus: transitionStatus.value,
 }));
 
 provide(CalendarMonthContext, {
   month,
-  text: computed(() =>
-    formatText(props.month.yearMonth, { month: 'long', year: 'numeric' }, locale.value),
-  ),
+  text: computed(() => formatPage(props.month, locale.value)),
+  isLeaving,
+  labelRoot,
+  getAriaLabelledBy,
 });
 
 // The default mapping leaves out the index `0`.
 const stateAttributesMapping: StateAttributesMapping<CalendarMonthState> = {
   index: (value) => ({ [CalendarMonthDataAttributes.index]: String(value) }),
+  ...transitionStatusMapping,
 };
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
+  props: (attrs) => [{ inert: isLeaving.value ? true : undefined }, attrs],
   stateAttributesMapping,
+});
+
+useOpenChangeComplete({
+  open: () => !isLeaving.value,
+  ref: element,
+  onComplete() {
+    if (isLeaving.value) {
+      finishLeaving(props.month);
+    }
+  },
 });
 
 defineExpose({ element });

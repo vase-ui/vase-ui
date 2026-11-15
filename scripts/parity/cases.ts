@@ -183,3 +183,26 @@ export function readTestRows(path: string, text: string): TestRow[] {
   visit(file, { describe: [], conditions: [] });
   return rows;
 }
+
+function operandsOf(node: ts.Expression): ts.Expression[] {
+  return ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.BarBarToken
+    ? [...operandsOf(node.left), ...operandsOf(node.right)]
+    : [node];
+}
+
+/**
+ * The terms of a condition. Each operand of a `||` of a `skipIf` is a term, because each operand
+ * skips the case by itself. Each other condition is one term.
+ */
+export function conditionTerms(condition: string): string[] {
+  if (!condition.startsWith('skipIf(')) {
+    return [condition];
+  }
+  const file = ts.createSourceFile('condition.ts', condition, ts.ScriptTarget.Latest);
+  const statement = file.statements.at(0);
+  const call = statement && ts.isExpressionStatement(statement) ? statement.expression : undefined;
+  const argument = call && ts.isCallExpression(call) ? call.arguments.at(0) : undefined;
+  return argument
+    ? operandsOf(argument).map((operand) => `skipIf(${operand.getText(file)})`)
+    : [condition];
+}

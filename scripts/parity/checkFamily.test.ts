@@ -140,11 +140,19 @@ test('a condition that Base UI does not have needs an engine row', () => {
   const rows = { [VASE_FILE]: [{ ...first, conditions: ['skipIf(isWebKit)'] }, second, suite] };
   const without = run([], { paths: [VASE_FILE], rows });
   assert.deepEqual(without.problems, [
-    `sample: added condition on case "a > first" in ${VASE_FILE}: Base UI has no condition on it. Remove the condition, or add an "engine" row.`,
+    `sample: added condition on case "a > first" in ${VASE_FILE}: Base UI does not have skipIf(isWebKit). Remove each added condition, or add an "engine" row.`,
   ]);
   const covered = run([engineRow], { paths: [VASE_FILE], rows });
   assert.deepEqual(covered.problems, []);
   assert.equal(covered.summary.cases.engine.webkit, 1);
+});
+
+test('the problem names each condition that Base UI does not have', () => {
+  const conditions = ['skipIf(isWebKit)', 'runIf(hasTouch)'];
+  const rows = { [VASE_FILE]: [{ ...first, conditions }, second, suite] };
+  assert.deepEqual(run([], { paths: [VASE_FILE], rows }).problems, [
+    `sample: added condition on case "a > first" in ${VASE_FILE}: Base UI does not have skipIf(isWebKit), runIf(hasTouch). Remove each added condition, or add an "engine" row.`,
+  ]);
 });
 
 test('a condition that Base UI also has needs no engine row', () => {
@@ -152,6 +160,42 @@ test('a condition that Base UI also has needs no engine row', () => {
     cases: [{ file: UPSTREAM_FILE, rows: [{ ...first, conditions: ['skipIf(isJSDOM)'] }] }],
   });
   const rows = { [VASE_FILE]: [{ ...first, conditions: ['skipIf(isJSDOM)'] }] };
+  assert.deepEqual(run([], { extract, paths: [VASE_FILE], rows }).problems, []);
+});
+
+const addedConditionForms: { name: string; conditions: string[] }[] = [
+  { name: 'a condition of its own', conditions: ['skipIf(isJSDOM)', 'skipIf(isWebKit)'] },
+  { name: 'a term of a condition that Base UI has', conditions: ['skipIf(isJSDOM || isWebKit)'] },
+  { name: 'a condition in place of the condition of Base UI', conditions: ['skipIf(isWebKit)'] },
+];
+
+for (const { name, conditions } of addedConditionForms) {
+  test(`a case that Base UI also skips needs an engine row for ${name}`, () => {
+    const extract = makeExtract({
+      cases: [{ file: UPSTREAM_FILE, rows: [{ ...first, conditions: ['skipIf(isJSDOM)'] }] }],
+    });
+    const rows = { [VASE_FILE]: [{ ...first, conditions }] };
+    assert.deepEqual(run([], { extract, paths: [VASE_FILE], rows }).problems, [
+      `sample: added condition on case "a > first" in ${VASE_FILE}: Base UI does not have skipIf(isWebKit). Remove each added condition, or add an "engine" row.`,
+    ]);
+    const covered = run([engineRow], { extract, paths: [VASE_FILE], rows });
+    assert.deepEqual(covered.problems, []);
+    assert.equal(covered.summary.cases.engine.webkit, 1);
+  });
+}
+
+test('a ported case can omit a term of a condition of Base UI', () => {
+  const extract = makeExtract({
+    cases: [
+      {
+        file: UPSTREAM_FILE,
+        rows: [
+          { ...first, conditions: ['skipIf(isJSDOM)', 'skipIf(reactMajor < 19 || !isBlink)'] },
+        ],
+      },
+    ],
+  });
+  const rows = { [VASE_FILE]: [{ ...first, conditions: ['skipIf(!isBlink)'] }] };
   assert.deepEqual(run([], { extract, paths: [VASE_FILE], rows }).problems, []);
 });
 

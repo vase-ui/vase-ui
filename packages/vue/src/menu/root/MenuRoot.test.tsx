@@ -16,6 +16,7 @@ import {
   isJSDOM,
   moveMouse,
   nextEvent,
+  popupAnatomyTests,
   popupConformanceTests,
   popupListConformanceTests,
   pressWithScreenReader,
@@ -23,6 +24,7 @@ import {
   screen,
   wait,
   waitFor,
+  waitForLaterMillisecond,
   waitSingleFrame,
   within,
 } from '#test-utils';
@@ -269,6 +271,22 @@ const DetachedTriggerMenu = defineComponent({
 
 describe('<Menu.Root />', () => {
   const { render } = createRenderer();
+
+  popupAnatomyTests({
+    createComponent: ({ open, onOpenChangeComplete, content }) => (
+      <Menu.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Menu.Trigger>Open</Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner data-testid="shown" class="shown">
+            Content
+            {content}
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>
+    ),
+    createPopup: () => <Menu.Popup data-testid="popup">Popup</Menu.Popup>,
+    render,
+  });
 
   describe('closing before the popup attaches', () => {
     it('unmounts the popup when a layout effect closes it on mount', async () => {
@@ -1757,17 +1775,19 @@ describe('<Menu.Root />', () => {
         const { user } = await render(<MenuWithNestedDialog />);
 
         const menuTrigger = screen.getByTestId('menu-trigger');
-        await user.click(menuTrigger);
-
-        await waitFor(() => {
-          expect(screen.queryByTestId('menu-popup')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.click(menuTrigger);
+          await waitFor(() => {
+            expect(screen.queryByTestId('menu-popup')).not.toBe(null);
+          });
         });
 
         const dialogTrigger = screen.getByTestId('dialog-trigger');
-        await user.click(dialogTrigger);
-
-        await waitFor(() => {
-          expect(screen.queryByTestId('dialog-popup')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.click(dialogTrigger);
+          await waitFor(() => {
+            expect(screen.queryByTestId('dialog-popup')).not.toBe(null);
+          });
         });
 
         const dialogButton = screen.getByTestId('dialog-button');
@@ -1825,9 +1845,10 @@ describe('<Menu.Root />', () => {
 
           const { user } = await render(<MenuWithNestedAlertDialog />);
 
-          await user.click(screen.getByTestId('menu-trigger'));
-
-          const alertDialogTrigger = await screen.findByTestId('alert-dialog-trigger');
+          const alertDialogTrigger = await waitForLaterMillisecond(async () => {
+            await user.click(screen.getByTestId('menu-trigger'));
+            return screen.findByTestId('alert-dialog-trigger');
+          });
           await user.click(alertDialogTrigger);
 
           const menuPopup = screen.getByTestId('menu-popup');
@@ -1886,7 +1907,10 @@ describe('<Menu.Root />', () => {
 
           const { user } = await render(<MenuWithNestedDialog />);
 
-          await user.click(screen.getByTestId('menu-trigger'));
+          const dialogTrigger = await waitForLaterMillisecond(async () => {
+            await user.click(screen.getByTestId('menu-trigger'));
+            return screen.findByTestId('dialog-trigger');
+          });
 
           const frameCallbacks = new Map<number, FrameRequestCallback>();
           let frameId = 0;
@@ -1904,7 +1928,6 @@ describe('<Menu.Root />', () => {
             });
 
           try {
-            const dialogTrigger = await screen.findByTestId('dialog-trigger');
             await fireEvent.click(dialogTrigger);
             await flushMicrotasks();
             await fireEvent.pointerLeave(dialogTrigger, {
@@ -1934,6 +1957,58 @@ describe('<Menu.Root />', () => {
           }
         },
       );
+
+      it('keeps focus in a nested dialog that is not modal when the pointer leaves the triggering menu item', async () => {
+        const MenuWithNestedDialog = defineComponent(() => () => (
+          <Menu.Root>
+            <Menu.Trigger data-testid="menu-trigger">Open Menu</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup data-testid="menu-popup">
+                  <Menu.Item>Item 1</Menu.Item>
+                  <Dialog.Root modal={false}>
+                    <Menu.Item
+                      as={Dialog.Trigger}
+                      closeOnClick={false}
+                      nativeButton
+                      data-testid="dialog-trigger"
+                    >
+                      Open Dialog
+                    </Menu.Item>
+                    <Dialog.Portal>
+                      <Dialog.Popup data-testid="dialog-popup">
+                        <Dialog.Close data-testid="dialog-close">Close</Dialog.Close>
+                      </Dialog.Popup>
+                    </Dialog.Portal>
+                  </Dialog.Root>
+                  <Menu.Item>Item 2</Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        ));
+
+        const { user } = await render(<MenuWithNestedDialog />);
+
+        await waitForLaterMillisecond(async () => {
+          await user.click(screen.getByTestId('menu-trigger'));
+          await screen.findByTestId('menu-popup');
+        });
+        const dialogTrigger = screen.getByTestId('dialog-trigger');
+        // The click focuses the item itself. The first `focusin` after it then comes from the dialog.
+        dialogTrigger.focus();
+        await nextEvent(document, 'focusin', { action: () => user.click(dialogTrigger) });
+
+        const dialogClose = screen.getByTestId('dialog-close');
+        expect(dialogClose).toHaveFocus();
+        expect(dialogTrigger).toHaveAttribute('data-highlighted');
+
+        await user.unhover(dialogTrigger);
+
+        expect(dialogTrigger).not.toHaveAttribute('data-highlighted');
+        expect(dialogClose).toHaveFocus();
+        expect(screen.getByTestId('menu-popup')).toBeInTheDocument();
+      });
     });
 
     describe('focus management', () => {
@@ -4674,6 +4749,8 @@ describe('<Menu.Root />', () => {
       const trigger = getByRole('button');
 
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(events).toEqual([['openChangeComplete', true]]);
+      events.length = 0;
 
       await fireEvent.keyDown(document.body, { key: 'Escape' });
       await waitFor(() => {

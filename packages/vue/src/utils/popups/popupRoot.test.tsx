@@ -16,10 +16,13 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  nextAnimationsRead,
+  nextCall,
   randomStringValue,
   renderOnServer,
   takeReportedMessages,
   waitFor,
+  waitSingleFrame,
 } from '#test-utils';
 import {
   PopupFixtureContext,
@@ -1803,15 +1806,18 @@ interface SingleAnchorRootInstance {
   transitionStatus: TransitionStatus;
 }
 
-// A root with one anchor: a button, and a popup while `mounted` is `true`. With `animatedClass`,
-// the popup holds an element that has the animations of the close, and the root gives that element
-// to the composable as `popupRef`.
+// A root with one anchor: a button, and a positioner while `mounted` is `true`. The positioner holds
+// the popup while `withPopup` is `true`. With `transitionClass`, the popup holds an element that has
+// the animations of an open change, and the root gives that element to the composable through
+// `getTransitionElement`.
 const SingleAnchorRoot = defineComponent({
   name: 'SingleAnchorRoot',
   props: {
     open: { type: Boolean as PropType<boolean | undefined>, default: undefined },
     defaultOpen: { type: Boolean, default: false },
-    animatedClass: { type: String as PropType<string | undefined>, default: undefined },
+    withPopup: { type: Boolean, default: true },
+    popupClass: { type: String as PropType<string | undefined>, default: undefined },
+    transitionClass: { type: String as PropType<string | undefined>, default: undefined },
   },
   emits: {
     openChange: (_open: boolean, _details: ValuePopupFixtureDetails) => true,
@@ -1819,13 +1825,14 @@ const SingleAnchorRoot = defineComponent({
     openChangeComplete: (_open: boolean) => true,
   },
   setup(props, { emit, expose }) {
-    const animatedElement = shallowRef<HTMLElement | null>(null);
+    const transitionElement = shallowRef<HTMLElement | null>(null);
     const { store, open, mounted, transitionStatus, actions } = useSingleAnchorPopupRoot(
       props,
       (initialState, defaultPopupId) => new ValuePopupFixtureStore(initialState, defaultPopupId),
       {
         name: 'SingleAnchorRoot',
-        popupRef: props.animatedClass === undefined ? undefined : animatedElement,
+        getTransitionElement:
+          props.transitionClass === undefined ? undefined : () => transitionElement.value,
         onOpenChange(nextOpen, details) {
           emit('openChange', nextOpen, details);
           if (!details.isCanceled) {
@@ -1840,6 +1847,11 @@ const SingleAnchorRoot = defineComponent({
 
     expose({ ...actions, store, open, mounted, transitionStatus });
 
+    const transitionAttributes = () => ({
+      'data-starting-style': transitionStatus.value === 'starting' ? '' : undefined,
+      'data-ending-style': transitionStatus.value === 'ending' ? '' : undefined,
+    });
+
     return () => (
       <>
         <button
@@ -1853,22 +1865,30 @@ const SingleAnchorRoot = defineComponent({
         </button>
         {mounted.value ? (
           <div
-            role="dialog"
-            ref={(element) => {
-              store.context.popupRef.value = element as HTMLElement | null;
-            }}
+            data-testid="positioner"
+            ref={(element) => store.set('positionerElement', element as HTMLElement | null)}
           >
-            popup
-            {props.animatedClass === undefined ? null : (
+            {props.withPopup ? (
               <div
+                role="dialog"
+                class={props.popupClass}
+                {...transitionAttributes()}
                 ref={(element) => {
-                  animatedElement.value = element as HTMLElement | null;
+                  store.context.popupRef.value = element as HTMLElement | null;
                 }}
-                class={props.animatedClass}
-                data-starting-style={transitionStatus.value === 'starting' ? '' : undefined}
-                data-ending-style={transitionStatus.value === 'ending' ? '' : undefined}
-              />
-            )}
+              >
+                popup
+                {props.transitionClass === undefined ? null : (
+                  <div
+                    ref={(element) => {
+                      transitionElement.value = element as HTMLElement | null;
+                    }}
+                    class={props.transitionClass}
+                    {...transitionAttributes()}
+                  />
+                )}
+              </div>
+            ) : null}
           </div>
         ) : null}
       </>
@@ -1891,6 +1911,9 @@ describe('useSingleAnchorPopupRoot', () => {
 
     await fireEvent.click(getByText('trigger'));
     expect(queryByRole('dialog')).not.toBe(null);
+    await waitFor(() => {
+      expect(events).toContainEqual(['openChangeComplete', true]);
+    });
     await fireEvent.click(getByText('trigger'));
     await waitFor(() => {
       expect(events).toContainEqual(['openChangeComplete', false]);
@@ -1899,6 +1922,7 @@ describe('useSingleAnchorPopupRoot', () => {
     expect(events).toEqual([
       ['openChange', true, 'trigger-press'],
       ['update:open', true],
+      ['openChangeComplete', true],
       ['openChange', false, 'trigger-press'],
       ['update:open', false],
       ['openChangeComplete', false],
@@ -2022,44 +2046,115 @@ describe('useSingleAnchorPopupRoot', () => {
     await flushMicrotasks();
 
     expect(queryByRole('dialog')).not.toBe(null);
-    expect(completions).toEqual([]);
+    expect(completions).toEqual([true]);
 
     root.current.unmount();
     await flushMicrotasks();
 
     expect(queryByRole('dialog')).toBe(null);
-    expect(completions).toEqual([false]);
+    expect(completions).toEqual([true, false]);
   });
 
-  it('waits for the animations of the popupRef option', async () => {
+  it('waits for the animations of the element that getTransitionElement gives', async () => {
     globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     const className = randomStringValue();
     // The popup element has no animation. Only the element of the option has one. The list holds
-    // the number of running animations of that element at each completion.
-    const animationsAtCompletion: number[] = [];
+    // the open state and the number of running animations of that element at each completion.
+    const animationsAtCompletion: [boolean, number][] = [];
     let animated: HTMLElement | null = null;
+    const completed = vi.fn();
+    function onOpenChangeComplete(open: boolean) {
+      animationsAtCompletion.push([open, animated!.getAnimations().length]);
+      completed();
+    }
+    let completion = nextCall(completed);
     const { getByText, queryByRole, container } = await render(() => (
       <>
         <style>{`.${className} { transition: opacity 50ms; opacity: 1 } .${className}[data-ending-style] { opacity: 0 }`}</style>
         <SingleAnchorRoot
           defaultOpen
-          animatedClass={className}
-          onOpenChangeComplete={() => animationsAtCompletion.push(animated!.getAnimations().length)}
+          transitionClass={className}
+          onOpenChangeComplete={onOpenChangeComplete}
         />
       </>
     ));
     animated = container.querySelector<HTMLElement>(`.${className}`);
+    await completion;
     // A transition starts from the style that the element had before the change. Read it now, so
     // the close finds that style.
     expect(getComputedStyle(animated!).opacity).toBe('1');
 
+    completion = nextCall(completed);
     await fireEvent.click(getByText('trigger'));
-    await waitFor(() => {
-      expect(animationsAtCompletion).toHaveLength(1);
-    });
+    await completion;
 
-    expect(animationsAtCompletion).toEqual([0]);
+    expect(animationsAtCompletion).toEqual([
+      [true, 0],
+      [false, 0],
+    ]);
     expect(queryByRole('dialog')).toBe(null);
+  });
+
+  it('completes the open on a popup element that attaches before the positioner completes', async () => {
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    const className = randomStringValue();
+    const withPopup = shallowRef(false);
+    const onOpenChangeComplete = vi.fn();
+    const { getByText, getByRole, getByTestId, queryByRole } = await render(() => (
+      <>
+        <style>{`@keyframes ${className} { from { opacity: 0 } } .${className} { animation: ${className} 100s }`}</style>
+        <SingleAnchorRoot
+          withPopup={withPopup.value}
+          popupClass={className}
+          onOpenChangeComplete={onOpenChangeComplete}
+        />
+      </>
+    ));
+
+    await fireEvent.click(getByText('trigger'));
+    expect(getByTestId('positioner')).toBeVisible();
+    expect(queryByRole('dialog')).toBe(null);
+    withPopup.value = true;
+    await nextTick();
+    const popup = getByRole('dialog');
+    await waitSingleFrame();
+    await waitSingleFrame();
+    await flushMicrotasks();
+    expect(onOpenChangeComplete.mock.calls).toEqual([]);
+
+    const completion = nextCall(onOpenChangeComplete);
+    for (const animation of popup.getAnimations()) {
+      animation.finish();
+    }
+    await completion;
+
+    expect(onOpenChangeComplete.mock.calls).toEqual([[true]]);
+  });
+
+  it('reports the open completion again when the popup opens again before its exit ends', async () => {
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    const className = randomStringValue();
+    const onOpenChangeComplete = vi.fn();
+    const { getByText, getByRole } = await render(() => (
+      <>
+        <style>{`@keyframes ${className} { to { opacity: 0 } } .${className}[data-ending-style] { animation: ${className} 100s }`}</style>
+        <SingleAnchorRoot popupClass={className} onOpenChangeComplete={onOpenChangeComplete} />
+      </>
+    ));
+
+    let completion = nextCall(onOpenChangeComplete);
+    await fireEvent.click(getByText('trigger'));
+    await completion;
+    const exitAnimations = await nextAnimationsRead(getByRole('dialog'), {
+      action: () => fireEvent.click(getByText('trigger')),
+    });
+    expect(exitAnimations).toHaveLength(1);
+
+    completion = nextCall(onOpenChangeComplete);
+    await fireEvent.click(getByText('trigger'));
+    await completion;
+
+    expect(onOpenChangeComplete.mock.calls).toEqual([[true], [true]]);
   });
 
   it('marks a root inside a popup tree as nested', async () => {
@@ -2115,7 +2210,8 @@ describe('useSingleAnchorPopupRoot', () => {
 
     expect(queryByRole('dialog')).toBe(popup);
     expect(root.current.store.select('open')).toBe(true);
-    expect(events).toEqual([]);
+    // The one completion is the open of the mount. An activation reports none.
+    expect(events).toEqual([['openChangeComplete', true]]);
   });
 
   it('warns when open changes between controlled and uncontrolled', async () => {

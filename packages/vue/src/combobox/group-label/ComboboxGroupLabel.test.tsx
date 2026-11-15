@@ -1,7 +1,7 @@
 import { expect, describe, it } from 'vitest';
 import { defineComponent } from 'vue';
 import { Combobox } from '@vase-ui/vue/combobox';
-import { createRenderer, describeConformance, screen } from '#test-utils';
+import { createHeldBranch, createRenderer, describeConformance, screen } from '#test-utils';
 
 describe('<Combobox.GroupLabel />', () => {
   const { render } = createRenderer();
@@ -125,5 +125,31 @@ describe('<Combobox.GroupLabel />', () => {
       await setProps({ labels: 'new' });
       expect(group).toHaveAttribute('aria-labelledby', 'new-label');
     });
+  });
+
+  it('does not name the group while KeepAlive holds a label that mounted in a held branch', async () => {
+    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+      <Combobox.GroupLabel key="label" id="held-label" />
+    ));
+    await render(() => (
+      <Combobox.Root open>
+        <Combobox.Portal>
+          <Combobox.Positioner>
+            <Combobox.Popup>
+              <Combobox.Group>
+                <HeldBranch />
+              </Combobox.Group>
+            </Combobox.Popup>
+          </Combobox.Positioner>
+        </Combobox.Portal>
+      </Combobox.Root>
+    ));
+    const group = screen.getByRole('group');
+
+    await mountWhileHeld();
+    expect(group).not.toHaveAttribute('aria-labelledby');
+
+    await show();
+    expect(group).toHaveAttribute('aria-labelledby', 'held-label');
   });
 });

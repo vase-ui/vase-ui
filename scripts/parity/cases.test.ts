@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { readTestRows } from './cases.ts';
+import { conditionTerms, readTestRows } from './cases.ts';
 import type { TestRow } from './cases.ts';
 
 const forms: { name: string; source: string; rows: TestRow[] }[] = [
@@ -175,6 +175,35 @@ const forms: { name: string; source: string; rows: TestRow[] }[] = [
 for (const { name, source, rows } of forms) {
   test(`readTestRows: ${name}`, () => {
     assert.deepEqual(readTestRows('sample.test.ts', source), rows);
+  });
+}
+
+const conditions: { name: string; condition: string; terms: string[] }[] = [
+  {
+    name: 'each operand of a || of a skipIf is a term',
+    condition: "skipIf(isJSDOM || !('onbeforematch' in window) || !/a || b/.test(text))",
+    terms: [
+      'skipIf(isJSDOM)',
+      "skipIf(!('onbeforematch' in window))",
+      'skipIf(!/a || b/.test(text))',
+    ],
+  },
+  {
+    name: 'a skipIf with && is one term',
+    condition: "skipIf(isJSDOM && direction === 'rtl')",
+    terms: ["skipIf(isJSDOM && direction === 'rtl')"],
+  },
+  {
+    name: 'a runIf is one term',
+    condition: 'runIf(isWebKit || hasTouch)',
+    terms: ['runIf(isWebKit || hasTouch)'],
+  },
+  { name: 'skip is one term', condition: 'skip', terms: ['skip'] },
+];
+
+for (const { name, condition, terms } of conditions) {
+  test(`conditionTerms: ${name}`, () => {
+    assert.deepEqual(conditionTerms(condition), terms);
   });
 }
 

@@ -24,6 +24,7 @@ export { detachedTriggersConformanceTests } from './detachedTriggersConformanceT
 export { dialogRootSharedTests } from './dialogRootSharedTests';
 export { hiddenInputSizeTests } from './hiddenInputSizeTests';
 export { hiddenInputTypeTests } from './hiddenInputTypeTests';
+export { nextCall, popupAnatomyTests } from './popupAnatomyTests';
 export { popupConformanceTests } from './popupConformanceTests';
 export { popupFocusPropsTests } from './popupFocusPropsTests';
 export { popupListConformanceTests } from './popupListConformanceTests';
@@ -32,6 +33,7 @@ export { viewportConformanceTests } from './viewportConformanceTests';
 export { isInaccessible, screen, waitFor, within } from '@testing-library/dom';
 export { fireEvent } from './fireEvent';
 export { flushMicrotasks } from './flushMicrotasks';
+export { createHeldBranch } from './heldBranch';
 export { cloneElement } from './cloneElement';
 export { createDescribe } from './createDescribe';
 export { randomStringValue } from './randomStringValue';
