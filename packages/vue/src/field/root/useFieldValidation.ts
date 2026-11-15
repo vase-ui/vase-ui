@@ -131,7 +131,7 @@ export function useFieldValidation(
   function setCustomValidity(element: HTMLInputElement, message: string) {
     // Never reinstall a native constraint message as custom validity.
     const displaced = element.validity.customError ? element.validationMessage : '';
-    const ownedMessage = message.replace(/\r\n?/g, '\n');
+    const ownedMessage = message.replaceAll(/\r\n?/g, '\n');
     element.setCustomValidity(ownedMessage);
     customValidity = [element, ownedMessage, displaced];
   }

@@ -41,13 +41,13 @@ Import the component and assemble its parts:
 
 ### Using with other components
 
-Give a part of another component to the `as` prop of a toolbar part. The two parts then share one element. The element joins the keyboard navigation of the toolbar and keeps the behavior of the other part. The demo at the top of this page does this for `Toggle`.
+Give a part of another component to the `as` prop of a toolbar part. The two parts then share one element. The element joins the keyboard navigation of the toolbar and keeps the behavior of the other part. The demo at the top of this page does this for `Toggle` and `Select.Trigger`, and this sample does it for `Menu.Trigger`:
 
-When the other part needs props or listeners of its own, render it in the `#render` slot. Bind `props` on it. Render a generic part in the `#render` slot too. The type of `as` does not accept a generic component. A popup trigger is a generic part. The demo at the top of this page renders `Select.Trigger` in the slot, and this sample renders `Menu.Trigger`:
+<<< ./toolbar/MenuInToolbar.vue{9}
 
-<<< ./toolbar/MenuInToolbar.vue{9-13}
+When the other part needs props or listeners of its own, render it in the `#render` slot. Bind `props` on it.
 
-- **Popups with a trigger**: render the trigger in the `#render` slot of `<Toolbar.Button>`, as shown above. This works for Alert Dialog, Dialog, Drawer, Menu, Popover and Select. Set `disabled` on `<Toolbar.Button>`, not on the trigger. The button then stays in the keyboard navigation of the toolbar.
+- **Popups with a trigger**: give the trigger to the `as` prop of `<Toolbar.Button>`, as shown above. This works for Alert Dialog, Dialog, Drawer, Menu, Popover and Select. Set `disabled` on `<Toolbar.Button>`, not on the trigger. The button then stays in the keyboard navigation of the toolbar.
 - **Tooltip**: render `<Toolbar.Button>` in the `#render` slot of `<Tooltip.Trigger>`.
 - **Number Field**: give `NumberField.Input` to the `as` prop of `<Toolbar.Input>`. Put the input inside `<NumberField.Root>` and `<NumberField.Group>`, with the increment and decrement buttons.
 

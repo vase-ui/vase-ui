@@ -1603,18 +1603,12 @@ describe('<RadioGroup />', () => {
     it('labels the radio group from the fieldset legend', async () => {
       await render(
         <Field.Root name="test">
-          <Fieldset.Root
-            v-slots={{
-              render: ({ props }: { props: Record<string, any> }) => (
-                <RadioGroup {...props}>
-                  <Fieldset.Legend>Legend</Fieldset.Legend>
-                  <Field.Item>
-                    <Radio.Root value="a" />
-                  </Field.Item>
-                </RadioGroup>
-              ),
-            }}
-          />
+          <Fieldset.Root as={RadioGroup}>
+            <Fieldset.Legend>Legend</Fieldset.Legend>
+            <Field.Item>
+              <Radio.Root value="a" />
+            </Field.Item>
+          </Fieldset.Root>
         </Field.Root>,
       );
 

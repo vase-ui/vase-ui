@@ -1,7 +1,6 @@
 import { getComputedStyle, isHTMLElement } from '@floating-ui/utils/dom';
 import type { TextDirection } from '../direction-context/DirectionContext';
 
-export { stopEvent } from '../../utils/popups/event';
 export {
   isIndexOutOfListBounds,
   isListIndexDisabled,
@@ -156,13 +155,13 @@ function getOffset(ancestor: HTMLElement, element: HTMLElement, side: 'left' | '
 function getStyles(element: HTMLElement) {
   const styles = getComputedStyle(element);
   return {
-    scrollMarginTop: parseFloat(styles.scrollMarginTop) || 0,
-    scrollMarginRight: parseFloat(styles.scrollMarginRight) || 0,
-    scrollMarginBottom: parseFloat(styles.scrollMarginBottom) || 0,
-    scrollMarginLeft: parseFloat(styles.scrollMarginLeft) || 0,
-    scrollPaddingTop: parseFloat(styles.scrollPaddingTop) || 0,
-    scrollPaddingRight: parseFloat(styles.scrollPaddingRight) || 0,
-    scrollPaddingBottom: parseFloat(styles.scrollPaddingBottom) || 0,
-    scrollPaddingLeft: parseFloat(styles.scrollPaddingLeft) || 0,
+    scrollMarginTop: Number.parseFloat(styles.scrollMarginTop) || 0,
+    scrollMarginRight: Number.parseFloat(styles.scrollMarginRight) || 0,
+    scrollMarginBottom: Number.parseFloat(styles.scrollMarginBottom) || 0,
+    scrollMarginLeft: Number.parseFloat(styles.scrollMarginLeft) || 0,
+    scrollPaddingTop: Number.parseFloat(styles.scrollPaddingTop) || 0,
+    scrollPaddingRight: Number.parseFloat(styles.scrollPaddingRight) || 0,
+    scrollPaddingBottom: Number.parseFloat(styles.scrollPaddingBottom) || 0,
+    scrollPaddingLeft: Number.parseFloat(styles.scrollPaddingLeft) || 0,
   };
 }

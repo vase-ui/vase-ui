@@ -12,9 +12,4 @@ export const android = lowerPlatform === ANDROID_STRING || lowerUserAgent.includ
 // Does not include iPadOS.
 export const mac = !ios && lowerPlatform.startsWith('mac');
 
-export const windows = lowerPlatform.startsWith('win');
-
-// Includes Chrome OS. Does not include Android.
-export const linux = !android && /^(linux|chrome os)/.test(lowerPlatform);
-
 export const apple = mac || ios;

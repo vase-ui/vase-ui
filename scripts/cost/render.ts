@@ -323,8 +323,12 @@ async function main(): Promise<void> {
   const readmePath = join(root, 'README.md');
   const history: Row[] = JSON.parse(readFileSync(join(root, 'cost', 'history.json'), 'utf8'));
   validate(history);
+  const newest = history.at(-1);
+  if (newest === undefined) {
+    throw new Error('cost/history.json has no row.');
+  }
   const readme = readFileSync(readmePath, 'utf8');
-  const updated = replaceBlock(readme, await renderBlock(history[history.length - 1], readmePath));
+  const updated = replaceBlock(readme, await renderBlock(newest, readmePath));
   if (updated === readme) {
     return;
   }
@@ -339,8 +343,10 @@ async function main(): Promise<void> {
 }
 
 if (import.meta.main) {
-  main().catch((error: unknown) => {
+  try {
+    await main();
+  } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
     process.exitCode = 1;
-  });
+  }
 }
