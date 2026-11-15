@@ -60,6 +60,8 @@ The manager has the same `add`, `close`, `update` and `promise` methods as `Toas
 
 All server requests share a manager of a module. A server render does not subscribe the provider to its manager, so a toast of one request does not go to another request.
 
+You can give one manager to more than one provider. Each provider then gets each toast of the manager. The `promise` method returns one promise for all the providers, so one handler handles its rejection.
+
 ## Stacking and animations
 
 Use the `--toast-index` CSS variable for the stacking order of the toasts. The toast with the index 0 is at the front.

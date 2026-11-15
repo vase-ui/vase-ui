@@ -51,11 +51,15 @@ function createVirtualElement(
       let x = domRect.x;
       let y = domRect.y;
 
-      if (offsetX == null && data.x && isXAxis) {
+      // An element out of the document, such as a trigger that `KeepAlive` holds, has an empty
+      // rect. The offset waits for a rect of the element in the document.
+      const isMeasured = !domElement || domElement.isConnected;
+
+      if (offsetX == null && data.x && isXAxis && isMeasured) {
         offsetX = domRect.x - data.x;
       }
 
-      if (offsetY == null && data.y && isYAxis) {
+      if (offsetY == null && data.y && isYAxis && isMeasured) {
         offsetY = domRect.y - data.y;
       }
 

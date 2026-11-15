@@ -6,6 +6,7 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  popupAnatomyTests,
   popupConformanceTests,
   renderOnServer,
   screen,
@@ -98,6 +99,22 @@ const MultipleDetachedTriggersPreviewCard = defineComponent({
 
 describe('<PreviewCard.Root />', () => {
   const { render } = createRenderer();
+
+  popupAnatomyTests({
+    createComponent: ({ open, onOpenChangeComplete, content }) => (
+      <PreviewCard.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <PreviewCard.Trigger href="#">Open</PreviewCard.Trigger>
+        <PreviewCard.Portal>
+          <PreviewCard.Positioner data-testid="shown" class="shown">
+            Content
+            {content}
+          </PreviewCard.Positioner>
+        </PreviewCard.Portal>
+      </PreviewCard.Root>
+    ),
+    createPopup: () => <PreviewCard.Popup data-testid="popup">Popup</PreviewCard.Popup>,
+    render,
+  });
 
   it('keeps the payload while a controlled reopen moves to another trigger', async () => {
     const handle = PreviewCard.createHandle<string>();

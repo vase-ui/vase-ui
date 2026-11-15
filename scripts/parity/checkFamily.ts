@@ -1,4 +1,4 @@
-import { isSuiteRow } from './cases.ts';
+import { conditionTerms, isSuiteRow } from './cases.ts';
 import type { TestRow } from './cases.ts';
 import { isSourceFileTarget, labelOf, targetOf } from './parityFiles.ts';
 import type { Engine, FamilyExtract, ExceptionRow, FamilyFile, Target } from './parityFiles.ts';
@@ -128,6 +128,11 @@ function coveringRow(
     }
   }
   return best;
+}
+
+function addedConditions(upstreamRow: TestRow, vaseRow: TestRow): string[] {
+  const upstream = new Set(upstreamRow.conditions?.flatMap(conditionTerms));
+  return (vaseRow.conditions ?? []).flatMap(conditionTerms).filter((term) => !upstream.has(term));
 }
 
 function pairRows(upstreamRows: TestRow[], vaseRows: TestRow[]) {
@@ -267,11 +272,12 @@ export function checkFamily(
     for (const [upstreamRow, vaseRow] of pairs) {
       const tally = isSuiteRow(upstreamRow) ? summary.suiteCalls : summary.cases;
       tally.matched += 1;
-      if (vaseRow.conditions?.length && !upstreamRow.conditions?.length) {
+      const added = addedConditions(upstreamRow, vaseRow);
+      if (added.length > 0) {
         const cover = coveringRow(rows, file, upstreamRow, (kind) => kind === 'engine');
         if (!cover) {
           problem(
-            `added condition on ${describesRow(vaseRow)} in ${candidates[0]}: Base UI has no condition on it. Remove the condition, or add an "engine" row.`,
+            `added condition on ${describesRow(vaseRow)} in ${candidates[0]}: Base UI does not have ${added.join(', ')}. Remove each added condition, or add an "engine" row.`,
           );
         } else {
           used.add(cover.index);
