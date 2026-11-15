@@ -1035,6 +1035,27 @@ describe('useDateTimeFieldRoot', () => {
       expect(events).toEqual(['input']);
     });
 
+    it('keeps a value that the type of its hidden input refuses at a `pageshow` event after the hydration', async () => {
+      // A `date` input has no year 0, so it has no value.
+      const props = { defaultValue: '0000-03-01', locale: 'en-US', name: 'when' };
+      const onValueChange = vi.fn();
+      const serverHtml = await renderOnServer(PROBE, props);
+      const { container } = await hydrate(DateTimeFieldProbe, {
+        serverHtml,
+        props: { ...props, onValueChange },
+      });
+      const input = hiddenInputOf(container);
+      const events = recordInputEvents(input);
+      expect(input.value).toBe('');
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(segmentOf(container, 'year').value).toBe('1');
+      expect(events).toEqual([]);
+    });
+
     hiddenInputSizeTests({
       render,
       createComponent: (props) => <DateTimeFieldProbe defaultValue="2026-11-14" {...props} />,

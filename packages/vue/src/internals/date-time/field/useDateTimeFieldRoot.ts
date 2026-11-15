@@ -885,12 +885,14 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     { flush: 'post' },
   );
 
-  useFormRestoreAsInput(hiddenInputElement, () => hiddenText.value, false);
+  // The type of the input can refuse the text of the value, such as a year 0 of a `date` input.
+  useFormRestoreAsInput(hiddenInputElement, () => handledHiddenValue, false);
 
-  // Vue writes the value to the hidden input when the text changes. A program can then send a
-  // `change` event with the text that the input had before, and the root must handle it.
+  // Vue writes the value to the hidden input when the text changes, and when the input gets the
+  // `value` key after the hydration. A program can then send a `change` event with the text that
+  // the input had before, and the root must handle it.
   watch(
-    hiddenText,
+    [hiddenText, writesHiddenValue],
     () => {
       handledHiddenValue = hiddenInputElement.value?.value;
     },
