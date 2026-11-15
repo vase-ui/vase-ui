@@ -1,6 +1,6 @@
 import userEvent from '@testing-library/user-event';
 import { userEvent as browserUserEvent } from 'vitest/browser';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent } from 'vue';
 import type { VNode } from 'vue';
 import { reset as resetWarnings } from '../../common/warn';
@@ -14,6 +14,7 @@ import {
   screen,
   takeReportedMessages,
   waitFor,
+  waitForLaterMillisecond,
 } from '#test-utils';
 
 describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
@@ -234,9 +235,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     await user.keyboard('[ArrowDown][ArrowDown][ArrowDown][ArrowDown]');
     expect(input).toHaveAttribute('aria-activedescendant', submenuTrigger.id);
 
-    await user.keyboard('[ArrowRight]');
-
-    const submenuInput = await screen.findByRole('searchbox', { name: 'Filter folders' });
+    const submenuInput = await waitForLaterMillisecond(async () => {
+      await user.keyboard('[ArrowRight]');
+      return screen.findByRole('searchbox', { name: 'Filter folders' });
+    });
     await waitFor(() => {
       expect(submenuInput).toHaveFocus();
     });
@@ -366,8 +368,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     expect(input).toHaveAttribute('aria-activedescendant', trigger.id);
 
     // A plain submenu roves real focus, so entering it hands focus to its first item.
-    await user.keyboard('[ArrowRight]');
-    const email = await screen.findByRole('menuitem', { name: 'Email' });
+    const email = await waitForLaterMillisecond(async () => {
+      await user.keyboard('[ArrowRight]');
+      return screen.findByRole('menuitem', { name: 'Email' });
+    });
     await waitFor(() => {
       expect(email).toHaveFocus();
     });
@@ -383,6 +387,70 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     });
     expect(input).toHaveFocus();
     expect(input).toHaveAttribute('aria-activedescendant', trigger.id);
+  });
+
+  describe('a plain submenu that takes the focus in the millisecond of its mount', () => {
+    // A mocked clock moves only in `render`, `rerender`, `setProps` and `waitForLaterMillisecond`.
+    // The focus of the submenu thus comes in the millisecond in which Vue attached its listeners.
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date('2026-01-01T00:00:00Z'));
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('clears the highlight of the parent trigger when a plain submenu takes the focus in the millisecond of its mount', async () => {
+      const { user } = await render(
+        <Menu.FilterProvider>
+          <Menu.Root defaultOpen>
+            <Menu.Trigger>Actions</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Input aria-label="Filter actions" />
+                  <Menu.List>
+                    <Menu.Item>Rename</Menu.Item>
+                    <Menu.SubmenuRoot>
+                      <Menu.SubmenuTrigger>Share</Menu.SubmenuTrigger>
+                      <Menu.Portal>
+                        <Menu.Positioner>
+                          <Menu.Popup data-testid="submenu">
+                            <Menu.Item>Email</Menu.Item>
+                            <Menu.Item>Copy link</Menu.Item>
+                          </Menu.Popup>
+                        </Menu.Positioner>
+                      </Menu.Portal>
+                    </Menu.SubmenuRoot>
+                  </Menu.List>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menu.FilterProvider>,
+      );
+
+      const input = screen.getByRole('searchbox', { name: 'Filter actions' });
+      await waitFor(() => {
+        expect(input).toHaveFocus();
+      });
+      await user.keyboard('[ArrowDown][ArrowDown]');
+      const trigger = screen.getByRole('menuitem', { name: 'Share' });
+      expect(input).toHaveAttribute('aria-activedescendant', trigger.id);
+
+      // The focus of the submenu comes before the clock moves, and the next key comes after it.
+      await waitForLaterMillisecond(async () => {
+        await user.keyboard('[ArrowRight]');
+        const email = await screen.findByRole('menuitem', { name: 'Email' });
+        await waitFor(() => {
+          expect(email).toHaveFocus();
+        });
+      });
+
+      expect(trigger).not.toHaveAttribute('data-highlighted');
+      await user.keyboard('[ArrowDown]');
+      expect(screen.getByRole('menuitem', { name: 'Copy link' })).toHaveFocus();
+    });
   });
 
   describe.skipIf(isJSDOM)('leaving a plain submenu while it animates out', () => {
@@ -432,7 +500,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         await waitFor(() => {
           expect(input).toHaveFocus();
         });
-        await user.keyboard('[ArrowDown][ArrowDown][ArrowRight]');
+        await waitForLaterMillisecond(() => user.keyboard('[ArrowDown][ArrowDown][ArrowRight]'));
         await waitFor(() => {
           expect(screen.getByRole('menuitem', { name: 'Email' })).toHaveFocus();
         });
@@ -454,7 +522,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       await waitFor(() => {
         expect(input).toHaveFocus();
       });
-      await user.keyboard('[ArrowDown][ArrowDown][ArrowRight]');
+      await waitForLaterMillisecond(() => user.keyboard('[ArrowDown][ArrowDown][ArrowRight]'));
       await waitFor(() => {
         expect(screen.getByRole('menuitem', { name: 'Email' })).toHaveFocus();
       });
@@ -472,8 +540,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       // The bare instance skips the pointer-events check of user-event, which a popup that a hover
       // opened fails while it transitions in.
-      await userEvent.hover(screen.getByRole('menuitem', { name: 'Share' }));
-      const email = await screen.findByRole('menuitem', { name: 'Email' });
+      const email = await waitForLaterMillisecond(async () => {
+        await userEvent.hover(screen.getByRole('menuitem', { name: 'Share' }));
+        return screen.findByRole('menuitem', { name: 'Email' });
+      });
       // In WebKit, a list ignores a pointer move with no movement, and the bare instance gives
       // none.
       await userEvent.hover(email);
@@ -521,8 +591,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       const trigger = screen.getByRole('button', { name: 'Actions' });
       trigger.focus();
       await flushMicrotasks();
-      await user.hover(trigger);
-      const input = await screen.findByRole('searchbox', { name: 'Filter actions' });
+      const input = await waitForLaterMillisecond(async () => {
+        await user.hover(trigger);
+        return screen.findByRole('searchbox', { name: 'Filter actions' });
+      });
       // A hover open shows the popup without moving focus off the trigger.
       expect(trigger).toHaveFocus();
       return { trigger, input };
@@ -864,7 +936,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       trigger.focus();
       await flushMicrotasks();
-      await user.keyboard('[Enter]');
+      await waitForLaterMillisecond(() => user.keyboard('[Enter]'));
       await waitFor(() => {
         expect(screen.getByRole('searchbox', { name: 'Filter actions' })).toHaveFocus();
       });
@@ -876,7 +948,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         expect(trigger).toHaveFocus();
       });
 
-      await user.keyboard('[Enter]');
+      await waitForLaterMillisecond(() => user.keyboard('[Enter]'));
       const input = screen.getByRole('searchbox', { name: 'Filter actions' });
       await waitFor(() => {
         expect(input).toHaveFocus();

@@ -26,6 +26,7 @@ export interface NavigationMenuRootContext<Value = any> {
   mounted: Readonly<Ref<boolean>>;
   popupElement: ShallowRef<HTMLElement | null>;
   positionerElement: ShallowRef<HTMLElement | null>;
+  backdropElement: ShallowRef<HTMLElement | null>;
   viewportElement: ShallowRef<HTMLElement | null>;
   viewportTargetElement: ShallowRef<HTMLElement | null>;
   /**

@@ -2,6 +2,7 @@ import { expect, describe, it } from 'vitest';
 import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import { Progress } from '@vase-ui/vue/progress';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -92,48 +93,33 @@ describe('<Progress.Label />', () => {
   });
 
   it('names the last label after KeepAlive shows a label that mounted while held', async () => {
-    const visible = shallowRef(true);
-    const extra = shallowRef(false);
-    const Branch = defineComponent(() => () => (
-      <div>
-        <Progress.Label key="a" id="label-a">
-          A
+    const { HeldBranch, hide, mountWhileHeld, show } = createHeldBranch(
+      () => (
+        <Progress.Label key="b" id="label-b">
+          B
         </Progress.Label>
-        {extra.value ? (
-          <Progress.Label key="b" id="label-b">
-            B
-          </Progress.Label>
-        ) : null}
-      </div>
-    ));
+      ),
+      {
+        renderBranch: (part) => (
+          <div>
+            <Progress.Label key="a" id="label-a">
+              A
+            </Progress.Label>
+            {part}
+          </div>
+        ),
+      },
+    );
     const App = defineComponent(() => () => (
       <Progress.Root value={40}>
-        <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+        <HeldBranch />
       </Progress.Root>
     ));
     await render(<App />);
     const progressbar = screen.getByRole('progressbar');
     const seen = [progressbar.getAttribute('aria-labelledby')];
-    const changes = [
-      () => {
-        visible.value = false;
-      },
-      () => {
-        extra.value = true;
-      },
-      () => {
-        visible.value = true;
-      },
-      () => {
-        visible.value = false;
-      },
-      () => {
-        visible.value = true;
-      },
-    ];
-    for (const change of changes) {
-      change();
-      await flushMicrotasks();
+    for (const change of [hide, mountWhileHeld, show, hide, show]) {
+      await change();
       seen.push(progressbar.getAttribute('aria-labelledby'));
     }
 

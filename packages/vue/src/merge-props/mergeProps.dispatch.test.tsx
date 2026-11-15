@@ -3,7 +3,7 @@ import { NumberField } from '@vase-ui/vue/number-field';
 import { Popover } from '@vase-ui/vue/popover';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import { Tooltip } from '@vase-ui/vue/tooltip';
-import { createRenderer, screen, waitFor } from '#test-utils';
+import { createRenderer, screen, waitFor, waitForLaterMillisecond } from '#test-utils';
 
 describe('VUE-82: preventVaseUIHandler() in a part inside another part', () => {
   const { render } = createRenderer();
@@ -28,9 +28,11 @@ describe('VUE-82: preventVaseUIHandler() in a part inside another part', () => {
       </Tooltip.Root>,
     );
 
-    await user.keyboard('[Tab]');
-    await waitFor(() => {
-      expect(onTooltipOpenChange).toHaveBeenCalledTimes(1);
+    await waitForLaterMillisecond(async () => {
+      await user.keyboard('[Tab]');
+      await waitFor(() => {
+        expect(onTooltipOpenChange).toHaveBeenCalledTimes(1);
+      });
     });
     await user.keyboard('[Enter]');
 

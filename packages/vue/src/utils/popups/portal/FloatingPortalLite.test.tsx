@@ -9,7 +9,14 @@ import {
   watch,
 } from 'vue';
 import type { ComponentPublicInstance, MaybeRefOrGetter, ShallowRef } from 'vue';
-import { createRenderer, describeConformance, hydrate, renderOnServer, screen } from '#test-utils';
+import {
+  createHeldBranch,
+  createRenderer,
+  describeConformance,
+  hydrate,
+  renderOnServer,
+  screen,
+} from '#test-utils';
 import FloatingPortal from './FloatingPortal.vue';
 import FloatingPortalLite from './FloatingPortalLite.vue';
 import FloatingPortalLiteHydration from './FloatingPortalLiteHydration.test.vue';
@@ -328,44 +335,29 @@ describe('FloatingPortalLite', () => {
         return () => <div data-testid="content" />;
       },
     });
-    const visible = shallowRef(true);
-    const hasPortal = shallowRef(false);
-    const Page = defineComponent({
-      name: 'Page',
-      setup: () => () => (
-        <div>
-          {hasPortal.value ? (
-            <FloatingPortalLite data-testid="portal">
-              <Content />
-            </FloatingPortalLite>
-          ) : null}
-        </div>
-      ),
-    });
-    await render(() => <KeepAlive>{visible.value ? <Page /> : null}</KeepAlive>);
+    const { HeldBranch, hide, mountWhileHeld, show } = createHeldBranch(() => (
+      <FloatingPortalLite data-testid="portal">
+        <Content />
+      </FloatingPortalLite>
+    ));
+    await render(() => <HeldBranch />);
 
-    visible.value = false;
-    await nextTick();
-    hasPortal.value = true;
-    await nextTick();
+    await mountWhileHeld();
 
     expect(screen.queryByTestId('portal')).toBe(null);
     expect(counts).toEqual({ mounted: 1, unmounted: 0 });
 
-    visible.value = true;
-    await nextTick();
+    await show();
 
     const portal = screen.getByTestId('portal');
     expect(portal.parentElement).toBe(document.body);
     expect(portal).toContainElement(screen.getByTestId('content'));
 
-    visible.value = false;
-    await nextTick();
+    await hide();
 
     expect(portal.isConnected).toBe(false);
 
-    visible.value = true;
-    await nextTick();
+    await show();
 
     expect(screen.getByTestId('portal')).toBe(portal);
     expect(portal.parentElement).toBe(document.body);

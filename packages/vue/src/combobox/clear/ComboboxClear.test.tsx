@@ -12,6 +12,7 @@ import {
   nextEvent,
   screen,
   waitFor,
+  waitForLaterMillisecond,
 } from '#test-utils';
 import ComboboxPartsReplacement from '../../../test/fixtures/ComboboxPartsReplacement.vue';
 import type { HTMLProps } from '../../internals/types';
@@ -246,9 +247,10 @@ describe('<Combobox.Clear />', () => {
       </Combobox.Root>,
     );
 
-    await user.click(screen.getByTestId('trigger'));
-
-    const clear = await screen.findByTestId('clear');
+    const clear = await waitForLaterMillisecond(async () => {
+      await user.click(screen.getByTestId('trigger'));
+      return screen.findByTestId('clear');
+    });
 
     await waitFor(() => {
       expect(screen.getByTestId('positioner')).toHaveAttribute('data-open', '');
@@ -304,8 +306,10 @@ describe('<Combobox.Clear />', () => {
 
       expect(screen.queryByTestId('clear')).toBe(null);
 
-      await user.click(screen.getByTestId('input'));
-      const option = await screen.findByRole('option', { name: 'a' });
+      const option = await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('input'));
+        return screen.findByRole('option', { name: 'a' });
+      });
 
       // The button mounts with the change, so the wait is on its container.
       await nextEvent(container, 'transitionend', {

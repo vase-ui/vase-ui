@@ -68,7 +68,6 @@ import { useButton } from '../../internals/use-button';
 import { REASONS } from '../../internals/reasons';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { isMouseWithinBounds } from '../../utils/getPseudoElementBounds';
-import { getFloatingFocusElement } from '../../utils/popups/element';
 import { isReleaseAtPressPoint } from '../../utils/popups/isReleaseAtPressPoint';
 import { pressableTriggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
 import { resolveAriaLabelledBy } from '../../utils/resolveAriaLabelledBy';
@@ -112,12 +111,15 @@ const popupSide = computed(() =>
   store.select('mounted') && store.select('positionerElement') ? store.select('popupSide') : null,
 );
 const triggerId = computed(() => props.id ?? store.select('id'));
-const ariaControls = computed(() =>
-  isOpen.value
-    ? (store.select('listElement')?.id ??
-      getFloatingFocusElement(store.select('positionerElement'))?.id)
-    : undefined,
-);
+// The trigger names the list, or the popup while the popup holds no list. An element with no id has
+// an empty `id`, and the trigger then has no `aria-controls`.
+const ariaControls = computed(() => {
+  if (!isOpen.value) {
+    return undefined;
+  }
+  const list = store.select('listElement');
+  return list ? list.id || undefined : store.select('popupId');
+});
 
 useLabelableId({ id: () => props.id, element: () => element.value });
 

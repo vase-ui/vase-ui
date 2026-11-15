@@ -8,14 +8,16 @@ const props = withDefaults(
     defaultValue: number | number[];
     // `defaultValue` is then the first value of `v-model:value`.
     controlled?: boolean | undefined;
+    min?: number | undefined;
     max?: number | undefined;
+    step?: number | undefined;
     format?: Intl.NumberFormatOptions | undefined;
     alignment?: 'center' | 'edge' | 'edge-client-only' | undefined;
     orientation?: 'horizontal' | 'vertical' | undefined;
     name?: string | undefined;
     explicitIndex?: boolean | undefined;
   }>(),
-  { max: 100, format: undefined, alignment: 'center', orientation: 'horizontal' },
+  { min: 0, max: 100, step: 1, format: undefined, alignment: 'center', orientation: 'horizontal' },
 );
 
 const model = shallowRef(props.defaultValue);
@@ -43,7 +45,9 @@ function handleValueChange(
 <template>
   <Slider.Root
     v-bind="rootProps()"
+    :min="min"
     :max="max"
+    :step="step"
     :format="format"
     :thumb-alignment="alignment"
     :orientation="orientation"

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import * as Menu from '../index.parts';
-import { createRenderer, fireEvent, screen, waitFor } from '#test-utils';
+import { createRenderer, fireEvent, screen, waitFor, waitForLaterMillisecond } from '#test-utils';
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
 
 // Kept in a separate file so the module mock doesn't leak into `MenuSubmenuTrigger.test.tsx`.
@@ -49,9 +49,10 @@ describe('<Menu.SubmenuTrigger /> with VoiceOver', () => {
     const { user } = await render(<Test />);
 
     await user.keyboard('[Tab]');
-    await user.keyboard('[Enter]');
-
-    const submenuTrigger = await screen.findByRole('menuitem', { name: 'More' });
+    const submenuTrigger = await waitForLaterMillisecond(async () => {
+      await user.keyboard('[Enter]');
+      return screen.findByRole('menuitem', { name: 'More' });
+    });
     await waitFor(() => {
       expect(submenuTrigger).toHaveFocus();
     });
@@ -74,9 +75,10 @@ describe('<Menu.SubmenuTrigger /> with VoiceOver', () => {
     const { user } = await render(<Test />);
 
     await user.keyboard('[Tab]');
-    await user.keyboard('[Enter]');
-
-    const submenuTrigger = await screen.findByRole('menuitem', { name: 'More' });
+    const submenuTrigger = await waitForLaterMillisecond(async () => {
+      await user.keyboard('[Enter]');
+      return screen.findByRole('menuitem', { name: 'More' });
+    });
     await waitFor(() => {
       expect(submenuTrigger).toHaveFocus();
     });
@@ -94,9 +96,10 @@ describe('<Menu.SubmenuTrigger /> with VoiceOver', () => {
   it('keeps the expanded state when the submenu is opened with a pointer', async () => {
     const { user } = await render(<Test />);
 
-    await user.click(screen.getByRole('button', { name: 'Open menu' }));
-
-    const submenuTrigger = await screen.findByRole('menuitem', { name: 'More' });
+    const submenuTrigger = await waitForLaterMillisecond(async () => {
+      await user.click(screen.getByRole('button', { name: 'Open menu' }));
+      return screen.findByRole('menuitem', { name: 'More' });
+    });
     await user.click(submenuTrigger);
 
     await screen.findByTestId('submenu');

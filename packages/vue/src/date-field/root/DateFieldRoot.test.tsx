@@ -8,7 +8,9 @@ import {
   createHeldBranch,
   createRenderer,
   describeConformance,
+  fireEvent,
   flushMicrotasks,
+  heldMountFormResetTests,
   hydrateAfter,
   recordInputEvents,
   removedPartHydrationTests,
@@ -750,5 +752,24 @@ describe('<DateField.Root />', () => {
         },
       ],
     });
+  });
+
+  heldMountFormResetTests({
+    render,
+    renderControl: () => (
+      <DateField.Root
+        name="date"
+        locale="en-US"
+        defaultValue={Temporal.PlainDate.from('2026-11-14')}
+      >
+        <DateField.Input />
+      </DateField.Root>
+    ),
+    change: () =>
+      fireEvent.input(hiddenInputOf(document.body), { target: { value: '2027-02-03' } }),
+    readState: () =>
+      screen.getAllByRole('spinbutton').map((segment) => segment.getAttribute('aria-valuenow')),
+    defaultState: ['11', '14', '2026'],
+    changedState: ['2', '3', '2027'],
   });
 });

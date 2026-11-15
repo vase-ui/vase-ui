@@ -10,6 +10,7 @@ import {
   nextEvent,
   screen,
   waitFor,
+  waitForLaterMillisecond,
 } from '#test-utils';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
 import type { ComboboxStore } from '../store';
@@ -152,10 +153,12 @@ describe('<Combobox.Popup />', () => {
 
     const input = screen.getByTestId('input');
 
-    await user.click(input);
+    const option = await waitForLaterMillisecond(async () => {
+      await user.click(input);
+      return screen.findByRole('option', { name: 'a' });
+    });
     // user-event's synthetic clicks carry no pointer type, so the mouse press is dispatched
     // directly.
-    const option = await screen.findByRole('option', { name: 'a' });
     await fireEvent.pointerDown(option, { pointerType: 'mouse' });
     await fireEvent.click(option, { detail: 1 });
     await waitFor(() => {
@@ -165,8 +168,10 @@ describe('<Combobox.Popup />', () => {
 
     input.focus();
     await flushMicrotasks();
-    await user.keyboard('{ArrowDown}');
-    await screen.findByRole('listbox');
+    await waitForLaterMillisecond(async () => {
+      await user.keyboard('{ArrowDown}');
+      await screen.findByRole('listbox');
+    });
     await user.keyboard('{ArrowDown}{Enter}');
     await waitFor(() => {
       expect(screen.queryByRole('listbox')).toBe(null);
@@ -209,7 +214,7 @@ describe('<Combobox.Popup />', () => {
   describe('the id of the popup in the store', () => {
     const Probe = defineComponent(() => {
       const store = useComboboxRootContext();
-      return () => <span data-testid="probe" data-popup-id={store.select('popupElementId')} />;
+      return () => <span data-testid="probe" data-popup-id={store.select('popupId')} />;
     });
 
     it('gives the rendered id of the popup to the store', async () => {
@@ -381,7 +386,10 @@ describe('<Combobox.Popup />', () => {
 
     it('returns to the trigger when the popup with the input closes', async () => {
       const { user } = await renderWithInputInPopup();
-      await user.click(screen.getByTestId('trigger'));
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('trigger'));
+        await screen.findByTestId('input');
+      });
       await waitFor(() => {
         expect(screen.getByTestId('input')).toHaveFocus();
       });
@@ -583,7 +591,10 @@ describe('<Combobox.Popup />', () => {
           </Combobox.Root>
         </div>,
       );
-      await user.click(screen.getByTestId('trigger'));
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('trigger'));
+        await screen.findByTestId('input');
+      });
       await waitFor(() => {
         expect(screen.getByTestId('input')).toHaveFocus();
       });

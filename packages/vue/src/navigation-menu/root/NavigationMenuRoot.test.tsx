@@ -330,6 +330,8 @@ function TestInlineNestedNavigationMenu(
     nestedItem1Value?: string | number | boolean;
     keepMountedContent?: boolean;
     nestedLinkCloseOnClick?: boolean;
+    nestedRootRef?: (instance: RootInstance | null) => void;
+    onNestedOpenChangeComplete?: (open: boolean) => void;
   } = {},
 ) {
   const {
@@ -337,6 +339,8 @@ function TestInlineNestedNavigationMenu(
     nestedItem1Value = 'nested-item-1',
     keepMountedContent = false,
     nestedLinkCloseOnClick = false,
+    nestedRootRef,
+    onNestedOpenChangeComplete,
   } = props;
   const nestedRootProps =
     nestedDefaultValue == null ? undefined : { defaultValue: nestedDefaultValue };
@@ -349,7 +353,11 @@ function TestInlineNestedNavigationMenu(
 
           <NavigationMenu.Content data-testid="popup-1" keepMounted={keepMountedContent}>
             <NavigationMenu.Link href="#link-1">Link 1</NavigationMenu.Link>
-            <NavigationMenu.Root {...nestedRootProps}>
+            <NavigationMenu.Root
+              ref={(instance) => nestedRootRef?.(instance as unknown as RootInstance | null)}
+              onOpenChangeComplete={onNestedOpenChangeComplete}
+              {...nestedRootProps}
+            >
               <NavigationMenu.List data-testid="inline-nested-list">
                 <NavigationMenu.Item value={nestedItem1Value}>
                   <NavigationMenu.Trigger data-testid="nested-trigger-1">
@@ -1024,6 +1032,41 @@ describe('<NavigationMenu.Root />', () => {
         </NavigationMenu.Portal>
       </NavigationMenu.Root>
     ),
+    createBackdropComponent: ({ open, onOpenChangeComplete }) => (
+      <NavigationMenu.Root
+        value={open ? 'item-1' : null}
+        onOpenChangeComplete={onOpenChangeComplete}
+      >
+        <NavigationMenu.List>
+          <NavigationMenu.Item value="item-1">
+            <NavigationMenu.Trigger>Item 1</NavigationMenu.Trigger>
+            <NavigationMenu.Content>Content</NavigationMenu.Content>
+          </NavigationMenu.Item>
+        </NavigationMenu.List>
+        <NavigationMenu.Portal>
+          <NavigationMenu.Backdrop data-testid="shown" class="shown" />
+        </NavigationMenu.Portal>
+      </NavigationMenu.Root>
+    ),
+    createBackdropAndPositionerComponent: ({ open, onOpenChangeComplete }) => (
+      <NavigationMenu.Root
+        value={open ? 'item-1' : null}
+        onOpenChangeComplete={onOpenChangeComplete}
+      >
+        <NavigationMenu.List>
+          <NavigationMenu.Item value="item-1">
+            <NavigationMenu.Trigger>Item 1</NavigationMenu.Trigger>
+            <NavigationMenu.Content>Content</NavigationMenu.Content>
+          </NavigationMenu.Item>
+        </NavigationMenu.List>
+        <NavigationMenu.Portal>
+          <NavigationMenu.Backdrop />
+          <NavigationMenu.Positioner data-testid="shown" class="shown">
+            <NavigationMenu.Viewport />
+          </NavigationMenu.Positioner>
+        </NavigationMenu.Portal>
+      </NavigationMenu.Root>
+    ),
     render,
     reportsOpen: false,
   });
@@ -1172,10 +1215,12 @@ describe('<NavigationMenu.Root />', () => {
       const trigger = screen.getByTestId('trigger-1');
       const topLevelList = trigger.closest('ul') as HTMLElement;
 
-      await fireEvent.mouseEnter(trigger);
-      await fireEvent.mouseMove(trigger);
-      vi.advanceTimersByTime(OPEN_DELAY);
-      await flushMicrotasks();
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.mouseEnter(trigger);
+        await fireEvent.mouseMove(trigger);
+        vi.advanceTimersByTime(OPEN_DELAY);
+        await flushMicrotasks();
+      });
 
       expect(topLevelList.style.pointerEvents).toBe('none');
 
@@ -1214,10 +1259,12 @@ describe('<NavigationMenu.Root />', () => {
       );
 
       const trigger = screen.getByText('Trigger 1');
-      await fireEvent.mouseEnter(trigger);
-      await fireEvent.mouseMove(trigger);
-      vi.advanceTimersByTime(OPEN_DELAY);
-      await flushMicrotasks();
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.mouseEnter(trigger);
+        await fireEvent.mouseMove(trigger);
+        vi.advanceTimersByTime(OPEN_DELAY);
+        await flushMicrotasks();
+      });
 
       expect(document.body.style.pointerEvents).toBe('none');
       expect(screen.getByTestId('custom-list').style.pointerEvents).toBe('');
@@ -1483,8 +1530,10 @@ describe('<NavigationMenu.Root />', () => {
       const trigger1 = screen.getByTestId('trigger-1');
       const trigger2 = screen.getByTestId('trigger-2');
 
-      await fireEvent.click(trigger1);
-      await flushMicrotasks();
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.click(trigger1);
+        await flushMicrotasks();
+      });
 
       expect(screen.queryByTestId('popup-1')).not.toBe(null);
       expect(trigger1).toHaveAttribute('aria-expanded', 'true');
@@ -3173,6 +3222,44 @@ describe('<NavigationMenu.Root />', () => {
         expect(trigger1).toHaveAttribute('aria-expanded', 'false');
       });
 
+      it.each([
+        { name: 'removed content', keepMountedContent: false },
+        { name: 'kept mounted content', keepMountedContent: true },
+      ])(
+        'VUE-98: returns the focus to the nested trigger when an inline viewport closes with the focus in it: $name',
+        async ({ keepMountedContent }) => {
+          const onNestedOpenChangeComplete = vi.fn();
+          const nestedRoot = shallowRef<RootInstance | null>(null);
+          const { user } = await render(() => (
+            <TestInlineNestedNavigationMenu
+              keepMountedContent={keepMountedContent}
+              nestedRootRef={(instance) => {
+                nestedRoot.value = instance;
+              }}
+              onNestedOpenChangeComplete={onNestedOpenChangeComplete}
+            />
+          ));
+
+          await waitForLaterMillisecond(async () => {
+            await user.click(screen.getByTestId('trigger-1'));
+            await flushMicrotasks();
+          });
+          const nestedTrigger = screen.getByTestId('nested-trigger-1');
+          const nestedLink = screen.getByRole('link', { name: 'Nested Link 1' });
+          nestedLink.focus();
+          await flushMicrotasks();
+          expect(nestedLink).toHaveFocus();
+
+          const closed = nextCall(onNestedOpenChangeComplete);
+          nestedRoot.value?.close();
+          await closed;
+
+          expect(nestedTrigger).toHaveFocus();
+          expect(nestedTrigger).toHaveAttribute('aria-expanded', 'false');
+          expect(screen.getByTestId('trigger-1')).toHaveAttribute('aria-expanded', 'true');
+        },
+      );
+
       it('maintains inline viewport state when hovering between triggers and content', async () => {
         await render(<TestInlineNestedNavigationMenu />);
         const trigger1 = screen.getByTestId('trigger-1');
@@ -3292,8 +3379,10 @@ describe('<NavigationMenu.Root />', () => {
           );
           const trigger1 = screen.getByTestId('trigger-1');
 
-          await fireEvent.click(trigger1);
-          await flushMicrotasks();
+          await waitForLaterMillisecond(async () => {
+            await fireEvent.click(trigger1);
+            await flushMicrotasks();
+          });
 
           const popup1 = screen.getByTestId('popup-1');
           const nestedTrigger1 = within(popup1).getByTestId('nested-trigger-1');
@@ -3336,8 +3425,10 @@ describe('<NavigationMenu.Root />', () => {
         const { user } = await render(<TestInlineNestedNavigationMenu />);
         const trigger1 = screen.getByTestId('trigger-1');
 
-        await fireEvent.click(trigger1);
-        await flushMicrotasks();
+        await waitForLaterMillisecond(async () => {
+          await fireEvent.click(trigger1);
+          await flushMicrotasks();
+        });
 
         const popup1 = screen.getByTestId('popup-1');
         expect(popup1).not.toBe(null);
@@ -3371,8 +3462,10 @@ describe('<NavigationMenu.Root />', () => {
         const { user } = await render(<TestDeeplyNestedNavigationMenu />);
         const trigger1 = screen.getByTestId('trigger-1');
 
-        await fireEvent.click(trigger1);
-        await flushMicrotasks();
+        await waitForLaterMillisecond(async () => {
+          await fireEvent.click(trigger1);
+          await flushMicrotasks();
+        });
 
         const content1 = screen.getByTestId('content-1');
         expect(content1).not.toBe(null);

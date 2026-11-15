@@ -6,7 +6,11 @@ defineProps<{
   composition:
     | 'collapsed'
     | 'defaults'
+    | 'edges'
     | 'fixed'
+    | 'handleFirst'
+    | 'hitAreaNumber'
+    | 'hitAreaObject'
     | 'layout'
     | 'layoutLength'
     | 'length'
@@ -47,6 +51,34 @@ const WrappedPanel = defineComponent({
     <Resizable.Panel id="a" data-testid="a" />
     <Resizable.Handle data-testid="handle-a" aria-label="First" />
     <Resizable.Panel v-if="!(laterRemovedAtMount && isMounted)" id="b" data-testid="b" />
+  </Resizable.Root>
+  <Resizable.Root v-else-if="composition === 'edges'" data-testid="root" drag-edges>
+    <Resizable.Panel id="a" data-testid="a" />
+    <Resizable.Panel id="b" data-testid="b" />
+  </Resizable.Root>
+  <Resizable.Root v-else-if="composition === 'handleFirst'" data-testid="root">
+    <Resizable.Handle data-testid="handle-first" aria-label="First" />
+    <Resizable.Panel id="a" data-testid="a" />
+    <Resizable.Handle data-testid="handle-a" aria-label="Second" />
+    <Resizable.Panel id="b" data-testid="b" />
+  </Resizable.Root>
+  <Resizable.Root
+    v-else-if="composition === 'hitAreaNumber'"
+    data-testid="root"
+    :hit-area-size="16"
+  >
+    <Resizable.Panel id="a" data-testid="a" />
+    <Resizable.Handle data-testid="handle-a" aria-label="First" />
+    <Resizable.Panel id="b" data-testid="b" />
+  </Resizable.Root>
+  <Resizable.Root
+    v-else-if="composition === 'hitAreaObject'"
+    data-testid="root"
+    :hit-area-size="{ fine: 12, coarse: 30 }"
+  >
+    <Resizable.Panel id="a" data-testid="a" />
+    <Resizable.Handle data-testid="handle-a" aria-label="First" />
+    <Resizable.Panel id="b" data-testid="b" />
   </Resizable.Root>
   <Resizable.Root v-else-if="composition === 'length'" data-testid="root">
     <Resizable.Panel id="a" data-testid="a" default-size="240px" />

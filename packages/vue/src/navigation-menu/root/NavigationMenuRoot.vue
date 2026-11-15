@@ -187,6 +187,7 @@ const rootRef = shallowRef<HTMLElement | null>(null);
 
 const positionerElement = shallowRef<HTMLElement | null>(null);
 const popupElement = shallowRef<HTMLElement | null>(null);
+const backdropElement = shallowRef<HTMLElement | null>(null);
 const viewportElement = shallowRef<HTMLElement | null>(null);
 const viewportTargetElement = shallowRef<HTMLElement | null>(null);
 const activationDirection = shallowRef<NavigationMenuActivationDirection>(null);
@@ -205,8 +206,9 @@ const popupAutoSizeResetRef: NavigationMenuPopupAutoSizeResetState = {
 };
 
 const preventUnmountOnClose = shallowRef(false);
-// With no popup part, the positioner is the part that shows.
-const transitionElement = () => popupElement.value ?? positionerElement.value;
+// With no popup part, the positioner is the part that shows, and with no positioner, the backdrop.
+const transitionElement = () =>
+  popupElement.value ?? positionerElement.value ?? backdropElement.value;
 const {
   mounted,
   transitionStatus,
@@ -222,7 +224,9 @@ const {
   onUnmount() {
     const doc = ownerDocument(rootRef.value);
     const activeEl = activeElement(doc);
-    const element = transitionElement();
+    // A root with an inline viewport has no popup, positioner or backdrop part. Its content is in
+    // the viewport.
+    const element = transitionElement() ?? viewportElement.value;
 
     const isReturnFocusBlocked = closeReason ? blockedReturnFocusReasons.has(closeReason) : false;
 
@@ -349,6 +353,7 @@ provide(NavigationMenuRootContext, {
   transitionStatus,
   positionerElement,
   popupElement,
+  backdropElement,
   viewportElement,
   viewportTargetElement,
   activationDirection: computed(() => (open.value ? activationDirection.value : null)),

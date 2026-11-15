@@ -151,6 +151,10 @@ export type PopupStoreContext<ChangeEventDetails> = PopupInteractionContext & {
    */
   readonly popupRef: ShallowRef<HTMLElement | null>;
   /**
+   * A ref to the element of the backdrop part.
+   */
+  readonly backdropRef: ShallowRef<HTMLElement | null>;
+  /**
    * Called when the open state changes.
    */
   onOpenChange?: ((open: boolean, eventDetails: ChangeEventDetails) => void) | undefined;
@@ -175,6 +179,7 @@ export type PopupStoreContext<ChangeEventDetails> = PopupInteractionContext & {
 export function createPopupStoreContext() {
   return {
     popupRef: shallowRef<HTMLElement | null>(null),
+    backdropRef: shallowRef<HTMLElement | null>(null),
     triggerElements: new PopupTriggerMap(),
     onOpenChange: undefined,
     onOpenChangeComplete: undefined,
@@ -192,7 +197,9 @@ const openSelector = (state: S) => state.openProp ?? state.open;
 const activeTriggerElementSelector = (state: S) =>
   state.mounted ? state.activeTriggerElement : null;
 
-const popupIdSelector = (state: S) => (state.popupElementId ?? state.defaultPopupId) || undefined;
+// A trigger names only an id that an element has now. No popup element, or one with an empty `id`,
+// gives no id.
+const popupIdSelector = (state: S) => state.popupElementId || undefined;
 
 function triggerOwnsOpenPopup(state: S, triggerId: string | undefined) {
   return (

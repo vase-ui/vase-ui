@@ -72,7 +72,6 @@ import type { Component } from 'vue';
 import { clamp } from '../../common/clamp';
 import { formatNumber } from '../../common/formatNumber';
 import {
-  dispatchTakeEvents,
   useAriaAfterHydration,
   useHiddenValueBeforeHydration,
   useIsHydrating,
@@ -99,7 +98,7 @@ import { useSetFieldFocused } from '../../internals/field-root-context/useSetFie
 import { useDeferredServerRender, useLabelableId } from '../../internals/labelable-provider';
 import type { HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
-import { useFormRestore } from '../../internals/useFormRestore';
+import { useFormRestoreAsInput } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { mergeProps } from '../../merge-props';
 import { matchesFocusVisible } from '../../utils/popups/element';
@@ -381,34 +380,37 @@ function setInputElement(value: unknown) {
 
 const writesValue = useHiddenValueBeforeHydration(() => inputElement.value);
 
-useFormRestore(inputElement, () => {
-  const input = inputElement.value;
-  if (input && input.valueAsNumber !== thumbValue.value) {
-    dispatchTakeEvents(input, false);
-  }
-});
+// The value that the input had after the last event that the thumb handled, or after the last
+// write of Vue or of the thumb. A range input moves its value to the step and into `min` and
+// `max`, so this text can differ from the value of the thumb.
+let handledInputValue: string | undefined;
 
-// The value that the input had after the last `input` or `change` event that the thumb handled.
-// A `change` event with that value is the second event of one user action.
-let handledInputValue: number | undefined;
+function syncHandledInputValue() {
+  handledInputValue = inputElement.value?.value;
+}
+
+watch([inputElement, thumbValue, min, max, step], syncHandledInputValue, { flush: 'post' });
+
+useFormRestoreAsInput(inputElement, () => handledInputValue, false);
 
 function onNativeChange(event: Event) {
   const input = event.currentTarget as HTMLInputElement;
-  const inputValue = input.valueAsNumber;
-  if (event.type === 'change' && inputValue === handledInputValue) {
+  // A range input sends `input` and then `change` for one user action. A `change` is new only when
+  // the input did not have its value after the last event or write.
+  if (event.type === 'change' && input.value === handledInputValue) {
     return;
   }
-  handledInputValue = inputValue;
+  handledInputValue = input.value;
 
-  handleInputChange(inputValue, thumbIndex.value, event);
+  handleInputChange(input.valueAsNumber, thumbIndex.value, event);
 
   // A listener can cancel the change, and a parent that controls the slider can keep its value.
   // Vue writes the value only when the thumb renders again.
   void nextTick(() => {
-    handledInputValue = undefined;
     if (thumbValue.value !== undefined && input.valueAsNumber !== thumbValue.value) {
       input.value = String(thumbValue.value);
     }
+    handledInputValue = input.value;
   });
 }
 

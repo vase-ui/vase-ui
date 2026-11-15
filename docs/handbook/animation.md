@@ -95,7 +95,7 @@ Use these attributes to make a CSS animation when a component becomes visible or
 
 A JavaScript animation library, such as [Motion for Vue](https://motion.dev/docs/vue) (the package `motion-v`), needs the popup in the DOM while its exit animation plays. Vase UI must also know when that animation ends.
 
-When a popup closes, `open` becomes `false` at once. The popup stays in the DOM until its exit animation ends. Vase UI finds the animations on the element of the popup. With no popup part, it finds them on the positioner, or on the backdrop of a dialog, an alert dialog or a drawer. It always finds CSS transitions and CSS animations. It also finds a `motion-v` animation that includes `opacity`.
+When a popup closes, `open` becomes `false` at once. The popup stays in the DOM until its exit animation ends. Vase UI finds the animations on the element of the popup. With no popup part, it finds them on the positioner, and with no positioner, on the backdrop. It always finds CSS transitions and CSS animations. It also finds a `motion-v` animation that includes `opacity`.
 
 When the animation ends, Vase UI removes the popup from the DOM, or hides it if the portal has `keepMounted`. The root emits `openChangeComplete` with `false`.
 
@@ -147,7 +147,7 @@ A popup stays in the DOM while it is closed when its portal has `keepMounted`. T
 
 ### Animate a Select popup
 
-The popup of [Select](/components/select) is not in the DOM until the first interaction with the select. After that, the popup stays in the DOM, and it is hidden while the select is closed. `Select.Portal` has no `keepMounted` prop. The same code animates the popup.
+The popup of [Select](/components/select) is not in the DOM until the select is open, gets the focus, or reads a value from its hidden input. After that, the popup stays in the DOM, and it is hidden while the select is closed. `Select.Portal` has no `keepMounted` prop. The code of [Animate a popup with motion-v](#animate-a-popup-with-motion-v) animates the popup. The popup can enter the DOM open, so `initial` is the closed style.
 
 <DemoFrame>
   <MotionSelect />

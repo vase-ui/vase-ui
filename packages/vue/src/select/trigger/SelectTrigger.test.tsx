@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
-import { defineComponent, KeepAlive, shallowRef } from 'vue';
+import { KeepAlive, defineComponent, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Select } from '@vase-ui/vue/select';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -13,6 +14,7 @@ import {
   isJSDOM,
   wait,
   waitFor,
+  waitForLaterMillisecond,
 } from '#test-utils';
 import type { SelectStore } from '../store';
 import SelectRootHydration from '../root/SelectRootHydration.test.vue';
@@ -148,13 +150,15 @@ describe('<Select.Trigger />', () => {
       trigger.getBoundingClientRect = () =>
         DOMRect.fromRect({ x: 100, y: 100, width: 100, height: 40 });
 
-      await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-      await fireEvent.mouseDown(trigger, { button: 0 });
-      if (options.release) {
-        await fireEvent.mouseUp(trigger, { button: 0, clientX: 150, clientY: 120 });
-      }
-      await waitFor(() => {
-        expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+        await fireEvent.mouseDown(trigger, { button: 0 });
+        if (options.release) {
+          await fireEvent.mouseUp(trigger, { button: 0, clientX: 150, clientY: 120 });
+        }
+        await waitFor(() => {
+          expect(trigger).toHaveAttribute('aria-expanded', 'true');
+        });
       });
       return trigger;
     }
@@ -239,10 +243,12 @@ describe('<Select.Trigger />', () => {
       trigger.getBoundingClientRect = () =>
         DOMRect.fromRect({ x: 100, y: 100, width: 100, height: 40 });
 
-      await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-      await fireEvent.mouseDown(trigger, { button: 0, clientX: pressX, clientY: 120 });
-      await waitFor(() => {
-        expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+        await fireEvent.mouseDown(trigger, { button: 0, clientX: pressX, clientY: 120 });
+        await waitFor(() => {
+          expect(trigger).toHaveAttribute('aria-expanded', 'true');
+        });
       });
       if (moves) {
         trigger.getBoundingClientRect = () =>
@@ -468,9 +474,10 @@ describe('<Select.Trigger />', () => {
       const trigger = screen.getByTestId('trigger');
       expect(trigger).not.toHaveAttribute('data-popup-side');
 
-      await user.click(trigger);
-
-      await waitFor(() => expect(screen.queryByRole('listbox')).not.toBe(null));
+      await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        await waitFor(() => expect(screen.queryByRole('listbox')).not.toBe(null));
+      });
       await waitFor(() => expect(trigger).toHaveAttribute('data-popup-side', 'right'));
 
       await user.click(document.body);
@@ -671,35 +678,25 @@ describe('<Select.Trigger />', () => {
     });
 
     it('the label does not name a trigger that mounts while KeepAlive holds it', async () => {
-      const visible = shallowRef(true);
-      const extra = shallowRef(false);
-      const Branch = defineComponent(() => () => (
-        <div>
-          {extra.value ? (
-            <Select.Root key="held">
-              <Select.Trigger id="held-trigger" />
-            </Select.Root>
-          ) : null}
-        </div>
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Select.Root key="held">
+          <Select.Trigger id="held-trigger" />
+        </Select.Root>
       ));
       await render(() => (
         <Field.Root>
           <Field.Label data-testid="label">Font</Field.Label>
-          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+          <HeldBranch />
         </Field.Root>
       ));
       const label = screen.getByTestId('label');
       const providerId = label.getAttribute('for');
 
-      visible.value = false;
-      await flushMicrotasks();
-      extra.value = true;
-      await flushMicrotasks();
+      await mountWhileHeld();
 
       expect(label.getAttribute('for')).toBe(providerId);
 
-      visible.value = true;
-      await flushMicrotasks();
+      await show();
 
       expect(label).toHaveAttribute('for', 'held-trigger');
     });
@@ -767,6 +764,194 @@ describe('<Select.Trigger />', () => {
       const labelId = screen.getByTestId('label').id;
       expect(labelId).not.toBe('');
       expect(screen.getByTestId('trigger')).toHaveAttribute('aria-labelledby', labelId);
+    });
+  });
+
+  describe('VUE-73: aria-controls names only an element in the document', () => {
+    it.each([
+      {
+        name: 'popup',
+        parts: () => (
+          <Select.Popup id="" data-testid="named">
+            <Select.Item value="a">A</Select.Item>
+          </Select.Popup>
+        ),
+      },
+      {
+        name: 'list',
+        parts: () => (
+          <Select.Popup>
+            <Select.List id="" data-testid="named">
+              <Select.Item value="a">A</Select.Item>
+            </Select.List>
+          </Select.Popup>
+        ),
+      },
+    ])('has no aria-controls while the $name has an empty id', async ({ parts }) => {
+      await render(
+        <Select.Root defaultOpen>
+          <Select.Trigger data-testid="trigger" />
+          <Select.Portal>
+            <Select.Positioner>{parts()}</Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+      await flushMicrotasks();
+
+      const trigger = screen.getByTestId('trigger');
+      expect(screen.getByTestId('named').id).toBe('');
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+    });
+
+    it('follows the id of the popup element', async () => {
+      const id = shallowRef('first');
+      await render(() => (
+        <Select.Root defaultOpen>
+          <Select.Trigger data-testid="trigger" />
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup id={id.value} data-testid="popup">
+                <Select.Item value="a">A</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+      ));
+      await flushMicrotasks();
+
+      const trigger = screen.getByTestId('trigger');
+      expect(trigger).toHaveAttribute('aria-controls', 'first');
+
+      id.value = 'second';
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('popup').id).toBe('second');
+      expect(trigger).toHaveAttribute('aria-controls', 'second');
+    });
+
+    it.each([
+      {
+        name: 'popup',
+        parts: () => (
+          <Select.Popup data-testid="named">
+            <Select.Item value="a">A</Select.Item>
+          </Select.Popup>
+        ),
+      },
+      {
+        name: 'popup with a list',
+        parts: () => (
+          <Select.Popup>
+            <Select.List data-testid="named">
+              <Select.Item value="a">A</Select.Item>
+            </Select.List>
+          </Select.Popup>
+        ),
+      },
+    ])('has no aria-controls while KeepAlive holds the $name', async ({ parts }) => {
+      const Popup = defineComponent({
+        setup: () => () => (
+          <Select.Portal>
+            <Select.Positioner>{parts()}</Select.Positioner>
+          </Select.Portal>
+        ),
+      });
+      const Other = defineComponent({ setup: () => () => <span /> });
+      const visible = shallowRef(true);
+      await render(() => (
+        <Select.Root defaultOpen>
+          <Select.Trigger data-testid="trigger" />
+          <KeepAlive>{visible.value ? <Popup key="popup" /> : <Other key="other" />}</KeepAlive>
+        </Select.Root>
+      ));
+      await flushMicrotasks();
+      const trigger = screen.getByTestId('trigger');
+      const named = screen.getByTestId('named');
+      expect(named.id).not.toBe('');
+      expect(trigger).toHaveAttribute('aria-controls', named.id);
+
+      visible.value = false;
+      await flushMicrotasks();
+
+      expect(named.isConnected).toBe(false);
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(named.isConnected).toBe(true);
+      expect(trigger).toHaveAttribute('aria-controls', named.id);
+    });
+
+    it('has no aria-controls while the popup mounts in a branch that KeepAlive holds', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
+        () => (
+          <Select.Popup data-testid="popup">
+            <Select.Item value="a">A</Select.Item>
+          </Select.Popup>
+        ),
+        { renderBranch: (part) => part },
+      );
+      await render(() => (
+        <Select.Root defaultOpen>
+          <Select.Trigger data-testid="trigger" />
+          <Select.Portal>
+            <Select.Positioner>
+              <HeldBranch />
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+      ));
+
+      await mountWhileHeld();
+
+      const trigger = screen.getByTestId('trigger');
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+
+      await show();
+
+      const popup = screen.getByTestId('popup');
+      expect(popup.id).not.toBe('');
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
+    });
+
+    it('names the popup while the list mounts in a branch that KeepAlive holds', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
+        () => (
+          <Select.List data-testid="list">
+            <Select.Item value="a">A</Select.Item>
+          </Select.List>
+        ),
+        { renderBranch: (part) => part },
+      );
+      await render(() => (
+        <Select.Root defaultOpen>
+          <Select.Trigger data-testid="trigger" />
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup data-testid="popup">
+                <HeldBranch />
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+      ));
+
+      await mountWhileHeld();
+
+      const trigger = screen.getByTestId('trigger');
+      const popup = screen.getByTestId('popup');
+      expect(popup.id).not.toBe('');
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
+
+      await show();
+
+      const list = screen.getByTestId('list');
+      expect(list.id).not.toBe('');
+      expect(trigger).toHaveAttribute('aria-controls', list.id);
     });
   });
 

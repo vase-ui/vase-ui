@@ -50,6 +50,47 @@ describe('<DateField.Input />', () => {
     expect(shown).toBe(format.format(epoch));
   });
 
+  // `Intl` of WebKit gives the year of these layouts as a part of the type `unknown`.
+  it.each([
+    {
+      name: 'a year and month in sc-IT',
+      locale: 'sc-IT',
+      value: () => Temporal.PlainYearMonth.from('2026-11'),
+      year: 2026,
+    },
+    {
+      name: 'a year and month in ksh',
+      locale: 'ksh',
+      value: () => Temporal.PlainYearMonth.from('2026-11'),
+      year: 2026,
+    },
+    {
+      name: 'a Buddhist date in my-MM',
+      locale: 'my-MM',
+      value: () => Temporal.PlainDate.from('2026-11-14').withCalendar('buddhist'),
+      year: 2569,
+    },
+    {
+      name: 'a Japanese date in my-MM',
+      locale: 'my-MM',
+      value: () => Temporal.PlainDate.from('2026-11-14').withCalendar('japanese'),
+      year: 8,
+    },
+  ])('shows a year segment for $name', async ({ locale, value, year }) => {
+    const { container } = await render(
+      <DateField.Root defaultValue={value()} locale={locale}>
+        <DateField.Input />
+      </DateField.Root>,
+    );
+
+    expect(
+      Array.from(
+        container.querySelectorAll<HTMLInputElement>('input[data-type="year"]'),
+        (input) => input.value,
+      ),
+    ).toEqual([new Intl.NumberFormat(locale, { useGrouping: false }).format(year)]);
+  });
+
   describe('slot: segment', () => {
     it('gives each part of the layout to the slot, and shows what the slot renders', async () => {
       const gives = new Set<string>();
@@ -184,6 +225,49 @@ describe('<DateField.Input />', () => {
           defaultValue: '2026-11-14T15:04',
           granularity: 'day',
           useSegmentSlot: true,
+        },
+      },
+      {
+        name: 'a year and month in sc-IT',
+        server: { locale: 'sc-IT', defaultValue: '2026-11' },
+        client: { locale: 'sc-IT', defaultValue: '2026-11' },
+      },
+      {
+        name: 'a year and month in ksh',
+        server: { locale: 'ksh', defaultValue: '2026-11' },
+        client: { locale: 'ksh', defaultValue: '2026-11' },
+      },
+      {
+        name: 'a Persian year and month in ksh',
+        server: {
+          locale: 'ksh',
+          calendar: 'persian',
+          defaultValue: '2026-11-14',
+          granularity: 'month',
+        },
+        client: {
+          locale: 'ksh',
+          calendar: 'persian',
+          defaultValue: '2026-11-14',
+          granularity: 'month',
+        },
+      },
+      {
+        name: 'a Buddhist date in my-MM',
+        server: { locale: 'my-MM', calendar: 'buddhist', defaultValue: '2026-11-14' },
+        client: { locale: 'my-MM', calendar: 'buddhist', defaultValue: '2026-11-14' },
+      },
+      {
+        name: 'a zoned Japanese value in my-MM',
+        server: {
+          locale: 'my-MM',
+          calendar: 'japanese',
+          defaultValue: '2026-11-14T15:04[Asia/Tokyo]',
+        },
+        client: {
+          locale: 'my-MM',
+          calendar: 'japanese',
+          defaultValue: '2026-11-14T15:04[Asia/Tokyo]',
         },
       },
     ])('hydrates $name with no message', async ({ server, client }) => {

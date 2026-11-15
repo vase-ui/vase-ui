@@ -2,7 +2,14 @@ import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { defineComponent, h, KeepAlive, nextTick, shallowRef } from 'vue';
 import type { Component, VNode } from 'vue';
-import { createRenderer, describeConformance, hydrate, renderOnServer, screen } from '#test-utils';
+import {
+  createHeldBranch,
+  createRenderer,
+  describeConformance,
+  hydrate,
+  renderOnServer,
+  screen,
+} from '#test-utils';
 import FocusManagerPart from '../../../../test/fixtures/FocusManagerPart.vue';
 import { REASONS } from '../../../internals/reasons';
 import { createAttribute } from '../createAttribute';
@@ -610,35 +617,25 @@ describe('FloatingPortal', () => {
   });
 
   it('VUE-5: keeps the portal element, the guards and the owner element out of the document when the part mounts while KeepAlive holds its branch', async () => {
-    const visible = shallowRef(true);
-    const hasPortal = shallowRef(false);
-    const Page = defineComponent({
-      name: 'Page',
-      setup: () => () => (
-        <div data-testid="host">
-          {hasPortal.value ? (
-            <FloatingPortal data-testid="portal">
-              <FocusManagerPart>
-                <input />
-              </FocusManagerPart>
-            </FloatingPortal>
-          ) : null}
-        </div>
+    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
+      () => (
+        <FloatingPortal data-testid="portal">
+          <FocusManagerPart>
+            <input />
+          </FocusManagerPart>
+        </FloatingPortal>
       ),
-    });
-    await render(() => <KeepAlive>{visible.value ? <Page /> : null}</KeepAlive>);
+      { renderBranch: (part) => <div data-testid="host">{part}</div> },
+    );
+    await render(() => <HeldBranch />);
 
-    visible.value = false;
-    await nextTick();
-    hasPortal.value = true;
-    await nextTick();
+    await mountWhileHeld();
 
     expect(screen.queryByTestId('portal')).toBe(null);
     expect(getOutsideGuards()).toEqual([]);
     expect(document.querySelector('[aria-owns]')).toBe(null);
 
-    visible.value = true;
-    await nextTick();
+    await show();
 
     const portal = screen.getByTestId('portal');
     const host = screen.getByTestId('host');

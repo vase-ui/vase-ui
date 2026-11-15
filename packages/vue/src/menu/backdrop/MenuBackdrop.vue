@@ -26,6 +26,7 @@ import { useContextMenuRootContext } from '../../internals/context-menu-root-con
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { createElementSetter } from '../../utils/popups/createElementSetter';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { useMenuRootContext } from '../root/MenuRootContext';
 
@@ -46,22 +47,11 @@ const state = computed<MenuBackdropState>(() => ({
   transitionStatus: store.select('transitionStatus'),
 }));
 
-let backdropElement: HTMLElement | null = null;
-
 const { element, elementProps } = useRenderElement('div', props, {
   state,
   ref: [
-    (backdrop) => {
-      // A compiled template can mount a new backdrop before it unmounts the old one. The old
-      // backdrop then must not clear the element of the new one.
-      if (
-        contextMenuContext !== undefined &&
-        (backdrop !== null || contextMenuContext.backdropRef.value === backdropElement)
-      ) {
-        contextMenuContext.backdropRef.value = backdrop as HTMLDivElement | null;
-      }
-      backdropElement = backdrop;
-    },
+    createElementSetter(store.context.backdropRef),
+    contextMenuContext && createElementSetter(contextMenuContext.backdropRef),
   ],
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [

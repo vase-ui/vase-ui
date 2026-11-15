@@ -2,6 +2,7 @@ import { expect, describe, it } from 'vitest';
 import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import { Meter } from '@vase-ui/vue/meter';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -88,48 +89,33 @@ describe('<Meter.Label />', () => {
   });
 
   it('names the last label after KeepAlive shows a label that mounted while held', async () => {
-    const visible = shallowRef(true);
-    const extra = shallowRef(false);
-    const Branch = defineComponent(() => () => (
-      <div>
-        <Meter.Label key="a" id="label-a">
-          A
+    const { HeldBranch, hide, mountWhileHeld, show } = createHeldBranch(
+      () => (
+        <Meter.Label key="b" id="label-b">
+          B
         </Meter.Label>
-        {extra.value ? (
-          <Meter.Label key="b" id="label-b">
-            B
-          </Meter.Label>
-        ) : null}
-      </div>
-    ));
+      ),
+      {
+        renderBranch: (part) => (
+          <div>
+            <Meter.Label key="a" id="label-a">
+              A
+            </Meter.Label>
+            {part}
+          </div>
+        ),
+      },
+    );
     const App = defineComponent(() => () => (
       <Meter.Root value={40}>
-        <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+        <HeldBranch />
       </Meter.Root>
     ));
     await render(<App />);
     const meter = screen.getByRole('meter');
     const seen = [meter.getAttribute('aria-labelledby')];
-    const changes = [
-      () => {
-        visible.value = false;
-      },
-      () => {
-        extra.value = true;
-      },
-      () => {
-        visible.value = true;
-      },
-      () => {
-        visible.value = false;
-      },
-      () => {
-        visible.value = true;
-      },
-    ];
-    for (const change of changes) {
-      change();
-      await flushMicrotasks();
+    for (const change of [hide, mountWhileHeld, show, hide, show]) {
+      await change();
       seen.push(meter.getAttribute('aria-labelledby'));
     }
 

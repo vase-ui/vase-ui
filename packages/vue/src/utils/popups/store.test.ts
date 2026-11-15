@@ -955,7 +955,7 @@ describe('BasePopupStore', () => {
         change: (store) => {
           store.set('popupElement', null);
         },
-        expected: 'default',
+        expected: undefined,
       },
     ])('follows the id of the popup element when $name', async ({ id, change, expected }) => {
       const store = new TestPopupStore(() => {}, { defaultPopupId: 'default' });

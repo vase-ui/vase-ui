@@ -5,8 +5,12 @@
     "https://www.w3.org/TR/wai-aria-1.2/#valuetype_idref_list",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/combobox/trigger/ComboboxTrigger.tsx#L89-L97",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/combobox/popup/ComboboxPopup.tsx#L46-L50",
-    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/internals/resolveRenderedId.ts#L9-L15"
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/internals/resolveRenderedId.ts#L9-L15",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/store.ts#L190-L193",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/select/trigger/SelectTrigger.tsx#L136-L138",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx#L657",
+    "https://vuejs.org/guide/built-ins/keep-alive.html#lifecycle-of-cached-instance"
   ],
-  "behavior": "An open `Combobox.Trigger` names in `aria-controls` only an id that an element has. That element is the popup while the input is in the popup, and the list while the trigger is beside the input. The trigger has no `aria-controls` while that element has no id, and while no popup is mounted, as in the server HTML of an open root. Base UI gives the trigger `aria-controls=\"\"` when the popup or the list has an empty `id`. When a `render` prop drops the id of the popup, and while no popup is mounted, Base UI names the default id of the popup, which no element has.",
+  "behavior": "An open trigger of Dialog, Alert Dialog, Drawer, Popover, Menu, Select, Combobox, Autocomplete or Navigation Menu has no `aria-controls` while no popup or list element that it can name is mounted. The server HTML of an open root thus has none. The trigger gives no `aria-controls=\"\"` for an element with an empty `id`. It also names no popup part, `Select.List` or `Menu.List` while `KeepAlive` holds that part, also when the part mounts in a held branch. `Select.Trigger` follows a change of the `id` of its popup. Base UI differs. Its triggers of Dialog, Alert Dialog, Drawer, Popover and Menu name the default id of the popup while no popup element is mounted, also in the server HTML. Its `Combobox.Trigger` names the default id of the popup while no popup is mounted, and when a `render` prop drops the id of the popup. No element has that id. Its `Select.Trigger`, `Combobox.Trigger` and `NavigationMenu.Trigger` give `aria-controls=\"\"` for an element with an empty `id`.",
   "dueWith": "packages/react/src/combobox/trigger/ComboboxTrigger.tsx"
 }

@@ -5,6 +5,7 @@ import { Combobox } from '@vase-ui/vue/combobox';
 import { Field } from '@vase-ui/vue/field';
 import {
   clientCenter,
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -17,6 +18,8 @@ import {
   screen,
   wait,
   waitFor,
+  waitForLaterMillisecond,
+  waitSingleFrame,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
@@ -486,17 +489,41 @@ describe('<Combobox.Trigger />', () => {
 
     it('does not open on ArrowDown/ArrowUp when reference is a textarea', async () => {
       const { user } = await render(
-        <Combobox.Root>
+        <Combobox.Root items={['alpha', 'beta']}>
           <Combobox.Trigger>Open</Combobox.Trigger>
-          <textarea aria-label="notes" />
+          <Combobox.Input as="textarea" aria-label="notes" />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List>
+                  {{
+                    item: ({ item }: ItemSlotProps) => (
+                      <Combobox.Item key={item} value={item}>
+                        {item}
+                      </Combobox.Item>
+                    ),
+                  }}
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
         </Combobox.Root>,
       );
 
-      const trigger = screen.getByRole('combobox');
-      await user.click(trigger);
-      await user.keyboard('{ArrowDown}');
+      // A press of the trigger opens the popup. The keys thus go to the textarea while the popup
+      // is closed.
+      screen.getByRole('textbox', { name: 'notes' }).focus();
+      await flushMicrotasks();
       expect(screen.queryByRole('listbox')).toBe(null);
+
+      await user.keyboard('{ArrowDown}');
+      await waitSingleFrame();
+      await flushMicrotasks();
+      expect(screen.queryByRole('listbox')).toBe(null);
+
       await user.keyboard('{ArrowUp}');
+      await waitSingleFrame();
+      await flushMicrotasks();
       expect(screen.queryByRole('listbox')).toBe(null);
     });
 
@@ -583,11 +610,12 @@ describe('<Combobox.Trigger />', () => {
       );
 
       const trigger = screen.getByTestId('trigger');
-      await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-      await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
-
-      await screen.findByRole('listbox');
-      const option = await screen.findByRole('option', { name: 'Beta' });
+      const option = await waitForLaterMillisecond(async () => {
+        await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+        await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
+        await screen.findByRole('listbox');
+        return screen.findByRole('option', { name: 'Beta' });
+      });
 
       await fireEvent.mouseMove(option, { pointerType: 'mouse', movementX: 1 });
       await waitFor(() => expect(option).toHaveAttribute('data-highlighted'));
@@ -621,11 +649,12 @@ describe('<Combobox.Trigger />', () => {
       );
 
       const trigger = screen.getByTestId('trigger');
-      await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-      await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
-
-      await screen.findByRole('listbox');
-      const option = await screen.findByRole('option', { name: 'Beta' });
+      const option = await waitForLaterMillisecond(async () => {
+        await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+        await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
+        await screen.findByRole('listbox');
+        return screen.findByRole('option', { name: 'Beta' });
+      });
 
       await fireEvent.mouseMove(option, { pointerType: 'mouse', movementX: 1 });
       await waitFor(() => expect(option).toHaveAttribute('data-highlighted'));
@@ -661,11 +690,12 @@ describe('<Combobox.Trigger />', () => {
         );
 
         const trigger = screen.getByTestId('trigger');
-        await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-        await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
-
-        await screen.findByRole('listbox');
-        const alpha = await screen.findByRole('option', { name: 'Alpha' });
+        const alpha = await waitForLaterMillisecond(async () => {
+          await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+          await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
+          await screen.findByRole('listbox');
+          return screen.findByRole('option', { name: 'Alpha' });
+        });
         const beta = await screen.findByRole('option', { name: 'Beta' });
 
         // Highlight Alpha so a stray drag-select would be able to commit it.
@@ -716,10 +746,12 @@ describe('<Combobox.Trigger />', () => {
         // closed-state effect must clear the shared pointerdown ref, otherwise the
         // stale entry makes the next drag-select onto Alpha read as a same-item tap
         // and never commit.
-        await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-        await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
-        await screen.findByRole('listbox');
-        const alpha = await screen.findByRole('option', { name: 'Alpha' });
+        const alpha = await waitForLaterMillisecond(async () => {
+          await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+          await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
+          await screen.findByRole('listbox');
+          return screen.findByRole('option', { name: 'Alpha' });
+        });
         await fireEvent.pointerDown(alpha, { pointerType: 'touch', isPrimary: true, button: 0 });
 
         await user.keyboard('{Escape}');
@@ -764,11 +796,12 @@ describe('<Combobox.Trigger />', () => {
       );
 
       const trigger = screen.getByTestId('trigger');
-      await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-      await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
-
-      await screen.findByRole('listbox');
-      const option = await screen.findByRole('option', { name: 'Beta' });
+      const option = await waitForLaterMillisecond(async () => {
+        await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+        await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
+        await screen.findByRole('listbox');
+        return screen.findByRole('option', { name: 'Beta' });
+      });
 
       await fireEvent.mouseUp(option, { button: 0 });
 
@@ -1137,6 +1170,79 @@ describe('<Combobox.Trigger />', () => {
 
         expect(popup.id).not.toBe('');
         expect(screen.getByTestId('trigger')).toHaveAttribute('aria-controls', popup.id);
+      });
+
+      it('has no aria-controls while KeepAlive holds the popup', async () => {
+        const Popup = defineComponent({
+          setup: () => () => (
+            <Combobox.Portal>
+              <Combobox.Positioner>
+                <Combobox.Popup data-testid="popup">
+                  <Combobox.Input />
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          ),
+        });
+        const Other = defineComponent({ setup: () => () => <span /> });
+        const visible = shallowRef(true);
+        await render(() => (
+          <Combobox.Root defaultOpen>
+            <Combobox.Trigger data-testid="trigger" />
+            <KeepAlive>{visible.value ? <Popup key="popup" /> : <Other key="other" />}</KeepAlive>
+          </Combobox.Root>
+        ));
+        await flushMicrotasks();
+        const trigger = screen.getByTestId('trigger');
+        const popup = screen.getByTestId('popup');
+        expect(popup.id).not.toBe('');
+        expect(trigger).toHaveAttribute('aria-controls', popup.id);
+
+        visible.value = false;
+        await flushMicrotasks();
+
+        expect(popup.isConnected).toBe(false);
+        expect(trigger).toHaveAttribute('aria-expanded', 'true');
+        expect(trigger).not.toHaveAttribute('aria-controls');
+
+        visible.value = true;
+        await flushMicrotasks();
+
+        expect(popup.isConnected).toBe(true);
+        expect(trigger).toHaveAttribute('aria-controls', popup.id);
+      });
+
+      it('has no aria-controls while the popup mounts in a branch that KeepAlive holds', async () => {
+        const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
+          () => (
+            <Combobox.Popup data-testid="popup">
+              <Combobox.Input />
+            </Combobox.Popup>
+          ),
+          { renderBranch: (part) => part },
+        );
+        await render(() => (
+          <Combobox.Root defaultOpen>
+            <Combobox.Trigger data-testid="trigger" />
+            <Combobox.Portal>
+              <Combobox.Positioner>
+                <HeldBranch />
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>
+        ));
+
+        await mountWhileHeld();
+
+        const trigger = screen.getByTestId('trigger');
+        expect(trigger).toHaveAttribute('aria-expanded', 'true');
+        expect(trigger).not.toHaveAttribute('aria-controls');
+
+        await show();
+
+        const popup = screen.getByTestId('popup');
+        expect(popup.id).not.toBe('');
+        expect(trigger).toHaveAttribute('aria-controls', popup.id);
       });
     });
 
@@ -1869,37 +1975,27 @@ describe('<Combobox.Trigger />', () => {
     });
 
     it('the label does not name a trigger that mounts while KeepAlive holds it', async () => {
-      const visible = shallowRef(true);
-      const extra = shallowRef(false);
       // With no `Combobox.Input` beside the trigger, the input is in the popup and the trigger is
       // the control of the field.
-      const Branch = defineComponent(() => () => (
-        <div>
-          {extra.value ? (
-            <Combobox.Root key="held" items={['apple']}>
-              <Combobox.Trigger id="held-trigger" />
-            </Combobox.Root>
-          ) : null}
-        </div>
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Combobox.Root key="held" items={['apple']}>
+          <Combobox.Trigger id="held-trigger" />
+        </Combobox.Root>
       ));
       await render(() => (
         <Field.Root>
           <Field.Label data-testid="label">Fruit</Field.Label>
-          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+          <HeldBranch />
         </Field.Root>
       ));
       const label = screen.getByTestId('label');
       const providerId = label.getAttribute('for');
 
-      visible.value = false;
-      await flushMicrotasks();
-      extra.value = true;
-      await flushMicrotasks();
+      await mountWhileHeld();
 
       expect(label.getAttribute('for')).toBe(providerId);
 
-      visible.value = true;
-      await flushMicrotasks();
+      await show();
 
       expect(label).toHaveAttribute('for', 'held-trigger');
     });

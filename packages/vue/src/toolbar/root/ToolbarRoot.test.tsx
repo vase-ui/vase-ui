@@ -7,11 +7,13 @@ import {
   createRenderer,
   describeConformance,
   flushMicrotasks,
+  heldMountListTests,
   hydrate,
   isJSDOM,
   renderOnServer,
   screen,
   takeReportedMessages,
+  waitFor,
 } from '#test-utils';
 import type { Orientation } from '../../internals/types';
 import { useToolbarRootContext } from './ToolbarRootContext';
@@ -33,6 +35,23 @@ function parse(html: string) {
 
 describe('<Toolbar.Root />', () => {
   const { render } = createRenderer();
+
+  heldMountListTests({
+    render,
+    renderList: (withLastItem) => (
+      <Toolbar.Root>
+        <Toolbar.Button>A</Toolbar.Button>
+        {withLastItem ? <Toolbar.Button>B</Toolbar.Button> : null}
+      </Toolbar.Root>
+    ),
+    async check(user) {
+      screen.getByRole('button', { name: 'A' }).focus();
+      await user.keyboard('[ArrowRight]');
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'B' })).toHaveFocus();
+      });
+    },
+  });
 
   describeConformance(<Toolbar.Root />, () => ({
     refInstanceof: window.HTMLDivElement,

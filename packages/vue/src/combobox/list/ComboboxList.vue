@@ -19,9 +19,9 @@ export interface ComboboxListProps
 import { computed, onScopeDispose, shallowRef, toRaw, watch } from 'vue';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { isInTreeOf, useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { stopEvent } from '../../utils/popups/event';
+import { useKeepAliveElementRef } from '../../utils/popups/useKeepAliveElementRef';
 import ComboboxCollection from '../collection/ComboboxCollection.vue';
 import { useComboboxPositionerContext } from '../positioner/ComboboxPositionerContext';
 import {
@@ -91,24 +91,10 @@ function setElements(list: HTMLElement | null) {
   listElement = list;
 }
 
-// `KeepAlive` takes the list out of the document and calls no `ref` callback. A list can also mount
-// in a branch that `KeepAlive` holds. While `KeepAlive` holds the list, the list gives no element to
-// the store, so that the input and the trigger do not name it. The `aria-controls` of the input
-// names the list, so the input is the owner of that reference.
-const { isHeld } = useKeepAliveState(
-  () => element.value,
-  (list) => isInTreeOf(toRaw(store.state).inputElement, list),
-);
-
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: [
-    (list: HTMLElement | null) => {
-      if (!isHeld.value) {
-        setElements(list);
-      }
-    },
-  ],
+  // The `aria-controls` of the input names the list, so the input is the owner of that reference.
+  ref: useKeepAliveElementRef(setElements, () => toRaw(store.state).inputElement),
   props: (attrs) => {
     const grid = store.select('grid');
     return [
@@ -142,10 +128,6 @@ const { element, elementProps } = useRenderElement('div', props, {
     ];
   },
 });
-
-// A render while `KeepAlive` held the list can give a new element, so the activation gives the
-// element that the list has now.
-watch(isHeld, (held) => setElements(held ? null : element.value));
 
 defineExpose({ element });
 </script>

@@ -1,16 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { createSSRApp, defineComponent, h, KeepAlive, onMounted, shallowRef } from 'vue';
+import { createSSRApp, defineComponent, h, onMounted, shallowRef } from 'vue';
 import { Checkbox } from '@vase-ui/vue/checkbox';
 import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import {
   createFormDataSpy,
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountFormResetTests,
   hiddenInputSizeTests,
   hydrate,
   hydrateAfter,
@@ -2617,6 +2619,15 @@ describe('<Checkbox.Root />', () => {
         expect(screen.getByRole('checkbox')).toHaveAttribute('aria-checked', 'mixed');
       });
     });
+
+    heldMountFormResetTests({
+      render,
+      renderControl: () => <Checkbox.Root name="notifications" defaultChecked />,
+      change: () => fireEvent.click(screen.getByRole('checkbox')),
+      readState: () => screen.getByRole('checkbox').getAttribute('aria-checked'),
+      defaultState: 'true',
+      changedState: 'false',
+    });
   });
 
   describe('in a field', () => {
@@ -3027,29 +3038,9 @@ describe('<Checkbox.Root />', () => {
   });
 
   describe('a checkbox that mounts while KeepAlive holds its branch', () => {
-    function createBranch(renderExtra: () => unknown) {
-      const visible = shallowRef(true);
-      const extra = shallowRef(false);
-      const Branch = defineComponent(() => () => <div>{extra.value ? renderExtra() : null}</div>);
-      const HeldBranch = defineComponent(() => () => (
-        <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
-      ));
-      async function mountWhileHeld() {
-        visible.value = false;
-        await flushMicrotasks();
-        extra.value = true;
-        await flushMicrotasks();
-      }
-      async function show() {
-        visible.value = true;
-        await flushMicrotasks();
-      }
-      return { HeldBranch, mountWhileHeld, show };
-    }
-
     it('does not block the form while held, and blocks it after the show', async () => {
       const handleSubmit = vi.fn();
-      const { HeldBranch, mountWhileHeld, show } = createBranch(() => (
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
         <Checkbox.Root key="box" required data-testid="box" />
       ));
       const { user } = await render(() => (
@@ -3075,7 +3066,7 @@ describe('<Checkbox.Root />', () => {
 
     it('does not block the form of its group while held, and blocks it after the show', async () => {
       const handleSubmit = vi.fn();
-      const { HeldBranch, mountWhileHeld, show } = createBranch(() => (
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
         <Checkbox.Root key="b" value="b" required />
       ));
       const { user } = await render(() => (
@@ -3102,7 +3093,7 @@ describe('<Checkbox.Root />', () => {
     });
 
     it('is not in `aria-controls` of the parent checkbox while held', async () => {
-      const { HeldBranch, mountWhileHeld, show } = createBranch(() => (
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
         <Checkbox.Root key="b" value="b" data-testid="b" />
       ));
       await render(() => (
@@ -3123,7 +3114,7 @@ describe('<Checkbox.Root />', () => {
     });
 
     it('does not give its id to the `for` of the label while held', async () => {
-      const { HeldBranch, mountWhileHeld, show } = createBranch(() => (
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
         <Checkbox.Root key="box" id="box" />
       ));
       await render(() => (
@@ -3265,9 +3256,13 @@ describe('<Checkbox.Root />', () => {
       const fixture = within(container);
       expect(getHiddenInput(fixture).checked).toBe(true);
       expect(fixture.getByTestId('changes').textContent).toBe('');
-      expect(takeReportedMessages()).toEqual([
+      // Vue writes `Hydration completed but contains mismatches.` one time for each page, so only the
+      // first mismatch of a test file has it.
+      const messages = takeReportedMessages().filter(
+        (message) => message !== 'console.error: Hydration completed but contains mismatches.',
+      );
+      expect(messages).toEqual([
         expect.stringMatching(/^console\.warn: .*Hydration attribute mismatch[\s\S]*checked/),
-        'console.error: Hydration completed but contains mismatches.',
       ]);
     });
   });

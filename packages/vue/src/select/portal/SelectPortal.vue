@@ -37,7 +37,7 @@ defineSlots<{
 const state: SelectPortalState = EMPTY_OBJECT;
 
 const store = useSelectRootContext();
-// The root mounts the items before the first open, so that a closed select can match a value.
+// `forceMounted` keeps the items of a closed select, so that it can match a value.
 const shouldRender = computed(() => store.select('mounted') || store.select('forceMounted'));
 
 // As in Base UI, this part renders `FloatingPortal` and makes no element of its own.
