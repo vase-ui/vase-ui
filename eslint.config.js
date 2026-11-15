@@ -534,14 +534,14 @@ export default defineConfig([
   {
     files: [...TEST_SCRIPT_FILES, 'packages/vue/test/**/*.{ts,tsx,vue}', 'fixtures/nuxt/test/**'],
     rules: {
-      // A ported test keeps the `!` of the Base UI test. A value that is absent fails the test.
+      // A ported test can keep the `!` of the Base UI test. A value that is absent fails the test.
       '@typescript-eslint/no-non-null-assertion': 'off',
       // A test takes the queries of Testing Library out of their object.
       '@typescript-eslint/unbound-method': 'off',
       // The fix changes a title such as `${key}` into an expression, and `pnpm parity:check` then
       // cannot read the title.
       '@typescript-eslint/no-unnecessary-template-expression': 'off',
-      // A ported test keeps the casts of the Base UI test.
+      // A ported test can keep the casts of the Base UI test.
       '@typescript-eslint/no-unnecessary-type-assertion': 'off',
     },
   },

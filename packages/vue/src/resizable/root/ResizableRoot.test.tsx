@@ -971,6 +971,7 @@ describe('<Resizable.Root />', () => {
         grows: ['30', '70', '25', '75'],
       },
       { name: 'a vertical root', composition: 'vertical', grows: ['40', '60'] },
+      { name: 'a collapsed panel', composition: 'collapsed', grows: ['0', '100'] },
       { name: 'the style of a consumer', composition: 'style', grows: ['30', '70'] },
     ])('hydrates $name with no warning and no mismatch left', async ({ composition, grows }) => {
       const props = { composition };
@@ -983,6 +984,21 @@ describe('<Resizable.Root />', () => {
 
       expect(growsIn(container)).toEqual(grows);
       expect(container.querySelectorAll('[data-allow-mismatch]')).toHaveLength(0);
+    });
+
+    it('has the state of the collapsed panel and of the handle after the hydration', async () => {
+      const props = { composition: 'collapsed' };
+      const serverHtml = await renderOnServer(
+        'src/resizable/root/ResizableRootHydration.test.vue',
+        props,
+      );
+
+      const { container } = await hydrate(ResizableRootHydration, { serverHtml, props });
+
+      expect(container.querySelector('#a')).toHaveAttribute('data-collapsed');
+      expect(container.querySelector('#b')).not.toHaveAttribute('data-collapsed');
+      expect(container.querySelector('[role="separator"]')).toHaveAttribute('data-at-min');
+      expect(container.querySelector('[role="separator"]')).not.toHaveAttribute('data-at-max');
     });
 
     it('keeps the style of a consumer after the hydration', async () => {
@@ -1050,6 +1066,303 @@ describe('<Resizable.Root />', () => {
       expect(within(container).getByTestId('late').style.flexGrow).toBe('33.333');
       expect(within(container).getByTestId('a')).toBe(panel);
       expect(takeReportedMessages()).toEqual([]);
+    });
+  });
+
+  describe('prop: pushPanels', () => {
+    // The middle panel has a least size of 20, so a move of the first handle goes on into the last
+    // panel only when the root pushes the panels.
+    function Pushing(props: { pushPanels: boolean }) {
+      return (
+        <div style={{ width: '1000px' }}>
+          <Resizable.Root pushPanels={props.pushPanels} defaultLayout={{ a: 30, b: 30, c: 40 }}>
+            <Resizable.Panel id="a" data-testid="a" />
+            <Resizable.Handle data-testid="handle-a" />
+            <Resizable.Panel id="b" data-testid="b" minSize={20} />
+            <Resizable.Handle data-testid="handle-b" />
+            <Resizable.Panel id="c" data-testid="c" />
+          </Resizable.Root>
+        </div>
+      );
+    }
+
+    it.each([
+      { name: 'pushes the next panel', pushPanels: true, expected: ['60', '20', '20'] },
+      { name: 'stops at the next panel', pushPanels: false, expected: ['40', '20', '40'] },
+    ])('a drag $name', async ({ pushPanels, expected }) => {
+      await render(<Pushing pushPanels={pushPanels} />);
+
+      await drag('handle-a', 300);
+
+      expect(grows('a', 'b', 'c')).toEqual(expected);
+    });
+
+    it.each([
+      { name: 'pushes the next panel', pushPanels: true, expected: ['50', '20', '30'] },
+      { name: 'stops at the next panel', pushPanels: false, expected: ['40', '20', '40'] },
+    ])('a key $name', async ({ pushPanels, expected }) => {
+      const { user } = await render(<Pushing pushPanels={pushPanels} />);
+      screen.getByTestId('handle-a').focus();
+
+      await user.keyboard('{Shift>}{ArrowRight}{ArrowRight}{/Shift}');
+
+      expect(grows('a', 'b', 'c')).toEqual(expected);
+    });
+
+    it.each([
+      { name: 'counts the next panels', pushPanels: true, max: '80' },
+      { name: 'counts the next panel only', pushPanels: false, max: '40' },
+    ])('has an aria-valuemax that $name', async ({ pushPanels, max }) => {
+      await render(<Pushing pushPanels={pushPanels} />);
+
+      expect(screen.getByTestId('handle-a')).toHaveAttribute('aria-valuemax', max);
+    });
+  });
+
+  describe('methods', () => {
+    type RootInstance = InstanceType<typeof Resizable.Root>;
+
+    // The methods come through a template ref, which a vnode makes only in a render function.
+    async function renderRoot(root: Record<string, unknown> = {}) {
+      const instance: { current?: RootInstance } = {};
+      await render(() => (
+        <Three
+          root={{
+            ref: (value: unknown) => {
+              instance.current = value as RootInstance;
+            },
+            ...root,
+          }}
+        />
+      ));
+      return () => {
+        if (!instance.current) {
+          throw new Error('The root is not mounted.');
+        }
+        return instance.current;
+      };
+    }
+
+    it('gives a copy of the layout that the panels show with getLayout()', async () => {
+      const getRoot = await renderRoot({ defaultLayout: { a: 20, b: 30, c: 50 } });
+
+      const layout = getRoot().getLayout();
+      layout.a = 99;
+
+      expect(getRoot().getLayout()).toEqual({ a: 20, b: 30, c: 50 });
+      await drag('handle-a', 100);
+      expect(getRoot().getLayout()).toEqual({ a: 30, b: 20, c: 50 });
+    });
+
+    it('sets the layout with a change, an update and a commit, in that order', async () => {
+      const calls: string[] = [];
+      const reasons: string[] = [];
+      const getRoot = await renderRoot({
+        onLayoutChange: (_layout: unknown, details: { reason: string }) => {
+          calls.push('layoutChange');
+          reasons.push(details.reason);
+        },
+        'onUpdate:layout': () => {
+          calls.push('update:layout');
+        },
+        onLayoutCommitted: (_layout: unknown, details: { reason: string }) => {
+          calls.push('layoutCommitted');
+          reasons.push(details.reason);
+        },
+      });
+
+      getRoot().setLayout({ a: 10, b: 20, c: 70 });
+      await nextTick();
+
+      expect(calls).toEqual(['layoutChange', 'update:layout', 'layoutCommitted']);
+      expect(reasons).toEqual([REASONS.imperativeAction, REASONS.imperativeAction]);
+      expect(grows('a', 'b', 'c')).toEqual(['10', '20', '70']);
+    });
+
+    it('keeps the layout, and emits no update and no commit, when a listener cancels setLayout()', async () => {
+      const onUpdate = vi.fn();
+      const onCommitted = vi.fn();
+      const getRoot = await renderRoot({
+        onLayoutChange: (_layout: unknown, details: { cancel: () => void }) => {
+          details.cancel();
+        },
+        'onUpdate:layout': onUpdate,
+        onLayoutCommitted: onCommitted,
+      });
+
+      getRoot().setLayout({ a: 10, b: 20, c: 70 });
+      await nextTick();
+
+      expect(onUpdate).not.toHaveBeenCalled();
+      expect(onCommitted).not.toHaveBeenCalled();
+      expect(grows('a', 'b', 'c')).toEqual(['33.334', '33.333', '33.333']);
+    });
+
+    it('emits nothing when the panels show the layout already', async () => {
+      const handlers = {
+        onLayoutChange: vi.fn(),
+        'onUpdate:layout': vi.fn(),
+        onLayoutCommitted: vi.fn(),
+      };
+      const getRoot = await renderRoot({ defaultLayout: { a: 20, b: 30, c: 50 }, ...handlers });
+
+      getRoot().setLayout({ a: 20, b: 30, c: 50 });
+      getRoot().setLayout({ a: 2, b: 3, c: 5 });
+      getRoot().reset();
+      await nextTick();
+
+      for (const handler of Object.values(handlers)) {
+        expect(handler).not.toHaveBeenCalled();
+      }
+    });
+
+    it('keeps the entry of a panel that is not mounted when it sets the layout', async () => {
+      const onLayoutChange = vi.fn();
+      const getRoot = await renderRoot({ onLayoutChange });
+
+      getRoot().setLayout({ a: 30, b: 30, c: 20, gone: 20 });
+      await nextTick();
+
+      expect(onLayoutChange.mock.calls[0]?.[0]).toEqual({ a: 30, b: 30, c: 20, gone: 20 });
+      expect(grows('a', 'b', 'c')).toEqual(['37.5', '37.5', '25']);
+    });
+
+    it('sets the layout of a disabled root', async () => {
+      const getRoot = await renderRoot({ disabled: true });
+
+      getRoot().setLayout({ a: 10, b: 20, c: 70 });
+      await nextTick();
+
+      expect(grows('a', 'b', 'c')).toEqual(['10', '20', '70']);
+    });
+
+    it.each([
+      {
+        name: 'the defaultLayout',
+        root: { defaultLayout: { a: 20, b: 30, c: 50 } },
+        expected: ['20', '30', '50'],
+      },
+      { name: 'the sizes of the panels', root: {}, expected: ['33.334', '33.333', '33.333'] },
+    ])('gives the layout at the start with reset(), from $name', async ({ root, expected }) => {
+      const onLayoutChange = vi.fn();
+      const onLayoutCommitted = vi.fn();
+      const getRoot = await renderRoot({ ...root, onLayoutChange, onLayoutCommitted });
+      await drag('handle-a', 100);
+      expect(grows('a', 'b', 'c')).not.toEqual(expected);
+      onLayoutChange.mockClear();
+      onLayoutCommitted.mockClear();
+
+      getRoot().reset();
+      await nextTick();
+
+      expect(grows('a', 'b', 'c')).toEqual(expected);
+      expect(onLayoutChange.mock.calls[0]?.[1].reason).toBe(REASONS.imperativeAction);
+      expect(onLayoutCommitted.mock.calls[0]?.[1].reason).toBe(REASONS.imperativeAction);
+    });
+
+    it('gives the layout at the start with reset() when the app controls the layout', async () => {
+      const layout = shallowRef<Record<string, number>>({ a: 50, b: 25, c: 25 });
+      const instance: { current?: InstanceType<typeof Resizable.Root> } = {};
+      await render(() => (
+        <Three
+          root={{
+            layout: layout.value,
+            ref: (value: unknown) => {
+              instance.current = value as InstanceType<typeof Resizable.Root>;
+            },
+            'onUpdate:layout': (next: Record<string, number>) => {
+              layout.value = next;
+            },
+          }}
+        />
+      ));
+
+      instance.current?.reset();
+      await nextTick();
+
+      expect(grows('a', 'b', 'c')).toEqual(['33.334', '33.333', '33.333']);
+    });
+  });
+
+  describe('useParentRoot()', () => {
+    const Probe = defineComponent({
+      props: { name: { type: String, required: true } },
+      setup(props) {
+        const parent = Resizable.useParentRoot();
+        return () => (
+          <button
+            type="button"
+            data-testid={props.name}
+            data-layout={parent ? JSON.stringify(parent.getLayout()) : 'none'}
+            onClick={() => {
+              parent?.setLayout({ a: 10, b: 90 });
+            }}
+          >
+            {parent ? parent.orientation.value : 'none'}
+          </button>
+        );
+      },
+    });
+
+    it('gives the orientation and the methods of the root that the part is in', async () => {
+      await render(
+        <div style={{ width: '1000px' }}>
+          <Resizable.Root orientation="vertical" style={{ height: '200px' }}>
+            <Resizable.Panel id="a" data-testid="a">
+              <Probe name="probe" />
+            </Resizable.Panel>
+            <Resizable.Handle />
+            <Resizable.Panel id="b" data-testid="b" />
+          </Resizable.Root>
+        </div>,
+      );
+      const probe = screen.getByTestId('probe');
+      expect(probe).toHaveTextContent('vertical');
+      expect(JSON.parse(probe.dataset.layout ?? '')).toEqual({ a: 50, b: 50 });
+
+      await fireEvent.click(probe);
+
+      expect(grows('a', 'b')).toEqual(['10', '90']);
+    });
+
+    it('gives the root that is nearest to the part when roots are nested', async () => {
+      await render(
+        <div style={{ width: '1000px', height: '400px' }}>
+          <Resizable.Root style={{ height: '100%' }}>
+            <Resizable.Panel id="outer-a">
+              <Probe name="outer-probe" />
+            </Resizable.Panel>
+            <Resizable.Handle />
+            <Resizable.Panel id="outer-b">
+              <Resizable.Root orientation="vertical" style={{ height: '100%' }}>
+                <Resizable.Panel id="inner-a" defaultSize={30}>
+                  <Probe name="inner-probe" />
+                </Resizable.Panel>
+                <Resizable.Handle />
+                <Resizable.Panel id="inner-b" />
+              </Resizable.Root>
+            </Resizable.Panel>
+          </Resizable.Root>
+        </div>,
+      );
+
+      expect(screen.getByTestId('outer-probe')).toHaveTextContent('horizontal');
+      expect(JSON.parse(screen.getByTestId('outer-probe').dataset.layout ?? '')).toEqual({
+        'outer-a': 50,
+        'outer-b': 50,
+      });
+      expect(screen.getByTestId('inner-probe')).toHaveTextContent('vertical');
+      expect(JSON.parse(screen.getByTestId('inner-probe').dataset.layout ?? '')).toEqual({
+        'inner-a': 30,
+        'inner-b': 70,
+      });
+    });
+
+    it('gives null outside a root', async () => {
+      await render(<Probe name="probe" />);
+
+      expect(screen.getByTestId('probe')).toHaveTextContent('none');
+      expect(screen.getByTestId('probe')).toHaveAttribute('data-layout', 'none');
     });
   });
 

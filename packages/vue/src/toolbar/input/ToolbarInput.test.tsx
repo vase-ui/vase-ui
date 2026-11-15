@@ -6,16 +6,20 @@ import { NumberField } from '@vase-ui/vue/number-field';
 import {
   createRenderer,
   describeConformance,
+  flushMicrotasks,
   hydrate,
+  hydrateAfter,
   isJSDOM,
   renderOnServer,
   screen,
+  within,
 } from '#test-utils';
 import { NOOP } from '../../internals/noop';
 import { ToolbarRootContext } from '../root/ToolbarRootContext';
 import type { Orientation } from '../../internals/types';
 import { CompositeRootContext } from '../../internals/composite/root/CompositeRootContext';
 import { ARROW_UP, ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT } from '../../internals/composite/composite';
+import ToolbarInputBeforeHydration from './ToolbarInputBeforeHydration.test.vue';
 import ToolbarInputHydration from './ToolbarInputHydration.test.vue';
 
 const HYDRATION_FIXTURE = 'src/toolbar/input/ToolbarInputHydration.test.vue';
@@ -395,6 +399,34 @@ describe('<Toolbar.Input />', () => {
 
       expect(readTabindexes(container)).toEqual(tabindexes);
       expect(container.querySelector('input')).toHaveValue('abcd');
+    });
+  });
+
+  describe('VUE-74: text that the user typed before the hydration', () => {
+    it.each([
+      { name: 'a value of the consumer', props: { controlled: true }, text: 'abcd' },
+      { name: 'a default value', props: { controlled: false }, text: 'abc' },
+    ])('runs the input listener one time for $name', async ({ props, text }) => {
+      const serverHtml = await renderOnServer(
+        'src/toolbar/input/ToolbarInputBeforeHydration.test.vue',
+        props,
+      );
+
+      const { container } = await hydrateAfter(ToolbarInputBeforeHydration, {
+        serverHtml,
+        props,
+        before(serverContainer) {
+          const serverInput = within(serverContainer).getByTestId<HTMLInputElement>('input');
+          serverInput.focus();
+          serverInput.value = 'abcd';
+        },
+      });
+      await flushMicrotasks();
+
+      const fixture = within(container);
+      expect(fixture.getByTestId('input')).toHaveValue('abcd');
+      expect(fixture.getByTestId('inputs').textContent).toBe('abcd');
+      expect(fixture.getByTestId('text').textContent).toBe(text);
     });
   });
 });
