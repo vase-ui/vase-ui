@@ -119,10 +119,6 @@ export namespace Trigger {
 /**
  * A text input to search for items in the list.
  * Renders an `<input>` element.
- *
- * The part has more than one root node: the dismiss button of an open popup, then its element. A
- * rule of `<style scoped>` thus does not match its element, and `v-show` has no effect on it. Use
- * `:deep()`, a CSS module, a `style` binding or `v-if`.
  */
 export const Input: typeof ComboboxInput = ComboboxInput;
 export namespace Input {
@@ -226,10 +222,6 @@ export namespace Positioner {
 /**
  * A container for the list.
  * Renders a `<div>` element.
- *
- * The part has more than one root node: its element, and the focus guards and the dismiss button
- * that it renders beside its element. A rule of `<style scoped>` thus does not match its element,
- * and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
  */
 export const Popup: typeof ComboboxPopup = ComboboxPopup;
 export namespace Popup {

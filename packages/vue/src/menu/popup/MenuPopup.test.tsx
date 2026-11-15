@@ -4,6 +4,7 @@ import { KeepAlive, computed, defineComponent, provide, shallowRef } from 'vue';
 import { Menubar } from '@vase-ui/vue/menubar';
 import * as Menu from '../index.parts';
 import {
+  clientCenter,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -285,8 +286,11 @@ describe('<Menu.Popup />', () => {
 
       const { user } = await render(<App />);
       const dialogTrigger = screen.getByRole('button', { name: 'Create' });
-      await user.click(dialogTrigger);
-      await user.click(await screen.findByRole('button', { name: 'Template' }));
+      const menuTrigger = await waitForLaterMillisecond(async () => {
+        await user.click(dialogTrigger);
+        return screen.findByRole('button', { name: 'Template' });
+      });
+      await user.click(menuTrigger);
       await user.click(await screen.findByRole('menuitem', { name: 'Blank' }));
 
       await waitFor(() => {
@@ -442,7 +446,7 @@ describe('<Menu.Popup />', () => {
       );
 
       const trigger = screen.getByText('Open');
-      await fireEvent.mouseDown(trigger);
+      await fireEvent.mouseDown(trigger, clientCenter(trigger));
       const item = await screen.findByText('Close');
 
       // Drag-release selection is only armed 200ms after the trigger press.

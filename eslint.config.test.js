@@ -130,6 +130,13 @@ const reported = [
     ruleId: 'no-restricted-properties',
     hint: 'provide',
   },
+  ...['toSorted', 'toReversed', 'toSpliced'].map((method) => ({
+    name: `a call of ${method}`,
+    file: `${SRC}/useRoot.ts`,
+    code: `export const copy = (items: number[]) => items.${method}();\n`,
+    ruleId: 'no-restricted-properties',
+    hint: 'Firefox 114',
+  })),
   {
     name: 'a read of $parent in resolveElement.ts',
     file: 'packages/vue/src/internals/resolveElement.ts',
@@ -151,6 +158,13 @@ const reported = [
     ruleId: 'vue/no-restricted-syntax',
     hint: 'provide',
   },
+  ...['toSorted', 'toReversed', 'toSpliced'].map((method) => ({
+    name: `a call of ${method} in a template`,
+    file: `${SRC}/DialogRoot.vue`,
+    code: `<script setup lang="ts">\nconst items = [2, 1];\n</script>\n\n<template>\n  <div>{{ items.${method}() }}</div>\n</template>\n`,
+    ruleId: 'vue/no-restricted-syntax',
+    hint: 'Firefox 114',
+  })),
   {
     name: 'a directive variable in script setup',
     file: `${SRC}/DialogRoot.vue`,

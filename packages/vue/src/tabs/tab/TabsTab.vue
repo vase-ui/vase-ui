@@ -112,6 +112,7 @@ const {
   getTabPanelIdByValue,
   onValueChange,
   orientation,
+  reaches,
   registerTab,
   tabActivationDirection,
 } = useTabsRootContext();
@@ -125,6 +126,8 @@ const registrationSource = Symbol();
 useRegisteredId(
   () => tabId.value,
   (getId) => registerTab(registrationSource, getId && { value: () => props.value, id: getId }),
+  () => element.value,
+  reaches,
 );
 
 const tabMetadata = computed<TabsTabMetadata>(() => ({

@@ -4,6 +4,7 @@ import { platform } from '../../common/platform';
 import { useContextMenuRootContext } from '../../internals/context-menu-root-context/ContextMenuRootContext';
 import { REASONS } from '../../internals/reasons';
 import { dispatchClickWithModifiers } from '../../utils/dispatchClickWithModifiers';
+import { isReleaseAtPressPoint } from '../../utils/popups/isReleaseAtPressPoint';
 import { useMenuRootContext } from '../root/MenuRootContext';
 import type { MenuStore } from '../store/MenuStore';
 import type { UseMenuItemMetadata } from './useMenuItem';
@@ -115,11 +116,14 @@ export function useMenuItemCommonProps(
       }
 
       const item = getItemElement();
+      const press = store.context.triggerPressRef.value;
       if (
         item &&
         itemMetadata.type === 'regular-item' &&
         store.context.allowMouseUpTriggerRef.value &&
-        (!isContextMenu || event.button === 2)
+        (!isContextMenu || event.button === 2) &&
+        // The open can put an item under a pointer that does not move (`VUE-84`).
+        !(press && isReleaseAtPressPoint(press, event))
       ) {
         // Drag release has no mousedown on this item. Focus it before activation so
         // arrow navigation continues from it when the menu stays open.

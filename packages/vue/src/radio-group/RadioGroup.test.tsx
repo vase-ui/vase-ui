@@ -1,5 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
-import { defineComponent, h, KeepAlive, onMounted, shallowRef, Teleport, watch } from 'vue';
+import {
+  computed,
+  defineComponent,
+  h,
+  KeepAlive,
+  onMounted,
+  shallowRef,
+  Teleport,
+  watch,
+} from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import type { TextDirection } from '@vase-ui/vue/direction-provider';
 import { Field } from '@vase-ui/vue/field';
@@ -635,6 +644,32 @@ describe('<RadioGroup />', () => {
 
     await fireEvent.click(screen.getByText('Remove second'));
     expect(group.value?.inputElement).toBe(null);
+  });
+
+  it('exposes the first enabled input when the value becomes null after the exposed radio unmounts', async () => {
+    const showSecond = shallowRef(true);
+    const value = shallowRef<string | null>('b');
+    const group = shallowRef<RadioGroupInstance | null>(null);
+    await render(() => (
+      <RadioGroup ref={group} value={value.value}>
+        <Radio.Root value="a" data-testid="radio-a" />
+        {showSecond.value && <Radio.Root value="b" data-testid="radio-b" />}
+      </RadioGroup>
+    ));
+    const inputA = getInput('radio-a');
+    const inputB = getInput('radio-b');
+
+    expect(group.value?.inputElement).toBe(inputB);
+
+    showSecond.value = false;
+    await flushMicrotasks();
+
+    expect(group.value?.inputElement).toBe(null);
+
+    value.value = null;
+    await flushMicrotasks();
+
+    expect(group.value?.inputElement).toBe(inputA);
   });
 
   it.skipIf(isJSDOM)(
@@ -3535,13 +3570,33 @@ describe('<RadioGroup />', () => {
       expect(screen.getByTestId('b')).toHaveFocus();
     });
 
-    it('focuses the first radio after a keyed move', async () => {
+    it('updates a computed of inputElement when a radio mounts before the other radios', async () => {
+      const extra = shallowRef(false);
+      const group = shallowRef<RadioGroupInstance | null>(null);
+      const exposedInput = computed(() => group.value?.inputElement);
+      await render(() => (
+        <RadioGroup ref={group}>
+          {extra.value ? <Radio.Root key="b" value="b" data-testid="b" /> : null}
+          <Radio.Root key="a" value="a" data-testid="a" />
+        </RadioGroup>
+      ));
+
+      expect(exposedInput.value).toBe(getInput('a'));
+
+      extra.value = true;
+      await flushMicrotasks();
+
+      expect(exposedInput.value).toBe(getInput('b'));
+    });
+
+    it('exposes and focuses the first radio after a keyed move', async () => {
       const order = shallowRef(['a', 'b']);
+      const group = shallowRef<RadioGroupInstance | null>(null);
       const handleSubmit = vi.fn();
       const App = defineComponent(() => () => (
         <Form onFormSubmit={handleSubmit}>
           <Field.Root name="fruit">
-            <RadioGroup required>
+            <RadioGroup ref={group} required>
               {order.value.map((value) => (
                 <Radio.Root key={value} value={value} data-testid={value} />
               ))}
@@ -3552,12 +3607,41 @@ describe('<RadioGroup />', () => {
       ));
       const { user } = await render(<App />);
 
+      expect(group.value?.inputElement).toBe(getInput('a'));
+
       order.value = ['b', 'a'];
       await flushMicrotasks();
+
+      expect(group.value?.inputElement).toBe(getInput('b'));
+
       await user.click(screen.getByRole('button', { name: 'Submit' }));
 
       expect(handleSubmit).not.toHaveBeenCalled();
       expect(screen.getByTestId('b')).toHaveFocus();
+    });
+
+    it.each([
+      { name: 'keeps the first radio when another radio', removed: 'a', exposed: 'b' },
+      { name: 'gives null when the first radio', removed: 'b', exposed: null },
+    ])('$name unmounts after a keyed move', async ({ removed, exposed }) => {
+      const order = shallowRef(['a', 'b']);
+      const group = shallowRef<RadioGroupInstance | null>(null);
+      await render(() => (
+        <RadioGroup ref={group}>
+          {order.value.map((value) => (
+            <Radio.Root key={value} value={value} data-testid={value} />
+          ))}
+        </RadioGroup>
+      ));
+      order.value = ['b', 'a'];
+      await flushMicrotasks();
+
+      expect(group.value?.inputElement).toBe(getInput('b'));
+
+      order.value = ['b', 'a'].filter((value) => value !== removed);
+      await flushMicrotasks();
+
+      expect(group.value?.inputElement).toBe(exposed === null ? null : getInput(exposed));
     });
 
     it('focuses a radio of a branch that KeepAlive shows before a radio outside it', async () => {

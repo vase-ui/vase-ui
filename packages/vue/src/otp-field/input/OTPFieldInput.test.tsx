@@ -1257,7 +1257,6 @@ describe('<OTPField.Input />', () => {
     });
 
     it('moves the focus out with Tab, and back to the tab stop with Shift+Tab', async () => {
-      // WebKit does not move the focus to a button with the Tab key, so the neighbors are inputs.
       await render(
         <div>
           <input aria-label="Before" />
