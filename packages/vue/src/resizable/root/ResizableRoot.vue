@@ -502,7 +502,11 @@ let knownIds = new Set<string>();
 // and after it sorted them. A panel that mounts with no entry in the layout of the consumer gets a
 // size, and the others make room for it. The layout then names that panel. A panel that goes keeps
 // its entry, so it comes back at its size.
-function syncLayoutWithPanels() {
+// The panels and the handles, in the order of the document.
+const listItems = shallowRef<readonly Element[]>([]);
+
+function syncLayoutWithPanels(map: ReadonlyMap<Element, unknown>) {
+  listItems.value = [...map.keys()];
   if (deactivated) {
     return;
   }
@@ -518,8 +522,7 @@ function syncLayoutWithPanels() {
 }
 
 const outerList = useCompositeListContext();
-const itemElements = shallowRef<(HTMLElement | null)[]>([]);
-useCompositeList({ elementsRef: itemElements, onMapChange: syncLayoutWithPanels });
+useCompositeList({ elementsRef: shallowRef([]), onMapChange: syncLayoutWithPanels });
 
 onMounted(() => {
   mounted = true;
@@ -869,21 +872,21 @@ const { element, elementProps } = useRenderElement('div', props, {
 // The root and each handle change the room of the panels when they change size. The panels do not:
 // a transition of `flex-grow` moves a panel and leaves the sum of the panels as it is.
 watch(
-  [element, itemElements],
-  ([rootElement, elements], _previous, onCleanup) => {
+  [element, listItems],
+  ([rootElement, items], _previous, onCleanup) => {
     if (rootElement === null || typeof ResizeObserver === 'undefined') {
       return;
     }
     // A panel or a handle that mounted changes the room of the panels.
     measure();
-    const panelElements = new Set(panels.value.map((panel) => panel.element.value));
+    const panelElements = new Set<Element | null>(panels.value.map((panel) => panel.element.value));
     const observer = new ResizeObserver(() => {
       measure();
     });
     observer.observe(rootElement);
-    for (const handle of elements) {
-      if (handle !== null && !panelElements.has(handle)) {
-        observer.observe(handle);
+    for (const item of items) {
+      if (!panelElements.has(item)) {
+        observer.observe(item);
       }
     }
     onCleanup(() => {
