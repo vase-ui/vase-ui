@@ -656,7 +656,7 @@ If a line must break a rule, put a disable comment on that line and give the rea
 
 The project `vapor` of the tests checks the parts in a Vapor app. See [Where a test runs](#where-a-test-runs).
 
-`isInHeldBranch()` of `src/internals/useKeepAliveState.ts` reads `getCurrentInstance`, because Vue has no other API that tells a part that `KeepAlive` holds its branch. In a part compiled as a Vapor component, the function gives `false`. Each part of the package compiles as a virtual DOM component. Such a part below the `KeepAlive` of a Vapor component gets `true` while that `KeepAlive` holds it. A case of `utils/popups/portal/PortalHeldMount.test.tsx` shows this in the project `vapor`.
+`isInHeldBranch()` of `src/internals/useKeepAliveState.ts` reads `getCurrentInstance`, because Vue has no other API that tells a part that `KeepAlive` holds its branch. In a part compiled as a Vapor component, the function gives `false`. Each part of the package compiles as a virtual DOM component. Such a part below the `KeepAlive` of a Vapor component gets `true` while that `KeepAlive` holds it. A case of `src/utils/popups/portal/PortalHeldMount.test.tsx` shows this in the project `vapor`.
 
 ### Server render
 
