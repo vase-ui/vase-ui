@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, posix, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { format, resolveConfig } from 'prettier';
 import ts from 'typescript';
@@ -15,11 +15,20 @@ import {
 } from '../parity/repository.ts';
 import type { FamilyFiles } from '../parity/repository.ts';
 import { listFiles, readFileAt, resolveCommit } from '../parity/upstreamClone.ts';
+import { classStringsOfScript, classStringsOfTsx, classStringsOfVue } from './demoClasses.ts';
 import { listFamilyPages } from './familyPages.ts';
 import { docsFolderGlobs } from './upstreamDocs.ts';
 
-/** A demo of Base UI has one folder for each variant. The Tailwind variants are not ported. */
+/** A demo of Base UI has one folder for each variant. */
 const TAILWIND_FOLDER = 'tailwind';
+
+/**
+ * The name of a Vue folder of a demo, by family, when it is not the name of the Base UI folder. The
+ * library of such a demo has no Vue release, so the Vue demo uses another library.
+ */
+const VUE_DEMO_NAMES: Record<string, Record<string, string> | undefined> = {
+  'handbook-forms': { 'react-hook-form': 'vee-validate' },
+};
 
 const ENTRY_POINT_IMPORT = /^@base-ui\/react\/([^/]+)$/;
 
@@ -34,6 +43,13 @@ export interface DemoRecord {
    * folder of the demo. A demo that imports no other entry point has no row.
    */
   entryPoints?: Record<string, string[]>;
+  /**
+   * The class strings of the `.ts` and `.tsx` files of a folder, by the path of the folder from
+   * `upstream`. The path of a file at the root is `.`. A string has one space between its class
+   * names. A row has a string as often as the folder repeats it, in the sequence of the code units.
+   * A folder with no class string has no row. Only a record that has Tailwind demos has this key.
+   */
+  classes?: Record<string, string[]>;
 }
 
 export interface UpstreamDemos {
@@ -50,6 +66,12 @@ export interface DemoFamily {
   record: DemoRecord | undefined;
   /** The SHA-256 of each file under `docs/demos/<family>`, by its path from that folder. */
   files: Map<string, string>;
+  /**
+   * The class strings of the `.vue` and `.ts` files in the Vue folder of each key of
+   * `record.classes`, by that key, in the sequence of the file names. A key whose Vue folder has no
+   * such file is not in the map.
+   */
+  vueClasses: Map<string, string[]>;
 }
 
 function demosFolder(name: string): string {
@@ -92,20 +114,53 @@ function sortedUnique(names: string[]): string[] {
   return [...new Set(names)].sort((a, b) => a.localeCompare(b, 'en'));
 }
 
+/** The name of the Vue folder of the demo of Base UI `demo`. */
+function vueDemoName(family: string, demo: string): string {
+  return VUE_DEMO_NAMES[family]?.[demo] ?? demo;
+}
+
+/** The name of the demo of Base UI that the Vue folder `vueDemo` holds. */
+function upstreamDemoName(family: string, vueDemo: string): string {
+  const names = Object.entries(VUE_DEMO_NAMES[family] ?? {});
+  return names.find(([, name]) => name === vueDemo)?.[0] ?? vueDemo;
+}
+
+/** The Vue folder of a folder of Base UI, both by their paths from the folder of the demos. */
+function vueFolder(family: string, upstreamFolder: string): string {
+  const [demo, ...rest] = upstreamFolder.split('/');
+  return [vueDemoName(family, demo), ...rest].join('/');
+}
+
+/** The strings of `strings` that `other` does not have. A repeated string counts as often as it repeats. */
+function subtract(strings: string[], other: string[]): string[] {
+  const available = new Map<string, number>();
+  for (const item of other) {
+    available.set(item, (available.get(item) ?? 0) + 1);
+  }
+  return strings.filter((item) => {
+    const count = available.get(item) ?? 0;
+    available.set(item, count - 1);
+    return count < 1;
+  });
+}
+
 /**
  * Reads the demo files of a family from the file list of Base UI at the matched commit of the family.
- * The record also names the other entry points that each demo imports.
+ * The record also names the other entry points that each demo imports. With `tailwind`, the record
+ * also has the files of the `tailwind` folders and the class strings of each folder.
  */
 export function readUpstreamDemos(
   name: string,
   family: FamilyFile,
   upstreamFiles: string[],
   readFile: (path: string) => string,
+  tailwind: boolean,
 ): UpstreamDemos {
   const upstream = upstreamDemosFolder(name, family);
   const files: Record<string, string> = {};
   const styles = new Map<string, string>();
   const imported = new Map<string, string[]>();
+  const classRows = new Map<string, string[]>();
   for (const path of upstreamFiles) {
     if (!path.startsWith(`${upstream}/`)) {
       continue;
@@ -113,16 +168,26 @@ export function readUpstreamDemos(
     const local = path.slice(upstream.length + 1);
     // `<demo>/index.ts` makes the demo with the docs code of Base UI.
     // The page of Vase UI does not use it.
-    if (local.split('/').includes(TAILWIND_FOLDER) || /^[^/]+\/index\.ts$/.test(local)) {
+    if (
+      (!tailwind && local.split('/').includes(TAILWIND_FOLDER)) ||
+      /^[^/]+\/index\.ts$/.test(local)
+    ) {
       continue;
     }
     const text = readFile(path);
     files[local] = sha256(text);
     if (local.endsWith('.css')) {
       styles.set(local, text);
-    } else if (/\.tsx?$/.test(local) && local.includes('/')) {
-      const demo = local.slice(0, local.indexOf('/'));
-      imported.set(demo, [...(imported.get(demo) ?? []), ...importedEntryPoints(text, name)]);
+    } else if (/\.tsx?$/.test(local)) {
+      if (local.includes('/')) {
+        const demo = local.slice(0, local.indexOf('/'));
+        imported.set(demo, [...(imported.get(demo) ?? []), ...importedEntryPoints(text, name)]);
+      }
+      const strings = tailwind ? classStringsOfTsx(text) : [];
+      if (strings.length > 0) {
+        const folder = posix.dirname(local);
+        classRows.set(folder, [...(classRows.get(folder) ?? []), ...strings]);
+      }
     }
   }
   const entryPoints = Object.fromEntries(
@@ -131,12 +196,20 @@ export function readUpstreamDemos(
       .map(([demo, names]): [string, string[]] => [demo, sortedUnique(names)])
       .sort(([a], [b]) => a.localeCompare(b, 'en')),
   );
+  // A sort of strings with no function compares the code units. The record then does not depend
+  // on the collation data of the machine.
+  const classes = Object.fromEntries(
+    [...classRows]
+      .map(([folder, strings]): [string, string[]] => [folder, strings.toSorted()])
+      .sort(([a], [b]) => (a < b ? -1 : 1)),
+  );
   return {
     record: {
       commit: family.matchedCommit,
       upstream,
       files,
       ...(Object.keys(entryPoints).length > 0 ? { entryPoints } : {}),
+      ...(Object.keys(classes).length > 0 ? { classes } : {}),
     },
     styles,
   };
@@ -168,7 +241,7 @@ export async function expectedFiles(
  */
 export function checkDemos(families: DemoFamily[], entryPoints: ReadonlySet<string>): string[] {
   const problems: string[] = [];
-  for (const { name, matchedCommit, record, files } of families) {
+  for (const { name, matchedCommit, record, files, vueClasses } of families) {
     const folder = demosFolder(name);
     const rerun = `Run \`${command(name)}\`.`;
     if (matchedCommit === undefined) {
@@ -206,16 +279,53 @@ export function checkDemos(families: DemoFamily[], entryPoints: ReadonlySet<stri
       }
     }
     for (const path of Object.keys(record.files)) {
-      const demo = /^(.+)\/css-modules\/index\.tsx$/.exec(path)?.[1];
-      if (demo === undefined || files.has(`${demo}/css-modules/index.vue`)) {
+      const match = /^(.+)\/(css-modules|tailwind)\/index\.tsx$/.exec(path);
+      if (match === null) {
         continue;
       }
+      const [, demo, variant] = match;
+      const vueFile = `${vueDemoName(name, demo)}/${variant}/index.vue`;
       const waits = (record.entryPoints?.[demo] ?? []).some(
         (entryPoint) => !entryPoints.has(entryPoint),
       );
-      if (!waits) {
+      if (!files.has(vueFile) && !waits) {
+        const kind = variant === TAILWIND_FOLDER ? 'Tailwind demo' : 'demo';
         problems.push(
-          `${folder}/${demo}/css-modules/index.vue does not exist. Base UI has the demo ${demo}. Port it.`,
+          `${folder}/${vueFile} does not exist. Base UI has the ${kind} ${demo}. Port it.`,
+        );
+      }
+    }
+    for (const [key, row] of Object.entries(record.classes ?? {})) {
+      const vueStrings = vueClasses.get(key);
+      if (vueStrings === undefined) {
+        continue;
+      }
+      const absent = subtract(row, vueStrings);
+      const extra = subtract(vueStrings, row);
+      if (absent.length > 0 || extra.length > 0) {
+        const lists = [
+          absent.length > 0
+            ? ` Absent: ${absent.map((item) => JSON.stringify(item)).join(', ')}.`
+            : '',
+          extra.length > 0
+            ? ` Extra: ${extra.map((item) => JSON.stringify(item)).join(', ')}.`
+            : '',
+        ].join('');
+        problems.push(
+          `${folder}/${vueFolder(name, key)} has class strings that differ from Base UI.${lists} Copy each class string from the Base UI file. Do not change it.`,
+        );
+      }
+    }
+    const recordedFolders = new Set(
+      Object.keys(record.files).flatMap((path) => /^([^/]+)\/tailwind\//.exec(path)?.[1] ?? []),
+    );
+    const vueFolders = new Set(
+      [...files.keys()].flatMap((path) => /^([^/]+)\/tailwind\//.exec(path)?.[1] ?? []),
+    );
+    for (const vueDemo of vueFolders) {
+      if (!recordedFolders.has(upstreamDemoName(name, vueDemo))) {
+        problems.push(
+          `${folder}/${vueDemo}/${TAILWIND_FOLDER} is not in ${recordPath(name)}. ${rerun} When the record still lacks the folder, Base UI has no such Tailwind demo. Delete the folder.`,
         );
       }
     }
@@ -284,18 +394,64 @@ function readRecord(name: string, file: string): DemoRecord {
   }
 }
 
+/** The class strings of the `.vue` and `.ts` files in the Vue folder of each folder in `classes`. */
+function readVueClasses(
+  name: string,
+  folder: string,
+  classes: Record<string, string[]>,
+): Map<string, string[]> {
+  return new Map(
+    Object.keys(classes).flatMap((key): [string, string[]][] => {
+      const directory = join(folder, vueFolder(name, key));
+      const sources = existsSync(directory)
+        ? readdirSync(directory)
+            .filter((file) => /\.(?:vue|ts)$/.test(file))
+            .sort()
+        : [];
+      if (sources.length === 0) {
+        return [];
+      }
+      return [
+        [
+          key,
+          sources.flatMap((file) => {
+            const text = readFileSync(join(directory, file), 'utf8');
+            return file.endsWith('.vue') ? classStringsOfVue(text) : classStringsOfScript(text);
+          }),
+        ],
+      ];
+    }),
+  );
+}
+
 export function loadDemoFamilies(root: string): DemoFamily[] {
   const { families, ownComponents } = readFamilyFiles(root);
   return demoFamilyNames(root, ownComponents).map((name) => {
     const folder = join(root, demosFolder(name));
     const recordFile = join(root, recordPath(name));
+    const record = existsSync(recordFile) ? readRecord(name, recordFile) : undefined;
     return {
       name,
       matchedCommit: families.find((item) => item.name === name)?.family?.matchedCommit,
-      record: existsSync(recordFile) ? readRecord(name, recordFile) : undefined,
+      record,
       files: existsSync(folder) ? listFolderFiles(folder) : new Map(),
+      vueClasses: readVueClasses(name, folder, record?.classes ?? {}),
     };
   });
+}
+
+/**
+ * A family has the record of its Tailwind demos when a demo folder of `docs/demos/<family>` has a
+ * `tailwind` folder. Without it, the record has no Tailwind row, and the check does not ask for the
+ * Tailwind demos of the family.
+ */
+function hasTailwindFolder(folder: string): boolean {
+  return (
+    existsSync(folder) &&
+    readdirSync(folder, { withFileTypes: true }).some(
+      (item) => item.isDirectory() && existsSync(join(folder, item.name, TAILWIND_FOLDER)),
+    )
+  );
 }
 
 async function main(): Promise<void> {
@@ -316,8 +472,12 @@ async function main(): Promise<void> {
       throw new Error(`There is no family file ${familyFile(name)}.`);
     }
     const commit = resolveCommit(clone, family.matchedCommit);
-    const demos = readUpstreamDemos(name, family, listFiles(clone, commit), (path) =>
-      readFileAt(clone, commit, path),
+    const demos = readUpstreamDemos(
+      name,
+      family,
+      listFiles(clone, commit),
+      (path) => readFileAt(clone, commit, path),
+      hasTailwindFolder(join(REPOSITORY_ROOT, demosFolder(name))),
     );
     for (const [path, text] of await expectedFiles(name, demos)) {
       const file = join(REPOSITORY_ROOT, path);

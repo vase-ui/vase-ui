@@ -2,9 +2,9 @@
 import type { HTMLAttributes } from 'vue';
 import type { DayOfWeek } from '../../internals/date-time/temporal';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
-import type { CalendarRootState } from '../root/CalendarRoot.vue';
+import type { CalendarState } from '../root/CalendarRoot.vue';
 
-export interface CalendarGridHeaderRowState extends CalendarRootState {}
+export interface CalendarGridHeaderRowState extends CalendarState {}
 
 export interface CalendarGridHeaderRowProps
   extends
@@ -23,6 +23,11 @@ const props = withDefaults(defineProps<CalendarGridHeaderRowProps>(), { as: 'tr'
 
 defineSlots<{
   /**
+   * The content before the names of the days, such as `Calendar.WeekNumberHeader`. The `#render`
+   * slot does not render it.
+   */
+  default?(): unknown;
+  /**
    * Renders one day of the week, from the first day of the week. The `#render` slot does not
    * render it.
    */
@@ -40,5 +45,5 @@ defineExpose({ element });
 <!-- prettier-ignore -->
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"><template v-for="(weekday, index) in weekdays" :key="weekday"><slot name="weekday" :weekday="weekday" :index="index" /></template></component>
+  <component :is="as" v-else v-bind="elementProps()"><slot /><template v-for="(weekday, index) in weekdays" :key="index"><slot name="weekday" :weekday="weekday" :index="index" /></template></component>
 </template>

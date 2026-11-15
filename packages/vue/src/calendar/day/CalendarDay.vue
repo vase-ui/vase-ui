@@ -39,9 +39,7 @@ defineSlots<{
 const { rules } = useCalendarRootContext();
 const { month } = useCalendarMonthContext();
 
-const state = computed<CalendarDayState>(() =>
-  getDayState(props.day, month.value.yearMonth, rules.value),
-);
+const state = computed<CalendarDayState>(() => getDayState(props.day, month.value, rules.value));
 
 provide(CalendarDayContext, { day: computed(() => props.day), state });
 

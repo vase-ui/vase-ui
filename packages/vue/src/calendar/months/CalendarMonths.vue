@@ -1,10 +1,17 @@
 <script lang="ts">
 import type { HTMLAttributes } from 'vue';
 import type { CalendarPage } from '../../internals/date-time/calendar/monthGrid';
+import type { NavigationDirection } from '../../internals/date-time/calendar/usePageTransition';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
-import type { CalendarRootState } from '../root/CalendarRoot.vue';
+import type { CalendarState } from '../root/CalendarRoot.vue';
 
-export interface CalendarMonthsState extends CalendarRootState {}
+export interface CalendarMonthsState extends CalendarState {
+  /**
+   * The side of the last change of the page: `previous` or `next`, and `none` until the page
+   * changes.
+   */
+  navigationDirection: NavigationDirection;
+}
 
 export interface CalendarMonthsProps
   extends
@@ -13,9 +20,13 @@ export interface CalendarMonthsProps
 </script>
 
 <script setup lang="ts">
+import { computed } from 'vue';
+import { getPageKey } from '../../internals/date-time/calendar/monthGrid';
+import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useCalendarRootContext } from '../root/CalendarRootContext';
+import * as CalendarMonthsDataAttributes from './CalendarMonthsDataAttributes';
 
 defineOptions({ inheritAttrs: false });
 
@@ -23,15 +34,31 @@ const props = withDefaults(defineProps<CalendarMonthsProps>(), { as: 'div' });
 
 defineSlots<{
   /**
-   * Renders one month of the calendar. The `#render` slot does not render it.
+   * Renders one month of the calendar. The `#render` slot does not render it. `index` is `-1` for a
+   * month that leaves.
    */
   month(props: { month: CalendarPage; index: number }): unknown;
   render: ComponentRenderFn<HTMLProps, CalendarMonthsState>;
 }>();
 
-const { state, pages } = useCalendarRootContext();
+const { state: rootState, pages, renderedPages, navigationDirection } = useCalendarRootContext();
 
-const { element, elementProps } = useRenderElement('div', props, { state });
+const state = computed<CalendarMonthsState>(() => ({
+  ...rootState.value,
+  navigationDirection: navigationDirection.value,
+}));
+
+function indexOf(page: CalendarPage) {
+  return pages.value.findIndex((other) => getPageKey(other) === getPageKey(page));
+}
+
+const stateAttributesMapping: StateAttributesMapping<CalendarMonthsState> = {
+  navigationDirection: (value) => ({
+    [CalendarMonthsDataAttributes.navigationDirection]: value,
+  }),
+};
+
+const { element, elementProps } = useRenderElement('div', props, { state, stateAttributesMapping });
 
 defineExpose({ element });
 </script>
@@ -39,5 +66,5 @@ defineExpose({ element });
 <!-- prettier-ignore -->
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"><template v-for="(month, index) in pages" :key="month.yearMonth.toString()"><slot name="month" :month="month" :index="index" /></template></component>
+  <component :is="as" v-else v-bind="elementProps()"><template v-for="month in renderedPages" :key="getPageKey(month)"><slot name="month" :month="month" :index="indexOf(month)" /></template></component>
 </template>

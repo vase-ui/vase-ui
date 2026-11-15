@@ -5,10 +5,11 @@ import type {
   CalendarChangeEventDetails,
   CalendarChangeEventReason,
 } from '../../internals/date-time/calendar/calendarProps';
+import type { NavigationDirection } from '../../internals/date-time/calendar/usePageTransition';
 import type { DateValue } from '../../internals/date-time/temporal';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 
-export interface CalendarRootState {
+export interface CalendarState {
   /**
    * Whether the component should ignore user interaction.
    */
@@ -25,6 +26,22 @@ export interface CalendarRootState {
    * Whether no day is selected.
    */
   empty: boolean;
+}
+
+export interface CalendarRootState extends CalendarState {
+  /**
+   * Whether the grid shows more than one month.
+   */
+  multipleMonths: boolean;
+  /**
+   * The side of the last change of the page: `previous` or `next`, and `none` until the page
+   * changes.
+   */
+  navigationDirection: NavigationDirection;
+  /**
+   * Whether the grid shows the broadcast calendar.
+   */
+  broadcastCalendar: boolean;
 }
 
 type CalendarInputValue<Value, Multiple extends boolean | undefined> = Multiple extends true
@@ -92,6 +109,7 @@ import { assertTemporal } from '../../internals/date-time/temporal';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { CalendarRootContext } from './CalendarRootContext';
+import { calendarRootStateAttributesMapping } from './stateAttributesMapping';
 
 defineOptions({ inheritAttrs: false });
 
@@ -105,6 +123,8 @@ const props = withDefaults(defineProps<CalendarRootProps<Value, Multiple>>(), {
   readOnly: false,
   invalid: false,
   autoFocus: false,
+  numberOfMonths: 1,
+  showOutsideDays: undefined,
 });
 
 const emit = defineEmits<{
@@ -134,19 +154,32 @@ defineSlots<{
 }>();
 
 const selection = useDaySelection(props, emit);
-const { label, focus, ...controller } = useCalendarRoot({ props, emit, selection });
+const { label, focus, ...controller } = useCalendarRoot({
+  part: 'Calendar.Root',
+  props,
+  emit,
+  selection,
+});
 
-const state = computed<CalendarRootState>(() => ({
+// The parts get the state that they share. The root adds the state of the pages.
+const state = computed<CalendarState>(() => ({
   disabled: props.disabled,
   readOnly: props.readOnly,
   invalid: props.invalid,
   empty: selection.values.value.length === 0,
 }));
+const rootState = computed<CalendarRootState>(() => ({
+  ...state.value,
+  multipleMonths: controller.pages.value.length > 1,
+  navigationDirection: controller.navigationDirection.value,
+  broadcastCalendar: props.broadcastCalendar === true,
+}));
 
 provide(CalendarRootContext, { ...controller, state });
 
 const { element, elementProps } = useRenderElement('div', props, {
-  state,
+  state: rootState,
+  stateAttributesMapping: calendarRootStateAttributesMapping,
   props: (attrs) => [
     {
       role: 'group',
@@ -161,6 +194,6 @@ defineExpose({ element, focus });
 </script>
 
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="rootState" />
+  <component :is="as" v-else v-bind="elementProps()"><slot :state="rootState" /></component>
 </template>

@@ -6,8 +6,11 @@ description: An unstyled Vue button component that can render as another tag and
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoButtonHero from '../demos/button/hero/css-modules/index.vue';
+import DemoButtonHeroTailwind from '../demos/button/hero/tailwind/index.vue';
 import DemoButtonLoading from '../demos/button/loading/css-modules/index.vue';
+import DemoButtonLoadingTailwind from '../demos/button/loading/tailwind/index.vue';
 </script>
 
 # Button
@@ -16,7 +19,12 @@ A button component that can render as another tag and can stay focusable while i
 
 <DemoFrame>
   <DemoButtonHero />
+  <template #tailwind>
+    <DemoButtonHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -25,6 +33,18 @@ A button component that can render as another tag and can stay focusable while i
 <<< ../demos/button/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/button/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Usage guidelines
 
@@ -59,7 +79,12 @@ Some browser and screen reader combinations do not reliably announce a change of
 
 <DemoFrame>
   <DemoButtonLoading />
+  <template #tailwind>
+    <DemoButtonLoadingTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -68,6 +93,18 @@ Some browser and screen reader combinations do not reliably announce a change of
 <<< ../demos/button/loading/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/button/loading/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## API reference
 

@@ -524,7 +524,7 @@ const reported = [
     hint: 'XSS',
   },
   {
-    name: 'a style block in a demo',
+    name: 'a style block in a CSS-module demo',
     file: 'docs/demos/sample/hero/css-modules/index.vue',
     code: '<script setup lang="ts"></script>\n\n<template>\n  <div class="sample" />\n</template>\n\n<style>\n.sample {\n  color: red;\n}\n</style>\n',
     ruleId: 'vue/no-restricted-block',
@@ -569,6 +569,13 @@ const reported = [
       hint: WAIT_HINT,
     })),
   ]),
+  {
+    name: 'a style block in a Tailwind demo',
+    file: 'docs/demos/sample/hero/tailwind/index.vue',
+    code: '<script setup lang="ts"></script>\n\n<template>\n  <div class="sample" />\n</template>\n\n<style>\n.sample {\n  color: red;\n}\n</style>\n',
+    ruleId: 'vue/no-restricted-block',
+    hint: 'class names',
+  },
 ];
 
 const passed = [
