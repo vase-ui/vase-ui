@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { defineComponent, shallowRef } from 'vue';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
@@ -9,6 +10,7 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  hydrateAfter,
   isJSDOM,
   renderOnServer,
   screen,
@@ -20,11 +22,13 @@ import ComboboxPartsReplacement from '../../../test/fixtures/ComboboxPartsReplac
 import { REASONS } from '../../internals/reasons';
 import type { VaseUIEvent } from '../../internals/types';
 import type { ComboboxStore } from '../store';
+import ComboboxInputBeforeHydration from './ComboboxInputBeforeHydration.test.vue';
 import ComboboxInputHydration from './ComboboxInputHydration.test.vue';
 import ComboboxInputTriggerHydration from './ComboboxInputTriggerHydration.test.vue';
 
 const HYDRATION_FIXTURE = 'src/combobox/input/ComboboxInputHydration.test.vue';
 const TRIGGER_HYDRATION_FIXTURE = 'src/combobox/input/ComboboxInputTriggerHydration.test.vue';
+const BEFORE_HYDRATION_FIXTURE = 'src/combobox/input/ComboboxInputBeforeHydration.test.vue';
 
 type RenderSlotProps = { props: Record<string, unknown> };
 
@@ -1740,6 +1744,77 @@ describe('<Combobox.Input />', () => {
 
       expect(screen.getByTestId('list').id).toBe('');
       expect(input).not.toHaveAttribute('aria-controls');
+    });
+  });
+
+  describe('VUE-74: text that the user typed before the hydration', () => {
+    async function hydrateTyped(
+      props: Record<string, unknown>,
+      { typed, focus }: { typed: string; focus: 'input' | 'outside' },
+    ) {
+      const serverHtml = await renderOnServer(BEFORE_HYDRATION_FIXTURE, props);
+      const { container } = await hydrateAfter(ComboboxInputBeforeHydration, {
+        serverHtml,
+        props,
+        before(serverContainer) {
+          within(serverContainer).getByTestId<HTMLInputElement>('input').value = typed;
+          within(serverContainer).getByTestId(focus).focus();
+        },
+      });
+      const fixture = within(container);
+      return {
+        fixture,
+        input: fixture.getByTestId<HTMLInputElement>('input'),
+        inputValue: fixture.getByTestId('input-value'),
+        changes: fixture.getByTestId('changes'),
+      };
+    }
+
+    it('writes the text to v-model:input-value, and the next key opens the list', async () => {
+      const { fixture, input, inputValue, changes } = await hydrateTyped(
+        {},
+        { typed: 'Mal', focus: 'input' },
+      );
+      await flushMicrotasks();
+
+      expect(input).toHaveValue('Mal');
+      expect(inputValue.textContent).toBe('Mal');
+      expect(changes.textContent).toBe('Mal (input-change)');
+      expect(input).toHaveAttribute('aria-expanded', 'false');
+      expect(fixture.queryAllByRole('option')).toHaveLength(0);
+
+      await userEvent.keyboard('t');
+
+      await waitFor(() =>
+        expect(fixture.getAllByRole('option').map((option) => option.textContent)).toEqual([
+          'Malta',
+        ]),
+      );
+    });
+
+    it('handles the text of an `Input` in `as` one time', async () => {
+      const { input, inputValue, changes } = await hydrateTyped(
+        { rendersInput: true },
+        { typed: 'Mal', focus: 'input' },
+      );
+      await flushMicrotasks();
+
+      expect(input).toHaveValue('Mal');
+      expect(inputValue.textContent).toBe('Mal');
+      expect(changes.textContent).toBe('Mal (input-change)');
+    });
+
+    it('touches the field and keeps the list closed when the focus is outside', async () => {
+      const { fixture, input, changes } = await hydrateTyped(
+        {},
+        { typed: 'Mal', focus: 'outside' },
+      );
+
+      await waitFor(() => expect(fixture.getByTestId('field')).toHaveAttribute('data-touched', ''));
+      await flushMicrotasks();
+      expect(changes.textContent).toBe('Mal (input-change)');
+      expect(input).toHaveAttribute('aria-expanded', 'false');
+      expect(fixture.queryAllByRole('option')).toHaveLength(0);
     });
   });
 });

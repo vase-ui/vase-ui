@@ -19,6 +19,7 @@ import { REASONS } from '../../internals/reasons';
 import { useAnimationsFinished } from '../../internals/useAnimationsFinished';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
+import { isFiniteAnimation } from '../../utils/getFiniteAnimations';
 import type { CollapsibleRootChangeEventDetails } from '../root/CollapsibleRoot.vue';
 import * as CollapsiblePanelDataAttributes from './CollapsiblePanelDataAttributes';
 
@@ -55,8 +56,8 @@ export function useCollapsiblePanel(
   // Vue calls the `ref` setter during the render of the part. A reactive read there would make the
   // render depend on it, so the element is a plain variable.
   let panel: HTMLElement | null = null;
-  // A part does not render again with its parent. Each value that the render reads is a
-  // `shallowRef`, so a change of the value renders the part.
+  // The render reads the next three values. A plain variable is not a source of the render, so
+  // each of them is a `shallowRef`.
   const animationType = shallowRef<AnimationType | null>(null);
   const dimensions = shallowRef<Dimensions>(EMPTY_DIMENSIONS);
   const lastMeasuredDimensions = shallowRef<Dimensions>(EMPTY_DIMENSIONS);
@@ -342,6 +343,19 @@ export function useCollapsiblePanel(
     },
   });
 
+  function completeClose() {
+    // The effect aborts the wait only when it runs again, and the `finished` promise of an
+    // animation can resolve before that. `animationend` also comes at the end of an enter
+    // animation. In both cases the panel can be open. A write of `mounted` `false` then starts
+    // the enter of the panel again.
+    if (isOpen()) {
+      return;
+    }
+
+    setMounted(false);
+    setDimensions(EMPTY_DIMENSIONS, false);
+  }
+
   // A closing panel needs more than `useOpenChangeComplete`. This effect runs after the update that
   // applies `data-ending-style`. Chrome can register the exit transition one frame late when an
   // accordion closes one item and opens another, so the effect waits one frame before it waits for
@@ -362,27 +376,14 @@ export function useCollapsiblePanel(
     if (!panel) {
       // A render function can remove the element in the ending phase. Nothing is left to animate,
       // so the close completes at once.
-      setMounted(false);
-      setDimensions(EMPTY_DIMENSIONS, false);
+      completeClose();
       return;
     }
 
     const abortController = new AbortController();
 
-    function handleComplete() {
-      // The effect aborts the wait only when it runs again, and the `finished` promise of an
-      // animation can resolve before that. The unmount of a panel that has opened again would
-      // remove it from the DOM.
-      if (isOpen()) {
-        return;
-      }
-
-      setMounted(false);
-      setDimensions(EMPTY_DIMENSIONS, false);
-    }
-
     const endingStyleFrame = AnimationFrame.request(() => {
-      runOnceCloseAnimationsFinish(handleComplete, abortController.signal);
+      runOnceCloseAnimationsFinish(completeClose, abortController.signal);
     });
 
     cleanupCloseEffect = () => {
@@ -393,6 +394,25 @@ export function useCollapsiblePanel(
 
   onMounted(runCloseEffect);
   watch([isMounted, isOpen, panelTransitionStatus], runCloseEffect, { flush: 'post' });
+
+  // The close effect reads the animations of the panel two frames after the ending style. A late
+  // frame can end a keyframe exit before that read, and the panel then has its open style again.
+  // The browser sends `animationend` in the frame of the end, before the paint. So this listener
+  // completes the close before the browser paints the open panel.
+  function handleAnimationEnd(event: AnimationEvent) {
+    const element = event.currentTarget as HTMLElement;
+    if (
+      event.target !== element ||
+      event.pseudoElement !== '' ||
+      element
+        .getAnimations()
+        .some((animation) => isFiniteAnimation(animation) && animation.playState !== 'finished')
+    ) {
+      return;
+    }
+
+    completeClose();
+  }
 
   // The props give the string `until-found` to the element, so the server HTML has
   // `hidden="until-found"` with Vue 3.5.41 or later. In Vue 3.6, the server writes it from
@@ -536,6 +556,7 @@ export function useCollapsiblePanel(
     // property, such as an `<svg>`, and Vue writes `false` there as `hidden="false"`.
     hidden: hidden.value ? (isHiddenUntilFound() ? 'until-found' : true) : undefined,
     id: toValue(parameters.id),
+    onAnimationend: handleAnimationEnd,
     onBeforematch: handleBeforeMatch,
   }));
 
@@ -720,7 +741,8 @@ export interface UseCollapsiblePanelParameters {
 export interface UseCollapsiblePanelReturnValue {
   height: ComputedRef<number | undefined>;
   /**
-   * `hidden`, `id`, the kept `data-starting-style` and the `beforematch` listener.
+   * `hidden`, `id`, the kept `data-starting-style`, and the `animationend` and `beforematch`
+   * listeners.
    */
   props: ComputedRef<Record<string, any>>;
   /**
