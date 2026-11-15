@@ -2018,8 +2018,18 @@ describe('<Toast.Root />', () => {
         bubbles: true,
         pointerId: 1,
       });
-      await fireEvent.pointerMove(root, { clientX: 101, clientY: 100, bubbles: true, pointerId: 1 });
-      await fireEvent.pointerMove(root, { clientX: 200, clientY: 100, bubbles: true, pointerId: 1 });
+      await fireEvent.pointerMove(root, {
+        clientX: 101,
+        clientY: 100,
+        bubbles: true,
+        pointerId: 1,
+      });
+      await fireEvent.pointerMove(root, {
+        clientX: 200,
+        clientY: 100,
+        bubbles: true,
+        pointerId: 1,
+      });
       expect(root).toHaveAttribute('data-swipe-direction', 'right');
 
       visible.value = false;
