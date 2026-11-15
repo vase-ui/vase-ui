@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { defineComponent, KeepAlive, nextTick, shallowRef } from 'vue';
+import { nextTick, shallowRef } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import {
+  createHeldBranch,
   createRenderer,
   createTransitionRunCounter,
   flushMicrotasks,
@@ -455,35 +456,27 @@ describe('usePopupAutoResize', () => {
     });
 
     it('measures a popup that mounts open while KeepAlive holds its branch, at the show', async () => {
-      const visible = shallowRef(true);
-      const mounted = shallowRef(false);
       const branchElement = shallowRef<HTMLElement | null>(null);
-      const Branch = defineComponent(() => () => (
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
         <div ref={branchElement}>
-          {mounted.value &&
-            scene({
-              root: openRoot,
-              triggers: [{ id: 'trigger', payload: 'narrow' }],
-              content: sized,
-            })}
+          {scene({
+            root: openRoot,
+            triggers: [{ id: 'trigger', payload: 'narrow' }],
+            content: sized,
+          })}
         </div>
       ));
       await render(() => (
         <div>
           <style>{POPUP_STYLE}</style>
-          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+          <HeldBranch />
         </div>
       ));
-      // A part that mounts in the flush of the deactivation gets `onDeactivated`.
-      visible.value = false;
-      await flushMicrotasks();
-      mounted.value = true;
-      await flushMicrotasks();
+      await mountWhileHeld();
       const popup = branchElement.value!.querySelector<HTMLElement>('[data-testid="popup"]')!;
       const widths = recordVariable(popup, '--popup-width');
 
-      visible.value = true;
-      await flushMicrotasks();
+      await show();
 
       await waitFor(() => {
         expect(readVariable(screen.getByTestId('positioner'), '--positioner-width')).toBe('120px');

@@ -3,6 +3,7 @@ import { KeepAlive, Teleport, computed, defineComponent, inject, shallowRef } fr
 import type { MaybeRefOrGetter, PropType } from 'vue';
 import type { Coords } from '@floating-ui/vue';
 import {
+  createHeldBranch,
   createRenderer,
   fireEvent,
   flushMicrotasks,
@@ -1025,19 +1026,12 @@ describe('rules with no Base UI case', () => {
       referenceStyle: PLACED_REFERENCE,
     });
     open.value = true;
-    const visible = shallowRef(true);
-    const mounted = shallowRef(false);
-    const Branch = defineComponent(() => () => <div>{mounted.value ? <Follower /> : null}</div>);
-    await render(() => <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>);
-    // A part that mounts in the flush of the deactivation gets `onDeactivated`.
-    visible.value = false;
-    await flushMicrotasks();
-    mounted.value = true;
-    await flushMicrotasks();
+    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => <Follower />);
+    await render(<HeldBranch />);
+    await mountWhileHeld();
     await moveOnPage(30, 300);
 
-    visible.value = true;
-    await flushMicrotasks();
+    await show();
     const shown = getPoint().x;
     await moveOnPage(40, 300);
 
