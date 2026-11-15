@@ -40,10 +40,11 @@ export interface ToolbarInputProps
 </script>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted, onUpdated } from 'vue';
 import { useValueBeforeHydration } from '../../common/hydration';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useFormRestoreAsInput } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFocusableWhenDisabled } from '../../utils/useFocusableWhenDisabled';
 import { useToolbarGroupContext } from '../group/ToolbarGroupContext';
@@ -113,6 +114,17 @@ const { compositeProps, compositeRef } = useCompositeItem({
 
 const writesValue = useValueBeforeHydration(props, () => element.value);
 
+// The value that the input has after the last event and the last render. A form state that the
+// browser restores changes the value with neither.
+let handledValue: string | undefined;
+
+function syncHandledValue() {
+  handledValue = (element.value as HTMLInputElement | null)?.value;
+}
+
+onMounted(syncHandledValue);
+onUpdated(syncHandledValue);
+
 const { element, elementProps } = useRenderElement('input', props, {
   state,
   ref: [compositeRef],
@@ -121,13 +133,20 @@ const { element, elementProps } = useRenderElement('input', props, {
     const { value, ...attrsWithoutValue } = attrs;
     return [
       compositeProps.value,
-      { onClick: preventWhenDisabled, onPointerdown: preventWhenDisabled },
+      {
+        onClick: preventWhenDisabled,
+        onPointerdown: preventWhenDisabled,
+        onInput: syncHandledValue,
+        onChange: syncHandledValue,
+      },
       defaultValueProps(),
       writesValue.value ? attrs : attrsWithoutValue,
       focusableWhenDisabledProps.value,
     ];
   },
 });
+
+useFormRestoreAsInput(element, () => handledValue, true);
 
 defineExpose({ element });
 </script>

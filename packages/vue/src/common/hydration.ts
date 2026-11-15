@@ -55,7 +55,22 @@ async function runQueuedTakes() {
   isTaking = false;
 }
 
-function isTextControl(element: Element | null): element is TextControl {
+/**
+ * Runs `take` after the current flush of Vue, in the order of the calls. Call it after the mount
+ * of a part whose control changed before the hydration.
+ * @param take Gives `true` when it sent a change. The next take then runs after the flush of that
+ * change, so a parent that controls two parts has the first change in its props.
+ */
+export function queueInputTake(take: () => boolean): void {
+  queuedTakes.push(take);
+  if (!isTaking) {
+    isTaking = true;
+    void nextTick(runQueuedTakes);
+  }
+}
+
+/** Whether the element is an `<input>` or a `<textarea>`. */
+export function isTextControl(element: Element | null): element is TextControl {
   return element?.localName === 'input' || element?.localName === 'textarea';
 }
 
@@ -77,6 +92,84 @@ function isHistoryTraversalOrReload(serverNode: RendererNode) {
   const navigation = ownerWindow(serverNode).performance.getEntriesByType('navigation')[0] as
     PerformanceNavigationTiming | undefined;
   return navigation?.type === 'back_forward' || navigation?.type === 'reload';
+}
+
+function leave(control: TextControl) {
+  const doc = ownerDocument(control);
+  const active = activeElement(doc);
+  if (!control.isConnected || active === control) {
+    return;
+  }
+  // A browser gives no `relatedTarget` for a focus that goes to no element.
+  const relatedTarget = active === doc.body ? null : active;
+  control.dispatchEvent(new Event('change', { bubbles: true }));
+  control.dispatchEvent(new FocusEvent('blur', { composed: true, relatedTarget }));
+  control.dispatchEvent(
+    new FocusEvent('focusout', { bubbles: true, composed: true, relatedTarget }),
+  );
+}
+
+/**
+ * Sends one `input` event to a control whose value changed with no event that its part handled.
+ * @param leaves With `true`, one tick later, a control that does not have the focus also gets
+ * `change`, `blur` and `focusout`, because the user left it before the listeners existed. A
+ * controlled part gets the new value in its prop only in the flush after the `input` event.
+ */
+export function dispatchTakeEvents(control: TextControl, leaves: boolean): void {
+  control.dispatchEvent(new InputEvent('input', { bubbles: true, composed: true }));
+  if (leaves) {
+    void nextTick(() => {
+      leave(control);
+    });
+  }
+}
+
+function useControlValueBeforeHydration(
+  isNativeControl: boolean,
+  control: () => Element | null,
+  leaves: boolean,
+  restorable: boolean,
+): Readonly<Ref<boolean>> {
+  const serverNode = getCurrentInstance()?.vnode.el;
+  if (
+    !isNativeControl ||
+    serverNode == null ||
+    (!restorable && isHistoryTraversalOrReload(serverNode))
+  ) {
+    return shallowRef(true);
+  }
+
+  const writesValue = shallowRef(false);
+
+  // Gives `true` when it sends the `input` event.
+  function take() {
+    const element = control();
+    if (
+      !isTextControl(element) ||
+      takenControls.has(element) ||
+      element.value === getUnchangedValue(element)
+    ) {
+      writesValue.value = true;
+      return false;
+    }
+
+    takenControls.add(element);
+    dispatchTakeEvents(element, leaves);
+    writesValue.value = true;
+    return true;
+  }
+
+  // The watcher gives Vue a job in the flush that `onMounted` starts, so `nextTick` waits for that
+  // flush. A root that registers its control in its own `onMounted` takes the initial value of its
+  // field in that flush, before the event.
+  const isMounted = shallowRef(false);
+  watch(isMounted, () => {});
+  onMounted(() => {
+    isMounted.value = true;
+    queueInputTake(take);
+  });
+
+  return writesValue;
 }
 
 /**
@@ -103,67 +196,19 @@ export function useValueBeforeHydration(
   { restorable = true }: { restorable?: boolean } = {},
 ): Readonly<Ref<boolean>> {
   const rendersElement = typeof componentProps.as === 'string' || useSlots().render !== undefined;
-  const serverNode = getCurrentInstance()?.vnode.el;
-  if (
-    !rendersElement ||
-    serverNode == null ||
-    (!restorable && isHistoryTraversalOrReload(serverNode))
-  ) {
-    return shallowRef(true);
-  }
+  return useControlValueBeforeHydration(rendersElement, control, true, restorable);
+}
 
-  const writesValue = shallowRef(false);
-
-  function leave(element: TextControl) {
-    const doc = ownerDocument(element);
-    const active = activeElement(doc);
-    if (!element.isConnected || active === element) {
-      return;
-    }
-    // A browser gives no `relatedTarget` for a focus that goes to no element.
-    const relatedTarget = active === doc.body ? null : active;
-    element.dispatchEvent(new Event('change', { bubbles: true }));
-    element.dispatchEvent(new FocusEvent('blur', { composed: true, relatedTarget }));
-    element.dispatchEvent(
-      new FocusEvent('focusout', { bubbles: true, composed: true, relatedTarget }),
-    );
-  }
-
-  // Gives `true` when it sends the `input` event.
-  function take() {
-    const element = control();
-    if (
-      !isTextControl(element) ||
-      takenControls.has(element) ||
-      element.value === getUnchangedValue(element)
-    ) {
-      writesValue.value = true;
-      return false;
-    }
-
-    takenControls.add(element);
-    element.dispatchEvent(new InputEvent('input', { bubbles: true, composed: true }));
-    writesValue.value = true;
-    // A controlled part gets the new value in its prop only in the flush after the event.
-    void nextTick(() => {
-      leave(element);
-    });
-    return true;
-  }
-
-  // The watcher gives Vue a job in the flush that `onMounted` starts, so `nextTick` waits for that
-  // flush. A root that registers its control in its own `onMounted` takes the initial value of its
-  // field in that flush, before the event.
-  const isMounted = shallowRef(false);
-  watch(isMounted, () => {});
-  onMounted(() => {
-    isMounted.value = true;
-    queuedTakes.push(take);
-    if (!isTaking) {
-      isTaking = true;
-      void nextTick(runQueuedTakes);
-    }
-  });
-
-  return writesValue;
+/**
+ * For a root that renders a hidden `<input>` of its own, such as `Select.Root`. It is
+ * {@link useValueBeforeHydration} with one difference: the input gets only the `input` event,
+ * because the user cannot focus or leave it.
+ * @param input Gives the hidden input.
+ * @param options As for {@link useValueBeforeHydration}.
+ */
+export function useHiddenValueBeforeHydration(
+  input: () => HTMLInputElement | null,
+  { restorable = true }: { restorable?: boolean } = {},
+): Readonly<Ref<boolean>> {
+  return useControlValueBeforeHydration(true, input, false, restorable);
 }

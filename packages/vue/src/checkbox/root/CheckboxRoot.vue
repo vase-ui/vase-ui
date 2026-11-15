@@ -130,11 +130,9 @@ import {
   shallowRef,
   watch,
 } from 'vue';
-import { addEventListener } from '../../common/addEventListener';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { getDefaultFormSubmitter } from '../../common/getDefaultFormSubmitter';
-import { useIsHydrated } from '../../common/hydration';
-import { ownerWindow } from '../../common/owner';
+import { queueInputTake, useIsHydrated } from '../../common/hydration';
 import { useControlled } from '../../common/useControlled';
 import { useTimeout } from '../../common/useTimeout';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
@@ -155,6 +153,7 @@ import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/
 import { useButton } from '../../internals/use-button';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useFormReset } from '../../internals/useFormReset';
+import { useFormRestore } from '../../internals/useFormRestore';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
@@ -401,10 +400,9 @@ const ariaLabelledBy = useAriaLabelledBy(
 
 // Vue writes `checked` to the input only when the value changes between two renders, and
 // hydration does not write it. HTML has no attribute for `indeterminate`, so a server cannot write
-// it. A browser also changes the input with no change of the state: it restores the form state of a
-// page, and a click on the input sets `indeterminate` to `false` and keeps the new `checked`, also
-// when a parent does not accept the click. A form would then submit a state that the checkbox does
-// not show.
+// it. A click on the input sets `indeterminate` to `false` and keeps the new `checked`, also when a
+// parent does not accept the click. A form would then submit a state that the checkbox does not
+// show.
 function writeStateToInput() {
   const input = inputElement.value;
   if (!input) {
@@ -420,7 +418,7 @@ function writeStateToInput() {
   }
 }
 
-function requestChange(nextChecked: boolean, event: Event) {
+function requestChange(nextChecked: boolean, event?: Event) {
   const details = createChangeEventDetails(REASONS.none, event);
 
   emit('checkedChange', nextChecked, details);
@@ -471,6 +469,26 @@ function onInputClick(event: MouseEvent) {
   void nextTick(writeStateToInput);
 }
 
+// The input changed with no event that the checkbox handled: a press on a native label before the
+// hydration, or a form state that the browser restored.
+function takeInputState(event?: Event) {
+  const input = inputElement.value;
+  if (!input) {
+    return;
+  }
+
+  if (
+    input.checked !== isChecked.value &&
+    !props.parent &&
+    !props.readOnly &&
+    !isDisabled.value
+  ) {
+    requestChange(input.checked, event);
+  }
+
+  void nextTick(writeStateToInput);
+}
+
 // An uncontrolled checkbox goes back to its default value through its change event. The result is
 // `true` when the state changed.
 function resetChecked(event: Event) {
@@ -504,20 +522,28 @@ useFormReset(inputElement, (event) => {
   }
 });
 
+// Vue writes `checked` to the attribute too, so only an input that changed before the hydration
+// differs from its `defaultChecked`. Its take waits until the field recorded its initial value.
 watch(
   inputElement,
-  (input, _previous, onCleanup) => {
+  (input) => {
     if (!input) {
       return;
     }
 
-    writeStateToInput();
-
-    // Chromium restores the form state of a page after `load`, with no event on the input.
-    onCleanup(addEventListener(ownerWindow(input), 'pageshow', writeStateToInput));
+    if (input.checked === input.defaultChecked) {
+      writeStateToInput();
+    } else {
+      queueInputTake(() => {
+        takeInputState();
+        return true;
+      });
+    }
   },
   { flush: 'post' },
 );
+
+useFormRestore(inputElement, takeInputState);
 
 watch(isIndeterminate, writeStateToInput, { flush: 'post' });
 

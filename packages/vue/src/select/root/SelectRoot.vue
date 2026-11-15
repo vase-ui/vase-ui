@@ -158,10 +158,9 @@ export type SelectRootOpenChangeEventDetails = SelectRootChangeEventDetails & {
 // With the default `never`, that check accepts a typed parameter and keeps `null` in the type.
 import { computed, nextTick, onMounted, provide, shallowRef, toRaw, watch } from 'vue';
 import type { HTMLAttributes } from 'vue';
-import { addEventListener } from '../../common/addEventListener';
 import { EMPTY_ARRAY, EMPTY_OBJECT } from '../../common/empty';
+import { useHiddenValueBeforeHydration } from '../../common/hydration';
 import { isElementDisabled } from '../../common/isElementDisabled';
-import { ownerWindow } from '../../common/owner';
 import { useControlled } from '../../common/useControlled';
 import type { InteractionType } from '../../common/useEnhancedClickHandler';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
@@ -180,6 +179,7 @@ import { createLabelIdRegistry, useLabelableId } from '../../internals/labelable
 import { NOOP } from '../../internals/noop';
 import { stringifyAsLabel, stringifyAsValue } from '../../internals/resolveValueLabel';
 import { useFormReset } from '../../internals/useFormReset';
+import { useFormRestoreAsInput } from '../../internals/useFormRestore';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { mergeProps } from '../../merge-props';
 import { useClick } from '../../utils/popups/interactions/useClick';
@@ -667,13 +667,15 @@ function setInputElement(value: unknown) {
   validation.inputRef.value = input;
 }
 
+const writesHiddenValue = useHiddenValueBeforeHydration(() => inputElement.value);
+
 // The value that the input has after the last event that the root handled. A write of Vue or of
 // the root sets it too.
 let handledValue: string | undefined;
 
 // Vue writes the value to the input only when the root renders. A browser can change the input
-// with no change of the state: an autofill, and the restore of the form state of a page. A form
-// would then submit a value that the select does not show.
+// with no change of the state, such as an autofill. A form would then submit a value that the
+// select does not show.
 function writeValueToInput() {
   const input = inputElement.value;
   if (input && input.value !== serializedValue.value) {
@@ -682,8 +684,9 @@ function writeValueToInput() {
   handledValue = input?.value;
 }
 
+// Until the take of the hydration, the input can hold a value that the root did not handle.
 onMounted(() => {
-  handledValue = inputElement.value?.value;
+  handledValue = writesHiddenValue.value ? inputElement.value?.value : serializedValue.value;
 });
 watch(
   serializedValue,
@@ -759,18 +762,7 @@ useFormReset(inputElement, (event) => {
   }
 });
 
-watch(
-  inputElement,
-  (input, _previous, onCleanup) => {
-    if (!input) {
-      return;
-    }
-
-    // Chromium restores the form state of a page after `load`, with no event on the input.
-    onCleanup(addEventListener(ownerWindow(input), 'pageshow', writeValueToInput));
-  },
-  { flush: 'post' },
-);
+useFormRestoreAsInput(inputElement, () => serializedValue.value, false);
 
 const hiddenInputName = computed(() => (isMultiple.value ? undefined : inputName.value));
 
@@ -801,7 +793,7 @@ function inputProps() {
       props.required,
     ),
     autocomplete: props.autoComplete,
-    value: serializedValue.value,
+    ...(writesHiddenValue.value ? { value: serializedValue.value } : undefined),
     disabled: isDisabled.value,
     required: props.required && !(isMultiple.value && hasSelectedValue.value),
     readonly: props.readOnly,

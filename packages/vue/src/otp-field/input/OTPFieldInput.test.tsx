@@ -1,4 +1,4 @@
-import { expect, vi, describe, it, onTestFinished } from 'vitest';
+import { expect, vi, describe, it } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { nextTick, shallowRef } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
@@ -11,6 +11,7 @@ import {
   flushMicrotasks,
   hydrate,
   hydrateAfter,
+  mockNavigationType,
   pasteText,
   renderOnServer,
   screen,
@@ -1385,20 +1386,6 @@ describe('<OTPField.Input />', () => {
   describe('VUE-74: text that the user typed before the hydration', () => {
     // The slots take no text after a move in the history or a reload. Each case gives the type of
     // the navigation, so that no case depends on how the runner loaded the page.
-    function mockNavigationType(type: NavigationTimingType) {
-      const getEntriesByType = performance.getEntriesByType.bind(performance);
-      const spy = vi
-        .spyOn(performance, 'getEntriesByType')
-        .mockImplementation((entryType) =>
-          entryType === 'navigation'
-            ? [{ type } as PerformanceNavigationTiming]
-            : getEntriesByType(entryType),
-        );
-      onTestFinished(() => {
-        spy.mockRestore();
-      });
-    }
-
     async function hydrateTyped(
       props: Record<string, unknown>,
       {

@@ -154,9 +154,9 @@ export type OTPFieldRootCompleteEventDetails =
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, provide, shallowRef, watch } from 'vue';
-import { addEventListener } from '../../common/addEventListener';
 import { clamp } from '../../common/clamp';
-import { ownerDocument, ownerWindow } from '../../common/owner';
+import { useHiddenValueBeforeHydration } from '../../common/hydration';
+import { ownerDocument } from '../../common/owner';
 import { activeElement, contains } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
@@ -178,6 +178,7 @@ import {
 } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useFormReset } from '../../internals/useFormReset';
+import { useFormRestore } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 import {
@@ -607,6 +608,13 @@ const { element, elementProps } = useRenderElement('div', props, {
   },
 });
 
+// After a move in the history or a reload, the hidden input can hold a code that the browser
+// restored. The root then takes no value from before the hydration, so it does not complete or
+// submit an old code.
+const writesHiddenValue = useHiddenValueBeforeHydration(() => hiddenInputElement.value, {
+  restorable: false,
+});
+
 // The value that the root last saw in the hidden input. The root sets it after each event that it
 // handles, after each write of its own and after each write of Vue.
 let handledHiddenValue: string | undefined;
@@ -656,7 +664,8 @@ function handleHiddenInput(event: Event) {
       createChangeEventDetails(REASONS.inputChange, event),
     );
 
-    if (committedValue != null && committedValue !== '') {
+    // The event of the take of the hydration comes with no action of the user, so the focus stays.
+    if (committedValue != null && committedValue !== '' && writesHiddenValue.value) {
       queueFocusInput(committedValue.length - 1, committedValue);
     }
   }
@@ -696,20 +705,18 @@ function setHiddenInput(input: unknown) {
   hiddenInputElement.value = next;
 }
 
+// Until the take of the hydration, the hidden input can hold a value that the root did not handle.
 watch(
   hiddenInputElement,
-  (hiddenInput, _previous, onCleanup) => {
-    if (!hiddenInput) {
-      return;
+  (hiddenInput) => {
+    if (hiddenInput) {
+      handledHiddenValue = writesHiddenValue.value ? hiddenInput.value : otpValue.value;
     }
-
-    handledHiddenValue = hiddenInput.value;
-
-    // A browser restores the form state of a page with no event on the inputs.
-    onCleanup(addEventListener(ownerWindow(hiddenInput), 'pageshow', writeValueToInputs));
   },
   { flush: 'post' },
 );
+
+useFormRestore(hiddenInputElement, writeValueToInputs);
 
 // Vue writes the value to the hidden input when the value changes. A program can then send a
 // `change` event with the value that the input had before, and the root must handle it.
@@ -731,7 +738,7 @@ function hiddenInputProps() {
     id: controlId.value && inputName.value == null ? `${controlId.value}-hidden-input` : undefined,
     form: props.form,
     name: inputName.value,
-    value: otpValue.value,
+    ...(writesHiddenValue.value ? { value: otpValue.value } : undefined),
     autocomplete: props.autoComplete,
     inputmode: resolvedInputMode.value,
     minlength: props.length,

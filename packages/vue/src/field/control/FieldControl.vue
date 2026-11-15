@@ -70,6 +70,7 @@ import {
 import { REASONS as REASON_VALUES } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useFormReset } from '../../internals/useFormReset';
+import { useFormRestoreAsInput } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 
@@ -340,6 +341,8 @@ useFormReset(element, () => {
   setDirty(value !== (validityData.value.initialValue ?? ''));
   clearFieldError(value);
 });
+
+useFormRestoreAsInput(element, () => handledValue, true);
 
 defineExpose({ element });
 </script>
