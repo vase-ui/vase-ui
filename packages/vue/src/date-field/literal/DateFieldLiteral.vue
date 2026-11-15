@@ -16,7 +16,8 @@ export interface DateFieldLiteralProps
     VaseUIComponentProps<DateFieldLiteralState>,
     /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
   /**
-   * The text to show. The `segment` slot of `DateField.Input` gives it.
+   * The part of the layout to show: a separator, an era or a time zone name. The `segment` slot of
+   * `DateField.Input` gives it.
    */
   segment: Extract<DateFieldInputSegment, { editable: false }>;
 }

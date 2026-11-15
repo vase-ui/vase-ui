@@ -52,12 +52,12 @@ Because of the hidden input, `DateField.Root` has more than one root node. A rul
 
 The value is a `Temporal` object, and `v-model:value` gives back the same kind. The field has a value only when each segment has a number, and it is `null` before that.
 
-| Kind                      | Segments                  | Granularity |
-| ------------------------- | ------------------------- | ----------- |
-| `Temporal.PlainDate`      | Year, month and day       | `day`       |
-| `Temporal.PlainDateTime`  | A date and a time         | `minute`    |
-| `Temporal.ZonedDateTime`  | A date, a time and a zone | `minute`    |
-| `Temporal.PlainYearMonth` | Year and month            | `month`     |
+| Kind                      | Segments                  | Default granularity |
+| ------------------------- | ------------------------- | ------------------- |
+| `Temporal.PlainDate`      | Year, month and day       | `day`               |
+| `Temporal.PlainDateTime`  | A date and a time         | `minute`            |
+| `Temporal.ZonedDateTime`  | A date, a time and a zone | `minute`            |
+| `Temporal.PlainYearMonth` | Year and month            | `month`             |
 
 An emitted value keeps the calendar, the time and the time zone of the value that you gave. With no value, the `granularity` prop gives the kind of the value that the field makes: `day` gives a `Temporal.PlainDate`, `month` gives a `Temporal.PlainYearMonth`, and each other unit gives a `Temporal.PlainDateTime`. Use `referenceDate` to give the kind, the time zone and the numbers that an empty segment takes when the user presses an arrow key.
 
@@ -161,15 +161,15 @@ On a Node.js version before 26, load a `Temporal` polyfill before the server sta
 
 Each segment is a stop of the Tab key. Left and Right swap in a right-to-left document.
 
-| Key                | Result                                                                                                           |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------- |
-| Up, Down           | Adds or takes 1 and wraps in the range of the segment. An empty segment takes its number from `referenceDate`.   |
-| Page Up, Page Down | Adds or takes 5 for a year, 2 for a month, 7 for a day, 2 for an hour, and 15 for a minute or a second.          |
-| Home, End          | The least and the greatest number of the segment.                                                                |
-| Digit              | Adds the digit. The focus goes to the next segment when the segment is full, or when no digit can make a number. |
-| Backspace, Delete  | Removes the last digit. Backspace in an empty segment moves to the segment before.                               |
-| Left, Right        | The segment before or after.                                                                                     |
-| A letter           | In a day period segment, selects the period whose text starts with that letter. Up and Down toggle the period.   |
+| Key                | Result                                                                                                                        |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| Up, Down           | Adds or takes 1 and wraps in the range of the segment. An empty segment takes its number from `referenceDate`, or from today. |
+| Page Up, Page Down | Adds or takes 5 for a year, 2 for a month, 7 for a day, 2 for an hour, and 15 for a minute or a second.                       |
+| Home, End          | The least and the greatest number of the segment.                                                                             |
+| Digit              | Adds the digit. The focus goes to the next segment when the segment is full, or when no digit can make a number.              |
+| Backspace, Delete  | Removes the last digit. Backspace in an empty segment moves to the segment before.                                            |
+| Left, Right        | The segment before or after.                                                                                                  |
+| A letter           | In a day period segment, selects the period whose text starts with that letter. Up and Down toggle the period.                |
 
 The digits are those of the numbering system of the locale, such as the digits of `ar-EG`. A paste of an ISO 8601 text, or of a text in the layout of the locale, fills the segments.
 
