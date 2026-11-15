@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Dialog } from '@vase-ui/vue/dialog';
-import { createRenderer, describeConformance, fireEvent, screen } from '#test-utils';
+import {
+  createRenderer,
+  describeConformance,
+  fireEvent,
+  screen,
+  waitForLaterMillisecond,
+} from '#test-utils';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import { REASONS } from '../../internals/reasons';
 import type { DialogStore } from '../store/DialogStore';
@@ -41,7 +47,7 @@ describe('<Dialog.Close />', () => {
       expect(handleOpenChange.mock.calls.length).toBe(0);
 
       const openButton = screen.getByText('Open');
-      await user.click(openButton);
+      await waitForLaterMillisecond(() => user.click(openButton));
 
       expect(handleOpenChange.mock.calls.length).toBe(1);
       expect(handleOpenChange.mock.calls[0][0]).toBe(true);
@@ -73,7 +79,7 @@ describe('<Dialog.Close />', () => {
       expect(handleOpenChange.mock.calls.length).toBe(0);
 
       const openButton = screen.getByText('Open');
-      await user.click(openButton);
+      await waitForLaterMillisecond(() => user.click(openButton));
 
       expect(handleOpenChange.mock.calls.length).toBe(1);
       expect(handleOpenChange.mock.calls[0][0]).toBe(true);
@@ -105,7 +111,7 @@ describe('<Dialog.Close />', () => {
     expect(handleOpenChange.mock.calls.length).toBe(0);
 
     const openButton = screen.getByText('Open');
-    await user.click(openButton);
+    await waitForLaterMillisecond(() => user.click(openButton));
 
     expect(handleOpenChange.mock.calls.length).toBe(1);
     expect(handleOpenChange.mock.calls[0][0]).toBe(true);

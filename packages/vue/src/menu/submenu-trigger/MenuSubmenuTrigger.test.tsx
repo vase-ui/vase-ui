@@ -12,6 +12,7 @@ import {
   screen,
   takeReportedMessages,
   waitFor,
+  waitForLaterMillisecond,
 } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
 import { createAttribute } from '../../utils/popups/createAttribute';
@@ -296,8 +297,10 @@ describe('<Menu.SubmenuTrigger />', () => {
         </Menu.Root>,
       );
 
-      await user.click(screen.getByRole('button', { name: 'Actions' }));
-      const trigger = await screen.findByRole('menuitem', { name: 'More' });
+      const trigger = await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Actions' }));
+        return screen.findByRole('menuitem', { name: 'More' });
+      });
       await user.hover(trigger);
       await screen.findByTestId('submenu');
       await waitFor(() => {
@@ -371,12 +374,12 @@ describe('<Menu.SubmenuTrigger />', () => {
       </Menu.Root>,
     );
 
-    await user.keyboard('[Tab][Enter]');
+    await waitForLaterMillisecond(() => user.keyboard('[Tab][Enter]'));
     const trigger = screen.getByRole('menuitem', { name: 'More' });
     await waitFor(() => {
       expect(trigger).toHaveFocus();
     });
-    await user.keyboard('[ArrowRight]');
+    await waitForLaterMillisecond(() => user.keyboard('[ArrowRight]'));
     const item = screen.getByRole('menuitem', { name: 'Alpha' });
     await waitFor(() => {
       expect(item).toHaveFocus();
@@ -443,12 +446,12 @@ describe('<Menu.SubmenuTrigger />', () => {
           </Menu.Root>,
         );
 
-        await user.keyboard('[Tab][Enter]');
+        await waitForLaterMillisecond(() => user.keyboard('[Tab][Enter]'));
         const trigger = screen.getByRole('menuitem', { name: 'More' });
         await waitFor(() => {
           expect(trigger).toHaveFocus();
         });
-        await user.keyboard('[ArrowRight]');
+        await waitForLaterMillisecond(() => user.keyboard('[ArrowRight]'));
         await waitFor(() => {
           expect(shadowRoot.activeElement?.textContent).toBe('Alpha');
         });
