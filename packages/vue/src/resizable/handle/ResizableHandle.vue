@@ -55,7 +55,7 @@ const stateAttributesMapping: StateAttributesMapping<ResizableHandleState> = {
 
 <script setup lang="ts">
 import { computed, onDeactivated, onScopeDispose, watch } from 'vue';
-import { useIsHydrating } from '../../common/hydration';
+import { useAriaAfterHydration, useIsHydrating } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
 import { activeElement } from '../../common/shadowDom';
 import {
@@ -107,6 +107,7 @@ const root = useResizableRootContext();
 useDeferredServerRender();
 
 const hydrating = useIsHydrating();
+const ariaAfterHydration = useAriaAfterHydration();
 const { ref: listItemRef, index } = useCompositeListItem({ list: root.list });
 const isDisabled = computed(() => root.disabled.value || props.disabled);
 
@@ -347,6 +348,14 @@ const { element, elementProps } = useRenderElement('div', props, {
       },
     },
     attrs,
+    // The values depend on the panel after the handle, and the server HTML has them.
+    (merged) => ({
+      ...merged,
+      'aria-controls': ariaAfterHydration(merged['aria-controls']),
+      'aria-valuenow': ariaAfterHydration(merged['aria-valuenow']),
+      'aria-valuemin': ariaAfterHydration(merged['aria-valuemin']),
+      'aria-valuemax': ariaAfterHydration(merged['aria-valuemax']),
+    }),
   ],
 });
 

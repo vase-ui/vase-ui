@@ -102,7 +102,7 @@ export type SwitchRootChangeEventDetails = VaseUIChangeEventDetails<SwitchRootCh
 
 <script setup lang="ts">
 import { computed, nextTick, provide, shallowRef, watch } from 'vue';
-import { queueInputTake } from '../../common/hydration';
+import { queueInputTake, useAriaAfterHydration } from '../../common/hydration';
 import { useControlled } from '../../common/useControlled';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -346,6 +346,7 @@ const state = computed<SwitchRootState>(() => ({
 
 provide(SwitchRootContext, state);
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('span', props, {
   state,
   ref: [buttonRef],
@@ -358,7 +359,7 @@ const { element, elementProps } = useRenderElement('span', props, {
       'aria-readonly': props.readOnly || undefined,
       'aria-required': props.required || undefined,
       'aria-label': props.ariaLabel,
-      'aria-labelledby': ariaLabelledBy.value,
+      'aria-labelledby': ariaAfterHydration(ariaLabelledBy.value),
       onFocusin() {
         setFocused(true);
       },
@@ -393,14 +394,17 @@ const { element, elementProps } = useRenderElement('span', props, {
     attrs,
     getButtonProps,
     (merged) => validation.getValidationProps(isDisabled.value, merged),
+    (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),
   ],
 });
 
 // The style is the constant itself, in an object that no `mergeProps` call makes.
 // `handleHiddenInputInvalid` then keeps the size that it writes.
 function inputProps() {
+  const validationProps = validation.getValidationProps(isDisabled.value);
   return {
-    ...validation.getValidationProps(isDisabled.value),
+    ...validationProps,
+    'aria-describedby': ariaAfterHydration(validationProps['aria-describedby']),
     ref: setInputElement,
     checked: isChecked.value,
     disabled: isDisabled.value,

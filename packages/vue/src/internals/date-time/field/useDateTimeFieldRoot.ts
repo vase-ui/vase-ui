@@ -12,6 +12,7 @@ import {
 import type { MaybeRefOrGetter } from 'vue';
 import { addEventListener } from '../../../common/addEventListener';
 import { clamp } from '../../../common/clamp';
+import { useAriaAfterHydration } from '../../../common/hydration';
 import { ownerWindow } from '../../../common/owner';
 import { contains } from '../../../common/shadowDom';
 import { useControlled } from '../../../common/useControlled';
@@ -657,6 +658,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     }
   }
 
+  const ariaAfterHydration = useAriaAfterHydration();
   const ariaLabelledBy = useAriaLabelledBy(
     () => toValue(parameters.ariaLabelledby),
     useControlLabelId(),
@@ -900,8 +902,10 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   // `handleHiddenInputInvalid` then keeps the size that it writes.
   function hiddenInputProps() {
     const type = INPUT_TYPES[kind.value] ?? 'text';
+    const validationProps = validation.getValidationProps(isDisabled.value);
     return {
-      ...validation.getValidationProps(isDisabled.value),
+      ...validationProps,
+      'aria-describedby': ariaAfterHydration(validationProps['aria-describedby']),
       ref: setHiddenInput,
       type,
       id:
@@ -948,10 +952,10 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     return [
       {
         role: 'group',
-        'aria-describedby': getDescriptionProps({ 'aria-describedby': ariaDescribedBy })[
-          'aria-describedby'
-        ],
-        'aria-labelledby': ariaLabelledBy.value,
+        'aria-describedby': ariaAfterHydration(
+          getDescriptionProps({ 'aria-describedby': ariaDescribedBy })['aria-describedby'],
+        ),
+        'aria-labelledby': ariaAfterHydration(ariaLabelledBy.value),
         onFocusout: handleFocusout,
       },
       elementAttrs,

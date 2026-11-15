@@ -41,6 +41,7 @@ export interface AccordionPanelProps
 import { computed, onMounted, watch } from 'vue';
 import { useCollapsiblePanel } from '../../collapsible/panel/useCollapsiblePanel';
 import { useCollapsibleRootContext } from '../../collapsible/root/CollapsibleRootContext';
+import { useAriaAfterHydration } from '../../common/hydration';
 import { warn } from '../../common/warn';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
@@ -140,13 +141,14 @@ const panelState = computed<AccordionPanelState>(() => ({
   transitionStatus: panelTransitionStatus.value,
 }));
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('div', props, {
   state: panelState,
   ref: panelRef,
   props: (attrs) => [
     panelProps.value,
     {
-      'aria-labelledby': triggerId.value,
+      'aria-labelledby': ariaAfterHydration(triggerId.value),
       role: 'region',
       style: {
         [AccordionPanelCssVars.accordionPanelHeight]:

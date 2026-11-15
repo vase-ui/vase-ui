@@ -12,6 +12,7 @@ import {
   hydrate,
   isJSDOM,
   nextEvent,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   takeReportedMessages,
@@ -2015,6 +2016,21 @@ describe('<Collapsible.Panel />', () => {
   });
 
   describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/collapsible/panel/CollapsiblePanelHydration.test.vue',
+      component: CollapsiblePanelHydration,
+      cases: [
+        {
+          name: 'the trigger of a removed panel',
+          props: { defaultOpen: true, panelId: 'panel-a', panelRemovedAtMount: true },
+          selector: '[data-testid="trigger"]',
+          attribute: 'aria-controls',
+          serverValue: 'panel-a',
+          clientValue: null,
+        },
+      ],
+    });
+
     const FIXTURE = 'src/collapsible/panel/CollapsiblePanelHydration.test.vue';
 
     it.each([

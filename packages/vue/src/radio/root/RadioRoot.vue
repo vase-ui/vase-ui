@@ -86,6 +86,7 @@ export interface RadioRootProps<Value = any>
 
 <script setup lang="ts" generic="Value = any">
 import { computed, nextTick, onDeactivated, provide, shallowRef, watch } from 'vue';
+import { useAriaAfterHydration } from '../../common/hydration';
 import { mergeCleanups } from '../../common/mergeCleanups';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { useFieldItemContext } from '../../field/item/FieldItemContext';
@@ -370,6 +371,7 @@ provide(RadioRootContext, state);
 // time.
 const item = group ? useCompositeItem({ active: checked, disabled: isDisabled }) : undefined;
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('span', props, {
   state,
   ref: item ? [item.compositeRef, buttonRef] : [buttonRef],
@@ -381,7 +383,7 @@ const { element, elementProps } = useRenderElement('span', props, {
       role: 'radio',
       'aria-checked': checked.value,
       'aria-label': props.ariaLabel,
-      'aria-labelledby': ariaLabelledBy.value,
+      'aria-labelledby': ariaAfterHydration(ariaLabelledBy.value),
       [ACTIVE_COMPOSITE_ITEM]: checked.value ? '' : undefined,
       // Only a fully disabled group leaves the tab order. A single disabled radio keeps the
       // composite tab index.
@@ -435,6 +437,7 @@ const { element, elementProps } = useRenderElement('span', props, {
     getButtonProps,
     getDescriptionProps,
     group && ((merged) => group.validation.getValidationProps(isDisabled.value, merged)),
+    (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),
   ],
 });
 

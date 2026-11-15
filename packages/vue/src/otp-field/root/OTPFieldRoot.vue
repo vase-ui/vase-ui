@@ -155,7 +155,7 @@ export type OTPFieldRootCompleteEventDetails =
 <script setup lang="ts">
 import { computed, nextTick, onMounted, provide, shallowRef, watch } from 'vue';
 import { clamp } from '../../common/clamp';
-import { useHiddenValueBeforeHydration } from '../../common/hydration';
+import { useAriaAfterHydration, useHiddenValueBeforeHydration } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
 import { activeElement, contains } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
@@ -589,6 +589,7 @@ function mergeAriaIds(...values: (string | undefined)[]) {
   return ids.length > 0 ? Array.from(new Set(ids)).join(' ') : undefined;
 }
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('div', props, {
   state,
   stateAttributesMapping: rootStateAttributesMapping,
@@ -597,11 +598,13 @@ const { element, elementProps } = useRenderElement('div', props, {
     return [
       {
         role: 'group',
-        'aria-describedby': mergeAriaIds(
-          ariaDescribedBy as string | undefined,
-          getDescriptionProps({})['aria-describedby'] as string | undefined,
+        'aria-describedby': ariaAfterHydration(
+          mergeAriaIds(
+            ariaDescribedBy as string | undefined,
+            getDescriptionProps({})['aria-describedby'] as string | undefined,
+          ),
         ),
-        'aria-labelledby': ariaLabelledBy.value,
+        'aria-labelledby': ariaAfterHydration(ariaLabelledBy.value),
       },
       elementAttrs,
     ];
@@ -728,8 +731,10 @@ watch(
 // The style is the constant itself, in an object that no `mergeProps` call makes.
 // `handleHiddenInputInvalid` then keeps the size that it writes.
 function hiddenInputProps() {
+  const validationProps = validation.getValidationProps(isDisabled.value);
   return {
-    ...validation.getValidationProps(isDisabled.value),
+    ...validationProps,
+    'aria-describedby': ariaAfterHydration(validationProps['aria-describedby']),
     ref: setHiddenInput,
     type: 'text',
     id: controlId.value && inputName.value == null ? `${controlId.value}-hidden-input` : undefined,

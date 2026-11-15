@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onMounted, shallowRef } from 'vue';
 import { Collapsible } from '../index';
 
 // A Boolean prop that is absent becomes `false` in Vue. `keepMounted` must stay `undefined`,
@@ -10,15 +11,22 @@ withDefaults(
     hiddenUntilFound?: boolean | undefined;
     panelId?: string | undefined;
     panelClass?: string | undefined;
+    panelRemovedAtMount?: boolean | undefined;
   }>(),
   { defaultOpen: undefined, keepMounted: undefined, hiddenUntilFound: undefined },
 );
+
+const isMounted = shallowRef(false);
+onMounted(() => {
+  isMounted.value = true;
+});
 </script>
 
 <template>
   <Collapsible.Root :default-open="defaultOpen">
-    <Collapsible.Trigger>Trigger</Collapsible.Trigger>
+    <Collapsible.Trigger data-testid="trigger">Trigger</Collapsible.Trigger>
     <Collapsible.Panel
+      v-if="!(panelRemovedAtMount && isMounted)"
       :id="panelId"
       :class="panelClass"
       :keep-mounted="keepMounted"

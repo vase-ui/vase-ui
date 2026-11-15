@@ -24,6 +24,7 @@ export { detachedTriggersConformanceTests } from './detachedTriggersConformanceT
 export { dialogRootSharedTests } from './dialogRootSharedTests';
 export { hiddenInputSizeTests } from './hiddenInputSizeTests';
 export { hiddenInputTypeTests } from './hiddenInputTypeTests';
+export { removedPartHydrationTests } from './removedPartHydrationTests';
 export { nextCall, popupAnatomyTests } from './popupAnatomyTests';
 export { popupConformanceTests } from './popupConformanceTests';
 export { popupFocusPropsTests } from './popupFocusPropsTests';

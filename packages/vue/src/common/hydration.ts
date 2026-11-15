@@ -1,5 +1,5 @@
 import { computed, nextTick, onMounted, shallowRef, useSlots, watch } from 'vue';
-// eslint-disable-next-line no-restricted-imports -- Vue sets `vnode.el` before `setup` only when it hydrates the component from server HTML. Vue has no public API for this fact, and Nuxt reads the same field. In Vapor mode the instance is `null`, and the part then writes its value as in a client-only mount.
+// eslint-disable-next-line no-restricted-imports -- Vue sets `vnode.el` before `setup` only when it hydrates the component from server HTML. Vue has no public API for this fact, and Nuxt reads the same field. In Vapor mode the instance is `null`, and each composable then acts as in a client-only mount.
 import { getCurrentInstance } from 'vue';
 import type { ComputedRef, Ref, RendererNode } from 'vue';
 import { ownerDocument, ownerWindow } from './owner';
@@ -32,6 +32,28 @@ export function useIsHydrated(): Readonly<Ref<boolean>> {
 export function useIsHydrating(): ComputedRef<boolean> {
   const hydrated = useIsHydrated();
   return computed(() => !hydrated.value);
+}
+
+/**
+ * For a part that binds an `aria-*` value that a later part gives, such as the id of a label that
+ * comes after the part. The function gives `null` while Vue hydrates the part from server HTML.
+ * On a server, in a client-only mount and after the mount, it gives the value.
+ *
+ * Vue does not patch an `aria-*` attribute while it hydrates, so the element keeps the value of the
+ * server HTML. The first client render does not know a later part yet. When the page removes or
+ * changes that part at the mount, the render after the mount can give the value of the first
+ * client render. Vue then writes nothing, and the element keeps the value of the server HTML. With
+ * `null` in the first client render, the render after the mount always writes its value.
+ *
+ * Give it only `aria-*` values. Vue compares other attributes, such as `id` and `tabindex`, while
+ * it hydrates, and it warns when they differ.
+ */
+export function useAriaAfterHydration(): <Value>(value: Value) => Value | null {
+  if (getCurrentInstance()?.vnode.el == null) {
+    return (value) => value;
+  }
+  const hydrated = useIsHydrated();
+  return (value) => (hydrated.value ? value : null);
 }
 
 type TextControl = HTMLInputElement | HTMLTextAreaElement;

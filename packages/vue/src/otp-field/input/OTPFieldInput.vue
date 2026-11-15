@@ -33,7 +33,7 @@ export interface OTPFieldInputProps
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUpdated, shallowRef, useAttrs, watch } from 'vue';
-import { useValueBeforeHydration } from '../../common/hydration';
+import { useAriaAfterHydration, useValueBeforeHydration } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
 import { platform } from '../../common/platform';
 import { activeElement } from '../../common/shadowDom';
@@ -340,6 +340,7 @@ function handlePaste(event: ClipboardEvent) {
   commitValue(rawValue, REASONS.inputPaste, event);
 }
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('input', props, {
   state: inputState,
   ref: [listItemRef],
@@ -379,7 +380,7 @@ const { element, elementProps } = useRenderElement('input', props, {
         pattern: pattern.value,
         readonly: readOnly.value || undefined,
         required: required.value || undefined,
-        'aria-labelledby': ariaLabel == null ? inheritedLabel : undefined,
+        'aria-labelledby': ariaAfterHydration(ariaLabel == null ? inheritedLabel : undefined),
         'aria-invalid': !disabled.value && invalid.value ? true : undefined,
         'aria-label': ariaLabel,
         onMousedown(event: MouseEvent) {
