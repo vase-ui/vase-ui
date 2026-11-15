@@ -11,6 +11,7 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountFormResetTests,
   hiddenInputSizeTests,
   hydrate,
   hydrateAfter,
@@ -2615,6 +2616,15 @@ describe('<Checkbox.Root />', () => {
         expect(input.indeterminate).toBe(true);
         expect(screen.getByRole('checkbox')).toHaveAttribute('aria-checked', 'mixed');
       });
+    });
+
+    heldMountFormResetTests({
+      render,
+      renderControl: () => <Checkbox.Root name="notifications" defaultChecked />,
+      change: () => fireEvent.click(screen.getByRole('checkbox')),
+      readState: () => screen.getByRole('checkbox').getAttribute('aria-checked'),
+      defaultState: 'true',
+      changedState: 'false',
     });
   });
 

@@ -1,0 +1,142 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { KeepAlive, Transition, defineComponent, shallowRef } from 'vue';
+import { Switch } from '@vase-ui/vue/switch';
+import {
+  createHeldBranch,
+  createRenderer,
+  fireEvent,
+  flushMicrotasks,
+  screen,
+  waitFor,
+} from '#test-utils';
+
+// `Switch.Root` calls the composable.
+function renderSwitchForm() {
+  return (
+    <form data-testid="form">
+      <Switch.Root name="notifications" defaultChecked />
+    </form>
+  );
+}
+
+describe('useFormReset', () => {
+  const { render } = createRenderer();
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  describe('BUG-6206: a native reset under KeepAlive', () => {
+    it('keeps a reset that waits while KeepAlive hides and shows the branch', async () => {
+      const visible = shallowRef(true);
+      const Branch = defineComponent(() => () => (
+        <Switch.Root name="notifications" defaultChecked />
+      ));
+      await render(() => (
+        <form data-testid="form">
+          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+        </form>
+      ));
+      const switchElement = screen.getByRole('switch');
+      expect(switchElement).toHaveAttribute('aria-checked', 'true');
+      await fireEvent.click(switchElement);
+      expect(switchElement).toHaveAttribute('aria-checked', 'false');
+
+      vi.useFakeTimers();
+      screen.getByTestId<HTMLFormElement>('form').reset();
+      visible.value = false;
+      await flushMicrotasks();
+      visible.value = true;
+      await flushMicrotasks();
+      vi.advanceTimersByTime(0);
+      vi.useRealTimers();
+      await flushMicrotasks();
+
+      expect(switchElement).toHaveAttribute('aria-checked', 'true');
+    });
+
+    it.each([
+      {
+        name: 'mounted shown',
+        async mount() {
+          const visible = shallowRef(true);
+          const Branch = defineComponent(() => renderSwitchForm);
+          await render(() => <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>);
+          return {
+            async hide() {
+              visible.value = false;
+              await flushMicrotasks();
+            },
+            async show() {
+              visible.value = true;
+              await flushMicrotasks();
+            },
+          };
+        },
+      },
+      {
+        name: 'mounted while held',
+        async mount() {
+          const { HeldBranch, mountWhileHeld, hide, show } = createHeldBranch(renderSwitchForm);
+          await render(<HeldBranch />);
+          await mountWhileHeld();
+          await show();
+          return { hide, show };
+        },
+      },
+    ])(
+      'follows a program reset of a form that KeepAlive holds with the control: $name',
+      async ({ mount }) => {
+        const { hide, show } = await mount();
+        // A query cannot find the form while `KeepAlive` holds it.
+        const form = screen.getByTestId<HTMLFormElement>('form');
+        const switchElement = screen.getByRole('switch');
+        expect(switchElement).toHaveAttribute('aria-checked', 'true');
+        await fireEvent.click(switchElement);
+        expect(switchElement).toHaveAttribute('aria-checked', 'false');
+
+        await hide();
+        vi.useFakeTimers();
+        form.reset();
+        vi.advanceTimersByTime(0);
+        vi.useRealTimers();
+        await flushMicrotasks();
+        await show();
+
+        expect({
+          part: switchElement.getAttribute('aria-checked'),
+          input: (form.elements.namedItem('notifications') as HTMLInputElement).checked,
+        }).toEqual({ part: 'true', input: true });
+      },
+    );
+
+    it('follows a program reset of a held form after a leave transition', async () => {
+      const visible = shallowRef(true);
+      const Branch = defineComponent(() => renderSwitchForm);
+      await render(() => (
+        <Transition>
+          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+        </Transition>
+      ));
+      const form = screen.getByTestId<HTMLFormElement>('form');
+      const switchElement = screen.getByRole('switch');
+      expect(switchElement).toHaveAttribute('aria-checked', 'true');
+      await fireEvent.click(switchElement);
+      expect(switchElement).toHaveAttribute('aria-checked', 'false');
+
+      visible.value = false;
+      await waitFor(() => {
+        expect(form).not.toBeInTheDocument();
+      });
+      vi.useFakeTimers();
+      form.reset();
+      vi.advanceTimersByTime(0);
+      vi.useRealTimers();
+      await flushMicrotasks();
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(switchElement).toHaveAttribute('aria-checked', 'true');
+    });
+  });
+});

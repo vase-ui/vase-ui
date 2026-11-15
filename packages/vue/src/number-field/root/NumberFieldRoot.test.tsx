@@ -8,6 +8,7 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountFormResetTests,
   hiddenInputSizeTests,
   hydrate,
   hydrateAfter,
@@ -871,6 +872,19 @@ describe('<NumberField />', () => {
         expect(seen).toEqual([false, true]);
         expect(getContext().isResetChangePending.value).toBe(false);
       });
+    });
+
+    heldMountFormResetTests({
+      render,
+      renderControl: () => (
+        <NumberFieldBase.Root name="quantity" defaultValue={5}>
+          <NumberFieldBase.Input data-testid="text" />
+        </NumberFieldBase.Root>
+      ),
+      change: () => autofill('9'),
+      readState: () => getText().value,
+      defaultState: '5',
+      changedState: '9',
     });
   });
 

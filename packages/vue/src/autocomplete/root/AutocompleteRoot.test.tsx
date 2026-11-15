@@ -10,6 +10,7 @@ import {
   createRenderer,
   fireEvent,
   flushMicrotasks,
+  heldMountFormResetTests,
   hydrate,
   hydrateAfter,
   isJSDOM,
@@ -3552,5 +3553,18 @@ describe('<Autocomplete.Root />', () => {
       expect(screen.queryByTestId('error')).toBe(null);
       expect(validate).toHaveBeenCalledTimes(validateCalls);
     });
+  });
+
+  heldMountFormResetTests({
+    render,
+    renderControl: () => (
+      <Autocomplete.Root name="search" items={cities} defaultValue="ma">
+        <Autocomplete.Input />
+      </Autocomplete.Root>
+    ),
+    change: () => type('mal'),
+    readState: () => getInput().value,
+    defaultState: 'ma',
+    changedState: 'mal',
   });
 });

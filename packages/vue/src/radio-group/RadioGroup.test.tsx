@@ -23,6 +23,7 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountFormResetTests,
   hydrate,
   hydrateAfter,
   isJSDOM,
@@ -2937,6 +2938,20 @@ describe('<RadioGroup />', () => {
         expect(screen.getByTestId('root')).not.toHaveAttribute('data-filled');
         expect(screen.getByTestId('root')).not.toHaveAttribute('data-dirty');
       });
+    });
+
+    heldMountFormResetTests({
+      render,
+      renderControl: () => (
+        <RadioGroup name="fruit" defaultValue="a">
+          {renderRadios()}
+        </RadioGroup>
+      ),
+      change: () => fireEvent.click(screen.getByTestId('b')),
+      readState: () =>
+        screen.getAllByRole('radio').map((radio) => radio.getAttribute('aria-checked')),
+      defaultState: ['true', 'false', 'false'],
+      changedState: ['false', 'true', 'false'],
     });
   });
 

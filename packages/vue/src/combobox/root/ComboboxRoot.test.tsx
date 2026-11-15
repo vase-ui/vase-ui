@@ -26,6 +26,7 @@ import {
   createRenderer,
   fireEvent,
   flushMicrotasks,
+  heldMountFormResetTests,
   hiddenInputSizeTests,
   hiddenInputTypeTests,
   hydrate,
@@ -2560,6 +2561,23 @@ describe('<Combobox.Root />', () => {
       expect(handleInputValueChange).toHaveBeenCalledTimes(1);
       expect(handleInputValueChange.mock.lastCall?.[0]).toBe('os');
     });
+  });
+
+  heldMountFormResetTests({
+    render,
+    renderControl: () => (
+      <Combobox.Root name="city" items={cities} defaultValue="Oslo">
+        <ComboboxInputPart />
+        <ComboboxListPart />
+      </Combobox.Root>
+    ),
+    change: async () => {
+      await type('ma');
+      await pick('Malmö');
+    },
+    readState: () => getInput().value,
+    defaultState: 'Oslo',
+    changedState: 'Malmö',
   });
 
   describe('VUE-21: a native reset clears the error of the field', () => {
