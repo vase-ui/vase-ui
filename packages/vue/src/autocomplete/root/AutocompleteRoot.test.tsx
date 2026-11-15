@@ -3607,40 +3607,46 @@ describe('<Autocomplete.Root />', () => {
       expect(validate).toHaveBeenCalledTimes(validateCalls);
     });
 
-    it('BUG-6206: puts back the default text while the input shows it as an inline completion', async () => {
-      const events: string[] = [];
-      await render(
-        <form data-testid="form">
-          <Autocomplete.Root
-            name="search"
-            mode="inline"
-            items={cities}
-            defaultValue="Malmö"
-            onValueChange={(value, details) =>
-              events.push(`valueChange:${value}:${details.reason}:${details.event.type}`)
-            }
-            {...{ 'onUpdate:value': (value: string) => events.push(`update:value:${value}`) }}
-          >
-            <Autocomplete.Input />
-            {popupWithList()}
-          </Autocomplete.Root>
-        </form>,
-      );
-      getInput().focus();
-      await type('');
-      await pressArrowDown();
-      await pressArrowDown();
-      expect(getInput().value).toBe('Malmö');
-      events.length = 0;
+    it.each([
+      { name: 'mode="inline"', mode: 'inline' },
+      { name: 'mode="both"', mode: 'both' },
+    ] as const)(
+      'BUG-6206: puts back the default text while the input shows it as an inline completion, $name',
+      async ({ mode }) => {
+        const events: string[] = [];
+        await render(
+          <form data-testid="form">
+            <Autocomplete.Root
+              name="search"
+              mode={mode}
+              items={cities}
+              defaultValue="Malmö"
+              onValueChange={(value, details) =>
+                events.push(`valueChange:${value}:${details.reason}:${details.event.type}`)
+              }
+              {...{ 'onUpdate:value': (value: string) => events.push(`update:value:${value}`) }}
+            >
+              <Autocomplete.Input />
+              {popupWithList()}
+            </Autocomplete.Root>
+          </form>,
+        );
+        getInput().focus();
+        await type('');
+        await pressArrowDown();
+        await pressArrowDown();
+        expect(getInput().value).toBe('Malmö');
+        events.length = 0;
 
-      await reset();
+        await reset();
 
-      expect(events).toEqual(['valueChange:Malmö:none:reset', 'update:value:Malmö']);
-      expect(getFormData('search')).toEqual(['Malmö']);
-      await fireEvent.keyDown(getInput(), { key: 'Escape' });
-      await flushMicrotasks();
-      expect(getInput().value).toBe('Malmö');
-    });
+        expect(events).toEqual(['valueChange:Malmö:none:reset', 'update:value:Malmö']);
+        expect(getFormData('search')).toEqual(['Malmö']);
+        await fireEvent.keyDown(getInput(), { key: 'Escape' });
+        await flushMicrotasks();
+        expect(getInput().value).toBe('Malmö');
+      },
+    );
 
     it('VUE-21: a canceled change of a reset that removes an inline completion starts no validation', async () => {
       const validate = vi.fn(() => null);
