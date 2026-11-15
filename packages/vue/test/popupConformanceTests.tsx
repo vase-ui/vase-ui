@@ -707,7 +707,7 @@ export function popupConformanceTests(config: PopupTestConfig) {
             <div>
               <style>
                 {`@keyframes ${animationName}-exit { to { opacity: 0; } }
-                  .${className}[data-ending-style] { animation: ${animationName}-exit 200ms; }`}
+                  .${className}[data-ending-style] { animation: ${animationName}-exit 100s; }`}
               </style>
               {prepareComponent({
                 root: {
@@ -731,7 +731,13 @@ export function popupConformanceTests(config: PopupTestConfig) {
           await waitFor(() => {
             expect(getPopup()).toHaveAttribute('data-ending-style');
           });
-          await wait(400);
+          // The part can stop its wait before it reads the animations, so the case reads them.
+          const animations = getPopup()!.getAnimations();
+          const finished = Promise.all(animations.map((animation) => animation.finished));
+          seekBeforeEnd(animations, 50);
+          await finished;
+          // A part completes the close in the microtasks after the end of the exit.
+          await flushMicrotasks();
 
           expect(onOpenChangeComplete).not.toHaveBeenCalledWith(false);
           expect(getPopup()).not.toBe(null);
