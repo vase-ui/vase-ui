@@ -232,9 +232,9 @@ const ACCEPTED: Record<string, (element: Element) => boolean> = {
 
 function expectNoViolationsInOpenState(element: Element) {
   return expectNoAxeViolations(element, {
-    // While a popup is open, a part gives `aria-hidden` to its focus guards and to the elements
-    // outside the popup, and these can take the focus. The mount case of `demos.test.tsx` keeps
-    // this rule for the closed demo.
+    // An open popup gives `aria-hidden` to its focus guards. A modal popup, and the list of an
+    // input that keeps the focus, also give it to the elements outside the popup. These elements
+    // can take the focus. The mount case of `demos.test.tsx` keeps this rule for the closed demo.
     rules: { 'aria-hidden-focus': { enabled: false } },
     accept: (rule, node) => ACCEPTED[rule]?.(node) ?? false,
   });
