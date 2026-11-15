@@ -1,7 +1,7 @@
 import type { CDPSession } from '@vitest/browser-playwright';
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { defineComponent, shallowRef, Teleport } from 'vue';
+import { defineComponent, KeepAlive, shallowRef, Teleport } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import type { HTMLProps } from '@vase-ui/vue/types';
@@ -1312,6 +1312,66 @@ describe('<Field.Control />', () => {
       await fireEvent.input(control, { target: { value: '' } });
 
       expect(control).toHaveAttribute('aria-invalid', 'true');
+    });
+  });
+
+  describe('KeepAlive', () => {
+    it.each([{ name: 'held mount' }, { name: 'deactivated' }])(
+      'a held required control does not block the submit of its form: $name',
+      async ({ name }) => {
+        const handleSubmit = vi.fn();
+        const visible = shallowRef(true);
+        const extra = shallowRef(name === 'deactivated');
+        const Branch = defineComponent(() => () => (
+          <div>{extra.value ? <Field.Control key="held" required /> : null}</div>
+        ));
+        const { user } = await render(() => (
+          <Form onFormSubmit={handleSubmit}>
+            <Field.Root name="email" data-testid="field">
+              <Field.Control defaultValue="shown" />
+              <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+            </Field.Root>
+            <button type="submit">Submit</button>
+          </Form>
+        ));
+
+        visible.value = false;
+        await flushMicrotasks();
+        extra.value = true;
+        await flushMicrotasks();
+        await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+        expect(handleSubmit).toHaveBeenCalledTimes(1);
+        expect(screen.getByTestId('field')).not.toHaveAttribute('data-invalid');
+      },
+    );
+
+    it('the label does not name a control that mounts while KeepAlive holds it', async () => {
+      const visible = shallowRef(true);
+      const extra = shallowRef(false);
+      const Branch = defineComponent(() => () => (
+        <div>{extra.value ? <Field.Control key="held" id="held-control" /> : null}</div>
+      ));
+      await render(() => (
+        <Field.Root>
+          <Field.Label data-testid="label">Email</Field.Label>
+          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+        </Field.Root>
+      ));
+      const label = screen.getByTestId('label');
+      const providerId = label.getAttribute('for');
+
+      visible.value = false;
+      await flushMicrotasks();
+      extra.value = true;
+      await flushMicrotasks();
+
+      expect(label.getAttribute('for')).toBe(providerId);
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(label).toHaveAttribute('for', 'held-control');
     });
   });
 
