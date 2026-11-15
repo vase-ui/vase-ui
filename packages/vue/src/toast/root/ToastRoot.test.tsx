@@ -957,6 +957,27 @@ describe('<Toast.Root />', () => {
 
       expect(screen.getByTestId('root')).toHaveAccessibleName('Copied');
     });
+
+    it('keeps the description when the consumer sets aria-labelledby to undefined', async () => {
+      await render(
+        <Toast.Provider>
+          <Toast.Viewport>
+            <Toast.Root
+              toast={{ id: 'test', description: 'Copied' }}
+              data-testid="root"
+              aria-labelledby={undefined}
+            >
+              <Toast.Description data-testid="description" />
+            </Toast.Root>
+          </Toast.Viewport>
+        </Toast.Provider>,
+      );
+      const root = screen.getByTestId('root');
+
+      expect(root).not.toHaveAttribute('aria-labelledby');
+      expect(root).toHaveAttribute('aria-describedby', screen.getByTestId('description').id);
+      expect(root).toHaveAccessibleDescription('Copied');
+    });
   });
 
   it('marks a toast that the limit hides with data-limited, and makes it inert', async () => {

@@ -199,8 +199,11 @@ const { element, elementProps } = useRenderElement('div', props, {
 
 function hasConsumerName(attrs: Record<string, unknown>) {
   const ariaLabel = attrs['aria-label'];
+  // The `aria-labelledby` of the consumer replaces the value of the root, also when it is
+  // `undefined`.
   return (
-    attrs['aria-labelledby'] != null || (typeof ariaLabel === 'string' && ariaLabel.trim() !== '')
+    Object.hasOwn(attrs, 'aria-labelledby') ||
+    (typeof ariaLabel === 'string' && ariaLabel.trim() !== '')
   );
 }
 
