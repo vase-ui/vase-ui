@@ -5,6 +5,6 @@
     "https://vuejs.org/guide/built-ins/teleport.html",
     "https://github.com/mui/base-ui/pull/5952"
   ],
-  "behavior": "When `KeepAlive` deactivates a popup, the popup keeps its open state. It releases the scroll lock, the modal marks, the document listeners and the timers. The portal element of the popup leaves the document. When `KeepAlive` activates the popup again, the popup takes them back, and the same portal element returns. A popup that mounts while `KeepAlive` holds its branch stays out of the document until the activation. Until then it takes no scroll lock, no modal marks and no focus, and it does not close on a press outside it. It reports no open state to a dialog or a drawer above it, or to `Drawer.Provider`.",
+  "behavior": "When `KeepAlive` deactivates a popup, the popup keeps its open state. It releases the scroll lock, the modal marks, the document listeners and the timers. The portal element of the popup leaves the document. When `KeepAlive` activates the popup again, the popup takes them back, and the same portal element returns. A popup that mounts while `KeepAlive` holds its branch stays out of the document until the activation. Until then it takes no scroll lock, no modal marks and no focus, and it does not close on a press outside it. It reports no open state to a dialog or a drawer above it, or to `Drawer.Provider`. At the activation, it takes the place that a popup that mounts in a shown branch has.",
   "dueWith": "packages/react/src/utils/popups/portal/FloatingPortal.tsx"
 }
