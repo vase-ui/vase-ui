@@ -291,8 +291,8 @@ describe('<Select.Root />', () => {
       const positioner = screen.getByTestId('positioner');
 
       await user.click(screen.getByTestId('trigger'));
-      // The root reads the animations of the positioner in a frame after the open. That read must
-      // not be the read of the close.
+      // The root reads the animations of the positioner in a frame after the open. The wait for the
+      // read of the close must start after that read.
       await listeners.openCompleted;
       expect(positioner).toHaveAttribute('data-open');
 
@@ -335,14 +335,14 @@ describe('<Select.Root />', () => {
       const popup = screen.getByTestId('popup');
 
       await user.click(screen.getByTestId('trigger'));
-      // The popup reads its animations after the open. That read must not be the read of the close.
+      // The root reads the animations of the popup in a frame after the open. The wait for the read
+      // of the close must start after that read.
       await listeners.openCompleted;
 
       const animations = await nextAnimationsRead(popup, {
         action: () => user.keyboard('{Escape}'),
       });
-      // `Select.Popup` reads these animations in the same microtask as the close wait of the root.
-      // A close that does not wait for the popup thus ends before the next task.
+      // A close that does not wait for these animations ends in the microtasks after the read.
       await flushMicrotasks();
 
       expect(animations).toHaveLength(1);
