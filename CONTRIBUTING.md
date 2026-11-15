@@ -1902,11 +1902,12 @@ This section is the contract of the test helpers. Each helper must obey it. The 
 - `fireTouch.start`, `move`, `end` and `cancel` dispatch a touch event with `touches`, `targetTouches` and `changedTouches` through `fireEvent`. A point needs only `clientX` and `clientY`. The event is a `TouchEvent` where the browser can construct one. WebKit on a desktop cannot construct a `Touch`. There the event is an `Event` with the three lists.
 - `flushMicrotasks` resolves in the next task. Each flush that Vue queued is then complete.
 - `waitFor(callback)` calls `callback` until it does not throw, and it resolves with the result. It calls `callback` immediately, after each change of the DOM of the page, and in each frame.
-- `waitFor` rejects with the last error of `callback` when the page rendered 180 frames and no call passed. A failed query already has the DOM of the page in its message. `waitFor` adds the DOM to the message of each other `Error`.
+- `waitFor` rejects with the last error of `callback` when the page rendered 180 frames and no call passed. The error of a failed query already has the DOM of its container in its message. `waitFor` adds the DOM of the page to the message of each other `Error`.
 - `waitFor` turns off the role report of a failed `getByRole` query in each call but the last. The wait of Testing Library turns it off in each call. The report reads the role and the style of each element of the page. The last call gives the full error.
 - `waitFor` takes no options. It replaces `waitFor` of `@testing-library/dom`, whose limit is 1 s.
 - `waitFor` rejects with a `TypeError` when `callback` returns a promise. It does not wait for a promise, and it does not call `callback` again after a rejection. Await the action first, then give `waitFor` a synchronous `callback`.
 - The `findBy` queries of `screen`, of `within` and of the result of `render` wait with `waitFor`. A `findBy` query throws when a call gives it options for its wait.
+- The error of a failed `findBy` query has the stack of the call, so Vitest shows the line of the test. The query runs in a frame callback, and the stack of that callback has no line of the test. `vi.defineHelper` gives the error the stack of the call.
 - `waitFor` counts the frames of the browser, also under fake timers. Fake timers replace `requestAnimationFrame`, and a fake frame comes only when the test moves the clock.
 - A helper file that `test/index.ts` loads imports `waitFor` from `waitFor.ts`, and `screen` and `within` from `queries.ts`, by a relative path, because `#test-utils` is that index. A test file imports them from `#test-utils`.
 - Only `queries.ts` imports `screen`, `within` and `queries` of `@testing-library/dom`.

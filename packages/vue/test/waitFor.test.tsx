@@ -1,7 +1,5 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import { screen, within } from './queries';
-import { waitSingleFrame } from './wait';
-import { waitFor } from './waitFor';
+import { screen, waitFor, waitSingleFrame, within } from '#test-utils';
 
 const WAIT_FRAMES = 180;
 
@@ -57,15 +55,40 @@ describe('waitFor', () => {
     expect(callback).toHaveBeenCalledTimes(1);
   });
 
-  it('calls the callback again after a change of the DOM, before the next frame', async () => {
+  it.each([
+    {
+      change: 'an added element',
+      prepareChange: () => () => {
+        appendButton('Changed');
+      },
+    },
+    {
+      change: 'a changed attribute',
+      prepareChange: () => {
+        const button = appendButton('Changed');
+        button.hidden = true;
+        return () => {
+          button.hidden = false;
+        };
+      },
+    },
+    {
+      change: 'a changed text',
+      prepareChange: () => {
+        const button = appendButton('Original');
+        return () => {
+          button.firstChild!.nodeValue = 'Changed';
+        };
+      },
+    },
+  ])('calls the callback again after $change, before the next frame', async ({ prepareChange }) => {
+    const change = prepareChange();
     const counter = countFrames();
-    queueMicrotask(() => {
-      appendButton('Added');
-    });
+    queueMicrotask(change);
 
-    const button = await waitFor(() => screen.getByRole('button', { name: 'Added' }));
+    const button = await waitFor(() => screen.getByRole('button', { name: 'Changed' }));
 
-    expect(button).toHaveTextContent('Added');
+    expect(button).toHaveTextContent('Changed');
     expect(counter.frames).toBe(0);
   });
 
@@ -185,12 +208,21 @@ describe('findBy queries', () => {
     );
   });
 
-  it('rejects with the error of the query after 180 frames of the page', async () => {
+  it('rejects with the error of the query and the stack of the call after 180 frames', async () => {
     const counter = countFrames();
 
-    await expect(within(document.body).findByRole('button', { name: 'Absent' })).rejects.toThrow(
+    const error: unknown = await within(document.body)
+      .findByRole('button', { name: 'Absent' })
+      .catch((reason: unknown) => reason);
+
+    expect(error).toBeInstanceOf(Error);
+    const { message, stack } = error as Error;
+    expect(message).toContain(
       'Unable to find an accessible element with the role "button" and name "Absent"',
     );
+    // The error of the query has the DOM, and the wait does not add it a second time.
+    expect(message.match(/Ignored nodes/g)).toHaveLength(1);
+    expect(stack).toContain('waitFor.test.tsx');
     expect(counter.frames).toBe(WAIT_FRAMES);
   });
 });

@@ -35,7 +35,7 @@ function isPromiseLike(value: unknown): boolean {
  * Calls `callback` until it does not throw, and resolves with its result. It calls `callback` at
  * once, after each change of the DOM of the page, and in each frame. It rejects with the last error
  * of `callback` when the page rendered 180 frames and no call passed. The message of that error has
- * the DOM of the page.
+ * the DOM of the page, or of the container of a failed query.
  * The limit is in frames of the page and not in seconds. A busy machine can stall the page for
  * some seconds, and a limit in seconds can end during the stall. The page renders no frame during
  * a stall, so the stall uses no frame of the limit.
@@ -84,8 +84,8 @@ export function waitFor<T>(callback: () => T): Promise<T> {
       remainingFrames -= 1;
       if (remainingFrames === 0) {
         settle();
-        // An error of a query has the DOM of the page already. The wait of Testing Library puts the
-        // DOM in each error, so this wait puts it in each other error. The message of a
+        // An error of a query has the DOM of its container already. The wait of Testing Library puts
+        // the DOM in each error, so this wait puts it in each other error. The message of a
         // `DOMException` has only a getter, so an assignment to it throws.
         if (lastError instanceof Error && lastError.name !== 'TestingLibraryElementError') {
           Object.defineProperty(lastError, 'message', {
