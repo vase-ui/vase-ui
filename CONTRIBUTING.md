@@ -412,7 +412,7 @@ One helper, `resolveElement(value)`, changes a value into an element:
 - If the exposed `element` has a value that is not an element and not empty, the next rule applies.
 - A prop with the name `element` is not an exposed element. The next rule applies.
 - Another component gives `$el` when that is an element. If not, the result is `null` and a development build shows a warning.
-- A ref on a Vapor component gives only the values that the component exposes, and no `$el`. A Vapor component thus gives an element only when it exposes `element`. If not, the result is `null` and a development build shows a warning.
+- A ref on a Vapor component gives only the values that the component exposes, and no `$el`. A Vapor component thus gives an element only when it exposes an element as `element`. If not, the result is `null` and a development build shows a warning.
 
 Rules:
 
