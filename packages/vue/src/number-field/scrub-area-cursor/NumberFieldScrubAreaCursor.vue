@@ -17,6 +17,7 @@ import type { CSSProperties } from 'vue';
 import { platform } from '../../common/platform';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { createAttribute } from '../../utils/popups/createAttribute';
 import { useNumberFieldRootContext } from '../root/NumberFieldRootContext';
 import { useNumberFieldScrubAreaContext } from '../scrub-area/NumberFieldScrubAreaContext';
 import { stateAttributesMapping } from '../utils/stateAttributesMapping';
@@ -27,6 +28,13 @@ const CURSOR_STYLE: CSSProperties = {
   left: 0,
   'pointer-events': 'none',
 };
+
+// A style that is scoped to the portal elements of the page reaches the cursor in this element.
+// The element makes no box, so the body gets no new box during a scrub.
+// The element is in this template and not in `FloatingPortalLite`, because that portal renders its
+// slot after the mount of this part. The checks of the `#render` slot run in the hooks of this part,
+// and they then do not see the element.
+const PORTAL_PROPS = { [createAttribute('portal')]: '', style: { display: 'contents' } };
 
 defineOptions({ inheritAttrs: false });
 
@@ -74,7 +82,9 @@ defineExpose({ element });
 
 <template>
   <Teleport v-if="shouldRender" to="body">
-    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-    <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+    <div v-bind="PORTAL_PROPS">
+      <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+      <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+    </div>
   </Teleport>
 </template>

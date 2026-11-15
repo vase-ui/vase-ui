@@ -63,6 +63,7 @@ import {
   onActivated,
   onDeactivated,
   onMounted,
+  onScopeDispose,
   provide,
   shallowRef,
   useAttrs,
@@ -183,6 +184,7 @@ const {
   validation,
   format,
   handleInputChange,
+  registerThumbInput,
   inset,
   isArrayValue,
   labelId,
@@ -400,14 +402,35 @@ function onNativeChange(event: Event) {
   handleInputChange(input.valueAsNumber, thumbIndex.value, event);
 
   // A listener can cancel the change, and a parent that controls the slider can keep its value.
-  // Vue writes the value only when the thumb renders again.
-  void nextTick(() => {
-    if (thumbValue.value !== undefined && input.valueAsNumber !== thumbValue.value) {
-      input.value = String(thumbValue.value);
-    }
-    handledInputValue = input.value;
-  });
+  void nextTick(writeValueToInput);
 }
+
+// Vue writes the value only when the thumb renders again.
+function writeValueToInput() {
+  const input = inputElement.value;
+  if (!input) {
+    return;
+  }
+  if (thumbValue.value !== undefined && input.valueAsNumber !== thumbValue.value) {
+    input.value = String(thumbValue.value);
+  }
+  handledInputValue = input.value;
+}
+
+onScopeDispose(
+  registerThumbInput({
+    take() {
+      const input = inputElement.value;
+      // Until its take of the hydration, the input holds a value that it got before the hydration.
+      if (!input || (writesValue.value && input.value === handledInputValue)) {
+        return undefined;
+      }
+      handledInputValue = input.value;
+      return { index: thumbIndex.value, value: input.valueAsNumber };
+    },
+    writeValue: writeValueToInput,
+  }),
+);
 
 function inputProps() {
   const value = thumbValue.value;

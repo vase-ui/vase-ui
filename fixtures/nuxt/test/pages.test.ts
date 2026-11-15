@@ -1697,7 +1697,7 @@ const FORM_STATE_CHANGED: Omit<FormState, 'submits' | 'completes'> = {
     quantity: 1,
     code: 1,
     volume: 1,
-    range: 2,
+    range: 1,
     when: 1,
     alarm: 1,
   },
