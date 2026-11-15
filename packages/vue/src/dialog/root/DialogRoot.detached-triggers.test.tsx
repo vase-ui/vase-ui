@@ -155,8 +155,10 @@ describe('<Dialog.Root />', () => {
     );
 
     async function openThenEscapeFromInactiveTrigger() {
-      await user.click(screen.getByRole('button', { name: 'Dialog trigger 1' }));
-      expect(await screen.findByTestId('dialog')).not.toBe(null);
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Dialog trigger 1' }));
+        expect(await screen.findByTestId('dialog')).not.toBe(null);
+      });
 
       screen.getByRole('button', { name: 'Dialog trigger 2' }).focus();
       await flushMicrotasks();

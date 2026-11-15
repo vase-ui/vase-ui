@@ -3072,8 +3072,11 @@ describe('<Select.Root />', () => {
         await screen.findByTestId('popover-popup');
       });
 
-      await user.click(screen.getByTestId('select-trigger'));
-      await user.click(await screen.findByRole('option', { name: 'Gala' }));
+      const gala = await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('select-trigger'));
+        return screen.findByRole('option', { name: 'Gala' });
+      });
+      await user.click(gala);
 
       await waitFor(() => {
         expect(screen.queryByRole('listbox')).toBe(null);

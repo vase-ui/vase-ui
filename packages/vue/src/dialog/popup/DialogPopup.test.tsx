@@ -12,6 +12,7 @@ import {
   screen,
   takeReportedMessages,
   waitFor,
+  waitForLaterMillisecond,
   waitSingleFrame,
 } from '#test-utils';
 import * as AlertDialog from '../../alert-dialog/index.parts';
@@ -274,12 +275,14 @@ describe('<Dialog.Popup />', () => {
       const { user } = await render(<DialogFromItem source={source} {...props} />);
       const sourceTrigger = screen.getByTestId('source-trigger');
 
-      await user.click(sourceTrigger);
-      await user.click(
-        await screen.findByRole(source === 'select' ? 'option' : 'menuitem', { name: 'Custom' }),
-      );
-
-      const close = await screen.findByRole('button', { name: 'Close' });
+      const custom = await waitForLaterMillisecond(async () => {
+        await user.click(sourceTrigger);
+        return screen.findByRole(source === 'select' ? 'option' : 'menuitem', { name: 'Custom' });
+      });
+      const close = await waitForLaterMillisecond(async () => {
+        await user.click(custom);
+        return screen.findByRole('button', { name: 'Close' });
+      });
       await waitFor(() => {
         expect(close).toHaveFocus();
       });
@@ -328,8 +331,10 @@ describe('<Dialog.Popup />', () => {
     });
     (document.activeElement as HTMLElement).blur();
 
-    open.value = true;
-    const close = await screen.findByRole('button', { name: 'Close' });
+    const close = await waitForLaterMillisecond(async () => {
+      open.value = true;
+      return screen.findByRole('button', { name: 'Close' });
+    });
     await waitFor(() => {
       expect(close).toHaveFocus();
     });
@@ -370,28 +375,31 @@ describe('<Dialog.Popup />', () => {
         </Dialog.Root>,
       );
 
-      await user.click(screen.getByRole('button', { name: 'Trigger 0' }));
-
-      await waitFor(() => {
-        expect(screen.getByTestId('popup0')).not.toBe(null);
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Trigger 0' }));
+        await waitFor(() => {
+          expect(screen.getByTestId('popup0')).not.toBe(null);
+        });
       });
 
       const computedStyles = getComputedStyle(screen.getByTestId('popup0'));
 
       expect(computedStyles.getPropertyValue('--nested-dialogs')).toBe('0');
 
-      await user.click(screen.getByRole('button', { name: 'Trigger 1' }));
-
-      await waitFor(() => {
-        expect(screen.getByTestId('popup1')).not.toBe(null);
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Trigger 1' }));
+        await waitFor(() => {
+          expect(screen.getByTestId('popup1')).not.toBe(null);
+        });
       });
 
       expect(computedStyles.getPropertyValue('--nested-dialogs')).toBe('1');
 
-      await user.click(screen.getByRole('button', { name: 'Trigger 2' }));
-
-      await waitFor(() => {
-        expect(screen.getByTestId('popup2')).not.toBe(null);
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Trigger 2' }));
+        await waitFor(() => {
+          expect(screen.getByTestId('popup2')).not.toBe(null);
+        });
       });
 
       expect(computedStyles.getPropertyValue('--nested-dialogs')).toBe('2');
@@ -435,10 +443,11 @@ describe('<Dialog.Popup />', () => {
 
       const { user } = await render(<App />);
 
-      await user.click(screen.getByRole('button', { name: 'Trigger 0' }));
-
-      await waitFor(() => {
-        expect(screen.getByTestId('popup0')).not.toBe(null);
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Trigger 0' }));
+        await waitFor(() => {
+          expect(screen.getByTestId('popup0')).not.toBe(null);
+        });
       });
 
       const computedStyles = getComputedStyle(screen.getByTestId('popup0'));
@@ -484,10 +493,11 @@ describe('<Dialog.Popup />', () => {
 
       const { user } = await render(<App />);
 
-      await user.click(screen.getByRole('button', { name: 'Trigger 0' }));
-
-      await waitFor(() => {
-        expect(screen.getByTestId('popup0')).not.toBe(null);
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Trigger 0' }));
+        await waitFor(() => {
+          expect(screen.getByTestId('popup0')).not.toBe(null);
+        });
       });
 
       const computedStyles = getComputedStyle(screen.getByTestId('popup0'));
@@ -519,14 +529,18 @@ describe('<Dialog.Popup />', () => {
         </Dialog.Root>,
       );
 
-      await user.click(screen.getByRole('button', { name: 'Open Dialog' }));
-      await waitFor(() => expect(screen.getByTestId('parent-dialog')).not.toBe(null));
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Open Dialog' }));
+        await waitFor(() => expect(screen.getByTestId('parent-dialog')).not.toBe(null));
+      });
 
       const parent = screen.getByTestId('parent-dialog');
       expect(getComputedStyle(parent).getPropertyValue('--nested-dialogs')).toBe('0');
 
-      await user.click(screen.getByRole('button', { name: 'Open Alert' }));
-      await waitFor(() => expect(screen.getByTestId('nested-alert')).not.toBe(null));
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Open Alert' }));
+        await waitFor(() => expect(screen.getByTestId('nested-alert')).not.toBe(null));
+      });
       await waitFor(() => {
         expect(getComputedStyle(parent).getPropertyValue('--nested-dialogs')).toBe('1');
       });
@@ -662,9 +676,11 @@ describe('<Dialog.Popup />', () => {
         const { user } = await render(<TestComponent />);
         const initial = screen.getByTestId('initial-outside');
 
-        await user.click(screen.getByText('Open'));
-        await waitFor(() => {
-          expect(initial.closest('[inert]')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.click(screen.getByText('Open'));
+          await waitFor(() => {
+            expect(initial.closest('[inert]')).not.toBe(null);
+          });
         });
         // The initial focus moves one frame after the DOM update of the open.
         await waitSingleFrame();

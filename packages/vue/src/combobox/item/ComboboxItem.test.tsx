@@ -10,6 +10,7 @@ import {
   isJSDOM,
   screen,
   waitFor,
+  waitForLaterMillisecond,
 } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
@@ -82,7 +83,7 @@ describe('<Combobox.Item />', () => {
       );
 
       const input = screen.getByTestId('input');
-      await user.click(input);
+      await waitForLaterMillisecond(() => user.click(input));
 
       const option = screen.getByRole('option', { name: 'banana' });
       await user.click(option);
@@ -114,8 +115,10 @@ describe('<Combobox.Item />', () => {
       );
 
       const input = screen.getByTestId('input');
-      await user.click(input);
-      await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      await waitForLaterMillisecond(async () => {
+        await user.click(input);
+        await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      });
 
       await user.keyboard('{ArrowDown}');
       await user.keyboard('{Enter}');
@@ -228,8 +231,10 @@ describe('<Combobox.Item />', () => {
     );
 
     const input = screen.getByTestId('input');
-    await user.click(input);
-    await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+    await waitForLaterMillisecond(async () => {
+      await user.click(input);
+      await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+    });
     await user.keyboard('{ArrowDown}');
     await user.keyboard('{Enter}');
 
@@ -316,9 +321,11 @@ describe('<Combobox.Item />', () => {
     );
 
     const input = screen.getByTestId('input');
-    await user.click(input);
-    await waitFor(() => {
-      expect(screen.getByRole('listbox')).not.toBe(null);
+    await waitForLaterMillisecond(async () => {
+      await user.click(input);
+      await waitFor(() => {
+        expect(screen.getByRole('listbox')).not.toBe(null);
+      });
     });
 
     const a = screen.getByRole('option', { name: 'a' });
@@ -500,8 +507,10 @@ describe('<Combobox.Item />', () => {
       const { user } = await render(<VirtualizedCombobox />);
 
       const input = screen.getByTestId('input');
-      await user.click(input);
-      await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      await waitForLaterMillisecond(async () => {
+        await user.click(input);
+        await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      });
 
       // Narrows the list to items containing "f" ("four", "five"), which sat at full-list
       // indices 3 and 4. The first filtered item is now "four", not "one".
@@ -521,8 +530,10 @@ describe('<Combobox.Item />', () => {
       const { user } = await render(<VirtualizedCombobox />);
 
       const input = screen.getByTestId('input');
-      await user.click(input);
-      await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      await waitForLaterMillisecond(async () => {
+        await user.click(input);
+        await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      });
 
       await user.type(input, 'f');
       await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(2));
@@ -645,8 +656,10 @@ describe('<Combobox.Item />', () => {
       );
 
       const input = screen.getByTestId('input');
-      await user.click(input);
-      await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      await waitForLaterMillisecond(async () => {
+        await user.click(input);
+        await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      });
 
       await user.type(input, 't');
       await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(2));

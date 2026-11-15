@@ -21,6 +21,7 @@ import {
   screen,
   useTestInteractions,
   waitFor,
+  waitForLaterMillisecond,
   waitSingleFrame,
 } from '#test-utils';
 import CompositeList from '../../../../test/fixtures/CompositeListPart.vue';
@@ -2088,9 +2089,10 @@ describe('useListNavigation', () => {
   it('grid navigation with changing list items', async () => {
     const { user } = await render(<EmojiPicker />);
 
-    await fireEvent.click(screen.getByRole('button'));
-
-    await flushMicrotasks();
+    await waitForLaterMillisecond(async () => {
+      await fireEvent.click(screen.getByRole('button'));
+      await flushMicrotasks();
+    });
 
     const input = screen.getByRole('textbox');
     const activeIndicator = screen.getByTestId('emoji-picker-active-index');
@@ -2118,9 +2120,10 @@ describe('useListNavigation', () => {
   it('grid navigation with disabled list items', async () => {
     const { unmount, user } = await render(<EmojiPicker />);
 
-    await fireEvent.click(screen.getByRole('button'));
-
-    await flushMicrotasks();
+    await waitForLaterMillisecond(async () => {
+      await fireEvent.click(screen.getByRole('button'));
+      await flushMicrotasks();
+    });
 
     const input = screen.getByRole('textbox');
     const activeIndicator = screen.getByTestId('emoji-picker-active-index');
@@ -2149,9 +2152,10 @@ describe('useListNavigation', () => {
 
     await render(<EmojiPicker />);
 
-    await fireEvent.click(screen.getByRole('button'));
-
-    await flushMicrotasks();
+    await waitForLaterMillisecond(async () => {
+      await fireEvent.click(screen.getByRole('button'));
+      await flushMicrotasks();
+    });
 
     const nextInput = screen.getByRole('textbox');
     const nextActiveIndicator = screen.getByTestId('emoji-picker-active-index');
@@ -2562,13 +2566,13 @@ describe('useListNavigation', () => {
         </Tree>,
       );
       const toEnd = orientation === 'vertical' ? 'ArrowDown' : 'ArrowRight';
-      await keyDown(part('trigger-root'), toEnd);
+      await waitForLaterMillisecond(() => keyDown(part('trigger-root'), toEnd));
       await waitFor(() => expect(item('one')).toHaveFocus());
       await keyDown(part('menu-root'), toEnd);
       await keyDown(part('menu-root'), toEnd);
       expect(part('trigger-more')).toHaveFocus();
       // The key that opens a list below: the cross axis of the list above.
-      await keyDown(part('trigger-more'), orientation === 'vertical' ? 'ArrowRight' : 'ArrowDown');
+      await waitForLaterMillisecond(() => keyDown(part('trigger-more'), orientation === 'vertical' ? 'ArrowRight' : 'ArrowDown'));
       await waitFor(() => expect(item('x')).toHaveFocus());
     }
 
@@ -2636,11 +2640,11 @@ describe('useListNavigation', () => {
           <NestedList label="root" items={['one', image]} />
         </Tree>,
       );
-      await keyDown(part('trigger-root'), 'ArrowDown');
+      await waitForLaterMillisecond(() => keyDown(part('trigger-root'), 'ArrowDown'));
       await waitFor(() => expect(item('one')).toHaveFocus());
       await keyDown(part('menu-root'), 'ArrowDown');
       expect(part('trigger-image')).toHaveFocus();
-      await keyDown(part('trigger-image'), 'ArrowRight');
+      await waitForLaterMillisecond(() => keyDown(part('trigger-image'), 'ArrowRight'));
       await waitFor(() => expect(item('.png')).toHaveFocus());
 
       await keyDown(part('menu-image'), 'ArrowRight');

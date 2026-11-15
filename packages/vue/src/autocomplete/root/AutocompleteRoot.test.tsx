@@ -16,6 +16,7 @@ import {
   renderOnServer,
   screen,
   waitFor,
+  waitForLaterMillisecond,
   within,
 } from '#test-utils';
 import type { VaseUIRenderResult } from '#test-utils';
@@ -547,10 +548,11 @@ describe('<Autocomplete.Root />', () => {
 
       const input = screen.getByRole<HTMLInputElement>('combobox');
 
-      await user.click(input);
-      await user.type(input, 'al');
-
-      const firstOption = await screen.findByRole('option', { name: 'alpha' });
+      const firstOption = await waitForLaterMillisecond(async () => {
+        await user.click(input);
+        await user.type(input, 'al');
+        return screen.findByRole('option', { name: 'alpha' });
+      });
       expect(firstOption).toHaveAttribute('data-highlighted');
 
       await user.keyboard('{Enter}');
@@ -590,9 +592,11 @@ describe('<Autocomplete.Root />', () => {
       );
 
       const input = screen.getByRole<HTMLInputElement>('combobox');
-      await user.click(input);
-      await user.keyboard('{ArrowDown}');
-      const alpha = await screen.findByRole('option', { name: 'alpha' });
+      const alpha = await waitForLaterMillisecond(async () => {
+        await user.click(input);
+        await user.keyboard('{ArrowDown}');
+        return screen.findByRole('option', { name: 'alpha' });
+      });
       await user.keyboard('{ArrowDown}');
       await waitFor(() => {
         expect(alpha).toHaveAttribute('data-highlighted');
@@ -628,9 +632,10 @@ describe('<Autocomplete.Root />', () => {
       );
 
       const trigger = screen.getByTestId('trigger');
-      await user.click(trigger);
-
-      const input = await screen.findByTestId('input');
+      const input = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        return screen.findByTestId('input');
+      });
       await waitFor(() => expect(input).toHaveFocus());
       await user.type(input, 'al');
 
@@ -670,8 +675,10 @@ describe('<Autocomplete.Root />', () => {
       );
 
       const trigger = screen.getByTestId('trigger');
-      await user.click(trigger);
-      const input = await screen.findByTestId('input');
+      const input = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        return screen.findByTestId('input');
+      });
       await waitFor(() => expect(input).toHaveFocus());
       await user.type(input, 'al');
       await user.keyboard('{Escape}');
@@ -772,10 +779,11 @@ describe('<Autocomplete.Root />', () => {
     );
 
     const input = screen.getByTestId<HTMLInputElement>('input');
-    await user.click(input);
-    await user.keyboard('{ArrowDown}');
-
-    expect(await screen.findByRole('listbox')).toHaveAttribute('aria-readonly', 'true');
+    await waitForLaterMillisecond(async () => {
+      await user.click(input);
+      await user.keyboard('{ArrowDown}');
+      expect(await screen.findByRole('listbox')).toHaveAttribute('aria-readonly', 'true');
+    });
 
     await user.click(await screen.findByRole('option', { name: 'beta' }));
 
@@ -2105,8 +2113,10 @@ describe('<Autocomplete.Root />', () => {
       );
 
       const input = screen.getByRole('combobox');
-      await user.click(screen.getByRole('combobox'));
-      await user.type(input, 'a'); // open and highlight first
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('combobox'));
+        await user.type(input, 'a'); // open and highlight first
+      });
       await user.keyboard('{Enter}');
 
       expect(handleSubmit).not.toHaveBeenCalled();
@@ -2133,7 +2143,7 @@ describe('<Autocomplete.Root />', () => {
       );
 
       const input = screen.getByRole<HTMLInputElement>('combobox');
-      await user.type(input, 'al');
+      await waitForLaterMillisecond(() => user.type(input, 'al'));
 
       const alphaButton = screen.getByRole('option', { name: 'alpha' });
       await user.click(alphaButton);
@@ -2165,7 +2175,7 @@ describe('<Autocomplete.Root />', () => {
         </Autocomplete.Root>,
       );
 
-      await user.type(screen.getByRole('combobox'), 'a');
+      await waitForLaterMillisecond(() => user.type(screen.getByRole('combobox'), 'a'));
       await user.click(screen.getByRole('option', { name: 'alpha' }));
 
       expect(handleSubmit).toHaveBeenCalledTimes(1);
@@ -2201,7 +2211,7 @@ describe('<Autocomplete.Root />', () => {
         </>,
       );
 
-      await user.type(screen.getByRole('combobox'), 'a');
+      await waitForLaterMillisecond(() => user.type(screen.getByRole('combobox'), 'a'));
       await user.click(screen.getByRole('option', { name: 'alpha' }));
 
       expect(handleSubmit).toHaveBeenCalledTimes(1);
@@ -2229,7 +2239,7 @@ describe('<Autocomplete.Root />', () => {
       );
 
       const input = screen.getByRole<HTMLInputElement>('combobox');
-      await user.type(input, 'al');
+      await waitForLaterMillisecond(() => user.type(input, 'al'));
       await user.keyboard('{ArrowDown}');
 
       const alphaButton = screen.getByRole('option', { name: 'alpha' });
@@ -2268,7 +2278,7 @@ describe('<Autocomplete.Root />', () => {
         );
 
         const input = screen.getByRole<HTMLInputElement>('combobox');
-        await user.type(input, 'al');
+        await waitForLaterMillisecond(() => user.type(input, 'al'));
         await user.click(screen.getByRole('option', { name: 'alpha' }));
 
         expect(handleSubmit).toHaveBeenCalledTimes(1);
@@ -2297,7 +2307,7 @@ describe('<Autocomplete.Root />', () => {
       );
 
       const input = screen.getByRole<HTMLInputElement>('combobox');
-      await user.type(input, 'al');
+      await waitForLaterMillisecond(() => user.type(input, 'al'));
       await user.keyboard('{ArrowDown}');
 
       const listbox = screen.getByRole('listbox');
@@ -2717,12 +2727,13 @@ describe('<Autocomplete.Root />', () => {
       );
 
       const input = screen.getByTestId('input');
-      await user.click(input);
-      await user.type(input, 'can');
-
-      // Should match the item by its label, not its value
-      await waitFor(() => {
-        expect(screen.getAllByRole('option')).toHaveLength(1);
+      await waitForLaterMillisecond(async () => {
+        await user.click(input);
+        await user.type(input, 'can');
+        // Should match the item by its label, not its value
+        await waitFor(() => {
+          expect(screen.getAllByRole('option')).toHaveLength(1);
+        });
       });
       await user.click(screen.getByRole('option', { name: 'Canada' }));
 
@@ -2752,12 +2763,13 @@ describe('<Autocomplete.Root />', () => {
       );
 
       const input = screen.getByTestId('input');
-      await user.click(input);
-      await user.type(input, 'can');
-
-      // Should match by the provided itemToStringValue mapping
-      await waitFor(() => {
-        expect(screen.getAllByRole('option')).toHaveLength(1);
+      await waitForLaterMillisecond(async () => {
+        await user.click(input);
+        await user.type(input, 'can');
+        // Should match by the provided itemToStringValue mapping
+        await waitFor(() => {
+          expect(screen.getAllByRole('option')).toHaveLength(1);
+        });
       });
       await user.keyboard('{ArrowDown}');
       await user.keyboard('{Enter}');
@@ -2788,10 +2800,11 @@ describe('<Autocomplete.Root />', () => {
       );
 
       const input = screen.getByTestId('input');
-      await user.type(input, 'can');
-
-      await waitFor(() => {
-        expect(screen.getAllByRole('option')).toHaveLength(1);
+      await waitForLaterMillisecond(async () => {
+        await user.type(input, 'can');
+        await waitFor(() => {
+          expect(screen.getAllByRole('option')).toHaveLength(1);
+        });
       });
       await user.click(screen.getByRole('option', { name: 'Canada' }));
 

@@ -15,6 +15,7 @@ import {
   screen,
   wait,
   waitFor,
+  waitForLaterMillisecond,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
@@ -580,11 +581,12 @@ describe('<Combobox.Trigger />', () => {
       );
 
       const trigger = screen.getByTestId('trigger');
-      await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-      await fireEvent.mouseDown(trigger, { button: 0 });
-
-      await screen.findByRole('listbox');
-      const option = await screen.findByRole('option', { name: 'Beta' });
+      const option = await waitForLaterMillisecond(async () => {
+        await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+        await fireEvent.mouseDown(trigger, { button: 0 });
+        await screen.findByRole('listbox');
+        return screen.findByRole('option', { name: 'Beta' });
+      });
 
       await fireEvent.mouseMove(option, { pointerType: 'mouse', movementX: 1 });
       await waitFor(() => expect(option).toHaveAttribute('data-highlighted'));
@@ -618,11 +620,12 @@ describe('<Combobox.Trigger />', () => {
       );
 
       const trigger = screen.getByTestId('trigger');
-      await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-      await fireEvent.mouseDown(trigger, { button: 0 });
-
-      await screen.findByRole('listbox');
-      const option = await screen.findByRole('option', { name: 'Beta' });
+      const option = await waitForLaterMillisecond(async () => {
+        await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+        await fireEvent.mouseDown(trigger, { button: 0 });
+        await screen.findByRole('listbox');
+        return screen.findByRole('option', { name: 'Beta' });
+      });
 
       await fireEvent.mouseMove(option, { pointerType: 'mouse', movementX: 1 });
       await waitFor(() => expect(option).toHaveAttribute('data-highlighted'));
@@ -658,11 +661,12 @@ describe('<Combobox.Trigger />', () => {
         );
 
         const trigger = screen.getByTestId('trigger');
-        await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-        await fireEvent.mouseDown(trigger, { button: 0 });
-
-        await screen.findByRole('listbox');
-        const alpha = await screen.findByRole('option', { name: 'Alpha' });
+        const alpha = await waitForLaterMillisecond(async () => {
+          await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+          await fireEvent.mouseDown(trigger, { button: 0 });
+          await screen.findByRole('listbox');
+          return screen.findByRole('option', { name: 'Alpha' });
+        });
         const beta = await screen.findByRole('option', { name: 'Beta' });
 
         // Highlight Alpha so a stray drag-select would be able to commit it.
@@ -713,10 +717,12 @@ describe('<Combobox.Trigger />', () => {
         // closed-state effect must clear the shared pointerdown ref, otherwise the
         // stale entry makes the next drag-select onto Alpha read as a same-item tap
         // and never commit.
-        await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-        await fireEvent.mouseDown(trigger, { button: 0 });
-        await screen.findByRole('listbox');
-        const alpha = await screen.findByRole('option', { name: 'Alpha' });
+        const alpha = await waitForLaterMillisecond(async () => {
+          await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+          await fireEvent.mouseDown(trigger, { button: 0 });
+          await screen.findByRole('listbox');
+          return screen.findByRole('option', { name: 'Alpha' });
+        });
         await fireEvent.pointerDown(alpha, { pointerType: 'touch', isPrimary: true, button: 0 });
 
         await user.keyboard('{Escape}');
@@ -761,11 +767,12 @@ describe('<Combobox.Trigger />', () => {
       );
 
       const trigger = screen.getByTestId('trigger');
-      await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-      await fireEvent.mouseDown(trigger, { button: 0 });
-
-      await screen.findByRole('listbox');
-      const option = await screen.findByRole('option', { name: 'Beta' });
+      const option = await waitForLaterMillisecond(async () => {
+        await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+        await fireEvent.mouseDown(trigger, { button: 0 });
+        await screen.findByRole('listbox');
+        return screen.findByRole('option', { name: 'Beta' });
+      });
 
       await fireEvent.mouseUp(option, { button: 0 });
 

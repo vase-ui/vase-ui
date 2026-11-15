@@ -16,6 +16,7 @@ import {
   renderOnServer,
   screen,
   waitFor,
+  waitForLaterMillisecond,
   within,
 } from '#test-utils';
 import ComboboxListPart from '../../../test/fixtures/ComboboxListPart.vue';
@@ -297,8 +298,10 @@ describe('<Combobox.Input />', () => {
       );
 
       const input = screen.getByTestId('input');
-      await user.click(input);
-      await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      await waitForLaterMillisecond(async () => {
+        await user.click(input);
+        await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      });
 
       await waitFor(() => {
         screen.getByRole('option', { name: 'a' });
@@ -517,10 +520,11 @@ describe('<Combobox.Input />', () => {
         expect(input.value).toBe('');
       });
 
-      await user.type(input, 'a');
-
-      await waitFor(() => {
-        expect(screen.getByRole('listbox')).not.toBe(null);
+      await waitForLaterMillisecond(async () => {
+        await user.type(input, 'a');
+        await waitFor(() => {
+          expect(screen.getByRole('listbox')).not.toBe(null);
+        });
       });
       await user.click(screen.getByRole('option', { name: 'apple' }));
 
