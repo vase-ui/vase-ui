@@ -8,7 +8,7 @@ function isElement(value: unknown): value is Element {
 /**
  * Changes the value of a template ref into an element.
  * An element stays the same. A component that exposes `element` gives that element.
- * Another component gives its root element, if it has one. A Vapor component has none, so it must
+ * Another component gives its root element, if it has one. A Vapor component gives none, so it must
  * expose `element`.
  */
 export function resolveElement(
