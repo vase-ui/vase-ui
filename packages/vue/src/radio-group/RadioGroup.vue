@@ -180,33 +180,32 @@ function setCheckedValue(value: Value, eventDetails: RadioGroupChangeEventDetail
 // The exposed input is the checked input, or else the first enabled input in the document. The
 // field validates each registered input, so the group does not write `validation.inputRef`. A stale
 // input of an unmounted radio there would block the submit of the form.
-const inputElement = shallowRef<HTMLInputElement | null>(null);
-let firstEnabledInput: HTMLInputElement | null = null;
+const exposedInput = shallowRef<HTMLInputElement | null>(null);
+const radioInputs = new Set<HTMLInputElement>();
 
-function registerInputRef(input: HTMLInputElement) {
-  if (!input.disabled) {
-    if (!firstEnabledInput || comesBeforeInSameTree(input, firstEnabledInput)) {
-      firstEnabledInput = input;
-    }
-
-    const currentInput = inputElement.value;
-    if (
-      input.checked ||
-      currentInput == null ||
-      currentInput.disabled ||
-      (!currentInput.checked && input === firstEnabledInput)
-    ) {
-      inputElement.value = input;
+function findFirstEnabledInput() {
+  let firstInput: HTMLInputElement | null = null;
+  for (const input of radioInputs) {
+    if (!input.disabled && (!firstInput || comesBeforeInSameTree(input, firstInput))) {
+      firstInput = input;
     }
   }
+  return firstInput;
+}
 
-  // A later call can make this input the exposed input, so the cleanup checks both.
+function registerInputRef(input: HTMLInputElement) {
+  radioInputs.add(input);
+
+  const currentInput = exposedInput.value;
+  if (!input.disabled && (input.checked || currentInput == null || currentInput.disabled)) {
+    exposedInput.value = input;
+  }
+
+  // A later call can make this input the exposed input, so the cleanup checks it.
   return () => {
-    if (firstEnabledInput === input) {
-      firstEnabledInput = null;
-    }
-    if (inputElement.value === input) {
-      inputElement.value = null;
+    radioInputs.delete(input);
+    if (exposedInput.value === input) {
+      exposedInput.value = null;
     }
   };
 }
@@ -253,9 +252,9 @@ useValueChanged(checkedValue, () => {
     validation.change(checkedValue.value);
   }
 
-  const fallbackInput = firstEnabledInput;
-  if (checkedValue.value == null && fallbackInput && !fallbackInput.disabled) {
-    inputElement.value = fallbackInput;
+  const fallbackInput = checkedValue.value == null ? findFirstEnabledInput() : null;
+  if (fallbackInput) {
+    exposedInput.value = fallbackInput;
   }
 });
 
@@ -350,7 +349,15 @@ const { element, elementProps } = useRenderElement('div', props, {
   ],
 });
 
-defineExpose({ element, inputElement });
+defineExpose({
+  element,
+  // A keyed move runs no registration. An exposed input that is not checked thus reads as the first
+  // enabled input in the document at each read.
+  get inputElement() {
+    const input = exposedInput.value;
+    return input == null || input.checked ? input : (findFirstEnabledInput() ?? input);
+  },
+});
 </script>
 
 <template>

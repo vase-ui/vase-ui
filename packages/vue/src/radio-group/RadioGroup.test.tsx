@@ -637,6 +637,32 @@ describe('<RadioGroup />', () => {
     expect(group.value?.inputElement).toBe(null);
   });
 
+  it('exposes the first enabled input when the value becomes null after the exposed radio unmounts', async () => {
+    const showSecond = shallowRef(true);
+    const value = shallowRef<string | null>('b');
+    const group = shallowRef<RadioGroupInstance | null>(null);
+    await render(() => (
+      <RadioGroup ref={group} value={value.value}>
+        <Radio.Root value="a" data-testid="radio-a" />
+        {showSecond.value && <Radio.Root value="b" data-testid="radio-b" />}
+      </RadioGroup>
+    ));
+    const inputA = getInput('radio-a');
+    const inputB = getInput('radio-b');
+
+    expect(group.value?.inputElement).toBe(inputB);
+
+    showSecond.value = false;
+    await flushMicrotasks();
+
+    expect(group.value?.inputElement).toBe(null);
+
+    value.value = null;
+    await flushMicrotasks();
+
+    expect(group.value?.inputElement).toBe(inputA);
+  });
+
   it.skipIf(isJSDOM)(
     'should return null when no radio is selected (matching native behavior)',
     async () => {
@@ -3535,13 +3561,14 @@ describe('<RadioGroup />', () => {
       expect(screen.getByTestId('b')).toHaveFocus();
     });
 
-    it('focuses the first radio after a keyed move', async () => {
+    it('exposes and focuses the first radio after a keyed move', async () => {
       const order = shallowRef(['a', 'b']);
+      const group = shallowRef<RadioGroupInstance | null>(null);
       const handleSubmit = vi.fn();
       const App = defineComponent(() => () => (
         <Form onFormSubmit={handleSubmit}>
           <Field.Root name="fruit">
-            <RadioGroup required>
+            <RadioGroup ref={group} required>
               {order.value.map((value) => (
                 <Radio.Root key={value} value={value} data-testid={value} />
               ))}
@@ -3552,8 +3579,13 @@ describe('<RadioGroup />', () => {
       ));
       const { user } = await render(<App />);
 
+      expect(group.value?.inputElement).toBe(getInput('a'));
+
       order.value = ['b', 'a'];
       await flushMicrotasks();
+
+      expect(group.value?.inputElement).toBe(getInput('b'));
+
       await user.click(screen.getByRole('button', { name: 'Submit' }));
 
       expect(handleSubmit).not.toHaveBeenCalled();
