@@ -62,7 +62,6 @@ import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMou
 import { REASONS } from '../../internals/reasons';
 import { resolvePopupLabel } from '../../internals/resolvePopupLabel';
 import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/types';
-import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
 import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
@@ -113,16 +112,6 @@ watch(() => (popupId.value === generatedPopupId ? undefined : popupId.value), se
   immediate: true,
 });
 onScopeDispose(() => setRenderedPopupId(undefined));
-
-useOpenChangeComplete({
-  open,
-  ref: store.context.popupRef,
-  onComplete() {
-    if (open.value) {
-      store.context.onOpenChangeComplete?.(true);
-    }
-  },
-});
 
 watch(
   floatingTreeRoot,

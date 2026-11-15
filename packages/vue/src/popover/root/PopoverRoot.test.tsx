@@ -12,6 +12,7 @@ import {
   isJSDOM,
   nextAnimationsRead,
   nextEvent,
+  popupAnatomyTests,
   popupConformanceTests,
   renderOnServer,
   screen,
@@ -221,6 +222,22 @@ async function tick(ms: number) {
 
 describe('<Popover.Root />', () => {
   const { render } = createRenderer();
+
+  popupAnatomyTests({
+    createComponent: ({ open, onOpenChangeComplete, content }) => (
+      <Popover.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Popover.Trigger>Open</Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Positioner data-testid="shown" class="shown">
+            Content
+            {content}
+          </Popover.Positioner>
+        </Popover.Portal>
+      </Popover.Root>
+    ),
+    createPopup: () => <Popover.Popup data-testid="popup">Popup</Popover.Popup>,
+    render,
+  });
 
   describe('closing before the popup attaches', () => {
     it.skipIf(isJSDOM)('waits for the closing animation once the popup attaches', async () => {

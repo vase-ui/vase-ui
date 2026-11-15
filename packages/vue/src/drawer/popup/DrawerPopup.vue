@@ -172,7 +172,6 @@ import { useDialogPortalContext } from '../../dialog/portal/DialogPortalContext'
 import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
 import { FOCUSABLE_POPUP_PROPS } from '../../utils/popups/popupStoreUtils';
@@ -313,16 +312,6 @@ onDeactivated(() => {
 });
 onActivated(() => {
   deactivated.value = false;
-});
-
-useOpenChangeComplete({
-  open,
-  ref: popupRef,
-  onComplete() {
-    if (open.value) {
-      store.context.onOpenChangeComplete?.(true);
-    }
-  },
 });
 
 const resolvedInitialFocus = computed(() =>
