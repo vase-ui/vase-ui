@@ -2015,13 +2015,14 @@ describe('<Tabs.Root />', () => {
 
       const trigger = screen.getByRole('button', { name: 'Open' });
 
-      await user.click(trigger);
+      await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
 
-      const tab1 = screen.getByRole('tab', { name: 'Overview' });
-      await waitFor(() => {
-        expect(tab1).toHaveFocus();
+        const tab1 = screen.getByRole('tab', { name: 'Overview' });
+        await waitFor(() => {
+          expect(tab1).toHaveFocus();
+        });
       });
-      await waitForLaterMillisecond();
       await user.keyboard('{ArrowRight}');
 
       const tab2 = screen.getByRole('tab', { name: 'Projects' });
@@ -2053,13 +2054,14 @@ describe('<Tabs.Root />', () => {
 
       const trigger = screen.getByRole('button', { name: 'Open' });
 
-      await user.click(trigger);
+      await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
 
-      const tab1 = screen.getByRole('tab', { name: 'Overview' });
-      await waitFor(() => {
-        expect(tab1).toHaveFocus();
+        const tab1 = screen.getByRole('tab', { name: 'Overview' });
+        await waitFor(() => {
+          expect(tab1).toHaveFocus();
+        });
       });
-      await waitForLaterMillisecond();
       await user.keyboard('{ArrowRight}');
 
       const tab2 = screen.getByRole('tab', { name: 'Projects' });

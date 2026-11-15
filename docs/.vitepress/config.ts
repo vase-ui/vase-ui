@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { defineConfig, postcssIsolateStyles } from 'vitepress';
+import type { MarkdownRenderer } from 'vitepress';
 import { createApiReferenceReader } from '../../scripts/docs/apiReference.ts';
 import { familyOfPage } from '../../scripts/docs/familyPages.ts';
 import { readNavigation } from '../../scripts/docs/navigation.ts';
@@ -8,7 +9,7 @@ import { markdownHeadingBadge } from './markdownHeadingBadge.ts';
 import { postcssFollowSiteTheme } from './postcssFollowSiteTheme.ts';
 
 const docsRoot = join(import.meta.dirname, '..');
-const manifest: { description: string } = JSON.parse(
+const manifest: { description: string; homepage: string } = JSON.parse(
   readFileSync(join(docsRoot, '../packages/vue/package.json'), 'utf8'),
 );
 const { nav, sidebar } = readNavigation(docsRoot);
@@ -39,6 +40,27 @@ const SYNTAX_COLORS = Object.fromEntries(
   ]),
 );
 
+// README.md names a page of this site by its full address, because GitHub and npm show that file.
+// This rule changes such an address to a path of the site, so the link opens in the same tab.
+function markdownSiteLinks(md: MarkdownRenderer): void {
+  md.core.ruler.after('linkify', 'site_links', ({ tokens }) => {
+    for (const { children } of tokens) {
+      for (const token of children ?? []) {
+        const address = token.type === 'link_open' ? token.attrGet('href') : null;
+        if (address?.startsWith(manifest.homepage)) {
+          token.attrSet('href', `/${address.slice(manifest.homepage.length)}`);
+        }
+      }
+    }
+  });
+}
+
+// VitePress takes one function for the Markdown renderer.
+function markdownConfig(md: MarkdownRenderer): void {
+  markdownHeadingBadge(md);
+  markdownSiteLinks(md);
+}
+
 export default defineConfig({
   lang: 'en-US',
   title: 'Vase UI',
@@ -60,7 +82,7 @@ export default defineConfig({
       },
     },
   },
-  markdown: { colorReplacements: SYNTAX_COLORS, config: markdownHeadingBadge },
+  markdown: { colorReplacements: SYNTAX_COLORS, config: markdownConfig },
   transformPageData(pageData) {
     const family = familyOfPage(pageData.relativePath);
     return family === undefined ? undefined : { apiReference: readApiReference(family) };

@@ -218,7 +218,7 @@ export class MenuStore<Payload> extends BasePopupStore<
       selectors,
     );
 
-    this.shareMouseUpTriggerRef(toRaw(this.state).parent);
+    this.#shareMouseUpTriggerRef(toRaw(this.state).parent);
   }
 
   // A store makes no watcher, so the write that changes `parent` shares the ref of the new parent.
@@ -227,11 +227,11 @@ export class MenuStore<Payload> extends BasePopupStore<
     super.setState(newState);
     const parent = toRaw(this.state).parent;
     if (parent !== previousParent) {
-      this.shareMouseUpTriggerRef(parent);
+      this.#shareMouseUpTriggerRef(parent);
     }
   }
 
-  private shareMouseUpTriggerRef(parent: MenuParent) {
+  #shareMouseUpTriggerRef(parent: MenuParent) {
     if (parent.type === 'menu') {
       this.context.allowMouseUpTriggerRef = parent.store.context.allowMouseUpTriggerRef;
     } else if (parent.type !== undefined) {
