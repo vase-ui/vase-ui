@@ -2042,9 +2042,18 @@ describe('<Collapsible.Panel />', () => {
       );
     });
 
-    it('names the panel in aria-controls of the trigger after the hydration of a panel with an id', async () => {
+    it('VUE-80: names a panel with an id in aria-controls of the trigger in the server HTML and after the hydration', async () => {
       const props = { defaultOpen: true, panelId: 'custom-panel-id' };
       const serverHtml = await renderOnServer(FIXTURE, props);
+
+      // The parse in a `<template>` element has no side effect. Its elements are of another
+      // document, so the matchers of the DOM do not take them.
+      const server = document.createElement('template');
+      server.innerHTML = serverHtml;
+      expect(server.content.querySelector('button')!.getAttribute('aria-controls')).toBe(
+        'custom-panel-id',
+      );
+      expect(server.content.querySelector('[data-testid="panel"]')!.id).toBe('custom-panel-id');
 
       const { container } = await hydrate(CollapsiblePanelHydration, { serverHtml, props });
 

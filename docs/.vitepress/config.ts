@@ -5,6 +5,8 @@ import type { MarkdownRenderer } from 'vitepress';
 import { createApiReferenceReader } from '../../scripts/docs/apiReference.ts';
 import { familyOfPage } from '../../scripts/docs/familyPages.ts';
 import { readNavigation } from '../../scripts/docs/navigation.ts';
+import { markdownHeadingBadge } from './markdownHeadingBadge.ts';
+import { postcssFollowSiteTheme } from './postcssFollowSiteTheme.ts';
 
 const docsRoot = join(import.meta.dirname, '..');
 const manifest: { description: string; homepage: string } = JSON.parse(
@@ -53,14 +55,21 @@ function markdownSiteLinks(md: MarkdownRenderer): void {
   });
 }
 
+// VitePress takes one function for the Markdown renderer.
+function markdownConfig(md: MarkdownRenderer): void {
+  markdownHeadingBadge(md);
+  markdownSiteLinks(md);
+}
+
 export default defineConfig({
   lang: 'en-US',
   title: 'Vase UI',
   description: manifest.description,
   base: '/',
   cleanUrls: true,
-  // A demo is inside an element with the class `vp-raw`. This plugin keeps the styles of the theme
-  // out of it, so the style sheet of the demo is the only one that styles it.
+  // A demo is inside an element with the class `vp-raw`. The first plugin keeps the styles of the
+  // theme out of it, so the style sheet of the demo is the only one that styles it. The second
+  // plugin makes that style sheet follow the theme of the site.
   vite: {
     css: {
       postcss: {
@@ -68,11 +77,12 @@ export default defineConfig({
           postcssIsolateStyles({
             includeFiles: [/vp-doc\.css/, /base\.css/, /[\\/]\.vitepress[\\/]theme[\\/]/],
           }),
+          postcssFollowSiteTheme(),
         ],
       },
     },
   },
-  markdown: { colorReplacements: SYNTAX_COLORS, config: markdownSiteLinks },
+  markdown: { colorReplacements: SYNTAX_COLORS, config: markdownConfig },
   transformPageData(pageData) {
     const family = familyOfPage(pageData.relativePath);
     return family === undefined ? undefined : { apiReference: readApiReference(family) };

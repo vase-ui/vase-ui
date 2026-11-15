@@ -1,7 +1,7 @@
 import { computed, onActivated, onDeactivated, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { useCompositeListContext } from './CompositeListContext';
-import type { CompositeListRegistration } from './CompositeListContext';
+import type { CompositeListContextValue, CompositeListRegistration } from './CompositeListContext';
 
 /**
  * Registers a list item and gives it its index (DOM position) in the list that
@@ -11,7 +11,7 @@ import type { CompositeListRegistration } from './CompositeListContext';
 export function useCompositeListItem<Metadata>(
   params: UseCompositeListItemParameters<Metadata> = {},
 ): UseCompositeListItemReturnValue {
-  const context = useCompositeListContext();
+  const context = params.list ?? useCompositeListContext();
 
   // An item with no explicit index takes its first index from a counter of the list. The counter
   // counts the `setup` calls of such items. Each sort sets it to the length of `elementsRef`.
@@ -110,6 +110,11 @@ export function useCompositeListItem<Metadata>(
 }
 
 export interface UseCompositeListItemParameters<Metadata> {
+  /**
+   * The list that the item registers with. The default is the nearest list that a
+   * `useCompositeList` above the item provides. The item reads it one time, in `setup`.
+   */
+  list?: CompositeListContextValue<Metadata>;
   /**
    * The explicit index of the item. An item with no explicit index gets its index from its position
    * in the document.

@@ -229,9 +229,6 @@ Creates a handle that connects a `Dialog.Root` with detached `Dialog.Trigger` pa
 
 `Dialog.Handle` is the class of the handle.
 
-- `open(triggerId)` opens the dialog for the `Dialog.Trigger` that has that `id` and the same handle. Give `null` to open the dialog with no trigger. When the handle has no trigger with that `id`, the dialog opens with no trigger, and a development build shows a warning.
-- `openWithPayload(payload)` opens the dialog with that payload and with no trigger. The default slot of `Dialog.Root` gets the payload.
-- `close()` closes the dialog.
-- `isOpen` is `true` while the dialog is open, and `false` while no root is mounted. A `computed` that reads it follows the open state.
+<ApiReference name="Dialog.Handle" />
 
-Call `open()`, `openWithPayload()` and `close()` only in an event handler or an effect, and not in a render.
+When no trigger has the `id` that `open()` gets, it opens the dialog with no trigger, and a development build shows a warning. A `computed` that reads `isOpen` follows the open state.

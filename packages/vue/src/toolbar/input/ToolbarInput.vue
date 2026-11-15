@@ -41,6 +41,7 @@ export interface ToolbarInputProps
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useValueBeforeHydration } from '../../common/hydration';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -110,16 +111,22 @@ const { compositeProps, compositeRef } = useCompositeItem({
   disabled: () => itemDisabled.value && !props.focusableWhenDisabled,
 });
 
+const writesValue = useValueBeforeHydration(props, () => element.value);
+
 const { element, elementProps } = useRenderElement('input', props, {
   state,
   ref: [compositeRef],
-  props: (attrs) => [
-    compositeProps.value,
-    { onClick: preventWhenDisabled, onPointerdown: preventWhenDisabled },
-    defaultValueProps(),
-    attrs,
-    focusableWhenDisabledProps.value,
-  ],
+  props: (attrs) => {
+    // The part declares no `value` prop, so the `value` of the consumer is in `attrs`.
+    const { value, ...attrsWithoutValue } = attrs;
+    return [
+      compositeProps.value,
+      { onClick: preventWhenDisabled, onPointerdown: preventWhenDisabled },
+      defaultValueProps(),
+      writesValue.value ? attrs : attrsWithoutValue,
+      focusableWhenDisabledProps.value,
+    ];
+  },
 });
 
 defineExpose({ element });

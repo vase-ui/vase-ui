@@ -71,15 +71,15 @@ If no visible label is rendered, give `aria-label` to the part that is the form 
 
 ### Labeling control groups
 
-To label a group of controls, compose `<Fieldset.Root>` with the group. A range slider with more than one thumb is an example. Render the group in the `#render` slot of `Fieldset.Root`. Keep the group label in `<Fieldset.Legend>`:
+To label a group of controls, compose `<Fieldset.Root>` with the group. A range slider with more than one thumb is an example. The slider has a prop of its own, so render it in the `#render` slot of `Fieldset.Root`. Keep the group label in `<Fieldset.Legend>`:
 
 <<< ../examples/forms/RangeInFieldset.vue{11-14,17-18}
 
-For a checkbox group and a radio group, wrap each option in `<Field.Item>`. Each control then has its own label and description:
+Give a checkbox group or a radio group with no props of its own to the `as` prop of `Fieldset.Root`. Wrap each option in `<Field.Item>`. Each control then has its own label and description:
 
 <<< ../components/radio-group/FieldsetLegend.vue{12,17-18,23}
 
-<<< ../components/checkbox-group/FieldsetLegend.vue{14,19-20,25}
+<<< ../components/checkbox-group/FieldsetLegend.vue{12,16-17,21}
 
 ## Building form fields
 

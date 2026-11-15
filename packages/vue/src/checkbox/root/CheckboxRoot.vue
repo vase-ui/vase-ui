@@ -302,10 +302,7 @@ watch(isHeld, (held) => {
   }
 });
 
-// `KeepAlive` runs the `onActivated` hooks from the last part to the first part. A registration in
-// the hook would reverse the order of the inputs. A watcher runs in the order of the parts. The
-// release before the registration moves an input that is still registered to the end, because
-// `Map.set` keeps the place of a key.
+// `KeepAlive` calls no `ref` setter at an activation.
 watch(shown, updateInputRegistration);
 
 watch(
