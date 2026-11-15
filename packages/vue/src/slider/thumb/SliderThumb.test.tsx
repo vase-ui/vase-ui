@@ -2156,14 +2156,12 @@ describe('<Slider.Thumb />', () => {
     });
 
     async function expectNoTakeAfterChange(
-      props: Record<string, unknown>,
-      change: Record<string, unknown>,
+      props: { defaultValue: number; step: number },
+      change: { min?: number; max?: number; step?: number },
       thumb: string[],
     ) {
-      const fixtureProps = shallowRef(props);
-      const { container } = await render(() => (
-        <SliderThumbHydration defaultValue={30} {...fixtureProps.value} />
-      ));
+      const fixtureProps = shallowRef<typeof props & typeof change>(props);
+      const { container } = await render(() => <SliderThumbHydration {...fixtureProps.value} />);
       fixtureProps.value = { ...props, ...change };
       await flushMicrotasks();
       const events = recordInputEvents(container);
