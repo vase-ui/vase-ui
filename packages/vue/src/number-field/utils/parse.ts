@@ -145,7 +145,7 @@ export function parseNumber(
   options?: Intl.NumberFormatOptions,
 ) {
   // Normalize control characters and whitespace; remove bidi/format controls
-  let input = formattedNumber.replace(FORMAT_CONTROL_GLOBAL_RE, '').trim();
+  let input = formattedNumber.replaceAll(FORMAT_CONTROL_GLOBAL_RE, '').trim();
 
   // Heuristic locale detection
   let computedLocale = locale;
@@ -161,7 +161,7 @@ export function parseNumber(
   const localeDigits = getLocaleDigits(computedLocale, options);
 
   // Normalize unicode minus/plus to ASCII, handle leading/trailing signs
-  input = input.replace(ANY_MINUS_RE, '-').replace(ANY_PLUS_RE, '+');
+  input = input.replaceAll(ANY_MINUS_RE, '-').replaceAll(ANY_PLUS_RE, '+');
 
   let isNegative = false;
 
@@ -180,7 +180,7 @@ export function parseNumber(
   // (`st. C`) can't be read as a separator.
   getAllFormatParts(computedLocale, options)
     .filter((part) => part.type === 'currency' || part.type === 'unit')
-    .map((part) => part.value.replace(FORMAT_CONTROL_GLOBAL_RE, ''))
+    .map((part) => part.value.replaceAll(FORMAT_CONTROL_GLOBAL_RE, ''))
     // Longest first, so a short label (`g`) can't cut into a longer one (`grame` in ak)
     .sort((a, b) => b.length - a.length)
     .forEach((label) => {
@@ -189,7 +189,7 @@ export function parseNumber(
 
   // Numeral systems to ASCII digits
   const toAsciiDigits = (text: string) =>
-    text.replace(/[\p{Nd}零〇一二三四五六七八九]/gu, (ch) => {
+    text.replaceAll(/[\p{Nd}零〇一二三四五六七八九]/gu, (ch) => {
       const localeDigit = localeDigits.indexOf(ch);
       const hanDigit = HAN_NUMERALS.indexOf(ch);
       if (localeDigit !== -1) {
@@ -230,22 +230,22 @@ export function parseNumber(
   // Once groups are gone, a decimal always comes before a digit, so drop dots that don't, such
   // as the one left by a partially deleted unit label (`21,5 st.`). Symbols removed below don't
   // count (`0.，25`, `0.%25`).
-  input = input.replace(/\.(?![，٬%٪％﹪‰؉]*\d)/g, '');
+  input = input.replaceAll(/\.(?![，٬%٪％﹪‰؉]*\d)/g, '');
 
   let unformatted = input
     .replaceAll(decimal, '.')
     // A `numberingSystem` option changes the separator, but users may still type the locale's
     // usual one (`21,7` in de with Arabic digits)
     .replaceAll(getDecimalSeparator(computedLocale), '.')
-    .replace(/[．٫]/g, '.') // FULLWIDTH_DECIMAL, ARABIC DECIMAL SEPARATOR (U+066B)
-    .replace(/[，٬%٪％﹪‰؉]/g, '') // FULLWIDTH_GROUP, ARABIC THOUSANDS SEPARATOR, percent, permille
+    .replaceAll(/[．٫]/g, '.') // FULLWIDTH_DECIMAL, ARABIC DECIMAL SEPARATOR (U+066B)
+    .replaceAll(/[，٬%٪％﹪‰؉]/g, '') // FULLWIDTH_GROUP, ARABIC THOUSANDS SEPARATOR, percent, permille
     // Remove the space a prefix label leaves behind (`R$ 13,00` → ` 13.00`), which would otherwise
     // separate the sign from the digits
     .trim();
 
   // The drop above runs before the decimal separator becomes a dot, so a run such as `1,,5` in
   // de-DE reaches this line.
-  unformatted = unformatted.replace(/\.{2,}/g, '.');
+  unformatted = unformatted.replaceAll(/\.{2,}/g, '.');
 
   // Mixed-locale safety: keep only the last '.' as decimal. Each other dot must be where a group
   // separator can be, as in `1.234.567.89`. Text such as `1.2.3` is not a number. With one dot
@@ -257,14 +257,14 @@ export function parseNumber(
   ) {
     return null;
   }
-  unformatted = unformatted.replace(/\.(?=[^.]*\.)/g, '');
+  unformatted = unformatted.replaceAll(/\.(?=[^.]*\.)/g, '');
 
   // Guard against Infinity inputs (ASCII and symbol)
   if (/^[-+]?Infinity$/i.test(input) || input.includes('∞')) {
     return null;
   }
 
-  let num = parseFloat((isNegative ? '-' : '') + unformatted);
+  let num = Number.parseFloat((isNegative ? '-' : '') + unformatted);
 
   // Check for a typed `%` after the labels are gone, so a unit whose label contains one
   // (`celsius-per-percent`) isn't rescaled

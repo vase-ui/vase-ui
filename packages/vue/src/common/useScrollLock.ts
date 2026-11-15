@@ -182,8 +182,10 @@ function preventScrollInsetScrollbars(referenceElement: Element | null) {
 
     // Avoid shift due to the default <body> margin. This does cause elements to be clipped
     // with whitespace. Warn if <body> has margins?
-    const marginY = parseFloat(bodyStyles.marginTop) + parseFloat(bodyStyles.marginBottom);
-    const marginX = parseFloat(bodyStyles.marginLeft) + parseFloat(bodyStyles.marginRight);
+    const marginY =
+      Number.parseFloat(bodyStyles.marginTop) + Number.parseFloat(bodyStyles.marginBottom);
+    const marginX =
+      Number.parseFloat(bodyStyles.marginLeft) + Number.parseFloat(bodyStyles.marginRight);
     const elementToLock = getViewportScroller(html, body);
 
     updateGutterOnly = supportsStableScrollbarGutter(referenceElement);

@@ -143,6 +143,10 @@ const emit = defineEmits<{
    * `'disabled'` and `'missing'`.
    */
   valueChange: [value: TabsTabValue, eventDetails: TabsRootChangeEventDetails];
+  /**
+   * Event handler called after `valueChange` with the new value, unless a listener cancels a change
+   * by the user. `v-model:value` uses it.
+   */
   'update:value': [value: TabsTabValue];
 }>();
 

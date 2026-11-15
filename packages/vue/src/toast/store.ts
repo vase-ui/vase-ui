@@ -109,15 +109,15 @@ export const selectors = {
 };
 
 export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
-  private timers = new Map<string, TimerInfo>();
+  #timers = new Map<string, TimerInfo>();
 
-  private areTimersPaused = false;
+  #areTimersPaused = false;
 
   /**
    * Whether the provider released its timers, for example while `KeepAlive` holds it.
-   * Timers don't run while suspended, independently of the hover/focus pause in `areTimersPaused`.
+   * Timers don't run while suspended, independently of the hover/focus pause in `#areTimersPaused`.
    */
-  private areTimersSuspended = false;
+  #areTimersSuspended = false;
 
   constructor(initialState: State) {
     super({ ...initialState }, {}, selectors);
@@ -128,7 +128,7 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
    * that calls a method, such as a `watchEffect` that adds a toast, does not run again when the
    * toasts change.
    */
-  private get current(): State {
+  get #current(): State {
     return toRaw(this.state);
   }
 
@@ -137,10 +137,10 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
    * interaction state of the same change.
    */
   override setState(newState: State): void {
-    super.setState({ ...newState, toasts: this.current.toasts });
+    super.setState({ ...newState, toasts: this.#current.toasts });
     // A sync watcher can write the other keys in the first pass. This pass starts from the state of
     // now, so that it keeps those writes.
-    super.setState({ ...this.current, toasts: newState.toasts });
+    super.setState({ ...this.#current, toasts: newState.toasts });
   }
 
   setViewport = (viewport: HTMLElement | null) => {
@@ -148,16 +148,16 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
   };
 
   syncProviderProps(timeout: number, limit: number) {
-    const limitChanged = this.current.limit !== limit;
+    const limitChanged = this.#current.limit !== limit;
 
-    if (this.current.timeout === timeout && !limitChanged) {
+    if (this.#current.timeout === timeout && !limitChanged) {
       return;
     }
 
     const updates = { timeout, limit } as Pick<State, 'timeout' | 'limit' | 'toasts'>;
 
     if (limitChanged) {
-      updates.toasts = applyLimited(this.current.toasts, limit);
+      updates.toasts = applyLimited(this.#current.toasts, limit);
     }
 
     this.update(updates);
@@ -166,41 +166,41 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
   disposeEffect = () => {
     // The cleanup also runs while `KeepAlive` keeps the store alive, so when the effect
     // runs again, resume the timers with their remaining time unless an interaction pauses them.
-    if (this.areTimersSuspended) {
-      this.areTimersSuspended = false;
-      if (!this.areTimersPaused) {
-        this.startTimers();
+    if (this.#areTimersSuspended) {
+      this.#areTimersSuspended = false;
+      if (!this.#areTimersPaused) {
+        this.#startTimers();
       }
     }
 
     return () => {
-      this.areTimersSuspended = true;
-      this.stopTimers();
+      this.#areTimersSuspended = true;
+      this.#stopTimers();
     };
   };
 
   removeToast(toastId: string, skipOnRemove = false) {
-    const index = selectors.toastIndex(this.current, toastId);
+    const index = selectors.toastIndex(this.#current, toastId);
     if (index === -1) {
       return;
     }
 
-    const toast = this.current.toasts[index];
+    const toast = this.#current.toasts[index];
     if (!skipOnRemove) {
       toast?.onRemove?.();
     }
 
-    const newToasts = [...this.current.toasts];
+    const newToasts = [...this.#current.toasts];
     newToasts.splice(index, 1);
-    this.setToasts(newToasts);
+    this.#setToasts(newToasts);
   }
 
   addToast = <Data extends object>(toast: ToastManagerAddOptions<Data>): string => {
-    const { timeout, limit } = this.current;
+    const { timeout, limit } = this.#current;
     const id = toast.id || generateId('toast');
 
     if (toast.id) {
-      const existingToast = selectors.toast(this.current, toast.id);
+      const existingToast = selectors.toast(this.#current, toast.id);
 
       if (existingToast) {
         if (existingToast.transitionStatus === 'ending') {
@@ -220,15 +220,15 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
       transitionStatus: 'starting',
     };
 
-    const updatedToasts = [toastToAdd, ...this.current.toasts];
-    this.setToasts(applyLimited(updatedToasts, limit));
+    const updatedToasts = [toastToAdd, ...this.#current.toasts];
+    this.#setToasts(applyLimited(updatedToasts, limit));
 
     const duration = toastToAdd.timeout ?? timeout;
     if (toastToAdd.type !== 'loading' && duration > 0) {
-      this.scheduleTimer(id, duration, () => this.closeToast(id));
+      this.#scheduleTimer(id, duration, () => this.closeToast(id));
     }
 
-    if (selectors.expandedOrOutOfFocus(this.current)) {
+    if (selectors.expandedOrOutOfFocus(this.#current)) {
       this.pauseTimers();
     }
 
@@ -241,7 +241,7 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
       | ToastManagerUpdateOptions<Data>
       | ((prevToast: ToastObject<Data>) => ToastManagerUpdateOptions<Data>),
   ) => {
-    const prevToast = selectors.toast(this.current, id);
+    const prevToast = selectors.toast(this.#current, id);
     // Never run the updater for an update the store is going to ignore.
     if (!prevToast || prevToast.transitionStatus === 'ending') {
       return;
@@ -263,8 +263,8 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
     resetTimer = false,
     markUpdated = false,
   ) => {
-    const { timeout, toasts } = this.current;
-    const prevToast = selectors.toast(this.current, id);
+    const { timeout, toasts } = this.#current;
+    const prevToast = selectors.toast(this.#current, id);
     if (!prevToast) {
       return;
     }
@@ -284,7 +284,7 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
       }),
     };
 
-    this.setToasts(toasts.map((toast) => (toast.id === id ? nextToast : toast)));
+    this.#setToasts(toasts.map((toast) => (toast.id === id ? nextToast : toast)));
 
     const nextTimeout = nextToast.timeout ?? timeout;
     const prevTimeout = prevToast.timeout ?? timeout;
@@ -294,12 +294,12 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
     const shouldHaveTimer =
       nextToast.transitionStatus !== 'ending' && nextToast.type !== 'loading' && nextTimeout > 0;
 
-    const hasTimer = this.timers.has(id);
+    const hasTimer = this.#timers.has(id);
     const timeoutChanged = prevTimeout !== nextTimeout;
     const wasLoading = prevToast.type === 'loading';
 
     if (!shouldHaveTimer && hasTimer) {
-      this.clearTimer(id);
+      this.#clearTimer(id);
       return;
     }
 
@@ -308,11 +308,11 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
       shouldHaveTimer &&
       (!hasTimer || timeoutChanged || timeoutUpdated || wasLoading || resetTimer)
     ) {
-      this.clearTimer(id);
+      this.#clearTimer(id);
 
-      this.scheduleTimer(id, nextTimeout, () => this.closeToast(id));
+      this.#scheduleTimer(id, nextTimeout, () => this.closeToast(id));
 
-      if (selectors.expandedOrOutOfFocus(this.current)) {
+      if (selectors.expandedOrOutOfFocus(this.#current)) {
         this.pauseTimers();
       }
     }
@@ -320,19 +320,19 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
 
   closeToast = (toastId?: string) => {
     const closeAll = toastId === undefined;
-    const { limit, toasts } = this.current;
+    const { limit, toasts } = this.#current;
     let toastsToClose: StoredToast[];
 
     if (closeAll) {
       toastsToClose = toasts;
-      this.clearTimers();
+      this.#clearTimers();
     } else {
-      const toast = selectors.toast(this.current, toastId);
+      const toast = selectors.toast(this.#current, toastId);
       if (!toast) {
         return;
       }
       toastsToClose = [toast];
-      this.clearTimer(toastId);
+      this.#clearTimer(toastId);
     }
 
     const endingToasts = toasts.map((item) =>
@@ -341,7 +341,7 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
         : item,
     );
     const newToasts = applyLimited(endingToasts, limit);
-    this.setToasts(newToasts, !newToasts.some((toast) => toast.transitionStatus !== 'ending'));
+    this.#setToasts(newToasts, !newToasts.some((toast) => toast.transitionStatus !== 'ending'));
 
     toastsToClose.forEach((toast) => {
       if (toast.transitionStatus !== 'ending') {
@@ -349,7 +349,7 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
       }
     });
 
-    this.handleFocusManagement(toastId);
+    this.#handleFocusManagement(toastId);
   };
 
   promiseToast = <Value, Data extends object>(
@@ -396,25 +396,25 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
   };
 
   pauseTimers() {
-    if (this.areTimersPaused) {
+    if (this.#areTimersPaused) {
       return;
     }
-    this.areTimersPaused = true;
-    this.stopTimers();
+    this.#areTimersPaused = true;
+    this.#stopTimers();
   }
 
   resumeTimers() {
-    if (!this.areTimersPaused) {
+    if (!this.#areTimersPaused) {
       return;
     }
-    this.areTimersPaused = false;
-    if (!this.areTimersSuspended) {
-      this.startTimers();
+    this.#areTimersPaused = false;
+    if (!this.#areTimersSuspended) {
+      this.#startTimers();
     }
   }
 
-  private stopTimers() {
-    this.timers.forEach((timer) => {
+  #stopTimers() {
+    this.#timers.forEach((timer) => {
       // Timers added while stopped never ran, and stopped timers already
       // recorded their remaining time, so leave both alone.
       if (timer.timeout?.isStarted()) {
@@ -427,12 +427,12 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
     });
   }
 
-  private startTimers() {
-    this.timers.forEach((timer, id) => {
+  #startTimers() {
+    this.#timers.forEach((timer, id) => {
       timer.remaining = timer.remaining > 0 ? timer.remaining : timer.delay;
       timer.timeout ??= Timeout.create();
       timer.timeout.start(timer.remaining, () => {
-        this.handleTimerFired(id);
+        this.#handleTimerFired(id);
         timer.callback();
       });
       timer.start = Date.now();
@@ -440,7 +440,7 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
   }
 
   restoreFocusToPrevElement() {
-    const { prevFocusElement, viewport } = this.current;
+    const { prevFocusElement, viewport } = this.#current;
     const doc = ownerDocument(prevFocusElement);
     // `body` can't be focused, so return focus to it by blurring whatever has it.
     if (prevFocusElement === doc.body) {
@@ -464,7 +464,7 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
     }
 
     const target = getTarget(event) as Element | null;
-    if (contains(this.current.viewport, target)) {
+    if (contains(this.#current.viewport, target)) {
       return;
     }
 
@@ -474,18 +474,18 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
     this.update({ hovering: false, focused: false });
   };
 
-  private scheduleTimer(id: string, delay: number, callback: () => void) {
+  #scheduleTimer(id: string, delay: number, callback: () => void) {
     const start = Date.now();
     const shouldStartActive =
-      !this.areTimersSuspended && !selectors.expandedOrOutOfFocus(this.current);
+      !this.#areTimersSuspended && !selectors.expandedOrOutOfFocus(this.#current);
     const currentTimeout = shouldStartActive ? Timeout.create() : undefined;
 
     currentTimeout?.start(delay, () => {
-      this.handleTimerFired(id);
+      this.#handleTimerFired(id);
       callback();
     });
 
-    this.timers.set(id, {
+    this.#timers.set(id, {
       timeout: currentTimeout,
       start,
       delay,
@@ -494,36 +494,36 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
     });
   }
 
-  private clearTimers() {
-    this.timers.forEach((timer) => {
+  #clearTimers() {
+    this.#timers.forEach((timer) => {
       timer.timeout?.clear();
     });
-    this.timers.clear();
-    this.areTimersPaused = false;
+    this.#timers.clear();
+    this.#areTimersPaused = false;
   }
 
-  private clearTimer(id: string) {
-    const timer = this.timers.get(id);
+  #clearTimer(id: string) {
+    const timer = this.#timers.get(id);
     timer?.timeout?.clear();
-    this.timers.delete(id);
+    this.#timers.delete(id);
 
-    this.resetPausedStateIfNoTimersRemain();
+    this.#resetPausedStateIfNoTimersRemain();
   }
 
-  private handleTimerFired(id: string) {
-    this.timers.delete(id);
-    this.resetPausedStateIfNoTimersRemain();
+  #handleTimerFired(id: string) {
+    this.#timers.delete(id);
+    this.#resetPausedStateIfNoTimersRemain();
   }
 
-  private resetPausedStateIfNoTimersRemain() {
-    if (this.timers.size === 0) {
+  #resetPausedStateIfNoTimersRemain() {
+    if (this.#timers.size === 0) {
       // No timers remain to keep paused; clear the flag so a fresh toast's
       // running timer can be paused again on hover/focus.
-      this.areTimersPaused = false;
+      this.#areTimersPaused = false;
     }
   }
 
-  private setToasts(newToasts: StoredToast[], clearInteraction: boolean = newToasts.length === 0) {
+  #setToasts(newToasts: StoredToast[], clearInteraction: boolean = newToasts.length === 0) {
     const updates = { toasts: newToasts } as Pick<State, 'toasts' | 'hovering' | 'focused'>;
 
     if (clearInteraction) {
@@ -534,8 +534,8 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
     this.update(updates);
   }
 
-  private handleFocusManagement(toastId: string | undefined) {
-    const { viewport } = this.current;
+  #handleFocusManagement(toastId: string | undefined) {
+    const { viewport } = this.#current;
     // With no viewport, no toast has the focus. A server has no viewport and no document.
     if (!viewport) {
       return;
@@ -551,8 +551,8 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
       return;
     }
 
-    const toasts = selectors.toasts(this.current);
-    const currentIndex = selectors.toastIndex(this.current, toastId);
+    const toasts = selectors.toasts(this.#current);
+    const currentIndex = selectors.toastIndex(this.#current, toastId);
 
     // A toast that was `limited` stays `inert` until Vue updates the DOM, so it can't take focus yet.
     const scan = (from: number, step: number) => {
