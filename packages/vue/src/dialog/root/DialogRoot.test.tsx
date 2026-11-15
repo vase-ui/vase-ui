@@ -23,6 +23,7 @@ import {
   flushMicrotasks,
   hydrate,
   isJSDOM,
+  nextAnimationsRead,
   nextCall,
   nextEvent,
   popupAnatomyTests,
@@ -32,6 +33,7 @@ import {
   wait,
   waitFor,
   waitForLaterMillisecond,
+  waitSingleFrame,
 } from '#test-utils';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import {
@@ -1549,7 +1551,7 @@ describe('<Dialog.Root />', () => {
 
         const onOpenChangeComplete = vi.fn();
 
-        // The first animation lasts 100 s, so it still runs when the test swaps it.
+        // Each animation lasts 100 s, so a stall of the page cannot end one before the case ends it.
         const style = `
           @keyframes test-enter-a {
             from {
@@ -1568,7 +1570,7 @@ describe('<Dialog.Root />', () => {
           }
 
           .animation-test-indicator.animation-b[data-open] {
-            animation: test-enter-b 50ms linear;
+            animation: test-enter-b 100s linear;
           }
         `;
 
@@ -1600,18 +1602,43 @@ describe('<Dialog.Root />', () => {
         const { user } = await render(<Test />);
 
         const openButton = screen.getByText('Open externally');
-        await nextEvent(document, 'animationstart', { action: () => user.click(openButton) });
+        const start = await nextEvent(document, 'animationstart', {
+          action: () => user.click(openButton),
+        });
+        const popup = screen.getByTestId('dialog-popup');
+        expect(start.target).toBe(popup);
+        expect((start as AnimationEvent).animationName).toBe('test-enter-a');
+        // The root reads the animations of the popup in the frame after the open. WebKit sends
+        // `animationstart` before that frame.
+        await waitSingleFrame();
 
         const swapButton = screen.getByText('Swap animation');
-        await user.click(swapButton);
+        // The swap cancels the first animation, and the root then reads the animations again.
+        const animations = await nextAnimationsRead(popup, {
+          action: () => user.click(swapButton),
+        });
+        expect(animations.map((animation) => (animation as CSSAnimation).animationName)).toEqual([
+          'test-enter-b',
+        ]);
+        expect(animations.map((animation) => animation.playState)).toEqual(['running']);
+        const callsAtEnd: number[] = [];
+        const finished = Promise.all(animations.map((animation) => animation.finished)).then(() => {
+          callsAtEnd.push(onOpenChangeComplete.mock.calls.length);
+        });
 
         await flushMicrotasks();
         expect(onOpenChangeComplete.mock.calls.length).toBe(0);
 
+        for (const animation of animations) {
+          animation.finish();
+        }
+        await finished;
+
         await waitFor(() => {
           expect(onOpenChangeComplete.mock.calls.length).toBe(1);
         });
-        expect(onOpenChangeComplete.mock.calls[0][0]).toBe(true);
+        expect(callsAtEnd).toEqual([0]);
+        expect(onOpenChangeComplete.mock.calls).toEqual([[true]]);
       });
 
       it('does not get called on open when dismissed during the enter animation', async () => {
