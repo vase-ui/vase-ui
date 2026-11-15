@@ -11,12 +11,12 @@ const props = withDefaults(
     // `model` binds `v-model:checked`. `keeps` gives `checked` and keeps it for each change.
     mode?: 'uncontrolled' | 'model' | 'keeps' | 'field' | 'group';
     defaultChecked?: boolean;
-    checked?: boolean;
+    checked?: boolean | undefined;
     indeterminate?: boolean;
     readOnly?: boolean;
     disabled?: boolean;
   }>(),
-  { mode: 'uncontrolled' },
+  { mode: 'uncontrolled', checked: undefined },
 );
 
 const model = shallowRef(props.checked);

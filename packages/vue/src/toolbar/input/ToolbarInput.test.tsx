@@ -10,6 +10,7 @@ import {
   hydrate,
   hydrateAfter,
   isJSDOM,
+  recordInputEvents,
   renderOnServer,
   screen,
   within,
@@ -427,6 +428,26 @@ describe('<Toolbar.Input />', () => {
       expect(fixture.getByTestId('input')).toHaveValue('abcd');
       expect(fixture.getByTestId('inputs').textContent).toBe('abcd');
       expect(fixture.getByTestId('text').textContent).toBe(text);
+    });
+  });
+
+  describe('VUE-81: the form state that the browser restores', () => {
+    it.each([
+      { name: 'a value of the consumer', props: { controlled: true }, text: 'abcd' },
+      { name: 'a default value', props: { controlled: false }, text: 'abc' },
+    ])('sends the events of a restored value to an input with $name', async ({ props, text }) => {
+      const { container } = await render(<ToolbarInputBeforeHydration {...props} />);
+      const fixture = within(container);
+      const events = recordInputEvents(container);
+      fixture.getByTestId<HTMLInputElement>('input').value = 'abcd';
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(fixture.getByTestId('inputs').textContent).toBe('abcd');
+      expect(fixture.getByTestId('text').textContent).toBe(text);
+      expect(fixture.getByTestId('input')).toHaveValue('abcd');
+      expect(events).toEqual(['input', 'change', 'blur', 'focusout']);
     });
   });
 });

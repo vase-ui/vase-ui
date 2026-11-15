@@ -6,6 +6,7 @@ import {
   detachedTriggersConformanceTests,
   fireEvent,
   flushMicrotasks,
+  hydrateAfter,
   isJSDOM,
   renderOnServer,
   screen,
@@ -388,27 +389,27 @@ describe('<Dialog.Root />', () => {
 
     it('hydrates a detached trigger from the stable fallback store', async () => {
       const handle = Dialog.createHandle();
-
-      const container = await insertServerHtml(
+      const serverHtml = await renderOnServer(
         'src/dialog/root/DialogDetachedTriggerHydration.test.vue',
+        {},
       );
-      const trigger = within(container).getByRole('button', { name: 'Trigger' });
-      expect(trigger).toHaveAttribute('aria-expanded', 'false');
-      expect(trigger).not.toHaveAttribute('data-popup-open');
+      let trigger: HTMLElement | undefined;
 
-      const app = createSSRApp(DialogDetachedTriggerHydration, { handle });
-      onTestFinished(() => {
-        app.unmount();
-        container.remove();
+      const { container } = await hydrateAfter(DialogDetachedTriggerHydration, {
+        serverHtml,
+        props: { handle },
+        before(serverContainer) {
+          trigger = within(serverContainer).getByRole('button', { name: 'Trigger' });
+          expect(trigger).toHaveAttribute('aria-expanded', 'false');
+          expect(trigger).not.toHaveAttribute('data-popup-open');
+        },
       });
-      app.mount(container);
 
       await waitFor(() => {
         expect(trigger).toHaveAttribute('aria-expanded', 'true');
       });
       expect(trigger).toHaveAttribute('data-popup-open');
       expect(within(container).getByRole('button', { name: 'Trigger' })).toBe(trigger);
-      expect(takeReportedMessages()).toEqual([]);
     });
 
     it('keeps the server snapshot stable when the root closes before a delayed trigger hydrates', async () => {

@@ -167,6 +167,27 @@ export function mockNavigationType(type: NavigationTimingType): void {
   });
 }
 
+/**
+ * Records the type of each `input`, `change`, `blur` and `focusout` event that reaches `target`
+ * until the test ends.
+ */
+export function recordInputEvents(target: EventTarget): string[] {
+  const types: string[] = [];
+  const record = (event: Event) => {
+    types.push(event.type);
+  };
+  const eventTypes = ['input', 'change', 'blur', 'focusout'];
+  for (const type of eventTypes) {
+    target.addEventListener(type, record, true);
+  }
+  onTestFinished(() => {
+    for (const type of eventTypes) {
+      target.removeEventListener(type, record, true);
+    }
+  });
+  return types;
+}
+
 async function renderOnClient(
   component: Component,
   props: Record<string, unknown> | undefined,

@@ -3,15 +3,12 @@ import { shallowRef } from 'vue';
 import { Select } from '@vase-ui/vue/select';
 import type { SelectRootChangeEventDetails } from '@vase-ui/vue/select';
 
-const props = withDefaults(
-  defineProps<{
-    // With no name, the hidden input is `type="hidden"`.
-    name?: string | undefined;
-    // The first value of `v-model:value`.
-    value?: string | undefined;
-  }>(),
-  { name: 'font', value: undefined },
-);
+const props = defineProps<{
+  // With no name, the hidden input is `type="hidden"`.
+  name?: string | undefined;
+  // The first value of `v-model:value`.
+  value?: string | undefined;
+}>();
 
 const fonts = { sans: 'Sans-serif', serif: 'Serif', mono: 'Monospace' };
 const model = shallowRef<string | null>(props.value ?? null);

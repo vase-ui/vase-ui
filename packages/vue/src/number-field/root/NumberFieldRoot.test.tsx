@@ -10,16 +10,22 @@ import {
   flushMicrotasks,
   hiddenInputSizeTests,
   hydrate,
+  hydrateAfter,
   isJSDOM,
   mockRuntimeLocale,
   pasteText,
+  recordInputEvents,
   renderOnServer,
   screen,
+  within,
 } from '#test-utils';
 import NumberFieldContextProbe from '../../../test/fixtures/NumberFieldContextProbe.vue';
 import { REASONS } from '../../internals/reasons';
+import NumberFieldRootBeforeHydration from './NumberFieldRootBeforeHydration.test.vue';
 import NumberFieldRootHydration from './NumberFieldRootHydration.test.vue';
 import NumberFieldRootReplace from './NumberFieldRootReplace.test.vue';
+
+const BEFORE_HYDRATION_FIXTURE = 'src/number-field/root/NumberFieldRootBeforeHydration.test.vue';
 
 type FieldRootInstance = InstanceType<typeof Field.Root>;
 type NumberFieldRootInstance = InstanceType<typeof NumberFieldBase.Root>;
@@ -506,16 +512,48 @@ describe('<NumberField />', () => {
       expect(handleUpdate.mock.calls).toEqual([[7]]);
       expect(getHiddenInput().value).toBe('5');
     });
+  });
 
-    it('after a `pageshow` event, because a browser can restore the form state after the mount', async () => {
-      const handleChange = vi.fn();
-      await render(<NumberFieldBase.Root defaultValue={5} onValueChange={handleChange} />);
+  describe('VUE-81: the state that the input got before the hydration', () => {
+    it('takes the value that a program wrote into the hidden input', async () => {
+      const props = { value: 5 };
+      const serverHtml = await renderOnServer(BEFORE_HYDRATION_FIXTURE, props);
+      let events: string[] = [];
+
+      const { container } = await hydrateAfter(NumberFieldRootBeforeHydration, {
+        serverHtml,
+        props,
+        before(serverContainer) {
+          events = recordInputEvents(serverContainer);
+          serverContainer.querySelector<HTMLInputElement>('input[aria-hidden="true"]')!.value = '9';
+        },
+      });
+      await flushMicrotasks();
+
+      const fixture = within(container);
+      expect(fixture.getByTestId('model').textContent).toBe('9');
+      expect(fixture.getByTestId('changes').textContent).toBe('9 (none)');
+      expect(fixture.getByTestId<HTMLInputElement>('input').value).toBe('9');
+      expect(getHiddenInput().value).toBe('9');
+      expect(events).toEqual(['input']);
+    });
+  });
+
+  describe('VUE-81: the form state that the browser restores', () => {
+    it('takes the hidden input at a `pageshow` event', async () => {
+      const { container } = await render(<NumberFieldRootBeforeHydration value={5} />);
+      const fixture = within(container);
+      const events = recordInputEvents(container);
       getHiddenInput().value = '9';
 
       window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
 
-      expect(getHiddenInput().value).toBe('5');
-      expect(handleChange).not.toHaveBeenCalled();
+      expect(fixture.getByTestId('model').textContent).toBe('9');
+      expect(fixture.getByTestId('changes').textContent).toBe('9 (none)');
+      expect(fixture.getByTestId<HTMLInputElement>('input').value).toBe('9');
+      expect(getHiddenInput().value).toBe('9');
+      expect(events).toEqual(['input']);
     });
   });
 

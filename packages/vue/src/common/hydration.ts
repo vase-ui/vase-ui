@@ -165,6 +165,15 @@ function useControlValueBeforeHydration(
   const isMounted = shallowRef(false);
   watch(isMounted, () => {});
   onMounted(() => {
+    // A control that equals its server HTML has nothing to take, so it gets the `value` key from
+    // the mount on. A root thus writes its value to its hidden input while the takes of the
+    // controls inside it run, and their `blur` validates the field against that value.
+    const element = control();
+    if (!isTextControl(element) || element.value === getUnchangedValue(element)) {
+      writesValue.value = true;
+      return;
+    }
+
     isMounted.value = true;
     queueInputTake(take);
   });

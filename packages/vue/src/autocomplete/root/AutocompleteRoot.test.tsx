@@ -13,6 +13,7 @@ import {
   hydrate,
   hydrateAfter,
   isJSDOM,
+  recordInputEvents,
   renderOnServer,
   screen,
   waitFor,
@@ -166,6 +167,37 @@ describe('<Autocomplete.Root />', () => {
       expect(fixture.getByTestId('input')).toHaveValue('Osl');
       expect(fixture.getByTestId('value').textContent).toBe('Osl');
       expect(fixture.getByTestId('changes').textContent).toBe('Osl (input-change)');
+    });
+  });
+
+  describe('VUE-81: the state that the input got before the hydration', () => {
+    it.each([
+      { name: 'a name', props: { name: 'city' }, value: 'Oslo', changes: 'Oslo (none)' },
+      { name: 'no name', props: {}, value: '', changes: '' },
+    ])('takes the hidden input of a root with $name', async ({ props, ...expected }) => {
+      const serverHtml = await renderOnServer(
+        'src/autocomplete/root/AutocompleteRootBeforeHydration.test.vue',
+        props,
+      );
+      let events: string[] = [];
+
+      const { container } = await hydrateAfter(AutocompleteRootBeforeHydration, {
+        serverHtml,
+        props,
+        before(serverContainer) {
+          events = recordInputEvents(serverContainer);
+          serverContainer.querySelector<HTMLInputElement>('input[aria-hidden="true"]')!.value =
+            'Oslo';
+        },
+      });
+      await flushMicrotasks();
+
+      const fixture = within(container);
+      expect(fixture.getByTestId('value').textContent).toBe(expected.value);
+      expect(fixture.getByTestId('changes').textContent).toBe(expected.changes);
+      expect(fixture.getByTestId('input')).toHaveValue(expected.value);
+      expect(container.querySelector('input[aria-hidden="true"]')).toHaveValue(expected.value);
+      expect(events).toEqual(expected.value === '' ? [] : ['input']);
     });
   });
 

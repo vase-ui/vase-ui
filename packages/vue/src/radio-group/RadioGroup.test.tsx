@@ -14,15 +14,19 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  hydrateAfter,
   isJSDOM,
   renderOnServer,
   screen,
+  within,
 } from '#test-utils';
+import RadioGroupBeforeHydration from './RadioGroupBeforeHydration.test.vue';
 import RadioGroupFieldHydration from './RadioGroupFieldHydration.test.vue';
 import RadioGroupHydration from './RadioGroupHydration.test.vue';
 
 const HYDRATION_FIXTURE = 'src/radio-group/RadioGroupHydration.test.vue';
 const FIELD_HYDRATION_FIXTURE = 'src/radio-group/RadioGroupFieldHydration.test.vue';
+const BEFORE_HYDRATION_FIXTURE = 'src/radio-group/RadioGroupBeforeHydration.test.vue';
 
 type RadioGroupInstance = { inputElement: HTMLInputElement | null };
 
@@ -3502,6 +3506,106 @@ describe('<RadioGroup />', () => {
 
       expect(handleSubmit).not.toHaveBeenCalled();
       expect(screen.getByTestId('a')).toHaveFocus();
+    });
+  });
+
+  describe('VUE-81: the state that the input got before the hydration', () => {
+    async function hydratePressed(
+      props: Record<string, unknown>,
+      change: (serverContainer: HTMLElement) => void,
+    ) {
+      const serverHtml = await renderOnServer(BEFORE_HYDRATION_FIXTURE, props);
+      const { container } = await hydrateAfter(RadioGroupBeforeHydration, {
+        serverHtml,
+        props,
+        before: change,
+      });
+      await flushMicrotasks();
+      return within(container);
+    }
+
+    function pressLabel(testId: string) {
+      return (serverContainer: HTMLElement) => {
+        within(serverContainer).getByTestId(testId).click();
+      };
+    }
+
+    function getCheckedStates(fixture: ReturnType<typeof within>) {
+      return ['a', 'b', 'c'].map((value) => ({
+        input: (fixture.getByTestId(value).nextElementSibling as HTMLInputElement).checked,
+        radio: fixture.getByTestId(value).getAttribute('aria-checked'),
+      }));
+    }
+
+    it('takes the pressed radio of a named controlled group', async () => {
+      const fixture = await hydratePressed(
+        { mode: 'model', named: true, value: 'a' },
+        pressLabel('label-c'),
+      );
+
+      expect(fixture.getByTestId('model').textContent).toBe('c');
+      expect(fixture.getByTestId('changes').textContent).toBe('c (vase-ui)');
+      expect(getCheckedStates(fixture)).toEqual([
+        { input: false, radio: 'false' },
+        { input: false, radio: 'false' },
+        { input: true, radio: 'true' },
+      ]);
+    });
+
+    it('keeps the value of a parent that keeps it', async () => {
+      const fixture = await hydratePressed(
+        { mode: 'keeps', named: true, value: 'a' },
+        pressLabel('label-c'),
+      );
+
+      expect(fixture.getByTestId('changes').textContent).toBe('c (vase-ui)');
+      expect(getCheckedStates(fixture)).toEqual([
+        { input: true, radio: 'true' },
+        { input: false, radio: 'false' },
+        { input: false, radio: 'false' },
+      ]);
+    });
+
+    it('takes the pressed radio with a changed text control between', async () => {
+      const fixture = await hydratePressed(
+        { mode: 'model', named: true, value: 'a', textBetween: true },
+        (serverContainer) => {
+          within(serverContainer).getByTestId<HTMLInputElement>('text').value = 'hello';
+          within(serverContainer).getByTestId('label-c').click();
+        },
+      );
+
+      expect(fixture.getByTestId('model').textContent).toBe('c');
+      expect(fixture.getByTestId('text-model').textContent).toBe('hello');
+      expect(fixture.getByTestId('changes').textContent).toBe('c (vase-ui)');
+      expect(getCheckedStates(fixture)[2]).toEqual({ input: true, radio: 'true' });
+    });
+
+    it('marks its field dirty after a press before the hydration', async () => {
+      const fixture = await hydratePressed({ mode: 'field', value: 'a' }, pressLabel('label-b'));
+      expect(fixture.getByTestId('field')).toHaveAttribute('data-dirty', '');
+
+      await fireEvent.click(fixture.getByTestId('a'));
+
+      expect(fixture.getByTestId('a')).toHaveAttribute('aria-checked', 'true');
+      expect(fixture.getByTestId('field')).not.toHaveAttribute('data-dirty');
+    });
+  });
+
+  describe('VUE-81: the form state that the browser restores', () => {
+    it('takes the checked input at a `pageshow` event', async () => {
+      const { container } = await render(
+        <RadioGroupBeforeHydration mode="model" named value="a" />,
+      );
+      const fixture = within(container);
+      (fixture.getByTestId('c').nextElementSibling as HTMLInputElement).checked = true;
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(fixture.getByTestId('model').textContent).toBe('c');
+      expect(fixture.getByTestId('changes').textContent).toBe('c (pageshow)');
+      expect(fixture.getByTestId('c')).toHaveAttribute('aria-checked', 'true');
     });
   });
 
