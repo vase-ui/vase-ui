@@ -42,6 +42,7 @@
       <li><NuxtLink to="/autocomplete">Autocomplete</NuxtLink></li>
       <li><NuxtLink to="/combobox">Combobox</NuxtLink></li>
       <li><NuxtLink to="/text-before-hydration">Text before hydration</NuxtLink></li>
+      <li><NuxtLink to="/form-state">Form state</NuxtLink></li>
     </ul>
   </main>
 </template>
