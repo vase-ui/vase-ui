@@ -5,6 +5,7 @@ import * as Combobox from '../src/combobox/index.parts';
 import * as DateField from '../src/date-field/index.parts';
 import * as OTPField from '../src/otp-field/index.parts';
 import * as Radio from '../src/radio/index.parts';
+import * as Resizable from '../src/resizable/index.parts';
 import * as Slider from '../src/slider/index.parts';
 import * as Switch from '../src/switch/index.parts';
 import * as TimeClock from '../src/time-clock/index.parts';
@@ -79,6 +80,13 @@ const id = 'id';
   <Slider.Thumb :aria-describedby="5" />
   <!-- @vue-expect-error `aria-valuetext` is a string -->
   <Slider.Thumb :aria-valuetext="5" />
+
+  <Resizable.Handle aria-valuetext="x" />
+  <Resizable.Handle :aria-valuetext="id" />
+  <Resizable.Handle ariaValuetext="x" />
+  <Resizable.Handle :ariaValuetext="id" />
+  <!-- @vue-expect-error `aria-valuetext` is a string -->
+  <Resizable.Handle :aria-valuetext="5" />
 
   <TimeClock.Face aria-label="x" aria-labelledby="id" aria-describedby="id" />
   <TimeClock.Face :aria-label="id" :aria-labelledby="id" :aria-describedby="id" />
