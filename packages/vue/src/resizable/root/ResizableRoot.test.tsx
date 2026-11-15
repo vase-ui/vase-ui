@@ -889,15 +889,35 @@ describe('<Resizable.Root />', () => {
       panelB?: Record<string, unknown>;
     }
 
-    // Each case presses a real key, so each engine gets the key as a user gives it.
-    function renderPanes({
+    // A listener on the document reads the key after each listener of the root. It then stops the
+    // action of the browser: Firefox moves the focus out of the page for an F6 that no listener
+    // prevented, and the focus of a later case then starts outside the page.
+    function recordPrevented() {
+      const prevented: boolean[] = [];
+      const listener = (event: KeyboardEvent) => {
+        if (event.key === 'F6') {
+          prevented.push(event.defaultPrevented);
+          event.preventDefault();
+        }
+      };
+      document.addEventListener('keydown', listener);
+      onTestFinished(() => {
+        document.removeEventListener('keydown', listener);
+      });
+      return prevented;
+    }
+
+    // Each case presses a real key, so each engine gets the key as a user gives it. The result is
+    // the record of `recordPrevented`.
+    async function renderPanes({
       root,
       a = <button type="button">A</button>,
       b = <button type="button">B</button>,
       c = <button type="button">C</button>,
       panelB,
     }: PanesOptions = {}) {
-      return render(
+      const prevented = recordPrevented();
+      await render(
         <div style={{ width: '1000px' }}>
           <Resizable.Root data-testid="root" {...root}>
             <Resizable.Panel id="a" data-testid="a">
@@ -914,24 +934,10 @@ describe('<Resizable.Root />', () => {
           </Resizable.Root>
         </div>,
       );
+      return prevented;
     }
 
     const button = (name: string) => screen.getByRole('button', { name });
-
-    // A listener on the document reads the key after each listener of the root.
-    function recordPrevented() {
-      const prevented: boolean[] = [];
-      const listener = (event: KeyboardEvent) => {
-        if (event.key === 'F6') {
-          prevented.push(event.defaultPrevented);
-        }
-      };
-      document.addEventListener('keydown', listener);
-      onTestFinished(() => {
-        document.removeEventListener('keydown', listener);
-      });
-      return prevented;
-    }
 
     it.each([
       { name: 'F6 from a control', from: 'B', keys: '{F6}', to: 'C' },
@@ -939,8 +945,7 @@ describe('<Resizable.Root />', () => {
       { name: 'F6 from a handle', from: 'handle-a', keys: '{F6}', to: 'B' },
       { name: 'Shift+F6 from a handle', from: 'handle-a', keys: '{Shift>}{F6}{/Shift}', to: 'A' },
     ])('moves the focus to the next pane: $name', async ({ from, keys, to }) => {
-      await renderPanes();
-      const prevented = recordPrevented();
+      const prevented = await renderPanes();
       (from.startsWith('handle') ? screen.getByTestId(from) : button(from)).focus();
 
       await userEvent.keyboard(keys);
@@ -1062,8 +1067,7 @@ describe('<Resizable.Root />', () => {
     });
 
     it('does not prevent the key when no pane has a control', async () => {
-      await renderPanes({ a: 'A', b: 'B', c: 'C' });
-      const prevented = recordPrevented();
+      const prevented = await renderPanes({ a: 'A', b: 'B', c: 'C' });
       const handle = screen.getByTestId('handle-a');
       handle.focus();
 
@@ -1094,14 +1098,13 @@ describe('<Resizable.Root />', () => {
     });
 
     it('does nothing when a keydown listener on the root calls preventVaseUIHandler', async () => {
-      await renderPanes({
+      const prevented = await renderPanes({
         root: {
           onKeydown: (event: KeyboardEvent & { preventVaseUIHandler: () => void }) => {
             event.preventVaseUIHandler();
           },
         },
       });
-      const prevented = recordPrevented();
       button('B').focus();
 
       await userEvent.keyboard('{F6}');
@@ -1115,12 +1118,13 @@ describe('<Resizable.Root />', () => {
       { name: 'Alt', keys: '{Alt>}{F6}{/Alt}' },
       { name: 'Meta', keys: '{Meta>}{F6}{/Meta}' },
     ])('does nothing with F6 and $name', async ({ keys }) => {
-      await renderPanes();
+      const prevented = await renderPanes();
       button('B').focus();
 
       await userEvent.keyboard(keys);
 
       expect(button('B')).toHaveFocus();
+      expect(prevented).toEqual([false]);
     });
 
     it('moves the focus in a disabled root', async () => {
