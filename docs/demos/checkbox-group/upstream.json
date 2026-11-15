@@ -4,6 +4,7 @@
   "files": {
     "hero/css-modules/index.module.css": "cacf490276c318569c5ec2c64888a3aaa63a25cfedc7a4568a1a064a5ec88d73",
     "hero/css-modules/index.tsx": "549ecbcbf2580d05ba1361b1381a05c5cd7647eb2474c403a32ad27c15935649",
+    "hero/tailwind/index.tsx": "9cef810143597cfad8ac02947d042a893d3e10ecfc6f427732138ca943c60362",
     "nested/css-modules/index.module.css": "cacf490276c318569c5ec2c64888a3aaa63a25cfedc7a4568a1a064a5ec88d73",
     "nested/css-modules/index.tsx": "c3b7f9a4a7f31316520662b96afeb4e82353fd4d6c1d38fbf450229320439753",
     "parent/css-modules/index.module.css": "cacf490276c318569c5ec2c64888a3aaa63a25cfedc7a4568a1a064a5ec88d73",
@@ -13,5 +14,20 @@
     "hero": ["checkbox"],
     "nested": ["checkbox"],
     "parent": ["checkbox"]
+  },
+  "classes": {
+    "hero/tailwind": [
+      "flex data-unchecked:hidden",
+      "flex data-unchecked:hidden",
+      "flex data-unchecked:hidden",
+      "flex flex-col items-start gap-1 text-neutral-950 dark:text-white",
+      "flex items-center gap-2 text-sm font-normal text-neutral-950 dark:text-white",
+      "flex items-center gap-2 text-sm font-normal text-neutral-950 dark:text-white",
+      "flex items-center gap-2 text-sm font-normal text-neutral-950 dark:text-white",
+      "flex size-4 shrink-0 items-center justify-center border rounded-none p-0 border-neutral-950 bg-white text-white dark:border-white dark:bg-neutral-950 dark:text-neutral-950 data-checked:bg-neutral-950 data-checked:text-white dark:data-checked:bg-white dark:data-checked:text-neutral-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white",
+      "flex size-4 shrink-0 items-center justify-center border rounded-none p-0 border-neutral-950 bg-white text-white dark:border-white dark:bg-neutral-950 dark:text-neutral-950 data-checked:bg-neutral-950 data-checked:text-white dark:data-checked:bg-white dark:data-checked:text-neutral-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white",
+      "flex size-4 shrink-0 items-center justify-center border rounded-none p-0 border-neutral-950 bg-white text-white dark:border-white dark:bg-neutral-950 dark:text-neutral-950 data-checked:bg-neutral-950 data-checked:text-white dark:data-checked:bg-white dark:data-checked:text-neutral-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white",
+      "text-sm font-bold"
+    ]
   }
 }

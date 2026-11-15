@@ -7,6 +7,7 @@ import {
   fireEvent,
   flushMicrotasks,
   screen,
+  waitForLaterMillisecond,
 } from '#test-utils';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
@@ -108,7 +109,7 @@ describe('<NavigationMenu.Viewport />', () => {
 
   it('sends the focus from the guard before the content to the first link', async () => {
     await renderMenu();
-    await fireEvent.click(screen.getByTestId('trigger'));
+    await waitForLaterMillisecond(() => fireEvent.click(screen.getByTestId('trigger')));
     const guard = screen.getByTestId('viewport').firstElementChild as HTMLElement;
 
     guard.focus();
@@ -123,7 +124,7 @@ describe('<NavigationMenu.Viewport />', () => {
     await renderMenu({}, { onFocusin: (event) => event.preventVaseUIHandler() });
     const trigger = screen.getByTestId('trigger');
     const viewport = screen.getByTestId('viewport');
-    await fireEvent.click(trigger);
+    await waitForLaterMillisecond(() => fireEvent.click(trigger));
     screen.getByRole('link', { name: 'First link' }).focus();
     expect(viewport).not.toHaveAttribute('inert');
 

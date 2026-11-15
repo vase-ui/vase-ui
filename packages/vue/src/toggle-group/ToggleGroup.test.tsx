@@ -9,10 +9,12 @@ import {
   createRenderer,
   describeConformance,
   flushMicrotasks,
+  heldMountListTests,
   hydrate,
   isJSDOM,
   renderOnServer,
   screen,
+  waitFor,
 } from '#test-utils';
 import type { Orientation } from '../internals/types';
 import { ToolbarGroupContext } from '../toolbar/group/ToolbarGroupContext';
@@ -34,6 +36,23 @@ function parse(html: string) {
 
 describe('<ToggleGroup />', () => {
   const { render } = createRenderer();
+
+  heldMountListTests({
+    render,
+    renderList: (withLastItem) => (
+      <ToggleGroup>
+        <Toggle value="a">A</Toggle>
+        {withLastItem ? <Toggle value="b">B</Toggle> : null}
+      </ToggleGroup>
+    ),
+    async check(user) {
+      screen.getByRole('button', { name: 'A' }).focus();
+      await user.keyboard('[ArrowRight]');
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'B' })).toHaveFocus();
+      });
+    },
+  });
 
   describeConformance(<ToggleGroup />, () => ({
     refInstanceof: window.HTMLDivElement,

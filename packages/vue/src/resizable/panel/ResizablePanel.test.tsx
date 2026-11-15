@@ -1,11 +1,15 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, defineComponent, nextTick, shallowRef } from 'vue';
+import type { ShallowRef } from 'vue';
 import {
   createRenderer,
   describeConformance,
   fireEvent,
+  flushMicrotasks,
   screen,
   takeReportedMessages,
+  waitFor,
+  waitSingleFrame,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
 import * as Resizable from '../index.parts';
@@ -13,14 +17,16 @@ import * as Resizable from '../index.parts';
 describe('<Resizable.Panel />', () => {
   const { render } = createRenderer();
 
-  // The container is 1000 px wide and 400 px high, and a handle has no size.
+  // The container is 1000 px wide and 400 px high, and a handle has no size. A test can give the
+  // width as a ref and change it.
   // A function renders the parts, so that a panel can have a template ref.
   function renderPanels(options: {
     root?: Record<string, unknown>;
     panels: Record<string, unknown>[];
+    width?: ShallowRef<number>;
   }) {
     return render(() => (
-      <div style={{ width: '1000px', height: '400px' }}>
+      <div style={{ width: `${options.width?.value ?? 1000}px`, height: '400px' }}>
         <Resizable.Root style={{ height: '100%' }} {...options.root}>
           {options.panels.flatMap((panel, index) => [
             index > 0 ? (
@@ -41,6 +47,19 @@ describe('<Resizable.Panel />', () => {
   }
 
   const flexOf = (index: number) => screen.getByTestId(`panel-${index}`).style.flexGrow;
+  const widthOf = (index: number) =>
+    screen.getByTestId(`panel-${index}`).getBoundingClientRect().width;
+
+  // The `ResizeObserver` of the root reads the new width after the layout of the next frame. A
+  // second frame comes after that read, so the panels then have their sizes for the new width. Until
+  // then they have the sizes of the old width.
+  async function changeWidth(width: ShallowRef<number>, next: number) {
+    await flushMicrotasks();
+    width.value = next;
+    await nextTick();
+    await waitSingleFrame();
+    await waitSingleFrame();
+  }
 
   describeConformance(<Resizable.Panel />, () => ({
     render: (node) => render(<Resizable.Root>{node}</Resizable.Root>),
@@ -1085,6 +1104,811 @@ describe('<Resizable.Panel />', () => {
 
       expect(screen.getByTestId('in-root')).toHaveTextContent('none');
       expect(screen.getByTestId('outside')).toHaveTextContent('none');
+    });
+  });
+
+  describe('sizes with a unit', () => {
+    // A length is a number of pixels of the panel space. The rows have the size and the pixels that
+    // it gives in this page.
+    const rem = () => Number.parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const units = [
+      { name: 'px', size: '200px', style: undefined, pixels: () => 200 },
+      { name: 'em', size: '10em', style: { fontSize: '20px' }, pixels: () => 200 },
+      { name: 'rem', size: '12rem', style: { fontSize: '24px' }, pixels: () => 12 * rem() },
+      { name: 'vw', size: '20vw', style: undefined, pixels: () => window.innerWidth * 0.2 },
+      { name: 'vh', size: '20vh', style: undefined, pixels: () => window.innerHeight * 0.2 },
+    ] as const;
+
+    it.each(units)('gives the size at the start in $name', async ({ size, style, pixels }) => {
+      await renderPanels({ panels: [{ defaultSize: size, style }, {}] });
+
+      expect(widthOf(0)).toBeCloseTo(pixels(), 0);
+      expect(widthOf(1)).toBeCloseTo(1000 - pixels(), 0);
+    });
+
+    it.each(units)('has the least size in $name', async ({ size, style, pixels }) => {
+      await renderPanels({ panels: [{ minSize: size, style }, {}] });
+
+      await drag(screen.getByTestId('handle-1'), -900);
+
+      expect(widthOf(0)).toBeCloseTo(pixels(), 0);
+    });
+
+    it.each(units)('has the greatest size in $name', async ({ size, style, pixels }) => {
+      await renderPanels({ panels: [{ maxSize: size, style }, {}] });
+
+      await drag(screen.getByTestId('handle-1'), 900);
+
+      expect(widthOf(0)).toBeCloseTo(pixels(), 0);
+    });
+
+    it.each(units)('has the collapsed size in $name', async ({ size, style, pixels }) => {
+      const { user } = await renderPanels({
+        panels: [
+          { collapsible: true, minSize: 50, defaultSize: 60, collapsedSize: size, style },
+          {},
+        ],
+      });
+      screen.getByTestId('handle-1').focus();
+
+      await user.keyboard('{Enter}');
+
+      expect(widthOf(0)).toBeCloseTo(pixels(), 0);
+    });
+
+    // The least size is 40%, which is 400 px, and the panel starts at its least size.
+    it.each(units)(
+      'collapses a drag that passes the collapse threshold in $name',
+      async ({ size, style, pixels }) => {
+        await renderPanels({
+          panels: [
+            { collapsible: true, minSize: 40, defaultSize: 40, collapseThreshold: size, style },
+            {},
+          ],
+        });
+        const handle = screen.getByTestId('handle-1');
+
+        await drag(handle, -(pixels() - 2));
+        expect(widthOf(0)).toBeCloseTo(400, 0);
+
+        await drag(handle, -(pixels() + 2));
+        expect(widthOf(0)).toBeCloseTo(0, 0);
+      },
+    );
+
+    it('gives a panel in a vertical root a size in pixels of its height', async () => {
+      await renderPanels({
+        root: { orientation: 'vertical' },
+        panels: [{ defaultSize: '100px', minSize: '80px' }, {}],
+      });
+
+      expect(screen.getByTestId('panel-0').getBoundingClientRect().height).toBeCloseTo(100, 0);
+      expect(screen.getByTestId('panel-1').getBoundingClientRect().height).toBeCloseTo(300, 0);
+    });
+
+    it('gives the content of a panel the pixels, and not the panel with its padding', async () => {
+      await renderPanels({
+        panels: [
+          { defaultSize: '200px', style: { padding: '0 30px', border: '5px solid' } },
+          { style: { padding: '0 10px' } },
+        ],
+      });
+
+      // The padding and the border of a panel are not in the panel space.
+      expect(widthOf(0)).toBeCloseTo(200 + 70, 0);
+    });
+
+    it('keeps a least size in pixels when the root gets smaller, and gives the layout back', async () => {
+      const width = shallowRef(1000);
+      await renderPanels({ width, panels: [{ minSize: '200px', defaultSize: 25 }, {}] });
+      expect(widthOf(0)).toBeCloseTo(250, 0);
+
+      await changeWidth(width, 600);
+      await waitFor(() => {
+        expect(widthOf(0)).toBeCloseTo(200, 0);
+      });
+      expect(widthOf(1)).toBeCloseTo(400, 0);
+
+      await changeWidth(width, 1000);
+      await waitFor(() => {
+        expect(widthOf(0)).toBeCloseTo(250, 0);
+      });
+    });
+
+    it('follows the size of the window for a size in vw', async () => {
+      const descriptor = Object.getOwnPropertyDescriptor(window, 'innerWidth');
+      onTestFinished(() => {
+        if (descriptor) {
+          Object.defineProperty(window, 'innerWidth', descriptor);
+        } else {
+          Reflect.deleteProperty(window, 'innerWidth');
+        }
+      });
+      await renderPanels({ panels: [{ minSize: '10vw', defaultSize: 5 }, {}] });
+      expect(widthOf(0)).toBeCloseTo(Math.max(window.innerWidth * 0.1, 50), 0);
+      // The observer of the root reads the page once after the mount. The size of the window
+      // must change after that read, so that only the event of the window gives the new size.
+      await waitSingleFrame();
+      await waitSingleFrame();
+
+      Object.defineProperty(window, 'innerWidth', { configurable: true, value: 3000 });
+      window.dispatchEvent(new Event('resize'));
+
+      await waitFor(() => {
+        expect(widthOf(0)).toBeCloseTo(300, 0);
+      });
+    });
+
+    it('reads the font size of the panel again at the next drag', async () => {
+      const fontSize = shallowRef('10px');
+      await render(() => (
+        <div style={{ width: '1000px' }}>
+          <Resizable.Root>
+            <Resizable.Panel
+              data-testid="a"
+              minSize="10em"
+              defaultSize={20}
+              style={{ fontSize: fontSize.value }}
+            />
+            <Resizable.Handle data-testid="handle" />
+            <Resizable.Panel data-testid="b" />
+          </Resizable.Root>
+        </div>
+      ));
+      const panel = screen.getByTestId('a');
+      expect(panel.getBoundingClientRect().width).toBeCloseTo(200, 0);
+
+      // The least size was 100 px. It is 300 px with the new font size, and the panel has 200 px.
+      fontSize.value = '30px';
+      await nextTick();
+      await drag(screen.getByTestId('handle'), -150);
+
+      expect(panel.getBoundingClientRect().width).toBeCloseTo(300, 0);
+    });
+
+    it('keeps the percent that a default size in a length gave, when the root changes size', async () => {
+      const width = shallowRef(1000);
+      await renderPanels({ width, panels: [{ defaultSize: '200px' }, {}] });
+      expect(widthOf(0)).toBeCloseTo(200, 0);
+
+      await changeWidth(width, 1500);
+
+      await waitFor(() => {
+        expect(widthOf(0)).toBeCloseTo(300, 0);
+      });
+    });
+
+    it('gives back the pixels of a default size in a length with reset() and a double click', async () => {
+      const width = shallowRef(1000);
+      const instance: { current?: InstanceType<typeof Resizable.Root> } = {};
+      await renderPanels({
+        width,
+        root: {
+          ref: (value: unknown) => {
+            instance.current = value as InstanceType<typeof Resizable.Root>;
+          },
+        },
+        panels: [{ defaultSize: '200px' }, {}],
+      });
+      await drag(screen.getByTestId('handle-1'), 100);
+      expect(widthOf(0)).toBeCloseTo(300, 0);
+      await changeWidth(width, 2000);
+      await waitFor(() => {
+        expect(widthOf(0)).toBeCloseTo(600, 0);
+      });
+
+      instance.current?.reset();
+      await nextTick();
+      expect(widthOf(0)).toBeCloseTo(200, 0);
+
+      await drag(screen.getByTestId('handle-1'), 100);
+      expect(widthOf(0)).toBeCloseTo(300, 0);
+      await fireEvent.dblClick(screen.getByTestId('handle-1'));
+      expect(widthOf(0)).toBeCloseTo(200, 0);
+    });
+
+    it('does not warn when the lengths of the panels cannot fit in a small root', async () => {
+      // A window can be too small for a length, so this is not a mistake of the code.
+      await renderPanels({ panels: [{ minSize: '700px' }, { minSize: '700px' }] });
+
+      expect(takeReportedMessages()).toEqual([]);
+    });
+
+    it('does not warn for a collapsible panel whose least size is a length', async () => {
+      await renderPanels({
+        panels: [{ collapsible: true, minSize: '12rem', collapsedSize: '48px' }, {}],
+      });
+
+      expect(takeReportedMessages()).toEqual([]);
+    });
+
+    it('warns once when a collapsible panel cannot collapse with lengths', async () => {
+      await renderPanels({
+        panels: [{ collapsible: true, minSize: '40px', collapsedSize: '48px' }, {}],
+      });
+
+      expect(takeReportedMessages()).toEqual([
+        expect.stringMatching(/^console\.warn: Vase UI: The panel ".*" is collapsible/),
+      ]);
+    });
+
+    it('resizes with a length', async () => {
+      const instance: { current?: InstanceType<typeof Resizable.Panel> } = {};
+      await renderPanels({
+        panels: [
+          {
+            minSize: '100px',
+            ref: (value: unknown) => {
+              instance.current = value as InstanceType<typeof Resizable.Panel>;
+            },
+          },
+          {},
+        ],
+      });
+
+      instance.current?.resize('250px');
+      await nextTick();
+      expect(widthOf(0)).toBeCloseTo(250, 0);
+
+      instance.current?.resize('2rem');
+      await nextTick();
+      expect(widthOf(0)).toBeCloseTo(Math.max(2 * rem(), 100), 0);
+    });
+  });
+
+  describe('prop: rootResizeBehavior', () => {
+    // The layout is 20, 50 and 30 in a root of 1000 px. A handle has no size.
+    const panels = [
+      { id: 'nav', defaultSize: 20, rootResizeBehavior: 'fixed' },
+      { id: 'editor', defaultSize: 50 },
+      { id: 'preview' },
+    ];
+
+    it('keeps the pixels of a fixed panel when the root gets larger or smaller', async () => {
+      const width = shallowRef(1000);
+      await renderPanels({ width, panels });
+      expect([widthOf(0), widthOf(1), widthOf(2)]).toEqual([
+        expect.closeTo(200, 0),
+        expect.closeTo(500, 0),
+        expect.closeTo(300, 0),
+      ]);
+
+      // The other panels keep their ratio of 50 to 30 in the room that is left.
+      await changeWidth(width, 1500);
+      await waitFor(() => {
+        expect(widthOf(1)).toBeCloseTo(812.5, 0);
+      });
+      expect(widthOf(0)).toBeCloseTo(200, 0);
+      expect(widthOf(2)).toBeCloseTo(487.5, 0);
+
+      await changeWidth(width, 500);
+      await waitFor(() => {
+        expect(widthOf(1)).toBeCloseTo(187.5, 0);
+      });
+      expect(widthOf(0)).toBeCloseTo(200, 0);
+      expect(widthOf(2)).toBeCloseTo(112.5, 0);
+    });
+
+    it('scales a panel that is proportional with the root', async () => {
+      const width = shallowRef(1000);
+      await renderPanels({
+        width,
+        panels: [{ id: 'nav', defaultSize: 20, rootResizeBehavior: 'proportional' }, {}],
+      });
+
+      await changeWidth(width, 1500);
+
+      await waitFor(() => {
+        expect(widthOf(0)).toBeCloseTo(300, 0);
+      });
+    });
+
+    it('emits no layout event for a size change of the root', async () => {
+      const width = shallowRef(1000);
+      const handlers = {
+        onLayoutChange: vi.fn(),
+        'onUpdate:layout': vi.fn(),
+        onLayoutCommitted: vi.fn(),
+      };
+      await renderPanels({ width, root: handlers, panels });
+
+      await changeWidth(width, 1500);
+      await waitFor(() => {
+        expect(widthOf(1)).toBeCloseTo(812.5, 0);
+      });
+
+      for (const handler of Object.values(handlers)) {
+        expect(handler).not.toHaveBeenCalled();
+      }
+    });
+
+    it('gives the panel new pixels with a drag', async () => {
+      const width = shallowRef(1000);
+      await renderPanels({ width, panels });
+
+      await drag(screen.getByTestId('handle-1'), 100);
+      expect(widthOf(0)).toBeCloseTo(300, 0);
+      await changeWidth(width, 1500);
+
+      await waitFor(() => {
+        expect(widthOf(1)).toBeCloseTo(685.7, 0);
+      });
+      expect(widthOf(0)).toBeCloseTo(300, 0);
+    });
+
+    it('gives the panel new pixels with a key', async () => {
+      const width = shallowRef(1000);
+      const { user } = await renderPanels({ width, panels });
+      screen.getByTestId('handle-1').focus();
+
+      await user.keyboard('{Shift>}{ArrowRight}{/Shift}');
+      expect(widthOf(0)).toBeCloseTo(300, 0);
+      await changeWidth(width, 1500);
+
+      await waitFor(() => {
+        expect(widthOf(1)).toBeCloseTo(685.7, 0);
+      });
+      expect(widthOf(0)).toBeCloseTo(300, 0);
+    });
+
+    it('gives the panel new pixels with a percent in the layout of the app', async () => {
+      const width = shallowRef(1000);
+      const layout = shallowRef<Record<string, number>>({ nav: 20, editor: 50, preview: 30 });
+      await render(() => (
+        <div style={{ width: `${width.value}px` }}>
+          <Resizable.Root layout={layout.value}>
+            <Resizable.Panel id="nav" data-testid="panel-0" rootResizeBehavior="fixed" />
+            <Resizable.Panel id="editor" data-testid="panel-1" />
+            <Resizable.Panel id="preview" data-testid="panel-2" />
+          </Resizable.Root>
+        </div>
+      ));
+      expect(widthOf(0)).toBeCloseTo(200, 0);
+
+      layout.value = { nav: 30, editor: 40, preview: 30 };
+      await nextTick();
+      expect(widthOf(0)).toBeCloseTo(300, 0);
+      await changeWidth(width, 1500);
+
+      await waitFor(() => {
+        expect(widthOf(1)).toBeCloseTo(685.7, 0);
+      });
+      expect(widthOf(0)).toBeCloseTo(300, 0);
+    });
+
+    it('gives the panel the pixels of a size in the layout of the app', async () => {
+      const width = shallowRef(1000);
+      const layout = shallowRef<Record<string, number | string>>({
+        nav: 20,
+        editor: 50,
+        preview: 30,
+      });
+      await render(() => (
+        <div style={{ width: `${width.value}px` }}>
+          <Resizable.Root layout={layout.value}>
+            <Resizable.Panel id="nav" data-testid="panel-0" rootResizeBehavior="fixed" />
+            <Resizable.Panel id="editor" data-testid="panel-1" />
+            <Resizable.Panel id="preview" data-testid="panel-2" />
+          </Resizable.Root>
+        </div>
+      ));
+
+      layout.value = { nav: '300px', editor: 40, preview: 30 };
+      await nextTick();
+      expect(widthOf(0)).toBeCloseTo(300, 0);
+      await changeWidth(width, 1500);
+
+      await waitFor(() => {
+        expect(widthOf(1)).toBeCloseTo(685.7, 0);
+      });
+      expect(widthOf(0)).toBeCloseTo(300, 0);
+    });
+
+    it('does not take new pixels when the app gives the layout that it has', async () => {
+      const width = shallowRef(1000);
+      const renders = shallowRef(0);
+      await render(() => (
+        <div style={{ width: `${width.value}px` }} data-renders={renders.value}>
+          {/* A new object with the same sizes at each render, as a template literal gives. */}
+          <Resizable.Root layout={{ nav: 20, editor: 50, preview: 30 }}>
+            <Resizable.Panel id="nav" data-testid="panel-0" rootResizeBehavior="fixed" />
+            <Resizable.Panel id="editor" data-testid="panel-1" />
+            <Resizable.Panel id="preview" data-testid="panel-2" />
+          </Resizable.Root>
+        </div>
+      ));
+      await changeWidth(width, 1500);
+      await waitFor(() => {
+        expect(widthOf(1)).toBeCloseTo(812.5, 0);
+      });
+
+      // The parent renders again with the same layout, and the root has read the new width.
+      renders.value += 1;
+      await nextTick();
+
+      expect(widthOf(0)).toBeCloseTo(200, 0);
+      expect(widthOf(1)).toBeCloseTo(812.5, 0);
+    });
+
+    it('gives a fixed panel that mounts later its pixels', async () => {
+      const width = shallowRef(1000);
+      const show = shallowRef(false);
+      await render(() => (
+        <div style={{ width: `${width.value}px` }}>
+          <Resizable.Root>
+            <Resizable.Panel id="a" data-testid="panel-0" />
+            <Resizable.Handle />
+            <Resizable.Panel id="b" data-testid="panel-1" />
+            {show.value ? (
+              <>
+                <Resizable.Handle />
+                <Resizable.Panel
+                  id="late"
+                  data-testid="panel-2"
+                  defaultSize={20}
+                  rootResizeBehavior="fixed"
+                />
+              </>
+            ) : null}
+          </Resizable.Root>
+        </div>
+      ));
+
+      show.value = true;
+      await nextTick();
+      await waitFor(() => {
+        expect(widthOf(2)).toBeCloseTo(200, 0);
+      });
+      await changeWidth(width, 1500);
+
+      await waitFor(() => {
+        expect(widthOf(0)).toBeCloseTo(650, 0);
+      });
+      expect(widthOf(2)).toBeCloseTo(200, 0);
+    });
+
+    it('gives a panel that becomes fixed its pixels', async () => {
+      const width = shallowRef(1000);
+      const behavior = shallowRef<'fixed' | 'proportional'>('proportional');
+      await render(() => (
+        <div style={{ width: `${width.value}px` }}>
+          <Resizable.Root>
+            <Resizable.Panel
+              id="a"
+              data-testid="panel-0"
+              defaultSize={20}
+              rootResizeBehavior={behavior.value}
+            />
+            <Resizable.Panel id="b" data-testid="panel-1" />
+          </Resizable.Root>
+        </div>
+      ));
+
+      behavior.value = 'fixed';
+      await nextTick();
+      await changeWidth(width, 1500);
+
+      await waitFor(() => {
+        expect(widthOf(1)).toBeCloseTo(1300, 0);
+      });
+      expect(widthOf(0)).toBeCloseTo(200, 0);
+    });
+
+    it('takes the room of a size change from the panel with the greater priority first', async () => {
+      const width = shallowRef(1000);
+      await renderPanels({
+        width,
+        panels: [
+          { id: 'nav', defaultSize: 30, minSize: 10, rootResizeBehavior: 'fixed' },
+          { id: 'editor', defaultSize: 40, minSize: 40 },
+          {
+            id: 'aside',
+            defaultSize: 30,
+            minSize: 10,
+            rootResizeBehavior: 'fixed',
+            rootResizePriority: 1,
+          },
+        ],
+      });
+
+      // The two pins of 300 px are 37.5% each at 800 px, and the editor has 40% at the least.
+      await changeWidth(width, 800);
+
+      await waitFor(() => {
+        expect(widthOf(2)).toBeCloseTo(180, 0);
+      });
+      expect(widthOf(0)).toBeCloseTo(300, 0);
+      expect(widthOf(1)).toBeCloseTo(320, 0);
+    });
+
+    it('takes the room of a size change from the first fixed panel with no priority', async () => {
+      const width = shallowRef(1000);
+      await renderPanels({
+        width,
+        panels: [
+          { id: 'nav', defaultSize: 30, minSize: 10, rootResizeBehavior: 'fixed' },
+          { id: 'editor', defaultSize: 40, minSize: 40 },
+          { id: 'aside', defaultSize: 30, minSize: 10, rootResizeBehavior: 'fixed' },
+        ],
+      });
+
+      await changeWidth(width, 800);
+
+      await waitFor(() => {
+        expect(widthOf(0)).toBeCloseTo(180, 0);
+      });
+      expect(widthOf(2)).toBeCloseTo(300, 0);
+      expect(widthOf(1)).toBeCloseTo(320, 0);
+    });
+
+    it('warns once when each panel is fixed', async () => {
+      await renderPanels({
+        panels: [
+          { id: 'a', rootResizeBehavior: 'fixed' },
+          { id: 'b', rootResizeBehavior: 'fixed' },
+        ],
+      });
+
+      expect(takeReportedMessages()).toEqual([
+        expect.stringMatching(/^console\.warn: Vase UI: Each panel of the root is fixed\./),
+      ]);
+    });
+  });
+
+  describe('prop: snapPoints', () => {
+    // A handle has no size, so 1% is 10 px. The panel `a` starts at 50%.
+    const snapping = { id: 'a', defaultSize: 50 };
+
+    it.each([
+      { name: 'in percent, from above', snapPoints: [40], distance: -80, expected: '40' },
+      { name: 'in percent, from below', snapPoints: [40], distance: -120, expected: '40' },
+      {
+        name: 'in percent, at the edge of the tolerance',
+        snapPoints: [40],
+        distance: -110,
+        expected: '40',
+      },
+      {
+        name: 'in percent, outside the tolerance',
+        snapPoints: [40],
+        distance: -130,
+        expected: '37',
+      },
+      { name: 'in pixels', snapPoints: ['400px'], distance: -96, expected: '40' },
+      { name: 'in rem', snapPoints: ['25rem'], distance: -96, expected: '40' },
+      { name: 'one of two', snapPoints: [20, 40], distance: -96, expected: '40' },
+    ])('snaps a drag to a snap point $name', async ({ snapPoints, distance, expected }) => {
+      await renderPanels({
+        panels: [{ ...snapping, snapPoints, snapTolerance: '2%' }, {}],
+      });
+
+      await drag(screen.getByTestId('handle-1'), distance);
+
+      expect(flexOf(0)).toBe(expected);
+    });
+
+    it('has a tolerance of 10 px by default', async () => {
+      await renderPanels({ panels: [{ ...snapping, snapPoints: [40] }, {}] });
+      const handle = screen.getByTestId('handle-1');
+
+      await drag(handle, -109);
+      expect(flexOf(0)).toBe('40');
+
+      await drag(handle, 111);
+      expect(flexOf(0)).toBe('51.1');
+    });
+
+    it('has the tolerance that snapTolerance gives', async () => {
+      await renderPanels({
+        panels: [{ ...snapping, snapPoints: [40], snapTolerance: '30px' }, {}],
+      });
+      const handle = screen.getByTestId('handle-1');
+
+      await drag(handle, -125);
+      expect(flexOf(0)).toBe('40');
+
+      await drag(handle, 140);
+      expect(flexOf(0)).toBe('54');
+    });
+
+    it('snaps the panel after the handle too', async () => {
+      await renderPanels({
+        panels: [{ id: 'a' }, { id: 'b', defaultSize: 50, snapPoints: [40], snapTolerance: 2 }],
+      });
+
+      await drag(screen.getByTestId('handle-1'), 96);
+
+      expect(flexOf(1)).toBe('40');
+    });
+
+    it('does not snap a key', async () => {
+      const { user } = await renderPanels({
+        panels: [{ ...snapping, defaultSize: 45, snapPoints: [40], snapTolerance: 10 }, {}],
+      });
+      screen.getByTestId('handle-1').focus();
+
+      await user.keyboard('{ArrowLeft}');
+
+      expect(flexOf(0)).toBe('44');
+    });
+
+    it('does not snap a method', async () => {
+      const instance: { current?: InstanceType<typeof Resizable.Panel> } = {};
+      await renderPanels({
+        panels: [
+          {
+            ...snapping,
+            snapPoints: [40],
+            snapTolerance: 10,
+            ref: (value: unknown) => {
+              instance.current = value as InstanceType<typeof Resizable.Panel>;
+            },
+          },
+          {},
+        ],
+      });
+
+      instance.current?.resize(43);
+      await nextTick();
+
+      expect(flexOf(0)).toBe('43');
+    });
+  });
+
+  describe('event: resize', () => {
+    const sizes = (handler: ReturnType<typeof vi.fn>) =>
+      handler.mock.calls.map(([size, previous]) => [size, previous]);
+
+    it('is emitted one time after the mount, with the pixels of the panel', async () => {
+      const onResize = vi.fn();
+      await renderPanels({ panels: [{ defaultSize: 30, onResize }, {}] });
+
+      await waitFor(() => {
+        expect(onResize).toHaveBeenCalledTimes(1);
+      });
+      expect(sizes(onResize)).toEqual([[{ percent: 30, pixels: 300 }, undefined]]);
+      expect(widthOf(0)).toBeCloseTo(300, 0);
+    });
+
+    it('is emitted for a drag with the size before it', async () => {
+      const onResize = vi.fn();
+      await renderPanels({ panels: [{ defaultSize: 30, onResize }, {}] });
+      await waitFor(() => {
+        expect(onResize).toHaveBeenCalledTimes(1);
+      });
+
+      await drag(screen.getByTestId('handle-1'), 100);
+
+      await waitFor(() => {
+        expect(onResize).toHaveBeenCalledTimes(2);
+      });
+      expect(sizes(onResize)[1]).toEqual([
+        { percent: 40, pixels: 400 },
+        { percent: 30, pixels: 300 },
+      ]);
+    });
+
+    it('is emitted for a size change of the root: the percent stays and the pixels change', async () => {
+      const width = shallowRef(1000);
+      const onResize = vi.fn();
+      await renderPanels({ width, panels: [{ defaultSize: 30, onResize }, {}] });
+      await waitFor(() => {
+        expect(onResize).toHaveBeenCalledTimes(1);
+      });
+
+      await changeWidth(width, 2000);
+
+      await waitFor(() => {
+        expect(onResize).toHaveBeenCalledTimes(2);
+      });
+      expect(sizes(onResize)[1]).toEqual([
+        { percent: 30, pixels: 600 },
+        { percent: 30, pixels: 300 },
+      ]);
+    });
+
+    it('is emitted for a fixed panel when the root changes size, with the same pixels', async () => {
+      const width = shallowRef(1000);
+      const onResize = vi.fn();
+      await renderPanels({
+        width,
+        panels: [{ defaultSize: 20, rootResizeBehavior: 'fixed', onResize }, {}],
+      });
+      await waitFor(() => {
+        expect(onResize).toHaveBeenCalledTimes(1);
+      });
+
+      await changeWidth(width, 2000);
+
+      await waitFor(() => {
+        expect(onResize).toHaveBeenCalledTimes(2);
+      });
+      expect(sizes(onResize)[1]).toEqual([
+        { percent: 10, pixels: 200 },
+        { percent: 20, pixels: 200 },
+      ]);
+    });
+
+    it('is not emitted for a change of another panel that leaves the panel as it is', async () => {
+      const onResize = vi.fn();
+      await renderPanels({ panels: [{ id: 'a', defaultSize: 30, onResize }, {}, {}] });
+      await waitFor(() => {
+        expect(onResize).toHaveBeenCalledTimes(1);
+      });
+
+      await drag(screen.getByTestId('handle-2'), 50);
+
+      expect(flexOf(1)).toBe('40');
+      expect(onResize).toHaveBeenCalledTimes(1);
+    });
+
+    it('is emitted with a length that gives the first size, once', async () => {
+      const onResize = vi.fn();
+      await renderPanels({ panels: [{ defaultSize: '240px', onResize }, {}] });
+
+      await waitFor(() => {
+        expect(onResize).toHaveBeenCalledTimes(1);
+      });
+      expect(sizes(onResize)).toEqual([[{ percent: 24, pixels: 240 }, undefined]]);
+    });
+
+    it('is emitted after the panel shows again when a size changed under KeepAlive', async () => {
+      const width = shallowRef(1000);
+      const visible = shallowRef(true);
+      const onResize = vi.fn();
+      const Side = defineComponent({
+        setup: () => () => <Resizable.Panel id="a" defaultSize={30} onResize={onResize} />,
+      });
+      await render(() => (
+        <div style={{ width: `${width.value}px` }}>
+          <Resizable.Root>
+            <KeepAlive>{visible.value ? <Side /> : null}</KeepAlive>
+            <Resizable.Panel id="b" data-testid="b" />
+          </Resizable.Root>
+        </div>
+      ));
+      await waitFor(() => {
+        expect(onResize).toHaveBeenCalledTimes(1);
+      });
+
+      visible.value = false;
+      await nextTick();
+      await changeWidth(width, 2000);
+      await waitFor(() => {
+        expect(screen.getByTestId('b').getBoundingClientRect().width).toBeCloseTo(2000, 0);
+      });
+      expect(onResize).toHaveBeenCalledTimes(1);
+
+      visible.value = true;
+      await nextTick();
+
+      await waitFor(() => {
+        expect(onResize).toHaveBeenCalledTimes(2);
+      });
+      expect(sizes(onResize)[1]?.[0]).toEqual({ percent: 30, pixels: 600 });
+    });
+  });
+
+  describe('method: getSize()', () => {
+    it('gives the size in percent and in pixels', async () => {
+      const instances: Record<string, InstanceType<typeof Resizable.Panel>> = {};
+      const withRef = (id: string) => ({
+        id,
+        ref: (value: unknown) => {
+          instances[id] = value as InstanceType<typeof Resizable.Panel>;
+        },
+      });
+      const width = shallowRef(1000);
+      await renderPanels({ width, panels: [{ ...withRef('a'), defaultSize: 30 }, withRef('b')] });
+      expect(instances.a?.getSize()).toEqual({ percent: 30, pixels: 300 });
+      expect(instances.b?.getSize()).toEqual({ percent: 70, pixels: 700 });
+
+      // The method reads the page, so it has the pixels before the observer of the root does. The
+      // observer reads the page in the next frame, and the case does not wait for it.
+      await flushMicrotasks();
+      width.value = 2000;
+      await nextTick();
+      expect(instances.a?.getSize()).toEqual({ percent: 30, pixels: 600 });
     });
   });
 

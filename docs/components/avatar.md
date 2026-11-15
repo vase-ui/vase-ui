@@ -6,7 +6,9 @@ description: An unstyled Vue avatar component that is easy to customize.
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoAvatarHero from '../demos/avatar/hero/css-modules/index.vue';
+import DemoAvatarHeroTailwind from '../demos/avatar/hero/tailwind/index.vue';
 </script>
 
 # Avatar
@@ -15,7 +17,12 @@ An easily stylable avatar component.
 
 <DemoFrame>
   <DemoAvatarHero />
+  <template #tailwind>
+    <DemoAvatarHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -24,6 +31,18 @@ An easily stylable avatar component.
 <<< ../demos/avatar/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/avatar/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Anatomy
 

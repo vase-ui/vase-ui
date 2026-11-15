@@ -10,6 +10,7 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountListTests,
   isInaccessible,
   isJSDOM,
   positionerConformanceTests,
@@ -92,6 +93,34 @@ function roundToDevicePixels(value: number) {
 
 describe('<Menu.Positioner />', () => {
   const { render } = createRenderer();
+
+  heldMountListTests({
+    render,
+    renderList: (withLastItem) => (
+      <Menu.Root defaultOpen>
+        <Menu.Trigger>Toggle</Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup data-testid="popup">
+              <Menu.Item>Item 1</Menu.Item>
+              {withLastItem ? <Menu.Item>Item 2</Menu.Item> : null}
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>
+    ),
+    async check(user) {
+      screen.getByTestId('popup').focus();
+      await user.keyboard('[ArrowDown]');
+      await waitFor(() => {
+        expect(screen.getByRole('menuitem', { name: 'Item 1' })).toHaveFocus();
+      });
+      await user.keyboard('[ArrowDown]');
+      await waitFor(() => {
+        expect(screen.getByRole('menuitem', { name: 'Item 2' })).toHaveFocus();
+      });
+    },
+  });
 
   it('leaves lazy flipping off for a plain menu', async () => {
     useAnchorPositioningSpy.mockClear();

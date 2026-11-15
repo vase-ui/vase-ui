@@ -6,7 +6,9 @@ description: An unstyled Vue radio group component that provides shared state to
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoRadioGroupHero from '../demos/radio-group/hero/css-modules/index.vue';
+import DemoRadioGroupHeroTailwind from '../demos/radio-group/hero/tailwind/index.vue';
 </script>
 
 # Radio Group
@@ -15,7 +17,12 @@ Provides shared state to a series of radio buttons.
 
 <DemoFrame>
   <DemoRadioGroupHero />
+  <template #tailwind>
+    <DemoRadioGroupHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -24,6 +31,18 @@ Provides shared state to a series of radio buttons.
 <<< ../demos/radio-group/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/radio-group/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Usage guidelines
 

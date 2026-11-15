@@ -4,11 +4,27 @@
   "files": {
     "hero/css-modules/index.module.css": "5b6177ab811720290ec40368dedd1c908f46df1499757a5501d6058c156be696",
     "hero/css-modules/index.tsx": "c51a612d8a269fcaa21ddd4a86c631a514def0f16837aa2bae9d178569725bea",
+    "hero/tailwind/index.tsx": "5d2542f09a96c1b106b30c87d30ab966fae22ea1586350cc6be1e45d4700acf0",
     "multiple/css-modules/index.module.css": "5b6177ab811720290ec40368dedd1c908f46df1499757a5501d6058c156be696",
-    "multiple/css-modules/index.tsx": "7b5cc2e5a14ab05c161449a767dae512800048c6d6661613238833f94fbca37d"
+    "multiple/css-modules/index.tsx": "7b5cc2e5a14ab05c161449a767dae512800048c6d6661613238833f94fbca37d",
+    "multiple/tailwind/index.tsx": "22ebee12c171a58658b641ff612f0d71b498042b17da746e4e47d99056db3289"
   },
   "entryPoints": {
     "hero": ["toggle"],
     "multiple": ["toggle"]
+  },
+  "classes": {
+    "hero/tailwind": [
+      "flex gap-px p-px border border-neutral-950 dark:border-white",
+      "flex size-8 items-center justify-center border-none rounded-none bg-transparent text-neutral-950 dark:text-white select-none hover:not-data-disabled:bg-neutral-100 dark:hover:not-data-disabled:bg-neutral-800 active:not-data-disabled:not-data-pressed:bg-neutral-200 dark:active:not-data-disabled:not-data-pressed:bg-neutral-700 data-pressed:bg-neutral-950 data-pressed:text-white dark:data-pressed:bg-white dark:data-pressed:text-neutral-950 data-pressed:hover:not-data-disabled:bg-neutral-950 data-pressed:hover:not-data-disabled:text-white dark:data-pressed:hover:not-data-disabled:bg-white dark:data-pressed:hover:not-data-disabled:text-neutral-950 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white",
+      "flex size-8 items-center justify-center border-none rounded-none bg-transparent text-neutral-950 dark:text-white select-none hover:not-data-disabled:bg-neutral-100 dark:hover:not-data-disabled:bg-neutral-800 active:not-data-disabled:not-data-pressed:bg-neutral-200 dark:active:not-data-disabled:not-data-pressed:bg-neutral-700 data-pressed:bg-neutral-950 data-pressed:text-white dark:data-pressed:bg-white dark:data-pressed:text-neutral-950 data-pressed:hover:not-data-disabled:bg-neutral-950 data-pressed:hover:not-data-disabled:text-white dark:data-pressed:hover:not-data-disabled:bg-white dark:data-pressed:hover:not-data-disabled:text-neutral-950 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white",
+      "flex size-8 items-center justify-center border-none rounded-none bg-transparent text-neutral-950 dark:text-white select-none hover:not-data-disabled:bg-neutral-100 dark:hover:not-data-disabled:bg-neutral-800 active:not-data-disabled:not-data-pressed:bg-neutral-200 dark:active:not-data-disabled:not-data-pressed:bg-neutral-700 data-pressed:bg-neutral-950 data-pressed:text-white dark:data-pressed:bg-white dark:data-pressed:text-neutral-950 data-pressed:hover:not-data-disabled:bg-neutral-950 data-pressed:hover:not-data-disabled:text-white dark:data-pressed:hover:not-data-disabled:bg-white dark:data-pressed:hover:not-data-disabled:text-neutral-950 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
+    ],
+    "multiple/tailwind": [
+      "flex gap-px p-px border border-neutral-950 dark:border-white",
+      "flex size-8 items-center justify-center border-none rounded-none bg-transparent text-neutral-950 dark:text-white select-none hover:bg-neutral-100 dark:hover:bg-neutral-800 data-pressed:bg-neutral-950 data-pressed:text-white dark:data-pressed:bg-white dark:data-pressed:text-neutral-950 data-pressed:hover:bg-neutral-950 data-pressed:hover:text-white dark:data-pressed:hover:bg-white dark:data-pressed:hover:text-neutral-950 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white",
+      "flex size-8 items-center justify-center border-none rounded-none bg-transparent text-neutral-950 dark:text-white select-none hover:bg-neutral-100 dark:hover:bg-neutral-800 data-pressed:bg-neutral-950 data-pressed:text-white dark:data-pressed:bg-white dark:data-pressed:text-neutral-950 data-pressed:hover:bg-neutral-950 data-pressed:hover:text-white dark:data-pressed:hover:bg-white dark:data-pressed:hover:text-neutral-950 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white",
+      "flex size-8 items-center justify-center border-none rounded-none bg-transparent text-neutral-950 dark:text-white select-none hover:bg-neutral-100 dark:hover:bg-neutral-800 data-pressed:bg-neutral-950 data-pressed:text-white dark:data-pressed:bg-white dark:data-pressed:text-neutral-950 data-pressed:hover:bg-neutral-950 data-pressed:hover:text-white dark:data-pressed:hover:bg-white dark:data-pressed:hover:text-neutral-950 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
+    ]
   }
 }

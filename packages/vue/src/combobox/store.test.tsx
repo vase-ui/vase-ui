@@ -95,6 +95,7 @@ function createComboboxStore(initialState: Partial<State> = {}) {
     clearRef: shallowRef(null),
     pointerDownItemRef: shallowRef(null),
     selectionEventRef: shallowRef(null),
+    openPressRef: shallowRef(null),
     ...createLabelIdRegistry(),
   };
   return new ComboboxStore(state, context, selectors);

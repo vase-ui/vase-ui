@@ -115,6 +115,8 @@ A server and a browser can have other `Intl` data for the same locale. The layou
 
 Digits that a visitor types into a segment before the page hydrates stay in the segment. After the hydration, the segment takes them as typed digits, and the root emits `valueChange` and `update:value` with the new value.
 
+The root also takes a time that a program or the browser writes into its hidden input before the page hydrates. It takes a time that the browser restores after a move back in the history or a reload too. It then emits `valueChange` and `update:value` one time. A `valueChange` listener can thus run after a move back with no action of the visitor.
+
 On a Node.js version before 26, load a `Temporal` polyfill before the server starts. See the [guide](/handbook/dates-and-times#servers).
 
 ## Keyboard
