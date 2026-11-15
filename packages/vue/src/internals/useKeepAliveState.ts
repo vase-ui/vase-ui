@@ -11,8 +11,8 @@ interface KeepAliveInstance {
 
 /**
  * Whether `KeepAlive` holds the component that calls the function, or a component above it. Call
- * it in `setup`. With no current component, it gives `false` and no warning. Vue reads the same flags
- * before it calls an `onActivated` or `onDeactivated` hook.
+ * it in `setup`. With no current component, it gives `false` and no warning. Vue reads the same
+ * flags before it calls an `onActivated` or `onDeactivated` hook.
  */
 export function isInHeldBranch(): boolean {
   for (
