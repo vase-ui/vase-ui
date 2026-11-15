@@ -1,13 +1,17 @@
 import { describe, expect, it, onTestFinished } from 'vitest';
+import { shallowRef } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import {
   createRenderer,
   describeConformance,
+  expectNoAxeViolations,
   fireEvent,
   flushMicrotasks,
   hydrate,
   renderOnServer,
   screen,
+  waitFor,
+  waitForLaterMillisecond,
   within,
 } from '#test-utils';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
@@ -150,6 +154,169 @@ describe('<NavigationMenu.Popup />', () => {
     await open();
 
     expect(transitions[0]).toBe('none');
+  });
+
+  describe('VUE-105: the name of the popup', () => {
+    function renderNamedMenu(
+      options: {
+        rootProps?: Record<string, unknown>;
+        triggerProps?: Record<string, unknown>;
+        popupProps?: Record<string, unknown>;
+      } = {},
+    ) {
+      // The fixture is a function, so that Vue makes the `ref` of the root in a render.
+      return render(() => (
+        <NavigationMenu.Root {...options.rootProps}>
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="one">
+              <NavigationMenu.Trigger data-testid="trigger-one" {...options.triggerProps}>
+                One
+              </NavigationMenu.Trigger>
+              <NavigationMenu.Content>
+                <NavigationMenu.Link href="#one">Link of one</NavigationMenu.Link>
+              </NavigationMenu.Content>
+            </NavigationMenu.Item>
+            <NavigationMenu.Item value="two">
+              <NavigationMenu.Trigger data-testid="trigger-two">Two</NavigationMenu.Trigger>
+              <NavigationMenu.Content>
+                <NavigationMenu.Link href="#two">Link of two</NavigationMenu.Link>
+              </NavigationMenu.Content>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          <NavigationMenu.Portal>
+            <NavigationMenu.Positioner>
+              <NavigationMenu.Popup data-testid="popup" {...options.popupProps}>
+                <NavigationMenu.Viewport />
+              </NavigationMenu.Popup>
+            </NavigationMenu.Positioner>
+          </NavigationMenu.Portal>
+        </NavigationMenu.Root>
+      ));
+    }
+
+    async function openOne() {
+      await fireEvent.click(screen.getByTestId('trigger-one'));
+      await flushMicrotasks();
+      return screen.getByTestId('popup');
+    }
+
+    it('has the name of its trigger', async () => {
+      await renderNamedMenu();
+      const trigger = screen.getByTestId('trigger-one');
+      const popup = await openOne();
+
+      expect(screen.getByRole('navigation', { name: 'One' })).toBe(popup);
+      expect(trigger.id).not.toBe('');
+      expect(popup).toHaveAttribute('aria-labelledby', trigger.id);
+    });
+
+    it('takes the name of the trigger that becomes active', async () => {
+      await renderNamedMenu();
+      const two = screen.getByTestId('trigger-two');
+      const popup = await openOne();
+
+      await fireEvent.click(two);
+      await flushMicrotasks();
+
+      expect(two).toHaveAttribute('aria-expanded', 'true');
+      expect(popup).toHaveAttribute('aria-labelledby', two.id);
+      expect(screen.getByRole('navigation', { name: 'Two' })).toBe(popup);
+    });
+
+    it('takes the id that the consumer gives the trigger', async () => {
+      await renderNamedMenu({ triggerProps: { id: 'products-trigger' } });
+      const popup = await openOne();
+
+      expect(screen.getByTestId('trigger-one')).toHaveAttribute('id', 'products-trigger');
+      expect(popup).toHaveAttribute('aria-labelledby', 'products-trigger');
+    });
+
+    it('uses an aria-label instead of the trigger label', async () => {
+      await renderNamedMenu({ popupProps: { 'aria-label': 'Site sections' } });
+      const popup = await openOne();
+
+      expect(screen.getByRole('navigation', { name: 'Site sections' })).toBe(popup);
+      expect(popup).not.toHaveAttribute('aria-labelledby');
+    });
+
+    it('keeps the name of its trigger until it unmounts', async () => {
+      const actionsRef = shallowRef<NavigationMenu.Root.Actions | null>(null);
+      await renderNamedMenu({
+        rootProps: {
+          ref: actionsRef,
+          onValueChange: (value: unknown, details: NavigationMenu.Root.ChangeEventDetails) => {
+            if (value == null) {
+              details.preventUnmountOnClose();
+            }
+          },
+        },
+      });
+      const trigger = screen.getByTestId('trigger-one');
+      const popup = await openOne();
+
+      actionsRef.value?.close();
+      await flushMicrotasks();
+
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
+      expect(popup).toBeInTheDocument();
+      expect(popup).toHaveAttribute('aria-labelledby', trigger.id);
+
+      actionsRef.value?.unmount();
+      await waitFor(() => {
+        expect(popup).not.toBeInTheDocument();
+      });
+    });
+
+    it('gives each open popup of a nested menu a name of its own', async () => {
+      await render(
+        <NavigationMenu.Root>
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="products">
+              <NavigationMenu.Trigger data-testid="trigger-products">Products</NavigationMenu.Trigger>
+              <NavigationMenu.Content>
+                <NavigationMenu.Root>
+                  <NavigationMenu.List>
+                    <NavigationMenu.Item value="guides">
+                      <NavigationMenu.Trigger data-testid="trigger-guides">
+                        Guides
+                      </NavigationMenu.Trigger>
+                      <NavigationMenu.Content>
+                        <NavigationMenu.Link href="#guides">Link of guides</NavigationMenu.Link>
+                      </NavigationMenu.Content>
+                    </NavigationMenu.Item>
+                  </NavigationMenu.List>
+                  <NavigationMenu.Portal>
+                    <NavigationMenu.Positioner side="right">
+                      <NavigationMenu.Popup>
+                        <NavigationMenu.Viewport />
+                      </NavigationMenu.Popup>
+                    </NavigationMenu.Positioner>
+                  </NavigationMenu.Portal>
+                </NavigationMenu.Root>
+              </NavigationMenu.Content>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          <NavigationMenu.Portal>
+            <NavigationMenu.Positioner>
+              <NavigationMenu.Popup>
+                <NavigationMenu.Viewport />
+              </NavigationMenu.Popup>
+            </NavigationMenu.Positioner>
+          </NavigationMenu.Portal>
+        </NavigationMenu.Root>,
+      );
+
+      await waitForLaterMillisecond(() =>
+        fireEvent.click(screen.getByTestId('trigger-products')),
+      );
+      await fireEvent.click(screen.getByTestId('trigger-guides'));
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('trigger-guides')).toHaveAttribute('aria-expanded', 'true');
+      expect(screen.getByRole('navigation', { name: 'Products' })).toBeInTheDocument();
+      expect(screen.getByRole('navigation', { name: 'Guides' })).toBeInTheDocument();
+      await expectNoAxeViolations(document.body, { runOnly: ['landmark-unique'] });
+    });
   });
 
   describe('hydration', () => {
