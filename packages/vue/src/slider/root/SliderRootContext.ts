@@ -68,6 +68,11 @@ export interface SliderRootContext {
   registerLabelId: RegisterId;
   /** Whether an id reference of the root reaches `element`. */
   reaches: (element: Element) => boolean;
+  /**
+   * Follows the native reset of the form of a thumb input. A thumb calls it for each reset that it
+   * gets. The root handles the first call for each `reset` event. Base UI does not have this member.
+   */
+  reset: (event: Event) => void;
   thumbMap: Readonly<Ref<ReadonlyMap<Element, CompositeMetadata<ThumbMetadata>>>>;
   largeStep: ComputedRef<number>;
   lastChangeReasonRef: Ref<SliderRootChangeEventReason>;
