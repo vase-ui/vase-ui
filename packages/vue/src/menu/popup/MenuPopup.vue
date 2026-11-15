@@ -60,7 +60,7 @@ import { createChangeEventDetails } from '../../internals/createBaseUIEventDetai
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import { REASONS } from '../../internals/reasons';
 import { resolvePopupLabel } from '../../internals/resolvePopupLabel';
-import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/types';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
 import FloatingFocusManager from '../../utils/popups/focus/FloatingFocusManager.vue';
@@ -205,7 +205,12 @@ const { element, elementProps } = useRenderElement('div', props, {
               store.select('activeTriggerId'),
             ),
           }),
-      onKeydown(event: KeyboardEvent) {
+      onKeydown(event: VaseUIEvent<KeyboardEvent>) {
+        // The handlers to the left also handle the keys of the items and of `Menu.Input`. A call of
+        // `event.preventVaseUIHandler()` in a listener of such a part thus stops them too.
+        if (event.vaseUIHandlerPrevented) {
+          event.preventVaseUIHandler();
+        }
         submenuRootContext.value?.onPopupKeydown?.(event);
         if (insideToolbar && COMPOSITE_KEYS.has(event.key)) {
           event.stopPropagation();
