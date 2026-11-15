@@ -139,10 +139,8 @@ describe('<Popover.Root />', () => {
       });
     }
 
-    async function expectClosed(trigger: HTMLElement) {
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
-      });
+    function expectClosed(trigger: HTMLElement) {
+      expect(screen.queryByTestId('popup')).toBe(null);
       expect(trigger).toHaveAttribute('aria-expanded', 'false');
     }
 
@@ -153,7 +151,7 @@ describe('<Popover.Root />', () => {
         await user.click(trigger);
         await expectOpenedBy(trigger);
         await user.click(trigger);
-        await expectClosed(trigger);
+        expectClosed(trigger);
       }
 
       await openAndClose();
@@ -169,7 +167,7 @@ describe('<Popover.Root />', () => {
         await user.pointer({ keys: '[TouchA]', target: trigger });
         await expectOpenedBy(trigger);
         await user.pointer({ keys: '[TouchA]', target: trigger });
-        await expectClosed(trigger);
+        expectClosed(trigger);
       }
 
       await openAndClose();
@@ -188,7 +186,7 @@ describe('<Popover.Root />', () => {
         await waitForLaterMillisecond(() => user.click(trigger));
         await expectOpenedBy(trigger);
         await user.click(screen.getByRole('button', { name: 'Close' }));
-        await expectClosed(trigger);
+        expectClosed(trigger);
       }
 
       await openAndClose();
@@ -211,7 +209,7 @@ describe('<Popover.Root />', () => {
       expect(trigger2.previousElementSibling).toHaveAttribute('data-vase-ui-focus-guard');
       expect(trigger2.nextElementSibling).toHaveAttribute('data-vase-ui-focus-guard');
       await user.click(trigger2);
-      await expectClosed(trigger2);
+      expectClosed(trigger2);
 
       expect(inactiveTrigger.renders).toBe(0);
     });
@@ -370,9 +368,7 @@ describe('<Popover.Root />', () => {
     await fireEvent.pointerUp(popup, { pointerType: 'touch', button: 0 });
     await fireEvent.click(popup);
     await user.keyboard('[Escape]');
-    await waitFor(() => {
-      expect(screen.queryByTestId('popup')).toBe(null);
-    });
+    expect(screen.queryByTestId('popup')).toBe(null);
 
     trigger.focus();
     await flushMicrotasks();
@@ -381,9 +377,7 @@ describe('<Popover.Root />', () => {
 
     // Virtual clicks have no pointerdown to replace the previous session's touch type.
     await fireEvent.click(screen.getByRole('button', { name: 'Outside' }), { detail: 0 });
-    await waitFor(() => {
-      expect(screen.queryByTestId('popup')).toBe(null);
-    });
+    expect(screen.queryByTestId('popup')).toBe(null);
   });
 
   describe.skipIf(isJSDOM)('multiple triggers within Root', () => {
@@ -514,9 +508,7 @@ describe('<Popover.Root />', () => {
       });
 
       await user.click(screen.getByRole('button', { name: 'Close' }));
-      await waitFor(() => {
-        expect(screen.queryByTestId('content')).toBe(null);
-      });
+      expect(screen.queryByTestId('content')).toBe(null);
       expect(fallback).toHaveFocus();
     });
   });
@@ -831,7 +823,7 @@ describe('<Popover.Root />', () => {
 
       await user.click(screen.getByRole('button', { name: 'Trigger 1' }));
       await waitFor(() => {
-        expect(screen.queryByTestId('popup')).not.toBe(null);
+        expect(screen.getByTestId('popup')).not.toBe(null);
       });
       await waitForPositioned(screen.getByTestId('positioner'));
 
@@ -840,7 +832,8 @@ describe('<Popover.Root />', () => {
       await settleTriggerChange();
 
       endingInstants.length = 0;
-      const exitAnimations = nextAnimationsRead(screen.getByTestId('popup'), {
+      const popup = screen.getByTestId('popup');
+      const exitAnimations = nextAnimationsRead(popup, {
         action: () => {
           open.value = false;
         },
@@ -855,13 +848,14 @@ describe('<Popover.Root />', () => {
       // inherit the `trigger-change` the earlier switch had stored.
       (await exitAnimations).forEach((animation) => animation.finish());
       await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
+        expect(popup).not.toBeInTheDocument();
       });
+      expect(screen.queryByTestId('popup')).toBe(null);
 
       open.value = true;
       await flushMicrotasks();
       await waitFor(() => {
-        expect(screen.queryByTestId('popup')).not.toBe(null);
+        expect(screen.getByTestId('popup')).not.toBe(null);
       });
 
       expect(screen.getByTestId('popup')).not.toHaveAttribute('data-instant');
@@ -962,7 +956,7 @@ describe('<Popover.Root />', () => {
 
       await user.hover(trigger1);
       await waitFor(() => {
-        expect(screen.queryByTestId('popup')).not.toBe(null);
+        expect(screen.getByTestId('popup')).not.toBe(null);
       });
       await waitForPositioned(screen.getByTestId('positioner'));
 
@@ -1050,9 +1044,7 @@ describe('<Popover.Root />', () => {
       expect(trigger2.nextElementSibling).toHaveAttribute('data-vase-ui-focus-guard');
 
       await user.click(screen.getByRole('button', { name: 'Close' }));
-      await waitFor(() => {
-        expect(screen.queryByText('Content')).toBe(null);
-      });
+      expect(screen.queryByText('Content')).toBe(null);
       expect(trigger2.previousElementSibling).not.toHaveAttribute('data-vase-ui-focus-guard');
       expect(trigger2.nextElementSibling).not.toHaveAttribute('data-vase-ui-focus-guard');
       // Closing with Popover.Close reports the active trigger.
@@ -1325,9 +1317,7 @@ describe('<Popover.Root />', () => {
 
       expect(isOpen()).toBe(!cancel);
       if (cancel) {
-        await waitFor(() => {
-          expect(screen.queryByTestId('popup')).toBe(null);
-        });
+        expect(screen.queryByTestId('popup')).toBe(null);
       } else {
         await waitFor(() => {
           expect(screen.getByTestId('popup')).toBeVisible();

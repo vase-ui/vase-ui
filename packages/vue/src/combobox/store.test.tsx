@@ -335,9 +335,7 @@ describe('combobox store synchronization', () => {
       });
 
       await user.keyboard('{Escape}');
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(store.select('anchorElement')).toBe(input);
 
       // Positioning clears the anchor while a closed popup stays mounted; reopening restores it.

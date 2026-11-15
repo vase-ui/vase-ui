@@ -120,9 +120,7 @@ export function dialogRootSharedTests(config: DialogRootSharedTestsConfig) {
         actions!.unmount();
         await flushMicrotasks();
 
-        await waitFor(() => {
-          expect(screen.queryByRole(popupRole, { hidden: true })).toBe(null);
-        });
+        expect(screen.queryByRole(popupRole, { hidden: true })).toBe(null);
       });
 
       it('clears manual unmount state after the `unmount` method is called', async () => {
@@ -164,9 +162,7 @@ export function dialogRootSharedTests(config: DialogRootSharedTestsConfig) {
 
         actions!.unmount();
         await flushMicrotasks();
-        await waitFor(() => {
-          expect(screen.queryByRole(popupRole, { hidden: true })).toBe(null);
-        });
+        expect(screen.queryByRole(popupRole, { hidden: true })).toBe(null);
 
         // The next close unmounts on its own again.
         await waitForLaterMillisecond(async () => {
@@ -175,9 +171,7 @@ export function dialogRootSharedTests(config: DialogRootSharedTestsConfig) {
         });
 
         await user.click(screen.getByRole('button', { name: 'Close' }));
-        await waitFor(() => {
-          expect(screen.queryByRole(popupRole, { hidden: true })).toBe(null);
-        });
+        expect(screen.queryByRole(popupRole, { hidden: true })).toBe(null);
       });
 
       it('closes the popup when the `close` method is called', async () => {

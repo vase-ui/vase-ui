@@ -1483,7 +1483,7 @@ describe('<OTPField.Input />', () => {
         { typed: ['1', '2'], focus: 'outside' },
       );
 
-      await waitFor(() => expect(fixture.queryByTestId('error')).not.toBeNull());
+      await waitFor(() => expect(fixture.getByTestId('error')).not.toBeNull());
       expect(field).toHaveAttribute('data-touched', '');
       expect(field).toHaveAttribute('data-invalid', '');
     });

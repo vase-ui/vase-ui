@@ -289,13 +289,15 @@ describe('<NavigationMenu.Content />', () => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
       const value = shallowRef<string | null>('one');
       await render(() => <Menu popup duration={5000} value={value.value} />);
-      expect(screen.getAllByTestId(/^content-/)).toHaveLength(1);
+      const contents = screen.getAllByTestId(/^content-/);
+      expect(contents).toHaveLength(1);
 
       value.value = null;
 
       await waitFor(() => {
-        expect(screen.queryAllByTestId(/^content-/)).toHaveLength(0);
+        expect(contents.filter((content) => content.isConnected)).toEqual([]);
       });
+      expect(screen.queryAllByTestId(/^content-/)).toHaveLength(0);
     });
   });
 
@@ -391,7 +393,7 @@ describe('<NavigationMenu.Content />', () => {
     await flushMicrotasks();
 
     await waitFor(() => {
-      expect(screen.queryByTestId('content-2')).not.toBe(null);
+      expect(screen.getByTestId('content-2')).not.toBe(null);
     });
 
     const content1After = screen.queryByTestId('content-1');

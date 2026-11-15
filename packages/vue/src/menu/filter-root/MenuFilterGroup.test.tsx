@@ -91,9 +91,7 @@ describe('filtered menu groups', () => {
     // around the submenu.
     await user.type(screen.getByRole('searchbox', { name: 'Filter actions' }), 'rena');
 
-    await waitFor(() => {
-      expect(screen.queryByRole('menuitem', { name: 'Move to' })).toBe(null);
-    });
+    expect(screen.queryByRole('menuitem', { name: 'Move to' })).toBe(null);
     await waitFor(() => {
       expect(group).toHaveAttribute('hidden');
     });

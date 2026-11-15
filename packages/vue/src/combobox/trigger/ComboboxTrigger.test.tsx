@@ -11,6 +11,7 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  isInaccessible,
   isJSDOM,
   pressWithScreenReader,
   renderOnServer,
@@ -386,12 +387,14 @@ describe('<Combobox.Trigger />', () => {
       const trigger = screen.getByTestId('trigger');
 
       await user.click(trigger);
-      expect(await screen.findByRole('listbox')).not.toBe(null);
+      const listbox = await screen.findByRole('listbox');
+      expect(listbox).not.toBe(null);
 
       await user.click(trigger);
       await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
+        expect(isInaccessible(listbox)).toBe(true);
       });
+      expect(screen.queryByRole('listbox')).toBe(null);
     });
 
     it('closes a popup opened with an arrow key', async () => {
@@ -416,12 +419,14 @@ describe('<Combobox.Trigger />', () => {
       input.focus();
       await flushMicrotasks();
       await user.keyboard('{ArrowDown}');
-      expect(await screen.findByRole('listbox')).not.toBe(null);
+      const listbox = await screen.findByRole('listbox');
+      expect(listbox).not.toBe(null);
 
       await user.click(screen.getByTestId('trigger'));
       await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
+        expect(isInaccessible(listbox)).toBe(true);
       });
+      expect(screen.queryByRole('listbox')).toBe(null);
     });
 
     it('should call onOpenChange when toggling', async () => {
@@ -753,9 +758,7 @@ describe('<Combobox.Trigger />', () => {
         await fireEvent.pointerDown(alpha, { pointerType: 'touch', isPrimary: true, button: 0 });
 
         await user.keyboard('{Escape}');
-        await waitFor(() => {
-          expect(screen.queryByRole('listbox')).toBe(null);
-        });
+        expect(screen.queryByRole('listbox')).toBe(null);
 
         // Reopen and drag-select onto Alpha (gesture starts on the trigger).
         await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
@@ -836,9 +839,7 @@ describe('<Combobox.Trigger />', () => {
 
       await fireEvent.mouseUp(document.body, { button: 0, clientX: 999, clientY: 999 });
 
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(onOpenChange.mock.lastCall?.[0]).toBe(false);
       expect(onOpenChange.mock.lastCall?.[1].reason).toBe(REASONS.cancelOpen);
     });
@@ -943,9 +944,7 @@ describe('<Combobox.Trigger />', () => {
 
       await fireEvent.mouseUp(document.body, { button: 0, clientX: 94, clientY: 120 });
 
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
     });
   });
 
@@ -1341,9 +1340,7 @@ describe('<Combobox.Trigger />', () => {
       await user.click(trigger);
       await screen.findByRole('listbox');
       await user.keyboard('{Escape}');
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
       // Focus returns to the trigger asynchronously after close.
       await waitFor(() => {
         expect(trigger).toHaveFocus();
@@ -1383,9 +1380,7 @@ describe('<Combobox.Trigger />', () => {
         await user.click(trigger);
         await screen.findByRole('listbox');
         await user.keyboard('{Escape}');
-        await waitFor(() => {
-          expect(screen.queryByRole('listbox')).toBe(null);
-        });
+        expect(screen.queryByRole('listbox')).toBe(null);
         await waitFor(() => {
           expect(trigger).toHaveFocus();
         });
@@ -1440,9 +1435,7 @@ describe('<Combobox.Trigger />', () => {
       await user.click(trigger);
       await screen.findByRole('listbox');
       await user.keyboard('{Escape}');
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
       await waitFor(() => {
         expect(trigger).toHaveFocus();
       });
@@ -1500,13 +1493,9 @@ describe('<Combobox.Trigger />', () => {
       await screen.findByRole('listbox');
 
       await user.click(screen.getByRole('button', { name: 'Remove banana' }));
-      await waitFor(() => {
-        expect(screen.queryByRole('option', { name: 'Banana' })).toBe(null);
-      });
+      expect(screen.queryByRole('option', { name: 'Banana' })).toBe(null);
       await user.keyboard('{Escape}');
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
 
       trigger.focus();
       await flushMicrotasks();
@@ -1546,12 +1535,12 @@ describe('<Combobox.Trigger />', () => {
 
       await user.click(trigger);
 
-      await waitFor(() => expect(screen.queryByRole('listbox')).not.toBe(null));
+      await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
       expect(trigger).toHaveAttribute('data-popup-side', 'right');
 
       await user.click(document.body);
 
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(trigger).not.toHaveAttribute('data-popup-side');
     });
 
@@ -1787,9 +1776,7 @@ describe('<Combobox.Trigger />', () => {
       // The press closes the popup before the focus leaves the input in the popup.
       await user.click(screen.getByRole('button', { name: 'Outside' }));
 
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(screen.getByRole('button', { name: 'Outside' })).toHaveFocus();
       expect(screen.getByTestId('error')).toHaveTextContent('required');
       expect(screen.getByTestId('trigger')).toHaveAttribute('aria-invalid', 'true');

@@ -213,10 +213,8 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
     });
   }
 
-  async function waitForPopupClosed() {
-    await waitFor(() => {
-      expect(screen.queryByTestId('popup')).toBe(null);
-    });
+  function expectPopupClosed() {
+    expect(screen.queryByTestId('popup')).toBe(null);
   }
 
   async function waitForContent(text: string) {
@@ -286,7 +284,7 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
                 expectActiveTrigger(number, 3);
 
                 await closeWith(interaction, user, trigger);
-                await waitForPopupClosed();
+                expectPopupClosed();
                 expectActiveTrigger(null, 3);
               }
             },
@@ -315,7 +313,7 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
             await waitForPopupOpen();
             expectActiveTrigger(2);
             await user.keyboard('[Escape]');
-            await waitForPopupClosed();
+            expectPopupClosed();
 
             expect(onOpenChange).toHaveBeenLastCalledWith(
               false,
@@ -335,7 +333,7 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
             await setProps({ triggerCount: 1 });
             // Some popups close as their active trigger unmounts; the others close on Escape.
             await user.keyboard('[Escape]');
-            await waitForPopupClosed();
+            expectPopupClosed();
 
             expect(onOpenChange).toHaveBeenLastCalledWith(
               false,
@@ -463,7 +461,7 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
 
             if (Close) {
               await user.click(screen.getByText('Close popup'));
-              await waitForPopupClosed();
+              expectPopupClosed();
               // Focus returns to the element that opened the popup. A press does not focus an inert
               // outside button, so the focus goes to the active trigger then.
               await waitFor(() => {
@@ -471,7 +469,7 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
               });
             } else {
               await user.click(closeExternally);
-              await waitForPopupClosed();
+              expectPopupClosed();
             }
             expectActiveTrigger(null);
           });
@@ -582,7 +580,7 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
 
           handle.close();
           await flushMicrotasks();
-          await waitForPopupClosed();
+          expectPopupClosed();
           expect(handle.isOpen).toBe(false);
           expectActiveTrigger(null);
         });
@@ -803,7 +801,7 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
           await waitForPopupOpen();
           expectActiveTrigger(1, 1);
           await closeWith(primaryInteraction, user, getTrigger(1));
-          await waitForPopupClosed();
+          expectPopupClosed();
         }
 
         it.each([

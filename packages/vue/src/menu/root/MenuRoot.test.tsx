@@ -442,9 +442,7 @@ describe('<Menu.Root />', () => {
     });
 
     await user.keyboard('{Escape}');
-    await waitFor(() => {
-      expect(screen.queryByRole('menu')).toBe(null);
-    });
+    expect(screen.queryByRole('menu')).toBe(null);
     expect(trigger).toHaveFocus();
   });
 
@@ -1591,7 +1589,7 @@ describe('<Menu.Root />', () => {
         await waitForLaterMillisecond(async () => {
           await user.hover(submenuTrigger);
           await waitFor(() => {
-            expect(screen.queryByTestId('submenu')).not.toBe(null);
+            expect(screen.getByTestId('submenu')).not.toBe(null);
           });
         });
 
@@ -1606,9 +1604,7 @@ describe('<Menu.Root />', () => {
         // Shift+Tab should close the submenu and focus should return to the submenu trigger
         await user.keyboard('{Shift>}{Tab}{/Shift}');
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('submenu')).toBe(null);
-        });
+        expect(screen.queryByTestId('submenu')).toBe(null);
 
         expect(submenuTrigger).toHaveFocus();
         expect(screen.getByTestId('menu')).not.toBe(null);
@@ -1666,9 +1662,7 @@ describe('<Menu.Root />', () => {
         const outside = screen.getByTestId('outside');
         await user.click(outside);
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('menu')).toBe(null);
-        });
+        expect(screen.queryByTestId('menu')).toBe(null);
         expect(screen.queryByTestId('submenu')).toBe(null);
         expect(screen.queryByTestId('nested-submenu')).toBe(null);
       });
@@ -1696,7 +1690,7 @@ describe('<Menu.Root />', () => {
           await waitForLaterMillisecond(async () => {
             await user.hover(submenuTrigger);
             await waitFor(() => {
-              expect(screen.queryByTestId('submenu')).not.toBe(null);
+              expect(screen.getByTestId('submenu')).not.toBe(null);
             });
           });
 
@@ -1704,9 +1698,7 @@ describe('<Menu.Root />', () => {
           await fireEvent.mouseLeave(submenuTrigger);
           await fireEvent.click(screen.getByTestId('item-4_1'));
 
-          await waitFor(() => {
-            expect(screen.queryByTestId('menu')).toBe(null);
-          });
+          expect(screen.queryByTestId('menu')).toBe(null);
 
           // Wait out pending hover close timers; they must not refire a close.
           await wait(100);
@@ -1773,16 +1765,12 @@ describe('<Menu.Root />', () => {
 
           await user.keyboard('[ArrowLeft]');
 
-          await waitFor(() => {
-            expect(screen.queryByTestId('nested-submenu')).toBe(null);
-          });
+          expect(screen.queryByTestId('nested-submenu')).toBe(null);
           expect(nestedSubmenuTrigger).toHaveFocus();
 
           await user.keyboard('[ArrowLeft]');
 
-          await waitFor(() => {
-            expect(screen.queryByTestId('submenu')).toBe(null);
-          });
+          expect(screen.queryByTestId('submenu')).toBe(null);
           expect(submenuTrigger).toHaveFocus();
         },
       );
@@ -1827,7 +1815,7 @@ describe('<Menu.Root />', () => {
         await waitForLaterMillisecond(async () => {
           await user.click(menuTrigger);
           await waitFor(() => {
-            expect(screen.queryByTestId('menu-popup')).not.toBe(null);
+            expect(screen.getByTestId('menu-popup')).not.toBe(null);
           });
         });
 
@@ -1835,7 +1823,7 @@ describe('<Menu.Root />', () => {
         await waitForLaterMillisecond(async () => {
           await user.click(dialogTrigger);
           await waitFor(() => {
-            expect(screen.queryByTestId('dialog-popup')).not.toBe(null);
+            expect(screen.getByTestId('dialog-popup')).not.toBe(null);
           });
         });
 
@@ -2174,8 +2162,9 @@ describe('<Menu.Root />', () => {
             expect(firstItem).toHaveFocus();
           });
 
+          const menu = screen.getByRole('menu');
           // The wait for the end of the exit starts before the Escape, so it has no time limit.
-          await nextEvent(screen.getByTestId('menu'), 'transitionend', {
+          await nextEvent(menu, 'transitionend', {
             after: 'transitionrun',
             action: async () => {
               await user.keyboard('[Escape]');
@@ -2189,8 +2178,9 @@ describe('<Menu.Root />', () => {
           });
 
           await waitFor(() => {
-            expect(screen.queryByRole('menu')).toBe(null);
+            expect(menu).not.toBeInTheDocument();
           });
+          expect(screen.queryByRole('menu')).toBe(null);
           expect(button).toHaveFocus();
         },
       );
@@ -2242,9 +2232,7 @@ describe('<Menu.Root />', () => {
         await user.tab();
 
         expect(screen.getByTestId('after')).toHaveFocus();
-        await waitFor(() => {
-          expect(screen.queryByTestId('menu')).toBe(null);
-        });
+        expect(screen.queryByTestId('menu')).toBe(null);
       });
 
       it('closes the menu and moves focus to the trigger when shift-tabbing from the open menu', async () => {
@@ -2272,9 +2260,7 @@ describe('<Menu.Root />', () => {
           expect(trigger).toHaveFocus();
         });
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('menu')).toBe(null);
-        });
+        expect(screen.queryByTestId('menu')).toBe(null);
       });
     });
 
@@ -2351,9 +2337,7 @@ describe('<Menu.Root />', () => {
 
         await user.keyboard('[Escape]');
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('submenu')).toBe(null);
-        });
+        expect(screen.queryByTestId('submenu')).toBe(null);
         expect(screen.getByTestId('menu')).not.toBe(null);
       });
 
@@ -2410,7 +2394,7 @@ describe('<Menu.Root />', () => {
         await user.click(trigger);
 
         await waitFor(() => {
-          expect(screen.queryByRole('menu')).not.toBe(null);
+          expect(screen.getByRole('menu')).not.toBe(null);
         });
 
         const positioner = screen.getByTestId('menu-positioner');
@@ -2431,7 +2415,7 @@ describe('<Menu.Root />', () => {
         await user.click(trigger);
 
         await waitFor(() => {
-          expect(screen.queryByRole('menu')).not.toBe(null);
+          expect(screen.getByRole('menu')).not.toBe(null);
         });
 
         const positioner = screen.getByTestId('menu-positioner');
@@ -2445,7 +2429,7 @@ describe('<Menu.Root />', () => {
         await render(<TestMenu rootProps={{ defaultOpen: true }} />);
 
         await waitFor(() => {
-          expect(screen.queryByRole('menu')).not.toBe(null);
+          expect(screen.getByRole('menu')).not.toBe(null);
         });
 
         const positioner = screen.getByTestId('menu-positioner');
@@ -2500,15 +2484,13 @@ describe('<Menu.Root />', () => {
         await waitForLaterMillisecond(async () => {
           await user.click(opener);
           await waitFor(() => {
-            expect(screen.queryByRole('menu')).not.toBe(null);
+            expect(screen.getByRole('menu')).not.toBe(null);
           });
         });
 
         await user.click(screen.getByRole('menuitem', { name: 'Close menu' }));
 
-        await waitFor(() => {
-          expect(screen.queryByRole('menu')).toBe(null);
-        });
+        expect(screen.queryByRole('menu')).toBe(null);
         expect(opener).toHaveFocus();
       });
 
@@ -2545,7 +2527,7 @@ describe('<Menu.Root />', () => {
         await user.click(screen.getByRole('button', { name: 'Show' }));
 
         await waitFor(() => {
-          expect(screen.queryByRole('menu')).not.toBe(null);
+          expect(screen.getByRole('menu')).not.toBe(null);
         });
 
         const positioner = screen.getByTestId('menu-positioner');
@@ -2695,14 +2677,12 @@ describe('<Menu.Root />', () => {
 
         open.value = false;
         await flushMicrotasks();
-        await waitFor(() => {
-          expect(screen.queryByTestId('popup')).toBe(null);
-        });
+        expect(screen.queryByTestId('popup')).toBe(null);
 
         open.value = true;
         await flushMicrotasks();
         await waitFor(() => {
-          expect(screen.queryByTestId('popup')).not.toBe(null);
+          expect(screen.getByTestId('popup')).not.toBe(null);
         });
 
         expect(trigger1).toHaveAttribute('aria-expanded', 'false');
@@ -2839,14 +2819,14 @@ describe('<Menu.Root />', () => {
         await waitForLaterMillisecond(async () => {
           await user.keyboard('{Enter}');
           await waitFor(() => {
-            expect(screen.queryByRole('menu')).not.toBe(null);
+            expect(screen.getByRole('menu')).not.toBe(null);
           });
         });
 
         await user.click(trigger);
 
         await waitFor(() => {
-          expect(screen.queryByRole('menu')).not.toBe(null);
+          expect(screen.getByRole('menu')).not.toBe(null);
         });
 
         await new Promise((resolve) => {
@@ -2856,9 +2836,7 @@ describe('<Menu.Root />', () => {
         root.unmount();
         await flushMicrotasks();
 
-        await waitFor(() => {
-          expect(screen.queryByRole('menu')).toBe(null);
-        });
+        expect(screen.queryByRole('menu')).toBe(null);
       });
     });
 
@@ -2874,14 +2852,12 @@ describe('<Menu.Root />', () => {
         await enterWithMouse(trigger);
 
         await waitFor(() => {
-          expect(screen.queryByRole('menu')).not.toBe(null);
+          expect(screen.getByRole('menu')).not.toBe(null);
         });
 
         await moveMouse(trigger, document.body);
 
-        await waitFor(() => {
-          expect(screen.queryByRole('menu')).toBe(null);
-        });
+        expect(screen.queryByRole('menu')).toBe(null);
       });
 
       it('cancels a pending hover open when the `close` action is called', async () => {
@@ -2920,7 +2896,7 @@ describe('<Menu.Root />', () => {
         await userEvent.hover(submenuTrigger);
 
         await waitFor(() => {
-          expect(screen.queryByTestId('submenu')).not.toBe(null);
+          expect(screen.getByTestId('submenu')).not.toBe(null);
         });
       });
 
@@ -2936,7 +2912,7 @@ describe('<Menu.Root />', () => {
         await userEvent.hover(submenuTrigger);
 
         await waitFor(() => {
-          expect(screen.queryByTestId('submenu')).not.toBe(null);
+          expect(screen.getByTestId('submenu')).not.toBe(null);
         });
 
         const previousBodyPointerEvents = document.body.style.pointerEvents;
@@ -2947,9 +2923,7 @@ describe('<Menu.Root />', () => {
           // Use fireEvent to bypass pointer-events checks during safe-polygon pointer events mutation
           await fireEvent.mouseMove(sibling);
 
-          await waitFor(() => {
-            expect(screen.queryByTestId('submenu')).toBe(null);
-          });
+          expect(screen.queryByTestId('submenu')).toBe(null);
 
           expect(document.body.style.pointerEvents).toBe('none');
         } finally {
@@ -3091,9 +3065,7 @@ describe('<Menu.Root />', () => {
         // Use fireEvent to bypass pointer-events checks during safe-polygon pointer events mutation
         await fireEvent.mouseMove(parentSibling);
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('nested-submenu')).toBe(null);
-        });
+        expect(screen.queryByTestId('nested-submenu')).toBe(null);
 
         // Now unhover the parent submenu container; it should remain open
         const submenu1 = screen.getByTestId('submenu');
@@ -3409,7 +3381,7 @@ describe('<Menu.Root />', () => {
         await waitForLaterMillisecond(async () => {
           await fireEvent.mouseDown(trigger, clientCenter(trigger));
           await waitFor(() => {
-            expect(screen.queryByTestId('menu')).not.toBe(null);
+            expect(screen.getByTestId('menu')).not.toBe(null);
           });
         });
 
@@ -3418,9 +3390,7 @@ describe('<Menu.Root />', () => {
         const item2 = screen.getByTestId('item-2');
         await fireEvent.mouseUp(item2);
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('menu')).toBe(null);
-        });
+        expect(screen.queryByTestId('menu')).toBe(null);
 
         expect(clickSpy.mock.calls.length).toBe(1);
 
@@ -3544,9 +3514,7 @@ describe('<Menu.Root />', () => {
 
         await browserUserEvent.dragAndDrop(trigger, backdrop);
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('menu')).toBe(null);
-        });
+        expect(screen.queryByTestId('menu')).toBe(null);
 
         expect(openChangeSpy.mock.calls.length).toBe(2);
         expect(openChangeSpy.mock.calls[0][0]).toBe(true);
@@ -3576,10 +3544,11 @@ describe('<Menu.Root />', () => {
         await waitForLaterMillisecond(async () => {
           await user.click(trigger);
           await waitFor(() => {
-            expect(screen.queryByRole('menu')).not.toBe(null);
+            expect(screen.getByRole('menu')).not.toBe(null);
           });
         });
 
+        expect(trigger).toHaveAttribute('data-popup-open');
         await user.click(trigger);
         await waitFor(() => {
           expect(trigger).not.toHaveAttribute('data-popup-open');
@@ -3590,11 +3559,13 @@ describe('<Menu.Root />', () => {
         await waitFor(() => {
           expect(trigger).toHaveAttribute('data-popup-open');
         });
+        const menu = screen.getByRole('menu');
 
         await user.click(trigger);
         await waitFor(() => {
-          expect(screen.queryByRole('menu')).toBe(null);
+          expect(menu).not.toBeInTheDocument();
         });
+        expect(screen.queryByRole('menu')).toBe(null);
       });
     });
   });
@@ -3640,9 +3611,7 @@ describe('<Menu.Root />', () => {
     root.close();
     await flushMicrotasks();
 
-    await waitFor(() => {
-      expect(screen.getByTestId('menu')).not.toHaveAttribute('data-open');
-    });
+    expect(screen.getByTestId('menu')).not.toHaveAttribute('data-open');
     expect(menuItem).toHaveAttribute('tabindex', '-1');
   });
 
@@ -3838,7 +3807,7 @@ describe('<Menu.Root />', () => {
         await flushMicrotasks();
 
         await waitFor(() => {
-          expect(screen.queryByRole('menu')).not.toBe(null);
+          expect(screen.getByRole('menu')).not.toBe(null);
         });
 
         // Exceed the impatient-click threshold so releasing over the item
@@ -3862,11 +3831,9 @@ describe('<Menu.Root />', () => {
         await flushMicrotasks();
 
         // The item activates on release: the menu closes and the dialog opens.
+        expect(screen.queryByRole('menu')).toBe(null);
         await waitFor(() => {
-          expect(screen.queryByRole('menu')).toBe(null);
-        });
-        await waitFor(() => {
-          expect(screen.queryByTestId('dialog-popup')).not.toBe(null);
+          expect(screen.getByTestId('dialog-popup')).not.toBe(null);
         });
 
         // The browser fires the gesture's native click on the common ancestor
@@ -4184,7 +4151,7 @@ describe('<Menu.Root />', () => {
       await user.keyboard('{ArrowDown}');
 
       await waitFor(() => {
-        expect(screen.queryByRole('menu')).not.toBe(null);
+        expect(screen.getByRole('menu')).not.toBe(null);
       });
 
       await user.keyboard('{ArrowDown}');
@@ -5018,7 +4985,7 @@ describe('<Menu.Root />', () => {
 
       await user.click(screen.getByRole('button', { name: 'Trigger A' }));
       await waitFor(() => {
-        expect(screen.queryByRole('menu')).not.toBe(null);
+        expect(screen.getByRole('menu')).not.toBe(null);
       });
       onOpenChange.mockClear();
 
@@ -5226,7 +5193,7 @@ describe('<Menu.Root />', () => {
 
       await user.click(screen.getByRole('button', { name: 'Trigger B' }));
       await waitFor(() => {
-        expect(screen.queryByRole('menu')).not.toBe(null);
+        expect(screen.getByRole('menu')).not.toBe(null);
       });
       onOpenChange.mockClear();
 
@@ -5266,9 +5233,7 @@ describe('<Menu.Root />', () => {
 
       handle.close();
       await flushMicrotasks();
-      await waitFor(() => {
-        expect(screen.queryByRole('menu')).toBe(null);
-      });
+      expect(screen.queryByRole('menu')).toBe(null);
 
       expect(handle.store.state.allowMouseEnter).toBe(false);
     });
@@ -5338,7 +5303,7 @@ describe('<Menu.Root />', () => {
       }
 
       await waitFor(() => {
-        expect(screen.queryByRole('menu')).not.toBe(null);
+        expect(screen.getByRole('menu')).not.toBe(null);
       });
       expect(menuPresentDuringEvent).toEqual([false]);
     });
@@ -6187,14 +6152,15 @@ describe('<Menu.Root />', () => {
       // A touch open of a popup that is narrower than the viewport takes no lock.
       await fireEvent.pointerDown(trigger, { pointerType: 'touch' });
       await fireEvent.mouseDown(trigger);
-      await screen.findByRole('menu');
+      const menu = await screen.findByRole('menu');
       await wait(0);
       expect(isScrollLocked(document)).toBe(false);
 
       handle.close();
       await waitFor(() => {
-        expect(screen.queryByRole('menu')).toBe(null);
+        expect(menu).not.toBeInTheDocument();
       });
+      expect(screen.queryByRole('menu')).toBe(null);
 
       handle.open('trigger');
       await screen.findByRole('menu');
