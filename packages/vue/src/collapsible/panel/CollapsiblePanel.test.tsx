@@ -4,6 +4,7 @@ import type { HTMLAttributes } from 'vue';
 import { Collapsible } from '@vase-ui/vue/collapsible';
 import type { HTMLProps } from '@vase-ui/vue/types';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -1312,6 +1313,27 @@ describe('<Collapsible.Panel />', () => {
       });
 
       expect(panel.getAnimations().length).toBe(0);
+    });
+
+    it('is not named by the trigger while KeepAlive holds a panel that mounted in a held branch', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Collapsible.Panel key="panel" id="held-panel">
+          Panel
+        </Collapsible.Panel>
+      ));
+      await render(() => (
+        <Collapsible.Root defaultOpen>
+          <Collapsible.Trigger>Trigger</Collapsible.Trigger>
+          <HeldBranch />
+        </Collapsible.Root>
+      ));
+      const trigger = screen.getByRole('button');
+
+      await mountWhileHeld();
+      expect(trigger).not.toHaveAttribute('aria-controls', 'held-panel');
+
+      await show();
+      expect(trigger).toHaveAttribute('aria-controls', 'held-panel');
     });
   });
 
