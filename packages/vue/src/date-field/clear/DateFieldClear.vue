@@ -54,10 +54,7 @@ const context = useDateTimeFieldContext();
 
 const isDisabled = computed(
   () =>
-    props.disabled ||
-    context.disabled.value ||
-    context.readOnly.value ||
-    context.state.value.empty,
+    props.disabled || context.disabled.value || context.readOnly.value || context.state.value.empty,
 );
 
 const state = computed<DateFieldClearState>(() => ({

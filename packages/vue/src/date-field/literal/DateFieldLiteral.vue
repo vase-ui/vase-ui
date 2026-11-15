@@ -29,6 +29,7 @@ import { useDateTimeFieldContext } from '../../internals/date-time/field/DateTim
 import { rootStateAttributesMapping } from '../../internals/date-time/field/useDateTimeFieldRoot';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { DateFieldLiteralElement } from './DateFieldLiteralElement';
 
 defineOptions({ inheritAttrs: false });
 
@@ -67,5 +68,5 @@ defineExpose({ element });
 
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()">{{ segment.text }}</component>
+  <DateFieldLiteralElement v-else :tag="as" :element-props="elementProps()" :text="segment.text" />
 </template>

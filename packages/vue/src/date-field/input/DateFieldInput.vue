@@ -68,5 +68,5 @@ defineExpose({ element });
 <!-- prettier-ignore -->
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="DateFieldInputChildren" />
-  <DateFieldInputElement v-else :tag="as" :element-props="elementProps()" :segments="context.segments.value" :list-key="context.listKey.value"><template v-if="$slots.segment" #segment="slotProps"><slot name="segment" v-bind="slotProps" /></template></DateFieldInputElement>
+  <DateFieldInputElement v-else :tag="as" :element-props="elementProps()" :segments="context.segments.value" :list-key="context.listKey.value" :segment-slot="$slots.segment" />
 </template>

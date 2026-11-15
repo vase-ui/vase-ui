@@ -17,26 +17,33 @@ describe('<DateField.Literal />', () => {
   // A separator is only a visual divider. An era and a zone name change the meaning of the date.
   it.each([
     { name: 'a separator', segment: SEPARATOR, isHidden: true },
-    { name: 'an era', segment: { type: 'era', index: 0, editable: false, text: 'BC' }, isHidden: false },
+    {
+      name: 'an era',
+      segment: { type: 'era', index: 0, editable: false, text: 'BC' },
+      isHidden: false,
+    },
     {
       name: 'a time zone name',
       segment: { type: 'timeZoneName', index: 5, editable: false, text: 'GMT+9' },
       isHidden: false,
     },
-  ] as const)('shows the text of $name, and hides a separator only', async ({ segment, isHidden }) => {
-    await render(
-      <DateField.Root locale="en-US">
-        <DateField.Literal segment={segment} data-testid="literal" />
-      </DateField.Root>,
-    );
-    const literal = screen.getByTestId('literal');
+  ] as const)(
+    'shows the text of $name, and hides a separator only',
+    async ({ segment, isHidden }) => {
+      await render(
+        <DateField.Root locale="en-US">
+          <DateField.Literal segment={segment} data-testid="literal" />
+        </DateField.Root>,
+      );
+      const literal = screen.getByTestId('literal');
 
-    expect(literal).toHaveTextContent(segment.text);
-    expect(literal).toHaveAttribute('data-type', segment.type);
-    if (isHidden) {
-      expect(literal).toHaveAttribute('aria-hidden', 'true');
-    } else {
-      expect(literal).not.toHaveAttribute('aria-hidden');
-    }
-  });
+      expect(literal).toHaveTextContent(segment.text);
+      expect(literal).toHaveAttribute('data-type', segment.type);
+      if (isHidden) {
+        expect(literal).toHaveAttribute('aria-hidden', 'true');
+      } else {
+        expect(literal).not.toHaveAttribute('aria-hidden');
+      }
+    },
+  );
 });

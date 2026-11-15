@@ -856,6 +856,47 @@ async function expectOTPFieldPage(page: Page) {
   expect(await readOTPSlotValues(page, 'pin')).toEqual(['5', '6', '', '']);
 }
 
+function readDateFieldSegments(page: Page, testId: string, attributeName: string) {
+  return page
+    .getByTestId(testId)
+    .locator('input[data-type]')
+    .evaluateAll((inputs, name) => inputs.map((input) => input.getAttribute(name)), attributeName);
+}
+
+function readDateFieldValues(page: Page, testId: string) {
+  return page
+    .getByTestId(testId)
+    .locator('input[data-type]')
+    .evaluateAll((inputs) => inputs.map((input) => (input as HTMLInputElement).value));
+}
+
+// The label of the first field comes after the field, and the server HTML names the group with it.
+// The hidden input has the name and the ISO text of the value.
+async function expectDateFieldPage(page: Page) {
+  const labelId = await page.getByTestId('when-label').getAttribute('id');
+  expect(labelId).toBeTruthy();
+  expect(await page.getByTestId('when').getAttribute('aria-labelledby')).toBe(labelId);
+  expect(await page.getByTestId('when').getAttribute('role')).toBe('group');
+  expect(await readDateFieldSegments(page, 'when', 'data-type')).toEqual(['month', 'day', 'year']);
+  expect(await readDateFieldValues(page, 'when')).toEqual(['11', '14', '2026']);
+  expect(await page.getByTestId('when-value').textContent()).toBe('2026-11-14');
+  expect(await readFormData(page)).toEqual(['when=2026-11-14']);
+  expect(await readDateFieldValues(page, 'card')).toEqual(['11', '2026']);
+}
+
+async function expectDateFieldPageOnServer(page: Page) {
+  await expectDateFieldPage(page);
+  // A server has no DOM, so it cannot find a native label.
+  expect(await page.getByTestId('card').getAttribute('aria-labelledby')).toBe(null);
+}
+
+async function expectHydratedDateFieldPage(page: Page) {
+  await expectDateFieldPage(page);
+  const labelId = await page.getByTestId('card-label').getAttribute('id');
+  expect(labelId).toBeTruthy();
+  expect(await page.getByTestId('card').getAttribute('aria-labelledby')).toBe(labelId);
+}
+
 async function expectOTPFieldPageOnServer(page: Page) {
   await expectOTPFieldPage(page);
   // A server has no DOM, so it cannot find a native label.
@@ -1601,6 +1642,11 @@ const PAGES: PageCase[] = [
     expectPage: expectOTPFieldPageOnServer,
     expectHydratedPage: expectHydratedOTPFieldPage,
   },
+  {
+    path: '/date-field',
+    expectPage: expectDateFieldPageOnServer,
+    expectHydratedPage: expectHydratedDateFieldPage,
+  },
   { path: '/number-field', expectPage: expectNumberFieldPage },
   { path: '/providers', expectPage: expectProvidersPage },
   { path: '/use-render', expectPage: expectUseRenderPage },
@@ -1936,6 +1982,35 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     await page.getByTestId('pin-label').click();
 
     expect(await readFocusedTestId()).toBe('pin-1');
+    expect(messages).toEqual([]);
+  });
+
+  it('types a date into /date-field, and clears it with the Clear button, after hydration', async () => {
+    const page = await createPage('/date-field');
+    const messages = collectMessages(page);
+    const readFocusedTestId = () =>
+      page.evaluate(() => document.activeElement?.getAttribute('data-testid'));
+
+    await page.getByTestId('when-month').click();
+    await page.keyboard.type('12');
+
+    expect(await readFocusedTestId()).toBe('when-day');
+    expect(await readDateFieldValues(page, 'when')).toEqual(['12', '14', '2026']);
+    expect(await page.getByTestId('when-value').textContent()).toBe('2026-12-14');
+    expect(await readFormData(page)).toEqual(['when=2026-12-14']);
+
+    await page.getByTestId('when-clear').click();
+
+    expect(await readFocusedTestId()).toBe('when-month');
+    expect(await readDateFieldValues(page, 'when')).toEqual(['', '', '']);
+    expect(await page.getByTestId('when-value').textContent()).toBe('');
+    expect(await readFormData(page)).toEqual(['when=']);
+
+    await page.getByTestId('card-label').click();
+
+    expect(await page.evaluate(() => document.activeElement?.getAttribute('data-type'))).toBe(
+      'month',
+    );
     expect(messages).toEqual([]);
   });
 

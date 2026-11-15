@@ -506,6 +506,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - Handles are upstream's objects, with no change: `Dialog.createHandle<Payload>()`, `handle`, `payload`, `triggerId`, `open()`, `openWithPayload()`, `close()`, `isOpen`.
 - Function children become a default scoped slot with named props: `{ payload }` on a root, `{ validity }` on `Field.Validity`, `{ item, index }` on `Combobox.Collection`, `{ value }` on `Select.Value`.
 - A part can take nodes or a function that renders each item as its children, such as `Combobox.List`. Its default slot holds the nodes, and the slot `item` with `{ item, index }` is the function. A slot does not show at run time if it takes slot props, so one slot cannot be both.
+- The slot of a list of parts has the name of its item, as `item` has. `DateField.Input` has the slot `segment` with `{ segment, index }`. It renders each part of the layout. With no slot, the part renders `DateField.Segment` for a segment that the user edits, and `DateField.Literal` for each other part. The `children` component of the `#render` slot takes the same slot.
 - `Combobox.Collection` uses each item as the `key` of its nodes. An item then keeps its element when the filter changes the list, as in React with `key={item}`. An item that the consumer replaces with a new object gets a new element. The items of one collection must be unique, because equal items give the same key.
 - Type the slots with `defineSlots`. Write each slot except `#render` as a method, as the Vue documentation does: `default(props: { state: ButtonState }): unknown`. A slot with no slot props is `default(): unknown`. A root with a value type uses `generic="Value"`.
 - Give the type parameter the default that Base UI gives it: `generic="Value = any"` on `Accordion.Root`. With no default, the handler of a root that has no `value` and no `defaultValue` gets `unknown[]`. Base UI gives `any[]`, and its type test has a line for it.
@@ -624,6 +625,8 @@ The source obeys rules that keep it compatible with the Vapor mode of Vue. ESLin
 
 If a line must break a rule, put a disable comment on that line and give the reason.
 
+A function component that calls `h` is not an SFC, so Vapor mode does not compile it. `DateFieldInputElement` is the one such component, for the reason in [Server render](#server-render).
+
 ### Server render
 
 - Each part must render with `renderToString` in Node with no DOM.
@@ -737,10 +740,10 @@ A date or time field and the `Intl` data of the server:
 
 - Each engine has its own `Intl` data for a locale. Chromium has no data for `is-IS` and uses `en-US`. The server and the browser then give another layout.
 - A layout can differ in the order of the segments, in the number of segments, in the text of a literal and in the hour cycle.
-- While the field hydrates, the part that renders the segments binds `data-allow-mismatch="children"` on `Input`, `attribute` on a segment and `text` on a literal. `useDateTimeFieldSegment` binds the one of a segment. Each part calls `useIsHydrating()` itself. `test/fixtures/DateTimeFieldProbe.vue` is the model.
+- While the field hydrates, the part that renders the segments binds `data-allow-mismatch="children"` on `Input`, `attribute` on a segment and `text` on a literal. `useDateTimeFieldSegment` binds the one of a segment. Each part calls `useIsHydrating()` itself. `DateField.Input`, `DateField.Segment` and `DateField.Literal` are the model. `test/fixtures/DateTimeFieldProbe.vue` renders the same elements for the tests of the engine.
 - Vue changes the text of a literal itself. While it hydrates, it writes no attribute that a `v-bind` object or `h()` gives, but the `value` of an input. A server element that Vue reuses for another segment thus keeps its attributes.
 - After the mount, the root compares the `data-type` and the attributes that `getSegmentAttributes` gives with the DOM. On a difference, it changes `listKey`, and the parts make the elements again.
-- For a fragment with another number of items than on the server, such as the fragment of `v-for`, Vue logs `Hydration completed but contains mismatches` also under `data-allow-mismatch`. The test part renders the items of the layout as direct children of its input element, so it gives no such message.
+- For a fragment with another number of items than on the server, such as the fragment of `v-for`, Vue logs `Hydration completed but contains mismatches` also under `data-allow-mismatch`. The part that renders the items of the layout thus gives them to Vue as direct children of its element. `DateFieldInputElement` does this with `h`, because a template cannot give a list of children with no fragment. The `children` component of a `#render` slot has no element, so it renders the items as a fragment, and a layout of the server that has another number of parts gives the message.
 
 ### What Vue replaces
 
@@ -2066,6 +2069,7 @@ A family that Base UI documents in `docs/src/app/(docs)/react/utils/`, such as `
 - The front matter has `order: 1`. The group then shows its pages in the sequence of their titles.
 - A demo is `docs/demos/<family>/<demo>/css-modules/index.vue`. It keeps the elements and the attributes of the Base UI file `demos/<demo>/css-modules/index.tsx`. Vase UI does not port the Tailwind demos.
 - A Base UI demo can use an API that only React has, such as a form action. The Vue demo then gives the same result with the API of Vue. The page says what the demo shows.
+- A demo of a date or time component gives `locale="en-US"`, so that the server and the browser show the same text. A template does not name `Temporal`, because Vue lets a template read only a short list of globals. The script of the demo makes each value.
 - The text and the links of a demo are about Vase UI. A demo does not name Base UI or React. A link to the documentation or to the source of Vase UI goes to a page of this site or to `https://github.com/vase-ui/vase-ui`. When Base UI links a page that this site does not have, link the nearest page that exists, or remove that link.
 - The site has a base path, and VitePress does not add it to a link in a demo. Start the path of a link to a page of this site with `import.meta.env.BASE_URL`. Do not use `withBase` of VitePress, because the test of the demos mounts a demo with no VitePress.
 - `docs/tsconfig.json` sets `dataAttributes` to `data-*`. With `strictTemplates`, vue-tsc then accepts a `data-*` attribute on a part, such as `data-color` in the hero demo of Alert Dialog.

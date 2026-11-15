@@ -9,6 +9,8 @@ interface DateFieldInputElementProps {
   segments: readonly DateTimeFieldSegment[];
   /** Changes when the layout of the server differs from the layout of the browser. */
   listKey: number;
+  /** The `segment` slot of the part. */
+  segmentSlot: ((props: { segment: DateTimeFieldSegment; index: number }) => unknown) | undefined;
 }
 
 /**
@@ -17,22 +19,23 @@ interface DateFieldInputElementProps {
  * HTML makes Vue log `Hydration completed but contains mismatches`, also under
  * `data-allow-mismatch`. The layout of a server differs when its `Intl` data differs from the data
  * of the browser. Direct children differ only by item, and `data-allow-mismatch` allows that.
+ *
+ * The part gives the slot as a prop and not as a slot of this component. A server render of a slot
+ * that a template makes with `v-if` is a function that writes to the output. Vue wraps such a
+ * function again when it passes through `h`, and the wrapper then renders nothing.
  */
-export const DateFieldInputElement: FunctionalComponent<
-  DateFieldInputElementProps,
-  {},
-  { segment?(props: { segment: DateTimeFieldSegment; index: number }): unknown }
-> = (props, { slots }) =>
-  h(
-    props.tag,
-    props.elementProps,
-    props.segments.map((segment) =>
-      h(
-        DateFieldInputLayoutItem,
-        { key: `${props.listKey}:${segment.index}`, segment },
-        slots.segment ? { segment: slots.segment } : undefined,
-      ),
+export const DateFieldInputElement: FunctionalComponent<DateFieldInputElementProps> = (props) => {
+  const items = props.segments.map((segment) =>
+    h(
+      DateFieldInputLayoutItem,
+      { key: `${props.listKey}:${segment.index}`, segment },
+      props.segmentSlot ? { segment: props.segmentSlot } : undefined,
     ),
   );
+  // A component takes its children as a slot, and an element takes them as an array.
+  return typeof props.tag === 'string'
+    ? h(props.tag, props.elementProps, items)
+    : h(props.tag, props.elementProps, { default: () => items });
+};
 
-DateFieldInputElement.props = ['tag', 'elementProps', 'segments', 'listKey'];
+DateFieldInputElement.props = ['tag', 'elementProps', 'segments', 'listKey', 'segmentSlot'];

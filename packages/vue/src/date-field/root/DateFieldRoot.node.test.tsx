@@ -3,6 +3,7 @@ import { renderToString } from 'vue/server-renderer';
 import { DateField } from '@vase-ui/vue/date-field';
 import { takeReportedMessages } from '../../../test/reportedMessages';
 import { formatter } from '../../internals/date-time/format';
+import DateFieldRootHydration from './DateFieldRootHydration.test.vue';
 
 // A server writes an empty `value` as a bare attribute.
 function segmentValues(html: string) {
@@ -87,18 +88,22 @@ describe('<DateField.Root /> on a server', () => {
     );
 
     expect(html).toMatch(/<div[^>]* data-allow-mismatch="children"/);
-    expect(html.match(/<input[^>]* data-type="\w+"[^>]* data-allow-mismatch="attribute"/g)).toHaveLength(3);
+    expect(
+      html.match(/<input[^>]* data-type="\w+"[^>]* data-allow-mismatch="attribute"/g),
+    ).toHaveLength(3);
     expect(html.match(/<span[^>]* data-allow-mismatch="text"/g)).toHaveLength(2);
   });
 
-  it('renders the same segments for the default parts and for the segment slot', async () => {
+  // A server renders a slot that a template makes as a function that writes to its output, and a
+  // slot of JSX as a function that returns its content.
+  it('renders the same segments for the default parts, a slot of JSX and a slot of a template', async () => {
     const value = Temporal.PlainDate.from('2026-11-14');
     const withDefaults = await renderToString(
       <DateField.Root defaultValue={value} locale="en-US">
         <DateField.Input />
       </DateField.Root>,
     );
-    const withSlot = await renderToString(
+    const withJsxSlot = await renderToString(
       <DateField.Root defaultValue={value} locale="en-US">
         <DateField.Input
           v-slots={{
@@ -112,8 +117,13 @@ describe('<DateField.Root /> on a server', () => {
         />
       </DateField.Root>,
     );
+    const withTemplateSlot = await renderToString(
+      <DateFieldRootHydration defaultValue="2026-11-14" locale="en-US" useSegmentSlot />,
+    );
 
-    expect(segmentValues(withSlot)).toEqual(segmentValues(withDefaults));
+    expect(segmentValues(withDefaults)).toHaveLength(3);
+    expect(segmentValues(withJsxSlot)).toEqual(segmentValues(withDefaults));
+    expect(segmentValues(withTemplateSlot)).toEqual(segmentValues(withDefaults));
   });
 
   it('renders a Clear button that is disabled for an empty field', async () => {
@@ -124,8 +134,10 @@ describe('<DateField.Root /> on a server', () => {
       </DateField.Root>,
     );
 
-    expect(html).toMatch(/<button[^>]* aria-label="Clear"[^>]*>x<\/button>/);
-    expect(html).toMatch(/<button[^>]* disabled[^>]*>/);
+    const button = /<button[^>]*>(?:<!--\[-->)?x/.exec(html)?.[0] ?? '';
+
+    expect(button).toContain(' aria-label="Clear"');
+    expect(button).toMatch(/ disabled[ >]/);
   });
 });
 

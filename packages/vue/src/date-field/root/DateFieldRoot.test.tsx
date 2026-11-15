@@ -144,25 +144,24 @@ describe('<DateField.Root />', () => {
       expect(emitted.toString()).toBe('2026-12-14');
     });
 
-    it('stays empty while the parent controls a null value', async () => {
+    it('keeps the value of the parent when the parent does not change it', async () => {
       const onValueChange = vi.fn();
       const { container, user } = await render(
-        <DateField.Root value={null} locale="en-US" onValueChange={onValueChange}>
+        <DateField.Root
+          value={Temporal.PlainDate.from('2026-11-14')}
+          locale="en-US"
+          onValueChange={onValueChange}
+        >
           <DateField.Input />
         </DateField.Root>,
       );
 
-      segmentOf(container, 'month').focus();
-      await user.keyboard('11');
       segmentOf(container, 'day').focus();
-      await user.keyboard('14');
-      segmentOf(container, 'year').focus();
-      await user.keyboard('2026');
+      await user.keyboard('{ArrowUp}');
 
-      // The field has a value after the last segment, and the parent keeps it as `null`.
-      expect(onValueChange.mock.lastCall![0].toString()).toBe('2026-11-14');
-      expect(hiddenInputOf(container).value).toBe('');
-      expect(screen.getByRole('group')).toHaveAttribute('data-empty');
+      expect(onValueChange.mock.lastCall![0].toString()).toBe('2026-11-15');
+      expect(segmentOf(container, 'day').value).toBe('14');
+      expect(hiddenInputOf(container).value).toBe('2026-11-14');
     });
   });
 

@@ -24,7 +24,9 @@ describe('<DateField.Input />', () => {
     childrenSelector: 'input[data-type]',
     render(node) {
       return render(
-        <DateField.Root defaultValue={Temporal.PlainDate.from('2026-11-14')}>{node}</DateField.Root>,
+        <DateField.Root defaultValue={Temporal.PlainDate.from('2026-11-14')}>
+          {node}
+        </DateField.Root>,
       );
     },
   }));
@@ -55,7 +57,13 @@ describe('<DateField.Input />', () => {
         <DateField.Root defaultValue={Temporal.PlainDate.from('2026-11-14')} locale="en-US">
           <DateField.Input
             v-slots={{
-              segment: ({ segment, index }: { segment: DateField.Input.Segment; index: number }) => {
+              segment: ({
+                segment,
+                index,
+              }: {
+                segment: DateField.Input.Segment;
+                index: number;
+              }) => {
                 gives.add(`${index} ${segment.type}`);
                 return segment.editable ? (
                   <DateField.Segment segment={segment} class="own-segment" />
@@ -111,6 +119,11 @@ describe('<DateField.Input />', () => {
       {
         name: 'the same layout',
         server: { locale: 'en-US', defaultValue: '2026-11-14' },
+        client: { locale: 'en-US', defaultValue: '2026-11-14' },
+      },
+      {
+        name: 'separators with other text',
+        server: { locale: 'de-DE', defaultValue: '2026-11-14' },
         client: { locale: 'en-US', defaultValue: '2026-11-14' },
       },
       {
