@@ -81,8 +81,8 @@ expectType<
   ChangeReason
 >('none' as ChangeReason);
 
-declare const actions: TimeField.Root.Actions;
-expectType<() => void, typeof actions.clear>(actions.clear);
+declare const kind: TimeField.Root.Value;
+expectType<Temporal.PlainTime | Temporal.PlainDateTime | Temporal.ZonedDateTime, typeof kind>(kind);
 
 declare const segment: TimeField.Input.Segment;
 if (segment.editable) {

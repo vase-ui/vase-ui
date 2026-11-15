@@ -30,7 +30,7 @@ export interface TimeFieldLiteralProps
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { computed } from 'vue';
 import { useDateTimeFieldContext } from '../../internals/date-time/field/DateTimeFieldContext';
 import { fieldValidityMapping } from '../../internals/field-constants';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
@@ -58,6 +58,10 @@ const state = computed<TimeFieldLiteralState>(() => ({
   index: props.segment.index,
 }));
 
+// The server can have another text than the browser. Vue lets `data-allow-mismatch="text"` allow only
+// an element that has a string as its one child, and a dynamic component gets its children in a
+// slot. The part thus binds the text as the prop `textContent`. Vue replaces a dynamic prop while it
+// hydrates, and it compares no `textContent`, so a text that differs gives no message.
 const { element, elementProps } = useRenderElement('span', props, {
   state,
   stateAttributesMapping,
@@ -66,17 +70,6 @@ const { element, elementProps } = useRenderElement('span', props, {
     { 'aria-hidden': props.segment.type === 'literal' ? true : undefined },
     attrs,
   ],
-});
-
-// The server can have another text than the browser. Vue accepts that only for an element that has
-// a string as its children, and a dynamic component gets its children in a slot. The part thus gives
-// the text as `textContent`. Vue compares no `textContent` while it hydrates, so the part writes the
-// text after the mount.
-onMounted(() => {
-  const literal = element.value;
-  if (literal && literal.textContent !== props.segment.text) {
-    literal.textContent = props.segment.text;
-  }
 });
 
 defineExpose({ element });

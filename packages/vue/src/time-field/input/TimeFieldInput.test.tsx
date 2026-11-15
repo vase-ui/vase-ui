@@ -336,6 +336,21 @@ describe('<TimeField.Input />', () => {
       },
     );
 
+    it('replaces a text between segments that the server wrote with the text of the browser', async () => {
+      const base = { defaultValue: '15:04', hourCycle: 24, clear: true } as const;
+      const serverHtml = await renderOnServer(FIXTURE, { ...base, locale: 'fr-CA' });
+
+      const { container } = await hydrate(TimeFieldRootHydration, {
+        serverHtml,
+        props: { ...base, locale: 'de-DE' },
+      });
+
+      expect(serverHtml).toContain(' h ');
+      expect(
+        Array.from(container.querySelectorAll('[data-type="literal"]'), (item) => item.textContent),
+      ).toEqual([':']);
+    });
+
     it('keeps the order of the segments of a server that has another order', async () => {
       const base = { defaultValue: '15:04', clear: true } as const;
       const serverHtml = await renderOnServer(FIXTURE, { ...base, locale: 'ko-KR' });

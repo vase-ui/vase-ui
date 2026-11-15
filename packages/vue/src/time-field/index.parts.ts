@@ -1,4 +1,3 @@
-import type { TimeValue } from '../internals/date-time/temporal';
 import TimeFieldClear from './clear/TimeFieldClear.vue';
 import type { TimeFieldClearProps, TimeFieldClearState } from './clear/TimeFieldClear.vue';
 import TimeFieldInput from './input/TimeFieldInput.vue';
@@ -11,12 +10,12 @@ import TimeFieldLiteral from './literal/TimeFieldLiteral.vue';
 import type { TimeFieldLiteralProps, TimeFieldLiteralState } from './literal/TimeFieldLiteral.vue';
 import TimeFieldRoot from './root/TimeFieldRoot.vue';
 import type {
-  TimeFieldRootActions,
   TimeFieldRootChangeEventDetails,
   TimeFieldRootChangeEventReason,
   TimeFieldRootGranularity,
   TimeFieldRootProps,
   TimeFieldRootState,
+  TimeFieldRootValue,
 } from './root/TimeFieldRoot.vue';
 import TimeFieldSegment from './segment/TimeFieldSegment.vue';
 import type { TimeFieldSegmentProps, TimeFieldSegmentState } from './segment/TimeFieldSegment.vue';
@@ -32,9 +31,10 @@ import type { TimeFieldSegmentProps, TimeFieldSegmentState } from './segment/Tim
 export const Root: typeof TimeFieldRoot = TimeFieldRoot;
 export namespace Root {
   export type State = TimeFieldRootState;
-  export type Props<Value extends TimeValue = Temporal.PlainTime> = TimeFieldRootProps<Value>;
+  export type Props<Value extends TimeFieldRootValue = Temporal.PlainTime> =
+    TimeFieldRootProps<Value>;
+  export type Value = TimeFieldRootValue;
   export type Granularity = TimeFieldRootGranularity;
-  export type Actions = TimeFieldRootActions;
   export type ChangeEventReason = TimeFieldRootChangeEventReason;
   export type ChangeEventDetails = TimeFieldRootChangeEventDetails;
 }

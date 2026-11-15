@@ -10,19 +10,15 @@ import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/type
 
 export type TimeFieldRootState = DateTimeFieldRootState;
 
+/** The kinds of value that the field takes and gives. */
+export type TimeFieldRootValue = TimeValue;
+
 export type TimeFieldRootGranularity = 'hour' | 'minute' | 'second';
 
 export type TimeFieldRootChangeEventReason = DateTimeFieldChangeEventReason;
 export type TimeFieldRootChangeEventDetails = DateTimeFieldChangeEventDetails;
 
-export interface TimeFieldRootActions {
-  /**
-   * Empties the field. The reason of the change is `'none'`.
-   */
-  clear: () => void;
-}
-
-export interface TimeFieldRootProps<Value extends TimeValue = Temporal.PlainTime>
+export interface TimeFieldRootProps<Value extends TimeFieldRootValue = Temporal.PlainTime>
   extends
     VaseUIComponentProps<TimeFieldRootState>,
     /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes>, 'id'> {
@@ -79,7 +75,7 @@ export interface TimeFieldRootProps<Value extends TimeValue = Temporal.PlainTime
   /**
    * The `step` of the hidden input, in seconds.
    * The hidden input gives `stepMismatch` to the field for a time that is not a multiple of the step
-   * after `minTime`.
+   * from `minTime`, or from midnight with no `minTime`.
    */
   step?: number | undefined;
   /**
@@ -128,7 +124,7 @@ export interface TimeFieldRootProps<Value extends TimeValue = Temporal.PlainTime
 }
 </script>
 
-<script setup lang="ts" generic="Value extends TimeValue = Temporal.PlainTime">
+<script setup lang="ts" generic="Value extends TimeFieldRootValue = Temporal.PlainTime">
 import DateTimeFieldHiddenInput from '../../internals/date-time/field/DateTimeFieldHiddenInput.vue';
 import {
   rootStateAttributesMapping,
@@ -215,14 +211,11 @@ const state = context.state;
 
 defineExpose({
   element,
-  /**
-   * The hidden input that holds the value of the field for a form.
-   */
+  /** The hidden input that holds the value of the field for a form. */
   inputElement: context.hiddenInputElement,
-  clear: (): void => {
-    context.clear();
-  },
-} satisfies TimeFieldRootActions & Record<string, unknown>);
+  /** Empties the field. The reason of the change is `none`. */
+  clear: () => context.clear(),
+});
 </script>
 
 <template>
