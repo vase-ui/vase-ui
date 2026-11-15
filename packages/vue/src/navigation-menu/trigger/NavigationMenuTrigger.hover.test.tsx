@@ -2,10 +2,12 @@ import { describe, expect, it, onTestFinished } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { createSSRApp } from 'vue';
 import { renderOnServer, takeReportedMessages, waitFor, within } from '#test-utils';
+import { allowTopLevelViewportWarning } from '../utils/test-utils';
 import NavigationMenuTriggerHydration from './NavigationMenuTriggerHydration.test.vue';
 
 describe('<NavigationMenu.Trigger />', () => {
   it('VUE-7: opens its item when the pointer is over the trigger as the hydration ends', async () => {
+    allowTopLevelViewportWarning();
     const serverHtml = await renderOnServer(
       'src/navigation-menu/trigger/NavigationMenuTriggerHydration.test.vue',
     );

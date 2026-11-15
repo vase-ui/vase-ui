@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { renderToString } from 'vue/server-renderer';
+import * as NavigationMenu from '../index.parts';
 import NavigationMenuRootHydration from './NavigationMenuRootHydration.test.vue';
 
 // The attribute order in the HTML is not part of the test.
@@ -42,6 +43,19 @@ describe('<NavigationMenu.Root />', () => {
       expect(readTag(html, 'root')).toContain('data-open');
       expect(readTag(html, 'icon-1')).toContain('data-popup-open');
       expect(readTag(html, 'icon-2')).not.toContain('data-popup-open');
+    });
+
+    it('VUE-104: gives no warning for a viewport with no positioner in a top-level root', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      const html = await renderToString(
+        <NavigationMenu.Root>
+          <NavigationMenu.Viewport data-testid="viewport" />
+        </NavigationMenu.Root>,
+      );
+
+      expect(readTag(html, 'viewport')).toMatch(/^<div /);
+      expect(warn).not.toHaveBeenCalled();
     });
   });
 });
