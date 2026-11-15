@@ -296,6 +296,28 @@ describe('<Combobox.Popup />', () => {
       expect(store.context.endDismissRef.value).toHaveAttribute('aria-label', 'Dismiss');
     });
 
+    it('keeps the dismiss button between the popup and its last inside guard', async () => {
+      await render(
+        <Combobox.Root defaultOpen modal>
+          <StoreProbe />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup data-testid="popup">
+                <Combobox.Input />
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+      const popup = await screen.findByTestId('popup');
+
+      await waitFor(() => {
+        expect(store.context.endDismissRef.value).toBe(popup.nextElementSibling);
+      });
+      expect(popup.previousElementSibling).toHaveAttribute('data-type', 'inside');
+      expect(popup.nextElementSibling?.nextElementSibling).toHaveAttribute('data-type', 'inside');
+    });
+
     it('renders no dismiss button after a popup that holds the input and is not modal', async () => {
       await render(
         <Combobox.Root defaultOpen>

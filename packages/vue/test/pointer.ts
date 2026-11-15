@@ -83,12 +83,21 @@ export async function pressWithScreenReader(element: Element) {
 }
 
 /**
+ * Returns the client point of the center of `element` as the init of a mouse event. A dispatched
+ * mouse event with no point has the point (0, 0).
+ */
+export function clientCenter(element: Element) {
+  const rect = element.getBoundingClientRect();
+  return { clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2 };
+}
+
+/**
  * Presses the main button of the real pointer at the center of `element` and holds it. `release`
  * lets the button go at the same point. A case that does not call it gets the release when it ends.
  */
 export async function holdPress(element: Element) {
-  const rect = element.getBoundingClientRect();
-  const point = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+  const { clientX, clientY } = clientCenter(element);
+  const point = { x: clientX, y: clientY };
   let held = true;
   async function release() {
     held = false;

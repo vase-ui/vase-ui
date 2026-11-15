@@ -7,6 +7,7 @@ import type { ComponentPublicInstance, PropType } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import { Menubar } from '@vase-ui/vue/menubar';
 import {
+  clientCenter,
   createRenderer,
   enterWithMouse,
   fireEvent,
@@ -3270,7 +3271,7 @@ describe('<Menu.Root />', () => {
 
         const trigger = screen.getByRole('button', { name: 'Toggle' });
 
-        await fireEvent.mouseDown(trigger);
+        await fireEvent.mouseDown(trigger, clientCenter(trigger));
 
         await waitFor(() => {
           expect(screen.queryByTestId('menu')).not.toBe(null);
@@ -3313,7 +3314,7 @@ describe('<Menu.Root />', () => {
         );
 
         const trigger = screen.getByRole('button', { name: 'Toggle' });
-        await fireEvent.mouseDown(trigger);
+        await fireEvent.mouseDown(trigger, clientCenter(trigger));
 
         const firstItem = await screen.findByRole('menuitem', { name: 'One' });
         const checkboxItem = screen.getByRole('menuitemcheckbox', { name: 'Two' });
@@ -3356,7 +3357,8 @@ describe('<Menu.Root />', () => {
           </Menu.Root>,
         );
 
-        await fireEvent.mouseDown(screen.getByRole('button', { name: 'Toggle' }));
+        const trigger = screen.getByRole('button', { name: 'Toggle' });
+        await fireEvent.mouseDown(trigger, clientCenter(trigger));
 
         const firstItem = await screen.findByRole('menuitem', { name: 'One' });
         const disabledItem = screen.getByRole('menuitem', { name: 'Two' });
