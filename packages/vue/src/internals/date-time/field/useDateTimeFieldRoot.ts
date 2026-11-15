@@ -10,8 +10,8 @@ import {
   watch,
 } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
-import { addEventListener } from '../../../common/addEventListener';
 import { clamp } from '../../../common/clamp';
+import { useHiddenValueBeforeHydration } from '../../../common/hydration';
 import { ownerWindow } from '../../../common/owner';
 import { contains } from '../../../common/shadowDom';
 import { useControlled } from '../../../common/useControlled';
@@ -32,6 +32,7 @@ import {
 } from '../../labelable-provider';
 import { REASONS } from '../../reasons';
 import { useFormReset } from '../../useFormReset';
+import { useFormRestoreAsInput } from '../../useFormRestore';
 import { useKeepAliveState } from '../../useKeepAliveState';
 import { useValueChanged } from '../../useValueChanged';
 import { displayCalendar } from '../displayCalendar';
@@ -697,6 +698,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   });
 
   const hiddenInputElement = shallowRef<HTMLInputElement | null>(null);
+  const writesHiddenValue = useHiddenValueBeforeHydration(() => hiddenInputElement.value);
 
   function syncCustomValidity() {
     hiddenInputElement.value?.setCustomValidity(customMessage.value);
@@ -872,17 +874,18 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
 
   watch(
     hiddenInputElement,
-    (input, _previous, onCleanup) => {
+    (input) => {
       if (!input) {
         return;
       }
-      handledHiddenValue = input.value;
+      // Until the take of the hydration, the input can hold a value that the root did not handle.
+      handledHiddenValue = writesHiddenValue.value ? input.value : hiddenText.value;
       syncCustomValidity();
-      // A browser restores the form state of a page with no event on the inputs.
-      onCleanup(addEventListener(ownerWindow(input), 'pageshow', writeValueToHiddenInput));
     },
     { flush: 'post' },
   );
+
+  useFormRestoreAsInput(hiddenInputElement, () => hiddenText.value, false);
 
   // Vue writes the value to the hidden input when the text changes. A program can then send a
   // `change` event with the text that the input had before, and the root must handle it.
@@ -908,7 +911,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
         controlId.value && inputName.value == null ? `${controlId.value}-hidden-input` : undefined,
       form: toValue(parameters.form),
       name: inputName.value,
-      value: hiddenText.value,
+      ...(writesHiddenValue.value ? { value: hiddenText.value } : undefined),
       autocomplete: toValue(parameters.autoComplete),
       min: inputLimits.value.min,
       max: inputLimits.value.max,
