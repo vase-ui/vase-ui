@@ -166,7 +166,7 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
 
   async function openWith(interaction: OpenInteraction, user: UserEvent, trigger: HTMLElement) {
     if (interaction === 'click') {
-      await user.click(trigger);
+      await waitForLaterMillisecond(() => user.click(trigger));
     } else if (interaction === 'hover') {
       await fireEvent.mouseEnter(trigger);
       await fireEvent.mouseMove(trigger);
@@ -179,9 +179,6 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
   async function closeWith(interaction: OpenInteraction, user: UserEvent, trigger: HTMLElement) {
     if (interaction === 'click') {
       if (Close) {
-        // The close part mounts with the popup. Vue skips its listener for an event of that
-        // millisecond.
-        await waitForLaterMillisecond();
         await user.click(screen.getByText('Close popup'));
       } else {
         await user.keyboard('{Escape}');

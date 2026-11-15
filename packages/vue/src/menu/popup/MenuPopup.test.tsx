@@ -284,11 +284,10 @@ describe('<Menu.Popup />', () => {
 
       const { user } = await render(<App />);
       const dialogTrigger = screen.getByRole('button', { name: 'Create' });
-      await user.click(dialogTrigger);
-      const menuTrigger = await screen.findByRole('button', { name: 'Template' });
-      // The menu trigger mounts with the dialog. Vue skips its listener for an event of that
-      // millisecond.
-      await waitForLaterMillisecond();
+      const menuTrigger = await waitForLaterMillisecond(async () => {
+        await user.click(dialogTrigger);
+        return screen.findByRole('button', { name: 'Template' });
+      });
       await user.click(menuTrigger);
       await user.click(await screen.findByRole('menuitem', { name: 'Blank' }));
 
