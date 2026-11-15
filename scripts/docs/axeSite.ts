@@ -125,6 +125,13 @@ async function main(): Promise<void> {
       tab.on('pageerror', (error: Error) => {
         problems.push(`${name}: the page threw ${String(error)}`);
       });
+      // A production build of Vue does not throw an error of a component or a hydration mismatch.
+      // It logs them with `console.error`.
+      tab.on('console', (message: { type(): string; text(): string }) => {
+        if (message.type() === 'error') {
+          problems.push(`${name}: the page logged the error ${message.text()}`);
+        }
+      });
       await tab.goto(`${origin}${page}`, { waitUntil: 'load' });
       // Vue sets `__vue_app__` on the root when it has hydrated the page. A frame shows the stored
       // styling method in the render after the mount, and fonts change the width of a table.
