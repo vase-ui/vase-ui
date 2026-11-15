@@ -45,8 +45,9 @@ export function createHeldBranch(renderPart: () => VNodeChild, options: HeldBran
     await flushMicrotasks();
   }
 
-  // Vue clears `isDeactivated` of the branch after the renders of the flush of the activation. A
-  // part that mounts in that flush thus starts held, and it gets `onActivated` in the same flush.
+  // `KeepAlive` puts the branch back in the document before the part mounts. Vue calls the
+  // `onActivated` hooks of the branch after the renders of that flush. The part thus mounts in the
+  // document, and it gets its first `onActivated` call in the flush of its mount.
   async function mountInActivation() {
     visible.value = true;
     mounted.value = true;
