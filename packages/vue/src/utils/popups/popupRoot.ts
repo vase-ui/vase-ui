@@ -413,7 +413,7 @@ function usePopupRootTransitions(
 
 /**
  * Keeps the trigger registration and the state of an open popup in step. Call it in `setup` of the
- * root. It does nothing while `KeepAlive` holds the root.
+ * root. It does nothing from a deactivation of the root by `KeepAlive` to the next activation.
  *
  * - A popup with no active trigger takes the only registered trigger, unless the open request
  *   named no trigger.
