@@ -153,7 +153,7 @@ A server does not know the locale of the visitor. With no `locale` prop, the fie
 
 A server and a browser can have other `Intl` data for the same locale. The layout of the server can then differ from the layout of the browser. While the field hydrates, it marks the elements that can differ. After it mounts, it compares its elements with its layout and makes them again where they differ. The hydration gives no warning.
 
-`DateField.Input` gives its parts to Vue as direct children of its element, and that is why a layout with other parts hydrates with no message. The `children` component of a `#render` slot renders the parts as a fragment. When the server has more parts than the browser, Vue then logs `Hydration completed but contains mismatches`. To avoid it, use the `as` prop or the `segment` slot in place of `#render`.
+`DateField.Input` gives its parts to Vue as direct children of its element, and that is why a layout with other parts hydrates with no message. The `children` component of a `#render` slot renders the parts as a fragment. When the server has more parts than the browser, Vue then logs `Hydration completed but contains mismatches`. To avoid it, do not use `#render` on `DateField.Input`. Give a tag name to `as`, or use the `segment` slot.
 
 On a Node.js version before 26, load a `Temporal` polyfill before the server starts. See the [guide](/handbook/dates-and-times#servers).
 
