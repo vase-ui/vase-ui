@@ -348,7 +348,8 @@ const { element, elementProps } = useRenderElement('div', props, {
       },
     },
     attrs,
-    // The values depend on the panel after the handle, and the server HTML has them.
+    // The first client render can come before the `setup` of the panel after the handle.
+    // `valueAttributes` then has none of these keys, so this getter adds them.
     (merged) => ({
       ...merged,
       'aria-controls': ariaAfterHydration(merged['aria-controls']),
