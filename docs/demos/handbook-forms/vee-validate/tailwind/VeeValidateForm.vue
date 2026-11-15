@@ -158,7 +158,7 @@ const protocols = ['http', 'https', 'ssh'];
 <template>
   <form
     ref="formElement"
-    aria-label="Launch new cloud server"
+    aria-label="Launch new cloud server with VeeValidate"
     novalidate
     class="flex w-full max-w-3xs flex-col gap-5 sm:max-w-[20rem]"
     @submit="onSubmit"
