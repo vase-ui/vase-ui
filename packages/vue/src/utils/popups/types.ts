@@ -60,7 +60,7 @@ export interface PopupInteractionReader {
 export interface PopupInteractionContext {
   readonly events: PopupEvents;
   /**
-   * The element of the backdrop part of a popup store.
+   * A ref to the element of the backdrop part. Only a popup store has it.
    */
   readonly backdropRef?: ShallowRef<HTMLElement | null> | undefined;
   nested: boolean;

@@ -422,7 +422,6 @@ describe('a press on a part of a child popup that is outside its popup element',
   );
 });
 
-// The part in it never mounts, as a part in an async component that still loads.
 const Pending = defineAsyncComponent(() => new Promise<DefineComponent>(() => {}));
 
 interface PendingPositionerCase {
