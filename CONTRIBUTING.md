@@ -751,6 +751,7 @@ The label of a root:
 - The label calls `useRegisteredLabelId(() => props.id, labelRoot, () => element.value)` and binds the result to `id`. The result is the `id` prop, or the id that the root made.
 - A server render writes the attributes of the root before the `setup` of the label runs. The label cannot give its id in time for the server HTML. A root cannot defer for its label, because a deferral moves the attributes and the `setup` of the label together.
 - Thus the root assumes a label until it is mounted. The server HTML has `aria-labelledby` with the generated id.
+- This rule covers `Progress.Root`, `Meter.Root`, `Fieldset.Root` and `Slider.Root`.
 - A root with a non-blank `aria-label` of the consumer assumes no label. The server HTML has no `aria-labelledby`. A root that has a label gets the id of the label when it is mounted.
 - The first render in a browser assumes what the server assumed, because Vue does not patch `aria-labelledby` when it hydrates.
 - `labelId` of `useLabelId` is the id of the registered label, with no assumption. `legendId` in the context of `Fieldset.Root` is that id.
@@ -758,6 +759,9 @@ The label of a root:
 - Until the page hydrates, the server HTML of those two roots points at the generated id, unless the consumer gives the root a non-blank `aria-label`.
 - No element has that id then. An `aria-labelledby` with no valid IDREF gives no name ([step 2B of the name computation](https://www.w3.org/TR/accname-1.2/#computation-steps)). Each of those roots thus has the name that it has with no `aria-labelledby`, as in Base UI.
 - axe reports such an `aria-labelledby` as `aria-valid-attr-value` in its `incomplete` list, and not as a violation. `expectNoAxeViolations` reads only the violations.
+- A user agent ignores an ID reference that matches no element ([WAI-ARIA 1.2, 8.6.1](https://www.w3.org/TR/wai-aria-1.2/#mapping_additional_relations_error_processing)).
+- The other rule is no `aria-labelledby` until the label registers, as in Base UI. The assumption is better. With the other rule, the server HTML of a `progressbar` or a `meter` that has a label has no name. These roles require a name (WAI-ARIA 1.2: [`progressbar`](https://www.w3.org/TR/wai-aria-1.2/#progressbar), [`meter`](https://www.w3.org/TR/wai-aria-1.2/#meter)). axe reports such a root with no name as a serious violation, `aria-progressbar-name` or `aria-meter-name`. A page with no client code never mounts the root, so that root never gets its name.
+- `Fieldset.Root` and `Slider.Root` have the role `group`, which does not require a name. The assumption gives the server HTML of each group the name of its label, when the label has no `id` prop.
 - An `aria-labelledby` of the consumer on the root wins, because the attributes of the consumer merge last.
 - Two labels with no `id` in one root get the same id.
 - `Slider.Root` is the exception, as in Base UI: its label always has the id `<id>-label`, and `<id>` is the `id` of the root. The root thus calls `createLabelIdRegistry()` and not `useLabelId()`. It assumes that id until it is mounted, under the rules above.
