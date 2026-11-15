@@ -18,7 +18,7 @@ import { REASONS } from '../../internals/reasons';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useUnmountAfterClose } from '../../internals/useUnmountAfterClose';
-import { isInHeldBranch } from '../../internals/useKeepAliveState';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import type { ReactiveStore } from './ReactiveStore';
 import { popupStoreSelectors } from './store';
 import type {
@@ -94,7 +94,8 @@ export interface UsePopupRootOptions<Store extends PopupRootStore> {
   /**
    * The root attaches its store to the handle after the DOM update of its mount. A root in a
    * pending `<Suspense>` branch attaches when Vue resolves the branch. The root detaches when it
-   * unmounts and while `KeepAlive` holds it.
+   * unmounts and while `KeepAlive` holds it. A root that mounts in a branch that `KeepAlive` holds
+   * detaches in its own `onMounted` hook, after the `onMounted` hooks of the parts below it.
    */
   handle?: MaybeRefOrGetter<PopupRootStoreHandle<Store> | undefined>;
   /**
@@ -218,26 +219,47 @@ export function usePopupRootWithPopupId<Store extends PopupRootStore>(
   // flush of the mount. That run comes after the DOM update and before the `onMounted` hook of each
   // part below the root, so such a hook can call the handle. A write in `onMounted` of the root
   // would come after those hooks. Vue holds that run while the root is in a pending `<Suspense>`
-  // branch, and a branch that Vue drops never runs it. A root that mounts in a branch that
-  // `KeepAlive` holds writes `false`. It attaches its store at the activation, as a deactivated
-  // root does.
+  // branch, and a branch that Vue drops never runs it.
   const isActive = shallowRef(false);
-  watch(
-    () => (isActive.value ? toValue(options.handle) : undefined),
-    (handle, _previous, onCleanup) => {
-      const detach = handle?.attachStore(store);
-      if (detach !== undefined) {
-        onCleanup(detach);
-      }
-    },
-    { flush: 'post' },
-  );
-  isActive.value = !isInHeldBranch();
+  let attachedHandle: PopupRootStoreHandle<Store> | undefined;
+  let detachStore: (() => void) | undefined;
+  function setAttachedHandle(handle: PopupRootStoreHandle<Store> | undefined) {
+    if (handle === attachedHandle) {
+      return;
+    }
+    detachStore?.();
+    attachedHandle = handle;
+    detachStore = handle?.attachStore(store);
+  }
+  watch(() => (isActive.value ? toValue(options.handle) : undefined), setAttachedHandle, {
+    flush: 'post',
+  });
+  isActive.value = true;
+  onScopeDispose(() => {
+    setAttachedHandle(undefined);
+  });
+
+  // A root that mounts in a branch that `KeepAlive` holds also attaches in that run, so an
+  // `onMounted` hook of a part below it reaches its store. The `onMounted` hook of the root comes
+  // after those hooks, and it detaches the store directly. A `watch` job that a post flush queues
+  // runs in a later pass of the flush, after the watchers of a detached trigger that follow the
+  // handle. The trigger would then register in the store of the held root.
+  // When `KeepAlive` shows the branch in the flush of the mount, `onActivated` can come after that
+  // detach. The `watch` then gets the same handle as in its last run and does not call
+  // `setAttachedHandle`, so `onActivated` calls it.
+  const { isHeld } = useKeepAliveState();
+  onMounted(() => {
+    if (isHeld.value) {
+      isActive.value = false;
+      setAttachedHandle(undefined);
+    }
+  });
   onDeactivated(() => {
     isActive.value = false;
   });
   onActivated(() => {
     isActive.value = true;
+    setAttachedHandle(toValue(options.handle));
   });
 
   return { store, open, mounted, payload, transitionStatus, actions };

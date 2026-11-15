@@ -56,6 +56,7 @@ import {
   popupStoreSelectors,
 } from './store';
 import type { PopupStoreContext, PopupStoreSelectors, PopupStoreState } from './store';
+import { PopupTriggerMap } from './popupTriggerMap';
 import { provideFloatingNode } from './tree/FloatingTree';
 import {
   createTestPopupStore,
@@ -1470,6 +1471,31 @@ describe('usePopupRoot', () => {
         expect(handle.store).toBe(root.current.store);
         expect(root.current.open).toBe(false);
       });
+
+      it('detaches a root in a branch that KeepAlive holds when the branch resolves, after the onMounted hook of a part below it', async () => {
+        const handle = createPopupFixtureHandle<string>();
+        const root = createRootRef();
+        const gate = createGate();
+        const Pending = createPendingPart(gate.promise);
+        const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+          <Suspense>
+            <PopupRootPart ref={root.ref} handle={handle} defaultOpen>
+              <CloseOnHook hook={onMounted} handle={handle} />
+              <Pending />
+            </PopupRootPart>
+          </Suspense>
+        ));
+        await render(() => <HeldBranch />);
+        await mountWhileHeld();
+
+        gate.open();
+        await flushMicrotasks();
+        expect(handle.store).toBe(handle.serverStore);
+        expect(root.current.open).toBe(false);
+
+        await show();
+        expect(handle.store).toBe(root.current.store);
+      });
     });
   });
 
@@ -1535,7 +1561,7 @@ describe('usePopupRoot', () => {
       expect(first.store).toBe(first.serverStore);
     });
 
-    it('attaches a root that mounts while KeepAlive holds its branch to its handle only at the activation', async () => {
+    it('detaches a root that mounts while KeepAlive holds its branch from its handle until the activation', async () => {
       const handle = createPopupFixtureHandle<string>();
       const root = createRootRef();
       const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
@@ -1558,6 +1584,120 @@ describe('usePopupRoot', () => {
 
       await show();
       expect(handle.store).toBe(root.current.store);
+    });
+
+    it('takes a call of the handle in the onMounted hook of a part below a root that mounts while KeepAlive holds its branch', async () => {
+      const handle = createPopupFixtureHandle<string>();
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <PopupRootPart handle={handle} defaultOpen>
+          <CloseOnHook hook={onMounted} handle={handle} />
+        </PopupRootPart>
+      ));
+      await render(() => <HeldBranch />);
+
+      await mountWhileHeld();
+      await show();
+
+      expect(handle.isOpen).toBe(false);
+    });
+
+    it('keeps a detached trigger out of the store of a root that mounts while KeepAlive holds its branch', async () => {
+      const add = vi.spyOn(PopupTriggerMap.prototype, 'add');
+      onTestFinished(() => {
+        add.mockRestore();
+      });
+      const handle = createPopupFixtureHandle<string>();
+      const root = createRootRef();
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <PopupRootPart ref={root.ref} handle={handle} defaultOpen />
+      ));
+      const { getByText } = await render(() => (
+        <div>
+          <PopupTriggerPart id="detached" handle={handle}>
+            detached
+          </PopupTriggerPart>
+          <HeldBranch />
+        </div>
+      ));
+      const trigger = getByText('detached');
+      const changedAttributes: (string | null)[] = [];
+      const recordChanges = (records: MutationRecord[]) => {
+        changedAttributes.push(...records.map((record) => record.attributeName));
+      };
+      const observer = new MutationObserver(recordChanges);
+      observer.observe(trigger, { attributes: true });
+      onTestFinished(() => {
+        observer.disconnect();
+      });
+
+      await mountWhileHeld();
+
+      recordChanges(observer.takeRecords());
+      expect(changedAttributes).toEqual([]);
+      expect(add.mock.contexts).not.toContain(root.current.store.context.triggerElements);
+
+      await show();
+      expect(root.current.store.context.triggerElements.getById('detached')).toBe(trigger);
+    });
+
+    it.each([
+      { name: 'from a state', fromProp: false },
+      { name: 'from a prop', fromProp: true },
+    ])(
+      'keeps its handle when it mounts in the flush that shows its KeepAlive branch: $name',
+      async ({ fromProp }) => {
+        const handle = createPopupFixtureHandle<string>();
+        const root = createRootRef();
+        const { HeldBranch, hide, mountInActivation } = createHeldBranch(() => (
+          <PopupRootPart ref={root.ref} handle={handle} />
+        ));
+        const { getByText } = await render(() => (
+          <div>
+            <PopupTriggerPart id="detached" handle={handle}>
+              detached
+            </PopupTriggerPart>
+            <HeldBranch />
+          </div>
+        ));
+        await hide();
+
+        await mountInActivation({ fromProp });
+        expect(handle.store).toBe(root.current.store);
+
+        await fireEvent.click(getByText('detached'));
+        expect(handle.isOpen).toBe(true);
+      },
+    );
+
+    it('gives the handle back to an older root after a part below a root that mounts held calls it', async () => {
+      const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      onTestFinished(() => {
+        consoleWarn.mockRestore();
+      });
+      const handle = createPopupFixtureHandle<string>();
+      const older = createRootRef();
+      const held = createRootRef();
+      const { HeldBranch, mountWhileHeld } = createHeldBranch(() => (
+        <PopupRootPart ref={held.ref} handle={handle} defaultOpen>
+          <CloseOnHook hook={onMounted} handle={handle} />
+        </PopupRootPart>
+      ));
+      await render(() => (
+        <>
+          <PopupRootPart ref={older.ref} handle={handle} defaultOpen />
+          <HeldBranch />
+        </>
+      ));
+
+      await mountWhileHeld();
+      expect(held.current.open).toBe(false);
+      expect(older.current.open).toBe(true);
+      expect(handle.store).toBe(older.current.store);
+
+      // A development build warns one frame after two roots took one handle.
+      await waitSingleFrame();
+      await waitSingleFrame();
+      expect(consoleWarn).not.toHaveBeenCalled();
     });
 
     it('closes with the reason none when KeepAlive deactivates the active trigger and the root stays', async () => {
