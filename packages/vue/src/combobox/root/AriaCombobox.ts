@@ -669,6 +669,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
             isItemEqualToValue: isItemEqualToValue.value,
           },
           listElement: null,
+          listElementId: undefined,
           triggerElement: null,
           inputElement: null,
           inputGroupElement: null,
@@ -1641,7 +1642,8 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   // An inline list is permanently expanded (see `ComboboxStore.interactions`).
   const expanded = computed(() => open.value || inline.value);
   const inputElement = computed(() => store.select('inputElement'));
-  const listElementId = computed(() => store.select('listElement')?.id);
+  // An element with no id has an empty `id`, and the input then has no `aria-controls`.
+  const listElementId = computed(() => store.select('listElementId') || undefined);
 
   const role = computed(() => {
     const isPlainInput = inputElement.value?.tagName === 'INPUT';

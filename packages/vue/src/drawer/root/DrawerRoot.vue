@@ -162,6 +162,7 @@ import { ownerWindow } from '../../common/owner';
 import { platform } from '../../common/platform';
 import { useControlled } from '../../common/useControlled';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { isInHeldBranch } from '../../internals/useKeepAliveState';
 import { useRenderDialogRoot } from '../../dialog/root/useRenderDialogRoot';
 import { useDrawerProviderContext } from '../provider/DrawerProviderContext';
 import { DrawerRootContext, useDrawerRootContext } from './DrawerRootContext';
@@ -377,7 +378,7 @@ const isOpen = computed(() => store.select('open'));
 
 // `KeepAlive` takes the popup of a deactivated drawer out of the document. The provider must then
 // not count the drawer, and the drawer must not handle the back gesture.
-const deactivated = shallowRef(false);
+const deactivated = shallowRef(isInHeldBranch());
 
 let hasReported = false;
 

@@ -27,6 +27,7 @@ import { createChangeEventDetails } from '../../../internals/createBaseUIEventDe
 import { REASONS } from '../../../internals/reasons';
 import { resolveElement } from '../../../internals/resolveElement';
 import type { FloatingUIOpenChangeDetails } from '../../../internals/types';
+import { isInHeldBranch } from '../../../internals/useKeepAliveState';
 import { createAttribute } from '../createAttribute';
 import { getFloatingFocusElement, isTypeableCombobox, isTypeableElement } from '../element';
 import { isVirtualClick, isVirtualPointerEvent, stopEvent } from '../event';
@@ -415,7 +416,7 @@ export function useFloatingFocusManager(
   const getNodeId = () => resolved.value.store.context.positioning?.nodeId;
 
   // Whether `KeepAlive` holds the popup. The popup keeps its open state.
-  const deactivated = shallowRef(false);
+  const deactivated = shallowRef(isInHeldBranch());
   const isDisabled = () => resolved.value.disabled || deactivated.value;
 
   let preventReturnFocus = false;
