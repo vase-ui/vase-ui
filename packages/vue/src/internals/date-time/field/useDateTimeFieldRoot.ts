@@ -885,7 +885,8 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     { flush: 'post' },
   );
 
-  // The type of the input can refuse the text of the value, such as a year 0 of a `date` input.
+  // The value sanitization of the input type can change the text of the value. A `date` input has
+  // no value for a year 0.
   useFormRestoreAsInput(hiddenInputElement, () => handledHiddenValue, false);
 
   // Vue writes the value to the hidden input when the text changes, and when the input gets the
