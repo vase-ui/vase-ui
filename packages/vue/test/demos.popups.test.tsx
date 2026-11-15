@@ -248,60 +248,63 @@ function mount(render: Render, variant: string, Demo: Component) {
   );
 }
 
-// Vitest cuts a `$name` value after 40 characters. The variant has its own value, so the two titles
-// of a long name stay different.
-describe.each(demos)('$name ($variant)', ({ name, variant, Demo }) => {
-  const { render } = createRenderer();
+// Vitest cuts a `$name` value after 40 characters, so two long names can get one title. A `%s`
+// value is not cut.
+describe.each(demos.map((demo) => [`${demo.name} (${demo.variant})`, demo] as const))(
+  '%s',
+  (_title, { name, variant, Demo }) => {
+    const { render } = createRenderer();
 
-  it('opens each popup with no Vue warning and no axe violation', async () => {
-    // A path is the index of the trigger at each depth. The case opens each path in a new mount,
-    // and it adds the triggers of the popup at the end of a path as new paths.
-    const paths: number[][] = [];
-    {
-      const view = await mount(render, variant, Demo);
-      const frame = view.container.querySelector<HTMLElement>('.demo-frame')!;
-      triggersAt(name, 0, frame, new Set()).forEach((_, index) => paths.push([index]));
-      view.unmount();
-    }
-    expect(paths, 'The case finds no trigger in a demo that has a Portal part.').not.toHaveLength(
-      0,
-    );
-
-    for (const path of paths) {
-      const view = await mount(render, variant, Demo);
-      const frame = view.container.querySelector<HTMLElement>('.demo-frame')!;
-      let before = new Set<Element>();
-      for (const [depth, index] of path.entries()) {
-        const trigger = triggersAt(name, depth, frame, before)[index]!;
-        before = new Set(document.querySelectorAll('[data-vase-ui-portal] *'));
-        const openBefore = new Set(openPopups());
-        await trigger.open(view.user);
-        await waitFor(() => {
-          expect(openPopups().filter((popup) => !openBefore.has(popup))).not.toHaveLength(0);
-        });
-        // A popup has its starting style until the frame after its mount. A style sheet gives that
-        // style no opacity, and axe gives no contrast for text that a reader cannot see.
-        await waitFor(() => {
-          expect([...document.querySelectorAll('[data-starting-style]')]).toEqual([]);
-        });
-        await waitFor(() => {
-          expect(runningAnimations()).toEqual([]);
-        });
+    it('opens each popup with no Vue warning and no axe violation', async () => {
+      // A path is the index of the trigger at each depth. The case opens each path in a new mount,
+      // and it adds the triggers of the popup at the end of a path as new paths.
+      const paths: number[][] = [];
+      {
+        const view = await mount(render, variant, Demo);
+        const frame = view.container.querySelector<HTMLElement>('.demo-frame')!;
+        triggersAt(name, 0, frame, new Set()).forEach((_, index) => paths.push([index]));
+        view.unmount();
       }
+      expect(paths, 'The case finds no trigger in a demo that has a Portal part.').not.toHaveLength(
+        0,
+      );
 
-      await expectNoViolationsInOpenState(frame);
-      for (const portal of portals().filter((element) => !frame.contains(element))) {
-        await expectNoViolationsInOpenState(portal);
-      }
+      for (const path of paths) {
+        const view = await mount(render, variant, Demo);
+        const frame = view.container.querySelector<HTMLElement>('.demo-frame')!;
+        let before = new Set<Element>();
+        for (const [depth, index] of path.entries()) {
+          const trigger = triggersAt(name, depth, frame, before)[index]!;
+          before = new Set(document.querySelectorAll('[data-vase-ui-portal] *'));
+          const openBefore = new Set(openPopups());
+          await trigger.open(view.user);
+          await waitFor(() => {
+            expect(openPopups().filter((popup) => !openBefore.has(popup))).not.toHaveLength(0);
+          });
+          // A popup has its starting style until the frame after its mount. A style sheet gives that
+          // style `opacity: 0`, and axe gives no contrast for text that a reader cannot see.
+          await waitFor(() => {
+            expect([...document.querySelectorAll('[data-starting-style]')]).toEqual([]);
+          });
+          await waitFor(() => {
+            expect(runningAnimations()).toEqual([]);
+          });
+        }
 
-      if (path.length < 3) {
-        triggersAt(name, path.length, frame, before).forEach((_, index) =>
-          paths.push([...path, index]),
-        );
+        await expectNoViolationsInOpenState(frame);
+        for (const portal of portals().filter((element) => !frame.contains(element))) {
+          await expectNoViolationsInOpenState(portal);
+        }
+
+        if (path.length < 3) {
+          triggersAt(name, path.length, frame, before).forEach((_, index) =>
+            paths.push([...path, index]),
+          );
+        }
+        view.unmount();
+        // The next mount starts after the flush of the unmount.
+        await flushMicrotasks();
       }
-      view.unmount();
-      // The next mount starts after the flush of the unmount.
-      await flushMicrotasks();
-    }
-  });
-});
+    });
+  },
+);
