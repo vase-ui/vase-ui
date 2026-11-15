@@ -6,7 +6,9 @@ description: An unstyled Vue checkbox component that is easy to customize.
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoCheckboxHero from '../demos/checkbox/hero/css-modules/index.vue';
+import DemoCheckboxHeroTailwind from '../demos/checkbox/hero/tailwind/index.vue';
 </script>
 
 # Checkbox
@@ -15,7 +17,12 @@ An easily stylable checkbox component.
 
 <DemoFrame>
   <DemoCheckboxHero />
+  <template #tailwind>
+    <DemoCheckboxHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -24,6 +31,18 @@ An easily stylable checkbox component.
 <<< ../demos/checkbox/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/checkbox/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Usage guidelines
 
