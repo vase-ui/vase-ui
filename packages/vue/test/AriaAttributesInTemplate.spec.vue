@@ -7,6 +7,7 @@ import * as OTPField from '../src/otp-field/index.parts';
 import * as Radio from '../src/radio/index.parts';
 import * as Slider from '../src/slider/index.parts';
 import * as Switch from '../src/switch/index.parts';
+import * as TimeField from '../src/time-field/index.parts';
 
 const id = 'id';
 </script>
@@ -77,6 +78,13 @@ const id = 'id';
   <Slider.Thumb :aria-describedby="5" />
   <!-- @vue-expect-error `aria-valuetext` is a string -->
   <Slider.Thumb :aria-valuetext="5" />
+
+  <TimeField.Root aria-labelledby="id" />
+  <TimeField.Root :aria-labelledby="id" />
+  <TimeField.Root ariaLabelledby="id" />
+  <TimeField.Root :ariaLabelledby="id" />
+  <!-- @vue-expect-error `aria-labelledby` is a string -->
+  <TimeField.Root :aria-labelledby="5" />
 
   <Combobox.Chip aria-description="x" />
   <Combobox.Chip :aria-description="id" />

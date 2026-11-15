@@ -144,7 +144,7 @@ export function useDateTimeFieldSegment(
         isFull = true;
       }
     }
-    // Until the hydration ends, the text can be one that the user typed before the page was
+    // Until the hydration ends, the event can be for text that the user typed before the page was
     // ready. The focus then moves only from the segment that has it.
     if (
       isFull &&
