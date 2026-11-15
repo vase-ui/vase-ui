@@ -1557,6 +1557,29 @@ describe('<Resizable.Handle />', () => {
       expect(inner).toHaveAttribute('data-crossing');
     });
 
+    it('keeps data-crossing on the joined handle while a second pointer presses it, moves on it and leaves it', async () => {
+      const { outer, inner, at, move } = await renderCrossing();
+      await fireEvent.pointerDown(outer, pointerInit({ ...at, buttons: 1 }));
+      await move(10, 10);
+      const second = (init: PointerEventInit = {}) =>
+        pointerInit({
+          pointerId: 2,
+          pointerType: 'touch',
+          clientX: at.clientX + 100,
+          clientY: at.clientY + 10,
+          ...init,
+        });
+
+      await fireEvent.pointerDown(inner, second({ buttons: 1 }));
+      await fireEvent.pointerMove(inner, second({ clientX: at.clientX + 120, buttons: 1 }));
+      expect(inner).toHaveAttribute('data-crossing');
+      await fireEvent.pointerUp(inner, second());
+      await fireEvent.pointerLeave(inner, second());
+
+      expect(inner).toHaveAttribute('data-crossing');
+      expect(inner).toHaveAttribute('data-dragging');
+    });
+
     it('sets no data-crossing away from the crossing', async () => {
       const { outer, at } = await renderCrossing();
 
@@ -1886,8 +1909,7 @@ describe('<Resizable.Handle />', () => {
       await nextTick();
 
       expect(onClick).toHaveBeenCalledTimes(1);
-      // The click of the script cleared the rule, so a click of a later press goes on too.
-      await drag(handle, 5, 5);
+      // The click of the script cleared the rule, so the next click with a detail goes on too.
       await clickOfPress(handle);
       expect(onClick).toHaveBeenCalledTimes(2);
     });

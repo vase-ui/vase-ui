@@ -100,6 +100,11 @@ export function createHandlePress(own: PressedHandle): HandlePress {
 
   function move(event: PointerEvent) {
     if (drags.length === 0) {
+      // The press of another pointer can drag this handle. That press writes `crossing` until it
+      // ends, so a second pointer on the handle does not change it.
+      if (own.drag.dragging.value) {
+        return;
+      }
       // The hover: with no button down, the handle shows whether a press here crosses another one.
       own.drag.crossing.value =
         event.buttons === 0 &&
@@ -142,7 +147,7 @@ export function createHandlePress(own: PressedHandle): HandlePress {
       onPointercancel: endWith(false),
       onLostpointercapture: endWith(false),
       onPointerleave() {
-        if (drags.length === 0) {
+        if (drags.length === 0 && !own.drag.dragging.value) {
           own.drag.crossing.value = false;
         }
       },
