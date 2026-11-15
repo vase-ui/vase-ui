@@ -5,6 +5,7 @@ import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import {
   createFormDataSpy,
+  createHeldBranch,
   createRenderer,
   describeConformance,
   flushMicrotasks,
@@ -518,80 +519,93 @@ describe('<DateField.Root />', () => {
   });
 
   describe('KeepAlive', () => {
-    it.each([{ name: 'held mount' }, { name: 'deactivated' }])(
-      'a held required date field does not block the submit of its form, and a shown one does: $name',
-      async ({ name }) => {
-        const handleSubmit = vi.fn();
-        const visible = shallowRef(true);
-        const extra = shallowRef(name === 'deactivated');
-        const Branch = defineComponent(() => () => (
-          <div>
-            {extra.value ? (
-              <DateField.Root key="held" required>
-                <DateField.Input />
-              </DateField.Root>
-            ) : null}
-          </div>
-        ));
-        const { user } = await render(() => (
-          <Form onFormSubmit={handleSubmit}>
-            <Field.Root name="date" data-testid="field">
-              <Field.Control defaultValue="shown" />
-              <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
-            </Field.Root>
-            <button type="submit">Submit</button>
-          </Form>
-        ));
+    it('a date field that mounts while KeepAlive holds it does not block the submit of its form', async () => {
+      const handleSubmit = vi.fn();
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <DateField.Root key="held" required>
+          <DateField.Input />
+        </DateField.Root>
+      ));
+      const { user } = await render(() => (
+        <Form onFormSubmit={handleSubmit}>
+          <Field.Root name="date" data-testid="field">
+            <Field.Control defaultValue="shown" />
+            <HeldBranch />
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>
+      ));
 
-        visible.value = false;
-        await flushMicrotasks();
-        extra.value = true;
-        await flushMicrotasks();
-        await user.click(screen.getByRole('button', { name: 'Submit' }));
+      await mountWhileHeld();
+      await user.click(screen.getByRole('button', { name: 'Submit' }));
 
-        expect(handleSubmit).toHaveBeenCalledTimes(1);
-        expect(handleSubmit.mock.lastCall?.[0]).toEqual({ date: 'shown' });
-        expect(screen.getByTestId('field')).not.toHaveAttribute('data-invalid');
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+      expect(handleSubmit.mock.lastCall?.[0]).toEqual({ date: 'shown' });
+      expect(screen.getByTestId('field')).not.toHaveAttribute('data-invalid');
 
-        visible.value = true;
-        await flushMicrotasks();
-        await user.click(screen.getByRole('button', { name: 'Submit' }));
+      await show();
+      await user.click(screen.getByRole('button', { name: 'Submit' }));
 
-        expect(handleSubmit).toHaveBeenCalledTimes(1);
-        expect(screen.getByTestId('field')).toHaveAttribute('data-invalid', '');
-      },
-    );
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+      expect(screen.getByTestId('field')).toHaveAttribute('data-invalid', '');
+    });
 
-    it('the label does not name a date field that mounts while KeepAlive holds it', async () => {
+    it('a date field that KeepAlive deactivates does not block the submit of its form', async () => {
+      const handleSubmit = vi.fn();
       const visible = shallowRef(true);
-      const extra = shallowRef(false);
       const Branch = defineComponent(() => () => (
         <div>
-          {extra.value ? (
-            <DateField.Root key="held" id="held-date">
-              <DateField.Input />
-            </DateField.Root>
-          ) : null}
+          <DateField.Root key="deactivated" required>
+            <DateField.Input />
+          </DateField.Root>
         </div>
+      ));
+      const { user } = await render(() => (
+        <Form onFormSubmit={handleSubmit}>
+          <Field.Root name="date" data-testid="field">
+            <Field.Control defaultValue="shown" />
+            <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>
+      ));
+
+      visible.value = false;
+      await flushMicrotasks();
+      await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+      expect(handleSubmit.mock.lastCall?.[0]).toEqual({ date: 'shown' });
+      expect(screen.getByTestId('field')).not.toHaveAttribute('data-invalid');
+
+      visible.value = true;
+      await flushMicrotasks();
+      await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+      expect(screen.getByTestId('field')).toHaveAttribute('data-invalid', '');
+    });
+
+    it('the label does not name a date field that mounts while KeepAlive holds it', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <DateField.Root key="held" id="held-date">
+          <DateField.Input />
+        </DateField.Root>
       ));
       await render(() => (
         <Field.Root>
           <Field.Label data-testid="label">Birth date</Field.Label>
-          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+          <HeldBranch />
         </Field.Root>
       ));
       const label = screen.getByTestId('label');
       const providerId = label.getAttribute('for');
 
-      visible.value = false;
-      await flushMicrotasks();
-      extra.value = true;
-      await flushMicrotasks();
+      await mountWhileHeld();
 
       expect(label.getAttribute('for')).toBe(providerId);
 
-      visible.value = true;
-      await flushMicrotasks();
+      await show();
 
       expect(label).toHaveAttribute('for', 'held-date');
     });
