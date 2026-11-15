@@ -2012,6 +2012,36 @@ describe('<Toast.Root />', () => {
       return { manager, visible, rendered };
     }
 
+    it.each([
+      { name: 'the root alone', withContent: false },
+      { name: 'a root with Toast.Content', withContent: true },
+    ])(
+      'measures a toast that mounts while KeepAlive holds it, at the show: $name',
+      async ({ withContent }) => {
+        globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+        const counter = createTransitionRunCounter(() => true);
+        const { manager, visible, rendered } = renderKeptViewport({
+          withContent,
+          onTransitionrun: counter.onTransitionrun,
+        });
+        const { container } = await rendered;
+        // A part that mounts in the flush of the deactivation gets `onDeactivated`.
+        visible.value = false;
+        await flushMicrotasks();
+        manager.add({ title: 'kept', timeout: 0 });
+        await flushMicrotasks();
+
+        await nextEvent(container, 'transitionrun', {
+          action: () => {
+            visible.value = true;
+          },
+        });
+
+        expect(counter.counts).toEqual({ enter: 1, exit: 0 });
+        expect(screen.getByTestId('toast').style.getPropertyValue('--toast-height')).toBe('40px');
+      },
+    );
+
     // The observers of `Toast.Content` correct the height at the show. With them, only the enter
     // transition shows a measure in the flush of the deactivation.
     it.each([
@@ -2041,6 +2071,51 @@ describe('<Toast.Root />', () => {
         expect(screen.getByTestId('toast').style.getPropertyValue('--toast-height')).toBe('40px');
       },
     );
+
+    it('measures a toast that mounts in the render of the activation', async () => {
+      const manager = Toast.createToastManager();
+      const visible = shallowRef(true);
+      const count = shallowRef(0);
+      // The page renders the toasts itself. A new prop then renders them in the patch of the
+      // activation.
+      const Page = defineComponent({
+        name: 'Page',
+        props: { count: { type: Number, required: true } },
+        setup(props) {
+          const { toasts } = Toast.useToastManager();
+          return () => (
+            <Toast.Viewport data-count={props.count}>
+              {toasts.value.map((toastItem) => (
+                <Toast.Root key={toastItem.id} toast={toastItem} data-testid="toast">
+                  <div style={{ height: '40px' }} />
+                </Toast.Root>
+              ))}
+            </Toast.Viewport>
+          );
+        },
+      });
+      const Other = defineComponent({ name: 'Other', setup: () => () => <p /> });
+      await render(() => (
+        <Toast.Provider toastManager={manager}>
+          <KeepAlive>
+            {visible.value ? <Page key="page" count={count.value} /> : <Other key="other" />}
+          </KeepAlive>
+        </Toast.Provider>
+      ));
+      visible.value = false;
+      await flushMicrotasks();
+
+      manager.add({ title: 'kept', timeout: 0 });
+      count.value += 1;
+      visible.value = true;
+      await flushMicrotasks();
+
+      const root = screen.getByTestId('toast');
+      await waitFor(() => {
+        expect(root.style.getPropertyValue('--toast-height')).toBe('40px');
+      });
+      expect(root).not.toHaveAttribute('data-starting-style');
+    });
 
     it('ends a swipe with no dismissal when KeepAlive deactivates the toast', async () => {
       const { manager, visible, rendered } = renderKeptViewport();

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { nextTick, shallowRef } from 'vue';
+import { defineComponent, KeepAlive, nextTick, shallowRef } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import {
   createRenderer,
@@ -44,6 +44,18 @@ interface AnchoringCase {
 
 function readVariable(element: HTMLElement, name: string) {
   return element.style.getPropertyValue(name);
+}
+
+function recordVariable(element: HTMLElement, name: string) {
+  const values = [readVariable(element, name)];
+  const observer = new MutationObserver(() => {
+    const value = readVariable(element, name);
+    if (values.at(-1) !== value) {
+      values.push(value);
+    }
+  });
+  observer.observe(element, { attributes: true, attributeFilter: ['style'] });
+  return { values, stop: () => observer.disconnect() };
 }
 
 // A change of the variable inside one task leaves no trace for a test. The variable of the first
@@ -160,18 +172,6 @@ describe('usePopupAutoResize', () => {
         expect(screen.getByTestId('popup')).toBeInTheDocument();
       });
       return result;
-    }
-
-    function recordVariable(element: HTMLElement, name: string) {
-      const values = [readVariable(element, name)];
-      const observer = new MutationObserver(() => {
-        const value = readVariable(element, name);
-        if (values.at(-1) !== value) {
-          values.push(value);
-        }
-      });
-      observer.observe(element, { attributes: true, attributeFilter: ['style'] });
-      return { values, stop: () => observer.disconnect() };
     }
 
     it('gives the measured size to the positioner and leaves the popup at auto when the popup opens', async () => {
@@ -452,6 +452,44 @@ describe('usePopupAutoResize', () => {
       await flushMicrotasks();
 
       expect(readVariable(positioner, '--positioner-width')).toBe('160px');
+    });
+
+    it('measures a popup that mounts open while KeepAlive holds its branch, at the show', async () => {
+      const visible = shallowRef(true);
+      const mounted = shallowRef(false);
+      const branchElement = shallowRef<HTMLElement | null>(null);
+      const Branch = defineComponent(() => () => (
+        <div ref={branchElement}>
+          {mounted.value &&
+            scene({
+              root: openRoot,
+              triggers: [{ id: 'trigger', payload: 'narrow' }],
+              content: sized,
+            })}
+        </div>
+      ));
+      await render(() => (
+        <div>
+          <style>{POPUP_STYLE}</style>
+          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+        </div>
+      ));
+      // A part that mounts in the flush of the deactivation gets `onDeactivated`.
+      visible.value = false;
+      await flushMicrotasks();
+      mounted.value = true;
+      await flushMicrotasks();
+      const popup = branchElement.value!.querySelector<HTMLElement>('[data-testid="popup"]')!;
+      const widths = recordVariable(popup, '--popup-width');
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      await waitFor(() => {
+        expect(readVariable(screen.getByTestId('positioner'), '--positioner-width')).toBe('120px');
+      });
+      widths.stop();
+      expect(widths.values).not.toContain('0px');
     });
 
     it('starts the next resize from the size before the deactivation', async () => {

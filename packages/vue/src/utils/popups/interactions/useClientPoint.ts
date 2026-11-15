@@ -13,6 +13,7 @@ import { addEventListener } from '../../../common/addEventListener';
 import { ownerWindow } from '../../../common/owner';
 import { contains, getTarget } from '../../../common/shadowDom';
 import type { HTMLProps } from '../../../internals/types';
+import { isInHeldBranch } from '../../../internals/useKeepAliveState';
 import type { PopupInteractionContext, PopupInteractionStore } from '../types';
 import { isMouseLikePointerType } from '../event';
 
@@ -126,7 +127,7 @@ export function useClientPoint(
 
   let disabledWhileOpen = false;
   let stopListening: (() => void) | null = null;
-  let deactivated = false;
+  let deactivated = isInHeldBranch();
   // Vue runs the cleanup of a part in the render of its parent. The cleanup thus reads no reactive
   // state, and it clears the store of the last run.
   let anchoredStore: PopupInteractionStore | undefined;
