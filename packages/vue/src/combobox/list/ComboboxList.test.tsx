@@ -1,8 +1,9 @@
 import { expect, vi, describe, it } from 'vitest';
-import { defineComponent, KeepAlive, shallowRef, toRaw } from 'vue';
+import { KeepAlive, shallowRef, toRaw } from 'vue';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -509,10 +510,9 @@ describe('<Combobox.List />', () => {
     });
 
     it('gives no element when it mounts while KeepAlive holds its branch', async () => {
-      const show = shallowRef(true);
-      const hasList = shallowRef(false);
-      const ListBranch = defineComponent(
-        () => () => (hasList.value ? <Combobox.List id="list" data-testid="list" /> : null),
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
+        () => <Combobox.List id="list" data-testid="list" />,
+        { renderBranch: (part) => part },
       );
       let store!: ComboboxStore;
       await render(() => (
@@ -522,7 +522,7 @@ describe('<Combobox.List />', () => {
           <Combobox.Portal>
             <Combobox.Positioner>
               <Combobox.Popup>
-                <KeepAlive>{show.value ? <ListBranch /> : null}</KeepAlive>
+                <HeldBranch />
               </Combobox.Popup>
             </Combobox.Positioner>
           </Combobox.Portal>
@@ -530,18 +530,14 @@ describe('<Combobox.List />', () => {
       ));
       await flushMicrotasks();
 
-      show.value = false;
-      await flushMicrotasks();
-      hasList.value = true;
-      await flushMicrotasks();
+      await mountWhileHeld();
 
       const input = screen.getByTestId('input');
       expect(document.getElementById('list')).toBe(null);
       expect(toRaw(store.state).listElement).toBe(null);
       expect(input).not.toHaveAttribute('aria-controls');
 
-      show.value = true;
-      await flushMicrotasks();
+      await show();
 
       expect(toRaw(store.state).listElement).toBe(screen.getByTestId('list'));
       expect(input).toHaveAttribute('aria-controls', 'list');

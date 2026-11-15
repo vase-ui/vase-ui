@@ -1,12 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { createSSRApp, defineComponent, h, KeepAlive, onMounted, shallowRef } from 'vue';
+import { createSSRApp, defineComponent, h, onMounted, shallowRef } from 'vue';
 import { Checkbox } from '@vase-ui/vue/checkbox';
 import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import {
   createFormDataSpy,
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -3026,29 +3027,9 @@ describe('<Checkbox.Root />', () => {
   });
 
   describe('a checkbox that mounts while KeepAlive holds its branch', () => {
-    function createBranch(renderExtra: () => unknown) {
-      const visible = shallowRef(true);
-      const extra = shallowRef(false);
-      const Branch = defineComponent(() => () => <div>{extra.value ? renderExtra() : null}</div>);
-      const HeldBranch = defineComponent(() => () => (
-        <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
-      ));
-      async function mountWhileHeld() {
-        visible.value = false;
-        await flushMicrotasks();
-        extra.value = true;
-        await flushMicrotasks();
-      }
-      async function show() {
-        visible.value = true;
-        await flushMicrotasks();
-      }
-      return { HeldBranch, mountWhileHeld, show };
-    }
-
     it('does not block the form while held, and blocks it after the show', async () => {
       const handleSubmit = vi.fn();
-      const { HeldBranch, mountWhileHeld, show } = createBranch(() => (
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
         <Checkbox.Root key="box" required data-testid="box" />
       ));
       const { user } = await render(() => (
@@ -3074,7 +3055,7 @@ describe('<Checkbox.Root />', () => {
 
     it('does not block the form of its group while held, and blocks it after the show', async () => {
       const handleSubmit = vi.fn();
-      const { HeldBranch, mountWhileHeld, show } = createBranch(() => (
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
         <Checkbox.Root key="b" value="b" required />
       ));
       const { user } = await render(() => (
@@ -3101,7 +3082,7 @@ describe('<Checkbox.Root />', () => {
     });
 
     it('is not in `aria-controls` of the parent checkbox while held', async () => {
-      const { HeldBranch, mountWhileHeld, show } = createBranch(() => (
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
         <Checkbox.Root key="b" value="b" data-testid="b" />
       ));
       await render(() => (
@@ -3122,7 +3103,7 @@ describe('<Checkbox.Root />', () => {
     });
 
     it('does not give its id to the `for` of the label while held', async () => {
-      const { HeldBranch, mountWhileHeld, show } = createBranch(() => (
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
         <Checkbox.Root key="box" id="box" />
       ));
       await render(() => (

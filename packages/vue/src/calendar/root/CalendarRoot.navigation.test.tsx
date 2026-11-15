@@ -22,7 +22,7 @@ function format(options: Intl.DateTimeFormatOptions, iso: string, locale = 'en-U
 
 const monthName = (iso: string) => format({ month: 'long', year: 'numeric' }, iso);
 
-// The names of the grids, one for each month that the calendar shows.
+// The names of the grids, one for each page that the calendar shows.
 function gridNames() {
   return screen.getAllByRole('grid').map((grid) => grid.getAttribute('aria-label'));
 }

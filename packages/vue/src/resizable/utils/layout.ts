@@ -24,6 +24,17 @@ export interface PanelConstraints {
   collapseThreshold?: number | undefined;
   /** Whether a move of a handle leaves the size of the panel as it is. */
   locked?: boolean | undefined;
+  /** Whether the panel keeps its size in pixels when the root changes size. */
+  fixed?: boolean | undefined;
+  /**
+   * When the other panels cannot take a size change of the root, the fixed panel with the greater
+   * number gives way first.
+   */
+  priority?: number | undefined;
+  /** In percent. A drag that comes within `snapTolerance` of a point gives the panel that size. */
+  snapPoints?: readonly number[] | undefined;
+  /** In percent. */
+  snapTolerance?: number | undefined;
 }
 
 interface PanelSize {
@@ -313,11 +324,161 @@ export function getHandleLimits(
   return { atMin: size <= min, atMax: size >= max };
 }
 
-export function areLayoutsEqual(a: Layout, b: Layout): boolean {
+/**
+ * The pixels of each fixed panel for a layout at a panel space of `space` pixels.
+ */
+export function takePins(
+  panels: readonly PanelConstraints[],
+  layout: Layout,
+  space: number,
+): Record<string, number> {
+  return Object.fromEntries(
+    panels
+      .filter((panel) => panel.fixed)
+      .map((panel) => [panel.id, (sizeOf(layout, panel) / 100) * space]),
+  );
+}
+
+/**
+ * Gives `total` percent to the panels in the ratio that they have in `layout`, as CSS flexbox
+ * does. A panel that a least or a greatest size holds keeps that size. The other panels share what
+ * is left. A collapsed panel keeps its collapsed size.
+ */
+function shareInRatio(panels: readonly PanelConstraints[], layout: Layout, total: number): Layout {
+  // Each panel has an entry from the start, so an id such as `__proto__` is a key and not a prototype.
+  const shares: Layout = Object.fromEntries(panels.map((panel) => [panel.id, 0]));
+  let remaining = total;
+  let free: PanelConstraints[] = [];
+  for (const panel of panels) {
+    if (isCollapsed(panel, sizeOf(layout, panel))) {
+      shares[panel.id] = panel.collapsedSize;
+      remaining -= panel.collapsedSize;
+    } else {
+      free.push(panel);
+    }
+  }
+  while (free.length > 0) {
+    const weight = sum(free.map((panel) => sizeOf(layout, panel)));
+    const proposals = free.map((panel) => ({
+      panel,
+      size: weight > 0 ? (sizeOf(layout, panel) / weight) * remaining : remaining / free.length,
+    }));
+    const violation = sum(
+      proposals.map(({ panel, size }) => clamp(size, panel.minSize, panel.maxSize) - size),
+    );
+    // As flexbox does, hold only the panels that break the kind of constraint with the larger total.
+    // The other panels then share the rest again. With no such panel, each panel is held, so the
+    // loop always ends.
+    const violators = proposals.filter(({ panel, size }) =>
+      violation > EPSILON ? size < panel.minSize : violation < -EPSILON && size > panel.maxSize,
+    );
+    const held = violators.length > 0 ? violators : proposals;
+    for (const { panel, size } of held) {
+      shares[panel.id] = clamp(size, panel.minSize, panel.maxSize);
+      remaining -= sizeOf(shares, panel);
+    }
+    free = free.filter((panel) => !held.some((entry) => entry.panel === panel));
+  }
+  return shares;
+}
+
+/**
+ * The layout after a change of the panel space. Each fixed panel that has a pin takes its pin, in
+ * percent of the new space. The other panels share the rest in the ratio that they have in `layout`,
+ * and a collapsed panel stays collapsed. When the other panels cannot take the change, the fixed
+ * panels take it: the greater `priority` first, then the sequence of the panels.
+ * With no panel that is not fixed, or with no space, the layout stays.
+ */
+export function applyFixedSizes(
+  panels: readonly PanelConstraints[],
+  layout: Layout,
+  pins: Readonly<Record<string, number>>,
+  space: number,
+): Layout {
+  const fixed = panels.filter((panel) => panel.fixed && Object.hasOwn(pins, panel.id));
+  const others = panels.filter((panel) => !fixed.includes(panel));
+  if (fixed.length === 0 || others.length === 0 || space <= 0) {
+    return layout;
+  }
+  const wanted: Layout = Object.fromEntries(panels.map((panel) => [panel.id, 0]));
+  for (const panel of fixed) {
+    wanted[panel.id] = isCollapsed(panel, sizeOf(layout, panel))
+      ? panel.collapsedSize
+      : ((pins[panel.id] ?? 0) / space) * 100;
+  }
+  Object.assign(
+    wanted,
+    shareInRatio(
+      others,
+      layout,
+      Math.max(100 - sum(fixed.map((panel) => sizeOf(wanted, panel))), 0),
+    ),
+  );
+  let remainder = 100 - sum(panels.map((panel) => sizeOf(wanted, panel)));
+  for (const panel of [...fixed].sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0))) {
+    if (Math.abs(remainder) <= EPSILON) {
+      break;
+    }
+    const size = sizeOf(wanted, panel);
+    const next = isCollapsed(panel, size)
+      ? size
+      : clamp(size + remainder, panel.minSize, panel.maxSize);
+    remainder -= next - size;
+    wanted[panel.id] = next;
+  }
+  return validateLayout(panels, wanted);
+}
+
+/**
+ * The delta of a drag, in percent, after the drag step and the snap points. With a drag step, the
+ * delta is the nearest multiple of it. Then the panel before the handle can snap. If it does not,
+ * the panel after the handle can snap. The nearest snap point that is inside the tolerance of the
+ * panel gives the panel that size. A snap point outside the least and the greatest size of the panel
+ * is not used. A locked panel does not snap, because its size does not change.
+ */
+export function snapDelta(
+  panels: readonly PanelConstraints[],
+  start: Layout,
+  pivot: number,
+  delta: number,
+  dragStep?: number,
+): number {
+  const stepped =
+    dragStep === undefined || dragStep <= 0 ? delta : Math.round(delta / dragStep) * dragStep;
+  for (const [index, sign] of [
+    [pivot, 1],
+    [pivot + 1, -1],
+  ] as const) {
+    const panel = panels[index];
+    if (panel === undefined || panel.locked) {
+      continue;
+    }
+    const size = sizeOf(start, panel) + sign * stepped;
+    const points = (panel.snapPoints ?? []).filter(
+      (point) =>
+        point >= panel.minSize &&
+        point <= panel.maxSize &&
+        Math.abs(size - point) <= (panel.snapTolerance ?? 0),
+    );
+    const nearest = points.sort((a, b) => Math.abs(size - a) - Math.abs(size - b))[0];
+    if (nearest !== undefined) {
+      return stepped + sign * (nearest - size);
+    }
+  }
+  return stepped;
+}
+
+export function areLayoutsEqual(
+  a: Readonly<Record<string, number | string>>,
+  b: Readonly<Record<string, number | string>>,
+): boolean {
   return hasSamePanels(a, b) && Object.entries(a).every(([id, size]) => b[id] === size);
 }
 
-export function hasSamePanels(a: Layout, b: Layout): boolean {
+export function hasSamePanels(
+  a: Readonly<Record<string, unknown>>,
+  b: Readonly<Record<string, unknown>>,
+): boolean {
   const ids = Object.keys(a);
   return ids.length === Object.keys(b).length && ids.every((id) => Object.hasOwn(b, id));
 }

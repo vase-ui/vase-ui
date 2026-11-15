@@ -5,6 +5,7 @@ import {
   fireEvent,
   flushMicrotasks,
   screen,
+  waitForLaterMillisecond,
 } from '#test-utils';
 import { Toast } from '@vase-ui/vue/toast';
 import { List, Button } from '../utils/test-utils';
@@ -45,7 +46,7 @@ describe('<Toast.Close />', () => {
     const button = screen.getByRole('button', { name: 'add' });
     const viewport = screen.getByTestId('viewport');
 
-    await user.click(button);
+    await waitForLaterMillisecond(() => user.click(button));
 
     expect(screen.getByTestId('title')).not.toBe(null);
 

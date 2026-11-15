@@ -2,6 +2,7 @@ import { expect, describe, it } from 'vitest';
 import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import { Fieldset } from '@vase-ui/vue/fieldset';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -140,48 +141,33 @@ describe('<Fieldset.Legend />', () => {
   });
 
   it('names the last legend after KeepAlive shows a legend that mounted while held', async () => {
-    const visible = shallowRef(true);
-    const extra = shallowRef(false);
-    const Branch = defineComponent(() => () => (
-      <div>
-        <Fieldset.Legend key="a" id="legend-a">
-          A
+    const { HeldBranch, hide, mountWhileHeld, show } = createHeldBranch(
+      () => (
+        <Fieldset.Legend key="b" id="legend-b">
+          B
         </Fieldset.Legend>
-        {extra.value ? (
-          <Fieldset.Legend key="b" id="legend-b">
-            B
-          </Fieldset.Legend>
-        ) : null}
-      </div>
-    ));
+      ),
+      {
+        renderBranch: (part) => (
+          <div>
+            <Fieldset.Legend key="a" id="legend-a">
+              A
+            </Fieldset.Legend>
+            {part}
+          </div>
+        ),
+      },
+    );
     const App = defineComponent(() => () => (
       <Fieldset.Root>
-        <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+        <HeldBranch />
       </Fieldset.Root>
     ));
     await render(<App />);
     const fieldset = screen.getByRole('group');
     const seen = [fieldset.getAttribute('aria-labelledby')];
-    const changes = [
-      () => {
-        visible.value = false;
-      },
-      () => {
-        extra.value = true;
-      },
-      () => {
-        visible.value = true;
-      },
-      () => {
-        visible.value = false;
-      },
-      () => {
-        visible.value = true;
-      },
-    ];
-    for (const change of changes) {
-      change();
-      await flushMicrotasks();
+    for (const change of [hide, mountWhileHeld, show, hide, show]) {
+      await change();
       seen.push(fieldset.getAttribute('aria-labelledby'));
     }
 

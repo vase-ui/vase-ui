@@ -9,6 +9,8 @@ import {
   flushMicrotasks,
   hiddenInputSizeTests,
   hydrate,
+  hydrateAfter,
+  recordInputEvents,
   renderOnServer,
   screen,
   takeReportedMessages,
@@ -1008,14 +1010,50 @@ describe('useDateTimeFieldRoot', () => {
       expect(input.value).toBe('2026-11-14');
     });
 
-    it('writes its text again when the page is shown from the cache', async () => {
-      const { container } = await render(<DateTimeFieldProbe defaultValue="2026-11-14" />);
+    it('takes the text that its hidden input got before the hydration, with one change', async () => {
+      const props = { defaultValue: '2026-11-14', locale: 'en-US', name: 'when' };
+      const onValueChange = vi.fn();
+      const serverHtml = await renderOnServer(PROBE, props);
+      let events: string[] = [];
+
+      const { container } = await hydrateAfter(DateTimeFieldProbe, {
+        serverHtml,
+        props: { ...props, onValueChange },
+        before(serverContainer) {
+          const input = hiddenInputOf(serverContainer);
+          events = recordInputEvents(input);
+          input.value = '2026-12-25';
+        },
+      });
+      await flushMicrotasks();
+
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+      expect(onValueChange.mock.calls[0]![0].toString()).toBe('2026-12-25');
+      expect(onValueChange.mock.calls[0]![1].reason).toBe('input-change');
+      expect(segmentOf(container, 'month').value).toBe('12');
+      expect(hiddenInputOf(container).value).toBe('2026-12-25');
+      expect(events).toEqual(['input']);
+    });
+
+    it('keeps a value that the type of its hidden input refuses at a `pageshow` event after the hydration', async () => {
+      // A `date` input has no year 0, so it has no value.
+      const props = { defaultValue: '0000-03-01', locale: 'en-US', name: 'when' };
+      const onValueChange = vi.fn();
+      const serverHtml = await renderOnServer(PROBE, props);
+      const { container } = await hydrate(DateTimeFieldProbe, {
+        serverHtml,
+        props: { ...props, onValueChange },
+      });
       const input = hiddenInputOf(container);
+      const events = recordInputEvents(input);
+      expect(input.value).toBe('');
 
-      input.value = '2020-01-01';
-      window.dispatchEvent(new Event('pageshow'));
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
 
-      expect(input.value).toBe('2026-11-14');
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(segmentOf(container, 'year').value).toBe('1');
+      expect(events).toEqual([]);
     });
 
     hiddenInputSizeTests({

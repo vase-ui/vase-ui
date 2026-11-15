@@ -10,6 +10,7 @@ import {
   screen,
   takeReportedMessages,
   waitFor,
+  waitForLaterMillisecond,
   within,
 } from '#test-utils';
 import CompositeItem from '../../../../test/fixtures/CompositeItemPart.vue';
@@ -284,8 +285,10 @@ describe('useCompositeItem', () => {
 
       expect(readTabindexes(container)).toEqual(['-1', '0', '-1']);
 
-      mount();
-      await settle();
+      await waitForLaterMillisecond(async () => {
+        mount();
+        await settle();
+      });
 
       expect(readTabindexes(container)).toEqual(['-1', '0', '-1']);
 

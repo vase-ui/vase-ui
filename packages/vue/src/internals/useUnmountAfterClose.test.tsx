@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { KeepAlive, defineComponent, nextTick, shallowRef, unref, watch } from 'vue';
+import { KeepAlive, Transition, defineComponent, nextTick, shallowRef, unref, watch } from 'vue';
 import type { Ref } from 'vue';
 import {
   createRenderer,
   flushMicrotasks,
+  nextAnimationsRead,
+  nextCall,
   randomStringValue,
   screen,
   waitFor,
@@ -54,6 +56,16 @@ interface HostProps {
   showElement?: boolean | undefined;
   animateInitialOpen?: boolean | undefined;
   popupClass?: string | undefined;
+  /**
+   * The name of a `<Transition>` around the element. With no name, the element has no
+   * `<Transition>`.
+   */
+  transitionName?: string | undefined;
+  /**
+   * Whether the element stays in the document after the unmount, as with `keepMounted` of a portal
+   * part.
+   */
+  keepMounted?: boolean | undefined;
 }
 
 function createHost() {
@@ -85,8 +97,8 @@ function createHost() {
         { flush: 'sync' },
       );
 
-      return () =>
-        result.mounted.value && props.showElement !== false ? (
+      const renderElement = () =>
+        (result.mounted.value || props.keepMounted) && props.showElement !== false ? (
           <div
             ref={element}
             class={props.popupClass}
@@ -95,8 +107,24 @@ function createHost() {
             data-ending-style={result.transitionStatus.value === 'ending' ? '' : undefined}
           />
         ) : null;
+
+      return () =>
+        props.transitionName === undefined ? (
+          renderElement()
+        ) : (
+          <Transition name={props.transitionName}>{renderElement()}</Transition>
+        );
     },
-    { props: ['open', 'showElement', 'animateInitialOpen', 'popupClass'] },
+    {
+      props: [
+        'open',
+        'showElement',
+        'animateInitialOpen',
+        'popupClass',
+        'transitionName',
+        'keepMounted',
+      ],
+    },
   );
 
   return {
@@ -501,6 +529,156 @@ describe('useUnmountAfterClose', () => {
 
       expect(host.result.mounted.value).toBe(true);
       expect(host.onUnmount).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('VUE-92: a close whose element detaches', () => {
+    it('ends the close when the element detaches in the flush of the close', async () => {
+      const host = createHost();
+      const { setProps } = await render(<host.Host open />);
+
+      await setProps({ open: false, showElement: false });
+
+      expect(host.onUnmount).toHaveBeenCalledTimes(1);
+      expect(host.result.mounted.value).toBe(false);
+    });
+
+    it('ends the close when the element detached while the popup was open', async () => {
+      const host = createHost();
+      const { setProps } = await render(<host.Host open />);
+      await setProps({ open: true, showElement: false });
+
+      await setProps({ open: false, showElement: false });
+
+      expect(host.onUnmount).toHaveBeenCalledTimes(1);
+      expect(host.result.mounted.value).toBe(false);
+    });
+
+    it('waits for an element that has not attached since the last close', async () => {
+      const host = createHost();
+      const { setProps } = await render(<host.Host open />);
+      await setProps({ open: false });
+      expect(host.onUnmount).toHaveBeenCalledTimes(1);
+
+      await setProps({ open: true, showElement: false });
+      await setProps({ open: false, showElement: false });
+      await flushMicrotasks();
+
+      expect(host.result.mounted.value).toBe(true);
+      expect(host.onUnmount).toHaveBeenCalledTimes(1);
+
+      await setProps({ open: false, showElement: true });
+      await flushMicrotasks();
+
+      expect(host.onUnmount).toHaveBeenCalledTimes(2);
+      expect(host.result.mounted.value).toBe(false);
+    });
+
+    it('ends the close when the element that stayed after the last close detaches', async () => {
+      const host = createHost();
+      const { setProps } = await render(<host.Host open keepMounted />);
+      await setProps({ open: false });
+      expect(host.onUnmount).toHaveBeenCalledTimes(1);
+      expect(screen.getByTestId('popup')).toBeInTheDocument();
+
+      await setProps({ open: true });
+      await setProps({ open: false, showElement: false });
+
+      expect(host.onUnmount).toHaveBeenCalledTimes(2);
+      expect(host.result.mounted.value).toBe(false);
+    });
+
+    it('ends the close of a reopen that comes after the element detached', async () => {
+      const host = createHost();
+      const { setProps } = await render(<host.Host open />);
+      host.preventUnmountOnClose.value = true;
+      await setProps({ open: false, showElement: false });
+      expect(host.result.mounted.value).toBe(true);
+
+      await setProps({ open: true, showElement: false });
+      await setProps({ open: false, showElement: false });
+
+      expect(host.onUnmount).toHaveBeenCalledTimes(1);
+      expect(host.result.mounted.value).toBe(false);
+    });
+
+    describe('with animations enabled', () => {
+      beforeEach(() => {
+        globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+      });
+
+      it('ends the close in the frame after the element leaves the document', async () => {
+        const host = createHost();
+        const popupClass = randomStringValue();
+        const animationName = randomStringValue();
+        const open = shallowRef(true);
+        const showElement = shallowRef(true);
+        await render(() => (
+          <div>
+            <style>{`
+              @keyframes ${animationName} { to { opacity: 0.5; } }
+              .${popupClass} { animation: ${animationName} 100s; }
+            `}</style>
+            <host.Host open={open.value} showElement={showElement.value} popupClass={popupClass} />
+          </div>
+        ));
+        expect(screen.getByTestId('popup').getAnimations()).toHaveLength(1);
+        let mountedInFrame: boolean | undefined;
+        requestAnimationFrame(() => {
+          mountedInFrame = host.result.mounted.value;
+        });
+
+        open.value = false;
+        showElement.value = false;
+        await nextTick();
+        await waitSingleFrame();
+        await flushMicrotasks();
+
+        expect(mountedInFrame).toBe(true);
+        expect(host.onUnmount).toHaveBeenCalledTimes(1);
+        expect(host.result.mounted.value).toBe(false);
+      });
+
+      it('waits for the animations of an element that a Transition keeps in the document', async () => {
+        const host = createHost();
+        const transitionName = randomStringValue();
+        const animationName = randomStringValue();
+        const open = shallowRef(true);
+        const showElement = shallowRef(true);
+        await render(() => (
+          <div>
+            <style>{`
+              @keyframes ${animationName} { to { opacity: 0; } }
+              .${transitionName}-leave-active { animation: ${animationName} 100s; }
+            `}</style>
+            <host.Host
+              open={open.value}
+              showElement={showElement.value}
+              transitionName={transitionName}
+            />
+          </div>
+        ));
+        const element = screen.getByTestId('popup');
+
+        const animations = await nextAnimationsRead(element, {
+          action: () => {
+            open.value = false;
+            showElement.value = false;
+          },
+        });
+
+        expect(element.isConnected).toBe(true);
+        expect(animations).toHaveLength(1);
+        expect(host.onUnmount).not.toHaveBeenCalled();
+
+        const unmounted = nextCall(host.onUnmount);
+        animations.forEach((animation) => {
+          animation.finish();
+        });
+        await unmounted;
+
+        expect(host.result.mounted.value).toBe(false);
+      });
     });
   });
 });

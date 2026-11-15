@@ -6,17 +6,29 @@ description: An unstyled Vue menu component that shows a list of actions in a dr
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoMenuArrow from '../demos/menu/arrow/css-modules/index.vue';
+import DemoMenuArrowTailwind from '../demos/menu/arrow/tailwind/index.vue';
 import DemoMenuCheckboxItems from '../demos/menu/checkbox-items/css-modules/index.vue';
+import DemoMenuCheckboxItemsTailwind from '../demos/menu/checkbox-items/tailwind/index.vue';
 import DemoMenuDetachedTriggersControlled from '../demos/menu/detached-triggers-controlled/css-modules/index.vue';
+import DemoMenuDetachedTriggersControlledTailwind from '../demos/menu/detached-triggers-controlled/tailwind/index.vue';
 import DemoMenuDetachedTriggersFull from '../demos/menu/detached-triggers-full/css-modules/index.vue';
+import DemoMenuDetachedTriggersFullTailwind from '../demos/menu/detached-triggers-full/tailwind/index.vue';
 import DemoMenuDetachedTriggersSimple from '../demos/menu/detached-triggers-simple/css-modules/index.vue';
+import DemoMenuDetachedTriggersSimpleTailwind from '../demos/menu/detached-triggers-simple/tailwind/index.vue';
 import DemoMenuFilter from '../demos/menu/filter/css-modules/index.vue';
+import DemoMenuFilterTailwind from '../demos/menu/filter/tailwind/index.vue';
 import DemoMenuGroupLabels from '../demos/menu/group-labels/css-modules/index.vue';
+import DemoMenuGroupLabelsTailwind from '../demos/menu/group-labels/tailwind/index.vue';
 import DemoMenuHero from '../demos/menu/hero/css-modules/index.vue';
+import DemoMenuHeroTailwind from '../demos/menu/hero/tailwind/index.vue';
 import DemoMenuOpenOnHover from '../demos/menu/open-on-hover/css-modules/index.vue';
+import DemoMenuOpenOnHoverTailwind from '../demos/menu/open-on-hover/tailwind/index.vue';
 import DemoMenuRadioItems from '../demos/menu/radio-items/css-modules/index.vue';
+import DemoMenuRadioItemsTailwind from '../demos/menu/radio-items/tailwind/index.vue';
 import DemoMenuSubmenu from '../demos/menu/submenu/css-modules/index.vue';
+import DemoMenuSubmenuTailwind from '../demos/menu/submenu/tailwind/index.vue';
 </script>
 
 # Menu
@@ -25,7 +37,12 @@ A list of actions in a dropdown, with keyboard navigation.
 
 <DemoFrame>
   <DemoMenuHero />
+  <template #tailwind>
+    <DemoMenuHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -34,6 +51,18 @@ A list of actions in a dropdown, with keyboard navigation.
 <<< ../demos/menu/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/menu/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Anatomy
 
@@ -51,7 +80,12 @@ The `delay` prop gives the time in milliseconds to wait before the menu opens on
 
 <DemoFrame>
   <DemoMenuOpenOnHover />
+  <template #tailwind>
+    <DemoMenuOpenOnHoverTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -61,13 +95,30 @@ The `delay` prop gives the time in milliseconds to wait before the menu opens on
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/menu/open-on-hover/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Checkbox items
 
 Use `<Menu.CheckboxItem>` for an item that turns a setting on or off. Bind its state with `v-model:checked`.
 
 <DemoFrame>
   <DemoMenuCheckboxItems />
+  <template #tailwind>
+    <DemoMenuCheckboxItemsTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -77,13 +128,30 @@ Use `<Menu.CheckboxItem>` for an item that turns a setting on or off. Bind its s
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/menu/checkbox-items/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Radio items
 
 Use `<Menu.RadioGroup>` and `<Menu.RadioItem>` for items that work like radio buttons. Bind the selected value with `v-model:value` on the group.
 
 <DemoFrame>
   <DemoMenuRadioItems />
+  <template #tailwind>
+    <DemoMenuRadioItemsTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -92,6 +160,18 @@ Use `<Menu.RadioGroup>` and `<Menu.RadioItem>` for items that work like radio bu
 <<< ../demos/menu/radio-items/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/menu/radio-items/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ### Close on click
 
@@ -105,7 +185,12 @@ Use `<Menu.GroupLabel>` to add a label to a `<Menu.Group>` or a `<Menu.RadioGrou
 
 <DemoFrame>
   <DemoMenuGroupLabels />
+  <template #tailwind>
+    <DemoMenuGroupLabelsTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -115,6 +200,18 @@ Use `<Menu.GroupLabel>` to add a label to a `<Menu.Group>` or a `<Menu.RadioGrou
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/menu/group-labels/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Nested menu
 
 To make a submenu, put a `<Menu.SubmenuRoot>` in the parent menu. Use `<Menu.SubmenuTrigger>` for the item that opens the nested menu.
@@ -123,7 +220,12 @@ To make a submenu, put a `<Menu.SubmenuRoot>` in the parent menu. Use `<Menu.Sub
 
 <DemoFrame>
   <DemoMenuSubmenu />
+  <template #tailwind>
+    <DemoMenuSubmenuTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -132,6 +234,18 @@ To make a submenu, put a `<Menu.SubmenuRoot>` in the parent menu. Use `<Menu.Sub
 <<< ../demos/menu/submenu/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/menu/submenu/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ### Navigate to another page
 
@@ -151,7 +265,12 @@ The methods of the handle, `open()` and `close()`, need a mounted `<Menu.Root>` 
 
 <DemoFrame>
   <DemoMenuDetachedTriggersSimple />
+  <template #tailwind>
+    <DemoMenuDetachedTriggersSimpleTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -160,6 +279,18 @@ The methods of the handle, `open()` and `close()`, need a mounted `<Menu.Root>` 
 <<< ../demos/menu/_index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/menu/detached-triggers-simple/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ### Multiple triggers
 
@@ -183,7 +314,12 @@ The root has no event for a change of the trigger. The `openChange` event gives 
 
 <DemoFrame>
   <DemoMenuDetachedTriggersControlled />
+  <template #tailwind>
+    <DemoMenuDetachedTriggersControlledTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -193,13 +329,30 @@ The root has no event for a change of the trigger. The `openChange` event gives 
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/menu/detached-triggers-controlled/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Arrow
 
 Use `<Menu.Arrow>` in the popup to connect the menu to its trigger.
 
 <DemoFrame>
   <DemoMenuArrow />
+  <template #tailwind>
+    <DemoMenuArrowTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -208,6 +361,18 @@ Use `<Menu.Arrow>` in the popup to connect the menu to its trigger.
 <<< ../demos/menu/arrow/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/menu/arrow/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ### Animating the Menu
 
@@ -232,7 +397,12 @@ Use `Menu.Viewport` only when one popup has more than one trigger, the content c
 
 <DemoFrame>
   <DemoMenuDetachedTriggersFull />
+  <template #tailwind>
+    <DemoMenuDetachedTriggersFullTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -244,6 +414,18 @@ Use `Menu.Viewport` only when one popup has more than one trigger, the content c
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/menu/detached-triggers-full/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Filtering [Preview]
 
 Wrap `<Menu.Root>` in `<Menu.FilterProvider>`, add `<Menu.Input>` to the popup, and put the items in `<Menu.List>`.
@@ -254,7 +436,12 @@ Label the input with `aria-label`, `aria-labelledby` or a visible `<label>`. Typ
 
 <DemoFrame>
   <DemoMenuFilter />
+  <template #tailwind>
+    <DemoMenuFilterTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -265,6 +452,22 @@ Label the input with `aria-label`, `aria-labelledby` or a visible `<label>`. Typ
 <<< ../demos/menu/filter/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/menu/filter/tailwind/index.vue
+
+<<< ../demos/menu/filter/tailwind/FilterableSubmenu.vue
+
+<<< ../demos/menu/filter/tailwind/classes.ts
+
+:::
+
+</DemoSource>
 
 #### Matching items
 

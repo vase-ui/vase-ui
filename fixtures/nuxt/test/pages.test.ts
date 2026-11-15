@@ -1642,6 +1642,8 @@ const FORM_STATE_INITIAL_MODELS = {
   code: '',
   volume: 50,
   range: [20, 80],
+  when: null,
+  alarm: null,
 };
 
 // The state of /form-state after a visitor presses each native label, types into each text control
@@ -1662,6 +1664,8 @@ const FORM_STATE_CHANGED: Omit<FormState, 'submits' | 'completes'> = {
     code: ['1234'],
     volume: ['70'],
     range: ['30', '60'],
+    when: ['2026-12-25'],
+    alarm: ['09:30'],
   },
   models: {
     text: 'typed',
@@ -1676,6 +1680,8 @@ const FORM_STATE_CHANGED: Omit<FormState, 'submits' | 'completes'> = {
     code: '1234',
     volume: 70,
     range: [30, 60],
+    when: '2026-12-25',
+    alarm: '09:30',
   },
   changes: {
     note: 1,
@@ -1692,6 +1698,8 @@ const FORM_STATE_CHANGED: Omit<FormState, 'submits' | 'completes'> = {
     code: 1,
     volume: 1,
     range: 2,
+    when: 1,
+    alarm: 1,
   },
   checked: {
     agree: 'true',
@@ -1779,6 +1787,8 @@ async function changeFormStateBeforeHydration(page: Page) {
     write('code', ['1234']);
     write('volume', ['70']);
     write('range', ['30', '60']);
+    write('when', ['2026-12-25']);
+    write('alarm', ['09:30']);
   });
 }
 
@@ -1805,6 +1815,10 @@ async function changeHydratedFormState(page: Page) {
     await input.focus();
     await page.keyboard.press('ArrowRight');
   }
+  await page.getByTestId('when').locator('input[data-type="month"]').click();
+  await page.keyboard.type('12252026');
+  await page.getByTestId('alarm').locator('input[data-type="hour"]').click();
+  await page.keyboard.type('0930');
 }
 
 function holdScripts(page: Page) {
@@ -2631,7 +2645,17 @@ describe.each(MODES)('in $name', async ({ dev }) => {
           expect(state.formData[name]).toEqual(FORM_STATE_CHANGED.formData[name]);
           expect(state.changes[name]).toBe(FORM_STATE_CHANGED.changes[name]);
         }
-        for (const name of ['text', 'filter', 'font', 'fruit', 'quantity', 'volume', 'range']) {
+        for (const name of [
+          'text',
+          'filter',
+          'font',
+          'fruit',
+          'quantity',
+          'volume',
+          'range',
+          'when',
+          'alarm',
+        ]) {
           const model = state.models[name];
           const isRestored =
             JSON.stringify(model) !==

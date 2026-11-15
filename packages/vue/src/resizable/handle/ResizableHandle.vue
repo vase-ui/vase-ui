@@ -69,10 +69,7 @@ import {
   PAGE_UP,
 } from '../../internals/composite/composite';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
-import {
-  createChangeEventDetails,
-  createGenericEventDetails,
-} from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -124,6 +121,10 @@ const primary = computed(() =>
     : root.constraints.value[pivot.value + (props.primaryPanel === 'next' ? 1 : 0)],
 );
 
+// A panel whose size is a length has no size in percent before the first measurement. The sizes of
+// the other panels are not exact either. Until then, no handle of the root has a value.
+const hasPendingLengths = computed(() => root.lengthPanels.value.size > 0);
+
 const valueAttributes = computed(() => {
   const panel = primary.value;
   if (panel === undefined) {
@@ -138,7 +139,7 @@ const valueAttributes = computed(() => {
   );
   return {
     'aria-controls': panel.id,
-    ...(isDisabled.value
+    ...(isDisabled.value || hasPendingLengths.value
       ? undefined
       : {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The panel is in the constraints, so the layout has an entry for its id.
@@ -150,7 +151,7 @@ const valueAttributes = computed(() => {
 });
 
 const limits = computed(() =>
-  pivot.value < 0 || isDisabled.value
+  pivot.value < 0 || isDisabled.value || hasPendingLengths.value
     ? undefined
     : getHandleLimits(root.constraints.value, root.shown.value, pivot.value, root.pushPanels.value),
 );
@@ -204,6 +205,12 @@ function onKeydown(event: KeyboardEvent) {
     toggleCollapse(event);
     return;
   }
+  // The steps and the constraints can be lengths, and the page can have changed since the last read.
+  root.measure();
+  // A root that waits for a length has no layout to move: a move would lose the length.
+  if (hasPendingLengths.value) {
+    return;
+  }
   const delta = getKeyDelta(event);
   if (delta === undefined) {
     return;
@@ -223,7 +230,7 @@ function onKeydown(event: KeyboardEvent) {
   }
   const applied = root.changeLayout(next, createChangeEventDetails(REASONS.keyboard, event));
   if (applied) {
-    root.commitLayout(applied, createGenericEventDetails(REASONS.keyboard, event));
+    root.commitLayout(applied, REASONS.keyboard, event);
   }
 }
 

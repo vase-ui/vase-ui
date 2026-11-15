@@ -3,6 +3,7 @@ import { KeepAlive, Teleport, computed, defineComponent, inject, shallowRef } fr
 import type { MaybeRefOrGetter, PropType } from 'vue';
 import type { Coords } from '@floating-ui/vue';
 import {
+  createHeldBranch,
   createRenderer,
   fireEvent,
   flushMicrotasks,
@@ -703,6 +704,14 @@ describe('rules with no Base UI case', () => {
 
   const REFERENCE_POINT = { x: REFERENCE_RECT.x, y: REFERENCE_RECT.y };
 
+  const PLACED_REFERENCE = {
+    position: 'fixed',
+    left: '200px',
+    top: '100px',
+    width: '100px',
+    height: '40px',
+  };
+
   it('sets the position when the pointer enters the reference', async () => {
     const { Follower, getPoint } = createFollower();
     await render(<Follower />);
@@ -991,13 +1000,7 @@ describe('rules with no Base UI case', () => {
   it('takes the offset of the cursor anchor from a rect of the reference in the document', async () => {
     const { Follower, open, getPoint } = createFollower({
       axis: 'x',
-      referenceStyle: {
-        position: 'fixed',
-        left: '200px',
-        top: '100px',
-        width: '100px',
-        height: '40px',
-      },
+      referenceStyle: PLACED_REFERENCE,
     });
     const Other = defineComponent({ setup: () => () => <p>other</p> });
     const show = shallowRef(true);
@@ -1015,6 +1018,24 @@ describe('rules with no Base UI case', () => {
     await flushMicrotasks();
 
     expect({ held, shown: getPoint().x }).toEqual({ held: 300, shown: 300 });
+  });
+
+  it('adds no window listener while it mounts in a branch that KeepAlive holds', async () => {
+    const { Follower, open, getPoint } = createFollower({
+      axis: 'x',
+      referenceStyle: PLACED_REFERENCE,
+    });
+    open.value = true;
+    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => <Follower />);
+    await render(<HeldBranch />);
+    await mountWhileHeld();
+    await moveOnPage(30, 300);
+
+    await show();
+    const shown = getPoint().x;
+    await moveOnPage(40, 300);
+
+    expect({ shown, moved: getPoint().x }).toEqual({ shown: 200, moved: 40 });
   });
 
   describe('a popup of the popup root', () => {

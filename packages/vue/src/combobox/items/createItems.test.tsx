@@ -10,6 +10,7 @@ import {
   takeReportedMessages,
   wait,
   waitFor,
+  waitForLaterMillisecond,
 } from '#test-utils';
 import { reset } from '../../common/error';
 import { defaultItemEquality } from '../../internals/itemEquality';
@@ -201,8 +202,10 @@ describe('Combobox.createItems', () => {
       expect(bob).toHaveTextContent('Product manager');
       expect(bob).toHaveTextContent('bob@example.com');
 
-      await user.clear(input);
-      await user.type(input, 'car');
+      await waitForLaterMillisecond(async () => {
+        await user.clear(input);
+        await user.type(input, 'car');
+      });
 
       const carol = screen.getByRole('option', { name: /Carol/ });
       expect(screen.queryByRole('option', { name: /Bob/ })).toBe(null);
