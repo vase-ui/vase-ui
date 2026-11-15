@@ -44,7 +44,7 @@ export interface HeldMountListTestsConfig {
    */
   renderList: (withLastItem: boolean) => VNodeChild;
   /**
-   * Does the step of a user that needs each item, and asserts its result.
+   * Asserts a result that needs each item. It can first do a step of a user, such as an arrow key.
    */
   check: (user: UserEvent) => Promise<void> | void;
 }
