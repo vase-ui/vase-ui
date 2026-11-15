@@ -50,8 +50,8 @@ const store = new ToastStore({
 
 provide(ToastContext, store);
 
-// Suspend the timers of the store. `hold` starts them when the provider is mounted. A server never
-// mounts the provider, so a toast that a `setup` adds on a server gets no timer.
+// Suspend the timers of the store. `hold` starts them after the mount. A server never mounts the
+// provider, so a toast that a `setup` adds on a server gets no timer.
 store.disposeEffect()();
 
 let releaseTimers: (() => void) | undefined;

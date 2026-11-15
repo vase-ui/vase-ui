@@ -377,7 +377,7 @@ const values = computed<readonly number[]>(() => {
 
 const fieldValue = computed(() => (range.value ? values.value : values.value[0]));
 
-// The form focuses `validation.inputRef`, which can name the input of another control.
+// The form focuses `validation.inputRef`.
 useRegisterFieldControl(
   validation.inputRef,
   rootId,

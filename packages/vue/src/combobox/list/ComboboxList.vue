@@ -93,7 +93,7 @@ function setElements(list: HTMLElement | null) {
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  // The `aria-controls` of the input names the list, so the input is the owner of that reference.
+  // The `aria-controls` of the input names the list.
   ref: useKeepAliveElementRef(setElements),
   props: (attrs) => {
     const grid = store.select('grid');

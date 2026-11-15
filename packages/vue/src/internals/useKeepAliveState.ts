@@ -65,9 +65,10 @@ export function useKeepAliveState(): KeepAliveState {
 
   // `onActivated` also runs in the flush of the first mount in a `KeepAlive`. A part that mounted
   // in a held branch gets the next call with no `onDeactivated` before it. That call comes in the
-  // flush of the mount when `KeepAlive` shows the branch in that flush. It comes before `onMounted` when a component of the branch mounts the part from its own
-  // state. It comes after `onMounted` when the root of the branch gets the part from a prop.
-  // `isInHeldBranch()` in `setup` gives `true` in both orders.
+  // flush of the mount when `KeepAlive` shows the branch in that flush. It comes before `onMounted`
+  // when a component of the branch mounts the part from its own state. It comes after `onMounted`
+  // when the root of the branch gets the part from a prop. `isInHeldBranch()` in `setup` gives
+  // `true` in both orders.
   onActivated(() => {
     if (isMountFlush && !mountsInHeldBranch) {
       return;

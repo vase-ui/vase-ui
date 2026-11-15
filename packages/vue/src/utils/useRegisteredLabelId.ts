@@ -132,8 +132,7 @@ export function useRegisteredLabelId(
   const id = computed(() => toValue(idProp) ?? root.defaultLabelId.value);
   const { isHeld, shown } = useKeepAliveState();
 
-  // The server HTML and the hydration need the id from the first render of the root. A label that
-  // mounts later can mount in a held branch, so it waits for the mount.
+  // The server HTML and the hydration need the id from the first render of the root.
   const writesInSetup = !root.isMounted();
   if (writesInSetup) {
     setLabelId(id.value);
