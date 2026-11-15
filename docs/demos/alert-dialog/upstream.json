@@ -4,13 +4,64 @@
   "files": {
     "_index.module.css": "2601d0bb58d48e7a522082e032700d84413bde51cd4308f2d40337ab7c609f7b",
     "detached-triggers-controlled/css-modules/index.tsx": "aa9afb04fb1735fdfaf94417840ce977bfa00ad79f31cd79c60223d8ed6bef1f",
+    "detached-triggers-controlled/tailwind/index.tsx": "a7dd0878253074401d292cefb1c319fc4c534f11e522906100a7ffadbe785d4f",
     "detached-triggers-simple/css-modules/index.tsx": "e9540e31770cdfc53147ae6c051f4e41f98bf376b8629daba58b4049ebe4da92",
+    "detached-triggers-simple/tailwind/index.tsx": "91e01e87c91de02269d4e44bf5b89f1164f7c70a7e2f644e5bf6b287bcaf56e3",
     "hero/css-modules/index.module.css": "2d8fcda049507f77e64b6f494f34edfb4b52b6b895ea35065eb11a98c02a988f",
     "hero/css-modules/index.tsx": "4f21a5bf2e3f4cb3a3dc602e4880e50da9c8b53c0c85b3b3b949ec7864582359",
+    "hero/tailwind/index.tsx": "9129ff4ae6f3b71476b3e2d882598dbda33174af4a05a9e8bc2306bad500e0c1",
     "open-from-menu/css-modules/index.module.css": "54ece553994b981b89cb734128c0dd363a870900e25bc9c9e3d74d6d917f299e",
-    "open-from-menu/css-modules/index.tsx": "4db05db81ff76f4283555e39f469d088a274f8dafc87b983ae19dcaea4a0fb42"
+    "open-from-menu/css-modules/index.tsx": "4db05db81ff76f4283555e39f469d088a274f8dafc87b983ae19dcaea4a0fb42",
+    "open-from-menu/tailwind/index.tsx": "932d9151fad2bc2fcaf8e19202bcf8d6d019c4be95288ee0b562a9d2489ab77c"
   },
   "entryPoints": {
     "open-from-menu": ["menu"]
+  },
+  "classes": {
+    "detached-triggers-controlled/tailwind": [
+      "fixed inset-0 bg-black opacity-20 transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0 dark:opacity-50 supports-[-webkit-touch-callout:none]:absolute supports-[-webkit-touch-callout:none]:min-h-dvh",
+      "fixed top-1/2 left-1/2 -mt-8 flex w-96 max-w-[calc(100%-3rem)] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 bg-white dark:bg-neutral-950 p-4 text-neutral-950 dark:text-white border border-neutral-950 dark:border-white shadow-[0.25rem_0.25rem_0] shadow-black/12 dark:shadow-none transition-[scale,opacity] duration-100 ease-out data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-starting-style:scale-[0.98] data-starting-style:opacity-0",
+      "flex flex-col gap-1",
+      "flex flex-wrap gap-2 justify-center",
+      "flex h-8 items-center justify-center gap-2 border border-neutral-950 dark:border-white bg-white dark:bg-neutral-950 px-3 text-sm leading-none whitespace-nowrap font-normal text-neutral-950 dark:text-white select-none hover:not-data-disabled:bg-neutral-100 dark:hover:not-data-disabled:bg-neutral-800 active:not-data-disabled:bg-neutral-200 dark:active:not-data-disabled:bg-neutral-700 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white data-disabled:border-neutral-500 data-disabled:text-neutral-500 disabled:border-neutral-500 disabled:text-neutral-500 dark:data-disabled:border-neutral-400 dark:data-disabled:text-neutral-400",
+      "flex justify-end gap-3",
+      "text-base font-bold",
+      "text-red-700 dark:text-red-400",
+      "text-sm text-neutral-600 dark:text-neutral-400"
+    ],
+    "detached-triggers-simple/tailwind": [
+      "fixed inset-0 bg-black opacity-20 transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0 dark:opacity-50 supports-[-webkit-touch-callout:none]:absolute supports-[-webkit-touch-callout:none]:min-h-dvh",
+      "fixed top-1/2 left-1/2 -mt-8 flex w-96 max-w-[calc(100%-3rem)] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 bg-white dark:bg-neutral-950 p-4 text-neutral-950 dark:text-white border border-neutral-950 dark:border-white shadow-[0.25rem_0.25rem_0] shadow-black/12 dark:shadow-none transition-[scale,opacity] duration-100 ease-out data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-starting-style:scale-[0.98] data-starting-style:opacity-0",
+      "flex flex-col gap-1",
+      "flex h-8 items-center justify-center gap-2 border border-neutral-950 dark:border-white bg-white dark:bg-neutral-950 px-3 text-sm leading-none whitespace-nowrap font-normal text-neutral-950 dark:text-white select-none hover:not-data-disabled:bg-neutral-100 dark:hover:not-data-disabled:bg-neutral-800 active:not-data-disabled:bg-neutral-200 dark:active:not-data-disabled:bg-neutral-700 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white data-disabled:border-neutral-500 data-disabled:text-neutral-500 disabled:border-neutral-500 disabled:text-neutral-500 dark:data-disabled:border-neutral-400 dark:data-disabled:text-neutral-400",
+      "flex justify-end gap-3",
+      "text-base font-bold",
+      "text-red-700 dark:text-red-400",
+      "text-sm text-neutral-600 dark:text-neutral-400"
+    ],
+    "hero/tailwind": [
+      "fixed inset-0 bg-black opacity-20 transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0 dark:opacity-50 supports-[-webkit-touch-callout:none]:absolute supports-[-webkit-touch-callout:none]:min-h-dvh",
+      "fixed top-1/2 left-1/2 -mt-8 flex w-96 max-w-[calc(100%-3rem)] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 bg-white dark:bg-neutral-950 p-4 text-neutral-950 dark:text-white border border-neutral-950 dark:border-white shadow-[0.25rem_0.25rem_0] shadow-black/12 dark:shadow-none transition-[scale,opacity] duration-100 ease-out data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-starting-style:scale-[0.98] data-starting-style:opacity-0",
+      "flex flex-col gap-1",
+      "flex h-8 items-center justify-center gap-2 border border-neutral-950 dark:border-white bg-white dark:bg-neutral-950 px-3 text-sm leading-none whitespace-nowrap font-normal text-neutral-950 dark:text-white select-none hover:not-data-disabled:bg-neutral-100 dark:hover:not-data-disabled:bg-neutral-800 active:not-data-disabled:bg-neutral-200 dark:active:not-data-disabled:bg-neutral-700 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white data-disabled:border-neutral-500 data-disabled:text-neutral-500 disabled:border-neutral-500 disabled:text-neutral-500 dark:data-disabled:border-neutral-400 dark:data-disabled:text-neutral-400",
+      "flex justify-end gap-3",
+      "text-base font-bold",
+      "text-red-700 dark:text-red-400",
+      "text-sm text-neutral-600 dark:text-neutral-400"
+    ],
+    "open-from-menu/tailwind": [
+      "fixed inset-0 bg-black opacity-20 transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0 dark:opacity-50 supports-[-webkit-touch-callout:none]:absolute supports-[-webkit-touch-callout:none]:min-h-dvh",
+      "fixed top-1/2 left-1/2 -mt-8 flex w-96 max-w-[calc(100%-3rem)] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 bg-white dark:bg-neutral-950 p-4 text-neutral-950 dark:text-white border border-neutral-950 dark:border-white shadow-[0.25rem_0.25rem_0] shadow-black/12 dark:shadow-none transition-[scale,opacity] duration-100 ease-out data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-starting-style:scale-[0.98] data-starting-style:opacity-0",
+      "flex cursor-default py-2 pr-8 pl-4 text-sm leading-4 outline-hidden select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-white data-highlighted:before:absolute data-highlighted:before:inset-x-1 data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-950 data-highlighted:before:content-[''] dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white",
+      "flex flex-col gap-1",
+      "flex h-8 items-center justify-center gap-1.5 border border-neutral-950 bg-white px-3 text-sm leading-none whitespace-nowrap font-normal text-neutral-950 select-none hover:not-data-disabled:bg-neutral-100 active:not-data-disabled:bg-neutral-200 data-pressed:bg-neutral-100 dark:border-white dark:bg-neutral-950 dark:text-white dark:hover:not-data-disabled:bg-neutral-800 dark:active:not-data-disabled:bg-neutral-700 dark:data-pressed:bg-neutral-800 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white",
+      "flex justify-end gap-3",
+      "mx-1 my-1 h-px bg-neutral-950 dark:bg-white",
+      "outline-hidden",
+      "relative origin-[var(--transform-origin)] border border-neutral-950 bg-white py-1 text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-hidden transition-[scale,opacity] duration-100 ease-out data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-starting-style:scale-[0.98] data-starting-style:opacity-0 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none",
+      "text-base font-bold",
+      "text-red-700 dark:text-red-400",
+      "text-sm text-neutral-600 dark:text-neutral-400"
+    ]
   }
 }

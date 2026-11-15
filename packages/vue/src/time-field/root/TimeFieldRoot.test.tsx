@@ -9,11 +9,19 @@ import {
   describeConformance,
   flushMicrotasks,
   hiddenInputSizeTests,
+  hydrateAfter,
+  recordInputEvents,
+  renderOnServer,
   screen,
+  within,
 } from '#test-utils';
 import { formatter } from '../../internals/date-time/format';
 import { kindOf } from '../../internals/date-time/temporal';
 import type { TemporalValue } from '../../internals/date-time/temporal';
+import { REASONS } from '../../internals/reasons';
+import TimeFieldRootHydration from './TimeFieldRootHydration.test.vue';
+
+const HYDRATION_FILE = 'src/time-field/root/TimeFieldRootHydration.test.vue';
 
 const segmentOf = (container: Element, type: string) =>
   container.querySelector<HTMLInputElement>(`input[data-type="${type}"]`)!;
@@ -408,6 +416,81 @@ describe('<TimeField.Root />', () => {
       await user.click(screen.getByRole('button', { name: 'Clear' }));
 
       expect(screen.getByTestId('error')).toHaveTextContent('Pick a time');
+    });
+  });
+
+  describe('the form state that the browser restores', () => {
+    function renderField(onValueChange: (...args: unknown[]) => void) {
+      return render(
+        <TimeField.Root
+          defaultValue={Temporal.PlainTime.from('15:04')}
+          hourCycle={24}
+          locale="en-US"
+          name="alarm"
+          onValueChange={onValueChange}
+        >
+          <TimeField.Input />
+        </TimeField.Root>,
+      );
+    }
+
+    it('takes a time that the browser restored before the hydration', async () => {
+      const props = { defaultValue: '15:04', hourCycle: 24, locale: 'en-US', name: 'alarm' };
+      const serverHtml = await renderOnServer(HYDRATION_FILE, props);
+
+      const { container } = await hydrateAfter(TimeFieldRootHydration, {
+        serverHtml,
+        props,
+        before(serverContainer) {
+          hiddenInputOf(serverContainer).value = '09:30';
+        },
+      });
+      await flushMicrotasks();
+      const fixture = within(container);
+
+      expect(['hour', 'minute'].map((type) => segmentOf(container, type).value)).toEqual([
+        '09',
+        '30',
+      ]);
+      expect(hiddenInputOf(container).value).toBe('09:30');
+      expect(new FormData(fixture.getByTestId<HTMLFormElement>('form')).get('alarm')).toBe('09:30');
+      expect(fixture.getByTestId('root')).toHaveAttribute('data-dirty');
+    });
+
+    it('takes a time that the browser restores at a `pageshow` event', async () => {
+      const onValueChange = vi.fn();
+      const { container } = await renderField(onValueChange);
+      const input = hiddenInputOf(container);
+      const events = recordInputEvents(input);
+      input.value = '09:30';
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+      expect(onValueChange.mock.calls[0]![0].toString()).toBe('09:30:00');
+      expect(onValueChange.mock.calls[0]![1].reason).toBe(REASONS.inputChange);
+      expect(['hour', 'minute'].map((type) => segmentOf(container, type).value)).toEqual([
+        '09',
+        '30',
+      ]);
+      expect(input.value).toBe('09:30');
+      expect(events).toEqual(['input']);
+    });
+
+    it('does nothing at a `pageshow` event from the back/forward cache', async () => {
+      const onValueChange = vi.fn();
+      const { container } = await renderField(onValueChange);
+      hiddenInputOf(container).value = '09:30';
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }));
+      await flushMicrotasks();
+
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(['hour', 'minute'].map((type) => segmentOf(container, type).value)).toEqual([
+        '15',
+        '04',
+      ]);
     });
   });
 

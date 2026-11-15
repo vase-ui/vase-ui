@@ -192,7 +192,7 @@ The request lasts until the popup opens again or unmounts, also when more close 
 
 `<AnimatePresence>` renders a Vue `<Transition>` or `<TransitionGroup>`. Both keep the element of the portal part in the DOM during the exit, but the parts in that element unmount. Thus the `exit` prop does not fit the close of a popup:
 
-- With `v-if="open"` on the portal part, the parts in the portal unmount when the popup closes. The root then does not emit `openChangeComplete` with `false`. The popup keeps `data-open` during the exit. The page under a modal dialog takes no pointer input until the exit ends.
+- With `v-if="open"` on the portal part, the parts in the portal unmount when the popup closes. The root emits `openChangeComplete` with `false` when the animations of the popup element end. The popup keeps `data-open` during the exit. The page under a modal dialog takes no pointer input until the exit ends.
 - With no `v-if` and no `keepMounted`, the parts in the portal unmount after Vase UI ends the close. The `exit` animation starts only then. The root thus emits `openChangeComplete` with `false` before the exit plays.
 
 In the two cases, a popup that opens again during the exit is a second popup in the page. The two popups have the same `id`.

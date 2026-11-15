@@ -226,11 +226,12 @@ const {
 
     const isReturnFocusBlocked = closeReason ? blockedReturnFocusReasons.has(closeReason) : false;
 
+    // A `v-if` of the consumer can remove the portal part while the focus is in it. The element is
+    // then gone, and the focus is on the body.
     if (
       !isReturnFocusBlocked &&
       isHTMLElement(prevTriggerElementRef.value) &&
-      (activeEl === ownerDocument(element).body || contains(element, activeEl)) &&
-      element
+      (activeEl === doc.body || contains(element, activeEl))
     ) {
       prevTriggerElementRef.value.focus({ preventScroll: true });
       prevTriggerElementRef.value = undefined;
