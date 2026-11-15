@@ -1958,7 +1958,8 @@ describe('<Toast.Root />', () => {
   });
 
   describe('KeepAlive', () => {
-    // The provider is outside `KeepAlive`, so the manager adds a toast while the viewport is held.
+    // The provider is outside `KeepAlive`, so it keeps the subscription to its manager while the
+    // viewport is held.
     function renderKeptViewport() {
       const manager = Toast.createToastManager();
       const visible = shallowRef(true);
@@ -2030,6 +2031,7 @@ describe('<Toast.Root />', () => {
         bubbles: true,
         pointerId: 1,
       });
+      expect(root).toHaveAttribute('data-swiping');
       expect(root).toHaveAttribute('data-swipe-direction', 'right');
 
       visible.value = false;
