@@ -114,11 +114,11 @@ function layoutOf(
   };
 }
 
-// In some calendars, the pattern of `my`, `ksh` and `sc` has the year of the week (`Y`), and
-// `resolvedOptions()` then has no `year`. Before V8 15.5, `formatToParts` ends the process for
-// such a pattern (https://github.com/nodejs/node/issues/67076). WebKit gives its year as a part of
-// the type `unknown`. The Chinese and Dangi calendars also have no `year`. They give `relatedYear`,
-// and the process does not end.
+// For some fields and calendars, the pattern of `my`, `ksh` and `sc` has the year of the week
+// (`Y`), and `resolvedOptions()` then has no `year`. Before V8 15.5, `formatToParts` ends the
+// process for such a pattern (https://github.com/nodejs/node/issues/67076). WebKit gives its year
+// as a part of the type `unknown`. The Chinese and Dangi calendars also have no `year`. They give
+// `relatedYear`, and the process does not end.
 function hasWeekYear(format: Intl.DateTimeFormat, formatOptions: Intl.DateTimeFormatOptions) {
   if (formatOptions.year === undefined) {
     return false;
