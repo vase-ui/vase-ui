@@ -539,9 +539,11 @@ describe('<Dialog.Root />', () => {
 
       const trigger = screen.getByTestId('trigger');
 
-      await user.click(trigger);
-      await waitFor(() => {
-        expect(screen.queryByRole('dialog')).not.toBe(null);
+      await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        await waitFor(() => {
+          expect(screen.queryByRole('dialog')).not.toBe(null);
+        });
       });
 
       await user.keyboard('[Escape]');
@@ -1433,17 +1435,19 @@ describe('<Dialog.Root />', () => {
         );
 
         const menuTrigger = screen.getByRole('button', { name: 'Open menu' });
-        await user.click(menuTrigger);
-
-        await waitFor(() => {
-          expect(screen.queryByRole('menu')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.click(menuTrigger);
+          await waitFor(() => {
+            expect(screen.queryByRole('menu')).not.toBe(null);
+          });
         });
 
         const dialogTrigger = screen.getByRole('menuitem', { name: 'Open dialog' });
-        await user.click(dialogTrigger);
-
-        await waitFor(() => {
-          expect(screen.queryByRole('dialog')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.click(dialogTrigger);
+          await waitFor(() => {
+            expect(screen.queryByRole('dialog')).not.toBe(null);
+          });
         });
 
         await user.keyboard('[Escape]');
@@ -2233,9 +2237,11 @@ describe('<Dialog.Root />', () => {
           await render(<App />);
           expect(`initial: ${isPageLocked()}`).toBe('initial: false');
 
-          await fireEvent.click(screen.getByRole('button', { name: 'Open dialog' }));
-          await waitFor(() => {
-            expect(screen.queryByRole('dialog')).not.toBe(null);
+          await waitForLaterMillisecond(async () => {
+            await fireEvent.click(screen.getByRole('button', { name: 'Open dialog' }));
+            await waitFor(() => {
+              expect(screen.queryByRole('dialog')).not.toBe(null);
+            });
           });
 
           // Spans the external unlock at 200ms: there must be no gap where the page scrolls.
@@ -2323,9 +2329,10 @@ describe('<Dialog.Root />', () => {
       const { user } = await render(<MenuDialog />);
 
       const menuTrigger = screen.getByRole('button', { name: 'Open menu' });
-      await user.click(menuTrigger);
-
-      const menu = await screen.findByRole('menu');
+      const menu = await waitForLaterMillisecond(async () => {
+        await user.click(menuTrigger);
+        return screen.findByRole('menu');
+      });
       await waitFor(() => {
         expect(menu).toHaveFocus();
       });
@@ -2448,8 +2455,10 @@ describe('<Dialog.Root />', () => {
 
       const { user } = await render(<App />);
 
-      await user.click(screen.getByTestId('trigger'));
-      await screen.findByRole('dialog');
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('trigger'));
+        await screen.findByRole('dialog');
+      });
 
       const textarea = screen.getByTestId('textarea');
       await user.click(textarea);
@@ -2458,9 +2467,10 @@ describe('<Dialog.Root />', () => {
 
       // Pressing the backdrop moves focus to the body before the close is
       // canceled and the confirmation dialog opens.
-      await user.click(screen.getByTestId('backdrop'));
-
-      const goBack = await screen.findByTestId('go-back');
+      const goBack = await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('backdrop'));
+        return screen.findByTestId('go-back');
+      });
       await waitFor(() => {
         expect(goBack).toHaveFocus();
       });
@@ -2530,9 +2540,10 @@ describe('<Dialog.Root />', () => {
       expect(field).toHaveFocus();
 
       // Blur the field to the body and open the confirmation while it is focused.
-      await user.click(screen.getByTestId('surface'));
-
-      const goBack = await screen.findByTestId('go-back');
+      const goBack = await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('surface'));
+        return screen.findByTestId('go-back');
+      });
       await waitFor(() => {
         expect(goBack).toHaveFocus();
       });

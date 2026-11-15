@@ -10,6 +10,7 @@ import {
   screen,
   takeReportedMessages,
   waitFor,
+  waitForLaterMillisecond,
 } from '#test-utils';
 import {
   ContextMenuProvider,
@@ -319,8 +320,10 @@ describe('<Menu.Item />', () => {
         </>,
       );
 
-      await user.click(screen.getByRole('button', { name: 'Open' }));
-      const item = await screen.findByRole('menuitem');
+      const item = await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Open' }));
+        return screen.findByRole('menuitem');
+      });
       expect(screen.getByRole('textbox')).not.toHaveFocus();
 
       if (press === 'Enter') {
@@ -352,9 +355,10 @@ describe('<Menu.Item />', () => {
     );
 
     const trigger = screen.getByRole('button', { name: 'Open' });
-    await user.click(trigger);
-
-    const item = await screen.findByRole('menuitem');
+    const item = await waitForLaterMillisecond(async () => {
+      await user.click(trigger);
+      return screen.findByRole('menuitem');
+    });
     await user.click(item);
 
     expect(onClick.mock.calls.length).toBe(1);
@@ -377,9 +381,10 @@ describe('<Menu.Item />', () => {
       );
 
       const trigger = screen.getByRole('button', { name: 'Open' });
-      await user.click(trigger);
-
-      const item = await screen.findByRole('menuitem');
+      const item = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        return screen.findByRole('menuitem');
+      });
       await user.click(item);
 
       expect(screen.queryByRole('menu')).toBe(null);
@@ -400,9 +405,10 @@ describe('<Menu.Item />', () => {
       );
 
       const trigger = screen.getByRole('button', { name: 'Open' });
-      await user.click(trigger);
-
-      const item = await screen.findByRole('menuitem');
+      const item = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        return screen.findByRole('menuitem');
+      });
       await user.click(item);
 
       expect(screen.queryByRole('menu')).not.toBe(null);

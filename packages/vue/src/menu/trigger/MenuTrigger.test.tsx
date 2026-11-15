@@ -68,7 +68,10 @@ describe('<Menu.Trigger />', () => {
       );
 
       const trigger = screen.getByRole('button', { name: 'Toggle' });
-      await userEvent.click(trigger);
+      await waitForLaterMillisecond(async () => {
+        await userEvent.click(trigger);
+        await screen.findByRole('menu');
+      });
       await waitFor(() => {
         expect(screen.getByRole('menu')).toHaveFocus();
       });
@@ -595,8 +598,10 @@ describe('<Menu.Trigger />', () => {
         </Menu.Root>,
       );
 
-      await fireEvent.mouseDown(screen.getByRole('button', { name: 'Open' }));
-      await screen.findByRole('menu');
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.mouseDown(screen.getByRole('button', { name: 'Open' }));
+        await screen.findByRole('menu');
+      });
       // After 200 ms of a held press, a release over an item activates the item.
       await wait(250);
       await fireEvent.keyDown(document.body, { key: 'Escape' });
@@ -1015,8 +1020,10 @@ describe('<Menu.Trigger />', () => {
 
       // The open trigger of a menubar closes its menu on `click`, so a slow press ends with a
       // click after the open.
-      await fireEvent.mouseDown(trigger);
-      await screen.findByTestId('file-menu');
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.mouseDown(trigger);
+        await screen.findByTestId('file-menu');
+      });
       await fireEvent.mouseUp(trigger);
       await fireEvent.click(trigger);
       await waitSingleFrame();

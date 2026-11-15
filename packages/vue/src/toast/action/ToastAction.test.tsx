@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 import type { Component } from 'vue';
-import { createRenderer, describeConformance, screen } from '#test-utils';
+import { createRenderer, describeConformance, screen, waitForLaterMillisecond } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
 import { Toast } from '@vase-ui/vue/toast';
 import { List, Button } from '../utils/test-utils';
@@ -63,7 +63,7 @@ describe('<Toast.Action />', () => {
       </Toast.Provider>,
     );
 
-    await user.click(screen.getByRole('button', { name: 'add' }));
+    await waitForLaterMillisecond(() => user.click(screen.getByRole('button', { name: 'add' })));
     expect(onClick).not.toHaveBeenCalled();
 
     await user.click(screen.getByTestId('action'));

@@ -1172,10 +1172,12 @@ describe('<NavigationMenu.Root />', () => {
       const trigger = screen.getByTestId('trigger-1');
       const topLevelList = trigger.closest('ul') as HTMLElement;
 
-      await fireEvent.mouseEnter(trigger);
-      await fireEvent.mouseMove(trigger);
-      vi.advanceTimersByTime(OPEN_DELAY);
-      await flushMicrotasks();
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.mouseEnter(trigger);
+        await fireEvent.mouseMove(trigger);
+        vi.advanceTimersByTime(OPEN_DELAY);
+        await flushMicrotasks();
+      });
 
       expect(topLevelList.style.pointerEvents).toBe('none');
 
@@ -1214,10 +1216,12 @@ describe('<NavigationMenu.Root />', () => {
       );
 
       const trigger = screen.getByText('Trigger 1');
-      await fireEvent.mouseEnter(trigger);
-      await fireEvent.mouseMove(trigger);
-      vi.advanceTimersByTime(OPEN_DELAY);
-      await flushMicrotasks();
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.mouseEnter(trigger);
+        await fireEvent.mouseMove(trigger);
+        vi.advanceTimersByTime(OPEN_DELAY);
+        await flushMicrotasks();
+      });
 
       expect(document.body.style.pointerEvents).toBe('none');
       expect(screen.getByTestId('custom-list').style.pointerEvents).toBe('');
@@ -1483,8 +1487,10 @@ describe('<NavigationMenu.Root />', () => {
       const trigger1 = screen.getByTestId('trigger-1');
       const trigger2 = screen.getByTestId('trigger-2');
 
-      await fireEvent.click(trigger1);
-      await flushMicrotasks();
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.click(trigger1);
+        await flushMicrotasks();
+      });
 
       expect(screen.queryByTestId('popup-1')).not.toBe(null);
       expect(trigger1).toHaveAttribute('aria-expanded', 'true');
@@ -3292,8 +3298,10 @@ describe('<NavigationMenu.Root />', () => {
           );
           const trigger1 = screen.getByTestId('trigger-1');
 
-          await fireEvent.click(trigger1);
-          await flushMicrotasks();
+          await waitForLaterMillisecond(async () => {
+            await fireEvent.click(trigger1);
+            await flushMicrotasks();
+          });
 
           const popup1 = screen.getByTestId('popup-1');
           const nestedTrigger1 = within(popup1).getByTestId('nested-trigger-1');
@@ -3336,8 +3344,10 @@ describe('<NavigationMenu.Root />', () => {
         const { user } = await render(<TestInlineNestedNavigationMenu />);
         const trigger1 = screen.getByTestId('trigger-1');
 
-        await fireEvent.click(trigger1);
-        await flushMicrotasks();
+        await waitForLaterMillisecond(async () => {
+          await fireEvent.click(trigger1);
+          await flushMicrotasks();
+        });
 
         const popup1 = screen.getByTestId('popup-1');
         expect(popup1).not.toBe(null);
@@ -3371,8 +3381,10 @@ describe('<NavigationMenu.Root />', () => {
         const { user } = await render(<TestDeeplyNestedNavigationMenu />);
         const trigger1 = screen.getByTestId('trigger-1');
 
-        await fireEvent.click(trigger1);
-        await flushMicrotasks();
+        await waitForLaterMillisecond(async () => {
+          await fireEvent.click(trigger1);
+          await flushMicrotasks();
+        });
 
         const content1 = screen.getByTestId('content-1');
         expect(content1).not.toBe(null);

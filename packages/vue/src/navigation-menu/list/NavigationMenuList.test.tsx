@@ -10,6 +10,7 @@ import {
   screen,
   takeReportedMessages,
   waitFor,
+  waitForLaterMillisecond,
 } from '#test-utils';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 
@@ -278,8 +279,10 @@ describe('<NavigationMenu.List />', () => {
     // A press with no hover and no focus. A real pointer hovers the trigger first, and the focus
     // of the trigger makes a press outside a focus-out.
     async function open(testId: string) {
-      await fireEvent.click(screen.getByTestId(testId));
-      await flushMicrotasks();
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.click(screen.getByTestId(testId));
+        await flushMicrotasks();
+      });
       expect(screen.getByTestId(testId)).toHaveAttribute('aria-expanded', 'true');
     }
 
