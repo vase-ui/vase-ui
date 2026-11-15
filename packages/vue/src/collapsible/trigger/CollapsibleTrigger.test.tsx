@@ -81,7 +81,7 @@ describe('<Collapsible.Trigger />', () => {
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
-  // instance set, and each later case of the file then gets a warning about a slot.
+  // instance set, and a later case of the file can then get a warning about a slot.
   it('throws when rendered outside a Collapsible.Root', async () => {
     await expect(render(<Collapsible.Trigger />)).rejects.toThrow(
       'Vase UI: A part of Collapsible must be inside <Collapsible.Root>. Without a root the part has no open state to read. Put the part inside <Collapsible.Root>.',
