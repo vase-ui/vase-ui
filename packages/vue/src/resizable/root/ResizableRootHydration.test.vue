@@ -3,7 +3,7 @@ import { defineComponent, h } from 'vue';
 import * as Resizable from '../index.parts';
 
 defineProps<{
-  composition: 'defaults' | 'layout' | 'nested' | 'style' | 'vertical';
+  composition: 'collapsed' | 'defaults' | 'layout' | 'nested' | 'style' | 'vertical';
 }>();
 
 // The root finds this panel through its context, and not through its place in the template.
@@ -42,6 +42,11 @@ const WrappedPanel = defineComponent({
         <Resizable.Panel id="inner-b" data-testid="inner-b" />
       </Resizable.Root>
     </Resizable.Panel>
+  </Resizable.Root>
+  <Resizable.Root v-else-if="composition === 'collapsed'" data-testid="root">
+    <Resizable.Panel id="a" data-testid="a" collapsible :min-size="20" :default-size="0" />
+    <Resizable.Handle data-testid="handle-a" aria-label="First" />
+    <Resizable.Panel id="b" data-testid="b" />
   </Resizable.Root>
   <Resizable.Root v-else-if="composition === 'vertical'" data-testid="root" orientation="vertical">
     <Resizable.Panel id="a" data-testid="a" :default-size="40" />

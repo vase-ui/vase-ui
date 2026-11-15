@@ -180,6 +180,7 @@ Vase UI can add a component that Base UI does not have. This is a component of V
 - A family is one upstream folder.
 - State attributes (`data-open`) and CSS variables keep upstream's names and values. Upstream CSS then works with no change.
 - A family that Base UI does not have names a state attribute with `data-` and the name of the state in kebab case: `data-dragging`. It names a CSS variable with `--`, the family, the part and the value, in kebab case: `--resizable-panel-size`.
+- The default of `getStateAttributesProps` writes `data-` and the lower case of the state key. A state with more than one word in its key, such as `atMin`, gets a `stateAttributesMapping` entry that writes `data-at-min`.
 - Internal names change `base-ui` to `vase-ui`: `data-vase-ui-*`, `event.preventVaseUIHandler()`, `VASE_UI_ANIMATIONS_DISABLED`, `new Event('vase-ui')`, the class `vase-ui-disable-scrollbar`.
 - A page can then hold the two libraries, and they do not share markers.
 - Messages start with `Vase UI:`.
@@ -506,6 +507,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 
 - A callback that only tells the consumer about a change becomes an emit. The name loses `on`: `openChangeComplete`, `valueCommitted`, `itemHighlighted`, `loadingStatusChange`.
 - `update:x` exists only where the part has a prop `x`. `Accordion.Item` emits `openChange` and has no prop `open`, so it has no `update:open`.
+- An emit can report a state that the part derives from other state, such as `collapsedChange` of `Resizable.Panel`. It has the new value and no `details`, and the part has no `update:x` for it. The part emits it after the DOM update of each change of the state, also a change that comes from the `layout` prop of the root. It does not emit it at the mount.
 - A native listener that the part calls itself, after work of its own, is a declared emit. `Form` does this for `submit`: it emits `submit` only when each field is valid. A listener in the attributes would run before that work.
 - A part can need to know if a listener exists. `Form` prevents the native submit only when a `formSubmit` listener exists. Such a part declares the emit and also a prop with the `on` name: `onFormSubmit`.
 - Vue gives the listener to the prop, and the emit still calls it. Type the prop as a function or an array of functions, because Vue gives the prop an array for two listeners.
@@ -516,6 +518,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 
 - `actionsRef` becomes methods that the part exposes. A consumer reads them through a template ref.
 - Popup roots expose `close()` and `unmount()`. `Field.Root` exposes `validate()`. Its prop `validate` is the validator function. `Form` exposes `validate(name?)`. The types are `DialogRootActions` and so on.
+- A part that Base UI does not have exposes its methods in the same way. `Resizable.Panel` exposes `collapse()`, `expand()`, `resize()` and `isCollapsed()`, and `Resizable.Root` exposes `getLayout()`, `setLayout()` and `reset()`. Their types are `Resizable.Panel.Actions` and `Resizable.Root.Actions`.
 - A ref prop of upstream (`inputRef`) becomes an exposed element (`inputElement`) beside `element`.
 - Handles are upstream's objects, with no change: `Dialog.createHandle<Payload>()`, `handle`, `payload`, `triggerId`, `open()`, `openWithPayload()`, `close()`, `isOpen`.
 - Function children become a default scoped slot with named props: `{ payload }` on a root, `{ validity }` on `Field.Validity`, `{ item, index }` on `Combobox.Collection`, `{ value }` on `Select.Value`.
@@ -533,6 +536,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - Write the `#render` slot as a property with the shared type: `render: ComponentRenderFn<HTMLProps, ButtonState>`. A part with the `children` slot prop writes a method with the three slot props, because `ComponentRenderFn` has no `children`.
 - A part whose default tag has attributes of its own gives them to the slot type. The `a` of `PreviewCard.Trigger` is an example: `render: ComponentRenderFn<HTMLProps & AnchorHTMLAttributes, PreviewCardTriggerState>`. `HTMLProps` has no `href`.
 - Hooks keep their names as composables: `useDirection`, `useRender`, `Toast.useToastManager`, `Combobox.useFilter`.
+- A public composable that gives the methods of the nearest part above the caller returns `null` when the caller is not inside that part. It calls `inject(key, null)`, so Vue shows no warning, and it throws no error. `Resizable.useParentPanel()` and `Resizable.useParentRoot()` do this. A composable that a part needs for its own work throws, as [Context of a root](#context-of-a-root) says.
 - Where an upstream hook returns a value that can change, the composable returns a ref of that value. `setup` runs one time, so a plain value does not follow a change. Read `.value` where the code uses the value. Do not make a copy of it in `setup`.
 - The ref is a `ComputedRef` when the composable computes the value: `useDirection()` returns `ComputedRef<TextDirection>`. It is a `Readonly<Ref<T>>` when the composable writes the value: `useTransitionStatus()` returns `mounted` and `transitionStatus` in this form.
 - Where an upstream hook returns a props object with a value that can change, the composable returns a `ComputedRef` of that object. Examples are `useLabel()` and `compositeProps` of `useCompositeItem()`. The part reads `.value` in the function that it gives to `useRenderElement` as `props`. `useCompositeRoot` returns a plain object, because its props are only listeners.
