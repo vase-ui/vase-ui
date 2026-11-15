@@ -68,8 +68,8 @@ watch(
   { flush: 'post' },
 );
 
-// A boundary that goes, `KeepAlive`, and the unmount end the press that this edge started, and the
-// drag that the press of another handle or edge started on it.
+// The unmount of the edge and `KeepAlive` end the press that this edge started, and the drag that
+// the press of another handle or edge started on it.
 function endDrags() {
   press.end();
   drag.end(undefined, false);
@@ -101,7 +101,7 @@ function getStyle(box: EdgeBox): CSSProperties {
     height: `${box.height}px`,
     zIndex: 1,
     touchAction: 'none',
-    // Safari reads the prefixed key.
+    // Safari has only the prefixed property.
     '-webkit-user-select': 'none',
     userSelect: 'none',
     [ResizableHandleCssVariables.resizableHandlePreviewOffset]: previewOffset.value,
