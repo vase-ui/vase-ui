@@ -1,10 +1,17 @@
 {
   "upstreamPaths": [
     "packages/react/src/utils/popups/focus/**",
+    "packages/react/test/floating-ui-tests/Navigation.module.css",
     "packages/react/test/floating-ui-tests/Navigation.tsx"
   ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
-  "exceptions": [],
+  "exceptions": [
+    {
+      "upstream": "packages/react/test/floating-ui-tests/Navigation.module.css",
+      "kind": "not-applicable",
+      "reason": "`packages/vue/test/floating-ui-tests/Navigation.tsx` holds the rules of the style sheet as style objects, because the package has no type for a CSS module."
+    }
+  ],
   "surfaceAdditions": [],
   "returnTypeDifferences": [],
   "notApplicableCommits": []

@@ -1,61 +1,17 @@
 {
   "upstreamPaths": [
+    "packages/react/src/global.d.ts",
+    "packages/react/src/index.test.tsx",
+    "packages/react/src/internals/*",
     "packages/react/src/internals/composite/**",
-    "packages/react/src/internals/constants.ts",
-    "packages/react/src/internals/createBaseUIEventDetails.ts",
-    "packages/react/src/internals/createBaseUIEventDetails.spec.ts",
-    "packages/react/src/internals/createFlushBeforePaint.ts",
     "packages/react/src/internals/field-constants/**",
     "packages/react/src/internals/field-register-control/**",
     "packages/react/src/internals/field-root-context/**",
-    "packages/react/src/internals/filter.ts",
-    "packages/react/src/internals/filter.test.ts",
-    "packages/react/src/internals/getDisabledMountTransitionStyles.ts",
-    "packages/react/src/internals/getHiddenInputType.ts",
-    "packages/react/src/internals/getStateAttributesProps.ts",
-    "packages/react/src/internals/getStateAttributesProps.test.ts",
-    "packages/react/src/internals/handleHiddenInputInvalid.ts",
-    "packages/react/src/internals/itemEquality.ts",
-    "packages/react/src/internals/itemEquality.test.ts",
     "packages/react/src/internals/labelable-provider/**",
-    "packages/react/src/internals/noop.ts",
-    "packages/react/src/internals/PrehydrationScript.tsx",
-    "packages/react/src/internals/prehydrationScript.stub.ts",
-    "packages/react/src/internals/reason-parts.ts",
-    "packages/react/src/internals/reasons.ts",
-    "packages/react/src/internals/resolvePopupLabel.ts",
-    "packages/react/src/internals/resolvePopupLabel.test.tsx",
-    "packages/react/src/internals/resolveRenderedAriaLabel.ts",
-    "packages/react/src/internals/resolveRenderedAriaLabel.test.tsx",
-    "packages/react/src/internals/resolveValueLabel.tsx",
-    "packages/react/src/internals/resolveValueLabel.test.ts",
-    "packages/react/src/internals/serializeValue.ts",
-    "packages/react/src/internals/stateAttributesMapping.ts",
-    "packages/react/src/internals/stateAttributesMapping.test.ts",
-    "packages/react/src/internals/TransitionStatusDataAttributes.ts",
-    "packages/react/src/internals/types.ts",
     "packages/react/src/internals/use-button/**",
-    "packages/react/src/internals/useAnchorPositioning.ts",
-    "packages/react/src/internals/useAnchorPositioning.test.tsx",
-    "packages/react/src/internals/useAnimationsFinished.ts",
-    "packages/react/src/internals/useAnimationsFinished.test.tsx",
-    "packages/react/src/internals/useBaseUiId.ts",
-    "packages/react/src/internals/useInitialLiveRegionTextMutation.ts",
-    "packages/react/src/internals/useInitialLiveRegionTextMutation.test.tsx",
-    "packages/react/src/internals/useItemRegistry.ts",
-    "packages/react/src/internals/useItemRegistry.test.tsx",
-    "packages/react/src/internals/useOpenChangeComplete.tsx",
-    "packages/react/src/internals/usePressAndHold.ts",
-    "packages/react/src/internals/useRenderElement.tsx",
-    "packages/react/src/internals/useRenderElement.test.tsx",
-    "packages/react/src/internals/useRenderElement.spec.tsx",
-    "packages/react/src/internals/useTransitionStatus.ts",
-    "packages/react/src/internals/useTransitionStatus.test.tsx",
-    "packages/react/src/internals/useTriggerSwitchTransition.ts",
-    "packages/react/src/internals/useUnmountAfterClose.ts",
-    "packages/react/src/internals/useValueChanged.ts",
-    "packages/react/src/internals/useValueChanged.test.tsx",
     "packages/react/src/types/**",
+    "packages/react/test/addVitestMatchers.ts",
+    "packages/react/test/advanceReactClock.ts",
     "packages/react/test/clipboard.ts",
     "packages/react/test/conformanceTests/**",
     "packages/react/test/createRenderer.ts",
@@ -64,10 +20,14 @@
     "packages/react/test/hiddenInputSizeTests.tsx",
     "packages/react/test/hiddenInputTypeTests.tsx",
     "packages/react/test/index.ts",
+    "packages/react/test/mergeRefs.ts",
     "packages/react/test/mockRuntimeLocale.ts",
-    "packages/react/test/pointer.ts",
     "packages/react/test/pointer.test.tsx",
+    "packages/react/test/pointer.ts",
     "packages/react/test/positionerConformanceTests.tsx",
+    "packages/react/test/resetBrowserPointer.ts",
+    "packages/react/test/scrollLock.ts",
+    "packages/react/test/types.d.ts",
     "packages/react/test/wait.ts",
     "packages/react/test/waitForPositioned.ts"
   ],
@@ -221,6 +181,78 @@
       "title": "publishes every registration under StrictMode double effects",
       "kind": "not-applicable",
       "reason": "The case runs the effects of the items two times under StrictMode. Vue has no Strict Mode, and a registration runs one time in `onMounted`."
+    },
+    {
+      "upstream": "packages/react/src/global.d.ts",
+      "kind": "not-applicable",
+      "reason": "The file declares the global `BASE_UI_ANIMATIONS_DISABLED`. `packages/vue/src/internals/useAnimationsFinished.ts` reads `VASE_UI_ANIMATIONS_DISABLED` and declares it there."
+    },
+    {
+      "upstream": "packages/react/src/index.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/test/writeBarrel.node.test.ts",
+      "reason": "The first case imports each internal entry of the package, and Vase UI has no entry point for an internal module. The second case checks the root exports against the other entries. The build writes the barrel from the folders that have an `index.ts`, and `writeBarrel.node.test.ts` covers that writer. `pnpm check:package` loads the built package in Node."
+    },
+    {
+      "upstream": "packages/react/src/internals/RequestQueue.ts",
+      "kind": "not-applicable",
+      "reason": "No Base UI component imports the file at the matched commit. It is the module of the package entry `./internals/RequestQueue`, and Vase UI has no entry point for an internal module."
+    },
+    {
+      "upstream": "packages/react/src/internals/RequestQueue.test.ts",
+      "kind": "not-applicable",
+      "reason": "No Base UI component imports `RequestQueue` at the matched commit."
+    },
+    {
+      "upstream": "packages/react/src/internals/TimeoutManager.ts",
+      "kind": "not-applicable",
+      "reason": "No Base UI component imports the file at the matched commit. It is the module of the package entry `./internals/TimeoutManager`, and Vase UI has no entry point for an internal module."
+    },
+    {
+      "upstream": "packages/react/src/internals/TimeoutManager.test.ts",
+      "kind": "not-applicable",
+      "reason": "No Base UI component imports `TimeoutManager` at the matched commit."
+    },
+    {
+      "upstream": "packages/react/src/internals/resolveRenderedId.ts",
+      "kind": "not-applicable",
+      "reason": "The file reads the id of a React element that is given as `render`. It gives the id to the owner through a ref callback. In Vue, `#render` is a slot, so the id of a part is its `id` prop. `MenuPopup.vue` and `useFilterDropdownList` give that id to their root with a `watch`."
+    },
+    {
+      "upstream": "packages/react/src/internals/resolveRenderedId.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/popup/MenuPopup.test.tsx",
+      "reason": "Vase UI has no such function. The block `prop: id` of this test covers the id that the root gets, the generated id after a removal, and the release at unmount. `packages/vue/src/filter-dropdown/list/FilterDropdownList.test.tsx` covers the release for the list, and `packages/vue/src/menu/filter-root/MenuFilterRoot.test.tsx` covers an empty id. The cases with a `render` element are for React."
+    },
+    {
+      "upstream": "packages/react/test/addVitestMatchers.ts",
+      "kind": "not-applicable",
+      "reason": "The file adds the matcher `toEqualDateTime`. Only the shared suite of the temporal adapters calls it, and Vase UI does not port that suite."
+    },
+    {
+      "upstream": "packages/react/test/advanceReactClock.ts",
+      "kind": "not-applicable",
+      "reason": "The helper flushes React before and after a move of the fake clock. A ported test calls `flushMicrotasks` and `vi.advanceTimersByTimeAsync`, which run the flushes of Vue."
+    },
+    {
+      "upstream": "packages/react/test/mergeRefs.ts",
+      "kind": "not-applicable",
+      "reason": "The helper merges React ref objects and ref callbacks. A Vue element takes one `ref`, so a test component gives it one function that calls each setter."
+    },
+    {
+      "upstream": "packages/react/test/resetBrowserPointer.ts",
+      "kind": "not-applicable",
+      "reason": "`packages/vue/test/setup.ts` moves the real pointer of the browser off the page after each test that put it there. A test file thus needs no call."
+    },
+    {
+      "upstream": "packages/react/test/scrollLock.ts",
+      "kind": "not-applicable",
+      "reason": "`isScrollLocked` of `packages/vue/test/fixtures/scrollDocument.ts` does this work. It reads the computed overflow of the element that scrolls the page, and the marker `data-vase-ui-scroll-locked`."
+    },
+    {
+      "upstream": "packages/react/test/types.d.ts",
+      "kind": "not-applicable",
+      "reason": "The file declares the type of a CSS module. No Vase UI test imports a CSS module: a test component has its styles as style objects."
     }
   ],
   "surfaceAdditions": [],
