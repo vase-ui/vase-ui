@@ -55,13 +55,15 @@ import { useRenderElement } from './useRenderElement';
 const TRANSPARENT_IMAGE_DATA_URI =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 
-const Note = defineComponent({
-  inheritAttrs: false,
-  setup() {
-    const { elementProps, tag } = useRender({}, { props: (attrs) => [{ role: 'note' }, attrs] });
+const Note = defineComponent(
+  (props: VaseUIComponentProps<object> & WithVaseUIEvent<HTMLAttributes>) => {
+    const { elementProps, tag } = useRender(props, {
+      props: (attrs) => [{ role: 'note' }, attrs],
+    });
     return () => h(tag.value, elementProps());
   },
-});
+  { props: ['as', 'stateClass', 'stateStyle'], inheritAttrs: false },
+);
 
 interface Row {
   name: string;
