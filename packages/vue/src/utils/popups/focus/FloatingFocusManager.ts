@@ -2,6 +2,7 @@ import {
   computed,
   inject,
   onActivated,
+  onBeforeMount,
   onDeactivated,
   onMounted,
   onScopeDispose,
@@ -103,7 +104,8 @@ export interface FloatingFocusManagerProps {
    * element of the focus manager above, and the newest element that had the focus before an open.
    * When `openInteractionType` is `null`, the element that had the focus comes before the reference.
    * An element that is not in the document, or that has the `hidden` attribute or an ancestor with
-   * it, cannot take the focus.
+   * it, cannot take the focus. No focus moves when the element is in the closed floating element of
+   * a disabled focus manager above, because that focus manager returned the focus at its close.
    *
    * - `false`: Do not move the focus.
    * - `true`: Move the focus based on the default behavior.
@@ -195,9 +197,19 @@ export interface FloatingFocusManagerProps {
   nodesAfterElement?: readonly ChildNode[] | undefined;
 }
 
-// The floating element of the focus manager above. A popup that has no node in the popup tree, such
-// as a dialog, finds its parent popup through this context.
-const ParentPopupElementContext: InjectionKey<() => HTMLElement | null> = Symbol();
+// The focus manager above. A dialog has no node in the popup tree, and a nested popup is in a portal
+// of its own, so a focus manager finds the popups above and below it through this context.
+interface ParentFocusManager {
+  // The last default target of a return of the focus below.
+  getPopupElement: () => HTMLElement | null;
+  // Adds the test of a focus manager below. The result removes the test.
+  addPopupBelow: (isInClosedPopup: (element: Element | null) => boolean) => () => void;
+  // Whether the element is in a closed popup of a disabled focus manager, here or above. That focus
+  // manager returned the focus at its close.
+  isInDisabledClosedPopup: (element: Element | null) => boolean;
+}
+
+const ParentFocusManagerContext: InjectionKey<ParentFocusManager> = Symbol();
 
 // The number of times that the focus managers above took their marks. A later take of the marks
 // lifts the marks of an earlier take, so the popup in the content of another popup must take its
@@ -400,8 +412,7 @@ export function useFloatingFocusManager(
   const portalNode = computed(() => portalContext?.portalNode.value ?? null);
   const tree = useFloatingTree(() => resolved.value.externalTree);
 
-  const getParentPopupElement = inject(ParentPopupElementContext, null);
-  provide(ParentPopupElementContext, () => floatingFocusElement.value);
+  const parentFocusManager = inject(ParentFocusManagerContext, null);
 
   const parentMarksCount = inject(ParentMarksCountContext, null);
   const marksCount = shallowRef(0);
@@ -417,6 +428,40 @@ export function useFloatingFocusManager(
   // Whether `KeepAlive` holds the popup. The popup keeps its open state.
   const deactivated = shallowRef(false);
   const isDisabled = () => resolved.value.disabled || deactivated.value;
+
+  // A nested dialog or a menu is in a portal of its own, and a dialog has no node in the popup tree.
+  // A focus in such a popup thus is not in `floating`.
+  const popupsBelow = new Set<(element: Element | null) => boolean>();
+
+  function isInClosedPopupBelow(element: Element | null) {
+    return [...popupsBelow].some((test) => test(element));
+  }
+
+  // A popup below that is still open keeps the focus. A popup that a menu item opens can be below the
+  // menu.
+  function isInClosedPopup(element: Element | null) {
+    return (!open.value && contains(floating.value, element)) || isInClosedPopupBelow(element);
+  }
+
+  provide(ParentFocusManagerContext, {
+    getPopupElement: () => floatingFocusElement.value,
+    addPopupBelow(test) {
+      popupsBelow.add(test);
+      return () => {
+        popupsBelow.delete(test);
+      };
+    },
+    isInDisabledClosedPopup: (element) =>
+      (!open.value && isDisabled() && contains(floating.value, element)) ||
+      parentFocusManager?.isInDisabledClosedPopup(element) === true,
+  });
+
+  // A server render calls no `onBeforeMount`, so it adds nothing.
+  let removeFromParent: (() => void) | undefined;
+  onBeforeMount(() => {
+    removeFromParent = parentFocusManager?.addPopupBelow(isInClosedPopup);
+  });
+  onScopeDispose(() => removeFromParent?.());
 
   let preventReturnFocus = false;
   let isPointerDown = false;
@@ -760,7 +805,7 @@ export function useFloatingFocusManager(
           ...(preferPreviousFocus
             ? [previousElement, domReferenceEl]
             : [domReferenceEl, previousElement]),
-          getParentPopupElement?.(),
+          parentFocusManager?.getPopupElement(),
         ]);
 
         // Use the next element instead of a hidden one, unless the closing update already moved the
@@ -785,12 +830,15 @@ export function useFloatingFocusManager(
         }
 
         const activeEl = activeElement(doc);
+        const insideElements = getResolvedInsideElements();
         const isFocusInsideFloatingTree =
           contains(floatingEl, activeEl) ||
+          insideElements.some((element) => element === activeEl || contains(element, activeEl)) ||
           (currentTree &&
             getNodeChildren(currentTree.nodesRef.value, getNodeId(), false).some((node) =>
               contains(node.context?.elements.floating, activeEl),
-            ));
+            )) ||
+          isInClosedPopupBelow(activeEl);
         const type = closeType;
 
         const job = { cancelled: false };
@@ -809,6 +857,9 @@ export function useFloatingFocusManager(
             !job.cancelled &&
             !preventReturnFocus &&
             isHTMLElement(returnElement) &&
+            // A popup above that closed with this popup returned the focus at its close. Its element
+            // goes at the end of its exit.
+            parentFocusManager?.isInDisabledClosedPopup(returnElement) !== true &&
             // If the focus moved somewhere else after mount, avoid returning focus
             // since it likely entered a different element which should be
             // respected: https://github.com/floating-ui/floating-ui/issues/2607
