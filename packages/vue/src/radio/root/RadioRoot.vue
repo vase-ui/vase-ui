@@ -299,13 +299,13 @@ if (group) {
     }
   });
 
-  // The group follows the checked input and the first enabled input. A radio that is disabled and
-  // checked keeps the input that the group has.
+  // The group takes the checked input, and an enabled input in place of `null`. A `computed` that
+  // reads `inputElement` also follows each change of `checked` and `disabled`.
   watch(
     [checked, isDisabled],
     () => {
       const input = inputElement.value;
-      if (input && !isHeld.value && !(isDisabled.value && checked.value)) {
+      if (input && !isHeld.value) {
         group.registerInputRef(input);
       }
     },

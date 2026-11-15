@@ -1,0 +1,11 @@
+{
+  "id": "VUE-101",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/radio-group/RadioGroup.tsx#L125-L152",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/radio/root/RadioRoot.tsx#L106-L117",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/docs/src/app/(docs)/react/handbook/forms/page.mdx#L464",
+    "https://html.spec.whatwg.org/multipage/interaction.html#focusable-area"
+  ],
+  "behavior": "`RadioGroup` never exposes the input of a disabled radio in `inputElement`. It exposes the checked input when that input is enabled, or else the first enabled input in the document, or else `null`. A radio or a group that becomes disabled thus gives the same `inputElement` as one that is disabled at the mount. A form library that focuses `inputElement` for an error then focuses an enabled radio. Base UI keeps the input in `inputRef` when its radio or its group becomes disabled, and skips it when they are disabled at the mount. The browser does not focus a disabled input, so such a library moves no focus.",
+  "dueWith": "packages/react/src/radio-group/RadioGroup.tsx"
+}

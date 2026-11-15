@@ -68,7 +68,7 @@ export type RadioGroupChangeEventDetails = VaseUIChangeEventDetails<RadioGroupCh
 </script>
 
 <script setup lang="ts" generic="Value = any">
-import { computed, provide, shallowRef } from 'vue';
+import { computed, provide, shallowRef, triggerRef } from 'vue';
 import { queueInputTake } from '../common/hydration';
 import { contains } from '../common/shadowDom';
 import { useControlled } from '../common/useControlled';
@@ -197,9 +197,10 @@ function setCheckedValue(value: Value, eventDetails: RadioGroupChangeEventDetail
   inputSyncRequest.value += 1;
 }
 
-// The exposed input is the checked input, or else the first enabled input in the document. The
-// field validates each registered input, so the group does not write `validation.inputRef`. A stale
-// input of an unmounted radio there would block the submit of the form.
+// The exposed input is the checked input when it is enabled, or else the first enabled input in the
+// document. The field validates each registered input, so the group does not write
+// `validation.inputRef`. A stale input of an unmounted radio there would block the submit of the
+// form.
 const exposedInput = shallowRef<HTMLInputElement | null>(null);
 const radioInputs = new Set<HTMLInputElement>();
 
@@ -213,31 +214,28 @@ function findFirstEnabledInput() {
   return firstInput;
 }
 
-// A keyed move runs no registration. An exposed input that is not checked thus reads as the first
-// enabled input in the document at each read.
+// A keyed move runs no registration, and a radio that becomes disabled keeps `exposedInput`. The
+// group thus applies the rule at each read.
 function getExposedInput() {
   const input = exposedInput.value;
-  return input == null || input.checked ? input : (findFirstEnabledInput() ?? input);
+  if (input == null) {
+    return null;
+  }
+  return input.checked && !input.disabled ? input : findFirstEnabledInput();
 }
 
 function registerInputRef(input: HTMLInputElement) {
   radioInputs.add(input);
 
-  // The read also finds the first enabled input. This write makes a `computed` that reads
-  // `inputElement` follow a registration.
-  const currentInput = exposedInput.value;
-  if (
-    !input.disabled &&
-    (input.checked ||
-      currentInput == null ||
-      currentInput.disabled ||
-      (!currentInput.checked && input === findFirstEnabledInput()))
-  ) {
+  if (!input.disabled && (input.checked || exposedInput.value == null)) {
     exposedInput.value = input;
   }
+  // A `computed` that reads `inputElement` then follows each registration, also one that keeps
+  // `exposedInput`.
+  triggerRef(exposedInput);
 
   // `inputElement` is `null` after the radio of the input that it gives unmounts, as in Base UI.
-  // After a keyed move, that input can differ from `exposedInput`.
+  // After a keyed move or a change of `disabled`, that input can differ from `exposedInput`.
   return () => {
     const givenInput = getExposedInput();
     radioInputs.delete(input);
