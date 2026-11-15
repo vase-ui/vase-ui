@@ -3537,15 +3537,14 @@ describe('<Autocomplete.Root />', () => {
   describe('VUE-102: a value with a line break', () => {
     const addresses = ['Main Street 1\nFlat 2', 'Box 1'];
 
-    function renderInPopup(defaultValue: string, onValueChange?: (value: string) => void) {
+    function renderInPopup(props: {
+      defaultValue: string;
+      defaultOpen?: boolean;
+      onValueChange?: (value: string) => void;
+    }) {
       return render(
         <form data-testid="form">
-          <Autocomplete.Root
-            name="address"
-            items={addresses}
-            defaultValue={defaultValue}
-            onValueChange={onValueChange}
-          >
+          <Autocomplete.Root name="address" items={addresses} {...props}>
             <Autocomplete.Trigger>
               <Autocomplete.Value />
             </Autocomplete.Trigger>
@@ -3576,7 +3575,7 @@ describe('<Autocomplete.Root />', () => {
       },
       {
         name: 'an input inside the popup',
-        renderAutocomplete: () => renderInPopup('Main Street 1\nFlat 2'),
+        renderAutocomplete: () => renderInPopup({ defaultValue: 'Main Street 1\nFlat 2' }),
       },
     ])('submits the value from $name', async ({ renderAutocomplete }) => {
       await renderAutocomplete();
@@ -3584,9 +3583,15 @@ describe('<Autocomplete.Root />', () => {
       expect(getFormData('address')).toEqual(['Main Street 1\nFlat 2']);
     });
 
+    // The open popup with no text registers each item, so the text can match an item.
     it('keeps the text that the browser restores', async () => {
       const handleValueChange = vi.fn();
-      await renderInPopup('Box 1', handleValueChange);
+      await renderInPopup({
+        defaultValue: '',
+        defaultOpen: true,
+        onValueChange: handleValueChange,
+      });
+      expect(getOptions()).toEqual(['Main Street 1\nFlat 2', 'Box 1']);
       const input = document.querySelector<HTMLInputElement>('input[name="address"]')!;
       input.value = 'Main Street 1Flat 2';
 
