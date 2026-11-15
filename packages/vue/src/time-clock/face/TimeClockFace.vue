@@ -2,13 +2,35 @@
 import type { HTMLAttributes } from 'vue';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { TimeClockRootState } from '../root/TimeClockRoot.vue';
+import type { TimeClockView } from '../utils/clockViews';
 
 export interface TimeClockFaceState extends TimeClockRootState {}
 
 export interface TimeClockFaceProps
   extends
     VaseUIComponentProps<TimeClockFaceState>,
-    /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {}
+    /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
+  /**
+   * A string value forwarded to the `aria-label` attribute of the `input`.
+   * It replaces the default name, which is the name of the view (such as "hour").
+   */
+  ariaLabel?: string | undefined;
+  /**
+   * A string value forwarded to the `aria-labelledby` attribute of the `input`.
+   * It replaces the default name.
+   */
+  ariaLabelledby?: string | undefined;
+  /**
+   * A string value forwarded to the `aria-describedby` attribute of the `input`.
+   */
+  ariaDescribedby?: string | undefined;
+  /**
+   * A function which returns a string value for the [`aria-valuetext`](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-valuetext) attribute of the `input`.
+   * It replaces the default text, which is the number with its unit (such as "30 minutes").
+   * This is important for screen reader users.
+   */
+  getAriaValueText?: ((value: number, view: TimeClockView) => string) | null | undefined;
+}
 </script>
 
 <script setup lang="ts">
@@ -112,10 +134,15 @@ function onInput(event: Event) {
 function inputProps() {
   return mergeProps<'input'>(
     {
-      'aria-label': label.value,
+      'aria-label': props.ariaLabel ?? (props.ariaLabelledby == null ? label.value : undefined),
+      'aria-labelledby': props.ariaLabelledby,
+      'aria-describedby': props.ariaDescribedby,
       'aria-readonly': root.readOnly.value ? 'true' : undefined,
       'aria-valuenow': root.selectedNumber.value.value,
-      'aria-valuetext': valueText.value,
+      'aria-valuetext':
+        typeof props.getAriaValueText === 'function'
+          ? props.getAriaValueText(root.selectedNumber.value.value, root.view.value)
+          : valueText.value,
       // A browser restores the value of an input that has no `autocomplete="off"` after a reload.
       autocomplete: 'off',
       disabled: root.disabled.value,

@@ -153,7 +153,7 @@ A key goes over a disabled number. The Left Arrow and the Right Arrow do not cha
 ## Accessibility
 
 - The root is a `group`. Give it a name with `aria-label` or `aria-labelledby`.
-- The range input has the name of the unit of the view, such as "hour", in the locale. Its `aria-valuetext` is the number and the unit, such as "10 hours".
+- The range input has the name of the unit of the view, such as "hour", in the locale. Its `aria-valuetext` is the number and the unit, such as "10 hours". Set `aria-label` or `aria-labelledby` on `TimeClock.Face` to replace the name, `aria-describedby` to add a description, and `getAriaValueText` to replace the value text. The face gives all four to the range input.
 - The numbers and the hand have `aria-hidden`, because the range input has the same information.
 - A touch screen reader changes the range input with its own gestures. A change that comes from the input selects the number like a key.
 - `TimeClock.DayPeriod` and `TimeClock.ViewTrigger` are buttons with `aria-pressed`. `TimeClock.ViewTrigger` has the name of its unit and the number, such as "hour 10", unless it has content of your own.

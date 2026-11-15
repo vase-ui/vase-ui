@@ -6,6 +6,7 @@ import * as OTPField from '../src/otp-field/index.parts';
 import * as Radio from '../src/radio/index.parts';
 import * as Slider from '../src/slider/index.parts';
 import * as Switch from '../src/switch/index.parts';
+import * as TimeClock from '../src/time-clock/index.parts';
 
 const id = 'id';
 </script>
@@ -69,6 +70,17 @@ const id = 'id';
   <Slider.Thumb :aria-describedby="5" />
   <!-- @vue-expect-error `aria-valuetext` is a string -->
   <Slider.Thumb :aria-valuetext="5" />
+
+  <TimeClock.Face aria-label="x" aria-labelledby="id" aria-describedby="id" />
+  <TimeClock.Face :aria-label="id" :aria-labelledby="id" :aria-describedby="id" />
+  <TimeClock.Face ariaLabel="x" ariaLabelledby="id" ariaDescribedby="id" />
+  <TimeClock.Face :ariaLabel="id" :ariaLabelledby="id" :ariaDescribedby="id" />
+  <!-- @vue-expect-error `aria-label` is a string -->
+  <TimeClock.Face :aria-label="5" />
+  <!-- @vue-expect-error `aria-labelledby` is a string -->
+  <TimeClock.Face :aria-labelledby="5" />
+  <!-- @vue-expect-error `aria-describedby` is a string -->
+  <TimeClock.Face :aria-describedby="5" />
 
   <Combobox.Chip aria-description="x" />
   <Combobox.Chip :aria-description="id" />

@@ -140,6 +140,56 @@ describe('<TimeClock.Face />', () => {
       ]);
     });
 
+    it('takes the name of a consumer in place of the name of the view', async () => {
+      await render(
+        <TimeClock.Root locale="en-US">
+          <TimeClock.Face aria-label="Meeting hour" data-testid="face" />
+        </TimeClock.Root>,
+      );
+
+      const slider = screen.getByRole('slider', { name: 'Meeting hour' });
+      expect(slider).toHaveAttribute('aria-label', 'Meeting hour');
+      expect(screen.getByTestId('face')).not.toHaveAttribute('aria-label');
+    });
+
+    it('takes the label reference of a consumer in place of the name of the view', async () => {
+      await render(
+        <TimeClock.Root locale="en-US">
+          <span id="clock-name">Start time</span>
+          <TimeClock.Face aria-labelledby="clock-name" data-testid="face" />
+        </TimeClock.Root>,
+      );
+
+      const slider = screen.getByRole('slider', { name: 'Start time' });
+      expect(slider).toHaveAttribute('aria-labelledby', 'clock-name');
+      expect(slider).not.toHaveAttribute('aria-label');
+      expect(screen.getByTestId('face')).not.toHaveAttribute('aria-labelledby');
+    });
+
+    it('gives the description reference of a consumer to the input', async () => {
+      await render(
+        <TimeClock.Root>
+          <span id="clock-help">Pick the hour</span>
+          <TimeClock.Face aria-describedby="clock-help" data-testid="face" />
+        </TimeClock.Root>,
+      );
+
+      expect(screen.getByRole('slider')).toHaveAccessibleDescription('Pick the hour');
+      expect(screen.getByTestId('face')).not.toHaveAttribute('aria-describedby');
+    });
+
+    it('takes the value text of a consumer in place of the number with its unit', async () => {
+      const getAriaValueText = vi.fn((value: number, view: string) => `${value} in ${view}`);
+      await render(
+        <TimeClock.Root locale="en-US" defaultValue={time('15:30')} defaultView="minute">
+          <TimeClock.Face getAriaValueText={getAriaValueText} />
+        </TimeClock.Root>,
+      );
+
+      expect(screen.getByRole('slider')).toHaveAttribute('aria-valuetext', '30 in minute');
+      expect(getAriaValueText).toHaveBeenLastCalledWith(30, 'minute');
+    });
+
     it('does not give the input a name, so that a form does not send it', async () => {
       await render(
         <TimeClock.Root>

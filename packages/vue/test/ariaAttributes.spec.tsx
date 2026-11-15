@@ -3,6 +3,7 @@ import * as OTPField from '../src/otp-field/index.parts';
 import * as Radio from '../src/radio/index.parts';
 import * as Slider from '../src/slider/index.parts';
 import * as Switch from '../src/switch/index.parts';
+import * as TimeClock from '../src/time-clock/index.parts';
 
 <Checkbox.Root aria-label="x" aria-labelledby="id" />;
 <Checkbox.Root ariaLabel="x" ariaLabelledby="id" />;
@@ -45,3 +46,12 @@ import * as Switch from '../src/switch/index.parts';
 <Slider.Thumb aria-describedby={5} />;
 // @ts-expect-error `aria-valuetext` is a string
 <Slider.Thumb aria-valuetext={5} />;
+
+<TimeClock.Face aria-label="x" aria-labelledby="id" aria-describedby="id" />;
+<TimeClock.Face ariaLabel="x" ariaLabelledby="id" ariaDescribedby="id" />;
+// @ts-expect-error `aria-label` is a string
+<TimeClock.Face aria-label={5} />;
+// @ts-expect-error `aria-labelledby` is a string
+<TimeClock.Face aria-labelledby={5} />;
+// @ts-expect-error `aria-describedby` is a string
+<TimeClock.Face aria-describedby={5} />;
