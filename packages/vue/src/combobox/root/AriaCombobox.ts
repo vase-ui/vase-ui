@@ -1,7 +1,6 @@
 import {
   computed,
   nextTick,
-  onActivated,
   onDeactivated,
   onMounted,
   onScopeDispose,
@@ -15,7 +14,7 @@ import { getOverflowAncestors } from '@floating-ui/vue';
 import { isHTMLElement } from '@floating-ui/utils/dom';
 import { addEventListener } from '../../common/addEventListener';
 import { EMPTY_ARRAY, EMPTY_OBJECT } from '../../common/empty';
-import { useIsHydrating } from '../../common/hydration';
+import { useHiddenValueBeforeHydration, useIsHydrating } from '../../common/hydration';
 import { ownerWindow } from '../../common/owner';
 import { activeElement, closest, contains, getTarget } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
@@ -56,6 +55,7 @@ import {
 import type { Group } from '../../internals/resolveValueLabel';
 import type { VaseUIEvent } from '../../internals/types';
 import { useFormReset } from '../../internals/useFormReset';
+import { useFormRestoreAsInput } from '../../internals/useFormRestore';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { mergeProps } from '../../merge-props';
 import { getHighlightReason } from '../../utils/getHighlightReason';
@@ -961,9 +961,14 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   }
 
   function setInputValue(next: string, eventDetails: AriaCombobox.ChangeEventDetails) {
-    callbacks.onInputValueChange(next, eventDetails);
-    if (eventDetails.isCanceled) {
-      return;
+    // The root emits no change for the text that the input has (`VUE-91`). The code below still
+    // runs for that text. With `selectionMode: 'none'` (Autocomplete), the input can show an
+    // inline completion, which is not the value of the root.
+    if (selectionMode.value === 'none' || next !== String(inputValue.value ?? '')) {
+      callbacks.onInputValueChange(next, eventDetails);
+      if (eventDetails.isCanceled) {
+        return;
+      }
     }
 
     // A canceled selection clear must not suppress close-completion cleanup.
@@ -1171,12 +1176,27 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   }
 
   function setSelectedValue(nextValue: any, eventDetails: AriaCombobox.ChangeEventDetails) {
+    // A pick of the selected item changes no value (`VUE-91`), but it can still fill the input.
+    if (
+      single.value &&
+      compareItemEquality(nextValue, selectedValue.value, isItemEqualToValue.value)
+    ) {
+      fillInput(nextValue, eventDetails);
+    } else {
+      commitSelectedValue(nextValue, eventDetails);
+    }
+  }
+
+  function commitSelectedValue(nextValue: any, eventDetails: AriaCombobox.ChangeEventDetails) {
     callbacks.onSelectedValueChange(nextValue, eventDetails);
     if (eventDetails.isCanceled) {
       return;
     }
     setSelectedValueUnwrapped(nextValue);
+    fillInput(nextValue, eventDetails);
+  }
 
+  function fillInput(nextValue: any, eventDetails: AriaCombobox.ChangeEventDetails) {
     const shouldFillInput =
       (selectionMode.value === 'none' && popupRef.value && (props.fillInputOnItemPress ?? true)) ||
       (single.value && !toRaw(store.state).inputInsidePopup);
@@ -1884,8 +1904,10 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     giveFieldInput(input);
   }
 
+  const writesHiddenValue = useHiddenValueBeforeHydration(() => hiddenInputElement.value);
+
   // Vue writes the value to the input only when the root renders. A browser can change the input
-  // with no change of the state: an autofill, and the restore of the form state of a page.
+  // with no change of the state, such as an autofill.
   function writeValueToInput() {
     const input = hiddenInputElement.value;
     if (input && input.value !== serializedValue.value) {
@@ -1984,9 +2006,11 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     let hasChanged = false;
     if (selectionMode.value !== 'none' && props.selectedValue === undefined) {
       const defaultValue = getDefaultSelectedValue();
+      // `setSelectedValue` keeps a value that `isItemEqualToValue` matches with the default object.
+      // The dirty state compares a single value by identity, so the reset puts back that object.
       if (isSelectedValueDirty(selectedValue.value, defaultValue, isItemEqualToValue.value)) {
         const details = createChangeEventDetails(REASONS.none, event);
-        setSelectedValue(defaultValue, details);
+        commitSelectedValue(defaultValue, details);
         hasChanged = !details.isCanceled;
       }
     }
@@ -2005,26 +2029,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     }
   });
 
-  // `KeepAlive` takes the hidden input out of the document. The flag is a source of the `watch`,
-  // so its cleanup removes the listener of the window.
-  const isDeactivated = shallowRef(false);
-  onDeactivated(() => {
-    isDeactivated.value = true;
-  });
-  onActivated(() => {
-    isDeactivated.value = false;
-  });
-  watch(
-    [hiddenInputElement, isDeactivated] as const,
-    ([input, deactivated], _previous, onCleanup) => {
-      if (!input || deactivated) {
-        return;
-      }
-      // Chromium restores the form state of a page after `load`, with no event on the input.
-      onCleanup(addEventListener(ownerWindow(input), 'pageshow', writeValueToInput));
-    },
-    { flush: 'post' },
-  );
+  useFormRestoreAsInput(hiddenInputElement, () => serializedValue.value, false);
 
   // The style is the constant itself, in an object that no `mergeProps` call makes.
   // `handleHiddenInputInvalid` then keeps the size that it writes.
@@ -2045,7 +2050,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
       disabled: disabled.value,
       required: required.value && !hasMultipleSelection.value,
       readonly: readOnly.value,
-      value: serializedValue.value,
+      ...(writesHiddenValue.value ? { value: serializedValue.value } : undefined),
       style: hiddenInputName.value ? visuallyHiddenInput : visuallyHiddenInputPinned,
       tabindex: -1,
       'aria-hidden': true,
