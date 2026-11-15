@@ -3293,6 +3293,29 @@ describe('<Autocomplete.Root />', () => {
       expect(getInput()).toHaveAttribute('aria-expanded', 'false');
       expect(getInput().value).toBe('ma');
     });
+
+    it('VUE-91: emits no valueChange for a press of an item whose text the input has', async () => {
+      const events: string[] = [];
+      await render(
+        <Autocomplete.Root
+          items={cities}
+          defaultValue="Malta"
+          defaultOpen
+          onValueChange={(value, details) => events.push(`valueChange:${value}:${details.reason}`)}
+          {...{ 'onUpdate:value': (value: string) => events.push(`update:value:${value}`) }}
+          onOpenChange={(open, details) => events.push(`openChange:${open}:${details.reason}`)}
+        >
+          <Autocomplete.Input />
+          {popupWithList()}
+        </Autocomplete.Root>,
+      );
+
+      await fireEvent.click(screen.getByRole('option', { name: 'Malta' }));
+      await flushMicrotasks();
+
+      expect(events).toEqual(['openChange:false:item-press']);
+      expect(getInput().value).toBe('Malta');
+    });
   });
 
   describe('inline completion', () => {
@@ -3320,6 +3343,37 @@ describe('<Autocomplete.Root />', () => {
 
       expect(events).toEqual(['valueChange:Malmö:item-press', 'update:value:Malmö']);
       expect(getInput().value).toBe('Malmö');
+    });
+
+    it('VUE-91: a native reset removes the inline text of the default value and emits no valueChange', async () => {
+      const events: string[] = [];
+      await render(
+        <form data-testid="form">
+          <Autocomplete.Root
+            name="search"
+            mode="inline"
+            items={cities}
+            onValueChange={(value, details) =>
+              events.push(`valueChange:${value}:${details.reason}`)
+            }
+            {...{ 'onUpdate:value': (value: string) => events.push(`update:value:${value}`) }}
+          >
+            <Autocomplete.Input />
+            {popupWithList()}
+          </Autocomplete.Root>
+        </form>,
+      );
+      getInput().focus();
+      await pressArrowDown();
+      await pressArrowDown();
+      expect(getInput().value).toBe('Malmö');
+
+      screen.getByTestId<HTMLFormElement>('form').reset();
+
+      await waitFor(() => {
+        expect(getInput().value).toBe('');
+      });
+      expect(events).toEqual([]);
     });
 
     it('typed text replaces the inline text', async () => {

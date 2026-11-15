@@ -4,14 +4,53 @@
   "files": {
     "alphanumeric/css-modules/index.module.css": "f56fc7e7375acb0bfc2e132bed3f2e5f04311adc710f7346c4f091d85c116211",
     "alphanumeric/css-modules/index.tsx": "d701ed2466fb0510b8491f399901b5abafa38486529bc8961493baf5223e43dc",
+    "alphanumeric/tailwind/index.tsx": "b4fa5244eef551a409b150796f1ab78beebe83a2f25563a268db168044ae2155",
     "custom-sanitize/css-modules/index.module.css": "903765ee347d3a72e0c68cd55b422cd5e19f830bfdba9ea310f59e3459d4f653",
     "custom-sanitize/css-modules/index.tsx": "8da4db2b1c40f5ba03a81344594fb35e815197fe1d0a357b04b2c5e44cbe3d29",
     "custom-sanitize/useInvalidFeedback.ts": "a91fa4a1da40b81bb51fbcacc57a274844629923d2735ffa64d8d097e2e7fe6b",
     "grouped/css-modules/index.module.css": "eaafcb35805a2a0ec8978f792d64b56829a4d5c2ac2a924f7b9dad8915b9cb3a",
     "grouped/css-modules/index.tsx": "4ed09aa8249b49388c961652ba0d3d8c70183e9037a2f54e69721f5b96ba7e87",
+    "grouped/tailwind/index.tsx": "a54415c3a4c159b91d6e2fa7e9da247444db94ca1d993a8bb9ce07e5efca79a6",
     "hero/css-modules/index.module.css": "768d9f6c2805786cc3d72b332b6c18ce31660bbc3158eebbab4c2bf70f81a16a",
     "hero/css-modules/index.tsx": "4dc60bc51aedd54f9838f00b46527d8fe91ae233e0f379c35264541cb8d29541",
+    "hero/tailwind/index.tsx": "2c3bd1a58abc3845f7f9c0e97553a5b1b5c3c95fa8107672c03d36d5fb7b3b51",
     "password/css-modules/index.module.css": "cd14b140729aba5f9702822e9d1c10d66f20a659d24e8b59c9972004c191124f",
-    "password/css-modules/index.tsx": "7b945d323b831092e3dd422df7fbc0e4e32073f4d809d4c680b24cb0bc496651"
+    "password/css-modules/index.tsx": "7b945d323b831092e3dd422df7fbc0e4e32073f4d809d4c680b24cb0bc496651",
+    "password/tailwind/index.tsx": "2f3643c3fddb7f5471105276de55a48bba4391349bf9249f40ecaa9ebb162411"
+  },
+  "classes": {
+    "alphanumeric/tailwind": [
+      "flex w-full gap-2",
+      "flex w-full max-w-80 flex-col items-start gap-1",
+      "font-mono",
+      "m-0 h-10 w-10 rounded-none border border-neutral-950 bg-white dark:bg-neutral-950 text-center font-inherit text-base font-normal text-neutral-950 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white",
+      "m-0 text-sm text-neutral-600 dark:text-neutral-400",
+      "text-sm font-bold text-neutral-950 dark:text-white"
+    ],
+    "grouped/tailwind": [
+      "flex gap-2",
+      "flex gap-2",
+      "flex w-full items-center gap-2",
+      "flex w-full max-w-80 flex-col items-start gap-1",
+      "h-px w-4 bg-current text-neutral-950 dark:text-white",
+      "m-0 h-10 w-10 rounded-none border border-neutral-950 bg-white dark:bg-neutral-950 text-center font-inherit text-base font-normal text-neutral-950 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white",
+      "m-0 h-10 w-10 rounded-none border border-neutral-950 bg-white dark:bg-neutral-950 text-center font-inherit text-base font-normal text-neutral-950 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white",
+      "text-sm font-bold text-neutral-950 dark:text-white"
+    ],
+    "hero/tailwind": [
+      "flex w-full gap-2",
+      "flex w-full max-w-80 flex-col items-start gap-1",
+      "m-0 h-10 w-10 rounded-none border border-neutral-950 bg-white dark:bg-neutral-950 text-center font-inherit text-base font-normal text-neutral-950 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white",
+      "m-0 text-sm text-neutral-600 dark:text-neutral-400",
+      "text-sm font-bold text-neutral-950 dark:text-white"
+    ],
+    "password/tailwind": [
+      "flex w-full gap-2",
+      "flex w-full max-w-80 flex-col items-start gap-1",
+      "font-mono",
+      "m-0 h-10 w-10 rounded-none border border-neutral-950 bg-white dark:bg-neutral-950 text-center font-inherit text-base font-normal text-neutral-950 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white",
+      "m-0 text-sm text-neutral-600 dark:text-neutral-400",
+      "text-sm font-bold text-neutral-950 dark:text-white"
+    ]
   }
 }

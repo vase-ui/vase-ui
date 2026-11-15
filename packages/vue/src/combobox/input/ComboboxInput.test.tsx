@@ -1015,6 +1015,72 @@ describe('<Combobox.Input />', () => {
       expect(onOuterKeyDown).toHaveBeenCalled();
     });
 
+    it.each([
+      { name: 'an empty input', inputValue: '', expected: [] },
+      {
+        name: 'text in the input',
+        inputValue: 'ap',
+        expected: ['inputValueChange::escape-key', 'update:inputValue:'],
+      },
+    ])(
+      'VUE-91: emits no valueChange for Escape in a closed multiple combobox with no value, $name',
+      async ({ inputValue, expected }) => {
+        const events: string[] = [];
+        const onOuterKeyDown = vi.fn();
+        const { user } = await render(
+          <div onKeydown={onOuterKeyDown}>
+            <Combobox.Root
+              multiple
+              defaultValue={[]}
+              defaultInputValue={inputValue}
+              onValueChange={(value: string[], details: { reason: string }) =>
+                events.push(`valueChange:${value.join()}:${details.reason}`)
+              }
+              {...{
+                'onUpdate:value': (value: string[]) => events.push(`update:value:${value.join()}`),
+              }}
+              onInputValueChange={(value: string, details: { reason: string }) =>
+                events.push(`inputValueChange:${value}:${details.reason}`)
+              }
+              {...{
+                'onUpdate:inputValue': (value: string) => events.push(`update:inputValue:${value}`),
+              }}
+            >
+              <Combobox.Input />
+            </Combobox.Root>
+          </div>,
+        );
+
+        screen.getByRole('combobox').focus();
+        await user.keyboard('{Escape}');
+
+        expect(events).toEqual(expected);
+        expect(screen.getByRole<HTMLInputElement>('combobox').value).toBe('');
+        expect(onOuterKeyDown).toHaveBeenCalled();
+      },
+    );
+
+    it('VUE-91: asks one time to clear the text for Escape in a closed combobox with no value', async () => {
+      const events: string[] = [];
+      const { user } = await render(
+        <Combobox.Root
+          defaultInputValue="ap"
+          onInputValueChange={(value: string, details: { reason: string; cancel: () => void }) => {
+            events.push(`inputValueChange:${value}:${details.reason}`);
+            details.cancel();
+          }}
+        >
+          <Combobox.Input />
+        </Combobox.Root>,
+      );
+
+      screen.getByRole('combobox').focus();
+      await user.keyboard('{Escape}');
+
+      expect(events).toEqual(['inputValueChange::escape-key']);
+      expect(screen.getByRole<HTMLInputElement>('combobox').value).toBe('ap');
+    });
+
     it('lets Escape propagate from a closed inline combobox', async () => {
       const onOuterKeyDown = vi.fn();
       const { user } = await render(
@@ -1721,6 +1787,61 @@ describe('<Combobox.Input />', () => {
 
       expect(handleFocusout).toHaveBeenCalledTimes(1);
       expect(screen.getByTestId('field')).not.toHaveAttribute('data-touched');
+    });
+  });
+
+  describe('VUE-77: aria-controls names only the list that exists', () => {
+    it('has no aria-controls while the list has an empty id', async () => {
+      await render(
+        <Combobox.Root defaultOpen>
+          <Combobox.Input data-testid="input" />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List id="" data-testid="list" />
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+      await flushMicrotasks();
+
+      const input = screen.getByTestId('input');
+      expect(screen.getByTestId('list').id).toBe('');
+      expect(input).toHaveAttribute('aria-expanded', 'true');
+      expect(input).not.toHaveAttribute('aria-controls');
+    });
+
+    it('follows the id of the list while the popup is open', async () => {
+      const id = shallowRef('first');
+      await render(() => (
+        <Combobox.Root defaultOpen>
+          <Combobox.Input data-testid="input" />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List id={id.value} data-testid="list" />
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>
+      ));
+      await flushMicrotasks();
+
+      const input = screen.getByTestId('input');
+      expect(input).toHaveAttribute('aria-controls', 'first');
+
+      id.value = 'second';
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('list').id).toBe('second');
+      expect(input).toHaveAttribute('aria-controls', 'second');
+
+      id.value = '';
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('list').id).toBe('');
+      expect(input).not.toHaveAttribute('aria-controls');
     });
   });
 

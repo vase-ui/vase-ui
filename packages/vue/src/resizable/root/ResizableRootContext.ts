@@ -5,10 +5,11 @@ import type { TextDirection } from '../../internals/direction-context/DirectionC
 import type { REASONS } from '../../internals/reasons';
 import type { Orientation } from '../../internals/types';
 import type { Layout, PanelConstraints } from '../utils/layout';
+import type { RootMeasurement } from '../utils/measure';
 import type {
   ResizableRootActions,
   ResizableRootChangeEventDetails,
-  ResizableRootCommitEventDetails,
+  ResizableRootCommitEventReason,
 } from './ResizableRoot.vue';
 
 export interface ResizablePanelRegistration {
@@ -21,7 +22,7 @@ export interface ResizablePanelRegistration {
    */
   index: ComputedRef<number>;
   /**
-   * Each size is a number, or a string of a number with an optional `%`.
+   * Each size is a number, or a string of a number with an optional unit.
    */
   minSize: () => number | string;
   maxSize: () => number | string;
@@ -30,6 +31,10 @@ export interface ResizablePanelRegistration {
   collapsedSize: () => number | string;
   collapseThreshold: () => number | string | undefined;
   disabled: () => boolean;
+  rootResizeBehavior: () => 'proportional' | 'fixed';
+  rootResizePriority: () => number;
+  snapPoints: () => readonly (number | string)[] | undefined;
+  snapTolerance: () => number | string;
   element: Readonly<ShallowRef<HTMLElement | null>>;
   /**
    * Whether `KeepAlive` holds the panel. Such a panel is not in the layout.
@@ -65,8 +70,13 @@ export interface ResizableRootContext {
    */
   list: CompositeListContextValue<{ id?: string }>;
   disabled: ComputedRef<boolean>;
+  /**
+   * The sizes that a key and a drag move by, in percent of the panel space. `dragStep` is
+   * `undefined` when the root has no drag step.
+   */
   step: ComputedRef<number>;
   largeStep: ComputedRef<number>;
+  dragStep: ComputedRef<number | undefined>;
   pushPanels: ComputedRef<boolean>;
   /**
    * The panels in the order of the document, without a panel that `KeepAlive` holds.
@@ -81,14 +91,24 @@ export interface ResizableRootContext {
    */
   shown: ComputedRef<Layout>;
   /**
+   * The panels whose first size is a length that the root cannot change into percent yet, with that
+   * length, by panel id. It is empty from the first measurement on.
+   */
+  lengthPanels: ComputedRef<ReadonlyMap<string, string>>;
+  /**
+   * What the root read from the page at the last measurement. It is `undefined` while the root has
+   * had no room for its panels.
+   */
+  measurement: Readonly<ShallowRef<RootMeasurement | undefined>>;
+  /**
    * Adds a panel to the root until the scope of the caller ends. Call it in `setup`.
    */
   registerPanel: (panel: ResizablePanelRegistration) => void;
   /**
-   * The room that the panels share on the screen, in pixels: the sum of the content boxes of the
-   * panel elements.
+   * Reads the page again, before a drag, a key or a method. It gives the new measurement, or
+   * `undefined` when the root has no room for its panels.
    */
-  getPanelSpace: () => number;
+  measure: () => RootMeasurement | undefined;
   /**
    * Starts a drag. It returns `false` while another drag of the root runs.
    */
@@ -100,7 +120,11 @@ export interface ResizableRootContext {
    * listener canceled the change.
    */
   changeLayout: (layout: Layout, details: ResizableRootChangeEventDetails) => Layout | undefined;
-  commitLayout: (layout: Layout, details: ResizableRootCommitEventDetails) => void;
+  /**
+   * Emits that the user ended a change of the layout. The snapshot of the event has the pixels of
+   * each fixed panel.
+   */
+  commitLayout: (layout: Layout, reason: ResizableRootCommitEventReason, event?: Event) => void;
   /**
    * Collapses the panel to its collapsed size, and commits the change. It does nothing for a panel
    * that is not collapsible or is collapsed. A handle (`handleMove`) moves the panel for a key.

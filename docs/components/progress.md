@@ -6,7 +6,9 @@ description: An unstyled Vue progress bar component that displays the status of 
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoProgressHero from '../demos/progress/hero/css-modules/index.vue';
+import DemoProgressHeroTailwind from '../demos/progress/hero/tailwind/index.vue';
 </script>
 
 # Progress
@@ -15,7 +17,12 @@ Displays the status of a task that takes a long time.
 
 <DemoFrame>
   <DemoProgressHero />
+  <template #tailwind>
+    <DemoProgressHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -24,6 +31,18 @@ Displays the status of a task that takes a long time.
 <<< ../demos/progress/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/progress/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Anatomy
 

@@ -25,6 +25,7 @@ export { dialogRootSharedTests } from './dialogRootSharedTests';
 export { heldMountFormResetTests } from './heldMountFormResetTests';
 export { hiddenInputSizeTests } from './hiddenInputSizeTests';
 export { hiddenInputTypeTests } from './hiddenInputTypeTests';
+export { nestedPopupCloseTests } from './nestedPopupCloseTests';
 export { nextCall, popupAnatomyTests } from './popupAnatomyTests';
 export { popupConformanceTests } from './popupConformanceTests';
 export { popupFocusPropsTests } from './popupFocusPropsTests';

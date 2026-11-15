@@ -3,7 +3,17 @@ import { defineComponent, h } from 'vue';
 import * as Resizable from '../index.parts';
 
 defineProps<{
-  composition: 'collapsed' | 'defaults' | 'layout' | 'nested' | 'style' | 'vertical';
+  composition:
+    | 'collapsed'
+    | 'defaults'
+    | 'fixed'
+    | 'layout'
+    | 'layoutLength'
+    | 'length'
+    | 'lengthMixed'
+    | 'nested'
+    | 'style'
+    | 'vertical';
 }>();
 
 // The root finds this panel through its context, and not through its place in the template.
@@ -29,6 +39,32 @@ const WrappedPanel = defineComponent({
     :default-layout="{ a: 20, b: 80 }"
   >
     <Resizable.Panel id="a" data-testid="a" />
+    <Resizable.Handle data-testid="handle-a" aria-label="First" />
+    <Resizable.Panel id="b" data-testid="b" />
+  </Resizable.Root>
+  <Resizable.Root v-else-if="composition === 'length'" data-testid="root">
+    <Resizable.Panel id="a" data-testid="a" default-size="240px" />
+    <Resizable.Handle data-testid="handle-a" aria-label="First" />
+    <Resizable.Panel id="b" data-testid="b" />
+  </Resizable.Root>
+  <Resizable.Root
+    v-else-if="composition === 'layoutLength'"
+    data-testid="root"
+    :default-layout="{ a: '15rem' }"
+  >
+    <Resizable.Panel id="a" data-testid="a" />
+    <Resizable.Handle data-testid="handle-a" aria-label="First" />
+    <Resizable.Panel id="b" data-testid="b" />
+  </Resizable.Root>
+  <Resizable.Root v-else-if="composition === 'lengthMixed'" data-testid="root">
+    <Resizable.Panel id="a" data-testid="a" default-size="240px" />
+    <Resizable.Handle data-testid="handle-a" aria-label="First" />
+    <Resizable.Panel id="b" data-testid="b" :default-size="30" />
+    <Resizable.Handle data-testid="handle-b" aria-label="Second" />
+    <Resizable.Panel id="c" data-testid="c" />
+  </Resizable.Root>
+  <Resizable.Root v-else-if="composition === 'fixed'" data-testid="root">
+    <Resizable.Panel id="a" data-testid="a" :default-size="20" root-resize-behavior="fixed" />
     <Resizable.Handle data-testid="handle-a" aria-label="First" />
     <Resizable.Panel id="b" data-testid="b" />
   </Resizable.Root>
