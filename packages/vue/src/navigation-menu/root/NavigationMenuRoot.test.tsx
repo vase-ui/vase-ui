@@ -1550,8 +1550,10 @@ describe('<NavigationMenu.Root />', () => {
       );
       const trigger = screen.getByTestId('trigger-1');
 
-      await user.click(trigger);
-      await flushMicrotasks();
+      await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        await flushMicrotasks();
+      });
       const link = screen.getByRole('link', { name: 'Link 1' });
       link.focus();
       await flushMicrotasks();
