@@ -190,7 +190,7 @@ describe('<NumberField.Increment />', () => {
       });
 
       await userEvent.pointer({ target: screen.getByRole('button'), keys: '[MouseLeft>]' });
-      await waitFor(() => expect(Number(input.value)).toBeGreaterThanOrEqual(3), { timeout: 3000 });
+      await waitFor(() => expect(Number(input.value)).toBeGreaterThanOrEqual(3));
       expect(onValueCommitted).not.toHaveBeenCalled();
 
       await userEvent.pointer({ keys: '[/MouseLeft]' });
