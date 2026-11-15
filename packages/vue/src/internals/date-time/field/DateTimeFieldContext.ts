@@ -90,6 +90,9 @@ export interface DateTimeFieldContext {
   moveFocus: (from: HTMLInputElement, direction: 1 | -1) => void;
   registerSegment: (element: HTMLInputElement) => void;
   unregisterSegment: (element: HTMLInputElement) => void;
+  /** A part that shows a literal, an era or a time zone name gives its element and its place in the layout. */
+  registerLiteral: (element: HTMLElement, index: number) => void;
+  unregisterLiteral: (element: HTMLElement) => void;
   setFocused: (focused: boolean) => void;
   /** A press on the `Input` outside a segment gives the focus to the first empty segment, else to the first segment. */
   handleInputPress: (event: MouseEvent) => void;

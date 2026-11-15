@@ -23,7 +23,6 @@ export interface PopupPartProps
 
 <script setup lang="ts">
 import { computed, inject } from 'vue';
-import { useOpenChangeComplete } from '../../src/internals/useOpenChangeComplete';
 import { useRenderElement } from '../../src/internals/useRenderElement';
 import { popupTransitionStateMapping } from '../../src/utils/popups/popupStateMapping';
 import { PopupFixtureContext } from './PopupFixture';
@@ -49,16 +48,6 @@ const state = computed<PopupPartState>(() => ({
   open: open.value,
   transitionStatus: store.select('transitionStatus'),
 }));
-
-useOpenChangeComplete({
-  open,
-  ref: store.context.popupRef,
-  onComplete() {
-    if (open.value) {
-      store.context.onOpenChangeComplete?.(true);
-    }
-  },
-});
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,

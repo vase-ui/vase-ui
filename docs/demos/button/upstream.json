@@ -4,7 +4,17 @@
   "files": {
     "hero/css-modules/index.module.css": "43df8635fba928911de9987b66b135272016019131f395dd4212df1bb55e66af",
     "hero/css-modules/index.tsx": "7aedbd0fc8707918c80f157f515e447308ba386291924904e690a0610fb7cc68",
+    "hero/tailwind/index.tsx": "4507f2be1bb93c390570726309d3bb7671c57a41ca61d02f5d08690bb52fd12c",
     "loading/css-modules/index.module.css": "43df8635fba928911de9987b66b135272016019131f395dd4212df1bb55e66af",
-    "loading/css-modules/index.tsx": "de6ff521f1376b9f781077aaf3fd3f6bb0c24d31b16b6bb4060bdafb367ddf79"
+    "loading/css-modules/index.tsx": "de6ff521f1376b9f781077aaf3fd3f6bb0c24d31b16b6bb4060bdafb367ddf79",
+    "loading/tailwind/index.tsx": "96c2f93118644178a1483dbdf8bbb3a669a1481dc2f09e45295c89b19d364a91"
+  },
+  "classes": {
+    "hero/tailwind": [
+      "flex h-8 items-center justify-center gap-2 rounded-none border border-neutral-950 bg-white px-3 text-sm leading-none whitespace-nowrap font-normal text-neutral-950 select-none hover:not-data-disabled:bg-neutral-100 active:not-data-disabled:bg-neutral-200 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white data-disabled:border-neutral-500 data-disabled:text-neutral-500 disabled:border-neutral-500 disabled:text-neutral-500 dark:border-white dark:bg-neutral-950 dark:text-white dark:hover:not-data-disabled:bg-neutral-800 dark:active:not-data-disabled:bg-neutral-700 dark:data-disabled:border-neutral-400 dark:data-disabled:text-neutral-400"
+    ],
+    "loading/tailwind": [
+      "flex h-8 items-center justify-center gap-2 rounded-none border border-neutral-950 bg-white px-3 text-sm leading-none whitespace-nowrap font-normal text-neutral-950 select-none hover:not-data-disabled:bg-neutral-100 active:not-data-disabled:bg-neutral-200 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white data-disabled:border-neutral-500 data-disabled:text-neutral-500 disabled:border-neutral-500 disabled:text-neutral-500 dark:border-white dark:bg-neutral-950 dark:text-white dark:hover:not-data-disabled:bg-neutral-800 dark:active:not-data-disabled:bg-neutral-700 dark:data-disabled:border-neutral-400 dark:data-disabled:text-neutral-400"
+    ]
   }
 }

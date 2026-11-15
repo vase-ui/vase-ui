@@ -7,6 +7,7 @@ import {
   flushMicrotasks,
   hydrate,
   nextEvent,
+  popupAnatomyTests,
   renderOnServer,
   screen,
   waitFor,
@@ -68,6 +69,22 @@ interface RootActions {
 
 describe('<ContextMenu.Root />', () => {
   const { render } = createRenderer();
+
+  popupAnatomyTests({
+    createComponent: ({ open, onOpenChangeComplete, content }) => (
+      <ContextMenu.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <ContextMenu.Trigger>Open</ContextMenu.Trigger>
+        <ContextMenu.Portal>
+          <ContextMenu.Positioner data-testid="shown" class="shown">
+            Content
+            {content}
+          </ContextMenu.Positioner>
+        </ContextMenu.Portal>
+      </ContextMenu.Root>
+    ),
+    createPopup: () => <ContextMenu.Popup data-testid="popup">Popup</ContextMenu.Popup>,
+    render,
+  });
 
   describe('interactions', () => {
     beforeEach(() => {
