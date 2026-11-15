@@ -508,9 +508,10 @@ describe('<Menu.FilterProvider><Menu.SubmenuRoot/></Menu.FilterProvider>', () =>
       const trigger = screen.getByTestId('submenu-trigger');
       trigger.focus();
       await flushMicrotasks();
-      await user.keyboard('{ArrowRight}');
-
-      await screen.findByRole('searchbox', { name: 'Filter folders' });
+      await waitForLaterMillisecond(async () => {
+        await user.keyboard('{ArrowRight}');
+        await screen.findByRole('searchbox', { name: 'Filter folders' });
+      });
 
       // Put real focus back on the trigger, then press the close key there rather than in the
       // submenu popup.

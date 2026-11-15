@@ -2797,10 +2797,11 @@ describe('<Menu.Root />', () => {
         trigger.focus();
         await flushMicrotasks();
 
-        await user.keyboard('{Enter}');
-
-        await waitFor(() => {
-          expect(screen.queryByRole('menu')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.keyboard('{Enter}');
+          await waitFor(() => {
+            expect(screen.queryByRole('menu')).not.toBe(null);
+          });
         });
 
         await user.click(trigger);

@@ -594,8 +594,10 @@ describe('<MenuRoot />', () => {
             expect(submenuTrigger2).toHaveFocus();
           });
 
-          await user.keyboard('[ArrowRight]');
-          await screen.findByTestId('level-3');
+          await waitForLaterMillisecond(async () => {
+            await user.keyboard('[ArrowRight]');
+            await screen.findByTestId('level-3');
+          });
 
           await user.click(screen.getByTestId('outside'));
           await waitFor(() => {
@@ -748,8 +750,10 @@ describe('<MenuRoot />', () => {
         await expectClosed();
       }
 
-      await user.click(screen.getByRole('button', { name: 'Library' }));
-      await expectOpenWith('Library');
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Library' }));
+        await expectOpenWith('Library');
+      });
       await waitForLaterMillisecond(async () => {
         await user.click(screen.getByRole('button', { name: 'Sharing' }));
         await expectOpenWith('Sharing');

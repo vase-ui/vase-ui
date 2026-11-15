@@ -368,8 +368,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     expect(input).toHaveAttribute('aria-activedescendant', trigger.id);
 
     // A plain submenu roves real focus, so entering it hands focus to its first item.
-    await user.keyboard('[ArrowRight]');
-    const email = await screen.findByRole('menuitem', { name: 'Email' });
+    const email = await waitForLaterMillisecond(async () => {
+      await user.keyboard('[ArrowRight]');
+      return screen.findByRole('menuitem', { name: 'Email' });
+    });
     await waitFor(() => {
       expect(email).toHaveFocus();
     });

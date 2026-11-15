@@ -3595,8 +3595,10 @@ describe('<Select.Root />', () => {
 
       await focusTrigger(screen.getByTestId('trigger'));
 
-      await user.keyboard('{ArrowDown}');
-      await screen.findByRole('listbox');
+      await waitForLaterMillisecond(async () => {
+        await user.keyboard('{ArrowDown}');
+        await screen.findByRole('listbox');
+      });
       await user.keyboard('{Enter}');
 
       expect(handleValueChange.mock.calls.length).toBe(0);
@@ -3858,7 +3860,7 @@ describe('<Select.Root />', () => {
 
     const { user } = await render(<App />);
 
-    await user.click(screen.getByText('initial'));
+    await waitForLaterMillisecond(() => user.click(screen.getByText('initial')));
 
     await user.click(screen.getByRole('button', { name: '1' }));
     expect(screen.getByTestId('value')).toHaveTextContent('1');
@@ -6453,10 +6455,11 @@ describe('<Select.Root />', () => {
       const { user } = await render(<Test />);
 
       const trigger = screen.getByTestId('trigger');
-      await user.click(trigger);
-
-      await waitFor(() => {
-        expect(screen.getByRole('option', { name: 'a' })).toHaveAttribute('data-selected', '');
+      await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        await waitFor(() => {
+          expect(screen.getByRole('option', { name: 'a' })).toHaveAttribute('data-selected', '');
+        });
       });
       expect(screen.getByRole('option', { name: 'c' })).toHaveAttribute('data-selected', '');
 

@@ -647,9 +647,10 @@ describe('<Autocomplete.Root />', () => {
       expect(trigger).toHaveFocus();
       expect(trigger).toHaveTextContent('alpha');
 
-      await user.click(trigger);
-
-      expect(await screen.findByTestId('input')).toHaveValue('alpha');
+      await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        expect(await screen.findByTestId('input')).toHaveValue('alpha');
+      });
       expect(await screen.findByRole('option', { name: 'alpha' })).not.toBe(null);
 
       await user.keyboard('{Escape}');
@@ -688,9 +689,10 @@ describe('<Autocomplete.Root />', () => {
       expect(trigger).toHaveTextContent('al');
       expect(onValueChange.mock.lastCall?.[0]).toBe('al');
 
-      await user.click(trigger);
-
-      expect(await screen.findByTestId('input')).toHaveValue('al');
+      await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        expect(await screen.findByTestId('input')).toHaveValue('al');
+      });
       expect(await screen.findByRole('option', { name: 'alpha' })).not.toBe(null);
       expect(await screen.findByRole('option', { name: 'alpine' })).not.toBe(null);
       await waitFor(() => expect(screen.queryByRole('option', { name: 'beta' })).toBe(null));

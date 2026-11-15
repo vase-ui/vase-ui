@@ -2887,8 +2887,10 @@ describe('<Popover.Root />', () => {
         expect(screen.queryByTestId('child-popup')).toBe(null);
 
         const childTrigger = screen.getByTestId('child-trigger');
-        await user.click(childTrigger);
-        await flushMicrotasks();
+        await waitForLaterMillisecond(async () => {
+          await user.click(childTrigger);
+          await flushMicrotasks();
+        });
 
         expect(parentPopup).not.toBe(null);
         expect(screen.getByTestId('child-popup')).not.toBe(null);

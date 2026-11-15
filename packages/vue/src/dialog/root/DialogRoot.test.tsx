@@ -1391,10 +1391,11 @@ describe('<Dialog.Root />', () => {
         });
 
         const dialogTrigger = screen.getByRole('menuitem', { name: 'Open dialog' });
-        await user.click(dialogTrigger);
-
-        await waitFor(() => {
-          expect(screen.queryByRole('dialog')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.click(dialogTrigger);
+          await waitFor(() => {
+            expect(screen.queryByRole('dialog')).not.toBe(null);
+          });
         });
 
         await user.keyboard('[Escape]');

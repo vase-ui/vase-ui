@@ -87,9 +87,10 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
         }),
       );
 
-      await activateTrigger(screen.getByTestId('trigger1'), user);
-
-      const firstImage = await screen.findByTestId('payload-image-1');
+      const firstImage = await waitForLaterMillisecond(async () => {
+        await activateTrigger(screen.getByTestId('trigger1'), user);
+        return screen.findByTestId('payload-image-1');
+      });
       const firstContainer = firstImage.closest('[data-current]');
       expect(firstContainer).not.toBe(null);
 
@@ -253,9 +254,11 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
           '100s',
         );
 
-        await activateTrigger(screen.getByTestId('trigger1'), user);
-        await waitFor(() => {
-          expect(screen.getByText('Content 0')).toBeVisible();
+        await waitForLaterMillisecond(async () => {
+          await activateTrigger(screen.getByTestId('trigger1'), user);
+          await waitFor(() => {
+            expect(screen.getByText('Content 0')).toBeVisible();
+          });
         });
         const viewport = screen.getByTestId('viewport');
         expect(viewport).not.toHaveAttribute('data-transitioning');
@@ -306,9 +309,11 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
           '0.2s',
         );
 
-        await activateTrigger(screen.getByTestId('trigger1'), user);
-        await waitFor(() => {
-          expect(screen.getByText('Content 0')).toBeVisible();
+        await waitForLaterMillisecond(async () => {
+          await activateTrigger(screen.getByTestId('trigger1'), user);
+          await waitFor(() => {
+            expect(screen.getByText('Content 0')).toBeVisible();
+          });
         });
 
         await activateTrigger(screen.getByTestId('trigger2'), user);
@@ -415,7 +420,10 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
 
         const trigger1 = screen.getByTestId('trigger1');
 
-        await activateTrigger(trigger1, user);
+        await waitForLaterMillisecond(async () => {
+          await activateTrigger(trigger1, user);
+          await screen.findByText('Content 1', { selector: '[data-current]' });
+        });
         await activateTrigger(screen.getByTestId('trigger2'), user);
         // A trigger that opens on `mousedown`, such as `Menu.Trigger`, changes the popup in the
         // frame after the press. On a busy page, the clicks can end before that frame. Wait for
@@ -509,9 +517,11 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
           </div>
         ));
 
-        await activateTrigger(screen.getByTestId('trigger1'), user);
-        await waitFor(() => {
-          expect(document.querySelector('[data-current]')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await activateTrigger(screen.getByTestId('trigger1'), user);
+          await waitFor(() => {
+            expect(document.querySelector('[data-current]')).not.toBe(null);
+          });
         });
         const viewport = screen.getByTestId('viewport');
         const runs = recordTransitionRuns(viewport);
