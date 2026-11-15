@@ -1,6 +1,7 @@
 import { expect, vi, describe, it } from 'vitest';
-import { shallowRef } from 'vue';
+import { createApp, shallowRef } from 'vue';
 import { Combobox } from '@vase-ui/vue/combobox';
+import { Field } from '@vase-ui/vue/field';
 import {
   createHeldBranch,
   createRenderer,
@@ -102,35 +103,38 @@ describe('<Combobox.Label />', () => {
     expect(trigger).toHaveAttribute('aria-labelledby', screen.getByTestId('label').id);
   });
 
-  it('does not name a later trigger while KeepAlive holds a label that mounted with no trigger', async () => {
-    const triggerMounted = shallowRef(false);
-    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
-      <Combobox.Label key="label" data-testid="label">
-        Fruit
-      </Combobox.Label>
+  it('names a portaled input from a label that mounts after it in an app in a detached element', async () => {
+    const labelMounted = shallowRef(false);
+    const container = document.createElement('div');
+    const app = createApp(() => (
+      <Field.Root>
+        <Combobox.Root>
+          {labelMounted.value && <Combobox.Label data-testid="label">Fruit</Combobox.Label>}
+          <Combobox.Portal keepMounted>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.Input data-testid="input" />
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>
+      </Field.Root>
     ));
-    await render(() => (
-      <Combobox.Root>
-        <HeldBranch />
-        {triggerMounted.value && <Combobox.Trigger data-testid="trigger" />}
-        <Combobox.Portal keepMounted>
-          <Combobox.Positioner>
-            <Combobox.Popup>
-              <Combobox.Input />
-            </Combobox.Popup>
-          </Combobox.Positioner>
-        </Combobox.Portal>
-      </Combobox.Root>
-    ));
-    await flushMicrotasks();
+    app.mount(container);
+    try {
+      await flushMicrotasks();
+      labelMounted.value = true;
+      await flushMicrotasks();
+      document.body.append(container);
+      await flushMicrotasks();
 
-    await mountWhileHeld();
-    triggerMounted.value = true;
-    await flushMicrotasks();
-    const trigger = screen.getByTestId('trigger');
-    expect(trigger).not.toHaveAttribute('aria-labelledby');
-
-    await show();
-    expect(trigger).toHaveAttribute('aria-labelledby', screen.getByTestId('label').id);
+      expect(document.querySelector('[data-testid="input"]')).toHaveAttribute(
+        'aria-labelledby',
+        container.querySelector('[data-testid="label"]')?.id,
+      );
+    } finally {
+      app.unmount();
+      container.remove();
+    }
   });
 });

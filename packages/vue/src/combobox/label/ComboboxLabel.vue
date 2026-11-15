@@ -57,8 +57,7 @@ const labelProps = useLabel({
   fallbackControlId: () =>
     store.select('triggerElement')?.id ?? (inputInsidePopup.value ? store.select('id') : undefined),
   registerLabelId: store.context.registerLabelId,
-  reaches: (target) =>
-    isInTreeOf(store.select('triggerElement') ?? store.select('inputElement'), target),
+  reaches: (target) => isInTreeOf(store.select('triggerElement'), target),
   element: () => element.value,
 });
 
