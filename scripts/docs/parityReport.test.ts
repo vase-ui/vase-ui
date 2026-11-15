@@ -18,7 +18,6 @@ import { REPOSITORY_ROOT } from '../parity/repository.ts';
 import type { FamilyFiles } from '../parity/repository.ts';
 import { buildParityReport, loadParityReport, readScope } from './parityReport.ts';
 import type { ParityReport, ReportInput, ScopeFile } from './parityReport.ts';
-import { renderStatusLine } from './status.ts';
 
 const [FIRST, SECOND, THIRD, FOURTH, CI, UNPORTED, UNPORTED_DOCS, ROOT_FILE] = [
   'a',
@@ -260,12 +259,7 @@ test('a date is the UTC day of the commit', () => {
 
 test('the status counts the complete components and names the components that no family names', () => {
   const { status } = buildParityReport(makeInput());
-  const counts = { done: 1, total: 3 };
-  assert.deepEqual(status, {
-    ...counts,
-    notStarted: ['dialog', 'select'],
-    line: renderStatusLine(counts),
-  });
+  assert.deepEqual(status, { done: 1, total: 3, notStarted: ['dialog', 'select'] });
 });
 
 test('an exception row keeps its kind, its reason and the label of the thing', () => {

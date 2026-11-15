@@ -4,7 +4,7 @@ import { baseUiCommitUrl } from './links.ts';
 </script>
 
 <template>
-  <p>{{ data.status.line }}</p>
+  <p>Vase UI has {{ data.status.done }} of the {{ data.status.total }} components of Base UI.</p>
   <p v-if="data.status.notStarted.length > 0">
     Not started ({{ data.status.notStarted.length }}): {{ data.status.notStarted.join(', ') }}
   </p>
