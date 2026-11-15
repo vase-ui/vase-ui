@@ -1083,6 +1083,32 @@ describe('<Resizable.Root />', () => {
       expect(takeReportedMessages()).toEqual([]);
     });
 
+    it('keeps a panel with a length inside a root that is narrower, before the hydration', async () => {
+      const props = { composition: 'length' };
+      const serverHtml = await renderOnServer(
+        'src/resizable/root/ResizableRootHydration.test.vue',
+        props,
+      );
+      const container = document.createElement('div');
+      container.style.width = '200px';
+      document.body.append(container);
+      container.innerHTML = serverHtml;
+      const panel = container.querySelector<HTMLElement>('#a');
+      // The panel shrinks to the root: it is 200 px and not 240 px, so it does not overflow.
+      expect(panel?.getBoundingClientRect().width).toBeCloseTo(200, 0);
+
+      const app = createSSRApp(ResizableRootHydration, props);
+      onTestFinished(() => {
+        app.unmount();
+        container.remove();
+      });
+      app.mount(container);
+      await nextTick();
+
+      expect(container.querySelector('#a')).toBe(panel);
+      expect(takeReportedMessages()).toEqual([]);
+    });
+
     it('gives each panel the layout of all three after it hydrates a panel below an async setup', async () => {
       const serverHtml = await renderOnServer('src/resizable/root/ResizableRootLatePanel.test.vue');
       const container = document.createElement('div');
@@ -1842,7 +1868,7 @@ describe('<Resizable.Root />', () => {
           </div>
         ));
         // A root with no room has the length that the panel asked for, and has no value.
-        expect(screen.getByTestId('nav').style.flex).toBe('0 0 200px');
+        expect(screen.getByTestId('nav').style.flex).toBe('0 1 200px');
         expect(screen.getByTestId('handle')).not.toHaveAttribute('aria-valuenow');
         expect(onResize).not.toHaveBeenCalled();
 
@@ -1898,7 +1924,7 @@ describe('<Resizable.Root />', () => {
         await nextTick();
         await flushMicrotasks();
 
-        expect(screen.getByTestId('late').style.flex).toBe('0 0 200px');
+        expect(screen.getByTestId('late').style.flex).toBe('0 1 200px');
         expect(onLayoutChange).not.toHaveBeenCalled();
       });
 
@@ -1926,7 +1952,7 @@ describe('<Resizable.Root />', () => {
         await nextTick();
 
         expect(onLayoutChange).not.toHaveBeenCalled();
-        expect(screen.getByTestId('nav').style.flex).toBe('0 0 200px');
+        expect(screen.getByTestId('nav').style.flex).toBe('0 1 200px');
         expect(instance.current?.getLayout()).toEqual({ nav: 0, main: 100 });
       });
     });

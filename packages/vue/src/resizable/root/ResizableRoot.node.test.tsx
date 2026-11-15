@@ -128,8 +128,8 @@ describe('<Resizable.Root /> on a server', () => {
 
   describe('a first size that is a length', () => {
     it.each([
-      { name: 'the size of a panel', composition: 'length', length: 'flex:0 0 240px' },
-      { name: 'the layout of the root', composition: 'layoutLength', length: 'flex:0 0 15rem' },
+      { name: 'the size of a panel', composition: 'length', length: 'flex:0 1 240px' },
+      { name: 'the layout of the root', composition: 'layoutLength', length: 'flex:0 1 15rem' },
     ])('renders a panel with $name in the unit that it has', async ({ composition, length }) => {
       const html = await renderToString(createSSRApp(ResizableRootHydration, { composition }));
 
@@ -159,7 +159,7 @@ describe('<Resizable.Root /> on a server', () => {
         createSSRApp(ResizableRootHydration, { composition: 'lengthMixed' }),
       );
 
-      expect(html).toContain('flex:0 0 240px');
+      expect(html).toContain('flex:0 1 240px');
       expect(growsIn(html)).toEqual([30, 70]);
       expect(valuesIn(html)).toEqual([]);
       expect(html).not.toContain('aria-valuemin');

@@ -226,7 +226,8 @@ const { ref: listItemRef, index } = useCompositeListItem({
 });
 
 // A panel whose first size is a length has that length until the first measurement. The panel
-// cannot have a size in percent before: the room of the panels is not known.
+// cannot have a size in percent before: the room of the panels is not known. It can shrink, so it
+// does not overflow a root that is narrower than the length.
 const length = computed(() => root.lengthPanels.value[id.value]);
 
 // A panel that `KeepAlive` holds is not in the layout. It keeps its last size and its last
@@ -274,7 +275,7 @@ const { element, elementProps } = useRenderElement('div', props, {
       // registered before it, so its size can differ from the size in the server HTML.
       'data-allow-mismatch': hydrating.value ? 'style' : undefined,
       style: {
-        flex: length.value === undefined ? `${size.value} 1 0px` : `0 0 ${length.value}`,
+        flex: length.value === undefined ? `${size.value} 1 0px` : `0 1 ${length.value}`,
         [root.orientation.value === 'horizontal' ? 'minWidth' : 'minHeight']: 0,
         ...(length.value === undefined
           ? { [ResizablePanelCssVariables.resizablePanelSize]: String(size.value) }
