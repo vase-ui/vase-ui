@@ -13,11 +13,11 @@ import type {
   UpstreamCommit,
   UpstreamFile,
 } from '../parity/parityFiles.ts';
-import { vaseFiles } from '../parity/paths.ts';
+import { DOCS_FOLDER_PREFIX, vaseFiles } from '../parity/paths.ts';
 import { REPOSITORY_ROOT } from '../parity/repository.ts';
 import type { FamilyFiles } from '../parity/repository.ts';
 import { buildParityReport, loadParityReport, readScope } from './parityReport.ts';
-import type { ParityReport, ReportInput, ScopeFile } from './parityReport.ts';
+import type { Change, ParityReport, ReportInput, ScopeFile } from './parityReport.ts';
 import { renderStatusLine } from './status.ts';
 
 const [FIRST, SECOND, THIRD, FOURTH, CI, UNPORTED, UNPORTED_DOCS, ROOT_FILE] = [
@@ -69,7 +69,7 @@ const scope: ScopeFile = {
     { paths: ['.circleci/**'], reason: 'CI and repository automation.' },
     {
       paths: ['docs/**'],
-      except: ['docs/src/app/(docs)/react/components/**'],
+      except: ['docs/src/app/(docs)/react/components/*/**'],
       reason: 'The docs site.',
     },
   ],
@@ -134,6 +134,7 @@ function makeInput(changes: Partial<ReportInput> = {}): ReportInput {
   return {
     upstream,
     families: [familyFiles('alpha', alpha), familyFiles('beta', beta)],
+    ownComponents: [],
     better: [],
     check: {
       problems: [],
@@ -205,7 +206,20 @@ test('a commit that no rule names is out-of-scope with no reason', () => {
   });
 });
 
-test('a root file, a settings file and an overview page have one reason, and a ported page and source file are not started', () => {
+function statesOfSinglePathCommits(paths: string[]): (path: string) => Change['other'] {
+  const shaOf = (path: string): string => String(paths.indexOf(path)).padStart(40, '0');
+  const commits = paths.map((path) => commit(shaOf(path), '2026-02-01T10:00:00+00:00', path));
+  const report = buildParityReport(
+    makeInput({
+      upstream: { ...upstream, commits },
+      families: [],
+      scope: readScope(REPOSITORY_ROOT),
+    }),
+  );
+  return (path) => changeOf(report, shaOf(path)).other;
+}
+
+test('a root file, a settings file and an overview page have one reason, and a source file is not started', () => {
   const oneReason = [
     'LICENSE',
     '.gitignore',
@@ -214,27 +228,33 @@ test('a root file, a settings file and an overview page have one reason, and a p
     '.vscode/settings.json',
     'docs/src/app/(docs)/react/overview/quick-start/page.mdx',
   ];
-  const notStarted = [
-    'docs/src/app/(docs)/react/components/dialog/page.mdx',
-    'packages/react/src/dialog/Dialog.tsx',
-  ];
-  const paths = [...oneReason, ...notStarted];
-  const shaOf = (path: string): string => String(paths.indexOf(path)).repeat(40);
-  const commits = paths.map((path) => commit(shaOf(path), '2026-02-01T10:00:00+00:00', path));
-  const report = buildParityReport(
-    makeInput({
-      upstream: { ...upstream, commit: shaOf(paths[paths.length - 1]), commits },
-      families: [],
-      scope: readScope(REPOSITORY_ROOT),
-    }),
-  );
+  const sourceFile = 'packages/react/src/dialog/Dialog.tsx';
+  const stateOf = statesOfSinglePathCommits([...oneReason, sourceFile]);
   for (const path of oneReason) {
-    const { other } = changeOf(report, shaOf(path));
+    const other = stateOf(path);
     assert.ok(other?.state === 'out-of-scope', path);
     assert.equal(other.reasons.length, 1, path);
   }
-  for (const path of notStarted) {
-    assert.deepEqual(changeOf(report, shaOf(path)).other, { state: 'not-started' }, path);
+  assert.deepEqual(stateOf(sourceFile), { state: 'not-started' });
+});
+
+test('the index page of a page group has one reason, and each file of a page folder is not started', () => {
+  const groupFolders = ['components', 'utils', 'handbook'].map(
+    (group) => DOCS_FOLDER_PREFIX + group,
+  );
+  const indexPages = groupFolders.map((folder) => `${folder}/page.mdx`);
+  const pageFiles = groupFolders.flatMap((folder) => [
+    `${folder}/a-page/page.mdx`,
+    `${folder}/a-page/demos/hero/css-modules/index.tsx`,
+  ]);
+  const stateOf = statesOfSinglePathCommits([...indexPages, ...pageFiles]);
+  for (const path of indexPages) {
+    const other = stateOf(path);
+    assert.ok(other?.state === 'out-of-scope', path);
+    assert.equal(other.reasons.length, 1, path);
+  }
+  for (const path of pageFiles) {
+    assert.deepEqual(stateOf(path), { state: 'not-started' }, path);
   }
 });
 
@@ -301,6 +321,29 @@ test('a return type difference keeps its entry, its type and its reason', () => 
     }),
   );
   assert.deepEqual(report.families[0].returnTypeDifferences, [row]);
+});
+
+test('the report lists each own component with its reason and its standard, and counts no component of it', () => {
+  const ownComponents = [
+    {
+      name: 'gamma',
+      record: {
+        standard: ['https://example.com/pattern', 'https://example.com/role'],
+        reason: 'Base UI has no gamma.',
+        parts: ['Root'],
+      },
+    },
+  ];
+  const report = buildParityReport(makeInput({ ownComponents }));
+  assert.deepEqual(report.ownComponents, [
+    {
+      name: 'gamma',
+      reason: 'Base UI has no gamma.',
+      standard: ['https://example.com/pattern', 'https://example.com/role'],
+    },
+  ]);
+  assert.deepEqual(report.status, buildParityReport(makeInput()).status);
+  assert.deepEqual(buildParityReport(makeInput()).ownComponents, []);
 });
 
 function betterRow(id: string): BetterRow {
@@ -379,6 +422,17 @@ test('loadParityReport throws when the check finds a problem', () => {
     () => loadParityReport(root),
     /^Error: The parity page needs a clean parity check\. Run `pnpm parity:check`[^\n]*\nalpha: parity\/families\/alpha\.upstream\.json does not exist/,
   );
+});
+
+test('loadParityReport gives the own components that it reads from parity/own', () => {
+  const report = loadParityReport(join(import.meta.dirname, '..', 'parity', 'fixtures'));
+  assert.deepEqual(report.ownComponents, [
+    {
+      name: 'sample',
+      reason: 'Base UI has no sample component.',
+      standard: ['https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/'],
+    },
+  ]);
 });
 
 test('readScope accepts parity/scope.json', () => {

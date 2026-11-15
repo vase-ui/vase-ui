@@ -180,6 +180,7 @@ import {
   createGenericEventDetails,
 } from '../../internals/createBaseUIEventDetails';
 import type { ReasonToEvent } from '../../internals/createBaseUIEventDetails';
+import { useFieldInput } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { useFormContext } from '../../internals/form-context';
 import { handleHiddenInputInvalid } from '../../internals/handleHiddenInputInvalid';
@@ -236,6 +237,10 @@ const emit = defineEmits<{
    * - `'scrub'` for scrub area drags
    */
   valueChange: [value: number | null, eventDetails: NumberFieldRootChangeEventDetails];
+  /**
+   * Event handler called after `valueChange` with the new value, unless a listener cancels the
+   * change. `v-model:value` uses it.
+   */
   'update:value': [value: number | null];
   /**
    * Callback function that is fired when the value is committed.
@@ -281,10 +286,9 @@ const minWithZeroDefault = computed(() => props.min ?? 0);
 const inputRef = shallowRef<HTMLInputElement | null>(null);
 const hiddenInputElement = shallowRef<HTMLInputElement | null>(null);
 
-// A template can mount the root that replaces this root before it unmounts this root. The root
-// then clears the input of the field only when the input is its own. A plain variable keeps the
-// render of the root from depending on the element.
+// A plain variable keeps the render of the root from depending on the element.
 let ownHiddenInput: HTMLInputElement | null = null;
+const giveFieldInput = useFieldInput();
 
 function setHiddenInputElement(next: unknown) {
   const input = next as HTMLInputElement | null;
@@ -292,14 +296,12 @@ function setHiddenInputElement(next: unknown) {
   if (input === ownHiddenInput) {
     return;
   }
-  if (input !== null || validation.inputRef.value === ownHiddenInput) {
-    validation.inputRef.value = input;
-  }
+  giveFieldInput(input);
   ownHiddenInput = input;
   hiddenInputElement.value = input;
 }
 
-const controlId = useLabelableId({ id: () => props.id });
+const controlId = useLabelableId({ id: () => props.id, element: () => element.value });
 
 const [numberValue, setValueUnwrapped] = useControlled<number | null>({
   controlled: () => props.value,
@@ -485,7 +487,7 @@ function incrementValue(
   amount: number,
   { direction, currentValue, event, reason }: IncrementValueParameters,
 ) {
-  const prevValue = currentValue == null ? valueRef.value : currentValue;
+  const prevValue = currentValue ?? valueRef.value;
   const nativeEvent = event as ReasonToEvent<IncrementValueParameters['reason']> | undefined;
 
   if (typeof prevValue !== 'number') {

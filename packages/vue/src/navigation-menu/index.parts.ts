@@ -105,6 +105,11 @@ export namespace Item {
  * A container for the content of the navigation menu item that is moved into the popup
  * when the item is active.
  * Renders a `<div>` element.
+ *
+ * The part renders its element in a `Teleport` in the viewport. Vue gives the scope id of
+ * `<style scoped>`, `v-show` and a custom directive only to a root element, so they do not reach
+ * this element. Put them on your element in the `#render` slot, or use a CSS module or a `style`
+ * binding.
  */
 export const Content: typeof NavigationMenuContent = NavigationMenuContent;
 export namespace Content {
@@ -128,6 +133,10 @@ export namespace Trigger {
  * A portal element that moves the popup to a different part of the DOM.
  * By default, the portal element is appended to `<body>`.
  * Renders a `<div>` element.
+ *
+ * The part renders its element in a `Teleport`. Vue gives the scope id of `<style scoped>`,
+ * `v-show` and a custom directive only to a root element, so they do not reach this element. Put
+ * them on your element in the `#render` slot, or use a CSS module or a `style` binding.
  */
 export const Portal: typeof NavigationMenuPortal = NavigationMenuPortal;
 export namespace Portal {
@@ -180,9 +189,7 @@ export namespace Arrow {
  * Renders a `<div>` element.
  *
  * In a positioner, the element holds the content of the active item, and two focus guards come
- * before and after the element. The part then has more than one root node. A rule of
- * `<style scoped>` thus does not match its element, and `v-show` has no effect on it. Use
- * `:deep()`, a CSS module, a `style` binding or `v-if`.
+ * before and after the element.
  *
  * With no positioner, the element holds a `<div>` for the content of the active item. While an
  * item is active, it also holds two focus guards.

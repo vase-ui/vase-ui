@@ -64,4 +64,6 @@ In this sample, the type of the listener follows `default-value`: a number for o
 
 <<< ../examples/typescript/GenericValue.vue
 
-The type check refuses a generic component as the value of `as`. Render it in the `#render` slot of the other part, and bind `props` on it.
+When no prop gives the type, write it on the parameter of the listener, such as `(value: string | null) => void` on a `Select.Root` with no `value` and no `default-value`.
+
+A generic component can be the value of `as`. To give it a prop or a listener with its type, render it in the `#render` slot of the other part, and bind `props` on it.

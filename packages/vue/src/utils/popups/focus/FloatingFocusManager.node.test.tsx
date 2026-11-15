@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { defineComponent, h } from 'vue';
 import { renderToString } from 'vue/server-renderer';
+import { FloatingFocusManager } from '../../../../test/fixtures/floatingFocusManagerHarness';
 import { useFloatingRootStore } from '../floating-root/useFloatingRootStore';
-import FloatingFocusManager from './FloatingFocusManager.vue';
 
 describe('FloatingFocusManager on a server', () => {
   it.each([
-    { name: 'two guards for a modal popup', modal: true, guards: 2 },
-    { name: 'no guard for a non-modal popup', modal: false, guards: 0 },
-  ])('renders $name with no DOM', async ({ modal, guards }) => {
+    { name: 'a modal popup', modal: true },
+    { name: 'a non-modal popup', modal: false },
+  ])('renders the element of $name with no guard and no DOM', async ({ modal }) => {
     const App = defineComponent({
       setup() {
         const store = useFloatingRootStore({ open: true });
@@ -19,8 +19,6 @@ describe('FloatingFocusManager on a server', () => {
 
     const html = await renderToString(h(App));
 
-    expect(html.match(/data-vase-ui-focus-guard/g) ?? []).toHaveLength(guards);
-    expect(html).toContain('<div id="popup"></div>');
-    expect(html).not.toContain('role="button"');
+    expect(html).toBe('<div id="popup"></div>');
   });
 });

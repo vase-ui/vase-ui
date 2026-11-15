@@ -10,6 +10,7 @@ const SAMPLE = join(FIXTURES, 'packages/vue/src/sample');
 const ENTRY = join(SAMPLE, 'index.ts');
 const PARTS = join(SAMPLE, 'index.parts.ts');
 const ROOT = join(SAMPLE, 'root/SampleRoot.vue');
+const POPUP = join(SAMPLE, 'popup/SamplePopup.vue');
 
 const CREATE_HANDLE = 'export function createHandle(): Handle {';
 const HANDLE = 'export interface Handle {\n  open: () => void;\n  close: () => void;\n}';
@@ -24,14 +25,18 @@ function exportOf(name: string): ExportMatch {
 }
 
 /** Changes the text of a fixture file in memory for the time of `run`. The text is put back after it. */
-function withText<T>(path: string, from: string, to: string, run: () => T): T {
+function withText<T>(path: string, edits: readonly (readonly [string, string])[], run: () => T): T {
   const original = readFileSync(path, 'utf8');
-  assert.equal(
-    original.includes(from),
-    true,
-    `The seed does not apply. This text is not in ${path}:\n${from}`,
-  );
-  project.updateFile(path, original.replace(from, to));
+  let edited = original;
+  for (const [from, to] of edits) {
+    assert.equal(
+      edited.includes(from),
+      true,
+      `The seed does not apply. This text is not in ${path}:\n${from}`,
+    );
+    edited = edited.replace(from, to);
+  }
+  project.updateFile(path, edited);
   try {
     return run();
   } finally {
@@ -39,7 +44,8 @@ function withText<T>(path: string, from: string, to: string, run: () => T): T {
   }
 }
 
-const withParts = <T>(from: string, to: string, run: () => T): T => withText(PARTS, from, to, run);
+const withParts = <T>(from: string, to: string, run: () => T): T =>
+  withText(PARTS, [[from, to]], run);
 
 const readCreateHandle = () => project.readFunction(exportOf('createHandle'));
 
@@ -171,8 +177,12 @@ test('a property has the tags of its own declaration, and a property of an Omit 
 test('a union of strings has its values in the sequence of its declaration', () => {
   const [changeReason, openReason] = withText(
     ROOT,
-    "export type SampleRootChangeEventReason = 'trigger-press' | 'escape-key' | 'none';",
-    "export type SampleRootChangeEventReason = 'trigger-press' | 'escape-key' | 'none';\nexport type SampleRootOpenEventReason = 'none' | 'escape-key' | 'trigger-press';",
+    [
+      [
+        "export type SampleRootChangeEventReason = 'trigger-press' | 'escape-key' | 'none';",
+        "export type SampleRootChangeEventReason = 'trigger-press' | 'escape-key' | 'none';\nexport type SampleRootOpenEventReason = 'none' | 'escape-key' | 'trigger-press';",
+      ],
+    ],
     () =>
       ['SampleRootChangeEventReason', 'SampleRootOpenEventReason'].map((name) =>
         project.readUnionValues(ENTRY, name),
@@ -182,12 +192,38 @@ test('a union of strings has its values in the sequence of its declaration', () 
   assert.deepEqual(openReason, ['none', 'escape-key', 'trigger-press']);
 });
 
+test('the export at a path can be in a namespace of a namespace, and a union of strings in a namespace has its values', () => {
+  const read = withParts(
+    CREATE_HANDLE,
+    `export type Reason = 'open' | 'close';\n\n${CREATE_HANDLE}`,
+    () => ({
+      props: project.findExportAt(ENTRY, 'Sample.Root.Props')?.path,
+      reason: project.findExportAt(ENTRY, 'Sample.Reason')?.path,
+      values: project.readUnionValues(ENTRY, 'Sample.Reason'),
+      missing: ['Sample.Root.Ghost', 'Sample.createHandle.Ghost', 'SampleRoot.Props'].map((path) =>
+        project.findExportAt(ENTRY, path),
+      ),
+    }),
+  );
+  assert.deepEqual(read, {
+    props: 'Sample.Root.Props',
+    reason: 'Sample.Reason',
+    values: ['open', 'close'],
+    missing: [undefined, undefined, undefined],
+  });
+});
+
 test('a class has its public properties and methods, in the sequence of the declaration', () => {
   const handle = withParts(
     HANDLE,
     [
       'class PopupHandle {',
       '  protected readonly fallback = 0;',
+      '  readonly #stores: number[] = [];',
+      '  get #newest(): number | undefined {',
+      '    return this.#stores.at(-1);',
+      '  }',
+      '  #detach(): void {}',
       '  /** @internal */',
       '  attach(): void {}',
       '  /** Whether the sample is open. */',
@@ -257,26 +293,63 @@ test('a union of literals has no property, although its apparent type has some',
   assert.deepEqual(properties, []);
 });
 
-test('a prop that has the name of the listener of an emit has no metadata, because vue-component-meta leaves it out', () => {
+const LISTENER_TYPE = '((open: boolean) => void) | ((open: boolean) => void)[] | undefined';
+const LISTENER_PROP = `  /** The listener of the \`openChangeComplete\` emit. */\n  onOpenChangeComplete?: ${LISTENER_TYPE};`;
+
+// vue-component-meta leaves out a prop that has the name of the listener of an emit.
+for (const { kind, file, edits, part } of [
+  {
+    kind: 'a generic SFC',
+    file: ROOT,
+    edits: [[OPEN_PROP, `${OPEN_PROP}\n${LISTENER_PROP}`]],
+    part: 'Root',
+  },
+  {
+    kind: 'an SFC with no type parameter',
+    file: POPUP,
+    edits: [
+      ['  disabled?: boolean | undefined;', `  disabled?: boolean | undefined;\n${LISTENER_PROP}`],
+      [
+        'const attrs = useAttrs();',
+        'defineEmits<{\n  openChangeComplete: [open: boolean];\n}>();\n\nconst attrs = useAttrs();',
+      ],
+    ],
+    part: 'Popup',
+  },
+] as const) {
+  test(`a prop of ${kind} that has the name of the listener of an emit has the type and the JSDoc of its declaration`, () => {
+    const props = withText(file, edits, () => project.readComponent(exportOf(part))?.props);
+    assert.deepEqual(props?.get('onOpenChangeComplete'), {
+      required: false,
+      default: null,
+      description: 'The listener of the `openChangeComplete` emit.',
+      type: LISTENER_TYPE,
+      ignored: false,
+    });
+  });
+}
+
+test('a prop that has the name of the listener of an emit is ignored when its JSDoc has the tag @ignore', () => {
   const props = withText(
     ROOT,
-    OPEN_PROP,
-    `${OPEN_PROP}\n  onOpenChangeComplete?: ((open: boolean) => void) | undefined;`,
+    [
+      [
+        OPEN_PROP,
+        `${OPEN_PROP}\n  /**\n   * The listener of the \`openChangeComplete\` emit.\n   * @ignore\n   */\n  onOpenChangeComplete?: ${LISTENER_TYPE};`,
+      ],
+    ],
     () => project.readComponent(exportOf('Root'))?.props,
   );
-  assert.deepEqual(props?.get('onOpenChangeComplete'), {
-    required: false,
-    default: null,
-    description: '',
-    type: '',
-  });
+  assert.equal(props?.get('onOpenChangeComplete')?.ignored, true);
 });
 
 test('a prop that the SFC compiler reads and vue-component-meta lists under another name is an error', () => {
   assert.throws(
     () =>
-      withText(ROOT, OPEN_PROP, `${OPEN_PROP}\n  onVnodeMounted?: (() => void) | undefined;`, () =>
-        project.readComponent(exportOf('Root')),
+      withText(
+        ROOT,
+        [[OPEN_PROP, `${OPEN_PROP}\n  onVnodeMounted?: (() => void) | undefined;`]],
+        () => project.readComponent(exportOf('Root')),
       ),
     /the SFC compiler reads the prop "onVnodeMounted", but vue-component-meta does not list it/,
   );

@@ -8,9 +8,12 @@ import {
   firePointer,
   flushMicrotasks,
   nextEvent,
+  nextAnimationsRead,
   screen,
   takeReportedMessages,
   waitFor,
+  waitForLaterMillisecond,
+  waitSingleFrame,
 } from '#test-utils';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import * as Dialog from '../../dialog/index.parts';
@@ -636,25 +639,26 @@ describe('<Drawer.Popup />', () => {
     });
     expect(parentPopup).toHaveAttribute('data-nested-drawer-open', '');
 
-    // The exit is a state that lasts only while the animation runs, so the case records the
-    // popups when the animation starts. It then ends the animation and waits for the unmount.
+    // The nested drawer is open at the mount and reads its animations in the frame after the mount.
+    // The next read of its popup is then the read of its exit.
+    await waitSingleFrame();
     const childPopup = screen.getByTestId('child-popup');
-    await nextEvent(childPopup, 'animationstart', {
+    // The exit lasts 100 s, so its state stays until the case ends the exit.
+    const animations = await nextAnimationsRead(childPopup, {
       action: () => screen.getByRole('button', { name: 'Close nested drawer' }).click(),
     });
+    const finished = animations.map((animation) => animation.finished);
+
     expect(childPopup).toHaveAttribute('data-ending-style');
     expect(parentPopup.style.getPropertyValue('--nested-drawers')).toBe('0');
     expect(parentPopup).not.toHaveAttribute('data-nested-drawer-open');
 
-    const animations = childPopup.getAnimations();
-    const finished = animations.map((animation) => animation.finished);
     for (const animation of animations) {
       animation.finish();
     }
     await Promise.all(finished);
-    await waitFor(() => {
-      expect(screen.queryByTestId('child-popup')).toBe(null);
-    });
+    await flushMicrotasks();
+    expect(screen.queryByTestId('child-popup')).toBe(null);
   });
 
   it('keeps a fixed height applied while a nested drawer closes', async () => {
@@ -719,8 +723,11 @@ describe('<Drawer.Popup />', () => {
     );
 
     const parentPopup = screen.getByTestId('parent-popup');
-    screen.getByRole('button', { name: 'Open nested drawer' }).click();
-    await flushMicrotasks();
+    // The open mounts the close button. Vue skips its listener for a click in that millisecond.
+    await waitForLaterMillisecond(async () => {
+      screen.getByRole('button', { name: 'Open nested drawer' }).click();
+      await flushMicrotasks();
+    });
 
     await waitFor(() => {
       expect(parentPopup).toHaveAttribute('data-nested-drawer-open', '');
@@ -742,12 +749,13 @@ describe('<Drawer.Popup />', () => {
       attributes: true,
     });
 
-    // The fixed height lasts only while the exit animation runs, so the case records the popups when
-    // the animation starts. It then ends the animation and waits for the unmount.
     const childPopup = screen.getByTestId('child-popup');
-    await nextEvent(childPopup, 'animationstart', {
+    // The exit lasts 100 s, so its state stays until the case ends the exit.
+    const animations = await nextAnimationsRead(childPopup, {
       action: () => screen.getByRole('button', { name: 'Close nested drawer' }).click(),
     });
+    const finished = animations.map((animation) => animation.finished);
+
     expect(childPopup).toHaveAttribute('data-ending-style');
     expect(parentPopup).not.toHaveAttribute('data-nested-drawer-open');
     expect(parentPopup.style.getPropertyValue('--drawer-height')).not.toBe('');
@@ -757,15 +765,12 @@ describe('<Drawer.Popup />', () => {
 
     observer.disconnect();
 
-    const animations = childPopup.getAnimations();
-    const finished = animations.map((animation) => animation.finished);
     for (const animation of animations) {
       animation.finish();
     }
     await Promise.all(finished);
-    await waitFor(() => {
-      expect(screen.queryByTestId('child-popup')).toBe(null);
-    });
+    await flushMicrotasks();
+    expect(screen.queryByTestId('child-popup')).toBe(null);
   });
 
   it('restores a fixed height before nested state when reopening a nested drawer', async () => {
@@ -820,8 +825,11 @@ describe('<Drawer.Popup />', () => {
     );
 
     const parentPopup = screen.getByTestId('parent-popup');
-    screen.getByRole('button', { name: 'Open nested drawer' }).click();
-    await flushMicrotasks();
+    // The open mounts the close button. Vue skips its listener for a click in that millisecond.
+    await waitForLaterMillisecond(async () => {
+      screen.getByRole('button', { name: 'Open nested drawer' }).click();
+      await flushMicrotasks();
+    });
 
     await waitFor(() => {
       expect(parentPopup).toHaveAttribute('data-nested-drawer-open', '');

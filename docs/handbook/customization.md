@@ -49,6 +49,8 @@ Call the `cancel()` method on `eventDetails` to cancel an event. This sample kee
 
 This lets you leave the part uncontrolled, because its internal state does not change. You do not need external state with a check on each update.
 
+When the part is controlled, `cancel()` is still the way to decline a change. A request that you do not apply to the `open` prop stays pending until the prop changes, so the part still reports a later close.
+
 Call `cancel()` before the listener returns. A call after an `await` has no effect.
 
 ### Allowing propagation of the DOM event
@@ -63,12 +65,13 @@ To stop the handler of Vase UI for an event such as `paste`, call `event.prevent
 
 <<< ../examples/customization/PreventHandler.vue{7}
 
-Use it as an escape hatch where no prop customizes the behavior yet.
+Your listener then takes over the interaction. Use the method with [controlled state](#controlling-components-with-state) to fit the behavior of a part to your app. When the interaction causes a change event, it is more explicit to [cancel that event](#canceling-a-vase-ui-event) for a specific `reason`.
 
 The method has no effect in these cases:
 
 - A native event that the part declares as an emit, such as `submit` of `Form`. The part emits the event after its own work.
 - A listener that the part adds with `addEventListener`, such as a listener on the document or the window. A popup has such listeners for <kbd>Esc</kbd> and for a press outside. To stop that close, call `cancel()` on the change event.
+- A listener of a parent part, such as a `Tooltip.Trigger` around the part. A call in a listener of the part stops only the handlers of the part. `Combobox.Chips`, `Combobox.InputGroup`, `Menu.Popup` and `Select.Popup` are the exceptions. The two Combobox parts do not handle a press that a listener of a child part stopped. The two popups do not move the highlight for a key that a listener of a child part stopped.
 
 To add a listener of your own in a `#render` slot, merge it with [`mergeProps`](/utils/merge-props#preventing-vase-ui-s-default-behavior).
 

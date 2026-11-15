@@ -37,8 +37,6 @@ type InputProps<T extends ElementType> =
 type Handler = (...args: any[]) => unknown;
 type HandlerValue = Handler | Handler[] | null | false | undefined;
 
-const EMPTY_PROPS = {};
-
 /* eslint-disable @typescript-eslint/unified-signatures -- The overloads are the public signature of Base UI, one for each count of props objects. */
 /**
  * Merges sets of Vue props. The rightmost set wins, as with `Object.assign`: its fields replace
@@ -48,8 +46,10 @@ const EMPTY_PROPS = {};
  * Event handlers run from right to left. The rightmost handler runs first, and the leftmost
  * handler runs last. An array of handlers is one handler, and its members run in index order.
  * When the first argument is a DOM event, a handler can call `event.preventVaseUIHandler()`.
- * The handlers to its left then do not run. This does not call `preventDefault()` or
- * `stopPropagation()`. When the first argument is not a DOM event, all handlers run.
+ * The handlers to its left then do not run. A call in a handler of another element, such as a
+ * child element, or in the other phase of the event, does not stop them. This does not call
+ * `preventDefault()` or `stopPropagation()`. When the first argument is not a DOM event, all
+ * handlers run.
  *
  * `class` values are joined, rightmost first. A value can be a string, an array or an object.
  * `style` values are merged, and the rightmost value of each property wins. A value can be a
@@ -57,11 +57,13 @@ const EMPTY_PROPS = {};
  *
  * A set can be an object or a function. The function gets the props that are merged up to that
  * point, from left to right. For `(obj1, obj2, fn, obj3)`, `fn` gets the merge of `obj1` and
- * `obj2`. The result of the function is not merged, so the function must call the earlier
- * handlers itself.
+ * `obj2`. The result of the function replaces those props, so the function must call the earlier
+ * handlers itself. `mergeProps` copies the result and does not change it.
  *
- * `preventVaseUIHandler()` does not stop a handler that such a function returns. That handler
- * must read `event.vaseUIHandlerPrevented` and stop when it is `true`.
+ * A handler that such a function returns can also call `event.preventVaseUIHandler()`.
+ * `mergeProps` does not stop an earlier handler that the function calls itself. Thus do not call
+ * the earlier handlers after this call. The call sets `event.vaseUIHandlerPrevented` to `true` for
+ * the rest of the dispatch, so the listeners of parent elements also read `true`.
  *
  * @important **`ref` is not merged.** Only the rightmost `ref` is kept.
  * @template T Tag of the element that gets the merged props. The sets and the result then have
@@ -136,7 +138,7 @@ export function mergeProps(a: any, b: any, c?: any, d?: any, e?: any) {
  */
 export function mergePropsN<T extends ElementType>(props: InputProps<T>[]): MergedProps<T> {
   if (props.length === 0) {
-    return EMPTY_PROPS;
+    return {};
   }
   if (props.length === 1) {
     return createInitialMergedProps(props[0]) as MergedProps<T>;
@@ -153,17 +155,15 @@ export function mergePropsN<T extends ElementType>(props: InputProps<T>[]): Merg
 }
 
 function createInitialMergedProps<T extends ElementType>(inputProps: InputProps<T>) {
-  if (isPropsGetter(inputProps)) {
-    // The code does not wrap a handler that a props getter returns. Such a handler keeps its rules.
-    return { ...inputProps(EMPTY_PROPS) };
-  }
-
-  return copyInitialProps(inputProps);
+  // A props getter can write to the object that it gets, so each call gets a new object.
+  return copyInitialProps(isPropsGetter(inputProps) ? inputProps({}) : inputProps);
 }
 
 function mergeInto<T extends ElementType>(merged: Record<string, any>, inputProps: InputProps<T>) {
   if (isPropsGetter(inputProps)) {
-    return inputProps(merged as MergedProps<T>);
+    // The result of a props getter can be an object that the caller keeps, so the later sets merge
+    // into a copy.
+    return copyInitialProps(inputProps(merged as MergedProps<T>));
   }
   return mutablyMergeInto(merged, inputProps);
 }
@@ -264,13 +264,15 @@ function mergeEventHandlers(ourHandlers: HandlerValue, theirHandlers: HandlerVal
     const event = args[0];
 
     if (isEvent(event)) {
-      const vaseUIEvent = event as VaseUIEvent<typeof event>;
+      makeEventPreventable(event as VaseUIEvent<typeof event>);
 
-      makeEventPreventable(vaseUIEvent);
-
+      // The DOM gives the same event object to each listener of a dispatch, so the flag can come
+      // from another listener or from an earlier call. Only a call during `theirHandler` stops
+      // `ourHandler`.
+      const callsBefore = countPreventCalls(event);
       const result = theirHandler(...args);
 
-      if (!vaseUIEvent.vaseUIHandlerPrevented) {
+      if (countPreventCalls(event) === callsBefore) {
         ourHandler(...args);
       }
 
@@ -301,9 +303,16 @@ function wrapEventHandler(handlers: HandlerValue) {
   };
 }
 
+const preventCalls = new WeakMap<Event, number>();
+
+function countPreventCalls(event: Event) {
+  return preventCalls.get(event) ?? 0;
+}
+
 export function makeEventPreventable<T extends Event>(event: VaseUIEvent<T>) {
   event.preventVaseUIHandler = () => {
     (event.vaseUIHandlerPrevented as boolean) = true;
+    preventCalls.set(event, countPreventCalls(event) + 1);
   };
 
   return event;

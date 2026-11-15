@@ -94,7 +94,7 @@ export function sortContributors<
   // Code units give the same order on each machine.
   const key = (person: Pick<Person, 'login'> | UnlinkedPerson) =>
     ('login' in person ? person.login : person.name).toLowerCase();
-  return [...contributors].sort(
+  return contributors.toSorted(
     (a, b) => b.contributions - a.contributions || compareCodeUnits(key(a), key(b)),
   );
 }
@@ -102,7 +102,7 @@ export function sortContributors<
 // NFC puts a letter and its marks in one character where Unicode has one. So the two forms of a
 // name have one text, and the check of the marks counts only the marks that remain.
 function cleanName(name: string | null): string {
-  return (name ?? '').trim().replace(/\s+/g, ' ').normalize('NFC');
+  return (name ?? '').trim().replaceAll(/\s+/g, ' ').normalize('NFC');
 }
 
 function isDisplayName(name: string): boolean {
@@ -139,7 +139,7 @@ function plainName({ name }: UnlinkedPerson, repository: string): string {
 // The entry with the most commits gives the spelling. For equal commits, the first spelling by code
 // units wins, so the result does not depend on the sequence of the rows.
 function mergeAuthors(entries: UnlinkedAuthor[]): UnlinkedAuthor {
-  const [first] = [...entries].sort(
+  const [first] = entries.toSorted(
     (a, b) => b.contributions - a.contributions || compareCodeUnits(a.name, b.name),
   );
   return {

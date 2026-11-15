@@ -36,7 +36,7 @@ A utility to merge multiple sets of Vue props.
 
   - An array of handlers is one handler.
   - A falsy handler in a later set keeps the handler of an earlier set.
-  - When the first argument is a DOM event, a handler can call `event.preventVaseUIHandler()`. The handlers to its left then do not run. This does not call `preventDefault()` or `stopPropagation()`.
+  - When the first argument is a DOM event, a handler can call `event.preventVaseUIHandler()`. The handlers to its left then do not run. A call in a listener of another element, such as a child element, or in the other phase of the event, does not stop them. This does not call `preventDefault()` or `stopPropagation()`.
   - When the first argument is not a DOM event, all handlers run.
 
 ### Preventing Vase UI's default behavior
@@ -65,7 +65,7 @@ The return value of the function replaces the props that are merged up to that p
 
 <<< ./merge-props/FunctionSet.vue#function{ts}
 
-`event.preventVaseUIHandler()` does not stop a handler that such a function returns. That handler must read `event.vaseUIHandlerPrevented` and stop when it is `true`.
+A handler that such a function returns can call `event.preventVaseUIHandler()`. `mergeProps` does not stop an earlier handler that the function calls itself. Thus do not call the earlier handlers after this call. The call sets `event.vaseUIHandlerPrevented` to `true` for the rest of the dispatch, so the listeners of parent elements also read `true`.
 
 ## API reference
 

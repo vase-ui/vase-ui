@@ -935,7 +935,7 @@ describe('<Dialog.Popup />', () => {
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
-  // instance set, and each later case of the file then gets a warning about a slot.
+  // instance set, and a later case of the file can then get a warning about a slot.
   it('throws a descriptive error when rendered outside <Dialog.Root>', async () => {
     await expect(render(<Dialog.Popup />)).rejects.toThrow(
       'Vase UI: DialogRootContext is missing. Without it a Dialog part has no dialog to read. Put the Dialog parts inside <Dialog.Root>.',

@@ -17,7 +17,7 @@ For example, most triggers render a `<button>` by default. The sample below uses
 
 Give a component to `as` when you set none of its own props. Use `#render` when you set a prop of the component, such as `size`. With `strictTemplates`, the type check refuses a prop that the default element of the part does not have.
 
-The custom component needs one root element. Vue gives the attributes to that element by default. The part reads the element from the `element` that the component exposes. If the component exposes none, the part reads its root element.
+The custom component needs one root element. Vue gives the attributes to that element by default. The part reads the element from the `element` that the component exposes. If the component exposes none, the part reads its root element. If the component sets `element` later than its `onMounted` hook, for example after an `await`, expose `element` as a ref so that the part sees the change.
 
 Under `#render`, the part does not render its default slot. Put the content in your element.
 
@@ -27,7 +27,7 @@ To compose more than one part with your own components, nest the `#render` slots
 
 <<< ../examples/composition/NestedTriggers.vue{13-23}
 
-In this sample, `Tooltip.Trigger` renders `Dialog.Trigger`, `Dialog.Trigger` renders `Menu.Trigger`, and `Menu.Trigger` renders `MyButton`. A popup trigger is a generic component, and the type check refuses it as the value of `as`. Nest the `#render` slots instead.
+In this sample, `Tooltip.Trigger` renders `Dialog.Trigger`, `Dialog.Trigger` renders `Menu.Trigger`, and `Menu.Trigger` renders `MyButton`.
 
 ## How props are merged
 
@@ -45,7 +45,7 @@ The rendered `<button>` gets:
 
 - `class="menu-trigger toolbar-button"`: class names are combined, and the rightmost set comes first.
 - `style="color: blue; padding: 4px;"`: style objects are merged, and the rightmost set wins.
-- Both click listeners, and `handleMenuClick` runs first. `event.preventVaseUIHandler()` skips every listener that runs after it. When `handleMenuClick` calls it, `handleToolbarClick` does not run. Some parts call it internally.
+- Both click listeners, and `handleMenuClick` runs first. `event.preventVaseUIHandler()` skips the listeners of that element that run after it. When `handleMenuClick` calls it, `handleToolbarClick` does not run. Some parts call it internally.
 
 An element takes one `ref`, and Vue keeps the last `ref` key. To keep the `ref` of the part and add one of your own, call `props.ref` in a function ref: `:ref="(element) => { props.ref(element); own = element }"`.
 

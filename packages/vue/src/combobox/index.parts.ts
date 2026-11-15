@@ -129,10 +129,6 @@ export namespace Value {
 /**
  * A text input to search for items in the list.
  * Renders an `<input>` element.
- *
- * The part has more than one root node: the dismiss button of an open popup, then its element. A
- * rule of `<style scoped>` thus does not match its element, and `v-show` has no effect on it. Use
- * `:deep()`, a CSS module, a `style` binding or `v-if`.
  */
 export const Input: typeof ComboboxInput = ComboboxInput;
 export namespace Input {
@@ -192,6 +188,10 @@ export namespace Status {
  * A portal element that moves the popup to a different part of the DOM.
  * By default, the portal element is appended to `<body>`.
  * Renders a `<div>` element.
+ *
+ * The part renders its element in a `Teleport`. Vue gives the scope id of `<style scoped>`,
+ * `v-show` and a custom directive only to a root element, so they do not reach this element. Put
+ * them on your element in the `#render` slot, or use a CSS module or a `style` binding.
  */
 export const Portal: typeof ComboboxPortal = ComboboxPortal;
 export namespace Portal {
@@ -222,10 +222,6 @@ export namespace Positioner {
 /**
  * A container for the list.
  * Renders a `<div>` element.
- *
- * The part has more than one root node: its element, and the focus guards and the dismiss button
- * that it renders beside its element. A rule of `<style scoped>` thus does not match its element,
- * and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
  */
 export const Popup: typeof ComboboxPopup = ComboboxPopup;
 export namespace Popup {

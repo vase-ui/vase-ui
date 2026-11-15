@@ -1,10 +1,11 @@
 import { expect, describe, it } from 'vitest';
-import { defineComponent, shallowRef } from 'vue';
+import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import { Fieldset } from '@vase-ui/vue/fieldset';
 import {
   createRenderer,
   describeConformance,
   fireEvent,
+  flushMicrotasks,
   hydrate,
   isJSDOM,
   renderOnServer,
@@ -113,15 +114,78 @@ describe('<Fieldset.Legend />', () => {
     expect(fieldset).not.toHaveAttribute('aria-labelledby');
   });
 
-  it('throws a descriptive error when rendered outside <Fieldset.Root>', async () => {
-    await expect(render(<Fieldset.Legend />)).rejects.toThrow(
-      'Vase UI: A part of Fieldset must be inside <Fieldset.Root>. Without a root the legend has no fieldset to name. Put the part inside <Fieldset.Root>.',
-    );
+  it('names the fieldset with the legend only while KeepAlive shows the legend', async () => {
+    const visible = shallowRef(true);
+    const App = defineComponent(() => () => (
+      <Fieldset.Root>
+        <KeepAlive>
+          {visible.value ? <Fieldset.Legend data-testid="legend">Legend</Fieldset.Legend> : null}
+        </KeepAlive>
+      </Fieldset.Root>
+    ));
+    await render(<App />);
+    const fieldset = screen.getByRole('group');
+    const legend = screen.getByTestId('legend');
+    expect(fieldset).toHaveAttribute('aria-labelledby', legend.id);
 
-    // Vue also warns about the error of `setup`.
-    expect(takeReportedMessages()).toEqual([
-      expect.stringContaining('Unhandled error during execution of setup function'),
-    ]);
+    visible.value = false;
+    await flushMicrotasks();
+    expect(fieldset).not.toHaveAttribute('aria-labelledby');
+
+    visible.value = true;
+    await flushMicrotasks();
+    // The same element proves that `KeepAlive` kept the legend and did not mount a new one.
+    expect(screen.getByTestId('legend')).toBe(legend);
+    expect(fieldset).toHaveAttribute('aria-labelledby', legend.id);
+  });
+
+  it('names the last legend after KeepAlive shows a legend that mounted while held', async () => {
+    const visible = shallowRef(true);
+    const extra = shallowRef(false);
+    const Branch = defineComponent(() => () => (
+      <div>
+        <Fieldset.Legend key="a" id="legend-a">
+          A
+        </Fieldset.Legend>
+        {extra.value ? (
+          <Fieldset.Legend key="b" id="legend-b">
+            B
+          </Fieldset.Legend>
+        ) : null}
+      </div>
+    ));
+    const App = defineComponent(() => () => (
+      <Fieldset.Root>
+        <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+      </Fieldset.Root>
+    ));
+    await render(<App />);
+    const fieldset = screen.getByRole('group');
+    const seen = [fieldset.getAttribute('aria-labelledby')];
+    const changes = [
+      () => {
+        visible.value = false;
+      },
+      () => {
+        extra.value = true;
+      },
+      () => {
+        visible.value = true;
+      },
+      () => {
+        visible.value = false;
+      },
+      () => {
+        visible.value = true;
+      },
+    ];
+    for (const change of changes) {
+      change();
+      await flushMicrotasks();
+      seen.push(fieldset.getAttribute('aria-labelledby'));
+    }
+
+    expect(seen).toEqual(['legend-a', null, null, 'legend-b', null, 'legend-b']);
   });
 
   it.skipIf(isJSDOM)(
@@ -164,5 +228,16 @@ describe('<Fieldset.Legend />', () => {
       'aria-labelledby',
       'own-legend',
     );
+  });
+
+  it('throws a descriptive error when rendered outside <Fieldset.Root>', async () => {
+    await expect(render(<Fieldset.Legend />)).rejects.toThrow(
+      'Vase UI: A part of Fieldset must be inside <Fieldset.Root>. Without a root the legend has no fieldset to name. Put the part inside <Fieldset.Root>.',
+    );
+
+    // Vue also warns about the error of `setup`.
+    expect(takeReportedMessages()).toEqual([
+      expect.stringContaining('Unhandled error during execution of setup function'),
+    ]);
   });
 });

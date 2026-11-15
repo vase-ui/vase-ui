@@ -1,10 +1,15 @@
-import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import type { Rolldown, UserConfig } from 'tsdown';
 import Vue from 'unplugin-vue/rolldown';
 
 const NOT_ENTRY_FOLDERS = new Set(['internals', 'utils', 'common']);
 const PREHYDRATION_SCRIPT = 'prehydrationScript.min';
+
+// The first line of the `index.ts` of an entry whose declarations name a `Temporal` type. The
+// barrel leaves out such an entry, so a consumer that imports only the barrel needs no `Temporal`
+// types.
+export const TEMPORAL_REFERENCE = '/// <reference lib="esnext.temporal" preserve="true" />';
 
 function entryNames(sourceRoot: string): string[] {
   if (!existsSync(sourceRoot)) {
@@ -26,11 +31,18 @@ export function familyEntries(sourceRoot: string): Record<string, string> {
   );
 }
 
+function isInBarrel(sourceRoot: string, name: string): boolean {
+  return (
+    !name.startsWith('unstable-') &&
+    !readFileSync(join(sourceRoot, name, 'index.ts'), 'utf8').startsWith(TEMPORAL_REFERENCE)
+  );
+}
+
 export function writeBarrel(barrelFile: string, sourceRoots: string[]): void {
   const specifiers = sourceRoots
     .flatMap((sourceRoot) =>
       entryNames(sourceRoot)
-        .filter((name) => !name.startsWith('unstable-'))
+        .filter((name) => isInBarrel(sourceRoot, name))
         .map((name) => relative(dirname(barrelFile), join(sourceRoot, name))),
     )
     .map((path) => (path.startsWith('.') ? path : `./${path}`))

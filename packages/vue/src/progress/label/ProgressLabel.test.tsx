@@ -1,10 +1,11 @@
 import { expect, describe, it } from 'vitest';
-import { defineComponent, shallowRef } from 'vue';
+import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import { Progress } from '@vase-ui/vue/progress';
 import {
   createRenderer,
   describeConformance,
   fireEvent,
+  flushMicrotasks,
   screen,
   takeReportedMessages,
 } from '#test-utils';
@@ -61,6 +62,82 @@ describe('<Progress.Label />', () => {
 
     await fireEvent.click(screen.getByRole('button', { name: 'Remove label' }));
     expect(progressbar).not.toHaveAttribute('aria-labelledby');
+  });
+
+  it('names the progress bar with the label only while KeepAlive shows the label', async () => {
+    const visible = shallowRef(true);
+    const App = defineComponent(() => () => (
+      <Progress.Root value={40}>
+        <KeepAlive>
+          {visible.value ? (
+            <Progress.Label data-testid="label">Upload progress</Progress.Label>
+          ) : null}
+        </KeepAlive>
+      </Progress.Root>
+    ));
+    await render(<App />);
+    const progressbar = screen.getByRole('progressbar');
+    const label = screen.getByTestId('label');
+    expect(progressbar).toHaveAttribute('aria-labelledby', label.id);
+
+    visible.value = false;
+    await flushMicrotasks();
+    expect(progressbar).not.toHaveAttribute('aria-labelledby');
+
+    visible.value = true;
+    await flushMicrotasks();
+    // The same element proves that `KeepAlive` kept the label and did not mount a new one.
+    expect(screen.getByTestId('label')).toBe(label);
+    expect(progressbar).toHaveAttribute('aria-labelledby', label.id);
+  });
+
+  it('names the last label after KeepAlive shows a label that mounted while held', async () => {
+    const visible = shallowRef(true);
+    const extra = shallowRef(false);
+    const Branch = defineComponent(() => () => (
+      <div>
+        <Progress.Label key="a" id="label-a">
+          A
+        </Progress.Label>
+        {extra.value ? (
+          <Progress.Label key="b" id="label-b">
+            B
+          </Progress.Label>
+        ) : null}
+      </div>
+    ));
+    const App = defineComponent(() => () => (
+      <Progress.Root value={40}>
+        <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+      </Progress.Root>
+    ));
+    await render(<App />);
+    const progressbar = screen.getByRole('progressbar');
+    const seen = [progressbar.getAttribute('aria-labelledby')];
+    const changes = [
+      () => {
+        visible.value = false;
+      },
+      () => {
+        extra.value = true;
+      },
+      () => {
+        visible.value = true;
+      },
+      () => {
+        visible.value = false;
+      },
+      () => {
+        visible.value = true;
+      },
+    ];
+    for (const change of changes) {
+      change();
+      await flushMicrotasks();
+      seen.push(progressbar.getAttribute('aria-labelledby'));
+    }
+
+    expect(seen).toEqual(['label-a', null, null, 'label-b', null, 'label-b']);
   });
 
   it('throws a descriptive error when rendered outside <Progress.Root>', async () => {

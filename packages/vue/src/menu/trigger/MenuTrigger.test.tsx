@@ -604,9 +604,10 @@ describe('<Menu.Trigger />', () => {
         expect(screen.queryByRole('menu')).toBe(null);
       });
 
-      handle.open('trigger');
-      const item = await screen.findByRole('menuitem');
-      await waitForLaterMillisecond();
+      const item = await waitForLaterMillisecond(() => {
+        handle.open('trigger');
+        return screen.findByRole('menuitem');
+      });
       await fireEvent.mouseUp(item);
 
       expect(onClick).not.toHaveBeenCalled();
@@ -1264,7 +1265,7 @@ describe('<Menu.Trigger />', () => {
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
-  // instance set, and each later case of the file then gets a warning about a slot.
+  // instance set, and a later case of the file can then get a warning about a slot.
   it('throws without Menu.Root or a handle', async () => {
     await expect(render(<Menu.Trigger />)).rejects.toThrow(
       'Vase UI: <Menu.Trigger> must be inside <Menu.Root>, or it must have a `handle`. Without a root the trigger has no menu to open. Put the trigger inside <Menu.Root>, or pass a `handle`.',

@@ -3,8 +3,8 @@ import type { InjectionKey, Ref, ShallowRef } from 'vue';
 import type { VaseUIChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
 
 /**
- * What the focus manager of a popup tells the portal around it. The portal renders its focus
- * guards from this state.
+ * What the focus manager of a popup tells the portal around it. The portal uses this state for its
+ * focus guards.
  */
 export interface FocusManagerState {
   modal: boolean;
@@ -15,7 +15,7 @@ export interface FocusManagerState {
   /**
    * Whether the focus manager has an element that gets the focus when the Tab key leaves the popup
    * forward. A popup part gives the guard after its trigger. The popup then has one place in the
-   * tab order, and the portal renders no guards of its own.
+   * tab order, and the portal keeps no guards of its own.
    */
   hasNextFocusableElement: boolean;
 }
@@ -32,14 +32,14 @@ export interface PortalContextValue {
    */
   setFocusManagerState(state: FocusManagerState | null): void;
   /**
-   * The guards that the focus manager renders at the edges of the popup. The focus manager writes
+   * The guards that the focus manager keeps beside the popup element. The focus manager writes
    * them.
    */
   beforeInsideRef: ShallowRef<HTMLSpanElement | null>;
   afterInsideRef: ShallowRef<HTMLSpanElement | null>;
   /**
-   * The guards that the portal renders around its place in the document. They are `null` while the
-   * portal renders no guards.
+   * The guards that the portal keeps around its place in the document. They are `null` while the
+   * portal keeps no guards.
    */
   beforeOutsideRef: Readonly<Ref<HTMLSpanElement | null>>;
   afterOutsideRef: Readonly<Ref<HTMLSpanElement | null>>;

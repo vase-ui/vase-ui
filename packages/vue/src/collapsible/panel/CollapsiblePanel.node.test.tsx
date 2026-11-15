@@ -1,12 +1,12 @@
 import { expect, describe, it } from 'vitest';
-import { h } from 'vue';
+import { defineComponent, h } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { Collapsible } from '@vase-ui/vue/collapsible';
 
 const PANEL_CONTENT = 'This is panel content';
 
-// Vue 3.5.41 is the first version whose server writes the value of `hidden`. An earlier server
-// writes a bare `hidden`.
+// Vue 3.5.41 is the first version whose server writes the value of `hidden`. In Vue 3.6, the
+// first such version is 3.6.0-rc.3. An earlier server writes a bare `hidden`.
 const canWriteUntilFound = (await renderToString(h('div', { hidden: 'until-found' }))).includes(
   'hidden="until-found"',
 );
@@ -134,25 +134,6 @@ describe('<Collapsible.Panel />', () => {
       expect(html).toContain(`aria-controls="${panelId}"`);
     });
 
-    // The server writes the trigger before the `setup` of the panel runs, so the trigger cannot
-    // name the `id` prop of the panel.
-    it('names the generated id in aria-controls of an open trigger whose panel has an id', async () => {
-      const html = await renderToString(
-        <Collapsible.Root defaultOpen>
-          <Collapsible.Trigger>Trigger</Collapsible.Trigger>
-          <Collapsible.Panel id="custom-panel-id" data-testid="panel">
-            {PANEL_CONTENT}
-          </Collapsible.Panel>
-        </Collapsible.Root>,
-      );
-
-      const triggerTag = readTriggerTag(html);
-
-      expect(triggerTag).toMatch(/\saria-controls="[^"]+"/);
-      expect(triggerTag).not.toContain('aria-controls="custom-panel-id"');
-      expect(readPanelTag(html)).toContain(' id="custom-panel-id"');
-    });
-
     it('has no panel when it is closed and has no keepMounted', async () => {
       const html = await renderToString(
         <Collapsible.Root>
@@ -183,6 +164,44 @@ describe('<Collapsible.Panel />', () => {
     });
   });
 
+  describe('VUE-80: the server HTML of an open trigger names only a panel that exists', () => {
+    it('has no aria-controls when the root has no panel', async () => {
+      const html = await renderToString(
+        <Collapsible.Root defaultOpen>
+          <Collapsible.Trigger>Trigger</Collapsible.Trigger>
+        </Collapsible.Root>,
+      );
+
+      expect(readTriggerTag(html)).toContain(' aria-expanded="true"');
+      expect(html).not.toContain('aria-controls');
+    });
+
+    // The panel registers its id after the server wrote the trigger.
+    it('has no aria-controls when the panel comes after the trigger below an async setup', async () => {
+      const PanelAfterAsyncSetup = defineComponent({
+        async setup() {
+          await Promise.resolve();
+          return () => (
+            <Collapsible.Panel id="custom-panel-id" data-testid="panel">
+              {PANEL_CONTENT}
+            </Collapsible.Panel>
+          );
+        },
+      });
+
+      const html = await renderToString(
+        <Collapsible.Root defaultOpen>
+          <Collapsible.Trigger>Trigger</Collapsible.Trigger>
+          <PanelAfterAsyncSetup />
+        </Collapsible.Root>,
+      );
+
+      expect(readTriggerTag(html)).toContain(' aria-expanded="true"');
+      expect(html).not.toContain('aria-controls');
+      expect(readPanelTag(html)).toContain(' id="custom-panel-id"');
+    });
+  });
+
   describe('VUE-3: the server HTML of a closed panel with hiddenUntilFound', () => {
     it.runIf(canWriteUntilFound)('has hidden="until-found"', async () => {
       const html = await renderToString(
@@ -198,7 +217,7 @@ describe('<Collapsible.Panel />', () => {
     });
 
     it.runIf(!canWriteUntilFound)(
-      'has a bare hidden, because a server before Vue 3.5.41 cannot write the value',
+      'has a bare hidden, because a server before Vue 3.5.41, or before 3.6.0-rc.3 in Vue 3.6, cannot write the value',
       async () => {
         const html = await renderToString(
           <Collapsible.Root>

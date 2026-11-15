@@ -44,7 +44,7 @@ export interface ComboboxInputProps
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, provide, shallowRef, toRaw, watch } from 'vue';
-import type { ComponentPublicInstance } from 'vue';
+import { useValueBeforeHydration } from '../../common/hydration';
 import { platform } from '../../common/platform';
 import { useTimeout } from '../../common/useTimeout';
 import { addInputFocusListeners } from '../../filter-dropdown/input/FilterDropdownInput';
@@ -59,16 +59,16 @@ import {
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
 import { useDeferredServerRender, useLabelableContext } from '../../internals/labelable-provider';
 import { REASONS } from '../../internals/reasons';
-import { resolveElement } from '../../internals/resolveElement';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { getHighlightReason } from '../../utils/getHighlightReason';
 import { stopEvent } from '../../utils/popups/event';
+import { useElementSiblings } from '../../utils/popups/focus/useElementSiblings';
 import { useComboboxChipsContext } from '../chips/ComboboxChipsContext';
 import { useComboboxPositionerContext } from '../positioner/ComboboxPositionerContext';
 import { useComboboxInputValueContext, useComboboxRootContext } from '../root/ComboboxRootContext';
-import ComboboxInternalDismissButton from '../utils/ComboboxInternalDismissButton.vue';
+import { useDismissButton } from '../utils/ComboboxInternalDismissButton';
 import {
   clickHighlightedItem,
   getChipNavigationKeys,
@@ -198,19 +198,6 @@ onMounted(() => {
   store.update({ inputInsidePopup: isInsidePopup.value });
 });
 
-let ownDismissButton: HTMLSpanElement | null = null;
-function setStartDismissButton(value: unknown) {
-  const button = resolveElement(value as ComponentPublicInstance | null) as HTMLSpanElement | null;
-  // Vue calls a function ref again on each patch, with the same component.
-  if (button === ownDismissButton) {
-    return;
-  }
-  if (button !== null || store.context.startDismissRef.value === ownDismissButton) {
-    store.context.startDismissRef.value = button;
-  }
-  ownDismissButton = button;
-}
-
 function clearHighlight(event: Event) {
   store.context.setIndices({
     activeIndex: null,
@@ -224,6 +211,8 @@ function displayText(value: unknown) {
   return value == null ? '' : String(value);
 }
 
+const writesValue = useValueBeforeHydration(props, () => element.value);
+
 // The value that the input has after the last event that the part handled. A write of Vue or of
 // the part sets it too.
 let handledValue: string | undefined;
@@ -231,7 +220,11 @@ let handledValue: string | undefined;
 function syncHandledValue() {
   handledValue = (element.value as HTMLInputElement | null)?.value;
 }
-onMounted(syncHandledValue);
+// At the mount the input can hold text that the user typed before the hydration, also in a
+// component in `as`. The last write of Vue, and the server HTML, have the text of the state.
+onMounted(() => {
+  handledValue = displayText(inputValue.value);
+});
 watch(() => composingValue.value ?? inputValue.value, syncHandledValue, { flush: 'post' });
 
 // Vue writes the DOM value only when the part renders. The part does not render when a listener
@@ -552,7 +545,7 @@ const { element, elementProps } = useRenderElement('input', props, {
       store.select('inputProps'),
       store.select('triggerProps', true),
       {
-        value: composingValue.value ?? inputValue.value,
+        ...(writesValue.value ? { value: composingValue.value ?? inputValue.value } : undefined),
         'aria-readonly': readOnly.value || undefined,
         'aria-required': required || undefined,
         'aria-labelledby': fieldLabelId.value,
@@ -578,11 +571,20 @@ const { element, elementProps } = useRenderElement('input', props, {
   stateAttributesMapping: triggerStateAttributesMapping,
 });
 
+const dismissButton = useDismissButton(
+  element,
+  () => open.value && focusManagerModal.value,
+  store.context.startDismissRef,
+);
+useElementSiblings(
+  element,
+  computed(() => (dismissButton.value ? { before: [dismissButton.value] } : null)),
+);
+
 defineExpose({ element });
 </script>
 
 <template>
-  <ComboboxInternalDismissButton v-if="open && focusManagerModal" :ref="setStartDismissButton" />
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
   <component :is="as" v-else v-bind="elementProps()" />
 </template>

@@ -34,6 +34,32 @@ describe('<Progress.Root /> on a server', () => {
     );
   });
 
+  it('renders the generated id in the aria-labelledby of a root that has no label', async () => {
+    const html = await renderToString(<Progress.Root value={30} />);
+
+    const id = /aria-labelledby="([^"]*)"/.exec(html)?.[1];
+    expect(id).toMatch(/^vase-ui-./);
+    expect(html).toBe(
+      [
+        `<div data-progressing aria-labelledby="${id}" aria-valuemax="100" aria-valuemin="0" aria-valuenow="30" aria-valuetext="30%" role="progressbar">`,
+        '<!--[--><!--[--><!--]-->',
+        '<span role="presentation" style="clip-path:inset(50%);overflow:hidden;white-space:nowrap;border:0;padding:0;width:1px;height:1px;margin:0;position:fixed;top:-1px;left:0;">x</span>',
+        '<!--]--></div>',
+      ].join(''),
+    );
+  });
+
+  it('renders the generated id in the aria-labelledby of a root whose label has an id of its own', async () => {
+    const html = await renderToString(
+      <Progress.Root value={30}>
+        <Progress.Label id="own">Upload</Progress.Label>
+      </Progress.Root>,
+    );
+
+    expect(/aria-labelledby="([^"]*)"/.exec(html)?.[1]).toMatch(/^vase-ui-./);
+    expect(html).toContain('<span data-progressing id="own" role="presentation">');
+  });
+
   it.each([
     { name: 'an aria-label', attributes: { 'aria-label': 'Storage' }, labelledBy: undefined },
     {

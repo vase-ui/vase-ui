@@ -164,7 +164,9 @@ export type AutocompleteRootHighlightEventReason = AriaCombobox.HighlightEventRe
 export type AutocompleteRootHighlightEventDetails = AriaCombobox.HighlightEventDetails;
 </script>
 
-<script setup lang="ts" generic="Items extends readonly any[]">
+<script setup lang="ts" generic="Items extends readonly any[] = never">
+// vue-tsc resolves `Items` before it checks a listener of a template.
+// With the default `never`, `itemHighlighted` accepts a typed parameter and keeps `undefined`.
 import { computed, nextTick, shallowRef, watch } from 'vue';
 import { useAriaCombobox } from '../../combobox/root/AriaCombobox';
 import { useCoreFilter } from '../../combobox/root/utils/useFilter';
@@ -202,11 +204,19 @@ const emit = defineEmits<{
    * Event handler called when the input value of the autocomplete changes.
    */
   valueChange: [value: string, eventDetails: AutocompleteRootChangeEventDetails];
+  /**
+   * Event handler called after `valueChange` with the new value, unless a listener cancels the
+   * change. `v-model:value` uses it.
+   */
   'update:value': [value: string];
   /**
    * Event handler called when the popup is opened or closed.
    */
   openChange: [open: boolean, eventDetails: AutocompleteRootOpenChangeEventDetails];
+  /**
+   * Event handler called after `openChange` with the new value, unless a listener cancels the
+   * change. `v-model:open` uses it.
+   */
   'update:open': [open: boolean];
   /**
    * Event handler called after any animations complete when the popup is opened or closed.

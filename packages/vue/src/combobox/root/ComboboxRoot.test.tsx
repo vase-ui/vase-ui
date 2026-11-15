@@ -2826,6 +2826,76 @@ describe('<Combobox.Root />', () => {
       expect(getInput()).toHaveAttribute('aria-expanded', 'true');
       expect(getInput()).toHaveAttribute('aria-activedescendant', activeId);
     });
+
+    it.each([{ name: 'held mount' }, { name: 'deactivated' }])(
+      'a held required combobox does not block the submit of its form: $name',
+      async ({ name }) => {
+        const handleSubmit = vi.fn();
+        const visible = shallowRef(true);
+        const extra = shallowRef(name === 'deactivated');
+        const Branch = defineComponent(() => () => (
+          <div>
+            {extra.value ? (
+              <Combobox.Root key="held" items={cities} required>
+                <Combobox.Input />
+              </Combobox.Root>
+            ) : null}
+          </div>
+        ));
+        const { user } = await render(() => (
+          <Form onFormSubmit={handleSubmit}>
+            <Field.Root name="city" data-testid="field">
+              <Field.Control defaultValue="shown" />
+              <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+            </Field.Root>
+            <button type="submit">Submit</button>
+          </Form>
+        ));
+
+        visible.value = false;
+        await flushMicrotasks();
+        extra.value = true;
+        await flushMicrotasks();
+        await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+        expect(handleSubmit).toHaveBeenCalledTimes(1);
+        expect(screen.getByTestId('field')).not.toHaveAttribute('data-invalid');
+      },
+    );
+
+    it('the label does not name a combobox that mounts while KeepAlive holds it', async () => {
+      const visible = shallowRef(true);
+      const extra = shallowRef(false);
+      const Branch = defineComponent(() => () => (
+        <div>
+          {extra.value ? (
+            <Combobox.Root key="held" items={cities} id="held-combobox">
+              <Combobox.Input />
+            </Combobox.Root>
+          ) : null}
+        </div>
+      ));
+      await render(() => (
+        <Field.Root>
+          <Field.Label data-testid="label">City</Field.Label>
+          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+        </Field.Root>
+      ));
+      const label = screen.getByTestId('label');
+      const providerId = label.getAttribute('for');
+
+      visible.value = false;
+      await flushMicrotasks();
+      extra.value = true;
+      await flushMicrotasks();
+
+      expect(label.getAttribute('for')).toBe(providerId);
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(label).toHaveAttribute('for', 'held-combobox');
+    });
   });
 
   describe('server render', () => {
@@ -10043,12 +10113,12 @@ describe('<Combobox.Root />', () => {
       await user.click(input);
       await screen.findByRole('listbox');
 
-      await user.type(input, 'tonari');
-
-      expect(screen.queryByRole('option', { name: 'Spirited Away' })).toBe(null);
-
       // Vue skips the listener of the item that the query mounted, in the millisecond of its mount.
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(async () => {
+        await user.type(input, 'tonari');
+
+        expect(screen.queryByRole('option', { name: 'Spirited Away' })).toBe(null);
+      });
       await user.click(screen.getByRole('option', { name: 'My Neighbor Totoro' }));
 
       expect(screen.queryByRole('listbox')).toBe(null);
@@ -11590,9 +11660,8 @@ describe('<Combobox.Root />', () => {
       await user.click(screen.getByRole('option', { name: 'JavaScript' }));
       await user.click(screen.getByRole('option', { name: 'TypeScript' }));
 
-      await user.type(input, 'pyth');
       // Vue skips the listener of the item that the query mounted, in the millisecond of its mount.
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(() => user.type(input, 'pyth'));
       await user.click(screen.getByRole('option', { name: 'Python' }));
 
       await flushMicrotasks();
@@ -13098,18 +13167,22 @@ describe('<Combobox.Root />', () => {
 
         const { user } = await render(<Test />);
         const trigger = screen.getByRole('button', { name: 'Choose fruit' });
-        await user.click(trigger);
-        const input = screen.getByRole('combobox');
-        await waitFor(() => expect(input).toHaveFocus());
-        if (query) {
-          await user.type(input, query);
-        }
-        await user.keyboard(query ? '{ArrowDown}' : '{ArrowDown}{ArrowDown}');
-        expect(screen.getByRole('option', { name: 'Banana' })).toHaveAttribute('data-highlighted');
-        onItemHighlighted.mockClear();
-
-        // Vue skips the listener of the item that the query mounted, in the millisecond of its mount.
-        await waitForLaterMillisecond();
+        // Vue skips the listener of an item that the open or the query mounted, in the millisecond
+        // of its mount.
+        const input = await waitForLaterMillisecond(async () => {
+          await user.click(trigger);
+          const combobox = screen.getByRole('combobox');
+          await waitFor(() => expect(combobox).toHaveFocus());
+          if (query) {
+            await user.type(combobox, query);
+          }
+          await user.keyboard(query ? '{ArrowDown}' : '{ArrowDown}{ArrowDown}');
+          expect(screen.getByRole('option', { name: 'Banana' })).toHaveAttribute(
+            'data-highlighted',
+          );
+          onItemHighlighted.mockClear();
+          return combobox;
+        });
         await user.keyboard('{Enter}');
         await waitForDialogToHide();
         expect(onValueChange).toHaveBeenLastCalledWith(multiple ? ['Banana'] : 'Banana');

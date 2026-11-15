@@ -17,7 +17,7 @@ export interface FieldsetLegendProps
    * The id of the legend. The root uses it for `aria-labelledby`.
    * A server render writes the attributes of the root before it renders the legend.
    * The server HTML of the root then points at a generated id until the page hydrates.
-   * A legend with an `id` of its own does not name the root until then.
+   * A legend with an `id` of its own is not in the `aria-labelledby` of the root until then.
    * To correct this, set `aria-labelledby` on `Fieldset.Root` to the same id.
    */
   id?: string | undefined;
@@ -40,9 +40,13 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, FieldsetLegendState>;
 }>();
 
-const { setLegendId, defaultLegendId, disabled } = useFieldsetRootContext();
+const { legendRoot, disabled } = useFieldsetRootContext();
 
-const legendId = useRegisteredLabelId(() => props.id, setLegendId, defaultLegendId);
+const legendId = useRegisteredLabelId(
+  () => props.id,
+  legendRoot,
+  () => element.value,
+);
 
 const state = computed<FieldsetLegendState>(() => ({ disabled: disabled.value }));
 

@@ -27,7 +27,6 @@ async function simulateSwipe(
   endX: number,
   endY: number,
   releaseTarget: HTMLElement | Document = element,
-  releaseType: 'pointerup' | 'pointercancel' = 'pointerup',
 ) {
   await fireEvent.pointerDown(element, {
     clientX: startX,
@@ -54,18 +53,12 @@ async function simulateSwipe(
     pointerId: 1,
   });
 
-  const releaseEvent = {
+  await fireEvent.pointerUp(releaseTarget, {
     clientX: endX,
     clientY: endY,
     bubbles: true,
     pointerId: 1,
-  };
-
-  if (releaseType === 'pointercancel') {
-    await fireEvent.pointerCancel(releaseTarget, releaseEvent);
-  } else {
-    await fireEvent.pointerUp(releaseTarget, releaseEvent);
-  }
+  });
 }
 
 describe('<Toast.Root />', () => {
@@ -1781,8 +1774,37 @@ describe('<Toast.Root />', () => {
 
       const toastElement = screen.getByTestId('toast-root');
 
-      await simulateSwipe(toastElement, 300, 100, -5000, 100, document, 'pointercancel');
+      await fireEvent.pointerDown(toastElement, {
+        clientX: 100,
+        clientY: 100,
+        button: 0,
+        bubbles: true,
+        pointerId: 1,
+      });
+      await fireEvent.pointerMove(toastElement, {
+        clientX: 101,
+        clientY: 100,
+        bubbles: true,
+        pointerId: 1,
+      });
+      await fireEvent.pointerMove(toastElement, {
+        clientX: 200,
+        clientY: 100,
+        bubbles: true,
+        pointerId: 1,
+      });
 
+      expect(toastElement).toHaveAttribute('data-swiping');
+      expect(toastElement).toHaveAttribute('data-swipe-direction', 'right');
+
+      await fireEvent.pointerCancel(document, {
+        clientX: 200,
+        clientY: 100,
+        bubbles: true,
+        pointerId: 1,
+      });
+
+      expect(screen.queryByTestId('toast-root')).not.toBe(null);
       expect(toastElement).not.toHaveAttribute('data-swiping');
       expect(toastElement).not.toHaveAttribute('data-swipe-direction');
       expect(toastElement.style.getPropertyValue('--toast-swipe-movement-x')).toBe('0px');

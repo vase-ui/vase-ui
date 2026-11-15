@@ -1,6 +1,7 @@
 import vue from '@vitejs/plugin-vue';
 import vueJsx from '@vitejs/plugin-vue-jsx';
 import { playwright } from '@vitest/browser-playwright';
+import { webkit } from 'playwright';
 import { configDefaults, defineConfig } from 'vitest/config';
 import { renderOnServer } from './test/server/renderOnServer.ts';
 
@@ -48,6 +49,7 @@ export default defineConfig({
         extends: true,
         test: {
           include: ['src/**/*.test.{ts,tsx}', 'test/**/*.test.{ts,tsx}'],
+          provide: { testApp: 'vdom' },
           exclude: [...configDefaults.exclude, '**/*.node.test.{ts,tsx}'],
           browser: {
             enabled: true,
@@ -79,7 +81,24 @@ export default defineConfig({
                   },
                 }),
               },
-              { browser: 'webkit', name: 'webkit' },
+              {
+                browser: 'webkit',
+                name: 'webkit',
+                // On macOS, the Tab key of WebKit skips a button or a checkbox while full keyboard
+                // access is off, and it is off by default. WebKit on Linux does not skip them.
+                ...(process.platform === 'darwin' && {
+                  provider: playwright({
+                    contextOptions,
+                    launchOptions: {
+                      executablePath: `${import.meta.dirname}/test/webkitFullKeyboardAccess.sh`,
+                      env: { ...process.env, VASE_UI_WEBKIT_EXECUTABLE: webkit.executablePath() },
+                    },
+                  }),
+                }),
+              },
+              // `render` mounts each test in a Vapor app. The project needs Vue 3.6, so `pnpm test`
+              // leaves it out.
+              { browser: 'chromium', name: 'vapor', provide: { testApp: 'vapor' } },
             ],
           },
         },

@@ -75,9 +75,9 @@ import { isMouseWithinBounds } from '../../utils/getPseudoElementBounds';
 import { stopEvent } from '../../utils/popups/event';
 import { useClick } from '../../utils/popups/interactions/useClick';
 import { useTypeahead } from '../../utils/popups/interactions/useTypeahead';
+import { isReleaseAtPressPoint } from '../../utils/popups/isReleaseAtPressPoint';
 import { resolveAriaLabelledBy } from '../../utils/resolveAriaLabelledBy';
 import { useComboboxInputValueContext, useComboboxRootContext } from '../root/ComboboxRootContext';
-import { getComboboxPopupId } from '../root/utils';
 import { useListEmpty, usePopupSide } from '../utils/parts';
 import { triggerStateAttributesMapping } from '../utils/stateAttributesMapping';
 
@@ -122,19 +122,23 @@ const popupSide = usePopupSide(store);
 
 const setFocused = useSetFieldFocused(isDisabled, () => element.value);
 
-useLabelableId({ id: () => (inputInsidePopup.value ? props.id : undefined) });
+useLabelableId({
+  id: () => (inputInsidePopup.value ? props.id : undefined),
+  element: () => element.value,
+});
 const triggerId = computed(() =>
   inputInsidePopup.value ? (props.id ?? store.select('id')) : props.id,
 );
 
+// An element with no id has an empty `id`, and the trigger then has no `aria-controls`.
 const ariaControls = computed(() => {
-  if (isOpen.value && inputInsidePopup.value) {
-    // Fall back to the default id while the popup registers its own (custom ids are stored once the
-    // popup mounts), so `aria-controls` is set on the same commit `open` becomes `true`. The store
-    // holds an empty string for a popup element with no id, and the default id applies then too.
-    return store.select('popupElementId') || getComboboxPopupId(store.select('id'));
+  if (!isOpen.value) {
+    return undefined;
   }
-  return isOpen.value ? store.select('listElement')?.id : undefined;
+  const id = inputInsidePopup.value
+    ? store.select('popupElementId')
+    : store.select('listElement')?.id;
+  return id || undefined;
 });
 
 let currentPointerType = '';
@@ -198,10 +202,12 @@ const focusTimeout = useTimeout();
 
 // The cleanup also runs on a server, so it removes the listener only from the document that got it.
 let mouseUpDocument: Document | null = null;
+let press: MouseEvent | null = null;
 
 function removeMouseUpListener() {
   mouseUpDocument?.removeEventListener('mouseup', handleMouseUp);
   mouseUpDocument = null;
+  press = null;
 }
 
 function handleMouseUp(mouseEvent: MouseEvent) {
@@ -221,6 +227,10 @@ function handleMouseUp(mouseEvent: MouseEvent) {
   }
 
   if (isMouseWithinBounds(mouseEvent, triggerElement)) {
+    return;
+  }
+
+  if (press && isReleaseAtPressPoint(press, mouseEvent)) {
     return;
   }
 
@@ -324,6 +334,7 @@ const { element, elementProps } = useRenderElement('button', props, {
 
         removeMouseUpListener();
         mouseUpDocument = ownerDocument(trigger);
+        press = event;
         mouseUpDocument.addEventListener('mouseup', handleMouseUp, { once: true });
       },
       onKeydown(event: KeyboardEvent) {

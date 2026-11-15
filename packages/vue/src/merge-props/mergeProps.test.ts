@@ -15,7 +15,7 @@ describe('mergeProps', () => {
     const mergedProps = mergeProps<'button'>(ourProps, theirProps);
 
     mergedProps.onClick?.(new MouseEvent('click') as any);
-    mergedProps.onKeydown?.(new KeyboardEvent('keydown') as any);
+    mergedProps.onKeydown?.(new KeyboardEvent('keydown'));
     mergedProps.onPaste?.(new Event('paste') as any);
 
     expect(theirProps.onClick.mock.invocationCallOrder[0]).toBeLessThan(
@@ -88,7 +88,7 @@ describe('mergeProps', () => {
       },
     );
 
-    mergedProps.onMousedown?.(new MouseEvent('mousedown') as any);
+    mergedProps.onMousedown?.(new MouseEvent('mousedown'));
 
     expect(prevented).toBe(true);
   });
@@ -108,7 +108,7 @@ describe('mergeProps', () => {
       },
     );
 
-    mergedProps.onMousedown?.(new MouseEvent('mousedown') as any);
+    mergedProps.onMousedown?.(new MouseEvent('mousedown'));
 
     expect(prevented).toBe(true);
   });
@@ -128,7 +128,7 @@ describe('mergeProps', () => {
       },
     ]);
 
-    mergedProps.onMousedown?.(new MouseEvent('mousedown') as any);
+    mergedProps.onMousedown?.(new MouseEvent('mousedown'));
 
     expect(prevented).toBe(true);
   });
@@ -392,7 +392,7 @@ describe('mergeProps', () => {
       },
     );
 
-    mergedProps.onMousedown?.(new MouseEvent('mousedown') as any, {
+    mergedProps.onMousedown?.(new MouseEvent('mousedown'), {
       reason: 'pointer',
     });
 
@@ -772,5 +772,234 @@ describe('Vue rules', () => {
     expect(mergedProps.ref).toBe(theirRef);
     expect(ourRef).not.toHaveBeenCalled();
     expect(theirRef).not.toHaveBeenCalled();
+  });
+});
+
+describe('VUE-70: the result of a props function', () => {
+  function preventingProps(onPrevented: (prevented: boolean | undefined) => void) {
+    return () => ({
+      onClick(event: VaseUIEvent<PointerEvent>) {
+        event.preventVaseUIHandler();
+        onPrevented(event.vaseUIHandlerPrevented);
+      },
+    });
+  }
+
+  it.each([
+    {
+      name: 'the first argument',
+      merge: (set: ReturnType<typeof preventingProps>) => mergeProps<'button'>(set, {}),
+    },
+    {
+      name: 'a later argument',
+      merge: (set: ReturnType<typeof preventingProps>) => mergeProps<'button'>({}, set),
+    },
+    {
+      name: 'the only set',
+      merge: (set: ReturnType<typeof preventingProps>) => mergeProps<'button'>(undefined, set),
+    },
+    {
+      name: 'the only item of mergePropsN',
+      merge: (set: ReturnType<typeof preventingProps>) => mergePropsN<'button'>([set]),
+    },
+    {
+      name: 'a later item of mergePropsN',
+      merge: (set: ReturnType<typeof preventingProps>) => mergePropsN<'button'>([{}, set]),
+    },
+  ])('gives the Vase UI event to the handler of a function in $name', ({ merge }) => {
+    const onPrevented = vi.fn();
+
+    const mergedProps = merge(preventingProps(onPrevented));
+    mergedProps.onClick?.(new PointerEvent('click'));
+
+    expect(onPrevented).toHaveBeenCalledExactlyOnceWith(true);
+  });
+
+  it('stops the earlier handler when the handler of a function reads the flag', () => {
+    const earlierHandler = vi.fn();
+
+    const mergedProps = mergeProps<'button'>({ onClick: earlierHandler }, (props) => ({
+      onClick(event) {
+        event.preventVaseUIHandler();
+        if (!event.vaseUIHandlerPrevented) {
+          props.onClick?.(event);
+        }
+      },
+    }));
+    mergedProps.onClick?.(new PointerEvent('click'));
+
+    expect(earlierHandler).not.toHaveBeenCalled();
+  });
+
+  it('gives the Vase UI event to an array of handlers that a function returns', () => {
+    const log: string[] = [];
+
+    const mergedProps = mergeProps<any>({}, () => ({
+      onClick: [
+        (event: VaseUIEvent<PointerEvent>) => {
+          event.preventVaseUIHandler();
+          log.push('first');
+        },
+        () => {
+          log.push('second');
+        },
+      ],
+    }));
+
+    expect(mergedProps.onClick).toBeTypeOf('function');
+    mergedProps.onClick(new PointerEvent('click'));
+
+    expect(log).toEqual(['first', 'second']);
+  });
+
+  it('does not write to an object that a function in a later argument returns', () => {
+    const handler = vi.fn();
+    const shared = { class: 'base', onClick: handler };
+
+    const mergedProps = mergeProps<'button'>({}, () => shared, {
+      class: 'next',
+      onClick() {},
+    });
+
+    expect(mergedProps.class).toBe('next base');
+    expect(shared).toEqual({ class: 'base', onClick: handler });
+  });
+
+  it('gives each function in the first argument an object of its own', () => {
+    mergeProps<'div'>((props) => {
+      props.id = 'written';
+      return props;
+    }, {});
+
+    let observedProps;
+    mergeProps<'div'>((props) => {
+      observedProps = { ...props };
+      return props;
+    }, {});
+
+    expect(observedProps).toEqual({});
+  });
+
+  it('gives each call of mergePropsN with no set an object of its own', () => {
+    const mergedProps = mergePropsN<'div'>([]);
+    mergedProps.id = 'written';
+
+    expect(mergePropsN<'div'>([])).toEqual({});
+  });
+});
+
+describe('VUE-82: the scope of preventVaseUIHandler()', () => {
+  function appendParentAndChild() {
+    const parent = document.createElement('div');
+    const child = document.createElement('button');
+    parent.append(child);
+    document.body.append(parent);
+    return { parent, child };
+  }
+
+  it.each([
+    {
+      name: 'a call in the child',
+      parentCalls: false,
+      expected: ['child consumer', 'parent consumer', 'parent part'],
+    },
+    {
+      name: 'a call in the child and the parent',
+      parentCalls: true,
+      expected: ['child consumer', 'parent consumer'],
+    },
+  ])(
+    'skips the part handler of a parent element only for a call in the parent: $name',
+    ({ parentCalls, expected }) => {
+      const log: string[] = [];
+      const parentProps = mergeProps<'div'>(
+        { onClick: () => log.push('parent part') },
+        {
+          onClick(event) {
+            log.push('parent consumer');
+            if (parentCalls) {
+              event.preventVaseUIHandler();
+            }
+          },
+        },
+      );
+      const childProps = mergeProps<'button'>(
+        { onClick: () => log.push('child part') },
+        {
+          onClick(event) {
+            log.push('child consumer');
+            event.preventVaseUIHandler();
+          },
+        },
+      );
+      const { parent, child } = appendParentAndChild();
+
+      try {
+        parent.addEventListener('click', (event) => parentProps.onClick?.(event));
+        child.addEventListener('click', (event) => childProps.onClick?.(event));
+        child.click();
+      } finally {
+        parent.remove();
+      }
+
+      expect(log).toEqual(expected);
+    },
+  );
+
+  it('runs the bubble handlers after a call in a capture handler of a parent', () => {
+    const log: string[] = [];
+    const parentProps = mergeProps<any>(
+      {
+        onClickCapture: () => log.push('parent capture part'),
+        onClick: () => log.push('parent part'),
+      },
+      {
+        onClickCapture(event: VaseUIEvent<MouseEvent>) {
+          log.push('parent capture consumer');
+          event.preventVaseUIHandler();
+        },
+        onClick: () => log.push('parent consumer'),
+      },
+    );
+    const childProps = mergeProps<'button'>(
+      { onClick: () => log.push('child part') },
+      { onClick: () => log.push('child consumer') },
+    );
+    const { parent, child } = appendParentAndChild();
+
+    try {
+      parent.addEventListener('click', parentProps.onClickCapture, { capture: true });
+      parent.addEventListener('click', parentProps.onClick);
+      child.addEventListener('click', (event) => childProps.onClick?.(event));
+      child.click();
+    } finally {
+      parent.remove();
+    }
+
+    expect(log).toEqual([
+      'parent capture consumer',
+      'child consumer',
+      'child part',
+      'parent consumer',
+      'parent part',
+    ]);
+  });
+
+  it('runs each merged earlier handler that a props function calls after its call', () => {
+    const log: string[] = [];
+
+    const mergedProps = mergeProps<'button'>(
+      { onClick: () => log.push('left') },
+      { onClick: () => log.push('right') },
+      (props) => ({
+        onClick(event) {
+          event.preventVaseUIHandler();
+          props.onClick?.(event);
+        },
+      }),
+    );
+    mergedProps.onClick?.(new PointerEvent('click'));
+
+    expect(log).toEqual(['right', 'left']);
   });
 });

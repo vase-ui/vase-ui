@@ -166,7 +166,7 @@ import {
   createChangeEventDetails,
   createGenericEventDetails,
 } from '../../internals/createBaseUIEventDetails';
-import { useRegisterFieldControl } from '../../internals/field-register-control';
+import { useFieldInput, useRegisterFieldControl } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { useFormContext } from '../../internals/form-context';
 import { handleHiddenInputInvalid } from '../../internals/handleHiddenInputInvalid';
@@ -215,6 +215,10 @@ const emit = defineEmits<{
    * - `'none'` for a native reset of the form
    */
   valueChange: [value: string, eventDetails: OTPFieldRootChangeEventDetails];
+  /**
+   * Event handler called after `valueChange` with the new value, unless a listener cancels the
+   * change. `v-model:value` uses it.
+   */
   'update:value': [value: string];
   /**
    * Callback fired when entered text contains characters that are rejected by validation or
@@ -283,7 +287,7 @@ const firstInput = () => (inputElements.value[0] as HTMLInputElement | undefined
 // value and removes slots. An element that left the document is then still in the list.
 const getConnectedInputs = () => inputElements.value.filter((input) => input?.isConnected);
 
-const controlId = useLabelableId({ id: () => props.id });
+const controlId = useLabelableId({ id: () => props.id, element: () => element.value });
 const ariaLabelledBy = useAriaLabelledBy(
   () => props.ariaLabelledby,
   useControlLabelId(),
@@ -675,6 +679,7 @@ useFormReset(hiddenInputElement, (event) => {
 
 // A plain variable keeps the render of the hidden input part from depending on the element.
 let ownHiddenInput: HTMLInputElement | null = null;
+const giveFieldInput = useFieldInput();
 
 function setHiddenInput(input: unknown) {
   const next = input as HTMLInputElement | null;
@@ -683,11 +688,7 @@ function setHiddenInput(input: unknown) {
     return;
   }
 
-  // A template can mount the root that replaces this root before it unmounts this root. This root
-  // then clears the input of the field only when the input is its own.
-  if (next !== null || validation.inputRef.value === ownHiddenInput) {
-    validation.inputRef.value = next;
-  }
+  giveFieldInput(next);
   ownHiddenInput = next;
   hiddenInputElement.value = next;
 }

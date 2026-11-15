@@ -107,7 +107,7 @@ import { ownerWindow } from '../../common/owner';
 import { useControlled } from '../../common/useControlled';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
-import { useRegisterFieldControl } from '../../internals/field-register-control';
+import { useFieldInput, useRegisterFieldControl } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
 import { useFormContext } from '../../internals/form-context';
@@ -144,6 +144,10 @@ const emit = defineEmits<{
    * Event handler called when the switch is activated or deactivated.
    */
   checkedChange: [checked: boolean, eventDetails: SwitchRootChangeEventDetails];
+  /**
+   * Event handler called after `checkedChange` with the new value, unless a listener cancels the
+   * change. `v-model:checked` uses it.
+   */
   'update:checked': [checked: boolean];
 }>();
 
@@ -170,6 +174,7 @@ const inputName = computed(() => fieldName.value ?? props.name);
 const clearFieldError = useClearFieldError(inputName);
 
 const inputElement = shallowRef<HTMLInputElement | null>(null);
+const giveFieldInput = useFieldInput();
 
 function setInputElement(value: unknown) {
   const input = value as HTMLInputElement | null;
@@ -178,13 +183,13 @@ function setInputElement(value: unknown) {
     return;
   }
   inputElement.value = input;
-  validation.inputRef.value = input;
+  giveFieldInput(input);
 }
 
 const setFocused = useSetFieldFocused(isDisabled, () => element.value);
 
 const rootId = useVaseUiId();
-const controlId = useLabelableId({ id: () => props.id });
+const controlId = useLabelableId({ id: () => props.id, element: () => element.value });
 const hiddenInputId = computed(() => (props.nativeButton ? undefined : controlId.value));
 
 const [isChecked, setCheckedState] = useControlled({

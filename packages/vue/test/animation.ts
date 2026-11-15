@@ -157,6 +157,7 @@ export interface FrameProbeResult {
 
 const MINIMUM_EXIT_DURATION = 10_000;
 const SEEK_MARGIN = 50;
+const EARLY_END_MARGIN = 1;
 
 /**
  * Tells if a frame paints between the end of the exit animation and the removal of the panel.
@@ -183,8 +184,14 @@ export async function probeFrameAfterExit(
   const read = nextAnimationsRead(panel);
   close();
   const animations = await read;
+  seekBeforeEnd(animations, SEEK_MARGIN, 'The part found no exit animation on the panel.');
+
+  return readFrameOfEnd(animations, isGone);
+}
+
+function seekBeforeEnd(animations: Animation[], margin: number, noAnimationMessage: string) {
   if (animations.length === 0) {
-    throw new Error('The part found no exit animation on the panel.');
+    throw new Error(noAnimationMessage);
   }
   const endTimes = animations.map((animation) =>
     Number(animation.effect!.getComputedTiming().endTime),
@@ -195,9 +202,14 @@ export async function probeFrameAfterExit(
     );
   }
   animations.forEach((animation, index) => {
-    animation.currentTime = endTimes[index] - SEEK_MARGIN;
+    animation.currentTime = endTimes[index] - margin;
   });
+}
 
+async function readFrameOfEnd(
+  animations: Animation[],
+  isGone: () => boolean,
+): Promise<FrameProbeResult> {
   await waitWithFrameLimit<void>(
     {
       frames: GUARD_FRAMES,
@@ -222,6 +234,72 @@ export async function probeFrameAfterExit(
       resolve({ isGone: isGone(), isSameFrame: Math.abs(frameTime - endTime) < 0.5 });
     });
   });
+}
+
+export interface EarlyExitProbeResult extends FrameProbeResult {
+  /** The part read the animations of the panel before the end of the exit. */
+  isReadBeforeEnd: boolean;
+}
+
+/**
+ * Tells if a frame paints between the end of the exit animation and the removal of the panel, when
+ * the exit ends before the part reads the animations of the panel. A late frame can end an exit in
+ * this way.
+ * The probe calls `close` and waits for the update that gives the panel `data-ending-style`. It
+ * rejects when that update does not come in 180 frames of the page after `close` ends. Then it
+ * moves each animation of the panel to 1 ms before its end, so the next frame ends the exit. The
+ * exit must last 100 s.
+ * The probe rejects when the panel has no animation, and when the panel goes before the end of the
+ * exit. It reads `isGone` as `probeFrameAfterExit` does.
+ * `isReadBeforeEnd` tells if a part called `getAnimations()` on the panel before the end. A read in
+ * the reaction to the end, such as a read in a listener of `animationend`, is not a read before the
+ * end. The probe sees only a call on the panel itself. A part that reads the animations of three or
+ * more elements in one microtask can get them from the root of the tree, as `nextAnimationsRead`
+ * says.
+ */
+export async function probeFrameAfterExitBeforeRead(
+  panel: HTMLElement,
+  isGone: () => boolean,
+  close: () => unknown,
+): Promise<EarlyExitProbeResult> {
+  await waitWithFrameLimit<void>(
+    {
+      frames: EVENT_FRAMES,
+      message: `The panel got no data-ending-style in ${EVENT_FRAMES} frames of the page.`,
+      action: close,
+    },
+    (resolve) => {
+      const observer = new MutationObserver(() => {
+        if (panel.hasAttribute('data-ending-style')) {
+          resolve();
+        }
+      });
+      observer.observe(panel, { attributes: true, attributeFilter: ['data-ending-style'] });
+      return () => observer.disconnect();
+    },
+  );
+
+  const animations = panel.getAnimations();
+  seekBeforeEnd(animations, EARLY_END_MARGIN, 'The panel has no exit animation.');
+  let isReadBeforeEnd = false;
+  let hasEnded = false;
+  panel.getAnimations = (options) => {
+    isReadBeforeEnd ||= !hasEnded;
+    return Element.prototype.getAnimations.call(panel, options);
+  };
+  Promise.all(animations.map((animation) => animation.finished)).then(
+    () => {
+      hasEnded = true;
+    },
+    () => {},
+  );
+
+  try {
+    const result = await readFrameOfEnd(animations, isGone);
+    return { ...result, isReadBeforeEnd };
+  } finally {
+    Reflect.deleteProperty(panel, 'getAnimations');
+  }
 }
 
 /**

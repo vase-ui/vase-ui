@@ -67,7 +67,9 @@ export type ToggleGroupChangeEventReason = typeof REASONS.none;
 export type ToggleGroupChangeEventDetails = VaseUIChangeEventDetails<ToggleGroupChangeEventReason>;
 </script>
 
-<script setup lang="ts" generic="Value extends string = string">
+<script setup lang="ts" generic="Value extends string = any">
+// vue-tsc resolves `Value` before it checks a listener of a template.
+// With the default `any`, that check accepts `(value: ('a' | 'b')[]) => void`.
 import { computed, provide } from 'vue';
 import { EMPTY_ARRAY } from '../common/empty';
 import { useControlled } from '../common/useControlled';
@@ -95,6 +97,10 @@ const emit = defineEmits<{
    * Callback fired when the pressed states of the toggle group changes.
    */
   valueChange: [groupValue: Value[], eventDetails: ToggleGroupChangeEventDetails];
+  /**
+   * Event handler called after `valueChange` with the new value, unless a listener cancels the
+   * change. `v-model:value` uses it.
+   */
   'update:value': [groupValue: Value[]];
 }>();
 
