@@ -2307,12 +2307,12 @@ describe('useDismiss', () => {
 
     const { user } = await render(<App />);
 
-    await user.click(screen.getByText('open 1'));
-    expect(screen.getByText('open 2')).toBeInTheDocument();
-
     // Vue skips the later listeners of an event that comes in the millisecond when Vue attached
     // them. The first click mounts the button of the second click.
-    await waitForLaterMillisecond();
+    await waitForLaterMillisecond(async () => {
+      await user.click(screen.getByText('open 1'));
+      expect(screen.getByText('open 2')).toBeInTheDocument();
+    });
     await user.click(screen.getByText('open 2'));
     await flushMicrotasks();
 
@@ -2563,6 +2563,53 @@ describe('useDismiss', () => {
 
       expect(changes).toEqual([{ open: false, reason: REASONS.outsidePress, eventType }]);
     });
+
+    it.each([
+      { name: 'click on a button', mode: 'intentional', eventType: 'click', child: false },
+      {
+        name: 'click on a child of a button',
+        mode: 'intentional',
+        eventType: 'click',
+        child: true,
+      },
+      { name: 'pointerdown on a button', mode: 'sloppy', eventType: 'pointerdown', child: false },
+      {
+        name: 'pointerdown on a child of a button',
+        mode: 'sloppy',
+        eventType: 'pointerdown',
+        child: true,
+      },
+    ] as const)(
+      'closes before a listener of the pressed button runs: $name',
+      async ({ mode, eventType, child }) => {
+        const order: string[] = [];
+        await render(
+          <>
+            <Popup
+              name="popup"
+              dismiss={{ outsidePressEvent: mode }}
+              onChange={(change: Change) => order.push(`${change.reason} ${change.eventType}`)}
+            />
+            <button
+              type="button"
+              {...{
+                [eventType === 'click' ? 'onClick' : 'onPointerdown']: () => order.push('listener'),
+              }}
+            >
+              {child ? <span data-testid="child">outside</span> : 'outside'}
+            </button>
+          </>,
+        );
+        expect(isOpen('popup')).toBe(true);
+
+        await userEvent.click(
+          child ? screen.getByTestId('child') : screen.getByRole('button', { name: 'outside' }),
+        );
+        await flushMicrotasks();
+
+        expect(order).toEqual([`${REASONS.outsidePress} ${eventType}`, 'listener']);
+      },
+    );
   });
 
   describe('popups below the popup in the component tree', () => {
@@ -2914,6 +2961,38 @@ describe('useDismiss', () => {
       await userEvent.click(outside);
       await flushMicrotasks();
       expect(isOpenInShadow()).toBe(false);
+    });
+
+    it('takes a press in a popup in a closed shadow root in another closed shadow root for a press inside', async () => {
+      const outerHost = document.createElement('div');
+      document.body.append(outerHost);
+      onTestFinished(() => outerHost.remove());
+      const host = document.createElement('div');
+      outerHost.attachShadow({ mode: 'closed' }).append(host);
+      const shadowRoot = host.attachShadow({ mode: 'closed' });
+      await render(
+        <Teleport to={shadowRoot as unknown as HTMLElement}>
+          <Popup name="popup">
+            <button data-testid="inside">inside</button>
+          </Popup>
+        </Teleport>,
+      );
+      expect(shadowRoot.querySelector('[data-testid="popup"]')).not.toBe(null);
+      const outerHostRect = outerHost.getBoundingClientRect();
+      const insideRect = shadowRoot
+        .querySelector('[data-testid="inside"]')!
+        .getBoundingClientRect();
+
+      // Outside both shadow roots, the target of the press is the outer host.
+      await userEvent.click(outerHost, {
+        position: {
+          x: insideRect.left - outerHostRect.left + 5,
+          y: insideRect.top - outerHostRect.top + 5,
+        },
+      });
+      await flushMicrotasks();
+
+      expect(shadowRoot.querySelector('[data-testid="popup"]')).not.toBe(null);
     });
   });
 
@@ -3289,12 +3368,39 @@ describe('useDismiss', () => {
         </>,
       );
       await fireEvent.click(screen.getByTestId('open-first'));
-      await fireEvent.click(screen.getByTestId('open-second'));
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(() => fireEvent.click(screen.getByTestId('open-second')));
 
       await fireEvent.pointerDown(screen.getByTestId('second'), mouse);
 
       expect({ first: isOpen('first'), second: isOpen('second') }).toEqual({
+        first: true,
+        second: true,
+      });
+    });
+
+    it('VUE-79: keeps the popup open for a press in a newer popup of a second copy of the module in a closed shadow root', async () => {
+      const copy: typeof import('./useDismiss') = await import('./useDismiss?copy' as string);
+      const First = createLayer(useDismiss, 'first');
+      const Second = createLayer(copy.useDismiss, 'second');
+      const host = document.createElement('div');
+      document.body.append(host);
+      onTestFinished(() => host.remove());
+      const shadowRoot = host.attachShadow({ mode: 'closed' });
+      await render(
+        <>
+          <First />
+          <Teleport to={shadowRoot as unknown as HTMLElement}>
+            <Second />
+          </Teleport>
+        </>,
+      );
+      const inShadow = (testId: string) => shadowRoot.querySelector(`[data-testid="${testId}"]`);
+      await fireEvent.click(screen.getByTestId('open-first'));
+      await waitForLaterMillisecond(() => fireEvent.click(inShadow('open-second')!));
+
+      await fireEvent.pointerDown(inShadow('second')!, mouse);
+
+      expect({ first: isOpen('first'), second: inShadow('second') !== null }).toEqual({
         first: true,
         second: true,
       });

@@ -73,6 +73,7 @@ import { contains } from '../common/shadowDom';
 import { useControlled } from '../common/useControlled';
 import { isEligibleInput } from '../field/root/useFieldValidation';
 import { useFieldsetRootContext } from '../fieldset/root/FieldsetRootContext';
+import { comesBeforeInSameTree } from '../internals/comesBeforeInSameTree';
 import { SHIFT } from '../internals/composite/composite';
 import { useCompositeRoot } from '../internals/composite/root/useCompositeRoot';
 import { createChangeEventDetails } from '../internals/createBaseUIEventDetails';
@@ -176,18 +177,25 @@ function setCheckedValue(value: Value, eventDetails: RadioGroupChangeEventDetail
   inputSyncRequest.value += 1;
 }
 
-// The exposed input is the checked input, or else the first enabled input. The field validates
-// each registered input, so the group does not write `validation.inputRef`. A stale input of an
-// unmounted radio there would block the submit of the form.
+// The exposed input is the checked input, or else the first enabled input in the document. The
+// field validates each registered input, so the group does not write `validation.inputRef`. A stale
+// input of an unmounted radio there would block the submit of the form.
 const inputElement = shallowRef<HTMLInputElement | null>(null);
 let firstEnabledInput: HTMLInputElement | null = null;
 
 function registerInputRef(input: HTMLInputElement) {
   if (!input.disabled) {
-    firstEnabledInput ??= input;
+    if (!firstEnabledInput || comesBeforeInSameTree(input, firstEnabledInput)) {
+      firstEnabledInput = input;
+    }
 
     const currentInput = inputElement.value;
-    if (input.checked || currentInput == null || currentInput.disabled) {
+    if (
+      input.checked ||
+      currentInput == null ||
+      currentInput.disabled ||
+      (!currentInput.checked && input === firstEnabledInput)
+    ) {
       inputElement.value = input;
     }
   }

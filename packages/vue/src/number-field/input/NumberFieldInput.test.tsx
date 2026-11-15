@@ -11,6 +11,7 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  hydrateAfter,
   mockRuntimeLocale,
   renderOnServer,
   screen,
@@ -20,10 +21,12 @@ import {
 } from '#test-utils';
 import { platform } from '../../common/platform';
 import { REASONS } from '../../internals/reasons';
+import NumberFieldInputBeforeHydration from './NumberFieldInputBeforeHydration.test.vue';
 import NumberFieldInputHydration from './NumberFieldInputHydration.test.vue';
 import NumberFieldInputReplace from './NumberFieldInputReplace.test.vue';
 
 const HYDRATION_FIXTURE = 'src/number-field/input/NumberFieldInputHydration.test.vue';
+const BEFORE_HYDRATION_FIXTURE = 'src/number-field/input/NumberFieldInputBeforeHydration.test.vue';
 
 function getHiddenInput() {
   const hiddenInput = document.querySelector<HTMLInputElement>('input[aria-hidden][type=number]');
@@ -2595,6 +2598,97 @@ describe('<NumberField.Input />', () => {
       expect(within(container).getByTestId('input')).toHaveValue(
         new Intl.NumberFormat('de-DE', format).format(1234.5),
       );
+    });
+  });
+
+  describe('VUE-74: text that the user typed before the hydration', () => {
+    async function hydrateTyped(
+      props: Record<string, unknown>,
+      { typed, focus }: { typed: string; focus: 'input' | 'outside' },
+    ) {
+      const serverHtml = await renderOnServer(BEFORE_HYDRATION_FIXTURE, props);
+      const { container } = await hydrateAfter(NumberFieldInputBeforeHydration, {
+        serverHtml,
+        props,
+        before(serverContainer) {
+          within(serverContainer).getByTestId<HTMLInputElement>('input').value = typed;
+          within(serverContainer).getByTestId(focus).focus();
+        },
+      });
+      const fixture = within(container);
+      return {
+        input: fixture.getByTestId<HTMLInputElement>('input'),
+        model: fixture.getByTestId('model'),
+        changes: fixture.getByTestId('changes'),
+        commits: fixture.getByTestId('commits'),
+      };
+    }
+
+    it('writes the typed number to v-model:value', async () => {
+      const { input, model, changes } = await hydrateTyped(
+        { controlled: true, value: 5, locale: 'en-US' },
+        { typed: '56', focus: 'input' },
+      );
+      await flushMicrotasks();
+
+      expect(input).toHaveValue('56');
+      expect(model.textContent).toBe('56');
+      expect(changes.textContent).toBe('56 (input-change)');
+    });
+
+    // A formatter is cached by its locale and its options, so no earlier case formats with the
+    // options of these cases. The parser reads the decimal separator from a formatter with
+    // `numberingSystem` and no other option.
+    it('parses the typed text in the locale of the runtime', async () => {
+      // The root formats the text of the server again in `de-DE` when it is mounted.
+      const props = {
+        value: 1000.5,
+        format: { numberingSystem: 'latn', maximumFractionDigits: 7 },
+      };
+      mockRuntimeLocale('de-DE');
+
+      const { input, changes } = await hydrateTyped(props, { typed: '7,5', focus: 'input' });
+      await flushMicrotasks();
+
+      expect(input).toHaveValue('7,5');
+      expect(changes.textContent).toBe('7.5 (input-change)');
+    });
+
+    it('writes the text of the state back for typed letters', async () => {
+      const { input, changes } = await hydrateTyped(
+        { value: 5, locale: 'en-US' },
+        { typed: 'abc', focus: 'input' },
+      );
+      await flushMicrotasks();
+
+      expect(input).toHaveValue('5');
+      expect(changes.textContent).toBe('');
+    });
+
+    it.each([
+      {
+        name: 'an uncontrolled root',
+        controlled: false,
+        format: { numberingSystem: 'latn', maximumFractionDigits: 8 },
+      },
+      {
+        name: 'a controlled root',
+        controlled: true,
+        format: { numberingSystem: 'latn', maximumFractionDigits: 9 },
+      },
+    ])('commits and formats a number that the user left: $name', async ({ controlled, format }) => {
+      mockRuntimeLocale('de-DE');
+
+      const { input, changes, commits } = await hydrateTyped(
+        { controlled, value: 1, format },
+        { typed: '1234,5', focus: 'outside' },
+      );
+      await waitFor(() => expect(commits.textContent).toBe('1234.5 (input-blur)'));
+      await flushMicrotasks();
+
+      expect(changes.textContent).toBe('1234.5 (input-change)');
+      expect(commits.textContent).toBe('1234.5 (input-blur)');
+      expect(input).toHaveValue(new Intl.NumberFormat('de-DE', format).format(1234.5));
     });
   });
 
