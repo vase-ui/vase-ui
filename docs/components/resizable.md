@@ -504,7 +504,7 @@ F6 passes over a panel with a size of 0 and a panel with no control. A root in a
 
 <<< ./resizable/StopF6.vue
 
-A root around it and the browser still get the key. To stop the key for each root and for the browser, call `event.preventDefault()`.
+The key still goes on to a root around it, and then to the browser. To stop the key for each root and for the browser, call `event.preventDefault()`.
 
 ## Accessibility
 

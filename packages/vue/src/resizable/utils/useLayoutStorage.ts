@@ -22,6 +22,7 @@ export interface ResizableLayoutStorageOptions {
   /**
    * The storage that holds the layout.
    * The composable reads it only after the mount, so a getter can name `sessionStorage`.
+   * When the storage changes, `layout` gets the item of the new storage.
    * @default localStorage
    */
   storage?: MaybeRefOrGetter<ResizableLayoutStorage | undefined>;
