@@ -2,6 +2,7 @@ export * from '../src/common/testUtils';
 export { pasteText } from './clipboard';
 export { createFormDataSpy } from './formData';
 export { createRenderer, waitForLaterMillisecond } from './createRenderer';
+export { isVaporApp } from './testApp';
 export type { Renderable, VaseUIRenderResult } from './createRenderer';
 export { mockRuntimeLocale } from './mockRuntimeLocale';
 export {
@@ -34,6 +35,6 @@ export { flushMicrotasks } from './flushMicrotasks';
 export { cloneElement } from './cloneElement';
 export { createDescribe } from './createDescribe';
 export { randomStringValue } from './randomStringValue';
-export { renderOnServer, hydrate } from './hydration';
+export { renderOnServer, hydrate, hydrateAfter } from './hydration';
 export { takeReportedMessages } from './reportedMessages';
 export { expectNoAxeViolations } from './axe';

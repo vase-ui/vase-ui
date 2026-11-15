@@ -11,14 +11,17 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  hydrateAfter,
   isJSDOM,
   popupAnatomyTests,
   renderOnServer,
   screen,
   waitFor,
+  within,
 } from '#test-utils';
 import type { VaseUIRenderResult } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
+import AutocompleteRootBeforeHydration from './AutocompleteRootBeforeHydration.test.vue';
 import AutocompleteRootHydration from './AutocompleteRootHydration.test.vue';
 
 const HYDRATION_FILE = 'src/autocomplete/root/AutocompleteRootHydration.test.vue';
@@ -157,6 +160,29 @@ describe('<Autocomplete.Root />', () => {
       expect(namedInputs).toHaveLength(1);
       expect(namedInputs[0]).toHaveAttribute('aria-hidden', 'true');
       expect(namedInputs[0].value).toBe('Oslo');
+    });
+  });
+
+  describe('VUE-74: text that the user typed before the hydration', () => {
+    it('writes the text to v-model:value', async () => {
+      const serverHtml = await renderOnServer(
+        'src/autocomplete/root/AutocompleteRootBeforeHydration.test.vue',
+      );
+
+      const { container } = await hydrateAfter(AutocompleteRootBeforeHydration, {
+        serverHtml,
+        before(serverContainer) {
+          const serverInput = within(serverContainer).getByTestId<HTMLInputElement>('input');
+          serverInput.focus();
+          serverInput.value = 'Osl';
+        },
+      });
+      await flushMicrotasks();
+
+      const fixture = within(container);
+      expect(fixture.getByTestId('input')).toHaveValue('Osl');
+      expect(fixture.getByTestId('value').textContent).toBe('Osl');
+      expect(fixture.getByTestId('changes').textContent).toBe('Osl (input-change)');
     });
   });
 
