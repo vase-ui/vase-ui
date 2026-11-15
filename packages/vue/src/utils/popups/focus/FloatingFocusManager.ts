@@ -857,8 +857,7 @@ export function useFloatingFocusManager(
             !job.cancelled &&
             !preventReturnFocus &&
             isHTMLElement(returnElement) &&
-            // A popup above that closed with this popup returned the focus at its close. Its element
-            // goes at the end of its exit.
+            // A popup above that closed with this popup returned the focus at its close.
             parentFocusManager?.isInDisabledClosedPopup(returnElement) !== true &&
             // If the focus moved somewhere else after mount, avoid returning focus
             // since it likely entered a different element which should be
