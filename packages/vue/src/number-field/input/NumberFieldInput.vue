@@ -21,6 +21,7 @@ export interface NumberFieldInputProps
 <script setup lang="ts">
 import { onMounted, watch } from 'vue';
 import { formatNumber } from '../../common/formatNumber';
+import { useValueBeforeHydration } from '../../common/hydration';
 import { useTimeout } from '../../common/useTimeout';
 import { warn } from '../../common/warn';
 import {
@@ -145,10 +146,16 @@ function writeTextToInput() {
   }
 }
 
+const writesValue = useValueBeforeHydration(props, () => element.value);
+
 onMounted(() => {
   handledText = inputRef.value?.value;
 });
-watch(() => state.value.inputValue, writeTextToInput, { flush: 'post' });
+// At the mount the root formats its text again in the runtime locale. Until the hydration ends,
+// the input keeps the text that the user typed, and the `input` event parses it.
+watch(() => (writesValue.value ? state.value.inputValue : undefined), writeTextToInput, {
+  flush: 'post',
+});
 
 useValueChanged(
   () => state.value.value,
@@ -559,7 +566,7 @@ const { element, elementProps } = useRenderElement('input', props, {
         disabled: state.value.disabled ? '' : undefined,
         readonly: state.value.readOnly ? '' : undefined,
         inputmode: inputMode.value,
-        value: state.value.inputValue,
+        ...(writesValue.value ? { value: state.value.inputValue } : undefined),
         type: 'text',
         autocomplete: 'off',
         autoCorrect: autocorrect === undefined ? 'off' : autocorrect,
