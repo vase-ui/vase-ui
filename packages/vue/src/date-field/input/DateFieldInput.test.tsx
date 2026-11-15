@@ -5,6 +5,7 @@ import {
   describeConformance,
   fireEvent,
   hydrate,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
 } from '#test-utils';
@@ -113,6 +114,58 @@ describe('<DateField.Input />', () => {
   });
 
   describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/date-field/root/DateFieldRootHydration.test.vue',
+      component: DateFieldRootHydration,
+      cases: [
+        {
+          name: 'a removed label',
+          props: {
+            locale: 'en-US',
+            label: 'after',
+            description: true,
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: '[data-testid="root"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description',
+          props: {
+            locale: 'en-US',
+            label: 'after',
+            description: true,
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: '[data-testid="root"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+        {
+          name: 'the hidden input, a removed description',
+          props: {
+            locale: 'en-US',
+            label: 'after',
+            description: true,
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: 'input[aria-hidden]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+      ],
+    });
+
     // A server and a browser can have other `Intl` data for a locale, so the layout of the server
     // can differ from the first layout of the browser, also in its number of parts.
     it.each([

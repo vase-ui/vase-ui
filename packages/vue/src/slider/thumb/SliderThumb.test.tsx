@@ -25,6 +25,7 @@ import {
   isJSDOM,
   mockRuntimeLocale,
   recordInputEvents,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   waitFor,
@@ -32,6 +33,7 @@ import {
 } from '#test-utils';
 import { platform } from '../../common/platform';
 import { createTouches, getHorizontalSliderRect } from '../utils/test-utils';
+import SliderRootHydration from '../root/SliderRootHydration.test.vue';
 import SliderThumbHydration from './SliderThumbHydration.test.vue';
 
 const isWebKit = platform.engine.webkit;
@@ -1964,6 +1966,42 @@ describe('<Slider.Thumb />', () => {
   });
 
   describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/slider/root/SliderRootHydration.test.vue',
+      component: SliderRootHydration,
+      cases: [
+        {
+          name: 'a removed field label',
+          props: { id: 'volume', defaultValue: 30, field: true, laterRemovedAtMount: true },
+          selector: 'input[type="range"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description',
+          props: { id: 'volume', defaultValue: 30, field: true, laterRemovedAtMount: true },
+          selector: 'input[type="range"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed slider label',
+          props: {
+            id: 'volume',
+            defaultValue: 30,
+            sliderLabel: 'after',
+            laterRemovedAtMount: true,
+          },
+          selector: 'input[type="range"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'volume-label',
+          clientValue: null,
+        },
+      ],
+    });
+
     it.each([
       { name: 'a single thumb', props: { defaultValue: 30 } },
       { name: 'a range with no index', props: { defaultValue: [25, 75] } },

@@ -15,6 +15,7 @@ import {
   hydrate,
   hydrateAfter,
   isJSDOM,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   takeReportedMessages,
@@ -3301,6 +3302,45 @@ describe('<Checkbox.Root />', () => {
   });
 
   describe('server-side rendering', () => {
+    removedPartHydrationTests({
+      file: 'src/checkbox/root/CheckboxRootHydration.test.vue',
+      component: CheckboxRootHydration,
+      cases: [
+        {
+          name: 'a removed label',
+          props: { label: 'field-after', laterRemovedAtMount: true },
+          selector: '[data-testid="checkbox"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description',
+          props: { label: 'field-after', laterRemovedAtMount: true },
+          selector: '[data-testid="checkbox"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+        {
+          name: 'the input, a removed description',
+          props: { label: 'field-after', laterRemovedAtMount: true },
+          selector: 'input',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description after another',
+          props: { label: 'field-after', descriptionBefore: true, laterRemovedAtMount: true },
+          selector: '[data-testid="checkbox"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-0 desc-a',
+          clientValue: 'desc-0',
+        },
+      ],
+    });
+
     it.each([
       { name: 'a checkbox that is off', props: {}, indeterminate: false },
       {

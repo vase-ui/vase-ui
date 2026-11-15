@@ -6,10 +6,12 @@ import {
   describeConformance,
   expectNoAxeViolations,
   fireEvent,
+  removedPartHydrationTests,
   screen,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
 import * as Resizable from '../index.parts';
+import ResizableRootHydration from '../root/ResizableRootHydration.test.vue';
 
 describe('<Resizable.Handle />', () => {
   const { render } = createRenderer();
@@ -1280,6 +1282,31 @@ describe('<Resizable.Handle />', () => {
 
       expect(handle).toHaveTextContent('vertical');
       expect(handle).toHaveClass('vertical-false-false');
+    });
+  });
+
+  describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/resizable/root/ResizableRootHydration.test.vue',
+      component: ResizableRootHydration,
+      cases: [
+        {
+          name: 'a removed panel, aria-controls',
+          props: { composition: 'layout', laterRemovedAtMount: true },
+          selector: '[data-testid="handle-a"]',
+          attribute: 'aria-controls',
+          serverValue: 'a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed panel, aria-valuenow',
+          props: { composition: 'layout', laterRemovedAtMount: true },
+          selector: '[data-testid="handle-a"]',
+          attribute: 'aria-valuenow',
+          serverValue: '20',
+          clientValue: null,
+        },
+      ],
     });
   });
 });

@@ -567,7 +567,10 @@ const { element, elementProps } = useRenderElement('input', props, {
       hasPositionerParent
         ? undefined
         : (merged) => validation.getValidationProps(isDisabled.value, merged),
-      (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),
+      (merged) => ({
+        ...merged,
+        'aria-describedby': ariaAfterHydration(merged['aria-describedby']),
+      }),
     ];
   },
   stateAttributesMapping: triggerStateAttributesMapping,

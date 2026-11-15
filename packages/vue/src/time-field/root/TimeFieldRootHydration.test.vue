@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onMounted, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { TimeField } from '@vase-ui/vue/time-field';
 
@@ -19,6 +20,9 @@ const props = withDefaults(
     clear?: boolean;
     // How the field gives its segments: the default parts, the `segment` slot, or a `#render` slot.
     input?: 'default' | 'segment-slot' | 'render-slot';
+    labelId?: string | undefined;
+    descriptionId?: string | undefined;
+    laterRemovedAtMount?: boolean;
   }>(),
   {
     label: 'none',
@@ -31,8 +35,15 @@ const props = withDefaults(
     step: undefined,
     name: undefined,
     input: 'default',
+    labelId: undefined,
+    descriptionId: undefined,
   },
 );
+
+const isMounted = shallowRef(false);
+onMounted(() => {
+  isMounted.value = true;
+});
 
 type Time = Temporal.PlainTime | Temporal.PlainDateTime | Temporal.ZonedDateTime;
 
@@ -81,10 +92,12 @@ function rootProps() {
         </TimeField.Input>
         <TimeField.Clear v-if="clear" data-testid="clear" />
       </TimeField.Root>
-      <Field.Label v-if="label === 'after'" data-testid="label">Alarm</Field.Label>
-      <Field.Description v-if="description" data-testid="description">
-        Pick a time.
-      </Field.Description>
+      <template v-if="!(laterRemovedAtMount && isMounted)">
+        <Field.Label v-if="label === 'after'" :id="labelId" data-testid="label">Alarm</Field.Label>
+        <Field.Description v-if="description" :id="descriptionId" data-testid="description">
+          Pick a time.
+        </Field.Description>
+      </template>
     </Field.Root>
   </form>
 </template>

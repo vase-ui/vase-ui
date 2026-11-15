@@ -7,6 +7,7 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  removedPartHydrationTests,
   screen,
   takeReportedMessages,
   isJSDOM,
@@ -14,6 +15,7 @@ import {
   waitFor,
 } from '#test-utils';
 import type { SelectStore } from '../store';
+import SelectRootHydration from '../root/SelectRootHydration.test.vue';
 import SelectTriggerReplacement from './SelectTriggerReplacement.test.vue';
 
 describe('<Select.Trigger />', () => {
@@ -773,5 +775,30 @@ describe('<Select.Trigger />', () => {
       'Vase UI: A part of Select must be inside <Select.Root>.',
     );
     expect(takeReportedMessages()).toHaveLength(1);
+  });
+
+  describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/select/root/SelectRootHydration.test.vue',
+      component: SelectRootHydration,
+      cases: [
+        {
+          name: 'a removed label part',
+          props: { id: 'font', label: 'after', laterRemovedAtMount: true },
+          selector: '[role="combobox"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'font-label',
+          clientValue: null,
+        },
+        {
+          name: 'a label part and a removed field label',
+          props: { id: 'font', label: 'before', fieldLabel: true, laterRemovedAtMount: true },
+          selector: '[role="combobox"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: 'font-label',
+        },
+      ],
+    });
   });
 });

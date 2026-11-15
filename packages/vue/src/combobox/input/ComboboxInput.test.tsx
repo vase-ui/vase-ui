@@ -13,6 +13,7 @@ import {
   hydrate,
   hydrateAfter,
   isJSDOM,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   waitFor,
@@ -1847,6 +1848,41 @@ describe('<Combobox.Input />', () => {
       expect(changes.textContent).toBe('Mal (input-change)');
       expect(input).toHaveAttribute('aria-expanded', 'false');
       expect(fixture.queryAllByRole('option')).toHaveLength(0);
+    });
+  });
+
+  describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/combobox/input/ComboboxInputHydration.test.vue',
+      component: ComboboxInputHydration,
+      cases: [
+        {
+          name: 'a removed label',
+          props: {
+            parts: ['input', 'label', 'description'],
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: '[data-testid="input"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description',
+          props: {
+            parts: ['input', 'label', 'description'],
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: '[data-testid="input"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+      ],
     });
   });
 });

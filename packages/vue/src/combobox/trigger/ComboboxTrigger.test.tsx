@@ -11,6 +11,7 @@ import {
   hydrate,
   isJSDOM,
   pressWithScreenReader,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   wait,
@@ -20,6 +21,7 @@ import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
 import type { ComboboxStore } from '../store';
+import ComboboxTriggerLabelHydration from './ComboboxTriggerLabelHydration.test.vue';
 import ComboboxTriggerOpenHydration from './ComboboxTriggerOpenHydration.test.vue';
 import ComboboxTriggerReplacement from './ComboboxTriggerReplacement.test.vue';
 
@@ -1902,6 +1904,31 @@ describe('<Combobox.Trigger />', () => {
       const labelId = screen.getByTestId('label').id;
       expect(labelId).not.toBe('');
       expect(screen.getByTestId('trigger')).toHaveAttribute('aria-labelledby', labelId);
+    });
+  });
+
+  describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/combobox/trigger/ComboboxTriggerLabelHydration.test.vue',
+      component: ComboboxTriggerLabelHydration,
+      cases: [
+        {
+          name: 'a removed label part',
+          props: { label: 'after', laterRemovedAtMount: true },
+          selector: '[data-testid="trigger"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'fruit-label',
+          clientValue: null,
+        },
+        {
+          name: 'a label part and a removed field label',
+          props: { label: 'before', fieldLabel: true, laterRemovedAtMount: true },
+          selector: '[data-testid="trigger"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: 'fruit-label',
+        },
+      ],
     });
   });
 });

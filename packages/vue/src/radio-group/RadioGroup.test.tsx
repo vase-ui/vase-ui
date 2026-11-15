@@ -26,6 +26,7 @@ import {
   hydrate,
   hydrateAfter,
   isJSDOM,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   takeReportedMessages,
@@ -3888,6 +3889,31 @@ describe('<RadioGroup />', () => {
       await flushMicrotasks();
 
       expect(screen.getByTestId('b')).toHaveFocus();
+    });
+  });
+
+  describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/radio-group/RadioGroupFieldHydration.test.vue',
+      component: RadioGroupFieldHydration,
+      cases: [
+        {
+          name: 'a removed label',
+          props: { defaultValue: 'a', laterRemovedAtMount: true },
+          selector: '[data-testid="group"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description',
+          props: { defaultValue: 'a', laterRemovedAtMount: true },
+          selector: '[data-testid="group"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+      ],
     });
   });
 });

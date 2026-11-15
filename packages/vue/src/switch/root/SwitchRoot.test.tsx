@@ -13,6 +13,7 @@ import {
   hydrate,
   hydrateAfter,
   isJSDOM,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   takeReportedMessages,
@@ -2124,6 +2125,37 @@ describe('<Switch.Root />', () => {
   });
 
   describe('server-side rendering', () => {
+    removedPartHydrationTests({
+      file: 'src/switch/root/SwitchRootHydration.test.vue',
+      component: SwitchRootHydration,
+      cases: [
+        {
+          name: 'a removed label',
+          props: { label: 'field-after', laterRemovedAtMount: true },
+          selector: '[data-testid="switch"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description',
+          props: { label: 'field-after', laterRemovedAtMount: true },
+          selector: '[data-testid="switch"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+        {
+          name: 'the input, a removed description',
+          props: { label: 'field-after', laterRemovedAtMount: true },
+          selector: 'input',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+      ],
+    });
+
     it.each([
       { name: 'a switch that is off', props: {} },
       { name: 'a switch that is on', props: { defaultChecked: true, name: 'notifications' } },

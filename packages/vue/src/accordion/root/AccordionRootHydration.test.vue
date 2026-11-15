@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onMounted, shallowRef } from 'vue';
 import { Accordion } from '../index';
 
 // A Boolean prop that is absent becomes `false` in Vue. `keepMounted` must stay `undefined`,
@@ -10,9 +11,15 @@ withDefaults(
     hiddenUntilFound?: boolean | undefined;
     triggerId?: string | undefined;
     panelId?: string | undefined;
+    laterRemovedAtMount?: boolean | undefined;
   }>(),
   { keepMounted: undefined },
 );
+
+const isMounted = shallowRef(false);
+onMounted(() => {
+  isMounted.value = true;
+});
 </script>
 
 <template>
@@ -23,9 +30,11 @@ withDefaults(
   >
     <Accordion.Item :value="0">
       <Accordion.Header>
-        <Accordion.Trigger :id="triggerId">Trigger 1</Accordion.Trigger>
+        <Accordion.Trigger :id="triggerId" data-testid="trigger">Trigger 1</Accordion.Trigger>
       </Accordion.Header>
-      <Accordion.Panel :id="panelId">Panel contents 1</Accordion.Panel>
+      <Accordion.Panel v-if="!(laterRemovedAtMount && isMounted)" :id="panelId">
+        Panel contents 1
+      </Accordion.Panel>
     </Accordion.Item>
     <Accordion.Item>
       <Accordion.Header>

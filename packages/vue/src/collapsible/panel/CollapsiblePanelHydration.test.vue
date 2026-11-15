@@ -11,7 +11,8 @@ withDefaults(
     hiddenUntilFound?: boolean | undefined;
     panelId?: string | undefined;
     panelClass?: string | undefined;
-    panelRemovedAtMount?: boolean | undefined;
+    panelBefore?: boolean | undefined;
+    laterRemovedAtMount?: boolean | undefined;
   }>(),
   { defaultOpen: undefined, keepMounted: undefined, hiddenUntilFound: undefined },
 );
@@ -24,9 +25,10 @@ onMounted(() => {
 
 <template>
   <Collapsible.Root :default-open="defaultOpen">
+    <Collapsible.Panel v-if="panelBefore" id="panel-0">Panel 0 content</Collapsible.Panel>
     <Collapsible.Trigger data-testid="trigger">Trigger</Collapsible.Trigger>
     <Collapsible.Panel
-      v-if="!(panelRemovedAtMount && isMounted)"
+      v-if="!(laterRemovedAtMount && isMounted)"
       :id="panelId"
       :class="panelClass"
       :keep-mounted="keepMounted"

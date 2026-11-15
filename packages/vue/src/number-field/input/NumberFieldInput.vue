@@ -588,7 +588,10 @@ const { element, elementProps } = useRenderElement('input', props, {
       },
       elementAttrs,
       (merged) => validation.getValidationProps(state.value.disabled, merged),
-      (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),
+      (merged) => ({
+        ...merged,
+        'aria-describedby': ariaAfterHydration(merged['aria-describedby']),
+      }),
     ];
   },
   stateAttributesMapping,

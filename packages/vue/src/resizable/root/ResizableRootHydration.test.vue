@@ -1,10 +1,16 @@
 <script setup lang="ts">
-import { defineComponent, h } from 'vue';
+import { defineComponent, h, onMounted, shallowRef } from 'vue';
 import * as Resizable from '../index.parts';
 
 defineProps<{
   composition: 'collapsed' | 'defaults' | 'layout' | 'nested' | 'style' | 'vertical';
+  laterRemovedAtMount?: boolean | undefined;
 }>();
+
+const isMounted = shallowRef(false);
+onMounted(() => {
+  isMounted.value = true;
+});
 
 // The root finds this panel through its context, and not through its place in the template.
 const WrappedPanel = defineComponent({
@@ -30,7 +36,7 @@ const WrappedPanel = defineComponent({
   >
     <Resizable.Panel id="a" data-testid="a" />
     <Resizable.Handle data-testid="handle-a" aria-label="First" />
-    <Resizable.Panel id="b" data-testid="b" />
+    <Resizable.Panel v-if="!(laterRemovedAtMount && isMounted)" id="b" data-testid="b" />
   </Resizable.Root>
   <Resizable.Root v-else-if="composition === 'nested'" data-testid="root">
     <WrappedPanel />

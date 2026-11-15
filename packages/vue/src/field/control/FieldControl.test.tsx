@@ -14,6 +14,7 @@ import {
   hydrateAfter,
   isJSDOM,
   recordInputEvents,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   takeReportedMessages,
@@ -1433,6 +1434,45 @@ describe('<Field.Control />', () => {
   });
 
   describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/field/control/FieldControlHydration.test.vue',
+      component: FieldControlHydration,
+      cases: [
+        {
+          name: 'a removed label after the control',
+          props: { label: 'after', laterRemovedAtMount: true },
+          selector: '[data-testid="control"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description',
+          props: { description: 'after', laterRemovedAtMount: true },
+          selector: '[data-testid="control"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description after another',
+          props: { description: 'both', laterRemovedAtMount: true },
+          selector: '[data-testid="control"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-0 desc-a',
+          clientValue: 'desc-0',
+        },
+        {
+          name: 'a removed label after another label',
+          props: { label: 'both', laterRemovedAtMount: true },
+          selector: '[data-testid="control"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: 'label-0',
+        },
+      ],
+    });
+
     it.each([
       {
         name: 'the label and the messages first',

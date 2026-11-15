@@ -11,6 +11,7 @@ import {
   flushMicrotasks,
   hydrate,
   isJSDOM,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   waitFor,
@@ -3307,6 +3308,39 @@ describe('<CheckboxGroup />', () => {
   });
 
   describe('server-side rendering', () => {
+    removedPartHydrationTests({
+      file: 'src/checkbox-group/CheckboxGroupHydration.test.vue',
+      component: CheckboxGroupHydration,
+      cases: [
+        {
+          name: 'a removed label',
+          props: {
+            label: 'after',
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: '[data-testid="group"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description',
+          props: {
+            label: 'after',
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: '[data-testid="group"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+      ],
+    });
+
     it.each([
       { name: 'a value', props: { defaultValue: ['banana'] } },
       { name: 'no value', props: {} },
