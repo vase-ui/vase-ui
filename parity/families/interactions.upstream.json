@@ -1,5 +1,5 @@
 {
-  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "commit": "315eba7a3d8a0a53d47fe7b902cb75daa21f6814",
   "upstreamPaths": [
     "packages/react/src/utils/popups/interactions/**",
     "packages/react/test/floating-ui-tests/useFloating.ts",
@@ -945,6 +945,13 @@
           "conditions": [
             "skipIf(!isJSDOM)"
           ]
+        },
+        {
+          "describe": [
+            "press ownership across independent non-modal layers",
+            "$name layer"
+          ],
+          "title": "$name respects opening order"
         }
       ]
     },

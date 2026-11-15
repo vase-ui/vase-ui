@@ -8,15 +8,15 @@ import { createEventEmitter } from '../createEventEmitter';
  * `provideFloatingTree` gives one to the parts below a root.
  */
 export class FloatingTreeStore {
-  public readonly nodesRef: ShallowRef<FloatingNodeType[]> = shallowRef([]);
+  readonly nodesRef: ShallowRef<FloatingNodeType[]> = shallowRef([]);
 
-  public readonly events: PopupEvents = createEventEmitter();
+  readonly events: PopupEvents = createEventEmitter();
 
-  public addNode(node: FloatingNodeType) {
+  addNode(node: FloatingNodeType) {
     this.nodesRef.value = [...this.nodesRef.value, node];
   }
 
-  public removeNode(node: FloatingNodeType) {
+  removeNode(node: FloatingNodeType) {
     this.nodesRef.value = this.nodesRef.value.filter((n) => n !== node);
   }
 }

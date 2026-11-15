@@ -1,0 +1,16 @@
+{
+  "commit": "315eba7a3d8a0a53d47fe7b902cb75daa21f6814",
+  "upstreamPaths": [
+    "docs/src/app/(docs)/react/handbook/typescript/**"
+  ],
+  "sources": [],
+  "typeTests": [],
+  "cases": [],
+  "surface": [],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/handbook/typescript/page.mdx",
+      "referenceTags": []
+    }
+  ]
+}
