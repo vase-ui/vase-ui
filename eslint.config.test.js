@@ -230,9 +230,16 @@ const reported = [
     hint: '#name',
   },
   {
-    name: 'a private method and a private accessor',
+    name: 'a private method',
     file: `${SRC}/store.ts`,
-    code: 'export class Store {\n  private get size() {\n    return 0;\n  }\n\n  private clear() {}\n\n  reset() {\n    this.clear();\n    return this.size;\n  }\n}\n',
+    code: 'export class Store {\n  private clear() {}\n\n  reset() {\n    this.clear();\n  }\n}\n',
+    ruleId: 'no-restricted-syntax',
+    hint: '#name',
+  },
+  {
+    name: 'a private get accessor',
+    file: `${SRC}/store.ts`,
+    code: 'export class Store {\n  private get size() {\n    return 0;\n  }\n\n  read() {\n    return this.size;\n  }\n}\n',
     ruleId: 'no-restricted-syntax',
     hint: '#name',
   },
