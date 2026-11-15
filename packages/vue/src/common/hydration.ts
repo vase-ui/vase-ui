@@ -112,7 +112,7 @@ function leave(control: TextControl) {
 /**
  * Sends one `input` event to a control whose value changed with no event that its part handled.
  * @param leaves With `true`, one tick later, a control that does not have the focus also gets
- * `change`, `blur` and `focusout`, because the user left it before the listeners existed. A
+ * `change`, `blur` and `focusout`, because the user left it before the part saw the change. A
  * controlled part gets the new value in its prop only in the flush after the `input` event.
  */
 export function dispatchTakeEvents(control: TextControl, leaves: boolean): void {
@@ -189,8 +189,9 @@ function useControlValueBeforeHydration(
  *
  * A control that equals its server HTML gives `true` from the mount. After the flush of the mount,
  * a control whose value differs from its server HTML gets one `input` event, and then the result
- * is `true`. The handler of the part thus reads `false` for that event. One tick later, such a control that does not have the focus also gets `change`,
- * `blur` and `focusout`, because the user left it before the listeners existed.
+ * is `true`. The handler of the part thus reads `false` for that event. One tick later, such a
+ * control that does not have the focus also gets `change`, `blur` and `focusout`, because the user
+ * left it before the listeners existed.
  *
  * In a client-only mount, and for a component in `as`, the result is `true` from the start.
  * @param componentProps The props of the part. The composable reads `as`.
