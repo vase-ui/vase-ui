@@ -3512,7 +3512,7 @@ describe('<NavigationMenu.Root />', () => {
             .map(([, value]) => value)
             .filter((value) => value !== 'auto' && value !== '0px');
 
-          expect(openHeight).toBe(`${popupRoot.offsetHeight}px`);
+          expect(openHeight).toBe(getComputedStyle(popupRoot).height);
           expect(fixedPopupHeights.length).toBeGreaterThan(0);
           expect(fixedPopupHeights.every((value) => value === openHeight)).toBe(true);
         } finally {

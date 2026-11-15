@@ -2,7 +2,7 @@
 import type { HTMLAttributes } from 'vue';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
-import type { FocusOption } from '../../utils/popups/focus/FloatingFocusManager.vue';
+import type { FocusOption } from '../../utils/popups/focus/FloatingFocusManager';
 
 export interface DialogPopupState {
   /**
@@ -57,7 +57,7 @@ import { computed } from 'vue';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import FloatingFocusManager from '../../utils/popups/focus/FloatingFocusManager.vue';
+import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
 import {
   FOCUSABLE_POPUP_PROPS,
   createDefaultInitialFocus,
@@ -148,23 +148,26 @@ const { element, elementProps } = useRenderElement('div', props, {
   ],
 });
 
+useFloatingFocusManager(
+  () => ({
+    store,
+    openInteractionType: openMethod.value,
+    disabled: !mounted.value,
+    closeOnFocusOut: !disablePointerDismissal.value,
+    initialFocus: resolvedInitialFocus.value,
+    returnFocus: props.finalFocus,
+    modal: modal.value !== false,
+    outsideElementsInert: modal.value === true,
+    restoreFocus: 'popup',
+    getInsideElements,
+  }),
+  element,
+);
+
 defineExpose({ element });
 </script>
 
 <template>
-  <FloatingFocusManager
-    :store="store"
-    :open-interaction-type="openMethod"
-    :disabled="!mounted"
-    :close-on-focus-out="!disablePointerDismissal"
-    :initial-focus="resolvedInitialFocus"
-    :return-focus="finalFocus"
-    :modal="modal !== false"
-    :outside-elements-inert="modal === true"
-    restore-focus="popup"
-    :get-inside-elements="getInsideElements"
-  >
-    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-    <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
-  </FloatingFocusManager>
+  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
 </template>

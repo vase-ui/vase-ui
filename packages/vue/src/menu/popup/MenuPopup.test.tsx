@@ -285,8 +285,11 @@ describe('<Menu.Popup />', () => {
 
       const { user } = await render(<App />);
       const dialogTrigger = screen.getByRole('button', { name: 'Create' });
-      await user.click(dialogTrigger);
-      await user.click(await screen.findByRole('button', { name: 'Template' }));
+      const menuTrigger = await waitForLaterMillisecond(async () => {
+        await user.click(dialogTrigger);
+        return screen.findByRole('button', { name: 'Template' });
+      });
+      await user.click(menuTrigger);
       await user.click(await screen.findByRole('menuitem', { name: 'Blank' }));
 
       await waitFor(() => {

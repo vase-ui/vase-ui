@@ -3,7 +3,7 @@ import type { HTMLAttributes } from 'vue';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { Align, Side } from '../../internals/useAnchorPositioning';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
-import type { FocusOption } from '../../utils/popups/focus/FloatingFocusManager.vue';
+import type { FocusOption } from '../../utils/popups/focus/FloatingFocusManager';
 
 export interface SelectPopupState {
   /**
@@ -60,11 +60,10 @@ import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
-import FloatingFocusManager from '../../utils/popups/focus/FloatingFocusManager.vue';
+import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { useDomEffect } from '../../utils/popups/useDomEffect';
 import { getMaxScrollOffset, SCROLL_EDGE_TOLERANCE_PX } from '../../utils/scrollEdges';
-import StyleDisableScrollbar from '../../utils/StyleDisableScrollbar.vue';
 import { styleDisableScrollbar, useStyleDisableScrollbar } from '../../utils/styles';
 import * as SelectPositionerCssVars from '../positioner/SelectPositionerCssVars';
 import { useSelectPositionerContext } from '../positioner/SelectPositionerContext';
@@ -523,9 +522,22 @@ const { element, elementProps } = useRenderElement('div', props, {
   },
 });
 
-// `StyleDisableScrollbar` gives the server HTML its style element. A popup that is not in a portal
-// is in the server HTML, and it hides its native scrollbar before the page hydrates.
+// `StyleDisableScrollbar` in `Select.Positioner` gives the server HTML its style element. A popup
+// that is not in a portal is in the server HTML, and it hides its native scrollbar before the page
+// hydrates.
 useStyleDisableScrollbar(element);
+
+useFloatingFocusManager(
+  () => ({
+    store,
+    modal: false,
+    disabled: !mounted.value,
+    openInteractionType: store.select('openMethod'),
+    returnFocus: props.finalFocus,
+    restoreFocus: true,
+  }),
+  element,
+);
 
 defineExpose({ element });
 
@@ -590,16 +602,6 @@ function unsetTransformStyles(popup: HTMLElement) {
 </script>
 
 <template>
-  <StyleDisableScrollbar />
-  <FloatingFocusManager
-    :store="store"
-    :modal="false"
-    :disabled="!mounted"
-    :open-interaction-type="store.select('openMethod')"
-    :return-focus="finalFocus"
-    restore-focus
-  >
-    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-    <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
-  </FloatingFocusManager>
+  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
 </template>

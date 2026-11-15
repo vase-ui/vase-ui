@@ -1,7 +1,7 @@
 import { defineComponent, shallowRef } from 'vue';
 import type { CSSProperties } from 'vue';
 import { getEmptyRootStore } from '../../src/utils/popups/floating-root/getEmptyRootStore';
-import FloatingFocusManager from '../../src/utils/popups/focus/FloatingFocusManager.vue';
+import { FloatingFocusManager } from '../fixtures/floatingFocusManagerHarness';
 import { safePolygon } from '../../src/utils/popups/interactions/safePolygon';
 import { useDismiss } from '../../src/utils/popups/interactions/useDismiss';
 import { useFocus } from '../../src/utils/popups/interactions/useFocus';

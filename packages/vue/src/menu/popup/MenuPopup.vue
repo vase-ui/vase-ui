@@ -3,7 +3,7 @@ import type { HTMLAttributes } from 'vue';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { Align, Side } from '../../internals/useAnchorPositioning';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
-import type { FocusOption } from '../../utils/popups/focus/FloatingFocusManager.vue';
+import type { FocusOption } from '../../utils/popups/focus/FloatingFocusManager';
 
 export interface MenuPopupState {
   /**
@@ -62,7 +62,7 @@ import { REASONS } from '../../internals/reasons';
 import { resolvePopupLabel } from '../../internals/resolvePopupLabel';
 import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import FloatingFocusManager from '../../utils/popups/focus/FloatingFocusManager.vue';
+import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
 import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { useToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
@@ -263,27 +263,31 @@ function getNextFocusableElement() {
   return store.context.triggerFocusTargetRef.value;
 }
 
+useFloatingFocusManager(
+  () => ({
+    store,
+    openInteractionType: store.select('openMethod'),
+    modal: parent.value.type === 'context-menu',
+    disabled: !mounted.value,
+    returnFocus: props.finalFocus ?? dynamicReturnFocus.value ?? returnFocus.value,
+    explicitReturnFocus:
+      props.finalFocus === undefined && dynamicReturnFocus.value ? false : undefined,
+    initialFocus: initialFocus.value,
+    restoreFocus: true,
+    getInsideElements: parent.value.type === undefined ? getInsideElements : undefined,
+    externalTree: parent.value.type !== 'menubar' ? floatingTreeRoot.value : undefined,
+    previousFocusableElement: activeTriggerElement.value,
+    nextFocusableElement: parent.value.type === undefined ? getNextFocusableElement : undefined,
+    beforeContentFocusGuardRef: store.context.beforeContentFocusGuardRef,
+    afterContentFocusGuardRef: store.context.afterContentFocusGuardRef,
+  }),
+  element,
+);
+
 defineExpose({ element });
 </script>
 
 <template>
-  <FloatingFocusManager
-    :store="store"
-    :open-interaction-type="store.select('openMethod')"
-    :modal="parent.type === 'context-menu'"
-    :disabled="!mounted"
-    :return-focus="finalFocus ?? dynamicReturnFocus ?? returnFocus"
-    :explicit-return-focus="finalFocus === undefined && dynamicReturnFocus ? false : undefined"
-    :initial-focus="initialFocus"
-    restore-focus
-    :get-inside-elements="parent.type === undefined ? getInsideElements : undefined"
-    :external-tree="parent.type !== 'menubar' ? floatingTreeRoot : undefined"
-    :previous-focusable-element="activeTriggerElement"
-    :next-focusable-element="parent.type === undefined ? getNextFocusableElement : undefined"
-    :before-content-focus-guard-ref="store.context.beforeContentFocusGuardRef"
-    :after-content-focus-guard-ref="store.context.afterContentFocusGuardRef"
-  >
-    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-    <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
-  </FloatingFocusManager>
+  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
 </template>
