@@ -6920,9 +6920,11 @@ describe('<Select.Root />', () => {
 
       const { user, setProps } = await render(<App value={[{ id: 2 }, { id: 3 }]} />);
 
-      await user.click(screen.getByTestId('trigger'));
-      await waitFor(() => {
-        expect(screen.getByRole('option', { name: 'opt-2' })).toHaveAttribute('data-highlighted');
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('trigger'));
+        await waitFor(() => {
+          expect(screen.getByRole('option', { name: 'opt-2' })).toHaveAttribute('data-highlighted');
+        });
       });
       await user.keyboard('{Escape}');
       await waitFor(() => {

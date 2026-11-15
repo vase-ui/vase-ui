@@ -441,9 +441,10 @@ describe('<Select.Trigger />', () => {
       const trigger = screen.getByTestId('trigger');
       expect(trigger).not.toHaveAttribute('data-popup-side');
 
-      await user.click(trigger);
-
-      await waitFor(() => expect(screen.queryByRole('listbox')).not.toBe(null));
+      await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        await waitFor(() => expect(screen.queryByRole('listbox')).not.toBe(null));
+      });
       await waitFor(() => expect(trigger).toHaveAttribute('data-popup-side', 'right'));
 
       await user.click(document.body);

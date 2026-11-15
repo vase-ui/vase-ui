@@ -4361,9 +4361,11 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       </Menu.FilterProvider>,
     );
 
-    await user.click(screen.getByRole('button', { name: 'Actions' }));
-    await waitFor(() => {
-      expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+    await waitForLaterMillisecond(async () => {
+      await user.click(screen.getByRole('button', { name: 'Actions' }));
+      await waitFor(() => {
+        expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+      });
     });
 
     await user.keyboard('[Escape]');
