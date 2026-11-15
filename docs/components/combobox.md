@@ -6,14 +6,23 @@ description: An unstyled Vue combobox component that renders an input combined w
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoComboboxAsyncMultiple from '../demos/combobox/async-multiple/css-modules/index.vue';
+import DemoComboboxAsyncMultipleTailwind from '../demos/combobox/async-multiple/tailwind/index.vue';
 import DemoComboboxAsyncSingle from '../demos/combobox/async-single/css-modules/index.vue';
+import DemoComboboxAsyncSingleTailwind from '../demos/combobox/async-single/tailwind/index.vue';
 import DemoComboboxCreateItems from '../demos/combobox/create-items/css-modules/index.vue';
+import DemoComboboxCreateItemsTailwind from '../demos/combobox/create-items/tailwind/index.vue';
 import DemoComboboxGrouped from '../demos/combobox/grouped/css-modules/index.vue';
+import DemoComboboxGroupedTailwind from '../demos/combobox/grouped/tailwind/index.vue';
 import DemoComboboxHero from '../demos/combobox/hero/css-modules/index.vue';
+import DemoComboboxHeroTailwind from '../demos/combobox/hero/tailwind/index.vue';
 import DemoComboboxInputInsidePopup from '../demos/combobox/input-inside-popup/css-modules/index.vue';
+import DemoComboboxInputInsidePopupTailwind from '../demos/combobox/input-inside-popup/tailwind/index.vue';
 import DemoComboboxMultiple from '../demos/combobox/multiple/css-modules/index.vue';
+import DemoComboboxMultipleTailwind from '../demos/combobox/multiple/tailwind/index.vue';
 import DemoComboboxVirtualized from '../demos/combobox/virtualized/css-modules/index.vue';
+import DemoComboboxVirtualizedTailwind from '../demos/combobox/virtualized/tailwind/index.vue';
 </script>
 
 # Combobox
@@ -22,7 +31,12 @@ An input combined with a list of predefined items to select.
 
 <DemoFrame>
   <DemoComboboxHero />
+  <template #tailwind>
+    <DemoComboboxHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -31,6 +45,18 @@ An input combined with a list of predefined items to select.
 <<< ../demos/combobox/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/combobox/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Usage guidelines
 
@@ -92,7 +118,12 @@ When the data loads or changes at run time, make the collection in a `computed`.
 
 <DemoFrame>
   <DemoComboboxCreateItems />
+  <template #tailwind>
+    <DemoComboboxCreateItemsTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -101,6 +132,18 @@ When the data loads or changes at run time, make the collection in a `computed`.
 <<< ../demos/combobox/create-items/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/combobox/create-items/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 As a rule of thumb, use primitive items for simple lists. Use object values when the selected record is useful application state. Use `createItems()` when the selection needs a stable primitive ID and the list still uses object records.
 
@@ -118,7 +161,12 @@ Add the `multiple` prop to `<Combobox.Root>` to let the user select more than on
 
 <DemoFrame>
   <DemoComboboxMultiple />
+  <template #tailwind>
+    <DemoComboboxMultipleTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -127,6 +175,18 @@ Add the `multiple` prop to `<Combobox.Root>` to let the user select more than on
 <<< ../demos/combobox/multiple/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/combobox/multiple/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 To let screen readers announce how to reach and remove the chips, give `aria-description` to `<Combobox.Chip>` and `<Combobox.Input>`. Also give `aria-label` to `<Combobox.Chips>` and `<Combobox.ChipRemove>`. Vase UI does not ship these strings. Translate them with the rest of your interface.
 
@@ -154,7 +214,12 @@ The typed filter still resets when the popup closes.
 
 <DemoFrame>
   <DemoComboboxInputInsidePopup />
+  <template #tailwind>
+    <DemoComboboxInputInsidePopupTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -163,6 +228,18 @@ The typed filter still resets when the popup closes.
 <<< ../demos/combobox/input-inside-popup/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/combobox/input-inside-popup/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 In this pattern, use `<Combobox.Label>` to give the trigger a visible label:
 
@@ -180,7 +257,12 @@ The `items` prop describes the groups as an array of objects. Each object has an
 
 <DemoFrame>
   <DemoComboboxGrouped />
+  <template #tailwind>
+    <DemoComboboxGroupedTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -190,13 +272,30 @@ The `items` prop describes the groups as an array of objects. Each object has an
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/combobox/grouped/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Async search (single)
 
 Load the items from a remote source when the input changes. The app does not need to load all items first. Keep the selected item in the `items` list, so that it stays available while new results arrive.
 
 <DemoFrame>
   <DemoComboboxAsyncSingle />
+  <template #tailwind>
+    <DemoComboboxAsyncSingleTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -206,13 +305,30 @@ Load the items from a remote source when the input changes. The app does not nee
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/combobox/async-single/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Async search (multiple)
 
 Load the items from a remote source when the input changes, and allow more than one selected item. The app does not need to load all items first. The selected items stay in the list while new matches arrive.
 
 <DemoFrame>
   <DemoComboboxAsyncMultiple />
+  <template #tailwind>
+    <DemoComboboxAsyncMultipleTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -222,13 +338,30 @@ Load the items from a remote source when the input changes, and allow more than 
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/combobox/async-multiple/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Virtualized
 
 Use a virtualization library, such as `@tanstack/vue-virtual`, to handle a large data set.
 
 <DemoFrame>
   <DemoComboboxVirtualized />
+  <template #tailwind>
+    <DemoComboboxVirtualizedTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -239,6 +372,20 @@ Use a virtualization library, such as `@tanstack/vue-virtual`, to handle a large
 <<< ../demos/combobox/virtualized/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/combobox/virtualized/tailwind/index.vue
+
+<<< ../demos/combobox/virtualized/tailwind/VirtualizedList.vue
+
+:::
+
+</DemoSource>
 
 #### Memoizing items
 
