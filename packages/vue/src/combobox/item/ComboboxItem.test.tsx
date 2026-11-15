@@ -3,6 +3,7 @@ import { defineComponent, shallowRef } from 'vue';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
 import {
+  clientCenter,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -10,6 +11,7 @@ import {
   isJSDOM,
   screen,
   waitFor,
+  waitForLaterMillisecond,
 } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
@@ -835,5 +837,46 @@ describe('<Combobox.Item />', () => {
 
       expect(screen.getByRole('row')).toContainElement(screen.getByRole('gridcell', { name: 'a' }));
     });
+  });
+
+  it('VUE-84: selects an item for a later drag that ends at the point of the press that opened the popup', async () => {
+    const onValueChange = vi.fn();
+    await render(
+      <Combobox.Root onValueChange={onValueChange}>
+        <Combobox.Trigger data-testid="trigger">Open</Combobox.Trigger>
+        <Combobox.Portal>
+          <Combobox.Positioner>
+            <Combobox.Popup>
+              <Combobox.Input data-testid="input" />
+              <Combobox.List>
+                <Combobox.Item value="one">one</Combobox.Item>
+              </Combobox.List>
+            </Combobox.Popup>
+          </Combobox.Positioner>
+        </Combobox.Portal>
+      </Combobox.Root>,
+    );
+    const trigger = screen.getByTestId('trigger');
+    const pressPoint = clientCenter(trigger);
+
+    const option = await waitForLaterMillisecond(async () => {
+      await fireEvent.mouseDown(trigger, { button: 0, ...pressPoint });
+      return screen.findByRole('option', { name: 'one' });
+    });
+    await fireEvent.mouseUp(trigger, { button: 0, ...pressPoint });
+
+    // A later drag starts on the input and ends on the item, at the point of the first press.
+    await fireEvent.mouseDown(screen.getByTestId('input'), {
+      button: 0,
+      clientX: pressPoint.clientX,
+      clientY: pressPoint.clientY + 50,
+    });
+    await moveOver(option);
+    await waitFor(() => {
+      expect(option).toHaveAttribute('data-highlighted');
+    });
+    await fireEvent.mouseUp(option, { button: 0, ...pressPoint });
+
+    expect(onValueChange.mock.calls.map(([value]) => value)).toEqual(['one']);
   });
 });
