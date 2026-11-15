@@ -34,7 +34,9 @@ export interface KeepAliveState {
    */
   isHeld: Readonly<Ref<boolean>>;
   /**
-   * Counts the activations by `KeepAlive`. The activation in the flush of the mount does not count.
+   * Counts the activations by `KeepAlive`. The activation in the flush of the mount does not count
+   * when the part mounts with its branch. It counts when the part mounts in the flush in which
+   * `KeepAlive` shows the branch.
    */
   shown: Readonly<Ref<number>>;
 }
@@ -57,6 +59,7 @@ export function useKeepAliveState(
 ): KeepAliveState {
   const isHeld = shallowRef(false);
   const shown = shallowRef(0);
+  const mountsInHeldBranch = isInHeldBranch();
   let isMountFlush = false;
 
   onMounted(() => {
@@ -89,9 +92,12 @@ export function useKeepAliveState(
 
   // `onActivated` also runs in the flush of the first mount in a `KeepAlive`. A part that mounted
   // in a held branch gets the next call with no `onDeactivated` before it, also when its owner is in
-  // that branch.
+  // that branch. That call comes in the flush of the mount when `KeepAlive` shows the branch in that
+  // flush. It comes before `onMounted` when a component of the branch mounts the part from its own
+  // state. It comes after `onMounted` when the root of the branch gets the part from a prop.
+  // `isInHeldBranch()` in `setup` gives `true` in both orders.
   onActivated(() => {
-    if (isMountFlush) {
+    if (isMountFlush && !mountsInHeldBranch) {
       return;
     }
     isHeld.value = false;

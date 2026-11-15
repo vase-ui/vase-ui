@@ -146,6 +146,69 @@ describe('<DateField.Root /> on a server', () => {
   });
 });
 
+describe('<DateField.Root /> in the languages that Node.js 22 to 26 cannot format', () => {
+  it.each([
+    {
+      name: 'a year and month in sc-IT',
+      value: () => Temporal.PlainDate.from('2026-11-14'),
+      props: { locale: 'sc-IT', granularity: 'month' },
+      numbers: { year: 2026, month: 11 },
+    },
+    {
+      name: 'a PlainYearMonth in ksh',
+      value: () => Temporal.PlainYearMonth.from('2026-11'),
+      props: { locale: 'ksh' },
+      numbers: { year: 2026, month: 11 },
+    },
+    {
+      name: 'a Persian year and month in ksh',
+      value: () => Temporal.PlainDate.from('2026-11-14'),
+      props: { locale: 'ksh', calendar: 'persian', granularity: 'month' },
+      numbers: { year: 1405, month: 8 },
+    },
+    {
+      name: 'a Buddhist date in my-MM',
+      value: () => Temporal.PlainDate.from('2026-11-14'),
+      props: { locale: 'my-MM', calendar: 'buddhist' },
+      numbers: { year: 2569, month: 11, day: 14 },
+    },
+    {
+      name: 'a zoned Japanese value in my-MM',
+      value: () => Temporal.ZonedDateTime.from('2026-11-14T15:04[Asia/Tokyo]'),
+      props: { locale: 'my-MM', calendar: 'japanese' },
+      numbers: { year: 8, month: 11, day: 14 },
+    },
+  ] as const)('renders the year segment of $name', async ({ value, props, numbers }) => {
+    const html = await renderToString(
+      <DateField.Root defaultValue={value()} {...props}>
+        <DateField.Input />
+      </DateField.Root>,
+    );
+    const digits = new Intl.NumberFormat(props.locale, { useGrouping: false });
+    const texts = Object.entries(numbers).map(([type, number]) => [type, digits.format(number)]);
+
+    expect(html.match(/<input[^>]* data-type="year"/g)).toHaveLength(1);
+    expect(Object.fromEntries(segmentValues(html))).toMatchObject(Object.fromEntries(texts));
+  });
+
+  // `format()` of `Intl` writes the year of the week, 2026, for this date in `my-MM`.
+  it('writes the era year of a Japanese date in the year segment', async () => {
+    const html = await renderToString(
+      <DateField.Root
+        defaultValue={Temporal.PlainDate.from('2026-11-14').withCalendar('japanese')}
+        locale="my-MM"
+      >
+        <DateField.Input />
+      </DateField.Root>,
+    );
+
+    expect(segmentValues(html).filter(([type]) => type === 'year')).toEqual([
+      ['year', new Intl.NumberFormat('my-MM', { useGrouping: false }).format(8)],
+    ]);
+    expect(html.match(/<span[^>]* data-type="era"[^>]*>[^<]+<\/span>/g)).toHaveLength(1);
+  });
+});
+
 describe('the date field with no Temporal', () => {
   // A case that throws in `setup` is the last of its file.
   it('loads its entry point, and a root throws when it renders', async () => {

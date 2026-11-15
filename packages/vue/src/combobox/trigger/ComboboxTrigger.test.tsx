@@ -18,6 +18,7 @@ import {
   wait,
   waitFor,
   waitForLaterMillisecond,
+  waitSingleFrame,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
@@ -486,17 +487,41 @@ describe('<Combobox.Trigger />', () => {
 
     it('does not open on ArrowDown/ArrowUp when reference is a textarea', async () => {
       const { user } = await render(
-        <Combobox.Root>
+        <Combobox.Root items={['alpha', 'beta']}>
           <Combobox.Trigger>Open</Combobox.Trigger>
-          <textarea aria-label="notes" />
+          <Combobox.Input as="textarea" aria-label="notes" />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List>
+                  {{
+                    item: ({ item }: ItemSlotProps) => (
+                      <Combobox.Item key={item} value={item}>
+                        {item}
+                      </Combobox.Item>
+                    ),
+                  }}
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
         </Combobox.Root>,
       );
 
-      const trigger = screen.getByRole('combobox');
-      await user.click(trigger);
-      await user.keyboard('{ArrowDown}');
+      // A press of the trigger opens the popup. The keys thus go to the textarea while the popup
+      // is closed.
+      screen.getByRole('textbox', { name: 'notes' }).focus();
+      await flushMicrotasks();
       expect(screen.queryByRole('listbox')).toBe(null);
+
+      await user.keyboard('{ArrowDown}');
+      await waitSingleFrame();
+      await flushMicrotasks();
+      expect(screen.queryByRole('listbox')).toBe(null);
+
       await user.keyboard('{ArrowUp}');
+      await waitSingleFrame();
+      await flushMicrotasks();
       expect(screen.queryByRole('listbox')).toBe(null);
     });
 

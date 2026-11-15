@@ -7,7 +7,9 @@ import {
   createFormDataSpy,
   createRenderer,
   describeConformance,
+  fireEvent,
   flushMicrotasks,
+  heldMountFormResetTests,
   hiddenInputSizeTests,
   hydrateAfter,
   recordInputEvents,
@@ -417,6 +419,20 @@ describe('<TimeField.Root />', () => {
 
       expect(screen.getByTestId('error')).toHaveTextContent('Pick a time');
     });
+  });
+
+  heldMountFormResetTests({
+    render,
+    renderControl: () => (
+      <TimeField.Root name="time" locale="en-US" defaultValue={Temporal.PlainTime.from('10:30')}>
+        <TimeField.Input />
+      </TimeField.Root>
+    ),
+    change: () => fireEvent.input(hiddenInputOf(document.body), { target: { value: '11:45' } }),
+    readState: () =>
+      screen.getAllByRole('spinbutton').map((segment) => segment.getAttribute('aria-valuenow')),
+    defaultState: ['10', '30', '0'],
+    changedState: ['11', '45', '0'],
   });
 
   describe('the form state that the browser restores', () => {
