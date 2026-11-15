@@ -17,7 +17,7 @@ export interface CalendarBaseProps {
   /**
    * The month that the grid shows. With `numberOfMonths`, it is the first month. With
    * `visibleDuration`, the page starts on a day of this month, or with the week that holds its
-   * first day, and a move of the page gives the month of its first day. A move of the root can
+   * first day, and a move of the page gives the month of its first day. A month or year select can
    * start the page earlier, so that the page ends with the week or the day of `maxDate`. When the
    * grid has another calendar than this month, the grid shows the month that holds the first day of
    * this month. Use it when controlled.
