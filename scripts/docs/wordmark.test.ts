@@ -17,8 +17,9 @@ const logo = /\blogo: \{(.*?)\}/s.exec(read('docs/.vitepress/config.ts'))?.[1] ?
 const logoImages = [...logo.matchAll(/'(\/[^']*)'/g)].map(([, path]) => path);
 
 function pathsOf(file: string): string[] {
-  return [...read(file).matchAll(/<path d="([^"]*)"/g)].map(([, outline]) => outline);
+  return [...read(file).matchAll(/<path\b[^>]*?\sd="([^"]*)"/g)].map(([, outline]) => outline);
 }
+
 // The first two paths of the wordmark are the mark. The other path is the words.
 const markPaths = pathsOf('docs/public/wordmark-light.svg').slice(0, 2);
 
