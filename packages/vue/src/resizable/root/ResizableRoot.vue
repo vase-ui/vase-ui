@@ -7,11 +7,19 @@ import type {
 import { REASONS } from '../../internals/reasons';
 import type { Orientation, VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { Layout } from '../utils/layout';
+import type { LayoutSnapshot } from '../utils/parseSize';
 
 /**
  * The size of each panel in percent of the panel space, by panel `id`. The sizes sum to 100.
  */
 export type ResizableRootLayout = Layout;
+
+/**
+ * The size of each panel by panel `id`. A size is a number, or a string of a number with a unit:
+ * `'30'` and `'30%'` are percent of the panel space, and `'200px'`, `'12em'`, `'12rem'`, `'30vh'`
+ * and `'30vw'` are lengths.
+ */
+export type ResizableRootLayoutSnapshot = LayoutSnapshot;
 
 export interface ResizableRootState {
   /**
@@ -43,34 +51,45 @@ export interface ResizableRootProps
    */
   disabled?: boolean | undefined;
   /**
-   * The controlled layout: the size of each panel in percent of the panel space, by panel `id`.
+   * The controlled layout: the size of each panel by panel `id`.
+   * A size is a number, or a string of a number with a unit. A number, and a string with no unit or
+   * with `%`, are percent of the panel space. A length (`px`, `em`, `rem`, `vh` or `vw`) turns into
+   * percent of the panel space at the moment that the root reads it, and a fixed panel keeps the
+   * pixels. The root reads a length when it has a measurement, so the size of a length shows after
+   * the mount. The change events give percent.
    * The panels show the layout as far as their constraints allow.
    * An entry for a panel that is not mounted stays in the layout, and the panel gets its size back
    * when it mounts.
    *
    * To render an uncontrolled root, use the `defaultLayout` prop instead.
    */
-  layout?: ResizableRootLayout | undefined;
+  layout?: ResizableRootLayoutSnapshot | undefined;
   /**
-   * The uncontrolled layout at the start.
+   * The uncontrolled layout at the start. It takes the same sizes as `layout`.
    * A panel with no entry takes its `defaultSize`, or an equal share of the space that is left.
    * The `reset()` method and a double click on a handle give back the sizes of this layout: the
    * method for each panel, and the double click for the primary panel of the handle.
    *
    * To render a controlled root, use the `layout` prop instead.
    */
-  defaultLayout?: ResizableRootLayout | undefined;
+  defaultLayout?: ResizableRootLayoutSnapshot | undefined;
   /**
-   * The size of the move of an arrow key, in percent of the panel space.
+   * The size of the move of an arrow key. A size is a number, or a string of a number with a unit.
+   * A number is percent of the panel space, and `em` is the font size of the root.
    * @default 1
    */
-  step?: number | undefined;
+  step?: number | string | undefined;
   /**
-   * The size of the move of an arrow key with Shift, and of Page Up and Page Down, in percent of the
-   * panel space.
+   * The size of the move of an arrow key with Shift, and of Page Up and Page Down. It takes the
+   * same sizes as `step`.
    * @default 10
    */
-  largeStep?: number | undefined;
+  largeStep?: number | string | undefined;
+  /**
+   * The size of the steps of a drag: a drag moves the handle to the nearest multiple of this size.
+   * It takes the same sizes as `step`. A key and a method do not use it.
+   */
+  dragStep?: number | string | undefined;
   /**
    * Whether a move of a handle goes on into the panels after the panel beside the handle.
    * When the panel beside the handle is at its least size, the move goes on into the next panel.
@@ -92,8 +111,16 @@ export type ResizableRootChangeEventDetails =
 
 export type ResizableRootCommitEventReason =
   typeof REASONS.drag | typeof REASONS.keyboard | typeof REASONS.imperativeAction | 'reset';
-export type ResizableRootCommitEventDetails =
-  VaseUIGenericEventDetails<ResizableRootCommitEventReason>;
+export type ResizableRootCommitEventDetails = VaseUIGenericEventDetails<
+  ResizableRootCommitEventReason,
+  {
+    /**
+     * The layout of the event, with the size of each fixed panel in whole pixels, such as `'240px'`.
+     * Give it to `layout` or to `defaultLayout`, and each fixed panel has its pixels again.
+     */
+    snapshot: ResizableRootLayoutSnapshot;
+  }
+>;
 
 export interface ResizableRootActions {
   /**
@@ -104,11 +131,11 @@ export interface ResizableRootActions {
   /**
    * Gives each panel the size that the layout has for it, as far as the constraints of the panels
    * allow. A panel that the layout lacks takes its `defaultSize`, or an equal share of the space
-   * that is left.
+   * that is left. The layout takes the same sizes as the `layout` prop.
    * The change has the reason `'imperative-action'`. It does nothing when the root has this
    * layout already.
    */
-  setLayout: (layout: ResizableRootLayout) => void;
+  setLayout: (layout: ResizableRootLayoutSnapshot) => void;
   /**
    * Gives the panels the layout of the `defaultLayout` prop, also in a controlled root.
    * A panel that it does not name takes its `defaultSize`, or an equal share of the space that is
@@ -131,6 +158,7 @@ import {
   shallowRef,
   watch,
 } from 'vue';
+import { addEventListener } from '../../common/addEventListener';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { useIsHydrated } from '../../common/hydration';
 import { ownerWindow } from '../../common/owner';
@@ -147,14 +175,18 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import {
   adjustLayoutToSize,
+  applyFixedSizes,
   areConstraintsFeasible,
   areLayoutsEqual,
   isCollapsed,
   resolveLayout,
+  takePins,
   toRequestedLayout,
 } from '../utils/layout';
 import type { PanelConstraints } from '../utils/layout';
-import { parseSize } from '../utils/parseSize';
+import { getMeasurement, isSameMeasurement, readMeasurement } from '../utils/measure';
+import type { RootMeasurement } from '../utils/measure';
+import { isLength, isViewportLength, normalizeLayout, parseSize } from '../utils/parseSize';
 import { ResizableRootContext } from './ResizableRootContext';
 import type { ResizableHandleMove, ResizablePanelRegistration } from './ResizableRootContext';
 
@@ -168,6 +200,7 @@ const props = withDefaults(defineProps<ResizableRootProps>(), {
   defaultLayout: undefined,
   step: 1,
   largeStep: 10,
+  dragStep: undefined,
   pushPanels: true,
 });
 
@@ -221,7 +254,8 @@ const state = computed<ResizableRootState>(() => ({
   dragging: dragging.value,
 }));
 
-const [requested, setRequested] = useControlled<ResizableRootLayout>({
+// The layout that the user or the app asked for: the `layout` prop, or the layout of the last change.
+const [input, setInput] = useControlled<ResizableRootLayoutSnapshot>({
   controlled: () => props.layout,
   default: () => props.defaultLayout ?? EMPTY_OBJECT,
   name: 'Resizable',
@@ -229,7 +263,7 @@ const [requested, setRequested] = useControlled<ResizableRootLayout>({
 });
 
 // The layout at the start. A later change of `defaultLayout` has no effect.
-const firstRequested: ResizableRootLayout = props.defaultLayout ?? EMPTY_OBJECT;
+const firstSnapshot: ResizableRootLayoutSnapshot = props.defaultLayout ?? EMPTY_OBJECT;
 
 const registered = shallowRef<readonly ResizablePanelRegistration[]>([]);
 const panels = computed(() =>
@@ -237,22 +271,164 @@ const panels = computed(() =>
     .filter((panel) => !panel.deactivated.value)
     .toSorted((a, b) => a.index.value - b.index.value),
 );
+
+// What the root read from the page. A server, the first render of a client and a root that has had
+// no room for its panels have none.
+const measurement = shallowRef<RootMeasurement | undefined>();
+// The pixels of each fixed panel. A size change of the root gives each fixed panel its pixels, and
+// the other panels share the rest.
+const pins = shallowRef<Readonly<Record<string, number>>>(EMPTY_OBJECT);
+
+// The numbers that change a size into percent: those of a panel, or those of the root.
+function getSizeBasis(id?: string) {
+  return measurement.value === undefined ? undefined : getMeasurement(measurement.value, id);
+}
+
 const constraints = computed<PanelConstraints[]>(() =>
   panels.value.map((panel) => {
-    const collapseThreshold = panel.collapseThreshold();
+    const id = panel.id.value;
+    const basis = getSizeBasis(id);
+    // A length has no percent before the first measurement. The panel then has the size that it has
+    // with no such constraint.
+    const toPercent = (size: number | string | undefined) =>
+      size === undefined ? undefined : parseSize(size, basis);
     return {
-      id: panel.id.value,
-      minSize: parseSize(panel.minSize()),
-      maxSize: parseSize(panel.maxSize()),
+      id,
+      minSize: toPercent(panel.minSize()) ?? 0,
+      maxSize: toPercent(panel.maxSize()) ?? 100,
       collapsible: panel.collapsible(),
-      collapsedSize: parseSize(panel.collapsedSize()),
-      defaultSize: panel.defaultSize === undefined ? undefined : parseSize(panel.defaultSize),
-      collapseThreshold: collapseThreshold === undefined ? undefined : parseSize(collapseThreshold),
+      collapsedSize: toPercent(panel.collapsedSize()) ?? 0,
+      defaultSize: toPercent(panel.defaultSize),
+      collapseThreshold: toPercent(panel.collapseThreshold()),
       locked: panel.disabled(),
+      fixed: panel.rootResizeBehavior() === 'fixed',
+      priority: panel.rootResizePriority(),
+      snapPoints: panel.snapPoints()?.flatMap((point) => toPercent(point) ?? []),
+      snapTolerance: toPercent(panel.snapTolerance()),
     };
   }),
 );
-const shown = computed(() => resolveLayout(constraints.value, requested.value));
+
+function normalize(snapshot: ResizableRootLayoutSnapshot) {
+  const fixedIds = new Set(
+    constraints.value.filter((panel) => panel.fixed).map((panel) => panel.id),
+  );
+  return normalizeLayout(snapshot, fixedIds, getSizeBasis);
+}
+
+// The layout in percent. A length of `input` has no percent before the first measurement, so the
+// layout then lacks it.
+const requested = shallowRef<ResizableRootLayout>(normalize(input.value).layout);
+
+// The panels whose first size is a length, before the first measurement. A server and the first
+// render of a client cannot give such a panel a size in percent.
+const lengthPanels = computed<Readonly<Record<string, string>>>(() => {
+  if (measurement.value !== undefined) {
+    return EMPTY_OBJECT;
+  }
+  return Object.fromEntries(
+    panels.value.flatMap((panel) => {
+      const id = panel.id.value;
+      const first = Object.hasOwn(input.value, id) ? input.value[id] : panel.defaultSize;
+      return typeof first === 'string' && isLength(first) ? [[id, first.trim()]] : [];
+    }),
+  );
+});
+
+// The layout of the requested sizes, inside the constraints. A panel that waits for the first
+// measurement has no size, and the other panels share the room.
+const resolved = computed<ResizableRootLayout>(() => {
+  if (Object.keys(lengthPanels.value).length === 0) {
+    return resolveLayout(constraints.value, requested.value);
+  }
+  const layout = resolveLayout(
+    constraints.value.filter((panel) => !Object.hasOwn(lengthPanels.value, panel.id)),
+    requested.value,
+  );
+  return Object.fromEntries(constraints.value.map((panel) => [panel.id, layout[panel.id] ?? 0]));
+});
+
+// The layout that the panels show: the fixed panels have their pixels in the present panel space.
+const shown = computed<ResizableRootLayout>(() =>
+  measurement.value === undefined
+    ? resolved.value
+    : applyFixedSizes(constraints.value, resolved.value, pins.value, measurement.value.space),
+);
+
+// A fixed panel takes the pixels that its size in `layout` has in the present panel space. `exact`
+// has the pixels of a size that was a length: they win over the pixels of the percent.
+function takePinsFrom(layout: ResizableRootLayout, exact: Readonly<Record<string, number>>) {
+  if (measurement.value !== undefined) {
+    pins.value = {
+      ...pins.value,
+      ...takePins(constraints.value, layout, measurement.value.space),
+      ...exact,
+    };
+  }
+}
+
+// A length turns into percent when the root reads `input`, and a percent stays as it is. The root
+// reads `input` at the first measurement and at each change of it, so a size change of the root
+// does not move a panel that is not fixed, and a fixed panel takes its pixels again.
+function acceptInput() {
+  const { layout, pins: exact } = normalize(input.value);
+  requested.value = layout;
+  takePinsFrom(resolved.value, exact);
+}
+
+// The sync watcher keeps `requested` right between a write and the next read. An object with the
+// same sizes, such as the one that a template literal makes at each render, is no change.
+watch(
+  input,
+  (next, previous) => {
+    if (!areLayoutsEqual(next, previous)) {
+      acceptInput();
+    }
+  },
+  { flush: 'sync' },
+);
+
+// A panel that mounts as a fixed panel, or becomes one, takes the pixels that it has now.
+watch(
+  () => constraints.value.some((panel) => panel.fixed && !Object.hasOwn(pins.value, panel.id)),
+  (missing) => {
+    if (missing && measurement.value !== undefined) {
+      const pinless = constraints.value.filter(
+        (panel) => panel.fixed && !Object.hasOwn(pins.value, panel.id),
+      );
+      pins.value = {
+        ...pins.value,
+        ...takePins(pinless, shown.value, measurement.value.space),
+      };
+    }
+  },
+);
+
+function getSizes(panel: ResizablePanelRegistration) {
+  return [
+    panel.minSize(),
+    panel.maxSize(),
+    panel.defaultSize,
+    panel.collapsedSize(),
+    panel.collapseThreshold(),
+    panel.snapTolerance(),
+    ...(panel.snapPoints() ?? []),
+  ];
+}
+
+// A size that constrains the layout, in a length: the window can be too small for it.
+const constraintsUseLengths = computed(() =>
+  panels.value.some((panel) =>
+    [panel.minSize(), panel.maxSize(), panel.defaultSize, panel.collapsedSize()].some(isLength),
+  ),
+);
+
+// A size in `vh` or `vw` follows the window.
+const usesViewportLengths = computed(
+  () =>
+    panels.value.some((panel) => getSizes(panel).some(isViewportLength)) ||
+    [props.step, props.largeStep, props.dragStep].some(isViewportLength),
+);
 
 if (process.env.NODE_ENV !== 'production') {
   // The first renders see only the panels that registered before them, so the check waits for the
@@ -269,21 +445,31 @@ if (process.env.NODE_ENV !== 'production') {
           'Give each panel an id of its own.',
         );
       }
-      if (!areConstraintsFeasible(current)) {
+      // A window can be too small for a length, so a root with a length does not warn.
+      if (!constraintsUseLengths.value && !areConstraintsFeasible(current)) {
         warn(
           'The sizes of the panels cannot sum to 100.',
           'The minimum and maximum sizes of the panels leave no layout that fills the root.',
           'Raise a `maxSize` or lower a `minSize`.',
         );
       }
-      const stuck = current.find(
-        (panel) => panel.collapsible && panel.minSize <= panel.collapsedSize,
-      );
+      // A length of the constraints has no size before the first measurement.
+      const stuck =
+        constraintsUseLengths.value && measurement.value === undefined
+          ? undefined
+          : current.find((panel) => panel.collapsible && panel.minSize <= panel.collapsedSize);
       if (stuck) {
         warn(
           `The panel "${stuck.id}" is collapsible, and its \`minSize\` is not greater than its \`collapsedSize\`.`,
           'A collapsible panel collapses when it goes below its `minSize`, so this panel cannot collapse.',
           'Give the panel a `minSize` that is greater than its `collapsedSize`.',
+        );
+      }
+      if (current.length > 0 && current.every((panel) => panel.fixed)) {
+        warn(
+          'Each panel of the root is fixed.',
+          'A fixed panel keeps its size in pixels when the root changes size, so no panel can take the change, and each panel is proportional.',
+          'Leave the `rootResizeBehavior` of one panel at `proportional`.',
         );
       }
     },
@@ -309,7 +495,13 @@ function syncLayoutWithPanels() {
     return;
   }
   const ids = constraints.value.map((panel) => panel.id);
-  const isNew = ids.some((id) => !knownIds.has(id) && !Object.hasOwn(requested.value, id));
+  // A panel that waits for the first measurement has no size yet, so it is not new for the layout.
+  const isNew = ids.some(
+    (id) =>
+      !knownIds.has(id) &&
+      !Object.hasOwn(requested.value, id) &&
+      !Object.hasOwn(lengthPanels.value, id),
+  );
   knownIds = new Set(ids);
   if (mounted && isNew) {
     changeLayout(shown.value, createChangeEventDetails(REASONS.none));
@@ -317,10 +509,13 @@ function syncLayoutWithPanels() {
 }
 
 const outerList = useCompositeListContext();
-useCompositeList({ elementsRef: shallowRef([]), onMapChange: syncLayoutWithPanels });
+// The elements of the panels and of the handles, in the order of the document.
+const items = shallowRef<(HTMLElement | null)[]>([]);
+useCompositeList({ elementsRef: items, onMapChange: syncLayoutWithPanels });
 
 onMounted(() => {
   mounted = true;
+  measure();
 });
 
 onDeactivated(() => {
@@ -386,22 +581,44 @@ function changeLayout(
     return undefined;
   }
   emit('update:layout', next);
-  setRequested(next);
+  setInput(next);
   return next;
 }
 
-function commitLayout(layout: ResizableRootLayout, details: ResizableRootCommitEventDetails) {
-  emit('layoutCommitted', layout, details);
+// The layout of an event with the size of each fixed panel in whole pixels. The root takes the pixels
+// from the layout of the event, so they are right also when the app has not written the layout yet.
+function getSnapshot(layout: ResizableRootLayout): ResizableRootLayoutSnapshot {
+  const space = measurement.value?.space;
+  if (space === undefined) {
+    return { ...layout };
+  }
+  return {
+    ...layout,
+    ...Object.fromEntries(
+      constraints.value.flatMap((panel) => {
+        const size = layout[panel.id];
+        return panel.fixed && size !== undefined
+          ? [[panel.id, `${Math.round((size / 100) * space)}px`]]
+          : [];
+      }),
+    ),
+  };
 }
 
-function createCommitDetails(
+function commitLayout(
+  layout: ResizableRootLayout,
   reason: ResizableRootCommitEventReason,
   event?: Event,
-): ResizableRootCommitEventDetails {
-  // `reset` is a reason of this family only, so `createGenericEventDetails` does not know it.
-  return reason === 'reset'
-    ? { reason, event: event ?? new Event('vase-ui') }
-    : createGenericEventDetails(reason, event);
+) {
+  const snapshot = getSnapshot(layout);
+  emit(
+    'layoutCommitted',
+    layout,
+    // `reset` is a reason of this family only, so `createGenericEventDetails` does not know it.
+    reason === 'reset'
+      ? { reason, event: event ?? new Event('vase-ui'), snapshot }
+      : createGenericEventDetails(reason, event, { snapshot }),
+  );
 }
 
 function startDragging() {
@@ -422,32 +639,39 @@ function stopDragging() {
   }
 }
 
-// The panel space is the room that the panels share: the sizes of their content boxes. The handles,
-// the gaps and the other elements of the root are not in it, and a panel adds its own padding and
-// border to its size.
-function getPanelSpace() {
-  const horizontal = props.orientation === 'horizontal';
-  let space = 0;
-  for (const { element } of panels.value) {
-    const panel = element.value;
-    if (panel) {
-      const rect = panel.getBoundingClientRect();
-      const style = ownerWindow(panel).getComputedStyle(panel);
-      const edges = horizontal
-        ? [style.paddingLeft, style.paddingRight, style.borderLeftWidth, style.borderRightWidth]
-        : [style.paddingTop, style.paddingBottom, style.borderTopWidth, style.borderBottomWidth];
-      const size = horizontal ? rect.width : rect.height;
-      const layoutSize = horizontal ? panel.offsetWidth : panel.offsetHeight;
-      // The rectangle has the pixels of the screen, and the padding and the border have layout
-      // pixels. A scale transform around the root makes the two differ.
-      const scale = layoutSize > 0 ? size / layoutSize : 1;
-      space += Math.max(
-        size - edges.reduce((total, edge) => total + Number.parseFloat(edge), 0) * scale,
-        0,
-      );
-    }
+// Reads the page again. The root does it after the mount, when the root or a handle changes size,
+// when the window changes size and a size has `vh` or `vw`, and before a drag, a key or a method. A
+// root with no room for its panels, such as a root with `display: none`, keeps the last measurement:
+// it then has its pixels when it shows again.
+function measure() {
+  const rootElement = element.value;
+  if (rootElement === null) {
+    return undefined;
   }
-  return space;
+  const next = readMeasurement(
+    rootElement,
+    panels.value.map((panel) => ({ id: panel.id.value, element: panel.element.value })),
+    props.orientation,
+  );
+  if (next === undefined) {
+    return undefined;
+  }
+  const previous = measurement.value;
+  if (previous === undefined || !isSameMeasurement(previous, next)) {
+    measurement.value = next;
+  }
+  // The first measurement gives each length its percent and each fixed panel its pixels.
+  if (previous === undefined) {
+    acceptInput();
+  }
+  return measurement.value;
+}
+
+// A panel whose first size is a length has no size before the first measurement, so a method
+// cannot change the layout of such a root yet.
+function canChange() {
+  measure();
+  return Object.keys(lengthPanels.value).length === 0;
 }
 
 function findPanel(id: string) {
@@ -484,12 +708,15 @@ function resizeWithHandle(
   const reason = handleMove?.reason ?? REASONS.imperativeAction;
   const applied = changeLayout(next, createChangeEventDetails(reason, handleMove?.event));
   if (applied) {
-    commitLayout(applied, createCommitDetails(reason, handleMove?.event));
+    commitLayout(applied, reason, handleMove?.event);
   }
   return true;
 }
 
 function collapsePanel(id: string, handleMove?: ResizableHandleMove) {
+  if (!canChange()) {
+    return;
+  }
   const found = findPanel(id);
   if (found?.panel.collapsible && !isCollapsed(found.panel, found.size)) {
     resizeWithHandle(found.index, found.panel.collapsedSize, found.index, handleMove);
@@ -497,6 +724,9 @@ function collapsePanel(id: string, handleMove?: ResizableHandleMove) {
 }
 
 function expandPanel(id: string, handleMove?: ResizableHandleMove) {
+  if (!canChange()) {
+    return;
+  }
   const found = findPanel(id);
   if (found && isCollapsed(found.panel, found.size)) {
     resizeWithHandle(
@@ -509,15 +739,38 @@ function expandPanel(id: string, handleMove?: ResizableHandleMove) {
 }
 
 function resizePanel(id: string, size: number | string) {
+  if (!canChange()) {
+    return;
+  }
   const found = findPanel(id);
-  if (found) {
-    resizeWithHandle(found.index, parseSize(size), found.index, undefined);
+  const percent = parseSize(size, getSizeBasis(id));
+  if (found && percent !== undefined) {
+    resizeWithHandle(found.index, percent, found.index, undefined);
   }
 }
 
+// The layout at the start, as the panels show it now: a length has the percent that it has in the
+// present panel space, and a fixed panel has the pixels of that layout.
+function getFirstLayout(): ResizableRootLayout {
+  const { layout, pins: exact } = normalize(firstSnapshot);
+  const first = resolveLayout(constraints.value, layout);
+  const space = measurement.value?.space;
+  return space === undefined
+    ? first
+    : applyFixedSizes(
+        constraints.value,
+        first,
+        { ...takePins(constraints.value, first, space), ...exact },
+        space,
+      );
+}
+
 function resetPanel(id: string, handleMove: ResizableHandleMove) {
+  if (!canChange()) {
+    return false;
+  }
   const found = findPanel(id);
-  const first = resolveLayout(constraints.value, firstRequested)[id];
+  const first = getFirstLayout()[id];
   return (
     found !== undefined &&
     first !== undefined &&
@@ -529,24 +782,30 @@ function getLayout() {
   return { ...shown.value };
 }
 
-function setLayout(layout: ResizableRootLayout) {
-  const resolved = resolveLayout(constraints.value, layout);
+function setLayout(snapshot: ResizableRootLayoutSnapshot) {
+  if (!canChange()) {
+    return;
+  }
+  const { layout, pins: exact } = normalize(snapshot);
+  const resolvedLayout = resolveLayout(constraints.value, layout);
   const current = toRequestedLayout(shown.value, requested.value);
-  if (areLayoutsEqual(toRequestedLayout(resolved, layout), current)) {
+  if (areLayoutsEqual(toRequestedLayout(resolvedLayout, layout), current)) {
     return;
   }
   const applied = changeLayout(
-    resolved,
+    resolvedLayout,
     createChangeEventDetails(REASONS.imperativeAction),
     layout,
   );
   if (applied) {
-    commitLayout(applied, createGenericEventDetails(REASONS.imperativeAction));
+    // The pixels of a length are exact, and the percent of the layout has three decimals.
+    pins.value = { ...pins.value, ...exact };
+    commitLayout(applied, REASONS.imperativeAction);
   }
 }
 
 function reset() {
-  setLayout(firstRequested);
+  setLayout(firstSnapshot);
 }
 
 const orientation = computed(() => props.orientation);
@@ -556,14 +815,19 @@ provide(ResizableRootContext, {
   direction,
   outerList,
   disabled: computed(() => props.disabled),
-  step: computed(() => props.step),
-  largeStep: computed(() => props.largeStep),
+  step: computed(() => parseSize(props.step, getSizeBasis()) ?? 1),
+  largeStep: computed(() => parseSize(props.largeStep, getSizeBasis()) ?? 10),
+  dragStep: computed(() =>
+    props.dragStep === undefined ? undefined : parseSize(props.dragStep, getSizeBasis()),
+  ),
   pushPanels: computed(() => props.pushPanels),
   panels,
   constraints,
   shown,
+  lengthPanels,
+  measurement,
   registerPanel,
-  getPanelSpace,
+  measure,
   startDragging,
   stopDragging,
   changeLayout,
@@ -587,6 +851,47 @@ const { element, elementProps } = useRenderElement('div', props, {
     attrs,
   ],
 });
+
+// The root and each handle change the room of the panels when they change size. The panels do not:
+// a transition of `flex-grow` moves a panel and leaves the sum of the panels as it is.
+watch(
+  [element, items],
+  ([rootElement, elements], _previous, onCleanup) => {
+    if (rootElement === null || typeof ResizeObserver === 'undefined') {
+      return;
+    }
+    // A panel or a handle that mounted changes the room of the panels.
+    measure();
+    const panelElements = new Set(panels.value.map((panel) => panel.element.value));
+    const observer = new ResizeObserver(() => {
+      measure();
+    });
+    observer.observe(rootElement);
+    for (const handle of elements) {
+      if (handle !== null && !panelElements.has(handle)) {
+        observer.observe(handle);
+      }
+    }
+    onCleanup(() => {
+      observer.disconnect();
+    });
+  },
+  { flush: 'post' },
+);
+
+watch(
+  [usesViewportLengths, element],
+  ([uses, rootElement], _previous, onCleanup) => {
+    if (uses && rootElement !== null) {
+      onCleanup(
+        addEventListener(ownerWindow(rootElement), 'resize', () => {
+          measure();
+        }),
+      );
+    }
+  },
+  { flush: 'post' },
+);
 
 defineExpose({ element, getLayout, setLayout, reset });
 </script>

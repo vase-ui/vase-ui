@@ -21,6 +21,18 @@ export interface ResizablePanelState {
   disabled: boolean;
 }
 
+export interface ResizablePanelSize {
+  /**
+   * The size in percent of the panel space.
+   */
+  percent: number;
+  /**
+   * The size in pixels, with three decimals. A pixel is a layout pixel: a scale transform around
+   * the root does not change it. It is 0 while the root has no measurement.
+   */
+  pixels: number;
+}
+
 export interface ResizablePanelProps
   extends
     VaseUIComponentProps<ResizablePanelState>,
@@ -31,19 +43,23 @@ export interface ResizablePanelProps
    */
   id?: string | undefined;
   /**
-   * The size of the panel at the start, in percent of the panel space.
-   * A size is a number, or a string of a number with an optional `%`.
+   * The size of the panel at the start.
+   * A size is a number, or a string of a number with a unit. A number, and a string with no unit or
+   * with `%`, are percent of the panel space. A length is `px`, `em`, `rem`, `vh` or `vw`: `em` is
+   * the font size of the panel, and `rem` is the font size of the root element of the document.
    * The panels that have no size share the space that is left in equal parts.
    * A later change of the prop has no effect. To change the size, change the layout of the root.
    */
   defaultSize?: number | string | undefined;
   /**
-   * The least size of the panel, in percent of the panel space.
+   * The least size of the panel. It takes the same sizes as `defaultSize`.
+   * A length applies from the first measurement, which is after the mount.
    * @default 0
    */
   minSize?: number | string | undefined;
   /**
-   * The greatest size of the panel, in percent of the panel space.
+   * The greatest size of the panel. It takes the same sizes as `defaultSize`.
+   * A length applies from the first measurement, which is after the mount.
    * @default 100
    */
   maxSize?: number | string | undefined;
@@ -58,15 +74,13 @@ export interface ResizablePanelProps
    */
   collapsible?: boolean | undefined;
   /**
-   * The size of the panel when it is collapsed, in percent of the panel space.
-   * A size is a number, or a string of a number with an optional `%`.
+   * The size of the panel when it is collapsed. It takes the same sizes as `defaultSize`.
    * @default 0
    */
   collapsedSize?: number | string | undefined;
   /**
    * The distance that a drag must pass below `minSize` to collapse the panel, and above
-   * `collapsedSize` to expand it, in percent of the panel space.
-   * A size is a number, or a string of a number with an optional `%`.
+   * `collapsedSize` to expand it. It takes the same sizes as `defaultSize`.
    * The default is half of the distance between `minSize` and `collapsedSize`.
    * A threshold that is greater than that distance acts as that distance.
    */
@@ -78,6 +92,34 @@ export interface ResizablePanelProps
    * @default false
    */
   disabled?: boolean | undefined;
+  /**
+   * What the panel does when the root changes size.
+   * A `'fixed'` panel keeps the pixels that it has, and the other panels share the rest in the ratio
+   * that they have. A `'proportional'` panel keeps its size in percent.
+   * A drag, a key, a method and the layout of the app give a fixed panel new pixels. The change of
+   * the root gives no layout event.
+   * @default 'proportional'
+   */
+  rootResizeBehavior?: 'proportional' | 'fixed' | undefined;
+  /**
+   * The order in which fixed panels give way when the other panels cannot take a size change of the
+   * root. The panel with the greater number gives way first, and panels with the same number give way
+   * in the order of the document.
+   * @default 0
+   */
+  rootResizePriority?: number | undefined;
+  /**
+   * The sizes that a drag snaps to. A drag that comes within `snapTolerance` of one of them gives the
+   * panel that size. Each size takes the same sizes as `defaultSize`. A snap point that is less than
+   * `minSize` or greater than `maxSize` is not used. A key and a method do not snap.
+   */
+  snapPoints?: (number | string)[] | undefined;
+  /**
+   * The distance from a snap point inside which a drag snaps to that point. It takes the same sizes
+   * as `defaultSize`.
+   * @default '10px'
+   */
+  snapTolerance?: number | string | undefined;
 }
 
 export interface ResizablePanelActions {
@@ -99,18 +141,23 @@ export interface ResizablePanelActions {
   /**
    * Gives the panel a size, as far as the constraints of the panels allow. A collapsible panel
    * collapses when the size is less than its `minSize`. No other panel collapses for it.
-   * The size is a number, or a string of a number with an optional `%`.
+   * The size is a number, or a string of a number with a unit, as `defaultSize` takes it. It does
+   * nothing for a length before the first measurement.
    */
   resize: (size: number | string) => void;
   /**
    * Whether the panel is collapsed.
    */
   isCollapsed: () => boolean;
+  /**
+   * Reads the page, and gives the size of the panel in percent and in pixels.
+   */
+  getSize: () => ResizablePanelSize;
 }
 </script>
 
 <script setup lang="ts">
-import { computed, onActivated, onDeactivated, provide, shallowRef } from 'vue';
+import { computed, onActivated, onDeactivated, provide, shallowRef, watch } from 'vue';
 import type { InjectionKey } from 'vue';
 import { useIsHydrating } from '../../common/hydration';
 import { CompositeListContext } from '../../internals/composite/list/CompositeListContext';
@@ -123,6 +170,7 @@ import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { useResizableRootContext } from '../root/ResizableRootContext';
 import { isCollapsed } from '../utils/layout';
+import { getPanelSize } from '../utils/measure';
 import { ResizablePanelContext } from './ResizablePanelContext';
 import * as ResizablePanelCssVariables from './ResizablePanelCssVariables';
 
@@ -135,6 +183,10 @@ const props = withDefaults(defineProps<ResizablePanelProps>(), {
   collapsible: false,
   collapsedSize: 0,
   disabled: false,
+  rootResizeBehavior: 'proportional',
+  rootResizePriority: 0,
+  snapPoints: undefined,
+  snapTolerance: '10px',
 });
 
 const emit = defineEmits<{
@@ -143,6 +195,14 @@ const emit = defineEmits<{
    * It is called after the DOM update, and not at the mount.
    */
   collapsedChange: [collapsed: boolean];
+  /**
+   * Event handler called after the DOM update when the size of the panel changes, in percent or in
+   * pixels: after the first measurement, after a change of the layout, and after a size change of
+   * the root, which changes the pixels. Receives the new size and the size at the last event, which
+   * is `undefined` at the first event.
+   * It is not called on a server, and not while the root has no room for its panels.
+   */
+  resize: [size: ResizablePanelSize, previousSize: ResizablePanelSize | undefined];
 }>();
 
 defineSlots<{
@@ -165,6 +225,10 @@ const { ref: listItemRef, index } = useCompositeListItem({
   metadata: computed(() => ({ id: id.value })),
 });
 
+// A panel whose first size is a length has that length until the first measurement. The panel
+// cannot have a size in percent before: the room of the panels is not known.
+const length = computed(() => root.lengthPanels.value[id.value]);
+
 // A panel that `KeepAlive` holds is not in the layout. It keeps its last size and its last
 // `collapsed` state until it shows again.
 const size = computed<number>(
@@ -174,6 +238,10 @@ const size = computed<number>(
 );
 const collapsed = computed<boolean>((previous) => {
   const constraints = root.constraints.value.find((panel) => panel.id === id.value);
+  // A panel that waits for its first measurement has no size, and it is not collapsed.
+  if (length.value !== undefined) {
+    return false;
+  }
   return constraints === undefined ? (previous ?? false) : isCollapsed(constraints, size.value);
 });
 
@@ -206,9 +274,11 @@ const { element, elementProps } = useRenderElement('div', props, {
       // registered before it, so its size can differ from the size in the server HTML.
       'data-allow-mismatch': hydrating.value ? 'style' : undefined,
       style: {
-        flex: `${size.value} 1 0px`,
+        flex: length.value === undefined ? `${size.value} 1 0px` : `0 0 ${length.value}`,
         [root.orientation.value === 'horizontal' ? 'minWidth' : 'minHeight']: 0,
-        [ResizablePanelCssVariables.resizablePanelSize]: String(size.value),
+        ...(length.value === undefined
+          ? { [ResizablePanelCssVariables.resizablePanelSize]: String(size.value) }
+          : undefined),
       },
     },
     attrs,
@@ -236,9 +306,37 @@ root.registerPanel({
   collapsedSize: () => props.collapsedSize,
   collapseThreshold: () => props.collapseThreshold,
   disabled: () => props.disabled,
+  rootResizeBehavior: () => props.rootResizeBehavior,
+  rootResizePriority: () => props.rootResizePriority,
+  snapPoints: () => props.snapPoints,
+  snapTolerance: () => props.snapTolerance,
   element,
   deactivated,
 });
+
+// The size at the last event. The source has no value before the mount, so the first event comes
+// after the first measurement, and a size that is not valid shows in the render.
+let lastSize: ResizablePanelSize | undefined;
+watch(
+  () =>
+    hydrating.value
+      ? undefined
+      : ([size.value, root.measurement.value?.space, deactivated.value] as const),
+  (current) => {
+    const [percent, space, isDeactivated] = current ?? [];
+    if (percent === undefined || space === undefined || isDeactivated === true) {
+      return;
+    }
+    const next = getPanelSize(percent, space);
+    if (next.percent === lastSize?.percent && next.pixels === lastSize.pixels) {
+      return;
+    }
+    const previous = lastSize;
+    lastSize = next;
+    emit('resize', next, previous);
+  },
+  { flush: 'post' },
+);
 
 const actions: ResizablePanelActions = {
   collapse: () => {
@@ -251,6 +349,10 @@ const actions: ResizablePanelActions = {
     root.resizePanel(id.value, wanted);
   },
   isCollapsed: () => collapsed.value,
+  getSize: () => {
+    root.measure();
+    return getPanelSize(size.value, root.measurement.value?.space);
+  },
 };
 
 provide(ResizablePanelContext, { id, state, ...actions });

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createSSRApp } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import * as Resizable from '../index.parts';
@@ -124,6 +124,82 @@ describe('<Resizable.Root /> on a server', () => {
     expect(html).toContain('data-disabled');
     expect(html).not.toContain('tabindex');
     expect(html).not.toContain('aria-valuenow');
+  });
+
+  describe('a first size that is a length', () => {
+    it.each([
+      { name: 'the size of a panel', composition: 'length', length: 'flex:0 0 240px' },
+      { name: 'the layout of the root', composition: 'layoutLength', length: 'flex:0 0 15rem' },
+    ])('renders a panel with $name in the unit that it has', async ({ composition, length }) => {
+      const html = await renderToString(createSSRApp(ResizableRootHydration, { composition }));
+
+      expect(html).toContain(length);
+      // The other panel takes the rest, and only that panel has the size as a variable.
+      expect(growsIn(html)).toEqual([100]);
+      expect(variablesIn(html)).toEqual([100]);
+    });
+
+    it('renders no value and no end of the travel for the handle', async () => {
+      const html = await renderToString(
+        createSSRApp(ResizableRootHydration, { composition: 'length' }),
+      );
+
+      expect(html).toContain('role="separator"');
+      expect(html).toContain('aria-controls="a"');
+      for (const name of ['aria-valuenow', 'aria-valuemin', 'aria-valuemax']) {
+        expect(html).not.toContain(name);
+      }
+      expect(html).not.toContain('data-at-min');
+      expect(html).not.toContain('data-at-max');
+      expect(html).toContain('tabindex="0"');
+    });
+
+    it('renders the other panels in the ratio of their sizes, and no value for any handle', async () => {
+      const html = await renderToString(
+        createSSRApp(ResizableRootHydration, { composition: 'lengthMixed' }),
+      );
+
+      expect(html).toContain('flex:0 0 240px');
+      expect(growsIn(html)).toEqual([30, 70]);
+      expect(valuesIn(html)).toEqual([]);
+      expect(html).not.toContain('aria-valuemin');
+      expect(html.match(/aria-controls=/g)).toHaveLength(2);
+    });
+
+    it('renders the size 0 and no collapsed state for the state of the panel', async () => {
+      const html = await renderToString(
+        <Resizable.Root>
+          <Resizable.Panel id="a" defaultSize="240px" collapsible minSize={20}>
+            {{ default: ({ state }: { state: { size: number } }) => `size ${state.size}` }}
+          </Resizable.Panel>
+          <Resizable.Panel id="b" />
+        </Resizable.Root>,
+      );
+
+      expect(html).toContain('size 0');
+      expect(html).not.toContain('data-collapsed');
+    });
+
+    it('renders a fixed panel as it renders a panel that is proportional', async () => {
+      const html = await renderToString(
+        createSSRApp(ResizableRootHydration, { composition: 'fixed' }),
+      );
+
+      expect(growsIn(html)).toEqual([20, 80]);
+      expect(valuesIn(html)).toEqual([20]);
+    });
+
+    it('renders no event of the size of a panel', async () => {
+      const onResize = vi.fn();
+      await renderToString(
+        <Resizable.Root>
+          <Resizable.Panel defaultSize={30} onResize={onResize} />
+          <Resizable.Panel />
+        </Resizable.Root>,
+      );
+
+      expect(onResize).not.toHaveBeenCalled();
+    });
   });
 
   it('renders the panels beside a panel below an async setup without it', async () => {

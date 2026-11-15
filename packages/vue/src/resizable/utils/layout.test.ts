@@ -10,7 +10,10 @@ import {
   isCollapsed,
   resolveLayout,
   resolveSize,
+  snapDelta,
+  takePins,
   toRequestedLayout,
+  applyFixedSizes,
   validateLayout,
 } from './layout';
 import type { Layout, PanelConstraints } from './layout';
@@ -595,6 +598,296 @@ describe('layout', () => {
     expect(adjustLayoutToSize(panels, { a: 50, b: 50 }, 0, 0, 5, { only: 1 })).toEqual({
       a: 20,
       b: 80,
+    });
+  });
+
+  describe('fixed panels', () => {
+    const layout = { nav: 20, editor: 50, preview: 30 };
+
+    it('fixed: a fixed panel keeps its pixels when the root changes size', () => {
+      const panels = [panel('nav', { fixed: true }), panel('editor'), panel('preview')];
+      const pins = takePins(panels, layout, 1000);
+
+      expect(pins).toEqual({ nav: 200 });
+      expect(applyFixedSizes(panels, layout, pins, 2000)).toEqual({
+        nav: 10,
+        editor: 56.25,
+        preview: 33.75,
+      });
+      expect(applyFixedSizes(panels, layout, pins, 500)).toEqual({
+        nav: 40,
+        editor: 37.5,
+        preview: 22.5,
+      });
+      expect(applyFixedSizes(panels, layout, pins, 1000)).toEqual(layout);
+    });
+
+    it('fixed: the constraints of the other panels limit a fixed panel in a small root', () => {
+      const panels = [
+        panel('nav', { fixed: true }),
+        panel('editor', { minSize: 30 }),
+        panel('preview', { minSize: 30 }),
+      ];
+
+      expect(applyFixedSizes(panels, layout, { nav: 200 }, 250)).toEqual({
+        nav: 40,
+        editor: 30,
+        preview: 30,
+      });
+      expect(applyFixedSizes(panels, layout, { nav: 200 }, 150)).toEqual({
+        nav: 40,
+        editor: 30,
+        preview: 30,
+      });
+    });
+
+    it('fixed: the other panels take the room before a fixed panel does', () => {
+      // At 2000 px the pin of 200 px is 10%. The preview has 20% at most, and the editor takes the
+      // rest of the share of the preview, so the nav stays at its pin.
+      const panels = [
+        panel('nav', { fixed: true }),
+        panel('editor', { maxSize: 80 }),
+        panel('preview', { maxSize: 20 }),
+      ];
+
+      expect(applyFixedSizes(panels, layout, { nav: 200 }, 2000)).toEqual({
+        nav: 10,
+        editor: 70,
+        preview: 20,
+      });
+    });
+
+    it('fixed: the fixed panels take the room that the other panels cannot take', () => {
+      const panels = [
+        panel('nav', { fixed: true }),
+        panel('editor', { maxSize: 60 }),
+        panel('preview', { maxSize: 20 }),
+      ];
+
+      // Both other panels are at their greatest size, so the nav grows from 10% to 20%.
+      expect(applyFixedSizes(panels, layout, { nav: 200 }, 2000)).toEqual({
+        nav: 20,
+        editor: 60,
+        preview: 20,
+      });
+    });
+
+    it('fixed: a greatest size and a least size both hold, one after the other', () => {
+      const panels = [
+        panel('nav', { fixed: true }),
+        panel('a', { maxSize: 20 }),
+        panel('b', { minSize: 35 }),
+        panel('c'),
+      ];
+
+      // The share of the other panels is 90%, and each would have 30%. The panel `a` is above its
+      // greatest size by more than `b` is below its least size, so `a` holds at 20 first. The panels
+      // `b` and `c` then share 70% and have 35% each, which is the least size of `b`.
+      expect(applyFixedSizes(panels, { nav: 10, a: 30, b: 30, c: 30 }, { nav: 100 }, 1000)).toEqual(
+        { nav: 10, a: 20, b: 35, c: 35 },
+      );
+      // Two panels that a least size holds have that size, and the others share what is left.
+      expect(
+        applyFixedSizes(
+          [
+            panel('nav', { fixed: true }),
+            panel('a', { minSize: 40 }),
+            panel('b'),
+            panel('c', { minSize: 40 }),
+          ],
+          { nav: 10, a: 30, b: 30, c: 30 },
+          { nav: 100 },
+          1000,
+        ),
+      ).toEqual({ nav: 10, a: 40, b: 10, c: 40 });
+    });
+
+    it.each<{
+      name: string;
+      panels: PanelConstraints[];
+      layout: Layout;
+      pins: Record<string, number>;
+      space: number;
+    }>([
+      {
+        name: 'no other panel',
+        panels: [panel('a', { fixed: true }), panel('b', { fixed: true })],
+        layout: { a: 40, b: 60 },
+        pins: { a: 400, b: 600 },
+        space: 2000,
+      },
+      {
+        name: 'no pin',
+        panels: [panel('a', { fixed: true }), panel('b')],
+        layout: { a: 40, b: 60 },
+        pins: {},
+        space: 2000,
+      },
+      {
+        name: 'no fixed panel',
+        panels: [panel('a'), panel('b')],
+        layout: { a: 40, b: 60 },
+        pins: { a: 400 },
+        space: 2000,
+      },
+      {
+        name: 'no space',
+        panels: [panel('a', { fixed: true }), panel('b')],
+        layout: { a: 40, b: 60 },
+        pins: { a: 400 },
+        space: 0,
+      },
+    ])('fixed: the layout stays with $name', ({ panels, layout: start, pins, space }) => {
+      expect(applyFixedSizes(panels, start, pins, space)).toBe(start);
+    });
+
+    it('fixed: a collapsed panel stays collapsed', () => {
+      const panels = [
+        panel('nav', { fixed: true, minSize: 20, collapsible: true, collapsedSize: 5 }),
+        panel('editor'),
+      ];
+      const collapsed = { nav: 5, editor: 95 };
+
+      expect(applyFixedSizes(panels, collapsed, takePins(panels, collapsed, 1000), 2000)).toEqual(
+        collapsed,
+      );
+      // A collapsed panel that is not fixed stays collapsed too.
+      const others = [
+        panel('nav', { fixed: true }),
+        panel('side', { minSize: 20, collapsible: true }),
+        panel('main'),
+      ];
+      expect(applyFixedSizes(others, { nav: 40, side: 0, main: 60 }, { nav: 400 }, 2000)).toEqual({
+        nav: 20,
+        side: 0,
+        main: 80,
+      });
+    });
+
+    it('fixed: an id that an object also has is an id', () => {
+      const panels = [panel('constructor', { fixed: true }), panel('toString')];
+
+      expect(takePins(panels, { constructor: 20, toString: 80 }, 1000)).toEqual({
+        constructor: 200,
+      });
+      expect(
+        applyFixedSizes(panels, { constructor: 20, toString: 80 }, { constructor: 200 }, 2000),
+      ).toEqual({ constructor: 10, toString: 90 });
+      expect(applyFixedSizes(panels, { constructor: 20, toString: 80 }, {}, 2000)).toEqual({
+        constructor: 20,
+        toString: 80,
+      });
+    });
+
+    it('priority: the fixed panel with the greater number gives way first', () => {
+      const start = { nav: 30, editor: 40, aside: 30 };
+      const pins = { nav: 300, aside: 300 };
+      const inSequence = [
+        panel('nav', { fixed: true, minSize: 10 }),
+        panel('editor', { minSize: 40 }),
+        panel('aside', { fixed: true, minSize: 10 }),
+      ];
+      const asideFirst = [
+        panel('nav', { fixed: true, minSize: 10 }),
+        panel('editor', { minSize: 40 }),
+        panel('aside', { fixed: true, minSize: 10, priority: 1 }),
+      ];
+
+      // At 800 px each pin is 37.5%, and the editor has 25%, which is less than its least size.
+      expect(applyFixedSizes(inSequence, start, pins, 800)).toEqual({
+        nav: 22.5,
+        editor: 40,
+        aside: 37.5,
+      });
+      expect(applyFixedSizes(asideFirst, start, pins, 800)).toEqual({
+        nav: 37.5,
+        editor: 40,
+        aside: 22.5,
+      });
+    });
+
+    it('priority: a fixed panel that reached its least size lets the next one give way', () => {
+      const panels = [
+        panel('nav', { fixed: true, minSize: 35, priority: 1 }),
+        panel('editor', { minSize: 40 }),
+        panel('aside', { fixed: true, minSize: 10 }),
+      ];
+
+      expect(
+        applyFixedSizes(panels, { nav: 30, editor: 40, aside: 30 }, { nav: 300, aside: 300 }, 800),
+      ).toEqual({ nav: 35, editor: 40, aside: 25 });
+    });
+  });
+
+  describe('snapping', () => {
+    it('snap: a drag step moves the handle in steps', () => {
+      const panels = [panel('a'), panel('b')];
+      const start = { a: 50, b: 50 };
+
+      expect(snapDelta(panels, start, 0, 7, 5)).toBe(5);
+      expect(snapDelta(panels, start, 0, 8, 5)).toBe(10);
+      expect(snapDelta(panels, start, 0, -8, 5)).toBe(-10);
+      expect(snapDelta(panels, start, 0, 7.3)).toBe(7.3);
+      expect(snapDelta(panels, start, 0, 7.3, 0)).toBe(7.3);
+    });
+
+    it('snap: a snap point gives its size inside the tolerance', () => {
+      const panels = [
+        panel('a', { snapPoints: [25, 40], snapTolerance: 2 }),
+        panel('b', { snapPoints: [50], snapTolerance: 2 }),
+      ];
+      const start = { a: 30, b: 70 };
+
+      expect(snapDelta(panels, start, 0, 9)).toBe(10);
+      expect(snapDelta(panels, start, 0, 11.5)).toBe(10);
+      expect(snapDelta(panels, start, 0, 13)).toBe(13);
+      expect(snapDelta(panels, start, 0, -4)).toBe(-5);
+      // The panel after the handle: 70 - 19 = 51, which is inside the tolerance of 50.
+      expect(snapDelta(panels, start, 0, 19)).toBe(20);
+      expect(adjustLayout(panels, start, 0, snapDelta(panels, start, 0, 9))).toEqual({
+        a: 40,
+        b: 60,
+      });
+    });
+
+    it('snap: a point has no tolerance by default, and the nearest point wins', () => {
+      const start = { a: 30, b: 70 };
+
+      expect(snapDelta([panel('a', { snapPoints: [40, 44] }), panel('b')], start, 0, 9.9)).toBe(
+        9.9,
+      );
+      expect(
+        snapDelta(
+          [panel('a', { snapPoints: [40, 44], snapTolerance: 5 }), panel('b')],
+          start,
+          0,
+          13,
+        ),
+      ).toBe(14);
+    });
+
+    it('snap: the drag step comes first, and the point takes the stepped size', () => {
+      const panels = [panel('a', { snapPoints: [38], snapTolerance: 3 }), panel('b')];
+
+      // 7 gives a step of 5, so the panel has 35, which is inside the tolerance of 38.
+      expect(snapDelta(panels, { a: 30, b: 70 }, 0, 7, 5)).toBe(8);
+    });
+
+    it('snap: a point outside the least and the greatest size is not used', () => {
+      const panels = [
+        panel('a', { minSize: 20, maxSize: 60, snapPoints: [10, 70, 30], snapTolerance: 100 }),
+        panel('b'),
+      ];
+
+      // The panel would have 65. Its nearest point is 70, which is above its greatest size, so the
+      // point 30 wins.
+      expect(snapDelta(panels, { a: 40, b: 60 }, 0, 25)).toBe(-10);
+    });
+
+    it('snap: a locked panel does not snap', () => {
+      const panels = [panel('a', { locked: true, snapPoints: [40], snapTolerance: 5 }), panel('b')];
+
+      expect(snapDelta(panels, { a: 30, b: 70 }, 0, 9)).toBe(9);
     });
   });
 });
