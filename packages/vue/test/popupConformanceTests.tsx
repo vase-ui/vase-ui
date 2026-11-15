@@ -9,7 +9,7 @@ import { ownerDocument } from '../src/common/owner';
 import { activeElement } from '../src/common/shadowDom';
 import { isJSDOM } from '../src/common/testUtils';
 import { REASONS } from '../src/internals/reasons';
-import { nextAnimationsRead } from './animation';
+import { nextAnimationsRead, seekBeforeEnd } from './animation';
 import type { createRenderer } from './createRenderer';
 import { fireEvent } from './fireEvent';
 import { flushMicrotasks } from './flushMicrotasks';
@@ -761,7 +761,7 @@ export function popupConformanceTests(config: PopupTestConfig) {
             },
           );
 
-          seekBeforeEnd(animations);
+          seekBeforeEnd(animations, 50);
           await finished;
           await waitFor(() => {
             expect(onOpenChangeComplete).toHaveBeenCalled();
@@ -795,7 +795,7 @@ export function popupConformanceTests(config: PopupTestConfig) {
             },
           );
 
-          seekBeforeEnd(animations);
+          seekBeforeEnd(animations, 50);
           await finished;
           await waitFor(expectPopupClosed);
           expect(callsAtEnd).toEqual([0]);
@@ -873,7 +873,7 @@ export function popupConformanceTests(config: PopupTestConfig) {
           const finished = Promise.all(animations.map((animation) => animation.finished));
 
           // ...and is hidden once it finishes.
-          seekBeforeEnd(animations);
+          seekBeforeEnd(animations, 50);
           await finished;
           // A family can replace the popup element when it hides it, so the case queries the
           // popup again.
@@ -892,15 +892,6 @@ function getTrigger() {
 
 function getPopup() {
   return screen.queryByTestId('popup');
-}
-
-// A part reads the animations of the popup in a frame after the open or the close. A late frame
-// can end a short animation before that read, so these animations last 100 s. A seek, and not
-// `finish()`, lets the browser end each animation in a frame, as it does for a user.
-function seekBeforeEnd(animations: Animation[]) {
-  for (const animation of animations) {
-    animation.currentTime = Number(animation.effect!.getComputedTiming().endTime) - 50;
-  }
 }
 
 // The root exposes its actions. A function ref gets them when the test renders a function.
