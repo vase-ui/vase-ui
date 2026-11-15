@@ -1634,6 +1634,77 @@ describe('<Combobox.Root />', () => {
       expect(getOptions()).toEqual([]);
       expect(getInput().value).toBe('Malta');
     });
+
+    it.each([
+      { name: 'a string value', props: { items: cities, defaultValue: 'Malta' } },
+      {
+        name: 'an object equal by isItemEqualToValue',
+        props: {
+          items: [
+            { value: 'malmo', label: 'Malmö' },
+            { value: 'malta', label: 'Malta' },
+          ],
+          defaultValue: { value: 'malta', label: 'Malta' },
+          isItemEqualToValue: (item: { value: string }, value: { value: string }) =>
+            item.value === value.value,
+        },
+      },
+    ])(
+      'VUE-91: emits no valueChange and no inputValueChange for a pick of the selected item, $name',
+      async ({ props }) => {
+        const rootProps: Record<string, unknown> = props;
+        const events: string[] = [];
+        await render(
+          <Combobox.Root
+            {...rootProps}
+            defaultOpen
+            onValueChange={(_, details) => events.push(`valueChange:${details.reason}`)}
+            onInputValueChange={(value, details) =>
+              events.push(`inputValueChange:${String(value)}:${details.reason}`)
+            }
+            onOpenChange={(open, details) => events.push(`openChange:${open}:${details.reason}`)}
+            {...{
+              'onUpdate:value': () => events.push('update:value'),
+              'onUpdate:inputValue': () => events.push('update:inputValue'),
+            }}
+          >
+            <ComboboxInputPart />
+            <ComboboxListPart />
+          </Combobox.Root>,
+        );
+        expect(getInput().value).toBe('Malta');
+
+        await pick('Malta');
+
+        expect(events).toEqual(['openChange:false:item-press']);
+        expect(getInput().value).toBe('Malta');
+      },
+    );
+
+    it('VUE-91: fills the input for a pick of the selected item after a typed query', async () => {
+      const events: string[] = [];
+      await render(
+        <Combobox.Root
+          items={cities}
+          defaultValue="Malta"
+          onValueChange={(_, details) => events.push(`valueChange:${details.reason}`)}
+          onInputValueChange={(value, details) =>
+            events.push(`inputValueChange:${String(value)}:${details.reason}`)
+          }
+          onOpenChange={(open, details) => events.push(`openChange:${open}:${details.reason}`)}
+        >
+          <ComboboxInputPart />
+          <ComboboxListPart />
+        </Combobox.Root>,
+      );
+
+      await type('ma');
+      events.length = 0;
+      await pick('Malta');
+
+      expect(events).toEqual(['inputValueChange:Malta:item-press', 'openChange:false:item-press']);
+      expect(getInput().value).toBe('Malta');
+    });
   });
 
   describe('controlled values', () => {

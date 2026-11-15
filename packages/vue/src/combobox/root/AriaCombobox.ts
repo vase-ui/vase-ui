@@ -945,9 +945,14 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   }
 
   function setInputValue(next: string, eventDetails: AriaCombobox.ChangeEventDetails) {
-    callbacks.onInputValueChange(next, eventDetails);
-    if (eventDetails.isCanceled) {
-      return;
+    // The root emits no change for the text that the input has (`VUE-91`). The code below still
+    // runs for that text. With `selectionMode: 'none'` (Autocomplete), the input can show an
+    // inline completion, which is not the value of the root.
+    if (selectionMode.value === 'none' || next !== String(inputValue.value ?? '')) {
+      callbacks.onInputValueChange(next, eventDetails);
+      if (eventDetails.isCanceled) {
+        return;
+      }
     }
 
     // A canceled selection clear must not suppress close-completion cleanup.
@@ -1124,11 +1129,16 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   }
 
   function setSelectedValue(nextValue: any, eventDetails: AriaCombobox.ChangeEventDetails) {
-    callbacks.onSelectedValueChange(nextValue, eventDetails);
-    if (eventDetails.isCanceled) {
-      return;
+    // A pick of the selected item changes no value (`VUE-91`), but it can still fill the input.
+    const isSelectedValue =
+      single.value && compareItemEquality(nextValue, selectedValue.value, isItemEqualToValue.value);
+    if (!isSelectedValue) {
+      callbacks.onSelectedValueChange(nextValue, eventDetails);
+      if (eventDetails.isCanceled) {
+        return;
+      }
+      setSelectedValueUnwrapped(nextValue);
     }
-    setSelectedValueUnwrapped(nextValue);
 
     const shouldFillInput =
       (selectionMode.value === 'none' && popupRef.value && (props.fillInputOnItemPress ?? true)) ||

@@ -1218,6 +1218,35 @@ describe('<Select.Item />', () => {
 
       expect(screen.getByTestId('value').textContent).toBe('one');
     });
+
+    it('VUE-91: emits no valueChange for a drag that ends on the selected item', async () => {
+      const onValueChange = vi.fn();
+      await render(
+        <Select.Root defaultValue="b" onValueChange={onValueChange}>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value data-testid="value" />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner alignItemWithTrigger={false}>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+                <Select.Item value="b">b</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+      const trigger = screen.getByTestId('trigger');
+
+      await openWithMouseDown(trigger);
+      await tick(500);
+      const option = screen.getByRole('option', { name: 'b' });
+      await fireEvent.mouseUp(option, clientCenter(option));
+
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
+      expect(screen.getByTestId('value').textContent).toBe('b');
+    });
   });
 
   describe('style hooks', () => {

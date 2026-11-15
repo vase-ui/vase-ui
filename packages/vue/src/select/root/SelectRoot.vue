@@ -172,6 +172,7 @@ import { useFormContext } from '../../internals/form-context';
 import { getHiddenInputType } from '../../internals/getHiddenInputType';
 import { handleHiddenInputInvalid } from '../../internals/handleHiddenInputInvalid';
 import {
+  compareItemEquality,
   defaultItemEquality,
   findSelectionIndex,
   isSelectedValueDirty,
@@ -497,6 +498,12 @@ useValueChanged(selectedValue, () => {
 });
 
 function setValue(nextValue: any, eventDetails: SelectRootChangeEventDetails) {
+  // HTML fires `change` when the user commits a change of the value (`VUE-91`). A press of an item
+  // of a multiple select always adds or removes that item.
+  if (!isMultiple.value && compareItemEquality(nextValue, selectedValue.value, comparer.value)) {
+    return false;
+  }
+
   emit('valueChange', nextValue, eventDetails);
 
   if (eventDetails.isCanceled) {

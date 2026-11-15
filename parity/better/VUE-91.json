@@ -1,0 +1,13 @@
+{
+  "id": "VUE-91",
+  "evidence": [
+    "https://html.spec.whatwg.org/multipage/indices.html#event-change",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/select/root/SelectRoot.tsx#L281-L291",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/select/item/SelectItem.tsx#L133-L151",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/combobox/root/AriaCombobox.tsx#L665-L671",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/combobox/root/AriaCombobox.tsx#L853-L874",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/menu/radio-group/MenuRadioGroup.tsx#L39-L49"
+  ],
+  "behavior": "`Select.Root`, `Combobox.Root` and `Menu.RadioGroup` emit no change event for the value that they have. Without `multiple`, a press of the selected item of `Select` or `Combobox` emits no `valueChange` and no `update:value`, and the popup still closes. A drag that ends on the selected item of `Select`, and the typeahead of a closed select that matches it, emit neither event too. `Select` and `Combobox` compare the value with `isItemEqualToValue`. `Combobox` emits no `inputValueChange` for the text that the input has. A pick of the selected item still fills the input when the input has other text. A click of the checked item of `Menu.RadioGroup` emits no `valueChange`, as a click of the checked radio of `RadioGroup` does not. Base UI calls `onValueChange` with the value that the part has. HTML fires `change` when the user commits a change of the value.",
+  "dueWith": "packages/react/src/select/root/SelectRoot.tsx"
+}
