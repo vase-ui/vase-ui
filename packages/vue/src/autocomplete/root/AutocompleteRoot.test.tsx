@@ -3263,6 +3263,32 @@ describe('<Autocomplete.Root />', () => {
   });
 
   describe('inline completion', () => {
+    it('mode="both": Enter commits the inline text of the highlighted item', async () => {
+      const events: string[] = [];
+      await render(
+        <Autocomplete.Root
+          mode="both"
+          items={cities}
+          onValueChange={(value, details) => events.push(`valueChange:${value}:${details.reason}`)}
+          {...{ 'onUpdate:value': (value: string) => events.push(`update:value:${value}`) }}
+        >
+          <Autocomplete.Input />
+          {popupWithList()}
+        </Autocomplete.Root>,
+      );
+      getInput().focus();
+      await type('Ma');
+      await pressArrowDown();
+      expect(getInput().value).toBe('Malmö');
+      events.length = 0;
+
+      await fireEvent.keyDown(getInput(), { key: 'Enter' });
+      await flushMicrotasks();
+
+      expect(events).toEqual(['valueChange:Malmö:item-press', 'update:value:Malmö']);
+      expect(getInput().value).toBe('Malmö');
+    });
+
     it('typed text replaces the inline text', async () => {
       const handleValueChange = vi.fn();
       await render(

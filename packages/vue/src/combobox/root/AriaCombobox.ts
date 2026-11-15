@@ -958,9 +958,14 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   }
 
   function setInputValue(next: string, eventDetails: AriaCombobox.ChangeEventDetails) {
-    callbacks.onInputValueChange(next, eventDetails);
-    if (eventDetails.isCanceled) {
-      return;
+    // The root emits no change for the text that the input has (`VUE-91`). The code below still
+    // runs for that text. With `selectionMode: 'none'` (Autocomplete), the input can show an
+    // inline completion, which is not the value of the root.
+    if (selectionMode.value === 'none' || next !== String(inputValue.value ?? '')) {
+      callbacks.onInputValueChange(next, eventDetails);
+      if (eventDetails.isCanceled) {
+        return;
+      }
     }
 
     // A canceled selection clear must not suppress close-completion cleanup.
@@ -1137,12 +1142,27 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   }
 
   function setSelectedValue(nextValue: any, eventDetails: AriaCombobox.ChangeEventDetails) {
+    // A pick of the selected item changes no value (`VUE-91`), but it can still fill the input.
+    if (
+      single.value &&
+      compareItemEquality(nextValue, selectedValue.value, isItemEqualToValue.value)
+    ) {
+      fillInput(nextValue, eventDetails);
+    } else {
+      commitSelectedValue(nextValue, eventDetails);
+    }
+  }
+
+  function commitSelectedValue(nextValue: any, eventDetails: AriaCombobox.ChangeEventDetails) {
     callbacks.onSelectedValueChange(nextValue, eventDetails);
     if (eventDetails.isCanceled) {
       return;
     }
     setSelectedValueUnwrapped(nextValue);
+    fillInput(nextValue, eventDetails);
+  }
 
+  function fillInput(nextValue: any, eventDetails: AriaCombobox.ChangeEventDetails) {
     const shouldFillInput =
       (selectionMode.value === 'none' && popupRef.value && (props.fillInputOnItemPress ?? true)) ||
       (single.value && !toRaw(store.state).inputInsidePopup);
@@ -1950,9 +1970,11 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     let hasChanged = false;
     if (selectionMode.value !== 'none' && props.selectedValue === undefined) {
       const defaultValue = getDefaultSelectedValue();
+      // `setSelectedValue` keeps a value that `isItemEqualToValue` matches with the default object.
+      // The dirty state compares a single value by identity, so the reset puts back that object.
       if (isSelectedValueDirty(selectedValue.value, defaultValue, isItemEqualToValue.value)) {
         const details = createChangeEventDetails(REASONS.none, event);
-        setSelectedValue(defaultValue, details);
+        commitSelectedValue(defaultValue, details);
         hasChanged = !details.isCanceled;
       }
     }

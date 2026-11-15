@@ -512,6 +512,9 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - `x !== undefined` means that the part is controlled. A development build shows a warning when the mode changes.
 - The part emits `xChange(value, details)` and then `update:x(value)`, synchronously.
 - The part does not emit `update:x` when `details.isCanceled` is true.
+- `Select.Root`, `Combobox.Root` and `Menu.RadioGroup` emit no `valueChange` and no `update:value` when the user picks the value that the part has (`VUE-91`). HTML fires `change` when the user commits a change of the value.
+- Without `multiple`, a press of the selected item of `Select` or `Combobox` still closes the popup.
+- `Select.Root` and `Combobox.Root` compare a value with `isItemEqualToValue`. `Combobox.Root` emits no `inputValueChange` and no `update:inputValue` for the text that the input has.
 - To stop a change, call `details.cancel()` before the listener returns. The part reads `isCanceled` at that time, so a call after an `await` has no effect.
 - An item whose change also changes its group, such as `Toggle` in `ToggleGroup`, emits in this order: `pressedChange` of the item, `valueChange` and `update:value` of the group, and `update:pressed` of the item. Both change events get the same `details` object. A `details.cancel()` in `pressedChange` stops each later event. A `details.cancel()` in `valueChange` stops `update:value` and `update:pressed`.
 - Do not throw to stop a change. A listener that throws stops `update:x` only where Vue throws the error again. Vue throws the error again only in a development build, or in a production build where `app.config.throwUnhandledErrorInProduction` is `true`. Vue does not throw it again when `app.config.errorHandler` or an ancestor `errorCaptured` hook that returns `false` handles the error. Where Vue does not throw the error again, the part emits `update:x`.
