@@ -9,23 +9,7 @@
       "upstream": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The other rows of this family that wait on parts of Menu name this file as their target. The file thus stays absent until the last of those parts exists. Its case needs only `ContextMenu.Item`."
-    },
-    {
-      "upstream": "packages/react/src/context-menu/root/ContextMenuRoot.test.tsx",
-      "describe": ["<ContextMenu.Root />"],
-      "title": "returns focus to the focused surface when closing with Shift+Tab",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The case closes the menu with the Tab key. The list navigation of the menu root closes a menu for Tab and for Shift+Tab, and it gives the focus back to the trigger. `Menu.Root` has no list navigation yet, so the key does not close the menu."
-    },
-    {
-      "upstream": "packages/react/src/context-menu/root/ContextMenuRoot.test.tsx",
-      "describe": ["<ContextMenu.Root />"],
-      "title": "returns focus to the focused surface when closing with Tab",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The case closes the menu with the Tab key. The list navigation of the menu root closes a menu for Tab and for Shift+Tab, and it gives the focus back to the trigger. `Menu.Root` has no list navigation yet, so the key does not close the menu."
+      "reason": "The file has no counterpart yet. Its case needs only `ContextMenu.Item`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
