@@ -44,6 +44,8 @@ import SelectRootHydration from './SelectRootHydration.test.vue';
 
 const BEFORE_HYDRATION_FIXTURE = 'src/select/root/SelectRootBeforeHydration.test.vue';
 
+const ADDRESSES = { 'Main Street 1\nFlat 2': 'Home', 'Box 1': 'Office' };
+
 type ChangeDetails = Select.Root.ChangeEventDetails;
 type OpenChangeDetails = Select.Root.OpenChangeEventDetails;
 type ValueSlotProps = { value: any };
@@ -3937,7 +3939,6 @@ describe('<Select.Root />', () => {
   });
 
   it('resets selected index when value is set to null without a null item', async () => {
-    const onOpenChangeComplete = vi.fn();
     const App = defineComponent(() => {
       const value = shallowRef<string | null>(null);
       return () => (
@@ -3971,8 +3972,8 @@ describe('<Select.Root />', () => {
             onValueChange={(newValue: string | null) => {
               value.value = newValue;
             }}
-            onOpenChangeComplete={onOpenChangeComplete}
           >
+            <StoreProbe />
             <Select.Trigger data-testid="trigger">
               <Select.Value
                 data-testid="value"
@@ -3994,27 +3995,28 @@ describe('<Select.Root />', () => {
 
     const { user } = await render(<App />);
 
-    await waitForLaterMillisecond(() => user.click(screen.getByText('initial')));
+    // The trigger opens the select in the frame after the press, and `user.click` can resolve
+    // before that frame. The open and its first read stay inside the wait, so the next press
+    // comes after the open.
+    await waitForLaterMillisecond(async () => {
+      await user.click(screen.getByText('initial'));
+      await screen.findByRole('listbox');
+    });
 
     await user.click(screen.getByRole('button', { name: '1' }));
     expect(screen.getByTestId('value')).toHaveTextContent('1');
 
     await user.click(screen.getByRole('button', { name: '2' }));
     expect(screen.getByTestId('value')).toHaveTextContent('2');
+    expect(store.state.selectedIndex).toBe(1);
 
     await user.click(screen.getByRole('button', { name: 'null' }));
     expect(screen.getByTestId('value')).toHaveTextContent('initial');
+    expect(store.state.selectedIndex).toBe(null);
 
-    // The trigger opens the select in the frame after the press, so the case waits for the event.
-    const opened = Promise.withResolvers<void>();
-    onOpenChangeComplete.mockImplementation((open: boolean) => {
-      if (open) {
-        opened.resolve();
-      }
-    });
     await user.click(screen.getByTestId('trigger'));
-    await opened.promise;
-    expect(screen.queryByRole('option', { name: '2' })).not.toHaveAttribute('data-selected', '');
+    const option = await screen.findByRole('option', { name: '2' });
+    expect(option).not.toHaveAttribute('data-selected', '');
   });
 
   it('does not force-mount the popup on a programmatic value change', async () => {
@@ -8560,6 +8562,78 @@ describe('<Select.Root />', () => {
       expect(fixture.getByTestId('model').textContent).toBe(expected.model);
       expect(fixture.getByTestId('changes').textContent).toBe(expected.changes);
       expect(getHiddenInput().value).toBe(expected.model);
+      expect(events).toEqual(['input']);
+    });
+
+    it.each([
+      { name: 'a line feed', value: 'Main Street 1\nFlat 2', text: 'Main Street 1Flat 2' },
+      { name: 'a carriage return', value: 'Main Street 1\rFlat 2', text: 'Main Street 1Flat 2' },
+    ])('sends no event at a `pageshow` event for a value with $name', async ({ value, text }) => {
+      const handleValueChange = vi.fn();
+      const { container } = await render(
+        <form data-testid="form">
+          <Select.Root
+            name="address"
+            items={{ [value]: 'Home' }}
+            defaultValue={value}
+            onValueChange={handleValueChange}
+          >
+            <Select.Trigger data-testid="trigger">
+              <Select.Value />
+            </Select.Trigger>
+          </Select.Root>
+        </form>,
+      );
+      const events = recordInputEvents(container);
+      expect(getHiddenInput().value).toBe(text);
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(events).toEqual([]);
+      expect(handleValueChange).not.toHaveBeenCalled();
+      expect(getHiddenInput().value).toBe(text);
+      expect(screen.getByTestId('trigger').textContent).toBe('Home');
+    });
+
+    it('takes an item that the browser restores into a select whose value has a line feed', async () => {
+      const handleValueChange = vi.fn();
+      const { container } = await render(
+        <form data-testid="form">
+          <Select.Root
+            name="address"
+            items={ADDRESSES}
+            defaultValue={'Main Street 1\nFlat 2'}
+            onValueChange={handleValueChange}
+          >
+            <Select.Trigger data-testid="trigger">
+              <Select.Value />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  {Object.entries(ADDRESSES).map(([value, label]) => (
+                    <Select.Item key={value} value={value}>
+                      <Select.ItemText>{label}</Select.ItemText>
+                    </Select.Item>
+                  ))}
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        </form>,
+      );
+      const events = recordInputEvents(container);
+      getHiddenInput().value = 'Box 1';
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(handleValueChange.mock.calls.map((call) => [call[0], call[1].reason])).toEqual([
+        ['Box 1', 'none'],
+      ]);
+      expect(screen.getByTestId('trigger').textContent).toBe('Office');
+      expect(getHiddenInput().value).toBe('Box 1');
       expect(events).toEqual(['input']);
     });
   });

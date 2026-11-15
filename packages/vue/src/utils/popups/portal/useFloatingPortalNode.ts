@@ -32,11 +32,6 @@ export interface UseFloatingPortalNodeProps {
    */
   componentProps: UseRenderElementComponentProps<any>;
   /**
-   * Props that the portal element gets, such as listeners. They come before the attributes of the
-   * consumer. The part calls the function in each render, so it can read reactive state.
-   */
-  props?: (() => Record<string, any> | undefined) | undefined;
-  /**
    * Set it to `true` for a part whose `#render` slot has the `children` prop.
    * `useRenderElement` then warns when the slot does not mount `children`.
    */
@@ -110,7 +105,7 @@ export function useFloatingPortalNode(
   });
 
   const { element, elementProps } = useRenderElement('div', params.componentProps, {
-    props: (attrs) => [{ id: uniqueId, [attr]: '' }, params.props?.(), attrs],
+    props: (attrs) => [{ id: uniqueId, [attr]: '' }, attrs],
     children: params.children,
   });
 

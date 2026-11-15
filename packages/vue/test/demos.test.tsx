@@ -12,6 +12,7 @@ import {
   screen,
   takeReportedMessages,
   waitFor,
+  within,
 } from '#test-utils';
 import DemoFrame from '../../../docs/.vitepress/components/DemoFrame.vue';
 import DemoSource from '../../../docs/.vitepress/components/DemoSource.vue';
@@ -310,6 +311,44 @@ describe('toast/promise', () => {
     // Vitest writes a rejection to the console while a test has a listener for the report.
     expect(takeReportedMessages()).toEqual(['console.error: [object PromiseRejectionEvent]']);
   });
+});
+
+describe('the form library demos of the Forms page', () => {
+  const { render } = createRenderer();
+
+  it.each([{ name: 'handbook-forms/vee-validate' }, { name: 'handbook-forms/tanstack-form' }])(
+    '$name: a failed submit moves the focus to the first invalid control',
+    async ({ name }) => {
+      const [Hero, Demo] = ['handbook-forms/hero', name].map(
+        (demoName) => demos.find((demo) => demo.name === demoName)!.Demo,
+      );
+      // The page has the first demo above this demo, and the fields of both demos have the same
+      // names. After a failed submit of the first demo, a search in the document finds its
+      // controls first.
+      const { user } = await render(
+        h('div', { 'data-demo': 'tailwind' }, [
+          h('div', { 'data-testid': 'hero' }, h(Hero)),
+          h('div', { 'data-testid': 'demo' }, h(Demo)),
+        ]),
+      );
+      const hero = within(screen.getByTestId('hero'));
+      const demo = within(screen.getByTestId('demo'));
+      const submit = demo.getByRole('button', { name: 'Launch server' });
+      await user.click(hero.getByRole('button', { name: 'Launch server' }));
+      await waitFor(() => expect(hero.getByRole('textbox', { name: 'Server name' })).toHaveFocus());
+
+      await user.click(submit);
+
+      await waitFor(() => expect(demo.getByRole('textbox', { name: 'Server name' })).toHaveFocus());
+
+      await user.keyboard('api-server-01');
+      await user.click(submit);
+
+      // In the VeeValidate demo, the element named `region` is a hidden input. It moves the focus
+      // to the combobox.
+      await waitFor(() => expect(demo.getByRole('combobox', { name: 'Region' })).toHaveFocus());
+    },
+  );
 });
 
 describe('demos', () => {

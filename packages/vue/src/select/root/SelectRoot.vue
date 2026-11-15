@@ -765,7 +765,7 @@ useFormReset(inputElement, (event) => {
   }
 });
 
-useFormRestoreAsInput(inputElement, () => serializedValue.value, false);
+useFormRestoreAsInput(inputElement, () => handledValue, false);
 
 const hiddenInputName = computed(() => (isMultiple.value ? undefined : inputName.value));
 

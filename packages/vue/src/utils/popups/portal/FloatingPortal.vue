@@ -28,7 +28,9 @@ export interface FloatingPortalProps
 <script setup lang="ts">
 import { computed, onUpdated, provide, shallowRef, watch } from 'vue';
 import type { Component } from 'vue';
+import { addEventListener } from '../../../common/addEventListener';
 import { EMPTY_OBJECT } from '../../../common/empty';
+import { mergeCleanups } from '../../../common/mergeCleanups';
 import { ownerVisuallyHidden } from '../../../internals/constants';
 import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
@@ -86,11 +88,27 @@ function handleFocus(event: FocusEvent) {
 const { element, elementProps, containerElement, deactivated } = useFloatingPortalNode({
   container: () => props.container,
   componentProps: props,
-  // The capture phase runs these listeners before a listener of the focus manager.
-  props: () =>
-    modal.value ? undefined : { onFocusinCapture: handleFocus, onFocusoutCapture: handleFocus },
   children: true,
 });
+
+// The capture phase runs these listeners before a listener of the focus manager. A Vue listener
+// here would get each focus in the popup first. Vue would then skip the Vue listener of a target
+// that mounted in the millisecond of the focus.
+watch(
+  [element, modal],
+  ([portalNode, isModal], _previous, onCleanup) => {
+    if (!portalNode || isModal) {
+      return;
+    }
+    onCleanup(
+      mergeCleanups(
+        addEventListener(portalNode, 'focusin', handleFocus, true),
+        addEventListener(portalNode, 'focusout', handleFocus, true),
+      ),
+    );
+  },
+  { flush: 'post' },
+);
 
 // The focus manager moves the focus after it opens the popup. The elements in the portal must be
 // tabbable again before that.

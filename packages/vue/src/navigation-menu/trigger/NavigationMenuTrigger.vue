@@ -490,7 +490,7 @@ const { element, elementProps } = useRenderElement('button', props, {
       onPointerenter: handleSetPointerType,
       onPointerdown: handleTriggerPointerDown,
       'aria-expanded': isActiveItem.value,
-      'aria-controls': isActiveItem.value ? popupElement.value?.id : undefined,
+      'aria-controls': (isActiveItem.value && popupElement.value?.id) || undefined,
       [NAVIGATION_MENU_TRIGGER_IDENTIFIER]: '',
       onFocusin() {
         if (isActiveItem.value) {

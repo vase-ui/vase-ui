@@ -54,7 +54,7 @@ describe('<Menu.Root /> on a server', () => {
     );
 
     expect(html).toMatch(
-      /^<!--\[--><button data-popup-open data-pressed type="button" tabindex="0" aria-haspopup="menu" aria-expanded="true" aria-controls="[^"]+" id="trigger"><!--\[-->Open<!--\]--><\/button><!--\]-->$/,
+      /^<!--\[--><button data-popup-open data-pressed type="button" tabindex="0" aria-haspopup="menu" aria-expanded="true" id="trigger"><!--\[-->Open<!--\]--><\/button><!--\]-->$/,
     );
   });
 

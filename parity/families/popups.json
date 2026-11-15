@@ -19,6 +19,22 @@
       "kind": "replaced",
       "test": "packages/vue/src/utils/popups/popupTriggerMap.node.test.ts",
       "reason": "The case needs a production build. Vitest sets `process.env.NODE_ENV` when it transforms a file for a browser, so only the Node project can change it."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/popupStoreUtils.test.tsx",
+      "describe": ["popupId selector"],
+      "title": "uses the default popup id as the popup id",
+      "kind": "replaced",
+      "test": "packages/vue/src/utils/popups/popupStoreUtils.test.tsx",
+      "reason": "The case asserts the default popup id while no popup element exists. Vase UI gives no id then (`VUE-73`). The block `VUE-73: the popup id is the id of the popup element` tests the popup id and the lone trigger with a popup element."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/popupStoreUtils.test.tsx",
+      "describe": ["popupId selector"],
+      "title": "associates a lone trigger with the popup id unless the popup opened without a trigger",
+      "kind": "replaced",
+      "test": "packages/vue/src/utils/popups/popupStoreUtils.test.tsx",
+      "reason": "The case asserts the default popup id while no popup element exists. Vase UI gives no id then (`VUE-73`). The block `VUE-73: the popup id is the id of the popup element` tests the popup id and the lone trigger with a popup element."
     }
   ],
   "surfaceAdditions": [],

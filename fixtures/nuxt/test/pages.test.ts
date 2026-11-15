@@ -1324,7 +1324,7 @@ async function expectHydratedPreviewCardPage(page: Page) {
 }
 
 // A server renders no popup and no portal. The trigger of an open root has the open state and
-// names the id of its popup.
+// names no popup, because a server renders no popup.
 async function expectAlertDialogPageOnServer(page: Page) {
   const attributeNames = ['aria-haspopup', 'aria-expanded', 'data-popup-open'];
   const read = (testId: string) => readAttributes(page.getByTestId(testId), attributeNames);
@@ -1344,7 +1344,7 @@ async function expectAlertDialogPageOnServer(page: Page) {
     'aria-expanded': 'false',
     'data-popup-open': null,
   });
-  expect(await page.getByTestId('open').getAttribute('aria-controls')).toBeTruthy();
+  expect(await page.getByTestId('open').getAttribute('aria-controls')).toBeNull();
   expect(await page.locator('[data-vase-ui-portal], [role="alertdialog"]').count()).toBe(0);
 }
 

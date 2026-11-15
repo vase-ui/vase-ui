@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Field as VeeField, useForm } from 'vee-validate';
-import { h } from 'vue';
+import { h, useTemplateRef } from 'vue';
 import type { FunctionalComponent } from 'vue';
 import * as Autocomplete from '../../components/autocomplete';
 import { Button } from '../../components/button';
@@ -53,7 +53,14 @@ function submitForm(data: FormValues) {
   });
 }
 
-const onSubmit = handleSubmit(submitForm);
+const formElement = useTemplateRef('formElement');
+
+// The element with the name of a field can be the hidden input of a part. That input gives the
+// focus to the control of the part.
+const onSubmit = handleSubmit(submitForm, ({ errors }) => {
+  const [name] = Object.keys(errors);
+  formElement.value?.querySelector<HTMLElement>(`[name="${name}"]`)?.focus();
+});
 
 function required(value: unknown) {
   return value === null || value === '' ? 'This field is required.' : true;
@@ -150,6 +157,7 @@ const protocols = ['http', 'https', 'ssh'];
 
 <template>
   <form
+    ref="formElement"
     aria-label="Launch new cloud server"
     novalidate
     class="flex w-full max-w-3xs flex-col gap-5 sm:max-w-[20rem]"

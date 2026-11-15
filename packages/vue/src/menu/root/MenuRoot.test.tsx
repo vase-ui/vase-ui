@@ -5522,25 +5522,21 @@ describe('<Menu.Root />', () => {
     const { context, store } = probe;
     const generated = context.generatedPopupId;
 
-    expect(store.select('popupId')).toBe(generated);
     expect(store.select('defaultPopupId')).toBe(generated);
 
     context.setRenderedPopupId('custom');
     await flushMicrotasks();
 
-    expect(store.select('popupId')).toBe('custom');
     expect(store.select('defaultPopupId')).toBe('custom');
 
     context.setRenderedPopupId('');
     await flushMicrotasks();
 
-    expect(store.select('popupId')).toBe(undefined);
     expect(store.select('defaultPopupId')).toBe(undefined);
 
     context.setRenderedPopupId(undefined);
     await flushMicrotasks();
 
-    expect(store.select('popupId')).toBe(generated);
     expect(store.select('defaultPopupId')).toBe(generated);
   });
 
