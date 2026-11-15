@@ -277,8 +277,8 @@ if (group) {
     }
   });
 
-  // The group takes the checked input, and an enabled input in place of an exposed input that is
-  // absent or disabled. A radio that is disabled and checked keeps the input that the group has.
+  // The group follows the checked input and the first enabled input. A radio that is disabled and
+  // checked keeps the input that the group has.
   watch(
     [checked, isDisabled],
     () => {

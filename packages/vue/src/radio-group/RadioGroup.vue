@@ -193,20 +193,35 @@ function findFirstEnabledInput() {
   return firstInput;
 }
 
+// A keyed move runs no registration. An exposed input that is not checked thus reads as the first
+// enabled input in the document at each read.
+function getExposedInput() {
+  const input = exposedInput.value;
+  return input == null || input.checked ? input : (findFirstEnabledInput() ?? input);
+}
+
 function registerInputRef(input: HTMLInputElement) {
   radioInputs.add(input);
 
+  // The read also finds the first enabled input. This write makes a `computed` that reads
+  // `inputElement` follow a registration.
   const currentInput = exposedInput.value;
-  if (!input.disabled && (input.checked || currentInput == null || currentInput.disabled)) {
+  if (
+    !input.disabled &&
+    (input.checked ||
+      currentInput == null ||
+      currentInput.disabled ||
+      (!currentInput.checked && input === findFirstEnabledInput()))
+  ) {
     exposedInput.value = input;
   }
 
-  // A later call can make this input the exposed input, so the cleanup checks it.
+  // `inputElement` is `null` after the radio of the input that it gives unmounts, as in Base UI.
+  // After a keyed move, that input can differ from `exposedInput`.
   return () => {
+    const givenInput = getExposedInput();
     radioInputs.delete(input);
-    if (exposedInput.value === input) {
-      exposedInput.value = null;
-    }
+    exposedInput.value = givenInput === input ? null : givenInput;
   };
 }
 
@@ -351,11 +366,8 @@ const { element, elementProps } = useRenderElement('div', props, {
 
 defineExpose({
   element,
-  // A keyed move runs no registration. An exposed input that is not checked thus reads as the first
-  // enabled input in the document at each read.
   get inputElement() {
-    const input = exposedInput.value;
-    return input == null || input.checked ? input : (findFirstEnabledInput() ?? input);
+    return getExposedInput();
   },
 });
 </script>
