@@ -51,6 +51,30 @@ describe('<Menu.RadioGroup />', () => {
       expect(onUpdateValue).toHaveBeenLastCalledWith('b');
     });
 
+    it('VUE-91: emits no valueChange for a click of the checked item', async () => {
+      const onValueChange = vi.fn();
+      const onUpdateValue = vi.fn();
+      const { user } = await render(
+        <Menu.Root open>
+          <Menu.RadioGroup
+            defaultValue="a"
+            onValueChange={onValueChange}
+            {...{ 'onUpdate:value': onUpdateValue }}
+          >
+            <Menu.RadioItem value="a">A</Menu.RadioItem>
+            <Menu.RadioItem value="b">B</Menu.RadioItem>
+          </Menu.RadioGroup>
+        </Menu.Root>,
+      );
+
+      const [a] = screen.getAllByRole('menuitemradio');
+      await user.click(a);
+
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(onUpdateValue).not.toHaveBeenCalled();
+      expect(a).toHaveAttribute('aria-checked', 'true');
+    });
+
     it('keeps the value when valueChange cancels the change', async () => {
       const onUpdateValue = vi.fn();
       const { user } = await render(

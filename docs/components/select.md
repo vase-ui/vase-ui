@@ -43,7 +43,7 @@ Import the component and assemble its parts:
 
 `Select.Root` renders no element. It renders a hidden input beside its content. A select with a `name` submits its value with the form. A select with `multiple` submits one value for each selected item.
 
-Bind the value with `v-model:value`. The root emits `valueChange` with the new value and `eventDetails`, and then `update:value`. To stop the change, call `eventDetails.cancel()` before the `valueChange` listener returns. The root then emits no `update:value` and keeps its value.
+Bind the value with `v-model:value`. The root emits `valueChange` with the new value and `eventDetails`, and then `update:value`. Without `multiple`, a press of the selected item emits neither event, and the popup closes. To stop the change, call `eventDetails.cancel()` before the `valueChange` listener returns. The root then emits no `update:value` and keeps its value.
 
 ## Positioning
 
