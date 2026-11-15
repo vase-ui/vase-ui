@@ -8,8 +8,9 @@ const NO_ENTRY_SELECTOR =
   ':disabled, input:is([type="checkbox" i], [type="radio" i]):not(:checked)';
 
 /**
- * Gives the value that `control` has after a write of `value`. The value sanitization of a text
- * input removes CR and LF, and a `<textarea>` changes CR and CR LF to LF.
+ * Gives the value of `control` after a write of `value`. The function writes to a copy of
+ * `control`. The value sanitization of a text input removes CR and LF, and a `<textarea>` changes
+ * CR and CR LF to LF.
  */
 export function sanitizeValue(
   control: HTMLInputElement | HTMLTextAreaElement,
@@ -50,10 +51,10 @@ export function useFormEntryValue(
       return;
     }
 
-    // An entry does not refer to its control. Each control of this name whose value gives this
-    // text after the sanitization adds one entry, in the order of the controls. The listener of
-    // another part can already have given its entry its value. A disabled input is not in the
-    // list. An input with no name adds no entry, so the counts below differ.
+    // An entry does not refer to its control. Each control in `controls` adds one entry, in the
+    // order of the controls. The listener of another part can already have given its entry its
+    // value, so the entries are compared after the sanitization. A disabled input of the part is
+    // not in `controls`. An input with no name adds no entry, so the counts below differ.
     const controls = Array.from(form.elements).filter(
       (control) =>
         isTextControl(control) &&

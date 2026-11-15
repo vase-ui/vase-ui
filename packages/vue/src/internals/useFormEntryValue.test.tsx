@@ -120,6 +120,11 @@ describe('useFormEntryValue', () => {
       expected: [['address', VALUE]],
     },
     {
+      name: 'an earlier unchecked radio',
+      before: () => <input type="radio" name="address" value={VALUE} />,
+      expected: [['address', VALUE]],
+    },
+    {
       name: 'an earlier select with the text',
       before: () => (
         <select name="address">

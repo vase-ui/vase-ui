@@ -8698,6 +8698,42 @@ describe('<Select.Root />', () => {
       expect(getFormData('address')).toEqual(['Main Street 1\nFlat 2']);
       expect(events).toEqual(['input']);
     });
+
+    it('selects the item whose value gives the restored text before an item with that label', async () => {
+      const handleValueChange = vi.fn();
+      await render(
+        <form data-testid="form">
+          <Select.Root name="address" defaultValue="Box 1" onValueChange={handleValueChange}>
+            <Select.Trigger>
+              <Select.Value />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  <Select.Item value="Box 1">
+                    <Select.ItemText>Office</Select.ItemText>
+                  </Select.Item>
+                  <Select.Item value="Box 2">
+                    <Select.ItemText>Main Street 1Flat 2</Select.ItemText>
+                  </Select.Item>
+                  <Select.Item value={'Main Street 1\nFlat 2'}>
+                    <Select.ItemText>Home</Select.ItemText>
+                  </Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        </form>,
+      );
+      getHiddenInput().value = 'Main Street 1Flat 2';
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(handleValueChange.mock.calls.map((call) => call[0])).toEqual([
+        'Main Street 1\nFlat 2',
+      ]);
+    });
   });
 
   describe('autofill', () => {
