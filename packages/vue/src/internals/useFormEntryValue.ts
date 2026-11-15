@@ -1,7 +1,8 @@
-import { onActivated, shallowRef, watch } from 'vue';
+import { watch } from 'vue';
 import type { Ref } from 'vue';
 import { addEventListener } from '../common/addEventListener';
 import { isTextControl } from '../common/hydration';
+import { useKeepAliveState } from './useKeepAliveState';
 
 // A disabled control, and a checkbox or a radio that is not checked, add no entry to a form.
 const NO_ENTRY_SELECTOR =
@@ -86,26 +87,26 @@ export function useFormEntryValue(
     }
   }
 
-  // `KeepAlive` mounts a part in a held branch in an element outside the document. It moves the
-  // element into the document at the next show, and it calls no `ref` setter.
-  const rootNode = shallowRef<Node | null>(null);
-  function readRootNode() {
-    rootNode.value = input.value?.getRootNode() ?? null;
-  }
-  watch(input, readRootNode, { flush: 'post' });
-  onActivated(readRootNode);
+  const { isHeld, shown } = useKeepAliveState();
 
   watch(
-    rootNode,
-    (node, _previous, onCleanup) => {
-      if (node === null) {
+    [input, isHeld, shown] as const,
+    ([element, held], _previous, onCleanup) => {
+      if (!isTextControl(element)) {
         return;
       }
 
-      // A `formdata` event does not leave a shadow root, so the listener is on the root node. In the
-      // capture phase, it changes the entry before the listeners of the consumer on the form.
-      onCleanup(addEventListener(node, 'formdata', handleFormData, { capture: true }));
+      // A `formdata` event does not leave a shadow root, so a shown part listens on the root node.
+      // `KeepAlive` calls no `ref` setter when it moves the input, so the `watch` also runs at each
+      // activation. A leave transition keeps a held input in the document until it ends, and no
+      // hook runs at that end. A form in the held branch moves with the input, so a held part
+      // listens on the form of the input. In the capture phase, the listener changes the entry
+      // before the listeners of the consumer on the form.
+      const target = held ? element.form : element.getRootNode();
+      if (target) {
+        onCleanup(addEventListener(target, 'formdata', handleFormData, { capture: true }));
+      }
     },
-    { flush: 'sync' },
+    { flush: 'post' },
   );
 }

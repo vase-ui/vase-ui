@@ -1,6 +1,6 @@
 import { describe, expect, it, onTestFinished } from 'vitest';
-import { Teleport, defineComponent, h, shallowRef } from 'vue';
-import { createHeldBranch, createRenderer, screen } from '#test-utils';
+import { KeepAlive, Teleport, Transition, defineComponent, h, shallowRef } from 'vue';
+import { createHeldBranch, createRenderer, screen, waitFor } from '#test-utils';
 import { useFormEntryValue } from './useFormEntryValue';
 
 const VALUE = 'Main Street 1\nFlat 2';
@@ -214,5 +214,43 @@ describe('useFormEntryValue', () => {
     await show();
 
     expect(getEntries()).toEqual([['address', VALUE]]);
+  });
+
+  it('gives the entry the value in a form that KeepAlive holds with the part', async () => {
+    const { HeldBranch, hide } = createHeldBranch(() => <EntryInput value={VALUE} />, {
+      renderBranch: (part) => <form data-testid="form">{part}</form>,
+      mounted: true,
+    });
+    await render(<HeldBranch />);
+    // A query cannot find the form while `KeepAlive` holds it.
+    const form = screen.getByTestId<HTMLFormElement>('form');
+
+    await hide();
+
+    expect(form.isConnected).toBe(false);
+    expect(getEntries(form)).toEqual([['address', VALUE]]);
+  });
+
+  it('gives the entry the value in a held form after a leave transition', async () => {
+    const visible = shallowRef(true);
+    const Branch = defineComponent(() => () => (
+      <form data-testid="form">
+        <EntryInput value={VALUE} />
+      </form>
+    ));
+    await render(() => (
+      <Transition>
+        <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+      </Transition>
+    ));
+    const form = screen.getByTestId<HTMLFormElement>('form');
+
+    visible.value = false;
+    await waitFor(() => {
+      expect(form).not.toBeInTheDocument();
+    });
+    expect(screen.queryByTestId('form')).toBeNull();
+
+    expect(getEntries(form)).toEqual([['address', VALUE]]);
   });
 });
