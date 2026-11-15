@@ -2775,10 +2775,36 @@ describe('<Resizable.Root />', () => {
       expect(second).toHaveAttribute('data-dragging');
     });
 
-    it('follows a drag, a size change of the root and a transition of the panels', async () => {
+    it('moves the node with a drag', async () => {
+      await renderEdges();
+      const [edge] = await findEdges();
+      expect(edge?.style.left).toBe('195px');
+
+      await fireEvent.pointerDown(edge as HTMLElement, { ...pointer, clientX: 0, buttons: 1 });
+      await fireEvent.pointerMove(edge as HTMLElement, { ...pointer, clientX: 40, buttons: 1 });
+
+      await waitFor(() => {
+        expect(edge?.style.left).toBe('235px');
+      });
+    });
+
+    it('moves the node with a size change of the root', async () => {
+      await renderEdges();
+      const [edge] = await findEdges();
+      expect(edge?.style.left).toBe('195px');
+      await flushMicrotasks();
+
+      (screen.getByTestId('root').parentElement as HTMLElement).style.width = '300px';
+
+      await waitFor(() => {
+        expect(edge?.style.left).toBe('145px');
+      });
+    });
+
+    it('moves the node with a transition of the panels', async () => {
       const instance: { current?: InstanceType<typeof Resizable.Root> } = {};
       await render(() => (
-        <div data-testid="frame" style={{ width: '400px', height: '100px' }}>
+        <div style={{ width: '400px', height: '100px' }}>
           <Resizable.Root
             data-testid="root"
             dragEdges
@@ -2787,42 +2813,22 @@ describe('<Resizable.Root />', () => {
               instance.current = value as InstanceType<typeof Resizable.Root>;
             }}
           >
-            <Resizable.Panel
-              id="a"
-              data-testid="a"
-              style={{ transition: 'flex-grow 100ms linear' }}
-            />
-            <Resizable.Panel id="b" data-testid="b" />
+            <Resizable.Panel id="a" style={{ transition: 'flex-grow 100ms linear' }} />
+            <Resizable.Panel id="b" />
           </Resizable.Root>
         </div>
       ));
       const [edge] = await findEdges();
-      // The first layout comes with a transition, so the boundary arrives in some frames.
+      // The first layout has a transition too, so the boundary arrives in some frames.
       await waitFor(() => {
         expect(edge?.style.left).toBe('195px');
       });
       await flushMicrotasks();
 
-      // A transition moves the boundary for some frames after the layout changed.
-      await flushMicrotasks();
       instance.current?.setLayout({ a: 25, b: 75 });
+
       await waitFor(() => {
         expect(edge?.style.left).toBe('95px');
-      });
-
-      // The pointer moves the boundary with the layout of the drag, also with a transition.
-      await flushMicrotasks();
-      await fireEvent.pointerDown(edge as HTMLElement, { ...pointer, clientX: 0, buttons: 1 });
-      await fireEvent.pointerMove(edge as HTMLElement, { ...pointer, clientX: 100, buttons: 1 });
-      await waitFor(() => {
-        expect(edge?.style.left).toBe('195px');
-      });
-      await fireEvent.pointerUp(edge as HTMLElement, { ...pointer, clientX: 100 });
-
-      await flushMicrotasks();
-      screen.getByTestId('frame').style.width = '300px';
-      await waitFor(() => {
-        expect(edge?.style.left).toBe('145px');
       });
     });
 
