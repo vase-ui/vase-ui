@@ -3368,12 +3368,39 @@ describe('useDismiss', () => {
         </>,
       );
       await fireEvent.click(screen.getByTestId('open-first'));
-      await fireEvent.click(screen.getByTestId('open-second'));
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(() => fireEvent.click(screen.getByTestId('open-second')));
 
       await fireEvent.pointerDown(screen.getByTestId('second'), mouse);
 
       expect({ first: isOpen('first'), second: isOpen('second') }).toEqual({
+        first: true,
+        second: true,
+      });
+    });
+
+    it('VUE-79: keeps the popup open for a press in a newer popup of a second copy of the module in a closed shadow root', async () => {
+      const copy: typeof import('./useDismiss') = await import('./useDismiss?copy' as string);
+      const First = createLayer(useDismiss, 'first');
+      const Second = createLayer(copy.useDismiss, 'second');
+      const host = document.createElement('div');
+      document.body.append(host);
+      onTestFinished(() => host.remove());
+      const shadowRoot = host.attachShadow({ mode: 'closed' });
+      await render(
+        <>
+          <First />
+          <Teleport to={shadowRoot as unknown as HTMLElement}>
+            <Second />
+          </Teleport>
+        </>,
+      );
+      const inShadow = (testId: string) => shadowRoot.querySelector(`[data-testid="${testId}"]`);
+      await fireEvent.click(screen.getByTestId('open-first'));
+      await waitForLaterMillisecond(() => fireEvent.click(inShadow('open-second')!));
+
+      await fireEvent.pointerDown(inShadow('second')!, mouse);
+
+      expect({ first: isOpen('first'), second: inShadow('second') !== null }).toEqual({
         first: true,
         second: true,
       });

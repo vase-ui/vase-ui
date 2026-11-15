@@ -83,11 +83,19 @@ function getPopupLayers(): PopupLayers {
   return holder[POPUP_LAYERS_KEY];
 }
 
-const positionerElementGetters = new Set<() => Element | null>();
+const POSITIONER_GETTERS_KEY = Symbol.for('vase-ui.positioner-getters');
+
+// A press in a popup of a second copy of the library can belong to that popup, so the copies share
+// the getters as they share the numbers.
+function getPositionerElementGetters(): Set<() => Element | null> {
+  const holder = globalThis as { [POSITIONER_GETTERS_KEY]?: Set<() => Element | null> };
+  holder[POSITIONER_GETTERS_KEY] ??= new Set();
+  return holder[POSITIONER_GETTERS_KEY];
+}
 
 /** Whether the shadow tree of `target` holds the positioner element of a popup, at any depth. */
 function hostsPopup(target: EventTarget) {
-  for (const getPositionerElement of positionerElementGetters) {
+  for (const getPositionerElement of getPositionerElementGetters()) {
     let root = getPositionerElement()?.getRootNode();
     while (isShadowRoot(root)) {
       if (root.host === target) {
@@ -1061,7 +1069,7 @@ export function useDismiss(
   // A server calls no `onMounted` hook and runs no such `watch`, so a server render adds no
   // listener to a document or to a store that a module shares.
   onMounted(() => {
-    positionerElementGetters.add(getPositionerElement);
+    getPositionerElementGetters().add(getPositionerElement);
     update();
   });
   onDeactivated(() => {
@@ -1076,7 +1084,7 @@ export function useDismiss(
     }
   });
   onScopeDispose(() => {
-    positionerElementGetters.delete(getPositionerElement);
+    getPositionerElementGetters().delete(getPositionerElement);
     listenedStore?.context.events.off('openchange', handleOpenChange);
     cleanup?.();
     clearInsideComponentTree();
