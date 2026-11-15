@@ -2120,7 +2120,7 @@ The thing that a row names decides which kinds the row can have:
 
 - A row that names a source file also covers the cases in that file.
 - A ported case can have a condition that the Base UI case does not have only with an `engine` row. A defect of the port never goes there.
-- The conditions of a case come from the `skipIf`, `runIf`, `skip` and `todo` of the case and of each `describe` block around it. A `skipIf` gives one condition for each operand of a `||` at the top level of its argument. Each operand skips the case by itself. For example, `skipIf(isJSDOM || isWebKit)` gives `skipIf(isJSDOM)` and `skipIf(isWebKit)`.
+- The conditions of a case come from the `skipIf`, `runIf`, `skip` and `todo` of the case and of each `describe` block around it. A `skipIf` gives one condition for each operand of a `||` at the top level of its argument. Each operand skips the case by itself. For example, `skipIf(isJSDOM || isWebKit)` gives `skipIf(isJSDOM)` and `skipIf(isWebKit)`. A `runIf`, a `skip` and a `todo` each give one condition.
 - `pnpm parity:check` compares the conditions of a ported case with those of the Base UI case, as text. A ported case can omit a condition of the Base UI case. It keeps the text of each condition that it does not omit.
 - Where ESLint asks for another form of a condition of Base UI, disable that rule for the line. The case "does not set the orientation via appearance for WebKit browsers" of `slider/root/SliderRoot.test.tsx` is the example.
 - An `engine` row covers each ported case that it names and that has a condition that the Base UI case does not have. A row that names a `describe` block or a test file covers each such case and suite call in it.

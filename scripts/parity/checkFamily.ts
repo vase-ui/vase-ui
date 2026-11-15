@@ -130,7 +130,6 @@ function coveringRow(
   return best;
 }
 
-/** The terms of the conditions of a Vase UI row that the Base UI row does not have. */
 function addedConditions(upstreamRow: TestRow, vaseRow: TestRow): string[] {
   const upstream = new Set(upstreamRow.conditions?.flatMap(conditionTerms));
   return (vaseRow.conditions ?? []).flatMap(conditionTerms).filter((term) => !upstream.has(term));
@@ -278,7 +277,7 @@ export function checkFamily(
         const cover = coveringRow(rows, file, upstreamRow, (kind) => kind === 'engine');
         if (!cover) {
           problem(
-            `added condition ${added.join(', ')} on ${describesRow(vaseRow)} in ${candidates[0]}: Base UI does not have it. Remove the condition, or add an "engine" row.`,
+            `added condition on ${describesRow(vaseRow)} in ${candidates[0]}: Base UI does not have ${added.join(', ')}. Remove each added condition, or add an "engine" row.`,
           );
         } else {
           used.add(cover.index);

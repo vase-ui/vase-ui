@@ -181,11 +181,11 @@ for (const { name, source, rows } of forms) {
 const conditions: { name: string; condition: string; terms: string[] }[] = [
   {
     name: 'each operand of a || of a skipIf is a term',
-    condition: "skipIf(isJSDOM || !('onbeforematch' in window) || !/a||b/.test(text))",
+    condition: "skipIf(isJSDOM || !('onbeforematch' in window) || !/a || b/.test(text))",
     terms: [
       'skipIf(isJSDOM)',
       "skipIf(!('onbeforematch' in window))",
-      'skipIf(!/a||b/.test(text))',
+      'skipIf(!/a || b/.test(text))',
     ],
   },
   {
