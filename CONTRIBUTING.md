@@ -278,9 +278,13 @@ A part that Base UI takes from another family is exported again and not copied: 
 - A part can have declarations that must win over `style` and `stateStyle`. The part gives them to `useRenderElement` as `overridingStyle`, a function that returns a style object or `undefined`. The composable merges the result last. `undefined` or an empty object adds no `style` key.
 - `Collapsible.Panel` gives `animation-name: none` and its temporary declarations in this way. See [What differs from the React source](#what-differs-from-the-react-source).
 - Each part that renders an element sets `defineOptions({ inheritAttrs: false })`. Each attribute and listener goes to the element through `mergeProps`.
+- An attribute with the value `undefined` is not given. The part keeps its own value, as Vue keeps the default of a declared prop. `null` removes the value of the part (`VUE-103`).
 - The exported props interface of a part extends `VaseUIComponentProps<State>`. That interface declares `as`, `stateClass` and `stateStyle`.
 - The interface also extends the attributes of its default tag through `/* @vue-ignore */`: `interface SeparatorProps extends VaseUIComponentProps<SeparatorState>, /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes>`.
 - `WithVaseUIEvent` adds `preventVaseUIHandler()` to the event that each native listener gets.
+- `WithVaseUIEvent` adds `null` to the type of each attribute that is not a listener. Vue types an attribute with no `null`, so without it vue-tsc refuses `:aria-hidden="null"` on a part.
+- A part that types an attribute in an interface of its own adds `null` to that type: `autocomplete?: string | null | undefined` of `Combobox.Input`.
+- Name each attribute that reaches a declared prop in the second type argument: `WithVaseUIEvent<HTMLAttributes, 'aria-label'>`. The type adds no `null` to such an attribute, because Vue gives its value to the prop, and such a prop takes no `null`. `Input` names `id` and `name`, because it gives them to the props of `Field.Control`.
 - TSX and templates then accept the native attributes and listeners, with their types.
 - `WithVaseUIEvent` leaves out the key `as`. The part declares `as` itself, and a library can add another `as` to the attributes of each element. `motion-v` does this. Without the omit, TypeScript reports TS2320 for the props interface of each part.
 - `WithVaseUIEvent` adds the attribute `aria-description`. WAI-ARIA 1.3 defines it for each element, and the types of Vue do not list it. Without the key, `<Combobox.Chip aria-description="…">` fails the type check of a consumer that sets `strictTemplates`. Do not add the key to the types of Vue with a module augmentation. That changes the type of each element in the project of the consumer.
@@ -317,7 +321,8 @@ A part that Base UI writes as another part renders that part and no element of i
 - `test/stableSlots.test.tsx` mounts `ContextMenu.Positioner` and `Drawer.Viewport` in a compiled template, with and without a `#render` slot. A case fails when a part in the content renders again after the part renders. Add a fixture and a row to `partsWithPopup` for each new part that has a popup below it.
 - Declare each event of that part with `defineEmits`. Vue then takes the listener out of `$attrs`. Listen to the event on that part. Emit it again at once with the same arguments. That part reads `details.isCanceled` after its emit returns, so a `details.cancel()` still stops `update:x`.
 - Expose the `element` of that part.
-- A part that adds listeners to that part binds `mergeProps(listeners, $attrs)`. A listener of the consumer with the same key then runs first, and `event.preventVaseUIHandler()` stops the listener of the part. `Drawer.Viewport` does this for its swipe listeners (`VUE-58`).
+- A part that adds listeners to that part binds `mergeProps(listeners, omitUndefinedAttributes(attrs))`, with `attrs` from `useAttrs()`. A listener of the consumer with the same key then runs first, and `event.preventVaseUIHandler()` stops the listener of the part. `Drawer.Viewport` does this for its swipe listeners (`VUE-58`). An attribute of the consumer with the value `undefined` keeps the value of the part.
+- A part that removes an attribute of that part gives `null`. `Drawer.Viewport` removes `data-nested-dialog-open` of `Dialog.Viewport` in this way.
 
 A root that Base UI writes as the root of another family renders that root. `ContextMenu.Root` renders `Menu.Root`:
 
@@ -471,6 +476,7 @@ Rules:
 `mergeProps(...sets)` is public. It follows upstream's rules with Vue names:
 
 - The rightmost set wins.
+- For an attribute, an `undefined` value in a later set also wins, as in Base UI. A part clears a value of its own sets in this way.
 - `class` values are joined, rightmost first.
 - `style` values are merged, and the rightmost wins.
 - `on[A-Z]…` handlers run from right to left. An array of handlers is made flat.
@@ -487,11 +493,14 @@ Rules:
 - An event is an object that has `preventDefault`. Do not use `instanceof`.
 - The type argument is the tag of the element: `mergeProps<'button'>`. The sets and the result then have the attributes of that element. With no type argument, a set accepts the attributes of each element, and the type of the result is `NativeElements['div']`: the attributes that each HTML element has.
 - A handler in a set gets a `VaseUIEvent`. A listener of the result gets the DOM event. With a type argument, the type of the result is `NativeElements[T]`.
+- A set has the attribute types of Vue, which have no `null`. `mergeProps` copies `null` to its result, and the type of the result is the type of Vue. Vue declares no `data-*` attribute, and the type of a set accepts `null` for one.
 - Vue types a listener of an element as a function of the DOM event. A template thus refuses a bound object whose listeners need a `VaseUIEvent`.
 
 ### `useRenderElement` and `useRender`
 
 - Each part that renders an element calls the internal composable `useRenderElement` in setup. It returns `element`, which the part exposes, and the function `elementProps`.
+- `useRenderElement` leaves out each attribute of the consumer with the value `undefined`. The `props` function thus gets no such key.
+- A part that reads an attribute of the consumer in `props` reads `null` as a removal of that attribute. `Menu.RadioGroup` then gives no `aria-labelledby`, and `Field.Control` gives no `aria-describedby`. `Calendar.Grid` then has no label, so it keeps the name of the month in `aria-label`.
 - `useRenderElement` takes its `ref` callbacks one time, in `setup`. It calls a callback only when the element changes. A change of a prop that keeps the element calls none.
 - A part that chooses a holder from a prop reads the prop in the callback. A `watch` of the prop moves the element to the other holder. `ScrollAreaScrollbar.vue` is the model.
 - A part that takes its orientation from a context clears, in its `ref` callback, each holder that holds its element. Its `watch` does not run when the change removes it with its parent. `ScrollAreaThumb.vue` is the model.
@@ -503,6 +512,7 @@ Rules:
 - A focus that a function ref gives before it calls `props.ref` comes before the second listener. A part that needs that focus reads `activeElement` in its `ref` callback, as `Menu.Input` does.
 - A Vue listener of the consumer on a plain element above a part can still miss such a focus. The Vue listener of the part gets the event first.
 - `useRender` is public. It gives the API of a part to a component of a consumer.
+- `UseRenderElementProps` keeps the attribute types of Vue, with no `null`. An object of that type is then a set of `mergeProps`, as in the TypeScript sample of the `useRender` page.
 
 ### Props
 
@@ -522,6 +532,7 @@ Rules:
 - Do not omit the `aria-*` key from the attributes type that the interface extends. vue-tsc keeps an `aria-*` name of a template as it is, because its `htmlAttributes` option names `aria-*`. Without the key, `<Switch.Root aria-label="Wi-Fi">` fails the type check of a consumer that sets `strictTemplates`.
 - A template and TSX then accept `aria-label` and `ariaLabel`, each as a `string`.
 - Add each such prop to the type tests `packages/vue/test/AriaAttributesInTemplate.spec.vue` and `packages/vue/test/ariaAttributes.spec.tsx`.
+- The `aria-*` key reaches the prop, so name it in the second type argument of `WithVaseUIEvent`. See [Parts that render an element](#parts-that-render-an-element). Add a line that gives the attribute `null` and must fail to `packages/vue/src/internals/NullAttributeInTemplate.spec.vue`.
 - vue-tsc types a generic SFC as a function of its props and its context. `Component` refuses that function when the SFC has a required slot. `as` also accepts `GenericComponent` of `src/internals/types.ts`, so `<Toolbar.Button :as="Select.Trigger">` passes the type check.
 - `GenericComponent` has `/* @vue-ignore */`, so the SFC compiler writes no run-time type for `as`. Without it, the type is `[String, Function]`. The build of the package keeps the type but not `skipCheck`, so Vue warns for a component object in the development build of a consumer. `pnpm check:package` gives `Select.Trigger` to `as` of `Toolbar.Button` in a development build, and fails on a warning.
 - `Toggle` is not a generic SFC, because no other prop, event or slot of `Toggle` follows `Value`. It keeps the type parameter on its exported props interface: `ToggleProps<Value extends string = string>`, with `defineProps<ToggleProps>()`. `ToggleGroup` is a generic SFC, because the type of its `valueChange` event follows `Value`.
@@ -1442,7 +1453,7 @@ The toasts of one `Toast.Provider` are in a `ToastStore`. The code is in `src/to
 - `Toast.Title` and `Toast.Description` render only while they have content: their default slot, or the label of their toast. Base UI also counts the children of the element of `render`. A part cannot read what its `#render` slot renders, so that content does not count.
 - When the last of two titles of a toast unmounts, the root names the title that stays (`VUE-56`). Base UI gives the root no `aria-labelledby` then. The descriptions follow the same rule for `aria-describedby`.
 - A root with no title gets its name from the last description (`VUE-99`). It then has the id of the description in `aria-labelledby` and has no `aria-describedby`. WAI-ARIA requires a name for the roles `dialog` and `alertdialog`, and Base UI gives such a root no name.
-- The root does not do this when the consumer gives it an `aria-label` that is not blank or an `aria-labelledby`. The root then keeps the description in `aria-describedby`. An `aria-labelledby` that is `undefined` also counts, because it replaces the value of the root. The root reads only its own attributes. An `aria-label` on the element of the `#render` slot does not stop the name from the description, because the root does not see it. An `aria-labelledby` that this element sets after the props replaces the name, and the root then has no `aria-describedby`. Put the name on `Toast.Root`.
+- The root does not do this when the consumer gives it an `aria-label` that is not blank or an `aria-labelledby`. The root then keeps the description in `aria-describedby`. An `aria-labelledby` that is `null` is given: it removes the value of the root, and the toast has no `aria-labelledby`. An `aria-labelledby` that is `undefined` is not given, so the root names the toast from the description (`VUE-103`). The root reads only its own attributes. An `aria-label` on the element of the `#render` slot does not stop the name from the description, because the root does not see it. An `aria-labelledby` that this element sets after the props replaces the name, and the root then has no `aria-describedby`. Put the name on `Toast.Root`.
 - In the `#render` slot of a label part, mount `children` for the label of the toast. To show your own content in another element, give the content in the default slot and the element in `as`.
 - `Toast.Action` shows the `children` of `actionProps` when the toast has them, as Base UI does. Without them, it shows its default slot. It renders only while it has content: `children` that are not empty, or a default slot.
 - A label part and `Toast.Action` read `$slots.default` again before each render, because `$slots` is not reactive. A parent that adds or removes the slot renders the part again.
@@ -2000,6 +2011,7 @@ Where a case has no better form, it differs from the Base UI case only by these 
 | A case under `skipIf(!isJSDOM)` that sets `process.env.NODE_ENV` to `'production'`                         | A case in the `.node.test` file of the same folder, with `vi.stubEnv('NODE_ENV', 'production')`. Give the upstream case a `replaced` row. Vitest sets the value when it transforms a file for a browser.                                                  |
 | A function child of `Combobox.List`                                                                        | The slot `item`: `{{ item: ({ item }: { item: string }) => … }}`                                                                                                                                                                                          |
 | An attribute on a part that renders no element, such as `data-testid` on `Combobox.Value`                  | Remove the attribute. Vue warns when a part with no element gets an attribute.                                                                                                                                                                            |
+| A case that removes an attribute of a part with `{undefined}`                                              | A `replaced` row that names `VUE-103`. The case of the family gives `null` to remove the attribute, and it asserts that `undefined` keeps it.                                                                                                             |
 | A mock of `SafeReact.captureOwnerStack`                                                                    | No counterpart. Remove the mock. Vue has no owner stack.                                                                                                                                                                                                  |
 | `user.hover` that must move the highlight of a list                                                        | `user.hover`, then `fireEvent.mouseMove(element, { movementX: 1 })`. Before a `pointerleave`, also `fireEvent.pointerMove(element, { pointerType: 'mouse', movementX: 1 })`. In WebKit, a list ignores a `mousemove` or a `pointermove` with no movement. |
 | `fireEvent.mouseMove` with no movement that must move the highlight of a list                              | The same call with `movementX: 1`. In WebKit, a list ignores a `mousemove` with no movement.                                                                                                                                                              |

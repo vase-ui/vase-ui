@@ -277,6 +277,7 @@ import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
 import DialogViewport from '../../dialog/viewport/DialogViewport.vue';
 import * as DialogViewportDataAttributes from '../../dialog/viewport/DialogViewportDataAttributes';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { omitUndefinedAttributes } from '../../internals/omitUndefinedAttributes';
 import { REASONS } from '../../internals/reasons';
 import * as TransitionStatusDataAttributes from '../../internals/TransitionStatusDataAttributes';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -1277,12 +1278,13 @@ const viewportHandlers = {
     swipe.touchProps.onTouchcancel(event);
   },
   // Drawer popups use drawer-specific nested state attributes.
-  // Suppress DialogViewport's generic nested dialog attribute.
-  [DialogViewportDataAttributes.nestedDialogOpen]: undefined,
+  // Suppress DialogViewport's generic nested dialog attribute. `Dialog.Viewport` keeps its own
+  // value for an attribute that is `undefined`, so the value is `null` (VUE-103).
+  [DialogViewportDataAttributes.nestedDialogOpen]: null,
 };
 
 function viewportProps() {
-  return { ...mergeProps(viewportHandlers, attrs), ...props };
+  return { ...mergeProps(viewportHandlers, omitUndefinedAttributes(attrs)), ...props };
 }
 
 // As in Base UI, this part renders `Dialog.Viewport` and makes no element of its own.

@@ -199,8 +199,9 @@ const { element, elementProps } = useRenderElement('div', props, {
 
 function hasConsumerName(attrs: Record<string, unknown>) {
   const ariaLabel = attrs['aria-label'];
-  // The `aria-labelledby` of the consumer replaces the value of the root, also when it is
-  // `undefined`.
+  // `attrs` has no key for an attribute whose value is `undefined` (VUE-103), so such an
+  // `aria-labelledby` is not a name. An `aria-labelledby` of `null` removes the value of the
+  // root. The consumer chose to remove the name, so the description does not take its place.
   return (
     Object.hasOwn(attrs, 'aria-labelledby') ||
     (typeof ariaLabel === 'string' && ariaLabel.trim() !== '')

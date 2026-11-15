@@ -56,7 +56,7 @@ export interface SliderRootProps<
 >
   extends
     VaseUIComponentProps<SliderRootState>,
-    /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes>, 'id'> {
+    /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes, 'aria-labelledby'>, 'id'> {
   /**
    * The uncontrolled value of the slider when it's initially rendered.
    *

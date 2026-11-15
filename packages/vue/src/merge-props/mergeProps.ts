@@ -1,6 +1,6 @@
 import { normalizeClass, normalizeStyle } from 'vue';
 import type { IntrinsicElementAttributes, NativeElements } from 'vue';
-import type { VaseUIEvent, WithVaseUIEvent } from '../internals/types';
+import type { VaseUIEvent, WithVaseUIEventHandlers } from '../internals/types';
 
 type ElementType = keyof IntrinsicElementAttributes;
 type KeyOfEach<T> = T extends unknown ? keyof T : never;
@@ -31,7 +31,8 @@ type MergedProps<T extends ElementType> =
   IsEachElement<T> extends true ? NativeElements['div'] : NativeElements[T];
 // The first member accepts an object with no index signature, such as `HTMLProps`.
 type PropsOf<T extends ElementType> =
-  WithVaseUIEvent<SetAttributes<T>> | (WithVaseUIEvent<SetAttributes<T>> & DataAttributes);
+  | WithVaseUIEventHandlers<SetAttributes<T>>
+  | (WithVaseUIEventHandlers<SetAttributes<T>> & DataAttributes);
 type InputProps<T extends ElementType> =
   PropsOf<T> | ((otherProps: MergedProps<T>) => PropsOf<T>) | undefined;
 type Handler = (...args: any[]) => unknown;

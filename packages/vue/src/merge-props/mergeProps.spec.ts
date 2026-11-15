@@ -33,6 +33,8 @@ mergeProps({ for: 'id' }, slotProps);
 mergeProps({ value: 1 }, slotProps);
 mergeProps({ viewBox: '0 0 1 1' }, slotProps);
 mergeProps({ 'data-state': 'on' }, slotProps);
+// @ts-expect-error A set has the attribute types of Vue, with no `null`.
+mergeProps({ 'aria-hidden': null }, slotProps);
 mergeProps<'div'>({ 'data-state': 'on' }, slotProps);
 mergeProps(slotProps, {
   href: '/',

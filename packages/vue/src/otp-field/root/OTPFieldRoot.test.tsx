@@ -921,6 +921,31 @@ describe('<OTPField.Root />', () => {
       );
     });
 
+    it('VUE-103: removes the description of the field for an `aria-describedby` of null', async () => {
+      await render(
+        <div>
+          <Field.Root>
+            <OTPFieldBase.Root length={OTP_LENGTH} data-testid="described" />
+            <Field.Description>Enter the six digits.</Field.Description>
+          </Field.Root>
+          <Field.Root>
+            <OTPFieldBase.Root
+              length={OTP_LENGTH}
+              aria-describedby={null}
+              data-testid="undescribed"
+            />
+            <Field.Description>Enter the code.</Field.Description>
+          </Field.Root>
+        </div>,
+      );
+
+      expect(screen.getByTestId('described')).toHaveAttribute(
+        'aria-describedby',
+        screen.getByText('Enter the six digits.').id,
+      );
+      expect(screen.getByTestId('undescribed')).not.toHaveAttribute('aria-describedby');
+    });
+
     it('lets the `aria-labelledby` of the consumer win over the label of the field', async () => {
       await render(
         <Field.Root>

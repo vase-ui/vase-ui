@@ -1191,6 +1191,31 @@ describe('<Drawer.Viewport />', () => {
     expect(prevented).toBe(true);
   });
 
+  it('VUE-103: keeps the nested dialog attribute off for an undefined attribute', async () => {
+    await render(
+      <Drawer.Root open>
+        <Drawer.Portal>
+          <Drawer.Viewport data-nested-dialog-open={undefined} data-testid="parent-viewport">
+            <Drawer.Popup data-testid="parent-popup">
+              <Drawer.Root open>
+                <Drawer.Portal>
+                  <Drawer.Viewport>
+                    <Drawer.Popup />
+                  </Drawer.Viewport>
+                </Drawer.Portal>
+              </Drawer.Root>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('parent-popup')).toHaveAttribute('data-nested-drawer-open', '');
+    });
+    expect(screen.getByTestId('parent-viewport')).not.toHaveAttribute('data-nested-dialog-open');
+  });
+
   it('does not mark nested drawers as swiping until movement passes the threshold', async () => {
     await render(
       <Drawer.Root open swipeDirection="down">

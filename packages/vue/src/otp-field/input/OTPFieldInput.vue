@@ -21,7 +21,7 @@ export interface OTPFieldInputState extends Omit<OTPFieldRootState, 'filled' | '
 // The type of `autocomplete` in `InputHTMLAttributes` is a union that is too large for vue-tsc.
 // With it, `defineProps` gives the error TS2590.
 interface OTPFieldInputAutocomplete {
-  autocomplete?: string | undefined;
+  autocomplete?: string | null | undefined;
 }
 
 export interface OTPFieldInputProps
@@ -357,8 +357,11 @@ const { element, elementProps } = useRenderElement('input', props, {
     } = attrs;
     const slotIndex = index.value;
     const ariaLabel = slotIndex === 0 ? undefined : (externalAriaLabel as string | undefined);
+    // `null` of the consumer removes the label of the field (VUE-103).
     const inheritedLabel =
-      (externalAriaLabelledBy as string | undefined) ?? inputAriaLabelledBy.value;
+      externalAriaLabelledBy === undefined
+        ? inputAriaLabelledBy.value
+        : (externalAriaLabelledBy as string | null);
 
     return [
       {

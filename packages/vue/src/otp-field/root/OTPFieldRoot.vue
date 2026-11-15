@@ -40,7 +40,10 @@ export interface OTPFieldRootState extends FieldRootState {
 export interface OTPFieldRootProps
   extends
     VaseUIComponentProps<OTPFieldRootState>,
-    /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes>, 'id' | 'inputmode' | 'onChange'> {
+    /* @vue-ignore */ Omit<
+      WithVaseUIEvent<HTMLAttributes, 'aria-labelledby'>,
+      'id' | 'inputmode' | 'onChange'
+    > {
   /**
    * The id of the first input element.
    * Subsequent inputs derive their ids from it (`{id}-2`, `{id}-3`, and so on).
@@ -597,10 +600,14 @@ const { element, elementProps } = useRenderElement('div', props, {
     return [
       {
         role: 'group',
-        'aria-describedby': mergeAriaIds(
-          ariaDescribedBy as string | undefined,
-          getDescriptionProps({})['aria-describedby'] as string | undefined,
-        ),
+        // `null` of the consumer removes the ids of the descriptions (VUE-103).
+        'aria-describedby':
+          ariaDescribedBy === null
+            ? null
+            : mergeAriaIds(
+                ariaDescribedBy as string | undefined,
+                getDescriptionProps({})['aria-describedby'] as string | undefined,
+              ),
         'aria-labelledby': ariaLabelledBy.value,
       },
       elementAttrs,
