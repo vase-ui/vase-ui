@@ -1,6 +1,7 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, createSSRApp, defineComponent, nextTick, shallowRef } from 'vue';
 import type { ShallowRef } from 'vue';
+import { Toolbar } from '@vase-ui/vue/toolbar';
 import {
   createRenderer,
   describeConformance,
@@ -506,6 +507,32 @@ describe('<Resizable.Root />', () => {
 
       expect(onLayoutChange).toHaveBeenCalledWith({ a: 60, b: 40 }, expect.anything());
       expect(screen.getByTestId('extra').getBoundingClientRect().width).toBe(50);
+    });
+
+    it('join the composite around the root, in a panel and as a child of the root', async () => {
+      await render(
+        <Toolbar.Root>
+          <Resizable.Root>
+            <Resizable.Panel>
+              <Toolbar.Button data-testid="in-panel">In a panel</Toolbar.Button>
+            </Resizable.Panel>
+            <Toolbar.Button data-testid="in-root">In the root</Toolbar.Button>
+            <Resizable.Handle data-testid="handle" />
+            <Resizable.Panel>
+              <Toolbar.Button data-testid="in-next-panel">In the next panel</Toolbar.Button>
+            </Resizable.Panel>
+          </Resizable.Root>
+        </Toolbar.Root>,
+      );
+      const inPanel = screen.getByTestId('in-panel');
+      inPanel.focus();
+
+      await fireEvent.keyDown(inPanel, { key: 'ArrowRight' });
+      expect(screen.getByTestId('in-root')).toHaveFocus();
+
+      await fireEvent.keyDown(screen.getByTestId('in-root'), { key: 'ArrowRight' });
+      expect(screen.getByTestId('in-next-panel')).toHaveFocus();
+      expect(screen.getByTestId('handle')).toHaveAttribute('aria-valuenow', '50');
     });
   });
 

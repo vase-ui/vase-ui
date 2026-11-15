@@ -118,7 +118,7 @@ const ariaControls = computed(() =>
     : undefined,
 );
 
-useLabelableId({ id: () => props.id });
+useLabelableId({ id: () => props.id, element: () => element.value });
 
 const setFocused = useSetFieldFocused(isDisabled, () => element.value);
 

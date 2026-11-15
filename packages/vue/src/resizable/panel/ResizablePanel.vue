@@ -161,10 +161,7 @@ export interface ResizablePanelActions {
 
 <script setup lang="ts">
 import { computed, onActivated, onDeactivated, provide, shallowRef, watch } from 'vue';
-import type { InjectionKey } from 'vue';
 import { useIsHydrating } from '../../common/hydration';
-import { CompositeListContext } from '../../internals/composite/list/CompositeListContext';
-import type { CompositeListContextValue } from '../../internals/composite/list/CompositeListContext';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -225,6 +222,7 @@ const id = useVaseUiId(() => props.id);
 const defaultSize = props.defaultSize;
 // The list publishes its map again when the id changes, so the root sees a panel with a new id.
 const { ref: listItemRef, index } = useCompositeListItem({
+  list: root.list,
   metadata: computed(() => ({ id: id.value })),
 });
 
@@ -360,12 +358,6 @@ const actions: ResizablePanelActions = {
 };
 
 provide(ResizablePanelContext, { id, state, ...actions });
-
-// The content of the panel gets the composite list around the root, so that an item in the panel,
-// such as a button of a toolbar around the root, joins that list. The key also takes `undefined`:
-// with no list around the root, an item in the panel has no list.
-const listKey: InjectionKey<CompositeListContextValue<any> | undefined> = CompositeListContext;
-provide(listKey, root.outerList);
 
 defineExpose({ element, ...actions });
 </script>

@@ -165,7 +165,6 @@ import { useIsHydrated } from '../../common/hydration';
 import { ownerWindow } from '../../common/owner';
 import { useControlled } from '../../common/useControlled';
 import { warn } from '../../common/warn';
-import { useCompositeListContext } from '../../internals/composite/list/CompositeListContext';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import {
   createChangeEventDetails,
@@ -524,8 +523,11 @@ function syncLayoutWithPanels(map: ReadonlyMap<Element, unknown>) {
   }
 }
 
-const outerList = useCompositeListContext();
-useCompositeList({ elementsRef: shallowRef([]), onMapChange: syncLayoutWithPanels });
+const list = useCompositeList<{ id?: string }>({
+  elementsRef: shallowRef([]),
+  onMapChange: syncLayoutWithPanels,
+  provide: false,
+});
 
 onMounted(() => {
   mounted = true;
@@ -831,7 +833,7 @@ const orientation = computed(() => props.orientation);
 provide(ResizableRootContext, {
   orientation,
   direction,
-  outerList,
+  list,
   disabled: computed(() => props.disabled),
   step: computed(() => parseSize(props.step, measurementFor()) ?? 1),
   largeStep: computed(() => parseSize(props.largeStep, measurementFor()) ?? 10),
