@@ -758,6 +758,7 @@ describe('<Popover.Root />', () => {
       });
 
       const reopenedPopup = screen.getByTestId('popup');
+      await waitSingleFrame();
       switchAnimations.forEach((animation) => animation.finish());
       await waitSingleFrame();
       await flushMicrotasks();
@@ -1004,6 +1005,7 @@ describe('<Popover.Root />', () => {
       expect(switchAnimations.length).toBeGreaterThan(0);
 
       await startExit(popup, () => user.unhover(trigger2));
+      await waitSingleFrame();
 
       // The case takes each promise before it ends the animation. A canceled animation gets a new
       // promise that never settles.
