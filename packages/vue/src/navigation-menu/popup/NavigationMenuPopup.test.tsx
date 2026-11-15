@@ -265,6 +265,7 @@ describe('<NavigationMenu.Popup />', () => {
       await waitFor(() => {
         expect(popup).not.toBeInTheDocument();
       });
+      expect(screen.queryByTestId('popup')).toBe(null);
     });
 
     it('gives each open popup of a nested menu a name of its own', async () => {
