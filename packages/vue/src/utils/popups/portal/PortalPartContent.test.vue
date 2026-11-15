@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { Component } from 'vue';
+import type { GenericComponent } from '../../../internals/types';
 import PlainPart from '../../../../test/fixtures/PlainPart.vue';
 
-// A generic part, such as `Dialog.Root`, is a function that `Component` does not accept.
-type PartComponent = Component | ((...args: any[]) => any);
+type PartComponent = Component | GenericComponent;
 
 // A compiled template, as in an app. `stateClass` runs in each render of its part. The outer part
 // stands for a positioner, and the inner part stands for a popup. A `v-if` on the portal, and not

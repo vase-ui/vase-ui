@@ -10043,12 +10043,12 @@ describe('<Combobox.Root />', () => {
       await user.click(input);
       await screen.findByRole('listbox');
 
-      await user.type(input, 'tonari');
-
-      expect(screen.queryByRole('option', { name: 'Spirited Away' })).toBe(null);
-
       // Vue skips the listener of the item that the query mounted, in the millisecond of its mount.
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(async () => {
+        await user.type(input, 'tonari');
+
+        expect(screen.queryByRole('option', { name: 'Spirited Away' })).toBe(null);
+      });
       await user.click(screen.getByRole('option', { name: 'My Neighbor Totoro' }));
 
       expect(screen.queryByRole('listbox')).toBe(null);
@@ -11590,9 +11590,8 @@ describe('<Combobox.Root />', () => {
       await user.click(screen.getByRole('option', { name: 'JavaScript' }));
       await user.click(screen.getByRole('option', { name: 'TypeScript' }));
 
-      await user.type(input, 'pyth');
       // Vue skips the listener of the item that the query mounted, in the millisecond of its mount.
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(() => user.type(input, 'pyth'));
       await user.click(screen.getByRole('option', { name: 'Python' }));
 
       await flushMicrotasks();
@@ -13098,18 +13097,22 @@ describe('<Combobox.Root />', () => {
 
         const { user } = await render(<Test />);
         const trigger = screen.getByRole('button', { name: 'Choose fruit' });
-        await user.click(trigger);
-        const input = screen.getByRole('combobox');
-        await waitFor(() => expect(input).toHaveFocus());
-        if (query) {
-          await user.type(input, query);
-        }
-        await user.keyboard(query ? '{ArrowDown}' : '{ArrowDown}{ArrowDown}');
-        expect(screen.getByRole('option', { name: 'Banana' })).toHaveAttribute('data-highlighted');
-        onItemHighlighted.mockClear();
-
-        // Vue skips the listener of the item that the query mounted, in the millisecond of its mount.
-        await waitForLaterMillisecond();
+        // Vue skips the listener of an item that the open or the query mounted, in the millisecond
+        // of its mount.
+        const input = await waitForLaterMillisecond(async () => {
+          await user.click(trigger);
+          const combobox = screen.getByRole('combobox');
+          await waitFor(() => expect(combobox).toHaveFocus());
+          if (query) {
+            await user.type(combobox, query);
+          }
+          await user.keyboard(query ? '{ArrowDown}' : '{ArrowDown}{ArrowDown}');
+          expect(screen.getByRole('option', { name: 'Banana' })).toHaveAttribute(
+            'data-highlighted',
+          );
+          onItemHighlighted.mockClear();
+          return combobox;
+        });
         await user.keyboard('{Enter}');
         await waitForDialogToHide();
         expect(onValueChange).toHaveBeenLastCalledWith(multiple ? ['Banana'] : 'Banana');

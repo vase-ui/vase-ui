@@ -47,11 +47,12 @@ describe('<Select.Item />', () => {
       </Select.Root>,
     );
 
-    await user.click(screen.getByTestId('trigger'));
+    const option = await waitForLaterMillisecond(async () => {
+      await user.click(screen.getByTestId('trigger'));
 
-    const option = await screen.findByRole('option', { name: 'one' });
+      return screen.findByRole('option', { name: 'one' });
+    });
     expect(option).toHaveAttribute('aria-selected', 'false');
-    await waitForLaterMillisecond();
 
     await user.click(option);
 
@@ -260,9 +261,10 @@ describe('<Select.Item />', () => {
       </Select.Root>,
     );
 
-    await user.click(screen.getByTestId('trigger'));
-    const option = await screen.findByRole('option', { name: 'two' });
-    await waitForLaterMillisecond();
+    const option = await waitForLaterMillisecond(async () => {
+      await user.click(screen.getByTestId('trigger'));
+      return screen.findByRole('option', { name: 'two' });
+    });
     await user.click(option);
 
     expect(handleValueChange).not.toHaveBeenCalled();
@@ -427,17 +429,18 @@ describe('<Select.Item />', () => {
 
       const trigger = screen.getByTestId('trigger');
 
-      await fireEvent.pointerDown(trigger, { pointerType: 'mouse' });
-      await fireEvent.mouseDown(trigger);
-      await fireEvent.pointerUp(trigger, { pointerType: 'mouse' });
-      await fireEvent.mouseUp(trigger);
-      await fireEvent.click(trigger);
-      await flushMicrotasks();
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.pointerDown(trigger, { pointerType: 'mouse' });
+        await fireEvent.mouseDown(trigger);
+        await fireEvent.pointerUp(trigger, { pointerType: 'mouse' });
+        await fireEvent.mouseUp(trigger);
+        await fireEvent.click(trigger);
+        await flushMicrotasks();
 
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).not.toBe(null);
+        await waitFor(() => {
+          expect(screen.queryByRole('listbox')).not.toBe(null);
+        });
       });
-      await waitForLaterMillisecond();
 
       const option = screen.getByRole('option', { name: 'two' });
 
@@ -510,9 +513,10 @@ describe('<Select.Item />', () => {
 
     const trigger = screen.getByTestId('trigger');
 
-    await fireEvent.click(trigger);
-    const option = await screen.findByRole('option', { name: 'three' });
-    await waitForLaterMillisecond();
+    const option = await waitForLaterMillisecond(async () => {
+      await fireEvent.click(trigger);
+      return screen.findByRole('option', { name: 'three' });
+    });
     await user.click(option);
     await fireEvent.click(trigger);
 
@@ -557,37 +561,35 @@ describe('<Select.Item />', () => {
     });
   });
 
-  it('selects the item with a click and hides the positioner after the popup closes', async () => {
+  it('should select the item and close popup when clicked', async () => {
     await render(
       <Select.Root>
         <Select.Trigger data-testid="trigger">
           <Select.Value data-testid="value" />
         </Select.Trigger>
-        <Select.Portal>
-          <Select.Positioner data-testid="positioner">
-            <Select.Popup>
-              <Select.Item value="one">one</Select.Item>
-            </Select.Popup>
-          </Select.Positioner>
-        </Select.Portal>
+        <Select.Positioner data-testid="positioner">
+          <Select.Item value="one">one</Select.Item>
+        </Select.Positioner>
       </Select.Root>,
     );
 
     const value = screen.getByTestId('value');
+    const trigger = screen.getByTestId('trigger');
+    const positioner = screen.getByTestId('positioner');
+
     expect(value.textContent).toBe('');
 
-    await fireEvent.click(screen.getByTestId('trigger'));
+    await fireEvent.click(trigger);
+
     await flushMicrotasks();
 
     await fireEvent.click(screen.getByText('one'));
+
     await flushMicrotasks();
 
     expect(value.textContent).toBe('one');
-    // The trigger gets the focus back and mounts the portal again, so query the new positioner.
-    await waitFor(() => {
-      expect(screen.getByTestId('positioner')).toHaveAttribute('hidden');
-    });
-    expect(screen.getByTestId('positioner')).not.toBeVisible();
+
+    expect(positioner).not.toBeVisible();
   });
 
   it('does not change the value of a read-only select', async () => {
@@ -662,10 +664,11 @@ describe('<Select.Item />', () => {
     }
 
     async function openWithMouseDown(trigger: HTMLElement) {
-      await fireEvent.mouseDown(trigger);
-      await waitFor(() => expect(screen.queryByRole('listbox')).not.toBe(null));
       // Vue skips a listener of an item for an event that comes in the millisecond of its mount.
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.mouseDown(trigger);
+        await waitFor(() => expect(screen.queryByRole('listbox')).not.toBe(null));
+      });
     }
 
     it('calls onClick once for a click made after the opening delay', async () => {

@@ -404,10 +404,11 @@ describe('<Menu.Popup />', () => {
 
       const trigger = screen.getByText('Open');
 
-      await user.click(trigger);
-      const item = await screen.findByText('Close');
       // The item mounts with the menu. Vue skips its listener for an event of that millisecond.
-      await waitForLaterMillisecond();
+      const item = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        return screen.findByText('Close');
+      });
       await fireEvent.pointerDown(item, { pointerType: 'mouse' });
       await fireEvent.click(item, { detail: 1 });
       await waitFor(() => {

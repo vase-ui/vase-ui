@@ -43,11 +43,27 @@
       "reason": "The case gives the lazy wrapper of the React Flight client as `render`."
     },
     {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
+      "describe": ["<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>", "leaving the menu"],
+      "title": "keeps input focus when a Shift+Tab close is canceled",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/filter-root/MenuFilterRoot.test.tsx",
+      "reason": "The case asserts that the input keeps the focus for Shift+Tab when the root cancels the close. Vase UI moves the focus to the trigger, and the menu stays open (VUE-69). The case \"VUE-69: moves the focus to the trigger for Shift+Tab from the input when the root cancels the close\" tests it."
+    },
+    {
       "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.webkit.test.tsx",
       "describe": ["<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider> (WebKit)"],
       "title": "keeps selection state for an auto-focused input in Strict Mode",
       "kind": "not-applicable",
       "reason": "The case checks the selection state after the double effects of Strict Mode. Vue has no Strict Mode."
+    },
+    {
+      "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
+      "describe": ["<Menu.Root />"],
+      "title": "keeps focus in the menu when a Shift+Tab close is canceled",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/root/MenuRoot.test.tsx",
+      "reason": "The case asserts that the focus stays in the menu for Shift+Tab when the root cancels the close. Vase UI moves the focus to the trigger, and the menu stays open (VUE-69). The case \"VUE-69: moves the focus to the trigger for Shift+Tab when the root cancels the close\" tests it."
     },
     {
       "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",

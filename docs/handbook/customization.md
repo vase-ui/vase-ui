@@ -49,6 +49,8 @@ Call the `cancel()` method on `eventDetails` to cancel an event. This sample kee
 
 This lets you leave the part uncontrolled, because its internal state does not change. You do not need external state with a check on each update.
 
+When the part is controlled, `cancel()` is still the way to decline a change. A request that you do not apply to the `open` prop stays pending until the prop changes, so the part still reports a later close.
+
 Call `cancel()` before the listener returns. A call after an `await` has no effect.
 
 ### Allowing propagation of the DOM event
@@ -63,7 +65,7 @@ To stop the handler of Vase UI for an event such as `paste`, call `event.prevent
 
 <<< ../examples/customization/PreventHandler.vue{7}
 
-Use it as an escape hatch where no prop customizes the behavior yet.
+Your listener then takes over the interaction. Use the method with [controlled state](#controlling-components-with-state) to fit the behavior of a part to your app. When the interaction causes a change event, it is more explicit to [cancel that event](#canceling-a-vase-ui-event) for a specific `reason`.
 
 The method has no effect in these cases:
 
