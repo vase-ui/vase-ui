@@ -54,6 +54,7 @@ import {
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { isReleaseAtPressPoint } from '../../utils/popups/isReleaseAtPressPoint';
 import { useDomEffect } from '../../utils/popups/useDomEffect';
 import {
   useComboboxDerivedItemsContext,
@@ -234,6 +235,12 @@ const { element, elementProps } = useRenderElement('div', props, {
         store.context.pointerDownItemRef.value = null;
 
         if (!isInteractive() || event.button !== 0 || pointerStartedOnItem || !highlighted.value) {
+          return;
+        }
+
+        // The open can put an item under a pointer that does not move (`VUE-84`).
+        const press = store.context.openPressRef.value;
+        if (press && isReleaseAtPressPoint(press, event)) {
           return;
         }
 

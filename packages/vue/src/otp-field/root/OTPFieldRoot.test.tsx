@@ -11,11 +11,15 @@ import {
   flushMicrotasks,
   hiddenInputSizeTests,
   hydrate,
+  hydrateAfter,
+  mockNavigationType,
   pasteText,
   renderOnServer,
   screen,
+  within,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
+import OTPFieldInputBeforeHydration from '../input/OTPFieldInputBeforeHydration.test.vue';
 import OTPFieldRootHydration from './OTPFieldRootHydration.test.vue';
 import OTPFieldRootReplace from './OTPFieldRootReplace.test.vue';
 
@@ -25,6 +29,8 @@ async function settleReset() {
   vi.advanceTimersByTime(0);
   await flushMicrotasks();
 }
+
+const BEFORE_HYDRATION_FIXTURE = 'src/otp-field/input/OTPFieldInputBeforeHydration.test.vue';
 
 function getHiddenInput(container: Element) {
   return container.querySelector<HTMLInputElement>('input[aria-hidden]')!;
@@ -2447,6 +2453,53 @@ describe('<OTPField.Root />', () => {
       );
 
       await hydrate(OTPFieldRootHydration, { serverHtml, props });
+    });
+  });
+
+  describe('VUE-81: the state that the input got before the hydration', () => {
+    async function hydrateFilled(navigationType: NavigationTimingType) {
+      mockNavigationType(navigationType);
+      const serverHtml = await renderOnServer(BEFORE_HYDRATION_FIXTURE);
+      const { container } = await hydrateAfter(OTPFieldInputBeforeHydration, {
+        serverHtml,
+        before(serverContainer) {
+          within(serverContainer).getByTestId('outside').focus();
+          getHiddenInput(serverContainer).value = '1234';
+        },
+      });
+      await flushMicrotasks();
+      const fixture = within(container);
+      return {
+        fixture,
+        hiddenInput: getHiddenInput(container),
+        slots: [0, 1, 2, 3].map((index) => fixture.getByTestId<HTMLInputElement>(`slot-${index}`)),
+      };
+    }
+
+    it('takes a code that an autofill wrote into the hidden input', async () => {
+      const { fixture, slots } = await hydrateFilled('navigate');
+
+      expect(fixture.getByTestId('model').textContent).toBe('1234');
+      expect(fixture.getByTestId('changes').textContent).toBe('1234 (input-change)');
+      expect(fixture.getByTestId('completes').textContent).toBe('1234 (input-change)');
+      expect(fixture.getByTestId('submits').textContent).toBe('1');
+      expect(slots.map((slot) => slot.value)).toEqual(['1', '2', '3', '4']);
+      expect(fixture.getByTestId('outside')).toHaveFocus();
+    });
+
+    it.each([
+      { name: 'a move in the history', type: 'back_forward' as const },
+      { name: 'a reload', type: 'reload' as const },
+    ])('takes no code from the hidden input after $name', async ({ type }) => {
+      const { fixture, hiddenInput, slots } = await hydrateFilled(type);
+
+      expect(hiddenInput.value).toBe('');
+      expect(slots.map((slot) => slot.value)).toEqual(['', '', '', '']);
+      expect(fixture.getByTestId('model').textContent).toBe('');
+      expect(fixture.getByTestId('changes').textContent).toBe('');
+      expect(fixture.getByTestId('completes').textContent).toBe('');
+      expect(fixture.getByTestId('submits').textContent).toBe('0');
+      expect(fixture.getByTestId('field')).not.toHaveAttribute('data-touched');
     });
   });
 

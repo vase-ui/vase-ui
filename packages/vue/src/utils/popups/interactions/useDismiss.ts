@@ -28,6 +28,7 @@ import { useTimeout } from '../../../common/useTimeout';
 import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import type { FloatingUIOpenChangeDetails } from '../../../internals/types';
+import { isInHeldBranch } from '../../../internals/useKeepAliveState';
 import { createAttribute } from '../createAttribute';
 import { isEventTargetWithin, isRootElement } from '../element';
 import { isVirtualClick } from '../event';
@@ -486,7 +487,7 @@ export function useDismiss(
     nextStore.context.events.on('openchange', handleOpenChange);
   }
 
-  let deactivated = false;
+  let deactivated = isInHeldBranch();
   let cleanup: (() => void) | undefined;
 
   function update() {

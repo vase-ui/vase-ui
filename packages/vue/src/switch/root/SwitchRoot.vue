@@ -102,8 +102,7 @@ export type SwitchRootChangeEventDetails = VaseUIChangeEventDetails<SwitchRootCh
 
 <script setup lang="ts">
 import { computed, nextTick, provide, shallowRef, watch } from 'vue';
-import { addEventListener } from '../../common/addEventListener';
-import { ownerWindow } from '../../common/owner';
+import { queueInputTake } from '../../common/hydration';
 import { useControlled } from '../../common/useControlled';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -121,6 +120,7 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useFormReset } from '../../internals/useFormReset';
+import { useFormRestore } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { dispatchClickWithModifiers } from '../../utils/dispatchClickWithModifiers';
@@ -244,8 +244,7 @@ const ariaLabelledBy = useAriaLabelledBy(
 );
 
 // Vue writes `checked` to the input only when the value changes between two renders, and
-// hydration does not write it. A browser changes the input with no change of the state: it
-// restores the form state of a page, and it keeps the result of a click that a parent does not
+// hydration does not write it. A browser keeps the result of a click that a parent does not
 // accept. A form would then submit a state that the switch does not show.
 function writeCheckedToInput() {
   const input = inputElement.value;
@@ -254,7 +253,7 @@ function writeCheckedToInput() {
   }
 }
 
-function requestChange(nextChecked: boolean, event: Event) {
+function requestChange(nextChecked: boolean, event?: Event) {
   const details = createChangeEventDetails(REASONS.none, event);
 
   emit('checkedChange', nextChecked, details);
@@ -286,6 +285,21 @@ function onInputClick(event: MouseEvent) {
   void nextTick(writeCheckedToInput);
 }
 
+// The input changed with no event that the switch handled: a press on a native label before the
+// hydration, or a form state that the browser restored.
+function takeInputState(event?: Event) {
+  const input = inputElement.value;
+  if (!input) {
+    return;
+  }
+
+  if (input.checked !== isChecked.value && !props.readOnly && !isDisabled.value) {
+    requestChange(input.checked, event);
+  }
+
+  void nextTick(writeCheckedToInput);
+}
+
 useFormReset(inputElement, (event) => {
   const hasChanged =
     props.checked === undefined &&
@@ -299,20 +313,28 @@ useFormReset(inputElement, (event) => {
   }
 });
 
+// Vue writes `checked` to the attribute too, so only an input that changed before the hydration
+// differs from its `defaultChecked`. Its take waits until the field recorded its initial value.
 watch(
   inputElement,
-  (input, _previous, onCleanup) => {
+  (input) => {
     if (!input) {
       return;
     }
 
-    writeCheckedToInput();
-
-    // Chromium restores the form state of a page after `load`, with no event on the input.
-    onCleanup(addEventListener(ownerWindow(input), 'pageshow', writeCheckedToInput));
+    if (input.checked === input.defaultChecked) {
+      writeCheckedToInput();
+    } else {
+      queueInputTake(() => {
+        takeInputState();
+        return true;
+      });
+    }
   },
   { flush: 'post' },
 );
+
+useFormRestore(inputElement, takeInputState);
 
 const state = computed<SwitchRootState>(() => ({
   ...fieldState.value,

@@ -10,7 +10,7 @@ interface ElementBounds {
 // Tolerance around the element bounds so a fast click whose pointer drifts slightly
 // during press-release isn't mistaken for a drag-off-and-release cancellation.
 // Matches typical OS/browser drag-initiation thresholds.
-export const BOUNDARY_OFFSET = 5;
+const BOUNDARY_OFFSET = 5;
 
 /**
  * Determines if a mouse event occurred within the bounds of an element
