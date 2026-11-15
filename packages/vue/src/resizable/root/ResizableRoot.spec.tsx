@@ -107,6 +107,7 @@ function assertCommit(details: CommitDetails) {
   }}
 />;
 <Resizable.Panel rootResizeBehavior="proportional" snapTolerance={5} />;
+<Resizable.Panel snapPoints={[25, '300px'] as const} />;
 // @ts-expect-error The behavior is proportional or fixed.
 <Resizable.Panel rootResizeBehavior="grow" />;
 // @ts-expect-error A snap point is a number or a string.

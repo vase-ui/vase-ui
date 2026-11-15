@@ -113,7 +113,7 @@ export interface ResizablePanelProps
    * panel that size. Each size takes the same sizes as `defaultSize`. A snap point that is less than
    * `minSize` or greater than `maxSize` is not used. A key and a method do not snap.
    */
-  snapPoints?: (number | string)[] | undefined;
+  snapPoints?: readonly (number | string)[] | undefined;
   /**
    * The distance from a snap point inside which a drag snaps to that point. It takes the same sizes
    * as `defaultSize`.

@@ -30,20 +30,24 @@ type Length = 'px' | 'em' | 'rem' | 'vh' | 'vw';
 
 const SIZE = /^(\d*\.?\d+)(%|px|em|rem|vh|vw)?$/;
 
-function readSize(value: number | string): { amount: number; unit: '%' | Length } {
+function splitSize(value: number | string): { amount: number; unit: '%' | Length } | undefined {
   if (typeof value === 'number') {
-    if (Number.isFinite(value) && value >= 0) {
-      return { amount: value, unit: '%' };
-    }
-  } else {
-    const [, text, unit = '%'] = SIZE.exec(value.trim()) ?? [];
-    if (text !== undefined) {
-      return { amount: Number(text), unit: isLengthUnit(unit) ? unit : '%' };
-    }
+    return Number.isFinite(value) && value >= 0 ? { amount: value, unit: '%' } : undefined;
   }
-  throw new Error(
-    `Vase UI: The size ${typeof value === 'string' ? `"${value}"` : value} is not valid. Resizable cannot use it as a size. Use a number of 0 or more, or a string of such a number with an optional unit: "%", "px", "em", "rem", "vh" or "vw". Examples are 30, "30%" and "200px".`,
-  );
+  const [, text, unit = '%'] = SIZE.exec(value.trim()) ?? [];
+  return text === undefined
+    ? undefined
+    : { amount: Number(text), unit: isLengthUnit(unit) ? unit : '%' };
+}
+
+function readSize(value: number | string): { amount: number; unit: '%' | Length } {
+  const size = splitSize(value);
+  if (size === undefined) {
+    throw new Error(
+      `Vase UI: The size ${typeof value === 'string' ? `"${value}"` : value} is not valid. Resizable cannot use it as a size. Use a number of 0 or more, or a string of such a number with an optional unit: "%", "px", "em", "rem", "vh" or "vw". Examples are 30, "30%" and "200px".`,
+    );
+  }
+  return size;
 }
 
 // The pattern of `SIZE` allows no other unit.
@@ -101,22 +105,11 @@ export function parsePixels(
 }
 
 /**
- * The unit of a size, or `undefined` for a number and for a form that is not valid. This function
- * does not throw: `parseSize` reports a size that is not valid where the root uses the size.
- */
-function getUnit(value: number | string | undefined): '%' | Length | undefined {
-  if (typeof value !== 'string') {
-    return value === undefined ? undefined : '%';
-  }
-  const [, text, unit = '%'] = SIZE.exec(value.trim()) ?? [];
-  return text === undefined ? undefined : isLengthUnit(unit) ? unit : '%';
-}
-
-/**
- * Whether the size is a length: `px`, `em`, `rem`, `vh` or `vw`.
+ * Whether the size is a length: `px`, `em`, `rem`, `vh` or `vw`. A size that is not valid is not a
+ * length, and this function does not throw: `parseSize` reports it where the root uses the size.
  */
 export function isLength(value: number | string | undefined): boolean {
-  const unit = getUnit(value);
+  const unit = value === undefined ? undefined : splitSize(value)?.unit;
   return unit !== undefined && isLengthUnit(unit);
 }
 
@@ -124,7 +117,7 @@ export function isLength(value: number | string | undefined): boolean {
  * Whether the size is a length in `vh` or `vw`, which follow the size of the window.
  */
 export function isViewportLength(value: number | string | undefined): boolean {
-  const unit = getUnit(value);
+  const unit = value === undefined ? undefined : splitSize(value)?.unit;
   return unit === 'vh' || unit === 'vw';
 }
 
