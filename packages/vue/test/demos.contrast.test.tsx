@@ -12,12 +12,15 @@ import '../../../docs/demos/tailwind.css';
 // Each demo of a row. A demo with a Tailwind file gets the cases of that file too.
 const modules = import.meta.glob<{ default: Component }>(
   [
+    '../../../docs/demos/alert-dialog/detached-triggers-simple/{css-modules,tailwind}/index.vue',
     '../../../docs/demos/alert-dialog/hero/{css-modules,tailwind}/index.vue',
     '../../../docs/demos/autocomplete/fuzzy-matching/{css-modules,tailwind}/index.vue',
     '../../../docs/demos/combobox/async-single/{css-modules,tailwind}/index.vue',
     '../../../docs/demos/combobox/input-inside-popup/{css-modules,tailwind}/index.vue',
     '../../../docs/demos/date-field/date-time/{css-modules,tailwind}/index.vue',
     '../../../docs/demos/navigation-menu/hero/{css-modules,tailwind}/index.vue',
+    '../../../docs/demos/navigation-menu/nested/{css-modules,tailwind}/index.vue',
+    '../../../docs/demos/navigation-menu/nested-inline/{css-modules,tailwind}/index.vue',
     '../../../docs/demos/select/hero/{css-modules,tailwind}/index.vue',
     '../../../docs/demos/select/object-values/{css-modules,tailwind}/index.vue',
   ],
@@ -159,10 +162,37 @@ async function typeInto(input: HTMLElement, text: string) {
   });
 }
 
+interface Row {
+  name: string;
+  demo: string;
+  reach: () => Promise<Element>;
+}
+
+function redButtonRows(buttonName: string, demo: string): Row[] {
+  return [
+    {
+      name: `${buttonName} in the frame while pressed`,
+      demo,
+      reach: () => press(screen.getByRole('button', { name: 'Discard draft' })),
+    },
+    {
+      name: `${buttonName} in a popup while pressed`,
+      demo,
+      async reach() {
+        await waitForLaterMillisecond(() =>
+          userEvent.click(screen.getByRole('button', { name: 'Discard draft' })),
+        );
+        const button = await waitFor(() => screen.getByRole('button', { name: 'Discard' }));
+        return press(button);
+      },
+    },
+  ];
+}
+
 // Each row gives the element whose text the case measures, in the state of its name. A real press
 // gives the document the input modality of a mouse, so the rows with a press come after the rows
 // that use the keyboard.
-const rows: { name: string; demo: string; reach: () => Promise<Element> }[] = [
+const rows: Row[] = [
   {
     name: 'placeholder of Select on hover',
     demo: 'select/hero',
@@ -218,6 +248,37 @@ const rows: { name: string; demo: string; reach: () => Promise<Element> }[] = [
     },
   },
   {
+    name: 'hint of an open submenu trigger',
+    demo: 'navigation-menu/nested-inline',
+    async reach() {
+      screen.getByRole('button', { name: 'Product' }).focus();
+      await userEvent.keyboard('{Enter}');
+      // The submenu of the default value is open, and no pointer is on its trigger.
+      const trigger = await waitFor(() => screen.getByRole('button', { name: /^Developers/ }));
+      await waitFor(() => {
+        expect(trigger).toHaveAttribute('data-pressed');
+      });
+      return trigger;
+    },
+  },
+  {
+    name: 'description of an open submenu trigger',
+    demo: 'navigation-menu/nested',
+    async reach() {
+      const trigger = await waitForLaterMillisecond(async () => {
+        screen.getByRole('button', { name: 'Overview' }).focus();
+        await userEvent.keyboard('{Enter}');
+        return waitFor(() => screen.getByRole('button', { name: /^Handbook/ }));
+      });
+      trigger.focus();
+      await userEvent.keyboard('{Enter}');
+      await waitFor(() => {
+        expect(trigger).toHaveAttribute('data-pressed');
+      });
+      return trigger;
+    },
+  },
+  {
     name: 'link description on hover',
     demo: 'navigation-menu/hero',
     async reach() {
@@ -248,22 +309,8 @@ const rows: { name: string; demo: string; reach: () => Promise<Element> }[] = [
       return trigger;
     },
   },
-  {
-    name: 'red button in the frame while pressed',
-    demo: 'alert-dialog/hero',
-    reach: () => press(screen.getByRole('button', { name: 'Discard draft' })),
-  },
-  {
-    name: 'red button in a popup while pressed',
-    demo: 'alert-dialog/hero',
-    async reach() {
-      await waitForLaterMillisecond(() =>
-        userEvent.click(screen.getByRole('button', { name: 'Discard draft' })),
-      );
-      const button = await waitFor(() => screen.getByRole('button', { name: 'Discard' }));
-      return press(button);
-    },
-  },
+  ...redButtonRows('red button', 'alert-dialog/hero'),
+  ...redButtonRows('danger button', 'alert-dialog/detached-triggers-simple'),
 ];
 
 const cases = rows.flatMap((row) =>
