@@ -6,11 +6,15 @@ description: An unstyled Vue toast component to generate notifications.
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoToastAnchored from '../demos/toast/anchored/css-modules/index.vue';
+import DemoToastAnchoredTailwind from '../demos/toast/anchored/tailwind/index.vue';
 import DemoToastCustom from '../demos/toast/custom/css-modules/index.vue';
 import DemoToastDeduplicate from '../demos/toast/deduplicate/css-modules/index.vue';
 import DemoToastHero from '../demos/toast/hero/css-modules/index.vue';
+import DemoToastHeroTailwind from '../demos/toast/hero/tailwind/index.vue';
 import DemoToastPosition from '../demos/toast/position/css-modules/index.vue';
+import DemoToastPositionTailwind from '../demos/toast/position/tailwind/index.vue';
 import DemoToastPromise from '../demos/toast/promise/css-modules/index.vue';
 import DemoToastUndo from '../demos/toast/undo/css-modules/index.vue';
 import DemoToastVaryingHeights from '../demos/toast/varying-heights/css-modules/index.vue';
@@ -22,7 +26,12 @@ Generates toast notifications.
 
 <DemoFrame>
   <DemoToastHero />
+  <template #tailwind>
+    <DemoToastHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -35,6 +44,22 @@ Generates toast notifications.
 <<< ../demos/toast/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/toast/hero/tailwind/index.vue
+
+<<< ../demos/toast/hero/tailwind/ToastButton.vue
+
+<<< ../demos/toast/hero/tailwind/ToastList.vue
+
+:::
+
+</DemoSource>
 
 ## Anatomy
 
@@ -146,7 +171,12 @@ To anchor a toast to an element, render it in `<Toast.Positioner>` and give the 
 
 <DemoFrame>
   <DemoToastAnchored />
+  <template #tailwind>
+    <DemoToastAnchoredTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -162,6 +192,24 @@ To anchor a toast to an element, render it in `<Toast.Positioner>` and give the 
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/toast/anchored/tailwind/index.vue
+
+<<< ../demos/toast/anchored/tailwind/AnchoredToasts.vue
+
+<<< ../demos/toast/anchored/tailwind/CopyButton.vue
+
+<<< ../demos/toast/anchored/tailwind/anchoredToastManager.ts
+
+:::
+
+</DemoSource>
+
 A prop of `<Toast.Positioner>` wins over the same key of `positionerProps`. When neither of them sets a key, the positioner uses the default of that key: `'top'` for `side`, `'center'` for `align`, `0` for `sideOffset` and `alignOffset`, `5` for `arrowPadding` and `collisionPadding`, `'clipping-ancestors'` for `collisionBoundary`, `'absolute'` for `positionMethod`, and `false` for `sticky` and `disableAnchorTracking`.
 
 Render the anchored toasts in a `<Toast.Provider>` of their own, apart from the stacked toasts. Make a global toast manager for each provider, so that the app can manage each kind of toast:
@@ -174,7 +222,12 @@ Your own CSS sets the position of the toasts. To change the position, change the
 
 <DemoFrame>
   <DemoToastPosition />
+  <template #tailwind>
+    <DemoToastPositionTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -187,6 +240,22 @@ Your own CSS sets the position of the toasts. To change the position, change the
 <<< ../demos/toast/position/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/toast/position/tailwind/index.vue
+
+<<< ../demos/toast/position/tailwind/ToastButton.vue
+
+<<< ../demos/toast/position/tailwind/ToastList.vue
+
+:::
+
+</DemoSource>
 
 ### Undo action
 
