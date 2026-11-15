@@ -997,7 +997,7 @@ The focus helpers of a popup are in `src/utils/popups/focus`.
 - It keeps two inside guards beside `element` with `useElementSiblings`, unless it is disabled. A modal popup has them. A popup that is not modal has them only in a `FloatingPortal`. The part thus has one root node (`VUE-60`).
 - `nodesAfterElement` gives nodes of the part that go after the element, before the last inside guard.
 - The two guards do not count as tabbable content of the popup. When the element of the part has no focusable marker, the positioner is the popup element, and the guards are in it.
-- `Combobox.Popup` disables its focus manager when the popup closes, not when it unmounts. During an exit animation, the popup then has no guards, and the focus returns at the close (`BUG-5519`).
+- `Combobox.Popup`, `Dialog.Popup` and `Drawer.Popup` disable their focus manager when the popup closes, not when it unmounts. During an exit animation, the popup then has no guards, and the focus returns at the close (`BUG-5519`). The focus also returns at the close while `preventUnmountOnClose()` keeps a dialog mounted.
 - Each prop takes its default only when its value is `undefined`, as `withDefaults` does. `null` has its own meaning for `openInteractionType` and `returnFocus`.
 - The composable reads the getter before each render of the part, as Vue updates the props of a component. A cleanup after the unmount thus reads the props of the last render. A live read can give a state that changed at the unmount, such as the active trigger of a submenu, and the focus then does not return.
 - A modal popup has no guards when `initialFocus` is `false` and its reference is a typeable element with `role="combobox"`. The focus stays in the reference then.
