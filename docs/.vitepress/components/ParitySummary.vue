@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { data } from '../../parity.data.ts';
-import ScrollBox from './ScrollBox.vue';
 import { baseUiCommitUrl } from './links.ts';
+import ScrollBox from './ScrollBox.vue';
 </script>
 
 <template>

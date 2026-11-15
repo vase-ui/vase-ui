@@ -13,9 +13,9 @@ let observer: ResizeObserver | undefined;
 // A keyboard user scrolls the box with the arrow keys, so the box or an element in it must take the
 // focus (WCAG 2.1.1). A table of the API reference has no such element. The box takes the focus
 // only while its content is wider than the box, so a box that does not scroll adds no stop to the
-// sequence of the Tab key. A box that can get the focus has a role and a name, as WAI-ARIA requires
-// for each focusable element. The role is `group`, not `region`, because a table is not a landmark
-// of the page.
+// sequence of the Tab key. A box that can get the focus has a name, so that a screen reader says
+// which table it is. WAI-ARIA 1.2 does not allow a name on a `div` with no role, so the box also
+// has a role. The role is `group`, not `region`, because a table is not a landmark of the page.
 onMounted(() => {
   const element = box.value;
   if (!element) {
