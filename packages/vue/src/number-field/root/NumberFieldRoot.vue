@@ -711,7 +711,7 @@ useFormReset(hiddenInputElement, (event) => {
   clearFieldError(numberValue.value);
 });
 
-useFormRestoreAsInput(hiddenInputElement, () => hiddenInputText.value, false);
+useFormRestoreAsInput(hiddenInputElement, () => handledValue, false);
 
 // The style is the constant itself, in an object that no `mergeProps` call makes.
 // `handleHiddenInputInvalid` then keeps the size that it writes.

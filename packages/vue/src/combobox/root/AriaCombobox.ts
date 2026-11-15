@@ -1909,6 +1909,10 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
 
   const writesHiddenValue = useHiddenValueBeforeHydration(() => hiddenInputElement.value);
 
+  // The value that the input has after the last event that the root handled. A write of Vue or of
+  // the root sets it too.
+  let handledValue: string | undefined;
+
   // Vue writes the value to the input only when the root renders. A browser can change the input
   // with no change of the state, such as an autofill.
   function writeValueToInput() {
@@ -1916,22 +1920,33 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     if (input && input.value !== serializedValue.value) {
       input.value = serializedValue.value;
     }
+    handledValue = input?.value;
   }
 
+  // Until the take of the hydration, the input can hold a value that the root did not handle.
+  onMounted(() => {
+    handledValue = writesHiddenValue.value
+      ? hiddenInputElement.value?.value
+      : serializedValue.value;
+  });
+  watch(
+    serializedValue,
+    () => {
+      handledValue = hiddenInputElement.value?.value;
+    },
+    { flush: 'post' },
+  );
+
   // Handle browser autofill.
-  let lastHandledValue: string | undefined;
   function handleAutofill(event: Event) {
     const input = event.currentTarget as HTMLInputElement;
     const nextValue = input.value;
     // A program can send `input` and `change` in one task. The root handles a value one time.
-    if (nextValue === lastHandledValue || nextValue === serializedValue.value) {
+    if (nextValue === handledValue) {
       return;
     }
-    lastHandledValue = nextValue;
-    void nextTick(() => {
-      lastHandledValue = undefined;
-      writeValueToInput();
-    });
+    handledValue = nextValue;
+    void nextTick(writeValueToInput);
     if (event.defaultPrevented || disabled.value || readOnly.value) {
       return;
     }
@@ -2035,7 +2050,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     }
   });
 
-  useFormRestoreAsInput(hiddenInputElement, () => serializedValue.value, false);
+  useFormRestoreAsInput(hiddenInputElement, () => handledValue, false);
 
   // The style is the constant itself, in an object that no `mergeProps` call makes.
   // `handleHiddenInputInvalid` then keeps the size that it writes.

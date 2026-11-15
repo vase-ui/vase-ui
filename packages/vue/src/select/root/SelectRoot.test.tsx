@@ -44,6 +44,8 @@ import SelectRootHydration from './SelectRootHydration.test.vue';
 
 const BEFORE_HYDRATION_FIXTURE = 'src/select/root/SelectRootBeforeHydration.test.vue';
 
+const ADDRESSES = { 'Main Street 1\nFlat 2': 'Home', 'Box 1': 'Office' };
+
 type ChangeDetails = Select.Root.ChangeEventDetails;
 type OpenChangeDetails = Select.Root.OpenChangeEventDetails;
 type ValueSlotProps = { value: any };
@@ -8560,6 +8562,78 @@ describe('<Select.Root />', () => {
       expect(fixture.getByTestId('model').textContent).toBe(expected.model);
       expect(fixture.getByTestId('changes').textContent).toBe(expected.changes);
       expect(getHiddenInput().value).toBe(expected.model);
+      expect(events).toEqual(['input']);
+    });
+
+    it.each([
+      { name: 'a line feed', value: 'Main Street 1\nFlat 2', text: 'Main Street 1Flat 2' },
+      { name: 'a carriage return', value: 'Main Street 1\rFlat 2', text: 'Main Street 1Flat 2' },
+    ])('sends no event at a `pageshow` event for a value with $name', async ({ value, text }) => {
+      const handleValueChange = vi.fn();
+      const { container } = await render(
+        <form data-testid="form">
+          <Select.Root
+            name="address"
+            items={{ [value]: 'Home' }}
+            defaultValue={value}
+            onValueChange={handleValueChange}
+          >
+            <Select.Trigger data-testid="trigger">
+              <Select.Value />
+            </Select.Trigger>
+          </Select.Root>
+        </form>,
+      );
+      const events = recordInputEvents(container);
+      expect(getHiddenInput().value).toBe(text);
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(events).toEqual([]);
+      expect(handleValueChange).not.toHaveBeenCalled();
+      expect(getHiddenInput().value).toBe(text);
+      expect(screen.getByTestId('trigger').textContent).toBe('Home');
+    });
+
+    it('takes an item that the browser restores into a select whose value has a line feed', async () => {
+      const handleValueChange = vi.fn();
+      const { container } = await render(
+        <form data-testid="form">
+          <Select.Root
+            name="address"
+            items={ADDRESSES}
+            defaultValue={'Main Street 1\nFlat 2'}
+            onValueChange={handleValueChange}
+          >
+            <Select.Trigger data-testid="trigger">
+              <Select.Value />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  {Object.entries(ADDRESSES).map(([value, label]) => (
+                    <Select.Item key={value} value={value}>
+                      <Select.ItemText>{label}</Select.ItemText>
+                    </Select.Item>
+                  ))}
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        </form>,
+      );
+      const events = recordInputEvents(container);
+      getHiddenInput().value = 'Box 1';
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(handleValueChange.mock.calls.map((call) => [call[0], call[1].reason])).toEqual([
+        ['Box 1', 'none'],
+      ]);
+      expect(screen.getByTestId('trigger').textContent).toBe('Office');
+      expect(getHiddenInput().value).toBe('Box 1');
       expect(events).toEqual(['input']);
     });
   });
