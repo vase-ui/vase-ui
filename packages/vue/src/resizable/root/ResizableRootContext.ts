@@ -60,10 +60,10 @@ export interface ResizableRootContext {
   orientation: ComputedRef<Orientation>;
   direction: ComputedRef<TextDirection>;
   /**
-   * The composite list around the root. A panel gives it to its content, so that an item in the
-   * panel joins that list and not the list of the panels.
+   * The list of the panels and the handles. They register with it through this context. The root
+   * does not provide the list, so an item of a composite around the root joins that composite.
    */
-  outerList: CompositeListContextValue<any> | undefined;
+  list: CompositeListContextValue<{ id?: string }>;
   disabled: ComputedRef<boolean>;
   step: ComputedRef<number>;
   largeStep: ComputedRef<number>;

@@ -92,6 +92,7 @@ import {
 } from '../../internals/composite/composite';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
+import { useFieldInput } from '../../internals/field-register-control';
 import { useFieldRootContext } from '../../internals/field-root-context';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
 import { useDeferredServerRender, useLabelableId } from '../../internals/labelable-provider';
@@ -229,7 +230,7 @@ let restoringFocusVisible = false;
 
 const thumbId = useVaseUiId();
 const defaultInputId = useVaseUiId();
-const labelableId = useLabelableId();
+const labelableId = useLabelableId({ element: () => element.value });
 const inputId = computed(() => (range.value ? defaultInputId.value : labelableId.value));
 
 const thumbMetadata = computed<ThumbMetadata>(() => ({ inputId: inputId.value }));
@@ -364,16 +365,15 @@ function getThumbStyle() {
   };
 }
 
+const giveFieldInput = useFieldInput();
+
 function setInputElement(value: unknown) {
   const input = value as HTMLInputElement | null;
   // Vue calls a function ref again on each patch, with the same element.
   if (input === inputElement.value) {
     return;
   }
-  // Another thumb can hold the ref of the field. Only this thumb clears its own input.
-  if (input || validation.inputRef.value === inputElement.value) {
-    validation.inputRef.value = input;
-  }
+  giveFieldInput(input);
   inputElement.value = input;
 }
 

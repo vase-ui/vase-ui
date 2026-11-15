@@ -107,7 +107,7 @@ const root = useResizableRootContext();
 useDeferredServerRender();
 
 const hydrating = useIsHydrating();
-const { ref: listItemRef, index } = useCompositeListItem();
+const { ref: listItemRef, index } = useCompositeListItem({ list: root.list });
 const isDisabled = computed(() => root.disabled.value || props.disabled);
 
 // The index in `panels` of the panel before the handle. A handle with no panel on one side has -1.

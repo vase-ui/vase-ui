@@ -16,7 +16,7 @@ import type {
   VaseUIHighlightEventDetails,
 } from '../../internals/createBaseUIEventDetails';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
-import { useRegisterFieldControl } from '../../internals/field-register-control';
+import { useFieldInput, useRegisterFieldControl } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { getFilter } from '../../internals/filter';
 import { useFormContext } from '../../internals/form-context';
@@ -420,7 +420,10 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     setValidityData,
   } = useFieldRootContext();
 
-  const id = useLabelableId({ id: () => props.id });
+  const id = useLabelableId({
+    id: () => props.id,
+    element: () => (inputInsidePopup.value ? store.select('triggerElement') : inputRef.value),
+  });
   const { labelId, registerLabelId } = createLabelIdRegistry();
   const direction = useDirection();
   const locale = useFormatLocale(() => props.locale);
@@ -1829,6 +1832,8 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     return value.map((current) => stringifyAsValue(current, props.itemToStringValue));
   });
 
+  const giveFieldInput = useFieldInput();
+
   function setHiddenInputElement(value: unknown) {
     const input = value as HTMLInputElement | null;
     // Vue calls a function ref again on each patch, with the same element.
@@ -1836,7 +1841,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
       return;
     }
     hiddenInputElement.value = input;
-    validation.inputRef.value = input;
+    giveFieldInput(input);
   }
 
   const writesHiddenValue = useHiddenValueBeforeHydration(() => hiddenInputElement.value);

@@ -292,5 +292,20 @@ describe('<Accordion.Trigger />', () => {
 
       expect(panel).toHaveAttribute('aria-labelledby', trigger.id);
     });
+
+    it('VUE-80: is no id while the item has no trigger', async () => {
+      await render(
+        <Accordion.Root defaultValue={['a']}>
+          <Accordion.Item value="a">
+            <Accordion.Panel data-testid="panel">Panel</Accordion.Panel>
+          </Accordion.Item>
+        </Accordion.Root>,
+      );
+
+      const panel = screen.getByTestId('panel');
+
+      expect(panel).toHaveAttribute('data-open');
+      expect(panel).not.toHaveAttribute('aria-labelledby');
+    });
   });
 });

@@ -377,6 +377,8 @@ const values = computed<readonly number[]>(() => {
 
 const fieldValue = computed(() => (range.value ? values.value : values.value[0]));
 
+// The form focuses `validation.inputRef`, which can name the input of another control. The element
+// of the root shows whether `KeepAlive` holds the slider.
 useRegisterFieldControl(
   validation.inputRef,
   rootId,
@@ -384,6 +386,7 @@ useRegisterFieldControl(
   undefined,
   () => !isDisabled.value,
   () => props.name,
+  () => element.value,
 );
 
 const clearFieldError = useClearFieldError(inputName);
