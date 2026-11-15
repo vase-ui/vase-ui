@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { KeepAlive, defineComponent, shallowRef } from 'vue';
 import { Dialog } from '@vase-ui/vue/dialog';
-import { createRenderer, describeConformance, flushMicrotasks, screen } from '#test-utils';
+import {
+  createHeldBranch,
+  createRenderer,
+  describeConformance,
+  flushMicrotasks,
+  screen,
+} from '#test-utils';
 
 describe('<Dialog.Description />', () => {
   const { render } = createRenderer();
@@ -142,6 +148,28 @@ describe('<Dialog.Description />', () => {
       await flushMicrotasks();
       expect(screen.getByTestId('description')).toBe(description);
       expect(popup).toHaveAttribute('aria-describedby', description.id);
+    });
+
+    it('does not describe the popup with a description that mounts while KeepAlive holds it', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Dialog.Description key="description" id="held-description" />
+      ));
+      await render(() => (
+        <Dialog.Root open modal={false}>
+          <Dialog.Portal>
+            <Dialog.Popup>
+              <HeldBranch />
+            </Dialog.Popup>
+          </Dialog.Portal>
+        </Dialog.Root>
+      ));
+      const popup = screen.getByRole('dialog');
+
+      await mountWhileHeld();
+      expect(popup).not.toHaveAttribute('aria-describedby');
+
+      await show();
+      expect(popup).toHaveAttribute('aria-describedby', 'held-description');
     });
   });
 });

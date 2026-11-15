@@ -85,6 +85,11 @@ const ParentNode = defineComponent({
   },
 });
 
+// The positioner rounds its place to the pixels of the device, as Floating UI does.
+function roundToDevicePixels(value: number) {
+  return Math.round(value * window.devicePixelRatio) / window.devicePixelRatio;
+}
+
 describe('<Menu.Positioner />', () => {
   const { render } = createRenderer();
 
@@ -398,7 +403,9 @@ describe('<Menu.Positioner />', () => {
 
       let anchorRect = anchorElement.getBoundingClientRect();
       await waitFor(() => {
-        expect(getTransform()).toBe(`translate(${anchorRect.left}px, ${anchorRect.bottom}px)`);
+        expect(getTransform()).toBe(
+          `translate(${roundToDevicePixels(anchorRect.left)}px, ${roundToDevicePixels(anchorRect.bottom)}px)`,
+        );
       });
 
       await user.click(setUndefinedButton);
@@ -406,7 +413,7 @@ describe('<Menu.Positioner />', () => {
       const triggerRect = trigger.getBoundingClientRect();
       await waitFor(() => {
         expect(getTransform()).toBe(
-          `translate(${Math.floor(triggerRect.left)}px, ${triggerRect.bottom}px)`,
+          `translate(${roundToDevicePixels(triggerRect.left)}px, ${roundToDevicePixels(triggerRect.bottom)}px)`,
         );
       });
 
@@ -414,7 +421,9 @@ describe('<Menu.Positioner />', () => {
 
       anchorRect = anchorElement.getBoundingClientRect();
       await waitFor(() => {
-        expect(getTransform()).toBe(`translate(${anchorRect.left}px, ${anchorRect.bottom}px)`);
+        expect(getTransform()).toBe(
+          `translate(${roundToDevicePixels(anchorRect.left)}px, ${roundToDevicePixels(anchorRect.bottom)}px)`,
+        );
       });
     });
   });

@@ -2,6 +2,7 @@ import { expect, vi, describe, it } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import { Tabs } from '@vase-ui/vue/tabs';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -337,6 +338,28 @@ describe('<Tabs.Tab />', () => {
       expect(disabledTab).not.toHaveAttribute('data-active');
       expect(disabledTab).toHaveAttribute('data-orientation', 'horizontal');
     });
+  });
+
+  it('is not named by its panel while KeepAlive holds a tab that mounted in a held branch', async () => {
+    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+      <Tabs.Tab key="tab" value="b" id="held-tab" />
+    ));
+    await render(() => (
+      <Tabs.Root defaultValue="b">
+        <Tabs.List>
+          <Tabs.Tab value="a" />
+          <HeldBranch />
+        </Tabs.List>
+        <Tabs.Panel value="b" keepMounted data-testid="panel" />
+      </Tabs.Root>
+    ));
+    const panel = screen.getByTestId('panel');
+
+    await mountWhileHeld();
+    expect(panel).not.toHaveAttribute('aria-labelledby');
+
+    await show();
+    expect(panel).toHaveAttribute('aria-labelledby', 'held-tab');
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current

@@ -3,6 +3,7 @@ import { defineComponent, shallowRef } from 'vue';
 import { Select } from '@vase-ui/vue/select';
 import type { VaseUIEvent } from '../../internals/types';
 import {
+  clientCenter,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -660,7 +661,7 @@ describe('<Select.Item />', () => {
     async function openWithMouseDown(trigger: HTMLElement) {
       // Vue skips a listener of an item for an event that comes in the millisecond of its mount.
       await waitForLaterMillisecond(async () => {
-        await fireEvent.mouseDown(trigger);
+        await fireEvent.mouseDown(trigger, clientCenter(trigger));
         await waitFor(() => expect(screen.queryByRole('listbox')).not.toBe(null));
       });
     }
@@ -1186,6 +1187,36 @@ describe('<Select.Item />', () => {
       expect(handleClick).toHaveBeenCalledOnce();
       expect(screen.getByTestId('value').textContent).toBe('Select font');
       expect(screen.queryByRole('listbox')).not.toBe(null);
+    });
+
+    it('VUE-84: selects an item for a later drag that ends at the point of the trigger press', async () => {
+      await render(
+        <Select.Root>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value data-testid="value" placeholder="Select font" />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner alignItemWithTrigger={false}>
+              <Select.Popup>
+                <Select.Item value="one">one</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+      const trigger = screen.getByTestId('trigger');
+      const pressPoint = clientCenter(trigger);
+
+      await openWithMouseDown(trigger);
+      await tick(500);
+      await fireEvent.mouseUp(trigger, pressPoint);
+      await fireEvent.mouseDown(screen.getByRole('listbox'), {
+        clientX: pressPoint.clientX,
+        clientY: pressPoint.clientY + 50,
+      });
+      await fireEvent.mouseUp(screen.getByRole('option', { name: 'one' }), pressPoint);
+
+      expect(screen.getByTestId('value').textContent).toBe('one');
     });
   });
 

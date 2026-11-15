@@ -8,7 +8,8 @@ function isElement(value: unknown): value is Element {
 /**
  * Changes the value of a template ref into an element.
  * An element stays the same. A component that exposes `element` gives that element.
- * Another component gives its root element, if it has one.
+ * Another component gives its root element, if it has one. A Vapor component gives none, so it must
+ * expose `element`.
  */
 export function resolveElement(
   value: Element | ComponentPublicInstance | null | undefined,
@@ -40,6 +41,18 @@ export function resolveElement(
         return null;
       }
     }
+  }
+
+  // A ref on a Vapor component gives only the values that the component exposes.
+  if (!('$el' in value)) {
+    if (process.env.NODE_ENV !== 'production') {
+      warn(
+        'The component is in Vapor mode and does not expose its element as `element`.',
+        'Vue gives a ref on a Vapor component only the values that the component exposes, so the part cannot reach its element.',
+        'Expose the element as `element` in the component: `defineExpose({ element })`.',
+      );
+    }
+    return null;
   }
 
   if (isElement(value.$el)) {
