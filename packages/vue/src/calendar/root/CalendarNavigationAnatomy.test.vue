@@ -4,17 +4,11 @@ import * as Calendar from '../index.parts';
 
 defineOptions({ inheritAttrs: false });
 
-// The parts of the navigation, and the parts of the weeks, are in the anatomy when a prop gives
-// them. The props of the root go through the attributes.
+// The selects, the week numbers and the footer are in the anatomy when a prop gives them. The
+// props of the root go through the attributes.
 withDefaults(
-  defineProps<{
-    buttons?: boolean;
-    caption?: boolean;
-    selects?: boolean;
-    weekNumbers?: boolean;
-    footer?: string | undefined;
-  }>(),
-  { buttons: true, caption: true, selects: false, weekNumbers: false, footer: undefined },
+  defineProps<{ selects?: boolean; weekNumbers?: boolean; footer?: string | undefined }>(),
+  { selects: false, weekNumbers: false, footer: undefined },
 );
 
 // The root exposes `focus`. A test reads it through `root`.
@@ -25,10 +19,8 @@ defineExpose({ root });
 
 <template>
   <Calendar.Root ref="root" v-bind="$attrs">
-    <template v-if="buttons">
-      <Calendar.PreviousButton data-testid="previous" />
-      <Calendar.NextButton data-testid="next" />
-    </template>
+    <Calendar.PreviousButton data-testid="previous" />
+    <Calendar.NextButton data-testid="next" />
     <template v-if="selects">
       <Calendar.MonthSelect data-testid="month-select" />
       <Calendar.YearSelect data-testid="year-select" />
@@ -36,7 +28,7 @@ defineExpose({ root });
     <Calendar.Months data-testid="months">
       <template #month="{ month }">
         <Calendar.Month :month="month">
-          <Calendar.Caption v-if="caption" />
+          <Calendar.Caption />
           <Calendar.Grid>
             <Calendar.GridHeader>
               <Calendar.GridHeaderRow>

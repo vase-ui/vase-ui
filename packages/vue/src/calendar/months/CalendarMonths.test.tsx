@@ -145,6 +145,33 @@ describe('<Calendar.Months />', () => {
       expect(months()).toHaveLength(1);
     });
 
+    it('has no tab stop while it leaves, and the one tab stop is outside it', async () => {
+      // 2026-11-30 is a day of November, and an outside day of the page of December.
+      const { user } = await renderCalendar({
+        showOutsideDays: true,
+        defaultFocusedDate: Temporal.PlainDate.from('2026-11-30'),
+      });
+      const month = months()[0]!;
+      await nextFrame();
+
+      const animations = await nextAnimationsRead(month, {
+        action: () => user.click(screen.getByTestId('next')),
+      });
+
+      expect(month).toHaveAttribute('inert');
+      const stops = document.querySelectorAll('[data-date] button[tabindex="0"]');
+      expect(stops).toHaveLength(1);
+      expect(stops[0]!.closest('[inert]')).toBe(null);
+      expect(stops[0]!.closest('[data-date]')).toHaveAttribute('data-date', '2026-11-30');
+
+      for (const animation of animations) {
+        animation.finish();
+      }
+      await waitFor(() => {
+        expect(months()).toHaveLength(1);
+      });
+    });
+
     it('goes at once when it has no animation', async () => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = true;
       const { user } = await renderCalendar();

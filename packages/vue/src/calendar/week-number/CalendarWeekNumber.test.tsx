@@ -59,7 +59,7 @@ describe('<Calendar.WeekNumber />', () => {
 
   it.each([
     {
-      name: 'a locale that starts on Monday has the ISO numbers',
+      name: 'a locale that starts on Monday',
       props: { locale: 'fr' },
       expected: ['44', '45', '46', '47', '48', '49'],
     },
@@ -80,14 +80,14 @@ describe('<Calendar.WeekNumber />', () => {
   });
 
   it.each([
-    { name: 'isoWeek: the last week of 2026 is week 53', props: { isoWeek: true }, last: '53' },
+    { name: 'isoWeek gives week 53', props: { isoWeek: true }, last: '53' },
     {
-      name: 'firstWeekContainsDate 1 with Monday: that week is week 1 of 2027',
+      name: 'Monday and firstWeekContainsDate 1',
       props: { firstDayOfWeek: 1, firstWeekContainsDate: 1 },
       last: '1',
     },
     {
-      name: 'a locale that starts on Sunday: that week has the next number',
+      name: 'a locale that starts on Sunday',
       props: {},
       last: '1',
     },

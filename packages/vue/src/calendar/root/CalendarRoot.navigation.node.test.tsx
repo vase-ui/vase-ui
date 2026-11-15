@@ -37,6 +37,16 @@ describe('<Calendar.Root /> navigation on a server', () => {
     expect(html).toContain(' data-navigation-direction="none"');
   });
 
+  it('allows the text that a browser can write another way, in the caption and in the options', async () => {
+    const html = await renderToString(<CalendarNavigationHydration {...props} selects />);
+
+    const caption = /<div[^>]* aria-live="polite"[^>]*>/.exec(html)![0];
+    expect(caption).toContain(' data-allow-mismatch="text"');
+    const options = html.match(/<option[^>]*>/g)!;
+    expect(options.length).toBeGreaterThan(12);
+    expect(options.every((tag) => tag.includes(' data-allow-mismatch="text"'))).toBe(true);
+  });
+
   it('names the grid by the id of its caption, as the client does', async () => {
     const html = await renderToString(<CalendarNavigationHydration {...props} />);
 

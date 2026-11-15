@@ -496,17 +496,22 @@ describe('<Calendar.Root /> pages', () => {
     const file = 'src/calendar/root/CalendarNavigationHydration.test.vue';
     const base = { today: '2026-11-14' };
 
+    // The text of a range has other spaces on Node and in Chromium for `en-US`, and Vue does not
+    // patch a label. The cases with a range use `ja`, where the two engines write the same text.
     it.each([
-      { name: 'two months with outside days', props: { numberOfMonths: 2, showOutsideDays: true } },
+      {
+        name: 'two months with outside days',
+        props: { numberOfMonths: 2, showOutsideDays: true, locale: 'ja' },
+      },
       { name: 'fixed weeks and week numbers', props: { fixedWeeks: true, weekNumbers: true } },
       { name: 'the broadcast calendar', props: { broadcastCalendar: true } },
-      { name: 'a page of two weeks', props: { duration: 'weeks:2' } },
+      { name: 'a page of two weeks', props: { duration: 'weeks:2', locale: 'ja' } },
       {
         name: 'the selects of a Buddhist calendar',
         props: { selects: true, calendar: 'buddhist' },
       },
       {
-        name: 'a footer, and the buttons at their limits',
+        name: 'a footer and a button at its limit',
         props: { footer: 'A day', maxDate: '2026-11-30' },
       },
     ])('hydrates with $name with no warning and no difference', async ({ props }) => {

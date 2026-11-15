@@ -46,7 +46,8 @@ export interface CalendarBaseProps {
    */
   pagedNavigation?: boolean | undefined;
   /**
-   * Whether each month has six weeks, so that the grid has the same height in each month.
+   * Whether each month has the same number of weeks, so that the grid has the same height in each
+   * month: six weeks, and five weeks with `broadcastCalendar`.
    * @default false
    */
   fixedWeeks?: boolean | undefined;

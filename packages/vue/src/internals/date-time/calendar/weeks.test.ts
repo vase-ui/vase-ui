@@ -29,7 +29,7 @@ describe('getWeekNumber', () => {
       week: 1,
     },
     {
-      name: 'a day of the last ISO week, not its first day',
+      name: 'a day inside the last ISO week',
       date: '2027-01-03',
       firstDay: 1,
       minimalDays: 4,
@@ -43,7 +43,7 @@ describe('getWeekNumber', () => {
       week: 53,
     },
     {
-      name: 'the week that holds January 1, from Sunday',
+      name: 'the week of January 1, from Sunday',
       date: '2026-12-27',
       firstDay: 7,
       minimalDays: 1,

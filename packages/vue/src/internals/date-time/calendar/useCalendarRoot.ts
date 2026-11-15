@@ -330,8 +330,8 @@ export function useCalendarRoot({
     return compareDates(date, startOfWeek(next.toPlainDate({ day: 1 }), 1)) >= 0 ? next : month;
   }
 
-  // Shows the page that holds `date`, with the least move: a page that is after the first page
-  // starts with `date`, and a page that is before it ends with `date`.
+  // Shows the page that holds `date`. A date after the page starts the new page, and a date before
+  // the page ends it, so the page moves the way that the date does.
   function showDate(date: Temporal.PlainDate, createDetails: () => CalendarChangeEventDetails) {
     const visible = duration.value;
     if (visible && pageStart.value) {
