@@ -239,11 +239,13 @@ test('a root file, a settings file and an overview page have one reason, and a s
 });
 
 test('the index page of a page group has one reason, and each file of a page folder is not started', () => {
-  const groups = ['components', 'utils', 'handbook'].map((group) => DOCS_FOLDER_PREFIX + group);
-  const indexPages = groups.map((group) => `${group}/page.mdx`);
-  const pageFiles = groups.flatMap((group) => [
-    `${group}/a-page/page.mdx`,
-    `${group}/a-page/demos/hero/css-modules/index.tsx`,
+  const groupFolders = ['components', 'utils', 'handbook'].map(
+    (group) => DOCS_FOLDER_PREFIX + group,
+  );
+  const indexPages = groupFolders.map((folder) => `${folder}/page.mdx`);
+  const pageFiles = groupFolders.flatMap((folder) => [
+    `${folder}/a-page/page.mdx`,
+    `${folder}/a-page/demos/hero/css-modules/index.tsx`,
   ]);
   const stateOf = statesOfSinglePathCommits([...indexPages, ...pageFiles]);
   for (const path of indexPages) {
