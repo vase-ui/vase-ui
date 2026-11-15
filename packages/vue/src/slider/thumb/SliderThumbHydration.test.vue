@@ -11,6 +11,7 @@ const props = withDefaults(
     min?: number | undefined;
     max?: number | undefined;
     step?: number | undefined;
+    minStepsBetweenValues?: number | undefined;
     format?: Intl.NumberFormatOptions | undefined;
     alignment?: 'center' | 'edge' | 'edge-client-only' | undefined;
     orientation?: 'horizontal' | 'vertical' | undefined;
@@ -48,6 +49,7 @@ function handleValueChange(
     :min="min"
     :max="max"
     :step="step"
+    :min-steps-between-values="minStepsBetweenValues"
     :format="format"
     :thumb-alignment="alignment"
     :orientation="orientation"
