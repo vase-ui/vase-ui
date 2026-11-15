@@ -110,7 +110,6 @@ describe('<Select.Positioner />', () => {
 
       await user.keyboard('{Escape}');
 
-      // The portal can remount around the close, so re-query the kept-mounted node.
       await waitFor(() => {
         expect(screen.getByTestId('positioner').hidden).toBe(true);
       });

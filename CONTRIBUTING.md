@@ -1193,6 +1193,7 @@ The portal of a popup is in `src/utils/popups/portal`. `useFloatingPortalNode()`
 - `FloatingPortalLite` does not provide `PortalContext`, so a portal inside it does not render in the portal element of the Lite portal.
 - The portal part of a family renders `FloatingPortalLite` or `FloatingPortal` while the popup is mounted or its `keepMounted` prop is set. It provides `keepMounted` as a `ComputedRef<boolean>`, and the positioner gives it to `usePopupPositioner`. `tooltip/portal/TooltipPortal.vue` is the model.
 - `Select.Portal` has no `keepMounted` prop. It renders `FloatingPortal` while the popup is mounted or `forceMounted` of the store is set, and it provides no context.
+- `SelectStore` sets `forceMounted` in each write that sets `mounted` to `true`. After the first open, the popup element and its items thus stay while the select is closed (`VUE-95`). Base UI sets `forceMounted` only when the trigger gets the focus or the browser autofills the hidden input. When neither comes before the end of a close, Base UI removes the popup at the end of that close.
 - `Combobox.Portal` has the `keepMounted` prop and provides it. It also renders while `forceMounted` of the store is set.
 - `FloatingPortal` provides `PortalContext`. The context holds the portal element, four guards and `setFocusManagerState()`.
 - The focus manager of the popup calls `setFocusManagerState()` with its state, and with `null` when it goes away. It gives a new object for each change, because the portal does not see a change in an object.

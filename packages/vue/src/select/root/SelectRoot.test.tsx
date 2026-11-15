@@ -164,9 +164,8 @@ describe('<Select.Root />', () => {
       await waitFor(() => {
         expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
       });
-      // A closed select keeps its list mounted and hidden, as after any other close. The focus
-      // goes to the trigger, and the trigger mounts the list in a 0 ms timer.
-      expect(await screen.findByRole('listbox', { hidden: true })).not.toHaveAttribute(
+      // A closed select keeps its list mounted and hidden, as after any other close.
+      expect(screen.getByRole('listbox', { hidden: true })).not.toHaveAttribute(
         'data-ending-style',
       );
     });
@@ -8666,19 +8665,26 @@ describe('<Select.Root />', () => {
     it('is null for a new value after the items unmount', async () => {
       const value = shallowRef('a');
       const open = shallowRef(true);
+      const showPortal = shallowRef(true);
+      const handleOpenChangeComplete = vi.fn();
       await render(() => (
-        <Select.Root value={value.value} open={open.value}>
+        <Select.Root
+          value={value.value}
+          open={open.value}
+          onOpenChangeComplete={handleOpenChangeComplete}
+        >
           <StoreProbe />
           <Select.Trigger />
-          <Select.Portal>
-            <Select.Positioner>
-              {/* The trigger mounts the items when it gets the focus back. */}
-              <Select.Popup finalFocus={false}>
-                <Select.Item value="a">a</Select.Item>
-                <Select.Item value="b">b</Select.Item>
-              </Select.Popup>
-            </Select.Positioner>
-          </Select.Portal>
+          {showPortal.value ? (
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  <Select.Item value="a">a</Select.Item>
+                  <Select.Item value="b">b</Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          ) : null}
         </Select.Root>
       ));
       await flushMicrotasks();
@@ -8686,8 +8692,11 @@ describe('<Select.Root />', () => {
 
       open.value = false;
       await waitFor(() => {
-        expect(screen.queryByRole('option')).toBe(null);
+        expect(handleOpenChangeComplete).toHaveBeenLastCalledWith(false);
       });
+      showPortal.value = false;
+      await flushMicrotasks();
+      expect(screen.queryAllByRole('option', { hidden: true })).toEqual([]);
       value.value = 'b';
       await flushMicrotasks();
 
