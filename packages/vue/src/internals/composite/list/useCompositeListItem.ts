@@ -34,8 +34,8 @@ export function useCompositeListItem<Metadata>(
   const guess = context && toValue(params.index) == null ? context.takeIndexGuess() : -1;
 
   let element: HTMLElement | null = null;
-  // An item that mounts while `KeepAlive` holds its branch gets no `onDeactivated`. The list skips
-  // its element, which is not in a document, so its first `onActivated` must register it again.
+  // An item that mounts in a held branch gets no `onDeactivated` call. The list skips its element,
+  // which is not in a document, so the first `onActivated` call must register the element again.
   let deactivated = isInHeldBranch();
 
   const registration: CompositeListRegistration<Metadata> = {

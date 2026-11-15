@@ -8,9 +8,11 @@ import { flushMicrotasks } from './flushMicrotasks';
 import { createHeldBranch } from './heldBranch';
 
 /**
- * The shared case of a part whose items register with a composite list. The list mounts while
- * `KeepAlive` holds its branch, its last item mounts in a later flush, and then the branch shows.
- * A user then needs each item, for example to move the focus with an arrow key.
+ * The shared case of a part that owns a composite list. The part mounts while `KeepAlive` holds its
+ * branch, and its last item mounts in a later flush. Then the branch shows. A sort in a held flush
+ * finds no item, so an item that mounts after it takes an index that another item has. That index
+ * stays wrong when the show starts no sort. A family that uses the list only for the index, such as
+ * Accordion, thus shows the fault in this case.
  */
 export function heldMountListTests(config: HeldMountListTestsConfig) {
   const { render, renderList, check } = config;
@@ -44,7 +46,8 @@ export interface HeldMountListTestsConfig {
    */
   renderList: (withLastItem: boolean) => VNodeChild;
   /**
-   * Asserts a result that needs each item. It can first do a step of a user, such as an arrow key.
+   * Asserts a result that needs each item. It can first do a step of a user, such as a press of an
+   * arrow key.
    */
   check: (user: UserEvent) => Promise<void> | void;
 }
