@@ -19,7 +19,7 @@ function shownVariant(): DemoVariant {
 
 // The select has `autocomplete="off"`. Firefox restores the value of a select when the page loads
 // again. That value can differ from the stored choice, and the select then shows another variant
-// than the demos.
+// than the demos until Vue hydrates the page.
 function select(event: Event) {
   const control = event.currentTarget;
   if (control instanceof HTMLSelectElement) {
