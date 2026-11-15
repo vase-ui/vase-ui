@@ -56,13 +56,12 @@ const RESTRICTED_GLOBALS = {
   checkGlobalObject: true,
 };
 
+const ARRAY_COPY_METHODS = ['toSorted', 'toReversed', 'toSpliced'];
+
 const RESTRICTED_PROPERTIES = [
   { property: '$el', message: MESSAGES.$el },
   { property: '$parent', message: MESSAGES.$parent },
-  ...['toSorted', 'toReversed', 'toSpliced'].map((property) => ({
-    property,
-    message: MESSAGES.arrayCopyMethod,
-  })),
+  ...ARRAY_COPY_METHODS.map((property) => ({ property, message: MESSAGES.arrayCopyMethod })),
 ];
 
 // The rule uses a fixed list of names. A pattern for a second capital also matches a
@@ -178,6 +177,10 @@ const RESTRICTED_TEMPLATE_SYNTAX = [
   },
   { selector: "Identifier[name='$el']", message: MESSAGES.$el },
   { selector: "Identifier[name='$parent']", message: MESSAGES.$parent },
+  {
+    selector: `MemberExpression[computed=false][property.name=/^(?:${ARRAY_COPY_METHODS.join('|')})$/]`,
+    message: MESSAGES.arrayCopyMethod,
+  },
 ];
 
 // The sinks of the Trusted Types API that take `TrustedHTML`, and the methods of the HTML Sanitizer

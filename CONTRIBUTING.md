@@ -1281,7 +1281,7 @@ A composite is a group of items with one tab stop, such as a toolbar or a list o
 
 - A root part calls `useCompositeRoot` in `setup`, and an item part calls `useCompositeItem`. Each part gives the result to `useRenderElement`.
 - `useCompositeRoot` makes the item registry with `useCompositeList`. `useCompositeItem` registers the item with `useCompositeListItem`. A part that needs only the registry calls those two composables.
-- `useCompositeList` returns the list, and it provides the list to the parts below its caller. With `provide: false`, it provides nothing. `useCompositeListItem` registers with the list that it gets as `list`, or with the nearest list above the item.
+- `useCompositeList` returns the list, and it provides the list to the parts below its caller. With `provide: false`, it provides nothing. `useCompositeListItem` registers with the list that it gets as `list`, or with the nearest list that a part above the item provides.
 - Base UI also has the components `CompositeList`, `CompositeRoot` and `CompositeItem`. Vase UI has no counterpart of them, because a Vue part renders its own element. Thus `as` and `#render` work with no change, and the DOM has no wrapper element.
 
 The composite root:
