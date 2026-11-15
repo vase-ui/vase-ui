@@ -43,7 +43,8 @@ const props = withDefaults(defineProps<TimeFieldClearProps>(), {
 
 defineSlots<{
   /**
-   * The content of the button. The default is `x`, and the button then has the `aria-label` `Clear`.
+   * The content of the button. The default is `x`. With no default slot and no `#render` slot, the
+   * button has the `aria-label` `Clear`.
    */
   default(props: { state: TimeFieldClearState }): unknown;
   render(props: { props: HTMLProps; state: TimeFieldClearState; children: Component }): unknown;
@@ -73,7 +74,7 @@ const { element, elementProps } = useRenderElement('button', props, {
   ref: [buttonRef],
   props: (attrs) => [
     {
-      // The button names itself only when it shows its own `x`.
+      // With a slot, the consumer gives the content, and the content gives the name.
       'aria-label': slots.default || slots.render ? undefined : 'Clear',
       onClick(event: MouseEvent) {
         context.clear(event);
