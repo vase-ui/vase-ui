@@ -50,7 +50,7 @@ Give a part of another component to the `as` prop of a toolbar part. The two par
 When the other part needs props or listeners of its own, render it in the `#render` slot. Bind `props` on it.
 
 - **Popups with a trigger**: give the trigger to the `as` prop of `<Toolbar.Button>`, as shown above. This works for Alert Dialog, Dialog, Drawer, Menu, Popover and Select. Set `disabled` on `<Toolbar.Button>`, not on the trigger. The button then stays in the keyboard navigation of the toolbar.
-- **Tooltip**: render `<Toolbar.Button>` in the `#render` slot of `<Tooltip.Trigger>`.
+- **Tooltip**: give `Toolbar.Button` to the `as` prop of `<Tooltip.Trigger>`. To disable the button, render `<Toolbar.Button disabled>` in the `#render` slot of `<Tooltip.Trigger>`. With the `disabled` prop of `<Tooltip.Trigger>`, the trigger does not open the tooltip, and the button stays enabled.
 - **Number Field**: give `NumberField.Input` to the `as` prop of `<Toolbar.Input>`. Put the input inside `<NumberField.Root>` and `<NumberField.Group>`, with the increment and decrement buttons.
 
 See [how props are merged](/handbook/composition#how-props-are-merged) for how the two parts combine.
