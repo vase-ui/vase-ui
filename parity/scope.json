@@ -72,11 +72,11 @@
     {
       "paths": ["docs/**"],
       "except": [
-        "docs/src/app/(docs)/react/components/**",
-        "docs/src/app/(docs)/react/utils/**",
-        "docs/src/app/(docs)/react/handbook/**"
+        "docs/src/app/(docs)/react/components/*/**",
+        "docs/src/app/(docs)/react/utils/*/**",
+        "docs/src/app/(docs)/react/handbook/*/**"
       ],
-      "reason": "The docs site and Base UI's own overview and release pages. The component, utility and handbook pages and their demos are in scope."
+      "reason": "The docs site, Base UI's own overview and release pages, and the index page that Base UI generates for each group of pages. The folders of the component, utility and handbook pages are in scope, with their demos."
     },
     {
       "paths": ["test/**"],

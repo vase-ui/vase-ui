@@ -2,6 +2,7 @@ import { shallowRef, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { useTimeout } from '../../common/useTimeout';
+import { comesBeforeInSameTree } from '../../internals/comesBeforeInSameTree';
 import { DEFAULT_VALIDITY_STATE } from '../../internals/field-constants/constants';
 import type {
   FieldRootState,
@@ -43,25 +44,30 @@ export function isEligibleInput(input: HTMLInputElement, formElement: HTMLFormEl
 }
 
 /**
- * Picks the input whose native validity should represent a field that owns several inputs (such as a
- * checkbox or radio group). Prefers the first eligible currently-invalid input, where "first" follows
- * registration order (mount order), and otherwise returns the first eligible input.
+ * Picks the input whose native validity represents a field that owns several inputs, such as a
+ * checkbox group or a radio group. It takes the first eligible invalid input in the document, as a
+ * native form does, or else the first eligible input in the document. The order of the
+ * registrations can differ from the document, for example after a keyed move. Inputs in two trees
+ * keep the order of the registrations.
  */
 function findRepresentativeInput(
   inputs: RegisteredInputs,
   formElement: HTMLFormElement | null,
 ): HTMLInputElement | null {
-  let fallback: HTMLInputElement | null = null;
+  let firstInvalid: HTMLInputElement | null = null;
+  let firstEligible: HTMLInputElement | null = null;
   for (const input of inputs.keys()) {
     if (!isEligibleInput(input, formElement)) {
       continue;
     }
-    if (!input.validity.valid) {
-      return input;
+    if (!firstEligible || comesBeforeInSameTree(input, firstEligible)) {
+      firstEligible = input;
     }
-    fallback ??= input;
+    if (!input.validity.valid && (!firstInvalid || comesBeforeInSameTree(input, firstInvalid))) {
+      firstInvalid = input;
+    }
   }
-  return fallback;
+  return firstInvalid ?? firstEligible;
 }
 
 function makeState(customError: boolean): Record<keyof ValidityState, boolean> {

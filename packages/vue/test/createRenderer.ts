@@ -2,10 +2,11 @@ import { within } from '@testing-library/dom';
 import type { BoundFunctions, queries } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
 import { afterEach, vi } from 'vitest';
-import { createApp, nextTick, shallowRef } from 'vue';
+import { nextTick, shallowRef } from 'vue';
 import type { VNode } from 'vue';
 import { cloneElement } from './cloneElement';
 import { recordVueWarnings } from './reportedMessages';
+import { createTestApp } from './testApp';
 
 /**
  * A vnode, or a function that returns a vnode. A vnode that has a `ref` must be made in a render
@@ -91,7 +92,7 @@ export function createRenderer() {
 
   async function render(element: Renderable): Promise<VaseUIRenderResult> {
     const current = shallowRef(element);
-    const app = createApp({
+    const app = createTestApp({
       render: () => (typeof current.value === 'function' ? current.value() : current.value),
     });
     recordVueWarnings(app);
