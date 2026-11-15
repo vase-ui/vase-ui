@@ -12,6 +12,7 @@ import {
   renderOnServer,
   screen,
   waitFor,
+  waitForLaterMillisecond,
 } from '#test-utils';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import type { DialogStore } from '../../dialog/store/DialogStore';
@@ -1286,7 +1287,8 @@ describe('<Drawer.SwipeArea />', () => {
 
       const swipeArea = screen.getByTestId('swipe-area');
 
-      await swipeUp(swipeArea, 220, 20);
+      // The swipe mounts the close button. Vue skips its listener for a click in that millisecond.
+      await waitForLaterMillisecond(() => swipeUp(swipeArea, 220, 20));
       expect(swipeArea).toHaveAttribute('data-open', '');
 
       const popup = screen.getByTestId('popup');
@@ -1294,9 +1296,7 @@ describe('<Drawer.SwipeArea />', () => {
       // Begin closing; the exit animation keeps the popup mounted while it plays.
       screen.getByRole('button', { name: 'Close' }).click();
       await flushMicrotasks();
-      await waitFor(() => {
-        expect(popup).toHaveAttribute('data-ending-style');
-      });
+      expect(popup).toHaveAttribute('data-ending-style');
 
       // Re-grab while the popup is still mounted mid-exit. A single move that locks the direction,
       // re-opens the drawer, and writes the movement (200 - 80 = 120px of remaining travel) on the
