@@ -7,6 +7,7 @@ import {
   firePointer,
   flushMicrotasks,
   hydrate,
+  popupAnatomyTests,
   renderOnServer,
   screen,
   takeReportedMessages,
@@ -667,6 +668,24 @@ function createProvider() {
 
 describe('<Drawer.Root />', () => {
   const { render } = createRenderer();
+
+  popupAnatomyTests({
+    createComponent: ({ open, onOpenChangeComplete, content }) => (
+      <Drawer.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Drawer.Trigger>Open</Drawer.Trigger>
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="shown" class="shown" />
+          {content}
+        </Drawer.Portal>
+      </Drawer.Root>
+    ),
+    createPopup: () => (
+      <Drawer.Viewport>
+        <Drawer.Popup>Popup</Drawer.Popup>
+      </Drawer.Viewport>
+    ),
+    render,
+  });
 
   it('exposes the attributes rendered by borrowed trigger and close parts', async () => {
     const { user } = await render(

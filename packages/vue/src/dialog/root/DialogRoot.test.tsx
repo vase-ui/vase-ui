@@ -24,6 +24,7 @@ import {
   hydrate,
   isJSDOM,
   nextEvent,
+  popupAnatomyTests,
   popupConformanceTests,
   renderOnServer,
   screen,
@@ -228,6 +229,20 @@ const MultipleDetachedTriggersDialog = defineComponent({
 
 describe('<Dialog.Root />', () => {
   const { render } = createRenderer();
+
+  popupAnatomyTests({
+    createComponent: ({ open, onOpenChangeComplete, content }) => (
+      <Dialog.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Dialog.Trigger>Open</Dialog.Trigger>
+        <Dialog.Portal>
+          <Dialog.Backdrop data-testid="shown" class="shown" />
+          {content}
+        </Dialog.Portal>
+      </Dialog.Root>
+    ),
+    createPopup: () => <Dialog.Popup>Popup</Dialog.Popup>,
+    render,
+  });
 
   popupConformanceTests({
     createComponent: (props) => (

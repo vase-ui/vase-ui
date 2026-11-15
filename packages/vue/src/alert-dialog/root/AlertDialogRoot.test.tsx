@@ -8,6 +8,7 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  popupAnatomyTests,
   popupConformanceTests,
   renderOnServer,
   screen,
@@ -46,6 +47,20 @@ const AlertDialogState = defineComponent({
 
 describe('<AlertDialog.Root />', () => {
   const { render } = createRenderer();
+
+  popupAnatomyTests({
+    createComponent: ({ open, onOpenChangeComplete, content }) => (
+      <AlertDialog.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <AlertDialog.Trigger>Open</AlertDialog.Trigger>
+        <AlertDialog.Portal>
+          <AlertDialog.Backdrop data-testid="shown" class="shown" />
+          {content}
+        </AlertDialog.Portal>
+      </AlertDialog.Root>
+    ),
+    createPopup: () => <AlertDialog.Popup>Popup</AlertDialog.Popup>,
+    render,
+  });
 
   popupConformanceTests({
     createComponent: (props) => (

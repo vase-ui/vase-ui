@@ -12,6 +12,7 @@ import {
   flushMicrotasks,
   hydrate,
   isJSDOM,
+  popupAnatomyTests,
   renderOnServer,
   screen,
   waitFor,
@@ -103,6 +104,22 @@ async function writeOutside(target: { value: unknown }, next: unknown) {
 
 describe('<Autocomplete.Root />', () => {
   const { render } = createRenderer();
+
+  popupAnatomyTests({
+    createComponent: ({ open, onOpenChangeComplete, content }) => (
+      <Autocomplete.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Autocomplete.Input />
+        <Autocomplete.Portal>
+          <Autocomplete.Positioner data-testid="shown" class="shown">
+            Content
+            {content}
+          </Autocomplete.Positioner>
+        </Autocomplete.Portal>
+      </Autocomplete.Root>
+    ),
+    createPopup: () => <Autocomplete.Popup>Popup</Autocomplete.Popup>,
+    render,
+  });
 
   // `getFilter` keeps the filter for no locale, with the runtime locale of its first use. The case
   // of the mocked locale is thus the first case of the file.

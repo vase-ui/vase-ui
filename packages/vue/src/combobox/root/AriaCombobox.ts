@@ -419,7 +419,9 @@ function getTransitionElement(store: ComboboxStore) {
   if (inline && positionerElement) {
     return closest<HTMLElement>(positionerElement, '[role="dialog"]');
   }
-  return store.context.popupRef.value ?? (positionerElement === listElement ? null : positionerElement);
+  return (
+    store.context.popupRef.value ?? (positionerElement === listElement ? null : positionerElement)
+  );
 }
 
 /**

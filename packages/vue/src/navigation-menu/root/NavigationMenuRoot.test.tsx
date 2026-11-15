@@ -11,6 +11,7 @@ import {
   flushMicrotasks,
   hydrate,
   isJSDOM,
+  popupAnatomyTests,
   renderOnServer,
   screen,
   waitFor,
@@ -1002,6 +1003,29 @@ const PopupElement = defineComponent(() => {
 
 describe('<NavigationMenu.Root />', () => {
   const { render } = createRenderer();
+
+  popupAnatomyTests({
+    createComponent: ({ open, onOpenChangeComplete }) => (
+      <NavigationMenu.Root
+        value={open ? 'item-1' : null}
+        onOpenChangeComplete={onOpenChangeComplete}
+      >
+        <NavigationMenu.List>
+          <NavigationMenu.Item value="item-1">
+            <NavigationMenu.Trigger>Item 1</NavigationMenu.Trigger>
+            <NavigationMenu.Content>Content</NavigationMenu.Content>
+          </NavigationMenu.Item>
+        </NavigationMenu.List>
+        <NavigationMenu.Portal>
+          <NavigationMenu.Positioner data-testid="shown" class="shown">
+            <NavigationMenu.Viewport />
+          </NavigationMenu.Positioner>
+        </NavigationMenu.Portal>
+      </NavigationMenu.Root>
+    ),
+    render,
+    reportsOpen: false,
+  });
 
   beforeEach(() => {
     vi.useFakeTimers({ shouldAdvanceTime: true });

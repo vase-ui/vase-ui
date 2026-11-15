@@ -268,10 +268,8 @@ export function useSingleAnchorPopupRoot<Store extends PopupRootStore>(
   usePopupRootOpenState(store, props, options.name);
 
   const open = computed(() => store.select('open'));
-  const { mounted, transitionStatus, actions } = usePopupRootTransitions(
-    store,
-    open,
-    () => (options.getTransitionElement ?? getTransitionElement)(store),
+  const { mounted, transitionStatus, actions } = usePopupRootTransitions(store, open, () =>
+    (options.getTransitionElement ?? getTransitionElement)(store),
   );
 
   return { store, open, mounted, transitionStatus, actions };

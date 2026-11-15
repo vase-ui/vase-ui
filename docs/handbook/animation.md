@@ -95,7 +95,7 @@ Use these attributes to make a CSS animation when a component becomes visible or
 
 A JavaScript animation library, such as [Motion for Vue](https://motion.dev/docs/vue) (the package `motion-v`), needs the popup in the DOM while its exit animation plays. Vase UI must also know when that animation ends.
 
-When a popup closes, `open` becomes `false` at once. The popup stays in the DOM until its exit animation ends. Vase UI finds the animations on the element of the popup. It always finds CSS transitions and CSS animations. It also finds a `motion-v` animation that includes `opacity`.
+When a popup closes, `open` becomes `false` at once. The popup stays in the DOM until its exit animation ends. Vase UI finds the animations on the element of the popup. With no popup part, it finds them on the positioner, or on the backdrop of a dialog, an alert dialog or a drawer. It always finds CSS transitions and CSS animations. It also finds a `motion-v` animation that includes `opacity`.
 
 When the animation ends, Vase UI removes the popup from the DOM, or hides it if the portal has `keepMounted`. The root emits `openChangeComplete` with `false`.
 

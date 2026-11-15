@@ -9,6 +9,7 @@ import {
   isInaccessible,
   isJSDOM,
   nextEvent,
+  popupAnatomyTests,
   popupConformanceTests,
   renderOnServer,
   screen,
@@ -124,6 +125,22 @@ const MultipleDetachedTriggersTooltip = defineComponent(
 
 describe('<Tooltip.Root />', () => {
   const { render } = createRenderer();
+
+  popupAnatomyTests({
+    createComponent: ({ open, onOpenChangeComplete, content }) => (
+      <Tooltip.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Tooltip.Trigger>Open</Tooltip.Trigger>
+        <Tooltip.Portal>
+          <Tooltip.Positioner data-testid="shown" class="shown">
+            Content
+            {content}
+          </Tooltip.Positioner>
+        </Tooltip.Portal>
+      </Tooltip.Root>
+    ),
+    createPopup: () => <Tooltip.Popup>Popup</Tooltip.Popup>,
+    render,
+  });
 
   it('keeps the payload while a controlled reopen moves to another trigger', async () => {
     const handle = Tooltip.createHandle<string>();
