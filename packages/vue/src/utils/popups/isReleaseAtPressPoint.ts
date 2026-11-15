@@ -1,8 +1,9 @@
 /**
- * The move of a pointer between its press and its release, in CSS pixels on each axis, that is not
- * a drag. `Select.Item` of Base UI takes 8 px of vertical travel as the start of a drag across its
- * items. The value is less than half of the smallest target of WCAG 2.2 (24 px). A pointer that
- * pressed the center of an item of that size is then still on that item.
+ * The largest move of a pointer between its press and its release, in CSS pixels on each axis,
+ * that is not a drag. `Select.Item` of Base UI takes 8 px of vertical travel as the start of a drag
+ * across its items. The value is less than half of the smallest target of WCAG 2.2 (24 px). A
+ * pointer that moves this distance or less from the center of an item of that size stays on that
+ * item.
  */
 const PRESS_POINT_TOLERANCE = 8;
 
