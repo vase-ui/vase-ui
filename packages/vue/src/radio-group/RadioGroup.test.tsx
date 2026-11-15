@@ -699,6 +699,31 @@ describe('<RadioGroup />', () => {
     expect(group.value?.inputElement).toBe(inputA);
   });
 
+  it('keeps inputElement null after the exposed radio unmounts when another radio becomes disabled', async () => {
+    const showFirst = shallowRef(true);
+    const disabled = shallowRef(false);
+    const group = shallowRef<RadioGroupInstance | null>(null);
+    await render(() => (
+      <RadioGroup ref={group}>
+        {showFirst.value && <Radio.Root value="a" data-testid="radio-a" />}
+        <Radio.Root value="b" data-testid="radio-b" />
+        <Radio.Root value="c" data-testid="radio-c" disabled={disabled.value} />
+      </RadioGroup>
+    ));
+
+    expect(group.value?.inputElement).toBe(getInput('radio-a'));
+
+    showFirst.value = false;
+    await flushMicrotasks();
+
+    expect(group.value?.inputElement).toBe(null);
+
+    disabled.value = true;
+    await flushMicrotasks();
+
+    expect(group.value?.inputElement).toBe(null);
+  });
+
   it.skipIf(isJSDOM)(
     'should return null when no radio is selected (matching native behavior)',
     async () => {

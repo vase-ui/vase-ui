@@ -299,8 +299,8 @@ if (group) {
     }
   });
 
-  // The group takes the checked input, and an enabled input in place of `null`. A `computed` that
-  // reads `inputElement` also follows each change of `checked` and `disabled`.
+  // The group takes an enabled input that is checked, or an enabled input in place of `null`. A
+  // `computed` that reads `inputElement` also follows each change of `checked` and `disabled`.
   watch(
     [checked, isDisabled],
     () => {

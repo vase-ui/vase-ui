@@ -214,8 +214,8 @@ function findFirstEnabledInput() {
   return firstInput;
 }
 
-// A keyed move runs no registration, and a radio that becomes disabled keeps `exposedInput`. The
-// group thus applies the rule at each read.
+// A keyed move runs no registration, and `exposedInput` keeps the input of a radio that becomes
+// disabled. The group thus applies the rule at each read.
 function getExposedInput() {
   const input = exposedInput.value;
   if (input == null) {
@@ -230,8 +230,8 @@ function registerInputRef(input: HTMLInputElement) {
   if (!input.disabled && (input.checked || exposedInput.value == null)) {
     exposedInput.value = input;
   }
-  // A `computed` that reads `inputElement` then follows each registration, also one that keeps
-  // `exposedInput`.
+  // A `computed` that reads `inputElement` then follows each registration, also a registration
+  // that does not change `exposedInput`.
   triggerRef(exposedInput);
 
   // `inputElement` is `null` after the radio of the input that it gives unmounts, as in Base UI.
