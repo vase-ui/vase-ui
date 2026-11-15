@@ -13,7 +13,10 @@ const PRESS_POINT_TOLERANCE = 8;
  * on another element. The client coordinates of a pointer that holds still do not change when the
  * page scrolls.
  */
-export function isReleaseAtPressPoint(press: MouseEvent, release: MouseEvent): boolean {
+export function isReleaseAtPressPoint(
+  press: Pick<MouseEvent, 'clientX' | 'clientY'>,
+  release: MouseEvent,
+): boolean {
   return (
     Math.abs(release.clientX - press.clientX) <= PRESS_POINT_TOLERANCE &&
     Math.abs(release.clientY - press.clientY) <= PRESS_POINT_TOLERANCE

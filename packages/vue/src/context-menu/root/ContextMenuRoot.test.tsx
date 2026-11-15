@@ -187,11 +187,11 @@ describe('<ContextMenu.Root />', () => {
         await screen.findByTestId('context-root-popup');
       });
 
-      await fireEvent.pointerMove(document.body, { clientX: 24, clientY: 24 });
+      await fireEvent.pointerMove(document.body, { clientX: 30, clientY: 30 });
       await fireEvent.mouseUp(screen.getByTestId('context-submenu-trigger'), {
         button: 2,
-        clientX: 24,
-        clientY: 24,
+        clientX: 30,
+        clientY: 30,
       });
       await flushMicrotasks();
 
@@ -288,8 +288,8 @@ describe('<ContextMenu.Root />', () => {
       });
       const item = screen.getByTestId('context-item');
 
-      await fireEvent.pointerMove(document.body, { clientX: 24, clientY: 24 });
-      await fireEvent.mouseUp(item, { button: 2, clientX: 24, clientY: 24 });
+      await fireEvent.pointerMove(document.body, { clientX: 30, clientY: 30 });
+      await fireEvent.mouseUp(item, { button: 2, clientX: 30, clientY: 30 });
 
       await waitFor(() => {
         expect(popup.isConnected).toBe(false);
