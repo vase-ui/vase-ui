@@ -16,6 +16,12 @@ const headingImages = [...heading.matchAll(/\bsrc(?:set)?="([^"]*)"/g)].map(([, 
 const logo = /\blogo: \{(.*?)\}/s.exec(read('docs/.vitepress/config.ts'))?.[1] ?? '';
 const logoImages = [...logo.matchAll(/'(\/[^']*)'/g)].map(([, path]) => path);
 
+function pathsOf(file: string): string[] {
+  return [...read(file).matchAll(/<path d="([^"]*)"/g)].map(([, outline]) => outline);
+}
+// The first two paths of the wordmark are the mark. The other path is the words.
+const markPaths = pathsOf('docs/public/wordmark-light.svg').slice(0, 2);
+
 test('the heading of README.md and the navigation bar each name two images', () => {
   assert.equal(headingImages.length, 2, 'README.md');
   assert.equal(logoImages.length, 2, 'docs/.vitepress/config.ts');
@@ -33,10 +39,16 @@ for (const path of logoImages) {
   test(`docs/.vitepress/config.ts: ${path} is a file of docs/public`, () => {
     assert.ok(existsSync(join(PUBLIC_ROOT, path)), `docs/public${path} does not exist.`);
   });
+
+  test(`docs/.vitepress/config.ts: ${path} holds the mark and no words`, () => {
+    assert.deepEqual(pathsOf(`docs/public${path}`), markPaths);
+  });
 }
 
-test('the dark wordmark is the light wordmark with white ink', () => {
-  const light = read('docs/public/wordmark-light.svg');
-  assert.equal(light.split('#000000').length, 2, 'The light file must name its ink one time.');
-  assert.equal(read('docs/public/wordmark-dark.svg'), light.replace('#000000', '#ffffff'));
-});
+for (const name of ['wordmark', 'mark']) {
+  test(`the dark ${name} is the light ${name} with white ink`, () => {
+    const light = read(`docs/public/${name}-light.svg`);
+    assert.equal(light.split('#000000').length, 2, 'The light file must name its ink one time.');
+    assert.equal(read(`docs/public/${name}-dark.svg`), light.replace('#000000', '#ffffff'));
+  });
+}
