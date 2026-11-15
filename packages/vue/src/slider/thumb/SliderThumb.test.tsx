@@ -1908,7 +1908,7 @@ describe('<Slider.Thumb />', () => {
       });
     });
 
-    function renderHeldSlider(name: string, shownControl: () => VNode) {
+    async function submitWithHeldSlider(name: string, shownControl: () => VNode) {
       const handleSubmit = vi.fn();
       const visible = shallowRef(true);
       const extra = shallowRef(name === 'deactivated');
@@ -1923,7 +1923,7 @@ describe('<Slider.Thumb />', () => {
           ) : null}
         </div>
       ));
-      const view = render(() => (
+      const { user } = await render(() => (
         <Form onFormSubmit={handleSubmit}>
           <Field.Root name="volume" data-testid="field">
             {shownControl()}
@@ -1933,23 +1933,19 @@ describe('<Slider.Thumb />', () => {
         </Form>
       ));
 
-      return async function submit() {
-        const { user } = await view;
-        visible.value = false;
-        await flushMicrotasks();
-        extra.value = true;
-        await flushMicrotasks();
-        await user.click(screen.getByRole('button', { name: 'Submit' }));
-        return handleSubmit;
-      };
+      visible.value = false;
+      await flushMicrotasks();
+      extra.value = true;
+      await flushMicrotasks();
+      await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+      return handleSubmit;
     }
 
     it.each([{ name: 'held mount' }, { name: 'deactivated' }])(
       'a held slider keeps the input of a shown required control: $name',
       async ({ name }) => {
-        const submit = renderHeldSlider(name, () => <Field.Control required />);
-
-        const handleSubmit = await submit();
+        const handleSubmit = await submitWithHeldSlider(name, () => <Field.Control required />);
 
         expect(handleSubmit).not.toHaveBeenCalled();
         expect(screen.getByTestId('field')).toHaveAttribute('data-invalid', '');
@@ -1957,9 +1953,9 @@ describe('<Slider.Thumb />', () => {
     );
 
     it('a slider that mounts while KeepAlive holds it gives no value to its form', async () => {
-      const submit = renderHeldSlider('held mount', () => <Field.Control defaultValue="shown" />);
-
-      const handleSubmit = await submit();
+      const handleSubmit = await submitWithHeldSlider('held mount', () => (
+        <Field.Control defaultValue="shown" />
+      ));
 
       expect(handleSubmit.mock.lastCall?.[0]).toEqual({ volume: 'shown' });
     });
