@@ -161,7 +161,8 @@ const RESTRICTED_REACT_EVENT_PROP_SYNTAX = Object.entries(VUE_KEY_OF_REACT_EVENT
     })),
 );
 
-// A `queryBy` query returns `null` for an absence, so a wait on that `null` passes on its first call.
+// A later block with `no-restricted-syntax` for a test file replaces the list of an earlier block.
+// Thus each selector for the test files is in this one list.
 const RESTRICTED_TEST_SYNTAX = [
   ...RESTRICTED_REACT_EVENT_PROP_SYNTAX,
   {

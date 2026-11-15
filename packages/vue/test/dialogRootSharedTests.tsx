@@ -193,13 +193,15 @@ export function dialogRootSharedTests(config: DialogRootSharedTestsConfig) {
         ));
 
         expect(screen.getByRole(popupRole)).toBeVisible();
+        const popup = screen.getByRole(popupRole);
 
         actions!.close();
         await flushMicrotasks();
 
         await waitFor(() => {
-          expect(queryPopup()).toBe(null);
+          expect(popup).not.toBeInTheDocument();
         });
+        expect(queryPopup()).toBe(null);
         expect(handleOpenChange).toHaveBeenCalledTimes(1);
         expect(handleOpenChange).toHaveBeenNthCalledWith(
           1,
@@ -239,18 +241,20 @@ export function dialogRootSharedTests(config: DialogRootSharedTestsConfig) {
         handle.openWithPayload(8);
         await flushMicrotasks();
         await waitFor(() => {
-          expect(queryPopup()).not.toBe(null);
+          expect(screen.getByRole(popupRole)).not.toBe(null);
         });
 
         expect(screen.getByTestId('content')).toHaveTextContent('8');
         expect(trigger1).toHaveAttribute('aria-expanded', 'false');
         expect(trigger2).toHaveAttribute('aria-expanded', 'false');
+        const popup = screen.getByRole(popupRole);
 
         handle.close();
         await flushMicrotasks();
         await waitFor(() => {
-          expect(queryPopup()).toBe(null);
+          expect(popup).not.toBeInTheDocument();
         });
+        expect(queryPopup()).toBe(null);
       });
     });
   });

@@ -733,6 +733,7 @@ describe('usePopupRoot', () => {
       follow.value = false;
       await fireEvent.click(getByText('trigger'));
       expect(updates).toEqual([true, false]);
+      expect(queryByRole('dialog')).not.toBe(null);
       const dialog = getByRole('dialog');
 
       open.value = false;
