@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useForm } from 'vee-validate';
+import { useTemplateRef } from 'vue';
 
 interface FormValues {
   username: string;
@@ -13,11 +14,16 @@ async function submitForm(data: FormValues) {
   await fetch('https://api.example.com/users', { method: 'POST', body: JSON.stringify(data) });
 }
 
-const onSubmit = handleSubmit(submitForm);
+const formElement = useTemplateRef('formElement');
+
+const onSubmit = handleSubmit(submitForm, ({ errors }) => {
+  const [name] = Object.keys(errors);
+  formElement.value?.querySelector<HTMLElement>(`[name="${name}"]`)?.focus();
+});
 </script>
 
 <template>
-  <form novalidate @submit="onSubmit">
+  <form ref="formElement" novalidate @submit="onSubmit">
     <!-- form fields -->
     <button type="submit">Submit</button>
   </form>

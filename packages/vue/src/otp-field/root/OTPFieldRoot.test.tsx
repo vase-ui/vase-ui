@@ -10,6 +10,7 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountFormResetTests,
   heldMountListTests,
   hiddenInputSizeTests,
   hydrate,
@@ -1935,6 +1936,19 @@ describe('<OTPField.Root />', () => {
           expect(screen.queryByTestId('error')).toBe(null);
         });
       });
+    });
+
+    heldMountFormResetTests({
+      render,
+      renderControl: () => <OTPField name="otp" defaultValue="12" />,
+      change: () => fireEvent.input(getHiddenInput(document.body), { target: { value: '123456' } }),
+      readState: () =>
+        screen
+          .getAllByRole<HTMLInputElement>('textbox')
+          .map((input) => input.value)
+          .join(''),
+      defaultState: '12',
+      changedState: '123456',
     });
 
     describe('autofill', () => {

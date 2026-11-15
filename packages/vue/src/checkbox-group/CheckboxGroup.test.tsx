@@ -10,6 +10,7 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountFormResetTests,
   hydrate,
   isJSDOM,
   renderOnServer,
@@ -2701,6 +2702,21 @@ describe('<CheckboxGroup />', () => {
       expect(checkbox).toHaveAttribute('aria-checked', 'false');
       expect(getFormData()).toEqual([]);
     });
+  });
+
+  heldMountFormResetTests({
+    render,
+    renderControl: () => (
+      <CheckboxGroup defaultValue={['apple']}>
+        <Checkbox.Root name="fruits" value="apple" />
+        <Checkbox.Root name="fruits" value="banana" />
+      </CheckboxGroup>
+    ),
+    change: () => fireEvent.click(screen.getAllByRole('checkbox')[0]!),
+    readState: () =>
+      screen.getAllByRole('checkbox').map((checkbox) => checkbox.getAttribute('aria-checked')),
+    defaultState: ['true', 'false'],
+    changedState: ['false', 'false'],
   });
 
   describe('VUE-21: a native reset clears the error of the field', () => {
