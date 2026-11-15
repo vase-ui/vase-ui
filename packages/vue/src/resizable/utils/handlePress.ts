@@ -26,8 +26,9 @@ export interface HandlePress {
    */
   start: (event: PointerEvent) => boolean;
   /**
-   * Ends the press and each of its drags without a layout, for a change of the lifecycle of the
-   * pressed handle. The call changes nothing when no press runs.
+   * Ends the press and each of its drags, for a change of the lifecycle of the pressed handle. A
+   * drag in a root with `'on-release'` then writes no layout. The call changes nothing when no
+   * press runs.
    */
   end: () => void;
 }
@@ -164,8 +165,8 @@ export function createHandlePress(own: PressedHandle): HandlePress {
           return;
         }
         stopClick = false;
-        // A click that a script or an assistive technology makes with no press has no detail. No
-        // click follows a touch drag in Chromium, so the flag can still be set at such a click.
+        // A click with no press, such as the click of `element.click()`, has the detail 0. No click
+        // follows a touch drag in Chromium, so the flag can still be set at such a click.
         if (event.detail !== 0) {
           event.preventDefault();
           event.stopPropagation();
