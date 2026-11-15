@@ -800,7 +800,7 @@ The label of a root:
 - This rule covers `Progress.Root`, `Meter.Root`, `Fieldset.Root` and `Slider.Root`.
 - A root with a non-blank `aria-label` of the consumer assumes no label. The server HTML has no `aria-labelledby`. A root that has a label gets the id of the label when it is mounted.
 - The first render in a browser assumes what the server assumed, because Vue does not patch `aria-labelledby` when it hydrates.
-- `Slider.Root` gives its `aria-labelledby` to the function of `useAriaAfterHydration()`. The label of its field can come after the control, and a `Slider.Label` before it then gives another id in the first client render.
+- `Slider.Root` is the exception while Vue hydrates it. It gives its `aria-labelledby` to the function of `useAriaAfterHydration()`. The label of its field can come after the control, and a `Slider.Label` before it then gives another id in the first client render.
 - `labelId` of `useLabelId` is the id of the registered label, with no assumption. `legendId` in the context of `Fieldset.Root` is that id.
 - After the mount, a root with no label has no `aria-labelledby`. A root whose label has an `id` prop has that id. Vue gives no warning, and the hydrated DOM is equal to a client-only render.
 - Until the page hydrates, the server HTML of those two roots points at the generated id, unless the consumer gives the root a non-blank `aria-label`.

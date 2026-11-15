@@ -792,11 +792,19 @@ describe('<Select.Trigger />', () => {
         },
         {
           name: 'a label part and a removed field label',
-          props: { id: 'font', label: 'before', fieldLabel: true, laterRemovedAtMount: true },
+          props: { id: 'font', label: 'before', field: true, laterRemovedAtMount: true },
           selector: '[role="combobox"]',
           attribute: 'aria-labelledby',
           serverValue: 'label-a',
           clientValue: 'font-label',
+        },
+        {
+          name: 'a removed description',
+          props: { id: 'font', label: 'before', field: true, laterRemovedAtMount: true },
+          selector: '[role="combobox"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
         },
       ],
     });

@@ -2445,7 +2445,7 @@ describe('<OTPField.Root />', () => {
           props: {
             label: 'after',
             description: true,
-            inputs: 2,
+            inputs: 4,
             labelId: 'label-a',
             descriptionId: 'desc-a',
             laterRemovedAtMount: true,
@@ -2460,7 +2460,7 @@ describe('<OTPField.Root />', () => {
           props: {
             label: 'after',
             description: true,
-            inputs: 2,
+            inputs: 4,
             labelId: 'label-a',
             descriptionId: 'desc-a',
             laterRemovedAtMount: true,
@@ -2475,7 +2475,7 @@ describe('<OTPField.Root />', () => {
           props: {
             label: 'after',
             description: true,
-            inputs: 2,
+            inputs: 4,
             labelId: 'label-a',
             descriptionId: 'desc-a',
             laterRemovedAtMount: true,

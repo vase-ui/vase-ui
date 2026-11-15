@@ -10,7 +10,7 @@ defineProps<{
   items?: Record<string, string> | undefined;
   label?: 'before' | 'after' | undefined;
   placeholder?: string | undefined;
-  fieldLabel?: boolean | undefined;
+  field?: boolean | undefined;
   laterRemovedAtMount?: boolean | undefined;
 }>();
 
@@ -21,14 +21,17 @@ onMounted(() => {
 </script>
 
 <template>
-  <Field.Root v-if="fieldLabel">
+  <Field.Root v-if="field">
     <Select.Root :id="id">
       <Select.Label v-if="label === 'before'">Font</Select.Label>
       <Select.Trigger>
         <Select.Value />
       </Select.Trigger>
     </Select.Root>
-    <Field.Label v-if="!(laterRemovedAtMount && isMounted)" id="label-a">Font</Field.Label>
+    <template v-if="!(laterRemovedAtMount && isMounted)">
+      <Field.Label id="label-a">Font</Field.Label>
+      <Field.Description id="desc-a">Pick a font.</Field.Description>
+    </template>
   </Field.Root>
   <Select.Root v-else :id="id" :name="name" :default-value="defaultValue" :items="items">
     <Select.Label v-if="label === 'before'">Font</Select.Label>

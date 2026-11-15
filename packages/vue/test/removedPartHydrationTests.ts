@@ -21,7 +21,9 @@ export function removedPartHydrationTests(config: RemovedPartHydrationTestsConfi
 
       const { container } = await hydrate(component, { serverHtml, props });
 
-      expect(container.querySelector(selector)?.getAttribute(attribute) ?? null).toBe(clientValue);
+      const element = container.querySelector(selector);
+      expect(element).toBeInTheDocument();
+      expect(element?.getAttribute(attribute)).toBe(clientValue);
     },
   );
 }

@@ -1306,6 +1306,22 @@ describe('<Resizable.Handle />', () => {
           serverValue: '20',
           clientValue: null,
         },
+        {
+          name: 'a removed panel, aria-valuemin',
+          props: { composition: 'layout', laterRemovedAtMount: true },
+          selector: '[data-testid="handle-a"]',
+          attribute: 'aria-valuemin',
+          serverValue: '0',
+          clientValue: null,
+        },
+        {
+          name: 'a removed panel, aria-valuemax',
+          props: { composition: 'layout', laterRemovedAtMount: true },
+          selector: '[data-testid="handle-a"]',
+          attribute: 'aria-valuemax',
+          serverValue: '100',
+          clientValue: null,
+        },
       ],
     });
   });
