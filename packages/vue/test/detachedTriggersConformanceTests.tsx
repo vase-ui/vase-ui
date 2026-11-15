@@ -218,16 +218,6 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
     });
   }
 
-  // A person presses an outside button after the frame of the initial focus. Before that frame, the
-  // press causes no focus-out close. A popup that closes on an outside press, such as Popover, then
-  // closes after the click listener of the button moved it: `useDismiss` runs its outside press
-  // after that listener. React runs that listener at its root, after the outside press.
-  async function waitForFocusInPopup() {
-    await waitFor(() => {
-      expect(screen.getByTestId('popup').contains(document.activeElement)).toBe(true);
-    });
-  }
-
   async function waitForContent(text: string) {
     await waitFor(() => {
       expect(screen.getByTestId('content').textContent).toBe(text);
@@ -460,9 +450,6 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
             await waitForContent('1');
             expectActiveTrigger(1);
             await expectPositionerAlignedWith(getTrigger(1));
-            if (Close) {
-              await waitForFocusInPopup();
-            }
 
             await user.click(openTrigger2);
             await waitForContent('2');
@@ -900,8 +887,7 @@ export interface DetachedTriggersTestConfig {
   Viewport?: AnyComponent;
   /**
    * When provided, click-opened popups are closed with it, and the programmatic test checks that
-   * focus returns to the element that opened the popup. That test also waits until the popup has the
-   * focus before it presses the next outside button.
+   * focus returns to the element that opened the popup.
    */
   Close?: AnyComponent;
   /**

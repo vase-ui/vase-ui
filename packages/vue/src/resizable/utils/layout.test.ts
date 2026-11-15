@@ -1,20 +1,26 @@
 import { describe, expect, it } from 'vitest';
 import {
   adjustLayout,
+  adjustLayoutToSize,
   areConstraintsFeasible,
   areLayoutsEqual,
+  getHandleLimits,
   getHandleRange,
   hasSamePanels,
+  isCollapsed,
   resolveLayout,
+  resolveSize,
   toRequestedLayout,
   validateLayout,
 } from './layout';
-import type { PanelConstraints } from './layout';
+import type { Layout, PanelConstraints } from './layout';
 
 const panel = (id: string, rest: Partial<PanelConstraints> = {}): PanelConstraints => ({
   id,
   minSize: 0,
   maxSize: 100,
+  collapsible: false,
+  collapsedSize: 0,
   defaultSize: undefined,
   ...rest,
 });
@@ -218,5 +224,377 @@ describe('layout', () => {
     const shown = { a: 80, b: 20 };
     expect(toRequestedLayout(shown, { c: 100 })).toBe(shown);
     expect(toRequestedLayout(shown, { c: 70, d: 40 })).toBe(shown);
+  });
+
+  it.each([
+    { name: 'a shrink to 21 gives the least size', wanted: 21, direction: 'shrink', size: 25 },
+    { name: 'a shrink to 19 collapses', wanted: 19, direction: 'shrink', size: 5 },
+    { name: 'a grow to 9 stays collapsed', wanted: 9, direction: 'grow', size: 5 },
+    { name: 'a grow to 11 expands', wanted: 11, direction: 'grow', size: 25 },
+  ] as const)(
+    'threshold: a threshold of 5 replaces the half of the distance, $name',
+    ({ wanted, direction, size }) => {
+      // The collapsed size is 5 and the least size is 25: the panel collapses below 20 and expands
+      // above 10.
+      const a = panel('a', {
+        minSize: 25,
+        collapsible: true,
+        collapsedSize: 5,
+        collapseThreshold: 5,
+      });
+
+      expect(resolveSize(a, wanted, direction)).toBe(size);
+    },
+  );
+
+  it.each([
+    { name: 'a shrink to 11', wanted: 11, direction: 'shrink', size: 20 },
+    { name: 'a shrink to 10', wanted: 10, direction: 'shrink', size: 10 },
+    { name: 'a grow to 19', wanted: 19, direction: 'grow', size: 10 },
+    { name: 'a grow to 20', wanted: 20, direction: 'grow', size: 20 },
+  ] as const)(
+    'threshold: a threshold greater than the distance acts as the distance, $name',
+    ({ wanted, direction, size }) => {
+      const a = panel('a', {
+        minSize: 20,
+        collapsible: true,
+        collapsedSize: 10,
+        collapseThreshold: 50,
+      });
+
+      expect(resolveSize(a, wanted, direction)).toBe(size);
+    },
+  );
+
+  it.each([
+    { name: 'a shrink to 24', wanted: 24, direction: 'shrink', size: 5 },
+    { name: 'a grow to 6', wanted: 6, direction: 'grow', size: 25 },
+  ] as const)('threshold: an exact move ignores it, $name', ({ wanted, direction, size }) => {
+    const a = panel('a', {
+      minSize: 25,
+      collapsible: true,
+      collapsedSize: 5,
+      collapseThreshold: 5,
+    });
+
+    expect(resolveSize(a, wanted, direction, true)).toBe(size);
+  });
+
+  it('threshold: a panel that is not collapsible stops at its least size', () => {
+    expect(resolveSize(panel('a', { minSize: 25, collapsedSize: 5 }), 3, 'shrink')).toBe(25);
+    expect(resolveSize(panel('a', { minSize: 25, collapsedSize: 5 }), 3, 'shrink', true)).toBe(25);
+  });
+
+  it.each([
+    { name: 'to the least size', delta: -10, a: 20 },
+    { name: 'to the least size at the edge', delta: -17, a: 20 },
+    { name: 'to the collapsed size', delta: -19, a: 4 },
+  ])('adjust: a collapsible panel collapses after half of the distance, $name', ({ delta, a }) => {
+    const panels = [panel('a', { minSize: 20, collapsible: true, collapsedSize: 4 }), panel('b')];
+
+    expect(adjustLayout(panels, { a: 30, b: 70 }, 0, delta)).toEqual({ a, b: 100 - a });
+  });
+
+  it.each([
+    { name: 'stays collapsed below half', delta: 7, a: 4 },
+    { name: 'expands above half', delta: 9, a: 20 },
+    { name: 'goes on past the least size', delta: 30, a: 34 },
+  ])('adjust: a collapsed panel expands after half of the distance, $name', ({ delta, a }) => {
+    const panels = [panel('a', { minSize: 20, collapsible: true, collapsedSize: 4 }), panel('b')];
+    const start = { a: 4, b: 96 };
+
+    const next = adjustLayout(panels, start, 0, delta);
+
+    expect(next).toEqual({ a, b: 100 - a });
+    if (a === 4) {
+      expect(next).toBe(start);
+    }
+  });
+
+  it('adjust: with `exact` a key step collapses and expands at once', () => {
+    const panels = [panel('a', { minSize: 20, collapsible: true }), panel('b')];
+
+    expect(adjustLayout(panels, { a: 20, b: 80 }, 0, -1, { exact: true })).toEqual({
+      a: 0,
+      b: 100,
+    });
+    expect(adjustLayout(panels, { a: 0, b: 100 }, 0, 1, { exact: true })).toEqual({ a: 20, b: 80 });
+  });
+
+  it.each([
+    { name: 'a panel with room takes the collapse', max: 100, expected: { a: 0, b: 90, c: 10 } },
+    { name: 'a panel with no room refuses it', max: 85, expected: { a: 20, b: 70, c: 10 } },
+  ])(
+    'adjust: a collapse that the growing panel has no room for is refused, $name',
+    ({ max, expected }) => {
+      const panels = [
+        panel('a', { minSize: 20, collapsible: true }),
+        panel('b', { maxSize: max }),
+        panel('c'),
+      ];
+
+      expect(adjustLayout(panels, { a: 30, b: 60, c: 10 }, 0, -25)).toEqual(expected);
+    },
+  );
+
+  it('adjust: a panel does not grow to a size between its collapsed size and its least size', () => {
+    const panels = [
+      panel('a', { minSize: 20, collapsible: true, collapsedSize: 4 }),
+      panel('b', { minSize: 85 }),
+    ];
+    const start = { a: 4, b: 96 };
+
+    expect(adjustLayout(panels, start, 0, 30)).toBe(start);
+  });
+
+  // In each case, a sum of sizes with decimals misses a limit by a rounding error of floating point:
+  // 0.2 + (99.8 - 98) is less than 2, and 10.4 + 59.7 is more than 70.1.
+  it.each<{
+    name: string;
+    panels: PanelConstraints[];
+    start: Layout;
+    delta: number;
+    expected: Layout;
+  }>([
+    {
+      name: 'an expand from a collapsed size of 0.2',
+      panels: [panel('a', { minSize: 2, collapsible: true, collapsedSize: 0.2 }), panel('b')],
+      start: { a: 0.2, b: 99.8 },
+      delta: 1,
+      expected: { a: 2, b: 98 },
+    },
+    {
+      name: 'a collapse that fills a maximum of 70.1',
+      panels: [
+        panel('a', { minSize: 20, collapsible: true }),
+        panel('b', { maxSize: 70.1 }),
+        panel('c'),
+      ],
+      start: { a: 59.7, b: 10.4, c: 29.9 },
+      delta: -100,
+      expected: { a: 0, b: 70.1, c: 29.9 },
+    },
+    {
+      name: 'a step to a least size of 33.29',
+      panels: [panel('a', { minSize: 33.29, collapsible: true }), panel('b')],
+      start: { a: 35.22, b: 64.78 },
+      delta: -1.93,
+      expected: { a: 33.29, b: 66.71 },
+    },
+  ])(
+    'adjust: a rounding error of a sum does not change $name',
+    ({ panels, start, delta, expected }) => {
+      expect(adjustLayout(panels, start, 0, delta, { exact: true })).toEqual(expected);
+    },
+  );
+
+  it.each([
+    {
+      name: 'the handle before it, to the right',
+      pivot: 0,
+      delta: 10,
+      expected: { a: 40, b: 30, c: 30 },
+    },
+    {
+      name: 'the handle before it, to the left',
+      pivot: 0,
+      delta: -10,
+      expected: { a: 20, b: 30, c: 50 },
+    },
+    {
+      name: 'the handle after it, to the right',
+      pivot: 1,
+      delta: 10,
+      expected: { a: 40, b: 30, c: 30 },
+    },
+    {
+      name: 'the handle after it, to the left',
+      pivot: 1,
+      delta: -10,
+      expected: { a: 20, b: 30, c: 50 },
+    },
+  ])('locked: a move goes through a disabled panel, $name', ({ pivot, delta, expected }) => {
+    const panels = [panel('a'), panel('b', { locked: true }), panel('c')];
+
+    expect(adjustLayout(panels, { a: 30, b: 30, c: 40 }, pivot, delta)).toEqual(expected);
+  });
+
+  it('locked: a handle with only locked panels on one side moves nothing', () => {
+    const a = panel('a', { locked: true });
+    const panels = [a, panel('b'), panel('c')];
+    const start = { a: 30, b: 30, c: 40 };
+
+    expect(adjustLayout(panels, start, 0, 10)).toBe(start);
+    expect(adjustLayout(panels, start, 0, -10)).toBe(start);
+    expect(getHandleRange(panels, start, 0, a)).toEqual({ min: 30, max: 30 });
+    expect(adjustLayout(panels, start, 1, 10)).toEqual({ a: 30, b: 40, c: 30 });
+  });
+
+  it('locked: a disabled panel keeps its constraints in a layout that is validated', () => {
+    const panels = [panel('a', { locked: true, minSize: 10 }), panel('b')];
+
+    expect(resolveLayout(panels, { a: 5, b: 95 })).toEqual({ a: 10, b: 90 });
+  });
+
+  it('push: with `push: false` only the two panels beside the handle change', () => {
+    const panels = [panel('a'), panel('b', { minSize: 20 }), panel('c')];
+    const start = { a: 30, b: 30, c: 40 };
+
+    expect(adjustLayout(panels, start, 0, 30)).toEqual({ a: 60, b: 20, c: 20 });
+    expect(adjustLayout(panels, start, 0, 30, { push: false })).toEqual({ a: 40, b: 20, c: 40 });
+    expect(adjustLayout(panels, start, 1, -30, { push: false })).toEqual({ a: 30, b: 20, c: 50 });
+  });
+
+  it('push: with `push: false` a locked panel beside the handle stops the move', () => {
+    const panels = [panel('a'), panel('b', { locked: true }), panel('c')];
+    const start = { a: 30, b: 30, c: 40 };
+
+    expect(adjustLayout(panels, start, 0, 10, { push: false })).toBe(start);
+    expect(adjustLayout(panels, start, 0, -10, { push: false })).toBe(start);
+  });
+
+  it('range: a collapsible panel can go to its collapsed size, and push: false limits the greatest size', () => {
+    const a = panel('a', { minSize: 20, collapsible: true, collapsedSize: 4 });
+    const panels = [a, panel('b', { minSize: 30 }), panel('c')];
+    const layout = { a: 30, b: 30, c: 40 };
+
+    expect(getHandleRange(panels, layout, 0, a)).toEqual({ min: 4, max: 70 });
+    expect(getHandleRange(panels, layout, 0, a, false)).toEqual({ min: 4, max: 30 });
+  });
+
+  it('range: a collapsible panel just above its least size can go to its collapsed size', () => {
+    // The panel after the handle has 20.002 of room, which is all of the size of the first panel
+    // above its collapsed size. The sizes have decimals, as a layout has after a drag.
+    const a = panel('a', { minSize: 20, collapsible: true, collapseThreshold: 20 });
+    const panels = [a, panel('b')];
+    const layout = { a: 20.002, b: 79.998 };
+
+    expect(getHandleRange(panels, layout, 0, a)).toEqual({ min: 0, max: 100 });
+    expect(adjustLayout(panels, layout, 0, -100, { exact: true })).toEqual({ a: 0, b: 100 });
+  });
+
+  it.each([
+    {
+      name: 'at the least size',
+      layout: { a: 20, b: 80 },
+      expected: { atMin: true, atMax: false },
+    },
+    { name: 'between', layout: { a: 40, b: 60 }, expected: { atMin: false, atMax: false } },
+    {
+      name: 'at the greatest size',
+      layout: { a: 60, b: 40 },
+      expected: { atMin: false, atMax: true },
+    },
+  ])('limits: the handle is $name', ({ layout, expected }) => {
+    const panels = [panel('a', { minSize: 20, maxSize: 60 }), panel('b', { minSize: 30 })];
+
+    expect(getHandleLimits(panels, layout, 0)).toEqual(expected);
+  });
+
+  it('limits: a collapsible panel at its least size is not at the end of the travel', () => {
+    const panels = [panel('a', { minSize: 20, collapsible: true }), panel('b')];
+
+    expect(getHandleLimits(panels, { a: 20, b: 80 }, 0)).toEqual({ atMin: false, atMax: false });
+    expect(getHandleLimits(panels, { a: 0, b: 100 }, 0)).toEqual({ atMin: true, atMax: false });
+  });
+
+  it('limits: a handle with only locked panels on one side is at both ends', () => {
+    const panels = [panel('a', { locked: true }), panel('b'), panel('c')];
+
+    expect(getHandleLimits(panels, { a: 30, b: 30, c: 40 }, 0)).toEqual({
+      atMin: true,
+      atMax: true,
+    });
+  });
+
+  it('limits: with `push: false` the panels beyond the next panel do not count', () => {
+    const panels = [panel('a'), panel('b', { minSize: 30 }), panel('c')];
+    const layout = { a: 30, b: 30, c: 40 };
+
+    expect(getHandleLimits(panels, layout, 0)).toEqual({ atMin: false, atMax: false });
+    expect(getHandleLimits(panels, layout, 0, false)).toEqual({ atMin: false, atMax: true });
+  });
+
+  it('collapsed: a collapsible panel at its collapsed size is collapsed', () => {
+    const a = panel('a', { minSize: 20, collapsible: true, collapsedSize: 33.3333 });
+
+    expect(isCollapsed(a, 33.333)).toBe(false);
+    expect(isCollapsed({ ...a, minSize: 40 }, 33.333)).toBe(true);
+    expect(isCollapsed(a, 20)).toBe(false);
+    expect(isCollapsed(panel('b', { minSize: 20, collapsedSize: 4 }), 4)).toBe(false);
+  });
+
+  it('validate: a collapsed panel takes none of the remainder', () => {
+    const panels = [panel('a', { minSize: 20, collapsible: true }), panel('b'), panel('c')];
+
+    expect(validateLayout(panels, { a: 5, b: 50, c: 40 })).toEqual({ a: 0, b: 60, c: 40 });
+  });
+
+  it('initial: a default size that is the collapsed size gives a collapsed panel', () => {
+    const a = (collapsedSize: number) =>
+      panel('a', { minSize: 20, collapsible: true, collapsedSize, defaultSize: collapsedSize });
+
+    expect(resolveLayout([a(0), panel('b')])).toEqual({ a: 0, b: 100 });
+    expect(resolveLayout([a(4), panel('b')])).toEqual({ a: 4, b: 96 });
+  });
+
+  it('action: `expand()` does not collapse another panel', () => {
+    const panels = [
+      panel('nav', { minSize: 20, collapsible: true }),
+      panel('editor', { minSize: 30 }),
+      panel('preview', { minSize: 20, collapsible: true }),
+    ];
+    const start = { nav: 0, editor: 35, preview: 65 };
+
+    // A key can collapse the preview. An action takes only what the preview has above its least size.
+    expect(adjustLayout(panels, start, 0, 60, { exact: true })).toEqual({
+      nav: 70,
+      editor: 30,
+      preview: 0,
+    });
+    expect(adjustLayout(panels, start, 0, 60, { exact: true, only: -1 })).toEqual({
+      nav: 50,
+      editor: 30,
+      preview: 20,
+    });
+    // `collapse()` names the panel that collapses.
+    expect(
+      adjustLayout(panels, { nav: 30, editor: 30, preview: 40 }, 0, -30, { exact: true, only: 0 }),
+    ).toEqual({ nav: 0, editor: 60, preview: 40 });
+  });
+
+  it.each([
+    {
+      name: 'the panel before the handle',
+      pivot: 0,
+      index: 0,
+      size: 20,
+      expected: { a: 20, b: 80 },
+    },
+    {
+      name: 'the panel after the handle',
+      pivot: 0,
+      index: 1,
+      size: 70,
+      expected: { a: 30, b: 70 },
+    },
+  ])('to size: a panel takes a size with $name', ({ pivot, index, size, expected }) => {
+    const panels = [panel('a'), panel('b')];
+
+    expect(adjustLayoutToSize(panels, { a: 50, b: 50 }, pivot, index, size)).toEqual(expected);
+  });
+
+  it('to size: the move is exact, so a collapsible panel collapses at once', () => {
+    const panels = [panel('a', { minSize: 20, collapsible: true }), panel('b')];
+
+    expect(adjustLayoutToSize(panels, { a: 50, b: 50 }, 0, 0, 5)).toEqual({ a: 0, b: 100 });
+    expect(adjustLayoutToSize(panels, { a: 50, b: 50 }, 0, 0, 5, { only: 0 })).toEqual({
+      a: 0,
+      b: 100,
+    });
+    expect(adjustLayoutToSize(panels, { a: 50, b: 50 }, 0, 0, 5, { only: 1 })).toEqual({
+      a: 20,
+      b: 80,
+    });
   });
 });
