@@ -114,4 +114,4 @@ Node.js 22, 24 and 26 end the process for some date formats of `Intl`, with no e
 - The language `ksh` (Colognian), a year and month field, and a calendar other than `chinese` and `dangi`.
 - The language `sc` (Sardinian), a year and month field, and the calendar `gregory`.
 
-In `ksh` and `sc`, the layout is the same as without the fault. In `my`, the year comes before the day, and a Japanese era shows its name, such as `Reiwa`, in place of a letter, such as `R`. Firefox and Safari show these fields in the same layout as Node.js.
+In `ksh` and `sc`, the layout is the same as without the fault. In `my`, the year comes before the day. A Japanese era shows its name, such as `Reiwa`, in place of a letter, such as `R`. Firefox and Safari show these fields in the same layout as Node.js.
