@@ -943,6 +943,34 @@ describe('<Tooltip.Root />', () => {
         expect(onOpenChangeComplete).not.toHaveBeenCalledWith(true);
       });
 
+      it('reports the open completion again when it toggles on an open tooltip that is not kept mounted', async () => {
+        const onOpenChangeComplete = vi.fn();
+        function nextCompletion() {
+          return new Promise<void>((resolve) => {
+            onOpenChangeComplete.mockImplementationOnce(() => resolve());
+          });
+        }
+
+        let completion = nextCompletion();
+        const { setProps } = await render(
+          <TestTooltip rootProps={{ open: true, disabled: false, onOpenChangeComplete }} />,
+        );
+        await completion;
+
+        completion = nextCompletion();
+        await setProps({ rootProps: { open: true, disabled: true, onOpenChangeComplete } });
+        await completion;
+        completion = nextCompletion();
+        await setProps({ rootProps: { open: true, disabled: false, onOpenChangeComplete } });
+        await completion;
+        expect(onOpenChangeComplete.mock.calls).toEqual([[true], [false], [true]]);
+
+        completion = nextCompletion();
+        await setProps({ rootProps: { open: false, disabled: false, onOpenChangeComplete } });
+        await completion;
+        expect(onOpenChangeComplete.mock.calls).toEqual([[true], [false], [true], [false]]);
+      });
+
       it('does not throw error when combined with defaultOpen', async () => {
         await render(<TestTooltip rootProps={{ defaultOpen: true, disabled: true }} />);
         await flushMicrotasks();

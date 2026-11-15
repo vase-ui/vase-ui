@@ -1504,6 +1504,50 @@ describe('<NavigationMenu.Root />', () => {
       expect(trigger).toHaveFocus();
     });
 
+    it('VUE-72: returns the focus to the trigger after Escape closes a positioner with no popup part', async () => {
+      let resolveClose = () => {};
+      const closed = new Promise<void>((resolve) => {
+        resolveClose = resolve;
+      });
+      const { user } = await render(
+        <NavigationMenu.Root
+          onOpenChangeComplete={(open: boolean) => {
+            if (!open) {
+              resolveClose();
+            }
+          }}
+        >
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="item-1">
+              <NavigationMenu.Trigger data-testid="trigger-1">Item 1</NavigationMenu.Trigger>
+              <NavigationMenu.Content data-testid="popup-1">
+                <NavigationMenu.Link href="#link-1">Link 1</NavigationMenu.Link>
+              </NavigationMenu.Content>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          <NavigationMenu.Portal>
+            <NavigationMenu.Positioner data-testid="positioner">
+              <NavigationMenu.Viewport />
+            </NavigationMenu.Positioner>
+          </NavigationMenu.Portal>
+        </NavigationMenu.Root>,
+      );
+      const trigger = screen.getByTestId('trigger-1');
+
+      await user.click(trigger);
+      await flushMicrotasks();
+      const link = screen.getByRole('link', { name: 'Link 1' });
+      link.focus();
+      await flushMicrotasks();
+      expect(link).toHaveFocus();
+
+      await user.keyboard('{Escape}');
+      await closed;
+
+      expect(screen.queryByTestId('positioner')).toBe(null);
+      expect(trigger).toHaveFocus();
+    });
+
     it('respects focus outside when clicking menu', async () => {
       const { user } = await render(
         <div>

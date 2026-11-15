@@ -67,7 +67,6 @@ import { contains, getTarget } from '../../common/shadowDom';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import { resolveElement } from '../../internals/resolveElement';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
 import FloatingFocusManager from '../../utils/popups/focus/FloatingFocusManager.vue';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
@@ -102,16 +101,6 @@ const empty = useListEmpty();
 const popupId = computed(() =>
   inputInsidePopup.value ? getComboboxPopupId(store.select('id')) : undefined,
 );
-
-useOpenChangeComplete({
-  open,
-  ref: store.context.popupRef,
-  onComplete() {
-    if (open.value) {
-      store.context.onOpenChangeComplete?.(true);
-    }
-  },
-});
 
 const state = computed<ComboboxPopupState>(() => ({
   open: open.value,

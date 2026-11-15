@@ -56,7 +56,6 @@ export interface DialogPopupProps
 import { computed } from 'vue';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
 import FloatingFocusManager from '../../utils/popups/focus/FloatingFocusManager.vue';
 import {
@@ -91,16 +90,6 @@ const mounted = computed(() => store.select('mounted'));
 const nestedOpenDialogCount = computed(() => store.select('nestedOpenDialogCount'));
 const open = computed(() => store.select('open'));
 const openMethod = computed(() => store.select('openMethod'));
-
-useOpenChangeComplete({
-  open,
-  ref: store.context.popupRef,
-  onComplete() {
-    if (open.value) {
-      store.context.onOpenChangeComplete?.(true);
-    }
-  },
-});
 
 const defaultInitialFocus = createDefaultInitialFocus(store.context.popupRef);
 const resolvedInitialFocus = computed(() =>

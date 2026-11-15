@@ -407,6 +407,22 @@ export interface UseAriaComboboxReturnValue {
 }
 
 /**
+ * Gives the element whose animations end an open change of a combobox.
+ * - An inline combobox in a Dialog waits for the animations of the dialog. The function finds the
+ *   dialog by `[role="dialog"]` and not by a context, so the dialog of another library also works.
+ *   The closest such element must be the element that animates.
+ * - A list with no `Combobox.Positioner` is its own positioner element. It stays on the screen
+ *   while the popup is closed, so it ends no open change.
+ */
+function getTransitionElement(store: ComboboxStore) {
+  const { inline, positionerElement, listElement } = store.state;
+  if (inline && positionerElement) {
+    return closest<HTMLElement>(positionerElement, '[role="dialog"]');
+  }
+  return store.context.popupRef.value ?? (positionerElement === listElement ? null : positionerElement);
+}
+
+/**
  * Does the work of the internal root of a combobox: the selected value, the input value, the
  * filter, the popup store, the contexts and the form wiring. Call it in the `setup` of a root part.
  * @param props An object with one getter for each prop of the root part. A read then tracks only
@@ -618,11 +634,6 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   const pointerDownItemRef = shallowRef<Element | null>(null);
   const selectionEventRef = shallowRef<MouseEvent | PointerEvent | KeyboardEvent | null>(null);
 
-  // Support composing the Dialog component around an inline combobox: its transitions wait for
-  // the dialog's animations. The root composable takes the element as a ref, and a `post` watcher
-  // below points it at that element.
-  const animatedPopup = shallowRef<HTMLElement | null>(null);
-
   const { store, open, transitionStatus, actions } = useSingleAnchorPopupRoot(
     props,
     (initialState, defaultPopupId) =>
@@ -705,7 +716,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
       name: 'Combobox',
       onOpenChange: (nextOpen, eventDetails) => handleOpenChange(nextOpen, eventDetails),
       onOpenChangeComplete: (nextOpen) => callbacks.onOpenChangeComplete(nextOpen),
-      popupRef: animatedPopup,
+      getTransitionElement: (comboboxStore) => getTransitionElement(comboboxStore),
     },
   );
   // A function of `setup` reads the current props, so the root assigns each command one time. A
@@ -1240,23 +1251,9 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     }
   }
 
-  // Support composing the Dialog component around an inline combobox.
-  // `[role="dialog"]` is more interoperable than using a context, e.g. it can work
-  // with third-party modal libraries, though the limitation is that the closest
-  // `role=dialog` part must be the animated element.
   function getResolvedPopup() {
-    const positioner = toRaw(store.state).positionerElement;
-    return inline.value && positioner
-      ? closest<HTMLElement>(positioner, '[role="dialog"]')
-      : popupRef.value;
+    return getTransitionElement(store);
   }
-  function syncAnimatedPopup() {
-    animatedPopup.value = getResolvedPopup();
-  }
-  onMounted(syncAnimatedPopup);
-  watch([inline, () => store.select('positionerElement'), popupRef], syncAnimatedPopup, {
-    flush: 'post',
-  });
 
   // The blocks below are the layout effects of Base UI, in the sequence of its source.
   function syncSelectedIndex() {

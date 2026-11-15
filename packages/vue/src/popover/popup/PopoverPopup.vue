@@ -64,7 +64,6 @@ import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
 import FloatingFocusManager from '../../utils/popups/focus/FloatingFocusManager.vue';
@@ -102,16 +101,6 @@ const transitionStatus = computed(() => store.select('transitionStatus'));
 const activeTriggerElement = computed(() => {
   const trigger = store.select('activeTriggerElement');
   return isHTMLElement(trigger) ? trigger : undefined;
-});
-
-useOpenChangeComplete({
-  open,
-  ref: store.context.popupRef,
-  onComplete() {
-    if (open.value) {
-      store.context.onOpenChangeComplete?.(true);
-    }
-  },
 });
 
 useHoverPopupInteraction(store, {

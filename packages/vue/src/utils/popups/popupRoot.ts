@@ -16,6 +16,7 @@ import { createChangeEventDetails } from '../../internals/createBaseUIEventDetai
 import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useUnmountAfterClose } from '../../internals/useUnmountAfterClose';
 import type { ReactiveStore } from './ReactiveStore';
 import { popupStoreSelectors } from './store';
@@ -110,6 +111,11 @@ export interface UsePopupRootOptions<Store extends PopupRootStore> {
    * @default false
    */
   disabled?: MaybeRefOrGetter<boolean | undefined>;
+  /**
+   * Gives the element whose animations end an open change. The default is the popup element, or
+   * the positioner element when no popup part renders.
+   */
+  getTransitionElement?: ((store: Store) => HTMLElement | null) | undefined;
 }
 
 type CreatePopupRootStore<Store extends PopupRootStore> = (
@@ -117,16 +123,17 @@ type CreatePopupRootStore<Store extends PopupRootStore> = (
   defaultPopupId: string | undefined,
 ) => Store;
 
-export interface UseSingleAnchorPopupRootOptions<Store extends PopupRootStore> extends Pick<
+export type UseSingleAnchorPopupRootOptions<Store extends PopupRootStore> = Pick<
   UsePopupRootOptions<Store>,
-  'name' | 'onOpenChange' | 'onOpenChangeComplete'
-> {
-  /**
-   * The element whose animations end the close, as a ref. The default is `store.context.popupRef`.
-   * A root inside another popup, such as a dialog, gives the element of that popup. The close then
-   * waits for the animations of that popup.
-   */
-  popupRef?: Readonly<Ref<HTMLElement | null>> | undefined;
+  'name' | 'onOpenChange' | 'onOpenChangeComplete' | 'getTransitionElement'
+>;
+
+/**
+ * Gives the element whose animations end an open change: the popup element, or the positioner
+ * element when no popup part renders.
+ */
+function getTransitionElement(store: PopupRootStore) {
+  return store.context.popupRef.value ?? store.state.positionerElement;
 }
 
 /**
@@ -195,7 +202,7 @@ export function usePopupRootWithPopupId<Store extends PopupRootStore>(
   const { mounted, transitionStatus, actions } = usePopupRootTransitions(
     store,
     open,
-    store.context.popupRef,
+    () => (options.getTransitionElement ?? getTransitionElement)(store),
     options.animateInitialOpen,
   );
 
@@ -264,7 +271,7 @@ export function useSingleAnchorPopupRoot<Store extends PopupRootStore>(
   const { mounted, transitionStatus, actions } = usePopupRootTransitions(
     store,
     open,
-    options.popupRef ?? store.context.popupRef,
+    () => (options.getTransitionElement ?? getTransitionElement)(store),
   );
 
   return { store, open, mounted, transitionStatus, actions };
@@ -339,18 +346,21 @@ function usePopupRootOpenState(
 function usePopupRootTransitions(
   store: PopupRootStore,
   open: Readonly<Ref<boolean>>,
-  popupRef: Readonly<Ref<HTMLElement | null>>,
+  transitionElement: () => HTMLElement | null,
   animateInitialOpen?: boolean,
 ) {
+  // One `true` for each open. A popup part that attaches after the completion starts no second one.
+  let openCompleted = false;
   const { mounted, transitionStatus, forceUnmount } = useUnmountAfterClose({
     open,
-    ref: popupRef,
+    ref: transitionElement,
     preventUnmountOnClose: () => store.select('preventUnmountingOnClose'),
     setPreventUnmountOnClose: (preventUnmountOnClose) =>
       store.set('preventUnmountingOnClose', preventUnmountOnClose),
     animateInitialOpen,
     onUnmount() {
       store.resetOnUnmount();
+      openCompleted = false;
       store.context.onOpenChangeComplete?.(false);
     },
   });
@@ -365,6 +375,30 @@ function usePopupRootTransitions(
     },
     { flush: 'sync', immediate: true },
   );
+
+  // The open wait follows the open state of the store, as `openChange` does, and not the `open` of
+  // a disabled root. A disabled root that stays mounted thus reports no second open completion when
+  // it shows again.
+  const storeOpen = () => store.select('open');
+  // The guard resets at a close, where the open wait does nothing. The result thus does not depend
+  // on the order of the watchers.
+  watch(storeOpen, (isOpen) => {
+    if (!isOpen) {
+      openCompleted = false;
+    }
+  });
+  useOpenChangeComplete({
+    enabled: storeOpen,
+    open: storeOpen,
+    ref: transitionElement,
+    restartKey: transitionElement,
+    onComplete() {
+      if (storeOpen() && !openCompleted) {
+        openCompleted = true;
+        store.context.onOpenChangeComplete?.(true);
+      }
+    },
+  });
 
   const actions: PopupRootActions = {
     unmount: forceUnmount,
