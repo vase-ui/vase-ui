@@ -4,6 +4,7 @@ import ResizablePanel from './panel/ResizablePanel.vue';
 import type {
   ResizablePanelActions,
   ResizablePanelProps,
+  ResizablePanelSize,
   ResizablePanelState,
 } from './panel/ResizablePanel.vue';
 import ResizableRoot from './root/ResizableRoot.vue';
@@ -14,6 +15,7 @@ import type {
   ResizableRootCommitEventDetails,
   ResizableRootCommitEventReason,
   ResizableRootLayout,
+  ResizableRootLayoutSnapshot,
   ResizableRootProps,
   ResizableRootState,
 } from './root/ResizableRoot.vue';
@@ -30,6 +32,7 @@ export namespace Root {
   export type Props = ResizableRootProps;
   export type Actions = ResizableRootActions;
   export type Layout = ResizableRootLayout;
+  export type LayoutSnapshot = ResizableRootLayoutSnapshot;
   export type ChangeEventReason = ResizableRootChangeEventReason;
   export type ChangeEventDetails = ResizableRootChangeEventDetails;
   export type CommitEventReason = ResizableRootCommitEventReason;
@@ -45,6 +48,7 @@ export namespace Panel {
   export type State = ResizablePanelState;
   export type Props = ResizablePanelProps;
   export type Actions = ResizablePanelActions;
+  export type Size = ResizablePanelSize;
 }
 
 /**

@@ -5,6 +5,7 @@ import {
   createRenderer,
   describeConformance,
   flushMicrotasks,
+  heldMountListTests,
   isJSDOM,
   positionerConformanceTests,
   screen,
@@ -20,6 +21,34 @@ import SelectPositionerScoped from './SelectPositionerScoped.test.vue';
 
 describe('<Select.Positioner />', () => {
   const { render } = createRenderer();
+
+  heldMountListTests({
+    render,
+    renderList: (withLastItem) => (
+      <Select.Root defaultOpen defaultValue="a">
+        <Select.Trigger>
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              <Select.Item value="a">Apple</Select.Item>
+              {withLastItem ? <Select.Item value="b">Banana</Select.Item> : null}
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>
+    ),
+    async check(user) {
+      await waitFor(() => {
+        expect(screen.getByRole('option', { name: 'Apple' })).toHaveFocus();
+      });
+      await user.keyboard('[ArrowDown]');
+      await waitFor(() => {
+        expect(screen.getByRole('option', { name: 'Banana' })).toHaveFocus();
+      });
+    },
+  });
 
   describeConformance(<Select.Positioner />, () => ({
     refInstanceof: window.HTMLDivElement,
@@ -81,7 +110,6 @@ describe('<Select.Positioner />', () => {
 
       await user.keyboard('{Escape}');
 
-      // The portal can remount around the close, so re-query the kept-mounted node.
       await waitFor(() => {
         expect(screen.getByTestId('positioner').hidden).toBe(true);
       });

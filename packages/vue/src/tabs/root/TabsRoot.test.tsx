@@ -10,6 +10,7 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountListTests,
   hydrate,
   isJSDOM,
   renderOnServer,
@@ -34,6 +35,20 @@ function readTabindexes(root: ParentNode) {
 
 describe('<Tabs.Root />', () => {
   const { render } = createRenderer();
+
+  heldMountListTests({
+    render,
+    renderList: (withLastItem) => (
+      <Tabs.Root defaultValue={0}>
+        <Tabs.Panel value={0} keepMounted data-testid="panel-0" />
+        {withLastItem ? <Tabs.Panel value={1} keepMounted data-testid="panel-1" /> : null}
+      </Tabs.Root>
+    ),
+    check() {
+      expect(screen.getByTestId('panel-0')).toHaveAttribute('data-index', '0');
+      expect(screen.getByTestId('panel-1')).toHaveAttribute('data-index', '1');
+    },
+  });
 
   describeConformance(<Tabs.Root value={0} />, () => ({
     render,

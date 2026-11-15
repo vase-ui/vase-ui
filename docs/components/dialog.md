@@ -6,15 +6,25 @@ description: An unstyled Vue dialog component that opens on top of the entire pa
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoDialogDetachedTriggersControlled from '../demos/dialog/detached-triggers-controlled/css-modules/index.vue';
+import DemoDialogDetachedTriggersControlledTailwind from '../demos/dialog/detached-triggers-controlled/tailwind/index.vue';
 import DemoDialogDetachedTriggersSimple from '../demos/dialog/detached-triggers-simple/css-modules/index.vue';
+import DemoDialogDetachedTriggersSimpleTailwind from '../demos/dialog/detached-triggers-simple/tailwind/index.vue';
 import DemoDialogFocusManagement from '../demos/dialog/focus-management/css-modules/index.vue';
+import DemoDialogFocusManagementTailwind from '../demos/dialog/focus-management/tailwind/index.vue';
 import DemoDialogHero from '../demos/dialog/hero/css-modules/index.vue';
+import DemoDialogHeroTailwind from '../demos/dialog/hero/tailwind/index.vue';
 import DemoDialogInsideScroll from '../demos/dialog/inside-scroll/css-modules/index.vue';
+import DemoDialogInsideScrollTailwind from '../demos/dialog/inside-scroll/tailwind/index.vue';
 import DemoDialogNested from '../demos/dialog/nested/css-modules/index.vue';
+import DemoDialogNestedTailwind from '../demos/dialog/nested/tailwind/index.vue';
 import DemoDialogOpenFromMenu from '../demos/dialog/open-from-menu/css-modules/index.vue';
+import DemoDialogOpenFromMenuTailwind from '../demos/dialog/open-from-menu/tailwind/index.vue';
 import DemoDialogOutsideScroll from '../demos/dialog/outside-scroll/css-modules/index.vue';
+import DemoDialogOutsideScrollTailwind from '../demos/dialog/outside-scroll/tailwind/index.vue';
 import DemoDialogUncontained from '../demos/dialog/uncontained/css-modules/index.vue';
+import DemoDialogUncontainedTailwind from '../demos/dialog/uncontained/tailwind/index.vue';
 </script>
 
 # Dialog
@@ -23,7 +33,12 @@ A popup that opens on top of the entire page.
 
 <DemoFrame>
   <DemoDialogHero />
+  <template #tailwind>
+    <DemoDialogHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -32,6 +47,18 @@ A popup that opens on top of the entire page.
 <<< ../demos/dialog/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/dialog/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Usage guidelines
 
@@ -67,7 +94,12 @@ To style the parent dialog while a nested dialog is open, use the `[data-nested-
 
 <DemoFrame>
   <DemoDialogNested />
+  <template #tailwind>
+    <DemoDialogNestedTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -77,6 +109,18 @@ To style the parent dialog while a nested dialog is open, use the `[data-nested-
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/dialog/nested/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Custom focus management
 
 The `initialFocus` and `finalFocus` props of `Dialog.Popup` set the element that gets the focus when the dialog opens and when it closes. Each prop takes an element, a component or a template ref of one.
@@ -85,7 +129,12 @@ Set a prop to `false` to keep the focus where it is. Or give a function that get
 
 <DemoFrame>
   <DemoDialogFocusManagement />
+  <template #tailwind>
+    <DemoDialogFocusManagementTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -95,13 +144,30 @@ Set a prop to `false` to keep the focus where it is. Or give a function that get
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/dialog/focus-management/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Outside scroll dialog
 
 To make the dialog scrollable, use `Dialog.Viewport` as an outer container of `Dialog.Popup` that scrolls. The popup can then extend past the bottom edge of the screen.
 
 <DemoFrame>
   <DemoDialogOutsideScroll />
+  <template #tailwind>
+    <DemoDialogOutsideScrollTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -111,13 +177,30 @@ To make the dialog scrollable, use `Dialog.Viewport` as an outer container of `D
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/dialog/outside-scroll/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Inside scroll dialog
 
 To keep the popup fully on the screen, make a container inside the popup scrollable. `Dialog.Viewport` then sets the position of `Dialog.Popup`.
 
 <DemoFrame>
   <DemoDialogInsideScroll />
+  <template #tailwind>
+    <DemoDialogInsideScrollTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -127,6 +210,18 @@ To keep the popup fully on the screen, make a container inside the popup scrolla
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/dialog/inside-scroll/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Placing elements outside the popup
 
 To show an element "outside" the colored area of the popup, keep it inside `Dialog.Popup`, and give the popup styles to a child element. The element then stays in the tab order, and screen readers announce it correctly.
@@ -135,7 +230,12 @@ To show an element "outside" the colored area of the popup, keep it inside `Dial
 
 <DemoFrame>
   <DemoDialogUncontained />
+  <template #tailwind>
+    <DemoDialogUncontainedTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -144,6 +244,18 @@ To show an element "outside" the colored area of the popup, keep it inside `Dial
 <<< ../demos/dialog/uncontained/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/dialog/uncontained/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ### Detached triggers
 
@@ -157,7 +269,12 @@ The methods of the handle, such as `open()` and `openWithPayload()`, act only wh
 
 <DemoFrame>
   <DemoDialogDetachedTriggersSimple />
+  <template #tailwind>
+    <DemoDialogDetachedTriggersSimpleTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -166,6 +283,18 @@ The methods of the handle, such as `open()` and `openWithPayload()`, act only wh
 <<< ../demos/dialog/_index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/dialog/detached-triggers-simple/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ### Multiple triggers
 
@@ -189,7 +318,12 @@ The root has no event for a change of the trigger id. The `openChange` event giv
 
 <DemoFrame>
   <DemoDialogDetachedTriggersControlled />
+  <template #tailwind>
+    <DemoDialogDetachedTriggersControlledTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -199,13 +333,30 @@ The root has no event for a change of the trigger id. The `openChange` event giv
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/dialog/detached-triggers-controlled/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Open from a menu
 
 To open a dialog from a menu, control the open state of the dialog with `v-model:open`. Set it to `true` in a `click` listener on the menu item. See [Menu](/components/menu) for the parts of the menu.
 
 <DemoFrame>
   <DemoDialogOpenFromMenu />
+  <template #tailwind>
+    <DemoDialogOpenFromMenuTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -214,6 +365,18 @@ To open a dialog from a menu, control the open state of the dialog with `v-model
 <<< ../demos/dialog/open-from-menu/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/dialog/open-from-menu/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## API reference
 

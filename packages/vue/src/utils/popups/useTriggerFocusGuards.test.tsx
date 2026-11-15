@@ -5,7 +5,13 @@ import type { ShallowRef, VNodeChild } from 'vue';
 import * as Dialog from '../../dialog/index.parts';
 import * as Menu from '../../menu/index.parts';
 import * as Popover from '../../popover/index.parts';
-import { createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
+import {
+  createRenderer,
+  flushMicrotasks,
+  screen,
+  waitFor,
+  waitForLaterMillisecond,
+} from '#test-utils';
 import FocusManagerPart from '../../../test/fixtures/FocusManagerPart.vue';
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
 import { REASONS } from '../../internals/reasons';
@@ -91,7 +97,10 @@ describe('useTriggerFocusGuards', () => {
 
     async function openPopup() {
       const trigger = screen.getByRole('button', { name: 'Toggle' });
-      await userEvent.click(trigger);
+      await waitForLaterMillisecond(async () => {
+        await userEvent.click(trigger);
+        await screen.findByTestId('popup');
+      });
       // Menu moves focus to the popup itself; Popover moves it to the first tabbable inside.
       await waitFor(() => {
         expect(screen.getByTestId(name === 'Popover' ? 'inside' : 'popup')).toHaveFocus();

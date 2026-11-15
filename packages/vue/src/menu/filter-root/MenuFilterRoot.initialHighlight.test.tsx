@@ -9,6 +9,7 @@ import {
   isJSDOM,
   screen,
   waitFor,
+  waitForLaterMillisecond,
   waitSingleFrame,
 } from '#test-utils';
 
@@ -46,7 +47,7 @@ describe('filterable menu initial highlight', () => {
     const trigger = screen.getByRole('button', { name: 'Actions' });
     trigger.focus();
     await flushMicrotasks();
-    await user.keyboard('[Enter]');
+    await waitForLaterMillisecond(() => user.keyboard('[Enter]'));
 
     const input = screen.getByRole('searchbox', { name: 'Filter actions' });
     const rename = screen.getByRole('menuitem', { name: 'Rename' });
@@ -87,7 +88,7 @@ describe('filterable menu initial highlight', () => {
     const { user } = await render(<Test />);
     screen.getByRole('button', { name: 'Actions' }).focus();
     await flushMicrotasks();
-    await user.keyboard('[Enter]');
+    await waitForLaterMillisecond(() => user.keyboard('[Enter]'));
     const input = screen.getByRole('searchbox', { name: 'Filter actions' });
     await waitFor(() => expect(input).toHaveFocus());
 
@@ -200,13 +201,14 @@ describe('filterable menu initial highlight', () => {
       await render(<Test onInputFocus={onInputFocus} />);
       const trigger = screen.getByRole('button', { name: 'Actions' });
       const touch = { pointerType: 'touch' };
-      await firePointer.down(trigger, { ...touch, timeStamp: 10 });
-      await fireEvent.mouseDown(trigger, { detail: 1 });
-      await firePointer.up(trigger, { ...touch, timeStamp: 20 });
-      await fireEvent.mouseUp(trigger, { detail: 1 });
-      await fireEvent.click(trigger, { detail: 1 });
-
-      const item = await screen.findByRole('menuitem', { name: 'Rename' });
+      const item = await waitForLaterMillisecond(async () => {
+        await firePointer.down(trigger, { ...touch, timeStamp: 10 });
+        await fireEvent.mouseDown(trigger, { detail: 1 });
+        await firePointer.up(trigger, { ...touch, timeStamp: 20 });
+        await fireEvent.mouseUp(trigger, { detail: 1 });
+        await fireEvent.click(trigger, { detail: 1 });
+        return screen.findByRole('menuitem', { name: 'Rename' });
+      });
       await waitSingleFrame();
 
       // A tap fires compatibility mouse events, including a `mousemove`, before its `mousedown`.
@@ -238,7 +240,7 @@ describe('filterable menu initial highlight', () => {
     const trigger = screen.getByRole('button', { name: 'Actions' });
     trigger.focus();
     await flushMicrotasks();
-    await user.keyboard('[Enter]');
+    await waitForLaterMillisecond(() => user.keyboard('[Enter]'));
     const input = screen.getByRole('searchbox', { name: 'Filter actions' });
     await waitFor(() => expect(input).toHaveFocus());
     await user.keyboard('[ArrowDown][Escape]');

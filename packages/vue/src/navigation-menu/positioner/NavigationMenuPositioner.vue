@@ -70,7 +70,7 @@ import {
   useNavigationMenuRootContext,
   useNavigationMenuTreeContext,
 } from '../root/NavigationMenuRootContext';
-import { createElementSetter } from '../utils/createElementSetter';
+import { createElementSetter } from '../../utils/popups/createElementSetter';
 import { NavigationMenuPositionerContext } from './NavigationMenuPositionerContext';
 
 defineOptions({ inheritAttrs: false });

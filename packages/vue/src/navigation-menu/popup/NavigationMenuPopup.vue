@@ -49,7 +49,7 @@ import { useRenderElement } from '../../internals/useRenderElement';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { useNavigationMenuPositionerContext } from '../positioner/NavigationMenuPositionerContext';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
-import { createElementSetter } from '../utils/createElementSetter';
+import { createElementSetter } from '../../utils/popups/createElementSetter';
 
 defineOptions({ inheritAttrs: false });
 

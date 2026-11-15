@@ -10,7 +10,11 @@ defineSlots<{
 
 const store = useSelectRootContext();
 
-const shouldRenderBackdrop = computed(() => store.select('mounted') && store.select('modal'));
+// Base UI renders the backdrop in the positioner, so it lasts as long as the positioner (`VUE-61`).
+const shouldRenderBackdrop = computed(
+  () =>
+    store.select('mounted') && store.select('positionerElement') !== null && store.select('modal'),
+);
 const open = computed(() => store.select('open'));
 const triggerElement = computed(() => store.select('triggerElement'));
 

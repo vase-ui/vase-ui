@@ -9,7 +9,7 @@ import {
   beforeEach,
   onTestFinished,
 } from 'vitest';
-import { KeepAlive, Teleport, defineComponent, onMounted, onUnmounted, shallowRef } from 'vue';
+import { Teleport, defineComponent, onMounted, onUnmounted, shallowRef } from 'vue';
 import type { CDPSession } from '@vitest/browser-playwright';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import type { TextDirection } from '@vase-ui/vue/direction-provider';
@@ -17,10 +17,12 @@ import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import { Slider } from '@vase-ui/vue/slider';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountListTests,
   hydrate,
   isJSDOM,
   renderOnServer,
@@ -146,6 +148,24 @@ describe('<Slider.Root />', () => {
   });
 
   const { render } = createRenderer();
+
+  heldMountListTests({
+    render,
+    renderList: (withLastItem) => (
+      <Slider.Root defaultValue={20}>
+        <Slider.Control data-testid="control">
+          <Slider.Track>{withLastItem ? <Slider.Thumb /> : null}</Slider.Track>
+        </Slider.Control>
+      </Slider.Root>
+    ),
+    async check() {
+      const control = screen.getByTestId('control');
+      vi.spyOn(control, 'getBoundingClientRect').mockImplementation(getHorizontalSliderRect);
+      await fireEvent.pointerDown(control, { buttons: 1, clientX: 80 });
+      await fireEvent.pointerUp(control, { buttons: 1, clientX: 80 });
+      expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', '80');
+    },
+  });
 
   describeConformance(<Slider.Root defaultValue={50} />, () => ({
     render,
@@ -3987,12 +4007,11 @@ describe('<Slider.Root />', () => {
   describe('KeepAlive', () => {
     async function submitAfterHeldControlChanges(change: 'mount' | 'element') {
       const handleSubmit = vi.fn();
-      const visible = shallowRef(true);
-      const hasControl = shallowRef(change === 'element');
       const tag = shallowRef('input');
-      const Branch = defineComponent(() => () => (
-        <div>{hasControl.value ? <Field.Control as={tag.value} /> : null}</div>
-      ));
+      const { HeldBranch, hide, mountWhileHeld } = createHeldBranch(
+        () => <Field.Control as={tag.value} />,
+        { mounted: change === 'element' },
+      );
       const { user } = await render(() => (
         <Form onFormSubmit={handleSubmit}>
           <Field.Root name="volume">
@@ -4001,20 +4020,19 @@ describe('<Slider.Root />', () => {
                 <Slider.Thumb />
               </Slider.Control>
             </Slider.Root>
-            <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+            <HeldBranch />
           </Field.Root>
           <button type="submit">Submit</button>
         </Form>
       ));
 
-      visible.value = false;
-      await flushMicrotasks();
       if (change === 'mount') {
-        hasControl.value = true;
+        await mountWhileHeld();
       } else {
+        await hide();
         tag.value = 'textarea';
+        await flushMicrotasks();
       }
-      await flushMicrotasks();
       await user.click(screen.getByRole('button', { name: 'Submit' }));
 
       return handleSubmit;

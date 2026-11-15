@@ -9,12 +9,19 @@ import {
   createRenderer,
   describeConformance,
   flushMicrotasks,
+  hydrateAfter,
+  recordInputEvents,
+  renderOnServer,
   screen,
+  within,
 } from '#test-utils';
 import { formatter } from '../../internals/date-time/format';
 import { kindOf } from '../../internals/date-time/temporal';
 import type { TemporalValue } from '../../internals/date-time/temporal';
 import { REASONS } from '../../internals/reasons';
+import DateFieldRootHydration from './DateFieldRootHydration.test.vue';
+
+const HYDRATION_FILE = 'src/date-field/root/DateFieldRootHydration.test.vue';
 
 const segmentOf = (container: Element, type: string) =>
   container.querySelector<HTMLInputElement>(`input[data-type="${type}"]`)!;
@@ -515,6 +522,85 @@ describe('<DateField.Root />', () => {
 
       expect(segmentOf(container, 'month').value).toBe('5');
       expect(segmentOf(container, 'year').value).toBe('2024');
+    });
+  });
+
+  describe('the form state that the browser restores', () => {
+    function renderField(onValueChange: (...args: unknown[]) => void) {
+      return render(
+        <DateField.Root
+          defaultValue={Temporal.PlainDate.from('2026-11-14')}
+          locale="en-US"
+          name="when"
+          onValueChange={onValueChange}
+        >
+          <DateField.Input />
+        </DateField.Root>,
+      );
+    }
+
+    it('takes a date that the browser restored before the hydration', async () => {
+      const props = { defaultValue: '2026-11-14', locale: 'en-US', name: 'when' };
+      const serverHtml = await renderOnServer(HYDRATION_FILE, props);
+
+      const { container } = await hydrateAfter(DateFieldRootHydration, {
+        serverHtml,
+        props,
+        before(serverContainer) {
+          hiddenInputOf(serverContainer).value = '2026-12-25';
+        },
+      });
+      await flushMicrotasks();
+      const fixture = within(container);
+
+      expect(['month', 'day', 'year'].map((type) => segmentOf(container, type).value)).toEqual([
+        '12',
+        '25',
+        '2026',
+      ]);
+      expect(hiddenInputOf(container).value).toBe('2026-12-25');
+      expect(new FormData(fixture.getByTestId<HTMLFormElement>('form')).get('when')).toBe(
+        '2026-12-25',
+      );
+      expect(fixture.getByTestId('root')).toHaveAttribute('data-dirty');
+    });
+
+    it('takes a date that the browser restores at a `pageshow` event', async () => {
+      const onValueChange = vi.fn();
+      const { container } = await renderField(onValueChange);
+      const input = hiddenInputOf(container);
+      const events = recordInputEvents(input);
+      input.value = '2026-12-25';
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+      expect(onValueChange.mock.calls[0]![0].toString()).toBe('2026-12-25');
+      expect(onValueChange.mock.calls[0]![1].reason).toBe(REASONS.inputChange);
+      expect(['month', 'day', 'year'].map((type) => segmentOf(container, type).value)).toEqual([
+        '12',
+        '25',
+        '2026',
+      ]);
+      expect(input.value).toBe('2026-12-25');
+      expect(events).toEqual(['input']);
+    });
+
+    it('does nothing at a `pageshow` event from the back/forward cache', async () => {
+      const onValueChange = vi.fn();
+      const { container } = await renderField(onValueChange);
+      hiddenInputOf(container).value = '2026-12-25';
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }));
+      await flushMicrotasks();
+
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(['month', 'day', 'year'].map((type) => segmentOf(container, type).value)).toEqual([
+        '11',
+        '14',
+        '2026',
+      ]);
     });
   });
 

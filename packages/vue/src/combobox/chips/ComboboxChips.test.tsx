@@ -1,12 +1,37 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { Field } from '@vase-ui/vue/field';
-import { createRenderer, describeConformance, fireEvent, screen, waitFor } from '#test-utils';
+import {
+  createRenderer,
+  describeConformance,
+  fireEvent,
+  heldMountListTests,
+  screen,
+  waitFor,
+} from '#test-utils';
 import type { ComboboxStore } from '../store';
 import ComboboxChipsReplacement from './ComboboxChipsReplacement.test.vue';
 
 describe('<Combobox.Chips />', () => {
   const { render } = createRenderer();
+
+  heldMountListTests({
+    render,
+    renderList: (withLastItem) => (
+      <Combobox.Root multiple defaultValue={['apple', 'banana']}>
+        <Combobox.Input />
+        <Combobox.Chips>
+          <Combobox.Chip data-testid="chip-apple">apple</Combobox.Chip>
+          {withLastItem ? <Combobox.Chip data-testid="chip-banana">banana</Combobox.Chip> : null}
+        </Combobox.Chips>
+      </Combobox.Root>
+    ),
+    async check(user) {
+      screen.getByTestId('chip-apple').focus();
+      await user.keyboard('[ArrowRight]');
+      expect(screen.getByTestId('chip-banana')).toHaveFocus();
+    },
+  });
 
   describeConformance(<Combobox.Chips />, () => ({
     refInstanceof: window.HTMLDivElement,

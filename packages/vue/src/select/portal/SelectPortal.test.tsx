@@ -1,8 +1,15 @@
-import { describe, expect, it } from 'vitest';
-import { defineComponent, h } from 'vue';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { defineComponent, h, shallowRef } from 'vue';
 import type { Component } from 'vue';
 import { Select } from '@vase-ui/vue/select';
-import { createRenderer, describeConformance, flushMicrotasks, screen } from '#test-utils';
+import {
+  createRenderer,
+  describeConformance,
+  flushMicrotasks,
+  isInaccessible,
+  screen,
+  waitFor,
+} from '#test-utils';
 import { createAttribute } from '../../utils/popups/createAttribute';
 import { useSelectRootContext } from '../root/SelectRootContext';
 import type { SelectStore } from '../store';
@@ -163,6 +170,67 @@ describe('<Select.Portal />', () => {
 
       expect(screen.getByTestId('positioner').isConnected).toBe(true);
       expect(getBackdrop()).toBe(null);
+    });
+  });
+
+  describe('VUE-95: the popup of a closed select', () => {
+    it.each([
+      { name: 'a close that returns the focus', close: 'escape' },
+      { name: 'a close that moves the focus out', close: 'outside' },
+      { name: 'a close by the open prop', close: 'prop' },
+    ] as const)('keeps the popup element and its items after $name', async ({ close }) => {
+      const open = shallowRef(true);
+      const handleOpenChangeComplete = vi.fn();
+      const { user } = await render(() => (
+        <div>
+          <button type="button">Outside</button>
+          <Select.Root
+            {...(close === 'prop' ? { open: open.value } : { defaultOpen: true })}
+            onOpenChangeComplete={handleOpenChangeComplete}
+          >
+            <Select.Trigger />
+            <Select.Portal>
+              <Select.Positioner alignItemWithTrigger={false}>
+                <Select.Popup data-testid="popup">
+                  <Select.Item value="a">a</Select.Item>
+                  <Select.Item value="b">b</Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        </div>
+      ));
+      const popup = await screen.findByTestId('popup');
+      const items = screen.getAllByRole('option');
+      const removals: Node[] = [];
+      const observer = new MutationObserver((records) => {
+        for (const record of records) {
+          removals.push(...[...record.removedNodes].filter((node) => node.contains(popup)));
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+      onTestFinished(() => observer.disconnect());
+
+      if (close === 'escape') {
+        await user.keyboard('{Escape}');
+      } else if (close === 'outside') {
+        await user.click(screen.getByRole('button', { name: 'Outside' }));
+      } else {
+        open.value = false;
+      }
+      await waitFor(() => {
+        expect(handleOpenChangeComplete).toHaveBeenLastCalledWith(false);
+      });
+      await flushMicrotasks();
+
+      expect(removals).toEqual([]);
+      expect(screen.getByTestId('popup')).toBe(popup);
+      expect(isInaccessible(popup)).toBe(true);
+      const itemsAfter = screen.getAllByRole('option', { hidden: true });
+      expect(itemsAfter).toHaveLength(items.length);
+      itemsAfter.forEach((item, index) => {
+        expect(item).toBe(items[index]);
+      });
     });
   });
 });

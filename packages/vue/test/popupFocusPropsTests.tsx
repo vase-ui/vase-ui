@@ -356,8 +356,10 @@ export function popupFocusPropsTests(config: PopupFocusPropsTestsConfig) {
       });
       expect(finalFocusSpy).toHaveBeenNthCalledWith(1, mouseCloseType);
 
-      await user.click(trigger);
-      await screen.findByText('Close');
+      await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        await screen.findByText('Close');
+      });
       await waitSingleFrame();
       await flushMicrotasks();
       await user.keyboard('[Escape]');
