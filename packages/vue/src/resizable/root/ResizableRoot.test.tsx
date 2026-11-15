@@ -1853,6 +1853,10 @@ describe('<Resizable.Root />', () => {
 
         handleWidth.value = 100;
         await nextTick();
+        // The observer reads the page in a frame. WebKit can hold that frame for a second when the
+        // case requests no frame.
+        await waitSingleFrame();
+        await waitSingleFrame();
 
         // The panels share 900 px, and 300 px is a third of them.
         await waitFor(() => {
@@ -1942,6 +1946,10 @@ describe('<Resizable.Root />', () => {
         await flushMicrotasks();
         visible.value = true;
         await nextTick();
+        // The observer reads the page in a frame. WebKit can hold that frame for a second when the
+        // case requests no frame.
+        await waitSingleFrame();
+        await waitSingleFrame();
         await waitFor(() => {
           expect(screen.getByTestId('handle')).toHaveAttribute('aria-valuenow', '20');
         });
@@ -1958,6 +1966,8 @@ describe('<Resizable.Root />', () => {
         await flushMicrotasks();
         visible.value = true;
         await nextTick();
+        await waitSingleFrame();
+        await waitSingleFrame();
 
         await waitFor(() => {
           expect(widthOf('main')).toBeCloseTo(1300, 0);
