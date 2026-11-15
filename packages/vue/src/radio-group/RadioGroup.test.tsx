@@ -3920,7 +3920,13 @@ describe('<RadioGroup />', () => {
     }>([
       { name: 'the checked radio', value: 'b', group: false, radios: ['b'], expected: 'a' },
       { name: 'each radio', value: undefined, group: false, radios: ['a', 'b'], expected: null },
-      { name: 'the group with no value', value: undefined, group: true, radios: [], expected: null },
+      {
+        name: 'the group with no value',
+        value: undefined,
+        group: true,
+        radios: [],
+        expected: null,
+      },
       { name: 'the group with a value', value: 'b', group: true, radios: [], expected: null },
     ])(
       'gives the input of a group that mounts disabled when $name becomes disabled',
