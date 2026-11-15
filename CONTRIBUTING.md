@@ -625,7 +625,7 @@ The source obeys rules that keep it compatible with the Vapor mode of Vue. ESLin
 
 If a line must break a rule, put a disable comment on that line and give the reason.
 
-A function component that calls `h` is not an SFC, so Vapor mode does not compile it. `DateFieldInputElement` is the one such component, for the reason in [Server render](#server-render).
+A function component that calls `h` is not an SFC, so Vapor mode does not compile it. `DateFieldInputElement` and `DateFieldLiteralElement` are the two such components, for the reasons in [Server render](#server-render).
 
 ### Server render
 
@@ -740,10 +740,13 @@ A date or time field and the `Intl` data of the server:
 
 - Each engine has its own `Intl` data for a locale. Chromium has no data for `is-IS` and uses `en-US`. The server and the browser then give another layout.
 - A layout can differ in the order of the segments, in the number of segments, in the text of a literal and in the hour cycle.
-- While the field hydrates, the part that renders the segments binds `data-allow-mismatch="children"` on `Input`, `attribute` on a segment and `text` on a literal. `useDateTimeFieldSegment` binds the one of a segment. Each part calls `useIsHydrating()` itself. `DateField.Input`, `DateField.Segment` and `DateField.Literal` are the model. `test/fixtures/DateTimeFieldProbe.vue` renders the same elements for the tests of the engine.
+- While the field hydrates, the part that renders the segments binds `data-allow-mismatch="children"` on `Input`, `attribute` on a segment and `text` on a literal. `useDateTimeFieldSegment` binds the one of a segment. Each part calls `useIsHydrating()` itself. `test/fixtures/DateTimeFieldProbe.vue` is the model.
 - Vue changes the text of a literal itself. While it hydrates, it writes no attribute that a `v-bind` object or `h()` gives, but the `value` of an input. A server element that Vue reuses for another segment thus keeps its attributes.
+- Vue lets `data-allow-mismatch="text"` allow the text of an element that has a string as its one child. It does not let the attribute allow a text node in a list of children, and a template gives the text of a dynamic element as such a node. `DateFieldLiteralElement` gives the text as a string with `h`.
 - After the mount, the root compares the `data-type` and the attributes that `getSegmentAttributes` gives with the DOM. On a difference, it changes `listKey`, and the parts make the elements again.
-- For a fragment with another number of items than on the server, such as the fragment of `v-for`, Vue logs `Hydration completed but contains mismatches` also under `data-allow-mismatch`. The part that renders the items of the layout thus gives them to Vue as direct children of its element. `DateFieldInputElement` does this with `h`, because a template cannot give a list of children with no fragment. The `children` component of a `#render` slot has no element, so it renders the items as a fragment, and a layout of the server that has another number of parts gives the message.
+- For a fragment with another number of items than on the server, such as the fragment of `v-for`, Vue logs `Hydration completed but contains mismatches` also under `data-allow-mismatch`. The test part renders the items of the layout as direct children of its input element, so it gives no such message.
+- `DateField.Input` gives the items of the layout to Vue as direct children of its element, as the test part does. `DateFieldInputElement` does this with `h`, because a template makes a fragment of a list. The `children` component of a `#render` slot has no element of its own, so it renders the items as a fragment.
+- A server render of a slot that a template makes with `v-if` writes to the output, and Vue wraps such a slot again when it passes through `h`. The wrapper renders nothing. `DateFieldInput` thus gives its `segment` slot to `DateFieldInputElement` as a prop.
 
 ### What Vue replaces
 

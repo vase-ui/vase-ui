@@ -50,7 +50,7 @@ function onWrongKind(value: Temporal.PlainTime | null) {
   <DateField.Root>
     <DateField.Input>
       <template #segment="{ segment, index }">
-        <DateField.Segment v-if="segment.editable" :segment="segment" :data-index="index" />
+        <DateField.Segment v-if="segment.editable" :segment="segment" :key="index" />
         <DateField.Literal v-else :segment="segment" />
       </template>
     </DateField.Input>
