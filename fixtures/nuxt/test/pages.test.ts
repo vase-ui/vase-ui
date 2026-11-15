@@ -456,10 +456,8 @@ async function expectIndicatorUnderTab(
   );
 }
 
-// The server writes a part before it registers the parts that come after it. The part that comes
-// first then has no id of the other part in the server HTML. It gets the id in the first flush on
-// the client. Panel `a` is not mounted, so no tab names it.
-async function expectTabIds(page: Page, { hydrated }: { hydrated: boolean }) {
+// Panel `a` is not mounted, so no tab names it.
+async function expectTabIds(page: Page) {
   const after = await readTabsRoot(page, 'panels-after');
   const before = await readTabsRoot(page, 'panels-before');
 
@@ -470,19 +468,19 @@ async function expectTabIds(page: Page, { hydrated }: { hydrated: boolean }) {
     after.tabs[1].id,
     after.tabs[2].id,
   ]);
-  expect(after.tabs.map((tab) => tab.controls)).toEqual(
-    hydrated ? [null, after.panels[0].id, after.panels[1].id] : [null, null, null],
-  );
-  expect(before.tabs.map((tab) => tab.controls)).toEqual([null, before.panels[0].id]);
-  expect(before.panels.map((panel) => panel.labelledby)).toEqual([
-    hydrated ? before.tabs[1].id : null,
+  expect(after.tabs.map((tab) => tab.controls)).toEqual([
+    null,
+    after.panels[0].id,
+    after.panels[1].id,
   ]);
+  expect(before.tabs.map((tab) => tab.controls)).toEqual([null, before.panels[0].id]);
+  expect(before.panels.map((panel) => panel.labelledby)).toEqual([before.tabs[1].id]);
 }
 
 // The server cannot measure the layout, so the indicator is hidden and has no variable. The script
 // after it has the nonce of the provider. It does not run here, because this page has no JavaScript.
 async function expectTabsPage(page: Page) {
-  await expectTabIds(page, { hydrated: false });
+  await expectTabIds(page);
 
   expect(
     await page.locator('[role="tablist"] script').evaluateAll((scripts) =>
@@ -503,7 +501,7 @@ async function expectTabsPage(page: Page) {
 }
 
 async function expectHydratedTabsPage(page: Page) {
-  await expectTabIds(page, { hydrated: true });
+  await expectTabIds(page);
 
   expect(await page.locator('[role="tablist"] script').count()).toBe(0);
   await expectIndicatorUnderTab(page, 'tab-b', { left: '100px', right: '100px' });
