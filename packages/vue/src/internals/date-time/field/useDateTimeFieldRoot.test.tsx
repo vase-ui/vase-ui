@@ -652,7 +652,7 @@ describe('useDateTimeFieldRoot', () => {
       await user.click(segmentOf(container, 'month'));
       await user.keyboard(row.month);
 
-      // The field has no value yet, and the month has its name in the calendar of the prop.
+      expect(onValueChange).not.toHaveBeenCalled();
       const firstDay = Temporal.PlainDate.from({
         calendar: row.calendar,
         year: Number(row.year),

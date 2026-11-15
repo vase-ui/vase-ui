@@ -344,6 +344,24 @@ describe('yearMonthInCalendar', () => {
   });
 
   it.each([
+    {
+      name: 'its own calendar, which no list names',
+      make: () =>
+        month('2027-11').toPlainDate({ day: 1 }).withCalendar('hebrew').toPlainYearMonth(),
+      calendar: 'hebrew',
+      expected: '2027-11-01[u-ca=hebrew]',
+    },
+    {
+      name: 'a calendar id in capital letters',
+      make: () => month('2026-11'),
+      calendar: 'GREGORY',
+      expected: '2026-11-01[u-ca=gregory]',
+    },
+  ])('gives the year and month in $name', ({ make, calendar, expected }) => {
+    expect(yearMonthInCalendar(make(), calendar)?.toString()).toBe(expected);
+  });
+
+  it.each([
     { calendar: 'persian' },
     { calendar: 'hebrew' },
     { calendar: 'coptic' },
@@ -360,8 +378,6 @@ describe('yearMonthInCalendar', () => {
     expect(yearMonthInCalendar(persian, 'iso8601')).toBeNull();
   });
 
-  // The ISO month 2027-11 and the Hebrew month 5788-M02 have the same days. So have the Persian
-  // month 1405-M02 and the Indian month 1948-M02.
   it.each([
     { name: 'an ISO month in hebrew', from: 'iso8601', start: '2027-11-01', to: 'hebrew' },
     { name: 'a Hebrew month in iso8601', from: 'hebrew', start: '2027-11-01', to: 'iso8601' },
@@ -379,7 +395,7 @@ describe('yearMonthInCalendar', () => {
     { name: 'the ISO months', calendars: ['iso8601', 'gregory', 'buddhist', 'japanese', 'roc'] },
     { name: 'the Coptic months', calendars: ['coptic', 'ethiopic', 'ethioaa'] },
   ])('gives each month of 40 years in each calendar that has $name', ({ calendars }) => {
-    const different: string[] = [];
+    const differentMonths: string[] = [];
     for (const from of calendars) {
       let source = day('2000-01-01').withCalendar(from).toPlainYearMonth();
       while (source.toPlainDate({ day: 1 }).withCalendar('iso8601').year < 2040) {
@@ -392,13 +408,13 @@ describe('yearMonthInCalendar', () => {
               .toPlainDate({ day: 1 })
               .equals(source.toPlainDate({ day: 1 }).withCalendar(to));
           if (!isSame) {
-            different.push(`${source.toString()} in ${to}`);
+            differentMonths.push(`${source.toString()} in ${to}`);
           }
         }
         source = source.add({ months: 1 });
       }
     }
     // A wrong list makes thousands of months differ, so the failure shows only the first five.
-    expect(different.slice(0, 5)).toEqual([]);
+    expect(differentMonths.slice(0, 5)).toEqual([]);
   });
 });

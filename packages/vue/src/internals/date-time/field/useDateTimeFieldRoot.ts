@@ -352,9 +352,9 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
       const date = midnight.value.toPlainDate();
       const isoMonth = date.toPlainYearMonth();
       const calendar = toValue(parameters.calendar);
-      // An ISO year and month does not show in a calendar that has other months, and
-      // `displayCalendar` would then ignore the `calendar` prop. So the field makes its value in
-      // that calendar.
+      // An ISO year and month does not show in a calendar that has other months, so
+      // `displayCalendar` ignores such a `calendar` prop for an ISO template. The template is thus
+      // in that calendar.
       return calendar === undefined || yearMonthInCalendar(isoMonth, calendar)
         ? isoMonth
         : date.withCalendar(calendar).toPlainYearMonth();
