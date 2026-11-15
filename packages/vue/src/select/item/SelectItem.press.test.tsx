@@ -72,7 +72,8 @@ describe('<Select.Item />', () => {
       side: 'bottom',
     },
     {
-      // The aligned popup has no room at the top, so it takes the place of an unaligned one.
+      // A trigger within 20 px of the top of the viewport stops the alignment of the popup. The
+      // popup then takes the place of an unaligned one.
       name: 'aligned at the top of the viewport',
       fixture: { alignItemWithTrigger: true, value: 'one', movesTrigger: true },
       side: 'bottom',

@@ -882,7 +882,7 @@ The state of a popup is in a store. The code is in `src/utils/popups`. `tooltip/
 - The store makes no `computed` and no watcher. The `computed` of a part stops with the part. Thus code can make a store outside a component, with no `effectScope`.
 - Write with `set`, `update` or `setState`. Do not assign to `state`.
 - `set` and `update` call `setState` with the full state, so a subclass that overrides `setState` sees each write.
-- A family store that must do work when one key of its state changes overrides `setState`, because a store makes no watcher. `MenuStore` shares the mouse-up ref of its parent in this way.
+- A family store that must do work when one key of its state changes overrides `setState`, because a store makes no watcher. `MenuStore` shares the mouse-up refs of its parent in this way.
 - Vue has no public batch for writes. A watcher with the default flush runs one time for an update of many keys. A watcher with `flush: 'sync'` runs after the write of each key, so it can read a state that is not complete.
 - `setState` finds the changed keys before it writes the first key. A sync watcher can write the store during an update, and that write stays.
 - `BasePopupStore` writes `open` and `openProp` after the other keys. A sync watcher of the open state then reads the trigger and the reason of the change.
@@ -1251,7 +1251,7 @@ The scroll lock stops the scroll of the page under a modal popup. The code is in
 - `Menu.Trigger` and `Select.Trigger` write the `mousedown` event of the press to `triggerPressRef` of the store context, because their items read it. `Combobox.Trigger` keeps the event in a variable and clears it with the document.
 - `Menu.Trigger`, `Select.Trigger` and `Combobox.Trigger` close the popup for a release more than 5 px off the trigger and off the popup, with the reason `cancel-open`, as in Base UI. `Combobox.Trigger` listens for the release only while the input is in the popup.
 - These triggers keep the popup open when the release comes within 5 px of the point of the press on each axis (`VUE-68`). The popup opens in the frame after the press, and a layout change in that frame can move the trigger. `isReleaseAtPressPoint` of `src/utils/popups/isReleaseAtPressPoint.ts` compares the two events. The listener that `Menu.Trigger` adds after a hover open has no press, so it does not make this check.
-- An item of `Menu` or `Select` does not activate for a release within 5 px of the point of the trigger press (`VUE-84`). The open can put an item under a pointer that does not move. A layout change can move the trigger, and `alignItemWithTrigger` puts the selected item of `Select` under the pointer.
+- An item of `Menu` or `Select` does not activate for a release within 5 px of the point of the trigger press on each axis (`VUE-84`). The open can put an item under a pointer that does not move. A layout change can move the trigger, and `alignItemWithTrigger` puts the selected item of `Select`, or its first item, under the pointer.
 - A submenu reads `triggerPressRef` of its parent menu. `Select.Trigger` clears the event at the release, because a `Select` item also takes a later drag while the popup stays open.
 
 ### Popup list navigation
