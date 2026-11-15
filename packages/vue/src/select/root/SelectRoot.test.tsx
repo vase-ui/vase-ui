@@ -1,19 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  defineComponent,
-  KeepAlive,
-  onBeforeUnmount,
-  onMounted,
-  reactive,
-  shallowRef,
-  watch,
-} from 'vue';
+import { defineComponent, onBeforeUnmount, onMounted, reactive, shallowRef, watch } from 'vue';
 import type { PropType } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import { Select } from '@vase-ui/vue/select';
 import {
   createFormDataSpy,
+  createHeldBranch,
   createRenderer,
   fireEvent,
   flushMicrotasks,
@@ -5113,31 +5106,25 @@ describe('<Select.Root />', () => {
       'a held required select does not block the submit of its form: $name',
       async ({ name }) => {
         const handleSubmit = vi.fn();
-        const visible = shallowRef(true);
-        const extra = shallowRef(name === 'deactivated');
-        const Branch = defineComponent(() => () => (
-          <div>
-            {extra.value ? (
-              <Select.Root key="held" required>
-                <Select.Trigger />
-              </Select.Root>
-            ) : null}
-          </div>
-        ));
+        const { HeldBranch, mountWhileHeld } = createHeldBranch(
+          () => (
+            <Select.Root key="held" required>
+              <Select.Trigger />
+            </Select.Root>
+          ),
+          { mounted: name === 'deactivated' },
+        );
         const { user } = await render(() => (
           <Form onFormSubmit={handleSubmit}>
             <Field.Root name="fruit" data-testid="field">
               <Field.Control defaultValue="shown" />
-              <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+              <HeldBranch />
             </Field.Root>
             <button type="submit">Submit</button>
           </Form>
         ));
 
-        visible.value = false;
-        await flushMicrotasks();
-        extra.value = true;
-        await flushMicrotasks();
+        await mountWhileHeld();
         await user.click(screen.getByRole('button', { name: 'Submit' }));
 
         expect(handleSubmit).toHaveBeenCalledTimes(1);
@@ -5146,35 +5133,25 @@ describe('<Select.Root />', () => {
     );
 
     it('the label does not name a select that mounts while KeepAlive holds it', async () => {
-      const visible = shallowRef(true);
-      const extra = shallowRef(false);
-      const Branch = defineComponent(() => () => (
-        <div>
-          {extra.value ? (
-            <Select.Root key="held" id="held-select">
-              <Select.Trigger />
-            </Select.Root>
-          ) : null}
-        </div>
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Select.Root key="held" id="held-select">
+          <Select.Trigger />
+        </Select.Root>
       ));
       await render(() => (
         <Field.Root>
           <Field.Label data-testid="label">Fruit</Field.Label>
-          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+          <HeldBranch />
         </Field.Root>
       ));
       const label = screen.getByTestId('label');
       const providerId = label.getAttribute('for');
 
-      visible.value = false;
-      await flushMicrotasks();
-      extra.value = true;
-      await flushMicrotasks();
+      await mountWhileHeld();
 
       expect(label.getAttribute('for')).toBe(providerId);
 
-      visible.value = true;
-      await flushMicrotasks();
+      await show();
 
       expect(label).toHaveAttribute('for', 'held-select');
     });

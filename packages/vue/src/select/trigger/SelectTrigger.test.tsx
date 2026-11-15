@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
-import { defineComponent, KeepAlive, shallowRef } from 'vue';
+import { KeepAlive, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Select } from '@vase-ui/vue/select';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -639,35 +640,25 @@ describe('<Select.Trigger />', () => {
     });
 
     it('the label does not name a trigger that mounts while KeepAlive holds it', async () => {
-      const visible = shallowRef(true);
-      const extra = shallowRef(false);
-      const Branch = defineComponent(() => () => (
-        <div>
-          {extra.value ? (
-            <Select.Root key="held">
-              <Select.Trigger id="held-trigger" />
-            </Select.Root>
-          ) : null}
-        </div>
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Select.Root key="held">
+          <Select.Trigger id="held-trigger" />
+        </Select.Root>
       ));
       await render(() => (
         <Field.Root>
           <Field.Label data-testid="label">Font</Field.Label>
-          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+          <HeldBranch />
         </Field.Root>
       ));
       const label = screen.getByTestId('label');
       const providerId = label.getAttribute('for');
 
-      visible.value = false;
-      await flushMicrotasks();
-      extra.value = true;
-      await flushMicrotasks();
+      await mountWhileHeld();
 
       expect(label.getAttribute('for')).toBe(providerId);
 
-      visible.value = true;
-      await flushMicrotasks();
+      await show();
 
       expect(label).toHaveAttribute('for', 'held-trigger');
     });

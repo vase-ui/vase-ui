@@ -4,6 +4,7 @@ import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import { NumberField as NumberFieldBase } from '@vase-ui/vue/number-field';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -1208,31 +1209,25 @@ describe('<NumberField />', () => {
       'a held required number field does not block the submit of its form: $name',
       async ({ name }) => {
         const handleSubmit = vi.fn();
-        const visible = shallowRef(true);
-        const extra = shallowRef(name === 'deactivated');
-        const Branch = defineComponent(() => () => (
-          <div>
-            {extra.value ? (
-              <NumberFieldBase.Root key="held" required>
-                <NumberFieldBase.Input />
-              </NumberFieldBase.Root>
-            ) : null}
-          </div>
-        ));
+        const { HeldBranch, mountWhileHeld } = createHeldBranch(
+          () => (
+            <NumberFieldBase.Root key="held" required>
+              <NumberFieldBase.Input />
+            </NumberFieldBase.Root>
+          ),
+          { mounted: name === 'deactivated' },
+        );
         const { user } = await render(() => (
           <Form onFormSubmit={handleSubmit}>
             <Field.Root name="quantity" data-testid="field">
               <Field.Control defaultValue="shown" />
-              <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+              <HeldBranch />
             </Field.Root>
             <button type="submit">Submit</button>
           </Form>
         ));
 
-        visible.value = false;
-        await flushMicrotasks();
-        extra.value = true;
-        await flushMicrotasks();
+        await mountWhileHeld();
         await user.click(screen.getByRole('button', { name: 'Submit' }));
 
         expect(handleSubmit).toHaveBeenCalledTimes(1);
@@ -1241,35 +1236,25 @@ describe('<NumberField />', () => {
     );
 
     it('the label does not name a number field that mounts while KeepAlive holds it', async () => {
-      const visible = shallowRef(true);
-      const extra = shallowRef(false);
-      const Branch = defineComponent(() => () => (
-        <div>
-          {extra.value ? (
-            <NumberFieldBase.Root key="held" id="held-number-field">
-              <NumberFieldBase.Input />
-            </NumberFieldBase.Root>
-          ) : null}
-        </div>
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <NumberFieldBase.Root key="held" id="held-number-field">
+          <NumberFieldBase.Input />
+        </NumberFieldBase.Root>
       ));
       await render(() => (
         <Field.Root>
           <Field.Label data-testid="label">Quantity</Field.Label>
-          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+          <HeldBranch />
         </Field.Root>
       ));
       const label = screen.getByTestId('label');
       const providerId = label.getAttribute('for');
 
-      visible.value = false;
-      await flushMicrotasks();
-      extra.value = true;
-      await flushMicrotasks();
+      await mountWhileHeld();
 
       expect(label.getAttribute('for')).toBe(providerId);
 
-      visible.value = true;
-      await flushMicrotasks();
+      await show();
 
       expect(label).toHaveAttribute('for', 'held-number-field');
     });

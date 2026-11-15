@@ -18,6 +18,7 @@ import { Radio } from '@vase-ui/vue/radio';
 import { RadioGroup } from '@vase-ui/vue/radio-group';
 import {
   createFormDataSpy,
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -3461,22 +3462,25 @@ describe('<RadioGroup />', () => {
       { name: 'b after a', before: false, first: 'a' },
       { name: 'b before a', before: true, first: 'b' },
     ])('keeps a radio that mounts while held out of the form: $name', async ({ before, first }) => {
-      const visible = shallowRef(true);
-      const extra = shallowRef(false);
       const group = shallowRef<RadioGroupInstance | null>(null);
       const handleSubmit = vi.fn();
-      const Radios = defineComponent(() => () => (
-        <>
-          {extra.value && before ? <Radio.Root key="b" value="b" data-testid="b" /> : null}
-          <Radio.Root key="a" value="a" data-testid="a" />
-          {extra.value && !before ? <Radio.Root key="b" value="b" data-testid="b" /> : null}
-        </>
-      ));
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
+        () => <Radio.Root key="b" value="b" data-testid="b" />,
+        {
+          renderBranch: (part) => (
+            <>
+              {before ? part : null}
+              <Radio.Root key="a" value="a" data-testid="a" />
+              {before ? null : part}
+            </>
+          ),
+        },
+      );
       const App = defineComponent(() => () => (
         <Form onFormSubmit={handleSubmit}>
           <Field.Root name="fruit">
             <RadioGroup ref={group} required>
-              <KeepAlive>{visible.value ? <Radios /> : <Placeholder />}</KeepAlive>
+              <HeldBranch />
             </RadioGroup>
           </Field.Root>
           <button type="submit">Submit</button>
@@ -3484,10 +3488,7 @@ describe('<RadioGroup />', () => {
       ));
       const { user } = await render(<App />);
 
-      visible.value = false;
-      await flushMicrotasks();
-      extra.value = true;
-      await flushMicrotasks();
+      await mountWhileHeld();
 
       expect(group.value?.inputElement).toBe(null);
 
@@ -3495,8 +3496,7 @@ describe('<RadioGroup />', () => {
 
       expect(handleSubmit).toHaveBeenCalledTimes(1);
 
-      visible.value = true;
-      await flushMicrotasks();
+      await show();
 
       expect(group.value?.inputElement).toBe(getInput(first));
 
@@ -3508,31 +3508,30 @@ describe('<RadioGroup />', () => {
 
     // A radio that mounts in a held group registers its input, because the group is held too.
     it('focuses the first radio when KeepAlive shows a held group', async () => {
-      const visible = shallowRef(true);
-      const extra = shallowRef(false);
       const handleSubmit = vi.fn();
-      const Group = defineComponent(() => () => (
-        <RadioGroup required>
-          <Radio.Root key="a" value="a" data-testid="a" />
-          {extra.value ? <Radio.Root key="b" value="b" data-testid="b" /> : null}
-        </RadioGroup>
-      ));
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
+        () => <Radio.Root key="b" value="b" data-testid="b" />,
+        {
+          renderBranch: (part) => (
+            <RadioGroup required>
+              <Radio.Root key="a" value="a" data-testid="a" />
+              {part}
+            </RadioGroup>
+          ),
+        },
+      );
       const App = defineComponent(() => () => (
         <Form onFormSubmit={handleSubmit}>
           <Field.Root name="fruit">
-            <KeepAlive>{visible.value ? <Group /> : <Placeholder />}</KeepAlive>
+            <HeldBranch />
           </Field.Root>
           <button type="submit">Submit</button>
         </Form>
       ));
       const { user } = await render(<App />);
 
-      visible.value = false;
-      await flushMicrotasks();
-      extra.value = true;
-      await flushMicrotasks();
-      visible.value = true;
-      await flushMicrotasks();
+      await mountWhileHeld();
+      await show();
       await user.click(screen.getByRole('button', { name: 'Submit' }));
 
       expect(handleSubmit).not.toHaveBeenCalled();

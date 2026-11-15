@@ -16,6 +16,7 @@ import { Form } from '@vase-ui/vue/form';
 import { Slider } from '@vase-ui/vue/slider';
 import type { VaseUIEvent } from '@vase-ui/vue/types';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   expectNoAxeViolations,
@@ -1910,33 +1911,27 @@ describe('<Slider.Thumb />', () => {
 
     async function submitWithHeldSlider(name: string, shownControl: () => VNode) {
       const handleSubmit = vi.fn();
-      const visible = shallowRef(true);
-      const extra = shallowRef(name === 'deactivated');
-      const Branch = defineComponent(() => () => (
-        <div>
-          {extra.value ? (
-            <Slider.Root key="held" defaultValue={5}>
-              <Slider.Control>
-                <Slider.Thumb />
-              </Slider.Control>
-            </Slider.Root>
-          ) : null}
-        </div>
-      ));
+      const { HeldBranch, mountWhileHeld } = createHeldBranch(
+        () => (
+          <Slider.Root key="held" defaultValue={5}>
+            <Slider.Control>
+              <Slider.Thumb />
+            </Slider.Control>
+          </Slider.Root>
+        ),
+        { mounted: name === 'deactivated' },
+      );
       const { user } = await render(() => (
         <Form onFormSubmit={handleSubmit}>
           <Field.Root name="volume" data-testid="field">
             {shownControl()}
-            <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+            <HeldBranch />
           </Field.Root>
           <button type="submit">Submit</button>
         </Form>
       ));
 
-      visible.value = false;
-      await flushMicrotasks();
-      extra.value = true;
-      await flushMicrotasks();
+      await mountWhileHeld();
       await user.click(screen.getByRole('button', { name: 'Submit' }));
 
       return handleSubmit;

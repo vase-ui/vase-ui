@@ -4,6 +4,7 @@ import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { Field } from '@vase-ui/vue/field';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -1839,37 +1840,27 @@ describe('<Combobox.Trigger />', () => {
     });
 
     it('the label does not name a trigger that mounts while KeepAlive holds it', async () => {
-      const visible = shallowRef(true);
-      const extra = shallowRef(false);
       // With no `Combobox.Input` beside the trigger, the input is in the popup and the trigger is
       // the control of the field.
-      const Branch = defineComponent(() => () => (
-        <div>
-          {extra.value ? (
-            <Combobox.Root key="held" items={['apple']}>
-              <Combobox.Trigger id="held-trigger" />
-            </Combobox.Root>
-          ) : null}
-        </div>
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Combobox.Root key="held" items={['apple']}>
+          <Combobox.Trigger id="held-trigger" />
+        </Combobox.Root>
       ));
       await render(() => (
         <Field.Root>
           <Field.Label data-testid="label">Fruit</Field.Label>
-          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+          <HeldBranch />
         </Field.Root>
       ));
       const label = screen.getByTestId('label');
       const providerId = label.getAttribute('for');
 
-      visible.value = false;
-      await flushMicrotasks();
-      extra.value = true;
-      await flushMicrotasks();
+      await mountWhileHeld();
 
       expect(label.getAttribute('for')).toBe(providerId);
 
-      visible.value = true;
-      await flushMicrotasks();
+      await show();
 
       expect(label).toHaveAttribute('for', 'held-trigger');
     });

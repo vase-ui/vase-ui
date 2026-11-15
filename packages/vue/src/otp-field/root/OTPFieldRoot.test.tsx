@@ -5,6 +5,7 @@ import { Form } from '@vase-ui/vue/form';
 import { Input } from '@vase-ui/vue/input';
 import { OTPField as OTPFieldBase } from '@vase-ui/vue/otp-field';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -2503,31 +2504,25 @@ describe('<OTPField.Root />', () => {
       'a held required OTP field does not block the submit of its form: $name',
       async ({ name }) => {
         const handleSubmit = vi.fn();
-        const visible = shallowRef(true);
-        const extra = shallowRef(name === 'deactivated');
-        const Branch = defineComponent(() => () => (
-          <div>
-            {extra.value ? (
-              <OTPFieldBase.Root key="held" length={1} required>
-                <OTPFieldBase.Input />
-              </OTPFieldBase.Root>
-            ) : null}
-          </div>
-        ));
+        const { HeldBranch, mountWhileHeld } = createHeldBranch(
+          () => (
+            <OTPFieldBase.Root key="held" length={1} required>
+              <OTPFieldBase.Input />
+            </OTPFieldBase.Root>
+          ),
+          { mounted: name === 'deactivated' },
+        );
         const { user } = await render(() => (
           <Form onFormSubmit={handleSubmit}>
             <Field.Root name="code" data-testid="field">
               <Field.Control defaultValue="shown" />
-              <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+              <HeldBranch />
             </Field.Root>
             <button type="submit">Submit</button>
           </Form>
         ));
 
-        visible.value = false;
-        await flushMicrotasks();
-        extra.value = true;
-        await flushMicrotasks();
+        await mountWhileHeld();
         await user.click(screen.getByRole('button', { name: 'Submit' }));
 
         expect(handleSubmit).toHaveBeenCalledTimes(1);
@@ -2536,35 +2531,25 @@ describe('<OTPField.Root />', () => {
     );
 
     it('the label does not name an OTP field that mounts while KeepAlive holds it', async () => {
-      const visible = shallowRef(true);
-      const extra = shallowRef(false);
-      const Branch = defineComponent(() => () => (
-        <div>
-          {extra.value ? (
-            <OTPFieldBase.Root key="held" length={1} id="held-otp-field">
-              <OTPFieldBase.Input />
-            </OTPFieldBase.Root>
-          ) : null}
-        </div>
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <OTPFieldBase.Root key="held" length={1} id="held-otp-field">
+          <OTPFieldBase.Input />
+        </OTPFieldBase.Root>
       ));
       await render(() => (
         <Field.Root>
           <Field.Label data-testid="label">Code</Field.Label>
-          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+          <HeldBranch />
         </Field.Root>
       ));
       const label = screen.getByTestId('label');
       const providerId = label.getAttribute('for');
 
-      visible.value = false;
-      await flushMicrotasks();
-      extra.value = true;
-      await flushMicrotasks();
+      await mountWhileHeld();
 
       expect(label.getAttribute('for')).toBe(providerId);
 
-      visible.value = true;
-      await flushMicrotasks();
+      await show();
 
       expect(label).toHaveAttribute('for', 'held-otp-field');
     });
