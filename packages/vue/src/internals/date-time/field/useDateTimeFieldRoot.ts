@@ -37,7 +37,15 @@ import { useValueChanged } from '../../useValueChanged';
 import { displayCalendar } from '../displayCalendar';
 import { digits as getDigits, formatter } from '../format';
 import type { DateMatcher } from '../matchers';
-import { isKind, kindOf, parseInputText, toInputText, toPlainDate, today } from '../temporal';
+import {
+  isKind,
+  kindOf,
+  parseInputText,
+  toInputText,
+  toPlainDate,
+  today,
+  yearMonthInCalendar,
+} from '../temporal';
 import type { DateValue, TemporalKind, TemporalValue } from '../temporal';
 import { DateTimeFieldContext } from './DateTimeFieldContext';
 import type {
@@ -341,7 +349,15 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
       return source;
     }
     if (kind.value === 'yearMonth') {
-      return midnight.value.toPlainDate().toPlainYearMonth();
+      const date = midnight.value.toPlainDate();
+      const isoMonth = date.toPlainYearMonth();
+      const calendar = toValue(parameters.calendar);
+      // An ISO year and month does not show in a calendar that has other months, and
+      // `displayCalendar` would then ignore the `calendar` prop. So the field makes its value in
+      // that calendar.
+      return calendar === undefined || yearMonthInCalendar(isoMonth, calendar)
+        ? isoMonth
+        : date.withCalendar(calendar).toPlainYearMonth();
     }
     if (kind.value === 'date') {
       return midnight.value.toPlainDate();

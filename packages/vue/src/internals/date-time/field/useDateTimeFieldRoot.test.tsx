@@ -602,6 +602,114 @@ describe('useDateTimeFieldRoot', () => {
       expect(segmentOf(container, 'year')).toHaveAttribute('aria-valuenow', '2027');
     });
 
+    it('makes an ISO date in an empty date field when the locale has another calendar', async () => {
+      const onValueChange = vi.fn();
+      const { container, user } = await render(
+        <DateTimeFieldProbe locale="fa-IR" onValueChange={onValueChange} />,
+      );
+
+      await user.click(segmentOf(container, 'year'));
+      await user.keyboard('1405');
+      await user.click(segmentOf(container, 'month'));
+      await user.keyboard('8');
+      await user.click(segmentOf(container, 'day'));
+      await user.keyboard('23');
+
+      const [value] = onValueChange.mock.calls.at(-1) as [Temporal.PlainDate];
+      expect(kindOf(value)).toBe('date');
+      expect(value.toString()).toBe('2026-11-14');
+      expect(segmentOf(container, 'year')).toHaveAttribute('aria-valuenow', '1405');
+      expect(segmentOf(container, 'month')).toHaveAttribute('aria-valuenow', '8');
+    });
+
+    it.each([
+      {
+        name: 'the Persian calendar of the prop',
+        calendar: 'persian',
+        month: '8',
+        year: '1405',
+        expected: '2026-10-23[u-ca=persian]',
+      },
+      {
+        name: 'the ISO calendar, with a Buddhist prop',
+        calendar: 'buddhist',
+        month: '5',
+        year: '2570',
+        expected: '2027-05',
+      },
+    ])('makes the value of an empty year and month field in $name', async (row) => {
+      const onValueChange = vi.fn();
+      const { container, user } = await render(
+        <DateTimeFieldProbe
+          granularity="month"
+          locale="en-US"
+          calendar={row.calendar}
+          name="when"
+          onValueChange={onValueChange}
+        />,
+      );
+
+      await user.click(segmentOf(container, 'month'));
+      await user.keyboard(row.month);
+
+      // The field has no value yet, and the month has its name in the calendar of the prop.
+      const firstDay = Temporal.PlainDate.from({
+        calendar: row.calendar,
+        year: Number(row.year),
+        month: Number(row.month),
+        day: 1,
+      });
+      expect(segmentOf(container, 'month')).toHaveAttribute(
+        'aria-valuetext',
+        textOf(firstDay, { month: 'long' }, 'en-US'),
+      );
+
+      await user.click(segmentOf(container, 'year'));
+      await user.keyboard(row.year);
+
+      const [value] = onValueChange.mock.calls.at(-1) as [Temporal.PlainYearMonth];
+      expect(kindOf(value)).toBe('yearMonth');
+      expect(value.toString()).toBe(row.expected);
+      expect(segmentOf(container, 'month')).toHaveAttribute('aria-valuenow', row.month);
+      expect(segmentOf(container, 'year')).toHaveAttribute('aria-valuenow', row.year);
+      expect(hiddenInputOf(container).value).toBe(row.expected);
+    });
+
+    it('keeps the calendar prop of an empty year and month field in a month that is also an ISO month', async () => {
+      // The ISO month 2027-11 is the Hebrew month 5788-M02, day for day.
+      const now = vi
+        .spyOn(Temporal.Now, 'plainDateISO')
+        .mockReturnValue(Temporal.PlainDate.from('2027-11-15'));
+      onTestFinished(() => {
+        now.mockRestore();
+      });
+      const onValueChange = vi.fn();
+      const { container, user } = await render(
+        <DateTimeFieldProbe
+          granularity="month"
+          locale="en-US"
+          calendar="hebrew"
+          onValueChange={onValueChange}
+        />,
+      );
+
+      await user.click(segmentOf(container, 'month'));
+      await user.keyboard('{ArrowUp}');
+      await user.click(segmentOf(container, 'year'));
+      await user.keyboard('{ArrowUp}');
+
+      const [first] = onValueChange.mock.calls.at(-1) as [Temporal.PlainYearMonth];
+      expect(first.toString()).toBe('2027-11-01[u-ca=hebrew]');
+
+      await user.click(segmentOf(container, 'month'));
+      await user.keyboard('{ArrowUp}');
+
+      const [next] = onValueChange.mock.calls.at(-1) as [Temporal.PlainYearMonth];
+      expect(next.toString()).toBe('2027-12-01[u-ca=hebrew]');
+      expect(segmentOf(container, 'month')).toHaveAttribute('aria-valuenow', '3');
+      expect(segmentOf(container, 'year')).toHaveAttribute('aria-valuenow', '5788');
+    });
+
     it('takes the numbers of an empty segment, and the zone, from referenceDate', async () => {
       const onValueChange = vi.fn();
       const { container, user } = await render(

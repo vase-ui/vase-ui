@@ -276,6 +276,13 @@ describe('toInputText and parseInputText', () => {
       seconds: false,
       expected: '2026-10-23[u-ca=persian]',
     },
+    {
+      name: 'a Hebrew month that is an ISO month',
+      make: () =>
+        month('2027-11').toPlainDate({ day: 1 }).withCalendar('hebrew').toPlainYearMonth(),
+      seconds: false,
+      expected: '2027-11-01[u-ca=hebrew]',
+    },
   ])('writes the text of $name', ({ make, seconds, expected }) => {
     expect(toInputText(make(), seconds)).toBe(expected);
   });
@@ -351,5 +358,47 @@ describe('yearMonthInCalendar', () => {
       .withCalendar('persian')
       .toPlainYearMonth();
     expect(yearMonthInCalendar(persian, 'iso8601')).toBeNull();
+  });
+
+  // The ISO month 2027-11 and the Hebrew month 5788-M02 have the same days. So have the Persian
+  // month 1405-M02 and the Indian month 1948-M02.
+  it.each([
+    { name: 'an ISO month in hebrew', from: 'iso8601', start: '2027-11-01', to: 'hebrew' },
+    { name: 'a Hebrew month in iso8601', from: 'hebrew', start: '2027-11-01', to: 'iso8601' },
+    { name: 'a Persian month in indian', from: 'persian', start: '2026-04-21', to: 'indian' },
+  ])('gives null for $name, also where the two months have the same days', (row) => {
+    const source = day(row.start).withCalendar(row.from).toPlainYearMonth();
+    const first = source.toPlainDate({ day: 1 }).withCalendar(row.to);
+    const last = source.toPlainDate({ day: source.daysInMonth }).withCalendar(row.to);
+    expect([first.day, last.day, first.monthCode]).toEqual([1, last.daysInMonth, last.monthCode]);
+
+    expect(yearMonthInCalendar(source, row.to)).toBeNull();
+  });
+
+  it.each([
+    { name: 'the ISO months', calendars: ['iso8601', 'gregory', 'buddhist', 'japanese', 'roc'] },
+    { name: 'the Coptic months', calendars: ['coptic', 'ethiopic', 'ethioaa'] },
+  ])('gives each month of 40 years in each calendar that has $name', ({ calendars }) => {
+    const different: string[] = [];
+    for (const from of calendars) {
+      let source = day('2000-01-01').withCalendar(from).toPlainYearMonth();
+      while (source.toPlainDate({ day: 1 }).withCalendar('iso8601').year < 2040) {
+        for (const to of calendars) {
+          const converted = yearMonthInCalendar(source, to);
+          const isSame =
+            converted?.calendarId === to &&
+            converted.daysInMonth === source.daysInMonth &&
+            converted
+              .toPlainDate({ day: 1 })
+              .equals(source.toPlainDate({ day: 1 }).withCalendar(to));
+          if (!isSame) {
+            different.push(`${source.toString()} in ${to}`);
+          }
+        }
+        source = source.add({ months: 1 });
+      }
+    }
+    // A wrong list makes thousands of months differ, so the failure shows only the first five.
+    expect(different.slice(0, 5)).toEqual([]);
   });
 });
