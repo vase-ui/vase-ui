@@ -21,6 +21,8 @@ const props = withDefaults(
     readOnly?: boolean;
     required?: boolean;
     clear?: boolean;
+    // How the field gives its segments: the default parts, the `segment` slot, or a `#render` slot.
+    input?: 'default' | 'segment-slot' | 'render-slot';
   }>(),
   {
     label: 'none',
@@ -34,6 +36,7 @@ const props = withDefaults(
     step: undefined,
     name: undefined,
     id: undefined,
+    input: 'default',
   },
 );
 
@@ -74,7 +77,18 @@ function rootProps() {
     <Field.Root>
       <Field.Label v-if="label === 'before'" data-testid="label">Alarm</Field.Label>
       <TimeField.Root data-testid="root" v-bind="rootProps()">
-        <TimeField.Input data-testid="input" />
+        <TimeField.Input v-if="input === 'default'" data-testid="input" />
+        <TimeField.Input v-else-if="input === 'segment-slot'" data-testid="input">
+          <template #segment="{ segment }">
+            <TimeField.Segment v-if="segment.editable" :segment="segment" class="segment" />
+            <TimeField.Literal v-else :segment="segment" class="literal" />
+          </template>
+        </TimeField.Input>
+        <TimeField.Input v-else data-testid="input">
+          <template #render="{ props: inputProps, children }">
+            <section v-bind="inputProps"><component :is="children" /></section>
+          </template>
+        </TimeField.Input>
         <TimeField.Clear v-if="clear" data-testid="clear" />
       </TimeField.Root>
       <Field.Label v-if="label === 'after'" data-testid="label">Alarm</Field.Label>

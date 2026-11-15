@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
+import { h } from 'vue';
+import type { Component } from 'vue';
 import { TimeField } from '@vase-ui/vue/time-field';
 import { createRenderer, describeConformance, screen } from '#test-utils';
+import type { HTMLProps } from '../../internals/types';
 
 describe('<TimeField.Clear />', () => {
   const { render } = createRenderer();
@@ -26,16 +29,39 @@ describe('<TimeField.Clear />', () => {
     );
   }
 
-  it('has the text Clear, and the default slot replaces it', async () => {
+  it('shows x with the name Clear, and the default slot replaces both', async () => {
     await render(
       <TimeField.Root defaultValue={Temporal.PlainTime.from('15:04')}>
         <TimeField.Clear data-testid="default" />
-        <TimeField.Clear data-testid="own">{{ default: () => 'Reset' }}</TimeField.Clear>
+        <TimeField.Clear data-testid="text">{{ default: () => 'Reset' }}</TimeField.Clear>
+        <TimeField.Clear data-testid="own" aria-label="Clear the alarm">
+          {{ default: () => '\u00d7' }}
+        </TimeField.Clear>
       </TimeField.Root>,
     );
 
+    expect(screen.getByTestId('default')).toHaveTextContent('x');
     expect(screen.getByTestId('default')).toHaveAccessibleName('Clear');
-    expect(screen.getByTestId('own')).toHaveAccessibleName('Reset');
+    expect(screen.getByTestId('text')).toHaveAccessibleName('Reset');
+    expect(screen.getByTestId('own')).toHaveAccessibleName('Clear the alarm');
+  });
+
+  it('shows x in the children component of the #render slot', async () => {
+    await render(
+      <TimeField.Root defaultValue={Temporal.PlainTime.from('15:04')}>
+        <TimeField.Clear>
+          {{
+            render: ({ props, children }: { props: HTMLProps; children: Component }) => (
+              <button {...props} data-testid="own">
+                {h(children)}
+              </button>
+            ),
+          }}
+        </TimeField.Clear>
+      </TimeField.Root>,
+    );
+
+    expect(screen.getByTestId('own')).toHaveTextContent('x');
   });
 
   it('empties the field with the reason clear-press, and gives the focus to the first segment', async () => {

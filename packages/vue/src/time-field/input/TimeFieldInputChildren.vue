@@ -5,11 +5,7 @@ import { markChildrenMounted } from '../../internals/useRenderElement';
 import TimeFieldLiteral from '../literal/TimeFieldLiteral.vue';
 import TimeFieldSegment from '../segment/TimeFieldSegment.vue';
 import type { TimeFieldInputSegment } from './TimeFieldInput.vue';
-
-// A layout has at most five items that are not literals: the hour, the minute, the second, the day
-// period and the time zone name. The layout joins two literals that follow each other. So a layout
-// has at most five items and six literals: one before, one between and one after them.
-const MAX_ITEMS = 11;
+import { MAX_LAYOUT_ITEMS } from './layoutItems';
 
 defineSlots<{
   /**
@@ -25,7 +21,7 @@ const context = useDateTimeFieldContext();
 // when the element allows a mismatch of its children. The list thus always has the same number of
 // iterations, and each iteration renders one node: an item of the layout, or the comment of `v-if`.
 const items = computed(() =>
-  Array.from({ length: MAX_ITEMS }, (_, position) => context.segments.value[position]),
+  Array.from({ length: MAX_LAYOUT_ITEMS }, (_, position) => context.segments.value[position]),
 );
 
 markChildrenMounted();

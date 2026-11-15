@@ -24,12 +24,14 @@ export interface TimeFieldClearProps
 </script>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, useSlots } from 'vue';
+import type { Component } from 'vue';
 import { useDateTimeFieldContext } from '../../internals/date-time/field/DateTimeFieldContext';
 import { rootStateAttributesMapping } from '../../internals/date-time/field/useDateTimeFieldRoot';
-import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import type { HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
 import { useRenderElement } from '../../internals/useRenderElement';
+import TimeFieldClearChildren from './TimeFieldClearChildren.vue';
 
 defineOptions({ inheritAttrs: false });
 
@@ -41,12 +43,13 @@ const props = withDefaults(defineProps<TimeFieldClearProps>(), {
 
 defineSlots<{
   /**
-   * The content of the button. The default is the text `Clear`.
+   * The content of the button. The default is `x`, and the button then has the `aria-label` `Clear`.
    */
   default(props: { state: TimeFieldClearState }): unknown;
-  render: ComponentRenderFn<HTMLProps, TimeFieldClearState>;
+  render(props: { props: HTMLProps; state: TimeFieldClearState; children: Component }): unknown;
 }>();
 
+const slots = useSlots();
 const context = useDateTimeFieldContext();
 
 const isDisabled = computed(
@@ -74,13 +77,23 @@ const { element, elementProps } = useRenderElement('button', props, {
   state,
   stateAttributesMapping: rootStateAttributesMapping,
   ref: [buttonRef],
-  props: (attrs) => [{ onClick: handleClick }, attrs, getButtonProps],
+  props: (attrs) => [
+    {
+      // The button names itself only when it shows its own `x`.
+      'aria-label': slots.default || slots.render ? undefined : 'Clear',
+      onClick: handleClick,
+    },
+    attrs,
+    getButtonProps,
+  ],
+  children: true,
 });
 
 defineExpose({ element });
 </script>
 
+<!-- prettier-ignore -->
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"><slot :state="state">Clear</slot></component>
+  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="TimeFieldClearChildren" />
+  <component :is="as" v-else v-bind="elementProps()"><TimeFieldClearChildren><template v-if="$slots.default" #default><slot :state="state" /></template></TimeFieldClearChildren></component>
 </template>
