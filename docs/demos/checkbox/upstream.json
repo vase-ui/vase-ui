@@ -7,10 +7,12 @@
     "hero/tailwind/index.tsx": "826bd0c59cdeb76c2fd7062a2dc69a22f2fb1d880a0471b9c2cc005dd4cddce0"
   },
   "classes": {
-    "hero/tailwind": [
-      "flex data-unchecked:hidden",
-      "flex items-center gap-2 text-sm font-normal text-neutral-950 dark:text-white",
-      "flex size-4 shrink-0 items-center justify-center border rounded-none p-0 border-neutral-950 bg-white text-white dark:border-white dark:bg-neutral-950 dark:text-neutral-950 data-checked:bg-neutral-950 data-checked:text-white dark:data-checked:bg-white dark:data-checked:text-neutral-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
-    ]
+    "hero/tailwind": {
+      "Checkbox.Indicator": ["flex data-unchecked:hidden"],
+      "Checkbox.Root": [
+        "flex size-4 shrink-0 items-center justify-center border rounded-none p-0 border-neutral-950 bg-white text-white dark:border-white dark:bg-neutral-950 dark:text-neutral-950 data-checked:bg-neutral-950 data-checked:text-white dark:data-checked:bg-white dark:data-checked:text-neutral-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
+      ],
+      "label": ["flex items-center gap-2 text-sm font-normal text-neutral-950 dark:text-white"]
+    }
   }
 }

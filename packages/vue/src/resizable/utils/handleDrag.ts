@@ -8,63 +8,65 @@ import type { Layout } from './layout';
 
 interface HandleDragOptions {
   /**
-   * The index in `panels` of the panel before the handle, or -1 when the handle has no panel on
-   * one side.
+   * The index in `panels` of the panel before the boundary, or -1 when the boundary has no panel
+   * on one side.
    */
   pivot: () => number;
-  disabled: () => boolean;
   /**
-   * The element that holds the pointer capture.
+   * Whether the boundary cannot move. A press on it starts no drag, and the press of another
+   * handle does not join it.
    */
-  element: () => HTMLElement | null;
+  disabled: () => boolean;
 }
 
-interface HandleDrag {
+export interface HandleDrag {
   dragging: Readonly<Ref<boolean>>;
+  /**
+   * Whether a press drags this boundary and a boundary of another root together. The press writes
+   * it.
+   */
+  crossing: Ref<boolean>;
+  disabled: () => boolean;
   /**
    * Starts a drag with the `pointerdown` event. It returns `false` when no drag starts.
    */
   start: (event: PointerEvent) => boolean;
   move: (event: PointerEvent) => void;
   /**
-   * Ends the drag that runs. The call changes nothing when no drag runs.
+   * Ends the drag that runs. The call changes nothing when no drag runs. The event is `undefined`
+   * for a change of the lifecycle. `apply` is `true` for the release of the pointer.
+   * In a root with `'on-release'`, only `apply` gives the layout of the drag to the root. In a
+   * `'live'` root, each move is written already, and each end commits the last layout that no
+   * listener canceled.
    */
-  end: (event?: PointerEvent) => void;
-  /**
-   * Stops the click that follows a drag in which the pointer moved. Give it to the capture
-   * listener of `click`. The click that follows a press with no move goes on.
-   */
-  stopClickAfterDrag: (event: MouseEvent) => void;
+  end: (event: PointerEvent | undefined, apply: boolean) => void;
 }
 
 /**
- * The drag of a handle. A move computes the layout from the layout at the start, so a drag that
- * goes out and back gives the start layout.
+ * The drag of one boundary of two panels, in one root. A move computes the layout from the layout
+ * at the start, so a drag that goes out and back gives the start layout. The pointer session, with
+ * its capture and its click, is in `createHandlePress`.
  */
 export function createHandleDrag(
   root: ResizableRootContext,
   options: HandleDragOptions,
 ): HandleDrag {
   const dragging = shallowRef(false);
-  let pointerId = 0;
+  const crossing = shallowRef(false);
   let horizontal = true;
   let rtl = false;
   let startPointer = 0;
   // The room of the panels on the screen, in pixels of the screen: the pointer has such pixels.
   let panelSpace = 0;
   let startLayout: Layout = {};
+  // The layout that the release gives. A drag in the mode `'on-release'` has it from its start.
+  let pending: Layout | undefined;
   // The layout of the last change that no listener canceled. The release commits it.
   let applied: Layout | undefined;
   // A drag that a lifecycle change ends commits with the last pointer event of the drag.
   let lastEvent: PointerEvent | undefined;
-  // Whether the pointer moved in the drag that runs.
-  let moved = false;
-  // Whether the next click is the click that follows a drag in which the pointer moved. A press
-  // clears it, so no timer is needed.
-  let stopClick = false;
 
   function start(event: PointerEvent) {
-    stopClick = false;
     const pivot = options.pivot();
     if (event.button !== 0 || event.defaultPrevented || options.disabled() || pivot < 0) {
       return false;
@@ -75,7 +77,6 @@ export function createHandleDrag(
       return false;
     }
     dragging.value = true;
-    pointerId = event.pointerId;
     horizontal = root.orientation.value === 'horizontal';
     rtl = horizontal && root.direction.value === 'rtl';
     startPointer = horizontal ? event.clientX : event.clientY;
@@ -83,54 +84,48 @@ export function createHandleDrag(
     startLayout = root.shown.value;
     applied = undefined;
     lastEvent = event;
-    moved = false;
-    try {
-      options.element()?.setPointerCapture(event.pointerId);
-    } catch {
-      // A pointer that a script made has no capture. The drag goes on with the events of the element.
+    pending = root.resizeMode.value === 'on-release' ? startLayout : undefined;
+    if (pending) {
+      root.setPendingLayout(pending);
     }
     return true;
   }
 
-  function end(event?: PointerEvent) {
-    // A lifecycle change gives no event. The event of another pointer does not end the drag.
-    if (!dragging.value || (event && event.pointerId !== pointerId)) {
+  function end(event: PointerEvent | undefined, apply: boolean) {
+    if (!dragging.value) {
       return;
     }
     dragging.value = false;
-    stopClick = moved;
-    const element = options.element();
-    if (element?.hasPointerCapture(pointerId)) {
-      element.releasePointerCapture(pointerId);
-    }
+    crossing.value = false;
     root.stopDragging();
-    if (applied) {
-      const layout = applied;
-      applied = undefined;
-      root.commitLayout(layout, REASONS.drag, event ?? lastEvent);
+    const endEvent = event ?? lastEvent;
+    const release =
+      apply && pending && !areLayoutsEqual(pending, root.shown.value) ? pending : undefined;
+    // In the mode `'on-release'` the drag has written nothing yet, so the release writes the layout.
+    const layout = release
+      ? root.changeLayout(release, createChangeEventDetails(REASONS.drag, endEvent))
+      : applied;
+    pending = undefined;
+    applied = undefined;
+    if (layout) {
+      root.commitLayout(layout, REASONS.drag, endEvent);
     }
   }
 
   function move(event: PointerEvent) {
-    if (!dragging.value || event.pointerId !== pointerId) {
+    if (!dragging.value) {
       return;
     }
     lastEvent = event;
-    // A release that the page did not send leaves no button down.
-    if (event.buttons === 0) {
-      end(event);
-      return;
-    }
     const pivot = options.pivot();
     const shown = root.shown.value;
     // The start layout is about the panels at the start. A panel that mounted or unmounted since
-    // then makes the layout and the handle unfit for the move.
+    // then makes the layout and the boundary unfit for the move.
     if (pivot < 0 || !hasSamePanels(startLayout, shown)) {
-      end(event);
+      end(event, false);
       return;
     }
     const distance = (horizontal ? event.clientX : event.clientY) - startPointer;
-    moved ||= distance !== 0;
     const delta = ((rtl ? -distance : distance) / panelSpace) * 100;
     const next = adjustLayout(
       root.constraints.value,
@@ -139,19 +134,18 @@ export function createHandleDrag(
       snapDelta(root.constraints.value, startLayout, pivot, delta, root.dragStep.value),
       { push: root.pushPanels.value },
     );
+    if (pending) {
+      if (!areLayoutsEqual(next, pending)) {
+        pending = next;
+        root.setPendingLayout(next);
+      }
+      return;
+    }
     if (areLayoutsEqual(next, shown)) {
       return;
     }
     applied = root.changeLayout(next, createChangeEventDetails(REASONS.drag, event)) ?? applied;
   }
 
-  function stopClickAfterDrag(event: MouseEvent) {
-    if (stopClick) {
-      stopClick = false;
-      event.preventDefault();
-      event.stopPropagation();
-    }
-  }
-
-  return { dragging, start, move, end, stopClickAfterDrag };
+  return { dragging, crossing, disabled: options.disabled, start, move, end };
 }
