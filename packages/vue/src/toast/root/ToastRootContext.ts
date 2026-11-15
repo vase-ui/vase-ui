@@ -12,7 +12,7 @@ export interface ToastRootContext {
   registerTitleId: RegisterId;
   /**
    * Registers the `id` of a description by its source. The root takes the `id` of the last
-   * description for `aria-describedby`.
+   * description for `aria-describedby`. A root with no title takes it for `aria-labelledby`.
    */
   registerDescriptionId: RegisterId;
   visibleIndex: ComputedRef<number>;
