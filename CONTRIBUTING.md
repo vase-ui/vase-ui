@@ -280,7 +280,7 @@ A part that Base UI takes from another family is exported again and not copied: 
 - The interface also extends the attributes of its default tag through `/* @vue-ignore */`: `interface SeparatorProps extends VaseUIComponentProps<SeparatorState>, /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes>`.
 - `WithVaseUIEvent` adds `preventVaseUIHandler()` to the event that each native listener gets.
 - `WithVaseUIEvent` adds `null` to the type of each attribute that is not a listener. Vue types an attribute with no `null`, so without it vue-tsc refuses `:aria-hidden="null"` on a part.
-- Name each attribute that reaches a declared prop in the second type argument: `WithVaseUIEvent<HTMLAttributes, 'aria-label'>`. The type adds no `null` to such an attribute, because Vue gives its value to the prop. `Input` names `id` and `name`, because it gives them to the props of `Field.Control`.
+- Name each attribute that reaches a declared prop in the second type argument: `WithVaseUIEvent<HTMLAttributes, 'aria-label'>`. The type adds no `null` to such an attribute, because Vue gives its value to the prop, and such a prop takes no `null`. `Input` names `id` and `name`, because it gives them to the props of `Field.Control`.
 - TSX and templates then accept the native attributes and listeners, with their types.
 - `WithVaseUIEvent` leaves out the key `as`. The part declares `as` itself, and a library can add another `as` to the attributes of each element. `motion-v` does this. Without the omit, TypeScript reports TS2320 for the props interface of each part.
 - `WithVaseUIEvent` adds the attribute `aria-description`. WAI-ARIA 1.3 defines it for each element, and the types of Vue do not list it. Without the key, `<Combobox.Chip aria-description="…">` fails the type check of a consumer that sets `strictTemplates`. Do not add the key to the types of Vue with a module augmentation. That changes the type of each element in the project of the consumer.
@@ -480,7 +480,7 @@ Rules:
 - An event is an object that has `preventDefault`. Do not use `instanceof`.
 - The type argument is the tag of the element: `mergeProps<'button'>`. The sets and the result then have the attributes of that element. With no type argument, a set accepts the attributes of each element, and the type of the result is `NativeElements['div']`: the attributes that each HTML element has.
 - A handler in a set gets a `VaseUIEvent`. A listener of the result gets the DOM event. With a type argument, the type of the result is `NativeElements[T]`.
-- A set has the attribute types of Vue, with no `null`. `mergeProps` copies `null` to its result, and the type of the result is the type of Vue.
+- A set has the attribute types of Vue, which have no `null`. `mergeProps` copies `null` to its result, and the type of the result is the type of Vue. Vue declares no `data-*` attribute, and the type of a set accepts `null` for one.
 - Vue types a listener of an element as a function of the DOM event. A template thus refuses a bound object whose listeners need a `VaseUIEvent`.
 
 ### `useRenderElement` and `useRender`
