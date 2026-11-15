@@ -3314,6 +3314,31 @@ describe('<Combobox.Root />', () => {
     });
   });
 
+  describe('VUE-102: a value with a line break', () => {
+    it('submits the value with a line feed', async () => {
+      await renderAddresses('Main Street 1\nFlat 2');
+
+      expect(getHiddenInput().value).toBe('Main Street 1Flat 2');
+      expect(getFormData('address')).toEqual(['Main Street 1\nFlat 2']);
+    });
+
+    it('selects the item whose value gives the text that the browser restores', async () => {
+      const { handleValueChange, events } = await renderAddresses('Box 1');
+      getHiddenInput().value = 'Main Street 1Flat 2';
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+      await flushMicrotasks();
+
+      expect(handleValueChange.mock.calls.map((call) => [call[0], call[1].reason])).toEqual([
+        ['Main Street 1\nFlat 2', 'none'],
+      ]);
+      expect(getOptions()).toEqual([]);
+      expect(getFormData('address')).toEqual(['Main Street 1\nFlat 2']);
+      expect(events).toEqual(['input']);
+    });
+  });
+
   describe('selection behavior', () => {
     describe('single', () => {
       it('fires onOpenChange once with reason item-press on mouse click', async () => {

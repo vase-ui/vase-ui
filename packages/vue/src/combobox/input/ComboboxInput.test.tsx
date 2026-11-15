@@ -1897,6 +1897,32 @@ describe('<Combobox.Input />', () => {
     });
   });
 
+  describe('VUE-102: a value with a line break', () => {
+    it('handles no change event for the text of a value with a line feed', async () => {
+      const handleValueChange = vi.fn();
+      await render(
+        <form data-testid="form">
+          <Autocomplete.Root
+            name="address"
+            defaultValue={'Main Street 1\nFlat 2'}
+            onValueChange={handleValueChange}
+          >
+            <Autocomplete.Input />
+          </Autocomplete.Root>
+        </form>,
+      );
+      const input = screen.getByRole<HTMLInputElement>('combobox');
+      expect(input.value).toBe('Main Street 1Flat 2');
+
+      await fireEvent.change(input);
+
+      expect(handleValueChange).not.toHaveBeenCalled();
+      expect(new FormData(screen.getByTestId<HTMLFormElement>('form')).getAll('address')).toEqual([
+        'Main Street 1\nFlat 2',
+      ]);
+    });
+  });
+
   describe('the focus listeners', () => {
     it('keeps the highlight of an inline list and the state of the field when the focused input is replaced', async () => {
       const InlineList = defineComponent(
