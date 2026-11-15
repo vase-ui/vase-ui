@@ -92,18 +92,18 @@ function ClearAndEmptyWithRender() {
       <Combobox.Clear
         keepMounted
         v-slots={{
-          render: ({ props, children: Children }: RenderSlotProps) => (
+          render: ({ props, children }: RenderSlotProps) => (
             <button {...props} data-testid="clear">
-              <Children />
+              {h(children)}
             </button>
           ),
         }}
       />
       <Combobox.Empty
         v-slots={{
-          render: ({ props, children: Children }: RenderSlotProps) => (
+          render: ({ props, children }: RenderSlotProps) => (
             <div {...props} data-testid="empty">
-              <Children />
+              {h(children)}
             </div>
           ),
         }}
