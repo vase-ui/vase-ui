@@ -4,6 +4,7 @@ import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { Field } from '@vase-ui/vue/field';
 import {
+  clientCenter,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -581,7 +582,7 @@ describe('<Combobox.Trigger />', () => {
 
       const trigger = screen.getByTestId('trigger');
       await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-      await fireEvent.mouseDown(trigger, { button: 0 });
+      await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
 
       await screen.findByRole('listbox');
       const option = await screen.findByRole('option', { name: 'Beta' });
@@ -619,7 +620,7 @@ describe('<Combobox.Trigger />', () => {
 
       const trigger = screen.getByTestId('trigger');
       await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-      await fireEvent.mouseDown(trigger, { button: 0 });
+      await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
 
       await screen.findByRole('listbox');
       const option = await screen.findByRole('option', { name: 'Beta' });
@@ -659,7 +660,7 @@ describe('<Combobox.Trigger />', () => {
 
         const trigger = screen.getByTestId('trigger');
         await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-        await fireEvent.mouseDown(trigger, { button: 0 });
+        await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
 
         await screen.findByRole('listbox');
         const alpha = await screen.findByRole('option', { name: 'Alpha' });
@@ -714,7 +715,7 @@ describe('<Combobox.Trigger />', () => {
         // stale entry makes the next drag-select onto Alpha read as a same-item tap
         // and never commit.
         await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-        await fireEvent.mouseDown(trigger, { button: 0 });
+        await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
         await screen.findByRole('listbox');
         const alpha = await screen.findByRole('option', { name: 'Alpha' });
         await fireEvent.pointerDown(alpha, { pointerType: 'touch', isPrimary: true, button: 0 });
@@ -726,7 +727,7 @@ describe('<Combobox.Trigger />', () => {
 
         // Reopen and drag-select onto Alpha (gesture starts on the trigger).
         await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-        await fireEvent.mouseDown(trigger, { button: 0 });
+        await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
         await screen.findByRole('listbox');
         const alphaReopened = await screen.findByRole('option', { name: 'Alpha' });
         await fireEvent.mouseMove(alphaReopened, { pointerType: 'mouse', movementX: 1 });
@@ -762,7 +763,7 @@ describe('<Combobox.Trigger />', () => {
 
       const trigger = screen.getByTestId('trigger');
       await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-      await fireEvent.mouseDown(trigger, { button: 0 });
+      await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
 
       await screen.findByRole('listbox');
       const option = await screen.findByRole('option', { name: 'Beta' });
