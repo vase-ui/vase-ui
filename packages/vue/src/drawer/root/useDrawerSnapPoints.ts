@@ -117,7 +117,7 @@ export function useDrawerSnapPoints(): UseDrawerSnapPointsReturnValue {
 
     viewportHeight.value = element ? element.offsetHeight : html.clientHeight;
 
-    const fontSize = parseFloat(getComputedStyle(html).fontSize);
+    const fontSize = Number.parseFloat(getComputedStyle(html).fontSize);
     if (Number.isFinite(fontSize)) {
       rootFontSize.value = fontSize;
     }

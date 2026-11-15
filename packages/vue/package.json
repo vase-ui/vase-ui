@@ -14,7 +14,7 @@
     "url": "git+https://github.com/vase-ui/vase-ui.git",
     "directory": "packages/vue"
   },
-  "homepage": "https://vase-ui.github.io/vase-ui/",
+  "homepage": "https://vase-ui.com/",
   "type": "module",
   "sideEffects": false,
   "files": [

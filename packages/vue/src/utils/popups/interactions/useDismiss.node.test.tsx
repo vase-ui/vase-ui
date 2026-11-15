@@ -22,6 +22,6 @@ describe('useDismiss on a server', () => {
     const html = await renderToString(createSSRApp(Popup));
 
     expect(html).toBe('<!--[--><button>trigger</button><div>popup</div><!--]-->');
-    expect(Symbol.for('vase-ui.escape-layers') in globalThis).toBe(false);
+    expect(Symbol.for('vase-ui.popup-layers') in globalThis).toBe(false);
   });
 });

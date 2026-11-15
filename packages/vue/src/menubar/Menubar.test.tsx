@@ -959,10 +959,11 @@ describe('<Menubar />', () => {
     // active when the item is clicked.
     vi.useFakeTimers();
     try {
-      screen.getByTestId('edit-trigger').focus();
-      await flushMicrotasks();
-      // The item mounts with the menu. Vue skips its listener for an event of that millisecond.
-      await waitForLaterMillisecond();
+      // The focus opens the menu, and the item mounts with it.
+      await waitForLaterMillisecond(() => {
+        screen.getByTestId('edit-trigger').focus();
+        return flushMicrotasks();
+      });
 
       await fireEvent(
         screen.getByTestId('edit-item-1'),
