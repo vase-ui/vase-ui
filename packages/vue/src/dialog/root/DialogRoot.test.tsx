@@ -1609,7 +1609,7 @@ describe('<Dialog.Root />', () => {
         expect(start.target).toBe(popup);
         expect((start as AnimationEvent).animationName).toBe('test-enter-a');
         // The root reads the animations of the popup in the frame after the open. WebKit sends
-        // `animationstart` before that frame.
+        // `animationstart` before that read.
         await waitSingleFrame();
 
         const swapButton = screen.getByText('Swap animation');
@@ -1629,6 +1629,9 @@ describe('<Dialog.Root />', () => {
         await flushMicrotasks();
         expect(onOpenChangeComplete.mock.calls.length).toBe(0);
 
+        // The restarted animation runs for one frame before the case ends it. A completion in a
+        // frame before the end thus shows in `callsAtEnd`.
+        await waitSingleFrame();
         for (const animation of animations) {
           animation.finish();
         }
