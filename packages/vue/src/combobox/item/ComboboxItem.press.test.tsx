@@ -161,9 +161,7 @@ describe('<Combobox.Item />', () => {
       await waitFor(() => {
         expect(onOpenChange.mock.lastCall?.[0]).toBe(false);
       });
-      expect(onValueChange.mock.calls.map(([nextValue]) => nextValue)).toEqual(
-        step === 'click' ? ['two'] : [],
-      );
+      expect(onValueChange).not.toHaveBeenCalled();
     },
   );
 });
