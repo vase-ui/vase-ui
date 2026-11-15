@@ -464,7 +464,10 @@ function handleKeydown(event: KeyboardEvent) {
     const details = createChangeEventDetails(REASONS.escapeKey, event);
     const value = state.selectionMode === 'multiple' ? [] : null;
     store.context.setInputValue('', details);
-    store.context.setSelectedValue(value, details);
+    // The root emits no change for a value that is already empty (`VUE-91`).
+    if (!isClear) {
+      store.context.setSelectedValue(value, details);
+    }
 
     if (!isClear && !state.inline && !details.isPropagationAllowed) {
       event.stopPropagation();
