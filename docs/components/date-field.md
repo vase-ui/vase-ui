@@ -61,7 +61,7 @@ The value is a `Temporal` object, and `v-model:value` gives back the same kind. 
 
 An emitted value keeps the calendar, the time and the time zone of the value that you gave. With no value, the `granularity` prop gives the kind of the value that the field makes: `day` gives a `Temporal.PlainDate`, `month` gives a `Temporal.PlainYearMonth`, and each other unit gives a `Temporal.PlainDateTime`. Use `referenceDate` to give the kind, the time zone and the numbers that an empty segment takes when the user presses an arrow key.
 
-Use `calendar` to show the date in another calendar, and `hourCycle` to give a time the 12-hour or the 24-hour cycle. The value keeps its own calendar. The locale and `calendar` change only the calendar in which the field shows the date. A field with no `value`, `defaultValue` and `referenceDate` makes a value in the ISO calendar. See the [guide](/handbook/dates-and-times#calendars).
+Use `calendar` to show the date in another calendar, and `hourCycle` to give a time the 12-hour or the 24-hour cycle. The value keeps its own calendar. The locale gives only the calendar in which the field shows the date, never the calendar of the value. A field with no `value`, `defaultValue` and `referenceDate` makes a value in the ISO calendar. The exception is an empty year and month field whose `calendar` prop names a calendar with other months than ISO, such as `persian` or `hebrew`. It makes its value in that calendar, because an ISO year and month does not show in that calendar. See the [guide](/handbook/dates-and-times#calendars).
 
 ## Examples
 
