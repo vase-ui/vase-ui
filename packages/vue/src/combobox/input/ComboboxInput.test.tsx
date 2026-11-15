@@ -21,6 +21,7 @@ import ComboboxPartsReplacement from '../../../test/fixtures/ComboboxPartsReplac
 import PopupRootNodeScoped from '../../utils/popups/focus/PopupRootNodeScoped.test.vue';
 import { REASONS } from '../../internals/reasons';
 import type { VaseUIEvent } from '../../internals/types';
+import { useComboboxRootContext } from '../root/ComboboxRootContext';
 import type { ComboboxStore } from '../store';
 import ComboboxInputHydration from './ComboboxInputHydration.test.vue';
 import ComboboxInputTriggerHydration from './ComboboxInputTriggerHydration.test.vue';
@@ -1544,6 +1545,35 @@ describe('<Combobox.Input />', () => {
       expect(screen.queryByTestId('first-input')).toBe(null);
       expect(store.select('inputElement')).toBe(input);
       expect(store.context.inputRef.value).toBe(input);
+      expect(store.context.startDismissRef.value).toBe(input.previousElementSibling);
+      expect(store.context.startDismissRef.value).toHaveAttribute('aria-label', 'Dismiss');
+    });
+
+    it('keeps the dismiss button of a newer input when an older input unmounts later', async () => {
+      let store!: ComboboxStore;
+      const StoreProbe = defineComponent(() => {
+        store = useComboboxRootContext();
+        return () => null;
+      });
+      const showsOlder = shallowRef(true);
+      const showsNewer = shallowRef(false);
+      await render(() => (
+        <Combobox.Root open>
+          <StoreProbe />
+          {showsOlder.value && <Combobox.Input data-testid="older-input" />}
+          {showsNewer.value && <Combobox.Input data-testid="newer-input" />}
+        </Combobox.Root>
+      ));
+
+      showsNewer.value = true;
+      await flushMicrotasks();
+      const input = screen.getByTestId('newer-input');
+      expect(store.context.startDismissRef.value).toBe(input.previousElementSibling);
+
+      showsOlder.value = false;
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('older-input')).toBe(null);
       expect(store.context.startDismissRef.value).toBe(input.previousElementSibling);
       expect(store.context.startDismissRef.value).toHaveAttribute('aria-label', 'Dismiss');
     });

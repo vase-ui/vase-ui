@@ -12,8 +12,8 @@ import { useComboboxRootContext } from '../root/ComboboxRootContext';
  *
  * The part keeps the button beside its element, so the part has one root node. The composable makes
  * the button for the document of `element`, so the server HTML has no button. It clears `buttonRef`
- * only while the ref holds its own button, because another part can write the ref in the same DOM
- * update.
+ * only while the ref holds its own button. Another part can write its button to the ref while this
+ * part stays mounted.
  */
 export function useDismissButton(
   element: Readonly<Ref<HTMLElement | null>>,
