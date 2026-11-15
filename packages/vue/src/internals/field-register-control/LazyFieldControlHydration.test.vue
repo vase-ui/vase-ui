@@ -5,7 +5,7 @@ import FieldControlPart from '../../../test/fixtures/FieldControlPart.vue';
 // The module makes the component of a server one time, as a lazy component of Nuxt is made. After
 // its first render, a server has the component loaded and runs its `setup` in the order of the
 // document.
-const LoadedOnServer = defineAsyncComponent(() => Promise.resolve(FieldControlPart));
+const ServerLazyFieldControlPart = defineAsyncComponent(() => Promise.resolve(FieldControlPart));
 </script>
 
 <script setup lang="ts">
@@ -25,7 +25,7 @@ defineProps<{
 // later parts. Vue keeps a loaded component, so each mount in a browser makes a new one.
 const LazyFieldControlPart =
   typeof document === 'undefined'
-    ? LoadedOnServer
+    ? ServerLazyFieldControlPart
     : defineAsyncComponent(() => Promise.resolve(FieldControlPart));
 </script>
 

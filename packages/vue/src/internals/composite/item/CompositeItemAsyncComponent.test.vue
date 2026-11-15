@@ -12,7 +12,7 @@ export function releaseAsyncComponent() {
 // The module makes the component of a server one time, as a lazy component of Nuxt is made. After
 // its first render, a server has the component loaded and runs its `setup` in the order of the
 // document.
-const LoadedOnServer = defineAsyncComponent(() => Promise.resolve(CompositeItemPart));
+const ServerAsyncCompositeItem = defineAsyncComponent(() => Promise.resolve(CompositeItemPart));
 </script>
 
 <script setup lang="ts">
@@ -22,7 +22,7 @@ import CompositeRootPart from '../../../../test/fixtures/CompositeRootPart.vue';
 // later items. Vue keeps a loaded component, so each mount in a browser makes a new one.
 const AsyncCompositeItem =
   typeof document === 'undefined'
-    ? LoadedOnServer
+    ? ServerAsyncCompositeItem
     : defineAsyncComponent(
         () =>
           new Promise<typeof CompositeItemPart>((resolve) => {
