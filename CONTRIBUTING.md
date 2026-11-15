@@ -103,7 +103,7 @@ The site imports the built package. Run `pnpm build` before `pnpm docs:typecheck
 - `parity/scope.json` lists what Vase UI does not port, each with its reason. It also lists the Base UI paths that are out of scope.
 - An `outOfScope` rule can have the key `except`. Its globs name the paths below `paths` that stay in scope.
 - Add an `except` glob only for a path that a family ports or will port.
-- A Base UI commit that changes an in-scope path and no path of a family shows as `not started` on the parity page.
+- A Base UI path is in scope when [Layout and names](#layout-and-names) maps it to a Vase UI path, or when an `except` glob names it. A Base UI commit that changes an in-scope path and no path of a family shows as `not started` on the parity page.
 - For the docs, an `except` glob names the page folders of a group: `docs/src/app/(docs)/react/components/*/**`.
 - Do not name the group folder. Its `page.mdx` is an index that Base UI generates from the pages, and no family ports it.
 - Port from Base UI at the tracked commit.
