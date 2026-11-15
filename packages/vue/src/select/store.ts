@@ -62,6 +62,11 @@ export type SelectStoreContext = ValuePopupContext<SelectRootOpenChangeEventDeta
     allowSelectedMouseUp: boolean;
     dragY: number;
   }>;
+  /**
+   * The `mousedown` event of the trigger press that opened the popup, until its release. An item
+   * reads it to ignore a release at the point of the press.
+   */
+  readonly triggerPressRef: Holder<MouseEvent | null>;
   readonly firstItemTextRef: Holder<HTMLElement | null>;
   readonly selectedItemTextRef: Holder<HTMLElement | null>;
   readonly alignItemWithTriggerActiveRef: Holder<boolean>;
