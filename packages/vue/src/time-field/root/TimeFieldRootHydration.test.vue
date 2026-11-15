@@ -1,0 +1,86 @@
+<script setup lang="ts">
+import { Field } from '@vase-ui/vue/field';
+import { TimeField } from '@vase-ui/vue/time-field';
+
+// The props of a server render go to Node as JSON, so a time is a text and the fixture makes it.
+const props = withDefaults(
+  defineProps<{
+    label?: 'none' | 'before' | 'after';
+    description?: boolean;
+    defaultValue?: string | undefined;
+    value?: string | undefined;
+    granularity?: 'hour' | 'minute' | 'second' | undefined;
+    hourCycle?: 12 | 24 | undefined;
+    locale?: string | undefined;
+    minTime?: string | undefined;
+    maxTime?: string | undefined;
+    step?: number | undefined;
+    name?: string | undefined;
+    id?: string | undefined;
+    disabled?: boolean;
+    readOnly?: boolean;
+    required?: boolean;
+    clear?: boolean;
+  }>(),
+  {
+    label: 'none',
+    defaultValue: undefined,
+    value: undefined,
+    granularity: undefined,
+    hourCycle: undefined,
+    locale: undefined,
+    minTime: undefined,
+    maxTime: undefined,
+    step: undefined,
+    name: undefined,
+    id: undefined,
+  },
+);
+
+type Time = Temporal.PlainTime | Temporal.PlainDateTime | Temporal.ZonedDateTime;
+
+// The kind of a text follows its form.
+function toTime(text: string | undefined): Time | undefined {
+  if (text === undefined) {
+    return undefined;
+  }
+  if (text.includes('[')) {
+    return Temporal.ZonedDateTime.from(text);
+  }
+  return text.includes('T') ? Temporal.PlainDateTime.from(text) : Temporal.PlainTime.from(text);
+}
+
+function rootProps() {
+  return {
+    defaultValue: toTime(props.defaultValue),
+    value: toTime(props.value),
+    granularity: props.granularity,
+    hourCycle: props.hourCycle,
+    locale: props.locale,
+    minTime: props.minTime === undefined ? undefined : Temporal.PlainTime.from(props.minTime),
+    maxTime: props.maxTime === undefined ? undefined : Temporal.PlainTime.from(props.maxTime),
+    step: props.step,
+    name: props.name,
+    id: props.id,
+    disabled: props.disabled,
+    readOnly: props.readOnly,
+    required: props.required,
+  };
+}
+</script>
+
+<template>
+  <form data-testid="form">
+    <Field.Root>
+      <Field.Label v-if="label === 'before'" data-testid="label">Alarm</Field.Label>
+      <TimeField.Root data-testid="root" v-bind="rootProps()">
+        <TimeField.Input data-testid="input" />
+        <TimeField.Clear v-if="clear" data-testid="clear" />
+      </TimeField.Root>
+      <Field.Label v-if="label === 'after'" data-testid="label">Alarm</Field.Label>
+      <Field.Description v-if="description" data-testid="description">
+        Pick a time.
+      </Field.Description>
+    </Field.Root>
+  </form>
+</template>
