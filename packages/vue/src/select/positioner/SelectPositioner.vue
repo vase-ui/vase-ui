@@ -52,6 +52,7 @@ import { useAnchorPositioning } from '../../internals/useAnchorPositioning';
 import { useVaseUIFloating } from '../../utils/popups/positioning/useFloating';
 import { usePositioner } from '../../utils/popups/positioning/usePositioner';
 import { useAnchoredPopupScrollLock } from '../../utils/popups/useAnchoredPopupScrollLock';
+import StyleDisableScrollbar from '../../utils/StyleDisableScrollbar.vue';
 import { clearStyles } from '../popup/utils';
 import { useSelectRootContext } from '../root/SelectRootContext';
 import { SelectPositionerContext } from './SelectPositionerContext';
@@ -269,10 +270,19 @@ provide(SelectPositionerContext, {
   },
 });
 
+// `StyleDisableScrollbar` gives the server HTML the style element of `Select.Popup`. It comes before
+// the popup, as in Base UI. In the element, it keeps one root node for the part. A `#render` slot
+// gives a fragment root, so the style element goes before the slot there.
 defineExpose({ element });
 </script>
 
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+  <template v-if="$slots.render">
+    <StyleDisableScrollbar />
+    <slot name="render" :props="elementProps()" :state="state" />
+  </template>
+  <component :is="as" v-else v-bind="elementProps()">
+    <StyleDisableScrollbar />
+    <slot :state="state" />
+  </component>
 </template>

@@ -45,7 +45,7 @@ The rendered `<button>` gets:
 
 - `class="menu-trigger toolbar-button"`: class names are combined, and the rightmost set comes first.
 - `style="color: blue; padding: 4px;"`: style objects are merged, and the rightmost set wins.
-- Both click listeners, and `handleMenuClick` runs first. `event.preventVaseUIHandler()` skips every listener that runs after it. When `handleMenuClick` calls it, `handleToolbarClick` does not run. Some parts call it internally.
+- Both click listeners, and `handleMenuClick` runs first. `event.preventVaseUIHandler()` skips the listeners of that element that run after it. When `handleMenuClick` calls it, `handleToolbarClick` does not run. Some parts call it internally.
 
 An element takes one `ref`, and Vue keeps the last `ref` key. To keep the `ref` of the part and add one of your own, call `props.ref` in a function ref: `:ref="(element) => { props.ref(element); own = element }"`.
 

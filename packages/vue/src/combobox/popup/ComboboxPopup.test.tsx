@@ -296,6 +296,28 @@ describe('<Combobox.Popup />', () => {
       expect(store.context.endDismissRef.value).toHaveAttribute('aria-label', 'Dismiss');
     });
 
+    it('keeps the dismiss button between the popup and its last inside guard', async () => {
+      await render(
+        <Combobox.Root defaultOpen modal>
+          <StoreProbe />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup data-testid="popup">
+                <Combobox.Input />
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+      const popup = await screen.findByTestId('popup');
+
+      await waitFor(() => {
+        expect(store.context.endDismissRef.value).toBe(popup.nextElementSibling);
+      });
+      expect(popup.previousElementSibling).toHaveAttribute('data-type', 'inside');
+      expect(popup.nextElementSibling?.nextElementSibling).toHaveAttribute('data-type', 'inside');
+    });
+
     it('renders no dismiss button after a popup that holds the input and is not modal', async () => {
       await render(
         <Combobox.Root defaultOpen>
@@ -536,6 +558,10 @@ describe('<Combobox.Popup />', () => {
         .filter((element) => element.tabIndex >= 0);
     }
 
+    function getFocusGuards() {
+      return [...document.querySelectorAll<HTMLElement>('[data-vase-ui-focus-guard]')];
+    }
+
     // Opens the popup with its trigger and closes it with the Escape key. The callback records the
     // document when the exit animation starts. The function resolves after the exit ends. A press
     // of the trigger keeps the content of the popup mounted for typeahead, so the positioner then
@@ -561,7 +587,8 @@ describe('<Combobox.Popup />', () => {
       await waitFor(() => {
         expect(screen.getByTestId('input')).toHaveFocus();
       });
-      expect(getFocusableUnderAriaHidden().length).toBeGreaterThan(0);
+      // A focus guard has `aria-hidden`, except in WebKit on an Apple system, where it is a button.
+      expect(getFocusGuards().length).toBeGreaterThan(0);
       const popup = screen.getByTestId('popup');
 
       await nextEvent(popup, 'animationstart', { action: () => user.keyboard('{Escape}') });
@@ -583,12 +610,15 @@ describe('<Combobox.Popup />', () => {
 
     it('BUG-5519: keeps no focusable content under aria-hidden during the exit animation', async () => {
       let focusableDuringExit: HTMLElement[] = [];
+      let guardsDuringExit: HTMLElement[] = [];
 
       await recordExit(() => {
         focusableDuringExit = getFocusableUnderAriaHidden();
+        guardsDuringExit = getFocusGuards();
       });
 
       expect(focusableDuringExit).toEqual([]);
+      expect(guardsDuringExit).toEqual([]);
     });
 
     it('BUG-5519: returns the focus to the trigger when the exit animation starts', async () => {
