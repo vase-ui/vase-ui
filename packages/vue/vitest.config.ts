@@ -1,6 +1,7 @@
 import vue from '@vitejs/plugin-vue';
 import vueJsx from '@vitejs/plugin-vue-jsx';
 import { playwright } from '@vitest/browser-playwright';
+import { webkit } from 'playwright';
 import { configDefaults, defineConfig } from 'vitest/config';
 import { renderOnServer } from './test/server/renderOnServer.ts';
 
@@ -79,7 +80,21 @@ export default defineConfig({
                   },
                 }),
               },
-              { browser: 'webkit', name: 'webkit' },
+              {
+                browser: 'webkit',
+                name: 'webkit',
+                // On macOS, the Tab key of WebKit skips a button or a checkbox while full keyboard
+                // access is off, and it is off by default. WebKit on Linux does not skip them.
+                ...(process.platform === 'darwin' && {
+                  provider: playwright({
+                    contextOptions,
+                    launchOptions: {
+                      executablePath: `${import.meta.dirname}/test/webkitFullKeyboardAccess.sh`,
+                      env: { ...process.env, VASE_UI_WEBKIT_EXECUTABLE: webkit.executablePath() },
+                    },
+                  }),
+                }),
+              },
             ],
           },
         },

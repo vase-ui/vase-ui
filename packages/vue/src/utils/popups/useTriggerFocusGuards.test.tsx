@@ -555,13 +555,8 @@ describe('useTriggerFocusGuards', () => {
     };
   }
 
-  // WebKit on macOS skips a button for the Tab key unless the button has a `tabindex`.
   function renderStop(testId: string, text: string) {
-    return (
-      <button data-testid={testId} tabindex={0}>
-        {text}
-      </button>
-    );
+    return <button data-testid={testId}>{text}</button>;
   }
 
   function renderButtons(content: OpenOptions['content']) {
