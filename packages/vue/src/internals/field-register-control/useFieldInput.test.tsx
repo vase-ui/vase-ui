@@ -111,6 +111,80 @@ describe('useFieldInput', () => {
     expect(await submit()).toEqual({ submitted: 0, invalid: true });
   });
 
+  // The new control is required and empty. The field is invalid when it validates that control.
+  it.each([
+    { name: 'while held, after', mount: 'while held', before: false, invalid: true },
+    { name: 'while held, before', mount: 'while held', before: true, invalid: false },
+    { name: 'in a show from a state, after', mount: 'state', before: false, invalid: true },
+    { name: 'in a show from a state, before', mount: 'state', before: true, invalid: false },
+    { name: 'in a show from a prop, after', mount: 'prop', before: false, invalid: true },
+    { name: 'in a show from a prop, before', mount: 'prop', before: true, invalid: false },
+  ])(
+    'the field validates the last input of a shown branch in the document: $name',
+    async ({ mount, before, invalid }) => {
+      const { HeldBranch, hide, mountWhileHeld, show, mountInActivation } = createHeldBranch(
+        () => <Field.Control key="new" required />,
+        {
+          renderBranch: (part) => (
+            <div>
+              {before ? part : null}
+              <Field.Control key="old" defaultValue="old" />
+              {before ? null : part}
+            </div>
+          ),
+        },
+      );
+      const submit = await renderForm(() => [<HeldBranch key="branch" />]);
+
+      if (mount === 'while held') {
+        await mountWhileHeld();
+        await show();
+      } else {
+        await hide();
+        await mountInActivation({ fromProp: mount === 'prop' });
+      }
+
+      expect(await submit()).toEqual({ submitted: invalid ? 0 : 1, invalid });
+    },
+  );
+
+  it('the field validates the input of the last show when it comes before an input of an earlier show', async () => {
+    const requiredBranch = createHeldBranch(() => <Field.Control key="required" required />, {
+      mounted: true,
+    });
+    const filledBranch = createHeldBranch(
+      () => <Field.Control key="filled" defaultValue="filled" />,
+      { mounted: true },
+    );
+    const submit = await renderForm(() => [
+      <requiredBranch.HeldBranch key="required" />,
+      <filledBranch.HeldBranch key="filled" />,
+    ]);
+
+    await requiredBranch.hide();
+    await filledBranch.hide();
+    await filledBranch.show();
+    await requiredBranch.show();
+
+    expect(await submit()).toEqual({ submitted: 0, invalid: true });
+  });
+
+  it('the field does not validate a control that mounted in a show after KeepAlive holds it again', async () => {
+    const { HeldBranch, hide, mountInActivation } = createHeldBranch(() => (
+      <Field.Control key="new" required />
+    ));
+    const submit = await renderForm(() => [
+      <Field.Control key="shown" defaultValue="shown" />,
+      <HeldBranch key="branch" />,
+    ]);
+
+    await hide();
+    await mountInActivation({ fromProp: true });
+    await hide();
+
+    expect(await submit()).toEqual({ submitted: 1, invalid: false });
+  });
+
   it('a held control whose element changes gives no input', async () => {
     const visible = shallowRef(true);
     const tag = shallowRef('input');
