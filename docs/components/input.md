@@ -35,6 +35,8 @@ Import the component and use it as a single part:
 
 <<< ./input/Anatomy.vue
 
+Text that a visitor types, or that the browser fills, before the page hydrates stays in the input. After the hydration, `Input` emits `valueChange` and `update:value` with that text. When the visitor left the input before the page hydrated, the input then also gets `change`, `blur` and `focusout`.
+
 ## API reference
 
 <ApiReference />

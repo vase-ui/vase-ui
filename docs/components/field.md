@@ -37,6 +37,8 @@ A native reset of the form puts an uncontrolled `Field.Control` back to its defa
 
 `Field.Root` exposes `validate()`. Call it through a template ref to validate the field.
 
+Text that a visitor types, or that the browser fills, before the page hydrates stays in `Field.Control`. After the hydration, `Field.Control` emits `valueChange` and `update:value` with that text. When the visitor left the control before the page hydrated, the control then also gets `change`, `blur` and `focusout`.
+
 ## API reference
 
 <ApiReference />

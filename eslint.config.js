@@ -31,6 +31,8 @@ const MESSAGES = {
   html: 'This name can render a string as HTML. Show data with text interpolation.',
   htmlDynamicArgument:
     'A dynamic argument can be `innerHTML`, which renders a string as HTML. Write the name of the attribute.',
+  privateKeyword:
+    'The `private` keyword is only a check of the compiler. Write an ECMAScript private member: `#name`.',
   reactEventProp: (reactKey, vueKey) =>
     `Vue makes the event name from the key, so \`${reactKey}\` listens to an event that no browser sends. Use \`${vueKey}\`.`,
 };
@@ -144,6 +146,13 @@ const RESTRICTED_SYNTAX = [
     selector:
       "BinaryExpression[operator='instanceof'][right.name=/^(?:Node|Text|Comment|Document|DocumentFragment|ShadowRoot|Window|Range|Selection|[A-Za-z]*Element|[A-Za-z]*Event)$/]",
     message: MESSAGES.domInstanceof,
+  },
+  {
+    // A `declare` field and a member of a `declare class` have no code at run time. TypeScript
+    // refuses `declare` on a `#` member, and a constructor cannot have a `#` name.
+    selector:
+      ":not(ClassDeclaration[declare=true] > ClassBody) > [accessibility='private']:not([declare=true])",
+    message: MESSAGES.privateKeyword,
   },
   ...RESTRICTED_REACT_EVENT_PROP_SYNTAX,
 ];
@@ -468,6 +477,8 @@ export default defineConfig([
       'no-restricted-globals': ['error', RESTRICTED_GLOBALS],
       'no-restricted-properties': ['error', ...RESTRICTED_PROPERTIES],
       'no-restricted-syntax': ['error', ...RESTRICTED_SYNTAX],
+      // `public` is the default of a class member, so the keyword says nothing.
+      '@typescript-eslint/explicit-member-accessibility': ['error', { accessibility: 'no-public' }],
       'vue/component-api-style': ['error', ['script-setup']],
       'vue/block-lang': ['error', { script: { lang: 'ts' } }],
       'vue/no-restricted-syntax': ['error', ...RESTRICTED_TEMPLATE_SYNTAX],
@@ -525,14 +536,14 @@ export default defineConfig([
   {
     files: [...TEST_SCRIPT_FILES, 'packages/vue/test/**/*.{ts,tsx,vue}', 'fixtures/nuxt/test/**'],
     rules: {
-      // A ported test keeps the `!` of the Base UI test. A value that is absent fails the test.
+      // A ported test can keep the `!` of the Base UI test. A value that is absent fails the test.
       '@typescript-eslint/no-non-null-assertion': 'off',
       // A test takes the queries of Testing Library out of their object.
       '@typescript-eslint/unbound-method': 'off',
       // The fix changes a title such as `${key}` into an expression, and `pnpm parity:check` then
       // cannot read the title.
       '@typescript-eslint/no-unnecessary-template-expression': 'off',
-      // A ported test keeps the casts of the Base UI test.
+      // A ported test can keep the casts of the Base UI test.
       '@typescript-eslint/no-unnecessary-type-assertion': 'off',
     },
   },
