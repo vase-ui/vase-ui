@@ -4222,6 +4222,8 @@ describe('<RadioGroup />', () => {
 
       expect(group.value?.inputElement).toBe(null);
 
+      // Vue patches the children of an element before its props. In one flush, the radio would thus
+      // mount in an enabled fieldset.
       disabled.value = true;
       await flushMicrotasks();
       showFirst.value = true;

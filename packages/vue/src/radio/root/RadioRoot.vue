@@ -299,8 +299,9 @@ if (group) {
     }
   });
 
-  // The registration of an enabled input ends the `null` after an unmount. A `computed` that reads
-  // `inputElement` also follows each change of `checked` and `disabled`.
+  // The registration of an input whose `disabled` property is `false` ends the `null` after an
+  // unmount. A `computed` that reads `inputElement` also follows each change of `checked` and
+  // `disabled`.
   watch(
     [checked, isDisabled],
     () => {

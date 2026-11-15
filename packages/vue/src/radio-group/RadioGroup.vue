@@ -203,7 +203,8 @@ function setCheckedValue(value: Value, eventDetails: RadioGroupChangeEventDetail
 // form.
 const radioInputs = new Set<HTMLInputElement>();
 // `inputElement` is `null` after the radio of the input that it gives unmounts, as in Base UI. The
-// registration of an enabled input and a value that becomes `null` end this state.
+// registration of an input whose `disabled` property is `false` and a value that becomes `null` end
+// this state.
 const isExposedInputDetached = shallowRef(false);
 
 // A keyed move and a change of a native `<fieldset>` run no registration, so the group reads its
