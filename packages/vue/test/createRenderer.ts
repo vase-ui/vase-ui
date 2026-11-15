@@ -1,5 +1,5 @@
-import { within } from '@testing-library/dom';
-import type { BoundFunctions, queries } from '@testing-library/dom';
+import { within } from './queries';
+import type { BoundQueries } from './queries';
 import userEvent from '@testing-library/user-event';
 import { afterEach, vi } from 'vitest';
 import { nextTick, shallowRef } from 'vue';
@@ -14,7 +14,7 @@ import { createTestApp } from './testApp';
  */
 export type Renderable = VNode | (() => VNode);
 
-export type VaseUIRenderResult = BoundFunctions<typeof queries> & {
+export type VaseUIRenderResult = BoundQueries & {
   container: HTMLElement;
   unmount: () => void;
   user: ReturnType<typeof userEvent.setup>;

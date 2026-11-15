@@ -14,6 +14,7 @@ import {
   hydrateAfter,
   isJSDOM,
   popupAnatomyTests,
+  recordInputEvents,
   renderOnServer,
   screen,
   waitFor,
@@ -183,6 +184,37 @@ describe('<Autocomplete.Root />', () => {
       expect(fixture.getByTestId('input')).toHaveValue('Osl');
       expect(fixture.getByTestId('value').textContent).toBe('Osl');
       expect(fixture.getByTestId('changes').textContent).toBe('Osl (input-change)');
+    });
+  });
+
+  describe('VUE-81: the state that the input got before the hydration', () => {
+    it.each([
+      { name: 'a name', props: { name: 'city' }, value: 'Oslo', changes: 'Oslo (none)' },
+      { name: 'no name', props: {}, value: '', changes: '' },
+    ])('takes the hidden input of a root with $name', async ({ props, ...expected }) => {
+      const serverHtml = await renderOnServer(
+        'src/autocomplete/root/AutocompleteRootBeforeHydration.test.vue',
+        props,
+      );
+      let events: string[] = [];
+
+      const { container } = await hydrateAfter(AutocompleteRootBeforeHydration, {
+        serverHtml,
+        props,
+        before(serverContainer) {
+          events = recordInputEvents(serverContainer);
+          serverContainer.querySelector<HTMLInputElement>('input[aria-hidden="true"]')!.value =
+            'Oslo';
+        },
+      });
+      await flushMicrotasks();
+
+      const fixture = within(container);
+      expect(fixture.getByTestId('value').textContent).toBe(expected.value);
+      expect(fixture.getByTestId('changes').textContent).toBe(expected.changes);
+      expect(fixture.getByTestId('input')).toHaveValue(expected.value);
+      expect(container.querySelector('input[aria-hidden="true"]')).toHaveValue(expected.value);
+      expect(events).toEqual(expected.value === '' ? [] : ['input']);
     });
   });
 
@@ -3263,6 +3295,32 @@ describe('<Autocomplete.Root />', () => {
   });
 
   describe('inline completion', () => {
+    it('mode="both": Enter commits the inline text of the highlighted item', async () => {
+      const events: string[] = [];
+      await render(
+        <Autocomplete.Root
+          mode="both"
+          items={cities}
+          onValueChange={(value, details) => events.push(`valueChange:${value}:${details.reason}`)}
+          {...{ 'onUpdate:value': (value: string) => events.push(`update:value:${value}`) }}
+        >
+          <Autocomplete.Input />
+          {popupWithList()}
+        </Autocomplete.Root>,
+      );
+      getInput().focus();
+      await type('Ma');
+      await pressArrowDown();
+      expect(getInput().value).toBe('Malmö');
+      events.length = 0;
+
+      await fireEvent.keyDown(getInput(), { key: 'Enter' });
+      await flushMicrotasks();
+
+      expect(events).toEqual(['valueChange:Malmö:item-press', 'update:value:Malmö']);
+      expect(getInput().value).toBe('Malmö');
+    });
+
     it('typed text replaces the inline text', async () => {
       const handleValueChange = vi.fn();
       await render(

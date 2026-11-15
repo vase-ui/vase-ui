@@ -1,4 +1,4 @@
-import { onTestFinished } from 'vitest';
+import { onTestFinished, vi } from 'vitest';
 import { createApp, createSSRApp, nextTick } from 'vue';
 import type { App, Component } from 'vue';
 import { recordVueWarnings, takeReportedMessages } from './reportedMessages';
@@ -147,6 +147,45 @@ export async function hydrateAfter(
   }
 
   return { container };
+}
+
+/**
+ * Gives `type` as the type of the navigation of the page until the test ends. A part can read it
+ * before its first render, and a runner can load the test page in any way.
+ */
+export function mockNavigationType(type: NavigationTimingType): void {
+  const getEntriesByType = performance.getEntriesByType.bind(performance);
+  const spy = vi
+    .spyOn(performance, 'getEntriesByType')
+    .mockImplementation((entryType) =>
+      entryType === 'navigation'
+        ? [{ type } as PerformanceNavigationTiming]
+        : getEntriesByType(entryType),
+    );
+  onTestFinished(() => {
+    spy.mockRestore();
+  });
+}
+
+/**
+ * Records the type of each `input`, `change`, `blur` and `focusout` event that reaches `target`
+ * until the test ends.
+ */
+export function recordInputEvents(target: EventTarget): string[] {
+  const types: string[] = [];
+  const record = (event: Event) => {
+    types.push(event.type);
+  };
+  const eventTypes = ['input', 'change', 'blur', 'focusout'];
+  for (const type of eventTypes) {
+    target.addEventListener(type, record, true);
+  }
+  onTestFinished(() => {
+    for (const type of eventTypes) {
+      target.removeEventListener(type, record, true);
+    }
+  });
+  return types;
 }
 
 async function renderOnClient(

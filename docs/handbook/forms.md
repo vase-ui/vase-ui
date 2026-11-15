@@ -71,7 +71,7 @@ If no visible label is rendered, give `aria-label` to the part that is the form 
 
 ### Labeling control groups
 
-To label a group of controls, compose `<Fieldset.Root>` with the group. A range slider with more than one thumb is an example. The slider has a prop of its own, so render it in the `#render` slot of `Fieldset.Root`. Keep the group label in `<Fieldset.Legend>`:
+To label a group of controls, compose `<Fieldset.Root>` with the group. Examples are a range slider with more than one thumb and a section that combines several inputs. The slider has a prop of its own, so render it in the `#render` slot of `Fieldset.Root`. Keep the group label in `<Fieldset.Legend>`:
 
 <<< ../examples/forms/RangeInFieldset.vue{11-14,17-18}
 

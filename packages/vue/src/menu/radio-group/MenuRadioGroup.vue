@@ -81,6 +81,11 @@ const [checkedValue, setValueUnwrapped] = useControlled({
 });
 
 function setValue(newValue: any, eventDetails: MenuRadioGroupChangeEventDetails) {
+  // As `RadioGroup` does, the group emits no change for a click of the checked item (`VUE-91`).
+  if (newValue === checkedValue.value) {
+    return;
+  }
+
   emit('valueChange', newValue, eventDetails);
 
   if (eventDetails.isCanceled) {
