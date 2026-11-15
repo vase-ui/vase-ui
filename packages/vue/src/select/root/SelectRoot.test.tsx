@@ -3900,7 +3900,6 @@ describe('<Select.Root />', () => {
   });
 
   it('resets selected index when value is set to null without a null item', async () => {
-    const onOpenChangeComplete = vi.fn();
     const App = defineComponent(() => {
       const value = shallowRef<string | null>(null);
       return () => (
@@ -3934,8 +3933,8 @@ describe('<Select.Root />', () => {
             onValueChange={(newValue: string | null) => {
               value.value = newValue;
             }}
-            onOpenChangeComplete={onOpenChangeComplete}
           >
+            <StoreProbe />
             <Select.Trigger data-testid="trigger">
               <Select.Value
                 data-testid="value"
@@ -3957,27 +3956,25 @@ describe('<Select.Root />', () => {
 
     const { user } = await render(<App />);
 
+    // The trigger opens the select in the frame after the press, and `user.click` can resolve
+    // before that frame. Without this wait, the open can come after the next press.
     await user.click(screen.getByText('initial'));
+    await screen.findByRole('listbox');
 
     await user.click(screen.getByRole('button', { name: '1' }));
     expect(screen.getByTestId('value')).toHaveTextContent('1');
 
     await user.click(screen.getByRole('button', { name: '2' }));
     expect(screen.getByTestId('value')).toHaveTextContent('2');
+    expect(store.state.selectedIndex).toBe(1);
 
     await user.click(screen.getByRole('button', { name: 'null' }));
     expect(screen.getByTestId('value')).toHaveTextContent('initial');
+    expect(store.state.selectedIndex).toBe(null);
 
-    // The trigger opens the select in the frame after the press, so the case waits for the event.
-    const opened = Promise.withResolvers<void>();
-    onOpenChangeComplete.mockImplementation((open: boolean) => {
-      if (open) {
-        opened.resolve();
-      }
-    });
     await user.click(screen.getByTestId('trigger'));
-    await opened.promise;
-    expect(screen.queryByRole('option', { name: '2' })).not.toHaveAttribute('data-selected', '');
+    const option = await screen.findByRole('option', { name: '2' });
+    expect(option).not.toHaveAttribute('data-selected', '');
   });
 
   it('does not force-mount the popup on a programmatic value change', async () => {
