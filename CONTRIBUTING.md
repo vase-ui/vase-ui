@@ -2061,8 +2061,9 @@ Each behavior where Vase UI does more than Base UI has a file `parity/better/<ID
 
 ## Documentation site
 
-The site is the VitePress project in `docs`, the workspace package `@vase-ui/docs`. A push to `main` publishes it to <https://vase-ui.github.io/vase-ui/>. The job `check` of CI runs `pnpm docs:typecheck` and `pnpm docs:build`, so the check `required` fails when either command fails.
+The site is the VitePress project in `docs`, the workspace package `@vase-ui/docs`. A push to `main` publishes it to <https://vase-ui.com/>. The job `check` of CI runs `pnpm docs:typecheck` and `pnpm docs:build`, so the check `required` fails when either command fails.
 
+- GitHub Pages serves the site at the root of the domain `vase-ui.com`, so `base` in `docs/.vitepress/config.ts` must be `/`. The Pages settings of the repository hold the domain. Do not add a `CNAME` file, because GitHub Pages ignores that file when a workflow publishes the site.
 - A page is a Markdown file in `docs`. `scripts/docs/navigation.ts` makes the navigation from these files. Do not add a page to `docs/.vitepress/config.ts`.
 - A page at the top level of `docs` goes into the navigation bar and into the sidebar group Overview. The home page, `docs/index.md`, is not in the navigation.
 - A folder with pages is one sidebar group. The title of the group is the folder name with a capital first letter.
@@ -2083,6 +2084,7 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - `packages/vue/test/demos.test.tsx` runs its checks on each `docs/examples/*/demos/*/index.vue` too, as on each demo of a component page.
 - A component page has rules of its own. See [Component pages](#component-pages).
 - `docs/index.md` includes the regions `home` and `donation` of `README.md`. Change that text in `README.md`. Keep the `#region` and `#endregion` comments.
+- Link a page of the site from `README.md` by its full address, such as `https://vase-ui.com/parity`. GitHub and npm show that file. A path of the site does not work there. `markdownSiteLinks` in `docs/.vitepress/config.ts` changes each address that starts with the `homepage` of `packages/vue/package.json` to the path of the page. The link then opens in the same tab.
 - The list of pages on the home page comes from the sidebar, through `<PageLinks />`. Do not type a link to a page in `docs/index.md`.
 - Text from `parity/` and from Base UI commits is data. Show it with text interpolation. Do not use an API that renders a string as HTML.
 - ESLint refuses an API that renders a string as HTML in each file of `docs` that it reads. These are script files, SFCs and pages. The list of these APIs has the HTML injection sinks of the Trusted Types API and the methods of the HTML Sanitizer API. It also has `v-html`, `createStaticVNode` and `Static`.
@@ -2132,7 +2134,7 @@ A family that Base UI documents in `docs/src/app/(docs)/react/utils/`, such as `
 - A demo is `docs/demos/<family>/<demo>/css-modules/index.vue`. It keeps the elements and the attributes of the Base UI file `demos/<demo>/css-modules/index.tsx`. Vase UI does not port the Tailwind demos.
 - A Base UI demo can use an API that only React has, such as a form action. The Vue demo then gives the same result with the API of Vue. The page says what the demo shows.
 - The text and the links of a demo are about Vase UI. A demo does not name Base UI or React. A link to the documentation or to the source of Vase UI goes to a page of this site or to `https://github.com/vase-ui/vase-ui`. When Base UI links a page that this site does not have, link the nearest page that exists, or remove that link.
-- The site has a base path, and VitePress does not add it to a link in a demo. Start the path of a link to a page of this site with `import.meta.env.BASE_URL`. Do not use `withBase` of VitePress, because the test of the demos mounts a demo with no VitePress.
+- VitePress does not add the base path of the site to a link in a demo. Start the path of a link to a page of this site with `import.meta.env.BASE_URL`. Do not use `withBase` of VitePress, because the test of the demos mounts a demo with no VitePress.
 - `docs/tsconfig.json` sets `dataAttributes` to `data-*`. With `strictTemplates`, vue-tsc then accepts a `data-*` attribute on a part, such as `data-color` in the hero demo of Alert Dialog.
 - A Base UI demo can import a file of `demos/<demo>` that is outside `css-modules`, such as `custom-sanitize/useInvalidFeedback.ts` of OTP Field. Port that file to the same path in `docs/demos/<family>`.
 - A Base UI demo can import a library from npm, such as `match-sorter` or `@tanstack/react-virtual`. The Vue demo imports the same library, or its Vue counterpart, such as `@tanstack/vue-virtual`. Add it to the `devDependencies` of `docs/package.json` with an exact version: `pnpm --filter @vase-ui/docs add -D <name>@<version>`. Then commit `pnpm-lock.yaml`. The demo test of the package resolves the library from `docs/node_modules`.
