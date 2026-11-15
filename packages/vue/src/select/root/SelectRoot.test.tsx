@@ -32,6 +32,7 @@ import {
   screen,
   wait,
   waitFor,
+  waitForLaterMillisecond,
   waitSingleFrame,
 } from '#test-utils';
 import { actOnElement } from '../../../test/fixtures/actOnElement';
@@ -187,8 +188,7 @@ describe('<Select.Root />', () => {
       const { user } = await render(<App />);
       await user.click(screen.getByTestId('trigger'));
 
-      // The trigger opens the select in the frame after the press. A busy machine can hold that
-      // frame for more than the limit of `waitFor`, so the case waits for the event.
+      // The trigger opens the select in the frame after the press, so the case waits for the event.
       await closed.promise;
       expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
       // The press mounts the list while closed so its items can register; it isn't left closing.
@@ -249,8 +249,8 @@ describe('<Select.Root />', () => {
       );
     }
 
-    // The trigger opens the select in the frame after the press, and a busy machine can hold that
-    // frame for more than the limit of `waitFor`. The `openChange` event has no limit.
+    // The trigger opens the select in the frame after the press, so the helper waits for the
+    // `openChange` event.
     async function openWithClick(
       user: Awaited<ReturnType<typeof renderWithoutPopup>>['user'],
       opened: Promise<void>,
@@ -1417,6 +1417,101 @@ describe('<Select.Root />', () => {
       await user.click(option);
 
       expect(handleValueChange.mock.calls.length).toBe(1);
+    });
+  });
+
+  describe('VUE-91: a value change for the value that the select has', () => {
+    const fonts = [
+      { value: 'sans', label: 'Sans-serif' },
+      { value: 'serif', label: 'Serif' },
+    ];
+
+    async function renderSelect(props: Record<string, unknown>, values: readonly unknown[]) {
+      const onValueChange = vi.fn();
+      const onUpdateValue = vi.fn();
+      const onOpenChange = vi.fn();
+      const result = await render(
+        <Select.Root
+          {...props}
+          onValueChange={onValueChange}
+          onOpenChange={onOpenChange}
+          {...{ 'onUpdate:value': onUpdateValue }}
+        >
+          <Select.Trigger data-testid="trigger">
+            <Select.Value data-testid="value" />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                {values.map((value, index) => (
+                  <Select.Item key={index} value={value}>
+                    {typeof value === 'string' ? value : (value as { label: string }).label}
+                  </Select.Item>
+                ))}
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+      return {
+        ...result,
+        trigger: screen.getByTestId('trigger'),
+        onValueChange,
+        onUpdateValue,
+        onOpenChange,
+      };
+    }
+
+    it.each([
+      { name: 'a string value', props: { defaultValue: 'b' }, values: ['a', 'b'], option: 'b' },
+      {
+        name: 'an object equal by isItemEqualToValue',
+        props: {
+          defaultValue: { value: 'serif', label: 'Serif' },
+          isItemEqualToValue: (item: { value: string }, value: { value: string }) =>
+            item.value === value.value,
+        },
+        values: fonts,
+        option: 'Serif',
+      },
+    ])(
+      'emits no valueChange for a press of the selected item, $name',
+      async ({ props, values, option }) => {
+        const { user, trigger, onValueChange, onUpdateValue, onOpenChange } = await renderSelect(
+          props,
+          values,
+        );
+
+        const optionElement = await waitForLaterMillisecond(async () => {
+          await user.click(trigger);
+          return screen.findByRole('option', { name: option });
+        });
+        await user.click(optionElement);
+        await flushMicrotasks();
+
+        expect(onValueChange).not.toHaveBeenCalled();
+        expect(onUpdateValue).not.toHaveBeenCalled();
+        expect(onOpenChange.mock.lastCall?.[0]).toBe(false);
+        expect(onOpenChange.mock.lastCall?.[1].reason).toBe(REASONS.itemPress);
+        expect(trigger).toHaveAttribute('aria-expanded', 'false');
+        expect(screen.getByTestId('value').textContent).toBe(option);
+      },
+    );
+
+    it('emits no valueChange when the typeahead of the closed trigger matches the selected item', async () => {
+      const { user, trigger, onValueChange, onUpdateValue } = await renderSelect(
+        { defaultValue: 'one' },
+        ['one', 'two', 'three'],
+      );
+
+      await focusTrigger(trigger);
+      await user.keyboard('o');
+      await flushMicrotasks();
+
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(onUpdateValue).not.toHaveBeenCalled();
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
+      expect(screen.getByTestId('value').textContent).toBe('one');
     });
   });
 
@@ -3867,8 +3962,7 @@ describe('<Select.Root />', () => {
     await user.click(screen.getByRole('button', { name: 'null' }));
     expect(screen.getByTestId('value')).toHaveTextContent('initial');
 
-    // The trigger opens the select in the frame after the press. A busy machine can hold that
-    // frame for more than the limit of `waitFor`, so the case waits for the event.
+    // The trigger opens the select in the frame after the press, so the case waits for the event.
     const opened = Promise.withResolvers<void>();
     onOpenChangeComplete.mockImplementation((open: boolean) => {
       if (open) {
@@ -8595,6 +8689,38 @@ describe('<Select.Root />', () => {
 
       expect(handleValueChange).toHaveBeenCalledTimes(0);
       expect(getFormData('font')).toEqual(['serif']);
+    });
+
+    it('VUE-91: puts back a default object that isItemEqualToValue matches with the value', async () => {
+      const defaultValue = { value: 'serif', label: 'Serif' };
+      const handleValueChange = vi.fn();
+      await render(
+        <form data-testid="form">
+          <Field.Root data-testid="field">
+            <Select.Root
+              name="font"
+              defaultValue={defaultValue}
+              isItemEqualToValue={(item: { value: string }, value: { value: string }) =>
+                item.value === value.value
+              }
+              onValueChange={handleValueChange}
+            >
+              <StoreProbe />
+              <Select.Trigger />
+            </Select.Root>
+          </Field.Root>
+        </form>,
+      );
+      await setValueAsItem({ value: 'sans', label: 'Sans-serif' });
+      await setValueAsItem({ value: 'serif', label: 'Serif' });
+      expect(screen.getByTestId('field')).toHaveAttribute('data-dirty', '');
+
+      screen.getByTestId<HTMLFormElement>('form').reset();
+      await settleReset();
+
+      expect(handleValueChange).toHaveBeenCalledTimes(3);
+      expect(handleValueChange.mock.lastCall?.[0]).toBe(defaultValue);
+      expect(screen.getByTestId('field')).not.toHaveAttribute('data-dirty');
     });
   });
 

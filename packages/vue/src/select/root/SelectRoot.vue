@@ -172,6 +172,7 @@ import { useFormContext } from '../../internals/form-context';
 import { getHiddenInputType } from '../../internals/getHiddenInputType';
 import { handleHiddenInputInvalid } from '../../internals/handleHiddenInputInvalid';
 import {
+  compareItemEquality,
   defaultItemEquality,
   findSelectionIndex,
   isSelectedValueDirty,
@@ -482,6 +483,16 @@ useValueChanged(selectedValue, () => {
 });
 
 function setValue(nextValue: any, eventDetails: SelectRootChangeEventDetails) {
+  // HTML fires `change` when the user commits a change of the value (`VUE-91`). A press of an item
+  // of a multiple select always adds or removes that item.
+  if (!isMultiple.value && compareItemEquality(nextValue, selectedValue.value, comparer.value)) {
+    return false;
+  }
+
+  return commitValue(nextValue, eventDetails);
+}
+
+function commitValue(nextValue: any, eventDetails: SelectRootChangeEventDetails) {
   emit('valueChange', nextValue, eventDetails);
 
   if (eventDetails.isCanceled) {
@@ -737,10 +748,12 @@ function handleHiddenInputChange(event: Event) {
 
 useFormReset(inputElement, (event) => {
   const defaultValue = getDefaultValue();
+  // `setValue` keeps a value that `isItemEqualToValue` matches with the default object. The dirty
+  // state compares a single value by identity, so the reset puts back that object.
   const hasChanged =
     props.value === undefined &&
     isSelectedValueDirty(selectedValue.value, defaultValue, comparer.value) &&
-    setValue(defaultValue, createChangeEventDetails(REASONS.none, event));
+    commitValue(defaultValue, createChangeEventDetails(REASONS.none, event));
 
   if (hasChanged) {
     isResetChangePending = true;

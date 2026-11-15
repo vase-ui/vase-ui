@@ -1,4 +1,4 @@
-import { waitFor } from '@testing-library/dom';
+import { waitFor } from './waitFor';
 import { expect } from 'vitest';
 
 /**

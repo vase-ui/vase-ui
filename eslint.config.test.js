@@ -53,6 +53,12 @@ const SRC = 'packages/vue/src/dialog';
 
 const SCRIPT_ONLY_TEMPLATE = '\n<template>\n  <div />\n</template>\n';
 
+const WAIT_HINT = '#test-utils';
+const WAIT_FILES = [
+  ['a test file', `${SRC}/DialogRoot.test.tsx`],
+  ['a shared suite', 'packages/vue/test/popupConformanceTests.tsx'],
+];
+
 const reported = [
   {
     name: 'an import of getCurrentInstance',
@@ -524,6 +530,45 @@ const reported = [
     ruleId: 'vue/no-restricted-block',
     hint: 'copied style sheet',
   },
+  ...WAIT_FILES.flatMap(([place, file]) => [
+    ...[
+      'waitFor',
+      'waitForElementToBeRemoved',
+      'findByRole',
+      'findAllByText',
+      'screen',
+      'within',
+      'queries',
+      'getQueriesForElement',
+    ].map((name) => ({
+      name: `an import of ${name} from Testing Library in ${place}`,
+      file,
+      code: `import { ${name} } from '@testing-library/dom';\n\nexport const used = ${name};\n`,
+      ruleId: 'no-restricted-imports',
+      hint: WAIT_HINT,
+    })),
+    ...[
+      ['vi.waitFor', "import { vi } from 'vitest';\n\nexport const wait = vi.waitFor(() => 1);\n"],
+      [
+        'vi.waitUntil',
+        "import { vi } from 'vitest';\n\nexport const wait = vi.waitUntil(() => true);\n",
+      ],
+      [
+        'expect.poll',
+        "import { expect } from 'vitest';\n\nexport const poll = expect.poll(() => 1);\n",
+      ],
+      [
+        'expect.element',
+        "import { expect } from 'vitest';\n\ndeclare const locator: unknown;\nexport const read = expect.element(locator);\n",
+      ],
+    ].map(([name, code]) => ({
+      name: `${name} in ${place}`,
+      file,
+      code,
+      ruleId: 'no-restricted-properties',
+      hint: WAIT_HINT,
+    })),
+  ]),
   {
     name: 'a style block in a Tailwind demo',
     file: 'docs/demos/sample/hero/tailwind/index.vue',
@@ -689,6 +734,26 @@ const passed = [
     file: PAGE,
     code: '---\norder: 1\n---\n',
   },
+  {
+    name: 'an import of waitFor, screen and within from #test-utils in a test file',
+    file: `${SRC}/DialogRoot.test.tsx`,
+    code: "import { screen, waitFor, within } from '#test-utils';\n\nexport const used = [screen, waitFor, within];\n",
+  },
+  {
+    name: 'an import of fireEvent, createEvent and isInaccessible from Testing Library in a shared suite',
+    file: 'packages/vue/test/popupConformanceTests.tsx',
+    code: "import { createEvent, fireEvent, isInaccessible } from '@testing-library/dom';\n\nexport const used = [createEvent, fireEvent, isInaccessible];\n",
+  },
+  {
+    name: 'an import of the queries of Testing Library in test/queries.ts',
+    file: 'packages/vue/test/queries.ts',
+    code: "import { getQueriesForElement, queries } from '@testing-library/dom';\n\nexport const used = [getQueriesForElement, queries];\n",
+  },
+  {
+    name: 'expect.poll in a test of the Nuxt fixture',
+    file: 'fixtures/nuxt/test/pages.test.ts',
+    code: "import { expect } from 'vitest';\n\nexport const poll = expect.poll(() => 1);\n",
+  },
 ];
 
 for (const { name, file, code, ruleId, hint } of reported) {
@@ -734,6 +799,13 @@ test('reports a form that the page does not hold at line 1', async () => {
   });
   const { line, column } = messages.find(({ ruleId }) => ruleId === 'vue/no-child-content');
   assert.deepEqual({ line, column }, { line: 1, column: 1 });
+});
+
+test('renders a page with the Markdown rules of the site', async () => {
+  const { default: config } = await import('./eslint.config.js');
+  const { processor } = config.find((entry) => entry.processor?.meta?.name === 'vase-ui/page');
+  const [{ text }] = processor.preprocess('### Filtering [Preview]\n', join(ROOT, PAGE));
+  assert.match(text, /<span class="heading-badge ignore-header">Preview<\/span>/);
 });
 
 test('does not write a fix into a page', async () => {

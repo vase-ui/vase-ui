@@ -890,8 +890,9 @@ describe('<Avatar.Image />', () => {
       });
       await firstLoad;
 
-      // The server can answer the request for the missing source after the 1 s limit of `waitFor`.
-      // This listener comes after the listener of the part, so the part sets the status first.
+      // The server answers the request for the missing source in its own time, and the 180 frames
+      // of `waitFor` can pass first. This listener comes after the listener of the part, so the part
+      // sets the status first.
       const error = new Promise<void>((resolve) => {
         image.addEventListener('error', () => resolve(), { once: true });
       });

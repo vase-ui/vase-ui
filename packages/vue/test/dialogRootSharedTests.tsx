@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { screen, waitFor } from '@testing-library/dom';
+import { screen } from './queries';
+import { waitFor } from './waitFor';
 import type * as AlertDialog from '../src/alert-dialog/index.parts';
 import type * as Dialog from '../src/dialog/index.parts';
 import { REASONS } from '../src/internals/reasons';
