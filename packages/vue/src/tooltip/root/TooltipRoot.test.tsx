@@ -1879,13 +1879,9 @@ describe('<Tooltip.Root />', () => {
 
         await user.hover(trigger);
 
-        // Well under the open delay, so only the close-transition fast path can reopen it.
-        await waitFor(
-          () => {
-            expect(screen.getByTestId('popup')).toHaveAttribute('data-open');
-          },
-          { timeout: 200 },
-        );
+        // The fast path of the close transition opens the popup in the task of the enter event. The
+        // open delay would open it later.
+        expect(screen.getByTestId('popup')).toHaveAttribute('data-open');
         expect(screen.getByTestId('popup')).not.toHaveAttribute('data-closed');
       },
     );

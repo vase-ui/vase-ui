@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/dom';
+import { screen } from '../queries';
 import { describe, expect, it, vi } from 'vitest';
 import type { Component, Slots, VNode } from 'vue';
 import type { VaseUiConformanceTestsOptions } from '../describeConformance';

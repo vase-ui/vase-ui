@@ -163,8 +163,7 @@ describe('<Select.Root />', () => {
       const { user } = await render(<App />);
       await user.click(screen.getByTestId('trigger'));
 
-      // The trigger opens the select in the frame after the press. A busy machine can hold that
-      // frame for more than the limit of `waitFor`, so the case waits for the event.
+      // The trigger opens the select in the frame after the press, so the case waits for the event.
       await closed.promise;
       expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
       // The press mounts the list while closed so its items can register; it isn't left closing.
@@ -225,8 +224,8 @@ describe('<Select.Root />', () => {
       );
     }
 
-    // The trigger opens the select in the frame after the press, and a busy machine can hold that
-    // frame for more than the limit of `waitFor`. The `openChange` event has no limit.
+    // The trigger opens the select in the frame after the press, so the helper waits for the
+    // `openChange` event.
     async function openWithClick(
       user: Awaited<ReturnType<typeof renderWithoutPopup>>['user'],
       opened: Promise<void>,
@@ -3843,8 +3842,7 @@ describe('<Select.Root />', () => {
     await user.click(screen.getByRole('button', { name: 'null' }));
     expect(screen.getByTestId('value')).toHaveTextContent('initial');
 
-    // The trigger opens the select in the frame after the press. A busy machine can hold that
-    // frame for more than the limit of `waitFor`, so the case waits for the event.
+    // The trigger opens the select in the frame after the press, so the case waits for the event.
     const opened = Promise.withResolvers<void>();
     onOpenChangeComplete.mockImplementation((open: boolean) => {
       if (open) {

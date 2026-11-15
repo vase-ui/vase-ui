@@ -74,18 +74,16 @@ function createLocker(use: typeof useScrollLock) {
 
 const Locker = createLocker(useScrollLock);
 
-// The observers of `waitFor` do not see a document in a frame, so it polls.
-const POLL = { interval: 5, timeout: 3000 };
-
 // A lock and an unlock each wait for a timer of 0 ms. A page that has scrollbars that take space can
 // send `resize` events, and each event puts the lock again in a later frame. Thus a case waits for
-// the state that stays. For a state that must not come, a case waits one timer first.
+// the state that stays. For a state that must not come, a case waits one timer first. The observer
+// of `waitFor` does not see the document of an iframe, so its check in each frame sees it.
 function waitForLock(page: ScrollDocument) {
-  return waitFor(() => expect(isPageLocked(page)).toBe(true), POLL);
+  return waitFor(() => expect(isPageLocked(page)).toBe(true));
 }
 
 function waitForUnlock(page: ScrollDocument) {
-  return waitFor(() => expect(isPageLocked(page)).toBe(false), POLL);
+  return waitFor(() => expect(isPageLocked(page)).toBe(false));
 }
 
 function inline(element: HTMLElement) {
@@ -298,27 +296,25 @@ describe('useScrollLock', () => {
       expect(page.win.innerWidth - page.html.clientWidth).toBe(12);
       await lock(page);
 
-      await waitFor(
-        () =>
-          expect(snapshot(page)).toEqual({
-            html: normalize(page, {
-              'scrollbar-gutter': 'stable',
-              'overflow-x': 'scroll',
-              'overflow-y': 'scroll',
-              'scroll-behavior': 'unset',
-            }),
-            body: normalize(page, {
-              position: 'relative',
-              height,
-              width,
-              'box-sizing': 'border-box',
-              'overflow-x': 'hidden',
-              'overflow-y': 'hidden',
-              'scroll-behavior': 'unset',
-            }),
-            marker: true,
+      await waitFor(() =>
+        expect(snapshot(page)).toEqual({
+          html: normalize(page, {
+            'scrollbar-gutter': 'stable',
+            'overflow-x': 'scroll',
+            'overflow-y': 'scroll',
+            'scroll-behavior': 'unset',
           }),
-        POLL,
+          body: normalize(page, {
+            position: 'relative',
+            height,
+            width,
+            'box-sizing': 'border-box',
+            'overflow-x': 'hidden',
+            'overflow-y': 'hidden',
+            'scroll-behavior': 'unset',
+          }),
+          marker: true,
+        }),
       );
     });
 
@@ -331,12 +327,10 @@ describe('useScrollLock', () => {
       expect(page.body.clientWidth).toBeGreaterThan(page.win.innerWidth);
       await lock(page);
 
-      await waitFor(
-        () =>
-          expect(pick(page.body, ['width'])).toEqual(
-            normalize(page, { width: 'calc(100vw - -100px)' }),
-          ),
-        POLL,
+      await waitFor(() =>
+        expect(pick(page.body, ['width'])).toEqual(
+          normalize(page, { width: 'calc(100vw - -100px)' }),
+        ),
       );
     });
 
@@ -346,12 +340,10 @@ describe('useScrollLock', () => {
       });
       await lock(page);
 
-      await waitFor(
-        () =>
-          expect(pick(page.html, ['scrollbar-gutter'])).toEqual(
-            normalize(page, { 'scrollbar-gutter': 'stable both-edges' }),
-          ),
-        POLL,
+      await waitFor(() =>
+        expect(pick(page.html, ['scrollbar-gutter'])).toEqual(
+          normalize(page, { 'scrollbar-gutter': 'stable both-edges' }),
+        ),
       );
     });
   });
@@ -382,11 +374,11 @@ describe('useScrollLock', () => {
 
       const { enabled } = await lock(page);
       await waitForLock(page);
-      await waitFor(() => expect(measure()).toEqual(before), POLL);
+      await waitFor(() => expect(measure()).toEqual(before));
 
       await release(enabled);
       await waitForUnlock(page);
-      await waitFor(() => expect(measure()).toEqual(before), POLL);
+      await waitFor(() => expect(measure()).toEqual(before));
     }
 
     it('keeps the content of a page that has overlay scrollbars in place', async () => {
@@ -411,7 +403,7 @@ describe('useScrollLock', () => {
       await waitForLock(page);
 
       await release(enabled);
-      await waitFor(() => expect(state(page)).toEqual(original), POLL);
+      await waitFor(() => expect(state(page)).toEqual(original));
     });
 
     it('gives the styles, the scroll position and the marker of a gutter page back', async () => {
@@ -423,7 +415,7 @@ describe('useScrollLock', () => {
       await waitForLock(page);
 
       await release(enabled);
-      await waitFor(() => expect(state(page)).toEqual(original), POLL);
+      await waitFor(() => expect(state(page)).toEqual(original));
     });
 
     it.runIf(hasBodyStrategy)(
@@ -438,7 +430,7 @@ describe('useScrollLock', () => {
         expect(page.html.hasAttribute(LOCK_MARKER)).toBe(true);
 
         await release(enabled);
-        await waitFor(() => expect(state(page)).toEqual(original), POLL);
+        await waitFor(() => expect(state(page)).toEqual(original));
       },
     );
   });
@@ -456,7 +448,7 @@ describe('useScrollLock', () => {
         await lock(page);
         await waitForLock(page);
 
-        await waitFor(() => expect(page.html.clientWidth).toBe(width), POLL);
+        await waitFor(() => expect(page.html.clientWidth).toBe(width));
       },
     );
   });
@@ -628,10 +620,10 @@ describe('useScrollLock', () => {
         page.win.dispatchEvent(new page.win.Event('resize'));
         expect(snapshot(page)).toEqual(original);
 
-        await waitFor(() => expect(snapshot(page)).toEqual(locked), POLL);
+        await waitFor(() => expect(snapshot(page)).toEqual(locked));
 
         await release(enabled);
-        await waitFor(() => expect(snapshot(page)).toEqual(original), POLL);
+        await waitFor(() => expect(snapshot(page)).toEqual(original));
       },
     );
 
@@ -665,7 +657,7 @@ describe('useScrollLock', () => {
         const { enabled } = await lock(page);
         await waitForLock(page);
         await release(enabled);
-        await waitFor(() => expect(snapshot(page)).toEqual(original), POLL);
+        await waitFor(() => expect(snapshot(page)).toEqual(original));
 
         page.win.dispatchEvent(new page.win.Event('resize'));
         await wait(50);
@@ -931,7 +923,7 @@ describe('useScrollLock', () => {
       expect(snapshot(page)).toEqual(locked);
 
       await release(enabled.b);
-      await waitFor(() => expect(state(page)).toEqual(original), POLL);
+      await waitFor(() => expect(state(page)).toEqual(original));
     }
 
     it('VUE-6: keeps a page that has overlay scrollbars locked until each copy has released its lock', async () => {
@@ -969,7 +961,7 @@ describe('useScrollLock', () => {
       const lockWrites = countWrites();
 
       await release(enabled.b);
-      await waitFor(() => expect(state(page)).toEqual(original), POLL);
+      await waitFor(() => expect(state(page)).toEqual(original));
       expect(lockWrites).toBe(2);
       expect(countWrites()).toBe(4);
     });

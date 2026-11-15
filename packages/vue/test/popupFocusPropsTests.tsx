@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import type { PropType, ShallowRef, VNode, VNodeChild } from 'vue';
-import { isInaccessible, screen, waitFor } from '@testing-library/dom';
+import { isInaccessible } from '@testing-library/dom';
+import { screen } from './queries';
+import { waitFor } from './waitFor';
 import type { InteractionType } from '../src/common/useEnhancedClickHandler';
 import type { FocusOption } from '../src/utils/popups/focus/FloatingFocusManager.vue';
 import { waitForLaterMillisecond } from './createRenderer';
