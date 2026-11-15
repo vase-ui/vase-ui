@@ -1334,6 +1334,7 @@ The toasts of one `Toast.Provider` are in a `ToastStore`. The code is in `src/to
 
 - `Toast.Provider` makes its store in `setup` and holds the timers of the store from `onMounted`. A toast that a `setup` adds on a server thus gets no timer.
 - The provider subscribes to its `toastManager` in `onMounted`. A manager that all server requests share thus gets no subscriber from a server render. A toast of one request then does not reach another request.
+- One manager can have more than one provider. Its `promise` method returns one promise that waits for the promise of each provider. A handler of the caller thus handles the rejection of each provider (`VUE-90`).
 - While `KeepAlive` holds the provider, it releases its timers and the subscription to its manager. The activation takes them back, and each timer continues with the time that was left.
 - The provider follows `timeout` and `limit` with a `watch` that has the default flush. A part that adds a toast in the same update thus sees the new values.
 - `Toast.Viewport` keeps the timers running while the focus is in a frame of the page (`BUG-6174`). The window gets `blur` when the focus goes into a frame. The viewport then checks, in a 0 ms timer after the event, if the page has focus and a frame is the active element. Firefox reports no focus in the event itself.
