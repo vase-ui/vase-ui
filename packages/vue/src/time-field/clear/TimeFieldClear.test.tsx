@@ -101,6 +101,24 @@ describe('<TimeField.Clear />', () => {
     expect(button).toHaveAttribute('data-disabled');
   });
 
+  it('does not empty a read-only field for a press on an element that is not a native button', async () => {
+    const onValueChange = vi.fn();
+    const { user } = await render(
+      <TimeField.Root
+        readOnly
+        defaultValue={Temporal.PlainTime.from('15:04')}
+        onValueChange={onValueChange}
+      >
+        <TimeField.Input />
+        <TimeField.Clear as="div" nativeButton={false} data-testid="clear" />
+      </TimeField.Root>,
+    );
+
+    await user.click(screen.getByTestId('clear'));
+
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+
   it('is enabled for a field with a value', async () => {
     await render(<Field defaultValue={Temporal.PlainTime.from('15:04')} />);
     const button = screen.getByRole('button', { name: 'Clear' });

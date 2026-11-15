@@ -67,12 +67,6 @@ const { buttonRef, getButtonProps } = useButton({
   disabled: isDisabled,
 });
 
-function handleClick(event: MouseEvent) {
-  if (!isDisabled.value) {
-    context.clear(event);
-  }
-}
-
 const { element, elementProps } = useRenderElement('button', props, {
   state,
   stateAttributesMapping: rootStateAttributesMapping,
@@ -81,7 +75,9 @@ const { element, elementProps } = useRenderElement('button', props, {
     {
       // The button names itself only when it shows its own `x`.
       'aria-label': slots.default || slots.render ? undefined : 'Clear',
-      onClick: handleClick,
+      onClick(event: MouseEvent) {
+        context.clear(event);
+      },
     },
     attrs,
     getButtonProps,
