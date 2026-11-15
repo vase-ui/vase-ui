@@ -1273,11 +1273,8 @@ describe('useRenderElement', () => {
       mockClock();
       const { Part, focusin, withHandlers } = createFocusPart();
       withHandlers.value = false;
-      await render(
-        <div onFocusinCapture={stampFirst}>
-          <Part data-testid="target" />
-        </div>,
-      );
+      // The JSX types of an element have no capture keys.
+      await render(h('div', { onFocusinCapture: stampFirst }, [<Part data-testid="target" />]));
 
       withHandlers.value = true;
       await nextTick();

@@ -72,6 +72,8 @@ const FOCUS_KEYS = {
 
 type FocusKey = keyof typeof FOCUS_KEYS;
 
+const FOCUS_KEY_LIST = Object.keys(FOCUS_KEYS) as FocusKey[];
+
 type FocusHandler = (event: FocusEvent) => unknown;
 
 interface FocusListeners {
@@ -153,7 +155,8 @@ export function useRenderElement<
   }
 
   // Vue adds the listeners of the props during the patch, before it calls the function ref. The
-  // native listener thus comes after the Vue listener on the element and in the phase.
+  // native listener thus runs after the Vue listener of its element and phase, and the mark tells
+  // it whether Vue ran the handler.
   function syncFocusListeners(element: Element | null) {
     for (const [key, listeners] of focusListeners) {
       const listenerElement = listeners.handler ? element : null;
@@ -210,7 +213,7 @@ export function useRenderElement<
     // The result is always a new object, so the writes below do not change a shared object.
     const outProps: Record<string, any> = mergeObjects(stateProps, resolvedProps) ?? {};
 
-    for (const key of Object.keys(FOCUS_KEYS) as FocusKey[]) {
+    for (const key of FOCUS_KEY_LIST) {
       const handler: unknown = outProps[key];
       let listeners = focusListeners.get(key);
       if (typeof handler === 'function') {
