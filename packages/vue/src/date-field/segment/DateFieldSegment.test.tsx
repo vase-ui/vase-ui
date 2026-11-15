@@ -89,24 +89,24 @@ describe('<DateField.Segment />', () => {
         serverHtml,
         props,
         before(serverContainer) {
-          segmentOf(serverContainer, 'month').value = '11';
+          segmentOf(serverContainer, 'month').value = '1';
           segmentOf(serverContainer, 'day').value = '14';
           segmentOf(serverContainer, 'year').value = '2026';
-          segmentOf(serverContainer, 'day').focus();
+          segmentOf(serverContainer, 'month').focus();
         },
       });
       const hiddenInput = container.querySelector<HTMLInputElement>('input[name="when"]')!;
 
       await waitFor(() => {
-        expect(hiddenInput).toHaveValue('2026-11-14');
+        expect(hiddenInput).toHaveValue('2026-01-14');
       });
       expect(['month', 'day', 'year'].map((type) => segmentOf(container, type).value)).toEqual([
-        '11',
+        '1',
         '14',
         '2026',
       ]);
-      // The focused day is full, so the focus goes on to the year, as for a typed day.
-      expect(segmentOf(container, 'year')).toHaveFocus();
+      // A full day and a full year that the user left do not take the focus from the month.
+      expect(segmentOf(container, 'month')).toHaveFocus();
     });
   });
 });
