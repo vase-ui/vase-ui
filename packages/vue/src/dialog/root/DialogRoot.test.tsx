@@ -458,13 +458,15 @@ describe('<Dialog.Root />', () => {
     const { user } = await render(<Test />);
     const trigger1 = screen.getByRole('button', { name: 'Trigger 1' });
 
-    await user.click(trigger1);
+    const trigger1Controls = await waitForLaterMillisecond(async () => {
+      await user.click(trigger1);
 
-    const popup = await screen.findByRole('dialog');
-    const trigger1Controls = trigger1.getAttribute('aria-controls');
+      const popup = await screen.findByRole('dialog');
+      const controls = trigger1.getAttribute('aria-controls');
 
-    expect(trigger1Controls).toBe(popup.getAttribute('id'));
-    await waitForLaterMillisecond();
+      expect(controls).toBe(popup.getAttribute('id'));
+      return controls;
+    });
 
     await user.click(screen.getByRole('button', { name: 'Mount trigger 2' }));
 
@@ -1140,12 +1142,10 @@ describe('<Dialog.Root />', () => {
       const { user } = await render(<App />);
 
       const trigger = screen.getByRole('button', { name: 'Open base' });
-      await user.click(trigger);
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(() => user.click(trigger));
 
       const nestedButton1 = screen.getByRole('button', { name: 'Open nested 1' });
-      await user.click(nestedButton1);
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(() => user.click(nestedButton1));
 
       const nestedButton2 = screen.getByRole('button', { name: 'Open nested 2' });
       await user.click(nestedButton2);
@@ -1197,12 +1197,10 @@ describe('<Dialog.Root />', () => {
       await render(<App />);
 
       const trigger = screen.getByRole('button', { name: 'Open base' });
-      await fireEvent.click(trigger);
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(() => fireEvent.click(trigger));
 
       const nestedButton1 = screen.getByRole('button', { name: 'Open nested 1' });
-      await fireEvent.click(nestedButton1);
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(() => fireEvent.click(nestedButton1));
 
       const nestedButton2 = screen.getByRole('button', { name: 'Open nested 2' });
       await fireEvent.click(nestedButton2);
@@ -1254,21 +1252,23 @@ describe('<Dialog.Root />', () => {
         );
 
         const dialogTrigger = screen.getByRole('button', { name: 'Open' });
-        await user.click(dialogTrigger);
+        await waitForLaterMillisecond(async () => {
+          await user.click(dialogTrigger);
 
-        await waitFor(() => {
-          expect(screen.queryByRole('dialog')).not.toBe(null);
+          await waitFor(() => {
+            expect(screen.queryByRole('dialog')).not.toBe(null);
+          });
         });
-        await waitForLaterMillisecond();
 
         const menuTrigger = screen.getByRole('button', { name: 'Open menu' });
 
-        await user.click(menuTrigger);
+        await waitForLaterMillisecond(async () => {
+          await user.click(menuTrigger);
 
-        await waitFor(() => {
-          expect(screen.queryByRole('menu')).not.toBe(null);
+          await waitFor(() => {
+            expect(screen.queryByRole('menu')).not.toBe(null);
+          });
         });
-        await waitForLaterMillisecond();
 
         const menuPositioner = screen.getByTestId('menu-positioner');
         const menuInternalBackdrop = menuPositioner.previousElementSibling as HTMLElement;
@@ -1314,21 +1314,23 @@ describe('<Dialog.Root />', () => {
         );
 
         const dialogTrigger = screen.getByRole('button', { name: 'Open' });
-        await user.click(dialogTrigger);
+        await waitForLaterMillisecond(async () => {
+          await user.click(dialogTrigger);
 
-        await waitFor(() => {
-          expect(screen.queryByRole('dialog')).not.toBe(null);
+          await waitFor(() => {
+            expect(screen.queryByRole('dialog')).not.toBe(null);
+          });
         });
-        await waitForLaterMillisecond();
 
         const selectTrigger = screen.getByTestId('select-trigger');
 
-        await user.click(selectTrigger);
+        await waitForLaterMillisecond(async () => {
+          await user.click(selectTrigger);
 
-        await waitFor(() => {
-          expect(screen.queryByRole('listbox')).not.toBe(null);
+          await waitFor(() => {
+            expect(screen.queryByRole('listbox')).not.toBe(null);
+          });
         });
-        await waitForLaterMillisecond();
 
         const selectPositioner = screen.getByTestId('select-positioner');
         const selectInternalBackdrop = selectPositioner.previousElementSibling as HTMLElement;
@@ -1831,16 +1833,17 @@ describe('<Dialog.Root />', () => {
     // such checkpoint, and a key press on a focused button gives a trusted click.
     async function click(testId: string) {
       const element = await query(testId);
-      // The popup can open in the millisecond of the click before. Vue skips the second and later
-      // listeners of an event in the millisecond in which it attached them.
-      await waitForLaterMillisecond();
-      if (element instanceof HTMLButtonElement) {
-        element.focus();
-        await userEvent.keyboard('{Enter}');
-      } else {
-        element.click();
-      }
-      await flushMicrotasks();
+      // The click can open a popup. Vue skips the second and later listeners of an event in the
+      // millisecond in which it attached them.
+      await waitForLaterMillisecond(async () => {
+        if (element instanceof HTMLButtonElement) {
+          element.focus();
+          await userEvent.keyboard('{Enter}');
+        } else {
+          element.click();
+        }
+        await flushMicrotasks();
+      });
     }
 
     type PortalContainer = 'shadow root' | 'body' | undefined;
