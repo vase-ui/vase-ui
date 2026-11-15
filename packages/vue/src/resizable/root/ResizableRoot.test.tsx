@@ -1790,6 +1790,24 @@ describe('<Resizable.Root />', () => {
         expect(grows('a', 'b', 'c')).toEqual(['71.6', '8.4', '20']);
       });
 
+      it('moves a key by a step in em, which is the font size of the root', async () => {
+        const { user } = await render(
+          <Sized
+            root={{
+              defaultLayout: { a: 50, b: 30, c: 20 },
+              step: '2em',
+              style: { fontSize: '20px' },
+            }}
+          />,
+        );
+        screen.getByTestId('handle-1').focus();
+
+        await user.keyboard('{ArrowRight}');
+
+        // 2em is 40 px, which is 4% of the panel space.
+        expect(grows('a', 'b', 'c')).toEqual(['54', '26', '20']);
+      });
+
       it('moves a key by a step in rem', async () => {
         const { user } = await render(
           <Sized root={{ defaultLayout: { a: 50, b: 30, c: 20 }, step: '5rem' }} />,
