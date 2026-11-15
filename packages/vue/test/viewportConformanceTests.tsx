@@ -286,11 +286,10 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
         // Allow `useAnimationsFinished` to begin waiting before the animations finish.
         await waitSingleFrame();
         await waitSingleFrame();
-        // The previous container is removed once the animations finish.
+        // The part removes the previous container in the microtasks after the animations end.
         finishAnimations();
-        await waitFor(() => {
-          expect(document.querySelector('[data-previous]')).toBe(null);
-        });
+        await flushMicrotasks();
+        expect(document.querySelector('[data-previous]')).toBe(null);
 
         expect(viewport).not.toHaveAttribute('data-transitioning');
         expect(document.querySelector('[data-current]')).toBeVisible();
@@ -367,9 +366,8 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
         await waitSingleFrame();
         await waitSingleFrame();
         finishAnimations();
-        await waitFor(() => {
-          expect(document.querySelector('[data-previous]')).toBe(null);
-        });
+        await flushMicrotasks();
+        expect(document.querySelector('[data-previous]')).toBe(null);
 
         open.value = false;
         await exitEnd.promise;
@@ -377,6 +375,7 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
         await waitFor(() => {
           expect(screen.getByTestId('popup').closest('[hidden]')).toBeInstanceOf(HTMLElement);
         });
+        expect(screen.getByTestId('popup')).not.toHaveAttribute('data-ending-style');
 
         await activateTrigger(trigger1, user);
         await waitFor(() => {
@@ -552,9 +551,8 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
 
         // Finish the live animations so the cleanup watcher can settle.
         finishAnimations();
-        await waitFor(() => {
-          expect(document.querySelector('[data-previous]')).toBe(null);
-        });
+        await flushMicrotasks();
+        expect(document.querySelector('[data-previous]')).toBe(null);
 
         expect(viewport).not.toHaveAttribute('data-transitioning');
       });
