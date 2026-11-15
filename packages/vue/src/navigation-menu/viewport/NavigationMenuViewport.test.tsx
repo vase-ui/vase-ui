@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, h, nextTick, shallowRef } from 'vue';
 import type { Ref } from 'vue';
 import {
@@ -11,6 +11,7 @@ import {
 } from '#test-utils';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
+import { TOP_LEVEL_VIEWPORT_WARNING, allowTopLevelViewportWarning } from '../utils/test-utils';
 import NavigationMenuViewportScoped from './NavigationMenuViewportScoped.test.vue';
 
 type ViewportRenderSlotProps = Parameters<
@@ -24,7 +25,14 @@ describe('<NavigationMenu.Viewport />', () => {
     refInstanceof: window.HTMLDivElement,
     childrenSelector: 'div',
     render(node) {
-      return render(<NavigationMenu.Root>{node}</NavigationMenu.Root>);
+      // Some cases of the suite count the calls of their own `console.warn` spy, so
+      // `allowTopLevelViewportWarning()` cannot take the warning here. The inner root is nested, so
+      // the viewport with no positioner gives no warning.
+      return render(
+        <NavigationMenu.Root>
+          <NavigationMenu.Root>{node}</NavigationMenu.Root>
+        </NavigationMenu.Root>,
+      );
     },
   }));
 
@@ -32,6 +40,7 @@ describe('<NavigationMenu.Viewport />', () => {
     viewportProps: Record<string, unknown> = {},
     triggerProps: NavigationMenu.Trigger.Props = {},
   ) {
+    allowTopLevelViewportWarning();
     return render(
       <NavigationMenu.Root>
         <NavigationMenu.List>
@@ -275,6 +284,112 @@ describe('<NavigationMenu.Viewport />', () => {
       await openMenu();
 
       expectGuardsBeside(screen.getByTestId('viewport'));
+    });
+  });
+
+  describe('VUE-104: a development build warns about a viewport with no positioner in a top-level root', () => {
+    function spyOnWarnings() {
+      return vi.spyOn(console, 'warn').mockImplementation(() => {});
+    }
+
+    it('warns one time when the viewport mounts, and not again when it mounts again', async () => {
+      const warn = spyOnWarnings();
+      const shown = shallowRef(true);
+
+      await render(() => (
+        <NavigationMenu.Root>
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="one">
+              <NavigationMenu.Trigger>One</NavigationMenu.Trigger>
+              <NavigationMenu.Content>
+                <NavigationMenu.Link href="#first">First link</NavigationMenu.Link>
+              </NavigationMenu.Content>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          {shown.value ? <NavigationMenu.Viewport data-testid="viewport" /> : null}
+        </NavigationMenu.Root>
+      ));
+
+      expect(warn.mock.calls).toEqual([[TOP_LEVEL_VIEWPORT_WARNING]]);
+
+      shown.value = false;
+      await nextTick();
+      expect(screen.queryByTestId('viewport')).toBe(null);
+      shown.value = true;
+      await nextTick();
+
+      expect(screen.getByTestId('viewport')).toBeInTheDocument();
+      expect(warn.mock.calls).toEqual([[TOP_LEVEL_VIEWPORT_WARNING]]);
+    });
+
+    it('gives no warning for a viewport with no positioner in a nested root', async () => {
+      const warn = spyOnWarnings();
+
+      await render(
+        <NavigationMenu.Root defaultValue="outer">
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="outer">
+              <NavigationMenu.Trigger>Outer</NavigationMenu.Trigger>
+              <NavigationMenu.Content>
+                <NavigationMenu.Root defaultValue="inner">
+                  <NavigationMenu.List>
+                    <NavigationMenu.Item value="inner">
+                      <NavigationMenu.Trigger>Inner</NavigationMenu.Trigger>
+                      <NavigationMenu.Content>
+                        <NavigationMenu.Link href="#inner">Inner link</NavigationMenu.Link>
+                      </NavigationMenu.Content>
+                    </NavigationMenu.Item>
+                  </NavigationMenu.List>
+                  <NavigationMenu.Viewport data-testid="nested-viewport" />
+                </NavigationMenu.Root>
+              </NavigationMenu.Content>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          <NavigationMenu.Portal>
+            <NavigationMenu.Positioner>
+              <NavigationMenu.Popup>
+                <NavigationMenu.Viewport />
+              </NavigationMenu.Popup>
+            </NavigationMenu.Positioner>
+          </NavigationMenu.Portal>
+        </NavigationMenu.Root>,
+      );
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('nested-viewport')).toContainElement(
+        screen.getByRole('link', { name: 'Inner link' }),
+      );
+      expect(warn).not.toHaveBeenCalled();
+    });
+
+    it('gives no warning for a viewport in a positioner of a top-level root', async () => {
+      const warn = spyOnWarnings();
+
+      await render(
+        <NavigationMenu.Root defaultValue="one">
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="one">
+              <NavigationMenu.Trigger>One</NavigationMenu.Trigger>
+              <NavigationMenu.Content>
+                <NavigationMenu.Link href="#first">First link</NavigationMenu.Link>
+              </NavigationMenu.Content>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          <NavigationMenu.Portal>
+            <NavigationMenu.Positioner>
+              <NavigationMenu.Popup>
+                <NavigationMenu.Viewport data-testid="viewport" />
+              </NavigationMenu.Popup>
+            </NavigationMenu.Positioner>
+          </NavigationMenu.Portal>
+        </NavigationMenu.Root>,
+      );
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('viewport')).toContainElement(
+        screen.getByRole('link', { name: 'First link' }),
+      );
+      expect(warn).not.toHaveBeenCalled();
     });
   });
 });

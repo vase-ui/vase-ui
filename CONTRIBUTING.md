@@ -2235,6 +2235,7 @@ A case that acts between the server render and the hydration calls `hydrateAfter
 - After a `Maximum recursive updates exceeded` error, Vue runs no post-flush job in a later case of the file. Put a case that can give that error last in its file.
 - A mock of a composable keeps the contract of the composable. The mock of `useImageLoadingStatus` in `avatar/fallback/AvatarFallback.test.tsx` gives `'idle'` until the mount, as the composable does.
 - When a test expects a `Vase UI:` message, use a console spy that has `mockImplementation`. A spy with no implementation passes the call to the console, and the test fails.
+- A development build warns when `NavigationMenu.Viewport` has no `NavigationMenu.Positioner` above it in a root that is not nested. A test can mount that form when it needs no positioner. Call `allowTopLevelViewportWarning()` of `navigation-menu/utils/test-utils.ts` before the mount. The test still fails on each other call of `console.warn`.
 - `test/setup.ts` sets `globalThis.VASE_UI_ANIMATIONS_DISABLED` to `true` when it loads and after each test. A test that needs a real animation sets it to `false`.
 - A test that counts the transitions of an element reads no style and no layout. A read starts the transition that the part must start, and the test then passes with a broken part.
 - Put the cases of such a test that use a real pointer event in a file of their own. `test/fixtures/AnimatedPanel.click.test.tsx` is an example. A real pointer event comes from `userEvent` of `vitest/browser`.
