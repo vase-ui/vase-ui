@@ -61,9 +61,9 @@ A `<label>` around each checkbox is the simplest way to label it:
 
 <<< ./checkbox-group/EnclosingLabel.vue{8,11}
 
-To name the group with a `Fieldset.Legend`, render the group in the `#render` slot of `Fieldset.Root`. Put each checkbox in a `Field.Item` with its `Field.Label`.
+To name the group with a `Fieldset.Legend`, give `CheckboxGroup` to the `as` prop of `Fieldset.Root`. Put each checkbox in a `Field.Item` with its `Field.Label`.
 
-<<< ./checkbox-group/FieldsetLegend.vue{10-13}
+<<< ./checkbox-group/FieldsetLegend.vue{10}
 
 ### Rendering as a native button
 
