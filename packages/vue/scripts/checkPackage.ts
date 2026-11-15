@@ -116,7 +116,7 @@ async function main(): Promise<void> {
       temporalEntries.push(file);
       assert.ok(
         hasTemporalReference(declarations),
-        `The declarations of ${file} name Temporal, and none of them starts with ${TEMPORAL_REFERENCE} Without the line, a consumer fails with TS2503 until it sets "lib" itself. Check that the patch of rolldown-plugin-dts is applied.`,
+        `The declarations of ${file} name Temporal, and none of them starts with ${TEMPORAL_REFERENCE}. Without the line, a consumer fails with TS2503 until it sets "lib" itself. Check that the patch of rolldown-plugin-dts is applied.`,
       );
       console.log(
         `  ${file}: names Temporal, and a declaration that it reaches starts with the reference line`,

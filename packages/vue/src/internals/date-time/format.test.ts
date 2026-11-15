@@ -64,22 +64,30 @@ describe('formatter', () => {
     }
   });
 
+  const clock = { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' } as const;
+
   it('formats the clock of a value that has no zone as it is', () => {
+    const expected = new Intl.DateTimeFormat('en-US', { ...clock, timeZone: 'UTC' }).format(
+      Date.UTC(2026, 2, 8, 2, 30),
+    );
     const [format, epoch] = formatter(
       Temporal.PlainDateTime.from('2026-03-08T02:30'),
-      { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' },
+      clock,
       'en-US',
     );
-    expect(format.format(epoch)).toBe('02:30');
+    expect(format.format(epoch)).toBe(expected);
   });
 
   it('formats the clock of a value in a zone in that zone', () => {
+    const expected = new Intl.DateTimeFormat('en-US', { ...clock, timeZone: 'Asia/Tokyo' }).format(
+      Date.UTC(2026, 10, 14, 14, 30),
+    );
     const [format, epoch] = formatter(
       Temporal.ZonedDateTime.from('2026-11-14T23:30[Asia/Tokyo]'),
-      { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' },
+      clock,
       'en-US',
     );
-    expect(format.format(epoch)).toBe('23:30');
+    expect(format.format(epoch)).toBe(expected);
   });
 
   it('formats a date in its calendar with the words of the locale', () => {
@@ -95,17 +103,24 @@ describe('formatter', () => {
   });
 
   it('formats an ISO date as a Gregorian date', () => {
+    const expected = new Intl.DateTimeFormat('en-US', {
+      dateStyle: 'long',
+      timeZone: 'UTC',
+      calendar: 'gregory',
+    }).format(Date.UTC(2026, 0, 31));
     const [format, epoch] = formatter(day('2026-01-31'), { dateStyle: 'long' }, 'en-US');
-    expect(format.format(epoch)).toBe('January 31, 2026');
+    expect(format.format(epoch)).toBe(expected);
   });
 
   it('formats a year and month', () => {
-    const [format, epoch] = formatter(
-      Temporal.PlainYearMonth.from('2026-11'),
-      { month: 'long', year: 'numeric' },
-      'en-US',
-    );
-    expect(format.format(epoch)).toBe('November 2026');
+    const options = { month: 'long', year: 'numeric' } as const;
+    const expected = new Intl.DateTimeFormat('en-US', {
+      ...options,
+      timeZone: 'UTC',
+      calendar: 'gregory',
+    }).format(Date.UTC(2026, 10, 1));
+    const [format, epoch] = formatter(Temporal.PlainYearMonth.from('2026-11'), options, 'en-US');
+    expect(format.format(epoch)).toBe(expected);
   });
 
   it.each([
@@ -142,15 +157,15 @@ describe('localeCalendar', () => {
   });
 
   it.each([
-    'th-TH',
-    'fa-IR',
-    'he-IL-u-ca-hebrew',
-    'en-US-u-ca-japanese',
-    'en-US-u-ca-iso8601',
-    'en-US-u-ca-islamicc',
-    'ar-SA-u-ca-islamic',
-    'en-US-u-ca-islamic-rgsa',
-  ])('gives for the locale %s a calendar that Temporal accepts', (locale) => {
+    { locale: 'th-TH' },
+    { locale: 'fa-IR' },
+    { locale: 'he-IL-u-ca-hebrew' },
+    { locale: 'en-US-u-ca-japanese' },
+    { locale: 'en-US-u-ca-iso8601' },
+    { locale: 'en-US-u-ca-islamicc' },
+    { locale: 'ar-SA-u-ca-islamic' },
+    { locale: 'en-US-u-ca-islamic-rgsa' },
+  ])('gives for the locale $locale a calendar that Temporal accepts', ({ locale }) => {
     const calendar = localeCalendar(locale);
     expect(Temporal.PlainDate.from('2026-11-14').withCalendar(calendar).calendarId).toBe(calendar);
   });

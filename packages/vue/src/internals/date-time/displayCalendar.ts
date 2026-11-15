@@ -4,8 +4,8 @@ import type { TemporalValue } from './temporal';
 
 /**
  * The calendar in which a part shows `value`: `calendar`, else the calendar of the value when it
- * is not ISO, else the calendar of the locale. `gregory` as `calendar` turns the calendar of the
- * locale off. A year and month shows in that calendar only where the calendar has the same months.
+ * is not ISO, else the calendar of the locale. `gregory` as `calendar` shows Gregorian dates in
+ * each locale. A year and month shows in that calendar only where the calendar has the same months.
  * Else it shows in its own calendar.
  */
 export function displayCalendar(

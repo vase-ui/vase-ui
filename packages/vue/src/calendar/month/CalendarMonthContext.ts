@@ -9,7 +9,7 @@ export interface CalendarMonthContext extends Pick<
 > {
   /** The page that the month shows. */
   month: ComputedRef<CalendarPage>;
-  /** The name of the month. A grid that no caption names has it as its `aria-label`. */
+  /** The name of the month. The grid of the month has it as its `aria-label`. */
   text: ComputedRef<string>;
   /** Whether the month left the calendar and stays until its animations end. */
   isLeaving: ComputedRef<boolean>;

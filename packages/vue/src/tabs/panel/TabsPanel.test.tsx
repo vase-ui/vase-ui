@@ -7,6 +7,7 @@ import {
   flushMicrotasks,
   hydrate,
   isJSDOM,
+  nextEvent,
   renderOnServer,
   screen,
   takeReportedMessages,
@@ -296,18 +297,17 @@ describe('<Tabs.Panel />', () => {
           </Tabs.Root>
         </div>
       ));
-      let transitionStarted = false;
-      container.addEventListener('transitionrun', () => {
-        transitionStarted = true;
+
+      // The panel mounts in the timer task, so the listener is on the container.
+      const transitionRun = await nextEvent(container, 'transitionrun', {
+        action: () => {
+          setTimeout(() => {
+            value.value = 'one';
+          });
+        },
       });
 
-      setTimeout(() => {
-        value.value = 'one';
-      });
-
-      await waitFor(() => {
-        expect(transitionStarted).toBe(true);
-      });
+      expect(transitionRun.target).toBe(container.querySelector('.animation-test-panel'));
     });
 
     it('applies data-ending-style before unmount', async () => {
@@ -360,7 +360,7 @@ describe('<Tabs.Panel />', () => {
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
-  // instance set, and each later case of the file then gets a warning about a slot.
+  // instance set, and a later case of the file can then get a warning about a slot.
   it('throws a descriptive error when rendered outside <Tabs.Root>', async () => {
     await expect(render(<Tabs.Panel value="1" keepMounted />)).rejects.toThrow(
       'Vase UI: A part of Tabs must be inside <Tabs.Root>. Without a root the part has no value and no orientation. Put the part inside <Tabs.Root>.',

@@ -34,9 +34,10 @@ const { element, elementProps } = useRenderElement('table', props, {
   props: (attrs) => [
     {
       role: 'grid',
-      // A caption that names the grid wins over the name of the month, when the caption is there.
+      // The caption of the month names the grid, and the name of the month is the name without it.
+      // The label that the consumer gives replaces both.
       'aria-labelledby': getAriaLabelledBy(attrs),
-      'aria-label': text.value,
+      'aria-label': attrs['aria-labelledby'] === undefined ? text.value : undefined,
       'aria-multiselectable': multiselectable.value ? true : undefined,
       'aria-readonly': state.value.readOnly ? true : undefined,
       'aria-disabled': state.value.disabled ? true : undefined,
