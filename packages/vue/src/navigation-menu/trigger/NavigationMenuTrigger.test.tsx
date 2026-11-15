@@ -12,6 +12,7 @@ import {
   renderOnServer,
   screen,
   waitFor,
+  waitForLaterMillisecond,
   within,
 } from '#test-utils';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
@@ -625,7 +626,7 @@ describe('<NavigationMenu.Trigger />', () => {
       const one = screen.getByTestId('trigger-one');
       const two = screen.getByTestId('trigger-two');
       const viewport = screen.getByTestId('viewport');
-      await fireEvent.click(one);
+      await waitForLaterMillisecond(() => fireEvent.click(one));
       const secondLink = screen.getByRole('link', { name: 'Second link of one' });
       secondLink.focus();
       two.focus();
@@ -643,7 +644,7 @@ describe('<NavigationMenu.Trigger />', () => {
     it('moves the focus through the content with the Tab key, and on to the next trigger', async () => {
       const { user } = await render(<Menu />);
       const one = screen.getByTestId('trigger-one');
-      await fireEvent.click(one);
+      await waitForLaterMillisecond(() => fireEvent.click(one));
       const first = screen.getByRole('link', { name: 'First link of one' });
       const second = screen.getByRole('link', { name: 'Second link of one' });
       one.focus();
@@ -670,7 +671,7 @@ describe('<NavigationMenu.Trigger />', () => {
       const { user } = await render(<Menu />);
       const one = screen.getByTestId('trigger-one');
       await fireEvent.click(screen.getByTestId('trigger-two'));
-      await fireEvent.click(one);
+      await waitForLaterMillisecond(() => fireEvent.click(one));
       screen.getByRole('link', { name: 'Second link of one' }).focus();
 
       await user.tab();
@@ -682,7 +683,7 @@ describe('<NavigationMenu.Trigger />', () => {
       await render(<Menu />);
       const one = screen.getByTestId('trigger-one');
       const viewport = screen.getByTestId('viewport');
-      await fireEvent.click(one);
+      await waitForLaterMillisecond(() => fireEvent.click(one));
       screen.getByRole('link', { name: 'First link of one' }).focus();
       screen.getByTestId('trigger-two').focus();
       await flushMicrotasks();
@@ -1063,8 +1064,10 @@ describe('<NavigationMenu.Trigger />', () => {
       overviewButton.focus();
       await flushMicrotasks();
 
-      await user.keyboard('{ArrowDown}');
-      await flushMicrotasks();
+      await waitForLaterMillisecond(async () => {
+        await user.keyboard('{ArrowDown}');
+        await flushMicrotasks();
+      });
 
       const positioner = screen.getByTestId('positioner');
       const popupHeight = () => screen.getByTestId('popup').getBoundingClientRect().height;
@@ -1097,8 +1100,10 @@ describe('<NavigationMenu.Trigger />', () => {
         expect(handbookButton).toHaveFocus();
       });
 
-      await user.keyboard('{ArrowDown}');
-      await flushMicrotasks();
+      await waitForLaterMillisecond(async () => {
+        await user.keyboard('{ArrowDown}');
+        await flushMicrotasks();
+      });
 
       await waitFor(() => {
         expect(
@@ -1444,9 +1449,10 @@ describe('<NavigationMenu.Trigger />', () => {
     // The safe-polygon lock sets `pointer-events: none` on the list while hovering.
     const user = rendererUser.setup({ pointerEventsCheck: 0 });
 
-    await user.hover(screen.getByRole('button', { name: 'Product' }));
-
-    const popupRoot = await screen.findByTestId('popup-root');
+    const popupRoot = await waitForLaterMillisecond(async () => {
+      await user.hover(screen.getByRole('button', { name: 'Product' }));
+      return screen.findByTestId('popup-root');
+    });
     const positioner = popupRoot.parentElement as HTMLElement;
     const setPositionerPropertySpy = vi.spyOn(positioner.style, 'setProperty');
     const getPositionerWidthCallsSince = (startIndex = 0) =>

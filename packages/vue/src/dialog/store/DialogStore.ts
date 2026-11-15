@@ -31,7 +31,6 @@ export type State<Payload> = PopupStoreState<Payload> & {
 };
 
 type Context = PopupStoreContext<DialogRootChangeEventDetails> & {
-  readonly backdropRef: ShallowRef<HTMLDivElement | null>;
   readonly internalBackdropRef: ShallowRef<HTMLDivElement | null>;
   readonly outsidePressEnabledRef: ShallowRef<boolean>;
   onNestedDialogOpen?: ((dialogCount: number, drawerCount: number) => void) | undefined;
@@ -122,7 +121,6 @@ function createInitialState<Payload>(
 function createInitialContext(): Context {
   return {
     ...createPopupStoreContext(),
-    backdropRef: shallowRef<HTMLDivElement | null>(null),
     internalBackdropRef: shallowRef<HTMLDivElement | null>(null),
     outsidePressEnabledRef: shallowRef(true),
     registerTitleId: NOOP,

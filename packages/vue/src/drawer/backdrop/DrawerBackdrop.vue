@@ -31,6 +31,7 @@ import { computed } from 'vue';
 import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { createElementSetter } from '../../utils/popups/createElementSetter';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import * as DrawerPopupCssVars from '../popup/DrawerPopupCssVars';
 import * as DrawerBackdropCssVars from './DrawerBackdropCssVars';
@@ -55,16 +56,7 @@ const state = computed<DrawerBackdropState>(() => ({
   transitionStatus: store.select('transitionStatus'),
 }));
 
-// A template can mount the backdrop that replaces this backdrop before it unmounts this backdrop.
-// The backdrop then clears the ref of the root only when the ref holds its own element.
-let ownBackdrop: HTMLDivElement | null = null;
-function setBackdrop(element: HTMLElement | null) {
-  const backdrop = element as HTMLDivElement | null;
-  if (backdrop !== null || store.context.backdropRef.value === ownBackdrop) {
-    store.context.backdropRef.value = backdrop;
-  }
-  ownBackdrop = backdrop;
-}
+let ownBackdrop: HTMLElement | null = null;
 
 // A swipe can write its progress to the element in each frame. Vue writes each key of the style
 // again when the part renders. The render thus gives the value that the element holds, so that a
@@ -75,7 +67,12 @@ function swipeProgressValue() {
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: setBackdrop,
+  ref: [
+    createElementSetter(store.context.backdropRef),
+    (backdrop: HTMLElement | null) => {
+      ownBackdrop = backdrop;
+    },
+  ],
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
     {

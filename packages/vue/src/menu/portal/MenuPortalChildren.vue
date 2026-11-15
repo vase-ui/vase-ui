@@ -15,9 +15,10 @@ const { store } = useMenuRootContext();
 const parent = computed(() => store.select('parent'));
 const open = computed(() => store.select('open'));
 
+// Base UI renders the backdrop in the positioner, so it lasts as long as the positioner (`VUE-61`).
 const shouldRenderBackdrop = computed(() => {
   const currentParent = parent.value;
-  if (!store.select('mounted')) {
+  if (!store.select('mounted') || store.select('positionerElement') === null) {
     return false;
   }
   if (currentParent.type === 'menubar') {

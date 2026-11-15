@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue';
+import { reactive, ref, shallowRef } from 'vue';
 import { Checkbox } from '@vase-ui/vue/checkbox';
 import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
 import { Combobox } from '@vase-ui/vue/combobox';
+import { DateField } from '@vase-ui/vue/date-field';
 import { Field } from '@vase-ui/vue/field';
 import { Input } from '@vase-ui/vue/input';
 import { NumberField } from '@vase-ui/vue/number-field';
@@ -12,6 +13,7 @@ import { RadioGroup } from '@vase-ui/vue/radio-group';
 import { Select } from '@vase-ui/vue/select';
 import { Slider } from '@vase-ui/vue/slider';
 import { Switch } from '@vase-ui/vue/switch';
+import { TimeField } from '@vase-ui/vue/time-field';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 
 // Each part changes before the hydration, or before a move back in the history. The test reads
@@ -34,6 +36,8 @@ const quantity = ref<number | null>(1);
 const code = ref('');
 const volume = ref(50);
 const range = ref([20, 80]);
+const when = shallowRef<Temporal.PlainDate | null>(null);
+const alarm = shallowRef<Temporal.PlainTime | null>(null);
 const changes = reactive<Record<string, number>>({});
 const submits = ref(0);
 const completes = ref(0);
@@ -178,6 +182,18 @@ function handleFilterInput(event: Event) {
           <Slider.Thumb aria-label="Maximum" :style="THUMB_STYLE" data-testid="range-max" />
         </Slider.Control>
       </Slider.Root>
+      <DateField.Root v-model:value="when" name="when" locale="en-US" @value-change="count('when')">
+        <DateField.Input data-testid="when" />
+      </DateField.Root>
+      <TimeField.Root
+        v-model:value="alarm"
+        name="alarm"
+        locale="en-US"
+        :hour-cycle="24"
+        @value-change="count('alarm')"
+      >
+        <TimeField.Input data-testid="alarm" />
+      </TimeField.Root>
     </form>
 
     <output data-testid="models">{{
@@ -194,6 +210,8 @@ function handleFilterInput(event: Event) {
         code,
         volume,
         range,
+        when: when?.toString() ?? null,
+        alarm: alarm?.toString({ smallestUnit: 'minute' }) ?? null,
       })
     }}</output>
     <output data-testid="changes">{{ JSON.stringify(changes) }}</output>

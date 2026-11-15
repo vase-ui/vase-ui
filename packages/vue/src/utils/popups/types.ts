@@ -1,5 +1,5 @@
 import type { Placement, VirtualElement } from '@floating-ui/vue';
-import type { HTMLAttributes } from 'vue';
+import type { HTMLAttributes, ShallowRef } from 'vue';
 import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
 import type { PopupTriggerMap } from './popupTriggerMap';
@@ -59,6 +59,14 @@ export interface PopupInteractionReader {
  */
 export interface PopupInteractionContext {
   readonly events: PopupEvents;
+  /**
+   * A ref to the element of the backdrop part. Only a popup store has it.
+   */
+  readonly backdropRef?: ShallowRef<HTMLElement | null> | undefined;
+  /**
+   * A ref to the internal backdrop that the portal renders. Only the store of a dialog has it.
+   */
+  readonly internalBackdropRef?: ShallowRef<HTMLElement | null> | undefined;
   nested: boolean;
   readonly triggerElements: PopupTriggerMap;
   /**

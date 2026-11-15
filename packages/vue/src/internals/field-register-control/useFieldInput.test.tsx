@@ -3,7 +3,7 @@ import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import type { VNode } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
-import { createRenderer, flushMicrotasks, screen } from '#test-utils';
+import { createHeldBranch, createRenderer, flushMicrotasks, screen } from '#test-utils';
 import { NOOP } from '../noop';
 import { useFieldInput } from './useFieldInput';
 
@@ -62,46 +62,30 @@ describe('useFieldInput', () => {
   );
 
   it('a control that mounts in a held branch does not take the input of a shown control', async () => {
-    const visible = shallowRef(true);
-    const extra = shallowRef(false);
-    const Branch = defineComponent(() => () => (
-      <div>{extra.value ? <Field.Control key="held" defaultValue="held" /> : null}</div>
+    const { HeldBranch, mountWhileHeld } = createHeldBranch(() => (
+      <Field.Control key="held" defaultValue="held" />
     ));
     const submit = await renderForm(() => [
       <Field.Control key="shown" required />,
-      <KeepAlive key="branch">{visible.value ? <Branch /> : null}</KeepAlive>,
+      <HeldBranch key="branch" />,
     ]);
 
-    visible.value = false;
-    await flushMicrotasks();
-    extra.value = true;
-    await flushMicrotasks();
+    await mountWhileHeld();
 
     expect(await submit()).toEqual({ submitted: 0, invalid: true });
   });
 
   it('two controls that mount in one held branch give no input', async () => {
-    const visible = shallowRef(true);
-    const extra = shallowRef(false);
-    const Branch = defineComponent(() => () => (
-      <div>
-        {extra.value
-          ? [
-              <Field.Control key="first" defaultValue="first" />,
-              <Field.Control key="second" defaultValue="second" />,
-            ]
-          : null}
-      </div>
-    ));
+    const { HeldBranch, mountWhileHeld } = createHeldBranch(() => [
+      <Field.Control key="first" defaultValue="first" />,
+      <Field.Control key="second" defaultValue="second" />,
+    ]);
     const submit = await renderForm(() => [
       <Field.Control key="shown" required />,
-      <KeepAlive key="branch">{visible.value ? <Branch /> : null}</KeepAlive>,
+      <HeldBranch key="branch" />,
     ]);
 
-    visible.value = false;
-    await flushMicrotasks();
-    extra.value = true;
-    await flushMicrotasks();
+    await mountWhileHeld();
 
     expect(await submit()).toEqual({ submitted: 0, invalid: true });
   });

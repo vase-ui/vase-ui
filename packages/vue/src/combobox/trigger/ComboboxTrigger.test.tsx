@@ -5,6 +5,7 @@ import { Combobox } from '@vase-ui/vue/combobox';
 import { Field } from '@vase-ui/vue/field';
 import {
   clientCenter,
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -16,6 +17,7 @@ import {
   screen,
   wait,
   waitFor,
+  waitForLaterMillisecond,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
@@ -581,11 +583,12 @@ describe('<Combobox.Trigger />', () => {
       );
 
       const trigger = screen.getByTestId('trigger');
-      await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-      await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
-
-      await screen.findByRole('listbox');
-      const option = await screen.findByRole('option', { name: 'Beta' });
+      const option = await waitForLaterMillisecond(async () => {
+        await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+        await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
+        await screen.findByRole('listbox');
+        return screen.findByRole('option', { name: 'Beta' });
+      });
 
       await fireEvent.mouseMove(option, { pointerType: 'mouse', movementX: 1 });
       await waitFor(() => expect(option).toHaveAttribute('data-highlighted'));
@@ -619,11 +622,12 @@ describe('<Combobox.Trigger />', () => {
       );
 
       const trigger = screen.getByTestId('trigger');
-      await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-      await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
-
-      await screen.findByRole('listbox');
-      const option = await screen.findByRole('option', { name: 'Beta' });
+      const option = await waitForLaterMillisecond(async () => {
+        await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+        await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
+        await screen.findByRole('listbox');
+        return screen.findByRole('option', { name: 'Beta' });
+      });
 
       await fireEvent.mouseMove(option, { pointerType: 'mouse', movementX: 1 });
       await waitFor(() => expect(option).toHaveAttribute('data-highlighted'));
@@ -659,11 +663,12 @@ describe('<Combobox.Trigger />', () => {
         );
 
         const trigger = screen.getByTestId('trigger');
-        await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-        await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
-
-        await screen.findByRole('listbox');
-        const alpha = await screen.findByRole('option', { name: 'Alpha' });
+        const alpha = await waitForLaterMillisecond(async () => {
+          await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+          await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
+          await screen.findByRole('listbox');
+          return screen.findByRole('option', { name: 'Alpha' });
+        });
         const beta = await screen.findByRole('option', { name: 'Beta' });
 
         // Highlight Alpha so a stray drag-select would be able to commit it.
@@ -714,10 +719,12 @@ describe('<Combobox.Trigger />', () => {
         // closed-state effect must clear the shared pointerdown ref, otherwise the
         // stale entry makes the next drag-select onto Alpha read as a same-item tap
         // and never commit.
-        await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-        await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
-        await screen.findByRole('listbox');
-        const alpha = await screen.findByRole('option', { name: 'Alpha' });
+        const alpha = await waitForLaterMillisecond(async () => {
+          await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+          await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
+          await screen.findByRole('listbox');
+          return screen.findByRole('option', { name: 'Alpha' });
+        });
         await fireEvent.pointerDown(alpha, { pointerType: 'touch', isPrimary: true, button: 0 });
 
         await user.keyboard('{Escape}');
@@ -762,11 +769,12 @@ describe('<Combobox.Trigger />', () => {
       );
 
       const trigger = screen.getByTestId('trigger');
-      await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-      await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
-
-      await screen.findByRole('listbox');
-      const option = await screen.findByRole('option', { name: 'Beta' });
+      const option = await waitForLaterMillisecond(async () => {
+        await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+        await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
+        await screen.findByRole('listbox');
+        return screen.findByRole('option', { name: 'Beta' });
+      });
 
       await fireEvent.mouseUp(option, { button: 0 });
 
@@ -1948,37 +1956,27 @@ describe('<Combobox.Trigger />', () => {
     });
 
     it('the label does not name a trigger that mounts while KeepAlive holds it', async () => {
-      const visible = shallowRef(true);
-      const extra = shallowRef(false);
       // With no `Combobox.Input` beside the trigger, the input is in the popup and the trigger is
       // the control of the field.
-      const Branch = defineComponent(() => () => (
-        <div>
-          {extra.value ? (
-            <Combobox.Root key="held" items={['apple']}>
-              <Combobox.Trigger id="held-trigger" />
-            </Combobox.Root>
-          ) : null}
-        </div>
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Combobox.Root key="held" items={['apple']}>
+          <Combobox.Trigger id="held-trigger" />
+        </Combobox.Root>
       ));
       await render(() => (
         <Field.Root>
           <Field.Label data-testid="label">Fruit</Field.Label>
-          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+          <HeldBranch />
         </Field.Root>
       ));
       const label = screen.getByTestId('label');
       const providerId = label.getAttribute('for');
 
-      visible.value = false;
-      await flushMicrotasks();
-      extra.value = true;
-      await flushMicrotasks();
+      await mountWhileHeld();
 
       expect(label.getAttribute('for')).toBe(providerId);
 
-      visible.value = true;
-      await flushMicrotasks();
+      await show();
 
       expect(label).toHaveAttribute('for', 'held-trigger');
     });

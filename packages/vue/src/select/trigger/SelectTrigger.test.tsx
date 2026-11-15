@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
-import { defineComponent, KeepAlive, shallowRef } from 'vue';
+import { KeepAlive, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Select } from '@vase-ui/vue/select';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -12,6 +13,7 @@ import {
   isJSDOM,
   wait,
   waitFor,
+  waitForLaterMillisecond,
 } from '#test-utils';
 import type { SelectStore } from '../store';
 import SelectTriggerReplacement from './SelectTriggerReplacement.test.vue';
@@ -146,13 +148,15 @@ describe('<Select.Trigger />', () => {
       trigger.getBoundingClientRect = () =>
         DOMRect.fromRect({ x: 100, y: 100, width: 100, height: 40 });
 
-      await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-      await fireEvent.mouseDown(trigger, { button: 0 });
-      if (options.release) {
-        await fireEvent.mouseUp(trigger, { button: 0, clientX: 150, clientY: 120 });
-      }
-      await waitFor(() => {
-        expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+        await fireEvent.mouseDown(trigger, { button: 0 });
+        if (options.release) {
+          await fireEvent.mouseUp(trigger, { button: 0, clientX: 150, clientY: 120 });
+        }
+        await waitFor(() => {
+          expect(trigger).toHaveAttribute('aria-expanded', 'true');
+        });
       });
       return trigger;
     }
@@ -237,10 +241,12 @@ describe('<Select.Trigger />', () => {
       trigger.getBoundingClientRect = () =>
         DOMRect.fromRect({ x: 100, y: 100, width: 100, height: 40 });
 
-      await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-      await fireEvent.mouseDown(trigger, { button: 0, clientX: pressX, clientY: 120 });
-      await waitFor(() => {
-        expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+        await fireEvent.mouseDown(trigger, { button: 0, clientX: pressX, clientY: 120 });
+        await waitFor(() => {
+          expect(trigger).toHaveAttribute('aria-expanded', 'true');
+        });
       });
       if (moves) {
         trigger.getBoundingClientRect = () =>
@@ -466,9 +472,10 @@ describe('<Select.Trigger />', () => {
       const trigger = screen.getByTestId('trigger');
       expect(trigger).not.toHaveAttribute('data-popup-side');
 
-      await user.click(trigger);
-
-      await waitFor(() => expect(screen.queryByRole('listbox')).not.toBe(null));
+      await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        await waitFor(() => expect(screen.queryByRole('listbox')).not.toBe(null));
+      });
       await waitFor(() => expect(trigger).toHaveAttribute('data-popup-side', 'right'));
 
       await user.click(document.body);
@@ -669,35 +676,25 @@ describe('<Select.Trigger />', () => {
     });
 
     it('the label does not name a trigger that mounts while KeepAlive holds it', async () => {
-      const visible = shallowRef(true);
-      const extra = shallowRef(false);
-      const Branch = defineComponent(() => () => (
-        <div>
-          {extra.value ? (
-            <Select.Root key="held">
-              <Select.Trigger id="held-trigger" />
-            </Select.Root>
-          ) : null}
-        </div>
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Select.Root key="held">
+          <Select.Trigger id="held-trigger" />
+        </Select.Root>
       ));
       await render(() => (
         <Field.Root>
           <Field.Label data-testid="label">Font</Field.Label>
-          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+          <HeldBranch />
         </Field.Root>
       ));
       const label = screen.getByTestId('label');
       const providerId = label.getAttribute('for');
 
-      visible.value = false;
-      await flushMicrotasks();
-      extra.value = true;
-      await flushMicrotasks();
+      await mountWhileHeld();
 
       expect(label.getAttribute('for')).toBe(providerId);
 
-      visible.value = true;
-      await flushMicrotasks();
+      await show();
 
       expect(label).toHaveAttribute('for', 'held-trigger');
     });

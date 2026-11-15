@@ -11,7 +11,16 @@ defineSlots<{
 const store = useComboboxRootContext();
 
 const open = computed(() => store.select('open'));
-const shouldRenderBackdrop = computed(() => store.select('mounted') && store.select('modal'));
+
+// Base UI renders the backdrop in the positioner, so it lasts as long as the positioner (`VUE-61`).
+// A list with no positioner is its own positioner element, and it has no backdrop.
+const hasPositioner = computed(() => {
+  const positionerElement = store.select('positionerElement');
+  return positionerElement !== null && positionerElement !== store.select('listElement');
+});
+const shouldRenderBackdrop = computed(
+  () => store.select('mounted') && hasPositioner.value && store.select('modal'),
+);
 const backdropCutout = computed(
   () =>
     store.select('inputGroupElement') ??

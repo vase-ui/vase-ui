@@ -50,7 +50,7 @@ import { popupTransitionStateMapping } from '../../utils/popups/popupStateMappin
 import { useKeepAliveElementRef } from '../../utils/popups/useKeepAliveElementRef';
 import { useNavigationMenuPositionerContext } from '../positioner/NavigationMenuPositionerContext';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
-import { createElementSetter } from '../utils/createElementSetter';
+import { createElementSetter } from '../../utils/popups/createElementSetter';
 
 defineOptions({ inheritAttrs: false });
 

@@ -1,5 +1,7 @@
 import { computed, nextTick, onMounted, shallowRef, watch } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
+import { ownerDocument } from '../../../common/owner';
+import { activeElement } from '../../../common/shadowDom';
 import { useControlled } from '../../../common/useControlled';
 import { useFormatLocale } from '../../../utils/useFormatLocale';
 import { createChangeEventDetails } from '../../createBaseUIEventDetails';
@@ -362,7 +364,7 @@ export function useCalendarRoot({
     const first = pages.value[0];
     const isBefore = first !== undefined && compareDates(date, first.first) < 0;
     return setMonth(
-      isBefore ? month.subtract({ months: monthCount.value - 1 }) : month,
+      clampMonth(isBefore ? month.subtract({ months: monthCount.value - 1 }) : month),
       createDetails(),
     );
   }
@@ -395,6 +397,10 @@ export function useCalendarRoot({
     );
   }
 
+  function isOwned(date: Temporal.PlainDate) {
+    return pages.value.some((page) => ownsDay(page, date));
+  }
+
   // `createDetails` makes a new object for each event, because `cancel()` belongs to one event.
   function moveFocus(date: Temporal.PlainDate, createDetails: () => CalendarChangeEventDetails) {
     if (!isShown(date) && !showDate(date, createDetails)) {
@@ -407,6 +413,62 @@ export function useCalendarRoot({
     return true;
   }
 
+  function clampDate(date: Temporal.PlainDate) {
+    const min = props.minDate && toGridDate(props.minDate);
+    const max = props.maxDate && toGridDate(props.maxDate);
+    if (min && compareDates(date, min) < 0) {
+      return min;
+    }
+    return max && compareDates(date, max) > 0 ? max : date;
+  }
+
+  function isDayElement(element: Element | null) {
+    return [...dayElements.values()].some((dayElement) => dayElement === element);
+  }
+
+  // An element in an `inert` subtree cannot keep the focus. The browser thus moves the focus to
+  // `<body>` when the page of the day that has the focus leaves.
+  // The root decides after the flush, because a consumer can give the new month in that flush. A
+  // consumer can also give the focus to another element then, and that focus stays.
+  // The root focuses the tab stop only when the tab stop is the focused day, or when the day that
+  // had the focus left the grid. Else the focus event would write the tab stop to the consumer in
+  // place of the day that the consumer wrote.
+  function keepFocusInGrid() {
+    const [someDayElement] = dayElements.values();
+    const doc = ownerDocument(someDayElement);
+    const focused = activeElement(doc);
+    if (!isDayElement(focused)) {
+      return;
+    }
+    void nextTick().then(() => {
+      const active = activeElement(doc);
+      if (active !== focused && active !== doc.body && active !== null) {
+        return;
+      }
+      const stop = tabStop.value;
+      const focusedDateHasStop = stop && props.focusedDate && isSameDay(stop, props.focusedDate);
+      if (focusedDateHasStop || !isDayElement(active)) {
+        focus();
+      }
+    });
+  }
+
+  // The watchers compare a text, because a consumer can give a new object for the same day or the
+  // same month in each render.
+  watch(
+    () => props.focusedDate && toInputText(props.focusedDate, false),
+    () => {
+      if (props.focusedDate) {
+        const date = clampDate(toGridDate(props.focusedDate));
+        if (!isShown(date) && !isOwned(date)) {
+          showDate(date, () => createChangeEventDetails(REASONS.none));
+        }
+      }
+      keepFocusInGrid();
+    },
+  );
+  watch(() => props.month?.toString(), keepFocusInGrid);
+
   const canChange = () => props.readOnly !== true;
 
   function pressDay(date: Temporal.PlainDate, event: MouseEvent) {
@@ -415,7 +477,7 @@ export function useCalendarRoot({
       selection.press(date, createChangeEventDetails(REASONS.dayPress, event));
     }
     // A day that no page owns shows as an outside day. A press on it shows its page.
-    if (canFocus(state) && !pages.value.some((page) => ownsDay(page, date))) {
+    if (canFocus(state) && !isOwned(date)) {
       showDate(date, () => createChangeEventDetails(REASONS.dayPress, event));
       focusDayElement(date);
     }

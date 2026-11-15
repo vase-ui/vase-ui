@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
-import { createRenderer, screen, waitFor } from '#test-utils';
+import { createRenderer, screen, waitFor, waitForLaterMillisecond } from '#test-utils';
 
 type ItemSlotProps = { item: string };
 
@@ -32,7 +32,7 @@ describe('<Autocomplete.Item />', () => {
       );
 
       const input = screen.getByTestId('input');
-      await user.click(input);
+      await waitForLaterMillisecond(() => user.click(input));
 
       const option = screen.getByRole('option', { name: 'banana' });
       await user.click(option);
@@ -64,8 +64,10 @@ describe('<Autocomplete.Item />', () => {
       );
 
       const input = screen.getByTestId('input');
-      await user.click(input);
-      await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      await waitForLaterMillisecond(async () => {
+        await user.click(input);
+        await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      });
 
       // Move highlight to an option then press Enter to select it
       await user.keyboard('{ArrowDown}');
@@ -95,7 +97,7 @@ describe('<Autocomplete.Item />', () => {
 
     const input = screen.getByTestId('input');
 
-    await user.click(input);
+    await waitForLaterMillisecond(() => user.click(input));
     await user.click(screen.getByRole('option', { name: 'banana' }));
     await user.click(input);
 
