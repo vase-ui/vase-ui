@@ -59,6 +59,7 @@ import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/
 import { useButton } from '../../internals/use-button';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { isVirtualClick } from '../../utils/popups/event';
+import { isReleaseAtPressPoint } from '../../utils/popups/isReleaseAtPressPoint';
 import { useSelectRootContext } from '../root/SelectRootContext';
 import { SelectItemContext } from './SelectItemContext';
 
@@ -277,7 +278,7 @@ const { element, elementProps } = useRenderElement('div', props, {
         allowMouseSelection = true;
         resetDragMovement();
       },
-      onMouseup() {
+      onMouseup(event: MouseEvent) {
         resetDragMovement();
 
         if (isDisabled.value || pointerType === 'touch') {
@@ -294,6 +295,12 @@ const { element, elementProps } = useRenderElement('div', props, {
         const disallowUnselectedMouseUp = !selection.allowUnselectedMouseUp && !selected.value;
 
         if (disallowSelectedMouseUp || disallowUnselectedMouseUp) {
+          return;
+        }
+
+        // The open can put an item under a pointer that does not move (`VUE-84`).
+        const press = store.context.triggerPressRef.value;
+        if (press && isReleaseAtPressPoint(press, event)) {
           return;
         }
 

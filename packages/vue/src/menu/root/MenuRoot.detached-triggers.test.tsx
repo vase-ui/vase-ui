@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import {
+  clientCenter,
   createRenderer,
   detachedTriggersConformanceTests,
   fireEvent,
@@ -612,7 +613,7 @@ describe('<MenuRoot />', () => {
           );
 
           const trigger1 = screen.getByRole('button', { name: 'Trigger 1' });
-          await fireEvent.mouseDown(trigger1);
+          await fireEvent.mouseDown(trigger1, clientCenter(trigger1));
 
           await screen.findByTestId('menu');
 
