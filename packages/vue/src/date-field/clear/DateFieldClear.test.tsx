@@ -47,18 +47,43 @@ describe('<DateField.Clear />', () => {
 
   // The button has the state of its field, so a style rule can hide it for an empty field.
   it.each([
-    { name: 'the field is empty', props: {} },
-    { name: 'the field is disabled', props: { defaultValue: DAY, disabled: true } },
-    { name: 'the field is read-only', props: { defaultValue: DAY, readOnly: true } },
-  ] as const)('is disabled while $name', async ({ props }) => {
+    { name: 'the field is empty', rootProps: {}, clearProps: {} },
+    {
+      name: 'the field is disabled',
+      rootProps: { defaultValue: DAY, disabled: true },
+      clearProps: {},
+    },
+    {
+      name: 'the field is read-only',
+      rootProps: { defaultValue: DAY, readOnly: true },
+      clearProps: {},
+    },
+    {
+      name: 'its disabled prop is set',
+      rootProps: { defaultValue: DAY },
+      clearProps: { disabled: true },
+    },
+  ] as const)('is disabled while $name', async ({ rootProps, clearProps }) => {
     await render(
-      <DateField.Root {...props}>
+      <DateField.Root {...rootProps}>
+        <DateField.Input />
+        <DateField.Clear {...clearProps} />
+      </DateField.Root>,
+    );
+
+    expect(screen.getByRole('button', { name: 'Clear' })).toBeDisabled();
+  });
+
+  it('is enabled while the field has a value', async () => {
+    await render(
+      <DateField.Root defaultValue={DAY}>
         <DateField.Input />
         <DateField.Clear />
       </DateField.Root>,
     );
 
-    expect(screen.getByRole('button', { name: 'Clear' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Clear' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Clear' })).not.toHaveAttribute('data-disabled');
   });
 
   it('shows an x that the aria-label Clear names, and shows its own content with no label', async () => {

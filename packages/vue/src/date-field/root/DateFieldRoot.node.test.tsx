@@ -96,7 +96,7 @@ describe('<DateField.Root /> on a server', () => {
 
   // A server renders a slot that a template makes as a function that writes to its output, and a
   // slot of JSX as a function that returns its content.
-  it('renders the same segments for the default parts, a slot of JSX and a slot of a template', async () => {
+  it('renders the same segments for the default parts, a slot of JSX, a slot of a template and a #render slot', async () => {
     const value = Temporal.PlainDate.from('2026-11-14');
     const withDefaults = await renderToString(
       <DateField.Root defaultValue={value} locale="en-US">
@@ -120,10 +120,15 @@ describe('<DateField.Root /> on a server', () => {
     const withTemplateSlot = await renderToString(
       <DateFieldRootHydration defaultValue="2026-11-14" locale="en-US" useSegmentSlot />,
     );
+    // The `children` component of a `#render` slot renders the parts as a fragment.
+    const withRenderSlot = await renderToString(
+      <DateFieldRootHydration defaultValue="2026-11-14" locale="en-US" useRenderSlot />,
+    );
 
     expect(segmentValues(withDefaults)).toHaveLength(3);
     expect(segmentValues(withJsxSlot)).toEqual(segmentValues(withDefaults));
     expect(segmentValues(withTemplateSlot)).toEqual(segmentValues(withDefaults));
+    expect(segmentValues(withRenderSlot)).toEqual(segmentValues(withDefaults));
   });
 
   it('renders a Clear button that is disabled for an empty field', async () => {

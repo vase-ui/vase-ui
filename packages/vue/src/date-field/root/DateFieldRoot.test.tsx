@@ -475,6 +475,24 @@ describe('<DateField.Root />', () => {
       check(container);
     });
 
+    // The field reads today in the zone of the `timeZone` prop. A spy gives each zone its day, so
+    // the case does not depend on the clock.
+    it('takes the numbers of an empty segment from today in the time zone of the prop', async () => {
+      vi.spyOn(Temporal.Now, 'plainDateISO').mockImplementation((timeZone) =>
+        Temporal.PlainDate.from(timeZone === 'Pacific/Kiritimati' ? '2026-11-15' : '2026-11-14'),
+      );
+      const { container, user } = await render(
+        <DateField.Root locale="en-US" timeZone="Pacific/Kiritimati">
+          <DateField.Input />
+        </DateField.Root>,
+      );
+
+      segmentOf(container, 'day').focus();
+      await user.keyboard('{ArrowUp}');
+
+      expect(segmentOf(container, 'day').value).toBe('15');
+    });
+
     it('takes the numbers of an empty segment from referenceDate', async () => {
       const { container, user } = await render(
         <DateField.Root referenceDate={Temporal.PlainDate.from('2024-05-17')} locale="en-US">

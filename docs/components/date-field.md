@@ -67,7 +67,7 @@ Use `calendar` to show the date in another calendar, and `hourCycle` to give a t
 
 ### Date and time
 
-A `Temporal.PlainDateTime` value adds the hour, the minute and the day period. Set `granularity` to `second` to add the seconds.
+A `Temporal.PlainDateTime` value adds the hour and the minute. A locale with a 12-hour cycle adds the day period. Set `granularity` to `second` to add the seconds.
 
 <DemoFrame>
   <DemoDateFieldDateTime />
@@ -151,9 +151,9 @@ The field renders with `renderToString`. The server HTML has the segments, the n
 
 A server does not know the locale of the visitor. With no `locale` prop, the field uses `en-US` until it mounts, and then the locale of the browser. Give a `locale` prop to render the same layout in each place.
 
-A server and a browser can have other `Intl` data for the same locale. The layout of the server can then differ from the layout of the browser. The field marks the elements that can differ while it hydrates. After it mounts, the field compares its elements with its layout and makes them again where they differ. The hydration gives no warning.
+A server and a browser can have other `Intl` data for the same locale. The layout of the server can then differ from the layout of the browser. While the field hydrates, it marks the elements that can differ. After it mounts, it compares its elements with its layout and makes them again where they differ. The hydration gives no warning.
 
-A `#render` slot on `DateField.Input` gets the segments in its `children`. Such a part is a fragment of elements, and Vue logs `Hydration completed but contains mismatches` when the layout of the server has another number of parts than the layout of the browser. To avoid it, use the `as` prop or the `segment` slot, which renders the elements as children of the `Input` element.
+`DateField.Input` gives its parts to Vue as direct children of its element, and that is why a layout with other parts hydrates with no message. The `children` component of a `#render` slot renders the parts as a fragment. When the server has more parts than the browser, Vue then logs `Hydration completed but contains mismatches`. To avoid it, use the `as` prop or the `segment` slot in place of `#render`.
 
 On a Node.js version before 26, load a `Temporal` polyfill before the server starts. See the [guide](/handbook/dates-and-times#servers).
 
@@ -176,7 +176,7 @@ The digits are those of the numbering system of the locale, such as the digits o
 ## Accessibility
 
 - `DateField.Root` has `role="group"`. Its name is the label of the field, or the elements of `aria-labelledby`.
-- A segment is an `<input>` with `role="spinbutton"`. Its name comes from `Intl.DisplayNames`, and its `aria-valuetext` is the name of the month, the day period, or `Empty`.
+- A segment is an `<input>` with `role="spinbutton"`. Its name comes from `Intl.DisplayNames`. A month has its name as `aria-valuetext`, a day period has its text, and a segment with no number has `Empty`.
 - A separator has `aria-hidden`. An era and a time zone name do not.
 - Each segment selects its whole text when it gets the focus.
 - The default `Clear` label is in English. Give the button an `aria-label` to change it.

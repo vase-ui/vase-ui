@@ -142,6 +142,11 @@ describe('<DateField.Input />', () => {
         client: { locale: 'en-US', defaultValue: '2026-11-14T15:04', granularity: 'day' },
       },
       {
+        name: 'the children component of a #render slot',
+        server: { locale: 'en-US', defaultValue: '2026-11-14', useRenderSlot: true },
+        client: { locale: 'en-US', defaultValue: '2026-11-14', useRenderSlot: true },
+      },
+      {
         name: 'a layout with fewer parts in a slot',
         server: { locale: 'en-US', defaultValue: '2026-11-14T15:04', useSegmentSlot: true },
         client: {

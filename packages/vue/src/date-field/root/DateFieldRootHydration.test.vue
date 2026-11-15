@@ -25,6 +25,7 @@ const props = withDefaults(
     label?: 'none' | 'before' | 'after' | 'native';
     clear?: boolean;
     useSegmentSlot?: boolean;
+    useRenderSlot?: boolean;
   }>(),
   {
     value: undefined,
@@ -89,7 +90,12 @@ function rootProps() {
       <Field.Label v-if="label === 'before'" data-testid="label">Date</Field.Label>
       <label v-if="label === 'native'" data-testid="label" :for="id">Date</label>
       <DateField.Root data-testid="root" v-bind="rootProps()">
-        <DateField.Input v-if="!useSegmentSlot" data-testid="input" />
+        <DateField.Input v-if="useRenderSlot" data-testid="input">
+          <template #render="{ props: inputProps, children }">
+            <div v-bind="inputProps"><component :is="children" /></div>
+          </template>
+        </DateField.Input>
+        <DateField.Input v-else-if="!useSegmentSlot" data-testid="input" />
         <DateField.Input v-else data-testid="input">
           <template #segment="{ segment }">
             <DateField.Segment v-if="segment.editable" :segment="segment" />
