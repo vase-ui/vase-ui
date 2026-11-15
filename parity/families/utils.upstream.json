@@ -1,5 +1,5 @@
 {
-  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "commit": "315eba7a3d8a0a53d47fe7b902cb75daa21f6814",
   "upstreamPaths": [
     "packages/react/src/utils/collapsibleOpenStateMapping.ts",
     "packages/react/src/utils/dispatchClickWithModifiers.ts",

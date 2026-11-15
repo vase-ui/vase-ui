@@ -185,8 +185,7 @@ describe('<Popover.Root />', () => {
       });
 
       async function openAndClose() {
-        await user.click(trigger);
-        await waitForLaterMillisecond();
+        await waitForLaterMillisecond(() => user.click(trigger));
         await expectOpenedBy(trigger);
         await user.click(screen.getByRole('button', { name: 'Close' }));
         await expectClosed(trigger);
@@ -438,8 +437,7 @@ describe('<Popover.Root />', () => {
       const trigger1 = screen.getByRole('button', { name: 'Trigger 1' });
       const trigger2 = screen.getByRole('button', { name: 'Trigger 2' });
 
-      await user.click(trigger1);
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(() => user.click(trigger1));
       await user.click(screen.getByRole('button', { name: 'Close' }));
       await waitFor(() => {
         expect(trigger1).toHaveFocus();
@@ -448,8 +446,9 @@ describe('<Popover.Root />', () => {
       trigger1.blur();
       expect(document.body).toHaveFocus();
 
-      await user.click(screen.getByRole('button', { name: 'Open Trigger 2 without focus' }));
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(() =>
+        user.click(screen.getByRole('button', { name: 'Open Trigger 2 without focus' })),
+      );
       await waitFor(() => {
         expect(screen.getByTestId('content')).toBeVisible();
       });
@@ -505,8 +504,9 @@ describe('<Popover.Root />', () => {
       await user.click(fallback);
       expect(fallback).toHaveFocus();
 
-      await user.click(screen.getByRole('button', { name: 'Disappearing trigger' }));
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(() =>
+        user.click(screen.getByRole('button', { name: 'Disappearing trigger' })),
+      );
       await waitFor(() => {
         expect(screen.getByTestId('content')).toBeVisible();
       });
@@ -700,10 +700,11 @@ describe('<Popover.Root />', () => {
     });
 
     it('does not apply the trigger-change instant to a non-hover close after switching triggers', async () => {
-      const { popup, instantsWhileEnding } = await renderHoverDetachedTriggers({
-        popupChildren: () => <Popover.Close>Close</Popover.Close>,
-      });
-      await waitForLaterMillisecond();
+      const { popup, instantsWhileEnding } = await waitForLaterMillisecond(() =>
+        renderHoverDetachedTriggers({
+          popupChildren: () => <Popover.Close>Close</Popover.Close>,
+        }),
+      );
 
       await fireEvent.click(screen.getByRole('button', { name: 'Close' }));
       await waitFor(() => {
@@ -1039,8 +1040,7 @@ describe('<Popover.Root />', () => {
 
       const trigger2 = screen.getByRole('button', { name: 'Trigger 2' });
 
-      await user.click(trigger2);
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(() => user.click(trigger2));
       await waitFor(() => {
         expect(screen.getByText('Content')).toBeVisible();
       });
