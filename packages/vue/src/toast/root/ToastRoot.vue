@@ -59,7 +59,16 @@ export const toastRootStateAttributesMapping: StateAttributesMapping<ToastRootSt
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, onScopeDispose, provide, shallowRef, watch } from 'vue';
+import {
+  computed,
+  onActivated,
+  onDeactivated,
+  onMounted,
+  onScopeDispose,
+  provide,
+  shallowRef,
+  watch,
+} from 'vue';
 import { ownerDocument } from '../../common/owner';
 import { activeElement, closest, contains, getTarget } from '../../common/shadowDom';
 import {
@@ -194,11 +203,25 @@ useOpenChangeComplete({
   },
 });
 
+// A toast that `KeepAlive` holds has no layout. The root measures it at the activation, and the
+// `starting` status stays until then, so the enter transition plays when the toast shows.
+const held = shallowRef(false);
+onDeactivated(() => {
+  held.value = true;
+  // The user cannot see a held toast, so a swipe in progress ends with no dismissal.
+  if (activePointerId !== null) {
+    endSwipe(false);
+  }
+});
+onActivated(() => {
+  held.value = false;
+});
+
 // Recalculates the natural height of the toast and updates it in the toast manager.
 // The store ignores this write while the toast is transitioning out.
 function recalculateHeight() {
   const rootElement = element.value;
-  if (!rootElement) {
+  if (!rootElement || held.value) {
     return;
   }
 
@@ -254,6 +277,15 @@ function initialize() {
 
 onMounted(initialize);
 watch([() => props.toast.id, () => props.toast.transitionStatus], initialize, { flush: 'post' });
+watch(
+  held,
+  (isHeld) => {
+    if (!isHeld) {
+      initialize();
+    }
+  },
+  { flush: 'post' },
+);
 
 onScopeDispose(() => {
   dragAbortController?.abort();
@@ -264,6 +296,10 @@ function handleSwipeEnd(event: PointerEvent) {
     return;
   }
 
+  endSwipe(event.type !== 'pointercancel' && !cancelledSwipe);
+}
+
+function endSwipe(canDismiss: boolean) {
   activePointerId = null;
   dragAbortController?.abort();
   dragAbortController = null;
@@ -275,10 +311,9 @@ function handleSwipeEnd(event: PointerEvent) {
   const resolvedDragOffset = dragOffset.value;
   const deltaX = resolvedDragOffset.x - resolvedInitialTransform.x;
   const deltaY = resolvedDragOffset.y - resolvedInitialTransform.y;
-  const dismissDirection =
-    event.type === 'pointercancel' || cancelledSwipe
-      ? undefined
-      : getDismissDirection(swipeDirections.value, deltaX, deltaY, SWIPE_THRESHOLD);
+  const dismissDirection = canDismiss
+    ? getDismissDirection(swipeDirections.value, deltaX, deltaY, SWIPE_THRESHOLD)
+    : undefined;
 
   if (dismissDirection) {
     currentSwipeDirection.value = dismissDirection;

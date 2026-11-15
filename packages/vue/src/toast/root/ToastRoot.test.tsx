@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defineComponent, h, onMounted, shallowRef, Teleport } from 'vue';
+import { defineComponent, h, KeepAlive, onMounted, shallowRef, Teleport } from 'vue';
 import type { PropType } from 'vue';
 import {
   createRenderer,
@@ -1954,6 +1954,90 @@ describe('<Toast.Root />', () => {
         );
         expect(toastIndexes.every((toastIndex) => toastIndex >= 0)).toBe(true);
       });
+    });
+  });
+
+  describe('KeepAlive', () => {
+    // The provider is outside `KeepAlive`, so the manager adds a toast while the viewport is held.
+    function renderKeptViewport() {
+      const manager = Toast.createToastManager();
+      const visible = shallowRef(true);
+      const ToastList = defineComponent({
+        setup() {
+          const { toasts } = Toast.useToastManager();
+          return () =>
+            toasts.value.map((toastItem) => (
+              <Toast.Root key={toastItem.id} toast={toastItem} data-testid="toast">
+                <div style={{ height: '40px' }} />
+              </Toast.Root>
+            ));
+        },
+      });
+      const Page = defineComponent({
+        name: 'Page',
+        setup: () => () => (
+          <Toast.Viewport>
+            <ToastList />
+          </Toast.Viewport>
+        ),
+      });
+      const Other = defineComponent({ name: 'Other', setup: () => () => <p /> });
+      const rendered = render(() => (
+        <Toast.Provider toastManager={manager}>
+          <KeepAlive>{visible.value ? <Page key="page" /> : <Other key="other" />}</KeepAlive>
+        </Toast.Provider>
+      ));
+      return { manager, visible, rendered };
+    }
+
+    it('measures a toast that mounts in the flush of the deactivation, at the show', async () => {
+      const { manager, visible, rendered } = renderKeptViewport();
+      await rendered;
+
+      manager.add({ title: 'kept', timeout: 0 });
+      visible.value = false;
+      await flushMicrotasks();
+      visible.value = true;
+      await flushMicrotasks();
+
+      await waitFor(() => {
+        expect(screen.getByTestId('toast').style.getPropertyValue('--toast-height')).toBe('40px');
+      });
+    });
+
+    it('ends a swipe with no dismissal when KeepAlive deactivates the toast', async () => {
+      const { manager, visible, rendered } = renderKeptViewport();
+      await rendered;
+      manager.add({ title: 'kept', timeout: 0 });
+      await flushMicrotasks();
+      const root = screen.getByTestId('toast');
+      await fireEvent.pointerDown(root, {
+        clientX: 100,
+        clientY: 100,
+        button: 0,
+        bubbles: true,
+        pointerId: 1,
+      });
+      await fireEvent.pointerMove(root, { clientX: 101, clientY: 100, bubbles: true, pointerId: 1 });
+      await fireEvent.pointerMove(root, { clientX: 200, clientY: 100, bubbles: true, pointerId: 1 });
+      expect(root).toHaveAttribute('data-swipe-direction', 'right');
+
+      visible.value = false;
+      await flushMicrotasks();
+      await fireEvent.pointerUp(document, {
+        clientX: 200,
+        clientY: 100,
+        bubbles: true,
+        pointerId: 1,
+      });
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('toast')).toBe(root);
+      expect(root).not.toHaveAttribute('data-ending-style');
+      expect(root).not.toHaveAttribute('data-swiping');
+      expect(root).not.toHaveAttribute('data-swipe-direction');
+      expect(root.style.transform).toBe('');
     });
   });
 });
