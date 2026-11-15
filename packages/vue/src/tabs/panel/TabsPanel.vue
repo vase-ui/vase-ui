@@ -80,6 +80,7 @@ const {
   value: selectedValue,
   getTabIdByPanelValue,
   orientation,
+  reaches,
   registerPanel,
   tabActivationDirection,
 } = useTabsRootContext();
@@ -109,6 +110,8 @@ const registrationSource = Symbol();
 useRegisteredId(
   () => (hidden.value && !props.keepMounted ? undefined : panelId.value),
   (getId) => registerPanel(registrationSource, getId && { value: () => props.value, id: getId }),
+  () => element.value,
+  reaches,
 );
 
 const state = computed<TabsPanelState>(() => ({

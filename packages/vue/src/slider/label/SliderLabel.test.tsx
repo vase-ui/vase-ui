@@ -3,6 +3,7 @@ import { defineComponent, KeepAlive, shallowRef, Teleport } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Slider } from '@vase-ui/vue/slider';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   expectNoAxeViolations,
@@ -232,6 +233,27 @@ describe('<Slider.Label />', () => {
         root: 'price-label',
         inputs: ['price-label', 'price-label'],
       });
+    });
+
+    it('does not name the thumbs while KeepAlive holds a label that mounted in a held branch', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Slider.Label key="label">Volume</Slider.Label>
+      ));
+      await render(() => (
+        <Slider.Root defaultValue={50}>
+          <HeldBranch />
+          <Slider.Control>
+            <Slider.Thumb />
+          </Slider.Control>
+        </Slider.Root>
+      ));
+      const input = screen.getByRole('slider');
+
+      await mountWhileHeld();
+      expect(input).not.toHaveAttribute('aria-labelledby');
+
+      await show();
+      expect(input).toHaveAttribute('aria-labelledby', screen.getByText('Volume').id);
     });
   });
 

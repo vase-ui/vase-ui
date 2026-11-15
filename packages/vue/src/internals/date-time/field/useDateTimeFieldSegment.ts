@@ -1,7 +1,9 @@
 import { computed, nextTick, shallowRef, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
-import { useIsHydrating } from '../../../common/hydration';
+import { useIsHydrating, useValueBeforeHydration } from '../../../common/hydration';
+import { ownerDocument } from '../../../common/owner';
 import { platform } from '../../../common/platform';
+import { activeElement } from '../../../common/shadowDom';
 import { stopEvent } from '../../../utils/popups/event';
 import { createChangeEventDetails } from '../../createBaseUIEventDetails';
 import { useDirection } from '../../direction-context/DirectionContext';
@@ -53,14 +55,17 @@ export interface UseDateTimeFieldSegmentReturnValue {
 /**
  * The keys, the typing, the focus and the composition of one editable segment. A segment part
  * calls it in `setup`, inside a root that called `useDateTimeFieldRoot`.
+ * @param componentProps The props of the part. `useValueBeforeHydration` reads `as`.
  */
 export function useDateTimeFieldSegment(
   segment: MaybeRefOrGetter<EditableDateTimeFieldSegment>,
+  componentProps: { as?: unknown },
 ): UseDateTimeFieldSegmentReturnValue {
   const context = useDateTimeFieldContext();
   const direction = useDirection();
   const isHydrating = useIsHydrating();
   const elementRef = shallowRef<HTMLInputElement | null>(null);
+  const writesValue = useValueBeforeHydration(componentProps, () => elementRef.value);
   const setFocused = useSetFieldFocused(context.disabled, elementRef, context.setFocused);
 
   const type = computed(() => toValue(segment).type);
@@ -139,7 +144,13 @@ export function useDateTimeFieldSegment(
         isFull = true;
       }
     }
-    if (isFull) {
+    // Until the hydration ends, the event can be for text that the user typed before the page was
+    // ready. The focus then moves only from the segment that has it.
+    if (
+      isFull &&
+      ownElement &&
+      (writesValue.value || activeElement(ownerDocument(ownElement)) === ownElement)
+    ) {
       moveFocus(1);
     }
   }
@@ -318,7 +329,7 @@ export function useDateTimeFieldSegment(
       role: 'spinbutton',
       autocomplete: 'off',
       spellcheck: 'false',
-      value: composingText.value ?? text,
+      ...(writesValue.value ? { value: composingText.value ?? text } : undefined),
       ...getSegmentAttributes(type.value, view.value),
       'aria-required': context.required.value || undefined,
       'aria-invalid': !context.disabled.value && context.invalid.value ? true : undefined,

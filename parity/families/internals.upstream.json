@@ -1,62 +1,18 @@
 {
   "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "upstreamPaths": [
+    "packages/react/src/global.d.ts",
+    "packages/react/src/index.test.tsx",
+    "packages/react/src/internals/*",
     "packages/react/src/internals/composite/**",
-    "packages/react/src/internals/constants.ts",
-    "packages/react/src/internals/createBaseUIEventDetails.ts",
-    "packages/react/src/internals/createBaseUIEventDetails.spec.ts",
-    "packages/react/src/internals/createFlushBeforePaint.ts",
     "packages/react/src/internals/field-constants/**",
     "packages/react/src/internals/field-register-control/**",
     "packages/react/src/internals/field-root-context/**",
-    "packages/react/src/internals/filter.ts",
-    "packages/react/src/internals/filter.test.ts",
-    "packages/react/src/internals/getDisabledMountTransitionStyles.ts",
-    "packages/react/src/internals/getHiddenInputType.ts",
-    "packages/react/src/internals/getStateAttributesProps.ts",
-    "packages/react/src/internals/getStateAttributesProps.test.ts",
-    "packages/react/src/internals/handleHiddenInputInvalid.ts",
-    "packages/react/src/internals/itemEquality.ts",
-    "packages/react/src/internals/itemEquality.test.ts",
     "packages/react/src/internals/labelable-provider/**",
-    "packages/react/src/internals/noop.ts",
-    "packages/react/src/internals/PrehydrationScript.tsx",
-    "packages/react/src/internals/prehydrationScript.stub.ts",
-    "packages/react/src/internals/reason-parts.ts",
-    "packages/react/src/internals/reasons.ts",
-    "packages/react/src/internals/resolvePopupLabel.ts",
-    "packages/react/src/internals/resolvePopupLabel.test.tsx",
-    "packages/react/src/internals/resolveRenderedAriaLabel.ts",
-    "packages/react/src/internals/resolveRenderedAriaLabel.test.tsx",
-    "packages/react/src/internals/resolveValueLabel.tsx",
-    "packages/react/src/internals/resolveValueLabel.test.ts",
-    "packages/react/src/internals/serializeValue.ts",
-    "packages/react/src/internals/stateAttributesMapping.ts",
-    "packages/react/src/internals/stateAttributesMapping.test.ts",
-    "packages/react/src/internals/TransitionStatusDataAttributes.ts",
-    "packages/react/src/internals/types.ts",
     "packages/react/src/internals/use-button/**",
-    "packages/react/src/internals/useAnchorPositioning.ts",
-    "packages/react/src/internals/useAnchorPositioning.test.tsx",
-    "packages/react/src/internals/useAnimationsFinished.ts",
-    "packages/react/src/internals/useAnimationsFinished.test.tsx",
-    "packages/react/src/internals/useBaseUiId.ts",
-    "packages/react/src/internals/useInitialLiveRegionTextMutation.ts",
-    "packages/react/src/internals/useInitialLiveRegionTextMutation.test.tsx",
-    "packages/react/src/internals/useItemRegistry.ts",
-    "packages/react/src/internals/useItemRegistry.test.tsx",
-    "packages/react/src/internals/useOpenChangeComplete.tsx",
-    "packages/react/src/internals/usePressAndHold.ts",
-    "packages/react/src/internals/useRenderElement.tsx",
-    "packages/react/src/internals/useRenderElement.test.tsx",
-    "packages/react/src/internals/useRenderElement.spec.tsx",
-    "packages/react/src/internals/useTransitionStatus.ts",
-    "packages/react/src/internals/useTransitionStatus.test.tsx",
-    "packages/react/src/internals/useTriggerSwitchTransition.ts",
-    "packages/react/src/internals/useUnmountAfterClose.ts",
-    "packages/react/src/internals/useValueChanged.ts",
-    "packages/react/src/internals/useValueChanged.test.tsx",
     "packages/react/src/types/**",
+    "packages/react/test/addVitestMatchers.ts",
+    "packages/react/test/advanceReactClock.ts",
     "packages/react/test/clipboard.ts",
     "packages/react/test/conformanceTests/**",
     "packages/react/test/createRenderer.ts",
@@ -65,15 +21,22 @@
     "packages/react/test/hiddenInputSizeTests.tsx",
     "packages/react/test/hiddenInputTypeTests.tsx",
     "packages/react/test/index.ts",
+    "packages/react/test/mergeRefs.ts",
     "packages/react/test/mockRuntimeLocale.ts",
-    "packages/react/test/pointer.ts",
     "packages/react/test/pointer.test.tsx",
+    "packages/react/test/pointer.ts",
     "packages/react/test/positionerConformanceTests.tsx",
+    "packages/react/test/resetBrowserPointer.ts",
+    "packages/react/test/scrollLock.ts",
+    "packages/react/test/types.d.ts",
     "packages/react/test/wait.ts",
     "packages/react/test/waitForPositioned.ts"
   ],
   "sources": [
+    "packages/react/src/global.d.ts",
     "packages/react/src/internals/PrehydrationScript.tsx",
+    "packages/react/src/internals/RequestQueue.ts",
+    "packages/react/src/internals/TimeoutManager.ts",
     "packages/react/src/internals/TransitionStatusDataAttributes.ts",
     "packages/react/src/internals/composite/composite.ts",
     "packages/react/src/internals/composite/constants.ts",
@@ -117,6 +80,7 @@
     "packages/react/src/internals/reasons.ts",
     "packages/react/src/internals/resolvePopupLabel.ts",
     "packages/react/src/internals/resolveRenderedAriaLabel.ts",
+    "packages/react/src/internals/resolveRenderedId.ts",
     "packages/react/src/internals/resolveValueLabel.tsx",
     "packages/react/src/internals/serializeValue.ts",
     "packages/react/src/internals/stateAttributesMapping.ts",
@@ -136,6 +100,8 @@
     "packages/react/src/internals/useUnmountAfterClose.ts",
     "packages/react/src/internals/useValueChanged.ts",
     "packages/react/src/types/index.ts",
+    "packages/react/test/addVitestMatchers.ts",
+    "packages/react/test/advanceReactClock.ts",
     "packages/react/test/clipboard.ts",
     "packages/react/test/conformanceTests/className.tsx",
     "packages/react/test/conformanceTests/propForwarding.tsx",
@@ -148,9 +114,13 @@
     "packages/react/test/hiddenInputSizeTests.tsx",
     "packages/react/test/hiddenInputTypeTests.tsx",
     "packages/react/test/index.ts",
+    "packages/react/test/mergeRefs.ts",
     "packages/react/test/mockRuntimeLocale.ts",
     "packages/react/test/pointer.ts",
     "packages/react/test/positionerConformanceTests.tsx",
+    "packages/react/test/resetBrowserPointer.ts",
+    "packages/react/test/scrollLock.ts",
+    "packages/react/test/types.d.ts",
     "packages/react/test/wait.ts",
     "packages/react/test/waitForPositioned.ts"
   ],
@@ -159,6 +129,135 @@
     "packages/react/src/internals/useRenderElement.spec.tsx"
   ],
   "cases": [
+    {
+      "file": "packages/react/src/index.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "@base-ui/react"
+          ],
+          "title": "should resolve internals and auxiliary exports",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "@base-ui/react"
+          ],
+          "title": "should have the correct root exports",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/internals/RequestQueue.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "RequestQueue"
+          ],
+          "title": "calls fetchFn for each queued key"
+        },
+        {
+          "describe": [
+            "RequestQueue"
+          ],
+          "title": "reports correct request status"
+        },
+        {
+          "describe": [
+            "RequestQueue"
+          ],
+          "title": "does not re-queue a key that is already pending"
+        },
+        {
+          "describe": [
+            "RequestQueue"
+          ],
+          "title": "respects maxConcurrentRequests"
+        },
+        {
+          "describe": [
+            "RequestQueue"
+          ],
+          "title": "processes next queued item on setRequestSettled"
+        },
+        {
+          "describe": [
+            "RequestQueue"
+          ],
+          "title": "processes next queued item on clearPendingRequest"
+        },
+        {
+          "describe": [
+            "RequestQueue"
+          ],
+          "title": "clears all queued and pending requests"
+        },
+        {
+          "describe": [
+            "RequestQueue"
+          ],
+          "title": "continues processing when fetchFn rejects"
+        },
+        {
+          "describe": [
+            "RequestQueue"
+          ],
+          "title": "supports custom getKeyId for complex key types"
+        },
+        {
+          "describe": [
+            "RequestQueue"
+          ],
+          "title": "processes keys in FIFO order"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/internals/TimeoutManager.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "TimeoutManager"
+          ],
+          "title": "calls the callback after the specified delay"
+        },
+        {
+          "describe": [
+            "TimeoutManager"
+          ],
+          "title": "replaces a timeout when start is called with the same key"
+        },
+        {
+          "describe": [
+            "TimeoutManager"
+          ],
+          "title": "clears a pending timeout"
+        },
+        {
+          "describe": [
+            "TimeoutManager"
+          ],
+          "title": "does not error when clearing a non-existent key"
+        },
+        {
+          "describe": [
+            "TimeoutManager"
+          ],
+          "title": "clears all active timeouts"
+        },
+        {
+          "describe": [
+            "TimeoutManager"
+          ],
+          "title": "allows safe clear after a timeout has fired"
+        }
+      ]
+    },
     {
       "file": "packages/react/src/internals/composite/composite.test.ts",
       "rows": [
@@ -1038,6 +1137,92 @@
             "resolveRenderedAriaLabel"
           ],
           "title": "cannot see an aria-label applied by a render function"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/internals/resolveRenderedId.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "resolveRenderedId"
+          ],
+          "title": "falls back to the generated id when nothing else is given"
+        },
+        {
+          "describe": [
+            "resolveRenderedId"
+          ],
+          "title": "prefers an explicit id prop"
+        },
+        {
+          "describe": [
+            "resolveRenderedId"
+          ],
+          "title": "treats an explicitly empty id prop as no id"
+        },
+        {
+          "describe": [
+            "resolveRenderedId"
+          ],
+          "title": "prefers a render element's own id"
+        },
+        {
+          "describe": [
+            "resolveRenderedId"
+          ],
+          "title": "treats an undefined id on a render element as no id"
+        },
+        {
+          "describe": [
+            "resolveRenderedId"
+          ],
+          "title": "reads a server-created render element's id",
+          "conditions": [
+            "skipIf(reactMajor < 19)"
+          ]
+        },
+        {
+          "describe": [
+            "resolveRenderedId"
+          ],
+          "title": "ignores a render element that does not set an id"
+        },
+        {
+          "describe": [
+            "resolveRenderedId"
+          ],
+          "title": "cannot see an id applied by a render function"
+        },
+        {
+          "describe": [
+            "useRenderedId"
+          ],
+          "title": "does not publish a generated fallback as an override"
+        },
+        {
+          "describe": [
+            "useRenderedId"
+          ],
+          "title": "publishes the id that lands on the rendered element"
+        },
+        {
+          "describe": [
+            "useRenderedId"
+          ],
+          "title": "publishes an empty string for an explicitly empty id"
+        },
+        {
+          "describe": [
+            "useRenderedId"
+          ],
+          "title": "clears an explicit id after it is removed"
+        },
+        {
+          "describe": [
+            "useRenderedId"
+          ],
+          "title": "releases the override when the element unmounts"
         }
       ]
     },
