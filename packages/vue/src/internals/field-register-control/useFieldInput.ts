@@ -54,10 +54,9 @@ export function useFieldInput(): (input: HTMLElement | null) => void {
     update();
   }
 
-  // A held control gives an input when it mounts or when its element changes. The input leaves the
-  // list in the next flush. `Slider.Root` gives `validation.inputRef` to `useRegisterFieldControl`,
-  // which reads it in `onMounted` to find out that `KeepAlive` holds the slider. The removal thus
-  // must not come before that hook.
+  // `KeepAlive` calls no `ref` setter at a deactivation. A held control still calls its setter at a
+  // mount in a held branch and when its element changes. The input of that control leaves the list
+  // here.
   watch([isHeld, element], ([held]) => {
     if (held) {
       release();
@@ -72,7 +71,7 @@ export function useFieldInput(): (input: HTMLElement | null) => void {
   return (input) => {
     release();
     ownInput = input as HTMLInputElement | null;
-    element.value = ownInput;
     give();
+    element.value = ownInput;
   };
 }
