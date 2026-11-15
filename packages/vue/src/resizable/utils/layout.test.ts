@@ -764,20 +764,34 @@ describe('layout', () => {
       });
     });
 
-    it('fixed: an id that an object also has is an id', () => {
-      const panels = [panel('constructor', { fixed: true }), panel('toString')];
+    it.each([{ id: 'constructor' }, { id: 'toString' }, { id: '__proto__' }])(
+      'fixed: the id $id is an id of a fixed panel',
+      ({ id }) => {
+        const panels = [panel(id, { fixed: true }), panel('other')];
+        const start = { [id]: 20, other: 80 };
 
-      expect(takePins(panels, { constructor: 20, toString: 80 }, 1000)).toEqual({
-        constructor: 200,
-      });
-      expect(
-        applyFixedSizes(panels, { constructor: 20, toString: 80 }, { constructor: 200 }, 2000),
-      ).toEqual({ constructor: 10, toString: 90 });
-      expect(applyFixedSizes(panels, { constructor: 20, toString: 80 }, {}, 2000)).toEqual({
-        constructor: 20,
-        toString: 80,
-      });
-    });
+        expect(Object.entries(takePins(panels, start, 1000))).toEqual([[id, 200]]);
+        expect(Object.entries(applyFixedSizes(panels, start, { [id]: 200 }, 2000))).toEqual([
+          [id, 10],
+          ['other', 90],
+        ]);
+        expect(applyFixedSizes(panels, start, {}, 2000)).toBe(start);
+      },
+    );
+
+    it.each([{ id: 'constructor' }, { id: 'toString' }, { id: '__proto__' }])(
+      'fixed: the id $id is an id of a panel that shares the room',
+      ({ id }) => {
+        const panels = [panel('nav', { fixed: true }), panel(id), panel('other')];
+        const start = { nav: 20, [id]: 50, other: 30 };
+
+        expect(Object.entries(applyFixedSizes(panels, start, { nav: 200 }, 2000))).toEqual([
+          ['nav', 10],
+          [id, 56.25],
+          ['other', 33.75],
+        ]);
+      },
+    );
 
     it('priority: the fixed panel with the greater number gives way first', () => {
       const start = { nav: 30, editor: 40, aside: 30 };

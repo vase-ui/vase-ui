@@ -321,15 +321,15 @@ const requested = shallowRef<ResizableRootLayout>(normalize(input.value).layout)
 
 // The panels whose first size is a length, before the first measurement. A server and the first
 // render of a client cannot give such a panel a size in percent.
-const lengthPanels = computed<Readonly<Record<string, string>>>(() => {
+const lengthPanels = computed<ReadonlyMap<string, string>>(() => {
   if (measurement.value !== undefined) {
-    return EMPTY_OBJECT;
+    return new Map();
   }
-  return Object.fromEntries(
+  return new Map(
     panels.value.flatMap((panel) => {
       const id = panel.id.value;
       const first = Object.hasOwn(input.value, id) ? input.value[id] : panel.defaultSize;
-      return typeof first === 'string' && isLength(first) ? [[id, first.trim()]] : [];
+      return typeof first === 'string' && isLength(first) ? [[id, first.trim()] as const] : [];
     }),
   );
 });
@@ -337,14 +337,19 @@ const lengthPanels = computed<Readonly<Record<string, string>>>(() => {
 // The layout of the requested sizes, inside the constraints. A panel that waits for the first
 // measurement has no size, and the other panels share the room.
 const resolved = computed<ResizableRootLayout>(() => {
-  if (Object.keys(lengthPanels.value).length === 0) {
+  if (lengthPanels.value.size === 0) {
     return resolveLayout(constraints.value, requested.value);
   }
   const layout = resolveLayout(
-    constraints.value.filter((panel) => !Object.hasOwn(lengthPanels.value, panel.id)),
+    constraints.value.filter((panel) => !lengthPanels.value.has(panel.id)),
     requested.value,
   );
-  return Object.fromEntries(constraints.value.map((panel) => [panel.id, layout[panel.id] ?? 0]));
+  return Object.fromEntries(
+    constraints.value.map((panel) => [
+      panel.id,
+      lengthPanels.value.has(panel.id) ? 0 : (layout[panel.id] ?? 0),
+    ]),
+  );
 });
 
 const shown = computed<ResizableRootLayout>(() =>
@@ -495,10 +500,7 @@ function syncLayoutWithPanels() {
   const ids = constraints.value.map((panel) => panel.id);
   // A panel that waits for the first measurement has no size yet, so it is not new for the layout.
   const isNew = ids.some(
-    (id) =>
-      !knownIds.has(id) &&
-      !Object.hasOwn(requested.value, id) &&
-      !Object.hasOwn(lengthPanels.value, id),
+    (id) => !knownIds.has(id) && !Object.hasOwn(requested.value, id) && !lengthPanels.value.has(id),
   );
   knownIds = new Set(ids);
   if (mounted && isNew) {
@@ -666,7 +668,7 @@ function measure() {
 // change the layout of such a root until then.
 function canChange() {
   measure();
-  return Object.keys(lengthPanels.value).length === 0;
+  return lengthPanels.value.size === 0;
 }
 
 function findPanel(id: string) {

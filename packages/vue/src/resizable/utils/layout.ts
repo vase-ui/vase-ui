@@ -345,7 +345,8 @@ export function takePins(
  * is left. A collapsed panel keeps its collapsed size.
  */
 function shareInRatio(panels: readonly PanelConstraints[], layout: Layout, total: number): Layout {
-  const shares: Layout = {};
+  // Each panel has an entry from the start, so an id such as `__proto__` is a key and not a prototype.
+  const shares: Layout = Object.fromEntries(panels.map((panel) => [panel.id, 0]));
   let remaining = total;
   let free: PanelConstraints[] = [];
   for (const panel of panels) {
@@ -366,14 +367,12 @@ function shareInRatio(panels: readonly PanelConstraints[], layout: Layout, total
       proposals.map(({ panel, size }) => clamp(size, panel.minSize, panel.maxSize) - size),
     );
     // As flexbox does, hold only the panels that break the kind of constraint with the larger total.
-    // The other panels then share the rest again.
-    const held = proposals.filter(({ panel, size }) =>
-      Math.abs(violation) <= EPSILON
-        ? true
-        : violation > 0
-          ? size < panel.minSize
-          : size > panel.maxSize,
+    // The other panels then share the rest again. With no such panel, each panel is held, so the
+    // loop always ends.
+    const violators = proposals.filter(({ panel, size }) =>
+      violation > EPSILON ? size < panel.minSize : violation < -EPSILON && size > panel.maxSize,
     );
+    const held = violators.length > 0 ? violators : proposals;
     for (const { panel, size } of held) {
       shares[panel.id] = clamp(size, panel.minSize, panel.maxSize);
       remaining -= sizeOf(shares, panel);
@@ -401,7 +400,7 @@ export function applyFixedSizes(
   if (fixed.length === 0 || others.length === 0 || space <= 0) {
     return layout;
   }
-  const wanted: Layout = {};
+  const wanted: Layout = Object.fromEntries(panels.map((panel) => [panel.id, 0]));
   for (const panel of fixed) {
     wanted[panel.id] = isCollapsed(panel, sizeOf(layout, panel))
       ? panel.collapsedSize

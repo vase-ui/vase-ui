@@ -92,9 +92,9 @@ export interface ResizableRootContext {
   shown: ComputedRef<Layout>;
   /**
    * The panels whose first size is a length that the root cannot change into percent yet, with that
-   * length. It is empty from the first measurement on.
+   * length, by panel id. It is empty from the first measurement on.
    */
-  lengthPanels: ComputedRef<Readonly<Record<string, string>>>;
+  lengthPanels: ComputedRef<ReadonlyMap<string, string>>;
   /**
    * What the root read from the page at the last measurement. It is `undefined` while the root has
    * had no room for its panels.

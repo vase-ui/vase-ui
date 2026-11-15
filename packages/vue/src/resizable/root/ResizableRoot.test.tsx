@@ -1736,6 +1736,46 @@ describe('<Resizable.Root />', () => {
       });
     });
 
+    describe('a panel id that an object also has', () => {
+      it.each([
+        { id: 'constructor', defaultSize: '240px' },
+        { id: 'toString', defaultSize: '240px' },
+        { id: '__proto__', defaultSize: '240px' },
+        { id: 'constructor', defaultSize: 24 },
+        { id: '__proto__', defaultSize: 24 },
+      ])(
+        'gives the panel $id with the size $defaultSize its pixels as a fixed panel',
+        async ({ id, defaultSize }) => {
+          const width = shallowRef(1000);
+          await render(() => (
+            <div style={{ width: `${width.value}px` }}>
+              <Resizable.Root>
+                <Resizable.Panel
+                  id={id}
+                  data-testid="a"
+                  defaultSize={defaultSize}
+                  rootResizeBehavior="fixed"
+                />
+                <Resizable.Handle data-testid="handle" />
+                <Resizable.Panel id="b" data-testid="b" />
+              </Resizable.Root>
+            </div>
+          ));
+          await waitFor(() => {
+            expect(screen.getByTestId('handle')).toHaveAttribute('aria-valuenow', '24');
+          });
+          expect(widthOf('a')).toBeCloseTo(240, 0);
+
+          await changeWidth(width, 2000);
+
+          await waitFor(() => {
+            expect(widthOf('b')).toBeCloseTo(1760, 0);
+          });
+          expect(widthOf('a')).toBeCloseTo(240, 0);
+        },
+      );
+    });
+
     describe('prop: dragStep', () => {
       const start = { a: 50, b: 30, c: 20 };
 

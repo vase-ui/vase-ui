@@ -123,7 +123,7 @@ const primary = computed(() =>
 
 // A panel whose size is a length has no size in percent before the first measurement. The sizes of
 // the other panels are not exact either. Until then, no handle of the root has a value.
-const hasPendingLengths = computed(() => Object.keys(root.lengthPanels.value).length > 0);
+const hasPendingLengths = computed(() => root.lengthPanels.value.size > 0);
 
 const valueAttributes = computed(() => {
   const panel = primary.value;

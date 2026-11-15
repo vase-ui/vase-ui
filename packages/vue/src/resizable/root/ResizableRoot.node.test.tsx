@@ -166,19 +166,22 @@ describe('<Resizable.Root /> on a server', () => {
       expect(html.match(/aria-controls=/g)).toHaveLength(2);
     });
 
-    it('renders the size 0 and no collapsed state for the state of the panel', async () => {
-      const html = await renderToString(
-        <Resizable.Root>
-          <Resizable.Panel id="a" defaultSize="240px" collapsible minSize={20}>
-            {{ default: ({ state }: { state: { size: number } }) => `size ${state.size}` }}
-          </Resizable.Panel>
-          <Resizable.Panel id="b" />
-        </Resizable.Root>,
-      );
+    it.each([{ id: 'a' }, { id: 'constructor' }, { id: 'toString' }, { id: '__proto__' }])(
+      'renders the size 0 and no collapsed state for the panel $id',
+      async ({ id }) => {
+        const html = await renderToString(
+          <Resizable.Root>
+            <Resizable.Panel id={id} defaultSize="240px" collapsible minSize={20}>
+              {{ default: ({ state }: { state: { size: number } }) => `size ${state.size}` }}
+            </Resizable.Panel>
+            <Resizable.Panel id="b" />
+          </Resizable.Root>,
+        );
 
-      expect(html).toContain('size 0');
-      expect(html).not.toContain('data-collapsed');
-    });
+        expect(html).toContain('size 0');
+        expect(html).not.toContain('data-collapsed');
+      },
+    );
 
     it('renders a fixed panel as it renders a panel that is proportional', async () => {
       const html = await renderToString(
