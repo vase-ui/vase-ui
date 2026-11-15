@@ -8680,6 +8680,38 @@ describe('<Select.Root />', () => {
       expect(handleValueChange).toHaveBeenCalledTimes(0);
       expect(getFormData('font')).toEqual(['serif']);
     });
+
+    it('VUE-91: puts back a default object that isItemEqualToValue matches with the value', async () => {
+      const defaultValue = { value: 'serif', label: 'Serif' };
+      const handleValueChange = vi.fn();
+      await render(
+        <form data-testid="form">
+          <Field.Root data-testid="field">
+            <Select.Root
+              name="font"
+              defaultValue={defaultValue}
+              isItemEqualToValue={(item: { value: string }, value: { value: string }) =>
+                item.value === value.value
+              }
+              onValueChange={handleValueChange}
+            >
+              <StoreProbe />
+              <Select.Trigger />
+            </Select.Root>
+          </Field.Root>
+        </form>,
+      );
+      await setValueAsItem({ value: 'sans', label: 'Sans-serif' });
+      await setValueAsItem({ value: 'serif', label: 'Serif' });
+      expect(screen.getByTestId('field')).toHaveAttribute('data-dirty', '');
+
+      screen.getByTestId<HTMLFormElement>('form').reset();
+      await settleReset();
+
+      expect(handleValueChange).toHaveBeenCalledTimes(3);
+      expect(handleValueChange.mock.lastCall?.[0]).toBe(defaultValue);
+      expect(screen.getByTestId('field')).not.toHaveAttribute('data-dirty');
+    });
   });
 
   describe('VUE-21: a native reset clears the error of the field', () => {

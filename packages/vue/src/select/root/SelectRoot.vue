@@ -504,6 +504,10 @@ function setValue(nextValue: any, eventDetails: SelectRootChangeEventDetails) {
     return false;
   }
 
+  return commitValue(nextValue, eventDetails);
+}
+
+function commitValue(nextValue: any, eventDetails: SelectRootChangeEventDetails) {
   emit('valueChange', nextValue, eventDetails);
 
   if (eventDetails.isCanceled) {
@@ -759,10 +763,12 @@ function handleHiddenInputChange(event: Event) {
 
 useFormReset(inputElement, (event) => {
   const defaultValue = getDefaultValue();
+  // `setValue` keeps a value that `isItemEqualToValue` matches with the default object. The dirty
+  // state compares a single value by identity, so the reset puts back that object.
   const hasChanged =
     props.value === undefined &&
     isSelectedValueDirty(selectedValue.value, defaultValue, comparer.value) &&
-    setValue(defaultValue, createChangeEventDetails(REASONS.none, event));
+    commitValue(defaultValue, createChangeEventDetails(REASONS.none, event));
 
   if (hasChanged) {
     isResetChangePending = true;

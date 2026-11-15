@@ -2440,6 +2440,54 @@ describe('<Combobox.Root />', () => {
       expect(getFormData('city')).toEqual(['Oslo']);
     });
 
+    it('VUE-91: puts back a default object that isItemEqualToValue matches with the value', async () => {
+      const defaultValue = { value: 'oslo', label: 'Oslo' };
+      const validate = vi.fn((value: unknown) =>
+        (value as { value: string } | null)?.value === 'malta' ? 'Not Malta' : null,
+      );
+      const handleValueChange = vi.fn();
+      await render(
+        <form data-testid="form">
+          <Field.Root data-testid="field" validate={validate} validationMode="onChange">
+            <Combobox.Root
+              items={[
+                { value: 'malta', label: 'Malta' },
+                { value: 'oslo', label: 'Oslo' },
+              ]}
+              defaultValue={defaultValue}
+              isItemEqualToValue={(item: { value: string }, value: { value: string }) =>
+                item.value === value.value
+              }
+              onValueChange={handleValueChange}
+            >
+              <ComboboxInputPart />
+              <ComboboxListPart />
+            </Combobox.Root>
+            <Field.Error data-testid="error" />
+          </Field.Root>
+        </form>,
+      );
+      await type('ma');
+      await pick('Malta');
+      await type('os');
+      await pick('Oslo');
+      expect(screen.getByTestId('field')).toHaveAttribute('data-dirty', '');
+
+      await reset();
+
+      expect(handleValueChange).toHaveBeenCalledTimes(3);
+      expect(handleValueChange.mock.lastCall?.[0]).toBe(defaultValue);
+      expect(screen.getByTestId('field')).not.toHaveAttribute('data-dirty');
+
+      // The next change gets its validation.
+      await type('ma');
+      await pick('Malta');
+      vi.advanceTimersByTime(0);
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('error')).toHaveTextContent('Not Malta');
+    });
+
     it('keeps an input inside the popup empty', async () => {
       const handleInputValueChange = vi.fn();
       await render(
