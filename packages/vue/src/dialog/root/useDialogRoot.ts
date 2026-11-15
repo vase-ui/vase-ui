@@ -12,6 +12,7 @@ import { isElement } from '@floating-ui/utils/dom';
 import { contains, getTarget } from '../../common/shadowDom';
 import { useScrollLock } from '../../common/useScrollLock';
 import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
+import { isInHeldBranch } from '../../internals/useKeepAliveState';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
 import { usePopupInteractionProps } from '../../utils/popups/popupStoreUtils';
 import { popupStoreSelectors } from '../../utils/popups/store';
@@ -124,7 +125,7 @@ export function useDialogInteractions({
 
   // `KeepAlive` takes the popup of a deactivated dialog out of the document, so the dialog above
   // must not count it.
-  const deactivated = shallowRef(false);
+  const deactivated = shallowRef(isInHeldBranch());
   let hasReported = false;
 
   // Notify parent of our open/close state using parent callbacks, if any
