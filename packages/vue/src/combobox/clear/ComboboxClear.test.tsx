@@ -444,4 +444,73 @@ describe('<Combobox.Clear />', () => {
 
     expect(counter.counts).toEqual({ enter: 0, exit: 1 });
   });
+
+  describe('VUE-91: a press with no value to clear', () => {
+    function recordValueEvents(events: string[]) {
+      return {
+        onValueChange: (value: string[], details: { reason: string }) =>
+          events.push(`valueChange:${value.join()}:${details.reason}`),
+        'onUpdate:value': (value: string[]) => events.push(`update:value:${value.join()}`),
+      };
+    }
+
+    it('emits no valueChange for a press of a button with keepMounted', async () => {
+      const events: string[] = [];
+      const { user } = await render(
+        <Combobox.Root multiple defaultValue={[]} {...recordValueEvents(events)}>
+          <Combobox.Input />
+          <Combobox.Clear data-testid="clear" keepMounted />
+        </Combobox.Root>,
+      );
+
+      await user.click(screen.getByTestId('clear'));
+
+      expect(events).toEqual([]);
+      expect(screen.getByRole('combobox')).toHaveFocus();
+    });
+
+    it('emits no valueChange for a second press during the exit animation', async () => {
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+      const events: string[] = [];
+      const { user } = await render(
+        <div>
+          <style>{`.clear { transition: opacity 100s; } .clear[data-ending-style] { opacity: 0; }`}</style>
+          <Combobox.Root multiple defaultValue={['apple']} {...recordValueEvents(events)}>
+            <Combobox.Input />
+            <Combobox.Clear class="clear" data-testid="clear" />
+          </Combobox.Root>
+        </div>,
+      );
+      const clear = screen.getByTestId('clear');
+      await nextEvent(clear, 'transitionrun', { action: () => user.click(clear) });
+      expect(events).toEqual(['valueChange::clear-press', 'update:value:']);
+      events.length = 0;
+
+      await user.click(clear);
+
+      expect(clear.isConnected).toBe(true);
+      expect(events).toEqual([]);
+    });
+
+    it('asks one time to clear the text when no item is selected', async () => {
+      const events: string[] = [];
+      const { user } = await render(
+        <Combobox.Root
+          defaultInputValue="ap"
+          onInputValueChange={(value: string, details: { reason: string; cancel: () => void }) => {
+            events.push(`inputValueChange:${value}:${details.reason}`);
+            details.cancel();
+          }}
+        >
+          <Combobox.Input />
+          <Combobox.Clear data-testid="clear" keepMounted />
+        </Combobox.Root>,
+      );
+
+      await user.click(screen.getByTestId('clear'));
+
+      expect(events).toEqual(['inputValueChange::clear-press']);
+      expect(screen.getByRole<HTMLInputElement>('combobox').value).toBe('ap');
+    });
+  });
 });
