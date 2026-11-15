@@ -499,6 +499,7 @@ Rules:
 - A focus that a function ref gives before it calls `props.ref` comes before the second listener. A part that needs that focus reads `activeElement` in its `ref` callback, as `Menu.Input` does.
 - A Vue listener of the consumer on a plain element above a part can still miss such a focus. The Vue listener of the part gets the event first.
 - `useRender` is public. It gives the API of a part to a component of a consumer.
+- `UseRenderElementProps` keeps the attribute types of Vue, with no `null`. An object of that type is then a set of `mergeProps`, as in the TypeScript sample of the `useRender` page.
 
 ### Props
 

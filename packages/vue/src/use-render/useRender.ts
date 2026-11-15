@@ -11,7 +11,7 @@ import type {
   ComponentRenderFn,
   HTMLProps,
   VaseUIComponentProps,
-  WithVaseUIEvent,
+  WithVaseUIEventHandlers,
 } from '../internals/types';
 import { useRenderElement } from '../internals/useRenderElement';
 import type { UseRenderElementParameters } from '../internals/useRenderElement';
@@ -70,9 +70,11 @@ export type UseRenderRenderProp<State = Record<string, unknown>> = ComponentRend
  * The native attributes and listeners of a tag.
  * Extend it behind a `@vue-ignore` comment in the props interface of a component.
  * The SFC compiler then makes no prop of them, and they stay in `$attrs`.
+ * The attributes have the types of Vue, with no `null`, so an object of this type is a set of
+ * `mergeProps`.
  */
 export type UseRenderElementProps<TagName extends keyof IntrinsicElementAttributes> =
-  WithVaseUIEvent<IntrinsicElementAttributes[TagName]>;
+  WithVaseUIEventHandlers<IntrinsicElementAttributes[TagName]>;
 
 /**
  * The props that a component declares for `useRender`: `as`, `stateClass` and `stateStyle`.

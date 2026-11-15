@@ -40,8 +40,7 @@ interface AriaDescriptionAttribute<Value> {
  * The type adds the attribute `aria-description`.
  * The type adds `null` to each attribute: `null` removes the value of the part.
  * `PropKeys` names each attribute that reaches a declared prop, such as `aria-label` for the prop
- * `ariaLabel`. Vue gives such a value to the prop, and a prop takes no `null`, so the type adds no
- * `null` to it.
+ * `ariaLabel`. Vue gives such a value to the prop, so the attribute keeps the type of Vue.
  */
 export type WithVaseUIEvent<T, PropKeys extends keyof T = never> = {
   [K in keyof T as K extends 'as' ? never : K]: K extends `on${Capitalize<string>}`
@@ -54,7 +53,8 @@ export type WithVaseUIEvent<T, PropKeys extends keyof T = never> = {
 /**
  * `WithVaseUIEvent` with the attribute types of Vue, which have no `null`.
  * The sets of `mergeProps` use it. `mergeProps` copies a `null` value to its result, and the type
- * of the result is the type of Vue.
+ * of the result is the type of Vue. `UseRenderElementProps` uses it too, so an object of that type
+ * is a set of `mergeProps`.
  */
 export type WithVaseUIEventHandlers<T> = {
   [K in keyof T as K extends 'as' ? never : K]: WithPreventVaseUIHandler<T[K]>;
