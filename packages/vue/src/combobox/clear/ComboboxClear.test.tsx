@@ -319,11 +319,6 @@ describe('<Combobox.Clear />', () => {
     it('triggers exit animation via data-ending-style before unmount', async () => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
 
-      let animationFinished = false;
-      const notifyAnimationFinished = () => {
-        animationFinished = true;
-      };
-
       const style = `
         .animation-test-indicator {
           transition: opacity 1ms;
@@ -340,12 +335,7 @@ describe('<Combobox.Clear />', () => {
           <style>{style}</style>
           <Combobox.Root defaultValue="a">
             <Combobox.Input data-testid="input" />
-            <Combobox.Clear
-              class="animation-test-indicator"
-              data-testid="clear"
-              keepMounted
-              onTransitionend={notifyAnimationFinished}
-            />
+            <Combobox.Clear class="animation-test-indicator" data-testid="clear" keepMounted />
           </Combobox.Root>
         </div>,
       );
@@ -353,10 +343,9 @@ describe('<Combobox.Clear />', () => {
       const clear = screen.getByTestId('clear');
       expect(clear).not.toBe(null);
 
-      await user.click(clear);
-
-      await waitFor(() => {
-        expect(animationFinished).toBe(true);
+      await nextEvent(clear, 'transitionend', {
+        after: 'transitionrun',
+        action: () => user.click(clear),
       });
     });
   });

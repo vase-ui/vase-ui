@@ -1,7 +1,8 @@
-import { computed, onActivated, onDeactivated, shallowRef, toValue, watch } from 'vue';
+import { computed, shallowRef, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { ownerWindow } from '../../common/owner';
 import { useVaseUiId } from '../useBaseUiId';
+import { useKeepAliveState } from '../useKeepAliveState';
 
 /**
  * A control calls it in `setup` when its element is not a labelable element of HTML, such as a
@@ -50,26 +51,18 @@ export function useAriaLabelledBy(
       !toValue(enableFallback)
     );
 
-  // `KeepAlive` moves the DOM of a deactivated control into a detached element. The input has no
-  // label there, and its root node is that element. The lookup and the observer wait for the
-  // activation.
-  const isDeactivated = shallowRef(false);
-
-  onDeactivated(() => {
-    isDeactivated.value = true;
-  });
-
-  onActivated(() => {
-    isDeactivated.value = false;
-  });
+  // `KeepAlive` moves the DOM of a held control into a detached element. The input has no label
+  // there, and its root node is that element. The lookup and the observer wait for the activation.
+  // A control that mounts in a held branch observes that element until its first activation.
+  const { isHeld, shown } = useKeepAliveState();
 
   // Base UI runs this lookup after each commit. A Vue component with the same props does not render
   // again when its parent renders, so a native `<label>` that a sibling adds or removes later would
   // not change the result. The lookup thus also runs when the DOM of the root node changes.
   watch(
-    [() => toValue(labelSourceRef), isLookupEnabled, generatedLabelId, isDeactivated],
-    ([labelSource, enabled, , deactivated], _previous, onCleanup) => {
-      if (!labelSource || !enabled || deactivated) {
+    [() => toValue(labelSourceRef), isLookupEnabled, generatedLabelId, isHeld, shown],
+    ([labelSource, enabled, , held], _previous, onCleanup) => {
+      if (!labelSource || !enabled || held) {
         fallbackAriaLabelledBy.value = undefined;
         return;
       }

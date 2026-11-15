@@ -67,7 +67,7 @@ defineSlots<{
 const state: MeterRootState = EMPTY_OBJECT;
 
 const formatLocale = useFormatLocale(() => props.locale);
-const { defaultLabelId, setLabelId, getAriaLabelledBy } = useLabelId();
+const { labelRoot, getAriaLabelledBy } = useLabelId(() => element.value);
 
 // `clamp` handles infinity. `NaN` needs a fallback, because `Math.min(NaN, max)` is `NaN`.
 const percentageValue = computed(() => {
@@ -97,8 +97,7 @@ provide(MeterRootContext, {
   locale: computed(() => props.locale),
   percentageValue,
   value: computed(() => props.value),
-  setLabelId,
-  defaultLabelId,
+  labelRoot,
 });
 
 const { element, elementProps } = useRenderElement('div', props, {

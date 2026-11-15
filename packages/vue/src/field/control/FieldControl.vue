@@ -86,6 +86,10 @@ const emit = defineEmits<{
    * Callback fired when the `value` changes. Use when controlled.
    */
   valueChange: [value: string, eventDetails: FieldControlChangeEventDetails];
+  /**
+   * Event handler called after `valueChange` with the new value, unless a listener cancels the
+   * change. `v-model:value` uses it.
+   */
   'update:value': [value: string];
 }>();
 

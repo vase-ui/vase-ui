@@ -10,6 +10,7 @@ import {
   flushMicrotasks,
   hydrate,
   isJSDOM,
+  nextEvent,
   renderOnServer,
   screen,
   waitFor,
@@ -1478,21 +1479,16 @@ describe('<ScrollArea.Root />', () => {
       });
       await loaded;
       const frameDocument = frame.contentDocument!;
-
-      // A style element with no nonce gets no style sheet when the policy is in force.
-      const control = frameDocument.createElement('style');
-      control.textContent = 'body{margin:0}';
-      frameDocument.head.append(control);
-      expect(control.sheet).toBeNull();
-      // The event of the control comes in a later task. Wait for it, so that the listener below
-      // does not count it.
-      await waitSingleFrame();
-      await waitSingleFrame();
-
-      const violations: Event[] = [];
-      frameDocument.addEventListener('securitypolicyviolation', (event) => {
-        violations.push(event);
-      });
+      const violations: (EventTarget | null)[] = [];
+      // `nextEvent` resolves in a listener of the control, and the case continues before the event
+      // bubbles. A capture listener of the document gets the event before that listener.
+      frameDocument.addEventListener(
+        'securitypolicyviolation',
+        (event) => {
+          violations.push(event.target);
+        },
+        { capture: true },
+      );
       const container = frameDocument.createElement('div');
       frameDocument.body.append(container);
       const app = createApp({
@@ -1507,14 +1503,25 @@ describe('<ScrollArea.Root />', () => {
       });
 
       app.mount(container);
-      await waitSingleFrame();
-      await waitSingleFrame();
+      // The flush after the mount removes the style element of the first render.
+      await nextTick();
 
+      // A style element with no nonce gets no style sheet when the policy is in force. The browser
+      // sends the violation events in a later task, in the order of the violations. The event of
+      // this element thus comes after the event of each element that connected before it.
+      const control = frameDocument.createElement('style');
+      control.textContent = 'body{margin:0}';
+      await nextEvent(control, 'securitypolicyviolation', {
+        action: () => frameDocument.head.append(control),
+      });
+
+      expect(control.sheet).toBeNull();
       const styles = queryDisableScrollbarStyles(frameDocument);
       expect(styles).toHaveLength(1);
       expect(styles[0].parentElement).toBe(frameDocument.head);
       expect(styles[0].sheet).not.toBeNull();
-      expect(violations).toHaveLength(0);
+      expect(violations).toHaveLength(1);
+      expect(violations.at(0)).toBe(control);
     });
 
     it('writes the nonce attribute on the style element of the first client render', () => {

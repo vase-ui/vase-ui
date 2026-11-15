@@ -67,6 +67,7 @@ import {
 } from '../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../internals/types';
 import { useVaseUiId } from '../internals/useBaseUiId';
+import { isInTreeOf } from '../internals/useKeepAliveState';
 import { useRenderElement } from '../internals/useRenderElement';
 import { useValueChanged } from '../internals/useValueChanged';
 import { CheckboxGroupContext } from './CheckboxGroupContext';
@@ -88,6 +89,10 @@ const emit = defineEmits<{
    * Provides the new value as an argument.
    */
   valueChange: [value: string[], eventDetails: CheckboxGroupChangeEventDetails];
+  /**
+   * Event handler called after `valueChange` with the new value, unless a listener cancels the
+   * change. `v-model:value` uses it.
+   */
   'update:value': [value: string[]];
 }>();
 
@@ -242,6 +247,7 @@ provide(CheckboxGroupContext, {
   validation,
   registerControlId,
   reset,
+  reaches: (target) => isInTreeOf(element.value, target),
 });
 
 const { element, elementProps } = useRenderElement('div', props, {
