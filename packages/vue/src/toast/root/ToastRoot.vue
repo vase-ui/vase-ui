@@ -78,7 +78,7 @@ import {
 import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
-import { isInTreeOf } from '../../internals/useKeepAliveState';
+import { isInHeldBranch, isInTreeOf } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { getElementTransform } from '../../utils/getElementTransform';
 import {
@@ -206,7 +206,7 @@ useOpenChangeComplete({
 
 // A toast that `KeepAlive` holds has no layout. The root measures it at the activation, and the
 // `starting` status stays until then, so the enter transition plays when the toast shows.
-const held = shallowRef(false);
+const held = shallowRef(isInHeldBranch());
 onDeactivated(() => {
   held.value = true;
   // The user cannot see a held toast, so a swipe in progress ends with no dismissal.
