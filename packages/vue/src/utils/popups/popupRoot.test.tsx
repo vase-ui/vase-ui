@@ -2059,7 +2059,7 @@ describe('useSingleAnchorPopupRoot', () => {
     globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     const className = randomStringValue();
     // The popup element has no animation. Only the element of the option has one. The list holds
-    // the number of running animations of that element at each completion.
+    // the open state and the number of running animations of that element at each completion.
     const animationsAtCompletion: [boolean, number][] = [];
     let animated: HTMLElement | null = null;
     const completed = vi.fn();
