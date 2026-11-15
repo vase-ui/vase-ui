@@ -102,6 +102,16 @@ describe('<Select.Root />', () => {
       </Select.Root>
     ),
     createPopup: () => <Select.Popup data-testid="popup">Popup</Select.Popup>,
+    createBackdropComponent: ({ open, onOpenChangeComplete }) => (
+      <Select.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Select.Trigger>
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Backdrop data-testid="shown" class="shown" />
+        </Select.Portal>
+      </Select.Root>
+    ),
     render,
   });
 

@@ -1024,6 +1024,22 @@ describe('<NavigationMenu.Root />', () => {
         </NavigationMenu.Portal>
       </NavigationMenu.Root>
     ),
+    createBackdropComponent: ({ open, onOpenChangeComplete }) => (
+      <NavigationMenu.Root
+        value={open ? 'item-1' : null}
+        onOpenChangeComplete={onOpenChangeComplete}
+      >
+        <NavigationMenu.List>
+          <NavigationMenu.Item value="item-1">
+            <NavigationMenu.Trigger>Item 1</NavigationMenu.Trigger>
+            <NavigationMenu.Content>Content</NavigationMenu.Content>
+          </NavigationMenu.Item>
+        </NavigationMenu.List>
+        <NavigationMenu.Portal>
+          <NavigationMenu.Backdrop data-testid="shown" class="shown" />
+        </NavigationMenu.Portal>
+      </NavigationMenu.Root>
+    ),
     render,
     reportsOpen: false,
   });

@@ -297,7 +297,11 @@ export function useDismiss(
   // A portal below this popup that no popup owns, such as `NavigationMenu.Portal`, is inside this
   // popup.
   function markInsidePortal(portal: Element) {
-    if (contains(portal, getStore().select('positionerElement'))) {
+    const store = getStore();
+    if (
+      contains(portal, store.select('positionerElement')) ||
+      contains(portal, store.context.backdropRef?.value)
+    ) {
       parent?.markInsideComponentTree();
     } else {
       markInsideComponentTree();

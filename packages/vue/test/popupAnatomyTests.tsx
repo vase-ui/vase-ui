@@ -26,6 +26,11 @@ export interface PopupAnatomyTestConfig {
    * after the open.
    */
   createPopup?: (() => VNode) | undefined;
+  /**
+   * Returns the root with a backdrop part and no positioner. The backdrop has
+   * `data-testid="shown"` and the class `shown`.
+   */
+  createBackdropComponent?: ((props: PopupAnatomyTestProps) => VNode) | undefined;
   render: ReturnType<typeof createRenderer>['render'];
   /**
    * Whether the root emits `openChangeComplete` with `true`.
@@ -57,19 +62,20 @@ function isShown(part: HTMLElement | null) {
 }
 
 /**
- * The cases of a root whose anatomy has no popup part. The positioner, or the backdrop of a dialog,
- * is then the part that shows. Its animations end each open change.
+ * The cases of a root whose anatomy has no popup part. The positioner, or else the backdrop, is
+ * then the part that shows. Its animations end each open change.
  */
 export function popupAnatomyTests(config: PopupAnatomyTestConfig) {
-  const { createComponent, createPopup, render, reportsOpen = true } = config;
+  const { createComponent, createPopup, createBackdropComponent, render, reportsOpen = true } =
+    config;
 
-  function createAnatomy() {
+  function createAnatomy(create = createComponent) {
     const open = shallowRef(false);
     const withPopup = shallowRef(false);
     const onOpenChangeComplete = vi.fn();
     const App = defineComponent(
       () => () =>
-        createComponent({
+        create({
           open: open.value,
           onOpenChangeComplete,
           content: withPopup.value ? createPopup?.() : null,
@@ -89,52 +95,57 @@ export function popupAnatomyTests(config: PopupAnatomyTestConfig) {
     await completion;
   }
 
+  async function closeAndReport(create: PopupAnatomyTestConfig['createComponent']) {
+    const { App, open, onOpenChangeComplete } = createAnatomy(create);
+    await render(<App />);
+
+    await openAnatomy(open, onOpenChangeComplete);
+    expect(isShown(getShownPart())).toBe(true);
+    const completion = nextCall(onOpenChangeComplete);
+    open.value = false;
+    await completion;
+
+    expect(isShown(getShownPart())).toBe(false);
+    expect(onOpenChangeComplete.mock.calls).toEqual(reportsOpen ? [[true], [false]] : [[false]]);
+  }
+
+  async function waitForExit(create: PopupAnatomyTestConfig['createComponent']) {
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    const { App, open, onOpenChangeComplete } = createAnatomy(create);
+    await render(
+      <>
+        <style>{`@keyframes popup-anatomy-exit { to { opacity: 0.5 } } .shown[data-closed] { animation: popup-anatomy-exit 100s }`}</style>
+        <App />
+      </>,
+    );
+    await openAnatomy(open, onOpenChangeComplete);
+    const part = getShownPart()!;
+
+    const animations = await nextAnimationsRead(part, {
+      action: () => {
+        open.value = false;
+      },
+    });
+    await flushMicrotasks();
+    expect(animations).toHaveLength(1);
+    expect(isShown(part)).toBe(true);
+    expect(onOpenChangeComplete).not.toHaveBeenCalledWith(false);
+
+    const completion = nextCall(onOpenChangeComplete);
+    for (const animation of animations) {
+      animation.finish();
+    }
+    await completion;
+
+    expect(isShown(getShownPart())).toBe(false);
+    expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
+  }
+
   describe('VUE-72: an anatomy with no popup part', () => {
-    it('hides the shown part after the close and reports each completion one time', async () => {
-      const { App, open, onOpenChangeComplete } = createAnatomy();
-      await render(<App />);
+    it('hides the shown part after the close and reports each completion one time', () =>
+      closeAndReport(createComponent));
 
-      await openAnatomy(open, onOpenChangeComplete);
-      expect(isShown(getShownPart())).toBe(true);
-      const completion = nextCall(onOpenChangeComplete);
-      open.value = false;
-      await completion;
-
-      expect(isShown(getShownPart())).toBe(false);
-      expect(onOpenChangeComplete.mock.calls).toEqual(reportsOpen ? [[true], [false]] : [[false]]);
-    });
-
-    it('waits for the exit animation of the shown part', async () => {
-      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
-      const { App, open, onOpenChangeComplete } = createAnatomy();
-      await render(
-        <>
-          <style>{`@keyframes popup-anatomy-exit { to { opacity: 0.5 } } .shown[data-closed] { animation: popup-anatomy-exit 100s }`}</style>
-          <App />
-        </>,
-      );
-      await openAnatomy(open, onOpenChangeComplete);
-      const part = getShownPart()!;
-
-      const animations = await nextAnimationsRead(part, {
-        action: () => {
-          open.value = false;
-        },
-      });
-      await flushMicrotasks();
-      expect(animations).toHaveLength(1);
-      expect(isShown(part)).toBe(true);
-      expect(onOpenChangeComplete).not.toHaveBeenCalledWith(false);
-
-      const completion = nextCall(onOpenChangeComplete);
-      for (const animation of animations) {
-        animation.finish();
-      }
-      await completion;
-
-      expect(isShown(getShownPart())).toBe(false);
-      expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
-    });
+    it('waits for the exit animation of the shown part', () => waitForExit(createComponent));
 
     it.skipIf(createPopup === undefined)(
       'reports one open completion when the popup part attaches after it',
@@ -157,4 +168,15 @@ export function popupAnatomyTests(config: PopupAnatomyTestConfig) {
       },
     );
   });
+
+  describe.skipIf(createBackdropComponent === undefined)(
+    'VUE-72: a backdrop with no positioner',
+    () => {
+      it('hides the shown part after the close and reports each completion one time', () =>
+        closeAndReport(createBackdropComponent!));
+
+      it('waits for the exit animation of the shown part', () =>
+        waitForExit(createBackdropComponent!));
+    },
+  );
 }

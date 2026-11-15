@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import type { VNode } from 'vue';
-import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
+import { defineAsyncComponent } from 'vue';
+import type { DefineComponent, VNode } from 'vue';
+import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#test-utils';
 import * as AlertDialog from '../../../alert-dialog/index.parts';
 import * as Combobox from '../../../combobox/index.parts';
 import * as Dialog from '../../../dialog/index.parts';
@@ -419,4 +420,136 @@ describe('a press on a part of a child popup that is outside its popup element',
       });
     },
   );
+});
+
+// The part in it never mounts, as a part in an async component that still loads.
+const Pending = defineAsyncComponent(() => new Promise<DefineComponent>(() => {}));
+
+interface PendingPositionerCase {
+  name: string;
+  render: (record: Recorder, onOpenChangeComplete: (open: boolean) => void) => VNode;
+}
+
+describe('a press on the backdrop of a popup whose positioner has not mounted', () => {
+  const { render } = createRenderer();
+
+  it.each<PendingPositionerCase>([
+    {
+      name: 'Popover',
+      render: (record, onOpenChangeComplete) => (
+        <Popover.Root defaultOpen onOpenChange={record} onOpenChangeComplete={onOpenChangeComplete}>
+          <Popover.Trigger>Trigger</Popover.Trigger>
+          <Popover.Portal>
+            <Popover.Backdrop data-testid="backdrop" />
+            <Pending>
+              <Popover.Positioner>
+                <Popover.Popup>Popup</Popover.Popup>
+              </Popover.Positioner>
+            </Pending>
+          </Popover.Portal>
+        </Popover.Root>
+      ),
+    },
+    {
+      name: 'Menu',
+      render: (record, onOpenChangeComplete) => (
+        <Menu.Root defaultOpen onOpenChange={record} onOpenChangeComplete={onOpenChangeComplete}>
+          <Menu.Trigger>Trigger</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Backdrop data-testid="backdrop" />
+            <Pending>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Item>Item</Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Pending>
+          </Menu.Portal>
+        </Menu.Root>
+      ),
+    },
+    {
+      name: 'Select',
+      render: (record, onOpenChangeComplete) => (
+        <Select.Root defaultOpen onOpenChange={record} onOpenChangeComplete={onOpenChangeComplete}>
+          <Select.Trigger>
+            <Select.Value placeholder="Pick" />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Backdrop data-testid="backdrop" />
+            <Pending>
+              <Select.Positioner>
+                <Select.Popup>
+                  <Select.Item value="a">A</Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Pending>
+          </Select.Portal>
+        </Select.Root>
+      ),
+    },
+    {
+      name: 'Combobox',
+      render: (record, onOpenChangeComplete) => (
+        <Combobox.Root
+          defaultOpen
+          onOpenChange={record}
+          onOpenChangeComplete={onOpenChangeComplete}
+        >
+          <Combobox.Input />
+          <Combobox.Portal>
+            <Combobox.Backdrop data-testid="backdrop" />
+            <Pending>
+              <Combobox.Positioner>
+                <Combobox.Popup>
+                  <Combobox.List>
+                    <Combobox.Item value="a">A</Combobox.Item>
+                  </Combobox.List>
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Pending>
+          </Combobox.Portal>
+        </Combobox.Root>
+      ),
+    },
+    {
+      name: 'Dialog',
+      render: (record, onOpenChangeComplete) => (
+        <Dialog.Root defaultOpen onOpenChange={record} onOpenChangeComplete={onOpenChangeComplete}>
+          <Dialog.Portal>
+            <Dialog.Backdrop data-testid="backdrop" />
+            <Pending>
+              <Dialog.Popup>Dialog</Dialog.Popup>
+            </Pending>
+          </Dialog.Portal>
+        </Dialog.Root>
+      ),
+    },
+    {
+      name: 'Drawer',
+      render: (record, onOpenChangeComplete) => (
+        <Drawer.Root defaultOpen onOpenChange={record} onOpenChangeComplete={onOpenChangeComplete}>
+          <Drawer.Portal>
+            <Drawer.Backdrop data-testid="backdrop" />
+            <Pending>
+              <Drawer.Popup>Drawer</Drawer.Popup>
+            </Pending>
+          </Drawer.Portal>
+        </Drawer.Root>
+      ),
+    },
+  ])('closes $name and hides the backdrop', async ({ render: renderPopup }) => {
+    const changes: Change[] = [];
+    const onOpenChangeComplete = vi.fn();
+    await render(renderPopup(recordInto(changes), onOpenChangeComplete));
+    const backdrop = screen.getByTestId('backdrop');
+
+    await press(backdrop);
+
+    expect(changes).toEqual(OUTSIDE_PRESS);
+    await waitFor(() => {
+      expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
+    });
+    expect(backdrop.isConnected && !backdrop.hidden).toBe(false);
+  });
 });

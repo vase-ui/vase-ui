@@ -25,6 +25,7 @@ import { computed } from 'vue';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { createElementSetter } from '../../utils/popups/createElementSetter';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { usePopoverRootContext } from '../root/PopoverRootContext';
 
@@ -46,6 +47,7 @@ const state = computed<PopoverBackdropState>(() => ({
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
+  ref: createElementSetter(store.context.backdropRef),
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
     {

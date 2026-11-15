@@ -236,6 +236,14 @@ describe('<Popover.Root />', () => {
       </Popover.Root>
     ),
     createPopup: () => <Popover.Popup data-testid="popup">Popup</Popover.Popup>,
+    createBackdropComponent: ({ open, onOpenChangeComplete }) => (
+      <Popover.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Popover.Trigger>Open</Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Backdrop data-testid="shown" class="shown" />
+        </Popover.Portal>
+      </Popover.Root>
+    ),
     render,
   });
 

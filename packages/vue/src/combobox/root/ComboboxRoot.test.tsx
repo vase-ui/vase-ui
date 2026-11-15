@@ -278,6 +278,14 @@ describe('<Combobox.Root />', () => {
       </Combobox.Root>
     ),
     createPopup: () => <Combobox.Popup data-testid="popup">Popup</Combobox.Popup>,
+    createBackdropComponent: ({ open, onOpenChangeComplete }) => (
+      <Combobox.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Combobox.Input />
+        <Combobox.Portal>
+          <Combobox.Backdrop data-testid="shown" class="shown" />
+        </Combobox.Portal>
+      </Combobox.Root>
+    ),
     render,
   });
 

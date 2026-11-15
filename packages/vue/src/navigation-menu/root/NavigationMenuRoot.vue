@@ -187,6 +187,7 @@ const rootRef = shallowRef<HTMLElement | null>(null);
 
 const positionerElement = shallowRef<HTMLElement | null>(null);
 const popupElement = shallowRef<HTMLElement | null>(null);
+const backdropElement = shallowRef<HTMLElement | null>(null);
 const viewportElement = shallowRef<HTMLElement | null>(null);
 const viewportTargetElement = shallowRef<HTMLElement | null>(null);
 const activationDirection = shallowRef<NavigationMenuActivationDirection>(null);
@@ -205,8 +206,9 @@ const popupAutoSizeResetRef: NavigationMenuPopupAutoSizeResetState = {
 };
 
 const preventUnmountOnClose = shallowRef(false);
-// With no popup part, the positioner is the part that shows.
-const transitionElement = () => popupElement.value ?? positionerElement.value;
+// With no popup part, the positioner is the part that shows, and with no positioner, the backdrop.
+const transitionElement = () =>
+  popupElement.value ?? positionerElement.value ?? backdropElement.value;
 const {
   mounted,
   transitionStatus,
@@ -348,6 +350,7 @@ provide(NavigationMenuRootContext, {
   transitionStatus,
   positionerElement,
   popupElement,
+  backdropElement,
   viewportElement,
   viewportTargetElement,
   activationDirection: computed(() => (open.value ? activationDirection.value : null)),

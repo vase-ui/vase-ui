@@ -285,6 +285,14 @@ describe('<Menu.Root />', () => {
       </Menu.Root>
     ),
     createPopup: () => <Menu.Popup data-testid="popup">Popup</Menu.Popup>,
+    createBackdropComponent: ({ open, onOpenChangeComplete }) => (
+      <Menu.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Menu.Trigger>Open</Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Backdrop data-testid="shown" class="shown" />
+        </Menu.Portal>
+      </Menu.Root>
+    ),
     render,
   });
 

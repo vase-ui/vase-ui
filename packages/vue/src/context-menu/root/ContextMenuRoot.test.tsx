@@ -83,6 +83,14 @@ describe('<ContextMenu.Root />', () => {
       </ContextMenu.Root>
     ),
     createPopup: () => <ContextMenu.Popup data-testid="popup">Popup</ContextMenu.Popup>,
+    createBackdropComponent: ({ open, onOpenChangeComplete }) => (
+      <ContextMenu.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <ContextMenu.Trigger>Open</ContextMenu.Trigger>
+        <ContextMenu.Portal>
+          <ContextMenu.Backdrop data-testid="shown" class="shown" />
+        </ContextMenu.Portal>
+      </ContextMenu.Root>
+    ),
     render,
   });
 
