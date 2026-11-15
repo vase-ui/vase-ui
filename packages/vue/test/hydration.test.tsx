@@ -9,7 +9,7 @@ import {
   ref,
   warn,
 } from 'vue';
-import { hydrate, renderOnServer } from '#test-utils';
+import { hydrate, hydrateAfter, renderOnServer } from '#test-utils';
 import ClassedElement from './fixtures/ClassedElement.vue';
 import HydrationFixture from './fixtures/HydrationFixture.vue';
 import LabelForControl from './fixtures/LabelForControl.vue';
@@ -233,6 +233,21 @@ describe('hydrate', () => {
     ).rejects.toThrow('error raised in the unmount');
 
     expect(document.querySelector('.throwing-on-unmount')).toBeNull();
+  });
+});
+
+describe('hydrateAfter', () => {
+  it('calls `before` before the mount, and fails for a Vue warning', async () => {
+    const serverHtml = await renderOnServer(FIXTURE);
+
+    await expect(
+      hydrateAfter(HydrationFixture, {
+        serverHtml,
+        before(container) {
+          container.querySelector('h2')!.textContent = 'Fixturr';
+        },
+      }),
+    ).rejects.toThrow(/Hydration text content mismatch/);
   });
 });
 
