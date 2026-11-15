@@ -1,7 +1,6 @@
 import {
   computed,
   nextTick,
-  onActivated,
   onDeactivated,
   onMounted,
   provide,
@@ -33,6 +32,7 @@ import {
 } from '../../labelable-provider';
 import { REASONS } from '../../reasons';
 import { useFormReset } from '../../useFormReset';
+import { useKeepAliveState } from '../../useKeepAliveState';
 import { useValueChanged } from '../../useValueChanged';
 import { displayCalendar } from '../displayCalendar';
 import { digits as getDigits, formatter } from '../format';
@@ -221,6 +221,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     state: fieldState,
     validation,
     validationMode,
+    reaches,
     setFocused: setFieldFocused,
     setTouched,
   } = useFieldRootContext();
@@ -378,7 +379,12 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   const digits = computed(() => getDigits(locale.value));
   const dayPeriodTexts = computed(() => getDayPeriodTexts(locale.value));
 
-  const controlId = useLabelableId({ id: () => toValue(parameters.id) });
+  const rootElement = shallowRef<HTMLElement | null>(null);
+
+  const controlId = useLabelableId({
+    id: () => toValue(parameters.id),
+    element: () => rootElement.value,
+  });
 
   // The name of a month depends on its year in a calendar with leap months. The value can have
   // another calendar than the field, so the date goes into the calendar of the field first.
@@ -623,8 +629,6 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     focusSegment(ordered[ordered.indexOf(from) + direction]);
   }
 
-  const rootElement = shallowRef<HTMLElement | null>(null);
-
   function handleInputPress(event: MouseEvent) {
     if (event.defaultPrevented || isDisabled.value) {
       return;
@@ -817,8 +821,8 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   let heldInput: HTMLInputElement | null = null;
   let unregisterInput: (() => void) | void;
   // `KeepAlive` takes the input out of the document, and the field must not use an input that is
-  // not in the document.
-  const isDeactivated = shallowRef(false);
+  // not in the document. A held required field that is empty would block the submit of its form.
+  const { isHeld, shown } = useKeepAliveState(hiddenInputElement, reaches);
 
   // A field can have more than one input, such as two date fields of a range. The input goes to the
   // registry of the field and not to `validation.inputRef`. The registry gives the field the first
@@ -846,23 +850,24 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     updateInputRegistration();
   }
 
-  onDeactivated(() => {
-    isDeactivated.value = true;
+  function releaseInput() {
     unregisterInput?.();
     unregisterInput = undefined;
-  });
+  }
 
-  onActivated(() => {
-    isDeactivated.value = false;
-  });
+  onDeactivated(releaseInput);
 
-  // `KeepAlive` runs the `onActivated` hooks from the last part to the first part. A registration
-  // in the hook would reverse the order of the inputs. A watcher runs in the order of the parts.
-  watch(isDeactivated, (deactivated) => {
-    if (!deactivated) {
-      updateInputRegistration();
+  // The `ref` setter of a root that mounts in a held branch registers the input.
+  watch(isHeld, (held) => {
+    if (held) {
+      releaseInput();
     }
   });
+
+  // `KeepAlive` calls no `ref` setter at an activation, so the root registers the input again. A
+  // watcher runs in the order of the parts. An `onActivated` hook would run from the last part to
+  // the first part and reverse the inputs.
+  watch(shown, updateInputRegistration);
 
   watch(
     hiddenInputElement,
