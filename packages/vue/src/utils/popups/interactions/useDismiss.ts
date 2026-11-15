@@ -300,7 +300,8 @@ export function useDismiss(
     const store = getStore();
     if (
       contains(portal, store.select('positionerElement')) ||
-      contains(portal, store.context.backdropRef?.value)
+      contains(portal, store.context.backdropRef?.value) ||
+      contains(portal, store.context.internalBackdropRef?.value)
     ) {
       parent?.markInsideComponentTree();
     } else {

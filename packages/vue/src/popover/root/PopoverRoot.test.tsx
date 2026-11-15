@@ -244,6 +244,17 @@ describe('<Popover.Root />', () => {
         </Popover.Portal>
       </Popover.Root>
     ),
+    createBackdropAndPositionerComponent: ({ open, onOpenChangeComplete }) => (
+      <Popover.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Popover.Trigger>Open</Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Backdrop />
+          <Popover.Positioner data-testid="shown" class="shown">
+            Content
+          </Popover.Positioner>
+        </Popover.Portal>
+      </Popover.Root>
+    ),
     render,
   });
 

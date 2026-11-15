@@ -31,6 +31,11 @@ export interface PopupAnatomyTestConfig {
    * `data-testid="shown"` and the class `shown`.
    */
   createBackdropComponent?: ((props: PopupAnatomyTestProps) => VNode) | undefined;
+  /**
+   * Returns the root with a backdrop part and a positioner with no popup part. The positioner has
+   * `data-testid="shown"` and the class `shown`. The backdrop has neither.
+   */
+  createBackdropAndPositionerComponent?: ((props: PopupAnatomyTestProps) => VNode) | undefined;
   render: ReturnType<typeof createRenderer>['render'];
   /**
    * Whether the root emits `openChangeComplete` with `true`.
@@ -70,6 +75,7 @@ export function popupAnatomyTests(config: PopupAnatomyTestConfig) {
     createComponent,
     createPopup,
     createBackdropComponent,
+    createBackdropAndPositionerComponent,
     render,
     reportsOpen = true,
   } = config;
@@ -151,6 +157,11 @@ export function popupAnatomyTests(config: PopupAnatomyTestConfig) {
       closeAndReport(createComponent));
 
     it('waits for the exit animation of the shown part', () => waitForExit(createComponent));
+
+    it.skipIf(createBackdropAndPositionerComponent === undefined)(
+      'waits for the exit animation of the positioner, and not of the backdrop',
+      () => waitForExit(createBackdropAndPositionerComponent!),
+    );
 
     it.skipIf(createPopup === undefined)(
       'reports one open completion when the popup part attaches after it',

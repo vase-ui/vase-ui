@@ -552,3 +552,43 @@ describe('a press on the backdrop of a popup whose positioner has not mounted', 
     expect(backdrop.isConnected && !backdrop.hidden).toBe(false);
   });
 });
+
+describe('a press on the internal backdrop of a modal dialog whose popup has not mounted', () => {
+  const { render } = createRenderer();
+
+  it.each<{ name: string; render: (record: Recorder) => VNode }>([
+    {
+      name: 'Dialog',
+      render: (record) => (
+        <Dialog.Root defaultOpen onOpenChange={record}>
+          <Dialog.Portal>
+            <Pending>
+              <Dialog.Popup>Dialog</Dialog.Popup>
+            </Pending>
+          </Dialog.Portal>
+        </Dialog.Root>
+      ),
+    },
+    {
+      name: 'Drawer',
+      render: (record) => (
+        <Drawer.Root defaultOpen onOpenChange={record}>
+          <Drawer.Portal>
+            <Pending>
+              <Drawer.Popup>Drawer</Drawer.Popup>
+            </Pending>
+          </Drawer.Portal>
+        </Drawer.Root>
+      ),
+    },
+  ])('closes $name and makes the internal backdrop inert', async ({ render: renderPopup }) => {
+    const changes: Change[] = [];
+    await render(renderPopup(recordInto(changes)));
+    const backdrop = screen.getByRole('presentation', { hidden: true });
+
+    await press(backdrop);
+
+    expect(changes).toEqual(OUTSIDE_PRESS);
+    expect(backdrop.inert).toBe(true);
+  });
+});
