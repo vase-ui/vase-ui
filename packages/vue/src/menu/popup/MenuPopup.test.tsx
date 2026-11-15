@@ -8,6 +8,7 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  nextEvent,
   popupFocusPropsTests,
   screen,
   takeReportedMessages,
@@ -1082,6 +1083,44 @@ describe('<Menu.Popup />', () => {
     expect(screen.getByTestId('popup')).toBe(popup);
     expect(popup.closest('[data-vase-ui-portal]')?.parentElement).toBe(document.body);
     expect(popup).toHaveAttribute('data-open');
+  });
+
+  it('VUE-82: keeps the focus on an item whose keydown listener calls preventVaseUIHandler()', async () => {
+    const { user } = await render(
+      <Menu.Root>
+        <Menu.Trigger>Open</Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup>
+              <Menu.Item
+                onKeydown={(event) => {
+                  if (event.key === 'ArrowDown') {
+                    event.preventVaseUIHandler();
+                  }
+                }}
+              >
+                One
+              </Menu.Item>
+              <Menu.Item>Two</Menu.Item>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>,
+    );
+
+    screen.getByRole('button', { name: 'Open' }).focus();
+    await flushMicrotasks();
+    // The item takes the focus in an animation frame after the open.
+    await waitForLaterMillisecond(() =>
+      nextEvent(document, 'focusin', { action: () => user.keyboard('[ArrowDown]') }),
+    );
+    const one = screen.getByRole('menuitem', { name: 'One' });
+    expect(one).toHaveFocus();
+
+    await user.keyboard('[ArrowDown]');
+    await waitSingleFrame();
+
+    expect(one).toHaveFocus();
   });
 
   it('BUG-5410: closes the menu for a press in a same-origin iframe', async () => {
