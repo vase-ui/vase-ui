@@ -1361,6 +1361,8 @@ The scroll lock stops the scroll of the page under a modal popup. The code is in
 - The list above is the nearest call of `useListNavigation` above the component in the component tree, and not the popup element around it in the DOM. A popup between the two lists that has no list navigation takes no part.
 - A component calls `useListNavigation` one time. A second call in the same component replaces the function that the first call provides.
 - `KeepAlive` takes the list out of the document, and the active item loses the focus. While `KeepAlive` holds the list, the composable stops its frames. At the activation, the active item gets the focus again, and the highlight does not change.
+- `useAriaCombobox` gives `openOnArrowKeyDown` the value `false` while its input element is not an `<input>`, such as a `<textarea>` (`VUE-97`). Such an element has no `role="combobox"` while the popup is closed. ArrowDown and ArrowUp then move its caret between the lines. While the popup is open, the two keys move the highlight.
+- `Combobox.Input` gives Home and End to the browser in an element that is not an `<input>` (`VUE-97`). The keys then do in it what they do in each other textarea.
 
 ### Popup typeahead
 

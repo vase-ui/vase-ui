@@ -16,6 +16,7 @@ import {
   renderOnServer,
   screen,
   waitFor,
+  waitSingleFrame,
   within,
 } from '#test-utils';
 import ComboboxListPart from '../../../test/fixtures/ComboboxListPart.vue';
@@ -215,6 +216,106 @@ describe('<Combobox.Input />', () => {
       expect(input).toHaveAttribute('aria-controls', listbox.id);
       expect(input).toHaveAttribute('aria-haspopup', 'listbox');
       expect(input).toHaveAttribute('aria-autocomplete', 'list');
+    });
+
+    describe('VUE-97: the caret keys of a textarea', () => {
+      const TEXT = 'one\ntwo';
+
+      async function pressKey(textarea: HTMLTextAreaElement, key: string, caret: number) {
+        textarea.focus();
+        textarea.setSelectionRange(caret, caret);
+        const keydowns: KeyboardEvent[] = [];
+        function recordKeydown(event: KeyboardEvent) {
+          keydowns.push(event);
+        }
+        window.addEventListener('keydown', recordKeydown, { capture: true });
+        await userEvent.keyboard(`{${key}}`);
+        window.removeEventListener('keydown', recordKeydown, { capture: true });
+        await waitSingleFrame();
+        await flushMicrotasks();
+        return {
+          caret: textarea.selectionStart,
+          prevented: keydowns.map((event) => event.defaultPrevented),
+        };
+      }
+
+      it.each([
+        { name: 'ArrowDown', caret: 0 },
+        { name: 'ArrowUp', caret: 7 },
+        { name: 'Home', caret: 5 },
+        { name: 'End', caret: 1 },
+      ])('gives $name to the browser while the popup is closed', async ({ name, caret }) => {
+        await render(
+          <div>
+            <textarea data-testid="plain" value={TEXT} />
+            <Combobox.Root items={['apple', 'banana']} defaultInputValue={TEXT}>
+              <Combobox.Input data-testid="input" as="textarea" />
+              <Combobox.Portal>
+                <Combobox.Positioner>
+                  <Combobox.Popup>
+                    <Combobox.List>
+                      {{
+                        item: ({ item }: { item: string }) => (
+                          <Combobox.Item key={item} value={item}>
+                            {item}
+                          </Combobox.Item>
+                        ),
+                      }}
+                    </Combobox.List>
+                  </Combobox.Popup>
+                </Combobox.Positioner>
+              </Combobox.Portal>
+            </Combobox.Root>
+          </div>,
+        );
+
+        const plain = await pressKey(screen.getByTestId<HTMLTextAreaElement>('plain'), name, caret);
+        const result = await pressKey(
+          screen.getByTestId<HTMLTextAreaElement>('input'),
+          name,
+          caret,
+        );
+
+        expect(result).toEqual({ caret: plain.caret, prevented: [false] });
+        expect(screen.queryByRole('listbox')).toBe(null);
+      });
+
+      it('moves the highlight with ArrowDown while the popup is open', async () => {
+        await render(
+          <Combobox.Root items={['apple', 'banana']}>
+            <Combobox.Input data-testid="input" as="textarea" />
+            <Combobox.Portal>
+              <Combobox.Positioner>
+                <Combobox.Popup>
+                  <Combobox.List>
+                    {{
+                      item: ({ item }: { item: string }) => (
+                        <Combobox.Item key={item} value={item}>
+                          {item}
+                        </Combobox.Item>
+                      ),
+                    }}
+                  </Combobox.List>
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>,
+        );
+
+        const textarea = screen.getByTestId<HTMLTextAreaElement>('input');
+        textarea.focus();
+        await userEvent.keyboard('a');
+        await screen.findByRole('listbox');
+        expect(textarea).not.toHaveAttribute('aria-activedescendant');
+
+        const result = await pressKey(textarea, 'ArrowDown', 1);
+
+        expect(result).toEqual({ caret: 1, prevented: [true] });
+        expect(textarea).toHaveAttribute(
+          'aria-activedescendant',
+          screen.getByRole('option', { name: 'apple' }).id,
+        );
+      });
     });
   });
 

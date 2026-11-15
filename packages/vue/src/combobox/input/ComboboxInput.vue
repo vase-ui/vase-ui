@@ -436,8 +436,10 @@ function handleKeydown(event: KeyboardEvent) {
   const input = event.currentTarget as HTMLInputElement;
   const scrollAmount = input.scrollWidth - input.clientWidth;
   const isRTL = direction.value === 'rtl';
+  // A textarea keeps the Home and End keys of the browser, as each other textarea does (`VUE-97`).
+  const isInputElement = input.tagName === 'INPUT';
 
-  if (event.key === 'Home') {
+  if (isInputElement && event.key === 'Home') {
     stopEvent(event);
     const cursor = platform.engine.gecko && isRTL ? input.value.length : 0;
     input.setSelectionRange(cursor, cursor);
@@ -445,7 +447,7 @@ function handleKeydown(event: KeyboardEvent) {
     return;
   }
 
-  if (event.key === 'End') {
+  if (isInputElement && event.key === 'End') {
     stopEvent(event);
     const cursor = platform.engine.gecko && isRTL ? 0 : input.value.length;
     input.setSelectionRange(cursor, cursor);
