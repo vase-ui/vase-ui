@@ -13,15 +13,14 @@ import type { ScrollDocument } from '../../../test/fixtures/scrollDocument';
 
 const PART_FILE = 'test/fixtures/AnchoredScrollLockPart.vue';
 
-// The observers of `waitFor` do not see a document in a frame, so it polls.
-const POLL = { interval: 5, timeout: 3000 };
-
+// The observer of `waitFor` does not see a change in the document of an iframe. Its check in each
+// frame sees the change.
 function waitForLock(page: ScrollDocument) {
-  return waitFor(() => expect(isPageLocked(page)).toBe(true), POLL);
+  return waitFor(() => expect(isPageLocked(page)).toBe(true));
 }
 
 function waitForUnlock(page: ScrollDocument) {
-  return waitFor(() => expect(isPageLocked(page)).toBe(false), POLL);
+  return waitFor(() => expect(isPageLocked(page)).toBe(false));
 }
 
 // Creates a document that has no scrollbar that takes space, so that its viewport is as wide as its

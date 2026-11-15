@@ -4,7 +4,7 @@ import { Meter } from '@vase-ui/vue/meter';
 import { mockRuntimeLocale } from '../../../test/mockRuntimeLocale';
 
 describe('<Meter.Root /> on a server', () => {
-  it('renders the label id, the width of the indicator and the hidden node', async () => {
+  it('VUE-89: renders the label id, the width of the indicator and the hidden node', async () => {
     const html = await renderToString(
       <Meter.Root value={30}>
         <Meter.Label>Battery Level</Meter.Label>

@@ -1,0 +1,55 @@
+/* Tailwind comes after the layer of VitePress, so a utility wins over a base rule of the site. */
+@layer __vitepress_base, theme, base, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+
+/*
+ * Only the frame of a Tailwind demo gets the reset. The popup of a demo is outside the frame, and
+ * the base styles of VitePress reset it already. The reset of Tailwind would change the popups of
+ * the CSS-module demos. The utilities also apply in a portal element, so a popup gets its classes.
+ */
+@layer base {
+  :where([data-demo='tailwind']) {
+    @import 'tailwindcss/preflight.css';
+  }
+}
+@layer utilities {
+  :where([data-demo='tailwind'], [data-vase-ui-portal]) {
+    @tailwind utilities source(none);
+  }
+}
+@source './**/*.{vue,ts}';
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-*: initial;
+  --color-white: white;
+  --color-black: black;
+
+  --color-neutral-50: oklch(98.5% 0 0deg);
+  --color-neutral-100: oklch(97% 0 0deg);
+  --color-neutral-200: oklch(92.2% 0 0deg);
+  --color-neutral-300: oklch(87% 0 0deg);
+  --color-neutral-400: oklch(70.8% 0 0deg);
+  --color-neutral-500: oklch(55.6% 0 0deg);
+  --color-neutral-600: oklch(43.9% 0 0deg);
+  --color-neutral-700: oklch(37.1% 0 0deg);
+  --color-neutral-800: oklch(26.9% 0 0deg);
+  --color-neutral-900: oklch(20.5% 0 0deg);
+  --color-neutral-950: oklch(14.5% 0 0deg);
+
+  --color-blue-500: oklch(62.3% 0.214 259.815deg);
+  --color-blue-700: oklch(48.8% 0.243 264.376deg);
+  --color-blue-800: oklch(42.4% 0.199 265.638deg);
+
+  --color-red-400: oklch(70.4% 0.191 22.216deg);
+  --color-red-700: oklch(50.5% 0.213 27.518deg);
+
+  --color-green-400: oklch(79.2% 0.209 151.711deg);
+  --color-green-700: oklch(52.7% 0.154 150.069deg);
+
+  --font-sans: 'Hanken Grotesk Variable', system-ui, sans-serif;
+  --font-mono:
+    'Geist Mono Variable', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
+  --font-serif: Georgia, 'Times New Roman', Times, 'Noto Serif', 'DejaVu Serif', serif;
+}

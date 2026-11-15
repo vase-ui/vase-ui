@@ -1,6 +1,23 @@
 {
   "upstreamPaths": [
     "packages/react/src/utils/popups/interactions/**",
+    "packages/react/test/floating-ui-tests/Button.module.css",
+    "packages/react/test/floating-ui-tests/Button.tsx",
+    "packages/react/test/floating-ui-tests/ComplexGrid.module.css",
+    "packages/react/test/floating-ui-tests/ComplexGrid.tsx",
+    "packages/react/test/floating-ui-tests/EmojiPicker.module.css",
+    "packages/react/test/floating-ui-tests/EmojiPicker.tsx",
+    "packages/react/test/floating-ui-tests/Grid.module.css",
+    "packages/react/test/floating-ui-tests/Grid.tsx",
+    "packages/react/test/floating-ui-tests/gridNavigationWithColumns.ts",
+    "packages/react/test/floating-ui-tests/ListboxFocus.tsx",
+    "packages/react/test/floating-ui-tests/Menu.module.css",
+    "packages/react/test/floating-ui-tests/Menu.tsx",
+    "packages/react/test/floating-ui-tests/MenuOrientation.module.css",
+    "packages/react/test/floating-ui-tests/MenuOrientation.tsx",
+    "packages/react/test/floating-ui-tests/Popover.module.css",
+    "packages/react/test/floating-ui-tests/Popover.tsx",
+    "packages/react/test/floating-ui-tests/renderGridRows.tsx",
     "packages/react/test/floating-ui-tests/useFloating.ts",
     "packages/react/test/useTestInteractions.test.tsx",
     "packages/react/test/useTestInteractions.ts"
@@ -45,6 +62,91 @@
       "title": "prop getters are memoized",
       "kind": "not-applicable",
       "reason": "`setup` runs one time, so the composable makes the getters one time and their identity cannot change. React makes new getters when a props object of the list changes. A new case covers the half that applies: a getter reads the current props of an entry that changes."
+    },
+    {
+      "upstream": "packages/react/test/floating-ui-tests/Button.tsx",
+      "kind": "not-applicable",
+      "reason": "Only `EmojiPicker.tsx` renders this React test component. The Vue picker of `packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx` renders a `button` element."
+    },
+    {
+      "upstream": "packages/react/test/floating-ui-tests/Button.module.css",
+      "kind": "not-applicable",
+      "reason": "The file is the style sheet of `Button.tsx`, which has no counterpart."
+    },
+    {
+      "upstream": "packages/react/test/floating-ui-tests/ComplexGrid.tsx",
+      "kind": "not-applicable",
+      "reason": "The file is a React test component. `packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx` holds the Vue component that the cases render, with only what the cases read."
+    },
+    {
+      "upstream": "packages/react/test/floating-ui-tests/ComplexGrid.module.css",
+      "kind": "not-applicable",
+      "reason": "The file is the style sheet of `ComplexGrid.tsx`. The package has no type for a CSS module, so a Vue test component sets its styles as style objects."
+    },
+    {
+      "upstream": "packages/react/test/floating-ui-tests/EmojiPicker.tsx",
+      "kind": "not-applicable",
+      "reason": "The file is a React test component. `packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx` holds the Vue component that the cases render, with only what the cases read."
+    },
+    {
+      "upstream": "packages/react/test/floating-ui-tests/EmojiPicker.module.css",
+      "kind": "not-applicable",
+      "reason": "The file is the style sheet of `EmojiPicker.tsx`. The package has no type for a CSS module, so a Vue test component sets its styles as style objects."
+    },
+    {
+      "upstream": "packages/react/test/floating-ui-tests/Grid.tsx",
+      "kind": "not-applicable",
+      "reason": "The file is a React test component. `packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx` holds the Vue component that the cases render, with only what the cases read."
+    },
+    {
+      "upstream": "packages/react/test/floating-ui-tests/Grid.module.css",
+      "kind": "not-applicable",
+      "reason": "The file is the style sheet of `Grid.tsx`. The package has no type for a CSS module, so a Vue test component sets its styles as style objects."
+    },
+    {
+      "upstream": "packages/react/test/floating-ui-tests/gridNavigationWithColumns.ts",
+      "kind": "not-applicable",
+      "reason": "`packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx` holds the function, beside the grids that call it."
+    },
+    {
+      "upstream": "packages/react/test/floating-ui-tests/ListboxFocus.tsx",
+      "kind": "not-applicable",
+      "reason": "The file is a React test component. `packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx` holds the Vue component that the cases render, with only what the cases read."
+    },
+    {
+      "upstream": "packages/react/test/floating-ui-tests/Menu.tsx",
+      "kind": "not-applicable",
+      "reason": "Two cases render this React test component, and Base UI runs them only in jsdom. Each case has a `replaced` row. The cases that replace them render the component `NestedList` of `packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx`."
+    },
+    {
+      "upstream": "packages/react/test/floating-ui-tests/Menu.module.css",
+      "kind": "not-applicable",
+      "reason": "The file is the style sheet of `Menu.tsx`, which has no counterpart."
+    },
+    {
+      "upstream": "packages/react/test/floating-ui-tests/MenuOrientation.tsx",
+      "kind": "not-applicable",
+      "reason": "One case renders this React test component, and Base UI runs it only in jsdom. The case has a `replaced` row. The cases that replace it render the component `NestedList` of `packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx`."
+    },
+    {
+      "upstream": "packages/react/test/floating-ui-tests/MenuOrientation.module.css",
+      "kind": "not-applicable",
+      "reason": "The file is the style sheet of `MenuOrientation.tsx`, which has no counterpart."
+    },
+    {
+      "upstream": "packages/react/test/floating-ui-tests/Popover.tsx",
+      "kind": "not-applicable",
+      "reason": "No Base UI test imports the file at the matched commit."
+    },
+    {
+      "upstream": "packages/react/test/floating-ui-tests/Popover.module.css",
+      "kind": "not-applicable",
+      "reason": "The file is the style sheet of `Popover.tsx`, which has no counterpart."
+    },
+    {
+      "upstream": "packages/react/test/floating-ui-tests/renderGridRows.tsx",
+      "kind": "not-applicable",
+      "reason": "Only `Menu.tsx` and `MenuOrientation.tsx` import the file, and Vase UI has no counterpart of those files."
     }
   ],
   "surfaceAdditions": [],

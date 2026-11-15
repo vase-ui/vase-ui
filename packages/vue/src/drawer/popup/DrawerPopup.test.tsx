@@ -7,6 +7,7 @@ import {
   fireEvent,
   firePointer,
   flushMicrotasks,
+  nextEvent,
   nextAnimationsRead,
   screen,
   takeReportedMessages,
@@ -1028,6 +1029,82 @@ describe('<Drawer.Popup />', () => {
 
       expect(popup).toHaveAttribute('data-label', 'second');
       expect(popup.style.getPropertyValue('--drawer-swipe-progress')).toBe('0.5');
+    });
+  });
+
+  describe('BUG-5519: an exit animation', () => {
+    const EXIT_CSS = `
+      .popup[data-ending-style] { animation: popup-exit 100s; }
+      @keyframes popup-exit { to { opacity: 0; } }
+    `;
+
+    // An element that the Tab key can reach, under `aria-hidden` on itself or on an ancestor.
+    function getFocusableUnderAriaHidden() {
+      return [...document.querySelectorAll<HTMLElement>('[aria-hidden="true"]')]
+        .flatMap((element) => [element, ...element.querySelectorAll<HTMLElement>('*')])
+        .filter((element) => element.tabIndex >= 0);
+    }
+
+    // Opens the drawer with its trigger and closes it with the Escape key. The callback records the
+    // document when the exit animation starts. The function resolves after the popup unmounts.
+    async function recordExit(record: () => void) {
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+      const { user } = await render(
+        <div>
+          <style>{EXIT_CSS}</style>
+          <Drawer.Root>
+            <Drawer.Trigger>Open</Drawer.Trigger>
+            <Drawer.Portal>
+              <Drawer.Viewport>
+                <Drawer.Popup class="popup" data-testid="popup">
+                  <Drawer.Close>Close</Drawer.Close>
+                </Drawer.Popup>
+              </Drawer.Viewport>
+            </Drawer.Portal>
+          </Drawer.Root>
+        </div>,
+      );
+      await user.click(screen.getByRole('button', { name: 'Open' }));
+      const popup = screen.getByTestId('popup');
+      await waitFor(() => {
+        expect(popup).toHaveFocus();
+      });
+      expect(getFocusableUnderAriaHidden().length).toBeGreaterThan(0);
+
+      await nextEvent(popup, 'animationstart', { action: () => user.keyboard('{Escape}') });
+      record();
+      // The animation of 100 s still runs after `animationstart`, so the case reads the list itself.
+      const animations = popup.getAnimations();
+      const finished = animations.map((animation) => animation.finished);
+      for (const animation of animations) {
+        animation.finish();
+      }
+      // A busy machine can stall the page for some seconds, so the wait for the end of the
+      // animations has no time limit.
+      await Promise.all(finished);
+      await waitFor(() => {
+        expect(screen.queryByTestId('popup')).toBe(null);
+      });
+    }
+
+    it('BUG-5519: keeps no focusable content under aria-hidden during the exit animation', async () => {
+      let focusableDuringExit: HTMLElement[] = [];
+
+      await recordExit(() => {
+        focusableDuringExit = getFocusableUnderAriaHidden();
+      });
+
+      expect(focusableDuringExit).toEqual([]);
+    });
+
+    it('BUG-5519: returns the focus to the trigger when the exit animation starts', async () => {
+      let focusedDuringExit: Element | null = null;
+
+      await recordExit(() => {
+        focusedDuringExit = document.activeElement;
+      });
+
+      expect(focusedDuringExit).toBe(screen.getByRole('button', { name: 'Open' }));
     });
   });
 

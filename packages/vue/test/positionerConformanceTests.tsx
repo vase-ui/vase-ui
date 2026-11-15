@@ -1,7 +1,8 @@
 import { defineComponent, shallowRef } from 'vue';
 import type { CSSProperties, VNode } from 'vue';
 import { describe, expect, it } from 'vitest';
-import { screen, waitFor } from '@testing-library/dom';
+import { screen } from './queries';
+import { waitFor } from './waitFor';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import { isJSDOM } from '../src/common/testUtils';
 import type { ComponentRenderFn, HTMLProps } from '../src/internals/types';

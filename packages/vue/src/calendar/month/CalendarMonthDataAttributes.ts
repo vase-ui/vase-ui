@@ -1,3 +1,5 @@
+import { TransitionStatusDataAttributes } from '../../internals/stateAttributesMapping';
+
 /**
  * Present when the calendar is disabled.
  */
@@ -15,6 +17,15 @@ export const invalid = 'data-invalid';
  */
 export const empty = 'data-empty';
 /**
- * The position of the month in the months of the calendar, from `0`.
+ * The position of the month in the months of the calendar, from `0`. It is `-1` while the month
+ * leaves the calendar.
  */
 export const index = 'data-index';
+/**
+ * Present when the month begins animating in.
+ */
+export const startingStyle = TransitionStatusDataAttributes.startingStyle;
+/**
+ * Present when the month is animating out. The month has no interaction then.
+ */
+export const endingStyle = TransitionStatusDataAttributes.endingStyle;

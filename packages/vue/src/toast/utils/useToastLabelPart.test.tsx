@@ -1,7 +1,7 @@
 import { expect, describe, it } from 'vitest';
 import { defineComponent, h, KeepAlive, nextTick, shallowRef } from 'vue';
 import type { VNode } from 'vue';
-import { createRenderer, screen, takeReportedMessages } from '#test-utils';
+import { createHeldBranch, createRenderer, screen, takeReportedMessages } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
 import { Toast } from '@vase-ui/vue/toast';
 import type { ToastLabel } from '../useToastManager';
@@ -280,6 +280,30 @@ describe('useToastLabelPart', () => {
 
       visible.value = true;
       await nextTick();
+      expect(root).toHaveAttribute(attribute, 'part');
+    });
+
+    it(`drops ${attribute} for a part that mounts while KeepAlive holds it, and points it at the part after the show`, async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Part key="part" id="part">
+          Toast content
+        </Part>
+      ));
+      await render(() => (
+        <Toast.Provider>
+          <Toast.Viewport>
+            <Toast.Root toast={{ id: 'test' }} data-testid="root">
+              <HeldBranch />
+            </Toast.Root>
+          </Toast.Viewport>
+        </Toast.Provider>
+      ));
+      const root = screen.getByTestId('root');
+
+      await mountWhileHeld();
+      expect(root).not.toHaveAttribute(attribute);
+
+      await show();
       expect(root).toHaveAttribute(attribute, 'part');
     });
   });

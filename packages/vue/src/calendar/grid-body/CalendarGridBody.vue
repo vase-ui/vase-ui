@@ -2,9 +2,9 @@
 import type { HTMLAttributes } from 'vue';
 import type { CalendarPageWeek } from '../../internals/date-time/calendar/monthGrid';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
-import type { CalendarRootState } from '../root/CalendarRoot.vue';
+import type { CalendarState } from '../root/CalendarRoot.vue';
 
-export interface CalendarGridBodyState extends CalendarRootState {}
+export interface CalendarGridBodyState extends CalendarState {}
 
 export interface CalendarGridBodyProps
   extends

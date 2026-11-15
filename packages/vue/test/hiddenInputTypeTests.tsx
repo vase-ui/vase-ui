@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { VNode } from 'vue';
 import { Field } from '@vase-ui/vue/field';
-import { screen } from '@testing-library/dom';
+import { screen } from './queries';
 import type { createRenderer } from './createRenderer';
 
 /**

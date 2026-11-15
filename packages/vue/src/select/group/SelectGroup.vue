@@ -15,6 +15,7 @@ import { computed, provide } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { isInTreeOf } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { SelectGroupContext } from './SelectGroupContext';
 
@@ -32,7 +33,11 @@ defineSlots<{
 const { ids, registerId } = createIdRegistry();
 const labelId = computed(() => ids.value.at(-1));
 
-provide(SelectGroupContext, { labelId, registerLabelId: registerId });
+provide(SelectGroupContext, {
+  labelId,
+  registerLabelId: registerId,
+  reaches: (target) => isInTreeOf(element.value, target),
+});
 
 const state: SelectGroupState = EMPTY_OBJECT;
 

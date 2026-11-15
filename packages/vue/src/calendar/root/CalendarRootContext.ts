@@ -1,10 +1,10 @@
 import { inject } from 'vue';
 import type { ComputedRef, InjectionKey } from 'vue';
 import type { CalendarRootController } from '../../internals/date-time/calendar/useCalendarRoot';
-import type { CalendarRootState } from './CalendarRoot.vue';
+import type { CalendarState } from './CalendarRoot.vue';
 
 export interface CalendarRootContext extends Omit<CalendarRootController, 'label' | 'focus'> {
-  state: ComputedRef<CalendarRootState>;
+  state: ComputedRef<CalendarState>;
 }
 
 export const CalendarRootContext: InjectionKey<CalendarRootContext> = Symbol();

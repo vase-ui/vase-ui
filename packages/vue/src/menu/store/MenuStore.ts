@@ -83,6 +83,12 @@ type Context = PopupStoreContext<MenuRootChangeEventDetails> & {
   /** The item last reported as highlighted, kept in every menu so reasons compare against it. */
   reportedItem: HTMLElement | undefined;
   allowMouseUpTriggerRef: Ref<boolean>;
+  /**
+   * The `mousedown` event of the press whose release the trigger waits for, or `null` after a hover
+   * open. An item reads it to ignore a release at the point of the press. A submenu shares the ref of
+   * its parent.
+   */
+  triggerPressRef: ShallowRef<MouseEvent | null>;
   /** The element that holds real focus while virtual list navigation is active. */
   virtualFocusRef: Readonly<Ref<HTMLElement | null>> | undefined;
   /** Whether a filterable menu's trigger was last pressed by a screen reader. */
@@ -218,22 +224,23 @@ export class MenuStore<Payload> extends BasePopupStore<
       selectors,
     );
 
-    this.#shareMouseUpTriggerRef(toRaw(this.state).parent);
+    this.#shareMouseUpRefs(toRaw(this.state).parent);
   }
 
-  // A store makes no watcher, so the write that changes `parent` shares the ref of the new parent.
+  // A store makes no watcher, so the write that changes `parent` shares the refs of the new parent.
   override setState(newState: Readonly<State<Payload>>): void {
     const previousParent = toRaw(this.state).parent;
     super.setState(newState);
     const parent = toRaw(this.state).parent;
     if (parent !== previousParent) {
-      this.#shareMouseUpTriggerRef(parent);
+      this.#shareMouseUpRefs(parent);
     }
   }
 
-  #shareMouseUpTriggerRef(parent: MenuParent) {
+  #shareMouseUpRefs(parent: MenuParent) {
     if (parent.type === 'menu') {
       this.context.allowMouseUpTriggerRef = parent.store.context.allowMouseUpTriggerRef;
+      this.context.triggerPressRef = parent.store.context.triggerPressRef;
     } else if (parent.type !== undefined) {
       this.context.allowMouseUpTriggerRef = parent.context.allowMouseUpTriggerRef;
     }
@@ -370,6 +377,7 @@ function createInitialContext(): Context {
     highlightEvent: undefined,
     reportedItem: undefined,
     allowMouseUpTriggerRef: shallowRef(false),
+    triggerPressRef: shallowRef<MouseEvent | null>(null),
     virtualFocusRef: undefined,
     triggerFocusTargetRef: shallowRef<HTMLElement | null>(null),
     beforeTriggerFocusGuardRef: shallowRef<HTMLElement | null>(null),

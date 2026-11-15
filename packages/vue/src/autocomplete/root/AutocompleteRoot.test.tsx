@@ -13,6 +13,7 @@ import {
   hydrate,
   hydrateAfter,
   isJSDOM,
+  popupAnatomyTests,
   renderOnServer,
   screen,
   waitFor,
@@ -106,6 +107,22 @@ async function writeOutside(target: { value: unknown }, next: unknown) {
 
 describe('<Autocomplete.Root />', () => {
   const { render } = createRenderer();
+
+  popupAnatomyTests({
+    createComponent: ({ open, onOpenChangeComplete, content }) => (
+      <Autocomplete.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Autocomplete.Input />
+        <Autocomplete.Portal>
+          <Autocomplete.Positioner data-testid="shown" class="shown">
+            Content
+            {content}
+          </Autocomplete.Positioner>
+        </Autocomplete.Portal>
+      </Autocomplete.Root>
+    ),
+    createPopup: () => <Autocomplete.Popup data-testid="popup">Popup</Autocomplete.Popup>,
+    render,
+  });
 
   // `getFilter` keeps the filter for no locale, with the runtime locale of its first use. The case
   // of the mocked locale is thus the first case of the file.
@@ -3246,6 +3263,32 @@ describe('<Autocomplete.Root />', () => {
   });
 
   describe('inline completion', () => {
+    it('mode="both": Enter commits the inline text of the highlighted item', async () => {
+      const events: string[] = [];
+      await render(
+        <Autocomplete.Root
+          mode="both"
+          items={cities}
+          onValueChange={(value, details) => events.push(`valueChange:${value}:${details.reason}`)}
+          {...{ 'onUpdate:value': (value: string) => events.push(`update:value:${value}`) }}
+        >
+          <Autocomplete.Input />
+          {popupWithList()}
+        </Autocomplete.Root>,
+      );
+      getInput().focus();
+      await type('Ma');
+      await pressArrowDown();
+      expect(getInput().value).toBe('Malmö');
+      events.length = 0;
+
+      await fireEvent.keyDown(getInput(), { key: 'Enter' });
+      await flushMicrotasks();
+
+      expect(events).toEqual(['valueChange:Malmö:item-press', 'update:value:Malmö']);
+      expect(getInput().value).toBe('Malmö');
+    });
+
     it('typed text replaces the inline text', async () => {
       const handleValueChange = vi.fn();
       await render(

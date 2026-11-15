@@ -8,6 +8,7 @@ import {
   fireEvent,
   flushMicrotasks,
   isInaccessible,
+  nextEvent,
   popupFocusPropsTests,
   screen,
   takeReportedMessages,
@@ -780,6 +781,115 @@ describe('<Dialog.Popup />', () => {
       await waitFor(() => {
         expect(screen.getByTestId('popup')).toHaveFocus();
       });
+    });
+  });
+
+  describe('BUG-5519: an exit animation', () => {
+    const EXIT_CSS = `
+      .popup[data-ending-style] { animation: popup-exit 100s; }
+      @keyframes popup-exit { to { opacity: 0; } }
+    `;
+
+    // An element that the Tab key can reach, under `aria-hidden` on itself or on an ancestor.
+    function getFocusableUnderAriaHidden() {
+      return [...document.querySelectorAll<HTMLElement>('[aria-hidden="true"]')]
+        .flatMap((element) => [element, ...element.querySelectorAll<HTMLElement>('*')])
+        .filter((element) => element.tabIndex >= 0);
+    }
+
+    // Opens the dialog with its trigger and closes it with the Escape key. The callback records the
+    // document when the exit animation starts. The function resolves after the popup unmounts.
+    async function recordExit(record: () => void) {
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+      const { user } = await render(
+        <div>
+          <style>{EXIT_CSS}</style>
+          <Dialog.Root>
+            <Dialog.Trigger>Open</Dialog.Trigger>
+            <Dialog.Portal>
+              <Dialog.Popup class="popup" data-testid="popup">
+                <Dialog.Close>Close</Dialog.Close>
+              </Dialog.Popup>
+            </Dialog.Portal>
+          </Dialog.Root>
+        </div>,
+      );
+      await user.click(screen.getByRole('button', { name: 'Open' }));
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus();
+      });
+      expect(getFocusableUnderAriaHidden().length).toBeGreaterThan(0);
+      const popup = screen.getByTestId('popup');
+
+      await nextEvent(popup, 'animationstart', { action: () => user.keyboard('{Escape}') });
+      record();
+      // The animation of 100 s still runs after `animationstart`, so the case reads the list itself.
+      const animations = popup.getAnimations();
+      const finished = animations.map((animation) => animation.finished);
+      for (const animation of animations) {
+        animation.finish();
+      }
+      // A busy machine can stall the page for some seconds, so the wait for the end of the
+      // animations has no time limit.
+      await Promise.all(finished);
+      await waitFor(() => {
+        expect(screen.queryByTestId('popup')).toBe(null);
+      });
+    }
+
+    it('BUG-5519: keeps no focusable content under aria-hidden during the exit animation', async () => {
+      let focusableDuringExit: HTMLElement[] = [];
+
+      await recordExit(() => {
+        focusableDuringExit = getFocusableUnderAriaHidden();
+      });
+
+      expect(focusableDuringExit).toEqual([]);
+    });
+
+    it('BUG-5519: returns the focus to the trigger when the exit animation starts', async () => {
+      let focusedDuringExit: Element | null = null;
+
+      await recordExit(() => {
+        focusedDuringExit = document.activeElement;
+      });
+
+      expect(focusedDuringExit).toBe(screen.getByRole('button', { name: 'Open' }));
+    });
+  });
+
+  it('BUG-5519: returns the focus to the trigger at the close while preventUnmountOnClose keeps the popup', async () => {
+    let root!: Dialog.Root.Actions;
+    const { user } = await render(() => (
+      <Dialog.Root
+        ref={(instance: unknown) => {
+          root = instance as Dialog.Root.Actions;
+        }}
+        onOpenChange={(_open, eventDetails) => eventDetails.preventUnmountOnClose()}
+      >
+        <Dialog.Trigger>Open</Dialog.Trigger>
+        <Dialog.Portal>
+          <Dialog.Popup data-testid="popup">
+            <Dialog.Close>Close</Dialog.Close>
+          </Dialog.Popup>
+        </Dialog.Portal>
+      </Dialog.Root>
+    ));
+    await user.click(screen.getByRole('button', { name: 'Open' }));
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus();
+    });
+
+    await user.keyboard('{Escape}');
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Open' })).toHaveFocus();
+    });
+    expect(screen.getByTestId('popup')).toHaveAttribute('data-closed');
+
+    root.unmount();
+    await waitFor(() => {
+      expect(screen.queryByTestId('popup')).toBe(null);
     });
   });
 

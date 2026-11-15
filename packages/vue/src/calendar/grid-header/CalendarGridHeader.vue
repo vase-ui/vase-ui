@@ -1,9 +1,9 @@
 <script lang="ts">
 import type { HTMLAttributes } from 'vue';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
-import type { CalendarRootState } from '../root/CalendarRoot.vue';
+import type { CalendarState } from '../root/CalendarRoot.vue';
 
-export interface CalendarGridHeaderState extends CalendarRootState {}
+export interface CalendarGridHeaderState extends CalendarState {}
 
 export interface CalendarGridHeaderProps
   extends

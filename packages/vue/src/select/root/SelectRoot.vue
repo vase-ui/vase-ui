@@ -172,6 +172,7 @@ import { useFormContext } from '../../internals/form-context';
 import { getHiddenInputType } from '../../internals/getHiddenInputType';
 import { handleHiddenInputInvalid } from '../../internals/handleHiddenInputInvalid';
 import {
+  compareItemEquality,
   defaultItemEquality,
   findSelectionIndex,
   isSelectedValueDirty,
@@ -300,10 +301,6 @@ watch(
   { deep: true },
 );
 
-// A select with no `Select.Popup` shows its positioner, so its close waits for the positioner.
-// The call below reads this ref before `store` exists, so a `watch` after the call writes it.
-const closeElement = shallowRef<HTMLElement | null>(null);
-
 const {
   store,
   open: isOpen,
@@ -361,6 +358,7 @@ const {
         selectionRef: {
           value: { allowSelectedMouseUp: false, allowUnselectedMouseUp: false, dragY: 0 },
         },
+        triggerPressRef: { value: null },
         firstItemTextRef: { value: null },
         selectedItemTextRef: { value: null },
         alignItemWithTriggerActiveRef: { value: false },
@@ -373,7 +371,6 @@ const {
     ),
   {
     name: 'Select',
-    popupRef: closeElement,
     onOpenChange(nextOpen, eventDetails) {
       emit('openChange', nextOpen, eventDetails);
 
@@ -401,16 +398,6 @@ const {
       emit('openChangeComplete', nextOpen);
     },
   },
-);
-
-// The call above makes `post` jobs that read this element: the layout read of the enter and the
-// close wait. A `sync` copy gives them the element in the patch that mounts it.
-watch(
-  () => store.context.popupRef.value ?? store.select('positionerElement'),
-  (element) => {
-    closeElement.value = element;
-  },
-  { flush: 'sync', immediate: true },
 );
 
 const serializedValue = computed(() => {
@@ -496,6 +483,16 @@ useValueChanged(selectedValue, () => {
 });
 
 function setValue(nextValue: any, eventDetails: SelectRootChangeEventDetails) {
+  // HTML fires `change` when the user commits a change of the value (`VUE-91`). A press of an item
+  // of a multiple select always adds or removes that item.
+  if (!isMultiple.value && compareItemEquality(nextValue, selectedValue.value, comparer.value)) {
+    return false;
+  }
+
+  return commitValue(nextValue, eventDetails);
+}
+
+function commitValue(nextValue: any, eventDetails: SelectRootChangeEventDetails) {
   emit('valueChange', nextValue, eventDetails);
 
   if (eventDetails.isCanceled) {
@@ -751,10 +748,12 @@ function handleHiddenInputChange(event: Event) {
 
 useFormReset(inputElement, (event) => {
   const defaultValue = getDefaultValue();
+  // `setValue` keeps a value that `isItemEqualToValue` matches with the default object. The dirty
+  // state compares a single value by identity, so the reset puts back that object.
   const hasChanged =
     props.value === undefined &&
     isSelectedValueDirty(selectedValue.value, defaultValue, comparer.value) &&
-    setValue(defaultValue, createChangeEventDetails(REASONS.none, event));
+    commitValue(defaultValue, createChangeEventDetails(REASONS.none, event));
 
   if (hasChanged) {
     isResetChangePending = true;

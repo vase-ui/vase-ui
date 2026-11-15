@@ -205,6 +205,8 @@ const popupAutoSizeResetRef: NavigationMenuPopupAutoSizeResetState = {
 };
 
 const preventUnmountOnClose = shallowRef(false);
+// With no popup part, the positioner is the part that shows.
+const transitionElement = () => popupElement.value ?? positionerElement.value;
 const {
   mounted,
   transitionStatus,
@@ -212,7 +214,7 @@ const {
   forceUnmount: unmount,
 } = useUnmountAfterClose({
   open,
-  ref: popupElement,
+  ref: transitionElement,
   preventUnmountOnClose,
   setPreventUnmountOnClose(next) {
     preventUnmountOnClose.value = next;
@@ -220,15 +222,15 @@ const {
   onUnmount() {
     const doc = ownerDocument(rootRef.value);
     const activeEl = activeElement(doc);
-    const popup = popupElement.value;
+    const element = transitionElement();
 
     const isReturnFocusBlocked = closeReason ? blockedReturnFocusReasons.has(closeReason) : false;
 
     if (
       !isReturnFocusBlocked &&
       isHTMLElement(prevTriggerElementRef.value) &&
-      (activeEl === ownerDocument(popup).body || contains(popup, activeEl)) &&
-      popup
+      (activeEl === ownerDocument(element).body || contains(element, activeEl)) &&
+      element
     ) {
       prevTriggerElementRef.value.focus({ preventScroll: true });
       prevTriggerElementRef.value = undefined;
