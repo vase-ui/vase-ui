@@ -44,7 +44,7 @@ Import the component and assemble its parts:
 
 <<< ./autocomplete/Anatomy.vue
 
-Bind the text with `v-model:value`. For the text that the root has, such as a press of the item whose text the input shows, the root emits no `valueChange` and no `update:value`.
+Bind the text with `v-model:value`. For the text that the root has, such as a press of the item with that text, the root emits no `valueChange` and no `update:value`.
 
 Text that a visitor types, or that the browser fills, before the page hydrates stays in `Autocomplete.Input`. After the hydration, the root emits `valueChange` and `update:value` with that text, and the popup stays closed. When the visitor left the input before the page hydrated, the input then also gets `change`, `blur` and `focusout`.
 
