@@ -30,7 +30,7 @@ export function useFieldInput(): (input: HTMLElement | null) => void {
   inputsOfField.set(inputRef, inputs);
 
   // Vue calls the setter during the render of the control. A read of a ref there would make that
-  // render depend on the ref, so the setter reads this variable and only writes `element`.
+  // render depend on the ref, so the setter reads this variable and reads no ref.
   let ownInput: HTMLInputElement | null = null;
   const element = shallowRef<HTMLInputElement | null>(null);
   const { isHeld, shown } = useKeepAliveState(element, reaches);
