@@ -255,6 +255,18 @@ describe('<Popover.Root />', () => {
         </Popover.Portal>
       </Popover.Root>
     ),
+    createPendingPositionerComponent: ({ Pending, onOpenChange }) => (
+      <Popover.Root defaultOpen modal onOpenChange={onOpenChange}>
+        <Popover.Trigger>Open</Popover.Trigger>
+        <Popover.Portal>
+          <Pending>
+            <Popover.Positioner data-testid="shown">
+              <Popover.Popup>Popup</Popover.Popup>
+            </Popover.Positioner>
+          </Pending>
+        </Popover.Portal>
+      </Popover.Root>
+    ),
     render,
   });
 

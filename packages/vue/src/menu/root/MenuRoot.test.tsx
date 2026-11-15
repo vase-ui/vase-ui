@@ -293,6 +293,20 @@ describe('<Menu.Root />', () => {
         </Menu.Portal>
       </Menu.Root>
     ),
+    createPendingPositionerComponent: ({ Pending, onOpenChange }) => (
+      <Menu.Root defaultOpen onOpenChange={onOpenChange}>
+        <Menu.Trigger>Open</Menu.Trigger>
+        <Menu.Portal>
+          <Pending>
+            <Menu.Positioner data-testid="shown">
+              <Menu.Popup>
+                <Menu.Item>Item</Menu.Item>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Pending>
+        </Menu.Portal>
+      </Menu.Root>
+    ),
     render,
   });
 

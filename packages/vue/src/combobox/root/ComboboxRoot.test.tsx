@@ -286,6 +286,22 @@ describe('<Combobox.Root />', () => {
         </Combobox.Portal>
       </Combobox.Root>
     ),
+    createPendingPositionerComponent: ({ Pending, onOpenChange }) => (
+      <Combobox.Root defaultOpen modal onOpenChange={onOpenChange}>
+        <Combobox.Input />
+        <Combobox.Portal>
+          <Pending>
+            <Combobox.Positioner data-testid="shown">
+              <Combobox.Popup>
+                <Combobox.List>
+                  <Combobox.Item value="a">A</Combobox.Item>
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Pending>
+        </Combobox.Portal>
+      </Combobox.Root>
+    ),
     render,
   });
 

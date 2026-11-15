@@ -112,6 +112,22 @@ describe('<Select.Root />', () => {
         </Select.Portal>
       </Select.Root>
     ),
+    createPendingPositionerComponent: ({ Pending, onOpenChange }) => (
+      <Select.Root defaultOpen onOpenChange={onOpenChange}>
+        <Select.Trigger>
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Portal>
+          <Pending>
+            <Select.Positioner data-testid="shown" alignItemWithTrigger={false}>
+              <Select.Popup>
+                <Select.Item value="a">A</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Pending>
+        </Select.Portal>
+      </Select.Root>
+    ),
     render,
   });
 
