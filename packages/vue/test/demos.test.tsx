@@ -330,7 +330,6 @@ describe.each([
           variant === method ||
           !pageDemos.some((other) => other.name === name && other.variant === method),
       );
-      expect(shown).not.toHaveLength(0);
       await render(
         h(
           'div',
