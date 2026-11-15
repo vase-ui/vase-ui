@@ -12,7 +12,7 @@ import {
 import { MenuGroupContext } from '../group/MenuGroupContext';
 
 const TestGroupProvider = defineComponent((_, { slots }) => {
-  provide(MenuGroupContext, { registerLabelId: () => {}, reaches: () => true });
+  provide(MenuGroupContext, { registerLabelId: () => {} });
   return () => slots.default?.();
 });
 

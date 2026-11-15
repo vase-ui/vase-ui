@@ -53,8 +53,6 @@ export interface SliderRootContext {
    */
   rootLabelId: ComputedRef<string>;
   registerLabelId: RegisterId;
-  /** Whether an id reference of the root reaches `element`. */
-  reaches: (element: Element) => boolean;
   thumbMap: Readonly<Ref<ReadonlyMap<Element, CompositeMetadata<ThumbMetadata>>>>;
   largeStep: ComputedRef<number>;
   lastChangeReasonRef: Ref<SliderRootChangeEventReason>;

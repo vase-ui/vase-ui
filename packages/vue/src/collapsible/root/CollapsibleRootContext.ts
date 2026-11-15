@@ -9,8 +9,6 @@ import type { UseCollapsibleRootReturnValue } from './useCollapsibleRoot';
 export interface CollapsibleRootContext extends UseCollapsibleRootReturnValue {
   onOpenChange: (open: boolean, eventDetails: CollapsibleRootChangeEventDetails) => void;
   state: ComputedRef<CollapsibleRootState>;
-  /** Whether an id reference of the root reaches `element`. */
-  reaches: (element: Element) => boolean;
 }
 
 export const CollapsibleRootContext: InjectionKey<CollapsibleRootContext> = Symbol();

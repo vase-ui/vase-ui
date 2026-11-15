@@ -207,7 +207,6 @@ const {
   disabled: fieldDisabled,
   name: fieldName,
   validation: fieldValidation,
-  reaches: fieldReaches,
 } = useFieldRootContext();
 const fieldItemContext = useFieldItemContext();
 const { getDescriptionProps, registerControlId } = useLabelableContext();
@@ -257,7 +256,7 @@ let unregisterInput: (() => void) | void;
 // `KeepAlive` takes the input out of the document, and the field must not use an input that is not
 // in the document. A held required checkbox that is off would block the submit of the form, and its
 // value would stay in the values of the form.
-const { isHeld, shown } = useKeepAliveState(() => element.value, group?.reaches ?? fieldReaches);
+const { isHeld, shown } = useKeepAliveState();
 
 function updateInputRegistration() {
   unregisterInput?.();
@@ -294,8 +293,9 @@ function releaseInput() {
 
 onDeactivated(releaseInput);
 
-// The `ref` setter of a checkbox that mounts in a held branch registers the input.
-watch(isHeld, (held) => {
+// The `ref` setter of a checkbox that mounts in a held branch registers the input. `isHeld` is
+// already `true` then, so the input is a source of the `watch`.
+watch([isHeld, inputElement], ([held]) => {
   if (held) {
     releaseInput();
   }
@@ -327,7 +327,6 @@ const ownsControlId = group?.registerControlId !== registerControlId;
 const controlId = useLabelableId({
   id: () => props.id || undefined,
   enabled: ownsControlId,
-  element: () => element.value,
 });
 const hiddenInputId = computed(() => (props.nativeButton ? undefined : controlId.value));
 

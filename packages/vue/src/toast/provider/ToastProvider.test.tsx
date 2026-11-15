@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, KeepAlive, nextTick, onMounted, shallowRef, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter, ShallowRef } from 'vue';
-import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
+import { createHeldBranch, createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
 import type { ToastManager } from '../createToastManager';
 import { Toast } from '@vase-ui/vue/toast';
 import type { ToastStore } from '../store';
@@ -285,6 +285,52 @@ describe('<Toast.Provider />', () => {
       second.add({ title: 'after the activation', timeout: 0 });
 
       expect(probe.store!.state.toasts).toHaveLength(1);
+    });
+
+    it('does not run the timer of a toast that a part adds while the provider mounts in a held branch', async () => {
+      const onClose = vi.fn();
+      const AddsToast = defineComponent(() => {
+        const { add } = Toast.useToastManager();
+        onMounted(() => {
+          add({ title: 'Saved', timeout: 1000, onClose });
+        });
+        return () => null;
+      });
+      const ToastList = defineComponent(() => {
+        const { toasts } = Toast.useToastManager();
+        return () =>
+          toasts.value.map((toast) => (
+            <Toast.Root key={toast.id} toast={toast} data-testid="toast">
+              <Toast.Title />
+            </Toast.Root>
+          ));
+      });
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Toast.Provider>
+          <AddsToast />
+          <Toast.Viewport>
+            <ToastList />
+          </Toast.Viewport>
+        </Toast.Provider>
+      ));
+      await render(<HeldBranch />);
+
+      await mountWhileHeld();
+      vi.advanceTimersByTime(5000);
+
+      expect(onClose).not.toHaveBeenCalled();
+
+      await show();
+
+      expect(screen.getAllByTestId('toast')).toHaveLength(1);
+
+      vi.advanceTimersByTime(999);
+
+      expect(onClose).not.toHaveBeenCalled();
+
+      vi.advanceTimersByTime(2);
+
+      expect(onClose).toHaveBeenCalledTimes(1);
     });
   });
 

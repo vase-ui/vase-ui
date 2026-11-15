@@ -20,7 +20,6 @@ import { EMPTY_OBJECT } from '../../common/empty';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
-import { isInTreeOf } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { usePopoverRootContext } from '../root/PopoverRootContext';
 
@@ -42,8 +41,6 @@ const source = Symbol();
 useRegisteredId(
   () => titleId.value,
   (getId) => store.context.registerTitleId(source, getId),
-  () => element.value,
-  (target) => isInTreeOf(store.select('popupElement'), target),
 );
 
 const state: PopoverTitleState = EMPTY_OBJECT;

@@ -120,7 +120,7 @@ const ariaControls = computed(() => {
   return list ? list.id || undefined : store.select('popupId');
 });
 
-useLabelableId({ id: () => props.id, element: () => element.value });
+useLabelableId({ id: () => props.id });
 
 const setFocused = useSetFieldFocused(isDisabled, () => element.value);
 

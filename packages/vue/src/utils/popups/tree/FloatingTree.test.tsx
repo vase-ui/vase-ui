@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { defineComponent, KeepAlive, nextTick, onMounted, shallowRef, Teleport } from 'vue';
 import type { ComputedRef, PropType, ShallowRef } from 'vue';
-import { createRenderer } from '#test-utils';
+import { createHeldBranch, createRenderer } from '#test-utils';
 import type { FloatingNodeType, FloatingTreeType, PopupPositioningContext } from '../types';
 import {
   provideFloatingNode,
@@ -191,6 +191,29 @@ describe('FloatingTree', () => {
 
     expect(namesOf(tree.nodesRef.value)).toEqual(order);
     expect(openNodesBelowTop()).toEqual(['before', 'parent', 'child', 'after']);
+  });
+
+  it('hides the context of a node whose part mounts while KeepAlive holds its branch until the activation', async () => {
+    const tree = new FloatingTreeStore();
+    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => <NodePart name="held" />);
+    await render(() => (
+      <TreeScope tree={tree}>
+        <NodePart name="top">
+          <HeldBranch />
+        </NodePart>
+      </TreeScope>
+    ));
+    const openNodesBelowTop = () => namesOf(getNodeChildren(tree.nodesRef.value, ids.top));
+
+    await mountWhileHeld();
+
+    expect(namesOf(tree.nodesRef.value)).toEqual(['top', 'held']);
+    expect(openNodesBelowTop()).toEqual([]);
+
+    await show();
+
+    expect(namesOf(tree.nodesRef.value)).toEqual(['top', 'held']);
+    expect(openNodesBelowTop()).toEqual(['held']);
   });
 
   it('removes a context from a node only when the node holds it, also while its part is deactivated', async () => {

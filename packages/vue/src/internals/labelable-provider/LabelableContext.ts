@@ -36,8 +36,6 @@ export interface LabelableContext {
   messageIds: ComputedRef<string[]>;
   registerMessageId: RegisterId;
   getDescriptionProps: (externalProps: Record<string, any>) => Record<string, any>;
-  /** Whether an id reference of the provider reaches `element`. */
-  reaches: (element: Element) => boolean;
 }
 
 /**
@@ -56,7 +54,6 @@ const DEFAULT_LABELABLE_CONTEXT: LabelableContext = {
   messageIds: computed(() => EMPTY_ARRAY),
   registerMessageId: NOOP,
   getDescriptionProps: (externalProps) => externalProps,
-  reaches: () => true,
 };
 
 /**

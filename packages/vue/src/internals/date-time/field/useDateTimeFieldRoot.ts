@@ -222,7 +222,6 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     state: fieldState,
     validation,
     validationMode,
-    reaches,
     setFocused: setFieldFocused,
     setTouched,
   } = useFieldRootContext();
@@ -384,7 +383,6 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
 
   const controlId = useLabelableId({
     id: () => toValue(parameters.id),
-    element: () => rootElement.value,
   });
 
   // The name of a month depends on its year in a calendar with leap months. The value can have
@@ -824,7 +822,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   let unregisterInput: (() => void) | void;
   // `KeepAlive` takes the input out of the document, and the field must not use an input that is
   // not in the document. A held required field that is empty would block the submit of its form.
-  const { isHeld, shown } = useKeepAliveState(hiddenInputElement, reaches);
+  const { isHeld, shown } = useKeepAliveState();
 
   // A field can have more than one input, such as two date fields of a range. The input goes to the
   // registry of the field and not to `validation.inputRef`. The registry gives the field the first
@@ -859,8 +857,9 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
 
   onDeactivated(releaseInput);
 
-  // The `ref` setter of a root that mounts in a held branch registers the input.
-  watch(isHeld, (held) => {
+  // The `ref` setter of a root that mounts in a held branch registers the input. `isHeld` is
+  // already `true` then, so the input is a source of the `watch`.
+  watch([isHeld, hiddenInputElement], ([held]) => {
     if (held) {
       releaseInput();
     }

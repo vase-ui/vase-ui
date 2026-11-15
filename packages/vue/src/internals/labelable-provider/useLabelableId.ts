@@ -10,7 +10,7 @@ import { useLabelableContext } from './LabelableContext';
  * then has the `for` that names the control.
  */
 export function useLabelableId(params: UseLabelableIdParameters = {}): ComputedRef<string> {
-  const { controlId, registerControlId, resetControlId, reaches } = useLabelableContext();
+  const { controlId, registerControlId, resetControlId } = useLabelableContext();
 
   const defaultId = useVaseUiId();
 
@@ -24,7 +24,7 @@ export function useLabelableId(params: UseLabelableIdParameters = {}): ComputedR
   // `KeepAlive` removes the DOM of a held control from the document, so the control gives no id
   // then. Its entry stays. `KeepAlive` runs the `onActivated` hooks of one branch from the last part
   // to the first part. A new entry in that hook would reverse the order of the controls.
-  const { isHeld, shown } = useKeepAliveState(params.element, reaches);
+  const { isHeld, shown } = useKeepAliveState();
 
   function getRegisteredId() {
     if (isHeld.value) {
@@ -106,9 +106,4 @@ export interface UseLabelableIdParameters {
    * @default true
    */
   enabled?: MaybeRefOrGetter<boolean | undefined> | undefined;
-  /**
-   * The element of the control. With it, a control that mounts in a branch that `KeepAlive` holds
-   * gives no id until the activation.
-   */
-  element?: MaybeRefOrGetter<Element | null | undefined> | undefined;
 }

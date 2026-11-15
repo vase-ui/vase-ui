@@ -16,7 +16,6 @@ import LabelableControl from '../../../test/fixtures/LabelableControl.vue';
 import LabelableLabel from '../../../test/fixtures/LabelableLabel.vue';
 import LabelableScope from '../../../test/fixtures/LabelableScope.vue';
 import LabelableLabelPosition from './LabelableLabelPosition.test.vue';
-import { isInTreeOf } from '../useKeepAliveState';
 import { useLabelableContext } from './LabelableContext';
 import { createLabelIdRegistry } from './createLabelIdRegistry';
 import { useLabel } from './useLabel';
@@ -532,26 +531,15 @@ describe('useLabel', () => {
       });
     });
 
-    describe('param: reaches', () => {
-      // The root is in the held branch and the field is not. The label is held for both owners.
-      it('gives no id to the field or to the root while KeepAlive holds a label that mounted in the branch of the root', async () => {
+    describe('KeepAlive', () => {
+      // The label registers with the field outside the branch and with the registry of a root.
+      it('gives no id to the field or to the root while KeepAlive holds a label that mounted in a held branch', async () => {
         const { labelId, registerLabelId } = createLabelIdRegistry();
         const HeldLabel = defineComponent(() => {
-          const element = shallowRef<HTMLElement | null>(null);
-          const labelProps = useLabel({
-            id: 'held-label',
-            registerLabelId,
-            reaches: (target) => isInTreeOf(rootElement.value, target),
-            element,
-          });
-          return () => <div ref={element} {...labelProps.value} />;
+          const labelProps = useLabel({ id: 'held-label', registerLabelId });
+          return () => <div {...labelProps.value} />;
         });
-        const rootElement = shallowRef<HTMLElement | null>(null);
-        const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
-          <div key="root" ref={rootElement}>
-            <HeldLabel />
-          </div>
-        ));
+        const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => <HeldLabel />);
         const FieldLabelId = defineComponent(() => {
           const context = useLabelableContext();
           return () => <output data-testid="field-label-id">{context.labelId.value}</output>;

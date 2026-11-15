@@ -64,7 +64,6 @@ const {
   open,
   handleTrigger,
   disabled: contextDisabled,
-  reaches,
 } = useCollapsibleRootContext();
 
 // The panel registers its id in `setup`, and it can come after the trigger.
@@ -86,8 +85,6 @@ const source = Symbol();
 useRegisteredId(
   () => triggerId.value,
   (getId) => registerTriggerId(source, getId),
-  () => element.value,
-  reaches,
 );
 
 const state = computed<AccordionTriggerState>(() => ({

@@ -1,6 +1,12 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, defineComponent, h, shallowRef } from 'vue';
-import { createRenderer, flushMicrotasks, recordInputEvents, screen } from '#test-utils';
+import {
+  createHeldBranch,
+  createRenderer,
+  flushMicrotasks,
+  recordInputEvents,
+  screen,
+} from '#test-utils';
 import { useFormRestore, useFormRestoreAsInput } from './useFormRestore';
 
 function renderInput(input: { value: HTMLInputElement | null }) {
@@ -78,6 +84,23 @@ describe('useFormRestore', () => {
     await flushMicrotasks();
 
     expect([count(addSpy), count(removeSpy)]).toEqual([2, 1]);
+  });
+
+  it('does not call the callback while KeepAlive holds a part that mounted in a held branch', async () => {
+    const handleRestore = vi.fn();
+    const Restorable = createRestorable(handleRestore);
+    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => <Restorable />);
+    await render(<HeldBranch />);
+
+    await mountWhileHeld();
+    window.dispatchEvent(new PageTransitionEvent('pageshow'));
+
+    expect(handleRestore).not.toHaveBeenCalled();
+
+    await show();
+    window.dispatchEvent(new PageTransitionEvent('pageshow'));
+
+    expect(handleRestore).toHaveBeenCalledTimes(1);
   });
 });
 

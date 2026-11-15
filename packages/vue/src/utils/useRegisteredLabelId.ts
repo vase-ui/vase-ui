@@ -2,7 +2,7 @@ import { computed, onMounted, onScopeDispose, shallowRef, toValue, watch } from 
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { useIsHydrating } from '../common/hydration';
 import { useVaseUiId } from '../internals/useBaseUiId';
-import { isInTreeOf, useKeepAliveState } from '../internals/useKeepAliveState';
+import { useKeepAliveState } from '../internals/useKeepAliveState';
 
 export type LabelIdSetter = (
   next: string | undefined | ((current: string | undefined) => string | undefined),
@@ -18,8 +18,6 @@ export interface LabelIdRoot {
   setLabelId: LabelIdSetter;
   defaultLabelId: ComputedRef<string>;
   isMounted: () => boolean;
-  /** Whether an id reference of the root reaches `element`. */
-  reaches: (element: Element) => boolean;
   /**
    * Queues a label that `KeepAlive` shows. The root names the last queued label in the document,
    * one time for each flush.
@@ -49,11 +47,8 @@ export interface UseLabelIdReturnValue {
  *
  * The first render in a browser assumes the same as a server. Vue does not patch an attribute when
  * it hydrates. A root that assumes a label only on a server keeps the generated id in the DOM.
- * @param rootElement The element of the root.
  */
-export function useLabelId(
-  rootElement: MaybeRefOrGetter<Element | null | undefined>,
-): UseLabelIdReturnValue {
+export function useLabelId(): UseLabelIdReturnValue {
   const defaultLabelId = useVaseUiId();
   const isHydrating = useIsHydrating();
   const registeredId = shallowRef<string | undefined>();
@@ -106,7 +101,6 @@ export function useLabelId(
       setLabelId,
       defaultLabelId,
       isMounted: () => isMounted,
-      reaches: (element) => isInTreeOf(toValue(rootElement), element),
       show(label) {
         shownLabels.add(label);
         showCount.value += 1;
@@ -136,7 +130,7 @@ export function useRegisteredLabelId(
 ): ComputedRef<string> {
   const { setLabelId } = root;
   const id = computed(() => toValue(idProp) ?? root.defaultLabelId.value);
-  const { isHeld, shown } = useKeepAliveState(element, root.reaches);
+  const { isHeld, shown } = useKeepAliveState();
 
   // The server HTML and the hydration need the id from the first render of the root. A label that
   // mounts later can mount in a held branch, so it waits for the mount.

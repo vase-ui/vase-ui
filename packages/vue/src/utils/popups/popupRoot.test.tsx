@@ -11,6 +11,7 @@ import {
 } from 'vue';
 import type { MaybeRefOrGetter, PropType } from 'vue';
 import {
+  createHeldBranch,
   createRenderer,
   createTransitionRunCounter,
   fireEvent,
@@ -1532,6 +1533,31 @@ describe('usePopupRoot', () => {
 
       expect(second.store).toBe(root.current.store);
       expect(first.store).toBe(first.serverStore);
+    });
+
+    it('attaches a root that mounts while KeepAlive holds its branch to its handle only at the activation', async () => {
+      const handle = createPopupFixtureHandle<string>();
+      const root = createRootRef();
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <PopupRootPart ref={root.ref} handle={handle} />
+      ));
+      const { getByText } = await render(() => (
+        <div>
+          <PopupTriggerPart id="detached" handle={handle}>
+            detached
+          </PopupTriggerPart>
+          <HeldBranch />
+        </div>
+      ));
+
+      await mountWhileHeld();
+      expect(handle.store).toBe(handle.serverStore);
+
+      await fireEvent.click(getByText('detached'));
+      expect(handle.isOpen).toBe(false);
+
+      await show();
+      expect(handle.store).toBe(root.current.store);
     });
 
     it('closes with the reason none when KeepAlive deactivates the active trigger and the root stays', async () => {

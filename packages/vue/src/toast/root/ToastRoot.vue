@@ -78,7 +78,7 @@ import {
 import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
-import { isInHeldBranch, isInTreeOf } from '../../internals/useKeepAliveState';
+import { isInHeldBranch } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { getElementTransform } from '../../utils/getElementTransform';
 import {
@@ -247,7 +247,6 @@ provide(ToastRootContext, {
   recalculateHeight,
   visibleIndex,
   expanded,
-  reaches: (target) => isInTreeOf(element.value, target),
 });
 
 function setDragOffset(nextDragOffset: { x: number; y: number }) {

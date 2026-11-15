@@ -175,7 +175,7 @@ function setPopupElement(popup: HTMLElement | null) {
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: useKeepAliveElementRef(setPopupElement, () => toRaw(store.state).activeTriggerElement),
+  ref: useKeepAliveElementRef(setPopupElement),
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
     // This listener runs after each other listener of the popup.

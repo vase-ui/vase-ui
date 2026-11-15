@@ -5,8 +5,6 @@ import type { RegisterId } from '../../internals/labelable-provider/LabelableCon
 export interface ComboboxGroupContext {
   labelId: ComputedRef<string | undefined>;
   registerLabelId: RegisterId;
-  /** Whether an id reference of the group reaches `element`. */
-  reaches: (element: Element) => boolean;
   /**
    * The items of this group, if the group has a list of items. A collection inside the group
    * renders them.

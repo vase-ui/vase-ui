@@ -18,6 +18,7 @@ import { REASONS } from '../../internals/reasons';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useUnmountAfterClose } from '../../internals/useUnmountAfterClose';
+import { isInHeldBranch } from '../../internals/useKeepAliveState';
 import type { ReactiveStore } from './ReactiveStore';
 import { popupStoreSelectors } from './store';
 import type {
@@ -217,7 +218,9 @@ export function usePopupRootWithPopupId<Store extends PopupRootStore>(
   // flush of the mount. That run comes after the DOM update and before the `onMounted` hook of each
   // part below the root, so such a hook can call the handle. A write in `onMounted` of the root
   // would come after those hooks. Vue holds that run while the root is in a pending `<Suspense>`
-  // branch, and a branch that Vue drops never runs it.
+  // branch, and a branch that Vue drops never runs it. A root that mounts in a branch that
+  // `KeepAlive` holds writes `false`. It attaches its store at the activation, as a deactivated
+  // root does.
   const isActive = shallowRef(false);
   watch(
     () => (isActive.value ? toValue(options.handle) : undefined),
@@ -229,7 +232,7 @@ export function usePopupRootWithPopupId<Store extends PopupRootStore>(
     },
     { flush: 'post' },
   );
-  isActive.value = true;
+  isActive.value = !isInHeldBranch();
   onDeactivated(() => {
     isActive.value = false;
   });

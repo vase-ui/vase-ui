@@ -74,7 +74,7 @@ defineSlots<{
 }>();
 
 const formatLocale = useFormatLocale(() => props.locale);
-const { labelRoot, getAriaLabelledBy } = useLabelId(() => element.value);
+const { labelRoot, getAriaLabelledBy } = useLabelId();
 
 // A `null` or non-finite value keeps the progress indeterminate.
 // Otherwise one clamped value and one percentage feed every output: the status, `aria-valuenow`,

@@ -39,7 +39,6 @@ defineSlots<{
 const { labelId, rendered, state } = useToastLabelPart(
   () => props.id,
   'title',
-  () => element.value,
 );
 
 const { element, elementProps } = useRenderElement('h2', props, {

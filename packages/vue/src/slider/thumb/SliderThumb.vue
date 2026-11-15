@@ -226,7 +226,7 @@ let restoringFocusVisible = false;
 
 const thumbId = useVaseUiId();
 const defaultInputId = useVaseUiId();
-const labelableId = useLabelableId({ element: () => element.value });
+const labelableId = useLabelableId();
 const inputId = computed(() => (range.value ? defaultInputId.value : labelableId.value));
 
 const thumbMetadata = computed<ThumbMetadata>(() => ({ inputId: inputId.value }));

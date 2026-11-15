@@ -90,7 +90,7 @@ const { element, elementProps } = useRenderElement('div', props, {
   state,
   ref: filterList
     ? undefined
-    : useKeepAliveElementRef(setListElement, () => toRaw(store.state).activeTriggerElement),
+    : useKeepAliveElementRef(setListElement),
   props: (attrs) => (filterList ? filterList.props(attrs) : getListProps(attrs)),
 });
 

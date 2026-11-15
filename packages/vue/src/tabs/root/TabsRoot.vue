@@ -113,7 +113,6 @@ import { useControlled } from '../../common/useControlled';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { isInTreeOf } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { TabsRootContext } from './TabsRootContext';
 import type { TabsPartRegistration } from './TabsRootContext';
@@ -387,7 +386,6 @@ provide(TabsRootContext, {
   },
   tabActivationDirection,
   hasChosenTab,
-  reaches: (target) => isInTreeOf(element.value, target),
 });
 
 // The panels register their elements in this list, to get their `data-index`.

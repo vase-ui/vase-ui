@@ -1,7 +1,5 @@
-import { computed, provide, shallowRef, toValue, watch } from 'vue';
-import type { MaybeRefOrGetter } from 'vue';
+import { computed, provide, shallowRef, watch } from 'vue';
 import { useVaseUiId } from '../useBaseUiId';
-import { isInTreeOf } from '../useKeepAliveState';
 import { LabelableContext, useLabelableContext } from './LabelableContext';
 import { createIdRegistry } from './createIdRegistry';
 import { createLabelIdRegistry } from './createLabelIdRegistry';
@@ -10,11 +8,8 @@ import { createLabelIdRegistry } from './createLabelIdRegistry';
  * Makes the labelable context of a field and provides it to the parts below.
  * `Field.Root` and `Field.Item` call it in `setup`.
  * A component cannot `inject` what it provides, so the root uses the context that this returns.
- * @param element The element of the part that calls it.
  */
-export function provideLabelableContext(
-  element?: MaybeRefOrGetter<Element | null | undefined>,
-): LabelableContext {
+export function provideLabelableContext(): LabelableContext {
   // The outer provider. `inject` reads the provides of the parent component, so it does not
   // return the context that this function makes.
   const parent = useLabelableContext();
@@ -70,7 +65,6 @@ export function provideLabelableContext(
     messageIds,
     registerMessageId,
     getDescriptionProps,
-    reaches: (target) => isInTreeOf(toValue(element), target),
   };
 
   provide(LabelableContext, context);

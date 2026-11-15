@@ -103,6 +103,30 @@ describe('<Combobox.Label />', () => {
     expect(trigger).toHaveAttribute('aria-labelledby', screen.getByTestId('label').id);
   });
 
+  it('does not name a trigger that mounts later while KeepAlive holds a label of a combobox with no trigger', async () => {
+    const hasTrigger = shallowRef(false);
+    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+      <Combobox.Label key="label" data-testid="label">
+        Fruit
+      </Combobox.Label>
+    ));
+    await render(() => (
+      <Combobox.Root>
+        <HeldBranch />
+        {hasTrigger.value && <Combobox.Trigger data-testid="trigger" />}
+      </Combobox.Root>
+    ));
+
+    await mountWhileHeld();
+    hasTrigger.value = true;
+    await flushMicrotasks();
+    const trigger = screen.getByTestId('trigger');
+    expect(trigger).not.toHaveAttribute('aria-labelledby');
+
+    await show();
+    expect(trigger).toHaveAttribute('aria-labelledby', screen.getByTestId('label').id);
+  });
+
   it('names a portaled input from a label that mounts after it in an app in a detached element', async () => {
     const labelMounted = shallowRef(false);
     const container = document.createElement('div');
