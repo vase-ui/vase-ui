@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { h } from 'vue';
 import type { Component } from 'vue';
-import { createRenderer, holdPress, screen, waitFor } from '#test-utils';
+import { createRenderer, holdPress, screen, waitFor, waitForLaterMillisecond } from '#test-utils';
 import DemoFrame from '../../../docs/.vitepress/components/DemoFrame.vue';
 import '../../../docs/.vitepress/theme/tokens.css';
 import '../../../docs/.vitepress/theme/look.css';
@@ -257,7 +257,9 @@ const rows: { name: string; demo: string; reach: () => Promise<Element> }[] = [
     name: 'red button in a popup while pressed',
     demo: 'alert-dialog/hero',
     async reach() {
-      await userEvent.click(screen.getByRole('button', { name: 'Discard draft' }));
+      await waitForLaterMillisecond(() =>
+        userEvent.click(screen.getByRole('button', { name: 'Discard draft' })),
+      );
       const button = await waitFor(() => screen.getByRole('button', { name: 'Discard' }));
       return press(button);
     },
