@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { shallowRef } from 'vue';
+import { nextTick, shallowRef } from 'vue';
 import {
   createRenderer,
   flushMicrotasks,
@@ -482,6 +482,19 @@ describe('<Calendar.Root /> the page of the focused day', () => {
       await flushMicrotasks();
 
       expect(screen.getByTestId('next')).toHaveFocus();
+    });
+
+    it('keeps a focus that the consumer moves out of the grid after the flush', async () => {
+      const { focusedDate } = await renderWithModels({ focusedDate: day('2026-11-12') });
+      button('2026-11-12')!.focus();
+
+      focusedDate.value = day('2026-12-24');
+      await nextTick();
+      screen.getByTestId('next').focus();
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('next')).toHaveFocus();
+      expect(gridNames()).toEqual([monthName('2026-12-24')]);
     });
   });
 

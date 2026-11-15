@@ -29,10 +29,10 @@ export interface CalendarBaseProps {
   defaultMonth?: Temporal.PlainYearMonth | undefined;
   /**
    * The day that the user focused last, and that has the tab stop. `null` means no such day. When
-   * it changes to a day that the grid does not show, the grid shows the page of that day, and the
-   * root emits `monthChange`. For a day outside `minDate` and `maxDate`, the grid shows the page of
-   * the limit. With a controlled `month`, the grid shows that page when the consumer gives the
-   * month. Use it when controlled.
+   * it changes to a day that no page of the grid shows or holds, the grid shows the page of that
+   * day. For a day outside `minDate` and `maxDate`, it shows the page of the limit. When that page
+   * is in another month, the root emits `monthChange`. With a controlled `month`, the page moves
+   * when the consumer gives that month. Use it when controlled.
    */
   focusedDate?: Temporal.PlainDate | null | undefined;
   /**

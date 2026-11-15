@@ -422,26 +422,32 @@ export function useCalendarRoot({
     return max && compareDates(date, max) > 0 ? max : date;
   }
 
-  function isFocusInGrid() {
-    return [...dayElements.values()].some(
-      (element) => activeElement(ownerDocument(element)) === element,
-    );
+  function isDayElement(element: Element | null) {
+    return [...dayElements.values()].some((dayElement) => dayElement === element);
   }
 
   // An element in an `inert` subtree cannot keep the focus. The browser thus moves the focus to
   // `<body>` when the page of the day that has the focus leaves.
-  // The root decides after the flush, because a consumer can give the new month in that flush.
-  // It focuses the tab stop only when the tab stop is the focused day, or when no day has the focus
-  // any more. Else the focus event would write the tab stop to the consumer in place of the day
-  // that the consumer wrote.
+  // The root decides after the flush, because a consumer can give the new month in that flush. A
+  // consumer can also give the focus to another element then, and that focus stays.
+  // The root focuses the tab stop only when the tab stop is the focused day, or when the day that
+  // had the focus left the grid. Else the focus event would write the tab stop to the consumer in
+  // place of the day that the consumer wrote.
   function keepFocusInGrid() {
-    if (!isFocusInGrid()) {
+    const [someDayElement] = dayElements.values();
+    const doc = ownerDocument(someDayElement);
+    const focused = activeElement(doc);
+    if (!isDayElement(focused)) {
       return;
     }
     void nextTick().then(() => {
+      const active = activeElement(doc);
+      if (active !== focused && active !== doc.body && active !== null) {
+        return;
+      }
       const stop = tabStop.value;
       const focusedDateHasStop = stop && props.focusedDate && isSameDay(stop, props.focusedDate);
-      if (focusedDateHasStop || !isFocusInGrid()) {
+      if (focusedDateHasStop || !isDayElement(active)) {
         focus();
       }
     });
