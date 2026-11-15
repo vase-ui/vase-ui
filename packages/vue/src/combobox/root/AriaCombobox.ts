@@ -1690,18 +1690,19 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   const inputElement = computed(() => store.select('inputElement'));
   // An element with no id has an empty `id`, and the input then has no `aria-controls`.
   const listElementId = computed(() => store.select('listElementId') || undefined);
+  // During SSR and initial hydration, the input ref is not available yet.
+  // Assume an input-like control so combobox ARIA attributes are present.
+  const shouldTreatAsInput = computed(
+    () => inputElement.value == null || inputElement.value.tagName === 'INPUT',
+  );
 
   const role = computed(() => {
-    const isPlainInput = inputElement.value?.tagName === 'INPUT';
-    // During SSR and initial hydration, the input ref is not available yet.
-    // Assume an input-like control so combobox ARIA attributes are present.
-    const shouldTreatAsInput = inputElement.value == null || isPlainInput;
     // A non-input control only takes on combobox semantics while the list is exposed, which for
     // an inline list is the whole time.
-    const shouldApplyAria = shouldTreatAsInput || expanded.value;
+    const shouldApplyAria = shouldTreatAsInput.value || expanded.value;
     // Vue before 3.5.14 sets the key `autocorrect` as a Boolean DOM property. The key
     // `autoCorrect` is an attribute in each version.
-    const reference: Record<string, unknown> = shouldTreatAsInput
+    const reference: Record<string, unknown> = shouldTreatAsInput.value
       ? { autocomplete: 'off', spellcheck: 'false', autoCorrect: 'off', autocapitalize: 'none' }
       : {};
     if (shouldApplyAria) {
@@ -1758,6 +1759,9 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     activeIndex,
     selectedIndex,
     virtual: true,
+    // A closed control that is not an input, such as a textarea, has no combobox role. Its arrow
+    // keys then move the caret, as in each other textarea (`VUE-97`).
+    openOnArrowKeyDown: shouldTreatAsInput,
     loopFocus: () => props.loopFocus ?? true,
     allowEscape: () => (props.loopFocus ?? true) && !autoHighlightMode.value,
     focusItemOnOpen: () =>
