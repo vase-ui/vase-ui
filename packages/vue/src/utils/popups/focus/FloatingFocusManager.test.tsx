@@ -12,7 +12,7 @@ import {
   Teleport,
   watch,
 } from 'vue';
-import type { PropType, ShallowRef } from 'vue';
+import type { PropType, ShallowRef, VNode } from 'vue';
 import {
   cloneElement,
   createRenderer,
@@ -73,7 +73,7 @@ type PopupStore = ReturnType<typeof useFloatingRootStore>;
 
 // A popup with a reference field. The reference opens the popup for a click, and for a
 // `mousedown` as a trigger of a popup part does. With `keepMounted`, the popup element stays and
-// the focus manager is disabled while the popup is closed. The default content has a button that
+// the focus manager is disabled while the popup is closed, unless `manager.disabled` is set. The default content has a button that
 // closes the popup, and the slot of the content gets the same function as `close`. `name` is the
 // prefix of each test id, so that a popup can hold another popup.
 const Popup = defineComponent({
@@ -128,7 +128,7 @@ const Popup = defineComponent({
           <FloatingFocusManager
             store={store}
             {...props.manager}
-            disabled={props.keepMounted ? !open.value : props.manager.disabled}
+            disabled={props.manager.disabled ?? (props.keepMounted ? !open.value : undefined)}
           >
             <div
               role={props.role}
@@ -1472,6 +1472,143 @@ describe('FloatingFocusManager', () => {
         popup.close();
 
         await waitFor(() => expect(screen.getByTestId('reference')).toHaveFocus());
+      });
+
+      it('returns the focus when it is in an element of getInsideElements', async () => {
+        const popup = captureStore();
+        await render(
+          <div>
+            <Popup
+              manager={{ getInsideElements: () => [screen.queryByTestId('inside')] }}
+              onStore={popup.onStore}
+            />
+            <input data-testid="inside" />
+          </div>,
+        );
+        await openPopup();
+        await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+        screen.getByTestId('inside').focus();
+
+        popup.close();
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('reference')).toHaveFocus();
+      });
+    });
+
+    // The portal puts the inner popup outside the element of the outer popup. With `keepMounted`,
+    // a focus manager stops at the close and the element stays, as the focus manager of a dialog
+    // does during its exit.
+    describe('BUG-5519: a popup in a popup', () => {
+      // `button` gets the functions that close the outer popup and the inner popup. It renders the
+      // content of the inner popup, and the focus moves to it at the open.
+      async function renderPopupInPopup({
+        outer = {},
+        innerKeepMounted = false,
+        button,
+      }: {
+        outer?: { keepMounted?: boolean; manager?: ManagerProps };
+        innerKeepMounted?: boolean;
+        button: (closeOuter: () => void, closeInner: () => void) => VNode;
+      }) {
+        await render(
+          <Popup keepMounted={outer.keepMounted} manager={outer.manager}>
+            {{
+              default: ({ close: closeOuter }: { close: () => void }) => (
+                <Popup name="inner-" portal keepMounted={innerKeepMounted}>
+                  {{
+                    default: ({ close: closeInner }: { close: () => void }) =>
+                      button(closeOuter, closeInner),
+                  }}
+                </Popup>
+              ),
+            }}
+          </Popup>,
+        );
+        await openPopup();
+        await openPopup(document, 'inner-');
+        await waitFor(() => expect(screen.getByTestId('button')).toHaveFocus());
+      }
+
+      it.each<{ name: string; closeOuterFirst: boolean }>([
+        { name: 'the outer popup closes first', closeOuterFirst: true },
+        { name: 'the inner popup closes first', closeOuterFirst: false },
+      ])(
+        'BUG-5519: returns the focus to the outer reference when both close and $name',
+        async ({ closeOuterFirst }) => {
+          await renderPopupInPopup({
+            outer: { keepMounted: true },
+            innerKeepMounted: true,
+            button: (closeOuter, closeInner) => (
+              <button
+                data-testid="button"
+                onClick={() => {
+                  const [first, second] = closeOuterFirst
+                    ? [closeOuter, closeInner]
+                    : [closeInner, closeOuter];
+                  first();
+                  second();
+                }}
+              />
+            ),
+          });
+
+          await fireEvent.click(screen.getByTestId('button'));
+          await flushMicrotasks();
+
+          expect(screen.getByTestId('reference')).toHaveFocus();
+        },
+      );
+
+      // A popover that a hover opened has a disabled focus manager while it is open.
+      it('BUG-5519: returns the focus to the inner reference in an open popup with a disabled focus manager', async () => {
+        await renderPopupInPopup({
+          outer: { manager: { disabled: true } },
+          button: (_closeOuter, closeInner) => (
+            <button data-testid="button" onClick={() => closeInner()} />
+          ),
+        });
+
+        await fireEvent.click(screen.getByTestId('button'));
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('inner-reference')).toHaveFocus();
+      });
+
+      // A popup that stays mounted with its focus manager on returns the focus only at its unmount,
+      // as after `preventUnmountOnClose()`.
+      it('BUG-5519: returns the focus to the inner reference in a closed popup whose focus manager is on', async () => {
+        await renderPopupInPopup({
+          outer: { keepMounted: true, manager: { disabled: false } },
+          innerKeepMounted: true,
+          button: (closeOuter, closeInner) => (
+            <button
+              data-testid="button"
+              onClick={() => {
+                closeOuter();
+                closeInner();
+              }}
+            />
+          ),
+        });
+
+        await fireEvent.click(screen.getByTestId('button'));
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('inner-reference')).toHaveFocus();
+      });
+
+      it('BUG-5519: keeps the focus in an inner popup that stays open', async () => {
+        await renderPopupInPopup({
+          outer: { keepMounted: true },
+          innerKeepMounted: true,
+          button: (closeOuter) => <button data-testid="button" onClick={() => closeOuter()} />,
+        });
+
+        await fireEvent.click(screen.getByTestId('button'));
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('button')).toHaveFocus();
       });
     });
 
