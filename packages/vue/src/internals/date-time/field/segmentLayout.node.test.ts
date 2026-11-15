@@ -65,10 +65,11 @@ function textsOf(value: TemporalValue, locale: string, options: Intl.DateTimeFor
   return { era: textOf('era'), timeZoneName: textOf('timeZoneName') };
 }
 
+// Node.js 22, 24 and 26 end the process for these layouts
+// (https://github.com/nodejs/node/issues/67076). When `.node-version` has the correction, `my` gets
+// the order and the Japanese era names of its own pattern, and both cases fail. See "Tool versions"
+// in CONTRIBUTING.md.
 describe('getSegmentLayout in Node.js', () => {
-  // Node.js 22, 24 and 26 end the process for these layouts
-  // (https://github.com/nodejs/node/issues/67076). When `.node-version` has the correction, `my`
-  // gets the order of its own pattern, and the case fails. See "Tool versions" in CONTRIBUTING.md.
   it('gives each layout of my, ksh and sc that Node.js 22 to 26 cannot format', () => {
     const cases = [
       ...CALENDARS.map((calendar) => ({
