@@ -11,3 +11,13 @@ export const disabled = 'data-disabled';
  * Present while the user drags the handle.
  */
 export const dragging = 'data-dragging';
+/**
+ * Present when the handle cannot move to the left, or up in a vertical root. The side is a side of
+ * the screen.
+ */
+export const atMin = 'data-at-min';
+/**
+ * Present when the handle cannot move to the right, or down in a vertical root. The side is a side
+ * of the screen.
+ */
+export const atMax = 'data-at-max';
