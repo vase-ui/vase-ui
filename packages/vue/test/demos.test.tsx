@@ -1,5 +1,5 @@
 /// <reference types="vite/client" />
-import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { h } from 'vue';
 import type { Component } from 'vue';
 import {
@@ -18,6 +18,19 @@ import DemoSource from '../../../docs/.vitepress/components/DemoSource.vue';
 import { demoVariant } from '../../../docs/.vitepress/components/demoVariant.ts';
 import { DEMO_VARIANT_STORAGE_KEY } from '../../../docs/.vitepress/components/demoVariantStorageKey.ts';
 import '../../../docs/demos/tailwind.css';
+import { mark } from './probeMarks';
+
+// PROBE: the bounds of each test. The gap from `test-finished` to the next `test-start` holds the
+// `onTestFinished` hooks of `test/setup.ts` and `test/reportedMessages.ts`.
+beforeEach((context) => {
+  mark('test-start', { test: context.task.name, suite: context.task.suite?.name });
+  onTestFinished(() => {
+    mark('test-finished');
+  });
+});
+afterEach(() => {
+  mark('after-each');
+});
 
 const modules = import.meta.glob<{ default: Component }>(
   [

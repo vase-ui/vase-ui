@@ -164,6 +164,83 @@ jobs:
       - if: ${{ !cancelled() }}
         run: pnpm test:vapor
 
+  # TEMPORARY. Put this job before `required:` in .github/workflows/ci.yml. `required` does not need it.
+  # Remove it before the pull request is ready.
+  probe-webkit:
+    name: probe-webkit (${{ matrix.arm }}, ${{ matrix.run }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        arm: [webkit-all]
+        run: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        include:
+          - { arm: webkit-heartbeat, run: 1 }
+          - { arm: webkit-heartbeat, run: 2 }
+          - { arm: webkit-heartbeat, run: 3 }
+          - { arm: webkit-heartbeat, run: 4 }
+          - { arm: webkit-heartbeat, run: 5 }
+          - { arm: webkit-heartbeat, run: 6 }
+          - { arm: webkit-cpuprof, run: 1 }
+          - { arm: webkit-cpuprof, run: 2 }
+          - { arm: webkit-cpuprof, run: 3 }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps webkit
+      - name: Machine
+        run: |
+          nproc
+          free -m
+      - name: Test
+        working-directory: packages/vue
+        env:
+          ARM: ${{ matrix.arm }}
+          PROBE_FILE: ${{ runner.temp }}/probe.jsonl
+          PROBE_JSC_GC: '1'
+          DEBUG: pw:browser
+        run: |
+          flags="--trace-gc --trace-gc-ignore-scavenger"
+          case "$ARM" in
+            webkit-heartbeat) export PROBE_HEARTBEAT=1 ;;
+            webkit-cpuprof) flags="$flags --cpu-prof --cpu-prof-dir=$RUNNER_TEMP/cpu" ;;
+          esac
+          # The memory of the runner every 10 s: three WebKit pages share 16 GB.
+          (while sleep 10; do echo "$(date -u +%T) $(free -m | sed -n 2p)"; done) > "$RUNNER_TEMP/memory.log" &
+          set +e
+          node $flags ./node_modules/vitest/vitest.mjs run --project webkit \
+            --reporter=default --reporter=json --outputFile.json="$RUNNER_TEMP/report.json" > "$RUNNER_TEMP/vitest.log" 2>&1
+          echo "vitest exit $?"
+          grep -c '\[GC<' "$RUNNER_TEMP/vitest.log"
+          node -e '
+            const r = require(process.argv[1]);
+            for (const f of r.testResults) for (const a of f.assertionResults)
+              if (a.duration >= 300 && f.name.endsWith("test/demos.test.tsx")) console.log("SLOW", a.duration, a.fullName);
+          ' "$RUNNER_TEMP/report.json"
+          if [ -d "$RUNNER_TEMP/cpu" ]; then gzip "$RUNNER_TEMP"/cpu/*.cpuprofile; fi
+          true
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: probe-${{ matrix.arm }}-${{ matrix.run }}
+          path: |
+            ${{ runner.temp }}/probe.jsonl
+            ${{ runner.temp }}/report.json
+            ${{ runner.temp }}/vitest.log
+            ${{ runner.temp }}/memory.log
+            ${{ runner.temp }}/cpu
+          retention-days: 7
+
   required:
     # Do not use `always()`. It starts this job in a cancelled run. The job waits for a runner
     # and holds the concurrency group, so the run of the new commit starts no job.

@@ -1,6 +1,7 @@
 import { onTestFinished, vi } from 'vitest';
 import { createApp, createSSRApp, nextTick } from 'vue';
 import type { App, Component } from 'vue';
+import { mark, takeMarks } from './probeMarks';
 import { recordVueWarnings, takeReportedMessages } from './reportedMessages';
 
 declare module 'vitest/browser' {
@@ -8,7 +9,9 @@ declare module 'vitest/browser' {
     renderOnServer: (
       file: string,
       props?: Record<string, unknown>,
+      marks?: unknown[],
     ) => Promise<{ html: string; warnings: string[] }>;
+    probeLog: (record: Record<string, unknown>) => Promise<{ nodeAt: number }>;
   }
 }
 
@@ -41,7 +44,9 @@ export async function renderOnServer(
   props?: Record<string, unknown>,
 ): Promise<string> {
   const { commands } = await import('vitest/browser');
-  const { html, warnings } = await commands.renderOnServer(file, props);
+  mark('command-sent', { file });
+  const { html, warnings } = await commands.renderOnServer(file, props, takeMarks());
+  mark('command-received');
 
   if (warnings.length > 0) {
     throw new Error(`The server render of ${file} gave Vue warnings:\n${warnings.join('\n')}`);
@@ -73,6 +78,7 @@ async function mountServerHtml(
   const app = createSSRApp(component, props);
   recordVueWarnings(app);
   onTestFinished(() => {
+    mark('hydrated-app-unmount');
     try {
       app.unmount();
     } catch {
@@ -101,10 +107,14 @@ export async function hydrate(
   component: Component,
   { serverHtml, props }: HydrateOptions,
 ): Promise<HydrateResult> {
+  mark('client-render-start');
   const clientDom = await renderOnClient(component, props);
+  mark('client-render-done');
 
   const container = insertServerHtml(serverHtml);
+  mark('server-html-inserted');
   await mountServerHtml(component, props, container);
+  mark('hydrate-mounted');
   const hydratedDom = serializeChildren(container);
 
   // Vue writes some hydration messages only to the console.
@@ -122,6 +132,7 @@ export async function hydrate(
     throw new Error(`The hydration is not clean.\n\n${problems.join('\n\n')}`);
   }
 
+  mark('hydrate-return');
   return { container };
 }
 
@@ -199,6 +210,7 @@ async function renderOnClient(
 
   try {
     await mountAndSettle(app, container);
+    mark('client-mounted');
     return serializeChildren(container);
   } finally {
     try {

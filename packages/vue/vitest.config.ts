@@ -5,6 +5,7 @@ import { playwright } from '@vitest/browser-playwright';
 import { webkit } from 'playwright';
 import { configDefaults, defineConfig } from 'vitest/config';
 import { collectGarbage } from './test/server/collectGarbage.ts';
+import { probeLog } from './test/server/probe.ts';
 import { renderOnServer } from './test/server/renderOnServer.ts';
 
 const contextOptions = { timezoneId: 'UTC' };
@@ -13,6 +14,7 @@ export default defineConfig({
   plugins: [vue(), vueJsx(), tailwindcss()],
   define: {
     'process.env.NODE_ENV': JSON.stringify('test'),
+    __PROBE_HEARTBEAT__: JSON.stringify(process.env.PROBE_HEARTBEAT === '1'),
   },
   resolve: {
     tsconfigPaths: true,
@@ -58,7 +60,7 @@ export default defineConfig({
             provider: playwright({ contextOptions }),
             headless: true,
             screenshotFailures: false,
-            commands: { collectGarbage, renderOnServer },
+            commands: { collectGarbage, probeLog, renderOnServer },
             instances: [
               { browser: 'chromium', name: 'chromium' },
               {
@@ -88,15 +90,30 @@ export default defineConfig({
                 name: 'webkit',
                 // On macOS, the Tab key of WebKit skips a button or a checkbox while full keyboard
                 // access is off, and it is off by default. WebKit on Linux does not skip them.
-                ...(process.platform === 'darwin' && {
-                  provider: playwright({
-                    contextOptions,
-                    launchOptions: {
-                      executablePath: `${import.meta.dirname}/test/webkitFullKeyboardAccess.sh`,
-                      env: { ...process.env, VASE_UI_WEBKIT_EXECUTABLE: webkit.executablePath() },
-                    },
-                  }),
-                }),
+                ...(process.platform === 'darwin'
+                  ? {
+                      provider: playwright({
+                        contextOptions,
+                        launchOptions: {
+                          executablePath: `${import.meta.dirname}/test/webkitFullKeyboardAccess.sh`,
+                          env: {
+                            ...process.env,
+                            ...(process.env.PROBE_JSC_GC && { JSC_logGC: process.env.PROBE_JSC_GC }),
+                            VASE_UI_WEBKIT_EXECUTABLE: webkit.executablePath(),
+                          },
+                        },
+                      }),
+                    }
+                  : process.env.PROBE_JSC_GC
+                    ? {
+                        provider: playwright({
+                          contextOptions,
+                          launchOptions: {
+                            env: { ...process.env, JSC_logGC: process.env.PROBE_JSC_GC },
+                          },
+                        }),
+                      }
+                    : {}),
               },
               // `render` mounts each test in a Vapor app. The project needs Vue 3.6, so `pnpm test`
               // leaves it out.
