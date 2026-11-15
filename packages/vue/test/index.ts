@@ -6,6 +6,7 @@ export { isVaporApp } from './testApp';
 export type { Renderable, VaseUIRenderResult } from './createRenderer';
 export { mockRuntimeLocale } from './mockRuntimeLocale';
 export {
+  clientCenter,
   enterWithMouse,
   firePointer,
   holdPress,

@@ -4,6 +4,7 @@ import { KeepAlive, computed, defineComponent, provide, shallowRef } from 'vue';
 import { Menubar } from '@vase-ui/vue/menubar';
 import * as Menu from '../index.parts';
 import {
+  clientCenter,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -441,7 +442,7 @@ describe('<Menu.Popup />', () => {
       );
 
       const trigger = screen.getByText('Open');
-      await fireEvent.mouseDown(trigger);
+      await fireEvent.mouseDown(trigger, clientCenter(trigger));
       const item = await screen.findByText('Close');
 
       // Drag-release selection is only armed 200ms after the trigger press.

@@ -358,6 +358,7 @@ const {
         selectionRef: {
           value: { allowSelectedMouseUp: false, allowUnselectedMouseUp: false, dragY: 0 },
         },
+        triggerPressRef: { value: null },
         firstItemTextRef: { value: null },
         selectedItemTextRef: { value: null },
         alignItemWithTriggerActiveRef: { value: false },

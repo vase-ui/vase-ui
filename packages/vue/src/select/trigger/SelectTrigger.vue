@@ -142,15 +142,16 @@ function setTriggerElement(trigger: HTMLElement | null) {
 
 // The cleanup also runs on a server, so it removes the listener only from the document that got it.
 let mouseUpDocument: Document | null = null;
-let press: MouseEvent | null = null;
 
 function removeMouseUpListener() {
   mouseUpDocument?.removeEventListener('mouseup', handleMouseUp);
   mouseUpDocument = null;
-  press = null;
 }
 
 function handleMouseUp(mouseEvent: MouseEvent) {
+  const press = store.context.triggerPressRef.value;
+  store.context.triggerPressRef.value = null;
+
   const trigger = element.value;
   if (!trigger) {
     return;
@@ -295,7 +296,7 @@ const { element, elementProps } = useRenderElement('button', props, {
 
         removeMouseUpListener();
         mouseUpDocument = ownerDocument(event.currentTarget as Element);
-        press = event;
+        store.context.triggerPressRef.value = event;
         mouseUpDocument.addEventListener('mouseup', handleMouseUp, { once: true });
       },
     },
