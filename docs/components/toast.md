@@ -216,6 +216,8 @@ Render the anchored toasts in a `<Toast.Provider>` of their own, apart from the 
 
 <<< ./toast/MixingManagers.vue
 
+Each viewport is a landmark region, and its default name is "Notifications". Give the viewport of the anchored toasts an `aria-label` of its own, such as "Anchored notifications".
+
 ### Custom position
 
 Your own CSS sets the position of the toasts. To change the position, change the styles of `.Viewport` and `.Root`. A more general component can take a `data-position` attribute, and the CSS gives each value its position. This demo shows the toasts at the top center:

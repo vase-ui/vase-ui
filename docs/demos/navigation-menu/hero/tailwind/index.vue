@@ -76,7 +76,7 @@ const linkCardClassName =
 </script>
 
 <template>
-  <NavigationMenu.Root class="min-w-max text-neutral-950 dark:text-white">
+  <NavigationMenu.Root class="min-w-max text-neutral-950 dark:text-white" aria-label="Example">
     <NavigationMenu.List class="relative flex gap-px">
       <NavigationMenu.Item>
         <NavigationMenu.Trigger :class="triggerClassName">

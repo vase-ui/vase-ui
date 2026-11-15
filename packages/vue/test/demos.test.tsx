@@ -313,6 +313,38 @@ describe('the form library demos of the Forms page', () => {
   );
 });
 
+describe.each([
+  { page: 'Toast', family: 'toast' },
+  { page: 'Navigation Menu', family: 'navigation-menu' },
+])('the demos of the $page page', ({ family }) => {
+  const { render } = createRenderer();
+  const pageDemos = demos.filter(({ name }) => name.startsWith(`${family}/`));
+  const methods = [...new Set(pageDemos.map(({ variant }) => variant))];
+
+  it.each(methods.map((method) => ({ method })))(
+    'have no axe violation when the page shows them together ($method)',
+    async ({ method }) => {
+      // The frame shows the other variant of a demo that does not have the selected one.
+      const shown = pageDemos.filter(
+        ({ name, variant }) =>
+          variant === method ||
+          !pageDemos.some((other) => other.name === name && other.variant === method),
+      );
+      expect(shown).not.toHaveLength(0);
+      await render(
+        h(
+          'div',
+          shown.map(({ variant, Demo }) => h('div', { 'data-demo': variant }, h(Demo))),
+        ),
+      );
+
+      // axe compares the landmarks of the demos only when it reads them together. The viewport of
+      // a toast provider is a landmark in a portal, outside the element of the render.
+      await expectNoAxeViolations(document.body);
+    },
+  );
+});
+
 describe('demos', () => {
   it('have no name of Base UI or React in their text or their links', () => {
     expect(sourcesThatMatch(/Base UI|BaseUI|base-ui|\bReact\b|\/react\//)).toEqual([]);
