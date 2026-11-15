@@ -5,8 +5,8 @@ import type { AccordionItemState } from './AccordionItem.vue';
 
 export interface AccordionItemContext {
   /**
-   * The `id` of a trigger that has no `id` of its own. The item makes it, so that the panel can
-   * name the trigger before the trigger renders.
+   * The `id` of a trigger that has no `id` of its own. The item makes it, as the item of Base UI
+   * does.
    */
   defaultTriggerId: ComputedRef<string>;
   /**
@@ -16,8 +16,8 @@ export interface AccordionItemContext {
   registerTriggerId: RegisterId;
   state: ComputedRef<AccordionItemState>;
   /**
-   * The `id` of the last trigger of the item. Until a trigger registers, it is `defaultTriggerId`.
-   * After a trigger has registered and then left, it is `undefined`.
+   * The `id` of the last trigger that is registered now. With no such trigger, it is `undefined`,
+   * so a panel names only a trigger that exists.
    */
   triggerId: ComputedRef<string | undefined>;
 }
