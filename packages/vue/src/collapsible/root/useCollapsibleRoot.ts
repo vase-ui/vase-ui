@@ -1,4 +1,4 @@
-import { computed, shallowRef, toValue } from 'vue';
+import { computed, toValue } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
 import { useControlled } from '../../common/useControlled';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -33,19 +33,8 @@ export function useCollapsibleRoot(
   );
 
   const defaultPanelId = useVaseUiId();
-  const { ids: panelIds, registerId } = createIdRegistry();
-  // A trigger renders before its panel registers. Until then, the root assumes the generated id.
-  const hasRegisteredPanel = shallowRef(false);
-  const panelId = computed(
-    () => panelIds.value.at(-1) ?? (hasRegisteredPanel.value ? undefined : defaultPanelId.value),
-  );
-
-  const registerPanelId: RegisterId = (source, getId) => {
-    if (getId) {
-      hasRegisteredPanel.value = true;
-    }
-    registerId(source, getId);
-  };
+  const { ids: panelIds, registerId: registerPanelId } = createIdRegistry();
+  const panelId = computed(() => panelIds.value.at(-1));
 
   function handleTrigger(event: MouseEvent | KeyboardEvent) {
     const nextOpen = !open.value;
@@ -121,6 +110,10 @@ export interface UseCollapsibleRootReturnValue {
    * Whether the collapsible panel is currently open.
    */
   open: ComputedRef<boolean>;
+  /**
+   * The `id` of the last panel that is registered now. With no such panel, it is `undefined`, so a
+   * trigger names only a panel that exists.
+   */
   panelId: ComputedRef<string | undefined>;
   registerPanelId: RegisterId;
   setMounted: (nextMounted: boolean) => void;

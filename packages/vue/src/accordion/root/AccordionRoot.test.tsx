@@ -1309,9 +1309,8 @@ describe('<Accordion.Root />', () => {
       file: string;
       component: Component;
       props: Record<string, unknown>;
-      server: ReturnType<typeof readNames>;
-      /** The names after the hydration. The default is the names in the server HTML. */
-      hydrated?: ReturnType<typeof readNames>;
+      /** The names in the server HTML, which are also the names after the hydration. */
+      names: ReturnType<typeof readNames>;
     }
 
     it.each<NamesRow>([
@@ -1320,7 +1319,7 @@ describe('<Accordion.Root />', () => {
         file: HYDRATION_FIXTURE,
         component: AccordionRootHydration,
         props: { defaultValue: [0] },
-        server: {
+        names: {
           controls: 'the generated panel id',
           labelledBy: 'the generated trigger id',
           hidden: false,
@@ -1331,41 +1330,35 @@ describe('<Accordion.Root />', () => {
         file: HYDRATION_FIXTURE,
         component: AccordionRootHydration,
         props: { keepMounted: true },
-        server: { controls: 'nothing', labelledBy: 'the generated trigger id', hidden: true },
+        names: { controls: 'nothing', labelledBy: 'the generated trigger id', hidden: true },
       },
       {
         name: 'a closed item with hiddenUntilFound',
         file: HYDRATION_FIXTURE,
         component: AccordionRootHydration,
         props: { hiddenUntilFound: true },
-        server: { controls: 'nothing', labelledBy: 'the generated trigger id', hidden: true },
+        names: { controls: 'nothing', labelledBy: 'the generated trigger id', hidden: true },
       },
       {
         name: 'an open item with a trigger id',
         file: HYDRATION_FIXTURE,
         component: AccordionRootHydration,
         props: { defaultValue: [0], triggerId: 'my-trigger' },
-        server: { controls: 'the generated panel id', labelledBy: 'my-trigger', hidden: false },
+        names: { controls: 'the generated panel id', labelledBy: 'my-trigger', hidden: false },
       },
       {
         name: 'an open item with a panel id',
         file: HYDRATION_FIXTURE,
         component: AccordionRootHydration,
         props: { defaultValue: [0], panelId: 'my-panel' },
-        // The server writes the trigger before the panel registers its id.
-        server: {
-          controls: 'another generated id',
-          labelledBy: 'the generated trigger id',
-          hidden: false,
-        },
-        hydrated: { controls: 'my-panel', labelledBy: 'the generated trigger id', hidden: false },
+        names: { controls: 'my-panel', labelledBy: 'the generated trigger id', hidden: false },
       },
       {
         name: 'an open item with the panel first',
         file: PANEL_FIRST_FIXTURE,
         component: AccordionRootPanelFirst,
         props: {},
-        server: {
+        names: {
           controls: 'the generated panel id',
           labelledBy: 'the generated trigger id',
           hidden: false,
@@ -1376,31 +1369,21 @@ describe('<Accordion.Root />', () => {
         file: PANEL_FIRST_FIXTURE,
         component: AccordionRootPanelFirst,
         props: { triggerId: 'my-trigger' },
-        // The server writes the panel before the trigger registers its id.
-        server: {
-          controls: 'the generated panel id',
-          labelledBy: 'another generated id',
-          hidden: false,
-        },
-        hydrated: {
-          controls: 'the generated panel id',
-          labelledBy: 'my-trigger',
-          hidden: false,
-        },
+        names: { controls: 'the generated panel id', labelledBy: 'my-trigger', hidden: false },
       },
     ])(
-      'names the parts in the server HTML and after the hydration: $name',
-      async ({ file, component, props, server, hydrated = server }) => {
+      'VUE-80: names the parts in the server HTML and after the hydration: $name',
+      async ({ file, component, props, names }) => {
         const serverHtml = await renderOnServer(file, props);
 
         // The parse in a `<template>` element has no side effect.
         const template = document.createElement('template');
         template.innerHTML = serverHtml;
-        expect(readNames(template.content)).toEqual(server);
+        expect(readNames(template.content)).toEqual(names);
 
         const { container } = await hydrate(component, { serverHtml, props });
 
-        expect(readNames(container)).toEqual(hydrated);
+        expect(readNames(container)).toEqual(names);
       },
     );
 
