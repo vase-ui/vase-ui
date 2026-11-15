@@ -90,6 +90,14 @@ describe('<Calendar.YearSelect />', () => {
     expect(select().value).toBe('2026');
   });
 
+  it('does not disable the year of the page when the calendar has no limit', async () => {
+    await renderCalendar({ defaultMonth: Temporal.PlainYearMonth.from('1800-03') });
+
+    expect(select().value).toBe('1800');
+    expect(select().selectedOptions[0]!.disabled).toBe(false);
+    expect([...select().options].some((option) => option.disabled)).toBe(false);
+  });
+
   it('moves the page to the year that the user picks, in the same month', async () => {
     const onMonthChange = vi.fn();
     const { user } = await renderCalendar({

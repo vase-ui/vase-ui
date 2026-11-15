@@ -333,6 +333,22 @@ describe('<Calendar.Root /> pages', () => {
       expect(gridNames()).toEqual([monthName('2026-12-01')]);
     });
 
+    it('gives each day one button when a page with fixed weeks has days of the next page', async () => {
+      // The broadcast October 2026 has 4 weeks. Its fifth week, 2026-10-26 to 2026-11-01, belongs to
+      // the broadcast November.
+      await renderCalendar({
+        broadcastCalendar: true,
+        fixedWeeks: true,
+        numberOfMonths: 2,
+        defaultMonth: Temporal.PlainYearMonth.from('2026-10'),
+      });
+
+      for (const date of ['2026-10-26', '2026-10-31', '2026-11-01']) {
+        expect(document.querySelectorAll(`[data-date="${date}"] button`)).toHaveLength(1);
+        expect(button(date)!.closest('table')).toBe(screen.getAllByRole('grid')[1]);
+      }
+    });
+
     it('moves by a broadcast month', async () => {
       const { user } = await renderCalendar({ broadcastCalendar: true });
 
@@ -445,6 +461,25 @@ describe('<Calendar.Root /> pages', () => {
 
       expect(onMonthChange).toHaveBeenCalledTimes(1);
       expect(gridNames()).toEqual([range('2026-11-22', '2026-12-05')]);
+    });
+
+    it('keeps the page when the consumer keeps the month', async () => {
+      const onMonthChange = vi.fn();
+      const { user } = await renderCalendar({
+        visibleDuration: { weeks: 2 },
+        month: Temporal.PlainYearMonth.from('2026-11'),
+        onMonthChange,
+      });
+      await user.click(screen.getByTestId('next'));
+      await user.click(screen.getByTestId('next'));
+      expect(gridNames()).toEqual([range('2026-11-29', '2026-12-12')]);
+
+      // The next page starts in December, and the month of the consumer stays November.
+      await user.click(screen.getByTestId('next'));
+
+      expect(onMonthChange).toHaveBeenCalledTimes(1);
+      expect(onMonthChange.mock.calls[0]![0].toString()).toBe('2026-12');
+      expect(gridNames()).toEqual([range('2026-11-29', '2026-12-12')]);
     });
 
     it('moves a page of days by its days', async () => {

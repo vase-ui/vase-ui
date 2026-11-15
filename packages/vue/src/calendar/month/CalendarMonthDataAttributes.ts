@@ -17,7 +17,8 @@ export const invalid = 'data-invalid';
  */
 export const empty = 'data-empty';
 /**
- * The position of the month in the months of the calendar, from `0`.
+ * The position of the month in the months of the calendar, from `0`. It is `-1` while the month
+ * leaves the calendar.
  */
 export const index = 'data-index';
 /**

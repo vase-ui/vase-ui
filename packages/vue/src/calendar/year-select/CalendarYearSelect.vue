@@ -16,7 +16,7 @@ export interface CalendarYearSelectProps
   format?: 'numeric' | '2-digit' | undefined;
   /**
    * The order of the years in the options. The years run from the year of `minDate` to the year of
-   * `maxDate`. A limit that the calendar does not have is 100 years from today. The year of the
+   * `maxDate`. With no such limit, they run to 100 years before or after today. The year of the
    * page is always an option.
    * @default 'asc'
    */
@@ -54,13 +54,11 @@ const { onChange } = useCalendarSelect({
   root,
   getSelect: () => element.value,
   getOptions({ yearMonth }) {
-    const { minDate, maxDate, today } = root.rules.value;
-    const todayYear = root.toGridDate(today).year;
-    const minYear = minDate ? root.toGridDate(minDate).year : todayYear - YEARS_AROUND_TODAY;
-    const maxYear = maxDate ? root.toGridDate(maxDate).year : todayYear + YEARS_AROUND_TODAY;
+    const { min, max } = root.monthLimits.value;
+    const todayYear = root.toGridDate(root.rules.value.today).year;
     // The year that the calendar shows is always an option, also when it is out of the limits.
-    const first = Math.min(minYear, yearMonth.year);
-    const last = Math.max(maxYear, yearMonth.year);
+    const first = Math.min(min?.year ?? todayYear - YEARS_AROUND_TODAY, yearMonth.year);
+    const last = Math.max(max?.year ?? todayYear + YEARS_AROUND_TODAY, yearMonth.year);
     const years = Array.from({ length: last - first + 1 }, (_, index) => first + index);
     if (props.order === 'desc') {
       years.reverse();
@@ -72,7 +70,8 @@ const { onChange } = useCalendarSelect({
         { year: props.format },
         locale.value,
       ),
-      disabled: year < minYear || year > maxYear,
+      // Only `minDate` and `maxDate` disable a year. The years around today are not a limit.
+      disabled: (min !== undefined && year < min.year) || (max !== undefined && year > max.year),
     }));
   },
   getValue: ({ yearMonth }) => String(yearMonth.year),

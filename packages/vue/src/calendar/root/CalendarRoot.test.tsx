@@ -364,11 +364,7 @@ describe('<Calendar.Root />', () => {
       { prop: 'hiddenDates', attribute: 'data-hidden' },
     ];
 
-    it.each(
-      props.flatMap((entry) =>
-        forms.map((form) => ({ ...entry, ...form, row: `${entry.prop}: ${form.name}` })),
-      ),
-    )(
+    it.each(props.flatMap((entry) => forms.map((form) => ({ ...entry, ...form }))))(
       'marks the days that $prop matches by $name',
       async ({ prop, attribute, matcher, matched, other }) => {
         await renderCalendar({ [prop]: matcher() });
@@ -478,7 +474,7 @@ describe('<Calendar.Root />', () => {
   // instance set, and each later case then gets a warning about a slot.
   it('throws when a modifier has the name of a state of a day', async () => {
     await expect(renderCalendar({ modifiers: { selected: day('2026-11-11') } })).rejects.toThrow(
-      'Vase UI: The `modifiers` prop of <Calendar.Root> has the key `selected`, which is the name of a state of a day. The attribute `data-selected` would then have two meanings. Rename the modifier.',
+      'Vase UI: The `modifiers` prop of <Calendar.Root> has the key `selected`. A day uses the attribute `data-selected` for a meaning of its own, so the attribute would have two meanings. Rename the modifier.',
     );
 
     expect(takeReportedMessages()).toEqual([

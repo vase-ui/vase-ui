@@ -35,7 +35,8 @@ const { element, elementProps } = useRenderElement('table', props, {
     {
       role: 'grid',
       // The caption of the month names the grid, and the name of the month is the name without it.
-      // The label that the consumer gives replaces both.
+      // An `aria-labelledby` of the consumer replaces both, and its `aria-label` replaces the name
+      // of the month.
       'aria-labelledby': getAriaLabelledBy(attrs),
       'aria-label': attrs['aria-labelledby'] === undefined ? text.value : undefined,
       'aria-multiselectable': multiselectable.value ? true : undefined,

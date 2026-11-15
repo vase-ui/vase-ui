@@ -199,7 +199,8 @@ describe('modifier names', () => {
     'today',
     'outsideMonth',
     'outside-month',
-  ])('refuses the state name %s', (name) => {
+    'date',
+  ])('refuses the name of an attribute of a day: %s', (name) => {
     expect(() => {
       assertModifierNames('Calendar.Root', { [name]: day('2026-11-11') });
     }).toThrow(/^Vase UI: The `modifiers` prop of <Calendar.Root> has the key `/);
@@ -245,7 +246,8 @@ describe('outside days', () => {
   });
 
   it('shows a day that two pages hold only in the page that owns it', () => {
-    // The last week of the November page and the first week of the December page both have 2026-11-29.
+    // The last week of the November page and the first week of the December page both have the days
+    // from 2026-11-29 to 2026-12-05.
     const pages = [november(), december()];
     const options = rules({ ...shown, pages });
 
@@ -263,7 +265,7 @@ describe('outside days', () => {
     );
   });
 
-  it('has no outside day in the broadcast page of a month', () => {
+  it('gives the broadcast page the days of the weeks around its month, as outside days', () => {
     // The broadcast page of November 2026 has the weeks from Monday October 26 to Sunday November 29.
     const pages = [getBroadcastPage(Temporal.PlainYearMonth.from('2026-11'))];
     const state = (date: string, props: Partial<DayRules>) =>
@@ -276,7 +278,7 @@ describe('outside days', () => {
   });
 
   it('has no day outside a page of weeks or days', () => {
-    const page = getDurationPage(day('2026-11-29'), { weeks: 2 });
+    const page = getDurationPage(day('2026-11-29'), { weeks: 2 }, november().yearMonth);
 
     expect(getDayState(day('2026-12-05'), page, rules())).toMatchObject({
       outsideMonth: false,

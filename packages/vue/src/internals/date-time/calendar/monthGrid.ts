@@ -20,7 +20,10 @@ export interface CalendarPage {
   first: Temporal.PlainDate;
   /** The last day that belongs to the page. The days after it belong to the page after. */
   last: Temporal.PlainDate;
-  /** The month of the page. A page of weeks or days has the month of its first day. */
+  /**
+   * The month of the page. A page of weeks or days has the month of the root: the month of its
+   * first day, or the month whose first day is in its first week.
+   */
   yearMonth: Temporal.PlainYearMonth;
   /** Whether the page is a duration of weeks or days. Such a page has no day outside its month. */
   isDuration: boolean;

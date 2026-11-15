@@ -70,10 +70,12 @@ export function getBroadcastPage(
 
 /**
  * The page of a duration. `start` is its first day: a day of `firstDay` for weeks. Days are one row.
+ * `yearMonth` is the month of the root, which a select of the page shows.
  */
 export function getDurationPage(
   start: Temporal.PlainDate,
   duration: VisibleDuration,
+  yearMonth: Temporal.PlainYearMonth,
 ): CalendarPage {
   const weeks =
     'weeks' in duration
@@ -87,7 +89,7 @@ export function getDurationPage(
     end,
     first: start,
     last: end,
-    yearMonth: start.toPlainYearMonth(),
+    yearMonth,
     isDuration: true,
     weekdays: weeks[0]?.days.map((day) => dayOfWeekOf(day)) ?? [],
     weeks,
@@ -109,9 +111,4 @@ export function alignPageStart(
     return edge === 'start' ? week : week.subtract({ weeks: duration.weeks - 1 });
   }
   return edge === 'start' ? date : date.subtract({ days: duration.days - 1 });
-}
-
-/** The duration as an argument of `add` and `subtract`. */
-export function toDurationLike(duration: VisibleDuration): Temporal.DurationLike {
-  return 'weeks' in duration ? { weeks: duration.weeks } : { days: duration.days };
 }

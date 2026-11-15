@@ -86,6 +86,30 @@ describe('<Calendar.MonthSelect />', () => {
     ]);
   });
 
+  it('disables a month that the broadcast calendar has wholly before minDate', async () => {
+    // The broadcast October 2026 ends on 2026-10-25, and 2026-10-28 is in the broadcast November.
+    await renderCalendar({ broadcastCalendar: true, minDate: day('2026-10-28') });
+
+    expect(options().find((option) => option.value === 'M10')!.disabled).toBe(true);
+    expect(options().find((option) => option.value === 'M11')!.disabled).toBe(false);
+  });
+
+  it('shows the month that the user picks in a page of weeks, from the week of its first day', async () => {
+    const onMonthChange = vi.fn();
+    const { user } = await renderCalendar({ visibleDuration: { weeks: 2 }, onMonthChange });
+
+    await user.selectOptions(select(), 'M12');
+
+    expect(onMonthChange).toHaveBeenCalledTimes(1);
+    expect(onMonthChange.mock.calls[0]![0].toString()).toBe('2026-12');
+    expect(select().value).toBe('M12');
+    // 2026-12-01 is a Tuesday, and the weeks start on Sunday.
+    expect(document.querySelector('[data-index="0"] [data-date]')).toHaveAttribute(
+      'data-date',
+      '2026-11-29',
+    );
+  });
+
   it('moves the page to the month that the user picks, and gives the change its reason', async () => {
     const onMonthChange = vi.fn();
     const { user } = await renderCalendar({ onMonthChange });

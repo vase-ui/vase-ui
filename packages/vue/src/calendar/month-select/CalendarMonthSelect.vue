@@ -48,9 +48,7 @@ const { onChange } = useCalendarSelect({
   root,
   getSelect: () => element.value,
   getOptions({ yearMonth }) {
-    const { minDate, maxDate } = root.rules.value;
-    const min = minDate && root.toGridDate(minDate).toPlainYearMonth();
-    const max = maxDate && root.toGridDate(maxDate).toPlainYearMonth();
+    const { min, max } = root.monthLimits.value;
     return Array.from({ length: yearMonth.monthsInYear }, (_, index) => {
       const month = Temporal.PlainYearMonth.from({
         year: yearMonth.year,

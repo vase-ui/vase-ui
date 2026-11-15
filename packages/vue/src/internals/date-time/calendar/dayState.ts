@@ -20,8 +20,8 @@ export interface DayState {
    */
   unavailable: boolean;
   /**
-   * Whether the day has no button: `hiddenDates` matches it, or it is in another month than the
-   * month of its page and `showOutsideDays` is off or another page shows it.
+   * Whether the day has no button: `hiddenDates` matches it, another page owns it, or it is in
+   * another month than the month of its page and `showOutsideDays` is off.
    */
   hidden: boolean;
   /**
@@ -79,15 +79,19 @@ export function getDayState(
   const outsideMonth = page !== null && !page.isDuration && !isInMonth(date, page.yearMonth);
   const isBeforeMin = rules.minDate !== undefined && compareDates(date, rules.minDate) < 0;
   const isAfterMax = rules.maxDate !== undefined && compareDates(date, rules.maxDate) > 0;
-  // Two pages that share a day show it one time: in the page that owns it.
-  const isShownByOtherPage =
-    outsideMonth && rules.pages.some((other) => other !== page && ownsDay(other, date));
+  // Two pages that share a day show it one time: in the page that owns it. A broadcast page with
+  // fixed weeks ends with days of its own month that the next broadcast page owns.
+  const isOwnedByOtherPage =
+    page !== null &&
+    !ownsDay(page, date) &&
+    rules.pages.some((other) => other !== page && ownsDay(other, date));
   return {
     selected: rules.isSelected(date),
     disabled: rules.disabled || isBeforeMin || isAfterMax || matches(date, rules.disabledDates),
     unavailable: matches(date, rules.unavailableDates),
     hidden:
-      (outsideMonth && (!rules.showOutsideDays || isShownByOtherPage)) ||
+      (outsideMonth && !rules.showOutsideDays) ||
+      isOwnedByOtherPage ||
       matches(date, rules.hiddenDates),
     today: isSameDay(date, rules.today),
     outsideMonth,
@@ -115,7 +119,8 @@ function toKebabCase(name: string): string {
   return name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
 }
 
-const STATE_ATTRIBUTES = [
+// The attributes that a day has without a modifier: its states, and its ISO date.
+const DAY_ATTRIBUTES = [
   'selected',
   'disabled',
   'unavailable',
@@ -123,11 +128,12 @@ const STATE_ATTRIBUTES = [
   'today',
   'outside-month',
   'weekend',
+  'date',
 ];
 
 /**
- * Throws in a development build when a modifier has the name of a state of a day: its attribute
- * would then have two meanings.
+ * Throws in a development build when a modifier has the name of an attribute of a day: that
+ * attribute would then have two meanings.
  */
 export function assertModifierNames(
   part: string,
@@ -137,10 +143,10 @@ export function assertModifierNames(
     return;
   }
   for (const name of Object.keys(modifiers ?? {})) {
-    if (STATE_ATTRIBUTES.includes(toKebabCase(name))) {
+    if (DAY_ATTRIBUTES.includes(toKebabCase(name))) {
       throw new Error(
-        `Vase UI: The \`modifiers\` prop of <${part}> has the key \`${name}\`, which is the name of a state of a day. ` +
-          `The attribute \`data-${toKebabCase(name)}\` would then have two meanings. Rename the modifier.`,
+        `Vase UI: The \`modifiers\` prop of <${part}> has the key \`${name}\`. ` +
+          `A day uses the attribute \`data-${toKebabCase(name)}\` for a meaning of its own, so the attribute would have two meanings. Rename the modifier.`,
       );
     }
   }

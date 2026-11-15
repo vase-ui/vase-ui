@@ -15,17 +15,11 @@ import type { DayRules } from './dayState';
 import type { CalendarSelection } from './daySelection';
 import { findKeyTarget, getKeyAction, getTabStop } from './focusTarget';
 import { formatPages } from './formatText';
-import { getMonthPage, isInMonth, startOfWeek } from './monthGrid';
+import { getMonthPage, startOfWeek } from './monthGrid';
 import type { CalendarPage, CalendarPageWeek } from './monthGrid';
 import { usePageTransition } from './usePageTransition';
 import type { NavigationDirection } from './usePageTransition';
-import {
-  alignPageStart,
-  getBroadcastPage,
-  getDurationPage,
-  getWeekNumber,
-  toDurationLike,
-} from './weeks';
+import { alignPageStart, getBroadcastPage, getDurationPage, getWeekNumber } from './weeks';
 import type { VisibleDuration } from './weeks';
 
 export interface CalendarRootEmit {
@@ -33,6 +27,12 @@ export interface CalendarRootEmit {
   (event: 'update:month', month: Temporal.PlainYearMonth): void;
   (event: 'focusedDateChange', date: Temporal.PlainDate, details: CalendarChangeEventDetails): void;
   (event: 'update:focusedDate', date: Temporal.PlainDate): void;
+}
+
+/** The first day of the page of a duration, and the month of the root for that page. */
+interface DurationStart {
+  day: Temporal.PlainDate;
+  month: Temporal.PlainYearMonth;
 }
 
 export interface UseCalendarRootOptions {
@@ -73,6 +73,11 @@ export interface CalendarRootController {
   canPrevious: ComputedRef<boolean>;
   /** Whether `maxDate` allows a page after the last one. */
   canNext: ComputedRef<boolean>;
+  /** The first and the last month that a page can show, by `minDate` and `maxDate`. */
+  monthLimits: ComputedRef<{
+    min: Temporal.PlainYearMonth | undefined;
+    max: Temporal.PlainYearMonth | undefined;
+  }>;
   /**
    * Moves the pages by one step: by one month, by `numberOfMonths` months with `pagedNavigation`,
    * or by the duration. It returns `true` when another step in the same direction is possible.
@@ -194,17 +199,25 @@ export function useCalendarRoot({
     state: 'focusedDate',
   });
 
-  // The first day of the page of a duration. It stays in `visibleMonth`: a month that the consumer
-  // sets moves the page to that month.
-  const durationStart = shallowRef<Temporal.PlainDate | null>(null);
+  // The first day of the page of a duration applies while the root has its month: a month that the
+  // consumer sets moves the page to that month. A move to a page of another month waits in
+  // `requestedDurationStart` until the root has that month. The page then changes one time, and a
+  // consumer that keeps its `month` keeps the page.
+  const durationStart = shallowRef<DurationStart | null>(null);
+  const requestedDurationStart = shallowRef<DurationStart | null>(null);
+
+  function isOfVisibleMonth(start: DurationStart | null): start is DurationStart {
+    return start !== null && toGridDate(start.month).toPlainYearMonth().equals(visibleMonth.value);
+  }
+
   const pageStart = computed(() => {
     const visible = duration.value;
     if (!visible) {
       return null;
     }
-    const start = durationStart.value && toGridDate(durationStart.value);
-    if (start && isInMonth(start, visibleMonth.value)) {
-      return start;
+    const start = [requestedDurationStart.value, durationStart.value].find(isOfVisibleMonth);
+    if (start) {
+      return toGridDate(start.day);
     }
     const anchor = monthState.value
       ? visibleMonth.value.toPlainDate({ day: 1 })
@@ -221,7 +234,7 @@ export function useCalendarRoot({
   const pages = computed(() => {
     const visible = duration.value;
     return visible && pageStart.value
-      ? [getDurationPage(pageStart.value, visible)]
+      ? [getDurationPage(pageStart.value, visible, visibleMonth.value)]
       : Array.from({ length: monthCount.value }, (_, index) =>
           createMonthPage(visibleMonth.value.add({ months: index })),
         );
@@ -293,12 +306,26 @@ export function useCalendarRoot({
   }
 
   // A page of a duration moves to the month of its first day: that month is the month of the root.
-  function setPageStart(start: Temporal.PlainDate, details: CalendarChangeEventDetails) {
-    const month = start.toPlainYearMonth();
-    if (!month.equals(visibleMonth.value) && !setMonth(month, details)) {
+  function setPageStart(
+    day: Temporal.PlainDate,
+    details: CalendarChangeEventDetails,
+    month = day.toPlainYearMonth(),
+  ) {
+    const start = { day, month };
+    if (isOfVisibleMonth(start)) {
+      durationStart.value = start;
+      requestedDurationStart.value = null;
+      return true;
+    }
+    // The page that waited for the month of the root is the page that the root shows now.
+    if (isOfVisibleMonth(requestedDurationStart.value)) {
+      durationStart.value = requestedDurationStart.value;
+    }
+    requestedDurationStart.value = start;
+    if (!setMonth(month, details)) {
+      requestedDurationStart.value = null;
       return false;
     }
-    durationStart.value = start;
     return true;
   }
 
@@ -469,11 +496,15 @@ export function useCalendarRoot({
     );
   });
 
+  const monthLimits = computed(() => ({
+    min: props.minDate && monthOfDate(toGridDate(props.minDate)),
+    max: props.maxDate && monthOfDate(toGridDate(props.maxDate)),
+  }));
+
   // The first month that a calendar of months can show keeps its last page at or before `maxDate`.
   function clampMonth(month: Temporal.PlainYearMonth) {
-    const min = props.minDate && monthOfDate(toGridDate(props.minDate));
-    const max = props.maxDate && monthOfDate(toGridDate(props.maxDate));
-    const last = max?.subtract({ months: monthCount.value - 1 });
+    const { min, max } = monthLimits.value;
+    const last = max?.subtract({ months: duration.value ? 0 : monthCount.value - 1 });
     if (min && Temporal.PlainYearMonth.compare(month, min) < 0) {
       return min;
     }
@@ -486,8 +517,7 @@ export function useCalendarRoot({
     const start = pageStart.value;
     const canContinue = () => (step === 1 ? canNext : canPrevious).value;
     if (visible && start) {
-      const next =
-        step === 1 ? start.add(toDurationLike(visible)) : start.subtract(toDurationLike(visible));
+      const next = step === 1 ? start.add(visible) : start.subtract(visible);
       return setPageStart(next, createDetails()) && canContinue();
     }
     const target = clampMonth(
@@ -497,15 +527,19 @@ export function useCalendarRoot({
   }
 
   function showMonth(month: Temporal.PlainYearMonth, pageIndex: number, event?: Event) {
-    const createDetails = () => createChangeEventDetails(REASONS.monthChange, event);
-    if (duration.value) {
-      showDate(month.toPlainDate({ day: 1 }), createDetails);
+    const target = clampMonth(month.subtract({ months: pageIndex }));
+    if (target.equals(visibleMonth.value)) {
       return;
     }
-    const target = clampMonth(month.subtract({ months: pageIndex }));
-    if (!target.equals(visibleMonth.value)) {
-      setMonth(target, createDetails());
+    const details = createChangeEventDetails(REASONS.monthChange, event);
+    const visible = duration.value;
+    if (visible) {
+      // The page starts with the week or the day of the first day of the month.
+      const first = target.toPlainDate({ day: 1 });
+      setPageStart(alignPageStart(first, visible, firstDay.value, 'start'), details, target);
+      return;
     }
+    setMonth(target, details);
   }
 
   onMounted(() => {
@@ -530,6 +564,7 @@ export function useCalendarRoot({
     navigationStep,
     canPrevious,
     canNext,
+    monthLimits,
     navigate,
     showMonth,
     getWeekNumber: (week) => getWeekNumber(week.start, firstDay.value, minimalDays.value),

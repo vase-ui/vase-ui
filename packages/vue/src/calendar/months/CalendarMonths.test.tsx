@@ -193,6 +193,42 @@ describe('<Calendar.Months />', () => {
       });
     });
 
+    it('keeps only the page that leaves when a page of weeks moves into the next month', async () => {
+      // The page of 2026-11-22 to 2026-12-05 belongs to November, and the next page to December.
+      const { user, container } = await renderCalendar({
+        visibleDuration: { weeks: 2 },
+        defaultFocusedDate: Temporal.PlainDate.from('2026-11-25'),
+      });
+      const firstDays: (string | null | undefined)[] = [];
+      const observer = new MutationObserver((records) => {
+        for (const node of records.flatMap((record) => [...record.addedNodes])) {
+          if (node instanceof Element && node.matches('[data-index]')) {
+            firstDays.push(node.querySelector('[data-date]')?.getAttribute('data-date'));
+          }
+        }
+      });
+      observer.observe(container, { childList: true, subtree: true });
+      onTestFinished(() => {
+        observer.disconnect();
+      });
+      const month = months()[0]!;
+      await nextFrame();
+
+      const animations = await nextAnimationsRead(month, {
+        action: () => user.click(screen.getByTestId('next')),
+      });
+
+      expect(firstDays).toEqual(['2026-12-06']);
+      expect([...months()].map((item) => item.getAttribute('data-index'))).toEqual(['-1', '0']);
+
+      for (const animation of animations) {
+        animation.finish();
+      }
+      await waitFor(() => {
+        expect(months()).toHaveLength(1);
+      });
+    });
+
     it('does not move, and keeps no month, when the runtime locale has another first day of the week', async () => {
       // The first render has the weeks of `en-US`, which start on Sunday. After the mount, the weeks
       // are those of the runtime locale, which start on Monday. That is not a move of the page.

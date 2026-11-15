@@ -16,7 +16,8 @@ export type CalendarChangeEventDetails = VaseUIChangeEventDetails<CalendarChange
 export interface CalendarBaseProps {
   /**
    * The month that the grid shows. With `numberOfMonths`, it is the first month. With
-   * `visibleDuration`, it is the month of the first day of the page. When the grid has another
+   * `visibleDuration`, the page starts on a day of this month, or with the week that holds its
+   * first day, and a move of the page gives the month of its first day. When the grid has another
    * calendar than this month, the grid shows the month that holds the first day of this month.
    * Use it when controlled.
    */
@@ -55,7 +56,7 @@ export interface CalendarBaseProps {
   /**
    * Whether the days of the months around a month have a button. The default is `false`, and `true`
    * with `broadcastCalendar`. Two months of the grid that share a day show it one time, in the
-   * month of the day. A press on a day that no month of the grid owns shows its month.
+   * month that owns it. A press on a day that no month of the grid owns shows its month.
    */
   showOutsideDays?: boolean | undefined;
   /**

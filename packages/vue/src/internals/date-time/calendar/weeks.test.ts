@@ -1,12 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getMonthPage } from './monthGrid';
-import {
-  alignPageStart,
-  getBroadcastPage,
-  getDurationPage,
-  getWeekNumber,
-  toDurationLike,
-} from './weeks';
+import { alignPageStart, getBroadcastPage, getDurationPage, getWeekNumber } from './weeks';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
 const month = (text: string) => Temporal.PlainYearMonth.from(text);
@@ -157,7 +151,7 @@ describe('getBroadcastPage', () => {
 
 describe('getDurationPage', () => {
   it('has whole weeks', () => {
-    const page = getDurationPage(day('2026-11-08'), { weeks: 2 });
+    const page = getDurationPage(day('2026-11-08'), { weeks: 2 }, month('2026-11'));
 
     expect(page.weeks.map((week) => text(week.start))).toEqual(['2026-11-08', '2026-11-15']);
     expect(text(page.start)).toBe('2026-11-08');
@@ -169,7 +163,7 @@ describe('getDurationPage', () => {
   });
 
   it('has the days of one row, from the first day', () => {
-    const page = getDurationPage(day('2026-11-12'), { days: 5 });
+    const page = getDurationPage(day('2026-11-12'), { days: 5 }, month('2026-11'));
 
     expect(page.weeks).toHaveLength(1);
     expect(page.weeks[0]!.days.map(text)).toEqual([
@@ -181,10 +175,6 @@ describe('getDurationPage', () => {
     ]);
     expect(text(page.end)).toBe('2026-11-16');
     expect(page.weekdays).toEqual([4, 5, 6, 7, 1]);
-  });
-
-  it('has the month of its first day', () => {
-    expect(getDurationPage(day('2026-11-29'), { weeks: 2 }).yearMonth.toString()).toBe('2026-11');
   });
 });
 
@@ -202,21 +192,13 @@ describe('alignPageStart', () => {
   it('shows the day in the page that starts there', () => {
     const duration = { weeks: 2 };
     for (const edge of ['start', 'end'] as const) {
-      const page = getDurationPage(alignPageStart(day('2026-11-11'), duration, 7, edge), duration);
+      const start = alignPageStart(day('2026-11-11'), duration, 7, edge);
+      const page = getDurationPage(start, duration, month('2026-11'));
 
       expect(page.weeks.some((week) => week.days.some((item) => text(item) === '2026-11-11'))).toBe(
         true,
       );
     }
-  });
-});
-
-describe('toDurationLike', () => {
-  it.each([
-    { duration: { weeks: 2 }, expected: { weeks: 2 } },
-    { duration: { days: 5 }, expected: { days: 5 } },
-  ])('gives $expected for $duration', ({ duration, expected }) => {
-    expect(toDurationLike(duration)).toEqual(expected);
   });
 });
 
