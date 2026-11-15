@@ -238,6 +238,37 @@ describe('<Popover.Root />', () => {
       </Popover.Root>
     ),
     createPopup: () => <Popover.Popup data-testid="popup">Popup</Popover.Popup>,
+    createBackdropComponent: ({ open, onOpenChangeComplete }) => (
+      <Popover.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Popover.Trigger>Open</Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Backdrop data-testid="shown" class="shown" />
+        </Popover.Portal>
+      </Popover.Root>
+    ),
+    createBackdropAndPositionerComponent: ({ open, onOpenChangeComplete }) => (
+      <Popover.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Popover.Trigger>Open</Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Backdrop />
+          <Popover.Positioner data-testid="shown" class="shown">
+            Content
+          </Popover.Positioner>
+        </Popover.Portal>
+      </Popover.Root>
+    ),
+    createPendingPositionerComponent: ({ Pending, onOpenChange }) => (
+      <Popover.Root defaultOpen modal onOpenChange={onOpenChange}>
+        <Popover.Trigger>Open</Popover.Trigger>
+        <Popover.Portal>
+          <Pending>
+            <Popover.Positioner data-testid="shown">
+              <Popover.Popup>Popup</Popover.Popup>
+            </Popover.Positioner>
+          </Pending>
+        </Popover.Portal>
+      </Popover.Root>
+    ),
     render,
   });
 

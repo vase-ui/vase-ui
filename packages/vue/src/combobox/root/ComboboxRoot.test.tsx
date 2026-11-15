@@ -284,6 +284,30 @@ describe('<Combobox.Root />', () => {
       </Combobox.Root>
     ),
     createPopup: () => <Combobox.Popup data-testid="popup">Popup</Combobox.Popup>,
+    createBackdropComponent: ({ open, onOpenChangeComplete }) => (
+      <Combobox.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Combobox.Input />
+        <Combobox.Portal>
+          <Combobox.Backdrop data-testid="shown" class="shown" />
+        </Combobox.Portal>
+      </Combobox.Root>
+    ),
+    createPendingPositionerComponent: ({ Pending, onOpenChange }) => (
+      <Combobox.Root defaultOpen modal onOpenChange={onOpenChange}>
+        <Combobox.Input />
+        <Combobox.Portal>
+          <Pending>
+            <Combobox.Positioner data-testid="shown">
+              <Combobox.Popup>
+                <Combobox.List>
+                  <Combobox.Item value="a">A</Combobox.Item>
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Pending>
+        </Combobox.Portal>
+      </Combobox.Root>
+    ),
     render,
   });
 

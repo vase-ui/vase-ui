@@ -123,6 +123,14 @@ describe('<Autocomplete.Root />', () => {
       </Autocomplete.Root>
     ),
     createPopup: () => <Autocomplete.Popup data-testid="popup">Popup</Autocomplete.Popup>,
+    createBackdropComponent: ({ open, onOpenChangeComplete }) => (
+      <Autocomplete.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Autocomplete.Input />
+        <Autocomplete.Portal>
+          <Autocomplete.Backdrop data-testid="shown" class="shown" />
+        </Autocomplete.Portal>
+      </Autocomplete.Root>
+    ),
     render,
   });
 

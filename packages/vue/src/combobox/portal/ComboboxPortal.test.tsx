@@ -59,6 +59,24 @@ describe('<Combobox.Portal />', () => {
     expect(portal.contains(screen.getByTestId('popup'))).toBe(true);
   });
 
+  it('VUE-61: renders no internal backdrop for a modal list that has no positioner', async () => {
+    await render(
+      <Combobox.Root defaultOpen modal>
+        <Combobox.Input />
+        <Combobox.Portal data-testid="portal">
+          <Combobox.List data-testid="list">
+            <Combobox.Item value="a">A</Combobox.Item>
+          </Combobox.List>
+        </Combobox.Portal>
+      </Combobox.Root>,
+    );
+    await flushMicrotasks();
+
+    const portal = screen.getByTestId('portal');
+    expect(portal.contains(screen.getByTestId('list'))).toBe(true);
+    expect(portal.querySelector('[role="presentation"][data-vase-ui-inert]')).toBe(null);
+  });
+
   it('keeps the positioner in the DOM while the popup is closed with keepMounted', async () => {
     await render(
       <Combobox.Root>
