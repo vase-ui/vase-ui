@@ -72,8 +72,10 @@ jobs:
       fail-fast: false
       matrix:
         # Firefox runs one test file at a time, so one job for all its files takes more than half
-        # of the time limit. The number after the slash is the number of Firefox shards. When you
-        # add or remove a shard, change that number in each Firefox shard.
+        # of the time limit. A WebKit page keeps the memory of each finished test file, so one job
+        # for all its files runs out of memory. The number after the slash is the number of shards
+        # of that engine. When you add or remove a shard, change that number in each shard of the
+        # engine.
         include:
           - engine: chromium
           - engine: firefox
@@ -83,6 +85,11 @@ jobs:
           - engine: firefox
             shard: 3/3
           - engine: webkit
+            shard: 1/3
+          - engine: webkit
+            shard: 2/3
+          - engine: webkit
+            shard: 3/3
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

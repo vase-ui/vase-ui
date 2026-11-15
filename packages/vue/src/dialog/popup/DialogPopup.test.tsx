@@ -8,6 +8,7 @@ import {
   fireEvent,
   flushMicrotasks,
   isInaccessible,
+  nestedPopupCloseTests,
   nextEvent,
   popupFocusPropsTests,
   screen,
@@ -891,6 +892,10 @@ describe('<Dialog.Popup />', () => {
     await waitFor(() => {
       expect(screen.queryByTestId('popup')).toBe(null);
     });
+  });
+
+  describe('BUG-5519: a popup in the popup that closes with it', () => {
+    nestedPopupCloseTests({ parts: Dialog, wrapPopup: (popup) => popup, render });
   });
 
   it('stops the arrow, Home and End keys at the popup', async () => {

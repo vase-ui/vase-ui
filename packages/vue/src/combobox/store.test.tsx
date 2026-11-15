@@ -62,6 +62,7 @@ function createComboboxStore(initialState: Partial<State> = {}) {
       isItemEqualToValue: defaultItemEquality,
     },
     listElement: null,
+    listElementId: undefined,
     popupElementId: undefined,
     triggerElement: null,
     inputElement: null,
@@ -94,6 +95,7 @@ function createComboboxStore(initialState: Partial<State> = {}) {
     clearRef: shallowRef(null),
     pointerDownItemRef: shallowRef(null),
     selectionEventRef: shallowRef(null),
+    openPressRef: shallowRef(null),
     ...createLabelIdRegistry(),
   };
   return new ComboboxStore(state, context, selectors);

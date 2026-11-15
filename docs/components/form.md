@@ -6,9 +6,13 @@ description: An unstyled Vue form component with consolidated error handling.
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoFormFormAction from '../demos/form/form-action/css-modules/index.vue';
+import DemoFormFormActionTailwind from '../demos/form/form-action/tailwind/index.vue';
 import DemoFormHero from '../demos/form/hero/css-modules/index.vue';
+import DemoFormHeroTailwind from '../demos/form/hero/tailwind/index.vue';
 import DemoFormZod from '../demos/form/zod/css-modules/index.vue';
+import DemoFormZodTailwind from '../demos/form/zod/tailwind/index.vue';
 </script>
 
 # Form
@@ -17,7 +21,12 @@ A native form element with consolidated error handling.
 
 <DemoFrame>
   <DemoFormHero />
+  <template #tailwind>
+    <DemoFormHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -26,6 +35,18 @@ A native form element with consolidated error handling.
 <<< ../demos/form/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/form/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Anatomy
 
@@ -47,7 +68,12 @@ The demo keeps the response in one state object. It disables the button while th
 
 <DemoFrame>
   <DemoFormFormAction />
+  <template #tailwind>
+    <DemoFormFormActionTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -56,6 +82,18 @@ The demo keeps the response in one state object. It disables the button while th
 <<< ../demos/form/form-action/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/form/form-action/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ### Submit form values as a JavaScript object
 
@@ -73,7 +111,12 @@ When you parse the schema with `schema.safeParse()`, use `z.flattenError(result.
 
 <DemoFrame>
   <DemoFormZod />
+  <template #tailwind>
+    <DemoFormZodTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -82,6 +125,18 @@ When you parse the schema with `schema.safeParse()`, use `z.flattenError(result.
 <<< ../demos/form/zod/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/form/zod/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## API reference
 

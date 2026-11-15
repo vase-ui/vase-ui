@@ -156,10 +156,15 @@ function handleClick(event: MouseEvent) {
   store.context.setInputValue('', createChangeEventDetails(REASONS.clearPress, event));
 
   if (selectionMode.value !== 'none') {
-    store.context.setSelectedValue(
-      Array.isArray(store.select('selectedValue')) ? [] : null,
-      createChangeEventDetails(REASONS.clearPress, event),
-    );
+    // A press can come while the value is empty: during the exit of the button, or with
+    // `keepMounted`. The root emits no change for an empty value (`VUE-91`). The call would also
+    // ask again to clear text that an `inputValueChange` listener kept.
+    if (store.select('hasSelectedValue')) {
+      store.context.setSelectedValue(
+        Array.isArray(store.select('selectedValue')) ? [] : null,
+        createChangeEventDetails(REASONS.clearPress, event),
+      );
+    }
     store.context.setIndices({ activeIndex: null, selectedIndex: null, type, event });
   } else {
     store.context.setIndices({ activeIndex: null, type, event });

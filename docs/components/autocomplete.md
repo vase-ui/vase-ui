@@ -6,14 +6,23 @@ description: An unstyled Vue autocomplete component that renders an input with a
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoAutocompleteAsync from '../demos/autocomplete/async/css-modules/index.vue';
+import DemoAutocompleteAsyncTailwind from '../demos/autocomplete/async/tailwind/index.vue';
 import DemoAutocompleteAutoHighlight from '../demos/autocomplete/auto-highlight/css-modules/index.vue';
+import DemoAutocompleteAutoHighlightTailwind from '../demos/autocomplete/auto-highlight/tailwind/index.vue';
 import DemoAutocompleteFuzzyMatching from '../demos/autocomplete/fuzzy-matching/css-modules/index.vue';
+import DemoAutocompleteFuzzyMatchingTailwind from '../demos/autocomplete/fuzzy-matching/tailwind/index.vue';
 import DemoAutocompleteGrouped from '../demos/autocomplete/grouped/css-modules/index.vue';
+import DemoAutocompleteGroupedTailwind from '../demos/autocomplete/grouped/tailwind/index.vue';
 import DemoAutocompleteHero from '../demos/autocomplete/hero/css-modules/index.vue';
+import DemoAutocompleteHeroTailwind from '../demos/autocomplete/hero/tailwind/index.vue';
 import DemoAutocompleteInline from '../demos/autocomplete/inline/css-modules/index.vue';
+import DemoAutocompleteInlineTailwind from '../demos/autocomplete/inline/tailwind/index.vue';
 import DemoAutocompleteLimit from '../demos/autocomplete/limit/css-modules/index.vue';
+import DemoAutocompleteLimitTailwind from '../demos/autocomplete/limit/tailwind/index.vue';
 import DemoAutocompleteVirtualized from '../demos/autocomplete/virtualized/css-modules/index.vue';
+import DemoAutocompleteVirtualizedTailwind from '../demos/autocomplete/virtualized/tailwind/index.vue';
 </script>
 
 # Autocomplete
@@ -22,7 +31,12 @@ An input that suggests options as you type.
 
 <DemoFrame>
   <DemoAutocompleteHero />
+  <template #tailwind>
+    <DemoAutocompleteHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -31,6 +45,18 @@ An input that suggests options as you type.
 <<< ../demos/autocomplete/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/autocomplete/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Usage guidelines
 
@@ -43,6 +69,8 @@ An input that suggests options as you type.
 Import the component and assemble its parts:
 
 <<< ./autocomplete/Anatomy.vue
+
+Bind the text with `v-model:value`. An inline completion that the input shows is not the value. The root emits no `valueChange` and no `update:value` for an action that gives the text that it has, such as a press of the item with that text.
 
 Text that a visitor types, or that the browser fills, before the page hydrates stays in `Autocomplete.Input`. After the hydration, the root emits `valueChange` and `update:value` with that text, and the popup stays closed. When the visitor left the input before the page hydrated, the input then also gets `change`, `blur` and `focusout`.
 
@@ -62,7 +90,12 @@ Load items asynchronously while typing and render custom status content.
 
 <DemoFrame>
   <DemoAutocompleteAsync />
+  <template #tailwind>
+    <DemoAutocompleteAsyncTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -72,13 +105,30 @@ Load items asynchronously while typing and render custom status content.
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/autocomplete/async/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Inline autocomplete
 
 Autofill the input with the highlighted item while navigating with arrow keys using the `mode` prop. Accepts `aria-autocomplete` values `list`, `both`, `inline`, or `none`.
 
 <DemoFrame>
   <DemoAutocompleteInline />
+  <template #tailwind>
+    <DemoAutocompleteInlineTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -87,6 +137,18 @@ Autofill the input with the highlighted item while navigating with arrow keys us
 <<< ../demos/autocomplete/inline/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/autocomplete/inline/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ### Grouped
 
@@ -98,7 +160,12 @@ Groups are represented by an array of objects with an `items` property, which it
 
 <DemoFrame>
   <DemoAutocompleteGrouped />
+  <template #tailwind>
+    <DemoAutocompleteGroupedTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -108,13 +175,30 @@ Groups are represented by an array of objects with an `items` property, which it
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/autocomplete/grouped/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Fuzzy matching
 
 Use fuzzy matching to find relevant results even when the query doesn't exactly match the item text.
 
 <DemoFrame>
   <DemoAutocompleteFuzzyMatching />
+  <template #tailwind>
+    <DemoAutocompleteFuzzyMatchingTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -124,13 +208,30 @@ Use fuzzy matching to find relevant results even when the query doesn't exactly 
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/autocomplete/fuzzy-matching/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Limit results
 
 Limit the number of visible items using the `limit` prop and guide users to refine their query using `Autocomplete.Status`.
 
 <DemoFrame>
   <DemoAutocompleteLimit />
+  <template #tailwind>
+    <DemoAutocompleteLimitTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -140,6 +241,18 @@ Limit the number of visible items using the `limit` prop and guide users to refi
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/autocomplete/limit/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Auto highlight
 
 The first matching item can be automatically highlighted as the user types by specifying the `autoHighlight` prop on `Autocomplete.Root`. Set the prop's value to `"always"` if the highlight should always be present, such as when the list is rendered inline within a dialog.
@@ -148,7 +261,12 @@ The prop can be combined with the `keepHighlight` and `highlightItemOnHover` pro
 
 <DemoFrame>
   <DemoAutocompleteAutoHighlight />
+  <template #tailwind>
+    <DemoAutocompleteAutoHighlightTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -158,13 +276,30 @@ The prop can be combined with the `keepHighlight` and `highlightItemOnHover` pro
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/autocomplete/auto-highlight/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Virtualized
 
 Efficiently handle large datasets using a virtualization library like `@tanstack/vue-virtual`.
 
 <DemoFrame>
   <DemoAutocompleteVirtualized />
+  <template #tailwind>
+    <DemoAutocompleteVirtualizedTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -175,6 +310,20 @@ Efficiently handle large datasets using a virtualization library like `@tanstack
 <<< ../demos/autocomplete/virtualized/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/autocomplete/virtualized/tailwind/index.vue
+
+<<< ../demos/autocomplete/virtualized/tailwind/VirtualizedList.vue
+
+:::
+
+</DemoSource>
 
 #### Memoizing items
 
