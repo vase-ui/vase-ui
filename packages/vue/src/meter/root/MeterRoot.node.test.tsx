@@ -49,6 +49,17 @@ describe('<Meter.Root /> on a server', () => {
     );
   });
 
+  it('renders the generated id in the aria-labelledby of a root whose label has an id of its own', async () => {
+    const html = await renderToString(
+      <Meter.Root value={30}>
+        <Meter.Label id="own">Battery Level</Meter.Label>
+      </Meter.Root>,
+    );
+
+    expect(/aria-labelledby="([^"]*)"/.exec(html)?.[1]).toMatch(/^vase-ui-./);
+    expect(html).toContain('<span id="own" role="presentation">');
+  });
+
   it.each([
     { name: 'an aria-label', attributes: { 'aria-label': 'Battery' }, labelledBy: undefined },
     {

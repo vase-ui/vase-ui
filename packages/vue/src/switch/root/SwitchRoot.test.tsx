@@ -2112,15 +2112,12 @@ describe('<Switch.Root />', () => {
   });
 
   describe('KeepAlive', () => {
-    beforeEach(() => {
-      vi.useFakeTimers();
-    });
-
-    afterEach(() => {
-      vi.useRealTimers();
-    });
-
     it('keeps its state, and a reset of the form does not change a switch that is not shown', async () => {
+      // A real click does not end under fake timers, so only this case of the block uses them.
+      vi.useFakeTimers();
+      onTestFinished(() => {
+        vi.useRealTimers();
+      });
       const App = defineComponent({
         props: { shown: { type: Boolean, default: true } },
         setup(props) {
@@ -2152,6 +2149,64 @@ describe('<Switch.Root />', () => {
       await settleReset();
 
       expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'false');
+    });
+
+    it.each([{ name: 'held mount' }, { name: 'deactivated' }])(
+      'a held required switch does not block the submit of its form: $name',
+      async ({ name }) => {
+        const handleSubmit = vi.fn();
+        const visible = shallowRef(true);
+        const extra = shallowRef(name === 'deactivated');
+        const Branch = defineComponent(() => () => (
+          <div>{extra.value ? <Switch.Root key="held" required /> : null}</div>
+        ));
+        const { user } = await render(() => (
+          <Form onFormSubmit={handleSubmit}>
+            <Field.Root name="email" data-testid="field">
+              <Field.Control defaultValue="shown" />
+              <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+            </Field.Root>
+            <button type="submit">Submit</button>
+          </Form>
+        ));
+
+        visible.value = false;
+        await flushMicrotasks();
+        extra.value = true;
+        await flushMicrotasks();
+        await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+        expect(handleSubmit).toHaveBeenCalledTimes(1);
+        expect(screen.getByTestId('field')).not.toHaveAttribute('data-invalid');
+      },
+    );
+
+    it('the label does not name a switch that mounts while KeepAlive holds it', async () => {
+      const visible = shallowRef(true);
+      const extra = shallowRef(false);
+      const Branch = defineComponent(() => () => (
+        <div>{extra.value ? <Switch.Root key="held" id="held-switch" /> : null}</div>
+      ));
+      await render(() => (
+        <Field.Root>
+          <Field.Label data-testid="label">Notifications</Field.Label>
+          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+        </Field.Root>
+      ));
+      const label = screen.getByTestId('label');
+      const providerId = label.getAttribute('for');
+
+      visible.value = false;
+      await flushMicrotasks();
+      extra.value = true;
+      await flushMicrotasks();
+
+      expect(label.getAttribute('for')).toBe(providerId);
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(label).toHaveAttribute('for', 'held-switch');
     });
   });
 });
