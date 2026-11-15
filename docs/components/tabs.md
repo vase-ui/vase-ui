@@ -6,8 +6,11 @@ description: An unstyled Vue tabs component that toggles between related panels 
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoTabsAnimatedPanels from '../demos/tabs/animated-panels/css-modules/index.vue';
+import DemoTabsAnimatedPanelsTailwind from '../demos/tabs/animated-panels/tailwind/index.vue';
 import DemoTabsHero from '../demos/tabs/hero/css-modules/index.vue';
+import DemoTabsHeroTailwind from '../demos/tabs/hero/tailwind/index.vue';
 </script>
 
 # Tabs
@@ -16,7 +19,12 @@ A component that toggles between related panels on the same page.
 
 <DemoFrame>
   <DemoTabsHero />
+  <template #tailwind>
+    <DemoTabsHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -25,6 +33,18 @@ A component that toggles between related panels on the same page.
 <<< ../demos/tabs/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/tabs/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Anatomy
 
@@ -42,7 +62,12 @@ Use the `data-starting-style` and `data-ending-style` attributes to animate a pa
 
 <DemoFrame>
   <DemoTabsAnimatedPanels />
+  <template #tailwind>
+    <DemoTabsAnimatedPanelsTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -51,6 +76,18 @@ Use the `data-starting-style` and `data-ending-style` attributes to animate a pa
 <<< ../demos/tabs/animated-panels/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/tabs/animated-panels/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ### Links
 

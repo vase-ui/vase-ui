@@ -6,7 +6,9 @@ description: An unstyled Vue meter component that provides a graphical display o
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoMeterHero from '../demos/meter/hero/css-modules/index.vue';
+import DemoMeterHeroTailwind from '../demos/meter/hero/tailwind/index.vue';
 </script>
 
 # Meter
@@ -15,7 +17,12 @@ A graphical display of a numeric value within a range.
 
 <DemoFrame>
   <DemoMeterHero />
+  <template #tailwind>
+    <DemoMeterHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -24,6 +31,18 @@ A graphical display of a numeric value within a range.
 <<< ../demos/meter/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/meter/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Anatomy
 

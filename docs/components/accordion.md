@@ -6,9 +6,13 @@ description: An unstyled Vue accordion component that displays a set of collapsi
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoAccordionHero from '../demos/accordion/hero/css-modules/index.vue';
+import DemoAccordionHeroTailwind from '../demos/accordion/hero/tailwind/index.vue';
 import DemoAccordionHiddenUntilFound from '../demos/accordion/hidden-until-found/css-modules/index.vue';
+import DemoAccordionHiddenUntilFoundTailwind from '../demos/accordion/hidden-until-found/tailwind/index.vue';
 import DemoAccordionMultiple from '../demos/accordion/multiple/css-modules/index.vue';
+import DemoAccordionMultipleTailwind from '../demos/accordion/multiple/tailwind/index.vue';
 </script>
 
 # Accordion
@@ -17,7 +21,12 @@ A set of collapsible panels with headings.
 
 <DemoFrame>
   <DemoAccordionHero />
+  <template #tailwind>
+    <DemoAccordionHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -26,6 +35,18 @@ A set of collapsible panels with headings.
 <<< ../demos/accordion/_index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/accordion/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Anatomy
 
@@ -41,7 +62,12 @@ Set the `multiple` prop to let the user open more than one panel at a time.
 
 <DemoFrame>
   <DemoAccordionMultiple />
+  <template #tailwind>
+    <DemoAccordionMultipleTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -50,6 +76,18 @@ Set the `multiple` prop to let the user open more than one panel at a time.
 <<< ../demos/accordion/_index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/accordion/multiple/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ### Hidden until found
 
@@ -61,7 +99,12 @@ A browser that does not support `hidden="until-found"` keeps each panel hidden u
 
 <DemoFrame>
   <DemoAccordionHiddenUntilFound />
+  <template #tailwind>
+    <DemoAccordionHiddenUntilFoundTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -70,6 +113,18 @@ A browser that does not support `hidden="until-found"` keeps each panel hidden u
 <<< ../demos/accordion/_index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/accordion/hidden-until-found/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## API reference
 

@@ -6,12 +6,19 @@ description: An unstyled Vue slider component that works like a range input and 
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoSliderEdgeAlignment from '../demos/slider/edge-alignment/css-modules/index.vue';
+import DemoSliderEdgeAlignmentTailwind from '../demos/slider/edge-alignment/tailwind/index.vue';
 import DemoSliderHero from '../demos/slider/hero/css-modules/index.vue';
+import DemoSliderHeroTailwind from '../demos/slider/hero/tailwind/index.vue';
 import DemoSliderMarks from '../demos/slider/marks/css-modules/index.vue';
+import DemoSliderMarksTailwind from '../demos/slider/marks/tailwind/index.vue';
 import DemoSliderRangeSlider from '../demos/slider/range-slider/css-modules/index.vue';
+import DemoSliderRangeSliderTailwind from '../demos/slider/range-slider/tailwind/index.vue';
 import DemoSliderSteps from '../demos/slider/steps/css-modules/index.vue';
+import DemoSliderStepsTailwind from '../demos/slider/steps/tailwind/index.vue';
 import DemoSliderVertical from '../demos/slider/vertical/css-modules/index.vue';
+import DemoSliderVerticalTailwind from '../demos/slider/vertical/tailwind/index.vue';
 </script>
 
 # Slider
@@ -20,7 +27,12 @@ An easily stylable range input.
 
 <DemoFrame>
   <DemoSliderHero />
+  <template #tailwind>
+    <DemoSliderHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -29,6 +41,18 @@ An easily stylable range input.
 <<< ../demos/slider/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/slider/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Usage guidelines
 
@@ -76,7 +100,12 @@ The `thumbCollisionBehavior` prop of `Slider.Root` sets what the thumbs do when 
 
 <DemoFrame>
   <DemoSliderRangeSlider />
+  <template #tailwind>
+    <DemoSliderRangeSliderTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -86,13 +115,30 @@ The `thumbCollisionBehavior` prop of `Slider.Root` sets what the thumbs do when 
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/slider/range-slider/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Steps
 
 The `step` prop sets the increment of the value. The `largeStep` prop sets the increment of Page Up, Page Down, and an arrow key with Shift.
 
 <DemoFrame>
   <DemoSliderSteps />
+  <template #tailwind>
+    <DemoSliderStepsTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -102,13 +148,30 @@ The `step` prop sets the increment of the value. The `largeStep` prop sets the i
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/slider/steps/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Marks
 
 Render your own tick marks. Put each mark on the track at the percentage of its value in the range.
 
 <DemoFrame>
   <DemoSliderMarks />
+  <template #tailwind>
+    <DemoSliderMarksTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -117,6 +180,18 @@ Render your own tick marks. Put each mark on the track at the percentage of its 
 <<< ../demos/slider/marks/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/slider/marks/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 The marks do not change the values that the thumb can have. To snap the thumb to each mark, set [`step`](#steps) to the distance between two marks.
 
@@ -128,7 +203,12 @@ With `edge`, the server HTML has an inline script that places the thumbs before 
 
 <DemoFrame>
   <DemoSliderEdgeAlignment />
+  <template #tailwind>
+    <DemoSliderEdgeAlignmentTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -138,13 +218,30 @@ With `edge`, the server HTML has an inline script that places the thumbs before 
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/slider/edge-alignment/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Vertical
 
 Set `orientation="vertical"` on `Slider.Root` to make a vertical slider.
 
 <DemoFrame>
   <DemoSliderVertical />
+  <template #tailwind>
+    <DemoSliderVerticalTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -153,6 +250,18 @@ Set `orientation="vertical"` on `Slider.Root` to make a vertical slider.
 <<< ../demos/slider/vertical/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/slider/vertical/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## API reference
 
