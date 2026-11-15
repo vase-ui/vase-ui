@@ -36,8 +36,7 @@ export interface TabsPanelProps
   keepMounted?: boolean | undefined;
   /**
    * The id of the panel. The tab of the panel uses it for `aria-controls`.
-   * A server render writes the panel before it renders a tab that comes after it. The panel then
-   * has no `aria-labelledby` in the server HTML, and it gets it in the first flush on the client.
+   * Without an id, the panel has a generated id.
    */
   id?: string | undefined;
 }
@@ -47,6 +46,7 @@ export interface TabsPanelProps
 import { computed } from 'vue';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
+import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import { transitionStatusMapping } from '../../internals/stateAttributesMapping';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -82,6 +82,9 @@ const {
   registerPanel,
   tabActivationDirection,
 } = useTabsRootContext();
+
+// A tab registers its id in `setup`, and it can come after the panel.
+useDeferredServerRender();
 
 const panelId = useVaseUiId(() => props.id);
 

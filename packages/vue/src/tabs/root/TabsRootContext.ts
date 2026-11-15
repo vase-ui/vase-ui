@@ -41,11 +41,12 @@ export interface TabsRootContext {
   getTabPanelIdByValue(tabValue: TabsTabValue): string | undefined;
   /**
    * Registers a tab one time, in `setup`. Call it with `undefined` to remove the registration.
-   * A server render of a part that comes later then has the `id`.
+   * The server HTML of a panel then has the `id`.
    */
   registerTab(source: symbol, registration: TabsPartRegistration | undefined): void;
   /**
    * Registers a panel one time, in `setup`. Call it with `undefined` to remove the registration.
+   * The server HTML of a tab then has the `id`.
    */
   registerPanel(source: symbol, registration: TabsPartRegistration | undefined): void;
   /**

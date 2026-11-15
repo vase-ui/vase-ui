@@ -9,8 +9,15 @@ withDefaults(
     numeric?: boolean;
     firstDisabled?: boolean;
     panel?: 'none' | 'before' | 'after';
+    ids?: boolean;
   }>(),
-  { value: undefined, defaultValue: undefined, orientation: 'horizontal', panel: 'none' },
+  {
+    value: undefined,
+    defaultValue: undefined,
+    orientation: 'horizontal',
+    panel: 'none',
+    ids: true,
+  },
 );
 </script>
 
@@ -21,14 +28,29 @@ withDefaults(
     :orientation="orientation"
     data-testid="root"
   >
-    <Tabs.Panel v-if="panel === 'before'" :value="numeric ? 0 : 'a'" id="panel-a" />
+    <Tabs.Panel
+      v-if="panel === 'before'"
+      :value="numeric ? 0 : 'a'"
+      :id="ids ? 'panel-a' : undefined"
+      data-testid="panel-a"
+    />
     <Tabs.List>
-      <Tabs.Tab :value="numeric ? 0 : 'a'" :disabled="firstDisabled" id="tab-a" data-testid="a">
+      <Tabs.Tab
+        :value="numeric ? 0 : 'a'"
+        :disabled="firstDisabled"
+        :id="ids ? 'tab-a' : undefined"
+        data-testid="a"
+      >
         A
       </Tabs.Tab>
       <Tabs.Tab :value="numeric ? 1 : 'b'" data-testid="b">B</Tabs.Tab>
       <Tabs.Tab :value="numeric ? 2 : 'c'" data-testid="c">C</Tabs.Tab>
     </Tabs.List>
-    <Tabs.Panel v-if="panel === 'after'" :value="numeric ? 0 : 'a'" id="panel-a" />
+    <Tabs.Panel
+      v-if="panel === 'after'"
+      :value="numeric ? 0 : 'a'"
+      :id="ids ? 'panel-a' : undefined"
+      data-testid="panel-a"
+    />
   </Tabs.Root>
 </template>
