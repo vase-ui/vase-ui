@@ -14,8 +14,9 @@ export interface ToastDescriptionProps
     VaseUIComponentProps<ToastDescriptionState>,
     /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes>, 'id'> {
   /**
-   * The id of the description. The toast uses it for `aria-describedby`, or for `aria-labelledby`
-   * when the toast has no title.
+   * The id of the description. The toast uses it for `aria-describedby`. A toast with no title
+   * uses it for `aria-labelledby` instead, unless the toast has its own `aria-label` or
+   * `aria-labelledby`.
    */
   id?: string | undefined;
 }
