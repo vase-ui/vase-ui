@@ -97,11 +97,13 @@ A 12-hour cycle adds a day period segment. The locale sets where the segment goe
 
 Give `minTime` and `maxTime` to limit the time. The hidden input has the type `time`, so an earlier time gives `rangeUnderflow` and a later time gives `rangeOverflow`. The `step` prop is the `step` of the hidden input, in seconds. A time that is not a multiple of the step from `minTime`, or from midnight with no `minTime`, gives `stepMismatch`. Put the field in a `Field` to show these errors.
 
-For a value that has a date, the hidden input has the type `datetime-local`, or a text for a value in a time zone. The field then sets a `customError` for a time outside `minTime` and `maxTime`. It also sets a `customError` for a field with some segments empty.
+For a value that has a date, the hidden input has the type `datetime-local`, or the type `text` for a value in a time zone. The field then sets a `customError` for a time outside `minTime` and `maxTime`.
+
+A field that has a number in some segments and not in all of them sets a `customError`, for each kind of value.
 
 ### Clear button
 
-`TimeField.Clear` empties the field and gives the focus to the first segment. It is disabled while the field is empty, disabled or read-only. With no content it shows `x` and has the `aria-label` `Clear`. With content, give the button an `aria-label` of your own.
+`TimeField.Clear` empties the field and gives the focus to the first segment. It is disabled while the field is empty, disabled or read-only. With no default slot and no `#render` slot, it shows `x` and has the `aria-label` `Clear`. Give an `aria-label` to a button whose content has no text, such as an icon or the `x` of the `children` component of the `#render` slot.
 
 ## Server render
 

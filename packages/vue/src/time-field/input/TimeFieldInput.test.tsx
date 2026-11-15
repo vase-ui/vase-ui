@@ -351,6 +351,23 @@ describe('<TimeField.Input />', () => {
       ).toEqual([':']);
     });
 
+    // An `Intl` of another version can give the same segments with another separator. The segments
+    // then have the same attributes, and the root makes no element again.
+    it('replaces a server text that is the only difference from the layout of the browser', async () => {
+      const base = { defaultValue: '15:04', locale: 'de-DE', clear: true } as const;
+      const serverHtml = (await renderOnServer(FIXTURE, base)).replace(
+        /(<span[^>]* data-type="literal"[^>]*>):(<\/span>)/,
+        '$1.$2',
+      );
+      expect(serverHtml).toContain('>.</span>');
+
+      const { container } = await hydrate(TimeFieldRootHydration, { serverHtml, props: base });
+
+      expect(
+        Array.from(container.querySelectorAll('[data-type="literal"]'), (item) => item.textContent),
+      ).toEqual([':']);
+    });
+
     it('keeps the order of the segments of a server that has another order', async () => {
       const base = { defaultValue: '15:04', clear: true } as const;
       const serverHtml = await renderOnServer(FIXTURE, { ...base, locale: 'ko-KR' });

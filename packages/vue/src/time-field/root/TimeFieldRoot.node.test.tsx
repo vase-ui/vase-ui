@@ -153,7 +153,9 @@ describe('<TimeField.Root /> on a server', () => {
     expect(
       html.match(/<input[^>]* data-type="\w+"[^>]* data-allow-mismatch="attribute"/g),
     ).toHaveLength(2);
-    expect(html).toMatch(/<span[^>]* data-type="literal"[^>]*>:<\/span>/);
+    expect(html).toMatch(
+      /<span(?=[^>]* data-type="literal")(?=[^>]* data-allow-mismatch="text")[^>]*>:<\/span>/,
+    );
   });
 
   it.each([

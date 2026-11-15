@@ -643,6 +643,8 @@ The source obeys rules that keep it compatible with the Vapor mode of Vue. ESLin
 
 If a line must break a rule, put a disable comment on that line and give the reason.
 
+A function component that calls `h` is not an SFC, so Vapor mode does not compile it. `DateTimeFieldLiteralElement` is the one such component, for the reason in [Server render](#server-render).
+
 ### Server render
 
 - Each part must render with `renderToString` in Node with no DOM.
@@ -767,7 +769,8 @@ A date or time field and the `Intl` data of the server:
 - After the mount, the root compares the `data-type` and the attributes that `getSegmentAttributes` gives with the DOM. On a difference, it changes `listKey`, and the parts make the elements again.
 - For a fragment with another number of items than on the server, such as the fragment of `v-for`, Vue logs `Hydration completed but contains mismatches` also under `data-allow-mismatch`. The test part renders the items of the layout as direct children of its input element, so it gives no such message.
 - `TimeField.Input` renders the layout in a list of `MAX_LAYOUT_ITEMS` iterations, and each iteration renders an item of the layout, or the comment of `v-if`. A list of a fixed length has the same length in the server HTML and in the browser, so Vue logs no message when the layouts have another number of items. A layout has at most five items that are not literals, and it joins two literals in a row. A layout thus has at most 11 items. The `children` component of the `#render` slot renders the same list.
-- `TimeField.Literal` binds no `data-allow-mismatch`. Vue lets that attribute allow the text of an element that has a string as its one child, and a template gives the children of a dynamic element in a slot. The part binds its text as the prop `textContent`. Vue replaces a dynamic prop while it hydrates, and it compares no `textContent`, so a text that differs gives no message.
+- Vue lets `data-allow-mismatch="text"` allow the text of an element that has a string as its one child. It does not let the attribute allow a text node in a list of children, and a template gives the text of a dynamic element as such a node. `TimeField.Literal` thus renders `DateTimeFieldLiteralElement`, which gives the text as a string with `h`.
+- Do not bind the text of a literal as the prop `textContent`. Vue before 3.5.39 does not write that prop while it hydrates, so the text of the server stays.
 
 ### What Vue replaces
 

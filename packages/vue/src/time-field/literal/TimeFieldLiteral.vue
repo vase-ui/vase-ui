@@ -31,7 +31,9 @@ export interface TimeFieldLiteralProps
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useIsHydrating } from '../../common/hydration';
 import { useDateTimeFieldContext } from '../../internals/date-time/field/DateTimeFieldContext';
+import { DateTimeFieldLiteralElement } from '../../internals/date-time/field/DateTimeFieldLiteralElement';
 import { fieldValidityMapping } from '../../internals/field-constants';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -51,6 +53,7 @@ defineSlots<{
 }>();
 
 const context = useDateTimeFieldContext();
+const isHydrating = useIsHydrating();
 
 const state = computed<TimeFieldLiteralState>(() => ({
   ...context.state.value,
@@ -58,16 +61,16 @@ const state = computed<TimeFieldLiteralState>(() => ({
   index: props.segment.index,
 }));
 
-// The server can have another text than the browser. Vue lets `data-allow-mismatch="text"` allow only
-// an element that has a string as its one child, and a dynamic component gets its children in a
-// slot. The part thus binds the text as the prop `textContent`. Vue replaces a dynamic prop while it
-// hydrates, and it compares no `textContent`, so a text that differs gives no message.
 const { element, elementProps } = useRenderElement('span', props, {
   state,
   stateAttributesMapping,
   props: (attrs) => [
-    // The text between the segments is not for assistive technology. The time zone name is.
-    { 'aria-hidden': props.segment.type === 'literal' ? true : undefined },
+    {
+      // The text between the segments is not for assistive technology. The time zone name is.
+      'aria-hidden': props.segment.type === 'literal' ? true : undefined,
+      // The server can have another text than the browser.
+      'data-allow-mismatch': isHydrating.value ? 'text' : undefined,
+    },
     attrs,
   ],
 });
@@ -77,5 +80,10 @@ defineExpose({ element });
 
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()" :textContent="segment.text" />
+  <DateTimeFieldLiteralElement
+    v-else
+    :tag="as"
+    :element-props="elementProps()"
+    :text="segment.text"
+  />
 </template>

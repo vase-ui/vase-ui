@@ -41,7 +41,7 @@ export interface TimeFieldRootProps<Value extends TimeFieldRootValue = Temporal.
    * The segments that the user did not fill start with the numbers of this value.
    * With no value, no `defaultValue` and no `referenceDate`, a new value is a `Temporal.PlainTime`.
    */
-  referenceDate?: TimeValue | undefined;
+  referenceDate?: Value | undefined;
   /**
    * The smallest unit that the field shows.
    * @default 'minute'
@@ -117,7 +117,7 @@ export interface TimeFieldRootProps<Value extends TimeFieldRootValue = Temporal.
    */
   autoComplete?: string | undefined;
   /**
-   * The ids of the elements that name the group. With this prop, the segments do not take the label
+   * The ids of the elements that name the group. With this prop, the group does not take the label
    * of the field.
    */
   ariaLabelledby?: string | undefined;

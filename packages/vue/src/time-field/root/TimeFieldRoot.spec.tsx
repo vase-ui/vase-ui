@@ -40,7 +40,14 @@ const explicitKind = (
     onValueChange={(v) => expectType<Temporal.PlainDateTime | null, typeof v>(v)}
   />
 );
-const referenceDate = <TimeField.Root referenceDate={zoned} />;
+const referenceDate = (
+  <TimeField.Root
+    referenceDate={zoned}
+    onValueChange={(v) => expectType<Temporal.ZonedDateTime | null, typeof v>(v)}
+  />
+);
+// @ts-expect-error the reference date has the kind of the value
+const referenceDateOfAnotherKind = <TimeField.Root value={time} referenceDate={zoned} />;
 
 // @ts-expect-error a date has no time
 const dateValue = <TimeField.Root value={date} />;
@@ -102,6 +109,7 @@ export {
   noValue,
   explicitKind,
   referenceDate,
+  referenceDateOfAnotherKind,
   dateValue,
   textValue,
   dayGranularity,

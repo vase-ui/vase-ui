@@ -8,7 +8,6 @@ const props = withDefaults(
     label?: 'none' | 'before' | 'after';
     description?: boolean;
     defaultValue?: string | undefined;
-    value?: string | undefined;
     granularity?: 'hour' | 'minute' | 'second' | undefined;
     hourCycle?: 12 | 24 | undefined;
     locale?: string | undefined;
@@ -16,9 +15,6 @@ const props = withDefaults(
     maxTime?: string | undefined;
     step?: number | undefined;
     name?: string | undefined;
-    id?: string | undefined;
-    disabled?: boolean;
-    readOnly?: boolean;
     required?: boolean;
     clear?: boolean;
     // How the field gives its segments: the default parts, the `segment` slot, or a `#render` slot.
@@ -27,7 +23,6 @@ const props = withDefaults(
   {
     label: 'none',
     defaultValue: undefined,
-    value: undefined,
     granularity: undefined,
     hourCycle: undefined,
     locale: undefined,
@@ -35,7 +30,6 @@ const props = withDefaults(
     maxTime: undefined,
     step: undefined,
     name: undefined,
-    id: undefined,
     input: 'default',
   },
 );
@@ -56,7 +50,6 @@ function toTime(text: string | undefined): Time | undefined {
 function rootProps() {
   return {
     defaultValue: toTime(props.defaultValue),
-    value: toTime(props.value),
     granularity: props.granularity,
     hourCycle: props.hourCycle,
     locale: props.locale,
@@ -64,9 +57,6 @@ function rootProps() {
     maxTime: props.maxTime === undefined ? undefined : Temporal.PlainTime.from(props.maxTime),
     step: props.step,
     name: props.name,
-    id: props.id,
-    disabled: props.disabled,
-    readOnly: props.readOnly,
     required: props.required,
   };
 }
