@@ -10,7 +10,7 @@ import { useElementSiblings } from '../../utils/popups/focus/useElementSiblings'
 import type { ElementSiblings } from '../../utils/popups/focus/useElementSiblings';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import type { NavigationMenuRootContext } from '../root/NavigationMenuRootContext';
-import { createElementSetter } from '../utils/createElementSetter';
+import { createElementSetter } from '../../utils/popups/createElementSetter';
 
 function createInsideGuardHandlers({
   positionerElement,

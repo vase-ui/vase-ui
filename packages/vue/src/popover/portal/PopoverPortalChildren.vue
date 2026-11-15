@@ -11,9 +11,11 @@ defineSlots<{
 
 const store = usePopoverRootContext();
 
+// Base UI renders the backdrop in the positioner, so it lasts as long as the positioner (`VUE-61`).
 const shouldRenderBackdrop = computed(
   () =>
     store.select('mounted') &&
+    store.select('positionerElement') !== null &&
     store.select('modal') === true &&
     store.select('openChangeReason') !== REASONS.triggerHover,
 );

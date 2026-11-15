@@ -101,6 +101,32 @@ describe('<Select.Root />', () => {
       </Select.Root>
     ),
     createPopup: () => <Select.Popup data-testid="popup">Popup</Select.Popup>,
+    createBackdropComponent: ({ open, onOpenChangeComplete }) => (
+      <Select.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Select.Trigger>
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Backdrop data-testid="shown" class="shown" />
+        </Select.Portal>
+      </Select.Root>
+    ),
+    createPendingPositionerComponent: ({ Pending, onOpenChange }) => (
+      <Select.Root defaultOpen onOpenChange={onOpenChange}>
+        <Select.Trigger>
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Portal>
+          <Pending>
+            <Select.Positioner data-testid="shown" alignItemWithTrigger={false}>
+              <Select.Popup>
+                <Select.Item value="a">A</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Pending>
+        </Select.Portal>
+      </Select.Root>
+    ),
     render,
   });
 
