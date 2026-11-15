@@ -52,7 +52,8 @@ describe('demos', () => {
     expect(sourcesThatMatch(/Base UI|BaseUI|base-ui|\bReact\b|\/react\//)).toEqual([]);
   });
 
-  // VitePress adds no base path to a link in a demo. A link that starts with `/` then misses the page.
+  // VitePress adds no base path to a link in a demo. With a base path other than `/`, a link that
+  // starts with `/` misses the page.
   it('start the path of each link to this site with the base path', () => {
     expect(sourcesThatMatch(/\bhref(?:="['`]?|:\s*['"`])\/(?!\/)/)).toEqual([]);
   });

@@ -61,11 +61,15 @@ For one property, `stateStyle` wins over `style`, and `style` wins over the styl
 
 A rule of `<style scoped>` matches the element of a part that has one root node.
 
-A part that renders a hidden input beside its element has more than one root node. `Switch.Root`, `Checkbox.Root`, `Radio.Root`, `NumberField.Root` and `OTPField.Root` are such parts. `Toast.Viewport` renders other nodes beside its element, so it also has more than one root node. A rule of `<style scoped>` does not match the element of such a part, and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`. The API reference of each such part says this.
+A part that renders a hidden input beside its element has more than one root node. `Switch.Root`, `Checkbox.Root`, `Radio.Root`, `NumberField.Root` and `OTPField.Root` are such parts. A rule of `<style scoped>` does not match the element of such a part, and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`. The API reference of each such part says this.
 
 In this sample, the rule `.thumb` matches `Switch.Thumb`, which has one root node. The rule `.field :deep(.switch)` reaches `Switch.Root` from an element of your own:
 
 <<< ../examples/styling/ScopedStyle.vue
+
+Each `Portal` part renders its element in a `Teleport`, in another place of the document. A rule of `<style scoped>`, `v-show` and a custom directive on the part do not reach that element, and `:deep()` does not reach it either. Write the element in the `#render` slot of the part. It is then an element of your own template, so they apply to it. Bind `props` on it, and mount `children` in it:
+
+<<< ../examples/styling/ScopedPortal.vue
 
 ## Tailwind CSS
 

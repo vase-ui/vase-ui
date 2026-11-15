@@ -30,6 +30,7 @@ import { useToastProviderContext } from '../provider/ToastProviderContext';
 import type { ToastStore } from '../store';
 import { List, Button } from '../utils/test-utils';
 import ToastViewportHydration from './ToastViewportHydration.test.vue';
+import ToastViewportScoped from './ToastViewportScoped.test.vue';
 
 const HYDRATION_FILE = 'src/toast/viewport/ToastViewportHydration.test.vue';
 
@@ -924,6 +925,42 @@ describe('<Toast.Viewport />', () => {
       window.dispatchEvent(new FocusEvent(type));
     }
 
+    async function appendFrame(parent: HTMLElement, sandbox?: string) {
+      const frame = parent.ownerDocument.createElement('iframe');
+      frame.srcdoc = '<button id="inner">inner</button>';
+      if (sandbox !== undefined) {
+        frame.setAttribute('sandbox', sandbox);
+      }
+      await new Promise<void>((resolve) => {
+        frame.addEventListener('load', () => resolve(), { once: true });
+        parent.append(frame);
+      });
+      onTestFinished(() => frame.remove());
+      return frame;
+    }
+
+    // A headless browser cannot hide the page or take the focus from its window. A case thus stubs
+    // the state and dispatches the event.
+    function stubPageState() {
+      const visibilityState = vi.spyOn(document, 'visibilityState', 'get');
+      const hasFocus = vi.spyOn(document, 'hasFocus');
+      onTestFinished(() => {
+        visibilityState.mockRestore();
+        hasFocus.mockRestore();
+      });
+
+      function setVisibility(state: DocumentVisibilityState) {
+        visibilityState.mockReturnValue(state);
+        document.dispatchEvent(new Event('visibilitychange'));
+      }
+
+      return {
+        hide: () => setVisibility('hidden'),
+        show: () => setVisibility('visible'),
+        setFocus: (value: boolean) => hasFocus.mockReturnValue(value),
+      };
+    }
+
     it('keeps the viewport expanded until the toasts that are leaving are gone', async () => {
       const manager = Toast.createToastManager();
       let store!: ToastStore;
@@ -960,14 +997,7 @@ describe('<Toast.Viewport />', () => {
       const onClose = vi.fn();
       const manager = Toast.createToastManager();
       await renderViewport(manager);
-
-      const frame = document.createElement('iframe');
-      frame.srcdoc = '<button id="inner">inner</button>';
-      await new Promise<void>((resolve) => {
-        frame.addEventListener('load', () => resolve(), { once: true });
-        document.body.append(frame);
-      });
-      onTestFinished(() => frame.remove());
+      const frame = await appendFrame(document.body);
 
       manager.add({ title: 'toast', timeout: 1000, onClose });
       await flushMicrotasks();
@@ -1004,6 +1034,165 @@ describe('<Toast.Viewport />', () => {
       await tick(5000);
 
       expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      { name: 'a frame of the same origin', sandbox: undefined },
+      // A frame with the `sandbox` attribute and no `allow-same-origin` has an opaque origin.
+      { name: 'a frame of another origin', sandbox: '' },
+    ])(
+      'BUG-6174: pauses the timers while the page is hidden with the focus in $name, and runs them when it shows',
+      async ({ sandbox }) => {
+        const onClose = vi.fn();
+        const manager = Toast.createToastManager();
+        await renderViewport(manager);
+        const frame = await appendFrame(document.body, sandbox);
+        manager.add({ title: 'toast', timeout: 1000, onClose });
+        await flushMicrotasks();
+        const page = stubPageState();
+        window.focus();
+        screen.getByTestId('origin').focus();
+        frame.focus();
+        await flushMicrotasks();
+        await tick(1);
+
+        page.setFocus(false);
+        page.hide();
+        await tick(5000);
+
+        expect(onClose).not.toHaveBeenCalled();
+
+        // The page shows with no focus for its window, so only the frame lets the timers continue.
+        page.show();
+        await tick(1);
+        await tick(1000);
+
+        expect(onClose).toHaveBeenCalledTimes(1);
+      },
+    );
+
+    it('BUG-6174: pauses the timers while the page is hidden with the focus in the page, and runs them when the window has the focus', async () => {
+      const onClose = vi.fn();
+      const manager = Toast.createToastManager();
+      await renderViewport(manager);
+      manager.add({ title: 'toast', timeout: 1000, onClose });
+      await flushMicrotasks();
+      const page = stubPageState();
+      window.focus();
+      screen.getByTestId('origin').focus();
+
+      page.hide();
+      await tick(5000);
+
+      expect(onClose).not.toHaveBeenCalled();
+
+      page.setFocus(false);
+      page.show();
+      await tick(1);
+      await tick(5000);
+
+      expect(onClose).not.toHaveBeenCalled();
+
+      // The timers run for half of the timeout, and the next hide pauses them again.
+      dispatchWindowEvent('focus');
+      await tick(1);
+      await tick(500);
+      page.hide();
+      await tick(5000);
+
+      expect(onClose).not.toHaveBeenCalled();
+
+      page.setFocus(true);
+      page.show();
+      await tick(1);
+      await tick(500);
+
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it.each([
+      { name: 'a frame', nested: false },
+      { name: 'a frame in a frame', nested: true },
+    ])(
+      'BUG-6174: pauses the timers when the window loses the focus while $name has it',
+      async ({ nested }) => {
+        const onClose = vi.fn();
+        const manager = Toast.createToastManager();
+        await renderViewport(manager);
+        const outerFrame = await appendFrame(document.body);
+        const frame = nested ? await appendFrame(outerFrame.contentDocument!.body) : outerFrame;
+        manager.add({ title: 'toast', timeout: 1000, onClose });
+        await flushMicrotasks();
+        const page = stubPageState();
+        window.focus();
+        screen.getByTestId('origin').focus();
+        frame.contentDocument!.getElementById('inner')!.focus();
+        await flushMicrotasks();
+        await tick(1);
+
+        // Only the window of the frame that has the focus gets the events of the page focus.
+        const frameWindow = frame.contentWindow as Window & typeof globalThis;
+        page.setFocus(false);
+        frameWindow.dispatchEvent(new frameWindow.FocusEvent('blur'));
+        await tick(1);
+        await tick(5000);
+
+        expect(onClose).not.toHaveBeenCalled();
+
+        page.setFocus(true);
+        frameWindow.dispatchEvent(new frameWindow.FocusEvent('focus'));
+        await tick(1);
+        await tick(1000);
+
+        expect(onClose).toHaveBeenCalledTimes(1);
+      },
+    );
+
+    it('BUG-6174: keeps one pair of frame listeners when the first toast comes before the focus check, and removes it at the unmount', async () => {
+      const manager = Toast.createToastManager();
+      const { unmount } = await renderViewport(manager);
+      const frame = await appendFrame(document.body);
+      const frameWindow = frame.contentWindow!;
+      const addListener = vi.spyOn(frameWindow, 'addEventListener');
+      const removeListener = vi.spyOn(frameWindow, 'removeEventListener');
+      const liveListeners = (type: string) =>
+        addListener.mock.calls.filter(([name]) => name === type).length -
+        removeListener.mock.calls.filter(([name]) => name === type).length;
+      window.focus();
+      screen.getByTestId('origin').focus();
+
+      // The first toast runs the listeners of the viewport again while the check of the `blur` waits.
+      frame.contentDocument!.getElementById('inner')!.focus();
+      manager.add({ title: 'toast', timeout: 0 });
+      await flushMicrotasks();
+      await tick(1);
+
+      expect([liveListeners('blur'), liveListeners('focus')]).toEqual([1, 1]);
+
+      unmount();
+
+      expect([liveListeners('blur'), liveListeners('focus')]).toEqual([0, 0]);
+    });
+
+    it('VUE-76: starts the timers paused when the page is hidden at the mount', async () => {
+      const onClose = vi.fn();
+      const manager = Toast.createToastManager();
+      const page = stubPageState();
+      page.setFocus(true);
+      page.hide();
+      await renderViewport(manager);
+      manager.add({ title: 'toast', timeout: 1000, onClose });
+      await flushMicrotasks();
+
+      await tick(5000);
+
+      expect(onClose).not.toHaveBeenCalled();
+
+      page.show();
+      await tick(1);
+      await tick(1000);
+
+      expect(onClose).toHaveBeenCalledTimes(1);
     });
 
     it('pauses timers when hovering', async () => {
@@ -2025,6 +2214,82 @@ describe('<Toast.Viewport />', () => {
 
       expect(screen.queryAllByRole('alert')).toHaveLength(0);
     });
+
+    it('takes the alert region out of the document while KeepAlive holds the viewport, and brings it back', async () => {
+      const manager = Toast.createToastManager();
+      const Page = defineComponent({
+        name: 'Page',
+        setup: () => () => (
+          <Toast.Provider toastManager={manager}>
+            <Toast.Viewport>
+              <ToastTextList />
+            </Toast.Viewport>
+          </Toast.Provider>
+        ),
+      });
+      const Other = defineComponent({ name: 'Other', setup: () => () => <p /> });
+      const showPage = shallowRef(true);
+      await render(() => (
+        <KeepAlive>{showPage.value ? <Page key="page" /> : <Other key="other" />}</KeepAlive>
+      ));
+      manager.add({ title: 'Saved', priority: 'high', timeout: 0 });
+      await flushMicrotasks();
+      const alert = screen.getByRole('alert');
+
+      showPage.value = false;
+      await flushMicrotasks();
+
+      expect(document.querySelectorAll('[role="alert"]')).toHaveLength(0);
+
+      showPage.value = true;
+      await flushMicrotasks();
+
+      expect(screen.getByRole('alert')).toBe(alert);
+    });
+  });
+
+  describe('VUE-60: the viewport has one root node', () => {
+    const rows = [
+      { name: 'with no toast', nodes: 'none', guard: false, alert: false },
+      { name: 'with focus guards', nodes: 'guards', guard: true, alert: false },
+      { name: 'with an alert region', nodes: 'alert', guard: false, alert: true },
+    ] as const;
+
+    // Base UI renders the guard before the element and the alert region after it.
+    function readNodesBeside(viewport: HTMLElement) {
+      return {
+        guard: viewport.previousElementSibling?.hasAttribute('data-vase-ui-focus-guard') ?? false,
+        alert: viewport.nextElementSibling?.querySelector('[role="alert"]') != null,
+      };
+    }
+
+    it.each(rows)(
+      'gives the scope id, v-show and a custom directive of the consumer to the viewport $name',
+      async ({ nodes, guard, alert }) => {
+        const shown = shallowRef(true);
+        await render(() => <ToastViewportScoped nodes={nodes} shown={shown.value} />);
+        await flushMicrotasks();
+        const viewport = screen.getByTestId('viewport');
+
+        expect(getComputedStyle(viewport).outlineStyle).toBe('dashed');
+        expect(viewport).toHaveAttribute('data-mark', 'marked');
+        expect(readNodesBeside(viewport)).toEqual({ guard, alert });
+
+        shown.value = false;
+        await nextTick();
+
+        expect(viewport).not.toBeVisible();
+      },
+    );
+
+    it.each(rows)('renders the viewport $name in a Transition', async ({ nodes, guard, alert }) => {
+      // The test setup fails the case on the warning that Vue gives for a part with more than one
+      // root node in a `Transition`.
+      await render(<ToastViewportScoped nodes={nodes} mode="transition" />);
+      await flushMicrotasks();
+
+      expect(readNodesBeside(screen.getByTestId('viewport'))).toEqual({ guard, alert });
+    });
   });
 
   it('removes its document listeners while KeepAlive holds it, and takes them back', async () => {
@@ -2067,15 +2332,19 @@ describe('<Toast.Viewport />', () => {
 
   describe('hydration', () => {
     it.each([
-      { name: 'inline', props: {}, serverHtml: 'role="region"' },
-      { name: 'in a portal', props: { portal: true }, serverHtml: '<!---->' },
-      { name: 'with a text label', props: { toast: 'text' }, serverHtml: 'role="alert"' },
-    ])('hydrates the viewport $name with no message', async ({ props, serverHtml }) => {
+      { name: 'inline', props: {}, serverHtml: 'role="region"', alerts: 0 },
+      { name: 'in a portal', props: { portal: true }, serverHtml: '<!---->', alerts: 0 },
+      { name: 'with a text label', props: { toast: 'text' }, serverHtml: 'Saved', alerts: 1 },
+    ])('hydrates the viewport $name with no message', async ({ props, serverHtml, alerts }) => {
       const html = await renderOnServer(HYDRATION_FILE, props);
 
       expect(html).toContain(serverHtml);
+      // Script makes the alert region after the mount.
+      expect(html).not.toContain('role="alert"');
 
       await hydrate(ToastViewportHydration, { serverHtml: html, props });
+
+      expect(document.querySelectorAll('[role="alert"]')).toHaveLength(alerts);
     });
 
     it('hydrates the component of a function label in the toast and in the alert region, and renders it in both for the next toast', async () => {
