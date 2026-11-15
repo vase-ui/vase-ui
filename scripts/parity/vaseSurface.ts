@@ -554,9 +554,14 @@ export function createVaseProject(tsconfig: string): VaseProject {
         .filter(
           (member) =>
             !ownTags(member).some(({ tagName }) => tagName.text === 'internal') &&
-            (member.declarations ?? []).every(
-              (declaration) => (ts.getCombinedModifierFlags(declaration) & hidden) === 0,
-            ),
+            (member.declarations ?? []).every((declaration) => {
+              // An ECMAScript private member (`#name`) has no modifier.
+              const name = ts.getNameOfDeclaration(declaration);
+              return (
+                (ts.getCombinedModifierFlags(declaration) & hidden) === 0 &&
+                !(name && ts.isPrivateIdentifier(name))
+              );
+            }),
         );
       return {
         properties: members
