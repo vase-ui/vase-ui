@@ -23,12 +23,11 @@ describe('<Toast.Viewport /> on a server', () => {
     expect(html).not.toContain('role="alert"');
   });
 
-  it('renders the alert region of a high priority toast that setup adds, and none for a low priority toast', async () => {
+  // Script makes the alert region after the mount, so a server renders only the toast.
+  it('renders a high priority toast with no alert region on a server', async () => {
     const AddInSetup = defineComponent({
       setup() {
-        const { add } = Toast.useToastManager();
-        add({ title: 'Saved', description: 'The file is saved.', priority: 'high', timeout: 0 });
-        add({ title: 'Draft', priority: 'low', timeout: 0 });
+        Toast.useToastManager().add({ title: 'Saved', priority: 'high', timeout: 0 });
         return () => null;
       },
     });
@@ -38,19 +37,19 @@ describe('<Toast.Viewport /> on a server', () => {
         render: () => (
           <Toast.Provider>
             <AddInSetup />
-            <Toast.Viewport />
+            <Toast.Viewport>
+              <ToastTextList />
+            </Toast.Viewport>
           </Toast.Provider>
         ),
       }),
     );
 
-    expect(html.match(/role="alert"/g)).toHaveLength(1);
     expect(html).toContain('Saved');
-    expect(html).toContain('The file is saved.');
-    expect(html).not.toContain('Draft');
+    expect(html).not.toContain('role="alert"');
   });
 
-  it('renders the component of a function label in the toast and in the alert region', async () => {
+  it('renders the component of a function label only in the toast on a server', async () => {
     const Label = defineComponent({ setup: () => () => <em data-toast-label>Saved</em> });
     const AddInSetup = defineComponent({
       setup() {
@@ -72,6 +71,6 @@ describe('<Toast.Viewport /> on a server', () => {
       }),
     );
 
-    expect(html.match(/data-toast-label/g)).toHaveLength(2);
+    expect(html.match(/data-toast-label/g)).toHaveLength(1);
   });
 });

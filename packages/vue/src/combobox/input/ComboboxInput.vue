@@ -45,6 +45,7 @@ export interface ComboboxInputProps
 <script setup lang="ts">
 import { computed, nextTick, onMounted, provide, shallowRef, toRaw, watch } from 'vue';
 import type { ComponentPublicInstance } from 'vue';
+import { useValueBeforeHydration } from '../../common/hydration';
 import { platform } from '../../common/platform';
 import { useTimeout } from '../../common/useTimeout';
 import { addInputFocusListeners } from '../../filter-dropdown/input/FilterDropdownInput';
@@ -224,6 +225,8 @@ function displayText(value: unknown) {
   return value == null ? '' : String(value);
 }
 
+const writesValue = useValueBeforeHydration(props, () => element.value);
+
 // The value that the input has after the last event that the part handled. A write of Vue or of
 // the part sets it too.
 let handledValue: string | undefined;
@@ -231,7 +234,11 @@ let handledValue: string | undefined;
 function syncHandledValue() {
   handledValue = (element.value as HTMLInputElement | null)?.value;
 }
-onMounted(syncHandledValue);
+// At the mount the input can hold text that the user typed before the hydration, also in a
+// component in `as`. The last write of Vue, and the server HTML, have the text of the state.
+onMounted(() => {
+  handledValue = displayText(inputValue.value);
+});
 watch(() => composingValue.value ?? inputValue.value, syncHandledValue, { flush: 'post' });
 
 // Vue writes the DOM value only when the part renders. The part does not render when a listener
@@ -552,7 +559,7 @@ const { element, elementProps } = useRenderElement('input', props, {
       store.select('inputProps'),
       store.select('triggerProps', true),
       {
-        value: composingValue.value ?? inputValue.value,
+        ...(writesValue.value ? { value: composingValue.value ?? inputValue.value } : undefined),
         'aria-readonly': readOnly.value || undefined,
         'aria-required': required || undefined,
         'aria-labelledby': fieldLabelId.value,
