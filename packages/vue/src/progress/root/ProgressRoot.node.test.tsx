@@ -49,6 +49,17 @@ describe('<Progress.Root /> on a server', () => {
     );
   });
 
+  it('renders the generated id in the aria-labelledby of a root whose label has an id of its own', async () => {
+    const html = await renderToString(
+      <Progress.Root value={30}>
+        <Progress.Label id="own">Upload</Progress.Label>
+      </Progress.Root>,
+    );
+
+    expect(/aria-labelledby="([^"]*)"/.exec(html)?.[1]).toMatch(/^vase-ui-./);
+    expect(html).toContain('<span data-progressing id="own" role="presentation">');
+  });
+
   it.each([
     { name: 'an aria-label', attributes: { 'aria-label': 'Storage' }, labelledBy: undefined },
     {

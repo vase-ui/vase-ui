@@ -71,7 +71,7 @@ export class BasePopupHandle<
    * transition. When a newer root detaches first, this stack lets the cleanup of `attachStore`
    * return control to the older root that is still mounted.
    */
-  private readonly attachedStores: Store[] = [];
+  readonly #attachedStores: Store[] = [];
 
   /**
    * The store of the root that controls the handle: the newest root that is still mounted, or
@@ -80,13 +80,19 @@ export class BasePopupHandle<
    */
   // For a type parameter, the return type of `shallowRef<Store | null>()` is a conditional type that
   // TypeScript does not resolve, and `.value` is then `any`. The annotation keeps `Store | null`.
-  private readonly attachedStoreRef: ShallowRef<Store | null> = shallowRef(null);
+  readonly #attachedStoreRef: ShallowRef<Store | null> = shallowRef(null);
 
   protected readonly fallbackStore: HandleStore;
 
-  private readonly componentName: string;
+  readonly #componentName: string;
 
-  private readonly throwOnMissingTrigger: boolean;
+  readonly #throwOnMissingTrigger: boolean;
+
+  /**
+   * The frame of the development warning for overlapping roots. Only a development build makes it,
+   * on the first overlap.
+   */
+  #overlapWarningFrame: AnimationFrame | undefined;
 
   /**
    * @param fallbackStore The inert, closed store that a detached trigger gets while no root is
@@ -101,10 +107,10 @@ export class BasePopupHandle<
    */
   constructor(fallbackStore: HandleStore, componentName: string, throwOnMissingTrigger = true) {
     this.fallbackStore = fallbackStore;
-    this.componentName = componentName;
-    this.throwOnMissingTrigger = throwOnMissingTrigger;
-    // A reactive proxy of the handle, for example from `ref()` or from the `data` option, unwraps
-    // `attachedStoreRef`. The next write to the pointer then fails.
+    this.#componentName = componentName;
+    this.#throwOnMissingTrigger = throwOnMissingTrigger;
+    // A consumer can put the handle in `ref()`, `reactive()`, `readonly()` or the `data` option. A
+    // method that reads a private member throws a `TypeError` on a proxy of the handle.
     markRaw(this);
   }
 
@@ -113,7 +119,7 @@ export class BasePopupHandle<
    * getter that reads it, such as `isOpen`, then follows each change of the pointer.
    */
   protected get attachedStore() {
-    return this.attachedStoreRef.value;
+    return this.#attachedStoreRef.value;
   }
 
   /**
@@ -123,7 +129,7 @@ export class BasePopupHandle<
    * detaches.
    */
   protected get attachedStoreUntracked() {
-    return this.attachedStores.at(-1) ?? null;
+    return this.#attachedStores.at(-1) ?? null;
   }
 
   /**
@@ -132,7 +138,7 @@ export class BasePopupHandle<
    * @internal
    */
   get store(): HandleStore {
-    return this.attachedStoreRef.value ?? this.fallbackStore;
+    return this.#attachedStoreRef.value ?? this.fallbackStore;
   }
 
   /**
@@ -150,18 +156,16 @@ export class BasePopupHandle<
    * @internal
    */
   attachStore(newStore: Store) {
-    this.attachedStores.push(newStore);
-    this.attachedStoreRef.value = newStore;
+    this.#attachedStores.push(newStore);
+    this.#attachedStoreRef.value = newStore;
 
     if (process.env.NODE_ENV !== 'production') {
-      if (this.attachedStores.length > 1) {
+      if (this.#attachedStores.length > 1) {
         // A short overlap is usual during an animated route transition, because the old root
         // unmounts a little after the new root mounts. The check waits one frame and warns only
         // when the overlap is still there, so a clean handoff gives no warning at any unmount time.
-        // The frame exists only in a development build, so the code makes it on first use.
-        const dev = this as this & { overlapWarningFrame?: AnimationFrame | undefined };
-        (dev.overlapWarningFrame ??= AnimationFrame.create()).request(() => {
-          if (this.attachedStores.length > 1) {
+        (this.#overlapWarningFrame ??= AnimationFrame.create()).request(() => {
+          if (this.#attachedStores.length > 1) {
             console.warn(
               'Vase UI: A handle is attached to more than one mounted root at the same time. ' +
                 'The most recently mounted root takes over, and the handle stops controlling the previous root. ' +
@@ -173,14 +177,14 @@ export class BasePopupHandle<
     }
 
     return () => {
-      const index = this.attachedStores.lastIndexOf(newStore);
+      const index = this.#attachedStores.lastIndexOf(newStore);
       if (index !== -1) {
-        this.attachedStores.splice(index, 1);
+        this.#attachedStores.splice(index, 1);
       }
       // Control goes to the newest root that is still mounted. A reset to `null` would leave an
       // older root that is still mounted with no control when a newer overlapping root detaches
       // first, for example when a route transition is canceled.
-      this.attachedStoreRef.value = this.attachedStores.at(-1) ?? null;
+      this.#attachedStoreRef.value = this.#attachedStores.at(-1) ?? null;
     };
   }
 
@@ -203,7 +207,7 @@ export class BasePopupHandle<
     if (attachedStore === null) {
       if (process.env.NODE_ENV !== 'production') {
         console.warn(
-          `Vase UI: ${this.componentName}Handle.open() was called while no root that uses this handle is mounted. ` +
+          `Vase UI: ${this.#componentName}Handle.open() was called while no root that uses this handle is mounted. ` +
             'The handle ignored the call. Mount a root with this handle before you call open().',
         );
       }
@@ -217,28 +221,28 @@ export class BasePopupHandle<
     // finds the trigger.
     let triggerElement: Element | undefined;
     if (triggerId) {
-      for (let i = this.attachedStores.length - 1; i >= 0 && !triggerElement; i -= 1) {
+      for (let i = this.#attachedStores.length - 1; i >= 0 && !triggerElement; i -= 1) {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The loop runs from the last index to 0.
-        triggerElement = this.attachedStores[i]!.context.triggerElements.getById(triggerId);
+        triggerElement = this.#attachedStores[i]!.context.triggerElements.getById(triggerId);
       }
       triggerElement ??= this.fallbackStore.context.triggerElements.getById(triggerId);
     }
 
     if (triggerId && !triggerElement) {
-      if (this.throwOnMissingTrigger) {
+      if (this.#throwOnMissingTrigger) {
         throw new Error(
-          `Vase UI: ${this.componentName}Handle.open() was called with the trigger id "${triggerId}", ` +
+          `Vase UI: ${this.#componentName}Handle.open() was called with the trigger id "${triggerId}", ` +
             'but no matching trigger is registered with this handle. ' +
             'An anchored popup cannot open without a trigger to anchor to. ' +
-            `Pass the id of a mounted ${this.componentName}.Trigger that has this handle set on its "handle" prop.`,
+            `Pass the id of a mounted ${this.#componentName}.Trigger that has this handle set on its "handle" prop.`,
         );
       }
 
       if (process.env.NODE_ENV !== 'production') {
         console.warn(
-          `Vase UI: ${this.componentName}Handle.open: No trigger found with id "${triggerId}". ` +
+          `Vase UI: ${this.#componentName}Handle.open: No trigger found with id "${triggerId}". ` +
             'The popup will open, but the trigger will not be associated with it. ' +
-            `Pass the id of a mounted ${this.componentName}.Trigger that has this handle set on its "handle" prop.`,
+            `Pass the id of a mounted ${this.#componentName}.Trigger that has this handle set on its "handle" prop.`,
         );
       }
     }
@@ -261,7 +265,7 @@ export class BasePopupHandle<
     if (attachedStore === null) {
       if (process.env.NODE_ENV !== 'production') {
         console.warn(
-          `Vase UI: ${this.componentName}Handle.close() was called while no root that uses this handle is mounted. ` +
+          `Vase UI: ${this.#componentName}Handle.close() was called while no root that uses this handle is mounted. ` +
             'The handle ignored the call. Mount a root with this handle before you call close().',
         );
       }
