@@ -11,7 +11,7 @@ import { ownerWindow } from '../common/owner';
  * Chromium can restore the form state of a page after the app is mounted, before `pageshow`, with
  * no event on the input. A page from the back/forward cache keeps its script state, so the part
  * has nothing to take.
- * @param input The element of a control. A ref that a `ref` setter writes.
+ * @param input An element of the part, such as its input. A ref that a `ref` setter writes.
  * @param onRestore Gets the `pageshow` event.
  */
 export function useFormRestore(
