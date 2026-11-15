@@ -8,8 +8,10 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  hydrate,
   isJSDOM,
   pressWithScreenReader,
+  renderOnServer,
   screen,
   wait,
   waitFor,
@@ -18,7 +20,10 @@ import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
 import type { ComboboxStore } from '../store';
+import ComboboxTriggerOpenHydration from './ComboboxTriggerOpenHydration.test.vue';
 import ComboboxTriggerReplacement from './ComboboxTriggerReplacement.test.vue';
+
+const HYDRATION_FIXTURE = 'src/combobox/trigger/ComboboxTriggerOpenHydration.test.vue';
 
 type ItemSlotProps = { item: string };
 
@@ -846,6 +851,37 @@ describe('<Combobox.Trigger />', () => {
       expect(listbox.isConnected).toBe(true);
     });
 
+    it('keeps the popup open for a release up to 5px off the trigger, away from the point of the press', async () => {
+      const onOpenChange = vi.fn();
+      await render(
+        <Combobox.Root onOpenChange={onOpenChange}>
+          <Combobox.Trigger data-testid="trigger">Open</Combobox.Trigger>
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List>
+                  <Combobox.Item value="alpha">Alpha</Combobox.Item>
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+      trigger.getBoundingClientRect = () =>
+        DOMRect.fromRect({ x: 100, y: 100, width: 100, height: 40 });
+
+      await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+      await fireEvent.mouseDown(trigger, { button: 0, clientX: 110, clientY: 120 });
+      await screen.findByRole('listbox');
+
+      await fireEvent.mouseUp(document.body, { button: 0, clientX: 205, clientY: 120 });
+
+      expect(onOpenChange.mock.calls.map(([open]) => open)).toEqual([true]);
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    });
+
     it('closes the popup when the release is more than 5px outside the trigger bounds', async () => {
       await render(
         <Combobox.Root>
@@ -980,29 +1016,125 @@ describe('<Combobox.Trigger />', () => {
       expect(trigger).toHaveAttribute('aria-controls', popup.id);
     });
 
-    it('names the default id of the popup while the popup element has no id', async () => {
-      await render(
-        <Combobox.Root defaultOpen id="fruits">
-          <Combobox.Trigger data-testid="trigger" />
-          <Combobox.Portal>
-            <Combobox.Positioner>
-              <Combobox.Popup
-                v-slots={{
-                  render: ({ props }: { props: HTMLProps }) => (
-                    <div {...props} id={undefined} data-testid="popup">
-                      <Combobox.Input />
-                    </div>
-                  ),
-                }}
-              />
-            </Combobox.Positioner>
-          </Combobox.Portal>
-        </Combobox.Root>,
-      );
-      await flushMicrotasks();
+    describe('VUE-73: aria-controls names only an element that exists', () => {
+      it('has no aria-controls while the popup has an empty id', async () => {
+        await render(
+          <Combobox.Root defaultOpen>
+            <Combobox.Trigger data-testid="trigger" />
+            <Combobox.Portal>
+              <Combobox.Positioner>
+                <Combobox.Popup id="" data-testid="popup">
+                  <Combobox.Input />
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>,
+        );
+        await flushMicrotasks();
 
-      expect(screen.getByTestId('popup').id).toBe('');
-      expect(screen.getByTestId('trigger')).toHaveAttribute('aria-controls', 'fruits-popup');
+        const trigger = screen.getByTestId('trigger');
+        expect(screen.getByTestId('popup').id).toBe('');
+        expect(trigger).toHaveAttribute('aria-expanded', 'true');
+        expect(trigger).not.toHaveAttribute('aria-controls');
+      });
+
+      it('follows the id of the popup element', async () => {
+        const id = shallowRef<string | undefined>(undefined);
+        await render(() => (
+          <Combobox.Root defaultOpen>
+            <Combobox.Trigger data-testid="trigger" />
+            <Combobox.Portal>
+              <Combobox.Positioner>
+                <Combobox.Popup
+                  v-slots={{
+                    render: ({ props }: { props: HTMLProps }) => (
+                      <div {...props} id={id.value} data-testid="popup">
+                        <Combobox.Input />
+                      </div>
+                    ),
+                  }}
+                />
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>
+        ));
+        await flushMicrotasks();
+
+        const trigger = screen.getByTestId('trigger');
+        expect(trigger).not.toHaveAttribute('aria-controls');
+
+        id.value = 'fruits';
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('popup').id).toBe('fruits');
+        expect(trigger).toHaveAttribute('aria-controls', 'fruits');
+
+        id.value = undefined;
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('popup').id).toBe('');
+        expect(trigger).not.toHaveAttribute('aria-controls');
+      });
+
+      it('has no aria-controls while no popup is mounted', async () => {
+        await render(
+          <Combobox.Root defaultOpen>
+            <Combobox.Trigger data-testid="trigger" />
+          </Combobox.Root>,
+        );
+        await flushMicrotasks();
+
+        const trigger = screen.getByTestId('trigger');
+        expect(trigger).toHaveAttribute('aria-expanded', 'true');
+        expect(trigger).toHaveAttribute('aria-haspopup', 'dialog');
+        expect(trigger).not.toHaveAttribute('aria-controls');
+      });
+
+      it('has no aria-controls while the list element has no id', async () => {
+        await render(
+          <Combobox.Root defaultOpen>
+            <Combobox.Input />
+            <Combobox.Trigger data-testid="trigger" />
+            <Combobox.Portal>
+              <Combobox.Positioner>
+                <Combobox.Popup>
+                  <Combobox.List
+                    v-slots={{
+                      render: ({ props }: { props: HTMLProps }) => (
+                        <div {...props} id={undefined} data-testid="list" />
+                      ),
+                    }}
+                  />
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>,
+        );
+        await flushMicrotasks();
+
+        const trigger = screen.getByTestId('trigger');
+        expect(screen.getByTestId('list').id).toBe('');
+        expect(trigger).toHaveAttribute('aria-expanded', 'true');
+        expect(trigger).toHaveAttribute('aria-haspopup', 'listbox');
+        expect(trigger).not.toHaveAttribute('aria-controls');
+      });
+
+      it('names the popup after the hydration of an open root', async () => {
+        const serverHtml = await renderOnServer(HYDRATION_FIXTURE);
+        const server = document.createElement('template');
+        server.innerHTML = serverHtml;
+        const serverTrigger = server.content.querySelector('[data-testid="trigger"]');
+        expect(serverTrigger?.getAttribute('aria-expanded')).toBe('true');
+        expect(serverTrigger?.hasAttribute('aria-controls')).toBe(false);
+
+        await hydrate(ComboboxTriggerOpenHydration, { serverHtml });
+
+        const popup = await screen.findByTestId('popup');
+        await flushMicrotasks();
+
+        expect(popup.id).not.toBe('');
+        expect(screen.getByTestId('trigger')).toHaveAttribute('aria-controls', popup.id);
+      });
     });
   });
 

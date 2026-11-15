@@ -403,10 +403,11 @@ describe('<Menu.Popup />', () => {
 
       const trigger = screen.getByText('Open');
 
-      await user.click(trigger);
-      const item = await screen.findByText('Close');
       // The item mounts with the menu. Vue skips its listener for an event of that millisecond.
-      await waitForLaterMillisecond();
+      const item = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        return screen.findByText('Close');
+      });
       await fireEvent.pointerDown(item, { pointerType: 'mouse' });
       await fireEvent.click(item, { detail: 1 });
       await waitFor(() => {
@@ -1115,7 +1116,7 @@ describe('<Menu.Popup />', () => {
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
-  // instance set, and each later case of the file then gets a warning about a slot.
+  // instance set, and a later case of the file can then get a warning about a slot.
   it('throws when rendered outside Menu.Positioner', async () => {
     await expect(
       render(

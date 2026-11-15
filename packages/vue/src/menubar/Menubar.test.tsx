@@ -959,10 +959,11 @@ describe('<Menubar />', () => {
     // active when the item is clicked.
     vi.useFakeTimers();
     try {
-      screen.getByTestId('edit-trigger').focus();
-      await flushMicrotasks();
-      // The item mounts with the menu. Vue skips its listener for an event of that millisecond.
-      await waitForLaterMillisecond();
+      // The focus opens the menu, and the item mounts with it.
+      await waitForLaterMillisecond(() => {
+        screen.getByTestId('edit-trigger').focus();
+        return flushMicrotasks();
+      });
 
       await fireEvent(
         screen.getByTestId('edit-item-1'),
@@ -2083,7 +2084,7 @@ describe('<Menubar />', () => {
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
-  // instance set, and each later case of the file then gets a warning about a slot.
+  // instance set, and a later case of the file can then get a warning about a slot.
   it('throws when the menubar context is missing', async () => {
     const ContextConsumer = defineComponent(() => {
       useMenubarContext();

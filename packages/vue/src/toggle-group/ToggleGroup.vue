@@ -97,6 +97,10 @@ const emit = defineEmits<{
    * Callback fired when the pressed states of the toggle group changes.
    */
   valueChange: [groupValue: Value[], eventDetails: ToggleGroupChangeEventDetails];
+  /**
+   * Event handler called after `valueChange` with the new value, unless a listener cancels the
+   * change. `v-model:value` uses it.
+   */
   'update:value': [groupValue: Value[]];
 }>();
 

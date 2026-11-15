@@ -145,10 +145,73 @@ describe('<Field.Description />', () => {
 
       expect(control).toHaveAttribute('aria-describedby', ids);
     });
+
+    it.each([
+      {
+        name: 'no description outside',
+        outside: false,
+        expected: ['description-a', null, null, 'description-a description-b'],
+      },
+      {
+        name: 'a description outside',
+        outside: true,
+        expected: [
+          'description-a description-c',
+          'description-c',
+          'description-c',
+          'description-a description-c description-b',
+        ],
+      },
+    ])(
+      'describes the control with a description that mounts while held only after the show: $name',
+      async ({ outside, expected }) => {
+        const visible = shallowRef(true);
+        const extra = shallowRef(false);
+        const Branch = defineComponent(() => () => (
+          <div>
+            <Field.Description key="a" id="description-a">
+              A
+            </Field.Description>
+            {extra.value ? (
+              <Field.Description key="b" id="description-b">
+                B
+              </Field.Description>
+            ) : null}
+          </div>
+        ));
+        await render(() => (
+          <Field.Root>
+            <Field.Control data-testid="control" />
+            <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+            {outside ? <Field.Description id="description-c">C</Field.Description> : null}
+          </Field.Root>
+        ));
+        const control = screen.getByTestId('control');
+        const seen = [control.getAttribute('aria-describedby')];
+        const changes = [
+          () => {
+            visible.value = false;
+          },
+          () => {
+            extra.value = true;
+          },
+          () => {
+            visible.value = true;
+          },
+        ];
+        for (const change of changes) {
+          change();
+          await flushMicrotasks();
+          seen.push(control.getAttribute('aria-describedby'));
+        }
+
+        expect(seen).toEqual(expected);
+      },
+    );
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
-  // instance set, and a later case that renders a slot gets a warning about that slot.
+  // instance set, and a later case of the file can then get a warning about a slot.
   it('throws a descriptive error when rendered outside <Field.Root>', async () => {
     await expect(render(<Field.Description />)).rejects.toThrow(
       'Vase UI: A part of Field must be inside <Field.Root>. Without a root the part has no field state to read. Put the part inside <Field.Root>.',

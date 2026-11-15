@@ -2219,10 +2219,11 @@ describe('useToast', () => {
       );
 
       const openDialogButton = screen.getByRole('button', { name: 'open dialog' });
-      await fireEvent.click(openDialogButton);
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.click(openDialogButton);
 
-      expect(screen.getByRole('dialog')).not.toBe(null);
-      await waitForLaterMillisecond();
+        expect(screen.getByRole('dialog')).not.toBe(null);
+      });
 
       const addToastButton = screen.getByRole('button', { name: 'add' });
       await fireEvent.click(addToastButton);

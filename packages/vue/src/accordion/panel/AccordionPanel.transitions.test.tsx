@@ -6,13 +6,16 @@ import {
   createTransitionRunCounter,
   nextAnimationsRead,
   nextEvent,
+  probeFrameAfterExitBeforeRead,
   waitFor,
   waitSingleFrame,
 } from '#test-utils';
+import type { EarlyExitProbeResult } from '#test-utils';
 
 const PANEL_CONTENT = 'This is panel content';
 
 const TRANSITION = 'accordion-transition-panel';
+const ANIMATION = 'accordion-animation-panel';
 
 const STYLE = `
   .${TRANSITION} {
@@ -24,6 +27,39 @@ const STYLE = `
   .${TRANSITION}[data-starting-style],
   .${TRANSITION}[data-ending-style] {
     height: 0;
+  }
+
+  @keyframes accordion-slide-down {
+    from {
+      height: 0;
+    }
+
+    to {
+      height: var(--accordion-panel-height);
+    }
+  }
+
+  @keyframes accordion-slide-up {
+    from {
+      height: var(--accordion-panel-height);
+    }
+
+    to {
+      height: 0;
+    }
+  }
+
+  .${ANIMATION} {
+    overflow: hidden;
+  }
+
+  .${ANIMATION}[data-open] {
+    animation: accordion-slide-down 100ms linear;
+  }
+
+  /* The probe moves the exit to its end, so the exit must not end by itself. */
+  .${ANIMATION}[data-closed] {
+    animation: accordion-slide-up 100s linear;
   }
 `;
 
@@ -128,6 +164,63 @@ describe('<Accordion.Panel /> transitions', () => {
         expect(counters.b.counts).toEqual({ enter: 3, exit: 3 });
       },
       30_000,
+    );
+  });
+
+  describe('VUE-71: a keyframe exit that ends before the part reads it', () => {
+    it.each<PanelRow & { name: string }>([
+      { name: 'unmounted' },
+      { name: 'keep-mounted', keepMounted: true },
+    ])(
+      'removes the panel in the frame in which the exit ends: $name',
+      async (row) => {
+        const value = shallowRef<string[]>([]);
+        const { container } = await render(() => (
+          <>
+            <style>{STYLE}</style>
+            <Accordion.Root value={value.value} keepMounted={row.keepMounted}>
+              <Accordion.Item value="a">
+                <Accordion.Panel class={ANIMATION} data-testid="panel">
+                  {PANEL_CONTENT}
+                </Accordion.Panel>
+              </Accordion.Item>
+            </Accordion.Root>
+          </>
+        ));
+        const getPanel = () => container.querySelector<HTMLElement>('[data-testid="panel"]');
+
+        const results: EarlyExitProbeResult[] = [];
+        for (let cycle = 0; cycle < 3; cycle += 1) {
+          const entered = nextEvent(container, 'animationend', { after: 'animationstart' });
+          changeValueInTimerTask(value, ['a']);
+          await entered;
+          await waitFor(() => {
+            expect(getPanel()!.style.getPropertyValue('--accordion-panel-height')).toBe('auto');
+          });
+
+          const panel = getPanel()!;
+          results.push(
+            await probeFrameAfterExitBeforeRead(
+              panel,
+              () => (row.keepMounted ? panel.hidden === true : !panel.isConnected),
+              () => changeValueInTimerTask(value, []),
+            ),
+          );
+
+          await waitFor(() => {
+            expect(getPanel() === null || getPanel()!.hidden === true).toBe(true);
+          });
+        }
+
+        expect(results.map(({ isReadBeforeEnd }) => isReadBeforeEnd)).toEqual([
+          false,
+          false,
+          false,
+        ]);
+        expect(results.map(({ isSameFrame }) => isSameFrame)).toEqual([true, true, true]);
+        expect(results.map(({ isGone }) => isGone)).toEqual([true, true, true]);
+      },
+      20_000,
     );
   });
 });

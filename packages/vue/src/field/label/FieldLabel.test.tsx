@@ -273,10 +273,68 @@ describe('<Field.Label />', () => {
 
       expect(control).toHaveAttribute('aria-labelledby', label.id);
     });
+
+    it.each([
+      {
+        name: 'no label outside',
+        outside: false,
+        expected: ['label-a', null, null, 'label-b'],
+      },
+      {
+        name: 'a label outside',
+        outside: true,
+        expected: ['label-c', 'label-c', 'label-c', 'label-b'],
+      },
+    ])(
+      'names the control with a label that mounts while held only after the show: $name',
+      async ({ outside, expected }) => {
+        const visible = shallowRef(true);
+        const extra = shallowRef(false);
+        const Branch = defineComponent(() => () => (
+          <div>
+            <Field.Label key="a" id="label-a">
+              A
+            </Field.Label>
+            {extra.value ? (
+              <Field.Label key="b" id="label-b">
+                B
+              </Field.Label>
+            ) : null}
+          </div>
+        ));
+        await render(() => (
+          <Field.Root>
+            <Field.Control data-testid="control" />
+            <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+            {outside ? <Field.Label id="label-c">C</Field.Label> : null}
+          </Field.Root>
+        ));
+        const control = screen.getByTestId('control');
+        const seen = [control.getAttribute('aria-labelledby')];
+        const changes = [
+          () => {
+            visible.value = false;
+          },
+          () => {
+            extra.value = true;
+          },
+          () => {
+            visible.value = true;
+          },
+        ];
+        for (const change of changes) {
+          change();
+          await flushMicrotasks();
+          seen.push(control.getAttribute('aria-labelledby'));
+        }
+
+        expect(seen).toEqual(expected);
+      },
+    );
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
-  // instance set, and a later case that renders a slot gets a warning about that slot.
+  // instance set, and a later case of the file can then get a warning about a slot.
   it('throws a descriptive error when rendered outside <Field.Root>', async () => {
     await expect(render(<Field.Label />)).rejects.toThrow(
       'Vase UI: A part of Field must be inside <Field.Root>. Without a root the part has no field state to read. Put the part inside <Field.Root>.',

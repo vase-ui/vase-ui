@@ -210,7 +210,7 @@ describe('<ScrollArea.Thumb />', () => {
       thumb.addEventListener('pointerdown', (event) => {
         pointerId = event.pointerId;
       });
-      // The pointer of the browser stays where this case leaves it, for each later test.
+      // A button of the real pointer stays pressed for each later test until a case releases it.
       onTestFinished(async () => {
         await userEvent.pointer({ coords: { x: 0, y: 0 }, keys: '[/MouseLeft]' });
       });

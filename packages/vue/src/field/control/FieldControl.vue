@@ -54,6 +54,7 @@ export interface FieldControlProps
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, watch } from 'vue';
+import { useValueBeforeHydration } from '../../common/hydration';
 import { useTimeout } from '../../common/useTimeout';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { fieldValidityMapping } from '../../internals/field-constants';
@@ -85,6 +86,10 @@ const emit = defineEmits<{
    * Callback fired when the `value` changes. Use when controlled.
    */
   valueChange: [value: string, eventDetails: FieldControlChangeEventDetails];
+  /**
+   * Event handler called after `valueChange` with the new value, unless a listener cancels the
+   * change. `v-model:value` uses it.
+   */
   'update:value': [value: string];
 }>();
 
@@ -126,11 +131,18 @@ const serializedDefaultValue = computed(() =>
   props.defaultValue == null ? undefined : String(props.defaultValue),
 );
 
+const writesValue = useValueBeforeHydration(props, () => element.value);
+
+// Until the hydration ends, the input can hold text that the part did not handle yet. The field
+// then takes the value of the props as the initial value, and the `input` event changes it.
 useRegisterFieldControl(
   () => element.value,
   controlId,
   () => serializedValue.value,
-  () => (element.value as HTMLInputElement | null)?.value,
+  () =>
+    writesValue.value
+      ? (element.value as HTMLInputElement | null)?.value
+      : (serializedValue.value ?? serializedDefaultValue.value ?? ''),
   () => !isDisabled.value,
   () => props.name,
 );
@@ -180,7 +192,7 @@ const enterValidationTimeout = useTimeout();
 // property `defaultValue` is the `value` attribute, and Vue sets it only when its value changes.
 function valueProps() {
   if (props.value !== undefined) {
-    return { value: props.value };
+    return writesValue.value ? { value: props.value } : undefined;
   }
   if (props.defaultValue === undefined) {
     return undefined;

@@ -1,0 +1,156 @@
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { userEvent } from 'vitest/browser';
+import { createRenderer, screen, waitFor } from '#test-utils';
+import * as Resizable from '../index.parts';
+
+// The pointer of the browser stays where a case leaves it, for each later test. A call with no
+// coordinates would move the pointer to the element of the last press, which is gone by then.
+function releasePointerAfterTest() {
+  onTestFinished(async () => {
+    await userEvent.pointer({ coords: { x: 0, y: 0 }, keys: '[/MouseLeft]' });
+  });
+}
+
+describe('<Resizable.Handle /> with the pointer of the browser', () => {
+  const { render } = createRenderer();
+
+  async function renderPanels(content?: unknown, handleProps: Record<string, unknown> = {}) {
+    await render(
+      <div style={{ width: '400px', height: '100px' }}>
+        <Resizable.Root style={{ height: '100%' }}>
+          <Resizable.Panel data-testid="first" />
+          <Resizable.Handle
+            data-testid="handle"
+            style={{ flex: 'none', width: '8px' }}
+            {...handleProps}
+          />
+          <Resizable.Panel data-testid="second">{content}</Resizable.Panel>
+        </Resizable.Root>
+      </div>,
+    );
+    const handle = screen.getByTestId('handle').getBoundingClientRect();
+    return {
+      first: screen.getByTestId('first'),
+      second: screen.getByTestId('second'),
+      at: { x: handle.left + handle.width / 2, y: handle.top + handle.height / 2 },
+    };
+  }
+
+  it('moves the layout with a press, a move and a release', async () => {
+    const { first, at } = await renderPanels();
+    const before = first.getBoundingClientRect().width;
+    releasePointerAfterTest();
+
+    await userEvent.pointer({ coords: at, keys: '[MouseLeft>]' });
+    await userEvent.pointer({ coords: { x: at.x + 100, y: at.y } });
+    expect(screen.getByTestId('handle')).toHaveAttribute('data-dragging');
+    expect(first.getBoundingClientRect().width - before).toBeCloseTo(100, 0);
+
+    await userEvent.pointer({ keys: '[/MouseLeft]' });
+
+    expect(screen.getByTestId('handle')).not.toHaveAttribute('data-dragging');
+    expect(first.getBoundingClientRect().width - before).toBeCloseTo(100, 0);
+  });
+
+  it('focuses the handle with the press', async () => {
+    const { at } = await renderPanels();
+    releasePointerAfterTest();
+
+    await userEvent.pointer({ coords: at, keys: '[MouseLeft>]' });
+
+    expect(screen.getByTestId('handle')).toHaveFocus();
+  });
+
+  it('shows no focus ring for a press, also when a key focused another element before', async () => {
+    await render(
+      <div style={{ width: '400px', height: '100px' }}>
+        <input data-testid="before" aria-label="Before" />
+        <Resizable.Root style={{ height: '100%' }}>
+          <Resizable.Panel />
+          <Resizable.Handle data-testid="handle" style={{ flex: 'none', width: '8px' }} />
+          <Resizable.Panel />
+        </Resizable.Root>
+      </div>,
+    );
+    releasePointerAfterTest();
+    // The Tab key puts a visible focus on the text input.
+    await userEvent.keyboard('{Tab}');
+    expect(screen.getByTestId('before')).toHaveFocus();
+    expect(screen.getByTestId('before').matches(':focus-visible')).toBe(true);
+    const handle = screen.getByTestId('handle');
+    const rect = handle.getBoundingClientRect();
+
+    await userEvent.pointer({
+      coords: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 },
+      keys: '[MouseLeft>]',
+    });
+
+    expect(handle).toHaveFocus();
+    expect(handle.matches(':focus-visible')).toBe(false);
+  });
+
+  it('follows the pointer across an iframe', async () => {
+    const { first, at } = await renderPanels(
+      <iframe
+        data-testid="frame"
+        title="Frame"
+        srcdoc="<p>Frame</p>"
+        style={{ width: '100%', height: '100%', border: 0 }}
+      />,
+    );
+    const frame = screen.getByTestId('frame') as HTMLIFrameElement;
+    await waitFor(() => {
+      expect(frame.contentDocument?.body.textContent).toBe('Frame');
+    });
+    const before = first.getBoundingClientRect().width;
+    releasePointerAfterTest();
+
+    // The first move goes over the iframe, which the handle has not reached yet.
+    await userEvent.pointer({ coords: at, keys: '[MouseLeft>]' });
+    await userEvent.pointer({ coords: { x: at.x + 150, y: at.y } });
+
+    expect(first.getBoundingClientRect().width - before).toBeCloseTo(150, 0);
+  });
+
+  it('selects no text when the pointer crosses a paragraph', async () => {
+    const { first, at } = await renderPanels(
+      <p data-testid="text" style={{ margin: 0 }}>
+        The panels show this text, and a drag across it keeps the page free of a selection.
+      </p>,
+    );
+    const before = first.getBoundingClientRect().width;
+    releasePointerAfterTest();
+
+    await userEvent.pointer({ coords: at, keys: '[MouseLeft>]' });
+    await userEvent.pointer({ coords: { x: at.x + 60, y: at.y } });
+    await userEvent.pointer({ coords: { x: at.x + 150, y: at.y + 10 } });
+    await userEvent.pointer({ keys: '[/MouseLeft]' });
+
+    expect(first.getBoundingClientRect().width - before).toBeCloseTo(150, 0);
+    expect(window.getSelection()?.toString()).toBe('');
+  });
+
+  it('runs a click listener of the consumer after a press with no move, and not after a drag', async () => {
+    const onClick = vi.fn();
+    const { at } = await renderPanels(undefined, { onClick });
+    releasePointerAfterTest();
+
+    await userEvent.pointer({ coords: at, keys: '[MouseLeft>]' });
+    await userEvent.pointer({ keys: '[/MouseLeft]' });
+    expect(onClick).toHaveBeenCalledTimes(1);
+
+    await userEvent.pointer({ coords: at, keys: '[MouseLeft>]' });
+    await userEvent.pointer({ coords: { x: at.x + 60, y: at.y } });
+    await userEvent.pointer({ keys: '[/MouseLeft]' });
+    expect(onClick).toHaveBeenCalledTimes(1);
+
+    // The next press clears the rule, so a press and a release with no move give a click again.
+    const moved = screen.getByTestId('handle').getBoundingClientRect();
+    await userEvent.pointer({
+      coords: { x: moved.left + moved.width / 2, y: moved.top + moved.height / 2 },
+      keys: '[MouseLeft>]',
+    });
+    await userEvent.pointer({ keys: '[/MouseLeft]' });
+    expect(onClick).toHaveBeenCalledTimes(2);
+  });
+});

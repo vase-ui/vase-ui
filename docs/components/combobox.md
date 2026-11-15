@@ -50,6 +50,8 @@ Import the component and assemble its parts:
 
 Bind the value with `v-model:value`, the text of the input with `v-model:inputValue` and the open state with `v-model:open`. The root emits `valueChange`, `inputValueChange` and `openChange` with the new value and `eventDetails`, and then `update:value`, `update:inputValue` and `update:open`. To stop a change, call `eventDetails.cancel()` before the listener returns. The root then emits no `update:` event.
 
+Text that a visitor types, or that the browser fills, before the page hydrates stays in `Combobox.Input`. After the hydration, the root emits `inputValueChange` and `update:inputValue` with that text, and the popup stays closed. When the visitor left the input before the page hydrated, the input then also gets `change`, `blur` and `focusout`.
+
 ## Item values
 
 Each `<Combobox.Item>` takes a `value` prop that identifies it. Pass the item being rendered. To render each filtered item, give `<Combobox.List>` the `item` slot. The slot gets `{ item, index }`:

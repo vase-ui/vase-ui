@@ -250,6 +250,10 @@ const emit = defineEmits<{
     value: Value extends number ? number : Value,
     eventDetails: SliderRootChangeEventDetails,
   ];
+  /**
+   * Event handler called after `valueChange` with the new value, unless a listener cancels the
+   * change. `v-model:value` uses it.
+   */
   'update:value': [value: Value extends number ? number : Value];
   /**
    * Callback function that is fired when a value change is committed.

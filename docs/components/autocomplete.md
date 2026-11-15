@@ -44,6 +44,8 @@ Import the component and assemble its parts:
 
 <<< ./autocomplete/Anatomy.vue
 
+Text that a visitor types, or that the browser fills, before the page hydrates stays in `Autocomplete.Input`. After the hydration, the root emits `valueChange` and `update:value` with that text, and the popup stays closed. When the visitor left the input before the page hydrated, the input then also gets `change`, `blur` and `focusout`.
+
 ## Item values
 
 Each `Autocomplete.Item` takes a `value` prop that identifies it. Pass the item being rendered, so that props like `itemToStringValue` receive it.

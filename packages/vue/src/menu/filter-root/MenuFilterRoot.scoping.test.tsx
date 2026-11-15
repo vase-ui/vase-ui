@@ -1170,7 +1170,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
   const { render } = createRenderer();
 
   // These cases are the last of the file. In Vue 3.5.12, a `setup` that throws leaves the current
-  // instance set, and a later case then gets a warning for each slot of a render function. So the
+  // instance set, and a later case can then get a warning about a slot of its JSX. So the
   // second case renders a fixture SFC, whose slots the template compiler makes. Each case renders
   // the part in the root, not in a portal: Vue renders a portal after the mount, so an error of the
   // part then comes in an update, and Vue cannot unmount the tree that it aborted.

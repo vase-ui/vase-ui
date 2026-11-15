@@ -1,16 +1,8 @@
-import {
-  computed,
-  onActivated,
-  onDeactivated,
-  onMounted,
-  onScopeDispose,
-  shallowRef,
-  toValue,
-  watch,
-} from 'vue';
+import { computed, onMounted, onScopeDispose, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { NOOP } from '../noop';
 import { useVaseUiId } from '../useBaseUiId';
+import { useKeepAliveState } from '../useKeepAliveState';
 import { useLabelableContext } from './LabelableContext';
 
 /**
@@ -18,7 +10,7 @@ import { useLabelableContext } from './LabelableContext';
  * then has the `for` that names the control.
  */
 export function useLabelableId(params: UseLabelableIdParameters = {}): ComputedRef<string> {
-  const { controlId, registerControlId, resetControlId } = useLabelableContext();
+  const { controlId, registerControlId, resetControlId, reaches } = useLabelableContext();
 
   const defaultId = useVaseUiId();
 
@@ -29,13 +21,13 @@ export function useLabelableId(params: UseLabelableIdParameters = {}): ComputedR
   let hasRegistered = false;
   let hadExplicitId = false;
   let isMounted = false;
-  // `KeepAlive` removes the DOM of a deactivated control from the document, so the control gives no
-  // id then. Its entry stays. `KeepAlive` runs the `onActivated` hooks of one branch from the last
-  // part to the first part. A new entry in that hook would reverse the order of the controls.
-  const isDeactivated = shallowRef(false);
+  // `KeepAlive` removes the DOM of a held control from the document, so the control gives no id
+  // then. Its entry stays. `KeepAlive` runs the `onActivated` hooks of one branch from the last part
+  // to the first part. A new entry in that hook would reverse the order of the controls.
+  const { isHeld, shown } = useKeepAliveState(params.element, reaches);
 
   function getRegisteredId() {
-    if (isDeactivated.value) {
+    if (isHeld.value) {
       return undefined;
     }
     const explicitId = id();
@@ -88,22 +80,10 @@ export function useLabelableId(params: UseLabelableIdParameters = {}): ComputedR
     }
   });
 
-  onDeactivated(() => {
-    isDeactivated.value = true;
-  });
-
-  onActivated(() => {
-    isDeactivated.value = false;
-  });
-
-  // A control with no id claims the default id of the provider again when `KeepAlive` activates it.
+  // A control with no id claims the default id of the provider again when `KeepAlive` shows it.
   // The claim waits for the flush after the hooks. In its own hook, the controls before it in the
-  // branch are still deactivated and give no id, so the claim would reset the selected id.
-  watch(isDeactivated, (deactivated) => {
-    if (!deactivated) {
-      register();
-    }
-  });
+  // branch are still held and give no id, so the claim would reset the selected id.
+  watch(shown, register);
 
   // `onScopeDispose` runs while Vue unmounts the control. The `onMounted` of a control that
   // replaces it runs in the flush after that, so the new control never sees the old registration.
@@ -126,4 +106,9 @@ export interface UseLabelableIdParameters {
    * @default true
    */
   enabled?: MaybeRefOrGetter<boolean | undefined> | undefined;
+  /**
+   * The element of the control. With it, a control that mounts in a branch that `KeepAlive` holds
+   * gives no id until the activation.
+   */
+  element?: MaybeRefOrGetter<Element | null | undefined> | undefined;
 }

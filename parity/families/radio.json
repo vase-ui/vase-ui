@@ -14,17 +14,17 @@
     {
       "entry": "Root",
       "prop": "id",
-      "reason": "The part reads `id` to name its hidden input and its element, and `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the element, and `types.md` has no row for a native attribute."
+      "reason": "The part reads `id` to name its hidden input and its element, and the Vue documentation says that `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the element, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Root",
       "prop": "ariaLabel",
-      "reason": "The part reads `aria-label` to find out if a label names the radio, and `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the element, and `types.md` has no row for a native attribute."
+      "reason": "The part reads `aria-label` to find out if a label names the radio, and the Vue documentation says that `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the element, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Root",
       "prop": "ariaLabelledby",
-      "reason": "The part reads `aria-labelledby` to find out if a label names the radio, and `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the element, and `types.md` has no row for a native attribute."
+      "reason": "The part reads `aria-labelledby` to find out if a label names the radio, and the Vue documentation says that `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the element, and `types.md` has no row for a native attribute."
     }
   ],
   "returnTypeDifferences": [],
