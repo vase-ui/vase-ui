@@ -6,12 +6,6 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The file has no counterpart yet. Its case needs only `ContextMenu.Item`."
-    },
-    {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "Positioner",
       "prop": "side",
