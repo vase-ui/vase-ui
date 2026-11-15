@@ -1,6 +1,7 @@
 import { expect, vi, describe, it } from 'vitest';
 import { computed, defineComponent, KeepAlive, shallowRef, Teleport } from 'vue';
 import {
+  createHeldBranch,
   createRenderer,
   flushMicrotasks,
   hydrate,
@@ -1189,6 +1190,53 @@ describe('<CompositeList />', () => {
         screen.getByTestId('c'),
       ]);
       expect(screen.getByTestId('c')).toHaveAttribute('data-index', '2');
+    });
+
+    it('registers an item that mounts while KeepAlive holds its branch when the branch shows', async () => {
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <CompositeListItemPart data-testid="b" />
+      ));
+      await render(() => (
+        <CompositeList elementsRef={elementsRef}>
+          <CompositeListItemPart data-testid="a" />
+          <HeldBranch />
+          <CompositeListItemPart data-testid="c" />
+        </CompositeList>
+      ));
+
+      await mountWhileHeld();
+      expect(elementsRef.value).toEqual([screen.getByTestId('a'), screen.getByTestId('c')]);
+
+      await show();
+      expect(elementsRef.value).toEqual([
+        screen.getByTestId('a'),
+        screen.getByTestId('b'),
+        screen.getByTestId('c'),
+      ]);
+      expect(screen.getByTestId('c')).toHaveAttribute('data-index', '2');
+    });
+
+    it('sorts a list that mounts with its items while KeepAlive holds its branch', async () => {
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
+      const count = shallowRef(1);
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <CompositeList elementsRef={elementsRef}>
+          {['a', 'b'].slice(0, count.value).map((name) => (
+            <CompositeListItemPart key={name} data-testid={name} />
+          ))}
+        </CompositeList>
+      ));
+      await render(() => <HeldBranch />);
+
+      await mountWhileHeld();
+      count.value = 2;
+      await flushMicrotasks();
+      expect(elementsRef.value).toEqual([]);
+
+      await show();
+      expect(elementsRef.value).toEqual([screen.getByTestId('a'), screen.getByTestId('b')]);
+      expect(screen.getByTestId('b')).toHaveAttribute('data-index', '1');
     });
   });
 });

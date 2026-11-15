@@ -64,7 +64,7 @@ import { useClick } from '../../utils/popups/interactions/useClick';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
 import { useListNavigation } from '../../utils/popups/interactions/useListNavigation';
 import { useOpenInteractionType } from '../../utils/popups/interactions/useOpenInteractionType';
-import { useSingleAnchorPopupRoot } from '../../utils/popups/popupRoot';
+import { getPopupTransitionElement, useSingleAnchorPopupRoot } from '../../utils/popups/popupRoot';
 import {
   FOCUSABLE_POPUP_PROPS,
   usePopupInteractionProps,
@@ -420,9 +420,10 @@ function getTransitionElement(store: ComboboxStore) {
   if (inline && positionerElement) {
     return closest<HTMLElement>(positionerElement, '[role="dialog"]');
   }
-  return (
-    store.context.popupRef.value ?? (positionerElement === listElement ? null : positionerElement)
-  );
+  if (positionerElement !== null && positionerElement === listElement) {
+    return null;
+  }
+  return getPopupTransitionElement(store);
 }
 
 /**

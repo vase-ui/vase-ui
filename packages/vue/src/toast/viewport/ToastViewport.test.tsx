@@ -21,6 +21,7 @@ import {
   takeReportedMessages,
   wait,
   waitFor,
+  waitForLaterMillisecond,
   within,
 } from '#test-utils';
 import ToastTextList from '../../../test/fixtures/ToastTextList.vue';
@@ -295,8 +296,10 @@ describe('<Toast.Viewport />', () => {
 
     const button = screen.getByRole('button', { name: 'add' });
 
-    await user.click(button);
-    await user.click(button);
+    await waitForLaterMillisecond(async () => {
+      await user.click(button);
+      await user.click(button);
+    });
 
     await user.keyboard('{F6}');
     await user.tab(); // first toast

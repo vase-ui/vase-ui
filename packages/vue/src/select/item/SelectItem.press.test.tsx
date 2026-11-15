@@ -9,6 +9,7 @@ import {
   screen,
   wait,
   waitFor,
+  waitForLaterMillisecond,
   waitForPositioned,
 } from '#test-utils';
 
@@ -54,9 +55,12 @@ describe('<Select.Item />', () => {
   }
 
   async function releaseOverItemAtPressPoint(trigger: HTMLElement, side: string) {
-    const { point, release } = await holdPress(trigger);
-    const positioner = await screen.findByTestId('positioner');
-    await waitForPositioned(positioner);
+    const { point, release } = await waitForLaterMillisecond(async () => {
+      const press = await holdPress(trigger);
+      await waitForPositioned(await screen.findByTestId('positioner'));
+      return press;
+    });
+    const positioner = screen.getByTestId('positioner');
     // The trigger arms the release over an item 400 ms after the open.
     await wait(500);
     expect(positioner).toHaveAttribute('data-side', side);

@@ -8,7 +8,14 @@ import { Switch } from '@vase-ui/vue/switch';
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';
 import { Toggle } from '@vase-ui/vue/toggle';
 import { ToggleGroup } from '@vase-ui/vue/toggle-group';
-import { createRenderer, describeConformance, isJSDOM, screen, waitFor } from '#test-utils';
+import {
+  createRenderer,
+  describeConformance,
+  isJSDOM,
+  screen,
+  waitFor,
+  waitForLaterMillisecond,
+} from '#test-utils';
 import { NOOP } from '../../internals/noop';
 import * as Menu from '../../menu/index.parts';
 import * as Select from '../../select/index.parts';
@@ -387,7 +394,7 @@ describe('<Toolbar.Button />', () => {
         await user.keyboard('[Tab]');
         expect(trigger).toHaveFocus();
 
-        await user.keyboard('[Enter]');
+        await waitForLaterMillisecond(() => user.keyboard('[Enter]'));
         expect(handleClick).toHaveBeenCalledTimes(1);
         expect(handleOpenChange).toHaveBeenCalledTimes(1);
         expect(screen.queryByRole('menu')).not.toBe(null);
@@ -524,7 +531,7 @@ describe('<Toolbar.Button />', () => {
         await user.keyboard('[Tab]');
         expect(trigger).toHaveFocus();
 
-        await user.keyboard('[ArrowDown]');
+        await waitForLaterMillisecond(() => user.keyboard('[ArrowDown]'));
         expect(screen.queryByRole('listbox')).toBe(screen.getByTestId('popup'));
         await waitFor(() => {
           expect(screen.getByRole('option', { name: 'a' })).toHaveFocus();

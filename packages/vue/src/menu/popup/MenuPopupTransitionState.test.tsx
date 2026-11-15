@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, onMounted, shallowRef, watch } from 'vue';
 import type { PropType } from 'vue';
 import * as Menu from '../index.parts';
-import { createRenderer, nextEvent, screen, waitFor } from '#test-utils';
+import { createRenderer, nextEvent, screen, waitFor, waitForLaterMillisecond } from '#test-utils';
 
 type PopupState = Pick<Menu.Popup.State, 'open' | 'transitionStatus'>;
 
@@ -134,7 +134,9 @@ describe('Menu popup transition state', () => {
       async function openMenu() {
         states.length = 0;
         completed.mockClear();
-        await startTransition(() => user.click(screen.getByRole('button', { name: 'Toggle' })));
+        await waitForLaterMillisecond(() =>
+          startTransition(() => user.click(screen.getByRole('button', { name: 'Toggle' }))),
+        );
         const popup = screen.getByRole('menu');
         expect(completed).not.toHaveBeenCalled();
         await expectCompletedAfterAnimations(popup, true);

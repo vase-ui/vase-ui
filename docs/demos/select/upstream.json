@@ -4,11 +4,77 @@
   "files": {
     "grouped/css-modules/index.module.css": "0d8d0b194bf84d332e99ccd829018a81008d7d55887fc569e63e3b4a799749b9",
     "grouped/css-modules/index.tsx": "30013fdc94537f50e75b28b62f4466fa4431582785fe5fc4bd1e747599f7eed7",
+    "grouped/tailwind/index.tsx": "aad00c9374760da9675def33335d13483d1b585441f21f27508ab6f3156fce5d",
     "hero/css-modules/index.module.css": "0bee0a5e7de047f0360ccce3688153db19f5dd805c95833594d026bbc31d3658",
     "hero/css-modules/index.tsx": "a9ea647693738f00c5dad11f5b402b9112233080ae56fdd3adba3683abf32bb7",
+    "hero/tailwind/index.tsx": "cc94a647be12a308774fcf8b770ef1b486c625048d28b40bf95316e3acb7bcf4",
     "multiple/css-modules/index.module.css": "5a944a8c33988c9f535f9f9058bc52a3bdae68c0836532555288e0ffbac2d218",
     "multiple/css-modules/index.tsx": "ebd65196d44b72e6e3bc547eb0de27f4a3b3bfb887d6e8bc2135ff96c6970564",
+    "multiple/tailwind/index.tsx": "02412ec84d495cd27a1efd0d84bbe07299022ad1b7ba9c253c9d4f18c026f416",
     "object-values/css-modules/index.module.css": "c80220e02af381ae274a9c0d79d83fdc3231c7882f759a247547c2caee525e44",
-    "object-values/css-modules/index.tsx": "3d2f3b1b2b0d0ebb5bb9bbe7a2aa46308e9b8345fb283e7681558d68de48ebff"
+    "object-values/css-modules/index.tsx": "3d2f3b1b2b0d0ebb5bb9bbe7a2aa46308e9b8345fb283e7681558d68de48ebff",
+    "object-values/tailwind/index.tsx": "3a081943de5ee8abcc50a5470735dad39d9cbb9bf119e83fe9d13f251c584108"
+  },
+  "classes": {
+    "grouped/tailwind": [
+      "block pb-0.5 last:pb-0",
+      "bottom-0 z-[2] flex h-4 w-full cursor-default items-center justify-center bg-white text-center text-xs before:absolute before:left-0 before:h-full before:w-full before:content-[''] data-[side=none]:before:bottom-[-100%] dark:bg-neutral-950",
+      "col-start-1",
+      "col-start-2",
+      "cursor-default text-sm font-bold text-neutral-950 dark:text-white",
+      "data-placeholder:text-neutral-500 dark:data-placeholder:text-neutral-400",
+      "flex flex-col items-start gap-1",
+      "flex h-8 min-w-44 items-center justify-between gap-3 pl-2 pr-1 text-sm leading-none whitespace-nowrap border border-neutral-950 dark:border-white bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white select-none hover:not-data-disabled:bg-neutral-100 dark:hover:not-data-disabled:bg-neutral-800 active:not-data-disabled:bg-neutral-200 dark:active:not-data-disabled:bg-neutral-700 data-disabled:border-neutral-500 data-disabled:text-neutral-500 disabled:border-neutral-500 disabled:text-neutral-500 dark:data-disabled:border-neutral-400 dark:data-disabled:text-neutral-400 data-pressed:bg-neutral-100 dark:data-pressed:bg-neutral-800 font-normal focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white",
+      "grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 py-1.5 pr-4 pl-2.5 text-sm outline-hidden select-none group-data-[side=none]:pr-12 data-highlighted:bg-neutral-950 data-highlighted:text-white dark:data-highlighted:bg-white dark:data-highlighted:text-neutral-950",
+      "group min-w-[var(--anchor-width)] origin-[var(--transform-origin)] bg-clip-padding border border-neutral-950 bg-white text-neutral-950 outline-hidden shadow-[0.25rem_0.25rem_0] shadow-black/12 transition-[scale,opacity] duration-100 ease-out data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-[side=none]:translate-y-px data-[side=none]:min-w-[calc(var(--anchor-width)+1.75rem)] data-[side=none]:data-ending-style:transition-none data-starting-style:scale-[0.98] data-starting-style:opacity-0 data-[side=none]:data-starting-style:scale-100 data-[side=none]:data-starting-style:opacity-100 data-[side=none]:data-starting-style:transition-none dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none",
+      "mx-4 my-1 h-px bg-neutral-950 dark:bg-white",
+      "outline-hidden select-none z-10",
+      "py-1.5 pr-4 pl-[2.125rem] text-sm leading-5 text-neutral-500 select-none dark:text-neutral-400",
+      "relative py-1 scroll-pt-6 scroll-pb-6 overflow-y-auto max-h-[var(--available-height)]",
+      "top-0 z-[2] flex h-4 w-full cursor-default items-center justify-center bg-white text-center text-xs before:absolute data-[side=none]:before:top-[-100%] before:left-0 before:h-full before:w-full before:content-[''] dark:bg-neutral-950"
+    ],
+    "hero/tailwind": [
+      "bottom-0 z-[1] flex h-4 w-full cursor-default items-center justify-center bg-white text-center text-xs before:absolute before:left-0 before:h-full before:w-full before:content-[''] data-[side=none]:before:bottom-[-100%] dark:bg-neutral-950",
+      "col-start-1",
+      "col-start-2",
+      "cursor-default text-sm font-bold text-neutral-950 dark:text-white",
+      "data-placeholder:text-neutral-500 dark:data-placeholder:text-neutral-400",
+      "flex flex-col items-start gap-1",
+      "flex h-8 min-w-40 items-center justify-between gap-3 pl-2 pr-1 text-sm leading-none whitespace-nowrap border border-neutral-950 dark:border-white bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white select-none hover:not-data-disabled:bg-neutral-100 dark:hover:not-data-disabled:bg-neutral-800 active:not-data-disabled:bg-neutral-200 dark:active:not-data-disabled:bg-neutral-700 data-disabled:border-neutral-500 data-disabled:text-neutral-500 disabled:border-neutral-500 disabled:text-neutral-500 dark:data-disabled:border-neutral-400 dark:data-disabled:text-neutral-400 data-pressed:bg-neutral-100 dark:data-pressed:bg-neutral-800 font-normal focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white",
+      "grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 py-1.5 pr-4 pl-2.5 text-sm outline-hidden select-none data-highlighted:bg-neutral-950 data-highlighted:text-white dark:data-highlighted:bg-white dark:data-highlighted:text-neutral-950",
+      "group min-w-[var(--anchor-width)] origin-[var(--transform-origin)] bg-clip-padding border border-neutral-950 bg-white text-neutral-950 outline-hidden shadow-[0.25rem_0.25rem_0] shadow-black/12 transition-[scale,opacity] duration-100 ease-out data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-[side=none]:translate-y-px data-[side=none]:min-w-[calc(var(--anchor-width)+1.75rem)] data-[side=none]:data-ending-style:transition-none data-starting-style:scale-[0.98] data-starting-style:opacity-0 data-[side=none]:data-starting-style:scale-100 data-[side=none]:data-starting-style:opacity-100 data-[side=none]:data-starting-style:transition-none dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none",
+      "outline-hidden select-none z-10",
+      "relative py-1 scroll-py-6 overflow-y-auto max-h-[var(--available-height)]",
+      "top-0 z-[1] flex h-4 w-full cursor-default items-center justify-center bg-white text-center text-xs before:absolute data-[side=none]:before:top-[-100%] before:left-0 before:h-full before:w-full before:content-[''] dark:bg-neutral-950"
+    ],
+    "multiple/tailwind": [
+      "col-start-1",
+      "col-start-2",
+      "cursor-default text-sm font-bold text-neutral-950 dark:text-white",
+      "data-placeholder:text-neutral-500 dark:data-placeholder:text-neutral-400",
+      "flex flex-col items-start gap-1",
+      "flex h-8 min-w-[14rem] items-center justify-between gap-3 pl-2 pr-1 text-sm leading-none whitespace-nowrap border border-neutral-950 dark:border-white bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white select-none hover:not-data-disabled:bg-neutral-100 dark:hover:not-data-disabled:bg-neutral-800 active:not-data-disabled:bg-neutral-200 dark:active:not-data-disabled:bg-neutral-700 data-disabled:border-neutral-500 data-disabled:text-neutral-500 disabled:border-neutral-500 disabled:text-neutral-500 dark:data-disabled:border-neutral-400 dark:data-disabled:text-neutral-400 data-pressed:bg-neutral-100 dark:data-pressed:bg-neutral-800 font-normal focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white",
+      "grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 py-1.5 pr-2.5 pl-2.5 text-sm outline-hidden select-none scroll-my-1 [@media(hover:hover)]:data-highlighted:bg-neutral-950 [@media(hover:hover)]:data-highlighted:text-white dark:[@media(hover:hover)]:data-highlighted:bg-white dark:[@media(hover:hover)]:data-highlighted:text-neutral-950",
+      "group max-h-[var(--available-height)] min-w-[var(--anchor-width)] origin-[var(--transform-origin)] bg-clip-padding overflow-y-auto border border-neutral-950 bg-white py-1 text-neutral-950 outline-hidden shadow-[0.25rem_0.25rem_0] shadow-black/12 transition-[scale,opacity] duration-100 ease-out data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-[side=none]:min-w-[calc(var(--anchor-width)+1.75rem)] data-[side=none]:data-ending-style:transition-none data-starting-style:scale-[0.98] data-starting-style:opacity-0 data-[side=none]:data-starting-style:scale-100 data-[side=none]:data-starting-style:opacity-100 data-[side=none]:data-starting-style:transition-none dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none",
+      "outline-hidden z-10"
+    ],
+    "object-values/tailwind": [
+      "bottom-0 z-[1] flex h-4 w-full cursor-default items-center justify-center bg-white text-center text-xs before:absolute before:left-0 before:h-full before:w-full before:content-[''] data-[side=none]:before:bottom-[-100%] dark:bg-neutral-950",
+      "col-start-1 flex items-center justify-center self-start relative top-[0.4em]",
+      "col-start-2 flex flex-col gap-0.5",
+      "cursor-default text-sm font-bold text-neutral-950 dark:text-white",
+      "flex flex-col items-start gap-0.5",
+      "flex flex-col items-start gap-1",
+      "flex min-h-8 min-w-[16rem] items-center justify-between gap-3 pl-2 pr-1 py-1.5 text-sm leading-none whitespace-nowrap border border-neutral-950 dark:border-white bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white select-none hover:not-data-disabled:bg-neutral-100 dark:hover:not-data-disabled:bg-neutral-800 active:not-data-disabled:bg-neutral-200 dark:active:not-data-disabled:bg-neutral-700 data-disabled:border-neutral-500 data-disabled:text-neutral-500 disabled:border-neutral-500 disabled:text-neutral-500 dark:data-disabled:border-neutral-400 dark:data-disabled:text-neutral-400 data-pressed:bg-neutral-100 dark:data-pressed:bg-neutral-800 font-normal focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white",
+      "group min-w-[var(--anchor-width)] origin-[var(--transform-origin)] bg-clip-padding border border-neutral-950 bg-white text-neutral-950 outline-hidden shadow-[0.25rem_0.25rem_0] shadow-black/12 transition-[scale,opacity] duration-100 ease-out data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-[side=none]:translate-y-px data-[side=none]:min-w-[calc(var(--anchor-width)+1.75rem)] data-[side=none]:data-ending-style:transition-none data-starting-style:scale-[0.98] data-starting-style:opacity-0 data-[side=none]:data-starting-style:scale-100 data-[side=none]:data-starting-style:opacity-100 data-[side=none]:data-starting-style:transition-none dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none",
+      "group/item grid cursor-default grid-cols-[1rem_1fr] items-start gap-2 py-1.5 pr-4 pl-2.5 text-sm outline-hidden select-none data-highlighted:bg-neutral-950 data-highlighted:text-white dark:data-highlighted:bg-white dark:data-highlighted:text-neutral-950",
+      "outline-hidden select-none z-10",
+      "relative py-1 scroll-py-6 overflow-y-auto max-h-[var(--available-height)]",
+      "text-sm",
+      "text-sm",
+      "text-xs text-neutral-600 dark:text-neutral-400",
+      "text-xs text-neutral-600 group-data-highlighted/item:text-neutral-400 dark:text-neutral-400 dark:group-data-highlighted/item:text-neutral-600",
+      "top-0 z-[1] flex h-4 w-full cursor-default items-center justify-center bg-white text-center text-xs before:absolute data-[side=none]:before:top-[-100%] before:left-0 before:h-full before:w-full before:content-[''] dark:bg-neutral-950"
+    ]
   }
 }
