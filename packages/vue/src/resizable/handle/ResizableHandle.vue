@@ -60,9 +60,10 @@ export interface ResizableHandleProps
   /**
    * A function which returns a string value for the [`aria-valuetext`](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-valuetext) attribute of the handle.
    * This is important for screen reader users.
-   * It gets the size of the primary panel: the size in percent as text in the locale of the page,
-   * such as `'30%'`, the size in percent as a number, and the details. `pixelSize` is
-   * `undefined` until the root has read the page, which comes after the mount.
+   * It gets the size of the primary panel: the size in percent as text, such as `'30%'`, the size
+   * in percent as a number, and the details. The text has the locale of the browser after the
+   * mount, and `en-US` before it. `pixelSize` is `undefined` until the root has read the page,
+   * which comes after the mount.
    * The handle has the attribute only while it has `aria-valuenow`.
    */
   getAriaValueText?:
