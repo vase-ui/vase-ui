@@ -144,6 +144,28 @@ jobs:
       - run: pnpm test:nuxt
       - run: pnpm test:vite
 
+  # This job builds the package and the site again, beside `check`, so that `check` does not take
+  # longer. Then it runs axe-core on each page of the built site.
+  docs-axe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps chromium
+      - run: pnpm build
+      - run: pnpm docs:build
+      - run: pnpm docs:axe
+
   # A prerelease of a dependency must not block a merge, so `required` does not need this job.
   # The version is the dist-tag `rc` of `vue` on npm.
   test-vue-rc:
@@ -175,7 +197,7 @@ jobs:
     # Do not use `always()`. It starts this job in a cancelled run. The job waits for a runner
     # and holds the concurrency group, so the run of the new commit starts no job.
     if: ${{ !cancelled() }}
-    needs: [check, test-node, test-browser, test-vue-floor, test-nuxt]
+    needs: [check, docs-axe, test-node, test-browser, test-vue-floor, test-nuxt]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions: {}

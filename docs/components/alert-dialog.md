@@ -189,12 +189,12 @@ To open an alert dialog from a menu, control the open state of the alert dialog 
 
 Creates a handle that connects an `AlertDialog.Root` with detached `AlertDialog.Trigger` parts. The type argument of the function is the type of the payload.
 
-<ApiReference name="AlertDialog.createHandle" />
+<ApiReference name="AlertDialog.createHandle" :heading-level="3" />
 
 ### Handle
 
 `AlertDialog.Handle` is the class of the handle. The types of `AlertDialog.Root` and `AlertDialog.Trigger` accept only a handle of this class, and not a handle from `Dialog.createHandle()`.
 
-<ApiReference name="AlertDialog.Handle" />
+<ApiReference name="AlertDialog.Handle" :heading-level="4" />
 
 When no trigger has the `id` that `open()` gets, it opens the alert dialog with no trigger, and a development build shows a warning. A `computed` that reads `isOpen` follows the open state.

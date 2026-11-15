@@ -454,12 +454,12 @@ Use `--drawer-swipe-progress` to fade the backdrop during a swipe, and `--drawer
 
 Creates a handle that connects a `Drawer.Root` with detached `Drawer.Trigger` parts. The type argument of the function is the type of the payload.
 
-<ApiReference name="Drawer.createHandle" />
+<ApiReference name="Drawer.createHandle" :heading-level="3" />
 
 ### Handle
 
 `Drawer.Handle` is the class of the handle.
 
-<ApiReference name="Drawer.Handle" />
+<ApiReference name="Drawer.Handle" :heading-level="4" />
 
 When no trigger has the `id` that `open()` gets, it opens the drawer with no trigger, and a development build shows a warning. A `computed` that reads `isOpen` follows the open state.

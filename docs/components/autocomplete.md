@@ -345,10 +345,10 @@ A child component that takes the item as a prop is a simpler alternative to virt
 
 Matches items against a query using `Intl.Collator` for robust string matching. Use it when you filter the items yourself.
 
-<ApiReference name="Autocomplete.useFilter" />
+<ApiReference name="Autocomplete.useFilter" :heading-level="3" />
 
 ## useFilteredItems
 
 Returns the items that the filter of `Autocomplete.Root` keeps. Call it inside `Autocomplete.Root`. It returns a `ComputedRef`: read `.value` in a script, and treat the list as read-only.
 
-<ApiReference name="Autocomplete.useFilteredItems" />
+<ApiReference name="Autocomplete.useFilteredItems" :heading-level="3" />
