@@ -5,13 +5,18 @@ import { Accordion } from '@vase-ui/vue/accordion';
 
 const PANEL_CONTENT = 'This is panel content';
 
-/** The declarations of the `style` attribute of the panel, in the order that the server wrote them. */
-function readPanelDeclarations(html: string) {
+/** The start tag of the panel, which has `data-testid="panel"`. */
+function readPanelTag(html: string) {
   const tag = /<div[^>]*data-testid="panel"[^>]*>/.exec(html)?.[0];
   if (tag === undefined) {
     throw new Error(`The HTML has no panel:\n${html}`);
   }
-  const style = /style="([^"]*)"/.exec(tag)?.[1] ?? '';
+  return tag;
+}
+
+/** The declarations of the `style` attribute of the panel, in the order that the server wrote them. */
+function readPanelDeclarations(html: string) {
+  const style = /style="([^"]*)"/.exec(readPanelTag(html))?.[1] ?? '';
   return style
     .split(';')
     .filter((declaration) => declaration.trim() !== '')
@@ -92,6 +97,7 @@ describe('<Accordion.Panel />', () => {
         </Accordion.Root>,
       );
 
+      expect(readPanelTag(html)).toContain(' data-open');
       expect(html).toContain(' id="custom-trigger-id"');
       expect(html).not.toContain('aria-labelledby');
     });
