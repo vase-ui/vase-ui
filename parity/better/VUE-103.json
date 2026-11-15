@@ -3,10 +3,11 @@
   "evidence": [
     "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/merge-props/mergeProps.ts#L181",
     "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/internals/useRenderElement.tsx#L227",
+    "https://github.com/mui/base-ui/pull/2151",
     "https://github.com/mui/base-ui/pull/5598",
     "https://vuejs.org/guide/components/props.html#prop-validation",
     "https://www.w3.org/TR/wai-aria-1.2/#dialog"
   ],
-  "behavior": "A part keeps its own value of an attribute when the consumer gives that attribute the value `undefined`, as Vue keeps the default of a declared prop. `null` removes the value of the part, and the attribute types of a part accept `null`. A wrapper that passes an optional prop on, such as `:aria-labelledby=\"labelledby\"`, thus keeps the accessible name of a dialog, the role of a checkbox and `type=\"button\"` of a button. In Base UI, `undefined` replaces the value of the part and removes the attribute.",
+  "behavior": "A part keeps its own value of an attribute when the consumer gives that attribute the value `undefined`, as Vue keeps the default of a declared prop. `null` removes the value of the part. The attribute types of a part accept `null`, except an attribute that reaches a declared prop, such as `aria-label` of `Checkbox.Root`: a prop takes no `null`. A wrapper that passes an optional prop on, such as `:aria-labelledby=\"labelledby\"`, thus keeps the accessible name of a dialog, the role of a checkbox and `type=\"button\"` of a button. In Base UI, `undefined` replaces the value of the part and removes the attribute. Base UI keeps the value of the part for `undefined` only for an event handler, `className` and `style`.",
   "dueWith": "packages/react/src/internals/useRenderElement.tsx"
 }

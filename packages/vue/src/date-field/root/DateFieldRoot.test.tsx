@@ -13,6 +13,7 @@ import {
   recordInputEvents,
   renderOnServer,
   screen,
+  waitFor,
   within,
 } from '#test-utils';
 import { formatter } from '../../internals/date-time/format';
@@ -354,6 +355,31 @@ describe('<DateField.Root />', () => {
       );
 
       expect(screen.getByRole('group', { name: 'Check-in' })).toBeInTheDocument();
+    });
+
+    it('VUE-103: removes the description of the field for an aria-describedby of null', async () => {
+      await render(
+        <div>
+          <Field.Root>
+            <DateField.Root data-testid="described">
+              <DateField.Input />
+            </DateField.Root>
+            <Field.Description data-testid="description">The day of arrival.</Field.Description>
+          </Field.Root>
+          <Field.Root>
+            <DateField.Root aria-describedby={null} data-testid="undescribed">
+              <DateField.Input />
+            </DateField.Root>
+            <Field.Description>The day of arrival.</Field.Description>
+          </Field.Root>
+        </div>,
+      );
+
+      const description = screen.getByTestId('description');
+      await waitFor(() => {
+        expect(screen.getByTestId('described')).toHaveAttribute('aria-describedby', description.id);
+      });
+      expect(screen.getByTestId('undescribed')).not.toHaveAttribute('aria-describedby');
     });
   });
 
