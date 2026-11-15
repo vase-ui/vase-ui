@@ -69,7 +69,7 @@ describe('<ContextMenu.Root />', () => {
     await waitForPositioned(screen.getByTestId('positioner'));
     // The menu opens at the press, before the release.
     expect(onOpenChange.mock.calls.map(([open]) => open)).toEqual([true]);
-    expect(first!.contains(document.elementFromPoint(target.x, target.y))).toBe(true);
+    expect(first.contains(document.elementFromPoint(target.x, target.y))).toBe(true);
 
     await userEvent.pointer({ coords: target });
     await userEvent.pointer({ coords: target, keys: '[/MouseRight]' });
