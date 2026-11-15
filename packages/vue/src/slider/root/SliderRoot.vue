@@ -469,14 +469,16 @@ function registerThumbInput(thumbInput: ThumbInput) {
 }
 
 // A form restore can change the inputs of several thumbs. The change of one thumb stops at the old
-// value of its neighbour, so the slider takes each changed input in one change.
+// value of its neighbour. It also renders the other thumbs, and Vue then writes their state over
+// their restored inputs. The slider thus takes each changed input in one change.
 function takeChangedInputs(valueInput: number, index: number) {
   const nextValues = values.value.slice();
-  nextValues[index] = valueInput;
+  nextValues[index] = clamp(valueInput, props.min, props.max);
   const taken: ThumbInput[] = [];
   for (const thumbInput of thumbInputs) {
     const input = thumbInput.take();
-    // During its own take of the hydration, the input of the thumb of the event still counts.
+    // The thumb of the event also gives its input during its own take of the hydration. A change
+    // of that thumb alone still stops at its neighbours.
     if (input !== undefined && input.index !== index) {
       nextValues[input.index] = input.value;
       taken.push(thumbInput);

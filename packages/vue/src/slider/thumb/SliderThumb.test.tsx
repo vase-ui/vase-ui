@@ -2315,7 +2315,7 @@ describe('<Slider.Thumb />', () => {
         result: '75,95',
       },
       {
-        name: 'inputs in the wrong order',
+        name: 'a range written in the wrong order',
         props: { defaultValue: [20, 80] },
         written: ['95', '85'],
         result: '85,95',
@@ -2401,6 +2401,29 @@ describe('<Slider.Thumb />', () => {
         ['20', '20'],
         ['80', '80'],
       ]);
+    });
+
+    it('keeps the value of a key between `min` and `max` when it also takes another thumb', async () => {
+      const onValueChange = vi.fn();
+      const { container } = await render(
+        <Slider.Root defaultValue={[0, 5]} minStepsBetweenValues={10} onValueChange={onValueChange}>
+          <Slider.Control>
+            <Slider.Thumb />
+            <Slider.Thumb />
+          </Slider.Control>
+        </Slider.Root>,
+      );
+      const [input] = container.querySelectorAll<HTMLInputElement>('input[type="range"]');
+      input!.focus();
+      await flushMicrotasks();
+      // The render of the focus writes the state of each thumb to its input.
+      writeInputs(container, ['0', '50']);
+
+      // End gives the first thumb the old value of its neighbour minus the minimum distance: -5.
+      await fireEvent.keyDown(input!, { key: 'End' });
+
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+      expect(onValueChange.mock.lastCall?.[0]).toEqual([0, 50]);
     });
 
     it('takes a value that the browser restores into a thumb whose value is off the step', async () => {
