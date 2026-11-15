@@ -194,8 +194,8 @@ export function useCalendarRoot({
     state: 'focusedDate',
   });
 
-  // The first day of the page of a duration. It stays in `visibleMonth`: a month that the
-  // consumer sets and a month that a listener refuses both bring the page back to the month.
+  // The first day of the page of a duration. It stays in `visibleMonth`: a month that the consumer
+  // sets moves the page to that month.
   const durationStart = shallowRef<Temporal.PlainDate | null>(null);
   const pageStart = computed(() => {
     const visible = duration.value;

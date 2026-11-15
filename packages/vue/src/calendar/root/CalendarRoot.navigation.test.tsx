@@ -415,6 +415,38 @@ describe('<Calendar.Root /> pages', () => {
       expect(gridNames()).toEqual([range('2026-11-08', '2026-11-21')]);
     });
 
+    it('follows a month that the consumer gives, from the week that holds its first day', async () => {
+      const { user, setProps } = await renderCalendar({
+        visibleDuration: { weeks: 2 },
+        month: Temporal.PlainYearMonth.from('2026-11'),
+      });
+      expect(gridNames()).toEqual([range('2026-11-01', '2026-11-14')]);
+      await user.click(screen.getByTestId('next'));
+      expect(gridNames()).toEqual([range('2026-11-15', '2026-11-28')]);
+
+      await setProps({ month: Temporal.PlainYearMonth.from('2027-01') });
+
+      // 2027-01-01 is a Friday, and the weeks start on Sunday.
+      expect(gridNames()).toEqual([range('2026-12-27', '2027-01-09')]);
+    });
+
+    it('keeps the page when a listener cancels the change of the month that it makes', async () => {
+      const onMonthChange = vi.fn((_month: unknown, details: { cancel: () => void }) => {
+        details.cancel();
+      });
+      const { user } = await renderCalendar({ visibleDuration: { weeks: 2 }, onMonthChange });
+
+      // The page after the first one starts in the same month, so it needs no change of the month.
+      await user.click(screen.getByTestId('next'));
+      expect(gridNames()).toEqual([range('2026-11-22', '2026-12-05')]);
+      expect(onMonthChange).not.toHaveBeenCalled();
+
+      await user.click(screen.getByTestId('next'));
+
+      expect(onMonthChange).toHaveBeenCalledTimes(1);
+      expect(gridNames()).toEqual([range('2026-11-22', '2026-12-05')]);
+    });
+
     it('moves a page of days by its days', async () => {
       const { user } = await renderCalendar({ visibleDuration: { days: 5 } });
       expect(screen.getByTestId('next')).toHaveAccessibleName('Next 5 days');
