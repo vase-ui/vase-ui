@@ -229,9 +229,13 @@ VeeValidate gives the function a value of the type `unknown`. Check the type in 
 
 ### Submitting data
 
-Wrap your submit function with `handleSubmit`. It validates the form. When the form is valid, it calls your function with the values as an object. Bind the result to the `submit` event of a native `<form>`:
+Wrap your submit function with `handleSubmit`. It validates the form. When the form is valid, it calls your function with the values as an object. Bind the result to the `submit` event of a native `<form>`.
 
-<<< ../examples/forms/VeeValidateSubmit.vue{16,20}
+`handleSubmit` takes a second function. VeeValidate calls it when the form is not valid, with the errors by field name. The names are in the sequence in which the fields mount. Find the element of the form that has the first name, and move the focus to it:
+
+<<< ../examples/forms/VeeValidateSubmit.vue{17,19-22,26}
+
+Where a part has a hidden input, as `Select` and `NumberField` have, that input has the name. It gives the focus to the control of the part.
 
 Do not use `Form` here. A field that shows an error stops the `submit` event of `Form`. `handleSubmit` then does not run, and VeeValidate does not show the errors of the other fields. Add `novalidate`, as `Form` does, so that the browser shows no message of its own.
 
@@ -294,5 +298,6 @@ To submit the form:
 
 1. Give a submit function to `onSubmit` in `useForm`.
 2. Call `form.handleSubmit()` from an event listener, such as `@submit.prevent` on the form or `@click` on a button.
+3. Give a function to `onSubmitInvalid` in `useForm`. TanStack Form calls it when the form is not valid. Vase UI gives `aria-invalid="true"` to the control of a field that is invalid. Find the first such element in the form, and move the focus to it.
 
-<<< ../examples/forms/TanstackSubmit.vue{6-11,16,18}
+<<< ../examples/forms/TanstackSubmit.vue{5,9-17,22,24}

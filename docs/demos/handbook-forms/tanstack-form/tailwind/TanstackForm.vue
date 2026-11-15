@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { revalidateLogic, useForm } from '@tanstack/vue-form';
 import type { DeepKeys, ValidationError } from '@tanstack/vue-form';
-import { h } from 'vue';
+import { h, useTemplateRef } from 'vue';
 import type { FunctionalComponent } from 'vue';
 import * as Autocomplete from '../../components/autocomplete';
 import { Button } from '../../components/button';
@@ -52,6 +52,8 @@ const requiredFields: (keyof FormValues)[] = [
 
 const toastManager = useToastManager();
 
+const formElement = useTemplateRef('formElement');
+
 const form = useForm({
   defaultValues,
   onSubmit: ({ value: formValues }) => {
@@ -60,6 +62,9 @@ const form = useForm({
       description: 'The form contains these values:',
       data: formValues,
     });
+  },
+  onSubmitInvalid: () => {
+    formElement.value?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
   },
   validationLogic: revalidateLogic({
     mode: 'submit',
@@ -170,6 +175,7 @@ const SERVER_TYPES = [
 
 <template>
   <form
+    ref="formElement"
     aria-label="Launch new cloud server"
     novalidate
     class="flex w-full max-w-3xs flex-col gap-5 sm:max-w-[20rem]"
