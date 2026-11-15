@@ -165,7 +165,7 @@ describe('resolveElement', () => {
       expect(resolveElement(value)).toBe(null);
       expect(warnSpy).toHaveBeenCalledTimes(1);
       expect(warnSpy.mock.calls[0][0]).toContain(
-        'Vase UI: The component is in Vapor mode and exposes no `element`.',
+        'Vase UI: The component is in Vapor mode and does not expose its element as `element`.',
       );
       expect(warnSpy.mock.calls[0][0]).toContain('`defineExpose({ element })`');
     });

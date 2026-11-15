@@ -47,7 +47,7 @@ export function resolveElement(
   if (!('$el' in value)) {
     if (process.env.NODE_ENV !== 'production') {
       warn(
-        'The component is in Vapor mode and exposes no `element`.',
+        'The component is in Vapor mode and does not expose its element as `element`.',
         'Vue gives a ref on a Vapor component only the values that the component exposes, so the part cannot reach its element.',
         'Expose the element as `element` in the component: `defineExpose({ element })`.',
       );
