@@ -56,7 +56,6 @@ export interface DialogPopupProps
 import { computed } from 'vue';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
 import {
@@ -95,16 +94,6 @@ const openMethod = computed(() => store.select('openMethod'));
 // stays in the closing popup, and its focus guards, which have `aria-hidden`, stay in the tab
 // order (BUG-5519). This part stops the focus manager when the popup closes.
 const focusManagerDisabled = computed(() => !open.value);
-
-useOpenChangeComplete({
-  open,
-  ref: store.context.popupRef,
-  onComplete() {
-    if (open.value) {
-      store.context.onOpenChangeComplete?.(true);
-    }
-  },
-});
 
 const defaultInitialFocus = createDefaultInitialFocus(store.context.popupRef);
 const resolvedInitialFocus = computed(() =>

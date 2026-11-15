@@ -78,10 +78,11 @@ export function testVaporConsumer(element: VNode, getOptions: () => VaseUiConfor
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const part = await renderConsumer('render-without-ref');
       expect(part?.element).toBe(null);
-      const messages = warnSpy.mock.calls.map(([message]) => String(message));
-      expect(
-        messages.filter((message) => message.includes('The `#render` slot gave no element')),
-      ).toHaveLength(1);
+      const messages = warnSpy.mock.calls
+        .map(([message]) => String(message))
+        .filter((message) => message.includes('The `#render` slot gave no element'));
+      expect(messages).toHaveLength(1);
+      expect(messages[0]).toContain('`:ref="props.ref"`');
     });
   });
 }

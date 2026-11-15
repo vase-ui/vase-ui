@@ -16,6 +16,7 @@ import {
   isJSDOM,
   moveMouse,
   nextEvent,
+  popupAnatomyTests,
   popupConformanceTests,
   popupListConformanceTests,
   pressWithScreenReader,
@@ -270,6 +271,22 @@ const DetachedTriggerMenu = defineComponent({
 
 describe('<Menu.Root />', () => {
   const { render } = createRenderer();
+
+  popupAnatomyTests({
+    createComponent: ({ open, onOpenChangeComplete, content }) => (
+      <Menu.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Menu.Trigger>Open</Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner data-testid="shown" class="shown">
+            Content
+            {content}
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>
+    ),
+    createPopup: () => <Menu.Popup data-testid="popup">Popup</Menu.Popup>,
+    render,
+  });
 
   describe('closing before the popup attaches', () => {
     it('unmounts the popup when a layout effect closes it on mount', async () => {
@@ -4732,6 +4749,8 @@ describe('<Menu.Root />', () => {
       const trigger = getByRole('button');
 
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(events).toEqual([['openChangeComplete', true]]);
+      events.length = 0;
 
       await fireEvent.keyDown(document.body, { key: 'Escape' });
       await waitFor(() => {
