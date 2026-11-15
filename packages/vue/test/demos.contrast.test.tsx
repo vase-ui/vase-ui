@@ -286,6 +286,8 @@ describe('the text of a demo has a contrast of 4.5:1 or more', () => {
 
   it.each(cases)('$name ($variant, $theme)', async (row) => {
     document.documentElement.classList.toggle('dark', row.theme === 'dark');
+    // As on a page, the frame is in `.Layout`. `look.css` gives the selection highlight of the site
+    // to the elements in it, and `tokens.css` gives that highlight its color.
     await render(
       h(
         'div',
