@@ -1,17 +1,23 @@
 <!-- @strictTemplates true -->
 <script setup lang="ts">
 import * as Checkbox from '../checkbox/index.parts';
+import * as Combobox from '../combobox/index.parts';
 import * as DateField from '../date-field/index.parts';
 import * as Dialog from '../dialog/index.parts';
 import * as Field from '../field/index.parts';
 import { Input } from '../input';
 import * as Menu from '../menu/index.parts';
+import * as NumberField from '../number-field/index.parts';
 import * as OTPField from '../otp-field/index.parts';
 import * as Radio from '../radio/index.parts';
 import * as Slider from '../slider/index.parts';
 import * as Switch from '../switch/index.parts';
 import * as TimeClock from '../time-clock/index.parts';
 import * as TimeField from '../time-field/index.parts';
+import * as Toolbar from '../toolbar/index.parts';
+import type { EditableDateTimeFieldSegment } from './date-time/field/useDateTimeFieldSegment';
+
+declare const segment: EditableDateTimeFieldSegment;
 </script>
 
 <template>
@@ -20,6 +26,16 @@ import * as TimeField from '../time-field/index.parts';
   <Dialog.Popup :aria-describedby="undefined" />
   <!-- @vue-expect-error `aria-hidden` is a Boolean -->
   <Menu.GroupLabel :aria-hidden="5" />
+
+  <Combobox.Input :autocomplete="null" />
+  <DateField.Segment :segment="segment" :autocomplete="null" />
+  <Field.Control :autocomplete="null" />
+  <Input :autocomplete="null" />
+  <Menu.Input :autocomplete="null" />
+  <NumberField.Input :autocomplete="null" />
+  <OTPField.Input :autocomplete="null" />
+  <TimeField.Segment :segment="segment" :autocomplete="null" />
+  <Toolbar.Input :autocomplete="null" />
 
   <!-- @vue-expect-error the prop `id` takes no `null` -->
   <Field.Control :id="null" />

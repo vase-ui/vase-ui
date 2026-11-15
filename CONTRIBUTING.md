@@ -280,6 +280,7 @@ A part that Base UI takes from another family is exported again and not copied: 
 - The interface also extends the attributes of its default tag through `/* @vue-ignore */`: `interface SeparatorProps extends VaseUIComponentProps<SeparatorState>, /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes>`.
 - `WithVaseUIEvent` adds `preventVaseUIHandler()` to the event that each native listener gets.
 - `WithVaseUIEvent` adds `null` to the type of each attribute that is not a listener. Vue types an attribute with no `null`, so without it vue-tsc refuses `:aria-hidden="null"` on a part.
+- A part that types an attribute in an interface of its own adds `null` to that type: `autocomplete?: string | null | undefined` of `Combobox.Input`.
 - Name each attribute that reaches a declared prop in the second type argument: `WithVaseUIEvent<HTMLAttributes, 'aria-label'>`. The type adds no `null` to such an attribute, because Vue gives its value to the prop, and such a prop takes no `null`. `Input` names `id` and `name`, because it gives them to the props of `Field.Control`.
 - TSX and templates then accept the native attributes and listeners, with their types.
 - `WithVaseUIEvent` leaves out the key `as`. The part declares `as` itself, and a library can add another `as` to the attributes of each element. `motion-v` does this. Without the omit, TypeScript reports TS2320 for the props interface of each part.
