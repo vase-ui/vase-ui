@@ -15,7 +15,10 @@ function readPage(page: Page) {
       document.querySelector(`[data-testid="${testId}"]`)?.hasAttribute('data-dirty') ?? false;
     const form = document.querySelector<HTMLFormElement>('[data-testid="form"]') ?? undefined;
     return {
-      formData: Array.from(new FormData(form), ([name, value]) => `${name}=${String(value)}`),
+      formData: Array.from(
+        new FormData(form),
+        ([name, value]) => `${name}=${typeof value === 'string' ? value : value.name}`,
+      ),
       models: JSON.parse(read('models')) as unknown,
       changes: JSON.parse(read('changes')) as unknown,
       dirty: { news: isDirty('news-field'), note: isDirty('note-field') },

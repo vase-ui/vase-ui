@@ -21,7 +21,12 @@ function handleValueChange(value: string | null, details: SelectRootChangeEventD
 
 <template>
   <form data-testid="form" @submit.prevent>
-    <Select.Root v-model:value="model" :name="name" :items="fonts" @value-change="handleValueChange">
+    <Select.Root
+      v-model:value="model"
+      :name="name"
+      :items="fonts"
+      @value-change="handleValueChange"
+    >
       <Select.Trigger data-testid="trigger">
         <Select.Value data-testid="value" />
       </Select.Trigger>

@@ -477,12 +477,7 @@ function takeInputState(event?: Event) {
     return;
   }
 
-  if (
-    input.checked !== isChecked.value &&
-    !props.parent &&
-    !props.readOnly &&
-    !isDisabled.value
-  ) {
+  if (input.checked !== isChecked.value && !props.parent && !props.readOnly && !isDisabled.value) {
     requestChange(input.checked, event);
   }
 

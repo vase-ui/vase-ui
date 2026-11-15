@@ -122,7 +122,12 @@ function handleFilterInput(event: Event) {
           </Select.Positioner>
         </Select.Portal>
       </Select.Root>
-      <Combobox.Root v-model:value="fruit" name="fruit" :items="FRUITS" @value-change="count('fruit')">
+      <Combobox.Root
+        v-model:value="fruit"
+        name="fruit"
+        :items="FRUITS"
+        @value-change="count('fruit')"
+      >
         <Combobox.Input aria-label="Fruit" data-testid="fruit-input" />
         <Combobox.Portal>
           <Combobox.Positioner>

@@ -1728,9 +1728,11 @@ async function changeFormStateBeforeHydration(page: Page) {
   }
   await page.evaluate(() => {
     const write = (name: string, values: string[]) => {
-      document.querySelectorAll<HTMLInputElement>(`input[name="${name}"]`).forEach((input, index) => {
-        input.value = values[index] ?? input.value;
-      });
+      document
+        .querySelectorAll<HTMLInputElement>(`input[name="${name}"]`)
+        .forEach((input, index) => {
+          input.value = values[index] ?? input.value;
+        });
     };
     write('font', ['mono']);
     write('fruit', ['Cherry']);
@@ -2558,9 +2560,11 @@ describe.each(MODES)('in $name', async ({ dev }) => {
         }
         for (const name of ['text', 'filter', 'font', 'fruit', 'quantity', 'volume', 'range']) {
           const model = state.models[name];
-          const isRestored = JSON.stringify(model) !== JSON.stringify(
-            FORM_STATE_INITIAL_MODELS[name as keyof typeof FORM_STATE_INITIAL_MODELS],
-          );
+          const isRestored =
+            JSON.stringify(model) !==
+            JSON.stringify(
+              FORM_STATE_INITIAL_MODELS[name as keyof typeof FORM_STATE_INITIAL_MODELS],
+            );
           expect(state.formData[name]).toEqual([model ?? ''].flat().map(String));
           expect(state.changes[name] ?? 0).toBe(isRestored ? FORM_STATE_CHANGED.changes[name] : 0);
         }

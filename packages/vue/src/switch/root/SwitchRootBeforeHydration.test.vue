@@ -49,7 +49,11 @@ function handleCheckedChange(checked: boolean, details: SwitchRootChangeEventDet
   <form data-testid="form" @submit.prevent>
     <component :is="mode === 'field' ? Field.Root : 'div'" data-testid="field">
       <label data-testid="label">
-        <Switch.Root v-bind="switchProps()" data-testid="switch" @checked-change="handleCheckedChange" />
+        <Switch.Root
+          v-bind="switchProps()"
+          data-testid="switch"
+          @checked-change="handleCheckedChange"
+        />
         Notifications
       </label>
     </component>

@@ -63,7 +63,11 @@ function handleGroupChange(value: string[], details: CheckboxGroupChangeEventDet
       News
     </label>
     <label v-else-if="mode === 'keeps'" data-testid="label">
-      <Checkbox.Root :checked="model" data-testid="checkbox" @checked-change="handleCheckedChange" />
+      <Checkbox.Root
+        :checked="model"
+        data-testid="checkbox"
+        @checked-change="handleCheckedChange"
+      />
       News
     </label>
     <label v-else data-testid="label">

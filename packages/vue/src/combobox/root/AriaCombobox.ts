@@ -1,12 +1,4 @@
-import {
-  computed,
-  nextTick,
-  onMounted,
-  provide,
-  shallowRef,
-  toRaw,
-  watch,
-} from 'vue';
+import { computed, nextTick, onMounted, provide, shallowRef, toRaw, watch } from 'vue';
 import type { ComputedRef, HTMLAttributes, ShallowRef } from 'vue';
 import { getOverflowAncestors } from '@floating-ui/vue';
 import { isHTMLElement } from '@floating-ui/utils/dom';

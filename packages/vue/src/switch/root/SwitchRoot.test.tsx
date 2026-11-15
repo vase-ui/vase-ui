@@ -1506,7 +1506,6 @@ describe('<Switch.Root />', () => {
       expect(handleUpdate.mock.calls).toEqual([[true], [true]]);
       expect(getInput().checked).toBe(false);
     });
-
   });
 
   describe('VUE-81: the state that the input got before the hydration', () => {

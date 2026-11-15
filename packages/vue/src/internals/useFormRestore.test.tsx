@@ -64,7 +64,9 @@ describe('useFormRestore', () => {
       spy.mock.calls.filter(([eventType]) => eventType === 'pageshow').length;
     const Restorable = createRestorable(() => {});
     const shown = shallowRef(true);
-    await render(() => <KeepAlive>{shown.value ? <Restorable key="restorable" /> : null}</KeepAlive>);
+    await render(() => (
+      <KeepAlive>{shown.value ? <Restorable key="restorable" /> : null}</KeepAlive>
+    ));
     expect([count(addSpy), count(removeSpy)]).toEqual([1, 0]);
 
     shown.value = false;

@@ -32,7 +32,10 @@ function rootProps() {
     : { defaultValue: props.defaultValue };
 }
 
-function handleValueChange(value: number | readonly number[], details: SliderRootChangeEventDetails) {
+function handleValueChange(
+  value: number | readonly number[],
+  details: SliderRootChangeEventDetails,
+) {
   changes.value = [...changes.value, `${String(value)} (${details.reason})`];
 }
 </script>
