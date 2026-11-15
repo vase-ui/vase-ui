@@ -19,6 +19,7 @@ import {
   fireEvent,
   flushMicrotasks,
   isJSDOM,
+  nextEvent,
   screen,
   useTestInteractions,
   waitFor,
@@ -73,9 +74,9 @@ type PopupStore = ReturnType<typeof useFloatingRootStore>;
 
 // A popup with a reference field. The reference opens the popup for a click, and for a
 // `mousedown` as a trigger of a popup part does. With `keepMounted`, the popup element stays and
-// the focus manager is disabled while the popup is closed, unless `manager.disabled` is set. The default content has a button that
-// closes the popup, and the slot of the content gets the same function as `close`. `name` is the
-// prefix of each test id, so that a popup can hold another popup.
+// the focus manager is disabled while the popup is closed, unless `manager.disabled` is set. The
+// default content has a button that closes the popup, and the slot of the content gets the same
+// function as `close`. `name` is the prefix of each test id, so that a popup can hold another popup.
 const Popup = defineComponent({
   props: {
     manager: { type: Object as PropType<ManagerProps>, default: () => ({}) },
@@ -178,6 +179,13 @@ async function openPopup(root: ParentNode = document, name = '') {
   reference.focus();
   await fireEvent.click(reference);
   await flushMicrotasks();
+}
+
+// The focus manager moves the focus into the popup in an animation frame after the open. The
+// reference takes the focus first, so the next `focusin` event is the move into the popup.
+async function openPopupAndWaitForFocus(name = '') {
+  screen.getByTestId(`${name}reference`).focus();
+  await nextEvent(document, 'focusin', { action: () => openPopup(document, name) });
 }
 
 function nextFrame() {
@@ -1485,8 +1493,8 @@ describe('FloatingFocusManager', () => {
             <input data-testid="inside" />
           </div>,
         );
-        await openPopup();
-        await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+        await openPopupAndWaitForFocus();
+        expect(screen.getByTestId('one')).toHaveFocus();
         screen.getByTestId('inside').focus();
 
         popup.close();
@@ -1526,8 +1534,8 @@ describe('FloatingFocusManager', () => {
           </Popup>,
         );
         await openPopup();
-        await openPopup(document, 'inner-');
-        await waitFor(() => expect(screen.getByTestId('button')).toHaveFocus());
+        await openPopupAndWaitForFocus('inner-');
+        expect(screen.getByTestId('button')).toHaveFocus();
       }
 
       it.each<{ name: string; closeOuterFirst: boolean }>([

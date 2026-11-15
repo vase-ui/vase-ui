@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { shallowRef } from 'vue';
 import type { VNode } from 'vue';
-import { screen, waitFor } from '@testing-library/dom';
+import { screen } from '@testing-library/dom';
 import type * as Dialog from '../src/dialog/index.parts';
 import type * as Drawer from '../src/drawer/index.parts';
 import * as Menu from '../src/menu/index.parts';
@@ -9,6 +9,7 @@ import * as Select from '../src/select/index.parts';
 import { nextAnimationsRead, nextEvent } from './animation';
 import { waitForLaterMillisecond } from './createRenderer';
 import type { createRenderer } from './createRenderer';
+import { flushMicrotasks } from './flushMicrotasks';
 
 type PopupParts = Pick<typeof Dialog, 'Root' | 'Trigger' | 'Portal' | 'Popup'>;
 
@@ -74,10 +75,12 @@ export function nestedPopupCloseTests(config: NestedPopupCloseTestsConfig) {
     await Promise.all(exits.map(({ finished }) => finished));
   }
 
-  async function waitForFocusIn(popup: HTMLElement) {
-    await waitFor(() => {
-      expect(popup.contains(document.activeElement)).toBe(true);
-    });
+  // A popup takes the focus in an animation frame after the open. A click of `user` focuses
+  // `control` first, so `control` takes the focus before the action. The next `focusin` event is
+  // then the move into the popup.
+  async function openAndWaitForFocus(control: HTMLElement, action: () => Promise<unknown>) {
+    control.focus();
+    await nextEvent(document, 'focusin', { action });
   }
 
   it.each([
@@ -135,13 +138,14 @@ export function nestedPopupCloseTests(config: NestedPopupCloseTestsConfig) {
       ));
       const outerTrigger = screen.getByRole('button', { name: 'Open outer' });
 
-      await user.click(outerTrigger);
+      await openAndWaitForFocus(outerTrigger, () => user.click(outerTrigger));
       const outerPopup = screen.getByTestId('outer-popup');
-      await waitForFocusIn(outerPopup);
+      expect(outerPopup.contains(document.activeElement)).toBe(true);
       await waitForLaterMillisecond();
-      await user.click(screen.getByRole('button', { name: 'Open inner' }));
+      const innerTrigger = screen.getByRole('button', { name: 'Open inner' });
+      await openAndWaitForFocus(innerTrigger, () => user.click(innerTrigger));
       const innerPopup = screen.getByTestId('inner-popup');
-      await waitForFocusIn(innerPopup);
+      expect(innerPopup.contains(document.activeElement)).toBe(true);
       await waitForLaterMillisecond();
 
       const { focusAtExitStart, exits } = await startExit(
@@ -150,9 +154,8 @@ export function nestedPopupCloseTests(config: NestedPopupCloseTestsConfig) {
         () => user.click(screen.getByRole('button', { name: 'Discard' })),
       );
       await finishExits(exits);
-      await waitFor(() => {
-        expect(screen.queryByTestId('outer-popup')).toBe(null);
-      });
+      await flushMicrotasks();
+      expect(screen.queryByTestId('outer-popup')).toBe(null);
 
       expect(focusAtExitStart).toBe(outerTrigger);
       expect(outerTrigger).toHaveFocus();
@@ -223,22 +226,21 @@ export function nestedPopupCloseTests(config: NestedPopupCloseTestsConfig) {
       ));
       const trigger = screen.getByRole('button', { name: 'Open' });
 
-      await user.click(trigger);
+      await openAndWaitForFocus(trigger, () => user.click(trigger));
       const outerPopup = screen.getByTestId('outer-popup');
-      await waitForFocusIn(outerPopup);
-      screen.getByTestId('list-trigger').focus();
+      expect(outerPopup.contains(document.activeElement)).toBe(true);
+      const listTrigger = screen.getByTestId('list-trigger');
       await waitForLaterMillisecond();
-      await user.keyboard('{Enter}');
-      await waitForFocusIn(screen.getByTestId('list-popup'));
+      await openAndWaitForFocus(listTrigger, () => user.keyboard('{Enter}'));
+      expect(screen.getByTestId('list-popup').contains(document.activeElement)).toBe(true);
       await waitForLaterMillisecond();
 
       const { focusAtExitStart, exits } = await startExit(outerPopup, [], () =>
         user.keyboard('{ArrowDown}{Enter}'),
       );
       await finishExits(exits);
-      await waitFor(() => {
-        expect(screen.queryByTestId('outer-popup')).toBe(null);
-      });
+      await flushMicrotasks();
+      expect(screen.queryByTestId('outer-popup')).toBe(null);
 
       expect(focusAtExitStart).toBe(trigger);
       expect(trigger).toHaveFocus();
