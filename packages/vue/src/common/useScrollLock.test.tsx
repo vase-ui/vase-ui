@@ -77,7 +77,8 @@ const Locker = createLocker(useScrollLock);
 // A lock and an unlock each wait for a timer of 0 ms. A page that has scrollbars that take space can
 // send `resize` events, and each event puts the lock again in a later frame. Thus a case waits for
 // the state that stays. For a state that must not come, a case waits one timer first. The observer
-// of `waitFor` does not see the document of an iframe, so its check in each frame sees it.
+// of `waitFor` does not see a change in the document of an iframe. Its check in each frame sees the
+// change.
 function waitForLock(page: ScrollDocument) {
   return waitFor(() => expect(isPageLocked(page)).toBe(true));
 }

@@ -1903,9 +1903,9 @@ This section is the contract of the test helpers. Each helper must obey it. The 
 - `flushMicrotasks` resolves in the next task. Each flush that Vue queued is then complete.
 - `waitFor(callback)` calls `callback` until it does not throw, and it resolves with the result. It calls `callback` immediately, after each change of the DOM of the page, and in each frame.
 - `waitFor` rejects with the last error of `callback` when the page rendered 180 frames and no call passed. The error of a failed query already has the DOM of its container in its message. `waitFor` adds the DOM of the page to the message of each other `Error`.
-- `waitFor` turns off the role report of a failed `getByRole` query in each call but the last. The wait of Testing Library turns it off in each call. The report reads the role and the style of each element of the page. The last call gives the full error.
+- In each call of `callback` but the last, a failed `getByRole` query gives no role report. The wait of Testing Library gives no role report in any call. The report reads the role and the style of each element of the container. The last call gives the full error.
 - `waitFor` takes no options. It replaces `waitFor` of `@testing-library/dom`, whose limit is 1 s.
-- `waitFor` rejects with a `TypeError` when `callback` returns a promise. It does not wait for a promise, and it does not call `callback` again after a rejection. Await the action first, then give `waitFor` a synchronous `callback`.
+- `waitFor` rejects with a `TypeError` when `callback` returns a promise. It does not wait for a promise, and it does not call `callback` again after a rejection. Await the action first. Then give `waitFor` a synchronous `callback`.
 - The `findBy` queries of `screen`, of `within` and of the result of `render` wait with `waitFor`. A `findBy` query throws when a call gives it options for its wait.
 - The error of a failed `findBy` query has the stack of the call, so Vitest shows the line of the test. The query runs in a frame callback, and the stack of that callback has no line of the test. `vi.defineHelper` gives the error the stack of the call.
 - `waitFor` counts the frames of the browser, also under fake timers. Fake timers replace `requestAnimationFrame`, and a fake frame comes only when the test moves the clock.

@@ -13,8 +13,8 @@ import type { ScrollDocument } from '../../../test/fixtures/scrollDocument';
 
 const PART_FILE = 'test/fixtures/AnchoredScrollLockPart.vue';
 
-// The observer of `waitFor` does not see the document of an iframe, so its check in each frame sees
-// it.
+// The observer of `waitFor` does not see a change in the document of an iframe. Its check in each
+// frame sees the change.
 function waitForLock(page: ScrollDocument) {
   return waitFor(() => expect(isPageLocked(page)).toBe(true));
 }

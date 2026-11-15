@@ -7,11 +7,11 @@ const browserRequestAnimationFrame = globalThis.requestAnimationFrame;
 const browserCancelAnimationFrame = globalThis.cancelAnimationFrame;
 
 const PROMISE_REFUSAL_MESSAGE =
-  'The callback of `waitFor` returned a promise. `waitFor` does not wait for a promise, and it does not call the callback again after a rejection. Await the action first, then give `waitFor` a synchronous callback.';
+  'The callback of `waitFor` returned a promise. `waitFor` does not wait for a promise, and it does not call the callback again after a rejection. Await the action first. Then give `waitFor` a synchronous callback.';
 
 // The wait of Testing Library sets this field around each call of its callback, and the package
 // does not export the function that does it. While the field is `true`, a failed `getByRole` skips
-// the report of the roles of the page.
+// the report of the roles of its container.
 type ConfigWithDiagnosticsFlag = ReturnType<typeof getConfig> & {
   _disableExpensiveErrorDiagnostics: boolean;
 };
@@ -41,7 +41,7 @@ function isPromiseLike(value: unknown): boolean {
  * a stall, so the stall uses no frame of the limit.
  * The frames are frames of the browser, also under fake timers.
  * A failed `getByRole` in `callback` gives its short error in each call but the last one. The
- * last call gives the full error, which reports the roles of the page.
+ * last call gives the full error, which reports the roles of the container.
  * It rejects with a `TypeError` when `callback` returns a promise, and it does not call `callback`
  * again. Testing Library waits for such a promise, and it calls `callback` again after a rejection.
  */
@@ -92,7 +92,7 @@ export function waitFor<T>(callback: () => T): Promise<T> {
             value: getConfig().getElementError(lastError.message, document.body).message,
           });
         }
-        // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- The helper passes on the value that `callback` threw.
+        // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- The helper rejects with the value that `callback` threw.
         reject(lastError);
         return;
       }

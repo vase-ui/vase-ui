@@ -2972,7 +2972,7 @@ describe('<Dialog.Root />', () => {
 
   describe('scroll lock', () => {
     // The lock and the unlock each wait for a timer of 0 ms. The observer of `waitFor` does not see
-    // the document of an iframe, so its check in each frame sees it.
+    // a change in the document of an iframe. Its check in each frame sees the change.
     function renderModalDialog(scrollDocument: ScrollDocument, rootProps: object = {}) {
       return (
         <Dialog.Root defaultOpen {...rootProps}>

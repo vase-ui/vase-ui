@@ -508,8 +508,8 @@ export default defineConfig([
     rules: { 'no-restricted-syntax': ['error', ...RESTRICTED_REACT_EVENT_PROP_SYNTAX] },
   },
   {
-    // The tests of `fixtures/nuxt` run in Node and wait with Playwright and `expect.poll`. The rule
-    // is for `packages/vue` only. `test/queries.ts` wraps the queries of Testing Library.
+    // The tests of `fixtures/nuxt` run in Node and wait with Playwright and `expect.poll`. These
+    // rules are for `packages/vue` only. `test/queries.ts` wraps the queries of Testing Library.
     files: [...VUE_TEST_SCRIPT_FILES, 'packages/vue/test/**/*.{ts,tsx,vue}'],
     ignores: ['packages/vue/test/queries.ts'],
     rules: {

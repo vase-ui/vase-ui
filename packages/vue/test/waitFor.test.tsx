@@ -164,7 +164,7 @@ describe('waitFor', () => {
     afterFrames(5, () => {
       isDone = true;
     });
-    // Longer than the limit of 1 s of the wait of Testing Library.
+    // The stall is longer than the limit of 1 s of the wait of Testing Library.
     stallPage(1200);
 
     await waitFor(() => {
