@@ -57,10 +57,11 @@ pnpm --filter @vase-ui/vue exec playwright install chromium firefox webkit
 | `pnpm docs:dev`                                  | Starts the development server of the site.                                                                                                                                                                                                                                                  |
 | `pnpm --filter @vase-ui/nuxt-fixture dev`        | Starts the development server of the Nuxt fixture, `fixtures/nuxt`. Run `pnpm build` first.                                                                                                                                                                                                 |
 | `pnpm --filter @vase-ui/nuxt-fixture typecheck`  | Runs `nuxt prepare`. Then it runs the vue-tsc of `packages/vue` on the app of the Nuxt fixture. Run `pnpm build` first.                                                                                                                                                                     |
-| `pnpm test`                                      | Runs all tests of `packages/vue`. It does not run `pnpm test:nuxt`.                                                                                                                                                                                                                         |
+| `pnpm test`                                      | Runs all tests of `packages/vue`. It does not run `pnpm test:nuxt` or `pnpm test:vapor`.                                                                                                                                                                                                    |
 | `pnpm test:node`                                 | Runs the tests that have no DOM.                                                                                                                                                                                                                                                            |
 | `pnpm test:browser`                              | Runs the browser tests in Chromium, Firefox and WebKit.                                                                                                                                                                                                                                     |
 | `pnpm test:chromium`                             | Runs the browser tests in Chromium. `test:firefox` and `test:webkit` do the same for their engine.                                                                                                                                                                                          |
+| `pnpm test:vapor`                                | Runs the browser tests in Chromium in a Vapor app. It needs Vue 3.6. See [Where a test runs](#where-a-test-runs).                                                                                                                                                                           |
 | `pnpm test:nuxt`                                 | Runs the tests of the Nuxt fixture, `fixtures/nuxt`, in Chromium. It tests a production build and then the development server. Run `pnpm build` first.                                                                                                                                      |
 
 To run one test file, add a part of its name: `pnpm test:chromium SinglePart`.
@@ -85,7 +86,7 @@ The site imports the built package. Run `pnpm build` before `pnpm docs:typecheck
 - The workspace also denies the install script of `vue-demi` with the entry `vue-demi: false`. `@tanstack/vue-form` of the docs depends on `vue-demi` through `@tanstack/vue-store`. The script only selects the build for Vue 2 or for Vue 3, and the package ships the build for Vue 3.
 - The lowest version of Vue that the package supports is 3.5.12. Before that version, `useId` can give different ids on the server and in the browser below a component that has `onServerPrefetch` ([vuejs/core#12128](https://github.com/vuejs/core/pull/12128)).
 - The peer range in `packages/vue/package.json`, the job `test-vue-floor` of CI and `docs/quick-start.md` hold that version. Change them together. The job installs that version and runs `pnpm test:node` and `pnpm test:chromium`.
-- The job `test-vue-rc` of CI installs the release candidate of Vue and runs `pnpm test:node` and `pnpm test:chromium`.
+- The job `test-vue-rc` of CI installs the release candidate of Vue and runs `pnpm test:node`, `pnpm test:chromium` and `pnpm test:vapor`.
 - When you change the version of `vitest`, search the `dist` folder of the new version for `VITEST_CHROMIUM_GC_DISK_THRESHOLD_GB`. When the new version does not read the variable, find another way to collect the garbage of Chromium after each test file. [Where a test runs](#where-a-test-runs) gives the reason.
 - When a release of `vitest` keeps the modules in the cache of the browser ([vitest-dev/vitest#11914](https://github.com/vitest-dev/vitest/pull/11914)), delete the variable from `.github/workflows/ci.yml`.
 
@@ -646,6 +647,8 @@ The source obeys rules that keep it compatible with the Vapor mode of Vue. ESLin
 | A `.tsx` source file                  | An SFC or a `.ts` composable                        |
 
 If a line must break a rule, put a disable comment on that line and give the reason.
+
+The project `vapor` of the tests checks the parts in a Vapor app. See [Where a test runs](#where-a-test-runs).
 
 ### Server render
 
@@ -1648,6 +1651,10 @@ Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>. Without a root the trigg
 - The job `test-browser` of CI runs the Firefox tests in three shards: `--shard=1/3`, `--shard=2/3` and `--shard=3/3`. Each shard is a job on its own runner, so the shards do not share a mouse. To run one shard on your machine, add its flag: `pnpm test:firefox --shard=1/3`. With no `--shard`, `pnpm test:firefox` runs all test files.
 - On Linux, Chromium keeps a block of shared memory for each module that a new test frame loads again, until a garbage collection frees it. A page that holds about 16,000 blocks loses its connections. Vitest then reports `Browser connection was closed`, and the job fails with no failed case.
 - On Linux, Vitest collects the garbage of Chromium after a test file only when the temporary folder has less free space than `VITEST_CHROMIUM_GC_DISK_THRESHOLD_GB` gives, in GB. The default is 4, and a CI runner has about 85 GB free. CI sets the variable to `1000000`, so Vitest collects the garbage after each test file. Firefox and WebKit ignore the variable.
+- The project `vapor` runs the browser tests in Chromium in a Vapor app. `createTestApp` of `test/testApp.ts` makes the app with `createVaporApp` and `vaporInteropPlugin`. The root of the app is the Vapor component `test/VaporRoot.vue`.
+- The project needs Vue 3.6, and the package develops on Vue 3.5. `pnpm test` thus leaves the project out. The job `test-vue-rc` installs the release candidate and runs `pnpm test:vapor`.
+- To run the project on your machine, install the Vue version of that job: `pnpm --filter @vase-ui/vue add --save-dev --save-exact vue@<version>`. After the run, restore `packages/vue/package.json` and `pnpm-lock.yaml` with git. Then run `pnpm install`. Do not commit the release candidate.
+- The hydration helpers and a test that makes its own app use an ordinary Vue app in each project.
 - A test file with a name that ends in `.node.test.ts` or `.node.test.tsx` runs in Node with no DOM. Use it for server render and for logic that must work with no DOM.
 - A `.node.test` file does not import `#test-utils`, because that index loads the libraries of the DOM helpers. To render a part, such a file imports `renderToString` from `vue/server-renderer` and the part directly.
 - A family can have one `.node.test.tsx` file for the server render of the whole family, in the folder of its root: `progress/root/ProgressRoot.node.test.tsx`. A `replaced` Base UI case is the exception. It goes to the `.node.test.tsx` file of the folder of its Base UI test, as [How to port a test](#how-to-port-a-test) says: `fieldset/legend/FieldsetLegend.node.test.tsx`.
@@ -1856,7 +1863,7 @@ This section is the contract of the test helpers. Each helper must obey it. The 
 
 - `createRenderer()` returns `{ render }`.
 - `render` takes a vnode or a function that returns a vnode. It resolves to the queries, `container`, `unmount`, `user`, `rerender` and `setProps`.
-- `render` mounts the vnode with `createApp`. The helpers do not use `@testing-library/vue`, because it depends on another version of `@testing-library/dom`.
+- `render` mounts the vnode in the app of `createTestApp`. It is a Vue app, or a Vapor app in the project `vapor`. The helpers do not use `@testing-library/vue`, because it depends on another version of `@testing-library/dom`.
 - The app of `render` records each Vue warning for the check of the test setup. Its `warnHandler` does not throw. After a `warnHandler` throws, Vue gives no more warnings on that page.
 - `user` is `userEvent.setup({ document })` of `@testing-library/user-event`, at the version that upstream pins.
 - `user` waits for a timer after each action, so it does not return under a fake clock that does not move. A fake clock that moves with real time can end a timer of a part between two awaited steps.
@@ -1878,6 +1885,8 @@ This section is the contract of the test helpers. Each helper must obey it. The 
 - In a browser, `test/setup.ts` replaces `requestPointerLock` with a function that rejects, as a browser that refuses the lock does. Whether a browser gives a pointer lock to the page of a test depends on the engine and on the platform. With a lock, Firefox puts a second pointer in the page. The move of the setup does not take that pointer off the page, and the page keeps it for each later test file. An element that a later test renders under that pointer gets hover events from the browser. A test that needs a pointer lock mocks `requestPointerLock`.
 - `holdPress(element)` presses the main button of the real pointer at the center of `element` and holds it. It resolves to `{ point, release }`. `release()` lets the button go at `point`. When the case does not call `release()`, the helper lets the button go when the case ends.
 - `describeConformance` has no hydration case. A server render needs the path of a module. The suite gets a vnode. The test of a part calls the hydration helpers.
+- In the project `vapor`, `describeConformance` adds the cases `Vapor consumer`. They render the part from `test/conformanceTests/VaporConsumer.vue`, a component in Vapor mode, with `as`, with `#render` and `:ref="props.ref"`, and with `#render` and no `:ref`. The consumer gives the part the default slot of the vnode of the call.
+- The consumer renders a static element for each tag of `testRenderPropWith`. Add a tag that a new call needs.
 - `describeConformance` needs a part that has its element when the `render` option of the call resolves. For a part with no element at mount, that option makes the element appear: it renders an open root, or it does the action that mounts the part. The call for `Avatar.Image` needs no action, because the test file mocks `Image` and the element appears in the flush after the mount.
 - The call for `ScrollArea.Corner` waits for the first measurement of the viewport, because the corner has no element before it. Its `render` option calls `await flushMicrotasks()`.
 - The call for a portal part, and for each part in it, such as `Tooltip.Popup`, also calls `await flushMicrotasks()` in its `render` option. The portal renders its element and its content in the flush after the mount.
@@ -1966,7 +1975,8 @@ A case that acts between the server render and the hydration calls `hydrateAfter
 - A test fails when Vue warns in it, or when a call to `console.warn` or `console.error` reaches the console. `test/setup.ts` makes this check when the test ends.
 - When a test expects a Vue warning, call `takeReportedMessages()` after the action. Assert the whole list that it returns. A `.node.test` file imports the function by a relative path to `test/reportedMessages`.
 - A part that throws in `setup` makes `render` reject with the error. Vue then warns `Unhandled error during execution of setup function`, and the test expects that warning. A prerelease of Vue 3.6 also writes `Active effect was not restored correctly` to the console, and `test/reportedMessages.ts` drops that one message.
-- Put such a case last in its file. In Vue 3.5.12, a `setup` that throws leaves the current instance set. A later case of the file can then get a Vue warning about a slot.
+- Put such a case last in its file. In Vue 3.5.12, a `setup` that throws leaves the current instance set. A later case of the file can then get a Vue warning about a slot. In a Vapor app, the root then takes that instance as its parent. A part of a later case can thus find the context of the earlier case.
+- A case that fails only in the project `vapor` gets the option `{ fails: isVaporApp }` and a comment that gives the cause. `#test-utils` exports `isVaporApp`. Vitest fails such a case when it passes, so the fix also removes the option. Do not use the modifier `it.fails`, because `pnpm parity:check` refuses it.
 - After a `Maximum recursive updates exceeded` error, Vue runs no post-flush job in a later case of the file. Put a case that can give that error last in its file.
 - A mock of a composable keeps the contract of the composable. The mock of `useImageLoadingStatus` in `avatar/fallback/AvatarFallback.test.tsx` gives `'idle'` until the mount, as the composable does.
 - When a test expects a `Vase UI:` message, use a console spy that has `mockImplementation`. A spy with no implementation passes the call to the console, and the test fails.

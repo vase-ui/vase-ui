@@ -2,6 +2,7 @@ export * from '../src/common/testUtils';
 export { pasteText } from './clipboard';
 export { createFormDataSpy } from './formData';
 export { createRenderer, waitForLaterMillisecond } from './createRenderer';
+export { isVaporApp } from './testApp';
 export type { Renderable, VaseUIRenderResult } from './createRenderer';
 export { mockRuntimeLocale } from './mockRuntimeLocale';
 export {
