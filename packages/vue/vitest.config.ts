@@ -3,8 +3,6 @@ import vueJsx from '@vitejs/plugin-vue-jsx';
 import { playwright } from '@vitest/browser-playwright';
 import { configDefaults, defineConfig } from 'vitest/config';
 import { renderOnServer } from './test/server/renderOnServer.ts';
-import { probeLog } from './test/server/probe.ts';
-import { collectGarbage } from './test/server/collectGarbage.ts';
 
 const contextOptions = { timezoneId: 'UTC' };
 
@@ -35,7 +33,7 @@ export default defineConfig({
       hooks: 'list',
     },
     retry: 0,
-    setupFiles: ['./test/setup.ts', ...(process.env.PROBE_COLLECT ? ['./test/server/probeCollect.ts'] : [])],
+    setupFiles: ['./test/setup.ts'],
     projects: [
       {
         extends: true,
@@ -56,7 +54,7 @@ export default defineConfig({
             provider: playwright({ contextOptions }),
             headless: true,
             screenshotFailures: false,
-            commands: { renderOnServer, probeLog, collectGarbage },
+            commands: { renderOnServer },
             instances: [
               { browser: 'chromium', name: 'chromium' },
               {
@@ -69,13 +67,11 @@ export default defineConfig({
                 provider: playwright({
                   contextOptions,
                   launchOptions: {
-                    env: { ...process.env, ...(process.env.PROBE_GC_FILE ? { MOZ_GCTIMER: process.env.PROBE_GC_FILE, MOZ_CCTIMER: process.env.PROBE_GC_FILE } : {}), ...(process.env.PROBE_PROFILE ? { MOZ_PROFILER_STARTUP: '1', MOZ_PROFILER_SHUTDOWN: process.env.PROBE_PROFILE, MOZ_PROFILER_STARTUP_FEATURES: process.env.PROBE_PROFILE_FEATURES ?? 'nostacksampling,ipcmessages', MOZ_PROFILER_STARTUP_FILTERS: 'GeckoMain,Socket Thread', MOZ_PROFILER_STARTUP_ENTRIES: '64000000', MOZ_PROFILER_STARTUP_DURATION: process.env.PROBE_PROFILE_DURATION ?? '80' } : {}) },
                     firefoxUserPrefs: {
                       // Vitest sets this preference to `true`. With that value, Firefox sometimes
                       // crashes a page when the page starts. With `false`, Vitest mocks a module by
                       // request interception, not by import map.
                       'dom.multiple_import_maps.enabled': false,
-                      ...(process.env.PROBE_MEM_LOG ? { 'javascript.options.mem.log': true, 'devtools.console.stdout.chrome': true, 'browser.dom.window.dump.enabled': true } : {}),
                       // Without this preference, a test in Firefox has no `Touch` and no
                       // `TouchEvent`. The ported touch cases of Base UI construct a `Touch`.
                       'dom.w3c_touch_events.enabled': 1,

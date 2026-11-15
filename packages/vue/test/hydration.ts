@@ -2,16 +2,13 @@ import { onTestFinished } from 'vitest';
 import { createApp, createSSRApp, nextTick } from 'vue';
 import type { App, Component } from 'vue';
 import { recordVueWarnings, takeReportedMessages } from './reportedMessages';
-import { mark, takeMarks } from './probeMarks';
 
 declare module 'vitest/browser' {
   interface BrowserCommands {
     renderOnServer: (
       file: string,
       props?: Record<string, unknown>,
-      marks?: unknown[],
     ) => Promise<{ html: string; warnings: string[] }>;
-    probeLog: (record: Record<string, unknown>) => Promise<{ nodeAt: number }>;
   }
 }
 
@@ -36,9 +33,7 @@ export async function renderOnServer(
   props?: Record<string, unknown>,
 ): Promise<string> {
   const { commands } = await import('vitest/browser');
-  mark('command-sent', { file });
-  const { html, warnings } = await commands.renderOnServer(file, props, takeMarks());
-  mark('command-received');
+  const { html, warnings } = await commands.renderOnServer(file, props);
 
   if (warnings.length > 0) {
     throw new Error(`The server render of ${file} gave Vue warnings:\n${warnings.join('\n')}`);
@@ -74,7 +69,6 @@ export async function hydrate(
   recordVueWarnings(app);
 
   onTestFinished(() => {
-    mark('hydrate-unmount-start');
     try {
       app.unmount();
     } catch {
@@ -88,15 +82,7 @@ export async function hydrate(
   range.selectNodeContents(container);
   container.append(range.createContextualFragment(serverHtml));
 
-  mark('client-render-done');
   await mountAndSettle(app, container);
-  mark('hydrate-mounted');
-  if ((globalThis as { __PROBE_EXTRA_TRIP__?: boolean }).__PROBE_EXTRA_TRIP__ !== false) {
-    const { commands } = await import('vitest/browser');
-    mark('extra-trip-sent');
-    const { nodeAt } = await commands.probeLog({ phase: 'extra-trip' });
-    mark('extra-trip-received', { nodeAt2: nodeAt });
-  }
   const hydratedDom = serializeChildren(container);
 
   // Vue writes some hydration messages only to the console.
@@ -114,7 +100,6 @@ export async function hydrate(
     throw new Error(`The hydration is not clean.\n\n${problems.join('\n\n')}`);
   }
 
-  mark('hydrate-return');
   return { container };
 }
 
