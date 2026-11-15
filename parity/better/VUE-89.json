@@ -1,0 +1,10 @@
+{
+  "id": "VUE-89",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/toast/createToastManager.ts#L64-L82",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/toast/provider/ToastProvider.tsx#L40-L52",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/toast/store.ts#L346-L374"
+  ],
+  "behavior": "One manager of `Toast.createToastManager()` can have more than one mounted provider. Its `promise` method returns one promise that waits for the promise of each provider, so a handler of the caller handles each rejection. Base UI returns the promise of the last provider only, and the browser reports the rejection of each other provider as unhandled.",
+  "dueWith": "packages/react/src/toast/createToastManager.ts"
+}
