@@ -173,6 +173,7 @@ import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
+import { isInHeldBranch } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import FloatingFocusManager from '../../utils/popups/focus/FloatingFocusManager.vue';
 import { FOCUSABLE_POPUP_PROPS } from '../../utils/popups/popupStoreUtils';
@@ -271,7 +272,7 @@ function measureHeight() {
 // `KeepAlive` takes the popup out of the document, and the popup then has no layout. The parts of
 // the popup that read the layout, or that report to the drawer above, stop while it is
 // deactivated.
-const deactivated = shallowRef(false);
+const deactivated = shallowRef(isInHeldBranch());
 
 let clearFrontmostHeight = NOOP;
 function reportFrontmostHeight() {
