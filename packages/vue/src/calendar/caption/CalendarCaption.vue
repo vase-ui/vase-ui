@@ -51,6 +51,8 @@ const captionId = useRegisteredLabelId(
 );
 const isHydrating = useIsHydrating();
 
+// With no default slot and no `as`, the text is the only child of a static element. Vue allows a
+// text mismatch only for such an element, so the template has a branch of its own for it.
 const text = computed(() => formatPage(month.value, locale.value, props.format));
 
 // A page change mounts a new caption, and a screen reader does not read the text of a live region
@@ -78,7 +80,6 @@ const { element, elementProps } = useRenderElement('div', props, {
 defineExpose({ element });
 </script>
 
-<!-- The text is the only child of the element in the last branch. Vue allows a text mismatch only there. -->
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :text="text" />
   <component :is="as" v-else-if="$slots.default || as !== 'div'" v-bind="elementProps()"

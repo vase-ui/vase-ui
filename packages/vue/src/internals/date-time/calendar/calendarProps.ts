@@ -54,7 +54,8 @@ export interface CalendarBaseProps {
   fixedWeeks?: boolean | undefined;
   /**
    * Whether the days of the months around a month have a button. The default is `false`, and `true`
-   * with `broadcastCalendar`. A press on such a day shows its month.
+   * with `broadcastCalendar`. Two months of the grid that share a day show it one time, in the
+   * month of the day. A press on a day that no month of the grid owns shows its month.
    */
   showOutsideDays?: boolean | undefined;
   /**
@@ -83,8 +84,8 @@ export interface CalendarBaseProps {
   broadcastCalendar?: boolean | undefined;
   /**
    * Shows one page of whole weeks, `{ weeks: 2 }`, or one row of days, `{ days: 5 }`, in place of
-   * a month. The navigation buttons move by the duration, and the page follows the focused day.
-   * `numberOfMonths` and `fixedWeeks` do not apply.
+   * a month. The navigation buttons move by the duration. A key that moves the focus out of the page
+   * shows the page that holds the day. `numberOfMonths` and `fixedWeeks` do not apply.
    */
   visibleDuration?: VisibleDuration | undefined;
   /**

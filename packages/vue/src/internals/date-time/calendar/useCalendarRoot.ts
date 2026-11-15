@@ -69,9 +69,9 @@ export interface CalendarRootController {
   navigationDirection: Readonly<Ref<NavigationDirection>>;
   /** What one press of a navigation button moves: months, weeks or days. */
   navigationStep: ComputedRef<{ unit: 'months' | 'weeks' | 'days'; count: number }>;
-  /** Whether a page before the first one can show a day that the user can reach. */
+  /** Whether `minDate` allows a page before the first one. */
   canPrevious: ComputedRef<boolean>;
-  /** Whether a page after the last one can show a day that the user can reach. */
+  /** Whether `maxDate` allows a page after the last one. */
   canNext: ComputedRef<boolean>;
   /**
    * Moves the pages by one step: by one month, by `numberOfMonths` months with `pagedNavigation`,
@@ -159,8 +159,8 @@ export function useCalendarRoot({
       props.timeZone ?? (first && isKind(first, 'zonedDateTime') ? first.timeZoneId : undefined)
     );
   });
-  // The clock is read in `setup`, and again when the month or the time zone changes. A page that
-  // stays open for days then gets the right day when the user moves on.
+  // The clock is read in `setup`, and again when the first page or the time zone changes. A page
+  // that stays open for days then gets the right day when the user moves on.
   const clockDay = shallowRef(today(timeZone.value));
   const todayDate = computed(() =>
     props.today === undefined ? clockDay.value : toPlainDate(props.today),
@@ -192,10 +192,6 @@ export function useCalendarRoot({
     default: () => props.defaultFocusedDate ?? null,
     name: 'Calendar',
     state: 'focusedDate',
-  });
-
-  watch([visibleMonth, timeZone], () => {
-    clockDay.value = today(timeZone.value);
   });
 
   // The first day of the page of a duration. It stays in `visibleMonth`: a month that the
@@ -231,6 +227,10 @@ export function useCalendarRoot({
         );
   });
   const weekdays = computed(() => pages.value[0]?.weekdays ?? []);
+
+  watch([() => pages.value[0]?.first.toString(), timeZone], () => {
+    clockDay.value = today(timeZone.value);
+  });
 
   const { navigationDirection, renderedPages, isLeaving, finishLeaving } = usePageTransition(
     pages,
@@ -312,8 +312,8 @@ export function useCalendarRoot({
     return true;
   }
 
-  // A Gregorian day belongs to the broadcast month that holds its week, and a day before the first
-  // Monday of the next month belongs to the month before that Monday.
+  // A broadcast month ends on the Sunday before the Monday of the week that holds the first day of
+  // the next month. The days from that Monday belong to the next month.
   function monthOfDate(date: Temporal.PlainDate) {
     const month = date.toPlainYearMonth();
     if (props.broadcastCalendar !== true) {

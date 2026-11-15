@@ -48,6 +48,8 @@ const state = computed<CalendarWeekNumberState>(() => ({
   ...rootState.value,
   weekNumber: getWeekNumber(props.week),
 }));
+// With no default slot and no `as`, the text is the only child of a static element. Vue allows a
+// text mismatch only for such an element, so the template has a branch of its own for it.
 const text = computed(() => formatNumber(state.value.weekNumber, locale.value));
 
 // The default mapping writes `data-weeknumber`.
@@ -73,7 +75,6 @@ const { element, elementProps } = useRenderElement('th', props, {
 defineExpose({ element });
 </script>
 
-<!-- The text is the only child of the element in the last branch. Vue allows a text mismatch only there. -->
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :text="text" />
   <component :is="as" v-else-if="$slots.default || as !== 'th'" v-bind="elementProps()"
