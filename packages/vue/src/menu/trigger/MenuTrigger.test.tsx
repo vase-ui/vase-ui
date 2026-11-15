@@ -5,6 +5,7 @@ import * as Menu from '../index.parts';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import { Menubar } from '@vase-ui/vue/menubar';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -1356,40 +1357,32 @@ describe('<Menu.Trigger />', () => {
     });
 
     it('has no aria-controls while the popup mounts in a branch that KeepAlive holds', async () => {
-      const hasPopup = shallowRef(false);
-      const Branch = defineComponent({
-        setup: () => () =>
-          hasPopup.value ? (
-            <Menu.Popup>
-              <Menu.Item>Item</Menu.Item>
-            </Menu.Popup>
-          ) : null,
-      });
-      const Other = defineComponent({ setup: () => () => <span /> });
-      const visible = shallowRef(true);
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
+        () => (
+          <Menu.Popup>
+            <Menu.Item>Item</Menu.Item>
+          </Menu.Popup>
+        ),
+        { renderBranch: (part) => part },
+      );
       await render(() => (
         <Menu.Root defaultOpen>
           <Menu.Trigger>Open</Menu.Trigger>
           <Menu.Portal>
             <Menu.Positioner>
-              <KeepAlive>
-                {visible.value ? <Branch key="branch" /> : <Other key="other" />}
-              </KeepAlive>
+              <HeldBranch />
             </Menu.Positioner>
           </Menu.Portal>
         </Menu.Root>
       ));
-      visible.value = false;
-      await flushMicrotasks();
-      hasPopup.value = true;
-      await flushMicrotasks();
+
+      await mountWhileHeld();
 
       const trigger = screen.getByRole('button', { name: 'Open' });
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
       expect(trigger).not.toHaveAttribute('aria-controls');
 
-      visible.value = true;
-      await flushMicrotasks();
+      await show();
 
       const popup = screen.getByRole('menu');
       expect(popup.id).not.toBe('');
@@ -1397,43 +1390,35 @@ describe('<Menu.Trigger />', () => {
     });
 
     it('names the popup while the list mounts in a branch that KeepAlive holds', async () => {
-      const hasList = shallowRef(false);
-      const Branch = defineComponent({
-        setup: () => () =>
-          hasList.value ? (
-            <Menu.List data-testid="list">
-              <Menu.Item>Item</Menu.Item>
-            </Menu.List>
-          ) : null,
-      });
-      const Other = defineComponent({ setup: () => () => <span /> });
-      const visible = shallowRef(true);
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
+        () => (
+          <Menu.List data-testid="list">
+            <Menu.Item>Item</Menu.Item>
+          </Menu.List>
+        ),
+        { renderBranch: (part) => part },
+      );
       await render(() => (
         <Menu.Root defaultOpen>
           <Menu.Trigger>Open</Menu.Trigger>
           <Menu.Portal>
             <Menu.Positioner>
               <Menu.Popup data-testid="popup">
-                <KeepAlive>
-                  {visible.value ? <Branch key="branch" /> : <Other key="other" />}
-                </KeepAlive>
+                <HeldBranch />
               </Menu.Popup>
             </Menu.Positioner>
           </Menu.Portal>
         </Menu.Root>
       ));
-      visible.value = false;
-      await flushMicrotasks();
-      hasList.value = true;
-      await flushMicrotasks();
+
+      await mountWhileHeld();
 
       const trigger = screen.getByRole('button', { name: 'Open' });
       const popup = screen.getByTestId('popup');
       expect(popup.id).not.toBe('');
       expect(trigger).toHaveAttribute('aria-controls', popup.id);
 
-      visible.value = true;
-      await flushMicrotasks();
+      await show();
 
       const list = screen.getByTestId('list');
       expect(list.id).not.toBe('');

@@ -3,6 +3,7 @@ import { defineComponent, KeepAlive, nextTick, onMounted, shallowRef } from 'vue
 import type { PropType } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -986,35 +987,29 @@ describe('<NavigationMenu.Trigger />', () => {
     });
 
     it('has no aria-controls while the popup mounts in a branch that KeepAlive holds', async () => {
-      const hasPopup = shallowRef(false);
-      const Branch = defineComponent({
-        setup: () => () =>
-          hasPopup.value ? (
-            <NavigationMenu.Popup data-testid="popup">
-              <NavigationMenu.Viewport />
-            </NavigationMenu.Popup>
-          ) : null,
-      });
-      const Other = defineComponent({ setup: () => () => <span /> });
-      const visible = shallowRef(true);
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
+        () => (
+          <NavigationMenu.Popup data-testid="popup">
+            <NavigationMenu.Viewport />
+          </NavigationMenu.Popup>
+        ),
+        { renderBranch: (part) => part },
+      );
       await renderMenu(() => (
         <NavigationMenu.Portal>
           <NavigationMenu.Positioner>
-            <KeepAlive>{visible.value ? <Branch key="branch" /> : <Other key="other" />}</KeepAlive>
+            <HeldBranch />
           </NavigationMenu.Positioner>
         </NavigationMenu.Portal>
       ));
-      visible.value = false;
-      await flushMicrotasks();
-      hasPopup.value = true;
-      await flushMicrotasks();
+
+      await mountWhileHeld();
 
       const trigger = screen.getByTestId('trigger');
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
       expect(trigger).not.toHaveAttribute('aria-controls');
 
-      visible.value = true;
-      await flushMicrotasks();
+      await show();
 
       const popup = screen.getByTestId('popup');
       expect(popup.id).not.toBe('');

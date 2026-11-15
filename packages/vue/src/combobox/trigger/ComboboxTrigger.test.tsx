@@ -1186,40 +1186,32 @@ describe('<Combobox.Trigger />', () => {
       });
 
       it('has no aria-controls while the popup mounts in a branch that KeepAlive holds', async () => {
-        const hasPopup = shallowRef(false);
-        const Branch = defineComponent({
-          setup: () => () =>
-            hasPopup.value ? (
-              <Combobox.Popup data-testid="popup">
-                <Combobox.Input />
-              </Combobox.Popup>
-            ) : null,
-        });
-        const Other = defineComponent({ setup: () => () => <span /> });
-        const visible = shallowRef(true);
+        const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
+          () => (
+            <Combobox.Popup data-testid="popup">
+              <Combobox.Input />
+            </Combobox.Popup>
+          ),
+          { renderBranch: (part) => part },
+        );
         await render(() => (
           <Combobox.Root defaultOpen>
             <Combobox.Trigger data-testid="trigger" />
             <Combobox.Portal>
               <Combobox.Positioner>
-                <KeepAlive>
-                  {visible.value ? <Branch key="branch" /> : <Other key="other" />}
-                </KeepAlive>
+                <HeldBranch />
               </Combobox.Positioner>
             </Combobox.Portal>
           </Combobox.Root>
         ));
-        visible.value = false;
-        await flushMicrotasks();
-        hasPopup.value = true;
-        await flushMicrotasks();
+
+        await mountWhileHeld();
 
         const trigger = screen.getByTestId('trigger');
         expect(trigger).toHaveAttribute('aria-expanded', 'true');
         expect(trigger).not.toHaveAttribute('aria-controls');
 
-        visible.value = true;
-        await flushMicrotasks();
+        await show();
 
         const popup = screen.getByTestId('popup');
         expect(popup.id).not.toBe('');

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { KeepAlive, defineComponent, shallowRef } from 'vue';
 import { Dialog } from '@vase-ui/vue/dialog';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -321,31 +322,26 @@ describe('<Dialog.Trigger />', () => {
     });
 
     it('has no aria-controls while the popup mounts in a branch that KeepAlive holds', async () => {
-      const hasPopup = shallowRef(false);
-      const Branch = defineComponent({
-        setup: () => () => (hasPopup.value ? <Dialog.Popup>popup</Dialog.Popup> : null),
-      });
-      const Other = defineComponent({ setup: () => () => <span /> });
-      const visible = shallowRef(true);
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
+        () => <Dialog.Popup>popup</Dialog.Popup>,
+        { renderBranch: (part) => part },
+      );
       await render(() => (
         <Dialog.Root defaultOpen modal={false}>
           <Dialog.Trigger>Open</Dialog.Trigger>
           <Dialog.Portal>
-            <KeepAlive>{visible.value ? <Branch key="branch" /> : <Other key="other" />}</KeepAlive>
+            <HeldBranch />
           </Dialog.Portal>
         </Dialog.Root>
       ));
-      visible.value = false;
-      await flushMicrotasks();
-      hasPopup.value = true;
-      await flushMicrotasks();
+
+      await mountWhileHeld();
 
       const trigger = screen.getByRole('button', { name: 'Open' });
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
       expect(trigger).not.toHaveAttribute('aria-controls');
 
-      visible.value = true;
-      await flushMicrotasks();
+      await show();
 
       const popup = screen.getByRole('dialog');
       expect(popup.id).not.toBe('');

@@ -3,6 +3,7 @@ import { userEvent } from 'vitest/browser';
 import { KeepAlive, defineComponent, nextTick, shallowRef } from 'vue';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   enterWithMouse,
@@ -719,35 +720,28 @@ describe('<Popover.Trigger />', () => {
     });
 
     it('has no aria-controls while the popup mounts in a branch that KeepAlive holds', async () => {
-      const hasPopup = shallowRef(false);
-      const Branch = defineComponent({
-        setup: () => () => (hasPopup.value ? <Popover.Popup>popup</Popover.Popup> : null),
-      });
-      const Other = defineComponent({ setup: () => () => <span /> });
-      const visible = shallowRef(true);
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
+        () => <Popover.Popup>popup</Popover.Popup>,
+        { renderBranch: (part) => part },
+      );
       await render(() => (
         <Popover.Root defaultOpen>
           <Popover.Trigger>Open</Popover.Trigger>
           <Popover.Portal>
             <Popover.Positioner>
-              <KeepAlive>
-                {visible.value ? <Branch key="branch" /> : <Other key="other" />}
-              </KeepAlive>
+              <HeldBranch />
             </Popover.Positioner>
           </Popover.Portal>
         </Popover.Root>
       ));
-      visible.value = false;
-      await flushMicrotasks();
-      hasPopup.value = true;
-      await flushMicrotasks();
+
+      await mountWhileHeld();
 
       const trigger = screen.getByRole('button', { name: 'Open' });
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
       expect(trigger).not.toHaveAttribute('aria-controls');
 
-      visible.value = true;
-      await flushMicrotasks();
+      await show();
 
       const popup = screen.getByRole('dialog');
       expect(popup.id).not.toBe('');

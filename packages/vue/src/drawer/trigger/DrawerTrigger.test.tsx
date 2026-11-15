@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { KeepAlive, defineComponent, shallowRef } from 'vue';
-import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
+import { createHeldBranch, createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
 import * as Dialog from '../../dialog/index.parts';
 import type { HTMLProps } from '../../internals/types';
 import * as Drawer from '../index.parts';
@@ -109,35 +109,28 @@ describe('<Drawer.Trigger />', () => {
     });
 
     it('has no aria-controls while the popup mounts in a branch that KeepAlive holds', async () => {
-      const hasPopup = shallowRef(false);
-      const Branch = defineComponent({
-        setup: () => () => (hasPopup.value ? <Drawer.Popup>popup</Drawer.Popup> : null),
-      });
-      const Other = defineComponent({ setup: () => () => <span /> });
-      const visible = shallowRef(true);
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
+        () => <Drawer.Popup>popup</Drawer.Popup>,
+        { renderBranch: (part) => part },
+      );
       await render(() => (
         <Drawer.Root defaultOpen modal={false}>
           <Drawer.Trigger>Open</Drawer.Trigger>
           <Drawer.Portal>
             <Drawer.Viewport>
-              <KeepAlive>
-                {visible.value ? <Branch key="branch" /> : <Other key="other" />}
-              </KeepAlive>
+              <HeldBranch />
             </Drawer.Viewport>
           </Drawer.Portal>
         </Drawer.Root>
       ));
-      visible.value = false;
-      await flushMicrotasks();
-      hasPopup.value = true;
-      await flushMicrotasks();
+
+      await mountWhileHeld();
 
       const trigger = screen.getByRole('button', { name: 'Open' });
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
       expect(trigger).not.toHaveAttribute('aria-controls');
 
-      visible.value = true;
-      await flushMicrotasks();
+      await show();
 
       const popup = screen.getByRole('dialog');
       expect(popup.id).not.toBe('');
