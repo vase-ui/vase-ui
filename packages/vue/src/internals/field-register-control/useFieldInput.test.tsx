@@ -148,6 +148,43 @@ describe('useFieldInput', () => {
     },
   );
 
+  it('the field validates the input of the last show when it comes before an input of an earlier show', async () => {
+    const requiredBranch = createHeldBranch(() => <Field.Control key="required" required />, {
+      mounted: true,
+    });
+    const filledBranch = createHeldBranch(
+      () => <Field.Control key="filled" defaultValue="filled" />,
+      { mounted: true },
+    );
+    const submit = await renderForm(() => [
+      <requiredBranch.HeldBranch key="required" />,
+      <filledBranch.HeldBranch key="filled" />,
+    ]);
+
+    await requiredBranch.hide();
+    await filledBranch.hide();
+    await filledBranch.show();
+    await requiredBranch.show();
+
+    expect(await submit()).toEqual({ submitted: 0, invalid: true });
+  });
+
+  it('the field does not validate a control that mounted in a show after KeepAlive holds it again', async () => {
+    const { HeldBranch, hide, mountInActivation } = createHeldBranch(() => (
+      <Field.Control key="new" required />
+    ));
+    const submit = await renderForm(() => [
+      <Field.Control key="shown" defaultValue="shown" />,
+      <HeldBranch key="branch" />,
+    ]);
+
+    await hide();
+    await mountInActivation({ fromProp: true });
+    await hide();
+
+    expect(await submit()).toEqual({ submitted: 1, invalid: false });
+  });
+
   it('a held control whose element changes gives no input', async () => {
     const visible = shallowRef(true);
     const tag = shallowRef('input');
