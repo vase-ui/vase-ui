@@ -176,6 +176,8 @@ describe('<Calendar.Months />', () => {
       const { user } = await renderCalendar({ numberOfMonths: 2 });
       const indexes = () => [...months()].map((month) => month.getAttribute('data-index'));
       expect(indexes()).toEqual(['0', '1']);
+      // The part reads the animations of each month in the frame after the mount.
+      await nextFrame();
 
       const animations = await nextAnimationsRead(months()[0]!, {
         action: () => user.click(screen.getByTestId('next')),
@@ -212,7 +214,9 @@ describe('<Calendar.Months />', () => {
         .getAllByRole('columnheader')
         .map((header) => header.getAttribute('abbr'));
       expect(headers[0]).toBe(
-        new DateTimeFormat('fr', { weekday: 'long' }).format(Date.parse('2026-11-09')),
+        new DateTimeFormat('fr', { weekday: 'long', timeZone: 'UTC' }).format(
+          Date.parse('2026-11-09'),
+        ),
       );
       expect(screen.getByRole('group')).toHaveAttribute('data-navigation-direction', 'none');
       expect(months()).toHaveLength(1);
