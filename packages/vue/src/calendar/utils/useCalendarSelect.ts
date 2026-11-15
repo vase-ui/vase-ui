@@ -8,6 +8,8 @@ import type { CalendarSelectOption } from './CalendarSelectContext';
 
 interface UseCalendarSelectParameters {
   root: CalendarRootContext;
+  /** Gives the element of the select. The part makes it after this call. */
+  getSelect: () => HTMLSelectElement | null;
   /** The options of the select for a page. */
   getOptions: (page: CalendarPage) => CalendarSelectOption[];
   /** The `value` of the option that a page shows. */
@@ -22,6 +24,7 @@ interface UseCalendarSelectParameters {
  */
 export function useCalendarSelect({
   root,
+  getSelect,
   getOptions,
   getValue,
   getMonth,
@@ -43,9 +46,9 @@ export function useCalendarSelect({
   provide(CalendarSelectContext, { options, selected });
 
   function onChange(event: Event) {
-    const select = event.currentTarget;
+    const select = getSelect();
     const current = page.value;
-    if (!(select instanceof HTMLSelectElement) || !current) {
+    if (!select || !current) {
       return;
     }
     root.showMonth(getMonth(current, select.value), pageIndex.value, event);

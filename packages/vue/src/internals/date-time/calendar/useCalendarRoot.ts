@@ -132,7 +132,9 @@ export function useCalendarRoot({
       ? 1
       : (props.firstDayOfWeek ?? weekData.value.firstDay),
   );
-  const minimalDays = computed(() => props.firstWeekContainsDate ?? (firstDay.value === 1 ? 4 : 1));
+  const minimalDays = computed(() =>
+    props.isoWeek === true ? 4 : (props.firstWeekContainsDate ?? (firstDay.value === 1 ? 4 : 1)),
+  );
   const weekend = computed(() => weekData.value.weekend);
   const monthCount = computed(() => Math.max(1, Math.floor(props.numberOfMonths ?? 1)));
   // A duration has at least one week or one day.
@@ -233,8 +235,7 @@ export function useCalendarRoot({
     (next, previous) => {
       if (
         next &&
-        previous &&
-        next.yearMonth.calendarId === previous.yearMonth.calendarId &&
+        next.yearMonth.calendarId === previous?.yearMonth.calendarId &&
         compareDates(next.first, previous.first) !== 0
       ) {
         navigationDirection.value =

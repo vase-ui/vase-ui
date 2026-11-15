@@ -46,6 +46,7 @@ const { state, locale } = root;
 
 const { onChange } = useCalendarSelect({
   root,
+  getSelect: () => element.value,
   getOptions({ yearMonth }) {
     const { minDate, maxDate } = root.rules.value;
     const min = minDate && root.toGridDate(minDate).toPlainYearMonth();
@@ -76,18 +77,22 @@ const { onChange } = useCalendarSelect({
 
 const label = computed(() => formatFieldName('month', locale.value));
 
-const { element, elementProps } = useRenderElement('select', props, {
-  state,
-  children: true,
-  props: (attrs) => [
-    {
-      'aria-label': label.value,
-      disabled: state.value.disabled ? true : undefined,
-      onChange,
-    },
-    attrs,
-  ],
-});
+const { element, elementProps } = useRenderElement<CalendarState, HTMLSelectElement>(
+  'select',
+  props,
+  {
+    state,
+    children: true,
+    props: (attrs) => [
+      {
+        'aria-label': label.value,
+        disabled: state.value.disabled ? true : undefined,
+        onChange,
+      },
+      attrs,
+    ],
+  },
+);
 
 defineExpose({ element });
 </script>

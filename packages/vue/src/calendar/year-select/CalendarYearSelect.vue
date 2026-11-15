@@ -16,7 +16,8 @@ export interface CalendarYearSelectProps
   format?: 'numeric' | '2-digit' | undefined;
   /**
    * The order of the years in the options. The years run from the year of `minDate` to the year of
-   * `maxDate`. A limit that the calendar does not have is 100 years from today.
+   * `maxDate`. A limit that the calendar does not have is 100 years from today. The year of the
+   * page is always an option.
    * @default 'asc'
    */
   order?: 'asc' | 'desc' | undefined;
@@ -51,6 +52,7 @@ const { state, locale } = root;
 
 const { onChange } = useCalendarSelect({
   root,
+  getSelect: () => element.value,
   getOptions({ yearMonth }) {
     const { minDate, maxDate, today } = root.rules.value;
     const todayYear = root.toGridDate(today).year;
@@ -84,18 +86,22 @@ const { onChange } = useCalendarSelect({
 
 const label = computed(() => formatFieldName('year', locale.value));
 
-const { element, elementProps } = useRenderElement('select', props, {
-  state,
-  children: true,
-  props: (attrs) => [
-    {
-      'aria-label': label.value,
-      disabled: state.value.disabled ? true : undefined,
-      onChange,
-    },
-    attrs,
-  ],
-});
+const { element, elementProps } = useRenderElement<CalendarState, HTMLSelectElement>(
+  'select',
+  props,
+  {
+    state,
+    children: true,
+    props: (attrs) => [
+      {
+        'aria-label': label.value,
+        disabled: state.value.disabled ? true : undefined,
+        onChange,
+      },
+      attrs,
+    ],
+  },
+);
 
 defineExpose({ element });
 </script>

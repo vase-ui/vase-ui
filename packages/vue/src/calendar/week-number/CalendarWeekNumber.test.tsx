@@ -10,10 +10,6 @@ const day = (text: string) => Temporal.PlainDate.from(text);
 // 2026-11-14 is a Saturday. With `en-US`, the weeks start on Sunday.
 const today = () => day('2026-11-14');
 
-function format(options: Intl.DateTimeFormatOptions, iso: string, locale = 'en-US') {
-  return new Intl.DateTimeFormat(locale, { timeZone: 'UTC', ...options }).format(Date.parse(iso));
-}
-
 // The page of November 2026 with weeks that start on Sunday: its first week is 2026-11-01.
 const week = () => getMonthPage(Temporal.PlainYearMonth.from('2026-11'), 7).weeks[0]!;
 
@@ -81,6 +77,11 @@ describe('<Calendar.WeekNumber />', () => {
 
   it.each([
     { name: 'isoWeek gives week 53', props: { isoWeek: true }, last: '53' },
+    {
+      name: 'isoWeek over the other props',
+      props: { isoWeek: true, firstDayOfWeek: 7, firstWeekContainsDate: 1 },
+      last: '53',
+    },
     {
       name: 'Monday and firstWeekContainsDate 1',
       props: { firstDayOfWeek: 1, firstWeekContainsDate: 1 },

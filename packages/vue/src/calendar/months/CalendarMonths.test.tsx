@@ -172,6 +172,25 @@ describe('<Calendar.Months />', () => {
       });
     });
 
+    it('gives the month that leaves the index -1, and the month that stays its new index', async () => {
+      const { user } = await renderCalendar({ numberOfMonths: 2 });
+      const indexes = () => [...months()].map((month) => month.getAttribute('data-index'));
+      expect(indexes()).toEqual(['0', '1']);
+
+      const animations = await nextAnimationsRead(months()[0]!, {
+        action: () => user.click(screen.getByTestId('next')),
+      });
+
+      expect(indexes()).toEqual(['-1', '0', '1']);
+
+      for (const animation of animations) {
+        animation.finish();
+      }
+      await waitFor(() => {
+        expect(indexes()).toEqual(['0', '1']);
+      });
+    });
+
     it('goes at once when it has no animation', async () => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = true;
       const { user } = await renderCalendar();

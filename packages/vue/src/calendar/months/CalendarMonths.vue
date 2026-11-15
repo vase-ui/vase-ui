@@ -36,7 +36,8 @@ const props = withDefaults(defineProps<CalendarMonthsProps>(), { as: 'div' });
 
 defineSlots<{
   /**
-   * Renders one month of the calendar. The `#render` slot does not render it.
+   * Renders one month of the calendar. The `#render` slot does not render it. `index` is `-1` for a
+   * month that leaves.
    */
   month(props: { month: CalendarPage; index: number }): unknown;
   render: ComponentRenderFn<HTMLProps, CalendarMonthsState>;
@@ -70,6 +71,11 @@ const rendered = computed(() =>
   [...pages.value, ...leaving.value].toSorted((a, b) => compareDates(a.first, b.first)),
 );
 
+// A month that leaves has no place in the months of the calendar.
+function indexOf(page: CalendarPage) {
+  return pages.value.findIndex((other) => getPageKey(other) === getPageKey(page));
+}
+
 provide(CalendarMonthsContext, {
   isLeaving: (page) => leaving.value.some((left) => getPageKey(left) === getPageKey(page)),
   finishLeaving(page) {
@@ -91,5 +97,5 @@ defineExpose({ element });
 <!-- prettier-ignore -->
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"><template v-for="(month, index) in rendered" :key="getPageKey(month)"><slot name="month" :month="month" :index="index" /></template></component>
+  <component :is="as" v-else v-bind="elementProps()"><template v-for="month in rendered" :key="getPageKey(month)"><slot name="month" :month="month" :index="indexOf(month)" /></template></component>
 </template>

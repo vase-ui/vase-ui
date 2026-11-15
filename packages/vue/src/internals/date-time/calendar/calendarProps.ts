@@ -15,14 +15,15 @@ export type CalendarChangeEventDetails = VaseUIChangeEventDetails<CalendarChange
 /** The props that each calendar root has, whatever its selection. */
 export interface CalendarBaseProps {
   /**
-   * The month that the grid shows. When the grid has another calendar than this month, the grid
-   * shows the month that holds the first day of this month.
+   * The month that the grid shows. With `numberOfMonths`, it is the first month. With
+   * `visibleDuration`, it is the month of the first day of the page. When the grid has another
+   * calendar than this month, the grid shows the month that holds the first day of this month.
    * Use it when controlled.
    */
   month?: Temporal.PlainYearMonth | undefined;
   /**
-   * The month that the grid shows when it first renders. With no value, the month of the focused
-   * day, else of the selected day, else of today.
+   * The month that the grid shows when it first renders, as `month` describes it. With no value, the
+   * month of the focused day, else of the selected day, else of today.
    */
   defaultMonth?: Temporal.PlainYearMonth | undefined;
   /**
@@ -62,7 +63,8 @@ export interface CalendarBaseProps {
    */
   firstDayOfWeek?: DayOfWeek | undefined;
   /**
-   * Whether the weeks start on Monday and have their ISO 8601 number.
+   * Whether the weeks follow ISO 8601: they start on Monday and have their ISO number.
+   * `firstDayOfWeek` and `firstWeekContainsDate` do not apply.
    * @default false
    */
   isoWeek?: boolean | undefined;
