@@ -55,9 +55,9 @@ function getClipPath(element: Element) {
 }
 
 // The `ResizeObserver` of `autoUpdate` notifies in the first frame after the start. Floating UI
-// then observes the backdrop again in a frame callback, and that observation notifies in the second
-// frame. Each notification measures the cutout. A move before the third frame thus passes also
-// when the observer of that move does not work.
+// then observes the backdrop again in a frame callback. That observation notifies in the second
+// frame, after the frame callback of the case. Each notification measures the cutout, so a move
+// before the second notification passes also when the observer of that move does not work.
 async function waitForFirstNotifications() {
   await waitSingleFrame();
   await waitSingleFrame();
@@ -218,7 +218,6 @@ describe('InternalBackdrop', () => {
         <InternalBackdrop data-testid="backdrop" cutout={cutout.value} />
       ));
       const backdrop = getByTestId('backdrop');
-      await waitForFirstNotifications();
 
       cutout.value = second;
       await nextTick();
@@ -226,6 +225,7 @@ describe('InternalBackdrop', () => {
       expect(startSpy).toHaveBeenCalledTimes(2);
       expect(stopSpy).toHaveBeenCalledTimes(1);
 
+      await waitForFirstNotifications();
       second.style.top = '260px';
       const after = getClipPath(second);
       expect(after).not.toBe(getClipPath(first));
