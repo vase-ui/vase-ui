@@ -1,0 +1,8 @@
+{
+  "id": "VUE-76",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/toast/viewport/ToastViewport.tsx#L45-L102"
+  ],
+  "behavior": "A viewport that mounts while the page is hidden starts with the timers paused. The timers start when the page shows and has the focus. Base UI starts them at once, so a toast that a page in a background tab adds can close before the user sees it.",
+  "dueWith": "packages/react/src/toast/viewport/ToastViewport.tsx"
+}

@@ -43,6 +43,8 @@ Bind the value with `v-model:value`. The root emits `valueChange` with the new v
 
 With no `locale` prop, the server HTML has the text in the format of `en-US`. When the root is mounted, the text changes to the format of the locale of the browser. Give the root a `locale` prop to get the same text on the server and in the browser.
 
+Text that a visitor types, or that the browser fills, before the page hydrates stays in `NumberField.Input` when the field accepts its characters. After the hydration, the root emits `valueChange` and `update:value` with the number of that text. When the visitor left the input before the page hydrated, the input then also gets `change`, `blur` and `focusout`, and the root emits `valueCommitted`.
+
 `NumberField.ScrubAreaCursor` renders its element in `<body>`, and only while the user scrubs. It does not render for a touch, in a WebKit browser such as Safari, or after `requestPointerLock()` throws or rejects.
 
 ## API reference
