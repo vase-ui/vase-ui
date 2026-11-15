@@ -5,7 +5,7 @@ import type {
   CalendarChangeEventDetails,
   CalendarChangeEventReason,
 } from '../../internals/date-time/calendar/calendarProps';
-import type { NavigationDirection } from '../../internals/date-time/calendar/useCalendarRoot';
+import type { NavigationDirection } from '../../internals/date-time/calendar/usePageTransition';
 import type { DateValue } from '../../internals/date-time/temporal';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 

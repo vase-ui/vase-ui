@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, onTestFinished } from 'vitest';
 import {
   createRenderer,
   describeConformance,
@@ -17,6 +17,14 @@ const today = () => day('2026-11-14');
 
 function format(options: Intl.DateTimeFormatOptions, iso: string, locale = 'en-US') {
   return new Intl.DateTimeFormat(locale, { timeZone: 'UTC', ...options }).format(Date.parse(iso));
+}
+
+function nextFrame() {
+  return new Promise<void>((resolve) => {
+    requestAnimationFrame(() => {
+      resolve();
+    });
+  });
 }
 
 describe('<Calendar.Caption />', () => {
@@ -89,19 +97,59 @@ describe('<Calendar.Caption />', () => {
     );
   });
 
-  it('gives a new caption a change of its text after a page change, and keeps the first one', async () => {
-    const { user } = await renderCalendar();
-    expect(caption().textContent).toBe(format({ month: 'long', year: 'numeric' }, '2026-11-14'));
+  describe('the live region', () => {
+    // The mark is in the text for a short time, so a record of the changes of the text shows it.
+    function recordTextChanges(container: HTMLElement) {
+      const changes: { text: string; caption: Element | null | undefined }[] = [];
+      const observer = new MutationObserver((records) => {
+        for (const record of records) {
+          if (record.type === 'characterData') {
+            changes.push({
+              text: (record.target as CharacterData).data,
+              caption: record.target.parentElement,
+            });
+          }
+        }
+      });
+      observer.observe(container, { characterData: true, subtree: true });
+      onTestFinished(() => {
+        observer.disconnect();
+      });
+      return changes;
+    }
 
-    await user.click(screen.getByTestId('next'));
+    it('gives the caption of a new month a change of its text, and not the caption of the first month', async () => {
+      const { user, container } = await renderCalendar();
+      const changes = recordTextChanges(container);
+      await nextFrame();
+      expect(changes).toEqual([]);
 
-    // The caption is in a new month, and its text has the mark of the mutation of a live region.
-    await waitFor(() => {
-      expect(caption().textContent).toContain(
-        format({ month: 'long', year: 'numeric' }, '2026-12-01'),
-      );
+      await user.click(screen.getByTestId('next'));
+      // The mark goes after a time, so the end of the record is the state that stays.
+      await waitFor(() => {
+        expect(changes).toHaveLength(2);
+      });
+
+      const december = format({ month: 'long', year: 'numeric' }, '2026-12-01');
+      expect(changes.map(({ text }) => text)).toEqual([`${december}\u2060`, december]);
+      expect(changes[0]!.caption).toBe(caption());
     });
-    expect(caption().textContent).toMatch(/\u2060$/);
+
+    it('does not change the text of a caption that stays', async () => {
+      const { user, container } = await renderCalendar({ numberOfMonths: 2 });
+      const changes = recordTextChanges(container);
+      await nextFrame();
+
+      await user.click(screen.getByTestId('next'));
+      await waitFor(() => {
+        expect(changes).toHaveLength(2);
+      });
+
+      // The calendar shows December and January. Only the caption of January is new.
+      const captions = [...document.querySelectorAll('[aria-live]')];
+      expect(captions).toHaveLength(2);
+      expect(changes.every(({ caption }) => caption === captions[1])).toBe(true);
+    });
   });
 
   // This case is the last of the file. In Vue 3.5.12, a `setup` that throws leaves the current

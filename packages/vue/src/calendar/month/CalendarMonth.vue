@@ -40,7 +40,6 @@ import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useTransitionStatus } from '../../internals/useTransitionStatus';
 import { useLabelId } from '../../utils/useRegisteredLabelId';
-import { useCalendarMonthsContext } from '../months/CalendarMonthsContext';
 import { useCalendarRootContext } from '../root/CalendarRootContext';
 import { CalendarMonthContext } from './CalendarMonthContext';
 import * as CalendarMonthDataAttributes from './CalendarMonthDataAttributes';
@@ -54,12 +53,18 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, CalendarMonthState>;
 }>();
 
-const { state: rootState, pages, locale, navigationDirection } = useCalendarRootContext();
-const monthsContext = useCalendarMonthsContext();
-const { defaultLabelId, setLabelId, getAriaLabelledBy } = useLabelId();
+const {
+  state: rootState,
+  pages,
+  locale,
+  navigationDirection,
+  isLeaving: isPageLeaving,
+  finishLeaving,
+} = useCalendarRootContext();
+const { labelRoot, getAriaLabelledBy } = useLabelId(() => element.value);
 
 const month = computed(() => props.month);
-const isLeaving = computed(() => monthsContext?.isLeaving(props.month) ?? false);
+const isLeaving = computed(() => isPageLeaving(props.month));
 
 // A month that mounts after the page changed starts its enter transition. The first render of a
 // calendar has none.
@@ -81,8 +86,7 @@ provide(CalendarMonthContext, {
   month,
   text: computed(() => formatPage(props.month, locale.value)),
   isLeaving,
-  defaultLabelId,
-  setLabelId,
+  labelRoot,
   getAriaLabelledBy,
 });
 
@@ -103,7 +107,7 @@ useOpenChangeComplete({
   ref: element,
   onComplete() {
     if (isLeaving.value) {
-      monthsContext?.finishLeaving(props.month);
+      finishLeaving(props.month);
     }
   },
 });

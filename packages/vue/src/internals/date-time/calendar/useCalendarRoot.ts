@@ -17,6 +17,8 @@ import { findKeyTarget, getKeyAction, getTabStop } from './focusTarget';
 import { formatPages } from './formatText';
 import { getMonthPage, isInMonth, startOfWeek } from './monthGrid';
 import type { CalendarPage, CalendarPageWeek } from './monthGrid';
+import { usePageTransition } from './usePageTransition';
+import type { NavigationDirection } from './usePageTransition';
 import {
   alignPageStart,
   getBroadcastPage,
@@ -41,15 +43,18 @@ export interface UseCalendarRootOptions {
   selection: CalendarSelection;
 }
 
-/** The side of the last change of the page: `none` until the page changes after the mount. */
-export type NavigationDirection = 'previous' | 'next' | 'none';
-
 /** What the root gives to its parts and to its own element. */
 export interface CalendarRootController {
   /** The locale for `Intl`. It is `en-US` until the root is mounted, when the consumer gives none. */
   locale: ComputedRef<Intl.LocalesArgument | undefined>;
   /** The pages of the grid. */
   pages: ComputedRef<CalendarPage[]>;
+  /** The pages of the grid, and the pages that left and stay until their animations end. */
+  renderedPages: ComputedRef<CalendarPage[]>;
+  /** Whether the page left the grid and stays until its animations end. */
+  isLeaving: (page: CalendarPage) => boolean;
+  /** A page that left calls it when its animations end. The page then goes. */
+  finishLeaving: (page: CalendarPage) => void;
   /** The days of the week in the order of the grid. */
   weekdays: ComputedRef<DayOfWeek[]>;
   weekend: ComputedRef<readonly DayOfWeek[]>;
@@ -227,22 +232,9 @@ export function useCalendarRoot({
   });
   const weekdays = computed(() => pages.value[0]?.weekdays ?? []);
 
-  // A new calendar of the grid, such as the calendar of the runtime locale after a hydration, gives
-  // other months but is not a move of the page.
-  const navigationDirection = shallowRef<NavigationDirection>('none');
-  watch(
-    () => pages.value[0],
-    (next, previous) => {
-      if (
-        next &&
-        next.yearMonth.calendarId === previous?.yearMonth.calendarId &&
-        compareDates(next.first, previous.first) !== 0
-      ) {
-        navigationDirection.value =
-          compareDates(next.first, previous.first) < 0 ? 'previous' : 'next';
-      }
-    },
-    { flush: 'sync' },
+  const { navigationDirection, renderedPages, isLeaving, finishLeaving } = usePageTransition(
+    pages,
+    computed(() => `${calendar.value}|${firstDay.value}`),
   );
 
   assertModifierNames(part, props.modifiers);
@@ -525,6 +517,9 @@ export function useCalendarRoot({
   return {
     locale: formatLocale,
     pages,
+    renderedPages,
+    isLeaving,
+    finishLeaving,
     weekdays,
     weekend,
     multiselectable: selection.multiselectable,

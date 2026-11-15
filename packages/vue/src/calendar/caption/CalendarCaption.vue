@@ -43,17 +43,21 @@ defineSlots<{
 }>();
 
 const { state, locale, navigationDirection } = useCalendarRootContext();
-const { month, setLabelId, defaultLabelId } = useCalendarMonthContext();
-const captionId = useRegisteredLabelId(() => props.id, setLabelId, defaultLabelId);
+const { month, labelRoot } = useCalendarMonthContext();
+const captionId = useRegisteredLabelId(
+  () => props.id,
+  labelRoot,
+  () => element.value,
+);
 const isHydrating = useIsHydrating();
 
 const text = computed(() => formatPage(month.value, locale.value, props.format));
 
 // A page change mounts a new caption, and a screen reader does not read the text of a live region
-// that is new. A mutation of the text after the mount makes it read the month. The caption of the
-// first page has no such change.
+// that is new. A mutation of the text after the mount makes it read the month. A caption that
+// mounts with the calendar has no such change, and a caption that stays does not get one.
 const liveRegionRef = useInitialLiveRegionTextMutation<HTMLElement>(
-  () => navigationDirection.value !== 'none',
+  navigationDirection.value !== 'none',
 );
 
 const { element, elementProps } = useRenderElement('div', props, {
@@ -74,9 +78,11 @@ const { element, elementProps } = useRenderElement('div', props, {
 defineExpose({ element });
 </script>
 
+<!-- The text is the only child of the element in the last branch. Vue allows a text mismatch only there. -->
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :text="text" />
-  <component :is="as" v-else v-bind="elementProps()"
+  <component :is="as" v-else-if="$slots.default || as !== 'div'" v-bind="elementProps()"
     ><slot :state="state" :text="text">{{ text }}</slot></component
   >
+  <div v-else v-bind="elementProps()">{{ text }}</div>
 </template>

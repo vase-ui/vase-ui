@@ -519,5 +519,25 @@ describe('<Calendar.Root /> pages', () => {
 
       await hydrate(CalendarNavigationHydration, { serverHtml, props: { ...base, ...props } });
     });
+
+    it.each([
+      { name: 'a caption', props: { locale: 'ja' }, text: '2026年11月' },
+      { name: 'a week number', props: { weekNumbers: true, locale: 'ja' }, text: '45' },
+    ])(
+      'writes the text of $name again with no warning when the server wrote another text',
+      async ({ props, text }) => {
+        const all = { ...base, ...props };
+        const serverHtml = (await renderOnServer(file, all)).replace(`>${text}<`, '>other<');
+        expect(serverHtml).toContain('>other<');
+
+        const { container } = await hydrate(CalendarNavigationHydration, {
+          serverHtml,
+          props: all,
+        });
+
+        expect(container).toHaveTextContent(text);
+        expect(container).not.toHaveTextContent('other');
+      },
+    );
   });
 });

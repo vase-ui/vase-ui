@@ -73,9 +73,11 @@ const { element, elementProps } = useRenderElement('th', props, {
 defineExpose({ element });
 </script>
 
+<!-- The text is the only child of the element in the last branch. Vue allows a text mismatch only there. -->
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :text="text" />
-  <component :is="as" v-else v-bind="elementProps()"
+  <component :is="as" v-else-if="$slots.default || as !== 'th'" v-bind="elementProps()"
     ><slot :state="state" :text="text">{{ text }}</slot></component
   >
+  <th v-else v-bind="elementProps()">{{ text }}</th>
 </template>

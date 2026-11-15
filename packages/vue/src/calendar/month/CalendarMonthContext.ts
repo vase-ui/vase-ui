@@ -5,7 +5,7 @@ import type { UseLabelIdReturnValue } from '../../utils/useRegisteredLabelId';
 
 export interface CalendarMonthContext extends Pick<
   UseLabelIdReturnValue,
-  'defaultLabelId' | 'setLabelId' | 'getAriaLabelledBy'
+  'labelRoot' | 'getAriaLabelledBy'
 > {
   /** The page that the month shows. */
   month: ComputedRef<CalendarPage>;
