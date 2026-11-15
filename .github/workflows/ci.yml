@@ -127,10 +127,11 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps chromium
+      - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps chromium firefox webkit
       - run: pnpm build
       - run: pnpm --filter @vase-ui/nuxt-fixture typecheck
       - run: pnpm test:nuxt
+      - run: pnpm test:vite
 
   # A prerelease of a dependency must not block a merge, so `required` does not need this job.
   # The version is the dist-tag `rc` of `vue` on npm.
