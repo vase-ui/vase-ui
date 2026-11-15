@@ -408,7 +408,7 @@ describe('focus listeners of Menu.Input', () => {
     await waitFor(() => expect(input).toHaveFocus());
     await waitFor(() => expect(input).toHaveAttribute('data-highlighted'));
 
-    // A Vue listener of a new input misses the focus of the mount only in most runs, so the case
+    // The focus of the mount comes in the millisecond of the attach only in some runs, so the case
     // replaces the input three times.
     let previous = input;
     for (const inputKey of ['second', 'third', 'fourth']) {
