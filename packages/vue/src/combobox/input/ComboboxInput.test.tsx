@@ -879,6 +879,50 @@ describe('<Combobox.Input />', () => {
       });
     });
 
+    // The handler of the list navigation records each key as keyboard input, and the highlight
+    // then stays when the pointer leaves. The `VUE-100` call stops that handler, so the part does
+    // not make the call for an input outside the popup.
+    it.each([
+      { name: 'Home in an input', as: 'input' as const, keys: '{Home}' },
+      { name: 'End in a textarea', as: 'textarea' as const, keys: '{End}' },
+    ])(
+      'keeps the highlight after $name outside the popup when the pointer leaves',
+      async ({ as, keys }) => {
+        await render(
+          <div>
+            <p>Outside</p>
+            <Combobox.Root items={['apple', 'apricot', 'banana']}>
+              <Combobox.Input data-testid="input" as={as} />
+              <Combobox.Portal>
+                <Combobox.Positioner>
+                  <Combobox.Popup>{itemList()}</Combobox.Popup>
+                </Combobox.Positioner>
+              </Combobox.Portal>
+            </Combobox.Root>
+          </div>,
+        );
+
+        const input = screen.getByTestId('input');
+        await waitForLaterMillisecond(async () => {
+          input.focus();
+          await userEvent.keyboard('a');
+          await screen.findByRole('listbox');
+        });
+        const apricot = screen.getByRole('option', { name: 'apricot' });
+        await userEvent.hover(apricot);
+        await waitFor(() => {
+          expect(input).toHaveAttribute('aria-activedescendant', apricot.id);
+        });
+
+        await userEvent.keyboard(keys);
+        await userEvent.hover(screen.getByText('Outside'));
+        await waitSingleFrame();
+        await flushMicrotasks();
+
+        expect(input).toHaveAttribute('aria-activedescendant', apricot.id);
+      },
+    );
+
     it('preserves caret position when controlled and inserting in the middle', async () => {
       const Controlled = defineComponent(() => {
         const value = shallowRef('');
