@@ -55,6 +55,7 @@ export interface MenuPopupProps
 
 <script setup lang="ts">
 import { computed, inject, onScopeDispose, toRaw, watch } from 'vue';
+import { contains } from '../../common/shadowDom';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
@@ -245,9 +246,31 @@ const initialFocus = computed<FocusOption>(() => {
   };
 });
 
-// The input of a filtered parent menu holds the real focus while the parent highlights an item. It
-// is an internal default, not a target of the consumer: the focus manager keeps a focus that moved.
-const dynamicReturnFocus = computed(() => parentHandoff?.parentVirtualFocusRef);
+// A closed root outside the menubar gives its store no node of the menubar, so the search finds the
+// open menu by its trigger in the menubar element.
+function getOpenMenubarTrigger() {
+  const menuParent = parent.value;
+  const menubarElement = menuParent.type === 'menubar' ? menuParent.context.contentElement.value : null;
+  const openMenu = store
+    .select('floatingTreeRoot')
+    .nodesRef.value.find(
+      (node) => node.context?.open && contains(menubarElement, node.context.elements.domReference),
+    );
+  return openMenu?.context?.elements.domReference ?? true;
+}
+
+// These targets are internal defaults, not targets of the consumer: the focus manager keeps a
+// focus that moved. The input of a filtered parent menu holds the real focus while the parent
+// highlights an item. A menu of a menubar that closes for another menu gives the focus to the
+// trigger of that menu, because a focus on its own trigger opens it again.
+const dynamicReturnFocus = computed(
+  () =>
+    parentHandoff?.parentVirtualFocusRef ??
+    (parent.value.type === 'menubar' &&
+    store.select('lastOpenChangeReason') === REASONS.siblingOpen
+      ? getOpenMenubarTrigger
+      : undefined),
+);
 
 const returnFocus = computed(() => {
   const { type } = parent.value;

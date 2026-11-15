@@ -1,7 +1,7 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { defineComponent, KeepAlive, nextTick, shallowRef } from 'vue';
-import type { ComputedRef } from 'vue';
+import type { ComputedRef, ShallowRef } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import type { TextDirection } from '@vase-ui/vue/direction-provider';
 import { Menubar } from '@vase-ui/vue/menubar';
@@ -12,6 +12,7 @@ import {
   flushMicrotasks,
   hydrate,
   isJSDOM,
+  nextEvent,
   pressWithTouch,
   renderOnServer,
   screen,
@@ -1018,6 +1019,253 @@ describe('<Menubar />', () => {
     });
     expect(outside).toHaveFocus();
   });
+
+  describe.skipIf(isJSDOM)(
+    'VUE-85: a menu that another menu closes gives the focus to that menu',
+    () => {
+      type SiblingMenusOptions = {
+        detached?: boolean;
+        filterableFile?: boolean;
+        keepFileMounted?: boolean;
+        fileDefaultOpen?: boolean;
+        controlledEdit?: boolean;
+      };
+
+      function createSiblingMenus({
+        detached = false,
+        filterableFile = false,
+        keepFileMounted = false,
+        fileDefaultOpen,
+        controlledEdit = false,
+      }: SiblingMenusOptions = {}) {
+        const onFileOpenChange = vi.fn<(open: boolean, reason: MenuRootChangeEventReason) => void>();
+        const onEditOpenChange = vi.fn<(open: boolean, reason: MenuRootChangeEventReason) => void>();
+        const fileHandle = detached ? Menu.createHandle() : undefined;
+        const editHandle = detached ? Menu.createHandle() : undefined;
+        const editOpen = shallowRef(false);
+
+        const SiblingMenus = defineComponent(() => () => {
+          const fileTrigger = (
+            <Menu.Trigger handle={fileHandle} id="file-trigger" data-testid="file-trigger">
+              File
+            </Menu.Trigger>
+          );
+          const editTrigger = (
+            <Menu.Trigger handle={editHandle} id="edit-trigger" data-testid="edit-trigger">
+              Edit
+            </Menu.Trigger>
+          );
+          const fileRoot = (
+            <Menu.Root
+              handle={fileHandle}
+              defaultOpen={fileDefaultOpen}
+              onOpenChange={(open: boolean, details: Menu.Root.ChangeEventDetails) => {
+                onFileOpenChange(open, details.reason);
+              }}
+            >
+              {detached ? null : fileTrigger}
+              <Menu.Portal keepMounted={keepFileMounted}>
+                <Menu.Positioner data-testid="file-menu">
+                  <Menu.Popup>
+                    {filterableFile ? (
+                      <>
+                        <Menu.Input aria-label="Filter file actions" />
+                        <Menu.List>
+                          <Menu.Item>Open</Menu.Item>
+                        </Menu.List>
+                      </>
+                    ) : (
+                      <Menu.Item>Open</Menu.Item>
+                    )}
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.Root>
+          );
+          const fileMenu = filterableFile ? (
+            <Menu.FilterProvider>{fileRoot}</Menu.FilterProvider>
+          ) : (
+            fileRoot
+          );
+          const editMenu = (
+            <Menu.Root
+              handle={editHandle}
+              open={controlledEdit ? editOpen.value : undefined}
+              onOpenChange={(open: boolean, details: Menu.Root.ChangeEventDetails) => {
+                onEditOpenChange(open, details.reason);
+                editOpen.value = open;
+              }}
+            >
+              {detached ? null : editTrigger}
+              <Menu.Portal>
+                <Menu.Positioner data-testid="edit-menu">
+                  <Menu.Popup>
+                    <Menu.Item>Copy</Menu.Item>
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.Root>
+          );
+
+          return detached ? (
+            <>
+              <Menubar style={menubarStyle}>
+                {fileTrigger}
+                {editTrigger}
+              </Menubar>
+              {fileMenu}
+              {editMenu}
+            </>
+          ) : (
+            <Menubar style={menubarStyle}>
+              {fileMenu}
+              {editMenu}
+            </Menubar>
+          );
+        });
+
+        return { SiblingMenus, onFileOpenChange, onEditOpenChange, editHandle, editOpen };
+      }
+
+      type SiblingMenus = ReturnType<typeof createSiblingMenus>;
+
+      // Each focus that arrives in the document after the call, so a case can show that the focus
+      // does not pass through the trigger of the menu that closed.
+      function recordFocusTargets() {
+        const targets: EventTarget[] = [];
+        function handleFocusin(event: FocusEvent) {
+          if (event.target) {
+            targets.push(event.target);
+          }
+        }
+        document.addEventListener('focusin', handleFocusin);
+        onTestFinished(() => document.removeEventListener('focusin', handleFocusin));
+        return targets;
+      }
+
+      async function openFileWithKeyboard() {
+        await focusTriggerWithKeyboard(screen.getByTestId('file-trigger'));
+        await nextEvent(document, 'focusin', { action: () => userEvent.keyboard('{Enter}') });
+        expect(screen.getByTestId('file-menu')).toContainElement(
+          document.activeElement as HTMLElement,
+        );
+      }
+
+      // The focus on the trigger comes in a microtask of the `mouseenter` of the hover. The open menu
+      // focuses its popup one animation frame later, so the wait for it starts before that frame.
+      async function hoverEditTrigger() {
+        const editTrigger = screen.getByTestId('edit-trigger');
+        await nextEvent(editTrigger, 'focusin', { action: () => userEvent.hover(editTrigger) });
+        const editPopupFocus = nextEvent(screen.getByTestId('edit-menu'), 'focusin');
+        await flushMicrotasks();
+        return editPopupFocus;
+      }
+
+      it.each([
+        { name: 'contained triggers', options: {} },
+        { name: 'detached triggers', options: { detached: true } },
+        { name: 'a filterable menu', options: { filterableFile: true } },
+        { name: 'a kept-mounted menu', options: { keepFileMounted: true } },
+      ])(
+        'opens the other menu once when the pointer moves to its trigger after a keyboard open, with $name',
+        async ({ options }) => {
+          const { SiblingMenus, onFileOpenChange, onEditOpenChange } = createSiblingMenus(options);
+          await render(<SiblingMenus />);
+          const fileTrigger = screen.getByTestId('file-trigger');
+          const editTrigger = screen.getByTestId('edit-trigger');
+
+          await openFileWithKeyboard();
+          const focusTargets = recordFocusTargets();
+          const editPopupFocus = await hoverEditTrigger();
+
+          expect(onFileOpenChange.mock.calls).toEqual([
+            [true, 'trigger-press'],
+            [false, 'sibling-open'],
+          ]);
+          expect(onEditOpenChange.mock.calls).toEqual([
+            [true, 'trigger-hover'],
+            [true, 'trigger-focus'],
+          ]);
+          expect(fileTrigger).not.toHaveAttribute('data-popup-open');
+          expect(editTrigger).toHaveAttribute('data-popup-open');
+
+          await editPopupFocus;
+          expect(focusTargets).toHaveLength(2);
+          expect(focusTargets[0]).toBe(editTrigger);
+          expect(screen.getByTestId('edit-menu')).toContainElement(
+            document.activeElement as HTMLElement,
+          );
+        },
+      );
+
+      it('keeps a menu with defaultOpen open at the mount, and closes it once when the pointer moves to another trigger', async () => {
+        // A script focus matches `:focus-visible` only after a keyboard input.
+        await userEvent.tab();
+        const { SiblingMenus, onFileOpenChange, onEditOpenChange } = createSiblingMenus({
+          fileDefaultOpen: true,
+        });
+
+        await nextEvent(document, 'focusin', { action: () => render(<SiblingMenus />) });
+        expect(onFileOpenChange.mock.calls).toEqual([]);
+        expect(screen.getByTestId('file-menu')).toContainElement(
+          document.activeElement as HTMLElement,
+        );
+
+        const editPopupFocus = await hoverEditTrigger();
+
+        expect(onFileOpenChange.mock.calls).toEqual([[false, 'sibling-open']]);
+        expect(onEditOpenChange.mock.calls).toEqual([
+          [true, 'trigger-hover'],
+          [true, 'trigger-focus'],
+        ]);
+        await editPopupFocus;
+        expect(screen.getByTestId('edit-menu')).toContainElement(
+          document.activeElement as HTMLElement,
+        );
+      });
+
+      it.each([
+        {
+          name: 'its open prop',
+          options: { controlledEdit: true },
+          openEdit: ({ editOpen }: SiblingMenus) => {
+            editOpen.value = true;
+          },
+          editCalls: [[true, 'trigger-focus']],
+        },
+        {
+          name: 'its handle',
+          options: { detached: true },
+          openEdit: ({ editHandle }: SiblingMenus) => editHandle?.open('edit-trigger'),
+          editCalls: [
+            [true, 'imperative-action'],
+            [true, 'trigger-focus'],
+          ],
+        },
+      ])(
+        'keeps a menu that $name opens open while the focus is in another menu',
+        async ({ options, openEdit, editCalls }) => {
+          const siblingMenus = createSiblingMenus(options);
+          const { SiblingMenus, onFileOpenChange, onEditOpenChange } = siblingMenus;
+          await render(<SiblingMenus />);
+          const editTrigger = screen.getByTestId('edit-trigger');
+
+          await openFileWithKeyboard();
+          await nextEvent(document, 'focusin', { action: () => openEdit(siblingMenus) });
+          expect(editTrigger).toHaveFocus();
+          await flushMicrotasks();
+
+          expect(onFileOpenChange.mock.calls).toEqual([
+            [true, 'trigger-press'],
+            [false, 'sibling-open'],
+          ]);
+          expect(onEditOpenChange.mock.calls).toEqual(editCalls);
+          expect(editTrigger).toHaveAttribute('data-popup-open');
+          expect(screen.getByTestId('edit-menu')).toBeInTheDocument();
+        },
+      );
+    },
+  );
 
   describe.for([
     { name: 'contained triggers', Component: ContainedTriggerMenubar },
