@@ -387,10 +387,25 @@ describe('useRegisteredLabelId', () => {
         showFlush: true,
         expected: ['label-a', 'none', 'label-a', 'none', 'label-a'],
       },
-    ])('$name', async ({ options, showFlush, expected }) => {
+      {
+        name: 'B mounts in the show patch, after A',
+        options: { before: false, outside: false, rootInBranch: false },
+        showFlush: true,
+        fromProp: true,
+        expected: ['label-a', 'none', 'label-b', 'none', 'label-b'],
+      },
+      {
+        name: 'B mounts in the show patch, before A',
+        options: { before: true, outside: false, rootInBranch: false },
+        showFlush: true,
+        fromProp: true,
+        expected: ['label-a', 'none', 'label-a', 'none', 'label-a'],
+      },
+    ])('$name', async ({ options, showFlush, fromProp, expected }) => {
       const { App, hide, mountWhileHeld, show, mountInActivation } = createApp(options);
+      const mountInShow = () => mountInActivation({ fromProp });
       const changes = showFlush
-        ? [hide, mountInActivation, hide, show]
+        ? [hide, mountInShow, hide, show]
         : [hide, mountWhileHeld, show, hide, show];
 
       await render(<App />);

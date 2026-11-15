@@ -1,5 +1,6 @@
-import { shallowRef, watch } from 'vue';
+import { nextTick, shallowRef, watch } from 'vue';
 import type { ShallowRef } from 'vue';
+import { comesBeforeInSameTree } from '../comesBeforeInSameTree';
 import { NOOP } from '../noop';
 import { useFieldRootContext } from '../field-root-context/FieldRootContext';
 import { useKeepAliveState } from '../useKeepAliveState';
@@ -7,6 +8,11 @@ import { useKeepAliveState } from '../useKeepAliveState';
 // The inputs of the controls of one field, in the order in which each control gave its input last.
 // The key is `validation.inputRef` of the field, so the list goes away with the field.
 const inputsOfField = new WeakMap<ShallowRef<HTMLInputElement | null>, HTMLInputElement[]>();
+// The inputs that the controls of one field gave again in the flush of a show.
+const shownInputsOfField = new WeakMap<
+  ShallowRef<HTMLInputElement | null>,
+  Set<HTMLInputElement>
+>();
 
 /**
  * Gives the input of a control to its field. Call it in `setup`. Call the result in the `ref`
@@ -64,9 +70,33 @@ export function useFieldInput(): (input: HTMLElement | null) => void {
     }
   });
 
-  // `KeepAlive` runs the `onActivated` hooks from the last part to the first part. A `watch` runs in
-  // the order of the parts, so the last control of the branch gives its input last.
-  watch(shown, give);
+  // The watchers of one show run in the order in which Vue made the controls. A control that a
+  // branch made later can come before an older control in the document. The input thus goes
+  // before each input of the same show that comes after it in the document.
+  function giveAtShow() {
+    release();
+    if (ownInput) {
+      let shownInputs = shownInputsOfField.get(inputRef);
+      if (!shownInputs) {
+        shownInputs = new Set();
+        shownInputsOfField.set(inputRef, shownInputs);
+        void nextTick(() => shownInputsOfField.delete(inputRef));
+      }
+      let index = inputs.length;
+      while (index > 0) {
+        const previous = inputs[index - 1];
+        if (!previous || !shownInputs.has(previous) || !comesBeforeInSameTree(ownInput, previous)) {
+          break;
+        }
+        index -= 1;
+      }
+      inputs.splice(index, 0, ownInput);
+      shownInputs.add(ownInput);
+    }
+    update();
+  }
+
+  watch(shown, giveAtShow);
 
   return (input) => {
     release();

@@ -22,9 +22,14 @@ export function createHeldBranch(renderPart: () => VNodeChild, options: HeldBran
     options;
   const visible = shallowRef(true);
   const mounted = shallowRef(isMountedWithBranch);
-  const Branch = defineComponent(() => () => renderBranch(mounted.value ? renderPart() : null));
+  const mountedByProp = shallowRef(false);
+  const Branch = defineComponent(
+    (props: { mounted: boolean }) => () =>
+      renderBranch(props.mounted || mounted.value ? renderPart() : null),
+    { props: ['mounted'] },
+  );
   const HeldBranch = defineComponent(() => () => (
-    <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+    <KeepAlive>{visible.value ? <Branch mounted={mountedByProp.value} /> : null}</KeepAlive>
   ));
 
   async function hide() {
@@ -45,12 +50,14 @@ export function createHeldBranch(renderPart: () => VNodeChild, options: HeldBran
     await flushMicrotasks();
   }
 
-  // `KeepAlive` moves the branch into the document before the part mounts. Vue calls the
-  // `onActivated` hooks of the branch after the renders of that flush. The part thus mounts in the
-  // document, and it gets its first `onActivated` call in the flush of its mount.
-  async function mountInActivation() {
+  // `KeepAlive` moves the branch into the document before the part mounts. The part thus mounts in
+  // the document, and it gets its first `onActivated` call in the flush of its mount. With
+  // `fromProp`, the branch gets the mount as a prop, and `KeepAlive` mounts the part when it patches
+  // the branch. The part then gets `onMounted` before `onActivated`. Else the branch mounts the part
+  // in its own render, after the patch, and the part gets `onActivated` first.
+  async function mountInActivation({ fromProp = false }: { fromProp?: boolean | undefined } = {}) {
     visible.value = true;
-    mounted.value = true;
+    (fromProp ? mountedByProp : mounted).value = true;
     await flushMicrotasks();
   }
 

@@ -111,6 +111,43 @@ describe('useFieldInput', () => {
     expect(await submit()).toEqual({ submitted: 0, invalid: true });
   });
 
+  // The new control is required and empty. The field is invalid when it validates that control.
+  it.each([
+    { name: 'while held, after', mount: 'while held', before: false, invalid: true },
+    { name: 'while held, before', mount: 'while held', before: true, invalid: false },
+    { name: 'in a show from a state, after', mount: 'state', before: false, invalid: true },
+    { name: 'in a show from a state, before', mount: 'state', before: true, invalid: false },
+    { name: 'in a show from a prop, after', mount: 'prop', before: false, invalid: true },
+    { name: 'in a show from a prop, before', mount: 'prop', before: true, invalid: false },
+  ])(
+    'the field validates the last input of a shown branch in the document: $name',
+    async ({ mount, before, invalid }) => {
+      const { HeldBranch, hide, mountWhileHeld, show, mountInActivation } = createHeldBranch(
+        () => <Field.Control key="new" required />,
+        {
+          renderBranch: (part) => (
+            <div>
+              {before ? part : null}
+              <Field.Control key="old" defaultValue="old" />
+              {before ? null : part}
+            </div>
+          ),
+        },
+      );
+      const submit = await renderForm(() => [<HeldBranch key="branch" />]);
+
+      if (mount === 'while held') {
+        await mountWhileHeld();
+        await show();
+      } else {
+        await hide();
+        await mountInActivation({ fromProp: mount === 'prop' });
+      }
+
+      expect(await submit()).toEqual({ submitted: invalid ? 0 : 1, invalid });
+    },
+  );
+
   it('a held control whose element changes gives no input', async () => {
     const visible = shallowRef(true);
     const tag = shallowRef('input');
