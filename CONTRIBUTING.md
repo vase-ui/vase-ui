@@ -563,7 +563,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - The root project, `docs` and `packages/vue` extend `@tsconfig/strictest`. A flag of the preset is off only for a reason that this section gives.
 - `packages/vue` has two projects. `tsconfig.build.json` has the source. The build, `pnpm parity:check` and the API reference read it.
 - `tsconfig.test.json` has each file of the package. `tsconfig.json` only names the two projects.
-- The test project has `noUncheckedIndexedAccess`, `noImplicitOverride`, `noUnusedLocals` and `noUnusedParameters` off. A ported test then keeps the text of the Base UI test.
+- The test project has `noUncheckedIndexedAccess`, `noImplicitOverride`, `noUnusedLocals` and `noUnusedParameters` off. A ported test can then keep the text of the Base UI test.
 - `exactOptionalPropertyTypes` is off in the package. With the flag, the built declarations give a listener no `| undefined`. A consumer that sets the flag then cannot pass `undefined` to a listener.
 - The consumer project of `pnpm check:package` sets `exactOptionalPropertyTypes`. It passes `undefined` to an optional prop and to a listener.
 - `noPropertyAccessFromIndexSignature` is off. A bundler replaces `process.env.NODE_ENV` only in that form. The Vue documentation and the parts write `slots.default` and `$slots.render`.
@@ -600,7 +600,7 @@ A disable comment has the form `// eslint-disable-next-line <rule> -- <reason>`.
 - Write `import type` on its own line.
 - Write `void` before a promise that the code does not wait for.
 - An optional parameter has no `| undefined`. An optional prop has it, as [Props](#props) says.
-- A test file keeps the `!` and the casts of the Base UI test.
+- A test file can keep the `!` and the casts of the Base UI test.
 
 ## Rules for the source
 
@@ -1667,7 +1667,15 @@ Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>. Without a root the trigg
 
 ### How to port a test
 
-A ported test is a file at the mapped path with the same `describe` and `it` titles as upstream. It is TSX, so it differs from the upstream file only by these rules:
+A ported test is a file at the mapped path with the same `describe` and `it` titles as upstream. `pnpm parity:check` finds the ported case of a Base UI case by these titles. It does not read the body of a case.
+
+- A ported case asserts each behavior that the Base UI case asserts. It can assert more.
+- The body of a ported case can have a better form than the body of the Base UI case. A better form never asserts less.
+- Examples are a wait with a limit in frames in place of `waitFor`, and a direct assertion in place of a negative assertion in `waitFor`. More examples are a real event of the browser in place of a dispatched event, and a stricter assertion. See [Test rules](#test-rules).
+- State each such change in the body of the pull request.
+- Only a rule of this section or an exception row removes a Base UI assertion or makes it less strict. An example is the rule for a warning that only React DOM gives.
+
+Where a case has no better form, it differs from the Base UI case only by these rules:
 
 | Base UI test                                                                                               | Vase UI test                                                                                                                                                                                                                                              |
 | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1828,7 +1836,7 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 - A case that upstream runs only in jsdom (`skipIf(!isJSDOM)`) is ported to the browser, or it gets an exception row.
 - Such a case that clicks a link adds a `click` listener on `window` that calls `preventDefault()`. A browser otherwise loads the `href`, and Vitest then cannot run the test file.
 - A case that upstream skips with a `skip()` call in its body runs when it passes in each engine. Remove the call, and state the removal in the body of the pull request.
-- A ported case can pass while the behavior in its title is broken. Keep its title and each Base UI assertion. Add assertions that fail when that behavior breaks. State them in the body of the pull request. When the source has a branch for one engine, an added assertion for that branch reads the same flag of `platform`.
+- A ported case can pass while the behavior in its title is broken. Add assertions that fail when that behavior breaks. State them in the body of the pull request. When the source has a branch for one engine, an added assertion for that branch reads the same flag of `platform`.
 - A case that fires its own `load` and `error` events on a real `<img>` holds the events of the browser. A capture listener on `document` stops each event that has `isTrusted`. See `holdBrowserImageEvents` in `avatar/image/AvatarImage.test.tsx`.
 - ESLint reports an `eslint-disable` comment that names a rule of a plugin that this repository does not have. It also reports a comment that disables nothing.
 - `#test-utils` is `packages/vue/test/index.ts`. It replaces the `#test-utils` and `@mui/internal-test-utils` of upstream.
