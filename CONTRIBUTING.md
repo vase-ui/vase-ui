@@ -2054,9 +2054,8 @@ A case that acts between the server render and the hydration calls `hydrateAfter
 - For text in a locale format, compute the expected text with the same locale and options as the component.
 - Do not write a generated id in a test. The id holds a count of the earlier `useId` calls, so a new call in a part changes later ids. Read the id from the element or from the HTML.
 - A case of Vase UI's own that depends on the Vue version or on the browser probes for the behavior. A condition names no engine. Each outcome has a case with `runIf`, as in `collapsible/panel/CollapsiblePanel.node.test.tsx`.
-- In WebKit on an Apple system, a focus guard is a button with the name "Focus guard", and it has no `aria-hidden`. See [Focus helpers](#focus-helpers).
-- A query for the role `button` while a popup is open names the button: `screen.getByRole('button', { name: 'Open' })`.
-- A case that finds the focus guards selects `[data-vase-ui-focus-guard]`, not `[aria-hidden]`.
+- A query for the role `button` while a popup is open names the button: `screen.getByRole('button', { name: 'Open' })`. In WebKit on an Apple system, the focus guards are buttons too, as [Focus helpers](#focus-helpers) says.
+- A case that finds the focus guards selects `[data-vase-ui-focus-guard]`, not `[aria-hidden]`. In WebKit on an Apple system, a guard has no `aria-hidden`.
 - A test of a position waits for the rectangle of the popup with `waitFor`. It does not count microtasks, frames or ticks.
 - On macOS, the fonts can give a line box a fractional height, so a place or a size can be fractional. A case rounds an expected place of a positioner to the pixels of the device, as Floating UI rounds the transform. `roundToDevicePixels` of `menu/positioner/MenuPositioner.test.tsx` is the model.
 - An expected size is the size that the part reads, such as the computed `height`. `offsetWidth` and `offsetHeight` round to whole pixels.
