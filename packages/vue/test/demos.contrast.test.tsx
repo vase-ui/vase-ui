@@ -206,7 +206,13 @@ const rows: { name: string; demo: string; reach: () => Promise<Element> }[] = [
       await waitFor(() => {
         expect(trigger).toHaveAttribute('aria-expanded', 'true');
       });
-      return press(trigger);
+      // The press of the open trigger closes the popup. The sheet gives the color of `data-pressed`
+      // to an open trigger, and that color wins over the color of `:active`.
+      await press(trigger);
+      await waitFor(() => {
+        expect(trigger).toHaveAttribute('aria-expanded', 'false');
+      });
+      return trigger;
     },
   },
   {
