@@ -2675,6 +2675,29 @@ describe('<Resizable.Root />', () => {
       },
     );
 
+    it.each([
+      { name: 'a touch', pointerType: 'touch' },
+      { name: 'a pen', pointerType: 'pen' },
+    ])('moves the layout with a drag of $name on the node', async ({ pointerType }) => {
+      await renderEdges();
+      const [edge] = await findEdges();
+
+      await fireEvent.pointerDown(edge as HTMLElement, {
+        ...pointer,
+        pointerType,
+        clientX: 0,
+        buttons: 1,
+      });
+      await fireEvent.pointerMove(edge as HTMLElement, {
+        ...pointer,
+        pointerType,
+        clientX: 40,
+        buttons: 1,
+      });
+
+      expect(widthOf('a')).toBeCloseTo(240, 0);
+    });
+
     it('renders one node for three panels with one handle', async () => {
       await renderEdges({ defaultLayout: { a: 25, b: 25, c: 50 } }, [
         <Resizable.Panel key="a" id="a" data-testid="a" />,

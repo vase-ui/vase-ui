@@ -1331,14 +1331,21 @@ describe('<Resizable.Handle />', () => {
       expect(screen.getAllByTestId('handle-1')[1]?.style.position).toBe('absolute');
     });
 
-    it('starts the drag and gets the focus with a press on the node', async () => {
-      const { element, area } = await renderHandle();
+    it.each([
+      { name: 'a mouse', pointerType: 'mouse' },
+      { name: 'a touch', pointerType: 'touch' },
+      { name: 'a pen', pointerType: 'pen' },
+    ])(
+      'starts the drag and gets the focus with a press of $name on the node',
+      async ({ pointerType }) => {
+        const { element, area } = await renderHandle();
 
-      await fireEvent.pointerDown(area, pointerInit({ buttons: 1 }));
+        await fireEvent.pointerDown(area, pointerInit({ buttons: 1, pointerType }));
 
-      expect(element).toHaveAttribute('data-dragging');
-      expect(element).toHaveFocus();
-    });
+        expect(element).toHaveAttribute('data-dragging');
+        expect(element).toHaveFocus();
+      },
+    );
 
     it('gives the `children` slot prop to the #render slot', async () => {
       await render(
@@ -1805,16 +1812,23 @@ describe('<Resizable.Handle />', () => {
     // The click of a press has the detail 1 or more, and `element.click()` has 0.
     const clickOfPress = (handle: HTMLElement) => fireEvent.click(handle, { detail: 1 });
 
-    it('stops the click that follows a drag in which the pointer moved', async () => {
-      const onClick = vi.fn();
-      await renderPanels({ handle: { onClick } });
-      const handle = screen.getByTestId('handle-1');
+    it.each([
+      { name: 'a mouse', pointerType: 'mouse' },
+      { name: 'a touch', pointerType: 'touch' },
+      { name: 'a pen', pointerType: 'pen' },
+    ])(
+      'stops the click that follows a drag of $name in which the pointer moved',
+      async ({ pointerType }) => {
+        const onClick = vi.fn();
+        await renderPanels({ handle: { onClick } });
+        const handle = screen.getByTestId('handle-1');
 
-      await drag(handle, 0, 100);
+        await drag(handle, 0, 100, { pointerType });
 
-      expect(await clickOfPress(handle)).toBe(false);
-      expect(onClick).not.toHaveBeenCalled();
-    });
+        expect(await clickOfPress(handle)).toBe(false);
+        expect(onClick).not.toHaveBeenCalled();
+      },
+    );
 
     it('lets the click that follows a press with no move go on', async () => {
       const onClick = vi.fn();
