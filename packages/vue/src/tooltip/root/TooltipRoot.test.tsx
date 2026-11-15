@@ -143,6 +143,44 @@ describe('<Tooltip.Root />', () => {
     render,
   });
 
+  describe('VUE-92: a portal part that a v-if of the consumer removes', () => {
+    it.each([
+      { name: 'no keepMounted', keepMounted: false },
+      { name: 'keepMounted', keepMounted: true },
+    ])('emits openChangeComplete with false after each close: $name', async ({ keepMounted }) => {
+      const onOpenChangeComplete = vi.fn();
+      const open = shallowRef(false);
+      await render(() => (
+        <Tooltip.Root open={open.value} onOpenChangeComplete={onOpenChangeComplete}>
+          <Tooltip.Trigger>Open</Tooltip.Trigger>
+          {open.value && (
+            <Tooltip.Portal keepMounted={keepMounted}>
+              <Tooltip.Positioner>
+                <Tooltip.Popup data-testid="popup">Popup</Tooltip.Popup>
+              </Tooltip.Positioner>
+            </Tooltip.Portal>
+          )}
+        </Tooltip.Root>
+      ));
+
+      async function openAndClose(cycle: number) {
+        const opened = nextCall(onOpenChangeComplete);
+        open.value = true;
+        await opened;
+        open.value = false;
+        await flushMicrotasks();
+
+        expect(screen.queryByTestId('popup')).toBe(null);
+        expect(onOpenChangeComplete).toHaveBeenCalledTimes(cycle * 2);
+      }
+
+      await openAndClose(1);
+      await openAndClose(2);
+
+      expect(onOpenChangeComplete.mock.calls).toEqual([[true], [false], [true], [false]]);
+    });
+  });
+
   it('keeps the payload while a controlled reopen moves to another trigger', async () => {
     const handle = Tooltip.createHandle<string>();
     const payloads: (string | undefined)[] = [];

@@ -65,7 +65,11 @@ export function useUnmountAfterClose(parameters: UseUnmountAfterCloseParameters)
     }
   });
 
+  let lastElement: HTMLElement | null = null;
+  const closeElement = () => toValue(ref) ?? lastElement;
+
   function unmount() {
+    lastElement = null;
     setMounted(false);
     onUnmount();
   }
@@ -98,14 +102,20 @@ export function useUnmountAfterClose(parameters: UseUnmountAfterCloseParameters)
     () => mounted.value && !isOpen() && !preventUnmountingOnClose.value,
   );
 
-  // The wait starts again only when the element attaches. A wait that starts again when the
-  // element detaches has no element and never completes.
+  // The wait starts again only when the element attaches. A `v-if` of the consumer can remove the
+  // part of the element in the flush of the close. Vue then sets the ref to `null`, so the wait
+  // uses the last element. An element out of the document has no CSS animations, and the close
+  // ends after one frame. A `<Transition>` of the consumer can keep the element in the document.
+  // The close then ends when the animations of the element end.
   const attachCount = shallowRef(0);
   watch(
-    () => toValue(ref) != null,
-    (attached) => {
-      if (attached) {
-        attachCount.value += 1;
+    () => toValue(ref),
+    (element, previousElement) => {
+      if (element) {
+        lastElement = element;
+        if (!previousElement) {
+          attachCount.value += 1;
+        }
       }
     },
     { flush: 'post' },
@@ -114,7 +124,7 @@ export function useUnmountAfterClose(parameters: UseUnmountAfterCloseParameters)
   useOpenChangeComplete({
     enabled: waitsForClose,
     open: isOpen,
-    ref,
+    ref: closeElement,
     restartKey: attachCount,
     onComplete() {
       if (!isOpen()) {

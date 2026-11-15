@@ -11,6 +11,7 @@ import {
   hydrate,
   isJSDOM,
   nextAnimationsRead,
+  nextCall,
   nextEvent,
   popupAnatomyTests,
   popupConformanceTests,
@@ -237,6 +238,44 @@ describe('<Popover.Root />', () => {
     ),
     createPopup: () => <Popover.Popup data-testid="popup">Popup</Popover.Popup>,
     render,
+  });
+
+  describe('VUE-92: a portal part that a v-if of the consumer removes', () => {
+    it.each([
+      { name: 'no keepMounted', keepMounted: false },
+      { name: 'keepMounted', keepMounted: true },
+    ])('emits openChangeComplete with false after each close: $name', async ({ keepMounted }) => {
+      const onOpenChangeComplete = vi.fn();
+      const open = shallowRef(false);
+      await render(() => (
+        <Popover.Root open={open.value} onOpenChangeComplete={onOpenChangeComplete}>
+          <Popover.Trigger>Open</Popover.Trigger>
+          {open.value && (
+            <Popover.Portal keepMounted={keepMounted}>
+              <Popover.Positioner>
+                <Popover.Popup data-testid="popup">Popup</Popover.Popup>
+              </Popover.Positioner>
+            </Popover.Portal>
+          )}
+        </Popover.Root>
+      ));
+
+      async function openAndClose(cycle: number) {
+        const opened = nextCall(onOpenChangeComplete);
+        open.value = true;
+        await opened;
+        open.value = false;
+        await flushMicrotasks();
+
+        expect(screen.queryByTestId('popup')).toBe(null);
+        expect(onOpenChangeComplete).toHaveBeenCalledTimes(cycle * 2);
+      }
+
+      await openAndClose(1);
+      await openAndClose(2);
+
+      expect(onOpenChangeComplete.mock.calls).toEqual([[true], [false], [true], [false]]);
+    });
   });
 
   describe('closing before the popup attaches', () => {
