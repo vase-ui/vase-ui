@@ -1,7 +1,6 @@
 import { expect, it } from 'vitest';
 import { shallowRef } from 'vue';
 import type { VNode } from 'vue';
-import { screen } from '@testing-library/dom';
 import type * as Dialog from '../src/dialog/index.parts';
 import type * as Drawer from '../src/drawer/index.parts';
 import * as Menu from '../src/menu/index.parts';
@@ -10,6 +9,7 @@ import { nextAnimationsRead, nextEvent } from './animation';
 import { waitForLaterMillisecond } from './createRenderer';
 import type { createRenderer } from './createRenderer';
 import { flushMicrotasks } from './flushMicrotasks';
+import { screen } from './queries';
 
 type PopupParts = Pick<typeof Dialog, 'Root' | 'Trigger' | 'Portal' | 'Popup'>;
 
