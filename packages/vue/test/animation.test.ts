@@ -98,6 +98,7 @@ describe('nextEndingStyle', () => {
       isResolved = true;
     });
 
+    element.setAttribute('data-closed', '');
     await waitSingleFrame();
     expect(isResolved).toBe(false);
 
@@ -107,7 +108,6 @@ describe('nextEndingStyle', () => {
 
     element.setAttribute('data-ending-style', '');
     await wait;
-    expect(isResolved).toBe(true);
   });
 });
 

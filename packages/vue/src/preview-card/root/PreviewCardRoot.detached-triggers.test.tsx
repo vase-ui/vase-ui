@@ -748,6 +748,7 @@ describe('<PreviewCard.Root />', () => {
       // Second cycle: once close lifecycle has fully finished, a fresh hover must honor OPEN_DELAY.
       // The reopen keeps the ending status of the popup until the next frame. A close before that
       // frame continues the exit of the first cycle, and the browser sends no `animationstart`.
+      // In WebKit, a close timer that is due after a stall of the page runs before that frame.
       await waitSingleFrame();
       await startExit(user, trigger1, name);
       expect(screen.getByTestId('popup')).toHaveAttribute('data-closed');
