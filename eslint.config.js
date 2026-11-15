@@ -7,6 +7,7 @@ import pluginVue from 'eslint-plugin-vue';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import vueParser from 'vue-eslint-parser';
+import siteConfig from './docs/.vitepress/config.ts';
 
 const SOURCE_FILES = ['packages/vue/src/**/*.{ts,vue}'];
 const TEST_FILES = ['**/*.test.*', '**/*.spec.*'];
@@ -295,7 +296,6 @@ const vitepress = await import(pathToFileURL(docsRequire.resolve('vitepress')).h
 // heading badge, thus also changes the SFC that ESLint reads. The exception is the code of a fence.
 // The site colors it in an asynchronous step, and a processor is synchronous, so this renderer
 // writes the code as text.
-const { default: siteConfig } = await import('./docs/.vitepress/config.ts');
 const pageRenderer = await vitepress.createMarkdownRenderer(`${import.meta.dirname}/docs`, {
   ...siteConfig.markdown,
   highlight: (code, lang) =>
