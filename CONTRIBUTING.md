@@ -1209,7 +1209,8 @@ The portal of a popup is in `src/utils/popups/portal`. `useFloatingPortalNode()`
 - `Dialog.Popup` gives the internal backdrop to its focus manager in `getInsideElements`, so the modal marks do not touch it. The release of the marks would remove the `inert` of the backdrop of a closing dialog.
 - `Drawer.Popup` gives the internal backdrop to its focus manager in the same way.
 - `NumberField.ScrubAreaCursor` puts its element in a portal element of its own in `<body>` (`VUE-96`). That element has `data-vase-ui-portal` and `display: contents`. A style that is scoped to the portal elements thus reaches the cursor, and `<body>` gets no new box.
-- The part writes that element in its own template, not through `FloatingPortalLite`. `FloatingPortalLite` renders its slot after the mount of the part, and the checks of the `#render` slot in `useRenderElement` then do not see the element. A `<Transition>` of the consumer around the part gets the portal element, which has no box, so it does not animate the cursor.
+- The part writes that element in its own template, not through `FloatingPortalLite`. `FloatingPortalLite` renders its slot after the mount of the part, and the checks of the `#render` slot in `useRenderElement` then do not see the element.
+- In Vue 3.5.41 and later, and in Vue 3.6.0-rc.3 and later, a `<Transition>` of the consumer around the part gets the portal element. That element has no box, so the `<Transition>` does not animate the cursor.
 
 ### Popup interactions
 
@@ -2192,8 +2193,8 @@ A case that acts between the server render and the hydration calls `hydrateAfter
 - A case of a date part gives the part `today`, or a value and a time zone, so that the case does not depend on the clock of the machine. A case that must see the read of the clock spies on `Temporal.Now.plainDateISO`, and it does not fake the timers.
 - Do not write a generated id in a test. The id holds a count of the earlier `useId` calls, so a new call in a part changes later ids. Read the id from the element or from the HTML.
 - A case of Vase UI's own that depends on the Vue version or on the browser probes for the behavior. A condition names no engine. Each outcome has a case with `runIf`, as in `collapsible/panel/CollapsiblePanel.node.test.tsx`.
-- The exception is a case that needs a command of the Chrome DevTools Protocol, such as `Input.imeSetComposition` for the input method editor. Only Chromium has that protocol, and no probe can do what the command does. Such a case has `it.runIf(platform.engine.blink)` and a comment that gives the reason. The cases of `a composition` in `number-field/input/NumberFieldInput.test.tsx` are the model.
-- A second exception is a case of a part that renders nothing in one engine, because the part reads `platform.engine`. Such a case skips that engine with the same condition and a comment that gives the reason. The scrub area cursor case of `test/demos.test.tsx` is the model.
+- One exception is a case that needs a command of the Chrome DevTools Protocol, such as `Input.imeSetComposition` for the input method editor. Only Chromium has that protocol, and no probe can do what the command does. Such a case has `it.runIf(platform.engine.blink)` and a comment that gives the reason. The cases of `a composition` in `number-field/input/NumberFieldInput.test.tsx` are the model.
+- A second exception is a case of a part that reads `platform.engine` and renders nothing in one engine. Such a case skips that engine with the flag of `platform.engine` that the part reads, and a comment that gives the reason. The scrub area cursor case of `test/demos.test.tsx` is the model.
 - A query for the role `button` while a popup is open names the button: `screen.getByRole('button', { name: 'Open' })`. In WebKit on an Apple system, the focus guards are buttons too, as [Focus helpers](#focus-helpers) says.
 - A case that finds the focus guards selects `[data-vase-ui-focus-guard]`, not `[aria-hidden]`. In WebKit on an Apple system, a guard has no `aria-hidden`.
 - A test of a position waits for the rectangle of the popup with `waitFor`. It does not count microtasks, frames or ticks.
