@@ -163,9 +163,10 @@ describe('<ContextMenu.Root />', () => {
       );
 
       const trigger = screen.getByTestId('context-trigger');
-      await fireEvent.contextMenu(trigger, { clientX: 20, clientY: 20, button: 2 });
-      await screen.findByTestId('context-root-popup');
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.contextMenu(trigger, { clientX: 20, clientY: 20, button: 2 });
+        await screen.findByTestId('context-root-popup');
+      });
 
       await fireEvent.pointerMove(document.body, { clientX: 24, clientY: 24 });
       await fireEvent.mouseUp(screen.getByTestId('context-submenu-trigger'), {
@@ -197,11 +198,12 @@ describe('<ContextMenu.Root />', () => {
 
       const trigger = screen.getByTestId('context-trigger');
 
-      await fireEvent.contextMenu(trigger, { clientX: 12, clientY: 12, button: 2 });
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.contextMenu(trigger, { clientX: 12, clientY: 12, button: 2 });
 
-      await screen.findByTestId('context-popup');
+        await screen.findByTestId('context-popup');
+      });
       const item = screen.getByTestId('context-item');
-      await waitForLaterMillisecond();
 
       await fireEvent.mouseUp(item, { button: 2, clientX: 12, clientY: 12 });
       await flushMicrotasks();
@@ -228,11 +230,12 @@ describe('<ContextMenu.Root />', () => {
 
       const trigger = screen.getByTestId('context-trigger');
 
-      await fireEvent.contextMenu(trigger, { clientX: 18, clientY: 18, button: 2 });
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.contextMenu(trigger, { clientX: 18, clientY: 18, button: 2 });
 
-      await screen.findByTestId('context-popup');
+        await screen.findByTestId('context-popup');
+      });
       const item = screen.getByTestId('context-item');
-      await waitForLaterMillisecond();
 
       await fireEvent.mouseUp(item, { button: 2, clientX: 18, clientY: 18 });
       await flushMicrotasks();
@@ -259,11 +262,12 @@ describe('<ContextMenu.Root />', () => {
 
       const trigger = screen.getByTestId('context-trigger');
 
-      await fireEvent.contextMenu(trigger, { clientX: 20, clientY: 20, button: 2 });
+      const popup = await waitForLaterMillisecond(async () => {
+        await fireEvent.contextMenu(trigger, { clientX: 20, clientY: 20, button: 2 });
 
-      const popup = await screen.findByTestId('context-popup');
+        return screen.findByTestId('context-popup');
+      });
       const item = screen.getByTestId('context-item');
-      await waitForLaterMillisecond();
 
       await fireEvent.pointerMove(document.body, { clientX: 24, clientY: 24 });
       await fireEvent.mouseUp(item, { button: 2, clientX: 24, clientY: 24 });

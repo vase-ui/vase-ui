@@ -86,7 +86,7 @@ function getLineRects(rects: ArrayLike<RectLike>) {
       lines.push(copyRect(rect));
     } else {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- `previousRect` is set, so `lines` has a line.
-      const line = lines[lines.length - 1]!;
+      const line = lines.at(-1)!;
       line.left = Math.min(line.left, rect.left);
       line.right = Math.max(line.right, rect.right);
       line.bottom = Math.max(line.bottom, rect.bottom);
@@ -174,7 +174,7 @@ function getInlineReferenceRect(
 
   if (side === 't' || side === 'b') {
     const firstRect = lines[0]!;
-    const lastRect = lines[lines.length - 1]!;
+    const lastRect = lines.at(-1)!;
     const targetRect = side === 't' ? firstRect : lastRect;
 
     return createRect(targetRect.left, firstRect.top, targetRect.right, lastRect.bottom);
