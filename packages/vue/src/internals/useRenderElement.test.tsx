@@ -1,5 +1,6 @@
 import { vi, expect, describe, it, onTestFinished } from 'vitest';
 import {
+  createApp,
   createSSRApp,
   defineAsyncComponent,
   defineComponent,
@@ -1283,7 +1284,7 @@ describe('useRenderElement', () => {
       expect(focusin).toHaveBeenCalledTimes(1);
     });
 
-    it('runs the focusin handler of a part that gets the focus in the millisecond of its hydration', async () => {
+    it('runs the focusin handler of a part that gets the focus in the millisecond of its hydration', () => {
       mockClock();
       const { Part, focusin } = createFocusPart();
       const container = document.createElement('div');
@@ -1307,6 +1308,35 @@ describe('useRenderElement', () => {
 
       expect(focusin).toHaveBeenCalledTimes(1);
       expect(takeReportedMessages()).toEqual([]);
+    });
+
+    it('gives an error of a focus handler that Vue skipped to the error handler of the app', () => {
+      mockClock();
+      const { Part, focusin } = createFocusPart();
+      const error = new Error('focus handler');
+      focusin.mockImplementation(() => {
+        throw error;
+      });
+      const errorHandler = vi.fn();
+      const container = document.createElement('div');
+      document.body.append(container);
+      const app = createApp({
+        render: () => (
+          <FocusOnMount onFocusinCapture={stampFirst}>
+            <Part data-testid="target" />
+          </FocusOnMount>
+        ),
+      });
+      app.config.errorHandler = errorHandler;
+      onTestFinished(() => {
+        app.unmount();
+        container.remove();
+      });
+
+      app.mount(container);
+
+      expect(errorHandler).toHaveBeenCalledTimes(1);
+      expect(errorHandler).toHaveBeenCalledWith(error, expect.anything(), expect.any(String));
     });
   });
 });
