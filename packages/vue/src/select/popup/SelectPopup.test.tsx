@@ -12,11 +12,14 @@ import {
   fireEvent,
   flushMicrotasks,
   isJSDOM,
+  nextEvent,
   popupFocusPropsTests,
   renderOnServer,
   screen,
   takeReportedMessages,
   waitFor,
+  waitForLaterMillisecond,
+  waitSingleFrame,
 } from '#test-utils';
 import SelectPopupHydration from './SelectPopupHydration.test.vue';
 
@@ -2052,6 +2055,47 @@ describe('<Select.Popup />', () => {
     await user.keyboard('[Escape]');
     expect(changes).toEqual([[false, 'escape-key']]);
     expect(screen.getByTestId('trigger')).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('VUE-82: keeps the focus on an item whose keydown listener calls preventVaseUIHandler()', async () => {
+    const { user } = await render(
+      <Select.Root defaultValue="a">
+        <Select.Trigger data-testid="trigger">
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              <Select.Item
+                value="a"
+                onKeydown={(event) => {
+                  if (event.key === 'ArrowDown') {
+                    event.preventVaseUIHandler();
+                  }
+                }}
+              >
+                a
+              </Select.Item>
+              <Select.Item value="b">b</Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>,
+    );
+
+    screen.getByTestId('trigger').focus();
+    await flushMicrotasks();
+    // The item takes the focus in an animation frame after the open.
+    await waitForLaterMillisecond(() =>
+      nextEvent(document, 'focusin', { action: () => user.keyboard('[Enter]') }),
+    );
+    const a = screen.getByRole('option', { name: 'a' });
+    expect(a).toHaveFocus();
+
+    await user.keyboard('[ArrowDown]');
+    await waitSingleFrame();
+
+    expect(a).toHaveFocus();
   });
 
   // In Vue 3.5.12, a `setup` that throws leaves the current instance set, and a later case of the

@@ -57,7 +57,7 @@ import { createChangeEventDetails } from '../../internals/createBaseUIEventDetai
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import { REASONS } from '../../internals/reasons';
-import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
 import FloatingFocusManager from '../../utils/popups/focus/FloatingFocusManager.vue';
@@ -497,7 +497,12 @@ const { element, elementProps } = useRenderElement('div', props, {
       store.select('popupProps'),
       {
         ...listProps.value,
-        onKeydown(event: KeyboardEvent) {
+        onKeydown(event: VaseUIEvent<KeyboardEvent>) {
+          // The handlers to the left also handle the keys of the items. A call of
+          // `event.preventVaseUIHandler()` in a listener of an item thus stops them too.
+          if (event.vaseUIHandlerPrevented) {
+            event.preventVaseUIHandler();
+          }
           // The arrow keys of the popup must not move the focus of a toolbar around the trigger.
           if (insideToolbar && COMPOSITE_KEYS.has(event.key)) {
             event.stopPropagation();
