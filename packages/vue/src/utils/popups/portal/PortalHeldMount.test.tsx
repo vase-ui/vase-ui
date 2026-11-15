@@ -1,7 +1,14 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import type { VNodeChild } from 'vue';
-import { createRenderer, flushMicrotasks, nextEvent, screen, waitSingleFrame } from '#test-utils';
+import {
+  createRenderer,
+  flushMicrotasks,
+  isVaporApp,
+  nextEvent,
+  screen,
+  waitSingleFrame,
+} from '#test-utils';
 import { getScrollLockRegistry } from '../../../../test/fixtures/scrollDocument';
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
@@ -16,6 +23,7 @@ import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
 import { Tooltip } from '@vase-ui/vue/tooltip';
+import VaporHeldBranch from './VaporHeldBranch.test.vue';
 
 // A part that mounts in the flush in which `KeepAlive` hides its branch gets `onDeactivated` in
 // that flush. `mountWhileHeld` thus hides the branch in one flush and mounts the part in a later
@@ -45,8 +53,8 @@ function createHeldBranch(renderPart: () => VNodeChild) {
     await flushMicrotasks();
   }
 
-  // Vue clears `isDeactivated` of the branch after the render of the activation. A part that
-  // mounts in that render thus starts held, and it gets `onActivated` in the same flush.
+  // Vue clears `isDeactivated` of the branch after the renders of the flush of the activation. A
+  // part that mounts in that flush thus starts held, and it gets `onActivated` in the same flush.
   async function mountInActivation() {
     visible.value = true;
     mounted.value = true;
@@ -384,6 +392,53 @@ describe('VUE-5: a popup whose root mounts while KeepAlive holds its branch', ()
     expect(getLockCount()).toBe(1);
     expect(isMarked(container)).toBe(true);
   });
+
+  // Only the project `vapor` renders a Vapor component. There the `KeepAlive` of the fixture is the
+  // `KeepAlive` of Vapor.
+  it.runIf(isVaporApp)(
+    'a dialog below the KeepAlive of a Vapor component stays out of the document until the branch shows',
+    async () => {
+      expect((VaporHeldBranch as { __vapor?: boolean }).__vapor).toBe(true);
+      const visible = shallowRef(true);
+      const mounted = shallowRef(false);
+      const { container } = await render(
+        <div>
+          <button data-testid="outside">Outside</button>
+          <VaporHeldBranch
+            visible={visible}
+            mounted={mounted}
+            part={defineComponent(() => renderDialog)}
+          />
+        </div>,
+      );
+      const outside = screen.getByTestId('outside');
+      outside.focus();
+
+      visible.value = false;
+      await flushMicrotasks();
+      mounted.value = true;
+      await flushMicrotasks();
+      await waitPastFocusFrame();
+
+      expect(document.querySelector('[data-vase-ui-portal]')).toBe(null);
+      expect(getLockCount()).toBe(0);
+      expect(getMarkedChildrenOfBody()).toEqual([]);
+      expect(outside).toHaveFocus();
+
+      await nextEvent(document, 'focusin', {
+        action: async () => {
+          visible.value = true;
+          await flushMicrotasks();
+        },
+      });
+
+      const popup = screen.getByTestId('popup');
+      expect(screen.getByTestId('portal').parentElement).toBe(document.body);
+      expect(popup.contains(document.activeElement)).toBe(true);
+      expect(getLockCount()).toBe(1);
+      expect(isMarked(container)).toBe(true);
+    },
+  );
 
   it('a nested dialog does not set data-nested-dialog-open on the dialog above', async () => {
     const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
