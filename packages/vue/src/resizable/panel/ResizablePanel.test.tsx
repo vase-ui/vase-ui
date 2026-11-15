@@ -51,12 +51,15 @@ describe('<Resizable.Panel />', () => {
   const widthOf = (index: number) =>
     screen.getByTestId(`panel-${index}`).getBoundingClientRect().width;
 
-  // The `ResizeObserver` of the root reads the new width after the layout, so the panels have
-  // their sizes for the new width a little later.
+  // The `ResizeObserver` of the root reads the new width after the layout of the next frame. A
+  // second frame comes after that read, so the panels then have their sizes for the new width. Until
+  // then they have the sizes of the old width.
   async function changeWidth(width: ShallowRef<number>, next: number) {
     await flushMicrotasks();
     width.value = next;
     await nextTick();
+    await waitSingleFrame();
+    await waitSingleFrame();
   }
 
   describeConformance(<Resizable.Panel />, () => ({
@@ -1289,6 +1292,47 @@ describe('<Resizable.Panel />', () => {
       expect(panel.getBoundingClientRect().width).toBeCloseTo(300, 0);
     });
 
+    it('keeps the percent that a default size in a length gave, when the root changes size', async () => {
+      const width = shallowRef(1000);
+      await renderPanels({ width, panels: [{ defaultSize: '200px' }, {}] });
+      expect(widthOf(0)).toBeCloseTo(200, 0);
+
+      await changeWidth(width, 1500);
+
+      await waitFor(() => {
+        expect(widthOf(0)).toBeCloseTo(300, 0);
+      });
+    });
+
+    it('gives back the pixels of a default size in a length with reset() and a double click', async () => {
+      const width = shallowRef(1000);
+      const instance: { current?: InstanceType<typeof Resizable.Root> } = {};
+      await renderPanels({
+        width,
+        root: {
+          ref: (value: unknown) => {
+            instance.current = value as InstanceType<typeof Resizable.Root>;
+          },
+        },
+        panels: [{ defaultSize: '200px' }, {}],
+      });
+      await drag(screen.getByTestId('handle-1'), 100);
+      expect(widthOf(0)).toBeCloseTo(300, 0);
+      await changeWidth(width, 2000);
+      await waitFor(() => {
+        expect(widthOf(0)).toBeCloseTo(600, 0);
+      });
+
+      instance.current?.reset();
+      await nextTick();
+      expect(widthOf(0)).toBeCloseTo(200, 0);
+
+      await drag(screen.getByTestId('handle-1'), 100);
+      expect(widthOf(0)).toBeCloseTo(300, 0);
+      await fireEvent.dblClick(screen.getByTestId('handle-1'));
+      expect(widthOf(0)).toBeCloseTo(200, 0);
+    });
+
     it('does not warn when the lengths of the panels cannot fit in a small root', async () => {
       // A window can be too small for a length, so this is not a mistake of the code.
       await renderPanels({ panels: [{ minSize: '700px' }, { minSize: '700px' }] });
@@ -1885,8 +1929,11 @@ describe('<Resizable.Panel />', () => {
       expect(instances.a?.getSize()).toEqual({ percent: 30, pixels: 300 });
       expect(instances.b?.getSize()).toEqual({ percent: 70, pixels: 700 });
 
-      // The method reads the page, so it has the pixels before the observer of the root does.
-      await changeWidth(width, 2000);
+      // The method reads the page, so it has the pixels before the observer of the root does. The
+      // observer reads the page in the next frame, and the case does not wait for it.
+      await flushMicrotasks();
+      width.value = 2000;
+      await nextTick();
       expect(instances.a?.getSize()).toEqual({ percent: 30, pixels: 600 });
     });
   });

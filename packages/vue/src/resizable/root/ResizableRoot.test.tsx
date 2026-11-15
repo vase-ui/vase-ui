@@ -1460,10 +1460,14 @@ describe('<Resizable.Root />', () => {
       );
     }
 
+    // The observer of the root reads the new width in the next frame, and the panels have their sizes
+    // for it after the second frame. Until then they have the sizes of the old width.
     async function changeWidth(width: ShallowRef<number>, next: number) {
       await flushMicrotasks();
       width.value = next;
       await nextTick();
+      await waitSingleFrame();
+      await waitSingleFrame();
     }
 
     describe('prop: defaultLayout', () => {

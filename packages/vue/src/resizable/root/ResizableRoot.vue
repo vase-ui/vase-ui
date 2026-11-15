@@ -283,8 +283,13 @@ function measurementFor(id?: string) {
   return measurement.value === undefined ? undefined : getMeasurement(measurement.value, id);
 }
 
-const constraints = computed<PanelConstraints[]>(() =>
-  panels.value.map((panel) => {
+// The percent of a `defaultSize` that is a length, as it was at the first measurement. The panel
+// keeps that percent, so it scales with the root as a panel with a default size in percent does.
+// A method that gives the first sizes back uses the length again, so it gives the pixels.
+const firstDefaultSizes = new WeakMap<ResizablePanelRegistration, number>();
+
+function buildConstraints(useFirstDefaultSizes: boolean): PanelConstraints[] {
+  return panels.value.map((panel) => {
     const id = panel.id.value;
     const panelMeasurement = measurementFor(id);
     // A length has no percent before the first measurement. The panel then has the size that it has
@@ -297,7 +302,9 @@ const constraints = computed<PanelConstraints[]>(() =>
       maxSize: toPercent(panel.maxSize()) ?? 100,
       collapsible: panel.collapsible(),
       collapsedSize: toPercent(panel.collapsedSize()) ?? 0,
-      defaultSize: toPercent(panel.defaultSize),
+      defaultSize:
+        (useFirstDefaultSizes ? firstDefaultSizes.get(panel) : undefined) ??
+        toPercent(panel.defaultSize),
       collapseThreshold: toPercent(panel.collapseThreshold()),
       locked: panel.disabled(),
       fixed: panel.rootResizeBehavior() === 'fixed',
@@ -305,8 +312,10 @@ const constraints = computed<PanelConstraints[]>(() =>
       snapPoints: panel.snapPoints()?.flatMap((point) => toPercent(point) ?? []),
       snapTolerance: toPercent(panel.snapTolerance()),
     };
-  }),
-);
+  });
+}
+
+const constraints = computed(() => buildConstraints(true));
 
 function normalize(snapshot: ResizableRootLayoutSnapshot) {
   const fixedIds = new Set(
@@ -654,6 +663,14 @@ function measure() {
     return undefined;
   }
   const previous = measurement.value;
+  if (previous === undefined) {
+    for (const panel of panels.value) {
+      const size = panel.defaultSize;
+      if (size !== undefined && isLength(size)) {
+        firstDefaultSizes.set(panel, parseSize(size, getMeasurement(next, panel.id.value)) ?? 0);
+      }
+    }
+  }
   if (previous === undefined || !isSameMeasurement(previous, next)) {
     measurement.value = next;
   }
@@ -750,7 +767,7 @@ function resizePanel(id: string, size: number | string) {
 // present panel space. A fixed panel has the pixels of that layout.
 function getFirstLayout(): ResizableRootLayout {
   const { layout, pins: exact } = normalize(firstSnapshot);
-  const first = resolveLayout(constraints.value, layout);
+  const first = resolveLayout(buildConstraints(false), layout);
   const space = measurement.value?.space;
   return space === undefined
     ? first
@@ -784,7 +801,7 @@ function setLayout(snapshot: ResizableRootLayoutSnapshot) {
     return;
   }
   const { layout, pins: exact } = normalize(snapshot);
-  const resolvedLayout = resolveLayout(constraints.value, layout);
+  const resolvedLayout = resolveLayout(buildConstraints(false), layout);
   const current = toRequestedLayout(shown.value, requested.value);
   if (areLayoutsEqual(toRequestedLayout(resolvedLayout, layout), current)) {
     return;

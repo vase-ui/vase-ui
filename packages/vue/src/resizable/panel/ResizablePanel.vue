@@ -48,6 +48,9 @@ export interface ResizablePanelProps
    * with `%`, are percent of the panel space. A length is `px`, `em`, `rem`, `vh` or `vw`. `em` is
    * the font size of the panel. `rem` is the font size of the root element of the document.
    * The panels that have no size share the space that is left in equal parts.
+   * A length gives the size at the first measurement. The panel then has that size in percent, so it
+   * scales with the root, unless it is fixed. `reset()` and a double click on a handle give the
+   * length back.
    * A later change of the prop has no effect. To change the size, change the layout of the root.
    */
   defaultSize?: number | string | undefined;
