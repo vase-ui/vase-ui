@@ -1,0 +1,50 @@
+<script lang="ts">
+import type { ButtonHTMLAttributes } from 'vue';
+import type {
+  NativeButtonProps,
+  VaseUIComponentProps,
+  WithVaseUIEvent,
+} from '../../internals/types';
+import type { CalendarState } from '../root/CalendarRoot.vue';
+
+export interface CalendarNextButtonState extends CalendarState {}
+
+export interface CalendarNextButtonProps
+  extends
+    NativeButtonProps,
+    VaseUIComponentProps<CalendarNextButtonState>,
+    /* @vue-ignore */ Omit<WithVaseUIEvent<ButtonHTMLAttributes>, 'disabled'> {
+  /**
+   * Whether the button should ignore user interaction.
+   * @default false
+   */
+  disabled?: boolean | undefined;
+}
+</script>
+
+<script setup lang="ts">
+import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useCalendarNavigationButton } from '../utils/useCalendarNavigationButton';
+
+defineOptions({ inheritAttrs: false });
+
+const props = withDefaults(defineProps<CalendarNextButtonProps>(), {
+  as: 'button',
+  disabled: false,
+  nativeButton: true,
+});
+
+defineSlots<{
+  default(props: { state: CalendarNextButtonState }): unknown;
+  render: ComponentRenderFn<HTMLProps, CalendarNextButtonState>;
+}>();
+
+const { element, elementProps, state } = useCalendarNavigationButton(props, 1);
+
+defineExpose({ element });
+</script>
+
+<template>
+  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+</template>

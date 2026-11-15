@@ -2,9 +2,13 @@ import type { VaseUIChangeEventDetails } from '../../createBaseUIEventDetails';
 import type { REASONS } from '../../reasons';
 import type { DateMatcher } from '../matchers';
 import type { DateValue, DayOfWeek } from '../temporal';
+import type { VisibleDuration } from './weeks';
 
 export type CalendarChangeEventReason =
-  typeof REASONS.dayPress | typeof REASONS.keyboard | typeof REASONS.none;
+  | typeof REASONS.dayPress
+  | typeof REASONS.keyboard
+  | typeof REASONS.monthChange
+  | typeof REASONS.none;
 
 export type CalendarChangeEventDetails = VaseUIChangeEventDetails<CalendarChangeEventReason>;
 
@@ -31,10 +35,55 @@ export interface CalendarBaseProps {
    */
   defaultFocusedDate?: Temporal.PlainDate | null | undefined;
   /**
+   * The number of months that the grid shows at one time, one after the other.
+   * @default 1
+   */
+  numberOfMonths?: number | undefined;
+  /**
+   * Whether the two navigation buttons move by `numberOfMonths` months. Without it, they move by
+   * one month.
+   * @default false
+   */
+  pagedNavigation?: boolean | undefined;
+  /**
+   * Whether each month has six weeks, so that the grid has the same height in each month.
+   * @default false
+   */
+  fixedWeeks?: boolean | undefined;
+  /**
+   * Whether the days of the months around a month have a button. The default is `false`, and `true`
+   * with `broadcastCalendar`. A press on such a day shows its month.
+   */
+  showOutsideDays?: boolean | undefined;
+  /**
    * The first day of the week, from `1` for Monday to `7` for Sunday.
    * The default is the first day of the week of the locale.
    */
   firstDayOfWeek?: DayOfWeek | undefined;
+  /**
+   * Whether the weeks start on Monday and have their ISO 8601 number.
+   * @default false
+   */
+  isoWeek?: boolean | undefined;
+  /**
+   * The day of January that is always in the first week of the year, from `1` to `7`. The default
+   * is `4` for weeks that start on Monday, which gives the ISO 8601 number of the week, and `1` for
+   * the other weeks.
+   */
+  firstWeekContainsDate?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | undefined;
+  /**
+   * Whether the grid shows the broadcast calendar. Its weeks start on Monday, and a month has the
+   * 4 or 5 weeks from the Monday of the week that holds its first day. It needs the Gregorian
+   * calendar.
+   * @default false
+   */
+  broadcastCalendar?: boolean | undefined;
+  /**
+   * Shows one page of whole weeks, `{ weeks: 2 }`, or one row of days, `{ days: 5 }`, in place of
+   * a month. The navigation buttons move by the duration, and the page follows the focused day.
+   * `numberOfMonths` and `fixedWeeks` do not apply.
+   */
+  visibleDuration?: VisibleDuration | undefined;
   /**
    * The first day that the user can select. An earlier day is disabled.
    */
@@ -53,6 +102,15 @@ export interface CalendarBaseProps {
    * The days that can take focus and cannot be selected. It has the same forms as `disabledDates`.
    */
   unavailableDates?: DateMatcher | undefined;
+  /**
+   * The days that have no button. It has the same forms as `disabledDates`.
+   */
+  hiddenDates?: DateMatcher | undefined;
+  /**
+   * The names of days, each with the days that it matches. A day that a modifier matches has the
+   * attribute `data-<name>`, and its state has the name as a key.
+   */
+  modifiers?: Record<string, DateMatcher> | undefined;
   /**
    * The day that is today. The default is the day of the clock in `timeZone`.
    * Give it when a server renders the calendar, so that the server and the browser agree.

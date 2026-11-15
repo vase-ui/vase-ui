@@ -84,6 +84,69 @@ describe('getKeyAction', () => {
   const ltr = { isRtl: false, canExtend: false };
 
   it.each([
+    { key: 'ArrowRight', options: ltr, duration: { days: 1 }, stepDays: 1 },
+    { key: 'ArrowLeft', options: ltr, duration: { days: -1 }, stepDays: -1 },
+    { key: 'ArrowDown', options: ltr, duration: { days: 7 }, stepDays: 7 },
+    { key: 'ArrowUp', options: ltr, duration: { days: -7 }, stepDays: -7 },
+    { key: 'PageDown', options: ltr, duration: { months: 1 }, stepDays: 1 },
+    { key: 'PageUp', options: ltr, duration: { months: -1 }, stepDays: -1 },
+    { key: 'PageDown', shiftKey: true, options: ltr, duration: { years: 1 }, stepDays: 1 },
+    { key: 'PageUp', shiftKey: true, options: ltr, duration: { years: -1 }, stepDays: -1 },
+    { key: 'ArrowRight', options: { ...ltr, isRtl: true }, duration: { days: -1 }, stepDays: -1 },
+    { key: 'ArrowLeft', options: { ...ltr, isRtl: true }, duration: { days: 1 }, stepDays: 1 },
+    { key: 'ArrowDown', options: { ...ltr, isRtl: true }, duration: { days: 7 }, stepDays: 7 },
+  ])(
+    'moves $duration for $key with shift $shiftKey, right to left $options.isRtl',
+    ({ key, shiftKey = false, options, duration, stepDays }) => {
+      expect(getKeyAction(key, shiftKey, options)).toEqual({
+        move: { duration, stepDays },
+        extend: false,
+      });
+    },
+  );
+
+  it.each([
+    { key: 'ArrowRight', isRtl: false, duration: { months: 1 } },
+    { key: 'ArrowLeft', isRtl: false, duration: { months: -1 } },
+    { key: 'ArrowRight', isRtl: true, duration: { months: -1 } },
+    { key: 'ArrowDown', isRtl: false, duration: { years: 1 } },
+    { key: 'ArrowUp', isRtl: true, duration: { years: -1 } },
+  ])(
+    'moves a month or a year for Shift and $key, when the selection cannot extend',
+    ({ key, isRtl, duration }) => {
+      const action = getKeyAction(key, true, { isRtl, canExtend: false });
+
+      expect(action).toEqual({
+        move: { duration, stepDays: Object.values(duration)[0] },
+        extend: false,
+      });
+    },
+  );
+
+  it.each([
+    { key: 'ArrowRight', isRtl: false, duration: { days: 1 } },
+    { key: 'ArrowLeft', isRtl: true, duration: { days: 1 } },
+    { key: 'ArrowUp', isRtl: false, duration: { days: -7 } },
+  ])(
+    'moves a day or a week and extends for Shift and $key, when the selection can extend',
+    ({ key, isRtl, duration }) => {
+      const action = getKeyAction(key, true, { isRtl, canExtend: true });
+
+      expect(action).toEqual({
+        move: { duration, stepDays: duration.days },
+        extend: true,
+      });
+    },
+  );
+
+  it.each([
+    { key: 'Home', weekEdge: 'start' },
+    { key: 'End', weekEdge: 'end' },
+  ])('goes to the $weekEdge of the week for $key', ({ key, weekEdge }) => {
+    expect(getKeyAction(key, false, ltr)).toEqual({ move: { weekEdge }, extend: false });
+  });
+
+  it.each([
     { name: 'Shift and Home', key: 'Home', shiftKey: true },
     { name: 'Enter', key: 'Enter', shiftKey: false },
     { name: 'a letter', key: 'a', shiftKey: false },

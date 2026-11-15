@@ -2,9 +2,9 @@
 import type { ThHTMLAttributes } from 'vue';
 import type { DayOfWeek } from '../../internals/date-time/temporal';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
-import type { CalendarRootState } from '../root/CalendarRoot.vue';
+import type { CalendarState } from '../root/CalendarRoot.vue';
 
-export interface CalendarWeekdayState extends CalendarRootState {
+export interface CalendarWeekdayState extends CalendarState {
   /**
    * Whether the day of the week is in the weekend of the locale.
    */

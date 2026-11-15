@@ -1,7 +1,39 @@
-import { describe, expect, it } from 'vitest';
-import { createRenderer, describeConformance, screen, takeReportedMessages } from '#test-utils';
+import { beforeEach, describe, expect, it, onTestFinished } from 'vitest';
+import {
+  createRenderer,
+  describeConformance,
+  nextAnimationsRead,
+  screen,
+  takeReportedMessages,
+  waitFor,
+} from '#test-utils';
 import * as Calendar from '../index.parts';
 import CalendarAncestors from '../root/CalendarAncestors.test.vue';
+import CalendarNavigationAnatomy from '../root/CalendarNavigationAnatomy.test.vue';
+
+// A month leaves with an exit animation of 100 s. A test that ends the animation does it itself, so
+// a late frame cannot end it before the part reads it.
+const STYLE = `
+  @keyframes calendar-month-leave {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
+  [data-index][data-ending-style] {
+    animation: calendar-month-leave 100s linear;
+  }
+`;
+
+const today = () => Temporal.PlainDate.from('2026-11-14');
+const months = () => document.querySelectorAll<HTMLElement>('[data-index]');
+
+function nextFrame() {
+  return new Promise<void>((resolve) => {
+    requestAnimationFrame(() => {
+      resolve();
+    });
+  });
+}
 
 describe('<Calendar.Months />', () => {
   const { render } = createRenderer();
@@ -47,6 +79,134 @@ describe('<Calendar.Months />', () => {
 
     expect(screen.getByTestId('custom')).not.toBe(null);
     expect(screen.queryByTestId('month')).toBe(null);
+  });
+
+  describe('the direction', () => {
+    it('is none until the page changes, and then the side of the change', async () => {
+      const { user } = await render(<CalendarNavigationAnatomy today={today()} locale="en-US" />);
+      const root = screen.getByRole('group');
+      expect(root).toHaveAttribute('data-navigation-direction', 'none');
+      expect(screen.getByTestId('months')).toHaveAttribute('data-navigation-direction', 'none');
+
+      await user.click(screen.getByTestId('next'));
+      expect(root).toHaveAttribute('data-navigation-direction', 'next');
+      expect(screen.getByTestId('months')).toHaveAttribute('data-navigation-direction', 'next');
+
+      await user.click(screen.getByTestId('previous'));
+      expect(root).toHaveAttribute('data-navigation-direction', 'previous');
+    });
+  });
+
+  describe('a month that leaves', () => {
+    beforeEach(() => {
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    });
+
+    function renderCalendar(props: Record<string, unknown> = {}) {
+      const style = document.createElement('style');
+      style.textContent = STYLE;
+      document.head.append(style);
+      onTestFinished(() => {
+        style.remove();
+      });
+      return render(
+        <CalendarNavigationAnatomy {...{ today: today(), locale: 'en-US', ...props }} />,
+      );
+    }
+
+    it('stays with no interaction until its animations end, and then goes', async () => {
+      const { user } = await renderCalendar();
+      const month = months()[0]!;
+      // The part reads the animations of the first month in the frame after the mount.
+      await nextFrame();
+
+      const read = nextAnimationsRead(month, {
+        action: () => user.click(screen.getByTestId('next')),
+      });
+      const animations = await read;
+
+      expect(animations).toHaveLength(1);
+      expect(month).toHaveAttribute('data-ending-style');
+      expect(month).toHaveAttribute('inert');
+      expect(month).toHaveAttribute('data-index', '-1');
+      expect(month.isConnected).toBe(true);
+      expect(months()).toHaveLength(2);
+
+      for (const animation of animations) {
+        animation.finish();
+      }
+      await Promise.all(animations.map((animation) => animation.finished));
+
+      await waitFor(() => {
+        expect(month.isConnected).toBe(false);
+      });
+      expect(months()).toHaveLength(1);
+    });
+
+    it('goes at once when it has no animation', async () => {
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = true;
+      const { user } = await renderCalendar();
+
+      await user.click(screen.getByTestId('next'));
+
+      await waitFor(() => {
+        expect(months()).toHaveLength(1);
+      });
+    });
+
+    it('does not keep a month that goes because the calendar of the grid changed', async () => {
+      const { setProps } = await renderCalendar();
+
+      await setProps({ calendar: 'persian' });
+
+      expect(months()).toHaveLength(1);
+      expect(document.querySelector('[data-ending-style]')).toBe(null);
+    });
+
+    it('gives the month that comes the starting style for a frame, and the first month none', async () => {
+      const { user, container } = await renderCalendar();
+      expect(document.querySelector('[data-starting-style]')).toBe(null);
+      const starts: Element[] = [];
+      let hasEnded = false;
+      const observer = new MutationObserver((records) => {
+        for (const record of records) {
+          for (const node of record.addedNodes) {
+            if (
+              node instanceof Element &&
+              node.matches('[data-index]') &&
+              node.hasAttribute('data-starting-style')
+            ) {
+              starts.push(node);
+            }
+          }
+          if (
+            record.type === 'attributes' &&
+            record.target instanceof Element &&
+            starts.includes(record.target) &&
+            !record.target.hasAttribute('data-starting-style')
+          ) {
+            hasEnded = true;
+          }
+        }
+      });
+      observer.observe(container, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['data-starting-style'],
+      });
+      onTestFinished(() => {
+        observer.disconnect();
+      });
+
+      await user.click(screen.getByTestId('next'));
+
+      await waitFor(() => {
+        expect(hasEnded).toBe(true);
+      });
+      expect(starts).toHaveLength(1);
+      expect(starts[0]).toHaveAttribute('data-index', '0');
+    });
   });
 
   // This case is the last of the file. In Vue 3.5.12, a `setup` that throws leaves the current

@@ -108,15 +108,20 @@ describe('getMonthPage', () => {
     );
   });
 
-  it('shows the days of a Persian month, which starts on the 23rd of an ISO month', () => {
-    const yearMonth = day('2026-11-14', 'persian').toPlainYearMonth();
+  it.each([
+    { name: 'persian', date: () => day('2026-11-14', 'persian'), days: 30, first: '2026-10-23' },
+    // The leap year 5784 has the month Adar I, which has 30 days.
+    { name: 'hebrew', date: () => day('2024-02-10', 'hebrew'), days: 30, first: '2024-02-10' },
+    { name: 'japanese', date: () => day('2019-05-20', 'japanese'), days: 31, first: '2019-05-01' },
+  ])('shows the days of a month of the calendar $name', ({ date, days, first }) => {
+    const yearMonth = date().toPlainYearMonth();
     const page = getMonthPage(yearMonth, 1);
     const inMonth = page.weeks
       .flatMap((week) => week.days)
       .filter((candidate) => isInMonth(candidate, yearMonth));
 
-    expect(inMonth).toHaveLength(30);
-    expect(text(inMonth[0]!)).toBe('2026-10-23');
+    expect(inMonth).toHaveLength(days);
+    expect(text(inMonth[0]!)).toBe(first);
   });
 });
 

@@ -1,10 +1,17 @@
 <script lang="ts">
 import type { HTMLAttributes } from 'vue';
 import type { CalendarPage } from '../../internals/date-time/calendar/monthGrid';
+import type { NavigationDirection } from '../../internals/date-time/calendar/useCalendarRoot';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
-import type { CalendarRootState } from '../root/CalendarRoot.vue';
+import type { CalendarState } from '../root/CalendarRoot.vue';
 
-export interface CalendarMonthsState extends CalendarRootState {}
+export interface CalendarMonthsState extends CalendarState {
+  /**
+   * The side of the last change of the page: `previous` or `next`, and `none` until the page
+   * changes.
+   */
+  navigationDirection: NavigationDirection;
+}
 
 export interface CalendarMonthsProps
   extends
@@ -13,9 +20,15 @@ export interface CalendarMonthsProps
 </script>
 
 <script setup lang="ts">
+import { computed, provide, shallowRef, watch } from 'vue';
+import { getPageKey } from '../../internals/date-time/calendar/monthGrid';
+import { compareDates } from '../../internals/date-time/temporal';
+import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useCalendarRootContext } from '../root/CalendarRootContext';
+import { CalendarMonthsContext } from './CalendarMonthsContext';
+import * as CalendarMonthsDataAttributes from './CalendarMonthsDataAttributes';
 
 defineOptions({ inheritAttrs: false });
 
@@ -29,9 +42,48 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, CalendarMonthsState>;
 }>();
 
-const { state, pages } = useCalendarRootContext();
+const { state: rootState, pages, navigationDirection } = useCalendarRootContext();
 
-const { element, elementProps } = useRenderElement('div', props, { state });
+const state = computed<CalendarMonthsState>(() => ({
+  ...rootState.value,
+  navigationDirection: navigationDirection.value,
+}));
+
+// A page that the grid no longer shows stays, so that its animations can end. The watcher is
+// synchronous, so the page is in the list in the render that removes it from the pages. A new
+// calendar of the grid, such as the calendar of the runtime locale after a hydration, gives other
+// months and is not a move of the page, so no page leaves.
+const leaving = shallowRef<CalendarPage[]>([]);
+watch(
+  pages,
+  (next, previous) => {
+    const shown = new Set(next.map((page) => getPageKey(page)));
+    const isNewCalendar = next[0]?.yearMonth.calendarId !== previous[0]?.yearMonth.calendarId;
+    leaving.value = isNewCalendar
+      ? []
+      : [...leaving.value, ...previous].filter((page) => !shown.has(getPageKey(page)));
+  },
+  { flush: 'sync' },
+);
+
+const rendered = computed(() =>
+  [...pages.value, ...leaving.value].toSorted((a, b) => compareDates(a.first, b.first)),
+);
+
+provide(CalendarMonthsContext, {
+  isLeaving: (page) => leaving.value.some((left) => getPageKey(left) === getPageKey(page)),
+  finishLeaving(page) {
+    leaving.value = leaving.value.filter((left) => getPageKey(left) !== getPageKey(page));
+  },
+});
+
+const stateAttributesMapping: StateAttributesMapping<CalendarMonthsState> = {
+  navigationDirection: (value) => ({
+    [CalendarMonthsDataAttributes.navigationDirection]: value,
+  }),
+};
+
+const { element, elementProps } = useRenderElement('div', props, { state, stateAttributesMapping });
 
 defineExpose({ element });
 </script>
@@ -39,5 +91,5 @@ defineExpose({ element });
 <!-- prettier-ignore -->
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"><template v-for="(month, index) in pages" :key="month.yearMonth.toString()"><slot name="month" :month="month" :index="index" /></template></component>
+  <component :is="as" v-else v-bind="elementProps()"><template v-for="(month, index) in rendered" :key="getPageKey(month)"><slot name="month" :month="month" :index="index" /></template></component>
 </template>

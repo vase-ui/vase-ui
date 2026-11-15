@@ -141,6 +141,50 @@ describe('<Calendar.Root /> keys', () => {
     });
   });
 
+  describe('at the end of a month', () => {
+    it.each([
+      {
+        name: 'January 31 to February 28',
+        today: '2026-01-31',
+        keys: '{PageDown}',
+        to: '2026-02-28',
+      },
+      { name: 'March 31 to February 28', today: '2026-03-31', keys: '{PageUp}', to: '2026-02-28' },
+      {
+        name: 'a leap day to the next year',
+        today: '2028-02-29',
+        keys: '{Shift>}{PageDown}{/Shift}',
+        to: '2029-02-28',
+      },
+    ])('goes from $name', async ({ today: from, keys, to }) => {
+      await pressKeys({ from, keys, props: { today: day(from) } });
+
+      expectFocus(to);
+    });
+  });
+
+  describe('in a calendar with 13 months', () => {
+    it('goes through each month of a Hebrew leap year and back to the same day', async () => {
+      // The year 5784 is a leap year. Tishri 15, its fifteenth day, is 2023-09-30.
+      const start = day('2023-09-30').withCalendar('hebrew');
+      expect(start.monthsInYear).toBe(13);
+      const onMonthChange = vi.fn();
+      await pressKeys({
+        from: '2023-09-30',
+        keys: '{PageDown}'.repeat(13),
+        props: { today: start, calendar: 'hebrew', onMonthChange },
+      });
+
+      const codes = onMonthChange.mock.calls.map(([month]) => month.monthCode);
+      expect(codes).toHaveLength(13);
+      expect(new Set(codes).size).toBe(13);
+      expect(codes).toContain('M05L');
+      expect(document.activeElement).toBe(
+        button(start.add({ years: 1 }).withCalendar('iso8601').toString()),
+      );
+    });
+  });
+
   describe('over days that cannot take focus', () => {
     // The weekend of `en-US` is Saturday and Sunday.
     const weekend = { disabledDates: { dayOfWeek: [6, 7] } };
@@ -164,6 +208,16 @@ describe('<Calendar.Root /> keys', () => {
       await pressKeys({ from, keys, props: weekend });
 
       expectFocus(to);
+    });
+
+    it('skips a hidden day, and stops on an unavailable day', async () => {
+      await pressKeys({
+        from: '2026-11-10',
+        keys: '{ArrowRight}',
+        props: { hiddenDates: day('2026-11-11'), unavailableDates: day('2026-11-12') },
+      });
+
+      expectFocus('2026-11-12');
     });
 
     it('stays when no day can take focus', async () => {

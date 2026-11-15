@@ -37,6 +37,40 @@ import CalendarWeek from './week/CalendarWeek.vue';
 import type { CalendarWeekProps, CalendarWeekState } from './week/CalendarWeek.vue';
 import CalendarWeekday from './weekday/CalendarWeekday.vue';
 import type { CalendarWeekdayProps, CalendarWeekdayState } from './weekday/CalendarWeekday.vue';
+import CalendarCaption from './caption/CalendarCaption.vue';
+import type { CalendarCaptionProps, CalendarCaptionState } from './caption/CalendarCaption.vue';
+import CalendarMonthSelect from './month-select/CalendarMonthSelect.vue';
+import type {
+  CalendarMonthSelectProps,
+  CalendarMonthSelectState,
+} from './month-select/CalendarMonthSelect.vue';
+import CalendarYearSelect from './year-select/CalendarYearSelect.vue';
+import type {
+  CalendarYearSelectProps,
+  CalendarYearSelectState,
+} from './year-select/CalendarYearSelect.vue';
+import CalendarPreviousButton from './previous-button/CalendarPreviousButton.vue';
+import type {
+  CalendarPreviousButtonProps,
+  CalendarPreviousButtonState,
+} from './previous-button/CalendarPreviousButton.vue';
+import CalendarNextButton from './next-button/CalendarNextButton.vue';
+import type {
+  CalendarNextButtonProps,
+  CalendarNextButtonState,
+} from './next-button/CalendarNextButton.vue';
+import CalendarWeekNumberHeader from './week-number-header/CalendarWeekNumberHeader.vue';
+import type {
+  CalendarWeekNumberHeaderProps,
+  CalendarWeekNumberHeaderState,
+} from './week-number-header/CalendarWeekNumberHeader.vue';
+import CalendarWeekNumber from './week-number/CalendarWeekNumber.vue';
+import type {
+  CalendarWeekNumberProps,
+  CalendarWeekNumberState,
+} from './week-number/CalendarWeekNumber.vue';
+import CalendarFooter from './footer/CalendarFooter.vue';
+import type { CalendarFooterProps, CalendarFooterState } from './footer/CalendarFooter.vue';
 import type { DateValue } from '../internals/date-time/temporal';
 
 /**
@@ -153,4 +187,84 @@ export const DayButton: typeof CalendarDayButton = CalendarDayButton;
 export namespace DayButton {
   export type Props = CalendarDayButtonProps;
   export type State = CalendarDayButtonState;
+}
+
+/**
+ * The name of the month, as a live region. The grid of the month is named by it.
+ * Renders a `<div>` element.
+ */
+export const Caption: typeof CalendarCaption = CalendarCaption;
+export namespace Caption {
+  export type Props = CalendarCaptionProps;
+  export type State = CalendarCaptionState;
+}
+
+/**
+ * A select that sets the month of the page.
+ * Renders a `<select>` element.
+ */
+export const MonthSelect: typeof CalendarMonthSelect = CalendarMonthSelect;
+export namespace MonthSelect {
+  export type Props = CalendarMonthSelectProps;
+  export type State = CalendarMonthSelectState;
+}
+
+/**
+ * A select that sets the year of the page.
+ * Renders a `<select>` element.
+ */
+export const YearSelect: typeof CalendarYearSelect = CalendarYearSelect;
+export namespace YearSelect {
+  export type Props = CalendarYearSelectProps;
+  export type State = CalendarYearSelectState;
+}
+
+/**
+ * The button that shows the page before. A hold repeats the move.
+ * Renders a `<button>` element.
+ */
+export const PreviousButton: typeof CalendarPreviousButton = CalendarPreviousButton;
+export namespace PreviousButton {
+  export type Props = CalendarPreviousButtonProps;
+  export type State = CalendarPreviousButtonState;
+}
+
+/**
+ * The button that shows the page after. A hold repeats the move.
+ * Renders a `<button>` element.
+ */
+export const NextButton: typeof CalendarNextButton = CalendarNextButton;
+export namespace NextButton {
+  export type Props = CalendarNextButtonProps;
+  export type State = CalendarNextButtonState;
+}
+
+/**
+ * The header of the column of the week numbers.
+ * Renders a `<th>` element.
+ */
+export const WeekNumberHeader: typeof CalendarWeekNumberHeader = CalendarWeekNumberHeader;
+export namespace WeekNumberHeader {
+  export type Props = CalendarWeekNumberHeaderProps;
+  export type State = CalendarWeekNumberHeaderState;
+}
+
+/**
+ * The number of a week.
+ * Renders a `<th>` element.
+ */
+export const WeekNumber: typeof CalendarWeekNumber = CalendarWeekNumber;
+export namespace WeekNumber {
+  export type Props = CalendarWeekNumberProps;
+  export type State = CalendarWeekNumberState;
+}
+
+/**
+ * A live region for a message below the calendar.
+ * Renders a `<div>` element.
+ */
+export const Footer: typeof CalendarFooter = CalendarFooter;
+export namespace Footer {
+  export type Props = CalendarFooterProps;
+  export type State = CalendarFooterState;
 }
