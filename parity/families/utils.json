@@ -40,7 +40,7 @@
     "packages/react/src/utils/useSwipeDismiss.ts",
     "packages/react/src/utils/valueToPercent.ts"
   ],
-  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "matchedCommit": "315eba7a3d8a0a53d47fe7b902cb75daa21f6814",
   "exceptions": [
     {
       "upstream": "packages/react/src/utils/getPseudoElementBounds.test.ts",

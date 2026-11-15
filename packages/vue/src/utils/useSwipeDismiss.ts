@@ -42,6 +42,53 @@ export function getDisplacement(direction: SwipeDirection, deltaX: number, delta
   }
 }
 
+export function applyDirectionalDamping(
+  deltaX: number,
+  deltaY: number,
+  directions: readonly SwipeDirection[],
+) {
+  const dampAxis = (delta: number, negative: SwipeDirection, positive: SwipeDirection) =>
+    (delta < 0 && !directions.includes(negative)) || (delta > 0 && !directions.includes(positive))
+      ? Math.sign(delta) * Math.abs(delta) ** 0.5
+      : delta;
+
+  return {
+    x: dampAxis(deltaX, 'left', 'right'),
+    y: dampAxis(deltaY, 'up', 'down'),
+  };
+}
+
+export function updateSwipeCancelBaseline(baseline: Point, position: Point, movement: Point) {
+  const clampAxis = (pos: number, base: number, move: number) =>
+    (move < 0 && pos > base) || (move > 0 && pos < base) ? pos : base;
+
+  return {
+    x: clampAxis(position.x, baseline.x, movement.x),
+    y: clampAxis(position.y, baseline.y, movement.y),
+  };
+}
+
+export function shouldCancelReverseSwipe(
+  directions: readonly SwipeDirection[],
+  maxDisplacement: number,
+  currentDisplacement: number,
+) {
+  return (
+    !(directions.includes('left') && directions.includes('right')) &&
+    !(directions.includes('up') && directions.includes('down')) &&
+    maxDisplacement - currentDisplacement >= REVERSE_CANCEL_THRESHOLD
+  );
+}
+
+export function getDismissDirection(
+  directions: readonly SwipeDirection[],
+  deltaX: number,
+  deltaY: number,
+  threshold: number,
+): SwipeDirection | undefined {
+  return directions.find((direction) => getDisplacement(direction, deltaX, deltaY) > threshold);
+}
+
 function getValidTimeStamp(timeStamp: number): number | null {
   return Number.isFinite(timeStamp) && timeStamp > 0 ? timeStamp : null;
 }
@@ -105,23 +152,15 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
 
   const directionState = computed(() => {
     const directions = toValue(options.directions);
-    const allowLeft = directions.includes('left');
-    const allowRight = directions.includes('right');
-    const allowUp = directions.includes('up');
-    const allowDown = directions.includes('down');
-    const hasHorizontal = allowLeft || allowRight;
+    const hasHorizontal = directions.includes('left') || directions.includes('right');
     // The callers give directions on one axis only.
     const scrollAxis: ScrollAxis = hasHorizontal ? 'horizontal' : 'vertical';
 
     return {
       directions,
       primaryDirection: directions.length === 1 ? directions[0] : undefined,
-      allowLeft,
-      allowRight,
-      allowUp,
-      allowDown,
       hasHorizontal,
-      hasVertical: allowUp || allowDown,
+      hasVertical: directions.includes('up') || directions.includes('down'),
       scrollAxis,
     };
   });
@@ -437,30 +476,12 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
     onCancel?.(event);
   }
 
-  function applyDirectionalDamping(deltaX: number, deltaY: number) {
-    const { allowLeft, allowRight, allowUp, allowDown, hasHorizontal, hasVertical } =
-      directionState.value;
-    const exponent = (value: number) => Math.sign(value) * Math.abs(value) ** 0.5;
-    const dampAxis = (delta: number, allowNegative: boolean, allowPositive: boolean) => {
-      if ((!allowNegative && delta < 0) || (!allowPositive && delta > 0)) {
-        return exponent(delta);
-      }
-      return delta;
-    };
-
-    return {
-      x: hasHorizontal ? dampAxis(deltaX, allowLeft, allowRight) : exponent(deltaX),
-      y: hasVertical ? dampAxis(deltaY, allowUp, allowDown) : exponent(deltaY),
-    };
-  }
-
   function canSwipeFromScrollEdgeOnPendingMove(
     scrollTarget: HTMLElement,
     deltaX: number,
     deltaY: number,
   ): boolean | null {
-    const { allowLeft, allowRight, allowUp, allowDown, hasHorizontal, hasVertical } =
-      directionState.value;
+    const { directions, hasHorizontal, hasVertical } = directionState.value;
     // A swipe to the start edge of the axis (down or right) can start when the scroll offset is at
     // the start. A swipe to the end edge (up or left) can start when the scroll offset is at the
     // end.
@@ -468,19 +489,19 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
       delta: number,
       scrollOffset: number,
       maxScrollOffset: number,
-      allowTowardStart: boolean,
-      allowTowardEnd: boolean,
+      towardStart: SwipeDirection,
+      towardEnd: SwipeDirection,
     ) =>
-      (delta > 0 && scrollOffset <= 0 && allowTowardStart) ||
-      (delta < 0 && scrollOffset >= Math.max(0, maxScrollOffset) && allowTowardEnd);
+      (delta > 0 && scrollOffset <= 0 && directions.includes(towardStart)) ||
+      (delta < 0 && scrollOffset >= Math.max(0, maxScrollOffset) && directions.includes(towardEnd));
 
     if (hasVertical && deltaY !== 0) {
       return canSwipeOnAxis(
         deltaY,
         scrollTarget.scrollTop,
         scrollTarget.scrollHeight - scrollTarget.clientHeight,
-        allowDown,
-        allowUp,
+        'down',
+        'up',
       );
     }
 
@@ -489,8 +510,8 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
         deltaX,
         scrollTarget.scrollLeft,
         scrollTarget.scrollWidth - scrollTarget.clientWidth,
-        allowRight,
-        allowLeft,
+        'right',
+        'left',
       );
     }
 
@@ -545,15 +566,7 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
       return;
     }
 
-    const {
-      primaryDirection,
-      allowLeft,
-      allowRight,
-      allowUp,
-      allowDown,
-      hasHorizontal,
-      hasVertical,
-    } = directionState.value;
+    const { directions, primaryDirection, hasHorizontal, hasVertical } = directionState.value;
     const trackDrag = toValue(options.trackDrag) ?? true;
 
     const target = getTarget(event) as HTMLElement | null;
@@ -586,27 +599,12 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
       }
     }
 
-    const clientX = position.x;
-    const clientY = position.y;
+    swipeCancelBaseline = updateSwipeCancelBaseline(swipeCancelBaseline, position, movement);
 
-    if (
-      (movement.y < 0 && clientY > swipeCancelBaseline.y) ||
-      (movement.y > 0 && clientY < swipeCancelBaseline.y)
-    ) {
-      swipeCancelBaseline = { x: swipeCancelBaseline.x, y: clientY };
-    }
-
-    if (
-      (movement.x < 0 && clientX > swipeCancelBaseline.x) ||
-      (movement.x > 0 && clientX < swipeCancelBaseline.x)
-    ) {
-      swipeCancelBaseline = { x: clientX, y: swipeCancelBaseline.y };
-    }
-
-    const deltaX = clientX - dragStartPos.x;
-    const deltaY = clientY - dragStartPos.y;
-    const cancelDeltaY = clientY - swipeCancelBaseline.y;
-    const cancelDeltaX = clientX - swipeCancelBaseline.x;
+    const deltaX = position.x - dragStartPos.x;
+    const deltaY = position.y - dragStartPos.y;
+    const cancelDeltaY = position.y - swipeCancelBaseline.y;
+    const cancelDeltaX = position.x - swipeCancelBaseline.x;
 
     if (!intendedSwipeDirection) {
       let candidate: SwipeDirection;
@@ -615,13 +613,7 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
       } else {
         candidate = deltaY > 0 ? 'down' : 'up';
       }
-
-      const isAllowed =
-        (candidate === 'left' && allowLeft) ||
-        (candidate === 'right' && allowRight) ||
-        (candidate === 'up' && allowUp) ||
-        (candidate === 'down' && allowDown);
-      if (isAllowed) {
+      if (directions.includes(candidate)) {
         intendedSwipeDirection = candidate;
         maxSwipeDisplacement = getDisplacement(candidate, deltaX, deltaY);
         currentSwipeDirection.value = candidate;
@@ -633,16 +625,12 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
       if (currentDisplacement > swipeThreshold) {
         cancelledSwipe = false;
         currentSwipeDirection.value = direction;
-      } else if (
-        !(allowLeft && allowRight) &&
-        !(allowUp && allowDown) &&
-        maxSwipeDisplacement - currentDisplacement >= REVERSE_CANCEL_THRESHOLD
-      ) {
+      } else if (shouldCancelReverseSwipe(directions, maxSwipeDisplacement, currentDisplacement)) {
         cancelledSwipe = true;
       }
     }
 
-    const dampedDelta = applyDirectionalDamping(deltaX, deltaY);
+    const dampedDelta = applyDirectionalDamping(deltaX, deltaY, directions);
     let newOffsetX = initialTransform.x;
     let newOffsetY = initialTransform.y;
 
@@ -696,11 +684,11 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
       return;
     }
 
-    const releaseDeltaX = dragOffset.x - initialTransform.x;
-    const releaseDeltaY = dragOffset.y - initialTransform.y;
+    const deltaX = dragOffset.x - initialTransform.x;
+    const deltaY = dragOffset.y - initialTransform.y;
     const progressDetails: SwipeProgressDetailsInternal = {
-      deltaX: releaseDeltaX,
-      deltaY: releaseDeltaY,
+      deltaX,
+      deltaY,
       direction: intendedSwipeDirection,
     };
 
@@ -727,8 +715,8 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
         ? endTime - swipeStartTime
         : 0;
     const velocityDurationMs = durationMs > 0 ? Math.max(durationMs, MIN_VELOCITY_DURATION_MS) : 0;
-    const velocityX = velocityDurationMs > 0 ? releaseDeltaX / velocityDurationMs : 0;
-    const velocityY = velocityDurationMs > 0 ? releaseDeltaY / velocityDurationMs : 0;
+    const velocityX = velocityDurationMs > 0 ? deltaX / velocityDurationMs : 0;
+    const velocityY = velocityDurationMs > 0 ? deltaY / velocityDurationMs : 0;
     let releaseVelocityX = lastDragVelocity.x;
     let releaseVelocityY = lastDragVelocity.y;
     if (lastDragSample && endTime !== null && endTime >= lastDragSample.time) {
@@ -752,8 +740,8 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
     const releaseDecision = onRelease?.({
       event,
       direction: intendedSwipeDirection,
-      deltaX: releaseDeltaX,
-      deltaY: releaseDeltaY,
+      deltaX,
+      deltaY,
       velocityX,
       velocityY,
       releaseVelocityX,
@@ -761,32 +749,20 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
     });
     const hasReleaseDecision = typeof releaseDecision === 'boolean';
 
-    function settle() {
-      dragOffset = { x: resolvedInitialTransform.x, y: resolvedInitialTransform.y };
-      currentSwipeDirection.value = undefined;
-      syncDragStyles(false);
-      updateSwipeProgress(0, progressDetails);
-    }
-
-    if (cancelledSwipe && !hasReleaseDecision) {
-      settle();
-      return;
-    }
-
     let shouldClose = false;
     let dismissDirection: SwipeDirection | undefined;
 
     if (hasReleaseDecision) {
       shouldClose = releaseDecision;
       dismissDirection = intendedSwipeDirection ?? directionState.value.primaryDirection;
-    } else {
-      for (const direction of directionState.value.directions) {
-        if (getDisplacement(direction, releaseDeltaX, releaseDeltaY) > swipeThreshold) {
-          shouldClose = true;
-          dismissDirection = direction;
-          break;
-        }
-      }
+    } else if (!cancelledSwipe) {
+      dismissDirection = getDismissDirection(
+        directionState.value.directions,
+        deltaX,
+        deltaY,
+        swipeThreshold,
+      );
+      shouldClose = dismissDirection !== undefined;
     }
 
     if (shouldClose && dismissDirection) {
@@ -795,7 +771,10 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
       syncDragStyles(false);
       onDismiss?.(event, { direction: dismissDirection });
     } else {
-      settle();
+      dragOffset = { x: resolvedInitialTransform.x, y: resolvedInitialTransform.y };
+      currentSwipeDirection.value = undefined;
+      syncDragStyles(false);
+      updateSwipeProgress(0, progressDetails);
     }
   }
 

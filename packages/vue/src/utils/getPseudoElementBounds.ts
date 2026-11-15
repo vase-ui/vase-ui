@@ -41,10 +41,10 @@ export function getPseudoElementBounds(element: HTMLElement): ElementBounds {
   }
 
   // Get dimensions of pseudo-elements
-  const beforeWidth = parseFloat(beforeStyles.width) || 0;
-  const beforeHeight = parseFloat(beforeStyles.height) || 0;
-  const afterWidth = parseFloat(afterStyles.width) || 0;
-  const afterHeight = parseFloat(afterStyles.height) || 0;
+  const beforeWidth = Number.parseFloat(beforeStyles.width) || 0;
+  const beforeHeight = Number.parseFloat(beforeStyles.height) || 0;
+  const afterWidth = Number.parseFloat(afterStyles.width) || 0;
+  const afterHeight = Number.parseFloat(afterStyles.height) || 0;
 
   // Calculate max dimensions including pseudo-elements
   const totalWidth = Math.max(elementRect.width, beforeWidth, afterWidth);

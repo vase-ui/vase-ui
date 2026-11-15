@@ -478,14 +478,7 @@ describe('<Toolbar.Button />', () => {
         await render(
           <Toolbar.Root>
             <Select.Root defaultValue="a">
-              <Toolbar.Button
-                data-testid="button"
-                v-slots={{
-                  render: ({ props }: { props: Record<string, unknown> }) => (
-                    <Select.Trigger {...props} />
-                  ),
-                }}
-              />
+              <Toolbar.Button data-testid="button" as={Select.Trigger} />
               <Select.Portal>
                 <Select.Positioner>
                   <Select.Popup>
@@ -508,14 +501,7 @@ describe('<Toolbar.Button />', () => {
         const { user } = await render(
           <Toolbar.Root>
             <Select.Root defaultValue="a" onValueChange={handleValueChange}>
-              <Toolbar.Button
-                data-testid="button"
-                v-slots={{
-                  render: ({ props }: { props: Record<string, unknown> }) => (
-                    <Select.Trigger {...props} />
-                  ),
-                }}
-              />
+              <Toolbar.Button data-testid="button" as={Select.Trigger} />
               <Select.Portal>
                 <Select.Positioner>
                   <Select.Popup data-testid="popup">
@@ -645,13 +631,7 @@ describe('<Toolbar.Button />', () => {
         const { user } = await render(
           <Toolbar.Root>
             <Dialog.Root modal={false} onOpenChange={onOpenChange}>
-              <Toolbar.Button
-                v-slots={{
-                  render: ({ props }: { props: Record<string, unknown> }) => (
-                    <Dialog.Trigger {...props} />
-                  ),
-                }}
-              />
+              <Toolbar.Button as={Dialog.Trigger} />
               <Dialog.Portal>
                 <Dialog.Backdrop />
                 <Dialog.Popup>
@@ -689,14 +669,7 @@ describe('<Toolbar.Button />', () => {
         const { user } = await render(
           <Toolbar.Root>
             <Dialog.Root modal={false} onOpenChange={onOpenChange}>
-              <Toolbar.Button
-                disabled
-                v-slots={{
-                  render: ({ props }: { props: Record<string, unknown> }) => (
-                    <Dialog.Trigger {...props} />
-                  ),
-                }}
-              />
+              <Toolbar.Button disabled as={Dialog.Trigger} />
               <Dialog.Portal>
                 <Dialog.Backdrop />
                 <Dialog.Popup>
@@ -729,13 +702,7 @@ describe('<Toolbar.Button />', () => {
         const { user } = await render(
           <Toolbar.Root>
             <Dialog.Root modal={false}>
-              <Toolbar.Button
-                v-slots={{
-                  render: ({ props }: { props: Record<string, unknown> }) => (
-                    <Dialog.Trigger {...props}>dialog</Dialog.Trigger>
-                  ),
-                }}
-              />
+              <Toolbar.Button as={Dialog.Trigger}>dialog</Toolbar.Button>
               <Dialog.Portal>
                 <Dialog.Popup />
               </Dialog.Portal>
@@ -770,13 +737,7 @@ describe('<Toolbar.Button />', () => {
         const { user } = await render(
           <Toolbar.Root>
             <AlertDialog.Root onOpenChange={onOpenChange}>
-              <Toolbar.Button
-                v-slots={{
-                  render: ({ props }: { props: Record<string, unknown> }) => (
-                    <AlertDialog.Trigger {...props} />
-                  ),
-                }}
-              />
+              <Toolbar.Button as={AlertDialog.Trigger} />
               <AlertDialog.Portal>
                 <AlertDialog.Backdrop />
                 <AlertDialog.Popup>
@@ -817,13 +778,7 @@ describe('<Toolbar.Button />', () => {
         const { user } = await render(
           <Toolbar.Root>
             <AlertDialog.Root>
-              <Toolbar.Button
-                v-slots={{
-                  render: ({ props }: { props: Record<string, unknown> }) => (
-                    <AlertDialog.Trigger {...props}>dialog</AlertDialog.Trigger>
-                  ),
-                }}
-              />
+              <Toolbar.Button as={AlertDialog.Trigger}>dialog</Toolbar.Button>
               <AlertDialog.Portal>
                 <AlertDialog.Popup />
               </AlertDialog.Portal>
@@ -879,13 +834,7 @@ describe('<Toolbar.Button />', () => {
         const { user } = await render(
           <Toolbar.Root>
             <Popover.Root onOpenChange={onOpenChange}>
-              <Toolbar.Button
-                v-slots={{
-                  render: ({ props }: { props: Record<string, unknown> }) => (
-                    <Popover.Trigger {...props} />
-                  ),
-                }}
-              />
+              <Toolbar.Button as={Popover.Trigger} />
               <Popover.Portal>
                 <Popover.Positioner>
                   <Popover.Popup>Content</Popover.Popup>
@@ -920,14 +869,7 @@ describe('<Toolbar.Button />', () => {
         const { user } = await render(
           <Toolbar.Root>
             <Popover.Root onOpenChange={onOpenChange}>
-              <Toolbar.Button
-                disabled
-                v-slots={{
-                  render: ({ props }: { props: Record<string, unknown> }) => (
-                    <Popover.Trigger {...props} />
-                  ),
-                }}
-              />
+              <Toolbar.Button disabled as={Popover.Trigger} />
               <Popover.Portal>
                 <Popover.Positioner>
                   <Popover.Popup>Content</Popover.Popup>

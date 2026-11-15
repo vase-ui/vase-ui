@@ -17,7 +17,7 @@ export function getElementTransform(element: HTMLElement, computedStyle?: CSSSty
     const matrix = /matrix(?:3d)?\(([^)]+)\)/.exec(transform);
     if (matrix) {
       /* eslint-disable @typescript-eslint/no-non-null-assertion -- The pattern has one group, and the length check of `values` proves each index. */
-      const values = matrix[1]!.split(', ').map(parseFloat);
+      const values = matrix[1]!.split(', ').map(Number.parseFloat);
       if (values.length === 6) {
         translateX = values[4]!;
         translateY = values[5]!;

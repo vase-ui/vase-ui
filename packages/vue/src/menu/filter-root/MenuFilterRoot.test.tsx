@@ -6043,8 +6043,8 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       });
     });
 
-    it('keeps input focus when a Shift+Tab close is canceled', async () => {
-      const { user } = await render(
+    it('VUE-69: moves the focus to the trigger for Shift+Tab from the input when the root cancels the close', async () => {
+      await render(
         <Menu.FilterProvider>
           <Menu.Root
             defaultOpen
@@ -6069,6 +6069,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         </Menu.FilterProvider>,
       );
 
+      const trigger = screen.getByRole('button', { name: 'Actions' });
       const input = screen.getByRole('searchbox', { name: 'Filter actions' });
       await waitFor(() => {
         expect(input).toHaveFocus();
@@ -6076,13 +6077,9 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       await browserUserEvent.keyboard('{Shift>}[Tab]{/Shift}');
 
-      expect(input).toHaveFocus();
-      expect(screen.getByRole('button', { name: 'Actions' })).toHaveAttribute(
-        'aria-expanded',
-        'true',
-      );
-      await user.type(input, 'r');
-      expect(input).toHaveValue('r');
+      expect(trigger).toHaveFocus();
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(screen.getByRole('menu')).toBeInTheDocument();
     });
   });
 
