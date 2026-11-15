@@ -244,7 +244,9 @@ describe('toast/promise', () => {
       vi.useRealTimers();
       vi.restoreAllMocks();
     });
-    const { Demo } = demos.find(({ name, variant }) => name === 'toast/promise' && variant === 'css-modules')!;
+    const { Demo } = demos.find(
+      ({ name, variant }) => name === 'toast/promise' && variant === 'css-modules',
+    )!;
     await render(h(Demo));
 
     await fireEvent.click(screen.getByRole('button', { name: 'Run promise' }));
