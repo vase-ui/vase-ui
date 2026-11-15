@@ -86,7 +86,7 @@ describe('the style sheet of the Tailwind demos', () => {
       name: 'a CSS-module frame gets nothing',
       vnode: () => h('div', { 'data-demo': 'css-modules' }, h('div', { class: 'h-8' })),
       selector: '.h-8',
-      expected: { height: '0px' },
+      expected: { height: '0px', 'box-sizing': 'content-box' },
     },
     {
       name: 'dark: follows the class dark',
