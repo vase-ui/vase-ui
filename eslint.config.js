@@ -271,10 +271,10 @@ const RESTRICTED_HTML_IMPORTS = [
   { name: 'vue', importNames: ['createStaticVNode', 'Static'], message: MESSAGES.html },
 ];
 
-// VitePress makes an SFC from a page, and Vue compiles the SFC. The processor makes the same SFC,
-// so the rules for an SFC apply to a page. A page includes a region of `README.md` and of
-// `THANKS.md`, and the synchronous render of a processor does not expand an include. ESLint thus
-// reads each of the two files as a page.
+// VitePress makes an SFC from a page, and Vue compiles the SFC. The processor makes an SFC from the
+// scripts of the page and the HTML of the renderer of VitePress. The rules for an SFC then apply to
+// a page. A page includes a region of `README.md` and of `THANKS.md`, and the synchronous render of
+// a processor does not expand an include. ESLint thus reads each of the two files as a page.
 const PAGE_FILES = ['docs/**/*.md', 'README.md', 'THANKS.md'];
 const SFC_OF_PAGE_FILES = PAGE_FILES.map((page) => `${page}/*.vue`);
 
@@ -291,9 +291,13 @@ function isVueFence(lang) {
 const docsRequire = createRequire(`${import.meta.dirname}/docs/package.json`);
 const vitepress = await import(pathToFileURL(docsRequire.resolve('vitepress')).href);
 
-// The site colors the code of a fence in an asynchronous step, and a processor is synchronous. This
-// renderer writes the code as text.
+// The renderer has each `markdown` option of the site. A Markdown rule of the site, such as the
+// heading badge, thus also changes the SFC that ESLint reads. The exception is the code of a fence.
+// The site colors it in an asynchronous step, and a processor is synchronous, so this renderer
+// writes the code as text.
+const { default: siteConfig } = await import('./docs/.vitepress/config.ts');
 const pageRenderer = await vitepress.createMarkdownRenderer(`${import.meta.dirname}/docs`, {
+  ...siteConfig.markdown,
   highlight: (code, lang) =>
     `<pre${isVueFence(lang) ? '' : ' v-pre'}><code>${pageRenderer.utils.escapeHtml(code)}</code></pre>`,
 });

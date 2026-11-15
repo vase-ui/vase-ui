@@ -346,6 +346,8 @@ Makes an asynchronous toast with three states: `loading`, `success` and `error`.
 
 <<< ./toast/ManagerMethods.vue#promise{ts}
 
+It returns a promise. That promise resolves with the value of the given promise. When the given promise rejects, the toast gets the `error` state, and the returned promise rejects with the same reason. Handle that rejection with `.catch()`, or with `try` and `catch` around an `await`. Without a handler, the browser reports an unhandled rejection. The [Promise](#promise) demo handles it with `.catch()`.
+
 The `loading` state accepts the options of the `add` method. The `success` and `error` states accept the options of the `update` method:
 
 <<< ./toast/ManagerMethods.vue#promise-options{ts}

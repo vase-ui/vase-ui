@@ -715,6 +715,13 @@ test('reports a form that the page does not hold at line 1', async () => {
   assert.deepEqual({ line, column }, { line: 1, column: 1 });
 });
 
+test('renders a page with the Markdown rules of the site', async () => {
+  const { default: config } = await import('./eslint.config.js');
+  const { processor } = config.find((entry) => entry.processor?.meta?.name === 'vase-ui/page');
+  const [{ text }] = processor.preprocess('### Filtering [Preview]\n', join(ROOT, PAGE));
+  assert.match(text, /<span class="heading-badge ignore-header">Preview<\/span>/);
+});
+
 test('does not write a fix into a page', async () => {
   const fixer = new ESLint({ cwd: ROOT, fix: true });
   const code = `<script setup lang="ts">\nimport { type Ref } from 'vue';\n\ndeclare const value: Ref<string>;\n</script>\n\n# Sample\n\n{{ value }}\n`;
