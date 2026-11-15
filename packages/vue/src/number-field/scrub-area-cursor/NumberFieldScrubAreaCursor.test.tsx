@@ -230,6 +230,38 @@ describe.skipIf(isWebKit)('<NumberField.ScrubAreaCursor />', () => {
     }
   });
 
+  describe('VUE-96: the portal element of the cursor', () => {
+    it('renders the cursor in a portal element in the body that makes no box', async () => {
+      const pointerLock = vi
+        .spyOn(document.body, 'requestPointerLock')
+        .mockImplementation(() => Promise.resolve());
+
+      try {
+        await render(
+          <NumberField.Root>
+            <NumberField.Input />
+            <NumberField.ScrubArea data-testid="scrub-area">
+              <NumberField.ScrubAreaCursor data-testid="cursor" />
+            </NumberField.ScrubArea>
+          </NumberField.Root>,
+        );
+        screen
+          .getByTestId('scrub-area')
+          .dispatchEvent(
+            new PointerEvent('pointerdown', { bubbles: true, clientX: 10, clientY: 10 }),
+          );
+        await flushMicrotasks();
+
+        const portal = screen.getByTestId('cursor').parentElement!;
+        expect(portal).toHaveAttribute('data-vase-ui-portal');
+        expect(portal.parentElement).toBe(document.body);
+        expect(portal.getClientRects()).toHaveLength(0);
+      } finally {
+        pointerLock.mockRestore();
+      }
+    });
+  });
+
   // After a `setup` that throws, Vue 3.5.12 keeps the current instance set, so this case is last.
   it('throws a descriptive error when rendered outside <NumberField.ScrubArea>', async () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});

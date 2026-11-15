@@ -18,6 +18,8 @@ function spyOnCollator(runtimeLocale?: string) {
   return collatorSpy;
 }
 
+let collatorCaseRuns = 0;
+
 describe('useComboboxFilter', () => {
   const { render } = createRenderer();
 
@@ -145,6 +147,10 @@ describe('useComboboxFilter options', () => {
   });
 
   it('makes no new collator when the collator options stay the same', async () => {
+    // A filter stays in a cache of the module while the page lives. The private-use subtag gives
+    // each run of the case a locale that the cache does not hold.
+    collatorCaseRuns += 1;
+    const locale = `en-x-run${collatorCaseRuns}`;
     const collatorSpy = spyOnCollator();
     const multiple = shallowRef(false);
     const value = shallowRef('Apple');
@@ -152,7 +158,7 @@ describe('useComboboxFilter options', () => {
 
     const TestFilter = defineComponent(() => {
       filter = useComboboxFilter(() => ({
-        locale: 'en',
+        locale,
         caseFirst: 'upper',
         multiple: multiple.value,
         value: value.value,

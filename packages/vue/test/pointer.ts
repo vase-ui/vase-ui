@@ -1,3 +1,4 @@
+import type { CDPSession } from '@vitest/browser-playwright';
 import { createEvent } from '@testing-library/dom';
 import { onTestFinished } from 'vitest';
 import { userEvent } from 'vitest/browser';
@@ -110,4 +111,83 @@ export async function holdPress(element: Element) {
   });
   await userEvent.pointer({ coords: point, keys: '[MouseLeft>]' });
   return { point, release };
+}
+
+interface ClientPoint {
+  x: number;
+  y: number;
+}
+
+// The protocol takes the coordinates of the top-level page, and the tester renders inside a scaled
+// iframe.
+function getProtocolPoint(point: ClientPoint): ClientPoint {
+  const frameRect = window.frameElement?.getBoundingClientRect() ?? new DOMRect();
+  const scale = frameRect.width / window.innerWidth || 1;
+  return { x: frameRect.left + point.x * scale, y: frameRect.top + point.y * scale };
+}
+
+function getPointOnLine(from: ClientPoint, to: ClientPoint, step: number, steps: number) {
+  return {
+    x: from.x + ((to.x - from.x) * step) / steps,
+    y: from.y + ((to.y - from.y) * step) / steps,
+  };
+}
+
+/**
+ * Drags a real touch from one client point of the test page to another, in `steps` moves, and lifts
+ * it at the last point. Only Chromium has the protocol that the helper uses: guard a case that
+ * calls it with `it.skipIf(!platform.engine.blink)`.
+ */
+export async function touchDrag(from: ClientPoint, to: ClientPoint, steps = 6) {
+  // Each engine loads this file, and only Chromium has a session. The import is lazy, as in the
+  // other cases that call `cdp()`.
+  const { cdp } = await import('vitest/browser');
+  const session = cdp() as CDPSession;
+  const send = (type: 'touchStart' | 'touchMove' | 'touchEnd', point?: ClientPoint) =>
+    session.send('Input.dispatchTouchEvent', {
+      type,
+      touchPoints: point ? [getProtocolPoint(point)] : [],
+    });
+  await send('touchStart', from);
+  try {
+    for (let step = 1; step <= steps; step += 1) {
+      await send('touchMove', getPointOnLine(from, to, step, steps));
+    }
+  } finally {
+    await send('touchEnd');
+  }
+}
+
+/**
+ * Drags a real pen from one client point of the test page to another, in `steps` moves, and lifts it
+ * at the last point. The pen then moves out of the test page, so it hovers over no element that a
+ * later test renders. Only Chromium has the protocol that the helper uses: guard a case that calls
+ * it with `it.skipIf(!platform.engine.blink)`.
+ */
+export async function penDrag(from: ClientPoint, to: ClientPoint, steps = 4) {
+  const { cdp } = await import('vitest/browser');
+  const session = cdp() as CDPSession;
+  const send = (
+    type: 'mouseMoved' | 'mousePressed' | 'mouseReleased',
+    point: ClientPoint,
+    buttons: number,
+  ) =>
+    session.send('Input.dispatchMouseEvent', {
+      type,
+      ...getProtocolPoint(point),
+      button: type === 'mouseMoved' && buttons === 0 ? 'none' : 'left',
+      buttons,
+      clickCount: type === 'mouseMoved' ? 0 : 1,
+      pointerType: 'pen',
+    });
+  await send('mouseMoved', from, 0);
+  await send('mousePressed', from, 1);
+  try {
+    for (let step = 1; step <= steps; step += 1) {
+      await send('mouseMoved', getPointOnLine(from, to, step, steps), 1);
+    }
+  } finally {
+    await send('mouseReleased', to, 0);
+    await send('mouseMoved', { x: -10, y: -10 }, 0);
+  }
 }

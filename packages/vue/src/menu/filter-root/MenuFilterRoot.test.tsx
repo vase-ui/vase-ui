@@ -1066,8 +1066,8 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         expect(item).not.toHaveAttribute('data-highlighted');
 
         const popup = screen.getByTestId('popup');
-        // The popup reads its animations in a frame after the open. That read must not be the read
-        // that the close takes.
+        // The root reads the animations of the popup in a frame after the open. The wait for the
+        // read of the close must start after that read.
         await waitSingleFrame();
         await waitSingleFrame();
         await nextAnimationsRead(popup, { action: () => user.click(trigger) });
@@ -4841,8 +4841,8 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         });
 
         const popup = screen.getByTestId('popup');
-        // The popup reads its animations in a frame after the open. That read must not be the
-        // read that the close takes.
+        // The root reads the animations of the popup in a frame after the open. The wait for the
+        // read of the close must start after that read.
         await waitSingleFrame();
         await waitSingleFrame();
         const animations = await nextAnimationsRead(popup, { action: () => close(user) });
@@ -4932,8 +4932,8 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       return input;
     }
 
-    // The popup reads its animations in a frame after the open. That read must not be the read
-    // that the close takes.
+    // The root reads the animations of the popup in a frame after the open. The wait for the read
+    // of the close must start after that read.
     async function pressEscapeAndReadAnimations(user: ReturnType<typeof userEvent.setup>) {
       const popup = screen.getByTestId('popup');
       await waitSingleFrame();

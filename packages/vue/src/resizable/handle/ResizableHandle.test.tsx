@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { nextTick, shallowRef } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import {
@@ -64,6 +64,23 @@ describe('<Resizable.Handle />', () => {
   const sizeOf = (index: number) =>
     screen.getByTestId(`panel-${index}`).getBoundingClientRect().width;
 
+  function matchCoarsePointer() {
+    const { matchMedia } = window;
+    window.matchMedia = (query: string) =>
+      ({
+        matches: query === '(pointer: coarse)',
+        media: query,
+        addEventListener() {},
+        removeEventListener() {},
+      }) as unknown as MediaQueryList;
+    onTestFinished(() => {
+      window.matchMedia = matchMedia;
+    });
+  }
+
+  const preview = (handle: HTMLElement) =>
+    handle.style.getPropertyValue('--resizable-handle-preview-offset');
+
   describeConformance(<Resizable.Handle />, () => ({
     render: (node) =>
       render(
@@ -74,6 +91,7 @@ describe('<Resizable.Handle />', () => {
         </Resizable.Root>,
       ),
     refInstanceof: window.HTMLDivElement,
+    childrenSelector: '[data-vase-ui-resizable-hit-area]',
   }));
 
   describe('attributes', () => {
@@ -1202,17 +1220,671 @@ describe('<Resizable.Handle />', () => {
     });
   });
 
-  describe('click after a drag', () => {
-    it('stops the click that follows a drag in which the pointer moved', async () => {
-      const onClick = vi.fn();
-      await renderPanels({ handle: { onClick } });
+  describe('hit area', () => {
+    // The handle is 8 px wide in a horizontal root, and 8 px high in a vertical root.
+    const handleSize = (orientation: 'horizontal' | 'vertical') => ({
+      style:
+        orientation === 'horizontal'
+          ? { flex: 'none', width: '8px' }
+          : { flex: 'none', height: '8px' },
+    });
+
+    async function renderHandle(
+      orientation: 'horizontal' | 'vertical' = 'horizontal',
+      root: Record<string, unknown> = {},
+      handle: Record<string, unknown> = {},
+    ) {
+      await renderPanels({
+        root: { orientation, ...root },
+        handle: { ...handleSize(orientation), ...handle },
+      });
+      const element = screen.getByTestId('handle-1');
+      const area = element.lastElementChild as HTMLElement;
+      return { element, area, rect: element.getBoundingClientRect() };
+    }
+
+    it('renders one node as the last child of the handle, after the content of the consumer', async () => {
+      await render(
+        <Resizable.Root>
+          <Resizable.Panel />
+          <Resizable.Handle data-testid="handle">
+            <span data-testid="grip" />
+          </Resizable.Handle>
+          <Resizable.Panel />
+        </Resizable.Root>,
+      );
+      const handle = screen.getByTestId('handle');
+
+      expect(handle.children).toHaveLength(2);
+      expect(handle.firstElementChild).toBe(screen.getByTestId('grip'));
+      expect(handle.lastElementChild).toHaveAttribute('data-vase-ui-resizable-hit-area');
+      expect(handle.lastElementChild).not.toHaveAttribute('role');
+      expect(handle.lastElementChild).toBeEmptyDOMElement();
+    });
+
+    it.each([
+      { name: 'a horizontal root', orientation: 'horizontal' },
+      { name: 'a vertical root', orientation: 'vertical' },
+    ] as const)('is 10 px wide on the axis of the move, in $name', async ({ orientation }) => {
+      const { area, rect } = await renderHandle(orientation);
+      const areaRect = area.getBoundingClientRect();
+
+      if (orientation === 'horizontal') {
+        expect(area.style.width).toBe('max(100%, 10px)');
+        expect([areaRect.width, areaRect.left, areaRect.height]).toEqual([
+          10,
+          rect.left - 1,
+          rect.height,
+        ]);
+      } else {
+        expect(area.style.height).toBe('max(100%, 10px)');
+        expect([areaRect.height, areaRect.top, areaRect.width]).toEqual([
+          10,
+          rect.top - 1,
+          rect.width,
+        ]);
+      }
+    });
+
+    it.each([
+      { name: 'a number', size: 16, expected: 16 },
+      { name: 'an object, for a fine pointer', size: { fine: 12, coarse: 30 }, expected: 12 },
+      { name: 'the size 0', size: 0, expected: 8 },
+    ])('has the size of $name', async ({ size, expected }) => {
+      const { area } = await renderHandle('horizontal', { hitAreaSize: size });
+
+      expect(area.getBoundingClientRect().width).toBe(expected);
+    });
+
+    it('keeps the box of the handle when the handle is wider than the size', async () => {
+      const { area } = await renderHandle(
+        'horizontal',
+        {},
+        { style: { flex: 'none', width: '20px' } },
+      );
+
+      expect(area.getBoundingClientRect().width).toBe(20);
+    });
+
+    it('has the coarse size while the pointer of the device is coarse', async () => {
+      matchCoarsePointer();
+
+      const { area } = await renderHandle('horizontal', { hitAreaSize: { fine: 12, coarse: 30 } });
+
+      expect(area.style.width).toBe('max(100%, 30px)');
+    });
+
+    it('has the fine size for a number, also while the pointer is coarse', async () => {
+      matchCoarsePointer();
+
+      const { area } = await renderHandle('horizontal', { hitAreaSize: 14 });
+
+      expect(area.style.width).toBe('max(100%, 14px)');
+    });
+
+    it('gives `position: relative` to the handle, and the style of the consumer wins', async () => {
+      const { element } = await renderHandle();
+      expect(element.style.position).toBe('relative');
+
+      await renderPanels({ handle: { style: { position: 'absolute' } } });
+
+      expect(screen.getAllByTestId('handle-1')[1]?.style.position).toBe('absolute');
+    });
+
+    it.each([
+      { name: 'a mouse', pointerType: 'mouse' },
+      { name: 'a touch', pointerType: 'touch' },
+      { name: 'a pen', pointerType: 'pen' },
+    ])(
+      'starts the drag and gets the focus with a press of $name on the node',
+      async ({ pointerType }) => {
+        const { element, area } = await renderHandle();
+
+        await fireEvent.pointerDown(area, pointerInit({ buttons: 1, pointerType }));
+
+        expect(element).toHaveAttribute('data-dragging');
+        expect(element).toHaveFocus();
+      },
+    );
+
+    it('gives the `children` slot prop to the #render slot', async () => {
+      await render(
+        <Resizable.Root>
+          <Resizable.Panel />
+          <Resizable.Handle
+            data-testid="handle"
+            v-slots={{
+              render: ({ props, children: Children }: any) => (
+                <section {...props}>
+                  <Children />
+                </section>
+              ),
+            }}
+          />
+          <Resizable.Panel />
+        </Resizable.Root>,
+      );
+
+      expect(screen.getByTestId('handle').tagName).toBe('SECTION');
+      expect(screen.getByTestId('handle').lastElementChild).toHaveAttribute(
+        'data-vase-ui-resizable-hit-area',
+      );
+    });
+
+    describe('a handle that cannot move', () => {
+      it.each([
+        { name: 'a disabled handle', handle: { disabled: true } },
+        { name: 'a disabled root', root: { disabled: true } },
+      ])('takes no press beside it: $name', async ({ handle, root }) => {
+        const { area } = await renderHandle('horizontal', root, handle);
+
+        expect(area.style.pointerEvents).toBe('none');
+      });
+
+      it('takes no press beside a handle that has no panel on one side', async () => {
+        await render(
+          <Resizable.Root>
+            <Resizable.Handle data-testid="handle" />
+            <Resizable.Panel />
+            <Resizable.Panel />
+          </Resizable.Root>,
+        );
+
+        expect(screen.getByTestId('handle').lastElementChild).toHaveStyle({
+          pointerEvents: 'none',
+        });
+      });
+
+      it('takes a press when the handle can move, and when it becomes able to move', async () => {
+        const disabled = shallowRef(true);
+        await render(() => (
+          <div style={{ width: '400px' }}>
+            <Resizable.Root>
+              <Resizable.Panel />
+              <Resizable.Handle data-testid="handle" disabled={disabled.value} />
+              <Resizable.Panel />
+            </Resizable.Root>
+          </div>
+        ));
+        const area = screen.getByTestId('handle').lastElementChild as HTMLElement;
+        expect(area.style.pointerEvents).toBe('none');
+
+        disabled.value = false;
+        await nextTick();
+
+        expect(area.style.pointerEvents).toBe('');
+      });
+    });
+  });
+
+  describe('crossing', () => {
+    const outerLayout = { height: '100%' };
+
+    // The outer root is 408 px wide and has a handle of 8 px, so 1% of its panel space is 4 px. The
+    // inner root is 308 px high and has a handle of 8 px, so 1% of its panel space is 3 px.
+    async function renderCrossing(
+      options: {
+        outer?: Record<string, unknown>;
+        inner?: Record<string, unknown>;
+        innerHandle?: Record<string, unknown>;
+        showInnerHandle?: { value: boolean };
+        outerDisabled?: { value: boolean };
+        outerHandle?: Record<string, unknown>;
+        bottomPanel?: boolean;
+      } = {},
+    ) {
+      await render(() => (
+        <div style={{ width: '408px', height: '308px' }}>
+          <Resizable.Root data-testid="outer" style={outerLayout} {...options.outer}>
+            <Resizable.Panel id="left" />
+            <Resizable.Handle
+              data-testid="outer-handle"
+              style={{ flex: 'none', width: '8px' }}
+              disabled={options.outerDisabled?.value}
+              {...options.outerHandle}
+            />
+            <Resizable.Panel id="right">
+              <Resizable.Root
+                data-testid="inner"
+                orientation="vertical"
+                style={outerLayout}
+                {...options.inner}
+              >
+                <Resizable.Panel id="top" />
+                {options.showInnerHandle?.value === false ? null : (
+                  <Resizable.Handle
+                    data-testid="inner-handle"
+                    style={{ flex: 'none', height: '8px' }}
+                    {...options.innerHandle}
+                  />
+                )}
+                {options.bottomPanel === false ? null : <Resizable.Panel id="bottom" />}
+              </Resizable.Root>
+            </Resizable.Panel>
+          </Resizable.Root>
+        </div>
+      ));
+      const outer = screen.getByTestId('outer-handle');
+      const inner = screen.queryByTestId('inner-handle') ?? outer;
+      const outerRect = outer.getBoundingClientRect();
+      const innerRect = inner.getBoundingClientRect();
+      // The crossing is at the right border of the outer handle, at the middle of the inner handle.
+      const at = { clientX: outerRect.right - 2, clientY: innerRect.top + innerRect.height / 2 };
+      const move = (x: number, y: number, init: PointerEventInit = {}) =>
+        fireEvent.pointerMove(
+          outer,
+          pointerInit({ clientX: at.clientX + x, clientY: at.clientY + y, buttons: 1, ...init }),
+        );
+      return { outer, inner, at, move };
+    }
+
+    const values = () => [
+      screen.getByTestId('outer-handle').getAttribute('aria-valuenow'),
+      screen.queryByTestId('inner-handle')?.getAttribute('aria-valuenow'),
+    ];
+
+    it('moves both layouts by the two distances of the pointer', async () => {
+      const { outer, at, move } = await renderCrossing();
+
+      await fireEvent.pointerDown(outer, pointerInit({ ...at, buttons: 1 }));
+      await move(40, 30);
+
+      expect(values()).toEqual(['60', '60']);
+    });
+
+    it('emits the events of each root one time', async () => {
+      const outerEvents = { onDraggingChange: vi.fn(), onLayoutCommitted: vi.fn() };
+      const innerEvents = { onDraggingChange: vi.fn(), onLayoutCommitted: vi.fn() };
+      const { outer, at, move } = await renderCrossing({ outer: outerEvents, inner: innerEvents });
+
+      await fireEvent.pointerDown(outer, pointerInit({ ...at, buttons: 1 }));
+      await move(40, 30);
+      await move(80, 60);
+      await fireEvent.pointerUp(
+        outer,
+        pointerInit({ clientX: at.clientX + 80, clientY: at.clientY + 60 }),
+      );
+
+      for (const events of [outerEvents, innerEvents]) {
+        expect(events.onDraggingChange.mock.calls).toEqual([[true], [false]]);
+        expect(events.onLayoutCommitted).toHaveBeenCalledTimes(1);
+      }
+      expect(values()).toEqual(['70', '70']);
+    });
+
+    it('has data-dragging and data-crossing on both handles during the drag, and neither after it', async () => {
+      const { outer, inner, at, move } = await renderCrossing();
+
+      await fireEvent.pointerDown(outer, pointerInit({ ...at, buttons: 1 }));
+      await move(10, 10);
+      for (const handle of [outer, inner]) {
+        expect(handle).toHaveAttribute('data-dragging');
+        expect(handle).toHaveAttribute('data-crossing');
+      }
+      await fireEvent.pointerUp(
+        outer,
+        pointerInit({ clientX: at.clientX + 10, clientY: at.clientY + 10 }),
+      );
+
+      for (const handle of [outer, inner]) {
+        expect(handle).not.toHaveAttribute('data-dragging');
+        expect(handle).not.toHaveAttribute('data-crossing');
+      }
+    });
+
+    it('gives data-crossing to the state of the handle', async () => {
+      const { outer, at } = await renderCrossing({
+        outerHandle: {
+          stateClass: (state: { crossing: boolean }) => `crossing-${String(state.crossing)}`,
+        },
+      });
+      expect(outer).toHaveClass('crossing-false');
+
+      await fireEvent.pointerDown(outer, pointerInit({ ...at, buttons: 1 }));
+
+      expect(outer).toHaveClass('crossing-true');
+    });
+
+    it('sets data-crossing on the handle under a pointer with no button at the crossing, and clears it at the leave', async () => {
+      const { outer, inner, at } = await renderCrossing();
+
+      await fireEvent.pointerMove(outer, pointerInit({ ...at, buttons: 0 }));
+      expect(outer).toHaveAttribute('data-crossing');
+      expect(inner).not.toHaveAttribute('data-crossing');
+      await fireEvent.pointerLeave(outer, pointerInit({}));
+      expect(outer).not.toHaveAttribute('data-crossing');
+
+      await fireEvent.pointerMove(inner, pointerInit({ ...at, buttons: 0 }));
+      expect(inner).toHaveAttribute('data-crossing');
+    });
+
+    it('keeps data-crossing on the joined handle while a second pointer presses it, moves on it and leaves it', async () => {
+      const { outer, inner, at, move } = await renderCrossing();
+      await fireEvent.pointerDown(outer, pointerInit({ ...at, buttons: 1 }));
+      await move(10, 10);
+      const second = (init: PointerEventInit = {}) =>
+        pointerInit({
+          pointerId: 2,
+          pointerType: 'touch',
+          clientX: at.clientX + 100,
+          clientY: at.clientY + 10,
+          ...init,
+        });
+
+      await fireEvent.pointerDown(inner, second({ buttons: 1 }));
+      await fireEvent.pointerMove(inner, second({ clientX: at.clientX + 120, buttons: 1 }));
+      expect(inner).toHaveAttribute('data-crossing');
+      await fireEvent.pointerUp(inner, second());
+      await fireEvent.pointerLeave(inner, second());
+
+      expect(inner).toHaveAttribute('data-crossing');
+      expect(inner).toHaveAttribute('data-dragging');
+    });
+
+    it('sets no data-crossing away from the crossing', async () => {
+      const { outer, at } = await renderCrossing();
+
+      await fireEvent.pointerMove(
+        outer,
+        pointerInit({ clientX: at.clientX, clientY: at.clientY - 60, buttons: 0 }),
+      );
+
+      expect(outer).not.toHaveAttribute('data-crossing');
+    });
+
+    it('does not drag the other handle with a press away from the crossing', async () => {
+      const { outer, at, move } = await renderCrossing();
+
+      await fireEvent.pointerDown(
+        outer,
+        pointerInit({ clientX: at.clientX, clientY: at.clientY - 60, buttons: 1 }),
+      );
+      await move(40, 30);
+
+      expect(values()).toEqual(['60', '50']);
+      expect(outer).not.toHaveAttribute('data-crossing');
+    });
+
+    it('does not join a disabled handle', async () => {
+      const { outer, at, move } = await renderCrossing({ innerHandle: { disabled: true } });
+
+      await fireEvent.pointerDown(outer, pointerInit({ ...at, buttons: 1 }));
+      await move(40, 30);
+
+      expect(screen.getByTestId('inner-handle')).not.toHaveAttribute('data-dragging');
+      expect(outer).not.toHaveAttribute('data-crossing');
+      expect(values()[0]).toBe('60');
+    });
+
+    it('does not join a handle that has no panel on one side, also for a pointer with no button', async () => {
+      const { outer, at, move } = await renderCrossing({ bottomPanel: false });
+
+      await fireEvent.pointerMove(outer, pointerInit({ ...at, buttons: 0 }));
+      expect(outer).not.toHaveAttribute('data-crossing');
+      await fireEvent.pointerDown(outer, pointerInit({ ...at, buttons: 1 }));
+      await move(40, 30);
+
+      expect(outer).not.toHaveAttribute('data-crossing');
+      expect(outer).toHaveAttribute('aria-valuenow', '60');
+    });
+
+    it('does not join a root that has a drag already, and the drag of the outer root goes on', async () => {
+      const { outer, inner, at, move } = await renderCrossing();
+      await fireEvent.pointerDown(
+        inner,
+        pointerInit({ pointerId: 2, buttons: 1, clientX: at.clientX + 100, clientY: at.clientY }),
+      );
+
+      await fireEvent.pointerDown(outer, pointerInit({ ...at, buttons: 1 }));
+      await move(40, 30);
+
+      expect(outer).toHaveAttribute('data-dragging');
+      expect(outer).not.toHaveAttribute('data-crossing');
+      expect(inner).toHaveAttribute('data-dragging');
+      expect(values()).toEqual(['60', '50']);
+    });
+
+    it('ends only its own drag when the joined handle unmounts, and the outer drag goes on', async () => {
+      const showInnerHandle = shallowRef(true);
+      const innerEvents = { onDraggingChange: vi.fn() };
+      const { outer, at, move } = await renderCrossing({ showInnerHandle, inner: innerEvents });
+      await fireEvent.pointerDown(outer, pointerInit({ ...at, buttons: 1 }));
+      expect(innerEvents.onDraggingChange.mock.calls).toEqual([[true]]);
+
+      showInnerHandle.value = false;
+      await nextTick();
+      await move(40, 30);
+
+      expect(innerEvents.onDraggingChange.mock.calls).toEqual([[true], [false]]);
+      expect(outer).toHaveAttribute('data-dragging');
+      expect(outer.getAttribute('aria-valuenow')).toBe('60');
+    });
+
+    it('ends both drags when the pressed handle becomes disabled', async () => {
+      const outerDisabled = shallowRef(false);
+      const outerEvents = { onDraggingChange: vi.fn() };
+      const innerEvents = { onDraggingChange: vi.fn() };
+      const { outer, inner, at } = await renderCrossing({
+        outer: outerEvents,
+        inner: innerEvents,
+        outerDisabled,
+      });
+      await fireEvent.pointerDown(outer, pointerInit({ ...at, buttons: 1 }));
+      expect(inner).toHaveAttribute('data-dragging');
+
+      outerDisabled.value = true;
+      await nextTick();
+
+      for (const handle of [outer, inner]) {
+        expect(handle).not.toHaveAttribute('data-dragging');
+        expect(handle).not.toHaveAttribute('data-crossing');
+      }
+      for (const events of [outerEvents, innerEvents]) {
+        expect(events.onDraggingChange.mock.calls).toEqual([[true], [false]]);
+      }
+    });
+
+    it('lets the click of the joined handle go on, and stops the click of the pressed handle', async () => {
+      const onInnerClick = vi.fn();
+      const onOuterClick = vi.fn();
+      const { outer, inner, at, move } = await renderCrossing({
+        innerHandle: { onClick: onInnerClick },
+        outerHandle: { onClick: onOuterClick },
+      });
+
+      await fireEvent.pointerDown(outer, pointerInit({ ...at, buttons: 1 }));
+      await move(40, 30);
+      await fireEvent.pointerUp(
+        outer,
+        pointerInit({ clientX: at.clientX + 40, clientY: at.clientY + 30 }),
+      );
+      await fireEvent.click(inner, { detail: 1 });
+      await fireEvent.click(outer, { detail: 1 });
+
+      expect(onInnerClick).toHaveBeenCalledTimes(1);
+      expect(onOuterClick).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('resize mode on-release', () => {
+    const onRelease = { resizeMode: 'on-release' };
+
+    it.each([
+      {
+        name: 'a horizontal root',
+        orientation: 'horizontal',
+        direction: 'ltr',
+        to: 100,
+        expected: '100px',
+      },
+      {
+        name: 'a vertical root',
+        orientation: 'vertical',
+        direction: 'ltr',
+        to: 80,
+        expected: '80px',
+      },
+      {
+        name: 'a right-to-left root',
+        orientation: 'horizontal',
+        direction: 'rtl',
+        to: 100,
+        expected: '100px',
+      },
+      {
+        name: 'a pointer that goes back',
+        orientation: 'horizontal',
+        direction: 'ltr',
+        to: -100,
+        expected: '-100px',
+      },
+    ] as const)(
+      'shows the distance to the place of the release in $name',
+      async ({ orientation, direction, to, expected }) => {
+        await renderPanels({ root: { ...onRelease, orientation }, direction });
+        const handle = screen.getByTestId('handle-1');
+
+        await fireEvent.pointerDown(handle, pointerInit({ buttons: 1 }));
+        expect(preview(handle)).toBe('0px');
+        await fireEvent.pointerMove(
+          handle,
+          pointerInit({
+            ...(orientation === 'horizontal' ? { clientX: to } : { clientY: to }),
+            buttons: 1,
+          }),
+        );
+
+        expect(preview(handle)).toBe(expected);
+        expect(handle).toHaveAttribute('aria-valuenow', '50');
+      },
+    );
+
+    it('gives the distance with three decimals at most', async () => {
+      // 10 px of a root of 300 px is 10/3 percent, and a number has no exact value for it.
+      await render(
+        <div style={{ width: '300px' }}>
+          <Resizable.Root resizeMode="on-release">
+            <Resizable.Panel />
+            <Resizable.Handle data-testid="handle" />
+            <Resizable.Panel />
+          </Resizable.Root>
+        </div>,
+      );
+      const handle = screen.getByTestId('handle');
+
+      await fireEvent.pointerDown(handle, pointerInit({ buttons: 1 }));
+      await fireEvent.pointerMove(handle, pointerInit({ clientX: 10, buttons: 1 }));
+
+      expect(preview(handle)).toMatch(/^\d+(\.\d{1,3})?px$/);
+      expect(Number.parseFloat(preview(handle))).toBeCloseTo(10, 2);
+    });
+
+    it('stops the distance at a constraint of the layout', async () => {
+      await renderPanels({ root: onRelease, panels: [{ id: 'a' }, { id: 'b', minSize: 40 }] });
       const handle = screen.getByTestId('handle-1');
 
-      await drag(handle, 0, 100);
+      await fireEvent.pointerDown(handle, pointerInit({ buttons: 1 }));
+      await fireEvent.pointerMove(handle, pointerInit({ clientX: 500, buttons: 1 }));
 
-      expect(await fireEvent.click(handle)).toBe(false);
-      expect(onClick).not.toHaveBeenCalled();
+      expect(preview(handle)).toBe('100px');
     });
+
+    it('has no variable before the press, after the release and after a cancel', async () => {
+      await renderPanels({ root: onRelease });
+      const handle = screen.getByTestId('handle-1');
+      expect(preview(handle)).toBe('');
+
+      await drag(handle, 0, 100);
+      expect(preview(handle)).toBe('');
+
+      await fireEvent.pointerDown(handle, pointerInit({ buttons: 1 }));
+      await fireEvent.pointerMove(handle, pointerInit({ clientX: 100, buttons: 1 }));
+      await fireEvent.pointerCancel(handle, pointerInit({}));
+      expect(preview(handle)).toBe('');
+      expect(handle).toHaveAttribute('aria-valuenow', '60');
+    });
+
+    it('keeps the layout during the drag and writes it at the release', async () => {
+      await renderPanels({ root: onRelease });
+      const handle = screen.getByTestId('handle-1');
+      const before = sizeOf(0);
+
+      await fireEvent.pointerDown(handle, pointerInit({ buttons: 1 }));
+      await fireEvent.pointerMove(handle, pointerInit({ clientX: 100, buttons: 1 }));
+      expect(sizeOf(0)).toBe(before);
+      await fireEvent.pointerUp(handle, pointerInit({ clientX: 100 }));
+
+      expect(sizeOf(0)).toBeCloseTo(before + 100, 0);
+    });
+
+    it('gives a handle that the layout moves its own distance and no data-dragging', async () => {
+      await renderPanels({
+        root: { ...onRelease, defaultLayout: { a: 40, b: 30, c: 30 } },
+        panels: [{ id: 'a' }, { id: 'b', minSize: 20 }, { id: 'c', minSize: 10 }],
+      });
+      const first = screen.getByTestId('handle-1');
+      const second = screen.getByTestId('handle-2');
+
+      await fireEvent.pointerDown(first, pointerInit({ buttons: 1 }));
+      expect(preview(second)).toBe('');
+      await fireEvent.pointerMove(first, pointerInit({ clientX: 250, buttons: 1 }));
+
+      expect(preview(first)).toBe('250px');
+      expect(preview(second)).toBe('150px');
+      expect(second).not.toHaveAttribute('data-dragging');
+    });
+
+    it('gives no variable to a handle that does not move', async () => {
+      await renderPanels({
+        root: { ...onRelease, defaultLayout: { a: 40, b: 30, c: 30 } },
+        panels: [{ id: 'a' }, { id: 'b' }, { id: 'c' }],
+      });
+      const first = screen.getByTestId('handle-1');
+
+      await fireEvent.pointerDown(screen.getByTestId('handle-2'), pointerInit({ buttons: 1 }));
+      await fireEvent.pointerMove(
+        screen.getByTestId('handle-2'),
+        pointerInit({ clientX: 100, buttons: 1 }),
+      );
+
+      expect(preview(first)).toBe('');
+    });
+
+    it.each([
+      { name: 'a touch', pointerType: 'touch' },
+      { name: 'a pen', pointerType: 'pen' },
+    ])('shows the distance for $name', async ({ pointerType }) => {
+      await renderPanels({ root: onRelease });
+      const handle = screen.getByTestId('handle-1');
+
+      await fireEvent.pointerDown(handle, pointerInit({ buttons: 1, pointerType }));
+      await fireEvent.pointerMove(handle, pointerInit({ clientX: 100, buttons: 1, pointerType }));
+
+      expect(preview(handle)).toBe('100px');
+    });
+  });
+
+  describe('click after a drag', () => {
+    // The click of a press has the detail 1 or more, and `element.click()` has 0.
+    const clickOfPress = (handle: HTMLElement) => fireEvent.click(handle, { detail: 1 });
+
+    it.each([
+      { name: 'a mouse', pointerType: 'mouse' },
+      { name: 'a touch', pointerType: 'touch' },
+      { name: 'a pen', pointerType: 'pen' },
+    ])(
+      'stops the click that follows a drag of $name in which the pointer moved',
+      async ({ pointerType }) => {
+        const onClick = vi.fn();
+        await renderPanels({ handle: { onClick } });
+        const handle = screen.getByTestId('handle-1');
+
+        await drag(handle, 0, 100, { pointerType });
+
+        expect(await clickOfPress(handle)).toBe(false);
+        expect(onClick).not.toHaveBeenCalled();
+      },
+    );
 
     it('lets the click that follows a press with no move go on', async () => {
       const onClick = vi.fn();
@@ -1221,7 +1893,7 @@ describe('<Resizable.Handle />', () => {
 
       await drag(handle, 0, 0);
 
-      expect(await fireEvent.click(handle)).toBe(true);
+      expect(await clickOfPress(handle)).toBe(true);
       expect(onClick).toHaveBeenCalledTimes(1);
     });
 
@@ -1231,8 +1903,8 @@ describe('<Resizable.Handle />', () => {
       const handle = screen.getByTestId('handle-1');
 
       await drag(handle, 0, 100);
-      await fireEvent.click(handle);
-      await fireEvent.click(handle);
+      await clickOfPress(handle);
+      await clickOfPress(handle);
 
       expect(onClick).toHaveBeenCalledTimes(1);
     });
@@ -1254,9 +1926,25 @@ describe('<Resizable.Handle />', () => {
       await drag(handle, 0, 100);
 
       await press(handle);
-      await fireEvent.click(handle);
+      await clickOfPress(handle);
 
       expect(onClick).toHaveBeenCalledTimes(1);
+    });
+
+    // No click follows a touch drag in Chromium, so the rule is still set when a script clicks.
+    it('lets a click that a script makes go on after a drag that no click followed', async () => {
+      const onClick = vi.fn();
+      await renderPanels({ handle: { onClick } });
+      const handle = screen.getByTestId('handle-1');
+
+      await drag(handle, 0, 100, { pointerType: 'touch' });
+      handle.click();
+      await nextTick();
+
+      expect(onClick).toHaveBeenCalledTimes(1);
+      // The click of the script cleared the rule, so the next click with a detail goes on too.
+      await clickOfPress(handle);
+      expect(onClick).toHaveBeenCalledTimes(2);
     });
   });
 

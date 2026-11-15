@@ -113,9 +113,11 @@ export function nextEvent(
  * It fails when no call comes in 600 frames of the page. With `action`, the function runs after
  * this function replaced `getAnimations` of the element, and the count of frames starts when it
  * ends, as in `nextEvent`.
- * Call it before the action, or give it the action. With three or more elements in one frame, a
- * part can get the animations of an element from the root of the tree. This function does not see
- * that read.
+ * Call it before the action, or give it the action. A part can read the animations of an open in a
+ * frame after the open. For the exit of a popup, call this function after `openChangeComplete`
+ * with `true`. An earlier call can get the read of the open.
+ * With three or more elements in one frame, a part can get the animations of an element from the
+ * root of the tree. This function does not see that read.
  */
 export function nextAnimationsRead(
   element: Element,

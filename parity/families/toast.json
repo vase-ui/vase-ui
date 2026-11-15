@@ -125,7 +125,7 @@
     {
       "entry": "Description",
       "prop": "id",
-      "reason": "The part gives `id` to the root for `aria-describedby` and follows a change of it, so it is a declared prop. Base UI reads it from the native attributes of the description, and `types.md` has no row for a native attribute."
+      "reason": "The part gives `id` to the root for `aria-describedby`, or for `aria-labelledby` when the toast has no title and no name of its own, and follows a change of it, so it is a declared prop. Base UI reads it from the native attributes of the description, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Close",
