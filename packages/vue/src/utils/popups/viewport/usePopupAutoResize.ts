@@ -48,7 +48,9 @@ export function usePopupAutoResize(parameters: UsePopupAutoResizeParameters) {
       return undefined;
     }
 
-    if (!popupElement || !positionerElement) {
+    // `KeepAlive` moves the popup out of the document before it calls `onDeactivated`. A
+    // measurement in that gap gives 0, and the next resize would start from it.
+    if (!popupElement || !positionerElement || !popupElement.isConnected) {
       return undefined;
     }
 

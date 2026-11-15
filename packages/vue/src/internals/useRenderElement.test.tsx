@@ -836,6 +836,9 @@ describe('useRenderElement', () => {
       expect(warnSpy.mock.calls[0][0]).toContain(
         'Vase UI: The `#render` slot gave no element to the part.',
       );
+      expect(warnSpy.mock.calls[0][0]).toContain(
+        'In a Vapor component, also bind the `ref` setter by name: `:ref="props.ref"`.',
+      );
     });
 
     it('warns when the `#render` slot renders nothing', async () => {

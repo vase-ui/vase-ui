@@ -193,10 +193,34 @@ describe('<Select.Trigger />', () => {
     });
 
     it.each([
-      { name: '5px right and 5px down', dx: 5, dy: 5, open: true },
-      { name: '6px right', dx: 6, dy: 0, open: false },
-      { name: '6px down', dx: 0, dy: 6, open: false },
-    ])('VUE-68: a trigger that moved, a release $name of the press', async ({ dx, dy, open }) => {
+      {
+        name: '8px right and down of a moved trigger',
+        pressX: 150,
+        moves: true,
+        dx: 8,
+        dy: 8,
+        open: true,
+      },
+      { name: '9px right of a moved trigger', pressX: 150, moves: true, dx: 9, dy: 0, open: false },
+      { name: '9px down of a moved trigger', pressX: 150, moves: true, dx: 0, dy: 9, open: false },
+      // The press is 2 px from the right edge of the trigger, and the margin of the trigger is 5 px.
+      {
+        name: '8px right, 6px off a still trigger',
+        pressX: 198,
+        moves: false,
+        dx: 8,
+        dy: 0,
+        open: true,
+      },
+      {
+        name: '9px right, 7px off a still trigger',
+        pressX: 198,
+        moves: false,
+        dx: 9,
+        dy: 0,
+        open: false,
+      },
+    ])('VUE-68: a release $name', async ({ pressX, moves, dx, dy, open }) => {
       const onOpenChange = vi.fn();
       await render(
         <Select.Root onOpenChange={onOpenChange}>
@@ -215,13 +239,19 @@ describe('<Select.Trigger />', () => {
         DOMRect.fromRect({ x: 100, y: 100, width: 100, height: 40 });
 
       await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-      await fireEvent.mouseDown(trigger, { button: 0, clientX: 150, clientY: 120 });
+      await fireEvent.mouseDown(trigger, { button: 0, clientX: pressX, clientY: 120 });
       await waitFor(() => {
         expect(trigger).toHaveAttribute('aria-expanded', 'true');
       });
-      trigger.getBoundingClientRect = () =>
-        DOMRect.fromRect({ x: 100, y: 300, width: 100, height: 40 });
-      await fireEvent.mouseUp(document.body, { button: 0, clientX: 150 + dx, clientY: 120 + dy });
+      if (moves) {
+        trigger.getBoundingClientRect = () =>
+          DOMRect.fromRect({ x: 100, y: 300, width: 100, height: 40 });
+      }
+      await fireEvent.mouseUp(document.body, {
+        button: 0,
+        clientX: pressX + dx,
+        clientY: 120 + dy,
+      });
 
       expect(trigger).toHaveAttribute('aria-expanded', String(open));
       expect(onOpenChange).toHaveBeenCalledTimes(open ? 1 : 2);

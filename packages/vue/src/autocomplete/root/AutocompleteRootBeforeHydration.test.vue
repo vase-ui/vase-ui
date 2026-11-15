@@ -3,6 +3,11 @@ import { shallowRef } from 'vue';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import type { AutocompleteRootChangeEventDetails } from '@vase-ui/vue/autocomplete';
 
+defineProps<{
+  // With no name and no field, the hidden input is `type="hidden"`.
+  name?: string | undefined;
+}>();
+
 const cities = ['Malmö', 'Malta', 'Oslo'];
 const value = shallowRef('');
 const changes = shallowRef<string[]>([]);
@@ -13,7 +18,12 @@ function handleValueChange(nextValue: string, details: AutocompleteRootChangeEve
 </script>
 
 <template>
-  <Autocomplete.Root v-model:value="value" :items="cities" @value-change="handleValueChange">
+  <Autocomplete.Root
+    v-model:value="value"
+    :name="name"
+    :items="cities"
+    @value-change="handleValueChange"
+  >
     <Autocomplete.Input data-testid="input" />
   </Autocomplete.Root>
   <output data-testid="value">{{ value }}</output>

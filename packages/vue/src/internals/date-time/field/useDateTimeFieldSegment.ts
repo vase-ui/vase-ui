@@ -190,7 +190,7 @@ export function useDateTimeFieldSegment(
   // in the input when the number does not change, so the segment writes its text again.
   function writeTextToInput() {
     const expected = composingText.value ?? view.value.text;
-    if (ownElement && ownElement.value !== expected) {
+    if (writesValue.value && ownElement && ownElement.value !== expected) {
       ownElement.value = expected;
     }
   }

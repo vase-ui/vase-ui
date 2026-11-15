@@ -14,3 +14,8 @@ export const invalid = 'data-invalid';
  * Present when no day is selected.
  */
 export const empty = 'data-empty';
+/**
+ * Indicates the side of the last change of the page. It is `none` until the page changes.
+ * @type {'previous' | 'next' | 'none'}
+ */
+export const navigationDirection = 'data-navigation-direction';

@@ -435,7 +435,8 @@
 }
 
 /* A demo and the code group under it make one card, as on a Base UI page. */
-.vp-doc .demo-frame + .vp-code-group {
+.vp-doc .demo + .vp-code-group,
+.vp-doc .demo-source > .vp-code-group {
   margin: 0 0 1.5rem;
   border-top: 0;
   border-start-start-radius: 0;

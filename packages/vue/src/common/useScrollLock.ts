@@ -6,6 +6,7 @@ import { platform } from './platform';
 import { ownerDocument, ownerWindow } from './owner';
 import { Timeout } from './useTimeout';
 import { AnimationFrame } from './useAnimationFrame';
+import { isInHeldBranch } from '../internals/useKeepAliveState';
 
 type OwnerWindow = ReturnType<typeof ownerWindow>;
 
@@ -347,7 +348,7 @@ export function useScrollLock(
   referenceElement: MaybeRefOrGetter<Element | null> = null,
 ): void {
   let releaseLock: (() => void) | undefined;
-  let deactivated = false;
+  let deactivated = isInHeldBranch();
 
   function update() {
     releaseLock?.();

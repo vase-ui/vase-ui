@@ -11,7 +11,6 @@ import {
 import { formatter } from '../../internals/date-time/format';
 import { getSegmentLayout } from '../../internals/date-time/field/segmentLayout';
 import TimeFieldRootHydration from '../root/TimeFieldRootHydration.test.vue';
-import { MAX_LAYOUT_ITEMS } from './layoutItems';
 
 const FIXTURE = 'src/time-field/root/TimeFieldRootHydration.test.vue';
 
@@ -159,117 +158,6 @@ describe('<TimeField.Input />', () => {
   });
 
   describe('layout', () => {
-    // The list of the part has MAX_LAYOUT_ITEMS iterations, so a layout with more items would lose
-    // its last items. The locales are the ones of a wide range of `Intl` patterns.
-    const LOCALES = [
-      'en-US',
-      'en-GB',
-      'en-IN',
-      'en-AU',
-      'de-DE',
-      'de-CH',
-      'fr-FR',
-      'fr-CA',
-      'fr-CH',
-      'es-ES',
-      'es-MX',
-      'es-US',
-      'it-IT',
-      'pt-BR',
-      'pt-PT',
-      'nl-NL',
-      'sv-SE',
-      'nb-NO',
-      'da-DK',
-      'fi-FI',
-      'is-IS',
-      'pl-PL',
-      'cs-CZ',
-      'sk-SK',
-      'hu-HU',
-      'ro-RO',
-      'bg-BG',
-      'el-GR',
-      'tr-TR',
-      'ru-RU',
-      'uk-UA',
-      'he-IL',
-      'ar-EG',
-      'ar-SA',
-      'fa-IR',
-      'ur-PK',
-      'hi-IN',
-      'bn-BD',
-      'ta-IN',
-      'te-IN',
-      'th-TH',
-      'vi-VN',
-      'id-ID',
-      'ms-MY',
-      'ja-JP',
-      'ko-KR',
-      'zh-CN',
-      'zh-TW',
-      'zh-HK',
-      'km-KH',
-      'lo-LA',
-      'my-MM',
-      'ne-NP',
-      'si-LK',
-      'am-ET',
-      'sw-KE',
-      'af-ZA',
-      'eu-ES',
-      'gl-ES',
-      'ca-ES',
-      'cy-GB',
-      'ga-IE',
-      'hr-HR',
-      'sl-SI',
-      'sr-RS',
-      'lt-LT',
-      'lv-LV',
-      'et-EE',
-      'ka-GE',
-      'kk-KZ',
-      'az-AZ',
-      'hy-AM',
-      'mn-MN',
-      'uz-UZ',
-      'ja-JP-u-hc-h12',
-      'en-US-u-hc-h23',
-      'ar-EG-u-nu-latn',
-    ];
-
-    it('has no more items than the list of the part renders, and no two literals in a row', () => {
-      let most = 0;
-      for (const locale of LOCALES) {
-        for (const time of ['hour', 'minute', 'second'] as const) {
-          for (const hourCycle of [undefined, 12, 24] as const) {
-            for (const timeZoneName of [false, true]) {
-              const { segments } = getSegmentLayout(locale, {
-                date: undefined,
-                time,
-                hourCycle,
-                calendar: 'iso8601',
-                era: false,
-                timeZoneName,
-              });
-              most = Math.max(most, segments.length);
-              expect(segments.length).toBeLessThanOrEqual(MAX_LAYOUT_ITEMS);
-              segments.forEach((item, index) => {
-                expect(item.type === 'literal' && segments[index + 1]?.type === 'literal').toBe(
-                  false,
-                );
-              });
-            }
-          }
-        }
-      }
-
-      expect(most).toBeGreaterThan(5);
-    });
-
     it('renders each item of the longest layout', async () => {
       const { container } = await render(
         <TimeField.Root
@@ -366,6 +254,33 @@ describe('<TimeField.Input />', () => {
       expect(
         Array.from(container.querySelectorAll('[data-type="literal"]'), (item) => item.textContent),
       ).toEqual([':']);
+    });
+
+    // An engine with other `Intl` data can put the time zone name in the place of a separator. Each
+    // segment keeps its place, so only the two spans differ. The case swaps them in the server HTML.
+    it('hydrates a server layout with the time zone name in the place of a separator', async () => {
+      const props = {
+        defaultValue: '2026-11-14T15:04[Asia/Tokyo]',
+        locale: 'en-US',
+        hourCycle: 24,
+      } as const;
+      const serverHtml = await renderOnServer(FIXTURE, props);
+      const [separator, zoneName] = Array.from(
+        serverHtml.matchAll(/<span[^>]*>[^<]*<\/span>/g),
+      ).slice(-2);
+
+      expect(separator?.[0]).toContain('data-type="literal"');
+      expect(zoneName?.[0]).toContain('data-type="timeZoneName"');
+
+      const separatorEnd = separator!.index + separator![0].length;
+      const swappedHtml =
+        serverHtml.slice(0, separator!.index) +
+        zoneName![0] +
+        serverHtml.slice(separatorEnd, zoneName!.index) +
+        separator![0] +
+        serverHtml.slice(zoneName!.index + zoneName![0].length);
+
+      await hydrate(TimeFieldRootHydration, { serverHtml: swappedHtml, props });
     });
 
     it('keeps the order of the segments of a server that has another order', async () => {

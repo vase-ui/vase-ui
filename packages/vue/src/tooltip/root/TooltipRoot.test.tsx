@@ -8,7 +8,9 @@ import {
   hydrate,
   isInaccessible,
   isJSDOM,
+  nextCall,
   nextEvent,
+  popupAnatomyTests,
   popupConformanceTests,
   renderOnServer,
   screen,
@@ -124,6 +126,22 @@ const MultipleDetachedTriggersTooltip = defineComponent(
 
 describe('<Tooltip.Root />', () => {
   const { render } = createRenderer();
+
+  popupAnatomyTests({
+    createComponent: ({ open, onOpenChangeComplete, content }) => (
+      <Tooltip.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Tooltip.Trigger>Open</Tooltip.Trigger>
+        <Tooltip.Portal>
+          <Tooltip.Positioner data-testid="shown" class="shown">
+            Content
+            {content}
+          </Tooltip.Positioner>
+        </Tooltip.Portal>
+      </Tooltip.Root>
+    ),
+    createPopup: () => <Tooltip.Popup data-testid="popup">Popup</Tooltip.Popup>,
+    render,
+  });
 
   it('keeps the payload while a controlled reopen moves to another trigger', async () => {
     const handle = Tooltip.createHandle<string>();
@@ -941,6 +959,28 @@ describe('<Tooltip.Root />', () => {
         await flushMicrotasks();
 
         expect(onOpenChangeComplete).not.toHaveBeenCalledWith(true);
+      });
+
+      it('reports the open completion again when it toggles on an open tooltip that is not kept mounted', async () => {
+        const onOpenChangeComplete = vi.fn();
+        let completion = nextCall(onOpenChangeComplete);
+        const { setProps } = await render(
+          <TestTooltip rootProps={{ open: true, disabled: false, onOpenChangeComplete }} />,
+        );
+        await completion;
+
+        completion = nextCall(onOpenChangeComplete);
+        await setProps({ rootProps: { open: true, disabled: true, onOpenChangeComplete } });
+        await completion;
+        completion = nextCall(onOpenChangeComplete);
+        await setProps({ rootProps: { open: true, disabled: false, onOpenChangeComplete } });
+        await completion;
+        expect(onOpenChangeComplete.mock.calls).toEqual([[true], [false], [true]]);
+
+        completion = nextCall(onOpenChangeComplete);
+        await setProps({ rootProps: { open: false, disabled: false, onOpenChangeComplete } });
+        await completion;
+        expect(onOpenChangeComplete.mock.calls).toEqual([[true], [false], [true], [false]]);
       });
 
       it('does not throw error when combined with defaultOpen', async () => {
@@ -1879,13 +1919,9 @@ describe('<Tooltip.Root />', () => {
 
         await user.hover(trigger);
 
-        // Well under the open delay, so only the close-transition fast path can reopen it.
-        await waitFor(
-          () => {
-            expect(screen.getByTestId('popup')).toHaveAttribute('data-open');
-          },
-          { timeout: 200 },
-        );
+        // The fast path of the close transition opens the popup in the task of the enter event. The
+        // open delay would open it later.
+        expect(screen.getByTestId('popup')).toHaveAttribute('data-open');
         expect(screen.getByTestId('popup')).not.toHaveAttribute('data-closed');
       },
     );

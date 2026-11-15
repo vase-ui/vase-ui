@@ -7,10 +7,12 @@ import pluginVue from 'eslint-plugin-vue';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import vueParser from 'vue-eslint-parser';
+import siteConfig from './docs/.vitepress/config.ts';
 
 const SOURCE_FILES = ['packages/vue/src/**/*.{ts,vue}'];
 const TEST_FILES = ['**/*.test.*', '**/*.spec.*'];
 const TEST_SCRIPT_FILES = TEST_FILES.map((testFiles) => [testFiles, '**/*.{js,mjs,ts,tsx,vue}']);
+const VUE_TEST_SCRIPT_FILES = TEST_SCRIPT_FILES.map((pair) => ['packages/vue/**', ...pair]);
 
 const MESSAGES = {
   getCurrentInstance:
@@ -33,6 +35,8 @@ const MESSAGES = {
   html: 'This name can render a string as HTML. Show data with text interpolation.',
   htmlDynamicArgument:
     'A dynamic argument can be `innerHTML`, which renders a string as HTML. Write the name of the attribute.',
+  waitLimit:
+    'This wait has a limit in seconds, and a busy machine can stall the page for longer. Use `waitFor`, `screen` or `within` of `#test-utils`. Their limit is a count of frames.',
   privateKeyword:
     'The `private` keyword is only a check of the compiler. Write an ECMAScript private member: `#name`.',
   reactEventProp: (reactKey, vueKey) =>
@@ -64,6 +68,23 @@ const RESTRICTED_PROPERTIES = [
   { property: '$el', message: MESSAGES.$el },
   { property: '$parent', message: MESSAGES.$parent },
   ...ARRAY_COPY_METHODS.map((property) => ({ property, message: MESSAGES.arrayCopyMethod })),
+];
+
+const RESTRICTED_TEST_IMPORTS = {
+  patterns: [
+    {
+      group: ['@testing-library/dom'],
+      importNamePattern: '^(waitFor|find|screen$|within$|queries$|getQueriesForElement$)',
+      message: MESSAGES.waitLimit,
+    },
+  ],
+};
+
+const RESTRICTED_TEST_PROPERTIES = [
+  { object: 'vi', property: 'waitFor', message: MESSAGES.waitLimit },
+  { object: 'vi', property: 'waitUntil', message: MESSAGES.waitLimit },
+  { object: 'expect', property: 'poll', message: MESSAGES.waitLimit },
+  { object: 'expect', property: 'element', message: MESSAGES.waitLimit },
 ];
 
 // The rule uses a fixed list of names. A pattern for a second capital also matches a
@@ -280,10 +301,10 @@ const RESTRICTED_HTML_IMPORTS = [
   { name: 'vue', importNames: ['createStaticVNode', 'Static'], message: MESSAGES.html },
 ];
 
-// VitePress makes an SFC from a page, and Vue compiles the SFC. The processor makes the same SFC,
-// so the rules for an SFC apply to a page. A page includes a region of `README.md` and of
-// `THANKS.md`, and the synchronous render of a processor does not expand an include. ESLint thus
-// reads each of the two files as a page.
+// VitePress makes an SFC from a page, and Vue compiles the SFC. The processor makes an SFC from the
+// scripts of the page and the HTML of the renderer of VitePress. The rules for an SFC then apply to
+// a page. A page includes a region of `README.md` and of `THANKS.md`, and the synchronous render of
+// a processor does not expand an include. ESLint thus reads each of the two files as a page.
 const PAGE_FILES = ['docs/**/*.md', 'README.md', 'THANKS.md'];
 const SFC_OF_PAGE_FILES = PAGE_FILES.map((page) => `${page}/*.vue`);
 
@@ -300,9 +321,12 @@ function isVueFence(lang) {
 const docsRequire = createRequire(`${import.meta.dirname}/docs/package.json`);
 const vitepress = await import(pathToFileURL(docsRequire.resolve('vitepress')).href);
 
-// The site colors the code of a fence in an asynchronous step, and a processor is synchronous. This
-// renderer writes the code as text.
+// The renderer has each `markdown` option of the site. A Markdown rule of the site, such as the
+// heading badge, thus also changes the SFC that ESLint reads. The exception is the code of a fence.
+// The site colors it in an asynchronous step, and a processor is synchronous, so this renderer
+// writes the code as text.
 const pageRenderer = await vitepress.createMarkdownRenderer(`${import.meta.dirname}/docs`, {
+  ...siteConfig.markdown,
   highlight: (code, lang) =>
     `<pre${isVueFence(lang) ? '' : ' v-pre'}><code>${pageRenderer.utils.escapeHtml(code)}</code></pre>`,
 });
@@ -507,6 +531,16 @@ export default defineConfig([
     files: [...TEST_SCRIPT_FILES, 'packages/vue/test/**/*.{ts,tsx,vue}'],
     rules: { 'no-restricted-syntax': ['error', ...RESTRICTED_REACT_EVENT_PROP_SYNTAX] },
   },
+  {
+    // The tests of `fixtures/nuxt` run in Node and wait with Playwright and `expect.poll`. These
+    // rules are for `packages/vue` only. `test/queries.ts` wraps the queries of Testing Library.
+    files: [...VUE_TEST_SCRIPT_FILES, 'packages/vue/test/**/*.{ts,tsx,vue}'],
+    ignores: ['packages/vue/test/queries.ts'],
+    rules: {
+      'no-restricted-imports': ['error', RESTRICTED_TEST_IMPORTS],
+      'no-restricted-properties': ['error', ...RESTRICTED_TEST_PROPERTIES],
+    },
+  },
   { files: PAGE_FILES, processor: pageProcessor },
   {
     // Text from parity/ and from Base UI commits is data. A page must not render it as HTML.
@@ -519,8 +553,9 @@ export default defineConfig([
     },
   },
   {
-    // The style sheet of a demo is a byte copy of the Base UI file. The copy shows that the data
-    // attributes and CSS variables of Vase UI are those of Base UI. A demo has no style of its own.
+    // The style sheet of a CSS-module demo is a byte copy of the Base UI file, and the class strings
+    // of a Tailwind demo are those of Base UI. Both show that the data attributes and CSS variables
+    // of Vase UI are those of Base UI. A demo has no style of its own.
     files: ['docs/demos/**/*.vue'],
     rules: {
       'vue/no-restricted-block': [
@@ -528,7 +563,7 @@ export default defineConfig([
         {
           element: 'style',
           message:
-            'The styles of a demo come from the copied style sheet of Base UI. Remove the style block.',
+            'A CSS-module demo takes its styles from the copied style sheet of Base UI. A Tailwind demo takes them from its class names. Remove the style block.',
         },
       ],
     },

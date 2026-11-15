@@ -39,6 +39,8 @@ Import the component and assemble its parts:
 
 Because of the hidden input, `Checkbox.Root` has more than one root node. A rule of `<style scoped>` does not match its element, and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
 
+`Checkbox.Root` takes the state of its input when the visitor presses a native label before the page hydrates. It also takes a state that the browser restores after a move back in the history or a reload. The checkbox then emits `checkedChange` and `update:checked` one time. A `checkedChange` listener can thus run after a move back with no action of the visitor. A read-only or disabled checkbox and the parent checkbox of a group take no state. They write their own state to the input.
+
 ## Examples
 
 ### Labeling a checkbox

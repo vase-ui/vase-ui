@@ -14,6 +14,7 @@ import {
   hydrate,
   hydrateAfter,
   isJSDOM,
+  recordInputEvents,
   renderOnServer,
   screen,
   takeReportedMessages,
@@ -1645,5 +1646,49 @@ describe('<Field.Control />', () => {
         await waitFor(() => expect(fixture.getByTestId('model').textContent).toBe('かな'));
       },
     );
+  });
+
+  describe('VUE-81: the form state that the browser restores', () => {
+    async function restore(props: Record<string, unknown>, restored: string | undefined) {
+      const { container } = await render(<FieldControlBeforeHydration {...props} />);
+      const fixture = within(container);
+      const events = recordInputEvents(container);
+      if (restored !== undefined) {
+        fixture.getByTestId<HTMLInputElement>('control').value = restored;
+      }
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+      return { fixture, events };
+    }
+
+    it.each([
+      { name: 'an uncontrolled control', props: { defaultValue: 'server' }, model: '' },
+      { name: 'a control with v-model', props: { value: 'server' }, model: 'restored' },
+    ])('takes a value that the browser restores into $name', async ({ props, model }) => {
+      const { fixture, events } = await restore(props, 'restored');
+
+      expect(fixture.getByTestId('changes').textContent).toBe('restored (none)');
+      expect(fixture.getByTestId('model').textContent).toBe(model);
+      expect(fixture.getByTestId('root')).toHaveAttribute('data-dirty', '');
+      expect(events).toEqual(['input', 'change', 'blur', 'focusout']);
+    });
+
+    it('touches and validates a restored control that does not have the focus', async () => {
+      const { fixture } = await restore({ type: 'email', validationMode: 'onBlur' }, 'abc');
+
+      expect(fixture.getByTestId('changes').textContent).toBe('abc (none)');
+      expect(fixture.getByTestId('root')).toHaveAttribute('data-touched', '');
+      expect(fixture.getByTestId('root')).toHaveAttribute('data-invalid', '');
+      expect(fixture.getByTestId('error').textContent).not.toBe('');
+    });
+
+    it('sends no event for a control with the handled value', async () => {
+      const { fixture, events } = await restore({ defaultValue: 'server' }, undefined);
+
+      expect(events).toEqual([]);
+      expect(fixture.getByTestId('changes').textContent).toBe('');
+      expect(fixture.getByTestId('root')).not.toHaveAttribute('data-touched');
+    });
   });
 });
