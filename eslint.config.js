@@ -1,3 +1,5 @@
+import { createRequire } from 'node:module';
+import { pathToFileURL } from 'node:url';
 import js from '@eslint/js';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import eslintConfigPrettier from 'eslint-config-prettier';
@@ -26,7 +28,9 @@ const MESSAGES = {
   domInstanceof:
     'Another realm has other classes. Check `nodeType`, or use the class of `ownerWindow(element)`.',
   tsx: 'A TSX component never compiles to Vapor mode. Write an SFC or a `.ts` composable.',
-  html: '`innerHTML`, `outerHTML` and `insertAdjacentHTML` render data as HTML. Use text interpolation.',
+  html: 'This name can render a string as HTML. Show data with text interpolation.',
+  htmlDynamicArgument:
+    'A dynamic argument can be `innerHTML`, which renders a string as HTML. Write the name of the attribute.',
   reactEventProp: (reactKey, vueKey) =>
     `Vue makes the event name from the key, so \`${reactKey}\` listens to an event that no browser sends. Use \`${vueKey}\`.`,
 };
@@ -170,25 +174,161 @@ const RESTRICTED_TEMPLATE_SYNTAX = [
   { selector: "Identifier[name='$parent']", message: MESSAGES.$parent },
 ];
 
-const RESTRICTED_HTML_SYNTAX = [
+// The sinks of the Trusted Types API that take `TrustedHTML`, and the methods of the HTML Sanitizer
+// API, which also render a string as HTML. The list has `execCommand` for each command, not only
+// `insertHTML`, because the API is deprecated.
+// https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API#injection_sink_interfaces
+// https://developer.mozilla.org/en-US/docs/Web/API/HTML_Sanitizer_API
+const HTML_PROPERTIES = '(?:inner|outer)HTML|srcdoc';
+const HTML_METHODS =
+  'insertAdjacentHTML|setHTML|setHTMLUnsafe|parseHTML|parseHTMLUnsafe|createContextualFragment|parseFromString|execCommand|writeln';
+
+// The name can be an identifier, a string, or a template literal that has no expression. A prop
+// `srcDoc` sets the attribute `srcdoc`, because HTML ignores the case of an attribute name. The
+// pattern thus ignores the case.
+function selectorOfEachName(node, field, names, rest = '') {
+  const pattern = `/^(?:${names})$/i`;
+  return [
+    `[${field}.name=${pattern}]`,
+    `[${field}.type='Literal'][${field}.value=${pattern}]`,
+    `[${field}.type='TemplateLiteral'][${field}.expressions.length=0][${field}.quasis.0.value.cooked=${pattern}]`,
+  ]
+    .map((name) => `${node}${name}${rest}`)
+    .join(', ');
+}
+
+const RESTRICTED_HTML_SCRIPT_SYNTAX = [
   {
-    // `:innerHTML`, `v-bind:innerHTML`, `.innerHTML` and `:inner-h-t-m-l.camel`. The `camel`
-    // modifier turns the last one into `innerHTML`. The parser writes the argument in lower case in
-    // `name`, so the selector reads `rawName`.
-    selector:
-      "VAttribute[directive=true][key.name.name='bind'][key.argument.rawName=/^(inner|outer)(-?H|-h)(-?T|-t)(-?M|-m)(-?L|-l)$/]",
+    // An object pattern has `Property` nodes too, and it reads the property.
+    selector: selectorOfEachName('ObjectExpression > Property', 'key', HTML_PROPERTIES),
+    message: MESSAGES.html,
+  },
+  {
+    // A member can be the target of a write in many positions, so the rule refuses each member, a
+    // read too.
+    selector: selectorOfEachName(
+      'MemberExpression',
+      'property',
+      `${HTML_PROPERTIES}|${HTML_METHODS}`,
+    ),
+    message: MESSAGES.html,
+  },
+  {
+    // A stream and the clipboard also have `write`, so the rule needs the name of the object.
+    selector: selectorOfEachName(
+      'MemberExpression',
+      'property',
+      'write',
+      ':matches([object.name=/document$/i], [object.property.name=/document$/i], [object.callee.name=/document$/i])',
+    ),
     message: MESSAGES.html,
   },
   {
     selector: [
-      // An object pattern has `Property` nodes too, and it reads the property.
-      'ObjectExpression > Property[key.name=/^(inner|outer)HTML$/]',
-      'AssignmentExpression > MemberExpression.left[property.name=/^(inner|outer)HTML$/]',
-      "CallExpression[callee.property.name='insertAdjacentHTML']",
+      selectorOfEachName(
+        "CallExpression[callee.property.name='setAttribute']",
+        'arguments.0',
+        'srcdoc',
+      ),
+      selectorOfEachName(
+        "CallExpression[callee.property.name='setAttributeNS']",
+        'arguments.1',
+        'srcdoc',
+      ),
     ].join(', '),
     message: MESSAGES.html,
   },
 ];
+
+const RESTRICTED_HTML_TEMPLATE_SYNTAX = [
+  {
+    // `:innerHTML`, `v-bind:innerHTML`, `.innerHTML` and `:inner-h-t-m-l.camel`. The `camel`
+    // modifier turns the last one into `innerHTML`, so the pattern allows a hyphen between the
+    // letters.
+    selector:
+      "VAttribute[directive=true][key.name.name='bind'][key.argument.rawName=/^(?:(?:inner|outer)-?h-?t-?m-?l|src-?doc)$/i]",
+    message: MESSAGES.html,
+  },
+  {
+    selector:
+      "VAttribute[directive=true][key.name.name='bind'][key.argument.type='VExpressionContainer']",
+    message: MESSAGES.htmlDynamicArgument,
+  },
+  ...RESTRICTED_HTML_SCRIPT_SYNTAX,
+];
+
+// `createStaticVNode` and `Static` render a string as HTML.
+const RESTRICTED_HTML_IMPORTS = [
+  { name: 'vue', importNames: ['createStaticVNode', 'Static'], message: MESSAGES.html },
+];
+
+// VitePress makes an SFC from a page, and Vue compiles the SFC. The processor makes the same SFC,
+// so the rules for an SFC apply to a page. A page includes a region of `README.md` and of
+// `THANKS.md`, and the synchronous render of a processor does not expand an include. ESLint thus
+// reads each of the two files as a page.
+const PAGE_FILES = ['docs/**/*.md', 'README.md', 'THANKS.md'];
+const SFC_OF_PAGE_FILES = PAGE_FILES.map((page) => `${page}/*.vue`);
+
+// Vue reads `{{ }}` in a fence only when the language ends in `-vue`. As the site does, this reads
+// the letters, digits, `_` and `-` at the start of the language in lower case. When the language
+// starts with another character, it reads the full language.
+function isVueFence(lang) {
+  return (/^[\w-]+/.exec(lang)?.[0].toLowerCase() ?? lang).endsWith('-vue');
+}
+
+// ESLint renders a page with the VitePress of `docs`, the one that builds the site. The root
+// `package.json` does not list VitePress, because the job `stage` of the release workflow installs
+// the root dependencies in a step that can get an OIDC token.
+const docsRequire = createRequire(`${import.meta.dirname}/docs/package.json`);
+const vitepress = await import(pathToFileURL(docsRequire.resolve('vitepress')).href);
+
+// The site colors the code of a fence in an asynchronous step, and a processor is synchronous. This
+// renderer writes the code as text.
+const pageRenderer = await vitepress.createMarkdownRenderer(`${import.meta.dirname}/docs`, {
+  highlight: (code, lang) =>
+    `<pre${isVueFence(lang) ? '' : ' v-pre'}><code>${pageRenderer.utils.escapeHtml(code)}</code></pre>`,
+});
+
+function sfcOfPage(text, path) {
+  // The `<<<` rule reads a code file from a path that is relative to the page.
+  const env = { path };
+  const html = pageRenderer.render(text, env);
+  const scripts = env.sfcBlocks.scripts.map(({ content }) => content);
+  // VitePress puts the HTML in a `div`, so a page that has no text still has a root element.
+  return [...scripts, `<template><div>${html}</div></template>`].join('\n');
+}
+
+// A report has a position in the SFC. The page has the reported text where the writer typed it, so
+// the report goes to the first place of that text in the page, or to line 1.
+function positionInPage(page, sfc, { line, column, endLine, endColumn }) {
+  const sfcLine = sfc.split('\n')[line - 1] ?? '';
+  const reported = sfcLine.slice(column - 1, endLine === line ? endColumn - 1 : undefined);
+  const before = page.slice(0, Math.max(page.indexOf(reported), 0)).split('\n');
+  return { line: before.length, column: before.at(-1).length + 1 };
+}
+
+const renderedPages = new Map();
+
+// There is no `supportsAutofix`, so ESLint writes no fix. A fix has a position in the SFC, not in
+// the page.
+const pageProcessor = {
+  meta: { name: 'vase-ui/page' },
+  preprocess(text, filename) {
+    const sfc = sfcOfPage(text, filename);
+    renderedPages.set(filename, { text, sfc });
+    return [{ text: sfc, filename: 'page.vue' }];
+  },
+  postprocess([messages], filename) {
+    const { text, sfc } = renderedPages.get(filename);
+    renderedPages.delete(filename);
+    return messages.map((message) => ({
+      ...message,
+      ...positionInPage(text, sfc, message),
+      endLine: undefined,
+      endColumn: undefined,
+    }));
+  },
+};
 
 export default defineConfig([
   globalIgnores([
@@ -347,15 +487,15 @@ export default defineConfig([
     files: [...TEST_SCRIPT_FILES, 'packages/vue/test/**/*.{ts,tsx,vue}'],
     rules: { 'no-restricted-syntax': ['error', ...RESTRICTED_REACT_EVENT_PROP_SYNTAX] },
   },
+  { files: PAGE_FILES, processor: pageProcessor },
   {
     // Text from parity/ and from Base UI commits is data. A page must not render it as HTML.
-    // The rules read the template and the script. They refuse `v-html`, `insertAdjacentHTML`, and
-    // `innerHTML` and `outerHTML` as a prop, an object key or an assignment target.
-    files: ['docs/**/*.vue'],
+    files: ['docs/**', ...SFC_OF_PAGE_FILES],
     rules: {
       'vue/no-v-html': 'error',
-      'vue/no-restricted-syntax': ['error', ...RESTRICTED_HTML_SYNTAX],
-      'no-restricted-syntax': ['error', ...RESTRICTED_HTML_SYNTAX],
+      'vue/no-restricted-syntax': ['error', ...RESTRICTED_HTML_TEMPLATE_SYNTAX],
+      'no-restricted-syntax': ['error', ...RESTRICTED_HTML_SCRIPT_SYNTAX],
+      'no-restricted-imports': ['error', { paths: RESTRICTED_HTML_IMPORTS }],
     },
   },
   {
