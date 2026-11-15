@@ -1430,6 +1430,7 @@ describe('<Resizable.Handle />', () => {
         showInnerHandle?: { value: boolean };
         outerDisabled?: { value: boolean };
         outerHandle?: Record<string, unknown>;
+        bottomPanel?: boolean;
       } = {},
     ) {
       await render(() => (
@@ -1457,7 +1458,7 @@ describe('<Resizable.Handle />', () => {
                     {...options.innerHandle}
                   />
                 )}
-                <Resizable.Panel id="bottom" />
+                {options.bottomPanel === false ? null : <Resizable.Panel id="bottom" />}
               </Resizable.Root>
             </Resizable.Panel>
           </Resizable.Root>
@@ -1613,6 +1614,18 @@ describe('<Resizable.Handle />', () => {
       expect(screen.getByTestId('inner-handle')).not.toHaveAttribute('data-dragging');
       expect(outer).not.toHaveAttribute('data-crossing');
       expect(values()[0]).toBe('60');
+    });
+
+    it('does not join a handle that has no panel on one side, also for a pointer with no button', async () => {
+      const { outer, at, move } = await renderCrossing({ bottomPanel: false });
+
+      await fireEvent.pointerMove(outer, pointerInit({ ...at, buttons: 0 }));
+      expect(outer).not.toHaveAttribute('data-crossing');
+      await fireEvent.pointerDown(outer, pointerInit({ ...at, buttons: 1 }));
+      await move(40, 30);
+
+      expect(outer).not.toHaveAttribute('data-crossing');
+      expect(outer).toHaveAttribute('aria-valuenow', '60');
     });
 
     it('does not join a root that has a drag already, and the drag of the outer root goes on', async () => {

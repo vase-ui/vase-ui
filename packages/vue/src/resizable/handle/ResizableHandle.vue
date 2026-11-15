@@ -176,7 +176,7 @@ const ends = computed(() =>
 
 const drag = createHandleDrag(root, {
   pivot: () => pivot.value,
-  disabled: () => isDisabled.value,
+  disabled: () => !isFocusable.value,
 });
 const press = createHandlePress({ drag, orientation: () => root.orientation.value });
 

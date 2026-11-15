@@ -122,8 +122,8 @@ function isCovered(handle: RegisteredHandle, elementsAtPoint: readonly Element[]
 
 /**
  * The drags that a press at (x, y) on `own` starts: the drag of `own` first, then the drag of each
- * handle and each edge of another root that the press crosses. Another handle joins when it is not
- * disabled, the point is in its join box, and no other element covers it at its nearest point. With
+ * handle and each edge of another root that the press crosses. Another handle joins when it can
+ * move, the point is in its join box, and no other element covers it at its nearest point. With
  * no handle of the other orientation in the result, the press drags only `own`: a crossing has the
  * two axes.
  * @param element The element that has the listener of the press.

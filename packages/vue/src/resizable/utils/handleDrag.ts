@@ -12,6 +12,10 @@ interface HandleDragOptions {
    * on one side.
    */
   pivot: () => number;
+  /**
+   * Whether the boundary cannot move. A press on it starts no drag, and the press of another
+   * handle does not join it.
+   */
   disabled: () => boolean;
 }
 
