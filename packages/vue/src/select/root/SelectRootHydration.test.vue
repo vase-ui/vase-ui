@@ -3,6 +3,8 @@ import { onMounted, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Select } from '@vase-ui/vue/select';
 
+// In a field, the root has the generated id of the field until the mount. An `id` prop of the root
+// thus does not give the label part the same id in the first client render and after the mount.
 defineProps<{
   id?: string | undefined;
   name?: string | undefined;
@@ -22,8 +24,8 @@ onMounted(() => {
 
 <template>
   <Field.Root v-if="field">
-    <Select.Root :id="id">
-      <Select.Label v-if="label === 'before'">Font</Select.Label>
+    <Select.Root>
+      <Select.Label v-if="label === 'before'" data-testid="label">Font</Select.Label>
       <Select.Trigger>
         <Select.Value />
       </Select.Trigger>

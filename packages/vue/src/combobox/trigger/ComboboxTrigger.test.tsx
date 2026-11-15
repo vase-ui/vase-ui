@@ -1914,7 +1914,7 @@ describe('<Combobox.Trigger />', () => {
       cases: [
         {
           name: 'a removed label part',
-          props: { laterRemovedAtMount: true },
+          props: { label: 'after', laterRemovedAtMount: true },
           selector: '[data-testid="trigger"]',
           attribute: 'aria-labelledby',
           serverValue: 'fruit-label',
@@ -1935,6 +1935,14 @@ describe('<Combobox.Trigger />', () => {
           attribute: 'aria-describedby',
           serverValue: 'desc-a',
           clientValue: null,
+        },
+        {
+          name: 'a label part and a removed field label',
+          props: { label: 'before', field: true, laterRemovedAtMount: true },
+          selector: '[data-testid="trigger"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: { idOf: '[data-testid="label"]' },
         },
       ],
     });

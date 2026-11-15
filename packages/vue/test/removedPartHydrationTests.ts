@@ -23,7 +23,11 @@ export function removedPartHydrationTests(config: RemovedPartHydrationTestsConfi
 
       const element = container.querySelector(selector);
       expect(element).toBeInTheDocument();
-      expect(element?.getAttribute(attribute)).toBe(clientValue);
+      const expected =
+        typeof clientValue === 'object' && clientValue !== null
+          ? container.querySelector(clientValue.idOf)?.id
+          : clientValue;
+      expect(element?.getAttribute(attribute)).toBe(expected);
     },
   );
 }
@@ -46,6 +50,9 @@ export interface RemovedPartHydrationCase {
   attribute: string;
   /** The value of the attribute in the server HTML. */
   serverValue: string;
-  /** The value of the attribute after the hydration, or `null` for no attribute. */
-  clientValue: string | null;
+  /**
+   * The value of the attribute after the hydration. `null` is no attribute. `{ idOf }` is the id of
+   * the element of that selector, for an id that Vue generates.
+   */
+  clientValue: string | null | { idOf: string };
 }
