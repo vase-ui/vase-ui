@@ -755,9 +755,10 @@ describe('<Drawer.Root />', () => {
 
     expect(screen.queryByTestId('payload')).toBeNull();
 
-    await fireEvent.click(screen.getByRole('button', { name: 'Trigger 1' }));
-    await flushMicrotasks();
-    await waitForLaterMillisecond();
+    await waitForLaterMillisecond(async () => {
+      await fireEvent.click(screen.getByRole('button', { name: 'Trigger 1' }));
+      await flushMicrotasks();
+    });
     expect(screen.getByTestId('payload').textContent).toBe('1');
 
     await fireEvent.click(screen.getByText('Close'));
@@ -800,9 +801,10 @@ describe('<Drawer.Root />', () => {
     const trigger = screen.getByRole('button', { name: 'Trigger 1' });
 
     async function openAndClose() {
-      await user.click(trigger);
-      expect(await screen.findByTestId('popup')).not.toBe(null);
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        expect(await screen.findByTestId('popup')).not.toBe(null);
+      });
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
       await user.click(screen.getByRole('button', { name: 'Close' }));
       await waitFor(() => {
@@ -926,11 +928,12 @@ describe('<Drawer.Root />', () => {
 
     expect(screen.getByTestId('payload').textContent).toBe('No payload');
 
-    await user.click(trigger);
-    await waitFor(() => {
-      expect(screen.getByText('Drawer content')).toBeVisible();
+    await waitForLaterMillisecond(async () => {
+      await user.click(trigger);
+      await waitFor(() => {
+        expect(screen.getByText('Drawer content')).toBeVisible();
+      });
     });
-    await waitForLaterMillisecond();
     expect(screen.getByTestId('payload').textContent).toBe('1');
     expect(trigger).toHaveAttribute('aria-expanded', 'true');
     expect(trigger.getAttribute('aria-controls')).toBe(
