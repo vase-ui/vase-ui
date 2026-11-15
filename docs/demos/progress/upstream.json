@@ -7,12 +7,12 @@
     "hero/tailwind/index.tsx": "f3054f38c8ee1ad80e9e95d7c835c023579cef87546df17992079fc6db8694fd"
   },
   "classes": {
-    "hero/tailwind": [
-      "bg-neutral-950 transition-[width] duration-500 dark:bg-white",
-      "col-span-2 h-1 overflow-hidden bg-neutral-200 dark:bg-neutral-800",
-      "grid max-w-full w-60 grid-cols-2 gap-y-2",
-      "text-right text-sm text-neutral-950 dark:text-white",
-      "text-sm font-normal text-neutral-950 dark:text-white"
-    ]
+    "hero/tailwind": {
+      "Progress.Indicator": ["bg-neutral-950 transition-[width] duration-500 dark:bg-white"],
+      "Progress.Label": ["text-sm font-normal text-neutral-950 dark:text-white"],
+      "Progress.Root": ["grid max-w-full w-60 grid-cols-2 gap-y-2"],
+      "Progress.Track": ["col-span-2 h-1 overflow-hidden bg-neutral-200 dark:bg-neutral-800"],
+      "Progress.Value": ["text-right text-sm text-neutral-950 dark:text-white"]
+    }
   }
 }
