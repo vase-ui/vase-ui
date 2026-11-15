@@ -10,6 +10,7 @@ import {
   createRenderer,
   fireEvent,
   flushMicrotasks,
+  heldMountFormResetTests,
   hiddenInputSizeTests,
   hiddenInputTypeTests,
   hydrate,
@@ -8909,6 +8910,22 @@ describe('<Select.Root />', () => {
       expect(handleValueChange.mock.lastCall?.[0]).toBe(defaultValue);
       expect(screen.getByTestId('field')).not.toHaveAttribute('data-dirty');
     });
+  });
+
+  heldMountFormResetTests({
+    render,
+    renderControl: () => (
+      <Select.Root name="font" defaultValue="sans">
+        <StoreProbe />
+        <Select.Trigger>
+          <Select.Value data-testid="value" />
+        </Select.Trigger>
+      </Select.Root>
+    ),
+    change: () => setValueAsItem('serif'),
+    readState: () => screen.getByTestId('value').textContent,
+    defaultState: 'sans',
+    changedState: 'serif',
   });
 
   describe('VUE-21: a native reset clears the error of the field', () => {
