@@ -830,7 +830,10 @@ describe('<Dialog.Popup />', () => {
           </Dialog.Root>
         </div>,
       );
-      await user.click(screen.getByRole('button', { name: 'Open' }));
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Open' }));
+        await screen.findByTestId('popup');
+      });
       await waitFor(() => {
         expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus();
       });
@@ -891,7 +894,10 @@ describe('<Dialog.Popup />', () => {
         </Dialog.Portal>
       </Dialog.Root>
     ));
-    await user.click(screen.getByRole('button', { name: 'Open' }));
+    await waitForLaterMillisecond(async () => {
+      await user.click(screen.getByRole('button', { name: 'Open' }));
+      await screen.findByTestId('popup');
+    });
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus();
     });

@@ -3324,7 +3324,7 @@ describe('<Autocomplete.Root />', () => {
         </Autocomplete.Root>,
       );
       getInput().focus();
-      await type('Ma');
+      await waitForLaterMillisecond(() => type('Ma'));
       await pressArrowDown();
       expect(getInput().value).toBe('Malmö');
       events.length = 0;
