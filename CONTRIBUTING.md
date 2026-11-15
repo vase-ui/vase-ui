@@ -671,7 +671,7 @@ If a line must break a rule, put a disable comment on that line and give the rea
 
 The project `vapor` of the tests checks the parts in a Vapor app. See [Where a test runs](#where-a-test-runs).
 
-A function component that calls `h` is not an SFC, so Vapor mode does not compile it. `DateFieldLiteralElement` is the one such component, for the reason in [Server render](#server-render).
+A function component that calls `h` is not an SFC, so Vapor mode does not compile it. `DateTimeFieldLiteralElement` is the one such component, for the reason in [Server render](#server-render).
 
 ### Server render
 
@@ -802,10 +802,10 @@ A date or time field and the `Intl` data of the server:
 - A layout can differ in the order of the segments, in the number of segments, in the text of a literal and in the hour cycle.
 - While the field hydrates, the part that renders the segments binds `data-allow-mismatch="children"` on `Input`, `attribute` on a segment and `text` on a literal. `useDateTimeFieldSegment` binds the one of a segment. Each part calls `useIsHydrating()` itself. `test/fixtures/DateTimeFieldProbe.vue` is the model.
 - Vue changes the text of a literal itself. While it hydrates, it writes no attribute that a `v-bind` object or `h()` gives, but the `value` of an input. A server element that Vue reuses for another segment thus keeps its attributes.
-- Vue lets `data-allow-mismatch="text"` allow the text of an element that has a string as its one child. It does not let the attribute allow a text node in a list of children, and a template gives the text of a dynamic element as such a node. `DateFieldLiteralElement` gives the text as a string with `h`.
+- Vue lets `data-allow-mismatch="text"` allow the text of an element that has a string as its one child. It does not let the attribute allow a text node in a list of children, and a template gives the text of a dynamic element as such a node. `DateField.Literal` thus renders `DateTimeFieldLiteralElement`, which gives the text as a string with `h`.
 - After the mount, the root compares the `data-type` and the attributes that `getSegmentAttributes` gives with the DOM. It also compares the `data-type` of each literal part with the type at its place in the layout. A server can put a time zone name or an era in the place of a separator. A literal part gives its element and its index with `registerLiteral`. On a difference, the root changes `listKey`, and the parts make the elements again.
 - For a fragment with another number of items than on the server, such as the fragment of `v-for`, Vue logs `Hydration completed but contains mismatches` also under `data-allow-mismatch`. The test part renders the items of the layout as direct children of its input element, so it gives no such message.
-- A template renders a list as a fragment, so `DateFieldInputChildren.vue` gives the fragment a fixed length: `MAX_LAYOUT_LENGTH` items, or more for a longer layout. Each item renders one part, or the comment of a `v-if` after the last part. The fragment then has the same length on the server and in the browser, and `data-allow-mismatch="children"` allows the difference of an item. `DateField.Input` renders the SFC in its element, and its `#render` slot gives the SFC as `children`.
+- A template renders a list as a fragment, so `DateFieldInputChildren.vue` gives the fragment a fixed length: `MAX_LAYOUT_LENGTH.date` items, or more for a longer layout. Each item renders one part, or the comment of a `v-if` after the last part. The fragment then has the same length on the server and in the browser, and `data-allow-mismatch="children"` allows the difference of an item. `DateField.Input` renders the SFC in its element, and its `#render` slot gives the SFC as `children`. `MAX_LAYOUT_LENGTH` of `segmentLayout.ts` has the limit of each family, and a case of `segmentLayout.test.ts` proves it over the layouts of many locales and calendars.
 
 ### What Vue replaces
 

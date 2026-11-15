@@ -27,10 +27,11 @@ export interface DateFieldLiteralProps
 import { computed } from 'vue';
 import { useIsHydrating } from '../../common/hydration';
 import { useDateTimeFieldContext } from '../../internals/date-time/field/DateTimeFieldContext';
+import { DateTimeFieldLiteralElement } from '../../internals/date-time/field/DateTimeFieldLiteralElement';
+import { useDateTimeFieldLiteral } from '../../internals/date-time/field/useDateTimeFieldLiteral';
 import { rootStateAttributesMapping } from '../../internals/date-time/field/useDateTimeFieldRoot';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { DateFieldLiteralElement } from './DateFieldLiteralElement';
 
 defineOptions({ inheritAttrs: false });
 
@@ -50,23 +51,7 @@ const state = computed<DateFieldLiteralState>(() => ({
   type: props.segment.type,
 }));
 
-let ownElement: HTMLElement | null = null;
-
-// The root compares the element with the layout after the hydration.
-function setElement(element: unknown) {
-  const next = element as HTMLElement | null;
-  // Vue calls a function ref again on each patch, with the same element.
-  if (next === ownElement) {
-    return;
-  }
-  if (ownElement) {
-    context.unregisterLiteral(ownElement);
-  }
-  if (next) {
-    context.registerLiteral(next, props.segment.index);
-  }
-  ownElement = next;
-}
+const setElement = useDateTimeFieldLiteral(() => props.segment.index);
 
 const { element, elementProps } = useRenderElement('span', props, {
   state,
@@ -88,5 +73,10 @@ defineExpose({ element });
 
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <DateFieldLiteralElement v-else :tag="as" :element-props="elementProps()" :text="segment.text" />
+  <DateTimeFieldLiteralElement
+    v-else
+    :tag="as"
+    :element-props="elementProps()"
+    :text="segment.text"
+  />
 </template>

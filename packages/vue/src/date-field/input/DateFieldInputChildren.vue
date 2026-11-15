@@ -20,7 +20,7 @@ const context = useDateTimeFieldContext();
 const positions = computed(() => {
   const segments = context.segments.value;
   return Array.from(
-    { length: Math.max(MAX_LAYOUT_LENGTH, segments.length) },
+    { length: Math.max(MAX_LAYOUT_LENGTH.date, segments.length) },
     (_, index) => segments[index],
   );
 });
