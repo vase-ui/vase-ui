@@ -88,6 +88,13 @@ describe('the style sheet of the Tailwind demos', () => {
       selector: '.h-8',
       expected: { height: '0px' },
     },
+    {
+      name: 'dark: follows the class dark',
+      vnode: () =>
+        h('div', { class: 'dark' }, h('div', { 'data-demo': 'tailwind' }, h(TailwindButton))),
+      selector: 'button',
+      expected: { color: 'rgb(255, 255, 255)' },
+    },
   ])('$name', async ({ vnode, selector, expected }) => {
     const { container } = await render(vnode());
     const style = getComputedStyle(container.querySelector(selector)!);

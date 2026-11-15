@@ -526,6 +526,22 @@ test('the class strings of a Vue demo come with the family, by the folder of eac
   );
 });
 
+test('the class strings of a demo with another name in Base UI come from the Vue folder that the map gives', () => {
+  const record = {
+    commit: COMMIT,
+    upstream: FORMS_DEMOS,
+    files: {},
+    classes: { 'react-hook-form/tailwind': ['a b'] },
+  };
+  const root = makeRoot({
+    'docs/demos/handbook-forms/upstream.json': JSON.stringify(record),
+    'docs/demos/handbook-forms/vee-validate/tailwind/index.vue':
+      '<template><div class="a b" /></template>\n',
+  });
+  const family = loadDemoFamilies(root).find(({ name }) => name === 'handbook-forms');
+  assert.deepEqual(family?.vueClasses, new Map([['react-hook-form/tailwind', ['a b']]]));
+});
+
 test('each demo and each copied style sheet of the repository match the record', () => {
   const families = loadDemoFamilies(REPOSITORY_ROOT);
   assert.notEqual(families.length, 0);
