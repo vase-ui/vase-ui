@@ -6,6 +6,7 @@ import {
   holdPress,
   screen,
   wait,
+  waitForLaterMillisecond,
   waitForPositioned,
 } from '#test-utils';
 import * as Menu from '../index.parts';
@@ -40,8 +41,11 @@ describe('<Menu.Item />', () => {
     ));
     const trigger = screen.getByRole('button', { name: 'Open' });
 
-    const { point, release } = await holdPress(trigger);
-    await waitForPositioned(await screen.findByTestId('positioner'));
+    const { point, release } = await waitForLaterMillisecond(async () => {
+      const press = await holdPress(trigger);
+      await waitForPositioned(await screen.findByTestId('positioner'));
+      return press;
+    });
     // The trigger arms the release over an item 200 ms after the press.
     await wait(300);
     // The trigger moved up at the open, so an item is now at the point of the press.

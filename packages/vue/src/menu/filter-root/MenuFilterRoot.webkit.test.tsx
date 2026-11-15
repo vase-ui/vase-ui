@@ -1,7 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, shallowRef, watch } from 'vue';
 import * as Menu from '../index.parts';
-import { createRenderer, flushMicrotasks, screen, waitFor, waitSingleFrame } from '#test-utils';
+import {
+  createRenderer,
+  flushMicrotasks,
+  screen,
+  waitFor,
+  waitForLaterMillisecond,
+  waitSingleFrame,
+} from '#test-utils';
 import type { HTMLProps, VaseUIEvent } from '../../internals/types';
 
 // Kept in a separate file so the module mock doesn't leak into `MenuFilterRoot.test.tsx`.
@@ -350,9 +357,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider> (WebKit)', () 
     await waitFor(() => {
       expect(screen.getByRole('searchbox', { name: 'Filter actions' })).toHaveFocus();
     });
-    await user.keyboard('[ArrowDown][ArrowRight]');
-
-    const submenuInput = await screen.findByRole('searchbox', { name: 'Filter more actions' });
+    const submenuInput = await waitForLaterMillisecond(async () => {
+      await user.keyboard('[ArrowDown][ArrowRight]');
+      return screen.findByRole('searchbox', { name: 'Filter more actions' });
+    });
     await waitFor(() => {
       expect(submenuInput).toHaveFocus();
     });

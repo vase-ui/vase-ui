@@ -6,10 +6,15 @@ description: An unstyled Vue alert dialog component that needs a response from t
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoAlertDialogDetachedTriggersControlled from '../demos/alert-dialog/detached-triggers-controlled/css-modules/index.vue';
+import DemoAlertDialogDetachedTriggersControlledTailwind from '../demos/alert-dialog/detached-triggers-controlled/tailwind/index.vue';
 import DemoAlertDialogDetachedTriggersSimple from '../demos/alert-dialog/detached-triggers-simple/css-modules/index.vue';
+import DemoAlertDialogDetachedTriggersSimpleTailwind from '../demos/alert-dialog/detached-triggers-simple/tailwind/index.vue';
 import DemoAlertDialogHero from '../demos/alert-dialog/hero/css-modules/index.vue';
+import DemoAlertDialogHeroTailwind from '../demos/alert-dialog/hero/tailwind/index.vue';
 import DemoAlertDialogOpenFromMenu from '../demos/alert-dialog/open-from-menu/css-modules/index.vue';
+import DemoAlertDialogOpenFromMenuTailwind from '../demos/alert-dialog/open-from-menu/tailwind/index.vue';
 </script>
 
 # Alert Dialog
@@ -18,7 +23,12 @@ A dialog that needs a response from the user before they continue.
 
 <DemoFrame>
   <DemoAlertDialogHero />
+  <template #tailwind>
+    <DemoAlertDialogHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -27,6 +37,18 @@ A dialog that needs a response from the user before they continue.
 <<< ../demos/alert-dialog/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/alert-dialog/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Anatomy
 
@@ -50,7 +72,12 @@ The methods of the handle, such as `open()` and `openWithPayload()`, act only wh
 
 <DemoFrame>
   <DemoAlertDialogDetachedTriggersSimple />
+  <template #tailwind>
+    <DemoAlertDialogDetachedTriggersSimpleTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -59,6 +86,18 @@ The methods of the handle, such as `open()` and `openWithPayload()`, act only wh
 <<< ../demos/alert-dialog/_index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/alert-dialog/detached-triggers-simple/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ### Multiple triggers
 
@@ -82,7 +121,12 @@ The root has no event for a change of the trigger id. The `openChange` event giv
 
 <DemoFrame>
   <DemoAlertDialogDetachedTriggersControlled />
+  <template #tailwind>
+    <DemoAlertDialogDetachedTriggersControlledTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -92,13 +136,30 @@ The root has no event for a change of the trigger id. The `openChange` event giv
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/alert-dialog/detached-triggers-controlled/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Open from a menu
 
 To open an alert dialog from a menu, control the open state of the alert dialog with `v-model:open`. Set it to `true` in a `click` listener on the menu item. See [Menu](/components/menu) for the parts of the menu.
 
 <DemoFrame>
   <DemoAlertDialogOpenFromMenu />
+  <template #tailwind>
+    <DemoAlertDialogOpenFromMenuTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -107,6 +168,18 @@ To open an alert dialog from a menu, control the open state of the alert dialog 
 <<< ../demos/alert-dialog/open-from-menu/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/alert-dialog/open-from-menu/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## API reference
 

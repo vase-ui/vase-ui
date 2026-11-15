@@ -11,6 +11,7 @@ import {
   hydrate,
   isJSDOM,
   nextAnimationsRead,
+  nextCall,
   nextEvent,
   popupAnatomyTests,
   popupConformanceTests,
@@ -18,6 +19,7 @@ import {
   screen,
   wait,
   waitFor,
+  waitForLaterMillisecond,
   waitSingleFrame,
 } from '#test-utils';
 import * as Combobox from '../../combobox/index.parts';
@@ -239,6 +241,44 @@ describe('<Popover.Root />', () => {
     render,
   });
 
+  describe('VUE-92: a portal part that a v-if of the consumer removes', () => {
+    it.each([
+      { name: 'no keepMounted', keepMounted: false },
+      { name: 'keepMounted', keepMounted: true },
+    ])('emits openChangeComplete with false after each close: $name', async ({ keepMounted }) => {
+      const onOpenChangeComplete = vi.fn();
+      const open = shallowRef(false);
+      await render(() => (
+        <Popover.Root open={open.value} onOpenChangeComplete={onOpenChangeComplete}>
+          <Popover.Trigger>Open</Popover.Trigger>
+          {open.value && (
+            <Popover.Portal keepMounted={keepMounted}>
+              <Popover.Positioner>
+                <Popover.Popup data-testid="popup">Popup</Popover.Popup>
+              </Popover.Positioner>
+            </Popover.Portal>
+          )}
+        </Popover.Root>
+      ));
+
+      async function openAndClose(cycle: number) {
+        const opened = nextCall(onOpenChangeComplete);
+        open.value = true;
+        await opened;
+        open.value = false;
+        await flushMicrotasks();
+
+        expect(screen.queryByTestId('popup')).toBe(null);
+        expect(onOpenChangeComplete).toHaveBeenCalledTimes(cycle * 2);
+      }
+
+      await openAndClose(1);
+      await openAndClose(2);
+
+      expect(onOpenChangeComplete.mock.calls).toEqual([[true], [false], [true], [false]]);
+    });
+  });
+
   describe('closing before the popup attaches', () => {
     it.skipIf(isJSDOM)('waits for the closing animation once the popup attaches', async () => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
@@ -418,8 +458,10 @@ describe('<Popover.Root />', () => {
       await render(renderApp());
       const trigger = screen.getByRole('button', { name: 'Toggle' });
 
-      await hoverOpen(trigger);
-      await flushMicrotasks();
+      await waitForLaterMillisecond(async () => {
+        await hoverOpen(trigger);
+        await flushMicrotasks();
+      });
       expect(screen.queryByRole('dialog')).not.toBe(null);
 
       await fireEvent.pointerDown(screen.getByRole('button', { name: 'More' }), {
@@ -498,9 +540,11 @@ describe('<Popover.Root />', () => {
 
         const trigger = screen.getByTestId('trigger');
 
-        await user.click(trigger);
-        await waitFor(() => {
-          expect(screen.queryByRole('dialog')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.click(trigger);
+          await waitFor(() => {
+            expect(screen.queryByRole('dialog')).not.toBe(null);
+          });
         });
 
         await user.keyboard('{Escape}');
@@ -801,8 +845,10 @@ describe('<Popover.Root />', () => {
         popoverTrigger.focus();
         await flushMicrotasks();
 
-        await user.keyboard('{Enter}');
-        await screen.findByTestId('popover-popup');
+        await waitForLaterMillisecond(async () => {
+          await user.keyboard('{Enter}');
+          await screen.findByTestId('popover-popup');
+        });
 
         const nestedTrigger = await screen.findByRole('button', { name: 'Open nested' });
 
@@ -852,12 +898,16 @@ describe('<Popover.Root />', () => {
         const { user } = await render(<Test />);
 
         const popoverTrigger = screen.getByRole('button', { name: 'Toggle' });
-        await user.click(popoverTrigger);
-        await screen.findByTestId('popover-popup');
+        await waitForLaterMillisecond(async () => {
+          await user.click(popoverTrigger);
+          await screen.findByTestId('popover-popup');
+        });
 
         const nestedTrigger = await screen.findByRole('button', { name: 'Open nested' });
-        await user.click(nestedTrigger);
-        await screen.findByTestId('menu-popup');
+        await waitForLaterMillisecond(async () => {
+          await user.click(nestedTrigger);
+          await screen.findByTestId('menu-popup');
+        });
 
         const item = await screen.findByText('Item');
         // In WebKit, a list ignores a pointer move with no movement, so the item has no focus when
@@ -1052,8 +1102,10 @@ describe('<Popover.Root />', () => {
         );
 
         const trigger = screen.getByRole('button', { name: 'Toggle' });
-        await fireEvent.click(trigger);
-        await flushMicrotasks();
+        await waitForLaterMillisecond(async () => {
+          await fireEvent.click(trigger);
+          await flushMicrotasks();
+        });
 
         await fireEvent.click(screen.getByTestId('close'));
 
@@ -1786,9 +1838,10 @@ describe('<Popover.Root />', () => {
             </div>,
           );
 
-          await user.click(screen.getByRole('button', { name: 'Menu' }));
-
-          const menu = await screen.findByRole('menu');
+          const menu = await waitForLaterMillisecond(async () => {
+            await user.click(screen.getByRole('button', { name: 'Menu' }));
+            return screen.findByRole('menu');
+          });
           await waitFor(() => {
             expect(menu).toHaveFocus();
           });
@@ -2711,19 +2764,21 @@ describe('<Popover.Root />', () => {
         const { user } = await render(<Test />);
 
         const parentTrigger = screen.getByRole('button', { name: 'Parent trigger' });
-        await user.click(parentTrigger);
-
-        await waitFor(() => {
-          expect(screen.queryByTestId('parent-popup')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.click(parentTrigger);
+          await waitFor(() => {
+            expect(screen.queryByTestId('parent-popup')).not.toBe(null);
+          });
         });
 
         const childOpener = screen.getByRole('button', {
           name: 'Open child programmatically',
         });
-        await user.click(childOpener);
-
-        await waitFor(() => {
-          expect(screen.queryByTestId('child-popup')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.click(childOpener);
+          await waitFor(() => {
+            expect(screen.queryByTestId('child-popup')).not.toBe(null);
+          });
         });
 
         await user.click(screen.getByRole('button', { name: 'Close child' }));
@@ -2779,9 +2834,10 @@ describe('<Popover.Root />', () => {
 
         const childTrigger = screen.getByRole('button', { name: 'Child' });
 
-        await fireEvent.click(childTrigger);
-
-        const childPopup = await screen.findByTestId('child-popup');
+        const childPopup = await waitForLaterMillisecond(async () => {
+          await fireEvent.click(childTrigger);
+          return screen.findByTestId('child-popup');
+        });
         const outside = screen.getByTestId('outside');
 
         await fireEvent.pointerDown(childPopup, { pointerType: 'mouse', button: 0 });
@@ -2873,8 +2929,10 @@ describe('<Popover.Root />', () => {
         expect(screen.queryByTestId('child-popup')).toBe(null);
 
         const parentTrigger = screen.getByTestId('parent-trigger');
-        await user.click(parentTrigger);
-        await flushMicrotasks();
+        await waitForLaterMillisecond(async () => {
+          await user.click(parentTrigger);
+          await flushMicrotasks();
+        });
 
         const parentPopup = screen.getByTestId('parent-popup');
 
@@ -2882,8 +2940,10 @@ describe('<Popover.Root />', () => {
         expect(screen.queryByTestId('child-popup')).toBe(null);
 
         const childTrigger = screen.getByTestId('child-trigger');
-        await user.click(childTrigger);
-        await flushMicrotasks();
+        await waitForLaterMillisecond(async () => {
+          await user.click(childTrigger);
+          await flushMicrotasks();
+        });
 
         expect(parentPopup).not.toBe(null);
         expect(screen.getByTestId('child-popup')).not.toBe(null);
@@ -2990,9 +3050,11 @@ describe('<Popover.Root />', () => {
           </>,
         );
 
-        await user.click(screen.getByRole('button', { name: 'Open dialog' }));
-        await waitFor(() => {
-          expect(screen.queryByTestId('dialog')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.click(screen.getByRole('button', { name: 'Open dialog' }));
+          await waitFor(() => {
+            expect(screen.queryByTestId('dialog')).not.toBe(null);
+          });
         });
         expect(screen.queryByTestId('popover')).not.toBe(null);
         await waitFor(() => {

@@ -70,6 +70,17 @@ describe('<Calendar.Root /> on a server', () => {
     ).toHaveLength(30 - expected.length);
   });
 
+  it('shows the month of a focused day of another month than today, with its tab stop', async () => {
+    const html = await renderToString(
+      <CalendarRootHydration {...props} focusedDate="2027-02-10" />,
+    );
+
+    expect(html).toContain(
+      ` aria-label="${format({ month: 'long', year: 'numeric' }, '2027-02-10')}"`,
+    );
+    expect(tabStops(html)).toEqual(['2027-02-10']);
+  });
+
   it('allows the values that a browser can write another way while the part hydrates', async () => {
     const html = await renderToString(<CalendarRootHydration {...props} />);
 

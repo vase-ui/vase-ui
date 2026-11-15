@@ -30,6 +30,19 @@ const VUE_DEMO_NAMES: Record<string, Record<string, string> | undefined> = {
   'handbook-forms': { 'react-hook-form': 'vee-validate' },
 };
 
+/**
+ * The class strings that the Vue folder of a demo has and its row of `classes` lacks, by family and
+ * by the key of the row. The Vue library of such a demo needs an element that the Base UI demo does
+ * not have.
+ */
+const VUE_DEMO_EXTRA_CLASSES: Record<string, Record<string, string[]> | undefined> = {
+  'handbook-forms': {
+    // `handleSubmit` of VeeValidate must get each `submit` event, so the demo has a native form.
+    // `Form` emits `submit` only when each field is valid. The string is that of the wrapper `Form`.
+    'react-hook-form/tailwind': ['flex w-full max-w-3xs flex-col gap-5 sm:max-w-[20rem]'],
+  },
+};
+
 const ENTRY_POINT_IMPORT = /^@base-ui\/react\/([^/]+)$/;
 
 export interface DemoRecord {
@@ -300,8 +313,9 @@ export function checkDemos(families: DemoFamily[], entryPoints: ReadonlySet<stri
       if (vueStrings === undefined) {
         continue;
       }
-      const absent = subtract(row, vueStrings);
-      const extra = subtract(vueStrings, row);
+      const expected = [...row, ...(VUE_DEMO_EXTRA_CLASSES[name]?.[key] ?? [])];
+      const absent = subtract(expected, vueStrings);
+      const extra = subtract(vueStrings, expected);
       if (absent.length > 0 || extra.length > 0) {
         const lists = [
           absent.length > 0
