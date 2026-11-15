@@ -2770,6 +2770,40 @@ describe('<Combobox.Root />', () => {
       expect([count(addSpy), count(removeSpy)]).toEqual([2, 1]);
     });
 
+    it.each([
+      { name: 'KeepAlive deactivates the root', step: 'deactivate' },
+      { name: 'the root unmounts', step: 'unmount' },
+    ] as const)(
+      'VUE-84: removes the listener of the opening press when $name',
+      async ({ step }) => {
+        const addSpy = vi.spyOn(window, 'addEventListener');
+        const removeSpy = vi.spyOn(window, 'removeEventListener');
+        onTestFinished(() => {
+          addSpy.mockRestore();
+          removeSpy.mockRestore();
+        });
+        const count = (spy: typeof addSpy | typeof removeSpy) =>
+          spy.mock.calls.filter(([eventType]) => eventType === 'mousedown').length;
+        const { view, shown } = renderInKeepAlive(shallowRef('Oslo'));
+        const { unmount } = await view;
+
+        await fireEvent.mouseDown(getInput(), { button: 0 });
+        await waitFor(() => {
+          expect(getInput()).toHaveAttribute('aria-expanded', 'true');
+        });
+        expect([count(addSpy), count(removeSpy)]).toEqual([1, 0]);
+
+        if (step === 'deactivate') {
+          shown.value = false;
+          await flushMicrotasks();
+        } else {
+          unmount();
+        }
+
+        expect([count(addSpy), count(removeSpy)]).toEqual([1, 1]);
+      },
+    );
+
     it('reports a change of the value after the activation', async () => {
       const value = shallowRef('Oslo');
       const { view, shown, handleInputValueChange } = renderInKeepAlive(value);

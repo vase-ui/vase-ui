@@ -11,6 +11,7 @@ import {
   isJSDOM,
   screen,
   waitFor,
+  waitForLaterMillisecond,
 } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
@@ -858,8 +859,10 @@ describe('<Combobox.Item />', () => {
     const trigger = screen.getByTestId('trigger');
     const pressPoint = clientCenter(trigger);
 
-    await fireEvent.mouseDown(trigger, { button: 0, ...pressPoint });
-    const option = await screen.findByRole('option', { name: 'one' });
+    const option = await waitForLaterMillisecond(async () => {
+      await fireEvent.mouseDown(trigger, { button: 0, ...pressPoint });
+      return screen.findByRole('option', { name: 'one' });
+    });
     await fireEvent.mouseUp(trigger, { button: 0, ...pressPoint });
 
     // A later drag starts on the input and ends on the item, at the point of the first press.
