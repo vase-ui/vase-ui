@@ -4,12 +4,15 @@ import vueJsx from '@vitejs/plugin-vue-jsx';
 import { playwright } from '@vitest/browser-playwright';
 import { webkit } from 'playwright';
 import { configDefaults, defineConfig } from 'vitest/config';
+import { postcssFollowSiteTheme } from '../../docs/.vitepress/postcssFollowSiteTheme.ts';
 import { renderOnServer } from './test/server/renderOnServer.ts';
 
 const contextOptions = { timezoneId: 'UTC' };
 
 export default defineConfig({
   plugins: [vue(), vueJsx(), tailwindcss()],
+  // A demo in a test follows the class `dark`, as it does on the site.
+  css: { postcss: { plugins: [postcssFollowSiteTheme()] } },
   define: {
     'process.env.NODE_ENV': JSON.stringify('test'),
   },
