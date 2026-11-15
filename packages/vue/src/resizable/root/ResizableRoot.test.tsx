@@ -2023,43 +2023,49 @@ describe('<Resizable.Root />', () => {
       });
     });
 
-    describe('a root that a scale transform changes', () => {
-      it('has sizes in layout pixels, and a drag that follows the pointer', async () => {
-        const onResize = vi.fn();
-        const instance: { current?: InstanceType<typeof Resizable.Panel> } = {};
-        await render(() => (
-          <div style={{ width: '1000px', transform: 'scale(0.5)', transformOrigin: '0 0' }}>
-            <Resizable.Root>
-              <Resizable.Panel
-                id="a"
-                data-testid="a"
-                minSize="200px"
-                defaultSize={50}
-                onResize={onResize}
-                ref={(value: unknown) => {
-                  instance.current = value as InstanceType<typeof Resizable.Panel>;
-                }}
-              />
-              <Resizable.Handle data-testid="handle" />
-              <Resizable.Panel id="b" data-testid="b" />
-            </Resizable.Root>
-          </div>
-        ));
-        await waitFor(() => {
-          expect(onResize).toHaveBeenCalledTimes(1);
-        });
-        // The panel has 500 layout pixels, which are 250 pixels on the screen.
-        expect(widthOf('a')).toBeCloseTo(250, 0);
-        expect(onResize.mock.calls[0]?.[0]).toEqual({ percent: 50, pixels: 500 });
+    describe('a root that a scale changes', () => {
+      it.each([
+        { name: 'a scale transform', scale: { transform: 'scale(0.5)', transformOrigin: '0 0' } },
+        { name: 'a CSS zoom', scale: { zoom: 0.5 } },
+      ])(
+        'has sizes in layout pixels, and a drag that follows the pointer, with $name',
+        async ({ scale }) => {
+          const onResize = vi.fn();
+          const instance: { current?: InstanceType<typeof Resizable.Panel> } = {};
+          await render(() => (
+            <div style={{ width: '1000px', ...scale }}>
+              <Resizable.Root>
+                <Resizable.Panel
+                  id="a"
+                  data-testid="a"
+                  minSize="200px"
+                  defaultSize={50}
+                  onResize={onResize}
+                  ref={(value: unknown) => {
+                    instance.current = value as InstanceType<typeof Resizable.Panel>;
+                  }}
+                />
+                <Resizable.Handle data-testid="handle" />
+                <Resizable.Panel id="b" data-testid="b" />
+              </Resizable.Root>
+            </div>
+          ));
+          await waitFor(() => {
+            expect(onResize).toHaveBeenCalledTimes(1);
+          });
+          // The panel has 500 layout pixels, which are 250 pixels on the screen.
+          expect(widthOf('a')).toBeCloseTo(250, 0);
+          expect(onResize.mock.calls[0]?.[0]).toEqual({ percent: 50, pixels: 500 });
 
-        await drag('handle', 50);
-        expect(widthOf('a')).toBeCloseTo(300, 0);
+          await drag('handle', 50);
+          expect(widthOf('a')).toBeCloseTo(300, 0);
 
-        // A minimum of 200 px is 100 px on the screen.
-        await drag('handle', -1000);
-        expect(widthOf('a')).toBeCloseTo(100, 0);
-        expect(instance.current?.getSize()).toEqual({ percent: 20, pixels: 200 });
-      });
+          // A minimum of 200 px is 100 px on the screen.
+          await drag('handle', -1000);
+          expect(widthOf('a')).toBeCloseTo(100, 0);
+          expect(instance.current?.getSize()).toEqual({ percent: 20, pixels: 200 });
+        },
+      );
     });
 
     describe('methods', () => {

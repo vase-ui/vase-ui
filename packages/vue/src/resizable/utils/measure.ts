@@ -21,7 +21,7 @@ export interface RootMeasurement {
    */
   rem: number;
   /**
-   * The font size of the root element.
+   * The font size of the element of `Resizable.Root`.
    */
   rootFontSize: number;
   /**
@@ -109,7 +109,7 @@ export function isSameMeasurement(a: RootMeasurement, b: RootMeasurement): boole
 
 /**
  * The numbers that change a size of a panel into percent. Without an id they are the numbers of
- * the root, where `em` is the font size of the root element.
+ * the root, where `em` is the font size of the element of `Resizable.Root`.
  */
 export function getMeasurement(measurement: RootMeasurement, id?: string): Measurement {
   const { space, rem, viewportWidth, viewportHeight } = measurement;
