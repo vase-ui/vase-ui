@@ -28,6 +28,7 @@ export interface CollapsibleTriggerProps
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
+import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { transitionStatusMapping } from '../../internals/stateAttributesMapping';
 import { useButton } from '../../internals/use-button';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -59,6 +60,9 @@ const {
   state: rootState,
   disabled: contextDisabled,
 } = useCollapsibleRootContext();
+
+// The panel registers its id in `setup`, and it can come after the trigger.
+useDeferredServerRender();
 
 const isDisabled = computed(() => props.disabled || contextDisabled.value);
 

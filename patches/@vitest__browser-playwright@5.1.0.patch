@@ -1,0 +1,39 @@
+diff --git a/dist/index.js b/dist/index.js
+index 08671d52813ae3435b09a60ac5bdac3c6867d117..823c82a27f06c1e1e168af91429ec88a405c1287 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -1434,21 +1434,20 @@ class PlaywrightBrowserProvider {
+ 		return {
+ 			page,
+ 			context: this.contexts.get(sessionId),
+-			frame() {
+-				return new Promise((resolve, reject) => {
+-					const frame = page.frame("vitest-iframe");
+-					if (frame) {
+-						return resolve(frame);
++			// The client of Playwright can still list the frame of the previous test file under the
++			// same name, so the frame comes from the iframe element of the page.
++			// https://github.com/vitest-dev/vitest/issues/11876
++			async frame() {
++				const element = await page.locator("[data-vitest=\"true\"]").elementHandle();
++				try {
++					const frame = await element.contentFrame();
++					if (!frame) {
++						throw new Error(`Cannot find "vitest-iframe" on the page. This is a bug in Vitest, please report it.`);
+ 					}
+-					const timeout = setTimeout(() => {
+-						const err = new Error(`Cannot find "vitest-iframe" on the page. This is a bug in Vitest, please report it.`);
+-						reject(err);
+-					}, 1e3).unref();
+-					page.on("frameattached", (frame) => {
+-						clearTimeout(timeout);
+-						resolve(frame);
+-					});
+-				});
++					return frame;
++				} finally {
++					await element.dispose();
++				}
+ 			},
+ 			get iframe() {
+ 				return page.frameLocator("[data-vitest=\"true\"]");

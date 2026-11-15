@@ -108,6 +108,13 @@ describe('displayCalendar', () => {
       expected: 'iso8601',
     },
     {
+      name: 'an ISO month that is a Hebrew month',
+      calendar: 'hebrew',
+      value: () => month('2027-11'),
+      locale: 'en-US',
+      expected: 'iso8601',
+    },
+    {
       name: 'the same months, from the option',
       calendar: 'japanese',
       value: () => month('2026-11'),
