@@ -68,7 +68,7 @@ describe('the style sheet of the Tailwind demos', () => {
   const { render } = createRenderer();
   const TailwindButton = modules['../../../docs/demos/button/hero/tailwind/index.vue'].default;
 
-  // `h-8` is a class of the Button demo.
+  // The style sheet has `h-8` and `dark:text-white`, because the Button demo has them.
   it.each([
     {
       name: 'a frame gets utilities and preflight',

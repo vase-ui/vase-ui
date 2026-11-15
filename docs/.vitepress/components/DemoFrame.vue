@@ -8,8 +8,8 @@ import type { DemoVariant } from './demoVariant.ts';
 
 const slots = useSlots();
 
-// The template calls this function, so a change of the slots changes the result. A page that gives
-// only the `#tailwind` slot shows it and has no select.
+// A computed does not see a change of the slots, so the template calls this function in each
+// render. A page that gives only the `#tailwind` slot shows it and has no select.
 function shownVariant(): DemoVariant {
   return slots.tailwind !== undefined &&
     (slots.default === undefined || demoVariant.value === 'tailwind')
