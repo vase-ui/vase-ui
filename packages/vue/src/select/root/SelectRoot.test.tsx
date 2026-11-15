@@ -290,7 +290,10 @@ describe('<Select.Root />', () => {
       );
       const positioner = screen.getByTestId('positioner');
 
-      await openWithClick(user, listeners.opened);
+      await user.click(screen.getByTestId('trigger'));
+      // The root reads the animations of the positioner in a frame after the open. That read must
+      // not be the read of the close.
+      await listeners.openCompleted;
       expect(positioner).toHaveAttribute('data-open');
 
       const animations = await nextAnimationsRead(positioner, {
