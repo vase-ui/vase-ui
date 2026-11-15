@@ -3,7 +3,7 @@ import type { HTMLAttributes } from 'vue';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { Align, Side } from '../../internals/useAnchorPositioning';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
-import type { FocusOption } from '../../utils/popups/focus/FloatingFocusManager.vue';
+import type { FocusOption } from '../../utils/popups/focus/FloatingFocusManager';
 
 export interface PopoverPopupState {
   /**
@@ -64,10 +64,9 @@ import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
-import FloatingFocusManager from '../../utils/popups/focus/FloatingFocusManager.vue';
+import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
 import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import {
@@ -102,16 +101,6 @@ const transitionStatus = computed(() => store.select('transitionStatus'));
 const activeTriggerElement = computed(() => {
   const trigger = store.select('activeTriggerElement');
   return isHTMLElement(trigger) ? trigger : undefined;
-});
-
-useOpenChangeComplete({
-  open,
-  ref: store.context.popupRef,
-  onComplete() {
-    if (open.value) {
-      store.context.onOpenChangeComplete?.(true);
-    }
-  },
 });
 
 useHoverPopupInteraction(store, {
@@ -181,25 +170,28 @@ const { element, elementProps } = useRenderElement('div', props, {
   ],
 });
 
+useFloatingFocusManager(
+  () => ({
+    store,
+    openInteractionType: store.select('openMethod'),
+    modal: focusManagerModal.value,
+    disabled: !mounted.value || store.select('openChangeReason') === REASONS.triggerHover,
+    initialFocus: resolvedInitialFocus.value,
+    returnFocus: props.finalFocus,
+    restoreFocus: 'popup',
+    getInsideElements,
+    previousFocusableElement: activeTriggerElement.value,
+    nextFocusableElement: store.context.triggerFocusTargetRef,
+    beforeContentFocusGuardRef: store.context.beforeContentFocusGuardRef,
+    afterContentFocusGuardRef: store.context.afterContentFocusGuardRef,
+  }),
+  element,
+);
+
 defineExpose({ element });
 </script>
 
 <template>
-  <FloatingFocusManager
-    :store="store"
-    :open-interaction-type="store.select('openMethod')"
-    :modal="focusManagerModal"
-    :disabled="!mounted || store.select('openChangeReason') === REASONS.triggerHover"
-    :initial-focus="resolvedInitialFocus"
-    :return-focus="finalFocus"
-    restore-focus="popup"
-    :get-inside-elements="getInsideElements"
-    :previous-focusable-element="activeTriggerElement"
-    :next-focusable-element="store.context.triggerFocusTargetRef"
-    :before-content-focus-guard-ref="store.context.beforeContentFocusGuardRef"
-    :after-content-focus-guard-ref="store.context.afterContentFocusGuardRef"
-  >
-    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-    <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
-  </FloatingFocusManager>
+  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
 </template>

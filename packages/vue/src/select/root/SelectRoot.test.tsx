@@ -1,5 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { defineComponent, onBeforeUnmount, onMounted, reactive, shallowRef, watch } from 'vue';
+import {
+  defineComponent,
+  KeepAlive,
+  onBeforeUnmount,
+  onMounted,
+  reactive,
+  shallowRef,
+  watch,
+} from 'vue';
 import type { PropType } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
@@ -15,6 +23,7 @@ import {
   isJSDOM,
   nextAnimationsRead,
   nextEvent,
+  popupAnatomyTests,
   popupConformanceTests,
   popupListConformanceTests,
   pressWithTouch,
@@ -27,7 +36,6 @@ import {
 } from '#test-utils';
 import { actOnElement } from '../../../test/fixtures/actOnElement';
 import { isScrollLocked } from '../../../test/fixtures/scrollDocument';
-import { platform } from '../../common/platform';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import * as Popover from '../../popover/index.parts';
@@ -35,8 +43,6 @@ import * as SelectSeparatorDataAttributes from '../../separator/SeparatorDataAtt
 import type { SelectStore } from '../store';
 import { useSelectRootContext } from './SelectRootContext';
 import SelectRootHydration from './SelectRootHydration.test.vue';
-
-const isWebKit = platform.engine.webkit;
 
 type ChangeDetails = Select.Root.ChangeEventDetails;
 type OpenChangeDetails = Select.Root.OpenChangeEventDetails;
@@ -79,6 +85,24 @@ function getFormData(name: string) {
 
 describe('<Select.Root />', () => {
   const { render } = createRenderer();
+
+  popupAnatomyTests({
+    createComponent: ({ open, onOpenChangeComplete, content }) => (
+      <Select.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Select.Trigger>
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner data-testid="shown" class="shown">
+            Content
+            {content}
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>
+    ),
+    createPopup: () => <Select.Popup data-testid="popup">Popup</Select.Popup>,
+    render,
+  });
 
   describe('closing before the popup attaches', () => {
     it('finishes closing when a layout effect closes it on mount', async () => {
@@ -5100,6 +5124,78 @@ describe('<Select.Root />', () => {
     });
   });
 
+  describe('KeepAlive', () => {
+    it.each([{ name: 'held mount' }, { name: 'deactivated' }])(
+      'a held required select does not block the submit of its form: $name',
+      async ({ name }) => {
+        const handleSubmit = vi.fn();
+        const visible = shallowRef(true);
+        const extra = shallowRef(name === 'deactivated');
+        const Branch = defineComponent(() => () => (
+          <div>
+            {extra.value ? (
+              <Select.Root key="held" required>
+                <Select.Trigger />
+              </Select.Root>
+            ) : null}
+          </div>
+        ));
+        const { user } = await render(() => (
+          <Form onFormSubmit={handleSubmit}>
+            <Field.Root name="fruit" data-testid="field">
+              <Field.Control defaultValue="shown" />
+              <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+            </Field.Root>
+            <button type="submit">Submit</button>
+          </Form>
+        ));
+
+        visible.value = false;
+        await flushMicrotasks();
+        extra.value = true;
+        await flushMicrotasks();
+        await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+        expect(handleSubmit).toHaveBeenCalledTimes(1);
+        expect(screen.getByTestId('field')).not.toHaveAttribute('data-invalid');
+      },
+    );
+
+    it('the label does not name a select that mounts while KeepAlive holds it', async () => {
+      const visible = shallowRef(true);
+      const extra = shallowRef(false);
+      const Branch = defineComponent(() => () => (
+        <div>
+          {extra.value ? (
+            <Select.Root key="held" id="held-select">
+              <Select.Trigger />
+            </Select.Root>
+          ) : null}
+        </div>
+      ));
+      await render(() => (
+        <Field.Root>
+          <Field.Label data-testid="label">Fruit</Field.Label>
+          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+        </Field.Root>
+      ));
+      const label = screen.getByTestId('label');
+      const providerId = label.getAttribute('for');
+
+      visible.value = false;
+      await flushMicrotasks();
+      extra.value = true;
+      await flushMicrotasks();
+
+      expect(label.getAttribute('for')).toBe(providerId);
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(label).toHaveAttribute('for', 'held-select');
+    });
+  });
+
   describe('dynamic items', () => {
     beforeEach(() => {
       vi.useFakeTimers({ shouldAdvanceTime: true });
@@ -7446,7 +7542,7 @@ describe('<Select.Root />', () => {
   });
 
   describe('prop: highlightItemOnHover', () => {
-    it.skipIf(isWebKit)('highlights an item on mouse move by default', async () => {
+    it('highlights an item on mouse move by default', async () => {
       const { user } = await render(
         <Select.Root defaultOpen>
           <Select.Trigger data-testid="trigger">
@@ -7467,6 +7563,7 @@ describe('<Select.Root />', () => {
       await flushMicrotasks();
       const optionB = screen.getByRole('option', { name: 'b' });
       await user.hover(optionB);
+      await fireEvent.mouseMove(optionB, { movementX: 1 });
 
       await waitFor(() => {
         expect(optionB).toHaveAttribute('data-highlighted');
@@ -7681,11 +7778,7 @@ describe('<Select.Root />', () => {
 
       for (const item of [bottomEdgeItem, topEdgeItem]) {
         await user.hover(item);
-        if (isWebKit) {
-          // WebKit gives the hover of user-event a `mousemove` with no movement, and the list
-          // navigation ignores it. See https://github.com/mui/base-ui/issues/4002.
-          await fireEvent.mouseMove(item, { movementX: 1, movementY: 1 });
-        }
+        await fireEvent.mouseMove(item, { movementX: 1 });
         await waitFor(() => {
           expect(item).toHaveAttribute('data-highlighted');
         });

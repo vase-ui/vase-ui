@@ -13,6 +13,9 @@ export const chipRemovePress = 'chip-remove-press' as const;
 export const trackPress = 'track-press' as const;
 export const incrementPress = 'increment-press' as const;
 export const decrementPress = 'decrement-press' as const;
+export const dayPress = 'day-press' as const;
+export const monthPress = 'month-press' as const;
+export const yearPress = 'year-press' as const;
 
 export const inputChange = 'input-change' as const;
 export const inputClear = 'input-clear' as const;
@@ -25,6 +28,7 @@ export const escapeKey = 'escape-key' as const;
 export const closeWatcher = 'close-watcher' as const;
 export const listNavigation = 'list-navigation' as const;
 export const keyboard = 'keyboard' as const;
+export const monthChange = 'month-change' as const;
 
 export const pointer = 'pointer' as const;
 export const drag = 'drag' as const;

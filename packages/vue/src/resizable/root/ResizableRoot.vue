@@ -136,7 +136,6 @@ import { useIsHydrated } from '../../common/hydration';
 import { ownerWindow } from '../../common/owner';
 import { useControlled } from '../../common/useControlled';
 import { warn } from '../../common/warn';
-import { useCompositeListContext } from '../../internals/composite/list/CompositeListContext';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import {
   createChangeEventDetails,
@@ -235,7 +234,7 @@ const registered = shallowRef<readonly ResizablePanelRegistration[]>([]);
 const panels = computed(() =>
   registered.value
     .filter((panel) => !panel.deactivated.value)
-    .toSorted((a, b) => a.index.value - b.index.value),
+    .sort((a, b) => a.index.value - b.index.value),
 );
 const constraints = computed<PanelConstraints[]>(() =>
   panels.value.map((panel) => {
@@ -316,8 +315,11 @@ function syncLayoutWithPanels() {
   }
 }
 
-const outerList = useCompositeListContext();
-useCompositeList({ elementsRef: shallowRef([]), onMapChange: syncLayoutWithPanels });
+const list = useCompositeList<{ id?: string }>({
+  elementsRef: shallowRef([]),
+  onMapChange: syncLayoutWithPanels,
+  provide: false,
+});
 
 onMounted(() => {
   mounted = true;
@@ -554,7 +556,7 @@ const orientation = computed(() => props.orientation);
 provide(ResizableRootContext, {
   orientation,
   direction,
-  outerList,
+  list,
   disabled: computed(() => props.disabled),
   step: computed(() => props.step),
   largeStep: computed(() => props.largeStep),

@@ -4,7 +4,7 @@ import type { Component, MaybeRefOrGetter, PropType } from 'vue';
 import { Checkbox } from '@vase-ui/vue/checkbox';
 import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
 import { useFloating } from '../../../../test/fixtures/useFloating';
-import FloatingFocusManager from '../focus/FloatingFocusManager.vue';
+import { FloatingFocusManager } from '../../../../test/fixtures/floatingFocusManagerHarness';
 import FloatingPortal from './FloatingPortal.vue';
 import FloatingPortalLite from './FloatingPortalLite.vue';
 import type { FloatingPortalContainer } from './useFloatingPortalNode';

@@ -4,6 +4,7 @@ import type { HTMLAttributes } from 'vue';
 import { Collapsible } from '@vase-ui/vue/collapsible';
 import type { HTMLProps } from '@vase-ui/vue/types';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -1313,6 +1314,27 @@ describe('<Collapsible.Panel />', () => {
 
       expect(panel.getAnimations().length).toBe(0);
     });
+
+    it('is not named by the trigger while KeepAlive holds a panel that mounted in a held branch', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Collapsible.Panel key="panel" id="held-panel">
+          Panel
+        </Collapsible.Panel>
+      ));
+      await render(() => (
+        <Collapsible.Root defaultOpen>
+          <Collapsible.Trigger>Trigger</Collapsible.Trigger>
+          <HeldBranch />
+        </Collapsible.Root>
+      ));
+      const trigger = screen.getByRole('button');
+
+      await mountWhileHeld();
+      expect(trigger).not.toHaveAttribute('aria-controls', 'held-panel');
+
+      await show();
+      expect(trigger).toHaveAttribute('aria-controls', 'held-panel');
+    });
   });
 
   // An engine with no `beforematch` cannot run these cases.
@@ -2020,9 +2042,18 @@ describe('<Collapsible.Panel />', () => {
       );
     });
 
-    it('names the panel in aria-controls of the trigger after the hydration of a panel with an id', async () => {
+    it('VUE-80: names a panel with an id in aria-controls of the trigger in the server HTML and after the hydration', async () => {
       const props = { defaultOpen: true, panelId: 'custom-panel-id' };
       const serverHtml = await renderOnServer(FIXTURE, props);
+
+      // The parse in a `<template>` element has no side effect. Its elements are of another
+      // document, so the matchers of the DOM do not take them.
+      const server = document.createElement('template');
+      server.innerHTML = serverHtml;
+      expect(server.content.querySelector('button')!.getAttribute('aria-controls')).toBe(
+        'custom-panel-id',
+      );
+      expect(server.content.querySelector('[data-testid="panel"]')!.id).toBe('custom-panel-id');
 
       const { container } = await hydrate(CollapsiblePanelHydration, { serverHtml, props });
 

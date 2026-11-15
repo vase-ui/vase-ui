@@ -3,7 +3,7 @@ import type { HTMLAttributes } from 'vue';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { Align, Side } from '../../internals/useAnchorPositioning';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
-import type { FocusOption } from '../../utils/popups/focus/FloatingFocusManager.vue';
+import type { FocusOption } from '../../utils/popups/focus/FloatingFocusManager';
 
 export interface ComboboxPopupState {
   /**
@@ -61,20 +61,17 @@ export interface ComboboxPopupProps
 
 <script setup lang="ts">
 import { computed, toRaw } from 'vue';
-import type { ComponentPublicInstance } from 'vue';
 import type { InteractionType } from '../../common/useEnhancedClickHandler';
 import { contains, getTarget } from '../../common/shadowDom';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
-import { resolveElement } from '../../internals/resolveElement';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
-import FloatingFocusManager from '../../utils/popups/focus/FloatingFocusManager.vue';
+import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { useComboboxPositionerContext } from '../positioner/ComboboxPositionerContext';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
 import { getComboboxPopupId } from '../root/utils';
-import ComboboxInternalDismissButton from '../utils/ComboboxInternalDismissButton.vue';
+import { useDismissButton } from '../utils/ComboboxInternalDismissButton';
 import { useListEmpty } from '../utils/parts';
 
 defineOptions({ inheritAttrs: false });
@@ -102,16 +99,6 @@ const empty = useListEmpty();
 const popupId = computed(() =>
   inputInsidePopup.value ? getComboboxPopupId(store.select('id')) : undefined,
 );
-
-useOpenChangeComplete({
-  open,
-  ref: store.context.popupRef,
-  onComplete() {
-    if (open.value) {
-      store.context.onOpenChangeComplete?.(true);
-    }
-  },
-});
 
 const state = computed<ComboboxPopupState>(() => ({
   open: open.value,
@@ -193,34 +180,26 @@ function getInsideElements() {
   return [store.context.startDismissRef.value, store.context.endDismissRef.value];
 }
 
-let ownDismissButton: HTMLSpanElement | null = null;
-function setEndDismissButton(value: unknown) {
-  const button = resolveElement(value as ComponentPublicInstance | null) as HTMLSpanElement | null;
-  // Vue calls a function ref again on each patch, with the same component.
-  if (button === ownDismissButton) {
-    return;
-  }
-  if (button !== null || store.context.endDismissRef.value === ownDismissButton) {
-    store.context.endDismissRef.value = button;
-  }
-  ownDismissButton = button;
-}
+const dismissButton = useDismissButton(element, focusManagerModal, store.context.endDismissRef);
+
+useFloatingFocusManager(
+  () => ({
+    store: store.interactions,
+    disabled: focusManagerDisabled.value,
+    modal: focusManagerModal.value,
+    openInteractionType: openMethod.value,
+    initialFocus: resolvedInitialFocus.value,
+    returnFocus: resolvedFinalFocus.value,
+    getInsideElements,
+    nodesAfterElement: dismissButton.value ? [dismissButton.value] : undefined,
+  }),
+  element,
+);
 
 defineExpose({ element });
 </script>
 
 <template>
-  <FloatingFocusManager
-    :store="store.interactions"
-    :disabled="focusManagerDisabled"
-    :modal="focusManagerModal"
-    :open-interaction-type="openMethod"
-    :initial-focus="resolvedInitialFocus"
-    :return-focus="resolvedFinalFocus"
-    :get-inside-elements="getInsideElements"
-  >
-    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-    <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
-    <ComboboxInternalDismissButton v-if="focusManagerModal" :ref="setEndDismissButton" />
-  </FloatingFocusManager>
+  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
 </template>

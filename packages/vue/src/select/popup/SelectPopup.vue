@@ -3,7 +3,7 @@ import type { HTMLAttributes } from 'vue';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { Align, Side } from '../../internals/useAnchorPositioning';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
-import type { FocusOption } from '../../utils/popups/focus/FloatingFocusManager.vue';
+import type { FocusOption } from '../../utils/popups/focus/FloatingFocusManager';
 
 export interface SelectPopupState {
   /**
@@ -57,15 +57,13 @@ import { createChangeEventDetails } from '../../internals/createBaseUIEventDetai
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import { REASONS } from '../../internals/reasons';
-import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
+import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
-import FloatingFocusManager from '../../utils/popups/focus/FloatingFocusManager.vue';
+import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { useDomEffect } from '../../utils/popups/useDomEffect';
 import { getMaxScrollOffset, SCROLL_EDGE_TOLERANCE_PX } from '../../utils/scrollEdges';
-import StyleDisableScrollbar from '../../utils/StyleDisableScrollbar.vue';
 import { styleDisableScrollbar, useStyleDisableScrollbar } from '../../utils/styles';
 import * as SelectPositionerCssVars from '../positioner/SelectPositionerCssVars';
 import { useSelectPositionerContext } from '../positioner/SelectPositionerContext';
@@ -195,16 +193,6 @@ onScopeDispose(() => {
   if (store.context.scrollHandlerRef.value === handleScroll) {
     store.context.scrollHandlerRef.value = null;
   }
-});
-
-useOpenChangeComplete({
-  open,
-  ref: store.context.popupRef,
-  onComplete() {
-    if (open.value) {
-      store.context.onOpenChangeComplete?.(true);
-    }
-  },
 });
 
 const state = computed<SelectPopupState>(() => ({
@@ -508,7 +496,12 @@ const { element, elementProps } = useRenderElement('div', props, {
       store.select('popupProps'),
       {
         ...listProps.value,
-        onKeydown(event: KeyboardEvent) {
+        onKeydown(event: VaseUIEvent<KeyboardEvent>) {
+          // The handlers to the left also handle the keys of the items. A call of
+          // `event.preventVaseUIHandler()` in a listener of an item thus stops them too.
+          if (event.vaseUIHandlerPrevented) {
+            event.preventVaseUIHandler();
+          }
           // The arrow keys of the popup must not move the focus of a toolbar around the trigger.
           if (insideToolbar && COMPOSITE_KEYS.has(event.key)) {
             event.stopPropagation();
@@ -529,9 +522,22 @@ const { element, elementProps } = useRenderElement('div', props, {
   },
 });
 
-// `StyleDisableScrollbar` gives the server HTML its style element. A popup that is not in a portal
-// is in the server HTML, and it hides its native scrollbar before the page hydrates.
+// `StyleDisableScrollbar` in `Select.Positioner` gives the server HTML its style element. A popup
+// that is not in a portal is in the server HTML, and it hides its native scrollbar before the page
+// hydrates.
 useStyleDisableScrollbar(element);
+
+useFloatingFocusManager(
+  () => ({
+    store,
+    modal: false,
+    disabled: !mounted.value,
+    openInteractionType: store.select('openMethod'),
+    returnFocus: props.finalFocus,
+    restoreFocus: true,
+  }),
+  element,
+);
 
 defineExpose({ element });
 
@@ -596,16 +602,6 @@ function unsetTransformStyles(popup: HTMLElement) {
 </script>
 
 <template>
-  <StyleDisableScrollbar />
-  <FloatingFocusManager
-    :store="store"
-    :modal="false"
-    :disabled="!mounted"
-    :open-interaction-type="store.select('openMethod')"
-    :return-focus="finalFocus"
-    restore-focus
-  >
-    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-    <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
-  </FloatingFocusManager>
+  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
 </template>

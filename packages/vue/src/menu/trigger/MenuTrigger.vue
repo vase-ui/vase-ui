@@ -223,6 +223,7 @@ function handleDocumentMouseUp(mouseEvent: MouseEvent) {
     return;
   }
 
+  const press = store.value.context.triggerPressRef.value;
   if (press && isReleaseAtPressPoint(press, mouseEvent)) {
     return;
   }
@@ -235,19 +236,17 @@ function handleDocumentMouseUp(mouseEvent: MouseEvent) {
 
 // The document that holds the `mouseup` listener, so that the unmount and `KeepAlive` remove it.
 let mouseUpDocument: Document | undefined;
-let press: MouseEvent | null = null;
 
-function listenForMouseUp(doc: Document, pressEvent: MouseEvent | null) {
+function listenForMouseUp(doc: Document, press: MouseEvent | null) {
   removeMouseUpListener();
   mouseUpDocument = doc;
-  press = pressEvent;
+  store.value.context.triggerPressRef.value = press;
   doc.addEventListener('mouseup', handleDocumentMouseUp, { once: true });
 }
 
 function removeMouseUpListener() {
   mouseUpDocument?.removeEventListener('mouseup', handleDocumentMouseUp);
   mouseUpDocument = undefined;
-  press = null;
 }
 
 // Whether the listener is the one of a hover open. Only that one goes when the open state changes:

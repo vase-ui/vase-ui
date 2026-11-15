@@ -124,6 +124,13 @@ const reported = [
     ruleId: 'no-restricted-properties',
     hint: 'provide',
   },
+  ...['toSorted', 'toReversed', 'toSpliced'].map((method) => ({
+    name: `a call of ${method}`,
+    file: `${SRC}/useRoot.ts`,
+    code: `export const copy = (items: number[]) => items.${method}();\n`,
+    ruleId: 'no-restricted-properties',
+    hint: 'Firefox 114',
+  })),
   {
     name: 'a read of $parent in resolveElement.ts',
     file: 'packages/vue/src/internals/resolveElement.ts',
@@ -145,6 +152,13 @@ const reported = [
     ruleId: 'vue/no-restricted-syntax',
     hint: 'provide',
   },
+  ...['toSorted', 'toReversed', 'toSpliced'].map((method) => ({
+    name: `a call of ${method} in a template`,
+    file: `${SRC}/DialogRoot.vue`,
+    code: `<script setup lang="ts">\nconst items = [2, 1];\n</script>\n\n<template>\n  <div>{{ items.${method}() }}</div>\n</template>\n`,
+    ruleId: 'vue/no-restricted-syntax',
+    hint: 'Firefox 114',
+  })),
   {
     name: 'a directive variable in script setup',
     file: `${SRC}/DialogRoot.vue`,
@@ -222,6 +236,41 @@ const reported = [
     ruleId: 'no-restricted-syntax',
     hint: 'nodeType',
   })),
+  {
+    name: 'a private field',
+    file: `${SRC}/store.ts`,
+    code: 'export class Store {\n  private readonly items: string[] = [];\n\n  get size() {\n    return this.items.length;\n  }\n}\n',
+    ruleId: 'no-restricted-syntax',
+    hint: '#name',
+  },
+  {
+    name: 'a private method',
+    file: `${SRC}/store.ts`,
+    code: 'export class Store {\n  private clear() {}\n\n  reset() {\n    this.clear();\n  }\n}\n',
+    ruleId: 'no-restricted-syntax',
+    hint: '#name',
+  },
+  {
+    name: 'a private get accessor',
+    file: `${SRC}/store.ts`,
+    code: 'export class Store {\n  private get size() {\n    return 0;\n  }\n\n  read() {\n    return this.size;\n  }\n}\n',
+    ruleId: 'no-restricted-syntax',
+    hint: '#name',
+  },
+  {
+    name: 'a private member of a class expression in script setup',
+    file: `${SRC}/DialogRoot.vue`,
+    code: `<script setup lang="ts">\nconst Store = class {\n  private static count = 0;\n\n  static next() {\n    Store.count += 1;\n    return Store.count;\n  }\n};\nconst count = Store.next();\n</script>\n\n<template>\n  <div>{{ count }}</div>\n</template>\n`,
+    ruleId: 'no-restricted-syntax',
+    hint: '#name',
+  },
+  {
+    name: 'a public member',
+    file: `${SRC}/store.ts`,
+    code: 'export class Store {\n  public clear() {}\n}\n',
+    ruleId: '@typescript-eslint/explicit-member-accessibility',
+    hint: 'Public accessibility modifier',
+  },
   {
     name: 'a TSX file',
     file: `${SRC}/DialogRoot.tsx`,
@@ -469,11 +518,18 @@ const reported = [
     hint: 'XSS',
   },
   {
-    name: 'a style block in a demo',
+    name: 'a style block in a CSS-module demo',
     file: 'docs/demos/sample/hero/css-modules/index.vue',
     code: '<script setup lang="ts"></script>\n\n<template>\n  <div class="sample" />\n</template>\n\n<style>\n.sample {\n  color: red;\n}\n</style>\n',
     ruleId: 'vue/no-restricted-block',
     hint: 'copied style sheet',
+  },
+  {
+    name: 'a style block in a Tailwind demo',
+    file: 'docs/demos/sample/hero/tailwind/index.vue',
+    code: '<script setup lang="ts"></script>\n\n<template>\n  <div class="sample" />\n</template>\n\n<style>\n.sample {\n  color: red;\n}\n</style>\n',
+    ruleId: 'vue/no-restricted-block',
+    hint: 'class names',
   },
 ];
 
@@ -507,6 +563,21 @@ const passed = [
     name: 'instanceof the class of ownerWindow',
     file: `${SRC}/useRoot.ts`,
     code: 'declare function ownerWindow(element: Element): Window & typeof globalThis;\n\nexport const check = (value: unknown, element: Element) =>\n  value instanceof ownerWindow(element).HTMLElement;\n',
+  },
+  {
+    name: 'an ECMAScript private member and a protected member',
+    file: `${SRC}/store.ts`,
+    code: 'export class Store {\n  readonly #items: string[] = [];\n\n  protected readonly name = "store";\n\n  get size() {\n    return this.#items.length;\n  }\n}\n',
+  },
+  {
+    name: 'a private field that has the declare keyword',
+    file: `${SRC}/handle.ts`,
+    code: 'export class Handle {\n  declare private readonly __handleBrand: never;\n}\n',
+  },
+  {
+    name: 'a private member of a declare class',
+    file: `${SRC}/itemCollection.ts`,
+    code: 'export declare class ItemCollection<Item> {\n  private constructor();\n  private readonly __itemCollectionBrand: (item: Item) => void;\n}\n',
   },
   {
     name: 'defineOptions in script setup',

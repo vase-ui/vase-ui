@@ -166,7 +166,7 @@ import { useControlled } from '../../common/useControlled';
 import type { InteractionType } from '../../common/useEnhancedClickHandler';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
-import { useRegisterFieldControl } from '../../internals/field-register-control';
+import { useFieldInput, useRegisterFieldControl } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { useFormContext } from '../../internals/form-context';
 import { getHiddenInputType } from '../../internals/getHiddenInputType';
@@ -255,7 +255,10 @@ const {
   setValidityData,
 } = useFieldRootContext();
 
-const controlId = useLabelableId({ id: () => props.id });
+const controlId = useLabelableId({
+  id: () => props.id,
+  element: () => store.select('triggerElement'),
+});
 
 const isDisabled = computed(() => Boolean(fieldDisabled.value || props.disabled));
 const isMultiple = computed(() => Boolean(props.multiple));
@@ -296,10 +299,6 @@ watch(
   },
   { deep: true },
 );
-
-// A select with no `Select.Popup` shows its positioner, so its close waits for the positioner.
-// The call below reads this ref before `store` exists, so a `watch` after the call writes it.
-const closeElement = shallowRef<HTMLElement | null>(null);
 
 const {
   store,
@@ -358,6 +357,7 @@ const {
         selectionRef: {
           value: { allowSelectedMouseUp: false, allowUnselectedMouseUp: false, dragY: 0 },
         },
+        triggerPressRef: { value: null },
         firstItemTextRef: { value: null },
         selectedItemTextRef: { value: null },
         alignItemWithTriggerActiveRef: { value: false },
@@ -370,7 +370,6 @@ const {
     ),
   {
     name: 'Select',
-    popupRef: closeElement,
     onOpenChange(nextOpen, eventDetails) {
       emit('openChange', nextOpen, eventDetails);
 
@@ -398,16 +397,6 @@ const {
       emit('openChangeComplete', nextOpen);
     },
   },
-);
-
-// The call above makes `post` jobs that read this element: the layout read of the enter and the
-// close wait. A `sync` copy gives them the element in the patch that mounts it.
-watch(
-  () => store.context.popupRef.value ?? store.select('positionerElement'),
-  (element) => {
-    closeElement.value = element;
-  },
-  { flush: 'sync', immediate: true },
 );
 
 const serializedValue = computed(() => {
@@ -656,6 +645,7 @@ usePopupInteractionProps(store, () => ({
 provide(SelectRootContext, store);
 
 const inputElement = shallowRef<HTMLInputElement | null>(null);
+const giveFieldInput = useFieldInput();
 
 function setInputElement(value: unknown) {
   const input = value as HTMLInputElement | null;
@@ -664,7 +654,7 @@ function setInputElement(value: unknown) {
     return;
   }
   inputElement.value = input;
-  validation.inputRef.value = input;
+  giveFieldInput(input);
 }
 
 // The value that the input has after the last event that the root handled. A write of Vue or of

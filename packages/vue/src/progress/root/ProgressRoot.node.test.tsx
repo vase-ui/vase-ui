@@ -4,7 +4,7 @@ import { Progress } from '@vase-ui/vue/progress';
 import { mockRuntimeLocale } from '../../../test/mockRuntimeLocale';
 
 describe('<Progress.Root /> on a server', () => {
-  it('renders the label id, the width of the indicator and the hidden node', async () => {
+  it('VUE-89: renders the label id, the width of the indicator and the hidden node', async () => {
     const html = await renderToString(
       <Progress.Root value={30}>
         <Progress.Label>Upload</Progress.Label>
@@ -47,6 +47,17 @@ describe('<Progress.Root /> on a server', () => {
         '<!--]--></div>',
       ].join(''),
     );
+  });
+
+  it('renders the generated id in the aria-labelledby of a root whose label has an id of its own', async () => {
+    const html = await renderToString(
+      <Progress.Root value={30}>
+        <Progress.Label id="own">Upload</Progress.Label>
+      </Progress.Root>,
+    );
+
+    expect(/aria-labelledby="([^"]*)"/.exec(html)?.[1]).toMatch(/^vase-ui-./);
+    expect(html).toContain('<span data-progressing id="own" role="presentation">');
   });
 
   it.each([

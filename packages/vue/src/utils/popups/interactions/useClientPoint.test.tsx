@@ -621,13 +621,15 @@ describe('rules with no Base UI case', () => {
   // A part that follows the cursor. The fixture `useFloating` returns no `elements`, so a case
   // reads the anchor of the store, which is `elements.reference` of Base UI. `keepMounted` keeps
   // the floating element while the popup is closed, as a popup does during its exit transition.
-  // With `container`, the floating element is in that element, such as the body of a frame.
+  // With `container`, the floating element is in that element, such as the body of a frame. With
+  // `referenceStyle`, the reference has that style and the rect of the browser, not the record.
   function createFollower(
     options: {
       enabled?: MaybeRefOrGetter<boolean | undefined>;
       axis?: MaybeRefOrGetter<'x' | 'y' | 'both' | undefined>;
       keepMounted?: boolean;
       container?: Element;
+      referenceStyle?: Record<string, string>;
     } = {},
   ) {
     const open = shallowRef(false);
@@ -652,8 +654,9 @@ describe('rules with no Base UI case', () => {
           <>
             <div
               data-testid="reference"
+              style={options.referenceStyle}
               ref={(element) => {
-                if (element) {
+                if (element && !options.referenceStyle) {
                   (element as HTMLElement).getBoundingClientRect = reference.getBoundingClientRect;
                 }
                 floating.refs.setReference(element);
@@ -983,6 +986,35 @@ describe('rules with no Base UI case', () => {
       held: { x: 100, y: 100 },
       active: { x: 300, y: 300 },
     });
+  });
+
+  it('takes the offset of the cursor anchor from a rect of the reference in the document', async () => {
+    const { Follower, open, getPoint } = createFollower({
+      axis: 'x',
+      referenceStyle: {
+        position: 'fixed',
+        left: '200px',
+        top: '100px',
+        width: '100px',
+        height: '40px',
+      },
+    });
+    const Other = defineComponent({ setup: () => () => <p>other</p> });
+    const show = shallowRef(true);
+    await render(() => (
+      <KeepAlive>{show.value ? <Follower key="follower" /> : <Other key="other" />}</KeepAlive>
+    ));
+    open.value = true;
+    await flushMicrotasks();
+    await moveOnPage(300, 300);
+
+    show.value = false;
+    await flushMicrotasks();
+    const held = getPoint().x;
+    show.value = true;
+    await flushMicrotasks();
+
+    expect({ held, shown: getPoint().x }).toEqual({ held: 300, shown: 300 });
   });
 
   describe('a popup of the popup root', () => {
