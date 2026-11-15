@@ -66,8 +66,13 @@ function isShown(part: HTMLElement | null) {
  * then the part that shows. Its animations end each open change.
  */
 export function popupAnatomyTests(config: PopupAnatomyTestConfig) {
-  const { createComponent, createPopup, createBackdropComponent, render, reportsOpen = true } =
-    config;
+  const {
+    createComponent,
+    createPopup,
+    createBackdropComponent,
+    render,
+    reportsOpen = true,
+  } = config;
 
   function createAnatomy(create = createComponent) {
     const open = shallowRef(false);
