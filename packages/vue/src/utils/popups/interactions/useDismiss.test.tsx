@@ -5,6 +5,7 @@ import type { PropType } from 'vue';
 import {
   createRenderer,
   fireEvent,
+  firePointer,
   fireTouch,
   flushMicrotasks,
   screen,
@@ -21,6 +22,7 @@ import { useFloating } from '../../../../test/floating-ui-tests/useFloating';
 import { ownerWindow } from '../../../common/owner';
 import { platform } from '../../../common/platform';
 import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
+import type { VaseUIChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import { mergeProps } from '../../../merge-props/mergeProps';
 import { createAttribute } from '../createAttribute';
@@ -204,6 +206,33 @@ const Tree = defineComponent({
     return () => slots.default?.();
   },
 });
+
+/**
+ * A popup that a button opens. `dismiss` is `useDismiss`, or the function of a second copy of the
+ * module.
+ */
+function createLayer(dismiss: typeof useDismiss, name: string) {
+  return defineComponent({
+    setup() {
+      const open = shallowRef(false);
+      const { refs, context } = useFloating({
+        open,
+        onOpenChange(nextOpen) {
+          open.value = nextOpen;
+        },
+      });
+      const { floating } = dismiss(context.rootStore);
+      return () => (
+        <>
+          <button data-testid={`open-${name}`} onClick={() => (open.value = true)} />
+          {open.value && (
+            <div data-testid={name} {...mergeProps(floating, { ref: refs.setFloating })} />
+          )}
+        </>
+      );
+    },
+  });
+}
 
 function isOpen(name: string) {
   return screen.queryByTestId(name) !== null;
@@ -2278,12 +2307,12 @@ describe('useDismiss', () => {
 
     const { user } = await render(<App />);
 
-    await user.click(screen.getByText('open 1'));
-    expect(screen.getByText('open 2')).toBeInTheDocument();
-
     // Vue skips the later listeners of an event that comes in the millisecond when Vue attached
     // them. The first click mounts the button of the second click.
-    await waitForLaterMillisecond();
+    await waitForLaterMillisecond(async () => {
+      await user.click(screen.getByText('open 1'));
+      expect(screen.getByText('open 2')).toBeInTheDocument();
+    });
     await user.click(screen.getByText('open 2'));
     await flushMicrotasks();
 
@@ -2293,7 +2322,7 @@ describe('useDismiss', () => {
   });
 
   describe('document listeners', () => {
-    it('has none while the popup is closed, 13 while it is open, and none after a close or an unmount', async () => {
+    it('has none while the popup is closed, 18 while it is open, and none after a close or an unmount', async () => {
       const count = countListeners();
       const { unmount } = await render(<Popup name="popup" defaultOpen={false} />);
       const closed = count();
@@ -2309,15 +2338,15 @@ describe('useDismiss', () => {
 
       expect({ closed, open, afterClose, afterUnmount: count() }).toEqual({
         closed: 0,
-        open: 13,
+        open: 18,
         afterClose: 0,
         afterUnmount: 0,
       });
     });
 
     it.each([
-      { name: 'no Escape listener', dismiss: { escapeKey: false }, listeners: 10 },
-      { name: 'no outside press listener', dismiss: { outsidePress: false }, listeners: 3 },
+      { name: 'no Escape listener', dismiss: { escapeKey: false }, listeners: 15 },
+      { name: 'no outside press listener', dismiss: { outsidePress: false }, listeners: 9 },
       { name: 'no listener while not enabled', dismiss: { enabled: false }, listeners: 0 },
     ])('has $name for its option', async ({ dismiss, listeners }) => {
       const count = countListeners();
@@ -2335,7 +2364,7 @@ describe('useDismiss', () => {
 
       enabled.value = true;
       await nextTick();
-      expect(count()).toBe(13);
+      expect(count()).toBe(18);
 
       await fireEvent.keyDown(document.body, { key: 'Escape' });
       expect(isOpen('popup')).toBe(false);
@@ -2345,14 +2374,14 @@ describe('useDismiss', () => {
       const count = countListeners();
       const escapeKey = shallowRef(false);
       await render(<Popup name="popup" dismiss={{ escapeKey }} />);
-      expect(count()).toBe(10);
+      expect(count()).toBe(15);
 
       await fireEvent.keyDown(document.body, { key: 'Escape' });
       expect(isOpen('popup')).toBe(true);
 
       escapeKey.value = true;
       await nextTick();
-      expect(count()).toBe(13);
+      expect(count()).toBe(18);
 
       await fireEvent.keyDown(document.body, { key: 'Escape' });
       expect(isOpen('popup')).toBe(false);
@@ -2388,9 +2417,9 @@ describe('useDismiss', () => {
         openAfterActivation,
         open: isOpen('popup'),
       }).toEqual({
-        active: 13,
+        active: 18,
         deactivated: 0,
-        activated: 13,
+        activated: 18,
         openAfterActivation: true,
         open: false,
       });
@@ -2406,13 +2435,13 @@ describe('useDismiss', () => {
       // The portal renders its `Teleport` one flush after its mount.
       await render(<Popup name="popup" portalContainer={frameDocument.body} />);
 
-      expect({ main: count(), frame: countInFrame() }).toEqual({ main: 0, frame: 13 });
+      expect({ main: count(), frame: countInFrame() }).toEqual({ main: 0, frame: 18 });
 
       await fireEvent.pointerDown(frameDocument.body, mouse);
       expect(frameDocument.querySelector('[data-testid="popup"]')).toBe(null);
     });
 
-    it('has none in a frame document while the popup is closed, 10 while it is open, and none after a close or an unmount', async () => {
+    it('has none in a frame document while the popup is closed, 15 while it is open, and none after a close or an unmount', async () => {
       const { frame, loaded } = addFrame();
       await loaded;
       const countInFrame = countListeners(frame.contentDocument!);
@@ -2428,10 +2457,10 @@ describe('useDismiss', () => {
       await fireEvent.click(screen.getByTestId('popup-trigger'));
       unmount();
 
-      // Nine press listeners, and the `load` listener for a frame in the frame.
+      // Fourteen press listeners, and the `load` listener for a frame in the frame.
       expect({ closed, open, afterClose, afterUnmount: countInFrame() }).toEqual({
         closed: 0,
-        open: 10,
+        open: 15,
         afterClose: 0,
         afterUnmount: 0,
       });
@@ -2534,6 +2563,53 @@ describe('useDismiss', () => {
 
       expect(changes).toEqual([{ open: false, reason: REASONS.outsidePress, eventType }]);
     });
+
+    it.each([
+      { name: 'click on a button', mode: 'intentional', eventType: 'click', child: false },
+      {
+        name: 'click on a child of a button',
+        mode: 'intentional',
+        eventType: 'click',
+        child: true,
+      },
+      { name: 'pointerdown on a button', mode: 'sloppy', eventType: 'pointerdown', child: false },
+      {
+        name: 'pointerdown on a child of a button',
+        mode: 'sloppy',
+        eventType: 'pointerdown',
+        child: true,
+      },
+    ] as const)(
+      'closes before a listener of the pressed button runs: $name',
+      async ({ mode, eventType, child }) => {
+        const order: string[] = [];
+        await render(
+          <>
+            <Popup
+              name="popup"
+              dismiss={{ outsidePressEvent: mode }}
+              onChange={(change: Change) => order.push(`${change.reason} ${change.eventType}`)}
+            />
+            <button
+              type="button"
+              {...{
+                [eventType === 'click' ? 'onClick' : 'onPointerdown']: () => order.push('listener'),
+              }}
+            >
+              {child ? <span data-testid="child">outside</span> : 'outside'}
+            </button>
+          </>,
+        );
+        expect(isOpen('popup')).toBe(true);
+
+        await userEvent.click(
+          child ? screen.getByTestId('child') : screen.getByRole('button', { name: 'outside' }),
+        );
+        await flushMicrotasks();
+
+        expect(order).toEqual([`${REASONS.outsidePress} ${eventType}`, 'listener']);
+      },
+    );
   });
 
   describe('popups below the popup in the component tree', () => {
@@ -2759,28 +2835,6 @@ describe('useDismiss', () => {
       const copy: typeof import('./useDismiss') = await import('./useDismiss?copy' as string);
       expect(copy.useDismiss).not.toBe(useDismiss);
 
-      function createLayer(dismiss: typeof useDismiss, name: string) {
-        return defineComponent({
-          setup() {
-            const open = shallowRef(false);
-            const { refs, context } = useFloating({
-              open,
-              onOpenChange(nextOpen) {
-                open.value = nextOpen;
-              },
-            });
-            const { floating } = dismiss(context.rootStore);
-            return () => (
-              <>
-                <button data-testid={`open-${name}`} onClick={() => (open.value = true)} />
-                {open.value && (
-                  <div data-testid={name} {...mergeProps(floating, { ref: refs.setFloating })} />
-                )}
-              </>
-            );
-          },
-        });
-      }
       const First = createLayer(useDismiss, 'first');
       const Second = createLayer(copy.useDismiss, 'second');
       const Third = createLayer(useDismiss, 'third');
@@ -2907,6 +2961,38 @@ describe('useDismiss', () => {
       await userEvent.click(outside);
       await flushMicrotasks();
       expect(isOpenInShadow()).toBe(false);
+    });
+
+    it('takes a press in a popup in a closed shadow root in another closed shadow root for a press inside', async () => {
+      const outerHost = document.createElement('div');
+      document.body.append(outerHost);
+      onTestFinished(() => outerHost.remove());
+      const host = document.createElement('div');
+      outerHost.attachShadow({ mode: 'closed' }).append(host);
+      const shadowRoot = host.attachShadow({ mode: 'closed' });
+      await render(
+        <Teleport to={shadowRoot as unknown as HTMLElement}>
+          <Popup name="popup">
+            <button data-testid="inside">inside</button>
+          </Popup>
+        </Teleport>,
+      );
+      expect(shadowRoot.querySelector('[data-testid="popup"]')).not.toBe(null);
+      const outerHostRect = outerHost.getBoundingClientRect();
+      const insideRect = shadowRoot
+        .querySelector('[data-testid="inside"]')!
+        .getBoundingClientRect();
+
+      // Outside both shadow roots, the target of the press is the outer host.
+      await userEvent.click(outerHost, {
+        position: {
+          x: insideRect.left - outerHostRect.left + 5,
+          y: insideRect.top - outerHostRect.top + 5,
+        },
+      });
+      await flushMicrotasks();
+
+      expect(shadowRoot.querySelector('[data-testid="popup"]')).not.toBe(null);
     });
   });
 
@@ -3037,7 +3123,7 @@ describe('useDismiss', () => {
       await second.loaded;
 
       expect({ whileThere, afterSearch: countInFirst() }).toEqual({
-        whileThere: 10,
+        whileThere: 15,
         afterSearch: 0,
       });
     });
@@ -3201,6 +3287,244 @@ describe('useDismiss', () => {
       expect(changes).toEqual([
         { store: 'a', open: false, reason: REASONS.outsidePress, eventType: 'pointerdown' },
       ]);
+    });
+  });
+
+  describe('popups that opened later', () => {
+    it.each([
+      { name: 'that closes for an outside press', dismiss: {} },
+      { name: 'that does not close for one', dismiss: { outsidePress: false } },
+    ])(
+      'BUG-5410: keeps the popup open for a press in an iframe in a newer popup $name',
+      async ({ dismiss }) => {
+        const changes: string[] = [];
+        await render(
+          <>
+            <Popup name="older" onChange={() => changes.push('older')} />
+            <Popup
+              name="newer"
+              defaultOpen={false}
+              dismiss={dismiss}
+              onChange={() => changes.push('newer')}
+            />
+          </>,
+        );
+        await fireEvent.click(screen.getByTestId('newer-trigger'));
+        const { frame, loaded } = addFrame({ parent: screen.getByTestId('newer') });
+        frame.style.position = 'static';
+        await loaded;
+
+        await pressInFrame(frame);
+
+        expect(changes).toEqual([]);
+      },
+    );
+
+    // The older popup checks a different press event in each row: `pointerdown` and `mousedown`,
+    // `click`, `touchmove` or `touchend`. Only the capture listener of the popup element for that
+    // event records the number of the newer popup.
+    it.each<{
+      name: string;
+      dismiss: UseDismissProps;
+      press: (target: Element) => Promise<void>;
+    }>([
+      { name: 'a mouse press', dismiss: {}, press: pressAndClick },
+      { name: 'a click', dismiss: { outsidePressEvent: 'intentional' }, press: pressAndClick },
+      { name: 'a swipe', dismiss: {}, press: (target) => swipe(target, 12) },
+      { name: 'a short swipe', dismiss: {}, press: (target) => swipe(target, 8) },
+    ])(
+      'VUE-79: keeps the popup open for $name in a newer popup in a closed shadow root',
+      async ({ dismiss, press }) => {
+        const host = document.createElement('div');
+        document.body.append(host);
+        onTestFinished(() => host.remove());
+        const shadowRoot = host.attachShadow({ mode: 'closed' });
+        const changes: string[] = [];
+        // Both popups are open at the mount, and each takes its number in the order of the tree.
+        // Thus `newer` has the higher number.
+        await render(
+          <>
+            <Popup name="older" dismiss={dismiss} onChange={() => changes.push('older')} />
+            <Teleport to={shadowRoot as unknown as HTMLElement}>
+              <Popup name="newer" onChange={() => changes.push('newer')} />
+            </Teleport>
+          </>,
+        );
+
+        await press(shadowRoot.querySelector('[data-testid="newer"]')!);
+
+        expect(changes).toEqual([]);
+      },
+    );
+
+    it('keeps the popup open for a press in a newer popup of a second copy of the module', async () => {
+      const copy: typeof import('./useDismiss') = await import('./useDismiss?copy' as string);
+      const First = createLayer(useDismiss, 'first');
+      const Second = createLayer(copy.useDismiss, 'second');
+      await render(
+        <>
+          <First />
+          <Second />
+        </>,
+      );
+      await fireEvent.click(screen.getByTestId('open-first'));
+      await waitForLaterMillisecond(() => fireEvent.click(screen.getByTestId('open-second')));
+
+      await fireEvent.pointerDown(screen.getByTestId('second'), mouse);
+
+      expect({ first: isOpen('first'), second: isOpen('second') }).toEqual({
+        first: true,
+        second: true,
+      });
+    });
+
+    it('VUE-79: keeps the popup open for a press in a newer popup of a second copy of the module in a closed shadow root', async () => {
+      const copy: typeof import('./useDismiss') = await import('./useDismiss?copy' as string);
+      const First = createLayer(useDismiss, 'first');
+      const Second = createLayer(copy.useDismiss, 'second');
+      const host = document.createElement('div');
+      document.body.append(host);
+      onTestFinished(() => host.remove());
+      const shadowRoot = host.attachShadow({ mode: 'closed' });
+      await render(
+        <>
+          <First />
+          <Teleport to={shadowRoot as unknown as HTMLElement}>
+            <Second />
+          </Teleport>
+        </>,
+      );
+      const inShadow = (testId: string) => shadowRoot.querySelector(`[data-testid="${testId}"]`);
+      await fireEvent.click(screen.getByTestId('open-first'));
+      await waitForLaterMillisecond(() => fireEvent.click(inShadow('open-second')!));
+
+      await fireEvent.pointerDown(inShadow('second')!, mouse);
+
+      expect({ first: isOpen('first'), second: inShadow('second') !== null }).toEqual({
+        first: true,
+        second: true,
+      });
+    });
+  });
+});
+
+describe('press ownership across independent non-modal layers', () => {
+  const { render: renderLayers } = createRenderer();
+
+  type OnOpenChange = (open: boolean, details: VaseUIChangeEventDetails<string>) => void;
+
+  const Layer = defineComponent({
+    props: {
+      id: { type: String, required: true },
+      open: { type: Boolean, required: true },
+      mode: { type: String as PropType<'intentional' | 'sloppy'>, required: true },
+      onOpenChange: { type: Function as PropType<OnOpenChange>, required: true },
+    },
+    setup(props) {
+      const { refs, context } = useFloating({
+        open: () => props.open,
+        onOpenChange: props.onOpenChange,
+      });
+      const { getFloatingProps } = useTestInteractions([
+        useDismiss(context.rootStore, { outsidePressEvent: props.mode }),
+      ]);
+      return () => (
+        <div
+          data-testid={props.id}
+          data-open={context.rootStore.select('open') ? '' : undefined}
+          {...getFloatingProps({ ref: refs.setFloating })}
+        />
+      );
+    },
+  });
+
+  describe.each([
+    { name: 'later-opened', targetIsLater: true, expectedCloses: 0 },
+    { name: 'earlier-opened', targetIsLater: false, expectedCloses: 1 },
+  ])('$name layer', ({ targetIsLater, expectedCloses }) => {
+    it.each([
+      {
+        name: 'intentional mouse click',
+        mode: 'intentional' as const,
+        press: async (target: HTMLElement) => {
+          await firePointer.down(target, { pointerType: 'mouse', timeStamp: 1 });
+          await fireEvent.mouseDown(target);
+          await firePointer.up(target, { pointerType: 'mouse', timeStamp: 2 });
+          await fireEvent.mouseUp(target);
+          await fireEvent.click(target, { detail: 1 });
+        },
+      },
+      {
+        name: 'sloppy pointerdown',
+        mode: 'sloppy' as const,
+        press: async (target: HTMLElement) => {
+          await firePointer.down(target, { pointerType: 'mouse', timeStamp: 1 });
+        },
+      },
+      {
+        name: 'sloppy mousedown',
+        mode: 'sloppy' as const,
+        press: async (target: HTMLElement) => {
+          await fireEvent.mouseDown(target);
+        },
+      },
+      {
+        name: 'sloppy touchend',
+        mode: 'sloppy' as const,
+        press: async (target: HTMLElement) => {
+          const touch = { clientX: 0, clientY: 0 };
+          await fireTouch.start(target, { touches: [touch], changedTouches: [touch] });
+          const moved = { clientX: 6, clientY: 0 };
+          await fireTouch.move(target, { touches: [moved], changedTouches: [moved] });
+          await fireTouch.end(target, { touches: [], changedTouches: [moved] });
+        },
+      },
+      {
+        name: 'sloppy touchmove',
+        mode: 'sloppy' as const,
+        press: async (target: HTMLElement) => {
+          const touch = { clientX: 0, clientY: 0 };
+          await fireTouch.start(target, { touches: [touch], changedTouches: [touch] });
+          const moved = { clientX: 12, clientY: 0 };
+          await fireTouch.move(target, { touches: [moved], changedTouches: [moved] });
+        },
+      },
+    ])('$name respects opening order', async ({ mode, press }) => {
+      const onOlderOpenChange = vi.fn<OnOpenChange>();
+      const onTargetOpenChange = vi.fn<OnOpenChange>();
+      const Fixture = defineComponent({
+        props: { bothOpen: { type: Boolean, required: true } },
+        setup(props) {
+          return () => (
+            <>
+              <Layer
+                id="older"
+                open={props.bothOpen || targetIsLater}
+                mode={mode}
+                onOpenChange={onOlderOpenChange}
+              />
+              <Layer
+                id="target"
+                open={props.bothOpen || !targetIsLater}
+                mode={mode}
+                onOpenChange={onTargetOpenChange}
+              />
+            </>
+          );
+        },
+      });
+      const { setProps } = await renderLayers(<Fixture bothOpen={false} />);
+      await setProps({ bothOpen: true });
+      expect(screen.getByTestId('older')).toHaveAttribute('data-open');
+      expect(screen.getByTestId('target')).toHaveAttribute('data-open');
+      expect(onOlderOpenChange).not.toHaveBeenCalled();
+      expect(onTargetOpenChange).not.toHaveBeenCalled();
+      await press(screen.getByTestId('target'));
+      expect(onOlderOpenChange).toHaveBeenCalledTimes(expectedCloses);
+      expect(
+        onOlderOpenChange.mock.calls.map(([open, details]) => ({ open, reason: details.reason })),
+      ).toEqual(expectedCloses ? [{ open: false, reason: REASONS.outsidePress }] : []);
+      expect(onTargetOpenChange).not.toHaveBeenCalled();
     });
   });
 });

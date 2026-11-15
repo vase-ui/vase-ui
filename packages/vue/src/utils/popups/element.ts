@@ -75,7 +75,7 @@ export function matchesFocusVisible(element: Element | null) {
   }
   try {
     return element.matches(':focus-visible');
-  } catch (_e) {
+  } catch {
     // A browser that does not know `:focus-visible` throws on this selector.
     return true;
   }

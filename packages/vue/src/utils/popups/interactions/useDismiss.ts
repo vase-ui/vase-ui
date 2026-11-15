@@ -40,15 +40,17 @@ type PressType = 'intentional' | 'sloppy';
 type PressTypes = PressType | { mouse: PressType; touch: PressType };
 type Bubbles = boolean | { escapeKey?: boolean | undefined; outsidePress?: boolean | undefined };
 
-interface EscapeLayers {
+interface PopupLayers {
   version: 1;
   /** The number that the popup that opened last took. */
   count: number;
   /** The highest number of the popups that keep an Escape event for themselves. */
-  layers: WeakMap<Event, number>;
+  escape: WeakMap<Event, number>;
+  /** The highest number of the popups that hold the target of a press event. */
+  press: WeakMap<Event, number>;
 }
 
-const ESCAPE_LAYERS_KEY = Symbol.for('vase-ui.escape-layers');
+const POPUP_LAYERS_KEY = Symbol.for('vase-ui.popup-layers');
 
 // A capture listener for each of these events marks a press, as the capture listeners of `floating` do.
 const PRESS_EVENTS = [
@@ -66,11 +68,43 @@ const PRESS_EVENTS = [
 // listeners of the document. Thus each open popup that keeps Escape for itself records its number
 // for the event in the capture phase. The popup with the highest recorded number handles the
 // event, together with each newer popup that lets Escape bubble.
+// The same numbers decide which popup owns a press. A press in a popup that opened after this one
+// belongs to that popup, so it is not an outside press here. An example is a modal Dialog that is
+// not below this popup in the component tree.
 // Two copies of the library on one page share the numbers, so the key is a `Symbol.for` key.
-function getEscapeLayers(): EscapeLayers {
-  const holder = globalThis as { [ESCAPE_LAYERS_KEY]?: EscapeLayers };
-  holder[ESCAPE_LAYERS_KEY] ??= { version: 1, count: 0, layers: new WeakMap() };
-  return holder[ESCAPE_LAYERS_KEY];
+function getPopupLayers(): PopupLayers {
+  const holder = globalThis as { [POPUP_LAYERS_KEY]?: PopupLayers };
+  holder[POPUP_LAYERS_KEY] ??= {
+    version: 1,
+    count: 0,
+    escape: new WeakMap(),
+    press: new WeakMap(),
+  };
+  return holder[POPUP_LAYERS_KEY];
+}
+
+const POSITIONER_GETTERS_KEY = Symbol.for('vase-ui.positioner-getters');
+
+// A press in a popup of a second copy of the library can belong to that popup, so the copies share
+// the getters as they share the numbers.
+function getPositionerElementGetters(): Set<() => Element | null> {
+  const holder = globalThis as { [POSITIONER_GETTERS_KEY]?: Set<() => Element | null> };
+  holder[POSITIONER_GETTERS_KEY] ??= new Set();
+  return holder[POSITIONER_GETTERS_KEY];
+}
+
+/** Whether the shadow tree of `target` holds the positioner element of a popup, at any depth. */
+function hostsPopup(target: EventTarget) {
+  for (const getPositionerElement of getPositionerElementGetters()) {
+    let root = getPositionerElement()?.getRootNode();
+    while (isShadowRoot(root)) {
+      if (root.host === target) {
+        return true;
+      }
+      root = root.host.getRootNode();
+    }
+  }
+  return false;
 }
 
 interface DismissParent {
@@ -381,15 +415,29 @@ export function useDismiss(
     }
   }
 
-  // This popup's open number for an Escape that reaches the document (see `getEscapeLayers`).
+  // This popup's open number orders Escape and outside-press ownership (see `getPopupLayers`).
   let layer = 0;
   function takeLayer(open: boolean) {
     if (open) {
-      const escapeLayers = getEscapeLayers();
-      escapeLayers.count += 1;
-      layer = escapeLayers.count;
+      const popupLayers = getPopupLayers();
+      popupLayers.count += 1;
+      layer = popupLayers.count;
     }
   }
+  function claimPress(event: Event) {
+    const { press } = getPopupLayers();
+    press.set(event, Math.max(press.get(event) ?? 0, layer));
+  }
+
+  // The document cannot see the path of a press in a closed shadow root, so the capture listeners
+  // of the popup element claim the press too.
+  function markPressInside(event: Event) {
+    markInsideComponentTree();
+    if (isEnabled() && getStore().select('open')) {
+      claimPress(event);
+    }
+  }
+
   // A server does not call `onBeforeMount`, so a server render takes no number. The hook runs for
   // a parent before its children, and `onMounted` runs for the children first.
   onBeforeMount(() => takeLayer(getStore().select('open')));
@@ -550,6 +598,10 @@ export function useDismiss(
 
       if (getStore().context.insideComponentTree) {
         clearInsideComponentTree();
+        return;
+      }
+
+      if ((getPopupLayers().press.get(event) ?? 0) > layer) {
         return;
       }
 
@@ -738,14 +790,28 @@ export function useDismiss(
 
       markPressInFrame(event);
 
+      // React runs the listeners of the pressed element at its root, after this listener. A
+      // capture listener of the target runs before the bubble listeners of the target. Thus the
+      // press closes the popup first, and a listener of the pressed element can open it again.
+      // Two targets get a bubble listener. A capture listener that the document gets while it
+      // runs its capture listeners does not run for this event. A press in a closed shadow root
+      // has the host as its target here. The capture listeners of a popup element in that tree
+      // must mark the press before this listener runs.
+      const capture = target !== event.currentTarget && !hostsPopup(target);
+
       // If propagation stops before the target, this runs on the next event of the type to reach
       // it instead, which must not be handled as the stopped one.
-      const unsubscribe = addEventListener(target, event.type, (currentEvent) => {
-        unsubscribe();
-        if (currentEvent === event) {
-          listener(event);
-        }
-      });
+      const unsubscribe = addEventListener(
+        target,
+        event.type,
+        (currentEvent) => {
+          unsubscribe();
+          if (currentEvent === event) {
+            listener(event);
+          }
+        },
+        capture,
+      );
     }
 
     function handleTouchStartCapture(event: TouchEvent) {
@@ -873,26 +939,48 @@ export function useDismiss(
       addTargetEventListenerOnce(event, handleTouchEnd);
     }
 
+    // The listener runs in the capture phase of the document. Thus each open popup that holds the
+    // target records its number before a `closeOnPressOutside` check runs on the target.
+    function recordPressLayer(event: Event) {
+      if (isEventWithin(event, getStore().select('positionerElement'))) {
+        claimPress(event);
+      }
+    }
+
     function listenForPress(pressDocument: Document) {
       return mergeCleanups(
-        addEventListener(pressDocument, 'click', closeOnPressOutsideCapture, true),
-        addEventListener(pressDocument, 'pointerdown', closeOnPressOutsideCapture, true),
-        addEventListener(pressDocument, 'pointerup', handlePressEndCapture, true),
-        addEventListener(pressDocument, 'pointercancel', handlePressEndCapture, true),
-        addEventListener(pressDocument, 'mousedown', closeOnPressOutsideCapture, true),
-        addEventListener(pressDocument, 'mouseup', handlePressEndCapture, true),
-        addEventListener(pressDocument, 'touchstart', handleTouchStartCapture, {
+        addEventListener(pressDocument, 'pointerdown', recordPressLayer, true),
+        addEventListener(pressDocument, 'mousedown', recordPressLayer, true),
+        addEventListener(pressDocument, 'click', recordPressLayer, true),
+        addEventListener(pressDocument, 'touchmove', recordPressLayer, {
           capture: true,
           passive: true,
         }),
-        addEventListener(pressDocument, 'touchmove', handleTouchMoveCapture, {
+        addEventListener(pressDocument, 'touchend', recordPressLayer, {
           capture: true,
           passive: true,
         }),
-        addEventListener(pressDocument, 'touchend', handleTouchEndCapture, {
-          capture: true,
-          passive: true,
-        }),
+        outsidePressEnabled &&
+          mergeCleanups(
+            addEventListener(pressDocument, 'click', closeOnPressOutsideCapture, true),
+            addEventListener(pressDocument, 'pointerdown', closeOnPressOutsideCapture, true),
+            addEventListener(pressDocument, 'pointerup', handlePressEndCapture, true),
+            addEventListener(pressDocument, 'pointercancel', handlePressEndCapture, true),
+            addEventListener(pressDocument, 'mousedown', closeOnPressOutsideCapture, true),
+            addEventListener(pressDocument, 'mouseup', handlePressEndCapture, true),
+            addEventListener(pressDocument, 'touchstart', handleTouchStartCapture, {
+              capture: true,
+              passive: true,
+            }),
+            addEventListener(pressDocument, 'touchmove', handleTouchMoveCapture, {
+              capture: true,
+              passive: true,
+            }),
+            addEventListener(pressDocument, 'touchend', handleTouchEndCapture, {
+              capture: true,
+              passive: true,
+            }),
+          ),
       );
     }
 
@@ -936,20 +1024,21 @@ export function useDismiss(
             'keydown',
             (event) => {
               if (!escapeKeyBubbles) {
-                const { layers } = getEscapeLayers();
-                layers.set(event, Math.max(layers.get(event) ?? 0, layer));
+                const { escape } = getPopupLayers();
+                escape.set(event, Math.max(escape.get(event) ?? 0, layer));
               }
             },
             true,
           ),
           addEventListener(doc, 'keydown', (event) => {
-            if (layer >= (getEscapeLayers().layers.get(event) ?? 0)) {
+            if (layer >= (getPopupLayers().escape.get(event) ?? 0)) {
               closeOnEscapeKeyDown(event);
             }
           }),
           addEventListener(doc, 'compositionend', handleCompositionEnd),
         ),
-      outsidePressEnabled && mergeCleanups(listenForPress(doc), listenInFrames()),
+      listenForPress(doc),
+      listenInFrames(),
     );
 
     cleanup = () => {
@@ -975,9 +1064,14 @@ export function useDismiss(
     { flush: 'post' },
   );
 
+  const getPositionerElement = () => getStore().select('positionerElement');
+
   // A server calls no `onMounted` hook and runs no such `watch`, so a server render adds no
   // listener to a document or to a store that a module shares.
-  onMounted(update);
+  onMounted(() => {
+    getPositionerElementGetters().add(getPositionerElement);
+    update();
+  });
   onDeactivated(() => {
     deactivated = true;
     update();
@@ -990,6 +1084,7 @@ export function useDismiss(
     }
   });
   onScopeDispose(() => {
+    getPositionerElementGetters().delete(getPositionerElement);
     listenedStore?.context.events.off('openchange', handleOpenChange);
     cleanup?.();
     clearInsideComponentTree();
@@ -1008,20 +1103,20 @@ export function useDismiss(
     // See https://github.com/mui/base-ui/pull/3379
     onPointerdown: markInsidePressStartPrevented,
     onMousedown: markInsidePressStartPrevented,
-    onClickCapture: markInsideComponentTree,
+    onClickCapture: markPressInside,
     onMousedownCapture(event: MouseEvent) {
-      markInsideComponentTree();
+      markPressInside(event);
       markPressStartedInside(event);
     },
     onPointerdownCapture(event: PointerEvent) {
-      markInsideComponentTree();
+      markPressInside(event);
       markPressStartedInside(event);
     },
     onMouseupCapture: markInsideComponentTree,
-    onTouchendCapture: markInsideComponentTree,
+    onTouchendCapture: markPressInside,
     // React adds each `touchmove` listener as a passive listener. A listener of an element that
     // is not passive makes the browser wait for it before each scroll step.
-    onTouchmoveCapturePassive: markInsideComponentTree,
+    onTouchmoveCapturePassive: markPressInside,
   };
 
   return { reference, floating, trigger: reference };

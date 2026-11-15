@@ -63,9 +63,9 @@ An enclosing `<label>` is the simplest labeling pattern for each radio:
 
 <<< ./radio-group/EnclosingLabel.vue{8,11}
 
-To name the group with a `Fieldset.Legend`, render the group in the `#render` slot of `Fieldset.Root`. `RadioGroup` is a generic component. The type check does not accept it as the value of `as`.
+To name the group with a `Fieldset.Legend`, give `RadioGroup` to the `as` prop of `Fieldset.Root`:
 
-<<< ./radio-group/FieldsetLegend.vue{10-13}
+<<< ./radio-group/FieldsetLegend.vue{10}
 
 ### Rendering as a native button
 

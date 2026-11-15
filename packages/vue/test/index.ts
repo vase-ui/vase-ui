@@ -7,6 +7,7 @@ export { mockRuntimeLocale } from './mockRuntimeLocale';
 export {
   enterWithMouse,
   firePointer,
+  holdPress,
   moveMouse,
   pressWithScreenReader,
   pressWithTouch,
