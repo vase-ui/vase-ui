@@ -643,6 +643,8 @@ The source obeys rules that keep it compatible with the Vapor mode of Vue. ESLin
 
 If a line must break a rule, put a disable comment on that line and give the reason.
 
+`isInHeldBranch()` of `src/internals/useKeepAliveState.ts` is the one reader of `getCurrentInstance`, because Vue has no other API that tells a part that `KeepAlive` holds its branch. In a part compiled as a Vapor component, the function gives `false`. Each part of the package compiles as a virtual DOM component. By a reading of the code of Vue 3.6, such a part below a Vapor `KeepAlive` gets `true` while that `KeepAlive` holds it.
+
 ### Server render
 
 - Each part must render with `renderToString` in Node with no DOM.
@@ -1072,6 +1074,7 @@ The portal of a popup is in `src/utils/popups/portal`. `useFloatingPortalNode()`
 - Base UI retries the check of a ref that is empty at first. The Vue portal does not, because Vue sets the ref of an ancestor or a later sibling before it runs that `watch`.
 - Updates in the flush of the mount can replace the container. The children then mount in the first container. That container is out of the document when the `onMounted` hooks of the children run. A child that focuses or measures in `onMounted` thus works on an element that is not in the document. Vue then moves the children to the new container. Base UI mounts them one time, in the new container.
 - `KeepAlive` leaves the content of a `Teleport` in the target. The portal sets `disabled` on its `Teleport` while `KeepAlive` holds the part. The content then leaves the document, and the same element returns.
+- The `Teleport` of a portal that mounts in a held branch has `disabled` from its first render. Its content thus mounts in the place of the part, out of the document, and moves to the container at the activation.
 - `FloatingPortalLite` does not provide `PortalContext`, so a portal inside it does not render in the portal element of the Lite portal.
 - The portal part of a family renders `FloatingPortalLite` or `FloatingPortal` while the popup is mounted or its `keepMounted` prop is set. It provides `keepMounted` as a `ComputedRef<boolean>`, and the positioner gives it to `usePopupPositioner`. `tooltip/portal/TooltipPortal.vue` is the model.
 - `Select.Portal` has no `keepMounted` prop. It renders `FloatingPortal` while the popup is mounted or `forceMounted` of the store is set, and it provides no context.
@@ -1554,6 +1557,9 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - `useUnmountAfterClose` is the exception. A close that is in progress when `KeepAlive` deactivates the root completes, and `onUnmount` runs one time. A wait that starts again at the activation would play a keyframe exit a second time.
 - `onActivated` also runs at the first mount in a `KeepAlive`. Keep a flag that `onDeactivated` sets. Do nothing in `onActivated` while the flag is not set.
 - A part that mounts in a branch that `KeepAlive` holds gets no `onDeactivated` call. Its first `onActivated` call comes with no `onDeactivated` call before it, so the flag of the rule above is not set at that call. `useKeepAliveState(element, reaches)` of `src/internals` ignores only the call in the flush of the mount, and `shown` counts each later activation. It reads the part as held from its mount when its element is not in a document and `reaches` refuses the element. It checks again when the element changes, because a part such as `Field.Error` can render its element later. The owner of a registry gives `reaches` with `isInTreeOf`: its element and the element of the part have one root node. An app that mounts in a detached element is thus not held.
+- A part whose own flag stops an effect that reaches out of the branch starts that flag with `isInHeldBranch()` of `src/internals/useKeepAliveState.ts`. The function reads `isDeactivated` of the part and of the components above it, as Vue does before it calls a `KeepAlive` hook. `useFloatingPortalNode`, `useScrollLock`, `useDismiss`, `FloatingFocusManager.vue`, `useDialogRoot`, `DrawerRoot.vue`, `DrawerPopup.vue` and `DrawerViewport.vue` do this. A popup that mounts in a held branch thus stays out of the document until the activation. Until then it takes no scroll lock, no modal marks, no focus and no document listener, and it reports no open state (`VUE-5`).
+- A part that mounts in the render of an activation also starts with the flag set. Vue clears `isDeactivated` after that render, and the part gets `onActivated` before `onMounted`. Do not make `onActivated` wait for the mount.
+- `useKeepAliveState` keeps its check of the element for the parts of a registry.
 - Where the effect is a `watch` with `onCleanup`, the flag is a `shallowRef` in the sources of that `watch`. The callback returns while the flag is set. `ScrollAreaViewport.vue` and `ScrollAreaContent.vue` do this for their observers.
 - `KeepAlive` moves a branch out of the document before it calls `onDeactivated`. An effect that a change queued earlier in the same flush can run in that gap. A read of the layout of an element of the branch then gives 0 or an empty value. An effect that runs again at the activation and only writes a measured value can run in the gap. An effect that keeps a choice from such a read returns while the element is not in the document (`isConnected`). `SelectPopup.vue` does this for the trigger in its placement. Its popup is in a `Teleport` and stays in the document in that gap.
 - `KeepAlive` takes the DOM of a deactivated part out of the document. The id of that part then must not stay in a `for`, an `aria-controls`, an `aria-labelledby` or an `aria-describedby`.
@@ -1980,6 +1986,7 @@ The hydration helpers:
 - Use `it.each` with object rows and `$name` titles for tests that differ only in data.
 - A test of the order in which a template mounts a new part and unmounts the old part uses a `.test.vue` fixture. A render function in TSX reuses the component, so it does not show this order.
 - A test that replaces one child of `KeepAlive` with another child of the same component gives each child its own `key`. `KeepAlive` then keeps both children and deactivates the one that the other child replaces.
+- A case of a part that mounts in a held branch hides the branch in one flush and mounts the part in a later flush. A part that mounts in the flush of the deactivation gets `onDeactivated`.
 - A test of the order of the parts of one kind renders more than one part of that kind in one branch. It hides the branch with `KeepAlive` and shows it again, and it compares the attributes before and after. Put a part before and a part after the part under test in the branch.
 - A test belongs in the file of the part whose prop or behavior it asserts.
 - For text in a locale format, compute the expected text with the same locale and options as the component.
