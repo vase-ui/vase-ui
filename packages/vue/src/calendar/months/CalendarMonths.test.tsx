@@ -83,7 +83,9 @@ describe('<Calendar.Months />', () => {
 
   describe('the direction', () => {
     it('is none until the page changes, and then the side of the change', async () => {
-      const { user } = await render(<CalendarNavigationAnatomy today={today()} locale="en-US" />);
+      const { user } = await render(
+        <CalendarNavigationAnatomy {...{ today: today(), locale: 'en-US' }} />,
+      );
       const root = screen.getByRole('group');
       expect(root).toHaveAttribute('data-navigation-direction', 'none');
       expect(screen.getByTestId('months')).toHaveAttribute('data-navigation-direction', 'none');

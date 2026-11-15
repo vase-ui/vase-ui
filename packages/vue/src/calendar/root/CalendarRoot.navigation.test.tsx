@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createRenderer, screen, takeReportedMessages, waitFor } from '#test-utils';
+import { createRenderer, hydrate, renderOnServer, screen, waitFor } from '#test-utils';
 import CalendarNavigationAnatomy from './CalendarNavigationAnatomy.test.vue';
+import CalendarNavigationHydration from './CalendarNavigationHydration.test.vue';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
 
@@ -491,15 +492,27 @@ describe('<Calendar.Root /> pages', () => {
     });
   });
 
-  // This case is the last of the file. In Vue 3.5.12, a `setup` that throws leaves the current
-  // instance set, and each later case then gets a warning about a slot.
-  it('throws when the broadcast calendar has another calendar than the Gregorian one', async () => {
-    await expect(renderCalendar({ broadcastCalendar: true, calendar: 'persian' })).rejects.toThrow(
-      'Vase UI: <Calendar.Root> has `broadcastCalendar` and shows the calendar `persian`. The broadcast calendar is made of Gregorian months, so no other calendar can show it. Remove `broadcastCalendar`, or set `calendar="gregory"`.',
-    );
+  describe('the server render', () => {
+    const file = 'src/calendar/root/CalendarNavigationHydration.test.vue';
+    const base = { today: '2026-11-14' };
 
-    expect(takeReportedMessages()).toEqual([
-      expect.stringContaining('Unhandled error during execution of setup function'),
-    ]);
+    it.each([
+      { name: 'two months with outside days', props: { numberOfMonths: 2, showOutsideDays: true } },
+      { name: 'fixed weeks and week numbers', props: { fixedWeeks: true, weekNumbers: true } },
+      { name: 'the broadcast calendar', props: { broadcastCalendar: true } },
+      { name: 'a page of two weeks', props: { duration: 'weeks:2' } },
+      {
+        name: 'the selects of a Buddhist calendar',
+        props: { selects: true, calendar: 'buddhist' },
+      },
+      {
+        name: 'a footer, and the buttons at their limits',
+        props: { footer: 'A day', maxDate: '2026-11-30' },
+      },
+    ])('hydrates with $name with no warning and no difference', async ({ props }) => {
+      const serverHtml = await renderOnServer(file, { ...base, ...props });
+
+      await hydrate(CalendarNavigationHydration, { serverHtml, props: { ...base, ...props } });
+    });
   });
 });

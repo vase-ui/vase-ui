@@ -15,10 +15,8 @@ describe('<Calendar.Footer />', () => {
   it('is a live region that shows the message and the state of the calendar', async () => {
     await render(
       <CalendarNavigationAnatomy
-        today={Temporal.PlainDate.from('2026-11-14')}
-        locale="en-US"
+        {...{ today: Temporal.PlainDate.from('2026-11-14'), locale: 'en-US', invalid: true }}
         footer="No day is selected."
-        invalid
       />,
     );
 

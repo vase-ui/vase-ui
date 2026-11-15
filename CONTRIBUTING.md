@@ -336,6 +336,8 @@ A part whose own node is text, such as `Progress.Value`, has four more rules:
 
 A part of a component that Base UI does not have, whose own node is text, has no `<Part>Children.vue`. Its default slot and its `#render` slot get the text as the slot prop `text`. The text is the content of the part when the consumer gives no default slot. `Calendar.Weekday` and `Calendar.DayButton` do this.
 
+A part of a component that Base UI does not have follows the same rules for its other nodes. `Calendar.MonthSelect` and `Calendar.YearSelect` have a `<Part>Children.vue` for their `option` nodes. The part provides the options in `CalendarSelectContext`.
+
 ### Parts with a hidden input
 
 Some upstream parts render a hidden `<input>` beside their element. `Switch.Root` is the model. The input gives the part the form behavior of a native control.
@@ -500,6 +502,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - Handles are upstream's objects, with no change: `Dialog.createHandle<Payload>()`, `handle`, `payload`, `triggerId`, `open()`, `openWithPayload()`, `close()`, `isOpen`.
 - Function children become a default scoped slot with named props: `{ payload }` on a root, `{ validity }` on `Field.Validity`, `{ item, index }` on `Combobox.Collection`, `{ value }` on `Select.Value`.
 - A part that renders a list has a slot that has the name of its item, as `Combobox.List` has the slot `item`: `#month` of `Calendar.Months`, `#weekday` of `Calendar.GridHeaderRow`, `#week` of `Calendar.GridBody` and `#day` of `Calendar.Week`. Its props are the item and its `index`, such as `{ day, index }`.
+- A list part of a component that Base UI does not have can have a default slot. The default slot holds the nodes before the items. `Calendar.WeekNumber` is in the default slot of `Calendar.Week`, and `Calendar.WeekNumberHeader` is in that of `Calendar.GridHeaderRow`. The `#render` slot does not render the default slot.
 - A part can take nodes or a function that renders each item as its children, such as `Combobox.List`. Its default slot holds the nodes, and the slot `item` with `{ item, index }` is the function. A slot does not show at run time if it takes slot props, so one slot cannot be both.
 - `Combobox.Collection` uses each item as the `key` of its nodes. An item then keeps its element when the filter changes the list, as in React with `key={item}`. An item that the consumer replaces with a new object gets a new element. The items of one collection must be unique, because equal items give the same key.
 - Type the slots with `defineSlots`. Write each slot except `#render` as a method, as the Vue documentation does: `default(props: { state: ButtonState }): unknown`. A slot with no slot props is `default(): unknown`. A root with a value type uses `generic="Value"`.
@@ -788,6 +791,8 @@ The date and time families call `Temporal` and `Intl` directly, through the func
 - `Intl` and `Temporal` do not have the same calendars. A part reads the calendar of a locale only through `localeCalendar`, which gives `gregory` when `Temporal` has no such calendar.
 - `today(timeZone)` gives today, and the `today` prop wins over it. The `timeZone` prop wins over the zone of a zoned value, and that zone wins over the zone of the runtime.
 - The root of a calendar holds the focused day and the month of the page. Each part derives its page from these two values, and no part keeps a page of its own.
+- A calendar of weeks or days (`visibleDuration`) also keeps the first day of its page in its root. That day stays in the month of the root. If it leaves that month, the page goes to the first day of the month, or to the week that holds it.
+- A page that the user leaves stays in `Calendar.Months` until its animations end. It has `data-ending-style` and `inert`, and no tab stop. A page that a new calendar of the grid replaces, such as the calendar of the runtime locale after a hydration, does not stay.
 - Make a list of days by adding days, and never by adding 24 hours. A change of the clock in a time zone then does not repeat a day and does not skip a day.
 
 ### Popup store

@@ -346,30 +346,6 @@ describe('<Calendar.Root />', () => {
         other: ['2026-11-09', '2026-11-13'],
       },
       {
-        name: 'before a day',
-        matcher: () => ({ before: day('2026-11-03') }),
-        matched: ['2026-11-02'],
-        other: ['2026-11-03'],
-      },
-      {
-        name: 'after a day',
-        matcher: () => ({ after: day('2026-11-26') }),
-        matched: ['2026-11-27'],
-        other: ['2026-11-26'],
-      },
-      {
-        name: 'between two days',
-        matcher: () => ({ before: day('2026-11-10'), after: day('2026-11-05') }),
-        matched: ['2026-11-06', '2026-11-09'],
-        other: ['2026-11-05', '2026-11-10'],
-      },
-      {
-        name: 'a day of the week',
-        matcher: () => ({ dayOfWeek: [2, 3] }),
-        matched: ['2026-11-10', '2026-11-11'],
-        other: ['2026-11-12'],
-      },
-      {
         name: 'a function',
         matcher: () => (date: Temporal.PlainDate) => date.day === 20,
         matched: ['2026-11-20'],

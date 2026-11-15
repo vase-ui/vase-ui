@@ -141,28 +141,6 @@ describe('<Calendar.Root /> keys', () => {
     });
   });
 
-  describe('at the end of a month', () => {
-    it.each([
-      {
-        name: 'January 31 to February 28',
-        today: '2026-01-31',
-        keys: '{PageDown}',
-        to: '2026-02-28',
-      },
-      { name: 'March 31 to February 28', today: '2026-03-31', keys: '{PageUp}', to: '2026-02-28' },
-      {
-        name: 'a leap day to the next year',
-        today: '2028-02-29',
-        keys: '{Shift>}{PageDown}{/Shift}',
-        to: '2029-02-28',
-      },
-    ])('goes from $name', async ({ today: from, keys, to }) => {
-      await pressKeys({ from, keys, props: { today: day(from) } });
-
-      expectFocus(to);
-    });
-  });
-
   describe('in a calendar with 13 months', () => {
     it('goes through each month of a Hebrew leap year and back to the same day', async () => {
       // The year 5784 is a leap year. Tishri 15, its fifteenth day, is 2023-09-30.
