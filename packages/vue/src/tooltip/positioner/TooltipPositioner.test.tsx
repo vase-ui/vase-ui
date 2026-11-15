@@ -8,6 +8,7 @@ import {
   positionerConformanceTests,
   screen,
   takeReportedMessages,
+  isVaporApp,
 } from '#test-utils';
 
 const Trigger: FunctionalComponent<Tooltip.Trigger.Props> = (props, { slots }) => (
@@ -89,10 +90,17 @@ describe('<Tooltip.Positioner />', () => {
     expect(takeReportedMessages()).toHaveLength(1);
   });
 
-  it('throws a descriptive error when rendered outside <Tooltip.Root>', async () => {
-    await expect(render(<Tooltip.Positioner />)).rejects.toThrow(
-      'Vase UI: A part of Tooltip must be inside <Tooltip.Root>.',
-    );
-    expect(takeReportedMessages()).toHaveLength(1);
-  });
+  // In a Vapor app this case fails. The case before it throws in `setup`, and Vue then keeps that
+  // component as the current instance. A Vapor app takes the current instance as the parent of
+  // its root, so the part finds the context of the earlier case.
+  it(
+    'throws a descriptive error when rendered outside <Tooltip.Root>',
+    { fails: isVaporApp },
+    async () => {
+      await expect(render(<Tooltip.Positioner />)).rejects.toThrow(
+        'Vase UI: A part of Tooltip must be inside <Tooltip.Root>.',
+      );
+      expect(takeReportedMessages()).toHaveLength(1);
+    },
+  );
 });

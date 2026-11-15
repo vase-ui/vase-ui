@@ -268,10 +268,7 @@ if (group) {
     }
   });
 
-  // `KeepAlive` runs the `onActivated` hooks from the last part to the first part. A registration in
-  // the hook would reverse the order of the inputs in the field, and the first radio would lose its
-  // place. A watcher runs in the order of the radios. The release before the registration moves an
-  // input that is still registered to the end, because `Map.set` keeps the place of a key.
+  // `KeepAlive` calls no `ref` setter at an activation.
   watch(shown, () => {
     const input = inputElement.value;
     releaseRegisteredInput();
