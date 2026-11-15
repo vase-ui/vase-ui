@@ -155,6 +155,8 @@ A server and a browser can have other `Intl` data for the same locale. The layou
 
 `DateField.Input` renders its parts in a list of fixed length, with a comment in each place after the last part. A layout with more or fewer parts thus hydrates with no message, also in the `children` component of a `#render` slot.
 
+Digits that a visitor types, or that the browser fills, before the page hydrates stay in the segments. After the hydration, the field takes their numbers. When each segment then has a number, the root emits `valueChange` and `update:value`. When the visitor left a segment before the page hydrated, the segment then also gets `change`, `blur` and `focusout`.
+
 On a Node.js version before 26, load a `Temporal` polyfill before the server starts. See the [guide](/handbook/dates-and-times#servers).
 
 ## Keyboard

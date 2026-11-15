@@ -1,9 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import { DateField } from '@vase-ui/vue/date-field';
-import { createRenderer, describeConformance, screen } from '#test-utils';
+import {
+  createRenderer,
+  describeConformance,
+  hydrateAfter,
+  renderOnServer,
+  screen,
+  waitFor,
+} from '#test-utils';
 import { formatter } from '../../internals/date-time/format';
+import DateFieldRootHydration from '../root/DateFieldRootHydration.test.vue';
+
+const HYDRATION_FILE = 'src/date-field/root/DateFieldRootHydration.test.vue';
 
 const MONTH = { type: 'month', index: 0, editable: true } as const;
+
+const segmentOf = (container: Element, type: string) =>
+  container.querySelector<HTMLInputElement>(`input[data-type="${type}"]`)!;
 
 describe('<DateField.Segment />', () => {
   const { render } = createRenderer();
@@ -64,5 +77,36 @@ describe('<DateField.Segment />', () => {
     );
 
     expect(screen.getByRole('spinbutton', { name: 'Birth month' })).toBeInTheDocument();
+  });
+
+  describe('text before the hydration', () => {
+    // Vue writes the `value` of an input when it hydrates the input, over the text that the user
+    // typed before the scripts of the page ran.
+    it('keeps the text that the user typed, and the field takes its numbers', async () => {
+      const props = { locale: 'en-US', name: 'when' };
+      const serverHtml = await renderOnServer(HYDRATION_FILE, props);
+      const { container } = await hydrateAfter(DateFieldRootHydration, {
+        serverHtml,
+        props,
+        before(serverContainer) {
+          segmentOf(serverContainer, 'month').value = '11';
+          segmentOf(serverContainer, 'day').value = '14';
+          segmentOf(serverContainer, 'year').value = '2026';
+          segmentOf(serverContainer, 'day').focus();
+        },
+      });
+      const hiddenInput = container.querySelector<HTMLInputElement>('input[name="when"]')!;
+
+      await waitFor(() => {
+        expect(hiddenInput).toHaveValue('2026-11-14');
+      });
+      expect(['month', 'day', 'year'].map((type) => segmentOf(container, type).value)).toEqual([
+        '11',
+        '14',
+        '2026',
+      ]);
+      // The focused day is full, so the focus goes on to the year, as for a typed day.
+      expect(segmentOf(container, 'year')).toHaveFocus();
+    });
   });
 });
