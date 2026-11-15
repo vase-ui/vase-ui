@@ -423,20 +423,25 @@ function getChipIndexForKey(event: KeyboardEvent, input: HTMLInputElement, selec
 
 function handleKeydown(event: VaseUIEvent<KeyboardEvent>) {
   const input = event.currentTarget as HTMLInputElement;
+  const state = toRaw(store.state);
 
-  // A textarea keeps the Home and End keys of the browser, as each other textarea does. The call
-  // also stops the list navigation, which takes the two keys when the input is in the popup
-  // (`VUE-97`).
-  if (input.tagName !== 'INPUT' && (event.key === 'Home' || event.key === 'End')) {
-    event.preventVaseUIHandler();
-    return;
+  if (event.key === 'Home' || event.key === 'End') {
+    // Home and End edit the text, also with a modifier key. The list navigation takes the two keys
+    // when the input is in the popup or the list is inline (`VUE-100`). Elsewhere its handler
+    // runs, because it records each key as keyboard input.
+    if (state.inputInsidePopup) {
+      event.preventVaseUIHandler();
+    }
+    // A textarea keeps the Home and End keys of the browser, as each other textarea does (`VUE-97`).
+    if (input.tagName !== 'INPUT') {
+      return;
+    }
   }
 
   if (event.ctrlKey || event.shiftKey || event.altKey || event.metaKey) {
     return;
   }
 
-  const state = toRaw(store.state);
   const isOpen = open.value;
 
   if (isDisabled.value || state.readOnly) {
