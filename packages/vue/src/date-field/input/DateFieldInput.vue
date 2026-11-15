@@ -26,7 +26,6 @@ import { rootStateAttributesMapping } from '../../internals/date-time/field/useD
 import type { HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import DateFieldInputChildren from './DateFieldInputChildren.vue';
-import { DateFieldInputElement } from './DateFieldInputElement';
 
 defineOptions({ inheritAttrs: false });
 
@@ -68,5 +67,5 @@ defineExpose({ element });
 <!-- prettier-ignore -->
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="DateFieldInputChildren" />
-  <DateFieldInputElement v-else :tag="as" :element-props="elementProps()" :segments="context.segments.value" :list-key="context.listKey.value" :segment-slot="$slots.segment" />
+  <component :is="as" v-else v-bind="elementProps()"><DateFieldInputChildren><template #segment="slotProps"><slot name="segment" v-bind="slotProps" /></template></DateFieldInputChildren></component>
 </template>

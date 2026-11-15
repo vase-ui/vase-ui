@@ -147,6 +147,36 @@ describe('<DateField.Input />', () => {
         client: { locale: 'en-US', defaultValue: '2026-11-14', useRenderSlot: true },
       },
       {
+        name: 'more parts in a #render slot',
+        server: {
+          locale: 'en-US',
+          defaultValue: '2026-11-14T15:04',
+          granularity: 'day',
+          useRenderSlot: true,
+        },
+        client: {
+          locale: 'en-US',
+          defaultValue: '2026-11-14T15:04',
+          hourCycle: 24,
+          useRenderSlot: true,
+        },
+      },
+      {
+        name: 'fewer parts in a #render slot',
+        server: {
+          locale: 'en-US',
+          defaultValue: '2026-11-14T15:04',
+          hourCycle: 24,
+          useRenderSlot: true,
+        },
+        client: {
+          locale: 'en-US',
+          defaultValue: '2026-11-14T15:04',
+          granularity: 'day',
+          useRenderSlot: true,
+        },
+      },
+      {
         name: 'a layout with fewer parts in a slot',
         server: { locale: 'en-US', defaultValue: '2026-11-14T15:04', useSegmentSlot: true },
         client: {
@@ -160,6 +190,33 @@ describe('<DateField.Input />', () => {
       const serverHtml = await renderOnServer(HYDRATION_FILE, server);
 
       await hydrate(DateFieldRootHydration, { serverHtml, props: client });
+    });
+
+    // An engine with other `Intl` data can put the time zone name in the place of a separator. Each
+    // segment keeps its place, so only the two spans differ. The case swaps them in the server HTML.
+    it('hydrates a server layout with the time zone name in the place of a separator', async () => {
+      const props = {
+        locale: 'en-US',
+        defaultValue: '2026-11-14T15:04[Asia/Tokyo]',
+        hourCycle: 24,
+      };
+      const serverHtml = await renderOnServer(HYDRATION_FILE, props);
+      const [separator, zoneName] = Array.from(
+        serverHtml.matchAll(/<span[^>]*>[^<]*<\/span>/g),
+      ).slice(-2);
+
+      expect(separator?.[0]).toContain('data-type="literal"');
+      expect(zoneName?.[0]).toContain('data-type="timeZoneName"');
+
+      const separatorEnd = separator!.index + separator![0].length;
+      const swappedHtml =
+        serverHtml.slice(0, separator!.index) +
+        zoneName![0] +
+        serverHtml.slice(separatorEnd, zoneName!.index) +
+        separator![0] +
+        serverHtml.slice(zoneName!.index + zoneName![0].length);
+
+      await hydrate(DateFieldRootHydration, { serverHtml: swappedHtml, props });
     });
   });
 });

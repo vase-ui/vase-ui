@@ -49,9 +49,28 @@ const state = computed<DateFieldLiteralState>(() => ({
   type: props.segment.type,
 }));
 
+let ownElement: HTMLElement | null = null;
+
+// The root compares the element with the layout after the hydration.
+function setElement(element: unknown) {
+  const next = element as HTMLElement | null;
+  // Vue calls a function ref again on each patch, with the same element.
+  if (next === ownElement) {
+    return;
+  }
+  if (ownElement) {
+    context.unregisterLiteral(ownElement);
+  }
+  if (next) {
+    context.registerLiteral(next, props.segment.index);
+  }
+  ownElement = next;
+}
+
 const { element, elementProps } = useRenderElement('span', props, {
   state,
   stateAttributesMapping: rootStateAttributesMapping,
+  ref: [setElement],
   props: (attrs) => [
     {
       // An era and a zone name tell something that a screen reader must read.

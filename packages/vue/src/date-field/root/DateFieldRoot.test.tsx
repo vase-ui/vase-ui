@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { DateField } from '@vase-ui/vue/date-field';
 import { Field } from '@vase-ui/vue/field';
 import {
@@ -478,9 +478,14 @@ describe('<DateField.Root />', () => {
     // The field reads today in the zone of the `timeZone` prop. A spy gives each zone its day, so
     // the case does not depend on the clock.
     it('takes the numbers of an empty segment from today in the time zone of the prop', async () => {
-      vi.spyOn(Temporal.Now, 'plainDateISO').mockImplementation((timeZone) =>
-        Temporal.PlainDate.from(timeZone === 'Pacific/Kiritimati' ? '2026-11-15' : '2026-11-14'),
-      );
+      const now = vi
+        .spyOn(Temporal.Now, 'plainDateISO')
+        .mockImplementation((timeZone) =>
+          Temporal.PlainDate.from(timeZone === 'Pacific/Kiritimati' ? '2026-11-15' : '2026-11-14'),
+        );
+      onTestFinished(() => {
+        now.mockRestore();
+      });
       const { container, user } = await render(
         <DateField.Root locale="en-US" timeZone="Pacific/Kiritimati">
           <DateField.Input />

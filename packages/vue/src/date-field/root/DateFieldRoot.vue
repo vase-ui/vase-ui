@@ -50,10 +50,10 @@ export interface DateFieldRootProps<Value extends DateFieldRootValue = DateField
    */
   referenceDate?: DateFieldRootValue | undefined;
   /**
-   * The last unit that the field shows. A date shows `day` or `month`, a year and month shows
-   * `month`, and a date with a time shows `minute` unless the prop says another unit. With no
-   * value, the prop also gives the kind of the value that the field makes.
-   * @default 'day'
+   * The last unit that the field shows. A date takes `day` or `month`, and shows `day` with no
+   * prop. A year and month always shows `month`. A date with a time takes each unit, and shows
+   * `minute` with no prop. With no value, the prop also gives the kind of the value that the field
+   * makes.
    */
   granularity?: DateFieldRootGranularity | undefined;
   /**

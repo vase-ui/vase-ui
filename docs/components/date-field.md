@@ -34,7 +34,7 @@ Base UI has no date field. This one follows the [spinbutton pattern](https://www
 
 ## Usage guidelines
 
-- **Form controls must have an accessible name**: Give the field a `<label>` element, or put it in a `Field`. See the [forms guide](/handbook/forms).
+- **Form controls must have an accessible name**: Put the field in a `Field` with a `Field.Label`, or give `DateField.Root` an `id` and a `<label>` element whose `for` is that id. See the [forms guide](/handbook/forms).
 
 ## Anatomy
 
@@ -61,7 +61,7 @@ The value is a `Temporal` object, and `v-model:value` gives back the same kind. 
 
 An emitted value keeps the calendar, the time and the time zone of the value that you gave. With no value, the `granularity` prop gives the kind of the value that the field makes: `day` gives a `Temporal.PlainDate`, `month` gives a `Temporal.PlainYearMonth`, and each other unit gives a `Temporal.PlainDateTime`. Use `referenceDate` to give the kind, the time zone and the numbers that an empty segment takes when the user presses an arrow key.
 
-Use `calendar` to show the date in another calendar, and `hourCycle` to give a time the 12-hour or the 24-hour cycle. The value keeps its own calendar. See the [guide](/handbook/dates-and-times#calendars).
+Use `calendar` to show the date in another calendar, and `hourCycle` to give a time the 12-hour or the 24-hour cycle. The value keeps its own calendar. The locale and `calendar` change only the calendar in which the field shows the date. A field with no `value`, `defaultValue` and `referenceDate` makes a value in the ISO calendar. See the [guide](/handbook/dates-and-times#calendars).
 
 ## Examples
 
@@ -131,7 +131,7 @@ Put the field in a `Field` to show the errors of its validation. The hidden inpu
 
 ### Clear button
 
-`DateField.Clear` empties the field and gives the focus to the first segment. It is disabled while the field is empty, disabled or read-only. With no content it shows `x` and has the `aria-label` `Clear`. With content, give the button an `aria-label` of your own.
+`DateField.Clear` empties the field and gives the focus to the first segment. It is disabled while the field is empty, disabled or read-only. With no content and no `#render` slot, it shows `x` and has the `aria-label` `Clear`. With content or a `#render` slot, give the button an `aria-label` of your own.
 
 <DemoFrame>
   <DemoDateFieldClear />
@@ -153,7 +153,7 @@ A server does not know the locale of the visitor. With no `locale` prop, the fie
 
 A server and a browser can have other `Intl` data for the same locale. The layout of the server can then differ from the layout of the browser. While the field hydrates, it marks the elements that can differ. After it mounts, it compares its elements with its layout and makes them again where they differ. The hydration gives no warning.
 
-`DateField.Input` gives its parts to Vue as direct children of its element, and that is why a layout with other parts hydrates with no message. The `children` component of a `#render` slot renders the parts as a fragment. When the server has more parts than the browser, Vue then logs `Hydration completed but contains mismatches`. To avoid it, do not use `#render` on `DateField.Input`. Give a tag name to `as`, or use the `segment` slot.
+`DateField.Input` renders its parts in a list of fixed length, with a comment in each place after the last part. A layout with more or fewer parts thus hydrates with no message, also in the `children` component of a `#render` slot.
 
 On a Node.js version before 26, load a `Temporal` polyfill before the server starts. See the [guide](/handbook/dates-and-times#servers).
 

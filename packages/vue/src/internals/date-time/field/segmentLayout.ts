@@ -21,6 +21,13 @@ export interface SegmentLayoutOptions {
   timeZoneName: boolean;
 }
 
+/**
+ * The greatest number of elements in a layout. A layout has at most ten elements that are not
+ * literals (a Chinese year has `relatedYear` and `yearName`), and a literal before, between and
+ * after them.
+ */
+export const MAX_LAYOUT_LENGTH = 21;
+
 export interface LayoutSegment {
   type: SegmentType;
   /** The text of a literal. Each other type has no text in a layout. */
