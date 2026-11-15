@@ -33,7 +33,7 @@ export function removeFloatingPointErrors(value: number, format?: Intl.NumberFor
     // that fall within the same epsilon: arithmetic that produces sub-epsilon precision (e.g.
     // accumulating a high-significance `step` past the first tick) is normalized to ~15
     // significant digits.
-    const roundedValue = parseFloat(value.toPrecision(15));
+    const roundedValue = Number.parseFloat(value.toPrecision(15));
     const cleanupDelta = Math.abs(roundedValue - value);
     // Cap the cleanup delta so `toPrecision(15)` cannot erase meaningful fractional values
     // at large magnitudes, where the relative epsilon alone is too permissive. The trade-off is

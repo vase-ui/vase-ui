@@ -34,11 +34,6 @@ import { hide } from '../utils/popups/positioning/hideMiddleware';
 import { DEFAULT_SIDES } from '../utils/popups/positioning/adaptiveOriginConstants';
 import * as CommonPositionerCssVars from '../utils/popups/positioning/CommonPositionerCssVars';
 
-export { useFloatingRootStore } from '../utils/popups/floating-root/useFloatingRootStore';
-export type { UseFloatingRootStoreOptions } from '../utils/popups/floating-root/useFloatingRootStore';
-export type { FloatingRootStore } from '../utils/popups/floating-root/FloatingRootStore';
-export type { PositioningInteractionStore } from '../utils/popups/types';
-
 const AVAILABLE_WIDTH_VAR = CommonPositionerCssVars.availableWidth;
 const AVAILABLE_HEIGHT_VAR = CommonPositionerCssVars.availableHeight;
 

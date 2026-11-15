@@ -399,12 +399,12 @@ export abstract class BasePopupStore<
   ChangeEventDetails extends PopupOpenChangeEventDetails,
 > extends ReactiveStore<Readonly<State>, Context, Selectors> {
   // A new object for each open. A close uses it to know if the popup opened again since.
-  private openSession = {};
+  #openSession = {};
 
   // A render can give the popup element a new `id` and write nothing to the store. The id comes
   // from a prop, an attribute or the `#render` slot. A `computed` does not follow a read of the DOM,
   // so the observer copies each change of the attribute to `popupElementId`.
-  private popupIdObserver: MutationObserver | undefined;
+  #popupIdObserver: MutationObserver | undefined;
 
   /**
    * Writes the state in two passes. The first pass writes each key except `open` and `openProp`.
@@ -417,11 +417,11 @@ export abstract class BasePopupStore<
     // that a controlled `open` prop did not apply does not start one. A close that waits for the
     // parent then keeps its request.
     if (!openSelector(current) && openSelector(newState)) {
-      this.openSession = {};
+      this.#openSession = {};
     }
     let next = this.anchorsToActiveTrigger() ? syncAnchorState(current, newState) : newState;
     if (next.popupElement !== current.popupElement) {
-      next = { ...next, popupElementId: this.observePopupId(next.popupElement) };
+      next = { ...next, popupElementId: this.#observePopupId(next.popupElement) };
     }
 
     super.setState({ ...next, open: current.open, openProp: current.openProp });
@@ -433,15 +433,15 @@ export abstract class BasePopupStore<
   /**
    * Follows the `id` of a new popup element. It gives the `id` that the element has now.
    */
-  private observePopupId(element: HTMLElement | null): string | undefined {
-    this.popupIdObserver?.disconnect();
+  #observePopupId(element: HTMLElement | null): string | undefined {
+    this.#popupIdObserver?.disconnect();
     if (element === null) {
       return undefined;
     }
-    this.popupIdObserver ??= new MutationObserver(() => {
+    this.#popupIdObserver ??= new MutationObserver(() => {
       this.set('popupElementId', toRaw(this.state).popupElement?.id);
     });
-    this.popupIdObserver.observe(element, { attributeFilter: ['id'] });
+    this.#popupIdObserver.observe(element, { attributeFilter: ['id'] });
     return element.id;
   }
 
@@ -496,7 +496,7 @@ export abstract class BasePopupStore<
       // A call after the close commits, such as after an `await` in `onOpenChange`, still applies
       // until the popup opens again. More closes can commit in the meantime. A controlled `open`
       // prop can lag behind the close.
-      if (closeSession === this.openSession) {
+      if (closeSession === this.#openSession) {
         this.set('preventUnmountingOnClose', true);
       }
     };
@@ -512,7 +512,7 @@ export abstract class BasePopupStore<
     const extraState = this.prepareOpenChange(nextOpen, details);
 
     if (!nextOpen) {
-      closeSession = this.openSession;
+      closeSession = this.#openSession;
     }
 
     this.update({
