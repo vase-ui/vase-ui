@@ -3264,10 +3264,10 @@ describe('<Checkbox.Root />', () => {
       const fixture = within(container);
       expect(getHiddenInput(fixture).checked).toBe(true);
       expect(fixture.getByTestId('changes').textContent).toBe('');
-      const messages = takeReportedMessages();
-      expect(
-        messages.filter((message) => !message.includes('Hydration completed but contains')),
-      ).toEqual([expect.stringMatching(/Hydration attribute mismatch[\s\S]*checked/)]);
+      expect(takeReportedMessages()).toEqual([
+        expect.stringMatching(/^console\.warn: .*Hydration attribute mismatch[\s\S]*checked/),
+        'console.error: Hydration completed but contains mismatches.',
+      ]);
     });
   });
 

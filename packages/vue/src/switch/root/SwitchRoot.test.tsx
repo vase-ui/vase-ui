@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, vi, describe, it, onTestFinished } from 'vitest';
-import { KeepAlive, defineComponent, h, shallowRef } from 'vue';
+import { KeepAlive, createSSRApp, defineComponent, h, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import { Switch } from '@vase-ui/vue/switch';
@@ -15,6 +15,7 @@ import {
   isJSDOM,
   renderOnServer,
   screen,
+  takeReportedMessages,
   waitFor,
   within,
 } from '#test-utils';
@@ -1574,6 +1575,30 @@ describe('<Switch.Root />', () => {
 
       expect(fixture.getByTestId('switch')).toHaveAttribute('aria-checked', 'false');
       expect(fixture.getByTestId('field')).not.toHaveAttribute('data-dirty');
+    });
+
+    it('keeps a client state that differs from the server HTML', async () => {
+      const serverHtml = await renderOnServer(BEFORE_HYDRATION_FIXTURE, { defaultChecked: false });
+      const container = document.createElement('div');
+      document.body.append(container);
+      container.innerHTML = serverHtml;
+      // The client props differ from the server props, so `hydrateAfter` would throw on the
+      // mismatch. Vue does not write `checked` when it hydrates.
+      const app = createSSRApp(SwitchRootBeforeHydration, { defaultChecked: true });
+      onTestFinished(() => {
+        app.unmount();
+        container.remove();
+      });
+      app.mount(container);
+      await flushMicrotasks();
+
+      // Vue does not correct the attributes of a mismatch, so the case reads the input.
+      expect(getInput().checked).toBe(true);
+      expect(within(container).getByTestId('changes').textContent).toBe('');
+      expect(takeReportedMessages()).toEqual([
+        expect.stringMatching(/^console\.warn: .*Hydration attribute mismatch[\s\S]*checked/),
+        'console.error: Hydration completed but contains mismatches.',
+      ]);
     });
   });
 

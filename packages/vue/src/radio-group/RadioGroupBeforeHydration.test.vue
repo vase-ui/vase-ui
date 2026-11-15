@@ -16,6 +16,8 @@ const props = withDefaults(
     textBetween?: boolean;
     // The first value of the model, or the default value.
     value?: string;
+    readOnly?: boolean;
+    disabled?: boolean;
   }>(),
   { mode: 'uncontrolled' },
 );
@@ -50,6 +52,8 @@ function handleValueChange(value: unknown, details: RadioGroupChangeEventDetails
     <component :is="mode === 'field' ? Field.Root : 'div'" data-testid="field">
       <RadioGroup
         :name="named ? 'choice' : undefined"
+        :read-only="readOnly"
+        :disabled="disabled"
         v-bind="groupProps()"
         data-testid="group"
         @value-change="handleValueChange"

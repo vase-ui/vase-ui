@@ -1,5 +1,5 @@
 import { expect, describe, it, vi } from 'vitest';
-import { computed, defineComponent, provide } from 'vue';
+import { computed, defineComponent, provide, shallowRef } from 'vue';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import { NumberField } from '@vase-ui/vue/number-field';
@@ -448,6 +448,27 @@ describe('<Toolbar.Input />', () => {
       expect(fixture.getByTestId('text').textContent).toBe(text);
       expect(fixture.getByTestId('input')).toHaveValue('abcd');
       expect(events).toEqual(['input', 'change', 'blur', 'focusout']);
+    });
+
+    it.each([
+      { name: 'the mount', text: 'abc' },
+      { name: 'a later render', text: 'abcd' },
+    ])('sends no event for the value of $name', async ({ text }) => {
+      const value = shallowRef('abc');
+      const { container } = await render(() => (
+        <Toolbar.Root>
+          <Toolbar.Input value={value.value} data-testid="input" />
+        </Toolbar.Root>
+      ));
+      const events = recordInputEvents(container);
+      value.value = text;
+      await flushMicrotasks();
+      expect(screen.getByTestId('input')).toHaveValue(text);
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(events).toEqual([]);
     });
   });
 });
