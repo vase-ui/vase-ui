@@ -1,9 +1,15 @@
 import { describe, expect, it, onTestFinished } from 'vitest';
-import { createApp, defineComponent, onActivated, onMounted } from 'vue';
+import { createApp, defineComponent, onActivated, onMounted, shallowRef } from 'vue';
 import type { Ref, VNodeChild } from 'vue';
-import { createHeldBranch, createRenderer, flushMicrotasks } from '#test-utils';
+import {
+  createHeldBranch,
+  createRenderer,
+  flushMicrotasks,
+  takeReportedMessages,
+} from '#test-utils';
 import { recordVueWarnings } from '../../test/reportedMessages';
 import { useKeepAliveState } from './useKeepAliveState';
+import type { KeepAliveState } from './useKeepAliveState';
 
 describe('useKeepAliveState', () => {
   const { render } = createRenderer();
@@ -106,5 +112,42 @@ describe('useKeepAliveState', () => {
       expect(log.slice(0, 2)).toEqual(hooks);
       expect([countAtShow, shown?.value]).toEqual(counts);
     });
+  });
+
+  it('counts the next activation of a part whose mount flush ends with a render error', async () => {
+    const isBroken = shallowRef(false);
+    const BreakAfterMount = defineComponent(() => {
+      onMounted(() => {
+        isBroken.value = true;
+      });
+      return () => {
+        if (isBroken.value) {
+          throw new Error('render error');
+        }
+        return null;
+      };
+    });
+    let state: KeepAliveState | undefined;
+    const RecordedPart = defineComponent(() => {
+      state = useKeepAliveState();
+      return () => <span />;
+    });
+    const { HeldBranch, hide, show } = createHeldBranch(() => <RecordedPart />, { mounted: true });
+
+    await expect(
+      render(
+        <>
+          <BreakAfterMount />
+          <HeldBranch />
+        </>,
+      ),
+    ).rejects.toThrow('render error');
+    expect(takeReportedMessages()).toHaveLength(2);
+
+    await hide();
+    await show();
+
+    expect(state?.isHeld.value).toBe(false);
+    expect(state?.shown.value).toBe(1);
   });
 });

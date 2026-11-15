@@ -1,4 +1,4 @@
-import { nextTick, onActivated, onDeactivated, onMounted, shallowRef } from 'vue';
+import { onActivated, onDeactivated, onMounted, shallowRef } from 'vue';
 // eslint-disable-next-line no-restricted-imports -- Vue has no other API that tells a part that it mounts in a branch that `KeepAlive` holds. Vue exports `getCurrentInstance` and types its `parent` and `isDeactivated` fields. A part compiled as a Vapor component gets `false`.
 import { getCurrentInstance } from 'vue';
 import type { Ref } from 'vue';
@@ -54,7 +54,9 @@ export function useKeepAliveState(): KeepAliveState {
 
   onMounted(() => {
     isMountFlush = true;
-    void nextTick(() => {
+    // The promise of `nextTick` rejects when a render of the flush throws. Its callback then does
+    // not run, the flag stays set, and the rejection is not handled.
+    queueMicrotask(() => {
       isMountFlush = false;
     });
   });
