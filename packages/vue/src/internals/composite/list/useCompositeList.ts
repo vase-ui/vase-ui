@@ -17,10 +17,12 @@ interface CompositeListItem<Metadata> {
 }
 
 /**
- * Makes the registry of the items of a composite. The part that owns the list calls it in `setup`.
- * Each item part calls `useCompositeListItem`.
+ * Makes the registry of the items of a composite and returns it. The part that owns the list calls
+ * it in `setup`. Each item part calls `useCompositeListItem`.
  */
-export function useCompositeList<Metadata>(params: UseCompositeListParameters<Metadata>): void {
+export function useCompositeList<Metadata>(
+  params: UseCompositeListParameters<Metadata>,
+): CompositeListContextValue<Metadata> {
   const { elementsRef, labelsRef, onMapChange } = params;
 
   const registrations = new Map<Element, CompositeListRegistration<Metadata>>();
@@ -205,7 +207,11 @@ export function useCompositeList<Metadata>(params: UseCompositeListParameters<Me
     map: computed(() => publishedMap.value),
   };
 
-  provide(CompositeListContext, context);
+  if (params.provide !== false) {
+    provide(CompositeListContext, context);
+  }
+
+  return context;
 }
 
 function getCompositeListSnapshot<Metadata>(
@@ -316,4 +322,11 @@ export interface UseCompositeListParameters<Metadata> {
    * changes.
    */
   onMapChange?: ((newMap: Map<Element, CompositeMetadata<Metadata>>) => void) | undefined;
+  /**
+   * Whether the parts below the caller get the list from `inject`. With `false`, the caller gives
+   * the list to its items, and each item gives it to `useCompositeListItem` as `list`. The other
+   * parts in the slot of the caller then get the list around the caller.
+   * @default true
+   */
+  provide?: boolean | undefined;
 }
