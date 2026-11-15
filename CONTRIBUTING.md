@@ -1035,6 +1035,8 @@ The viewport of a popup, in `src/utils/popups/viewport`, shows the old content w
 - The resize writes the size variables to the popup element and the positioner element, and their rendered style has none of them.
 - A `style` of the consumer on the popup replaces an anchoring declaration that has the same property at the next render.
 - While `KeepAlive` holds the part, the resize measures nothing and a morph in progress ends.
+- The resize measures nothing while the popup is not in the document. The next resize then starts from the size of the last measurement in the document.
+- A change of the trigger gives no `data-activation-direction` while the old trigger or the new trigger is not in the document (`VUE-88`).
 
 ### Focus helpers
 
@@ -1191,6 +1193,7 @@ The interaction composables of a popup are in `src/utils/popups/interactions`.
 - `useClientPoint` writes a virtual element at the pointer to `anchorOverride` for each move, and `null` when the part unmounts. A positioner reads it through `store.select('anchor')`.
 - While it is enabled, `useClientPoint` adds one `mousemove` listener to the window of the positioner element. A mouse-like pointer keeps the listener while the store has that element, so the popup follows the pointer while it closes. A touch pointer keeps it only while the popup is open. The listener removes itself when the pointer moves over the positioner element. A `mouseenter` or `mousemove` event of the trigger adds it again while the popup is open. A popup that a non-mouse event opened, such as a focus or a key press, gets no listener and keeps the anchor of its trigger. While it is not enabled, `useClientPoint` has no listener. It writes the anchor element of the store to `anchorOverride`.
 - `store` of `useClientPoint` is a store, a ref or a getter. When the store changes, the composable removes its window listener. It writes `null` to `anchorOverride` of the old store. It then applies the rules above to the new store.
+- The anchor of `useClientPoint` takes the offset of the cursor from a rect of its reference only while the reference is in the document.
 
 The delay group is in `src/utils/popups/delay-group`. The popups of a group share a delay. While a popup of the group is open, and for `timeoutMs` after it closes, the open delay of the group is 0.
 
@@ -1345,6 +1348,8 @@ The toasts of one `Toast.Provider` are in a `ToastStore`. The code is in `src/to
 - `Toast.Viewport` has one root node. Script makes the focus guard before its element and the alert region after it, and `useElementSiblings` keeps them there. See [Focus helpers](#focus-helpers).
 - `ToastViewportChildren.vue` renders the alerts in the alert region through a `Teleport`. A label that is a function thus renders its component there.
 - `Toast.Root` catches the error of `setPointerCapture`. Firefox throws `NotFoundError` for a pointer that is not active, such as the pointer id of a dispatched event. The swipe then goes on with no capture (`VUE-50`).
+- `Toast.Root` measures no height after `KeepAlive` deactivates it. It measures at the next activation. A new toast keeps `data-starting-style` until then, so its enter transition plays when it shows.
+- `Toast.Root` ends a swipe in progress with no dismissal when `KeepAlive` deactivates it.
 - `Toast.Title` and `Toast.Description` render only while they have content: their default slot, or the label of their toast. Base UI also counts the children of the element of `render`. A part cannot read what its `#render` slot renders, so that content does not count.
 - When the last of two titles of a toast unmounts, the root names the title that stays (`VUE-56`). Base UI gives the root no `aria-labelledby` then. The descriptions follow the same rule for `aria-describedby`.
 - In the `#render` slot of a label part, mount `children` for the label of the toast. To show your own content in another element, give the content in the default slot and the element in `as`.
