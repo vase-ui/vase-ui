@@ -23,8 +23,8 @@ export interface SegmentLayoutOptions {
 
 /**
  * The greatest number of elements in a layout. A layout has at most ten elements that are not
- * literals (a Chinese year has `relatedYear` and `yearName`), and a literal before, between and
- * after them.
+ * literals (a year of the Chinese calendar can have `relatedYear` and `yearName`), and a literal
+ * before, between and after them.
  */
 export const MAX_LAYOUT_LENGTH = 21;
 
