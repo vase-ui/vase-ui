@@ -111,7 +111,7 @@ export function useCompositeListItem<Metadata>(
 
 export interface UseCompositeListItemParameters<Metadata> {
   /**
-   * The list that the item registers with. The default is the list that the nearest
+   * The list that the item registers with. The default is the nearest list that a
    * `useCompositeList` above the item provides. The item reads it one time, in `setup`.
    */
   list?: CompositeListContextValue<Metadata>;
