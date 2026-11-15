@@ -1,7 +1,7 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import { defineComponent, KeepAlive, shallowRef } from 'vue';
-import type { VNodeChild } from 'vue';
+import { defineComponent, shallowRef } from 'vue';
 import {
+  createHeldBranch,
   createRenderer,
   flushMicrotasks,
   isVaporApp,
@@ -24,45 +24,6 @@ import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
 import { Tooltip } from '@vase-ui/vue/tooltip';
 import VaporHeldBranch from './VaporHeldBranch.test.vue';
-
-// A part that mounts in the flush in which `KeepAlive` hides its branch gets `onDeactivated` in
-// that flush. `mountWhileHeld` thus hides the branch in one flush and mounts the part in a later
-// flush.
-function createHeldBranch(renderPart: () => VNodeChild) {
-  const visible = shallowRef(true);
-  const mounted = shallowRef(false);
-  const Branch = defineComponent(() => () => <div>{mounted.value ? renderPart() : null}</div>);
-  const HeldBranch = defineComponent(() => () => (
-    <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
-  ));
-
-  async function mountWhileHeld() {
-    visible.value = false;
-    await flushMicrotasks();
-    mounted.value = true;
-    await flushMicrotasks();
-  }
-
-  async function show() {
-    visible.value = true;
-    await flushMicrotasks();
-  }
-
-  async function hide() {
-    visible.value = false;
-    await flushMicrotasks();
-  }
-
-  // Vue clears `isDeactivated` of the branch after the renders of the flush of the activation. A
-  // part that mounts in that flush thus starts held, and it gets `onActivated` in the same flush.
-  async function mountInActivation() {
-    visible.value = true;
-    mounted.value = true;
-    await flushMicrotasks();
-  }
-
-  return { HeldBranch, mountWhileHeld, show, hide, mountInActivation };
-}
 
 function getLockCount() {
   return getScrollLockRegistry()?.lockCount ?? 0;

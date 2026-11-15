@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { shallowRef } from 'vue';
 import * as Popover from '../index.parts';
-import { createRenderer, describeConformance, flushMicrotasks, screen } from '#test-utils';
+import {
+  createHeldBranch,
+  createRenderer,
+  describeConformance,
+  flushMicrotasks,
+  screen,
+} from '#test-utils';
 import PopoverTitleReplacement from './PopoverTitleReplacement.test.vue';
 
 describe('<Popover.Title />', () => {
@@ -80,5 +86,30 @@ describe('<Popover.Title />', () => {
       'aria-labelledby',
       screen.getByText('Title 2').id,
     );
+  });
+
+  it('does not name the popup with a title that mounts while KeepAlive holds it', async () => {
+    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+      <Popover.Title key="title" id="held-title" />
+    ));
+    await render(() => (
+      <Popover.Root open>
+        <Popover.Portal>
+          <Popover.Positioner>
+            <Popover.Popup>
+              <HeldBranch />
+            </Popover.Popup>
+          </Popover.Positioner>
+        </Popover.Portal>
+      </Popover.Root>
+    ));
+    await flushMicrotasks();
+    const popup = screen.getByRole('dialog');
+
+    await mountWhileHeld();
+    expect(popup).not.toHaveAttribute('aria-labelledby');
+
+    await show();
+    expect(popup).toHaveAttribute('aria-labelledby', 'held-title');
   });
 });

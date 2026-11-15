@@ -4,7 +4,7 @@ import { Progress } from '@vase-ui/vue/progress';
 import { mockRuntimeLocale } from '../../../test/mockRuntimeLocale';
 
 describe('<Progress.Root /> on a server', () => {
-  it('renders the label id, the width of the indicator and the hidden node', async () => {
+  it('VUE-89: renders the label id, the width of the indicator and the hidden node', async () => {
     const html = await renderToString(
       <Progress.Root value={30}>
         <Progress.Label>Upload</Progress.Label>
