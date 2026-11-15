@@ -62,6 +62,7 @@ function createComboboxStore(initialState: Partial<State> = {}) {
       isItemEqualToValue: defaultItemEquality,
     },
     listElement: null,
+    listElementId: undefined,
     popupElementId: undefined,
     triggerElement: null,
     inputElement: null,
