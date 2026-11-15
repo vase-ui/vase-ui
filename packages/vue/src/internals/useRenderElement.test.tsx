@@ -26,7 +26,6 @@ import {
   screen,
   takeReportedMessages,
   waitFor,
-  waitForLaterMillisecond,
 } from '#test-utils';
 import OverridingStylePart from '../../test/fixtures/OverridingStylePart.vue';
 import { EMPTY_OBJECT } from '../common/empty';
@@ -1261,10 +1260,8 @@ describe('useRenderElement', () => {
 
       withHandlers.value = false;
       await nextTick();
-      await waitForLaterMillisecond(() => {
-        withHandlers.value = true;
-        return nextTick();
-      });
+      withHandlers.value = true;
+      await nextTick();
       screen.getByTestId('target').focus();
 
       expect(focusin).toHaveBeenCalledTimes(1);

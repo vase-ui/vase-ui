@@ -13,7 +13,7 @@ import {
   useAttrs,
   useSlots,
 } from 'vue';
-// eslint-disable-next-line no-restricted-imports -- The second focus listener gives an error of a handler to the error handler of the app, as a Vue listener does. Vue needs the instance of the part for that. In a Vapor component the instance is `null`, and Vue then logs the error.
+// eslint-disable-next-line no-restricted-imports -- The second focus listener gives an error of a handler to the error handler of the app, as a Vue listener does. Vue needs the instance of the part for that. A Vapor component gets `null`. Vue's listener on an element of a Vapor template skips no event, so there the second listener calls no handler.
 import { getCurrentInstance } from 'vue';
 import type {
   ComponentPublicInstance,
@@ -61,8 +61,8 @@ export function markChildrenMounted(): void {
 }
 
 // Vue skips a Vue listener that it attached in the millisecond of an event when an earlier Vue
-// listener got the event. `focus` and `blur` do not bubble, so the Vue listener of the target gets
-// each of them first.
+// listener got the event. `focus` and `blur` do not bubble, and no part has a Vue listener for them
+// in the capture phase. The Vue listener of the target thus gets each of them first.
 const FOCUS_KEYS = {
   onFocusin: { type: 'focusin', capture: false },
   onFocusout: { type: 'focusout', capture: false },
