@@ -78,6 +78,50 @@ onMounted(restoreDemoVariant);
   color: white;
 }
 
+/* A copied style sheet gives the placeholder of a trigger `oklch(55.6% 0 0)` in the light theme and
+   `oklch(70.8% 0 0)` in the dark theme. Behind that text the trigger paints a hover color, a color
+   for an open popup and a color for `:active`. In the light theme the contrast is 4.35:1 on the
+   first two and 3.76:1 on the third. In the dark theme it is 4.01:1 on the third. These rules use
+   the next gray of the sheets that has 4.5:1 or more on each of these colors, in each state, so
+   the text does not change its color when the pointer comes. A trigger in `ActionButtons` shows
+   only an icon. The last selector is the class that gives the color in the Tailwind variant. */
+.demo-frame
+  :deep(
+    :is(
+      [class*='_Value_'],
+      [class*='_Trigger_']:not([class*='_ActionButtons_'] *),
+      [class~='data-placeholder:text-neutral-500']
+    )[data-placeholder]
+  ) {
+  color: oklch(43.9% 0 0deg);
+}
+
+.dark
+  .demo-frame
+  :deep(
+    :is(
+      [class*='_Value_'],
+      [class*='_Trigger_']:not([class*='_ActionButtons_'] *),
+      [class~='data-placeholder:text-neutral-500']
+    )[data-placeholder]
+  ) {
+  color: oklch(87% 0 0deg);
+}
+
+/* A copied style sheet gives a red button `oklch(70.4% 0.191 22.216)` in the dark theme. On the
+   color of `:active`, `oklch(37.1% 0 0)`, that text has 3.59:1 contrast. The sheets have no lighter
+   red, so this rule uses the next lighter red of the Tailwind palette, which is the palette of the
+   sheets. It has 5.40:1. */
+.dark
+  .demo-frame
+  :deep(
+    :is([class*='_Button_'][data-color='red'], [class*='_DangerButton_']):active:not(
+        [data-disabled]
+      )
+  ) {
+  color: oklch(80.8% 0.114 19.571deg);
+}
+
 .demo:has(> .demo-toolbar) .demo-frame,
 .demo:has(+ .vp-code-group, + .demo-source) .demo-frame {
   border-end-start-radius: 0;
