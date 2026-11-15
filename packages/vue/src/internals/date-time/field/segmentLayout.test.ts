@@ -103,6 +103,27 @@ describe('getSegmentLayout', () => {
     expect(types({ calendar: 'iso8601' })).toEqual(types({ calendar: 'gregory' }));
   });
 
+  // `resolvedOptions()` of these calendars has no `year` in Node.js. Their pattern gives
+  // `relatedYear`, so the layout keeps the pattern with no era.
+  it.each([
+    { name: 'the Chinese calendar in en-US', locale: 'en-US', calendar: 'chinese' },
+    { name: 'the Dangi calendar in ko-KR', locale: 'ko-KR', calendar: 'dangi' },
+  ])('keeps the layout of $name with no era', ({ locale, calendar }) => {
+    const [format, epoch] = formatter(
+      Temporal.PlainDate.from('2026-11-14').withCalendar(calendar),
+      { year: 'numeric', month: 'numeric', day: 'numeric' },
+      locale,
+    );
+    const parts = format
+      .formatToParts(epoch)
+      .map(({ type, value }) => (type === 'literal' ? value : type));
+    const { segments } = getSegmentLayout(locale, { ...DATE_TIME, time: undefined, calendar });
+
+    expect(segments.map(({ type, text }) => (type === 'literal' ? text : type))).toEqual(
+      parts.map((part) => (part === 'relatedYear' ? 'year' : part)),
+    );
+  });
+
   it('maps the parts that Intl gives, and joins the literals that follow each other', () => {
     // `Intl` has the parts `relatedYear` and `yearName` for a Chinese year, and TypeScript has not.
     const part = (type: string, value: string) => ({ type, value }) as Intl.DateTimeFormatPart;
@@ -234,11 +255,6 @@ describe('MAX_LAYOUT_LENGTH', () => {
       let most = 0;
       for (const locale of LOCALES) {
         for (const calendar of calendars) {
-          // `field.polyfill.node.test.tsx` runs this case in Node.js, where V8 aborts the process
-          // for the default pattern of `my-MM` in a calendar that is not Gregorian (26.13.1).
-          if (locale === 'my-MM' && calendar !== 'iso8601' && calendar !== 'gregory') {
-            continue;
-          }
           for (const hourCycle of [undefined, 12, 24] as const) {
             const { segments } = getSegmentLayout(locale, {
               date,
