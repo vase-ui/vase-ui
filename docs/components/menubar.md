@@ -6,7 +6,9 @@ description: An unstyled Vue menu bar component that provides commands and optio
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoMenubarHero from '../demos/menubar/hero/css-modules/index.vue';
+import DemoMenubarHeroTailwind from '../demos/menubar/hero/tailwind/index.vue';
 </script>
 
 # Menubar
@@ -15,7 +17,12 @@ A menu bar that provides commands and options for your application.
 
 <DemoFrame>
   <DemoMenubarHero />
+  <template #tailwind>
+    <DemoMenubarHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -24,6 +31,18 @@ A menu bar that provides commands and options for your application.
 <<< ../demos/menubar/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/menubar/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Anatomy
 

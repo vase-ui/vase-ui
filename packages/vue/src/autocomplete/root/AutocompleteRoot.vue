@@ -387,6 +387,11 @@ const { actions, inputElement, hiddenInputProps } = useAriaCombobox<ItemValue, '
     onSelectedValueChange() {},
     onInputValueChange(value, eventDetails) {
       inlineInputValue.value = '';
+      // The root emits no change for its value (`VUE-91`). The input can show an inline completion,
+      // so the root compares the text with the typed value and not with the text of the input.
+      if (value === String(typedValue.value ?? '')) {
+        return;
+      }
       emit('valueChange', value, eventDetails);
       if (eventDetails.isCanceled) {
         return;

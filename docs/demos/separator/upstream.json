@@ -3,6 +3,19 @@
   "upstream": "docs/src/app/(docs)/react/components/separator/demos",
   "files": {
     "hero/css-modules/index.module.css": "9f9f09aad33f5566525d7adacd8e807085819294d4403462df782a1620dc03c8",
-    "hero/css-modules/index.tsx": "ace1fe33122efb63c2cd983ebdcc180d9afc43625270233b495404752f212ed9"
+    "hero/css-modules/index.tsx": "ace1fe33122efb63c2cd983ebdcc180d9afc43625270233b495404752f212ed9",
+    "hero/tailwind/index.tsx": "0b2909eae0b739d8ed8a119ef5ff1d77ed8174af8a5c09eb34e5d805458a69b3"
+  },
+  "classes": {
+    "hero/tailwind": [
+      "flex gap-4 text-nowrap",
+      "text-sm text-neutral-950 decoration-neutral-300 decoration-1 underline-offset-2 hover:underline focus-visible:no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:text-white dark:decoration-neutral-700",
+      "text-sm text-neutral-950 decoration-neutral-300 decoration-1 underline-offset-2 hover:underline focus-visible:no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:text-white dark:decoration-neutral-700",
+      "text-sm text-neutral-950 decoration-neutral-300 decoration-1 underline-offset-2 hover:underline focus-visible:no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:text-white dark:decoration-neutral-700",
+      "text-sm text-neutral-950 decoration-neutral-300 decoration-1 underline-offset-2 hover:underline focus-visible:no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:text-white dark:decoration-neutral-700",
+      "text-sm text-neutral-950 decoration-neutral-300 decoration-1 underline-offset-2 hover:underline focus-visible:no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:text-white dark:decoration-neutral-700",
+      "text-sm text-neutral-950 decoration-neutral-300 decoration-1 underline-offset-2 hover:underline focus-visible:no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:text-white dark:decoration-neutral-700",
+      "w-px bg-neutral-300 dark:bg-neutral-700"
+    ]
   }
 }

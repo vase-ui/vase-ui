@@ -7,6 +7,7 @@ import {
   fireEvent,
   firePointer,
   flushMicrotasks,
+  nestedPopupCloseTests,
   nextEvent,
   nextAnimationsRead,
   screen,
@@ -1105,6 +1106,14 @@ describe('<Drawer.Popup />', () => {
       });
 
       expect(focusedDuringExit).toBe(screen.getByRole('button', { name: 'Open' }));
+    });
+  });
+
+  describe('BUG-5519: a popup in the popup that closes with it', () => {
+    nestedPopupCloseTests({
+      parts: Drawer,
+      wrapPopup: (popup) => <Drawer.Viewport>{popup}</Drawer.Viewport>,
+      render,
     });
   });
 

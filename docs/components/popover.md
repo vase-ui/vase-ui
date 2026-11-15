@@ -6,11 +6,17 @@ description: An unstyled Vue popover component that shows an accessible popup an
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoPopoverDetachedTriggersControlled from '../demos/popover/detached-triggers-controlled/css-modules/index.vue';
+import DemoPopoverDetachedTriggersControlledTailwind from '../demos/popover/detached-triggers-controlled/tailwind/index.vue';
 import DemoPopoverDetachedTriggersFull from '../demos/popover/detached-triggers-full/css-modules/index.vue';
+import DemoPopoverDetachedTriggersFullTailwind from '../demos/popover/detached-triggers-full/tailwind/index.vue';
 import DemoPopoverDetachedTriggersSimple from '../demos/popover/detached-triggers-simple/css-modules/index.vue';
+import DemoPopoverDetachedTriggersSimpleTailwind from '../demos/popover/detached-triggers-simple/tailwind/index.vue';
 import DemoPopoverHero from '../demos/popover/hero/css-modules/index.vue';
+import DemoPopoverHeroTailwind from '../demos/popover/hero/tailwind/index.vue';
 import DemoPopoverOpenOnHover from '../demos/popover/open-on-hover/css-modules/index.vue';
+import DemoPopoverOpenOnHoverTailwind from '../demos/popover/open-on-hover/tailwind/index.vue';
 </script>
 
 # Popover
@@ -19,7 +25,12 @@ An accessible popup anchored to a button.
 
 <DemoFrame>
   <DemoPopoverHero />
+  <template #tailwind>
+    <DemoPopoverHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -28,6 +39,18 @@ An accessible popup anchored to a button.
 <<< ../demos/popover/_index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/popover/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Anatomy
 
@@ -45,7 +68,12 @@ The `delay` prop gives the time in milliseconds to wait before the popover opens
 
 <DemoFrame>
   <DemoPopoverOpenOnHover />
+  <template #tailwind>
+    <DemoPopoverOpenOnHoverTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -54,6 +82,18 @@ The `delay` prop gives the time in milliseconds to wait before the popover opens
 <<< ../demos/popover/_index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/popover/open-on-hover/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ### Detached triggers
 
@@ -67,7 +107,12 @@ The methods of the handle, `open()` and `close()`, need a mounted `<Popover.Root
 
 <DemoFrame>
   <DemoPopoverDetachedTriggersSimple />
+  <template #tailwind>
+    <DemoPopoverDetachedTriggersSimpleTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -76,6 +121,18 @@ The methods of the handle, `open()` and `close()`, need a mounted `<Popover.Root
 <<< ../demos/popover/_index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/popover/detached-triggers-simple/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ### Multiple triggers
 
@@ -99,7 +156,12 @@ The root has no event for a change of the trigger. The `openChange` event gives 
 
 <DemoFrame>
   <DemoPopoverDetachedTriggersControlled />
+  <template #tailwind>
+    <DemoPopoverDetachedTriggersControlledTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -108,6 +170,18 @@ The root has no event for a change of the trigger. The `openChange` event gives 
 <<< ../demos/popover/_index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/popover/detached-triggers-controlled/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ### Animating the Popover
 
@@ -132,7 +206,12 @@ Use `Popover.Viewport` only when one popup has more than one trigger, the conten
 
 <DemoFrame>
   <DemoPopoverDetachedTriggersFull />
+  <template #tailwind>
+    <DemoPopoverDetachedTriggersFullTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -141,6 +220,18 @@ Use `Popover.Viewport` only when one popup has more than one trigger, the conten
 <<< ../demos/popover/detached-triggers-full/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/popover/detached-triggers-full/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## API reference
 

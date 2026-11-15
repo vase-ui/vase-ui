@@ -6,7 +6,9 @@ description: A direction provider component that enables RTL behavior for Vase U
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoDirectionProviderHero from '../demos/direction-provider/hero/css-modules/index.vue';
+import DemoDirectionProviderHeroTailwind from '../demos/direction-provider/hero/tailwind/index.vue';
 </script>
 
 # Direction Provider
@@ -15,7 +17,12 @@ Enables RTL behavior for Vase UI components.
 
 <DemoFrame>
   <DemoDirectionProviderHero />
+  <template #tailwind>
+    <DemoDirectionProviderHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -24,6 +31,18 @@ Enables RTL behavior for Vase UI components.
 <<< ../demos/direction-provider/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/direction-provider/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Anatomy
 

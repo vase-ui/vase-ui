@@ -3,6 +3,16 @@
   "upstream": "docs/src/app/(docs)/react/components/field/demos",
   "files": {
     "hero/css-modules/index.module.css": "37abe8c6c178476dab7a529e5d993731592b42a552fddacb1c70ea46e41ecb58",
-    "hero/css-modules/index.tsx": "0333b4ae1ef17036d29efd1383a67678d16f972b8de6ffbb76d092028789321a"
+    "hero/css-modules/index.tsx": "0333b4ae1ef17036d29efd1383a67678d16f972b8de6ffbb76d092028789321a",
+    "hero/tailwind/index.tsx": "037dcac6975c6dfabe8b95d41e0e82335d6aac2093b7e2ad76bf820e6401ce73"
+  },
+  "classes": {
+    "hero/tailwind": [
+      "flex w-full max-w-64 flex-col items-start gap-1",
+      "h-8 self-stretch border border-neutral-950 bg-white dark:bg-neutral-950 px-2 text-sm any-pointer-coarse:text-base font-normal text-neutral-950 placeholder:text-neutral-500 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white dark:border-white dark:text-white dark:placeholder:text-neutral-400",
+      "text-sm font-bold text-neutral-950 dark:text-white",
+      "text-sm text-neutral-600 dark:text-neutral-400",
+      "text-sm text-red-700 dark:text-red-400"
+    ]
   }
 }

@@ -200,12 +200,10 @@ const focusTimeout = useTimeout();
 
 // The cleanup also runs on a server, so it removes the listener only from the document that got it.
 let mouseUpDocument: Document | null = null;
-let press: MouseEvent | null = null;
 
 function removeMouseUpListener() {
   mouseUpDocument?.removeEventListener('mouseup', handleMouseUp);
   mouseUpDocument = null;
-  press = null;
 }
 
 function handleMouseUp(mouseEvent: MouseEvent) {
@@ -228,6 +226,7 @@ function handleMouseUp(mouseEvent: MouseEvent) {
     return;
   }
 
+  const press = store.context.openPressRef.value;
   if (press && isReleaseAtPressPoint(press, mouseEvent)) {
     return;
   }
@@ -332,7 +331,6 @@ const { element, elementProps } = useRenderElement('button', props, {
 
         removeMouseUpListener();
         mouseUpDocument = ownerDocument(trigger);
-        press = event;
         mouseUpDocument.addEventListener('mouseup', handleMouseUp, { once: true });
       },
       onKeydown(event: KeyboardEvent) {
