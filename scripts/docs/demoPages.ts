@@ -147,9 +147,10 @@ function checkFrame(frame: Frame, demoFiles: ReadonlySet<string>): FrameCheck {
 }
 
 /**
- * Checks the frames of the pages. Each Tailwind demo is in the `#tailwind` slot of one frame, on the
- * page of its family, and the sources of the two variants follow the frame. `demoFiles` holds the
- * path of each file under `docs/demos`, from that folder.
+ * Checks the frames of the pages. Each frame has a form of the frames of `docs/components/button.md`.
+ * Each Tailwind demo is in the `#tailwind` slot of one frame, on the page of its family, and the
+ * sources of the two variants follow the frame. `demoFiles` holds the path of each file under
+ * `docs/demos`, from that folder.
  */
 export function checkDemoPages(pages: DemoPage[], demoFiles: ReadonlySet<string>): string[] {
   const problems: string[] = [];
