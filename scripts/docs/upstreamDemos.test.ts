@@ -297,6 +297,9 @@ test('the check reports a Tailwind demo with no Vue file when each entry point t
 
 const FORMS_DEMOS = 'docs/src/app/(docs)/react/handbook/forms/demos';
 
+/** The class string that the Vue demo `vee-validate` has more than its row, on its native form. */
+const FORM_CLASS = 'flex w-full max-w-3xs flex-col gap-5 sm:max-w-[20rem]';
+
 /** A family whose Base UI demo `react-hook-form` is the Vue demo `vee-validate`. */
 function makeFormsFamily(overrides: Partial<DemoFamily> = {}): DemoFamily {
   return {
@@ -312,7 +315,7 @@ function makeFormsFamily(overrides: Partial<DemoFamily> = {}): DemoFamily {
       ['upstream.json', sha256('record')],
       ['vee-validate/tailwind/index.vue', sha256('vue')],
     ]),
-    vueClasses: new Map([['react-hook-form/tailwind', [CLASS_A]]]),
+    vueClasses: new Map([['react-hook-form/tailwind', [CLASS_A, FORM_CLASS]]]),
     ...overrides,
   };
 }
@@ -335,9 +338,20 @@ test('the check names the Vue folder of a demo that has another name in Base UI'
       ENTRY_POINTS,
     ),
     [
-      `docs/demos/handbook-forms/vee-validate/tailwind has class strings that differ from Base UI. Absent: "${CLASS_A}". Copy each class string from the Base UI file. Do not change it.`,
+      `docs/demos/handbook-forms/vee-validate/tailwind has class strings that differ from Base UI. Absent: "${CLASS_A}", "${FORM_CLASS}". Copy each class string from the Base UI file. Do not change it.`,
     ],
   );
+});
+
+test('the Vue demo of another library has the class string of the element that it needs, one time', () => {
+  const withClasses = (strings: string[]): DemoFamily =>
+    makeFormsFamily({ vueClasses: new Map([['react-hook-form/tailwind', strings]]) });
+  assert.deepEqual(checkDemos([withClasses([CLASS_A])], ENTRY_POINTS), [
+    `docs/demos/handbook-forms/vee-validate/tailwind has class strings that differ from Base UI. Absent: "${FORM_CLASS}". Copy each class string from the Base UI file. Do not change it.`,
+  ]);
+  assert.deepEqual(checkDemos([withClasses([CLASS_A, FORM_CLASS, FORM_CLASS])], ENTRY_POINTS), [
+    `docs/demos/handbook-forms/vee-validate/tailwind has class strings that differ from Base UI. Extra: "${FORM_CLASS}". Copy each class string from the Base UI file. Do not change it.`,
+  ]);
 });
 
 const NO_FAMILY_FILE =
