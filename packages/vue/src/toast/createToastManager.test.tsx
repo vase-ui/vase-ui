@@ -1,7 +1,14 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { defineComponent, Fragment } from 'vue';
-import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
+import {
+  createRenderer,
+  fireEvent,
+  flushMicrotasks,
+  screen,
+  takeReportedMessages,
+} from '#test-utils';
 import { Toast } from '@vase-ui/vue/toast';
+import type { ToastManager } from './createToastManager';
 import type { ToastObject } from './useToastManager';
 import { List } from './utils/test-utils';
 
@@ -327,6 +334,117 @@ describe('createToastManager', () => {
       await flushMicrotasks();
 
       expect(screen.queryByTestId('title')).toBe(null);
+    });
+  });
+
+  describe('VUE-90: one manager in more than one provider', () => {
+    async function renderProviders(toastManager: ToastManager, count: number) {
+      await render(
+        <Fragment>
+          {Array.from({ length: count }, (_, index) => (
+            <Toast.Provider key={index} toastManager={toastManager} />
+          ))}
+        </Fragment>,
+      );
+    }
+
+    // The browser reports the rejections that have no handler in their sequence. The rejection of
+    // the case comes after the action, so its report comes after each report of the action.
+    async function rejectionsWithNoHandler(action: () => void) {
+      const reported: Promise<unknown>[] = [];
+      const last = Promise.withResolvers<never>();
+      const lastReported = Promise.withResolvers<void>();
+      const record = ({ promise }: PromiseRejectionEvent) => {
+        reported.push(promise);
+        if (promise === last.promise) {
+          lastReported.resolve();
+        }
+      };
+      window.addEventListener('unhandledrejection', record);
+      onTestFinished(() => window.removeEventListener('unhandledrejection', record));
+
+      action();
+      await flushMicrotasks();
+      last.reject(new Error('The last rejection of the case.'));
+      await lastReported.promise;
+
+      // Vitest writes each report to the console while a test has a listener for the report.
+      expect(takeReportedMessages()).toEqual(
+        reported.map(() => 'console.error: [object PromiseRejectionEvent]'),
+      );
+      return reported.slice(0, -1);
+    }
+
+    const options = { loading: 'loading', success: 'success', error: 'error' };
+
+    it.each([
+      { name: 'one provider', count: 1 },
+      { name: 'two providers', count: 2 },
+    ])(
+      'leaves no rejection with no handler when the caller handles it: $name',
+      async ({ count }) => {
+        const toastManager = Toast.createToastManager();
+        await renderProviders(toastManager, count);
+        const reason = new Error('reason');
+        let caught: unknown;
+
+        const reported = await rejectionsWithNoHandler(() => {
+          toastManager.promise(Promise.reject(reason), options).catch((error: unknown) => {
+            caught = error;
+          });
+        });
+
+        expect(caught).toBe(reason);
+        expect(reported).toEqual([]);
+      },
+    );
+
+    it.each([
+      { name: 'no provider', count: 0 },
+      { name: 'one provider', count: 1 },
+      { name: 'two providers', count: 2 },
+    ])(
+      'reports only the returned promise when the caller has no handler: $name',
+      async ({ count }) => {
+        const toastManager = Toast.createToastManager();
+        await renderProviders(toastManager, count);
+        let returned: Promise<unknown> | undefined;
+
+        const reported = await rejectionsWithNoHandler(() => {
+          returned = toastManager.promise(Promise.reject(new Error('reason')), options);
+        });
+
+        expect(reported.map((promise) => promise === returned)).toEqual([true]);
+      },
+    );
+
+    it.each([
+      { name: 'no provider', count: 0 },
+      { name: 'one provider', count: 1 },
+      { name: 'two providers', count: 2 },
+    ])('resolves with the value of the given promise: $name', async ({ count }) => {
+      const toastManager = Toast.createToastManager();
+      await renderProviders(toastManager, count);
+
+      await expect(toastManager.promise(Promise.resolve('value'), options)).resolves.toBe('value');
+    });
+
+    it.each([
+      { name: 'one provider', count: 1 },
+      { name: 'two providers', count: 2 },
+    ])('rejects with the error that the success function throws: $name', async ({ count }) => {
+      const toastManager = Toast.createToastManager();
+      await renderProviders(toastManager, count);
+      const error = new Error('success');
+
+      await expect(
+        toastManager.promise(Promise.resolve('value'), {
+          ...options,
+          success: () => {
+            throw error;
+          },
+        }),
+      ).rejects.toBe(error);
     });
   });
 

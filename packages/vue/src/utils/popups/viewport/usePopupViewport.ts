@@ -175,7 +175,11 @@ export function usePopupViewport(parameters: UsePopupViewportParameters): UsePop
 
     previousContent.value = takePicture(container);
     showStartingStyle.value = true;
-    triggerOffset.value = calculateRelativePosition(previousTrigger, trigger);
+    // A trigger that `KeepAlive` holds is not on the page, so the change has no direction.
+    triggerOffset.value =
+      previousTrigger.isConnected && trigger.isConnected
+        ? calculateRelativePosition(previousTrigger, trigger)
+        : null;
   });
 
   let cleanupController: AbortController | undefined;

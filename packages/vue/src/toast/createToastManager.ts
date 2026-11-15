@@ -65,7 +65,7 @@ export function createToastManager<Data extends object = any>(): ToastManager<Da
       promiseValue: Promise<Value>,
       options: ToastManagerPromiseOptions<Value, T>,
     ): Promise<Value> {
-      let handledPromise = promiseValue;
+      const providerPromises: Promise<Value>[] = [];
 
       emit({
         action: 'promise',
@@ -73,12 +73,14 @@ export function createToastManager<Data extends object = any>(): ToastManager<Da
           ...options,
           promise: promiseValue,
           setPromise(promise: Promise<Value>) {
-            handledPromise = promise;
+            providerPromises.push(promise);
           },
         },
       });
 
-      return handledPromise;
+      // Each provider of the manager gives a promise that rejects when the given promise rejects.
+      // The returned promise waits for all of them, so no such rejection stays with no handler.
+      return Promise.all(providerPromises).then(() => promiseValue);
     },
   };
 }

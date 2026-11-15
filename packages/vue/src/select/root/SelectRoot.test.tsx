@@ -38,7 +38,6 @@ import {
 } from '#test-utils';
 import { actOnElement } from '../../../test/fixtures/actOnElement';
 import { isScrollLocked } from '../../../test/fixtures/scrollDocument';
-import { platform } from '../../common/platform';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import * as Popover from '../../popover/index.parts';
@@ -49,8 +48,6 @@ import SelectRootBeforeHydration from './SelectRootBeforeHydration.test.vue';
 import SelectRootHydration from './SelectRootHydration.test.vue';
 
 const BEFORE_HYDRATION_FIXTURE = 'src/select/root/SelectRootBeforeHydration.test.vue';
-
-const isWebKit = platform.engine.webkit;
 
 type ChangeDetails = Select.Root.ChangeEventDetails;
 type OpenChangeDetails = Select.Root.OpenChangeEventDetails;
@@ -7768,11 +7765,7 @@ describe('<Select.Root />', () => {
 
       for (const item of [bottomEdgeItem, topEdgeItem]) {
         await user.hover(item);
-        if (isWebKit) {
-          // WebKit gives the hover of user-event a `mousemove` with no movement, and the list
-          // navigation ignores it. See https://github.com/mui/base-ui/issues/4002.
-          await fireEvent.mouseMove(item, { movementX: 1, movementY: 1 });
-        }
+        await fireEvent.mouseMove(item, { movementX: 1 });
         await waitFor(() => {
           expect(item).toHaveAttribute('data-highlighted');
         });
