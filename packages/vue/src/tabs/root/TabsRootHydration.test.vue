@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { computed, onMounted, shallowRef } from 'vue';
 import { Tabs } from '@vase-ui/vue/tabs';
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     value?: string | number | null;
     defaultValue?: string | number | null;
@@ -10,6 +11,7 @@ withDefaults(
     firstDisabled?: boolean;
     panel?: 'none' | 'before' | 'after';
     ids?: boolean;
+    removedAtMount?: 'none' | 'list' | 'panel';
   }>(),
   {
     value: undefined,
@@ -17,8 +19,15 @@ withDefaults(
     orientation: 'horizontal',
     panel: 'none',
     ids: true,
+    removedAtMount: 'none',
   },
 );
+
+const isMounted = shallowRef(false);
+onMounted(() => {
+  isMounted.value = true;
+});
+const removed = computed(() => (isMounted.value ? props.removedAtMount : 'none'));
 </script>
 
 <template>
@@ -29,12 +38,12 @@ withDefaults(
     data-testid="root"
   >
     <Tabs.Panel
-      v-if="panel === 'before'"
+      v-if="panel === 'before' && removed !== 'panel'"
       :value="numeric ? 0 : 'a'"
       :id="ids ? 'panel-a' : undefined"
       data-testid="panel-a"
     />
-    <Tabs.List>
+    <Tabs.List v-if="removed !== 'list'">
       <Tabs.Tab
         :value="numeric ? 0 : 'a'"
         :disabled="firstDisabled"
@@ -47,7 +56,7 @@ withDefaults(
       <Tabs.Tab :value="numeric ? 2 : 'c'" data-testid="c">C</Tabs.Tab>
     </Tabs.List>
     <Tabs.Panel
-      v-if="panel === 'after'"
+      v-if="panel === 'after' && removed !== 'panel'"
       :value="numeric ? 0 : 'a'"
       :id="ids ? 'panel-a' : undefined"
       data-testid="panel-a"

@@ -44,6 +44,7 @@ export interface TabsPanelProps
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useIsHydrating } from '../../common/hydration';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
@@ -86,6 +87,8 @@ const {
 // A tab registers its id in `setup`, and it can come after the panel.
 useDeferredServerRender();
 
+const isHydrating = useIsHydrating();
+
 const panelId = useVaseUiId(() => props.id);
 
 const { ref: listItemRef, index } = useCompositeListItem();
@@ -120,7 +123,11 @@ const { element, elementProps } = useRenderElement('div', props, {
   ref: [listItemRef],
   props: (attrs) => [
     {
-      'aria-labelledby': getTabIdByPanelValue(props.value),
+      // Hydration does not patch an attribute. `null` and `undefined` are different values, so
+      // the render after the mount removes an `aria-labelledby` of the server HTML that names a
+      // removed tab.
+      'aria-labelledby':
+        getTabIdByPanelValue(props.value) ?? (isHydrating.value ? null : undefined),
       // Vue writes `false` as the attribute `hidden="false"` on an element that is not HTML.
       hidden: hidden.value ? true : undefined,
       id: panelId.value,

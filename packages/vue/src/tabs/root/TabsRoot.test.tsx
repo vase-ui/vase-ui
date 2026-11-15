@@ -2997,6 +2997,35 @@ describe('<Tabs.Root />', () => {
         expect(readIds(container)).toEqual({ controls: 'panel-a', labelledby: 'tab-a' });
       },
     );
+
+    it.each([
+      {
+        name: 'the panel after the list',
+        props: { defaultValue: 'a', panel: 'after', removedAtMount: 'panel' },
+        selector: '[data-testid="a"]',
+        attribute: 'aria-controls',
+        serverId: 'panel-a',
+      },
+      {
+        name: 'the list after the panel',
+        props: { defaultValue: 'a', panel: 'before', removedAtMount: 'list' },
+        selector: '[data-testid="panel-a"]',
+        attribute: 'aria-labelledby',
+        serverId: 'tab-a',
+      },
+    ] as const)(
+      'VUE-80: removes an id of the server HTML when the page removes the part at the mount, $name',
+      async ({ props, selector, attribute, serverId }) => {
+        const serverHtml = await renderOnServer(HYDRATION_FIXTURE, props);
+        const template = document.createElement('template');
+        template.innerHTML = serverHtml;
+        expect(template.content.querySelector(selector)?.getAttribute(attribute)).toBe(serverId);
+
+        const { container } = await hydrate(TabsRootHydration, { serverHtml, props });
+
+        expect(container.querySelector(selector)).not.toHaveAttribute(attribute);
+      },
+    );
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current

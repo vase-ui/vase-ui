@@ -77,6 +77,7 @@ export interface TabsTabProps
 
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue';
+import { useIsHydrating } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
 import { activeElement, contains } from '../../common/shadowDom';
 import { ACTIVE_COMPOSITE_ITEM } from '../../internals/composite/constants';
@@ -120,6 +121,8 @@ const { highlightedIndex, onHighlightedIndexChange } = useCompositeRootContext()
 
 // A panel registers its id in `setup`, and it can come after the tab.
 useDeferredServerRender();
+
+const isHydrating = useIsHydrating();
 
 const tabId = useVaseUiId(() => props.id);
 const active = computed(() => props.value === activeTabValue.value);
@@ -267,7 +270,10 @@ const { element, elementProps } = useRenderElement('button', props, {
     compositeProps.value,
     {
       role: 'tab',
-      'aria-controls': getTabPanelIdByValue(props.value),
+      // Hydration does not patch an attribute. `null` and `undefined` are different values, so
+      // the render after the mount removes an `aria-controls` of the server HTML that names a
+      // removed panel.
+      'aria-controls': getTabPanelIdByValue(props.value) ?? (isHydrating.value ? null : undefined),
       'aria-selected': active.value,
       id: tabId.value,
       onClick,
