@@ -8,6 +8,7 @@ import {
   onMounted,
   provide,
   shallowRef,
+  watch,
 } from 'vue';
 import type { MaybeRefOrGetter, PropType } from 'vue';
 import {
@@ -1554,6 +1555,31 @@ describe('usePopupRoot', () => {
       expect(handle.isOpen).toBe(true);
       expect(queryByRole('dialog')).not.toBe(null);
       expect(getByText('trigger')).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    it('changes isOpen of its handle one time at its mount, at its deactivation and at its activation by KeepAlive', async () => {
+      const handle = createPopupFixtureHandle<string>();
+      const changes: boolean[] = [];
+      const stop = watch(
+        () => handle.isOpen,
+        (isOpen) => {
+          changes.push(isOpen);
+        },
+        { flush: 'sync' },
+      );
+      onTestFinished(stop);
+      const { HeldBranch, hide, show } = createHeldBranch(
+        () => <PopupRootPart handle={handle} defaultOpen />,
+        { mounted: true },
+      );
+      await render(() => <HeldBranch />);
+      expect(changes).toEqual([true]);
+
+      await hide();
+      expect(changes).toEqual([true, false]);
+
+      await show();
+      expect(changes).toEqual([true, false, true]);
     });
 
     it('gives a new handle its store at the activation when the handle prop changes while KeepAlive holds the root', async () => {
