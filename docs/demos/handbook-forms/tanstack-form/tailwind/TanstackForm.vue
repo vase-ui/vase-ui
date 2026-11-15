@@ -3,31 +3,20 @@ import { revalidateLogic, useForm } from '@tanstack/vue-form';
 import type { DeepKeys, ValidationError } from '@tanstack/vue-form';
 import { h } from 'vue';
 import type { FunctionalComponent } from 'vue';
-import { Autocomplete } from '@vase-ui/vue/autocomplete';
-import { Button } from '@vase-ui/vue/button';
-import { Checkbox } from '@vase-ui/vue/checkbox';
-import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
-import { Combobox } from '@vase-ui/vue/combobox';
-import { Field } from '@vase-ui/vue/field';
-import { Fieldset } from '@vase-ui/vue/fieldset';
-import { NumberField } from '@vase-ui/vue/number-field';
-import { Radio } from '@vase-ui/vue/radio';
-import { RadioGroup } from '@vase-ui/vue/radio-group';
-import { Select } from '@vase-ui/vue/select';
-import { Slider } from '@vase-ui/vue/slider';
-import { Switch } from '@vase-ui/vue/switch';
-import { Toast } from '@vase-ui/vue/toast';
-import layout from '../../../../examples/forms/layout.module.css';
-import autocompleteStyles from '../../../autocomplete/hero/css-modules/index.module.css';
-import buttonStyles from '../../../button/hero/css-modules/index.module.css';
-import checkboxGroupStyles from '../../../checkbox-group/hero/css-modules/index.module.css';
-import comboboxStyles from '../../../combobox/hero/css-modules/index.module.css';
-import fieldStyles from '../../../field/hero/css-modules/index.module.css';
-import numberFieldStyles from '../../../number-field/hero/css-modules/index.module.css';
-import radioGroupStyles from '../../../radio-group/hero/css-modules/index.module.css';
-import selectStyles from '../../../select/hero/css-modules/index.module.css';
-import sliderStyles from '../../../slider/range-slider/css-modules/index.module.css';
-import switchStyles from '../../../switch/hero/css-modules/index.module.css';
+import * as Autocomplete from '../../components/autocomplete';
+import { Button } from '../../components/button';
+import * as Checkbox from '../../components/checkbox';
+import { CheckboxGroup } from '../../components/checkbox-group';
+import * as Combobox from '../../components/combobox';
+import * as Field from '../../components/field';
+import * as Fieldset from '../../components/fieldset';
+import * as NumberField from '../../components/number-field';
+import * as Radio from '../../components/radio';
+import { RadioGroup } from '../../components/radio-group';
+import * as Select from '../../components/select';
+import * as Slider from '../../components/slider';
+import * as Switch from '../../components/switch';
+import { useToastManager } from '../../components/toast';
 
 interface FormValues {
   serverName: string;
@@ -61,7 +50,7 @@ const requiredFields: (keyof FormValues)[] = [
   'numOfInstances',
 ];
 
-const toastManager = Toast.useToastManager();
+const toastManager = useToastManager();
 
 const form = useForm({
   defaultValues,
@@ -107,27 +96,10 @@ const CaretUpDownIcon: FunctionalComponent = (_, { attrs }) =>
     h('path', { d: 'M11 10H5l3 3.5zm0-4H5l3-3.5z' }),
   ]);
 
-const CaretDownIcon: FunctionalComponent = (_, { attrs }) =>
-  h('svg', { ...ICON_PROPS, fill: 'currentColor', ...attrs }, [h('path', { d: 'M12 6H4l4 4.5z' })]);
-
 const CheckIcon: FunctionalComponent = (_, { attrs }) =>
   h('svg', { ...ICON_PROPS, fill: 'none', stroke: 'currentColor', ...attrs }, [
     h('path', { d: 'm2.5 8.5 4 4 7-9' }),
   ]);
-
-const XIcon: FunctionalComponent = (_, { attrs }) =>
-  h(
-    'svg',
-    {
-      ...ICON_PROPS,
-      fill: 'none',
-      stroke: 'currentColor',
-      'stroke-linecap': 'square',
-      'stroke-linejoin': 'round',
-      ...attrs,
-    },
-    [h('path', { d: 'm4.5 4.5 7 7m-7 0 7-7' })],
-  );
 
 const PlusIcon: FunctionalComponent = (_, { attrs }) =>
   h(
@@ -191,13 +163,16 @@ const SERVER_TYPES = [
     return { label: value, value };
   }),
 ];
+
+// The input of a slider thumb has the focus, and `blur` does not bubble. The thumbs thus listen
+// to `focusout`.
 </script>
 
 <template>
   <form
     aria-label="Launch new cloud server"
     novalidate
-    :class="layout.Form"
+    class="flex w-full max-w-3xs flex-col gap-5 sm:max-w-[20rem]"
     @submit.prevent="form.handleSubmit()"
   >
     <form.Field v-slot="{ field }" name="serverName">
@@ -206,20 +181,16 @@ const SERVER_TYPES = [
         :invalid="!field.state.meta.isValid"
         :dirty="field.state.meta.isDirty"
         :touched="field.state.meta.isTouched"
-        :class="fieldStyles.Field"
       >
-        <Field.Label :class="fieldStyles.Label">Server name</Field.Label>
+        <Field.Label>Server name</Field.Label>
         <Field.Control
           :value="field.state.value"
           placeholder="e.g. api-server-01"
-          :class="fieldStyles.Input"
           @value-change="field.handleChange"
           @blur="field.handleBlur"
         />
-        <Field.Description :class="fieldStyles.Description">
-          Must be 3 or more characters long
-        </Field.Description>
-        <Field.Error :match="!field.state.meta.isValid" :class="fieldStyles.Error">
+        <Field.Description>Must be 3 or more characters long</Field.Description>
+        <Field.Error :match="!field.state.meta.isValid">
           {{ field.state.meta.errors.join(',') }}
         </Field.Error>
       </Field.Root>
@@ -231,44 +202,37 @@ const SERVER_TYPES = [
         :invalid="!field.state.meta.isValid"
         :dirty="field.state.meta.isDirty"
         :touched="field.state.meta.isTouched"
-        :class="fieldStyles.Field"
       >
         <Combobox.Root
           :items="REGIONS"
           :value="field.state.value"
           @value-change="field.handleChange"
         >
-          <div :class="comboboxStyles.Label">
-            <Field.Label>Region</Field.Label>
-            <Combobox.InputGroup :class="comboboxStyles.InputGroup">
-              <Combobox.Input
-                placeholder="e.g. eu-central-1"
-                :class="comboboxStyles.Input"
-                @blur="field.handleBlur"
-              />
-              <div :class="comboboxStyles.ActionButtons">
-                <Combobox.Clear :class="comboboxStyles.Clear" aria-label="Clear selection">
-                  <XIcon />
-                </Combobox.Clear>
-                <Combobox.Trigger :class="comboboxStyles.Trigger">
-                  <CaretDownIcon />
+          <div class="relative text-sm leading-5 font-bold text-neutral-950 dark:text-white">
+            <Field.Label class="mb-1 block">Region</Field.Label>
+            <Combobox.InputGroup>
+              <Combobox.Input placeholder="e.g. eu-central-1" @blur="field.handleBlur" />
+              <div
+                class="absolute right-0 bottom-0 inline-flex h-full items-center justify-center text-neutral-500 dark:text-neutral-400"
+              >
+                <Combobox.Clear />
+                <Combobox.Trigger>
+                  <Combobox.CaretDownIcon />
                 </Combobox.Trigger>
               </div>
             </Combobox.InputGroup>
           </div>
           <Combobox.Portal>
-            <Combobox.Positioner :class="comboboxStyles.Positioner" :side-offset="4">
-              <Combobox.Popup :class="comboboxStyles.Popup">
-                <Combobox.Empty>
-                  <div :class="comboboxStyles.Empty">No matches</div>
-                </Combobox.Empty>
-                <Combobox.List :class="comboboxStyles.List">
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.Empty>No matches</Combobox.Empty>
+                <Combobox.List>
                   <template #item="{ item }">
-                    <Combobox.Item :value="item" :class="comboboxStyles.Item">
-                      <Combobox.ItemIndicator :class="comboboxStyles.ItemIndicator">
+                    <Combobox.Item :value="item">
+                      <Combobox.ItemIndicator>
                         <CheckIcon />
                       </Combobox.ItemIndicator>
-                      <span :class="comboboxStyles.ItemText">{{ item }}</span>
+                      <span class="col-start-2">{{ item }}</span>
                     </Combobox.Item>
                   </template>
                 </Combobox.List>
@@ -276,7 +240,7 @@ const SERVER_TYPES = [
             </Combobox.Positioner>
           </Combobox.Portal>
         </Combobox.Root>
-        <Field.Error :match="!field.state.meta.isValid" :class="fieldStyles.Error">
+        <Field.Error :match="!field.state.meta.isValid">
           {{ field.state.meta.errors.join(',') }}
         </Field.Error>
       </Field.Root>
@@ -288,7 +252,6 @@ const SERVER_TYPES = [
         :invalid="!field.state.meta.isValid"
         :dirty="field.state.meta.isDirty"
         :touched="field.state.meta.isTouched"
-        :class="fieldStyles.Field"
       >
         <Autocomplete.Root
           :items="IMAGES"
@@ -297,29 +260,22 @@ const SERVER_TYPES = [
           :item-to-string-value="(itemValue: Image) => itemValue.url"
           @value-change="field.handleChange"
         >
-          <Field.Label :class="fieldStyles.Label">Container image</Field.Label>
+          <Field.Label>Container image</Field.Label>
           <Autocomplete.Input
             placeholder="e.g. docker.io/library/node:latest"
-            :class="[autocompleteStyles.Input, layout.ImageInput]"
             @blur="field.handleBlur"
           />
-          <Field.Description :class="fieldStyles.Description">
-            Enter a registry URL with optional tags
-          </Field.Description>
+          <Field.Description>Enter a registry URL with optional tags</Field.Description>
           <Autocomplete.Portal>
-            <Autocomplete.Positioner
-              :class="[autocompleteStyles.Positioner, layout.ImagePositioner]"
-              :side-offset="4"
-            >
-              <Autocomplete.Popup :class="autocompleteStyles.Popup">
-                <Autocomplete.List :class="autocompleteStyles.List">
+            <Autocomplete.Positioner>
+              <Autocomplete.Popup>
+                <Autocomplete.List>
                   <template #item="{ item }">
-                    <Autocomplete.Item
-                      :value="item"
-                      :class="[autocompleteStyles.Item, layout.ImageItem]"
-                    >
+                    <Autocomplete.Item :value="item">
                       <span>{{ item.name }}</span>
-                      <span :class="layout.ImageUrl">{{ item.url }}</span>
+                      <span class="font-mono whitespace-nowrap text-xs opacity-80">{{
+                        item.url
+                      }}</span>
                     </Autocomplete.Item>
                   </template>
                 </Autocomplete.List>
@@ -327,7 +283,7 @@ const SERVER_TYPES = [
             </Autocomplete.Positioner>
           </Autocomplete.Portal>
         </Autocomplete.Root>
-        <Field.Error :match="!field.state.meta.isValid" :class="fieldStyles.Error">
+        <Field.Error :match="!field.state.meta.isValid">
           {{ field.state.meta.errors.join(',') }}
         </Field.Error>
       </Field.Root>
@@ -339,48 +295,39 @@ const SERVER_TYPES = [
         :invalid="!field.state.meta.isValid"
         :dirty="field.state.meta.isDirty"
         :touched="field.state.meta.isTouched"
-        :class="fieldStyles.Field"
       >
         <Select.Root
           :items="SERVER_TYPES"
           :value="field.state.value"
           @value-change="field.handleChange"
         >
-          <div :class="selectStyles.Field">
-            <Select.Label :class="selectStyles.Label">Server type</Select.Label>
-            <Select.Trigger
-              :class="[selectStyles.Select, layout.SelectTrigger]"
-              @blur="field.handleBlur"
-            >
-              <Select.Value :class="selectStyles.Value" />
+          <div class="w-fit space-y-1">
+            <Select.Label>Server type</Select.Label>
+            <Select.Trigger class="w-48" @blur="field.handleBlur">
+              <Select.Value />
               <Select.Icon>
                 <CaretUpDownIcon />
               </Select.Icon>
             </Select.Trigger>
           </div>
           <Select.Portal>
-            <Select.Positioner :class="selectStyles.Positioner" :side-offset="4">
-              <Select.Popup :class="selectStyles.Popup">
-                <Select.ScrollUpArrow :class="selectStyles.ScrollArrow" />
-                <Select.List :class="selectStyles.List">
-                  <Select.Item
-                    v-for="{ label, value } in SERVER_TYPES"
-                    :key="label"
-                    :value="value"
-                    :class="selectStyles.Item"
-                  >
-                    <Select.ItemIndicator :class="selectStyles.ItemIndicator">
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.ScrollUpArrow />
+                <Select.List>
+                  <Select.Item v-for="{ label, value } in SERVER_TYPES" :key="label" :value="value">
+                    <Select.ItemIndicator>
                       <CheckIcon />
                     </Select.ItemIndicator>
-                    <Select.ItemText :class="selectStyles.ItemText">{{ label }}</Select.ItemText>
+                    <Select.ItemText>{{ label }}</Select.ItemText>
                   </Select.Item>
                 </Select.List>
-                <Select.ScrollDownArrow :class="selectStyles.ScrollArrow" />
+                <Select.ScrollDownArrow />
               </Select.Popup>
             </Select.Positioner>
           </Select.Portal>
         </Select.Root>
-        <Field.Error :match="!field.state.meta.isValid" :class="fieldStyles.Error">
+        <Field.Error :match="!field.state.meta.isValid">
           {{ field.state.meta.errors.join(',') }}
         </Field.Error>
       </Field.Root>
@@ -392,27 +339,25 @@ const SERVER_TYPES = [
         :invalid="!field.state.meta.isValid"
         :dirty="field.state.meta.isDirty"
         :touched="field.state.meta.isTouched"
-        :class="fieldStyles.Field"
       >
         <NumberField.Root
           :value="field.state.value"
           :min="1"
           :max="64"
-          :class="numberFieldStyles.Field"
           @value-change="field.handleChange"
         >
-          <Field.Label :class="fieldStyles.Label">Number of instances</Field.Label>
-          <NumberField.Group :class="numberFieldStyles.Group">
-            <NumberField.Decrement :class="numberFieldStyles.Decrement">
+          <Field.Label>Number of instances</Field.Label>
+          <NumberField.Group>
+            <NumberField.Decrement>
               <MinusIcon />
             </NumberField.Decrement>
-            <NumberField.Input :class="numberFieldStyles.Input" @blur="field.handleBlur" />
-            <NumberField.Increment :class="numberFieldStyles.Increment">
+            <NumberField.Input @blur="field.handleBlur" />
+            <NumberField.Increment>
               <PlusIcon />
             </NumberField.Increment>
           </NumberField.Group>
         </NumberField.Root>
-        <Field.Error :match="!field.state.meta.isValid" :class="fieldStyles.Error">
+        <Field.Error :match="!field.state.meta.isValid">
           {{ field.state.meta.errors.join(',') }}
         </Field.Error>
       </Field.Root>
@@ -424,7 +369,6 @@ const SERVER_TYPES = [
         :invalid="!field.state.meta.isValid"
         :dirty="field.state.meta.isDirty"
         :touched="field.state.meta.isTouched"
-        :class="fieldStyles.Field"
       >
         <Fieldset.Root>
           <template #render="{ props }">
@@ -436,26 +380,23 @@ const SERVER_TYPES = [
               :max="1"
               :step="0.01"
               :format="{ style: 'percent', minimumFractionDigits: 0, maximumFractionDigits: 0 }"
-              :class="layout.Slider"
+              class="w-full gap-y-2"
               @value-change="field.handleChange"
               @value-committed="field.handleChange"
             >
-              <Fieldset.Legend :class="fieldStyles.Label">Scaling threshold</Fieldset.Legend>
-              <Slider.Value :class="layout.SliderValue" />
-              <Slider.Control :class="[sliderStyles.Control, layout.SliderControl]">
-                <Slider.Track :class="sliderStyles.Track">
-                  <Slider.Indicator :class="sliderStyles.Indicator" />
-                  <!-- The thumb input has the focus and `blur` does not bubble. Use `focusout`. -->
+              <Fieldset.Legend>Scaling threshold</Fieldset.Legend>
+              <Slider.Value class="col-start-2 text-end" />
+              <Slider.Control>
+                <Slider.Track>
+                  <Slider.Indicator />
                   <Slider.Thumb
                     :index="0"
                     aria-label="Minimum threshold"
-                    :class="sliderStyles.Thumb"
                     @focusout="field.handleBlur"
                   />
                   <Slider.Thumb
                     :index="1"
                     aria-label="Maximum threshold"
-                    :class="sliderStyles.Thumb"
                     @focusout="field.handleBlur"
                   />
                 </Slider.Track>
@@ -463,7 +404,7 @@ const SERVER_TYPES = [
             </Slider.Root>
           </template>
         </Fieldset.Root>
-        <Field.Error :match="!field.state.meta.isValid" :class="fieldStyles.Error">
+        <Field.Error :match="!field.state.meta.isValid">
           {{ field.state.meta.errors.join(',') }}
         </Field.Error>
       </Field.Root>
@@ -475,21 +416,20 @@ const SERVER_TYPES = [
         :invalid="!field.state.meta.isValid"
         :dirty="field.state.meta.isDirty"
         :touched="field.state.meta.isTouched"
-        :class="fieldStyles.Field"
       >
         <Fieldset.Root>
           <template #render="{ props }">
             <RadioGroup
               v-bind="props"
               :value="field.state.value"
-              :class="layout.Row"
+              class="gap-4"
               @value-change="field.handleChange"
             >
-              <Fieldset.Legend :class="fieldStyles.Label">Storage type</Fieldset.Legend>
+              <Fieldset.Legend class="-mt-px">Storage type</Fieldset.Legend>
               <Field.Item v-for="storageType in storageTypes" :key="storageType">
-                <Field.Label :class="[radioGroupStyles.Item, layout.Uppercase]">
-                  <Radio.Root :value="storageType" :class="radioGroupStyles.Radio">
-                    <Radio.Indicator :class="radioGroupStyles.Indicator" />
+                <Field.Label class="uppercase">
+                  <Radio.Root :value="storageType">
+                    <Radio.Indicator />
                   </Radio.Root>
                   {{ storageType }}
                 </Field.Label>
@@ -497,7 +437,7 @@ const SERVER_TYPES = [
             </RadioGroup>
           </template>
         </Fieldset.Root>
-        <Field.Error :match="!field.state.meta.isValid" :class="fieldStyles.Error">
+        <Field.Error :match="!field.state.meta.isValid">
           {{ field.state.meta.errors.join(',') }}
         </Field.Error>
       </Field.Root>
@@ -509,20 +449,18 @@ const SERVER_TYPES = [
         :invalid="!field.state.meta.isValid"
         :dirty="field.state.meta.isDirty"
         :touched="field.state.meta.isTouched"
-        :class="fieldStyles.Field"
       >
-        <Field.Label :class="switchStyles.Label">
+        <Field.Label class="gap-2">
           Restart on failure
           <Switch.Root
             :checked="field.state.value"
-            :class="switchStyles.Switch"
             @checked-change="field.handleChange"
             @blur="field.handleBlur"
           >
-            <Switch.Thumb :class="switchStyles.Thumb" />
+            <Switch.Thumb />
           </Switch.Root>
         </Field.Label>
-        <Field.Error :match="!field.state.meta.isValid" :class="fieldStyles.Error">
+        <Field.Error :match="!field.state.meta.isValid">
           {{ field.state.meta.errors.join(',') }}
         </Field.Error>
       </Field.Root>
@@ -534,28 +472,20 @@ const SERVER_TYPES = [
         :invalid="!field.state.meta.isValid"
         :dirty="field.state.meta.isDirty"
         :touched="field.state.meta.isTouched"
-        :class="fieldStyles.Field"
       >
         <Fieldset.Root>
           <template #render="{ props }">
             <CheckboxGroup
               v-bind="props"
               :value="field.state.value"
-              :class="checkboxGroupStyles.CheckboxGroup"
               @value-change="field.handleChange"
             >
-              <Fieldset.Legend :class="fieldStyles.Label"
-                >Allowed network protocols</Fieldset.Legend
-              >
-              <div :class="layout.Protocols">
+              <Fieldset.Legend class="mb-2">Allowed network protocols</Fieldset.Legend>
+              <div class="flex gap-4">
                 <Field.Item v-for="protocol in protocols" :key="protocol">
-                  <Field.Label :class="[checkboxGroupStyles.Item, layout.Uppercase]">
-                    <Checkbox.Root
-                      :value="protocol"
-                      :class="checkboxGroupStyles.Checkbox"
-                      @blur="field.handleBlur"
-                    >
-                      <Checkbox.Indicator :class="checkboxGroupStyles.Indicator">
+                  <Field.Label class="uppercase">
+                    <Checkbox.Root :value="protocol" @blur="field.handleBlur">
+                      <Checkbox.Indicator>
                         <CheckIcon />
                       </Checkbox.Indicator>
                     </Checkbox.Root>
@@ -566,12 +496,12 @@ const SERVER_TYPES = [
             </CheckboxGroup>
           </template>
         </Fieldset.Root>
-        <Field.Error :match="!field.state.meta.isValid" :class="fieldStyles.Error">
+        <Field.Error :match="!field.state.meta.isValid">
           {{ field.state.meta.errors.join(',') }}
         </Field.Error>
       </Field.Root>
     </form.Field>
 
-    <Button type="submit" :class="buttonStyles.Button">Launch server</Button>
+    <Button type="submit" class="mt-3">Launch server</Button>
   </form>
 </template>
