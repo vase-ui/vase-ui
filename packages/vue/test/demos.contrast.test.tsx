@@ -5,6 +5,7 @@ import { h } from 'vue';
 import type { Component } from 'vue';
 import { createRenderer, holdPress, screen, waitFor } from '#test-utils';
 import DemoFrame from '../../../docs/.vitepress/components/DemoFrame.vue';
+import '../../../docs/.vitepress/theme/tokens.css';
 import '../../../docs/.vitepress/theme/look.css';
 import '../../../docs/demos/tailwind.css';
 
@@ -15,6 +16,7 @@ const modules = import.meta.glob<{ default: Component }>(
     '../../../docs/demos/autocomplete/fuzzy-matching/{css-modules,tailwind}/index.vue',
     '../../../docs/demos/combobox/async-single/{css-modules,tailwind}/index.vue',
     '../../../docs/demos/combobox/input-inside-popup/{css-modules,tailwind}/index.vue',
+    '../../../docs/demos/date-field/date-time/{css-modules,tailwind}/index.vue',
     '../../../docs/demos/navigation-menu/hero/{css-modules,tailwind}/index.vue',
     '../../../docs/demos/select/hero/{css-modules,tailwind}/index.vue',
     '../../../docs/demos/select/object-values/{css-modules,tailwind}/index.vue',
@@ -81,20 +83,39 @@ function backgroundOf(element: Element): Rgba {
   return layers.reduceRight<Rgba>((below, layer) => blendOver(layer, below), [255, 255, 255, 255]);
 }
 
+// The colors of the text of an element and of the background behind it. The selected text of the
+// focused input keeps its own color, and the highlight of `::selection` goes over the background.
+// Chromium reports another color for a `::selection` that has a rule and no color.
+function paintOf(element: Element) {
+  const background = backgroundOf(element);
+  const color = getComputedStyle(element).color;
+  if (
+    element instanceof HTMLInputElement &&
+    element === document.activeElement &&
+    element.selectionStart !== element.selectionEnd
+  ) {
+    const highlight = rgbaOf(getComputedStyle(element, '::selection').backgroundColor);
+    return { text: color, background: blendOver(highlight, background) };
+  }
+  return { text: color, background };
+}
+
 /** The text of `root` that has the lowest WCAG contrast against the background behind it. */
 function lowestContrastIn(root: Element) {
   const readings = [root, ...root.querySelectorAll('*')]
     .filter((element) =>
-      [...element.childNodes].some(
-        (node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim(),
-      ),
+      element instanceof HTMLInputElement
+        ? element.value !== ''
+        : [...element.childNodes].some(
+            (node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim(),
+          ),
     )
     .map((element) => {
-      const background = backgroundOf(element);
-      const text = luminance(blendOver(rgbaOf(getComputedStyle(element).color), background));
-      const behind = luminance(background);
+      const paint = paintOf(element);
+      const text = luminance(blendOver(rgbaOf(paint.text), paint.background));
+      const behind = luminance(paint.background);
       return {
-        text: element.textContent.trim(),
+        text: element instanceof HTMLInputElement ? element.value : element.textContent.trim(),
         ratio: (Math.max(text, behind) + 0.05) / (Math.min(text, behind) + 0.05),
       };
     });
@@ -185,6 +206,18 @@ const rows: { name: string; demo: string; reach: () => Promise<Element> }[] = [
     },
   },
   {
+    name: 'selected text of a focused segment',
+    demo: 'date-field/date-time',
+    async reach() {
+      const segment = screen.getAllByRole('spinbutton')[0] as HTMLInputElement;
+      segment.focus();
+      await waitFor(() => {
+        expect(segment.selectionEnd).toBeGreaterThan(0);
+      });
+      return segment;
+    },
+  },
+  {
     name: 'link description on hover',
     demo: 'navigation-menu/hero',
     async reach() {
@@ -255,11 +288,15 @@ describe('the text of a demo has a contrast of 4.5:1 or more', () => {
     document.documentElement.classList.toggle('dark', row.theme === 'dark');
     await render(
       h(
-        DemoFrame,
-        null,
-        row.variant === 'tailwind'
-          ? { tailwind: () => h(row.Demo) }
-          : { default: () => h(row.Demo) },
+        'div',
+        { class: 'Layout' },
+        h(
+          DemoFrame,
+          null,
+          row.variant === 'tailwind'
+            ? { tailwind: () => h(row.Demo) }
+            : { default: () => h(row.Demo) },
+        ),
       ),
     );
 
