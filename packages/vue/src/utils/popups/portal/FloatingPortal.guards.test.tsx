@@ -609,6 +609,44 @@ describe('FloatingPortal', () => {
     expect(getOwner(screen.getByTestId('host'))).toBe(owner);
   });
 
+  it('VUE-5: keeps the portal element, the guards and the owner element out of the document when the part mounts while KeepAlive holds its branch', async () => {
+    const visible = shallowRef(true);
+    const hasPortal = shallowRef(false);
+    const Page = defineComponent({
+      name: 'Page',
+      setup: () => () => (
+        <div data-testid="host">
+          {hasPortal.value ? (
+            <FloatingPortal data-testid="portal">
+              <FocusManagerPart>
+                <input />
+              </FocusManagerPart>
+            </FloatingPortal>
+          ) : null}
+        </div>
+      ),
+    });
+    await render(() => <KeepAlive>{visible.value ? <Page /> : null}</KeepAlive>);
+
+    visible.value = false;
+    await nextTick();
+    hasPortal.value = true;
+    await nextTick();
+
+    expect(screen.queryByTestId('portal')).toBe(null);
+    expect(getOutsideGuards()).toEqual([]);
+    expect(document.querySelector('[aria-owns]')).toBe(null);
+
+    visible.value = true;
+    await nextTick();
+
+    const portal = screen.getByTestId('portal');
+    const host = screen.getByTestId('host');
+    expect(portal.parentElement).toBe(document.body);
+    expect(listPlaceOfPortal(host)).toEqual(['guard outside', 'owner', 'guard outside']);
+    expect(getOwner(host)).toHaveAttribute('aria-owns', portal.id);
+  });
+
   describe('hydration', () => {
     it('renders no portal element and no guard on a server, and hydrates with no message', async () => {
       const serverHtml = await renderOnServer(HYDRATION_FILE);
