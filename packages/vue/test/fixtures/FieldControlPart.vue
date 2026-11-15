@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { shallowRef, useAttrs } from 'vue';
-import { useRegisterFieldControl } from '../../src/internals/field-register-control';
+import { useFieldInput, useRegisterFieldControl } from '../../src/internals/field-register-control';
 import { useFieldRootContext } from '../../src/internals/field-root-context';
 import { useSetFieldFocused } from '../../src/internals/field-root-context/useSetFieldFocused';
 
@@ -18,7 +18,8 @@ const emit = defineEmits<{
 }>();
 
 const attrs = useAttrs();
-const { validation, setFilled } = useFieldRootContext();
+const { setFilled } = useFieldRootContext();
+const giveFieldInput = useFieldInput();
 const inputElement = shallowRef<HTMLInputElement | null>(null);
 
 const setFocused = useSetFieldFocused(
@@ -41,8 +42,13 @@ if (props.value !== undefined) {
 }
 
 function setInputElement(element: unknown) {
-  inputElement.value = element as HTMLInputElement | null;
-  validation.inputRef.value = element as HTMLInputElement | null;
+  const input = element as HTMLInputElement | null;
+  // Vue calls a function ref again on each patch, with the same element.
+  if (input === inputElement.value) {
+    return;
+  }
+  inputElement.value = input;
+  giveFieldInput(input);
 }
 
 function elementProps() {

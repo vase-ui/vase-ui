@@ -6,6 +6,7 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  nextEvent,
   renderOnServer,
   screen,
   waitFor,
@@ -303,6 +304,68 @@ describe('<ContextMenu.Root />', () => {
       expect(screen.queryByTestId('context-popup')).toBe(null);
       expect(onOpenChange.mock.calls.length).toBe(0);
     });
+  });
+
+  it('returns focus to the focused surface when closing with Shift+Tab', async () => {
+    const { user } = await render(
+      <ContextMenu.Root>
+        <ContextMenu.Trigger as="button">Surface</ContextMenu.Trigger>
+        <ContextMenu.Portal>
+          <ContextMenu.Positioner>
+            <ContextMenu.Popup>
+              <ContextMenu.Item>Item</ContextMenu.Item>
+            </ContextMenu.Popup>
+          </ContextMenu.Positioner>
+        </ContextMenu.Portal>
+      </ContextMenu.Root>,
+    );
+
+    const surface = screen.getByRole('button', { name: 'Surface' });
+    await user.tab();
+    expect(surface).toHaveFocus();
+    // The menu takes the focus in an animation frame after the open.
+    await nextEvent(document, 'focusin', {
+      action: () => fireEvent.contextMenu(surface, { clientX: 20, clientY: 20, button: 2 }),
+    });
+    const menu = screen.getByRole('menu');
+    expect(menu).toHaveFocus();
+
+    await user.tab({ shift: true });
+    await waitFor(() => {
+      expect(menu.isConnected).toBe(false);
+    });
+    expect(surface).toHaveFocus();
+  });
+
+  it('returns focus to the focused surface when closing with Tab', async () => {
+    const { user } = await render(
+      <ContextMenu.Root>
+        <ContextMenu.Trigger as="button">Surface</ContextMenu.Trigger>
+        <ContextMenu.Portal>
+          <ContextMenu.Positioner>
+            <ContextMenu.Popup>
+              <ContextMenu.Item>Item</ContextMenu.Item>
+            </ContextMenu.Popup>
+          </ContextMenu.Positioner>
+        </ContextMenu.Portal>
+      </ContextMenu.Root>,
+    );
+
+    const surface = screen.getByRole('button', { name: 'Surface' });
+    await user.tab();
+    expect(surface).toHaveFocus();
+    // The menu takes the focus in an animation frame after the open.
+    await nextEvent(document, 'focusin', {
+      action: () => fireEvent.contextMenu(surface, { clientX: 20, clientY: 20, button: 2 }),
+    });
+    const menu = screen.getByRole('menu');
+    expect(menu).toHaveFocus();
+
+    await user.tab();
+    await waitFor(() => {
+      expect(menu.isConnected).toBe(false);
+    });
+    expect(surface).toHaveFocus();
   });
 
   describe('prop: collisionAvoidance', () => {
