@@ -7452,6 +7452,8 @@ describe('<Combobox.Root />', () => {
 
       // Verify interactions are disabled
       await user.click(trigger);
+      await waitSingleFrame();
+      await flushMicrotasks();
       expect(screen.queryByRole('listbox')).toBe(null);
     });
 
@@ -7480,6 +7482,8 @@ describe('<Combobox.Root />', () => {
       expect(screen.queryByRole('listbox')).toBe(null);
 
       await user.click(trigger);
+      await waitSingleFrame();
+      await flushMicrotasks();
       expect(screen.queryByRole('listbox')).toBe(null);
     });
 
@@ -8490,7 +8494,11 @@ describe('<Combobox.Root />', () => {
       expect(popup).toHaveAttribute('data-ending-style');
 
       await user.click(screen.getByTestId('trigger'));
-      await flushMicrotasks();
+      // The trigger opens the popup in the frame after the press. The press of `refetch` needs the
+      // open popup.
+      await waitFor(() => {
+        expect(input).toHaveAttribute('aria-expanded', 'true');
+      });
 
       expect(input).toHaveValue('app');
 
@@ -8592,7 +8600,11 @@ describe('<Combobox.Root />', () => {
 
       // The close path already cleared the input, so nothing survives the reopen.
       await user.click(screen.getByTestId('trigger'));
-      await flushMicrotasks();
+      // The trigger opens the popup in the frame after the press. The second Escape needs the open
+      // popup.
+      await waitFor(() => {
+        expect(input).toHaveAttribute('aria-expanded', 'true');
+      });
 
       expect(input).toHaveValue('');
 

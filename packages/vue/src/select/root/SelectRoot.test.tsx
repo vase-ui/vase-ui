@@ -3535,6 +3535,8 @@ describe('<Select.Root />', () => {
       expect(document.activeElement).not.toBe(trigger);
 
       await user.click(trigger);
+      await waitSingleFrame();
+      await flushMicrotasks();
       expect(handleOpenChange.mock.calls.length).toBe(0);
     });
 
@@ -3579,6 +3581,8 @@ describe('<Select.Root />', () => {
       expect(document.activeElement).not.toBe(trigger);
 
       await user.click(trigger);
+      await waitSingleFrame();
+      await flushMicrotasks();
       expect(handleOpenChange.mock.calls.length).toBe(0);
 
       await user.click(screen.getByRole('button', { name: 'toggle' }));
@@ -8441,7 +8445,8 @@ describe('<Select.Root />', () => {
 
       await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
       await fireEvent.mouseDown(trigger, { button: 0 });
-      await wait(20);
+      await waitSingleFrame();
+      await flushMicrotasks();
 
       expect(trigger).toHaveAttribute('aria-expanded', 'false');
       expect(handleOpenChange).toHaveBeenCalledTimes(0);

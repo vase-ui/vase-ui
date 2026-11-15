@@ -121,6 +121,8 @@ describe('<Combobox.Trigger />', () => {
 
       const trigger = screen.getByTestId('trigger');
       await user.click(trigger);
+      await waitSingleFrame();
+      await flushMicrotasks();
 
       expect(screen.queryByRole('listbox')).toBe(null);
     });
