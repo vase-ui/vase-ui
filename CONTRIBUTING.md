@@ -105,9 +105,9 @@ The site imports the built package. Run `pnpm build` before `pnpm docs:typecheck
 - An `outOfScope` rule can have the key `except`. Its globs name the paths below `paths` that stay in scope.
 - Add an `except` glob only for a path that a family ports or will port.
 - A Base UI path is in scope when [Layout and names](#layout-and-names) maps it to a Vase UI path, or when an `except` glob names it. A Base UI commit that changes an in-scope path and no path of a family shows as `not started` on the parity page. A path that a `notPorted` row names does not cause this state.
-- A `notPorted` row names its files as globs in `upstream`. A commit that changes such files, no path of a family and no other in-scope path shows as `out of scope`. The page shows the reason of the row.
-- Each Base UI file that [Layout and names](#layout-and-names) maps is in the `upstreamPaths` of a family, or a `notPorted` row names it. Use a `notPorted` row only where Vase UI ports nothing of a folder, or the repository cannot hold the counterpart.
-- Name the files that are directly in a shared folder with one glob, such as `packages/react/src/internals/*`. A new Base UI file in that folder is then in the family.
+- A `notPorted` row names its files as globs in `upstream`. An entry with a line range, such as `packages/react/package.json:74-108`, matches no file. A commit that changes files that such globs name, no path of a family and no other in-scope path shows as `out of scope`. The page shows the reason of the row.
+- Each Base UI file that [Layout and names](#layout-and-names) maps is in the `upstreamPaths` of a family, or a `notPorted` row names it. A file is in no family only where Vase UI ports nothing of its folder, or where the repository cannot hold its counterpart.
+- Where one family holds each file directly in a folder, name those files with one glob, such as `packages/react/src/internals/*`. A new Base UI file in that folder is then in the family.
 - For the docs, an `except` glob names the page folders of a group: `docs/src/app/(docs)/react/components/*/**`.
 - Do not name the group folder. Its `page.mdx` is an index that Base UI generates from the pages, and no family ports it.
 - Port from Base UI at the tracked commit.

@@ -252,7 +252,7 @@
     {
       "upstream": "packages/react/test/types.d.ts",
       "kind": "not-applicable",
-      "reason": "The file declares the type of a CSS module. No Vase UI test imports a CSS module: a test component has its styles as style objects."
+      "reason": "The file declares the type of a CSS module. No Vase UI test imports a CSS module. A test component sets its styles as style objects."
     }
   ],
   "surfaceAdditions": [],

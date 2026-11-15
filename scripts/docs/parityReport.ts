@@ -152,7 +152,9 @@ function otherOf(paths: string[], scope: ScopeFile): NonNullable<Change['other']
     return { state: 'not-started' };
   }
   const reasons = [
-    ...scope.outOfScope.filter((rule) => paths.some((path) => matchesAny(path, rule.paths))),
+    ...scope.outOfScope.filter((rule) =>
+      paths.some((path) => matchesAny(path, rule.paths) && !matchesAny(path, rule.except ?? [])),
+    ),
     ...paths.flatMap(notPortedRows),
   ].map(({ reason }) => reason);
   return { state: 'out-of-scope', reasons: [...new Set(reasons)] };

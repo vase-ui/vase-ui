@@ -63,7 +63,13 @@ const upstream: UpstreamFile = {
 };
 
 const scope: ScopeFile = {
-  notPorted: [{ what: 'a thing', upstream: ['packages/react/src/thing/**'], reason: 'A reason.' }],
+  notPorted: [
+    {
+      what: 'a thing',
+      upstream: ['packages/react/src/thing/**', 'docs/src/app/(docs)/react/components/thing/**'],
+      reason: 'A reason.',
+    },
+  ],
   outOfScope: [
     { paths: ['.github/**'], reason: 'CI and repository automation.' },
     { paths: ['.circleci/**'], reason: 'CI and repository automation.' },
@@ -232,6 +238,13 @@ test('a commit with a path of a notPorted row and an out-of-scope path has the t
 test('a commit with a path of a notPorted row and a path that no family has is not-started', () => {
   assert.deepEqual(otherOfCommit(NOT_PORTED_FILE, 'packages/react/src/dialog/Dialog.tsx'), {
     state: 'not-started',
+  });
+});
+
+test('a docs path of a notPorted row has no reason of the rule that keeps it in scope', () => {
+  assert.deepEqual(otherOfCommit('docs/src/app/(docs)/react/components/thing/page.mdx'), {
+    state: 'out-of-scope',
+    reasons: ['A reason.'],
   });
 });
 

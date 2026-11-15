@@ -71,7 +71,7 @@
     {
       "upstream": "packages/react/test/floating-ui-tests/Button.module.css",
       "kind": "not-applicable",
-      "reason": "The style sheet of `Button.tsx`, which has no counterpart."
+      "reason": "The file is the style sheet of `Button.tsx`, which has no counterpart."
     },
     {
       "upstream": "packages/react/test/floating-ui-tests/ComplexGrid.tsx",
@@ -81,7 +81,7 @@
     {
       "upstream": "packages/react/test/floating-ui-tests/ComplexGrid.module.css",
       "kind": "not-applicable",
-      "reason": "The style sheet of `ComplexGrid.tsx`. The package has no type for a CSS module, so a Vue test component sets its styles as style objects."
+      "reason": "The file is the style sheet of `ComplexGrid.tsx`. The package has no type for a CSS module, so a Vue test component sets its styles as style objects."
     },
     {
       "upstream": "packages/react/test/floating-ui-tests/EmojiPicker.tsx",
@@ -91,7 +91,7 @@
     {
       "upstream": "packages/react/test/floating-ui-tests/EmojiPicker.module.css",
       "kind": "not-applicable",
-      "reason": "The style sheet of `EmojiPicker.tsx`. The package has no type for a CSS module, so a Vue test component sets its styles as style objects."
+      "reason": "The file is the style sheet of `EmojiPicker.tsx`. The package has no type for a CSS module, so a Vue test component sets its styles as style objects."
     },
     {
       "upstream": "packages/react/test/floating-ui-tests/Grid.tsx",
@@ -101,7 +101,7 @@
     {
       "upstream": "packages/react/test/floating-ui-tests/Grid.module.css",
       "kind": "not-applicable",
-      "reason": "The style sheet of `Grid.tsx`. The package has no type for a CSS module, so a Vue test component sets its styles as style objects."
+      "reason": "The file is the style sheet of `Grid.tsx`. The package has no type for a CSS module, so a Vue test component sets its styles as style objects."
     },
     {
       "upstream": "packages/react/test/floating-ui-tests/gridNavigationWithColumns.ts",
@@ -116,22 +116,22 @@
     {
       "upstream": "packages/react/test/floating-ui-tests/Menu.tsx",
       "kind": "not-applicable",
-      "reason": "Only two cases that Base UI runs in jsdom render this React test component, and each has a `replaced` row. The cases that replace them render the component `NestedList` of `packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx`."
+      "reason": "Two cases render this React test component, and Base UI runs them only in jsdom. Each case has a `replaced` row. The cases that replace them render the component `NestedList` of `packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx`."
     },
     {
       "upstream": "packages/react/test/floating-ui-tests/Menu.module.css",
       "kind": "not-applicable",
-      "reason": "The style sheet of `Menu.tsx`, which has no counterpart."
+      "reason": "The file is the style sheet of `Menu.tsx`, which has no counterpart."
     },
     {
       "upstream": "packages/react/test/floating-ui-tests/MenuOrientation.tsx",
       "kind": "not-applicable",
-      "reason": "Only one case that Base UI runs in jsdom renders this React test component, and it has a `replaced` row. The cases that replace it render the component `NestedList` of `packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx`."
+      "reason": "One case renders this React test component, and Base UI runs it only in jsdom. The case has a `replaced` row. The cases that replace it render the component `NestedList` of `packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx`."
     },
     {
       "upstream": "packages/react/test/floating-ui-tests/MenuOrientation.module.css",
       "kind": "not-applicable",
-      "reason": "The style sheet of `MenuOrientation.tsx`, which has no counterpart."
+      "reason": "The file is the style sheet of `MenuOrientation.tsx`, which has no counterpart."
     },
     {
       "upstream": "packages/react/test/floating-ui-tests/Popover.tsx",
@@ -141,7 +141,7 @@
     {
       "upstream": "packages/react/test/floating-ui-tests/Popover.module.css",
       "kind": "not-applicable",
-      "reason": "The style sheet of `Popover.tsx`, which has no counterpart."
+      "reason": "The file is the style sheet of `Popover.tsx`, which has no counterpart."
     },
     {
       "upstream": "packages/react/test/floating-ui-tests/renderGridRows.tsx",
