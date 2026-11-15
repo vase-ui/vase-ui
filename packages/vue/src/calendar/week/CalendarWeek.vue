@@ -2,9 +2,9 @@
 import type { HTMLAttributes } from 'vue';
 import type { CalendarPageWeek } from '../../internals/date-time/calendar/monthGrid';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
-import type { CalendarRootState } from '../root/CalendarRoot.vue';
+import type { CalendarState } from '../root/CalendarRoot.vue';
 
-export interface CalendarWeekState extends CalendarRootState {}
+export interface CalendarWeekState extends CalendarState {}
 
 export interface CalendarWeekProps
   extends
@@ -29,6 +29,11 @@ const props = withDefaults(defineProps<CalendarWeekProps>(), { as: 'tr' });
 
 defineSlots<{
   /**
+   * The content before the days, such as `Calendar.WeekNumber`. The `#render` slot does not render
+   * it.
+   */
+  default?(): unknown;
+  /**
    * Renders one day of the week. The `#render` slot does not render it.
    */
   day(props: { day: Temporal.PlainDate; index: number }): unknown;
@@ -45,5 +50,5 @@ defineExpose({ element });
 <!-- prettier-ignore -->
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"><template v-for="(day, index) in week.days" :key="toInputText(day, false)"><slot name="day" :day="day" :index="index" /></template></component>
+  <component :is="as" v-else v-bind="elementProps()"><slot /><template v-for="(day, index) in week.days" :key="toInputText(day, false)"><slot name="day" :day="day" :index="index" /></template></component>
 </template>

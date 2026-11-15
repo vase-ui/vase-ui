@@ -31,6 +31,7 @@ import type { HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useCalendarDayContext } from '../day/CalendarDayContext';
+import { useCalendarMonthContext } from '../month/CalendarMonthContext';
 import { dayStateAttributesMapping } from '../day/stateAttributesMapping';
 import { useCalendarRootContext } from '../root/CalendarRootContext';
 
@@ -55,10 +56,12 @@ defineSlots<{
 
 const root = useCalendarRootContext();
 const { day, state } = useCalendarDayContext();
+const { isLeaving } = useCalendarMonthContext();
 const isHydrating = useIsHydrating();
 
+// The button of a month that leaves has no tab stop, and the root does not focus it.
 const isTabStop = computed(
-  () => root.tabStop.value !== null && isSameDay(root.tabStop.value, day.value),
+  () => !isLeaving.value && root.tabStop.value !== null && isSameDay(root.tabStop.value, day.value),
 );
 const text = computed(() => formatText(day.value, { day: 'numeric' }, root.locale.value));
 const label = computed(() => formatText(day.value, props.format ?? FULL_DATE, root.locale.value));
@@ -105,9 +108,9 @@ const { element, elementProps } = useRenderElement('button', props, {
 
 // The root focuses a day after a key moves the focus, and it finds the button of the day here.
 watch(
-  [element, day],
-  ([button, date], _previous, onCleanup) => {
-    if (button) {
+  [element, day, isLeaving],
+  ([button, date, leaving], _previous, onCleanup) => {
+    if (button && !leaving) {
       onCleanup(root.registerDay(date, button));
     }
   },

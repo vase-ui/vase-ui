@@ -523,8 +523,9 @@ export default defineConfig([
     },
   },
   {
-    // The style sheet of a demo is a byte copy of the Base UI file. The copy shows that the data
-    // attributes and CSS variables of Vase UI are those of Base UI. A demo has no style of its own.
+    // The style sheet of a CSS-module demo is a byte copy of the Base UI file, and the class strings
+    // of a Tailwind demo are those of Base UI. Both show that the data attributes and CSS variables
+    // of Vase UI are those of Base UI. A demo has no style of its own.
     files: ['docs/demos/**/*.vue'],
     rules: {
       'vue/no-restricted-block': [
@@ -532,7 +533,7 @@ export default defineConfig([
         {
           element: 'style',
           message:
-            'The styles of a demo come from the copied style sheet of Base UI. Remove the style block.',
+            'A CSS-module demo takes its styles from the copied style sheet of Base UI. A Tailwind demo takes them from its class names. Remove the style block.',
         },
       ],
     },

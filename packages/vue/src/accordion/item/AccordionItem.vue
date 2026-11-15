@@ -59,6 +59,7 @@ import { useCompositeListItem } from '../../internals/composite/list/useComposit
 import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
+import { isInTreeOf } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useAccordionRootContext } from '../root/AccordionRootContext';
 import { AccordionItemContext } from './AccordionItemContext';
@@ -128,6 +129,7 @@ provide(CollapsibleRootContext, {
     disabled: collapsible.disabled.value,
     transitionStatus: collapsible.transitionStatus.value,
   })),
+  reaches: (target) => isInTreeOf(element.value, target),
 });
 
 const state = computed<AccordionItemState>(() => ({

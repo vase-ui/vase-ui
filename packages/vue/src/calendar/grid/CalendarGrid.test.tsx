@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { createRenderer, describeConformance, screen, takeReportedMessages } from '#test-utils';
+import {
+  createRenderer,
+  describeConformance,
+  flushMicrotasks,
+  screen,
+  takeReportedMessages,
+} from '#test-utils';
 import * as Calendar from '../index.parts';
 import CalendarAncestors from '../root/CalendarAncestors.test.vue';
 
@@ -18,13 +24,17 @@ describe('<Calendar.Grid />', () => {
     render: (node) => render(<CalendarAncestors level="month">{node}</CalendarAncestors>),
   }));
 
-  it('names the grid by the month', async () => {
+  it('names the grid by the month when no caption names it', async () => {
     await render(
       <CalendarAncestors level="month">
         <Calendar.Grid />
       </CalendarAncestors>,
     );
 
+    // The grid assumes a caption until it is mounted, and the first flush after the mount drops it.
+    await flushMicrotasks();
+
+    expect(screen.getByRole('grid')).not.toHaveAttribute('aria-labelledby');
     expect(screen.getByRole('grid')).toHaveAccessibleName(monthName);
   });
 

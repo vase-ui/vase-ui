@@ -822,7 +822,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
 
   // A field can have more than one input, such as two date fields of a range. The input goes to the
   // registry of the field and not to `validation.inputRef`. The registry gives the field the first
-  // input that is invalid.
+  // invalid input in the document.
   function updateInputRegistration() {
     unregisterInput?.();
     unregisterInput = heldInput
@@ -856,8 +856,8 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     isDeactivated.value = false;
   });
 
-  // `KeepAlive` runs the `onActivated` hooks from the last part to the first part. A registration
-  // in the hook would reverse the order of the inputs. A watcher runs in the order of the parts.
+  // `KeepAlive` calls no `ref` setter at an activation, so the root registers the input again. The
+  // release before the registration keeps one cleanup for each registration.
   watch(isDeactivated, (deactivated) => {
     if (!deactivated) {
       updateInputRegistration();
