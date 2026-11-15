@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { defineComponent, h, KeepAlive, onMounted, shallowRef, Teleport } from 'vue';
+import { defineComponent, h, KeepAlive, nextTick, onMounted, shallowRef, Teleport } from 'vue';
 import type { PropType } from 'vue';
 import {
   createRenderer,
   createTransitionRunCounter,
   describeConformance,
+  expectNoAxeViolations,
   fireEvent,
   flushMicrotasks,
   nextEvent,
@@ -839,6 +840,144 @@ describe('<Toast.Root />', () => {
 
     expect(screen.getByTestId('viewport')).toHaveFocus();
     expect(screen.getByTestId('high')).not.toHaveAttribute('aria-hidden');
+  });
+
+  describe('VUE-99: the name of a toast with no title', () => {
+    const LabelledToastList = defineComponent({
+      setup() {
+        const { toasts } = Toast.useToastManager();
+        return () =>
+          toasts.value.map((toastItem) => (
+            <Toast.Root key={toastItem.id} toast={toastItem} data-testid={toastItem.id}>
+              <Toast.Title />
+              <Toast.Description data-testid="description" />
+            </Toast.Root>
+          ));
+      },
+    });
+
+    it.each([
+      { name: 'dialog', priority: undefined, role: 'dialog' },
+      { name: 'alertdialog', priority: 'high', role: 'alertdialog' },
+    ] as const)(
+      'gives the role $name its name from the description',
+      async ({ priority, role }) => {
+        const manager = Toast.createToastManager();
+        await render(
+          <Toast.Provider toastManager={manager}>
+            <Toast.Viewport data-testid="viewport">
+              <LabelledToastList />
+            </Toast.Viewport>
+          </Toast.Provider>,
+        );
+
+        manager.add({ id: 'copied', description: 'Copied', priority, timeout: 0 });
+        await flushMicrotasks();
+        // A high priority toast has `aria-hidden` until the viewport has the focus.
+        await fireEvent.keyDown(document.body, { key: 'F6' });
+
+        const root = screen.getByTestId('copied');
+        expect(root).toHaveAttribute('role', role);
+        expect(root).toHaveAttribute('aria-labelledby', screen.getByTestId('description').id);
+        expect(root).not.toHaveAttribute('aria-describedby');
+        expect(root).toHaveAccessibleName('Copied');
+        expect(root).toHaveAccessibleDescription('');
+        await expectNoAxeViolations(root);
+      },
+    );
+
+    it('names the toast with its title while a title is mounted', async () => {
+      const showTitle = shallowRef(true);
+      await render(() => (
+        <Toast.Provider>
+          <Toast.Viewport>
+            <Toast.Root
+              toast={{ id: 'test', title: 'Saved', description: 'Copied' }}
+              data-testid="root"
+            >
+              {showTitle.value && <Toast.Title data-testid="title" />}
+              <Toast.Description data-testid="description" />
+            </Toast.Root>
+          </Toast.Viewport>
+        </Toast.Provider>
+      ));
+      const root = screen.getByTestId('root');
+
+      expect(root).toHaveAccessibleName('Saved');
+      expect(root).toHaveAccessibleDescription('Copied');
+
+      showTitle.value = false;
+      await nextTick();
+      expect(root).toHaveAttribute('aria-labelledby', screen.getByTestId('description').id);
+      expect(root).not.toHaveAttribute('aria-describedby');
+      expect(root).toHaveAccessibleName('Copied');
+
+      showTitle.value = true;
+      await nextTick();
+      expect(root).toHaveAttribute('aria-labelledby', screen.getByTestId('title').id);
+      expect(root).toHaveAttribute('aria-describedby', screen.getByTestId('description').id);
+    });
+
+    it.each([
+      { name: 'aria-label', attrs: { 'aria-label': 'Clipboard' }, labelledBy: null },
+      { name: 'aria-labelledby', attrs: { 'aria-labelledby': 'own-name' }, labelledBy: 'own-name' },
+    ])('keeps the name from the $name of the consumer', async ({ attrs, labelledBy }) => {
+      await render(
+        <Toast.Provider>
+          <span id="own-name">Clipboard</span>
+          <Toast.Viewport>
+            <Toast.Root toast={{ id: 'test', description: 'Copied' }} data-testid="root" {...attrs}>
+              <Toast.Description data-testid="description" />
+            </Toast.Root>
+          </Toast.Viewport>
+        </Toast.Provider>,
+      );
+      const root = screen.getByTestId('root');
+
+      expect(root.getAttribute('aria-labelledby')).toBe(labelledBy);
+      expect(root).toHaveAttribute('aria-describedby', screen.getByTestId('description').id);
+      expect(root).toHaveAccessibleName('Clipboard');
+      expect(root).toHaveAccessibleDescription('Copied');
+    });
+
+    it('names the toast with its description when the aria-label of the consumer is blank', async () => {
+      await render(
+        <Toast.Provider>
+          <Toast.Viewport>
+            <Toast.Root
+              toast={{ id: 'test', description: 'Copied' }}
+              data-testid="root"
+              aria-label=" "
+            >
+              <Toast.Description data-testid="description" />
+            </Toast.Root>
+          </Toast.Viewport>
+        </Toast.Provider>,
+      );
+
+      expect(screen.getByTestId('root')).toHaveAccessibleName('Copied');
+    });
+
+    it('keeps the description when the consumer sets aria-labelledby to undefined', async () => {
+      await render(
+        <Toast.Provider>
+          <Toast.Viewport>
+            <Toast.Root
+              toast={{ id: 'test', description: 'Copied' }}
+              data-testid="root"
+              aria-labelledby={undefined}
+            >
+              <Toast.Description data-testid="description" />
+            </Toast.Root>
+          </Toast.Viewport>
+        </Toast.Provider>,
+      );
+      const root = screen.getByTestId('root');
+
+      expect(root).not.toHaveAttribute('aria-labelledby');
+      expect(root).toHaveAttribute('aria-describedby', screen.getByTestId('description').id);
+      expect(root).toHaveAccessibleDescription('Copied');
+    });
   });
 
   it('marks a toast that the limit hides with data-limited, and makes it inert', async () => {

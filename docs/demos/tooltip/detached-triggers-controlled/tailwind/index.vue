@@ -36,7 +36,7 @@ const arrowClass =
           :class="iconButtonClass"
           :handle="demoTooltip"
           id="trigger-1"
-          aria-label="Controlled tooltip"
+          aria-label="Trigger 1"
         >
           <HeadphonesIcon aria-hidden="true" />
         </Tooltip.Trigger>
@@ -45,7 +45,7 @@ const arrowClass =
           :class="[iconButtonClass, 'border-l-0']"
           :handle="demoTooltip"
           id="trigger-2"
-          aria-label="Controlled tooltip"
+          aria-label="Trigger 2"
         >
           <StopwatchIcon aria-hidden="true" />
         </Tooltip.Trigger>
@@ -54,7 +54,7 @@ const arrowClass =
           :class="[iconButtonClass, 'border-l-0']"
           :handle="demoTooltip"
           id="trigger-3"
-          aria-label="Controlled tooltip"
+          aria-label="Trigger 3"
         >
           <TrashIcon aria-hidden="true" />
         </Tooltip.Trigger>

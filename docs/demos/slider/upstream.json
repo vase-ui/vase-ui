@@ -22,49 +22,69 @@
     "vertical/tailwind/index.tsx": "fff32f70449d06a4cb4645fb856d4a94d0f33406410a4d1d1c97aa9a970767c6"
   },
   "classes": {
-    "edge-alignment/tailwind": [
-      "bg-neutral-950 select-none dark:bg-white",
-      "flex w-56 touch-none items-center py-3 select-none",
-      "h-1 w-full bg-neutral-200 select-none dark:bg-neutral-800",
-      "size-4 border border-neutral-950 bg-white select-none has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-neutral-950 dark:has-[:focus-visible]:outline-white dark:border-white dark:bg-neutral-950"
-    ],
-    "hero/tailwind": [
-      "bg-neutral-950 select-none dark:bg-white",
-      "flex w-56 touch-none items-center py-3 select-none",
-      "h-1 w-full bg-neutral-200 select-none dark:bg-neutral-800",
-      "size-4 border border-neutral-950 bg-white select-none has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-neutral-950 dark:has-[:focus-visible]:outline-white dark:border-white dark:bg-neutral-950"
-    ],
-    "marks/tailwind": [
-      "absolute -translate-x-1/2 text-xs whitespace-nowrap text-neutral-600 dark:text-neutral-400",
-      "absolute top-1/2 h-2 w-px -translate-x-1/2 -translate-y-1/2 bg-neutral-950 dark:bg-white",
-      "bg-neutral-950 select-none dark:bg-white",
-      "flex touch-none items-center py-2.5 select-none",
-      "h-1 w-full bg-neutral-200 select-none dark:bg-neutral-800",
-      "relative h-4 select-none",
-      "size-4 border border-neutral-950 bg-white select-none has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-neutral-950 dark:has-[:focus-visible]:outline-white dark:border-white dark:bg-neutral-950",
-      "w-56"
-    ],
-    "range-slider/tailwind": [
-      "bg-neutral-950 select-none dark:bg-white",
-      "flex w-56 touch-none items-center py-3 select-none",
-      "h-1 w-full bg-neutral-200 select-none dark:bg-neutral-800",
-      "size-4 border border-neutral-950 bg-white select-none has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-neutral-950 dark:has-[:focus-visible]:outline-white dark:border-white dark:bg-neutral-950",
-      "size-4 border border-neutral-950 bg-white select-none has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-neutral-950 dark:has-[:focus-visible]:outline-white dark:border-white dark:bg-neutral-950"
-    ],
-    "steps/tailwind": [
-      "bg-neutral-950 select-none dark:bg-white",
-      "col-span-2 flex touch-none items-center py-3 select-none",
-      "cursor-default text-sm text-neutral-950 dark:text-white",
-      "grid w-56 grid-cols-2",
-      "h-1 w-full bg-neutral-200 select-none dark:bg-neutral-800",
-      "size-4 border border-neutral-950 bg-white select-none has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-neutral-950 dark:has-[:focus-visible]:outline-white dark:border-white dark:bg-neutral-950",
-      "text-end text-sm text-neutral-950 dark:text-white"
-    ],
-    "vertical/tailwind": [
-      "bg-neutral-200 select-none dark:bg-neutral-800 data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1",
-      "bg-neutral-950 select-none dark:bg-white",
-      "flex touch-none select-none data-[orientation=vertical]:h-32 data-[orientation=vertical]:px-3",
-      "size-4 border border-neutral-950 bg-white select-none has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-neutral-950 dark:has-[:focus-visible]:outline-white dark:border-white dark:bg-neutral-950"
-    ]
+    "edge-alignment/tailwind": {
+      "Slider.Control": ["flex w-56 touch-none items-center py-3 select-none"],
+      "Slider.Indicator": ["bg-neutral-950 select-none dark:bg-white"],
+      "Slider.Thumb": [
+        "size-4 border border-neutral-950 bg-white select-none has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-neutral-950 dark:has-[:focus-visible]:outline-white dark:border-white dark:bg-neutral-950"
+      ],
+      "Slider.Track": ["h-1 w-full bg-neutral-200 select-none dark:bg-neutral-800"]
+    },
+    "hero/tailwind": {
+      "Slider.Control": ["flex w-56 touch-none items-center py-3 select-none"],
+      "Slider.Indicator": ["bg-neutral-950 select-none dark:bg-white"],
+      "Slider.Thumb": [
+        "size-4 border border-neutral-950 bg-white select-none has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-neutral-950 dark:has-[:focus-visible]:outline-white dark:border-white dark:bg-neutral-950"
+      ],
+      "Slider.Track": ["h-1 w-full bg-neutral-200 select-none dark:bg-neutral-800"]
+    },
+    "marks/tailwind": {
+      "Slider.Control": ["flex touch-none items-center py-2.5 select-none"],
+      "Slider.Indicator": ["bg-neutral-950 select-none dark:bg-white"],
+      "Slider.Root": ["w-56"],
+      "Slider.Thumb": [
+        "size-4 border border-neutral-950 bg-white select-none has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-neutral-950 dark:has-[:focus-visible]:outline-white dark:border-white dark:bg-neutral-950"
+      ],
+      "Slider.Track": ["h-1 w-full bg-neutral-200 select-none dark:bg-neutral-800"],
+      "div": [
+        "absolute top-1/2 h-2 w-px -translate-x-1/2 -translate-y-1/2 bg-neutral-950 dark:bg-white",
+        "relative h-4 select-none"
+      ],
+      "span": [
+        "absolute -translate-x-1/2 text-xs whitespace-nowrap text-neutral-600 dark:text-neutral-400"
+      ]
+    },
+    "range-slider/tailwind": {
+      "Slider.Control": ["flex w-56 touch-none items-center py-3 select-none"],
+      "Slider.Indicator": ["bg-neutral-950 select-none dark:bg-white"],
+      "Slider.Thumb": [
+        "size-4 border border-neutral-950 bg-white select-none has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-neutral-950 dark:has-[:focus-visible]:outline-white dark:border-white dark:bg-neutral-950",
+        "size-4 border border-neutral-950 bg-white select-none has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-neutral-950 dark:has-[:focus-visible]:outline-white dark:border-white dark:bg-neutral-950"
+      ],
+      "Slider.Track": ["h-1 w-full bg-neutral-200 select-none dark:bg-neutral-800"]
+    },
+    "steps/tailwind": {
+      "Slider.Control": ["col-span-2 flex touch-none items-center py-3 select-none"],
+      "Slider.Indicator": ["bg-neutral-950 select-none dark:bg-white"],
+      "Slider.Label": ["cursor-default text-sm text-neutral-950 dark:text-white"],
+      "Slider.Root": ["grid w-56 grid-cols-2"],
+      "Slider.Thumb": [
+        "size-4 border border-neutral-950 bg-white select-none has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-neutral-950 dark:has-[:focus-visible]:outline-white dark:border-white dark:bg-neutral-950"
+      ],
+      "Slider.Track": ["h-1 w-full bg-neutral-200 select-none dark:bg-neutral-800"],
+      "Slider.Value": ["text-end text-sm text-neutral-950 dark:text-white"]
+    },
+    "vertical/tailwind": {
+      "Slider.Control": [
+        "flex touch-none select-none data-[orientation=vertical]:h-32 data-[orientation=vertical]:px-3"
+      ],
+      "Slider.Indicator": ["bg-neutral-950 select-none dark:bg-white"],
+      "Slider.Thumb": [
+        "size-4 border border-neutral-950 bg-white select-none has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-neutral-950 dark:has-[:focus-visible]:outline-white dark:border-white dark:bg-neutral-950"
+      ],
+      "Slider.Track": [
+        "bg-neutral-200 select-none dark:bg-neutral-800 data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1"
+      ]
+    }
   }
 }

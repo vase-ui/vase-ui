@@ -11,61 +11,84 @@
     "multiple/tailwind/index.tsx": "0417a3e3fbaacd2fa4c0267beb49f0d0e2c3243d5697c0e4f8aaa330594ca2df"
   },
   "classes": {
-    "hero/tailwind": [
-      "border-t border-neutral-950 dark:border-white",
-      "border-t border-neutral-950 dark:border-white",
-      "flex w-full max-w-80 flex-col border border-neutral-950 text-neutral-950 dark:border-white dark:text-white",
-      "group flex w-full items-center justify-between gap-4 bg-transparent px-3 py-2 text-left text-sm font-normal text-neutral-950 select-none hover:not-data-disabled:bg-neutral-100 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:text-white dark:hover:not-data-disabled:bg-neutral-800",
-      "group flex w-full items-center justify-between gap-4 bg-transparent px-3 py-2 text-left text-sm font-normal text-neutral-950 select-none hover:not-data-disabled:bg-neutral-100 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:text-white dark:hover:not-data-disabled:bg-neutral-800",
-      "group flex w-full items-center justify-between gap-4 bg-transparent px-3 py-2 text-left text-sm font-normal text-neutral-950 select-none hover:not-data-disabled:bg-neutral-100 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:text-white dark:hover:not-data-disabled:bg-neutral-800",
-      "h-[var(--accordion-panel-height)] overflow-hidden text-sm transition-[height] duration-150 ease-[ease-out] data-ending-style:h-0 data-starting-style:h-0",
-      "h-[var(--accordion-panel-height)] overflow-hidden text-sm transition-[height] duration-150 ease-[ease-out] data-ending-style:h-0 data-starting-style:h-0",
-      "h-[var(--accordion-panel-height)] overflow-hidden text-sm transition-[height] duration-150 ease-[ease-out] data-ending-style:h-0 data-starting-style:h-0",
-      "px-3 py-2",
-      "px-3 py-2",
-      "px-3 py-2",
-      "shrink-0 transition-transform duration-100 ease-[ease-out] group-data-panel-open:rotate-45",
-      "shrink-0 transition-transform duration-100 ease-[ease-out] group-data-panel-open:rotate-45",
-      "shrink-0 transition-transform duration-100 ease-[ease-out] group-data-panel-open:rotate-45"
-    ],
-    "hidden-until-found/tailwind": [
-      "border-t border-neutral-950 dark:border-white",
-      "border-t border-neutral-950 dark:border-white",
-      "border-t border-neutral-950 dark:border-white",
-      "flex w-full max-w-80 flex-col border border-neutral-950 text-neutral-950 dark:border-white dark:text-white",
-      "group flex w-full items-center justify-between gap-4 bg-transparent px-3 py-2 text-left text-sm font-normal text-neutral-950 select-none hover:not-data-disabled:bg-neutral-100 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:text-white dark:hover:not-data-disabled:bg-neutral-800",
-      "group flex w-full items-center justify-between gap-4 bg-transparent px-3 py-2 text-left text-sm font-normal text-neutral-950 select-none hover:not-data-disabled:bg-neutral-100 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:text-white dark:hover:not-data-disabled:bg-neutral-800",
-      "group flex w-full items-center justify-between gap-4 bg-transparent px-3 py-2 text-left text-sm font-normal text-neutral-950 select-none hover:not-data-disabled:bg-neutral-100 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:text-white dark:hover:not-data-disabled:bg-neutral-800",
-      "group flex w-full items-center justify-between gap-4 bg-transparent px-3 py-2 text-left text-sm font-normal text-neutral-950 select-none hover:not-data-disabled:bg-neutral-100 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:text-white dark:hover:not-data-disabled:bg-neutral-800",
-      "h-[var(--accordion-panel-height)] overflow-hidden text-sm transition-[height] duration-150 ease-[ease-out] data-ending-style:h-0 data-starting-style:h-0",
-      "h-[var(--accordion-panel-height)] overflow-hidden text-sm transition-[height] duration-150 ease-[ease-out] data-ending-style:h-0 data-starting-style:h-0",
-      "h-[var(--accordion-panel-height)] overflow-hidden text-sm transition-[height] duration-150 ease-[ease-out] data-ending-style:h-0 data-starting-style:h-0",
-      "h-[var(--accordion-panel-height)] overflow-hidden text-sm transition-[height] duration-150 ease-[ease-out] data-ending-style:h-0 data-starting-style:h-0",
-      "px-3 py-2",
-      "px-3 py-2",
-      "px-3 py-2",
-      "px-3 py-2",
-      "shrink-0 transition-transform duration-100 ease-[ease-out] group-data-panel-open:rotate-45",
-      "shrink-0 transition-transform duration-100 ease-[ease-out] group-data-panel-open:rotate-45",
-      "shrink-0 transition-transform duration-100 ease-[ease-out] group-data-panel-open:rotate-45",
-      "shrink-0 transition-transform duration-100 ease-[ease-out] group-data-panel-open:rotate-45"
-    ],
-    "multiple/tailwind": [
-      "border-t border-neutral-950 dark:border-white",
-      "border-t border-neutral-950 dark:border-white",
-      "flex w-full max-w-80 flex-col border border-neutral-950 text-neutral-950 dark:border-white dark:text-white",
-      "group flex w-full items-center justify-between gap-4 bg-transparent px-3 py-2 text-left text-sm font-normal text-neutral-950 select-none hover:not-data-disabled:bg-neutral-100 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:text-white dark:hover:not-data-disabled:bg-neutral-800",
-      "group flex w-full items-center justify-between gap-4 bg-transparent px-3 py-2 text-left text-sm font-normal text-neutral-950 select-none hover:not-data-disabled:bg-neutral-100 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:text-white dark:hover:not-data-disabled:bg-neutral-800",
-      "group flex w-full items-center justify-between gap-4 bg-transparent px-3 py-2 text-left text-sm font-normal text-neutral-950 select-none hover:not-data-disabled:bg-neutral-100 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:text-white dark:hover:not-data-disabled:bg-neutral-800",
-      "h-[var(--accordion-panel-height)] overflow-hidden text-sm transition-[height] duration-150 ease-[ease-out] data-ending-style:h-0 data-starting-style:h-0",
-      "h-[var(--accordion-panel-height)] overflow-hidden text-sm transition-[height] duration-150 ease-[ease-out] data-ending-style:h-0 data-starting-style:h-0",
-      "h-[var(--accordion-panel-height)] overflow-hidden text-sm transition-[height] duration-150 ease-[ease-out] data-ending-style:h-0 data-starting-style:h-0",
-      "px-3 py-2",
-      "px-3 py-2",
-      "px-3 py-2",
-      "shrink-0 transition-transform duration-100 ease-[ease-out] group-data-panel-open:rotate-45",
-      "shrink-0 transition-transform duration-100 ease-[ease-out] group-data-panel-open:rotate-45",
-      "shrink-0 transition-transform duration-100 ease-[ease-out] group-data-panel-open:rotate-45"
-    ]
+    "hero/tailwind": {
+      "Accordion.Item": [
+        "border-t border-neutral-950 dark:border-white",
+        "border-t border-neutral-950 dark:border-white"
+      ],
+      "Accordion.Panel": [
+        "h-[var(--accordion-panel-height)] overflow-hidden text-sm transition-[height] duration-150 ease-[ease-out] data-ending-style:h-0 data-starting-style:h-0",
+        "h-[var(--accordion-panel-height)] overflow-hidden text-sm transition-[height] duration-150 ease-[ease-out] data-ending-style:h-0 data-starting-style:h-0",
+        "h-[var(--accordion-panel-height)] overflow-hidden text-sm transition-[height] duration-150 ease-[ease-out] data-ending-style:h-0 data-starting-style:h-0"
+      ],
+      "Accordion.Root": [
+        "flex w-full max-w-80 flex-col border border-neutral-950 text-neutral-950 dark:border-white dark:text-white"
+      ],
+      "Accordion.Trigger": [
+        "group flex w-full items-center justify-between gap-4 bg-transparent px-3 py-2 text-left text-sm font-normal text-neutral-950 select-none hover:not-data-disabled:bg-neutral-100 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:text-white dark:hover:not-data-disabled:bg-neutral-800",
+        "group flex w-full items-center justify-between gap-4 bg-transparent px-3 py-2 text-left text-sm font-normal text-neutral-950 select-none hover:not-data-disabled:bg-neutral-100 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:text-white dark:hover:not-data-disabled:bg-neutral-800",
+        "group flex w-full items-center justify-between gap-4 bg-transparent px-3 py-2 text-left text-sm font-normal text-neutral-950 select-none hover:not-data-disabled:bg-neutral-100 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:text-white dark:hover:not-data-disabled:bg-neutral-800"
+      ],
+      "div": ["px-3 py-2", "px-3 py-2", "px-3 py-2"],
+      "svg": [
+        "shrink-0 transition-transform duration-100 ease-[ease-out] group-data-panel-open:rotate-45",
+        "shrink-0 transition-transform duration-100 ease-[ease-out] group-data-panel-open:rotate-45",
+        "shrink-0 transition-transform duration-100 ease-[ease-out] group-data-panel-open:rotate-45"
+      ]
+    },
+    "hidden-until-found/tailwind": {
+      "Accordion.Item": [
+        "border-t border-neutral-950 dark:border-white",
+        "border-t border-neutral-950 dark:border-white",
+        "border-t border-neutral-950 dark:border-white"
+      ],
+      "Accordion.Panel": [
+        "h-[var(--accordion-panel-height)] overflow-hidden text-sm transition-[height] duration-150 ease-[ease-out] data-ending-style:h-0 data-starting-style:h-0",
+        "h-[var(--accordion-panel-height)] overflow-hidden text-sm transition-[height] duration-150 ease-[ease-out] data-ending-style:h-0 data-starting-style:h-0",
+        "h-[var(--accordion-panel-height)] overflow-hidden text-sm transition-[height] duration-150 ease-[ease-out] data-ending-style:h-0 data-starting-style:h-0",
+        "h-[var(--accordion-panel-height)] overflow-hidden text-sm transition-[height] duration-150 ease-[ease-out] data-ending-style:h-0 data-starting-style:h-0"
+      ],
+      "Accordion.Root": [
+        "flex w-full max-w-80 flex-col border border-neutral-950 text-neutral-950 dark:border-white dark:text-white"
+      ],
+      "Accordion.Trigger": [
+        "group flex w-full items-center justify-between gap-4 bg-transparent px-3 py-2 text-left text-sm font-normal text-neutral-950 select-none hover:not-data-disabled:bg-neutral-100 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:text-white dark:hover:not-data-disabled:bg-neutral-800",
+        "group flex w-full items-center justify-between gap-4 bg-transparent px-3 py-2 text-left text-sm font-normal text-neutral-950 select-none hover:not-data-disabled:bg-neutral-100 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:text-white dark:hover:not-data-disabled:bg-neutral-800",
+        "group flex w-full items-center justify-between gap-4 bg-transparent px-3 py-2 text-left text-sm font-normal text-neutral-950 select-none hover:not-data-disabled:bg-neutral-100 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:text-white dark:hover:not-data-disabled:bg-neutral-800",
+        "group flex w-full items-center justify-between gap-4 bg-transparent px-3 py-2 text-left text-sm font-normal text-neutral-950 select-none hover:not-data-disabled:bg-neutral-100 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:text-white dark:hover:not-data-disabled:bg-neutral-800"
+      ],
+      "div": ["px-3 py-2", "px-3 py-2", "px-3 py-2", "px-3 py-2"],
+      "svg": [
+        "shrink-0 transition-transform duration-100 ease-[ease-out] group-data-panel-open:rotate-45",
+        "shrink-0 transition-transform duration-100 ease-[ease-out] group-data-panel-open:rotate-45",
+        "shrink-0 transition-transform duration-100 ease-[ease-out] group-data-panel-open:rotate-45",
+        "shrink-0 transition-transform duration-100 ease-[ease-out] group-data-panel-open:rotate-45"
+      ]
+    },
+    "multiple/tailwind": {
+      "Accordion.Item": [
+        "border-t border-neutral-950 dark:border-white",
+        "border-t border-neutral-950 dark:border-white"
+      ],
+      "Accordion.Panel": [
+        "h-[var(--accordion-panel-height)] overflow-hidden text-sm transition-[height] duration-150 ease-[ease-out] data-ending-style:h-0 data-starting-style:h-0",
+        "h-[var(--accordion-panel-height)] overflow-hidden text-sm transition-[height] duration-150 ease-[ease-out] data-ending-style:h-0 data-starting-style:h-0",
+        "h-[var(--accordion-panel-height)] overflow-hidden text-sm transition-[height] duration-150 ease-[ease-out] data-ending-style:h-0 data-starting-style:h-0"
+      ],
+      "Accordion.Root": [
+        "flex w-full max-w-80 flex-col border border-neutral-950 text-neutral-950 dark:border-white dark:text-white"
+      ],
+      "Accordion.Trigger": [
+        "group flex w-full items-center justify-between gap-4 bg-transparent px-3 py-2 text-left text-sm font-normal text-neutral-950 select-none hover:not-data-disabled:bg-neutral-100 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:text-white dark:hover:not-data-disabled:bg-neutral-800",
+        "group flex w-full items-center justify-between gap-4 bg-transparent px-3 py-2 text-left text-sm font-normal text-neutral-950 select-none hover:not-data-disabled:bg-neutral-100 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:text-white dark:hover:not-data-disabled:bg-neutral-800",
+        "group flex w-full items-center justify-between gap-4 bg-transparent px-3 py-2 text-left text-sm font-normal text-neutral-950 select-none hover:not-data-disabled:bg-neutral-100 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:text-white dark:hover:not-data-disabled:bg-neutral-800"
+      ],
+      "div": ["px-3 py-2", "px-3 py-2", "px-3 py-2"],
+      "svg": [
+        "shrink-0 transition-transform duration-100 ease-[ease-out] group-data-panel-open:rotate-45",
+        "shrink-0 transition-transform duration-100 ease-[ease-out] group-data-panel-open:rotate-45",
+        "shrink-0 transition-transform duration-100 ease-[ease-out] group-data-panel-open:rotate-45"
+      ]
+    }
   }
 }
