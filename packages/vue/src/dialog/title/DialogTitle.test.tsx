@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { KeepAlive, defineComponent, shallowRef } from 'vue';
 import { Dialog } from '@vase-ui/vue/dialog';
-import { createRenderer, describeConformance, flushMicrotasks, screen } from '#test-utils';
+import {
+  createHeldBranch,
+  createRenderer,
+  describeConformance,
+  flushMicrotasks,
+  screen,
+} from '#test-utils';
 import DialogTitleReplacement from './DialogTitleReplacement.test.vue';
 
 describe('<Dialog.Title />', () => {
@@ -154,6 +160,28 @@ describe('<Dialog.Title />', () => {
       await flushMicrotasks();
       expect(screen.getByTestId('title')).toBe(title);
       expect(popup).toHaveAttribute('aria-labelledby', title.id);
+    });
+
+    it('does not name the popup with a title that mounts while KeepAlive holds it', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Dialog.Title key="title" id="held-title" />
+      ));
+      await render(() => (
+        <Dialog.Root open modal={false}>
+          <Dialog.Portal>
+            <Dialog.Popup>
+              <HeldBranch />
+            </Dialog.Popup>
+          </Dialog.Portal>
+        </Dialog.Root>
+      ));
+      const popup = screen.getByRole('dialog');
+
+      await mountWhileHeld();
+      expect(popup).not.toHaveAttribute('aria-labelledby');
+
+      await show();
+      expect(popup).toHaveAttribute('aria-labelledby', 'held-title');
     });
   });
 });

@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { shallowRef } from 'vue';
 import * as Popover from '../index.parts';
-import { createRenderer, describeConformance, flushMicrotasks, screen } from '#test-utils';
+import {
+  createHeldBranch,
+  createRenderer,
+  describeConformance,
+  flushMicrotasks,
+  screen,
+} from '#test-utils';
 
 describe('<Popover.Description />', () => {
   const { render } = createRenderer();
@@ -65,5 +71,30 @@ describe('<Popover.Description />', () => {
     await flushMicrotasks();
 
     expect(popup).toHaveAttribute('aria-describedby', screen.getByTestId('second').id);
+  });
+
+  it('does not describe the popup with a description that mounts while KeepAlive holds it', async () => {
+    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+      <Popover.Description key="description" id="held-description" />
+    ));
+    await render(() => (
+      <Popover.Root open>
+        <Popover.Portal>
+          <Popover.Positioner>
+            <Popover.Popup>
+              <HeldBranch />
+            </Popover.Popup>
+          </Popover.Positioner>
+        </Popover.Portal>
+      </Popover.Root>
+    ));
+    await flushMicrotasks();
+    const popup = screen.getByRole('dialog');
+
+    await mountWhileHeld();
+    expect(popup).not.toHaveAttribute('aria-describedby');
+
+    await show();
+    expect(popup).toHaveAttribute('aria-describedby', 'held-description');
   });
 });

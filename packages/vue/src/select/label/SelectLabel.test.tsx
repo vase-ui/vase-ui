@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { Select } from '@vase-ui/vue/select';
-import { createRenderer, describeConformance, flushMicrotasks, screen } from '#test-utils';
+import {
+  createHeldBranch,
+  createRenderer,
+  describeConformance,
+  flushMicrotasks,
+  screen,
+} from '#test-utils';
 
 describe('<Select.Label />', () => {
   const { render } = createRenderer();
@@ -45,5 +51,26 @@ describe('<Select.Label />', () => {
     await flushMicrotasks();
 
     expect(screen.getByTestId('trigger')).toHaveFocus();
+  });
+
+  it('does not name the trigger while KeepAlive holds a label that mounted in a held branch', async () => {
+    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+      <Select.Label key="label" data-testid="label">
+        Font
+      </Select.Label>
+    ));
+    await render(() => (
+      <Select.Root>
+        <HeldBranch />
+        <Select.Trigger data-testid="trigger" />
+      </Select.Root>
+    ));
+    const trigger = screen.getByTestId('trigger');
+
+    await mountWhileHeld();
+    expect(trigger).not.toHaveAttribute('aria-labelledby');
+
+    await show();
+    expect(trigger).toHaveAttribute('aria-labelledby', screen.getByTestId('label').id);
   });
 });
