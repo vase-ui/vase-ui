@@ -86,8 +86,8 @@ function listPages(): string[] {
 }
 
 async function main(): Promise<void> {
-  // The root package does not depend on VitePress, Playwright or axe-core. The packages that use
-  // them do.
+  // The root package does not depend on VitePress, Playwright or axe-core. The release job `stage`
+  // installs the root dependencies in a step that can get an OIDC token.
   const vitepress = await import(pathToFileURL(docsRequire.resolve('vitepress')).href);
   const { chromium } = vueRequire('playwright');
   const axeSource: string = vueRequire('axe-core').source;
