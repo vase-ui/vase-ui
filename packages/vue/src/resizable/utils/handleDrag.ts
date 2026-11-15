@@ -1,12 +1,9 @@
 import { shallowRef } from 'vue';
 import type { Ref } from 'vue';
-import {
-  createChangeEventDetails,
-  createGenericEventDetails,
-} from '../../internals/createBaseUIEventDetails';
+import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { ResizableRootContext } from '../root/ResizableRootContext';
-import { adjustLayout, areLayoutsEqual, hasSamePanels } from './layout';
+import { adjustLayout, areLayoutsEqual, hasSamePanels, snapDelta } from './layout';
 import type { Layout } from './layout';
 
 interface HandleDragOptions {
@@ -53,6 +50,7 @@ export function createHandleDrag(
   let horizontal = true;
   let rtl = false;
   let startPointer = 0;
+  // The room of the panels on the screen, in pixels of the screen: the pointer has such pixels.
   let panelSpace = 0;
   let startLayout: Layout = {};
   // The layout of the last change that no listener canceled. The release commits it.
@@ -71,8 +69,9 @@ export function createHandleDrag(
     if (event.button !== 0 || event.defaultPrevented || options.disabled() || pivot < 0) {
       return false;
     }
-    const space = root.getPanelSpace();
-    if (space <= 0 || !root.startDragging()) {
+    // A root with no room for its panels has no measurement, and no drag.
+    const measurement = root.measure();
+    if (measurement === undefined || !root.startDragging()) {
       return false;
     }
     dragging.value = true;
@@ -80,7 +79,7 @@ export function createHandleDrag(
     horizontal = root.orientation.value === 'horizontal';
     rtl = horizontal && root.direction.value === 'rtl';
     startPointer = horizontal ? event.clientX : event.clientY;
-    panelSpace = space;
+    panelSpace = measurement.space * measurement.scale;
     startLayout = root.shown.value;
     applied = undefined;
     lastEvent = event;
@@ -108,7 +107,7 @@ export function createHandleDrag(
     if (applied) {
       const layout = applied;
       applied = undefined;
-      root.commitLayout(layout, createGenericEventDetails(REASONS.drag, event ?? lastEvent));
+      root.commitLayout(layout, REASONS.drag, event ?? lastEvent);
     }
   }
 
@@ -133,9 +132,13 @@ export function createHandleDrag(
     const distance = (horizontal ? event.clientX : event.clientY) - startPointer;
     moved ||= distance !== 0;
     const delta = ((rtl ? -distance : distance) / panelSpace) * 100;
-    const next = adjustLayout(root.constraints.value, startLayout, pivot, delta, {
-      push: root.pushPanels.value,
-    });
+    const next = adjustLayout(
+      root.constraints.value,
+      startLayout,
+      pivot,
+      snapDelta(root.constraints.value, startLayout, pivot, delta, root.dragStep.value),
+      { push: root.pushPanels.value },
+    );
     if (areLayoutsEqual(next, shown)) {
       return;
     }
