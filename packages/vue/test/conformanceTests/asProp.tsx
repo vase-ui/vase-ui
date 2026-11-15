@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/dom';
+import { screen } from '../queries';
 import { expect, describe, it, vi } from 'vitest';
 import { defineComponent } from 'vue';
 import type { Component, FunctionalComponent, VNode } from 'vue';

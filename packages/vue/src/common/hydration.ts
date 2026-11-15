@@ -55,7 +55,22 @@ async function runQueuedTakes() {
   isTaking = false;
 }
 
-function isTextControl(element: Element | null): element is TextControl {
+/**
+ * Runs `take` after the current flush of Vue, in the order of the calls. Call it after the mount
+ * of a part whose control changed before the hydration.
+ * @param take Gives `true` when it sent a change. The next take then runs after the flush of that
+ * change, so a parent that controls two parts has the first change in its props.
+ */
+export function queueInputTake(take: () => boolean): void {
+  queuedTakes.push(take);
+  if (!isTaking) {
+    isTaking = true;
+    void nextTick(runQueuedTakes);
+  }
+}
+
+/** Whether the element is an `<input>` or a `<textarea>`. */
+export function isTextControl(element: Element | null): element is TextControl {
   return element?.localName === 'input' || element?.localName === 'textarea';
 }
 
@@ -79,33 +94,45 @@ function isHistoryTraversalOrReload(serverNode: RendererNode) {
   return navigation?.type === 'back_forward' || navigation?.type === 'reload';
 }
 
+function leave(control: TextControl) {
+  const doc = ownerDocument(control);
+  const active = activeElement(doc);
+  if (!control.isConnected || active === control) {
+    return;
+  }
+  // A browser gives no `relatedTarget` for a focus that goes to no element.
+  const relatedTarget = active === doc.body ? null : active;
+  control.dispatchEvent(new Event('change', { bubbles: true }));
+  control.dispatchEvent(new FocusEvent('blur', { composed: true, relatedTarget }));
+  control.dispatchEvent(
+    new FocusEvent('focusout', { bubbles: true, composed: true, relatedTarget }),
+  );
+}
+
 /**
- * For a part that renders a text control. While Vue hydrates the part from server HTML, the
- * result is `false`, and the part gives its element no `value` key. The control then keeps a
- * value that it got before the hydration: typed text, an autofill or a value that the browser
- * restored.
- *
- * After the flush of the mount, a control whose value differs from its server HTML gets one
- * `input` event, and then the result is `true`. The handler of the part thus reads `false` for
- * that event. One tick later, such a control that does not have the focus also gets `change`,
- * `blur` and `focusout`, because the user left it before the listeners existed.
- *
- * In a client-only mount, and for a component in `as`, the result is `true` from the start.
- * @param componentProps The props of the part. The composable reads `as`.
- * @param control Gives the element of the part.
- * @param options With `restorable: false`, the result is also `true` from the start after a move
- * in the history or a reload. Vue then writes the value of the part over a value that the browser
- * restored.
+ * Sends one `input` event to a control whose value changed with no event that its part handled.
+ * @param leaves With `true`, one tick later, a control that does not have the focus also gets
+ * `change`, `blur` and `focusout`, because the user left it before the part saw the change. A
+ * controlled part gets the new value in its prop only in the flush after the `input` event.
  */
-export function useValueBeforeHydration(
-  componentProps: { as?: unknown },
+export function dispatchTakeEvents(control: TextControl, leaves: boolean): void {
+  control.dispatchEvent(new InputEvent('input', { bubbles: true, composed: true }));
+  if (leaves) {
+    void nextTick(() => {
+      leave(control);
+    });
+  }
+}
+
+function useControlValueBeforeHydration(
+  isNativeControl: boolean,
   control: () => Element | null,
-  { restorable = true }: { restorable?: boolean } = {},
+  leaves: boolean,
+  restorable: boolean,
 ): Readonly<Ref<boolean>> {
-  const rendersElement = typeof componentProps.as === 'string' || useSlots().render !== undefined;
   const serverNode = getCurrentInstance()?.vnode.el;
   if (
-    !rendersElement ||
+    !isNativeControl ||
     serverNode == null ||
     (!restorable && isHistoryTraversalOrReload(serverNode))
   ) {
@@ -113,21 +140,6 @@ export function useValueBeforeHydration(
   }
 
   const writesValue = shallowRef(false);
-
-  function leave(element: TextControl) {
-    const doc = ownerDocument(element);
-    const active = activeElement(doc);
-    if (!element.isConnected || active === element) {
-      return;
-    }
-    // A browser gives no `relatedTarget` for a focus that goes to no element.
-    const relatedTarget = active === doc.body ? null : active;
-    element.dispatchEvent(new Event('change', { bubbles: true }));
-    element.dispatchEvent(new FocusEvent('blur', { composed: true, relatedTarget }));
-    element.dispatchEvent(
-      new FocusEvent('focusout', { bubbles: true, composed: true, relatedTarget }),
-    );
-  }
 
   // Gives `true` when it sends the `input` event.
   function take() {
@@ -142,12 +154,8 @@ export function useValueBeforeHydration(
     }
 
     takenControls.add(element);
-    element.dispatchEvent(new InputEvent('input', { bubbles: true, composed: true }));
+    dispatchTakeEvents(element, leaves);
     writesValue.value = true;
-    // A controlled part gets the new value in its prop only in the flush after the event.
-    void nextTick(() => {
-      leave(element);
-    });
     return true;
   }
 
@@ -157,13 +165,60 @@ export function useValueBeforeHydration(
   const isMounted = shallowRef(false);
   watch(isMounted, () => {});
   onMounted(() => {
-    isMounted.value = true;
-    queuedTakes.push(take);
-    if (!isTaking) {
-      isTaking = true;
-      void nextTick(runQueuedTakes);
+    // A control that equals its server HTML has nothing to take, so it gets the `value` key from
+    // the mount on. A root thus writes its value to its hidden input while the takes of the
+    // controls inside it run, and their `blur` validates the field against that value.
+    const element = control();
+    if (!isTextControl(element) || element.value === getUnchangedValue(element)) {
+      writesValue.value = true;
+      return;
     }
+
+    isMounted.value = true;
+    queueInputTake(take);
   });
 
   return writesValue;
+}
+
+/**
+ * For a part that renders a text control. While Vue hydrates the part from server HTML, the
+ * result is `false`, and the part gives its element no `value` key. The control then keeps a
+ * value that it got before the hydration: typed text, an autofill or a value that the browser
+ * restored.
+ *
+ * A control that equals its server HTML gives `true` from the mount. After the flush of the mount,
+ * a control whose value differs from its server HTML gets one `input` event, and then the result
+ * is `true`. The handler of the part thus reads `false` for that event. One tick later, such a
+ * control that does not have the focus also gets `change`, `blur` and `focusout`, because the user
+ * left it before the listeners existed.
+ *
+ * In a client-only mount, and for a component in `as`, the result is `true` from the start.
+ * @param componentProps The props of the part. The composable reads `as`.
+ * @param control Gives the element of the part.
+ * @param options With `restorable: false`, the result is also `true` from the start after a move
+ * in the history or a reload. Vue then writes the value of the part over a value that the browser
+ * restored.
+ */
+export function useValueBeforeHydration(
+  componentProps: { as?: unknown },
+  control: () => Element | null,
+  { restorable = true }: { restorable?: boolean } = {},
+): Readonly<Ref<boolean>> {
+  const rendersElement = typeof componentProps.as === 'string' || useSlots().render !== undefined;
+  return useControlValueBeforeHydration(rendersElement, control, true, restorable);
+}
+
+/**
+ * For a root that renders a hidden `<input>` of its own, such as `Select.Root`. It is
+ * {@link useValueBeforeHydration} with one difference: the input gets only the `input` event,
+ * because the user cannot focus or leave it.
+ * @param input Gives the hidden input.
+ * @param options As for {@link useValueBeforeHydration}.
+ */
+export function useHiddenValueBeforeHydration(
+  input: () => HTMLInputElement | null,
+  { restorable = true }: { restorable?: boolean } = {},
+): Readonly<Ref<boolean>> {
+  return useControlValueBeforeHydration(true, input, false, restorable);
 }

@@ -71,7 +71,11 @@ import {
 import type { Component } from 'vue';
 import { clamp } from '../../common/clamp';
 import { formatNumber } from '../../common/formatNumber';
-import { useIsHydrating } from '../../common/hydration';
+import {
+  dispatchTakeEvents,
+  useHiddenValueBeforeHydration,
+  useIsHydrating,
+} from '../../common/hydration';
 import { ownerWindow } from '../../common/owner';
 import { contains } from '../../common/shadowDom';
 import { visuallyHidden } from '../../common/visuallyHidden';
@@ -94,6 +98,7 @@ import { useSetFieldFocused } from '../../internals/field-root-context/useSetFie
 import { useDeferredServerRender, useLabelableId } from '../../internals/labelable-provider';
 import type { HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useFormRestore } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { mergeProps } from '../../merge-props';
 import { matchesFocusVisible } from '../../utils/popups/element';
@@ -372,6 +377,15 @@ function setInputElement(value: unknown) {
   inputElement.value = input;
 }
 
+const writesValue = useHiddenValueBeforeHydration(() => inputElement.value);
+
+useFormRestore(inputElement, () => {
+  const input = inputElement.value;
+  if (input && input.valueAsNumber !== thumbValue.value) {
+    dispatchTakeEvents(input, false);
+  }
+});
+
 // The value that the input had after the last `input` or `change` event that the thumb handled.
 // A `change` event with that value is the second event of one user action.
 let handledInputValue: number | undefined;
@@ -569,7 +583,7 @@ function inputProps() {
       },
       tabindex: props.tabindex,
       type: 'range',
-      value: value ?? '',
+      ...(writesValue.value ? { value: value ?? '' } : undefined),
     },
     (merged) => validation.getValidationProps(isDisabled.value, merged),
     {
