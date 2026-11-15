@@ -18,6 +18,7 @@ import {
   wait,
   waitFor,
   waitForLaterMillisecond,
+  waitSingleFrame,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
@@ -120,6 +121,8 @@ describe('<Combobox.Trigger />', () => {
 
       const trigger = screen.getByTestId('trigger');
       await user.click(trigger);
+      await waitSingleFrame();
+      await flushMicrotasks();
 
       expect(screen.queryByRole('listbox')).toBe(null);
     });

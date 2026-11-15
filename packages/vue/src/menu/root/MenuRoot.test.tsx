@@ -4118,6 +4118,8 @@ describe('<Menu.Root />', () => {
       expect(submenuTrigger).toHaveAttribute('data-disabled');
 
       await user.click(submenuTrigger);
+      await waitSingleFrame();
+      await flushMicrotasks();
 
       expect(screen.queryByTestId('submenu-popup')).toBe(null);
     });
