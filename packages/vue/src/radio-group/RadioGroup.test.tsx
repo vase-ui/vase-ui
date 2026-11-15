@@ -3516,6 +3516,7 @@ describe('<RadioGroup />', () => {
             <RadioGroup ref={group} required>
               {extra.value ? <Radio.Root key="b" value="b" data-testid="b" /> : null}
               <Radio.Root key="a" value="a" data-testid="a" />
+              <Radio.Root key="c" value="c" data-testid="c" />
             </RadioGroup>
           </Field.Root>
           <button type="submit">Submit</button>

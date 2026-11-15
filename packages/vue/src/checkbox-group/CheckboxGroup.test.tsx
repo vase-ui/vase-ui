@@ -3071,6 +3071,7 @@ describe('<CheckboxGroup />', () => {
                 <Checkbox.Root key="banana" value="banana" required data-testid="banana" />
               ) : null}
               <Checkbox.Root key="apple" value="apple" required data-testid="apple" />
+              <Checkbox.Root key="cherry" value="cherry" required data-testid="cherry" />
             </CheckboxGroup>
           </Field.Root>
           <button type="submit">Submit</button>

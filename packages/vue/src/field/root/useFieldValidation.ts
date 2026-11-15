@@ -45,10 +45,10 @@ export function isEligibleInput(input: HTMLInputElement, formElement: HTMLFormEl
 
 /**
  * Picks the input whose native validity represents a field that owns several inputs, such as a
- * checkbox group or a radio group. It takes the first eligible invalid input in the document, or else
- * the first eligible input in the document, as a native form does. The order of the registrations
- * can differ from the document, for example after a keyed move. Inputs in two trees keep the order of
- * the registrations.
+ * checkbox group or a radio group. It takes the first eligible invalid input in the document, as a
+ * native form does, or else the first eligible input in the document. The order of the
+ * registrations can differ from the document, for example after a keyed move. Inputs in two trees
+ * keep the order of the registrations.
  */
 function findRepresentativeInput(
   inputs: RegisteredInputs,
