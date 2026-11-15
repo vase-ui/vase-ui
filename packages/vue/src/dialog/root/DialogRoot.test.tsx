@@ -24,6 +24,7 @@ import {
   hydrate,
   isJSDOM,
   nextEvent,
+  popupAnatomyTests,
   popupConformanceTests,
   renderOnServer,
   screen,
@@ -228,6 +229,20 @@ const MultipleDetachedTriggersDialog = defineComponent({
 
 describe('<Dialog.Root />', () => {
   const { render } = createRenderer();
+
+  popupAnatomyTests({
+    createComponent: ({ open, onOpenChangeComplete, content }) => (
+      <Dialog.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Dialog.Trigger>Open</Dialog.Trigger>
+        <Dialog.Portal>
+          <Dialog.Backdrop data-testid="shown" class="shown" />
+          {content}
+        </Dialog.Portal>
+      </Dialog.Root>
+    ),
+    createPopup: () => <Dialog.Popup data-testid="popup">Popup</Dialog.Popup>,
+    render,
+  });
 
   popupConformanceTests({
     createComponent: (props) => (
@@ -458,13 +473,15 @@ describe('<Dialog.Root />', () => {
     const { user } = await render(<Test />);
     const trigger1 = screen.getByRole('button', { name: 'Trigger 1' });
 
-    await user.click(trigger1);
+    const trigger1Controls = await waitForLaterMillisecond(async () => {
+      await user.click(trigger1);
 
-    const popup = await screen.findByRole('dialog');
-    const trigger1Controls = trigger1.getAttribute('aria-controls');
+      const popup = await screen.findByRole('dialog');
+      const controls = trigger1.getAttribute('aria-controls');
 
-    expect(trigger1Controls).toBe(popup.getAttribute('id'));
-    await waitForLaterMillisecond();
+      expect(controls).toBe(popup.getAttribute('id'));
+      return controls;
+    });
 
     await user.click(screen.getByRole('button', { name: 'Mount trigger 2' }));
 
@@ -1140,12 +1157,10 @@ describe('<Dialog.Root />', () => {
       const { user } = await render(<App />);
 
       const trigger = screen.getByRole('button', { name: 'Open base' });
-      await user.click(trigger);
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(() => user.click(trigger));
 
       const nestedButton1 = screen.getByRole('button', { name: 'Open nested 1' });
-      await user.click(nestedButton1);
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(() => user.click(nestedButton1));
 
       const nestedButton2 = screen.getByRole('button', { name: 'Open nested 2' });
       await user.click(nestedButton2);
@@ -1197,12 +1212,10 @@ describe('<Dialog.Root />', () => {
       await render(<App />);
 
       const trigger = screen.getByRole('button', { name: 'Open base' });
-      await fireEvent.click(trigger);
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(() => fireEvent.click(trigger));
 
       const nestedButton1 = screen.getByRole('button', { name: 'Open nested 1' });
-      await fireEvent.click(nestedButton1);
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(() => fireEvent.click(nestedButton1));
 
       const nestedButton2 = screen.getByRole('button', { name: 'Open nested 2' });
       await fireEvent.click(nestedButton2);
@@ -1254,21 +1267,23 @@ describe('<Dialog.Root />', () => {
         );
 
         const dialogTrigger = screen.getByRole('button', { name: 'Open' });
-        await user.click(dialogTrigger);
+        await waitForLaterMillisecond(async () => {
+          await user.click(dialogTrigger);
 
-        await waitFor(() => {
-          expect(screen.queryByRole('dialog')).not.toBe(null);
+          await waitFor(() => {
+            expect(screen.queryByRole('dialog')).not.toBe(null);
+          });
         });
-        await waitForLaterMillisecond();
 
         const menuTrigger = screen.getByRole('button', { name: 'Open menu' });
 
-        await user.click(menuTrigger);
+        await waitForLaterMillisecond(async () => {
+          await user.click(menuTrigger);
 
-        await waitFor(() => {
-          expect(screen.queryByRole('menu')).not.toBe(null);
+          await waitFor(() => {
+            expect(screen.queryByRole('menu')).not.toBe(null);
+          });
         });
-        await waitForLaterMillisecond();
 
         const menuPositioner = screen.getByTestId('menu-positioner');
         const menuInternalBackdrop = menuPositioner.previousElementSibling as HTMLElement;
@@ -1314,21 +1329,23 @@ describe('<Dialog.Root />', () => {
         );
 
         const dialogTrigger = screen.getByRole('button', { name: 'Open' });
-        await user.click(dialogTrigger);
+        await waitForLaterMillisecond(async () => {
+          await user.click(dialogTrigger);
 
-        await waitFor(() => {
-          expect(screen.queryByRole('dialog')).not.toBe(null);
+          await waitFor(() => {
+            expect(screen.queryByRole('dialog')).not.toBe(null);
+          });
         });
-        await waitForLaterMillisecond();
 
         const selectTrigger = screen.getByTestId('select-trigger');
 
-        await user.click(selectTrigger);
+        await waitForLaterMillisecond(async () => {
+          await user.click(selectTrigger);
 
-        await waitFor(() => {
-          expect(screen.queryByRole('listbox')).not.toBe(null);
+          await waitFor(() => {
+            expect(screen.queryByRole('listbox')).not.toBe(null);
+          });
         });
-        await waitForLaterMillisecond();
 
         const selectPositioner = screen.getByTestId('select-positioner');
         const selectInternalBackdrop = selectPositioner.previousElementSibling as HTMLElement;
@@ -1831,16 +1848,17 @@ describe('<Dialog.Root />', () => {
     // such checkpoint, and a key press on a focused button gives a trusted click.
     async function click(testId: string) {
       const element = await query(testId);
-      // The popup can open in the millisecond of the click before. Vue skips the second and later
-      // listeners of an event in the millisecond in which it attached them.
-      await waitForLaterMillisecond();
-      if (element instanceof HTMLButtonElement) {
-        element.focus();
-        await userEvent.keyboard('{Enter}');
-      } else {
-        element.click();
-      }
-      await flushMicrotasks();
+      // The click can open a popup. Vue skips the second and later listeners of an event in the
+      // millisecond in which it attached them.
+      await waitForLaterMillisecond(async () => {
+        if (element instanceof HTMLButtonElement) {
+          element.focus();
+          await userEvent.keyboard('{Enter}');
+        } else {
+          element.click();
+        }
+        await flushMicrotasks();
+      });
     }
 
     type PortalContainer = 'shadow root' | 'body' | undefined;
@@ -2968,10 +2986,8 @@ describe('<Dialog.Root />', () => {
   });
 
   describe('scroll lock', () => {
-    // The lock and the unlock each wait for a timer of 0 ms. The observers of `waitFor` do not see a
-    // document in a frame, so it polls.
-    const POLL = { interval: 5, timeout: 3000 };
-
+    // The lock and the unlock each wait for a timer of 0 ms. The observer of `waitFor` does not see
+    // a change in the document of an iframe. Its check in each frame sees the change.
     function renderModalDialog(scrollDocument: ScrollDocument, rootProps: object = {}) {
       return (
         <Dialog.Root defaultOpen {...rootProps}>
@@ -2986,10 +3002,10 @@ describe('<Dialog.Root />', () => {
       const scrollDocument = await createScrollDocument();
       const handle = Dialog.createHandle();
       await render(() => renderModalDialog(scrollDocument, { handle }));
-      await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(true), POLL);
+      await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(true));
 
       handle.close();
-      await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(false), POLL);
+      await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(false));
       expect(getScrollLockRegistry()?.lockCount).toBe(0);
     });
 
@@ -3016,13 +3032,13 @@ describe('<Dialog.Root />', () => {
       await render(() => (
         <KeepAlive>{show.value ? <ModalDialog key="dialog" /> : <Other key="other" />}</KeepAlive>
       ));
-      await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(true), POLL);
+      await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(true));
 
       show.value = false;
-      await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(false), POLL);
+      await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(false));
 
       show.value = true;
-      await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(true), POLL);
+      await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(true));
     });
   });
 

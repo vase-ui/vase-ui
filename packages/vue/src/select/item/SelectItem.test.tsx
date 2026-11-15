@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, expect, vi, describe, it } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import { Select } from '@vase-ui/vue/select';
-import { platform } from '../../common/platform';
 import type { VaseUIEvent } from '../../internals/types';
 import {
+  clientCenter,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -12,8 +12,6 @@ import {
   waitFor,
   waitForLaterMillisecond,
 } from '#test-utils';
-
-const isWebKit = platform.engine.webkit;
 
 describe('<Select.Item />', () => {
   const { render } = createRenderer();
@@ -47,11 +45,12 @@ describe('<Select.Item />', () => {
       </Select.Root>,
     );
 
-    await user.click(screen.getByTestId('trigger'));
+    const option = await waitForLaterMillisecond(async () => {
+      await user.click(screen.getByTestId('trigger'));
 
-    const option = await screen.findByRole('option', { name: 'one' });
+      return screen.findByRole('option', { name: 'one' });
+    });
     expect(option).toHaveAttribute('aria-selected', 'false');
-    await waitForLaterMillisecond();
 
     await user.click(option);
 
@@ -260,9 +259,10 @@ describe('<Select.Item />', () => {
       </Select.Root>,
     );
 
-    await user.click(screen.getByTestId('trigger'));
-    const option = await screen.findByRole('option', { name: 'two' });
-    await waitForLaterMillisecond();
+    const option = await waitForLaterMillisecond(async () => {
+      await user.click(screen.getByTestId('trigger'));
+      return screen.findByRole('option', { name: 'two' });
+    });
     await user.click(option);
 
     expect(handleValueChange).not.toHaveBeenCalled();
@@ -403,30 +403,29 @@ describe('<Select.Item />', () => {
     });
   });
 
-  it.skipIf(isWebKit)(
-    'should highlight a hovered item and commit it with a mouse click',
-    async () => {
-      const onValueChange = vi.fn();
+  it('should highlight a hovered item and commit it with a mouse click', async () => {
+    const onValueChange = vi.fn();
 
-      await render(
-        <Select.Root onValueChange={onValueChange}>
-          <Select.Trigger data-testid="trigger">
-            <Select.Value data-testid="value" />
-          </Select.Trigger>
-          <Select.Portal>
-            <Select.Positioner>
-              <Select.Popup>
-                <Select.Item value="one">one</Select.Item>
-                <Select.Item value="two">two</Select.Item>
-                <Select.Item value="three">three</Select.Item>
-              </Select.Popup>
-            </Select.Positioner>
-          </Select.Portal>
-        </Select.Root>,
-      );
+    await render(
+      <Select.Root onValueChange={onValueChange}>
+        <Select.Trigger data-testid="trigger">
+          <Select.Value data-testid="value" />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              <Select.Item value="one">one</Select.Item>
+              <Select.Item value="two">two</Select.Item>
+              <Select.Item value="three">three</Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>,
+    );
 
-      const trigger = screen.getByTestId('trigger');
+    const trigger = screen.getByTestId('trigger');
 
+    await waitForLaterMillisecond(async () => {
       await fireEvent.pointerDown(trigger, { pointerType: 'mouse' });
       await fireEvent.mouseDown(trigger);
       await fireEvent.pointerUp(trigger, { pointerType: 'mouse' });
@@ -437,30 +436,29 @@ describe('<Select.Item />', () => {
       await waitFor(() => {
         expect(screen.queryByRole('listbox')).not.toBe(null);
       });
-      await waitForLaterMillisecond();
+    });
 
-      const option = screen.getByRole('option', { name: 'two' });
+    const option = screen.getByRole('option', { name: 'two' });
 
-      await fireEvent.pointerEnter(option, { pointerType: 'mouse' });
-      await fireEvent.mouseMove(option);
+    await fireEvent.pointerEnter(option, { pointerType: 'mouse' });
+    await fireEvent.mouseMove(option, { movementX: 1 });
 
-      await waitFor(() => {
-        expect(option).toHaveAttribute('data-highlighted');
-      });
+    await waitFor(() => {
+      expect(option).toHaveAttribute('data-highlighted');
+    });
 
-      await fireEvent.pointerDown(option, { pointerType: 'mouse' });
-      await fireEvent.mouseDown(option);
-      await fireEvent.pointerUp(option, { pointerType: 'mouse' });
-      await fireEvent.mouseUp(option);
-      await fireEvent.click(option);
-      await flushMicrotasks();
+    await fireEvent.pointerDown(option, { pointerType: 'mouse' });
+    await fireEvent.mouseDown(option);
+    await fireEvent.pointerUp(option, { pointerType: 'mouse' });
+    await fireEvent.mouseUp(option);
+    await fireEvent.click(option);
+    await flushMicrotasks();
 
-      expect(onValueChange).toHaveBeenCalledExactlyOnceWith('two', expect.anything());
-      await waitFor(() => {
-        expect(screen.getByTestId('value').textContent).toBe('two');
-      });
-    },
-  );
+    expect(onValueChange).toHaveBeenCalledExactlyOnceWith('two', expect.anything());
+    await waitFor(() => {
+      expect(screen.getByTestId('value').textContent).toBe('two');
+    });
+  });
 
   it('should ignore an unhighlighted item with a generic virtual click', async () => {
     await render(
@@ -510,9 +508,10 @@ describe('<Select.Item />', () => {
 
     const trigger = screen.getByTestId('trigger');
 
-    await fireEvent.click(trigger);
-    const option = await screen.findByRole('option', { name: 'three' });
-    await waitForLaterMillisecond();
+    const option = await waitForLaterMillisecond(async () => {
+      await fireEvent.click(trigger);
+      return screen.findByRole('option', { name: 'three' });
+    });
     await user.click(option);
     await fireEvent.click(trigger);
 
@@ -660,10 +659,11 @@ describe('<Select.Item />', () => {
     }
 
     async function openWithMouseDown(trigger: HTMLElement) {
-      await fireEvent.mouseDown(trigger);
-      await waitFor(() => expect(screen.queryByRole('listbox')).not.toBe(null));
       // Vue skips a listener of an item for an event that comes in the millisecond of its mount.
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.mouseDown(trigger, clientCenter(trigger));
+        await waitFor(() => expect(screen.queryByRole('listbox')).not.toBe(null));
+      });
     }
 
     it('calls onClick once for a click made after the opening delay', async () => {
@@ -1187,6 +1187,97 @@ describe('<Select.Item />', () => {
       expect(handleClick).toHaveBeenCalledOnce();
       expect(screen.getByTestId('value').textContent).toBe('Select font');
       expect(screen.queryByRole('listbox')).not.toBe(null);
+    });
+
+    it.each([
+      { name: '8px right and 8px down', dx: 8, dy: 8, value: 'Select font' },
+      { name: '9px right', dx: 9, dy: 0, value: 'one' },
+      { name: '9px down', dx: 0, dy: 9, value: 'one' },
+    ])('VUE-84: a release $name of the trigger press', async ({ dx, dy, value }) => {
+      await render(
+        <Select.Root>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value data-testid="value" placeholder="Select font" />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner alignItemWithTrigger={false}>
+              <Select.Popup>
+                <Select.Item value="one">one</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+      const trigger = screen.getByTestId('trigger');
+      const pressPoint = clientCenter(trigger);
+
+      await openWithMouseDown(trigger);
+      await tick(500);
+      await fireEvent.mouseUp(screen.getByRole('option', { name: 'one' }), {
+        clientX: pressPoint.clientX + dx,
+        clientY: pressPoint.clientY + dy,
+      });
+
+      expect(screen.getByTestId('value').textContent).toBe(value);
+    });
+
+    it('VUE-84: selects an item for a later drag that ends at the point of the trigger press', async () => {
+      await render(
+        <Select.Root>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value data-testid="value" placeholder="Select font" />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner alignItemWithTrigger={false}>
+              <Select.Popup>
+                <Select.Item value="one">one</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+      const trigger = screen.getByTestId('trigger');
+      const pressPoint = clientCenter(trigger);
+
+      await openWithMouseDown(trigger);
+      await tick(500);
+      await fireEvent.mouseUp(trigger, pressPoint);
+      await fireEvent.mouseDown(screen.getByRole('listbox'), {
+        clientX: pressPoint.clientX,
+        clientY: pressPoint.clientY + 50,
+      });
+      await fireEvent.mouseUp(screen.getByRole('option', { name: 'one' }), pressPoint);
+
+      expect(screen.getByTestId('value').textContent).toBe('one');
+    });
+
+    it('VUE-91: emits no valueChange for a drag that ends on the selected item', async () => {
+      const onValueChange = vi.fn();
+      await render(
+        <Select.Root defaultValue="b" onValueChange={onValueChange}>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value data-testid="value" />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner alignItemWithTrigger={false}>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+                <Select.Item value="b">b</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+      const trigger = screen.getByTestId('trigger');
+
+      await openWithMouseDown(trigger);
+      await tick(500);
+      const option = screen.getByRole('option', { name: 'b' });
+      await fireEvent.mouseUp(option, clientCenter(option));
+
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
+      expect(screen.getByTestId('value').textContent).toBe('b');
     });
   });
 

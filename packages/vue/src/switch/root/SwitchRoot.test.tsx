@@ -11,18 +11,27 @@ import {
   flushMicrotasks,
   hiddenInputSizeTests,
   hydrate,
+  hydrateAfter,
   isJSDOM,
   renderOnServer,
   screen,
   takeReportedMessages,
   waitFor,
+  within,
 } from '#test-utils';
 import type { VaseUIRenderResult } from '#test-utils';
 import FieldScope from '../../../test/fixtures/FieldScope.vue';
 import FormScope from '../../../test/fixtures/FormScope.vue';
+import SwitchRootBeforeHydration from './SwitchRootBeforeHydration.test.vue';
 import SwitchRootHydration from './SwitchRootHydration.test.vue';
 
+const BEFORE_HYDRATION_FIXTURE = 'src/switch/root/SwitchRootBeforeHydration.test.vue';
+
 type User = VaseUIRenderResult['user'];
+
+function getInput() {
+  return screen.getByRole<HTMLInputElement>('checkbox', { hidden: true });
+}
 
 // The part follows a reset in a timeout of 0 ms, after the listeners of the event.
 // The case that calls this function uses fake timers.
@@ -1466,10 +1475,6 @@ describe('<Switch.Root />', () => {
   });
 
   describe('the hidden input has the state of the switch', () => {
-    function getInput() {
-      return screen.getByRole<HTMLInputElement>('checkbox', { hidden: true });
-    }
-
     it.each([
       { name: 'a click on the switch', act: () => screen.getByRole('switch').click() },
       { name: 'a click on the input', act: () => getInput().click() },
@@ -1502,24 +1507,84 @@ describe('<Switch.Root />', () => {
       expect(handleUpdate.mock.calls).toEqual([[true], [true]]);
       expect(getInput().checked).toBe(false);
     });
+  });
+
+  describe('VUE-81: the state that the input got before the hydration', () => {
+    // The press of a native label, or the restore of the form state of the page.
+    async function hydrateChanged(
+      props: Record<string, unknown>,
+      change: (serverInput: HTMLInputElement) => void,
+    ) {
+      const serverHtml = await renderOnServer(BEFORE_HYDRATION_FIXTURE, props);
+      let serverInput: HTMLInputElement | null = null;
+      const { container } = await hydrateAfter(SwitchRootBeforeHydration, {
+        serverHtml,
+        props,
+        before(serverContainer) {
+          serverInput = serverContainer.querySelector('input');
+          change(serverInput!);
+        },
+      });
+      await flushMicrotasks();
+      expect(container.querySelector('input')).toBe(serverInput);
+      return within(container);
+    }
+
+    function pressLabel(serverInput: HTMLInputElement) {
+      serverInput.closest('label')!.click();
+    }
 
     it.each([
-      { name: 'an uncontrolled switch', props: { defaultChecked: true } },
-      { name: 'a controlled switch', props: { checked: true } },
-    ])('after the hydration of $name whose input changed before', async ({ props }) => {
-      const serverHtml = await renderOnServer(
-        'src/switch/root/SwitchRootHydration.test.vue',
-        props,
-      );
+      { name: 'an uncontrolled switch', props: {}, model: '' },
+      { name: 'a switch with v-model', props: { mode: 'model', checked: false }, model: 'true' },
+    ])('takes a press on a native label of $name', async ({ props, model }) => {
+      const fixture = await hydrateChanged(props, pressLabel);
+
+      expect(fixture.getByTestId('switch')).toHaveAttribute('aria-checked', 'true');
+      expect(getInput().checked).toBe(true);
+      expect(fixture.getByTestId('model').textContent).toBe(model);
+      expect(fixture.getByTestId('changes').textContent).toBe('true (vase-ui)');
+    });
+
+    it('keeps the state of a parent that keeps its value', async () => {
+      const fixture = await hydrateChanged({ mode: 'keeps', checked: true }, pressLabel);
+
+      expect(fixture.getByTestId('switch')).toHaveAttribute('aria-checked', 'true');
+      expect(getInput().checked).toBe(true);
+      expect(fixture.getByTestId('changes').textContent).toBe('false (vase-ui)');
+    });
+
+    it.each([
+      { name: 'read-only', props: { readOnly: true } },
+      { name: 'disabled', props: { disabled: true } },
+    ])('takes nothing while it is $name', async ({ props }) => {
+      const fixture = await hydrateChanged(props, (serverInput) => {
+        serverInput.checked = true;
+      });
+
+      expect(fixture.getByTestId('switch')).toHaveAttribute('aria-checked', 'false');
+      expect(getInput().checked).toBe(false);
+      expect(fixture.getByTestId('changes').textContent).toBe('');
+    });
+
+    it('marks its field dirty after a press before the hydration', async () => {
+      const fixture = await hydrateChanged({ mode: 'field' }, pressLabel);
+      expect(fixture.getByTestId('field')).toHaveAttribute('data-dirty', '');
+
+      await fireEvent.click(fixture.getByTestId('switch'));
+
+      expect(fixture.getByTestId('switch')).toHaveAttribute('aria-checked', 'false');
+      expect(fixture.getByTestId('field')).not.toHaveAttribute('data-dirty');
+    });
+
+    it('keeps a client state that differs from the server HTML', async () => {
+      const serverHtml = await renderOnServer(BEFORE_HYDRATION_FIXTURE, { defaultChecked: false });
       const container = document.createElement('div');
       document.body.append(container);
       container.innerHTML = serverHtml;
-      const input = container.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
-      expect(input.checked).toBe(true);
-      // A browser that restores the form state of the page, or a click on a label.
-      input.checked = false;
-
-      const app = createSSRApp(SwitchRootHydration, props);
+      // The client props differ from the server props, so `hydrateAfter` would throw on the
+      // mismatch. Vue does not write `checked` when it hydrates.
+      const app = createSSRApp(SwitchRootBeforeHydration, { defaultChecked: true });
       onTestFinished(() => {
         app.unmount();
         container.remove();
@@ -1527,23 +1592,43 @@ describe('<Switch.Root />', () => {
       app.mount(container);
       await flushMicrotasks();
 
-      expect(container.querySelector('input[type="checkbox"]')).toBe(input);
-      expect(input.checked).toBe(true);
-      expect(takeReportedMessages()).toEqual([]);
+      // Vue does not correct the attributes of a mismatch, so the case reads the input.
+      expect(getInput().checked).toBe(true);
+      expect(within(container).getByTestId('changes').textContent).toBe('');
+      expect(takeReportedMessages()).toEqual([
+        expect.stringMatching(/^console\.warn: .*Hydration attribute mismatch[\s\S]*checked/),
+        'console.error: Hydration completed but contains mismatches.',
+      ]);
     });
+  });
 
-    it('after a `pageshow` event, because a browser can restore the form state after the mount', async () => {
-      const handleChange = vi.fn();
-      await render(<Switch.Root onCheckedChange={handleChange} />);
+  describe('VUE-81: the form state that the browser restores', () => {
+    it('takes the input at a `pageshow` event', async () => {
+      const { container } = await render(<SwitchRootBeforeHydration />);
+      const fixture = within(container);
       getInput().checked = true;
 
       window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
 
-      expect(getInput().checked).toBe(false);
+      expect(fixture.getByTestId('changes').textContent).toBe('true (pageshow)');
+      expect(fixture.getByTestId('switch')).toHaveAttribute('aria-checked', 'true');
 
-      await fireEvent.click(screen.getByRole('switch'));
+      await fireEvent.click(fixture.getByTestId('switch'));
 
-      expect(handleChange.mock.calls.map(([checked]) => checked)).toEqual([true]);
+      expect(fixture.getByTestId('changes').textContent).toBe('true (pageshow); false (click)');
+    });
+
+    it('does nothing at a `pageshow` event from the back/forward cache', async () => {
+      const { container } = await render(<SwitchRootBeforeHydration />);
+      const fixture = within(container);
+      getInput().checked = true;
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }));
+      await flushMicrotasks();
+
+      expect(fixture.getByTestId('changes').textContent).toBe('');
+      expect(fixture.getByTestId('switch')).toHaveAttribute('aria-checked', 'false');
     });
   });
 
@@ -2112,15 +2197,12 @@ describe('<Switch.Root />', () => {
   });
 
   describe('KeepAlive', () => {
-    beforeEach(() => {
-      vi.useFakeTimers();
-    });
-
-    afterEach(() => {
-      vi.useRealTimers();
-    });
-
     it('keeps its state, and a reset of the form does not change a switch that is not shown', async () => {
+      // A real click does not end under fake timers, so only this case of the block uses them.
+      vi.useFakeTimers();
+      onTestFinished(() => {
+        vi.useRealTimers();
+      });
       const App = defineComponent({
         props: { shown: { type: Boolean, default: true } },
         setup(props) {
@@ -2152,6 +2234,64 @@ describe('<Switch.Root />', () => {
       await settleReset();
 
       expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'false');
+    });
+
+    it.each([{ name: 'held mount' }, { name: 'deactivated' }])(
+      'a held required switch does not block the submit of its form: $name',
+      async ({ name }) => {
+        const handleSubmit = vi.fn();
+        const visible = shallowRef(true);
+        const extra = shallowRef(name === 'deactivated');
+        const Branch = defineComponent(() => () => (
+          <div>{extra.value ? <Switch.Root key="held" required /> : null}</div>
+        ));
+        const { user } = await render(() => (
+          <Form onFormSubmit={handleSubmit}>
+            <Field.Root name="email" data-testid="field">
+              <Field.Control defaultValue="shown" />
+              <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+            </Field.Root>
+            <button type="submit">Submit</button>
+          </Form>
+        ));
+
+        visible.value = false;
+        await flushMicrotasks();
+        extra.value = true;
+        await flushMicrotasks();
+        await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+        expect(handleSubmit).toHaveBeenCalledTimes(1);
+        expect(screen.getByTestId('field')).not.toHaveAttribute('data-invalid');
+      },
+    );
+
+    it('the label does not name a switch that mounts while KeepAlive holds it', async () => {
+      const visible = shallowRef(true);
+      const extra = shallowRef(false);
+      const Branch = defineComponent(() => () => (
+        <div>{extra.value ? <Switch.Root key="held" id="held-switch" /> : null}</div>
+      ));
+      await render(() => (
+        <Field.Root>
+          <Field.Label data-testid="label">Notifications</Field.Label>
+          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+        </Field.Root>
+      ));
+      const label = screen.getByTestId('label');
+      const providerId = label.getAttribute('for');
+
+      visible.value = false;
+      await flushMicrotasks();
+      extra.value = true;
+      await flushMicrotasks();
+
+      expect(label.getAttribute('for')).toBe(providerId);
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(label).toHaveAttribute('for', 'held-switch');
     });
   });
 });

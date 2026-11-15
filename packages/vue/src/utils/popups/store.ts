@@ -366,6 +366,29 @@ type PopupUnmountKey =
   'activeTriggerId' | 'activeTriggerElement' | 'mounted' | 'preventUnmountingOnClose';
 
 /**
+ * Makes a function that follows the `id` of one element. Each call stops following the last element
+ * and follows the new one. It gives the `id` that the new element has now. `onChange` runs after
+ * each later change of the attribute.
+ *
+ * A store copies the `id` of an element of its state to a key of its state with this function. A
+ * `computed` does not follow a read of the DOM.
+ */
+export function createElementIdObserver(
+  onChange: () => void,
+): (element: HTMLElement | null) => string | undefined {
+  let observer: MutationObserver | undefined;
+  return (element) => {
+    observer?.disconnect();
+    if (element === null) {
+      return undefined;
+    }
+    observer ??= new MutationObserver(onChange);
+    observer.observe(element, { attributeFilter: ['id'] });
+    return element.id;
+  };
+}
+
+/**
  * The store of a popup root. It holds the state that all popups share and runs each open change in
  * the same order:
  *
@@ -402,9 +425,10 @@ export abstract class BasePopupStore<
   #openSession = {};
 
   // A render can give the popup element a new `id` and write nothing to the store. The id comes
-  // from a prop, an attribute or the `#render` slot. A `computed` does not follow a read of the DOM,
-  // so the observer copies each change of the attribute to `popupElementId`.
-  #popupIdObserver: MutationObserver | undefined;
+  // from a prop, an attribute or the `#render` slot.
+  readonly #observePopupId = createElementIdObserver(() => {
+    this.set('popupElementId', toRaw(this.state).popupElement?.id);
+  });
 
   /**
    * Writes the state in two passes. The first pass writes each key except `open` and `openProp`.
@@ -428,21 +452,6 @@ export abstract class BasePopupStore<
     // A sync watcher can write the store in the first pass. This pass starts from the state of now,
     // so that it keeps that write.
     super.setState({ ...toRaw(this.state), open: next.open, openProp: next.openProp });
-  }
-
-  /**
-   * Follows the `id` of a new popup element. It gives the `id` that the element has now.
-   */
-  #observePopupId(element: HTMLElement | null): string | undefined {
-    this.#popupIdObserver?.disconnect();
-    if (element === null) {
-      return undefined;
-    }
-    this.#popupIdObserver ??= new MutationObserver(() => {
-      this.set('popupElementId', toRaw(this.state).popupElement?.id);
-    });
-    this.#popupIdObserver.observe(element, { attributeFilter: ['id'] });
-    return element.id;
   }
 
   /**

@@ -85,10 +85,8 @@ export interface RadioRootProps<Value = any>
 </script>
 
 <script setup lang="ts" generic="Value = any">
-import { computed, onDeactivated, provide, shallowRef, watch } from 'vue';
-import { addEventListener } from '../../common/addEventListener';
+import { computed, nextTick, onDeactivated, provide, shallowRef, watch } from 'vue';
 import { mergeCleanups } from '../../common/mergeCleanups';
-import { ownerWindow } from '../../common/owner';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { useFieldItemContext } from '../../field/item/FieldItemContext';
 import { ACTIVE_COMPOSITE_ITEM } from '../../internals/composite/constants';
@@ -109,6 +107,7 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useFormReset } from '../../internals/useFormReset';
+import { useFormRestore } from '../../internals/useFormRestore';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useRadioGroupContext } from '../../radio-group/RadioGroupContext';
@@ -216,8 +215,7 @@ const { getButtonProps, buttonRef } = useButton({
 });
 
 // Vue writes `checked` to the input only when the value changes between two renders, and
-// hydration does not write it. A browser changes the input with no change of the state: it
-// restores the form state of a page, and it checks the input of a click that the parent does not
+// hydration does not write it. A browser checks the input of a click that the parent does not
 // accept. A form would then submit a state that the radio does not show.
 function writeCheckedToInput() {
   const input = inputElement.value;
@@ -226,17 +224,21 @@ function writeCheckedToInput() {
   }
 }
 
+// Vue writes `checked` to the attribute too, so only an input that changed before the hydration
+// differs from its `defaultChecked`. The group then takes its inputs one time, and the radio writes
+// nothing before that take.
 watch(
   inputElement,
-  (input, _previous, onCleanup) => {
+  (input) => {
     if (!input) {
       return;
     }
 
-    writeCheckedToInput();
-
-    // Chromium restores the form state of a page after `load`, with no event on the input.
-    onCleanup(addEventListener(ownerWindow(input), 'pageshow', writeCheckedToInput));
+    if (group && input.checked !== input.defaultChecked) {
+      group.takeInputsAfterMount();
+    } else {
+      writeCheckedToInput();
+    }
   },
   { flush: 'post' },
 );
@@ -245,6 +247,26 @@ if (group) {
   // A click checks the input and unchecks the other inputs of a group that has a name. A parent
   // that controls the group can keep the old value, and then no radio renders again.
   watch(group.inputSyncRequest, writeCheckedToInput, { flush: 'post' });
+
+  // Only the input that the browser checked gives its value to the group. Each radio writes its
+  // state in the next tick: a write in this tick can uncheck the input that the browser checked,
+  // before its radio reads it.
+  watch(
+    group.inputTakeRequest,
+    (request) => {
+      const input = inputElement.value;
+      if (!request || !input || input.checked === checked.value) {
+        return;
+      }
+
+      if (input.checked && !isDisabled.value && !isReadOnly.value && props.value !== undefined) {
+        group.setCheckedValue(props.value, createChangeEventDetails(REASONS.none, request.event));
+      }
+
+      void nextTick(writeCheckedToInput);
+    },
+    { flush: 'post' },
+  );
 
   // The radio follows the reset with its own input. The input that the group exposes changes with
   // the value and can be absent.
@@ -268,10 +290,7 @@ if (group) {
     }
   });
 
-  // `KeepAlive` runs the `onActivated` hooks from the last part to the first part. A registration in
-  // the hook would reverse the order of the inputs in the field, and the first radio would lose its
-  // place. A watcher runs in the order of the radios. The release before the registration moves an
-  // input that is still registered to the end, because `Map.set` keeps the place of a key.
+  // `KeepAlive` calls no `ref` setter at an activation.
   watch(shown, () => {
     const input = inputElement.value;
     releaseRegisteredInput();
@@ -329,6 +348,11 @@ function onInputClick(event: MouseEvent) {
   if (!group) {
     event.preventDefault();
   }
+}
+
+// A radio with no group has no state to change, so it writes its state over a restored input.
+if (!group) {
+  useFormRestore(inputElement, writeCheckedToInput);
 }
 
 const state = computed<RadioRootState>(() => ({

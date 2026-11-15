@@ -1,4 +1,6 @@
 import { createEvent } from '@testing-library/dom';
+import { onTestFinished } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { fireEvent } from './fireEvent';
 
 export async function enterWithMouse(element: HTMLElement, init?: MouseEventInit) {
@@ -78,4 +80,34 @@ export async function pressWithScreenReader(element: Element) {
   await fireEvent.pointerUp(element, pointerInit);
   await fireEvent.mouseUp(element, { detail: 0 });
   await fireEvent.click(element, { detail: 0 });
+}
+
+/**
+ * Returns the client point of the center of `element` as the init of a mouse event. A dispatched
+ * mouse event with no point has the point (0, 0).
+ */
+export function clientCenter(element: Element) {
+  const rect = element.getBoundingClientRect();
+  return { clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2 };
+}
+
+/**
+ * Presses the main button of the real pointer at the center of `element` and holds it. `release`
+ * lets the button go at the same point. A case that does not call it gets the release when it ends.
+ */
+export async function holdPress(element: Element) {
+  const { clientX, clientY } = clientCenter(element);
+  const point = { x: clientX, y: clientY };
+  let held = true;
+  async function release() {
+    held = false;
+    await userEvent.pointer({ coords: point, keys: '[/MouseLeft]' });
+  }
+  onTestFinished(async () => {
+    if (held) {
+      await release();
+    }
+  });
+  await userEvent.pointer({ coords: point, keys: '[MouseLeft>]' });
+  return { point, release };
 }

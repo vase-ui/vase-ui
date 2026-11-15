@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import { useTemplateRef } from 'vue';
 import type { VaseUIChangeEventDetails } from '../../src/internals/createBaseUIEventDetails';
 import { useFloatingRootStore } from '../../src/utils/popups/floating-root/useFloatingRootStore';
-import FloatingFocusManager from '../../src/utils/popups/focus/FloatingFocusManager.vue';
+import { useFloatingFocusManager } from '../../src/utils/popups/focus/FloatingFocusManager';
 
 // A focus manager with a store of its own, for the tests of the portal. The props are the state
-// that a popup part gives through its store.
+// that a popup part gives through its store. The store has no popup element, and the guards go
+// beside the `div`.
 const props = withDefaults(
   defineProps<{
     open?: boolean | undefined;
@@ -25,16 +27,19 @@ const store = useFloatingRootStore({
   onOpenChange: (open, eventDetails) => emit('openChange', open, eventDetails),
   elements: { anchor: () => props.domReference },
 });
+
+useFloatingFocusManager(
+  () => ({
+    store,
+    modal: props.modal,
+    closeOnFocusOut: props.closeOnFocusOut,
+    nextFocusableElement: props.nextFocusableElement,
+    initialFocus: false,
+  }),
+  useTemplateRef('element'),
+);
 </script>
 
 <template>
-  <FloatingFocusManager
-    :store="store"
-    :modal="modal"
-    :close-on-focus-out="closeOnFocusOut"
-    :next-focusable-element="nextFocusableElement"
-    :initial-focus="false"
-  >
-    <slot />
-  </FloatingFocusManager>
+  <div ref="element"><slot /></div>
 </template>

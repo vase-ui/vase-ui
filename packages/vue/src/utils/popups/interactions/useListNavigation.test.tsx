@@ -17,7 +17,6 @@ import {
   fireEvent,
   flushMicrotasks,
   isJSDOM,
-  nextEvent,
   screen,
   useTestInteractions,
   waitFor,
@@ -32,7 +31,7 @@ import { REASONS } from '../../../internals/reasons';
 import { mergeProps } from '../../../merge-props/mergeProps';
 import { FOCUSABLE_ATTRIBUTE } from '../constants';
 import type { FloatingRootStore } from '../floating-root/FloatingRootStore';
-import FloatingFocusManager from '../focus/FloatingFocusManager.vue';
+import { FloatingFocusManager } from '../../../../test/fixtures/floatingFocusManagerHarness';
 import FloatingPortal from '../portal/FloatingPortal.vue';
 import {
   provideFloatingNode,
@@ -953,13 +952,12 @@ async function renderList(props: InstanceType<typeof List>['$props'] = {}) {
 
 describe('useListNavigation', () => {
   it('does not add role-dependent aria-orientation', async () => {
-    const { container } = await render(<App orientation="horizontal" />);
+    await render(<App orientation="horizontal" />);
 
-    // The item takes the focus in an animation frame after the open.
-    await nextEvent(container, 'focusin', {
-      action: () => fireEvent.keyDown(screen.getByRole('button'), { key: 'ArrowRight' }),
+    await fireEvent.keyDown(screen.getByRole('button'), { key: 'ArrowRight' });
+    await waitFor(() => {
+      expect(screen.getByTestId('item-0')).toHaveFocus();
     });
-    expect(screen.getByTestId('item-0')).toHaveFocus();
 
     expect(screen.getByRole('menu')).not.toHaveAttribute('aria-orientation');
   });

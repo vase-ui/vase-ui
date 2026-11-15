@@ -2,6 +2,9 @@ name: CI
 
 on:
   pull_request:
+  # The merge queue runs these jobs on the pull request on top of `main`.
+  merge_group:
+    types: [checks_requested]
   push:
     branches: [main]
 
@@ -14,6 +17,7 @@ permissions: {}
 env:
   VITEST_CHROMIUM_GC_DISK_THRESHOLD_GB: '1000000'
 
+# A merge group has its own branch, so its group is its ref. Only a pull request cancels a run.
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -127,10 +131,11 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps chromium
+      - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps chromium firefox webkit
       - run: pnpm build
       - run: pnpm --filter @vase-ui/nuxt-fixture typecheck
       - run: pnpm test:nuxt
+      - run: pnpm test:vite
 
   # A prerelease of a dependency must not block a merge, so `required` does not need this job.
   # The version is the dist-tag `rc` of `vue` on npm.
@@ -154,6 +159,10 @@ jobs:
       - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps chromium
       - run: pnpm test:node
       - run: pnpm test:chromium
+      # The project `vapor` mounts each test in a Vapor app. It also runs when a step above
+      # fails, so that the job shows its result too.
+      - if: ${{ !cancelled() }}
+        run: pnpm test:vapor
 
   required:
     # Do not use `always()`. It starts this job in a cancelled run. The job waits for a runner

@@ -49,6 +49,8 @@ A native form submits one entry for each checked checkbox that has a name and is
 
 In the server HTML, the group already has the id of its `Field.Label` in `aria-labelledby`. The label can come before or after the group.
 
+Each checkbox of the group takes the state of its input when the visitor presses a native label before the page hydrates. It also takes a state that the browser restores after a move back in the history or a reload. The group then emits `valueChange` and `update:value` one time for each checkbox that changed. A `valueChange` listener can thus run after a move back with no action of the visitor.
+
 ## Examples
 
 ### Labeling a checkbox group
@@ -61,9 +63,9 @@ A `<label>` around each checkbox is the simplest way to label it:
 
 <<< ./checkbox-group/EnclosingLabel.vue{8,11}
 
-To name the group with a `Fieldset.Legend`, render the group in the `#render` slot of `Fieldset.Root`. Put each checkbox in a `Field.Item` with its `Field.Label`.
+To name the group with a `Fieldset.Legend`, give `CheckboxGroup` to the `as` prop of `Fieldset.Root`. Put each checkbox in a `Field.Item` with its `Field.Label`.
 
-<<< ./checkbox-group/FieldsetLegend.vue{10-13}
+<<< ./checkbox-group/FieldsetLegend.vue{10}
 
 ### Rendering as a native button
 

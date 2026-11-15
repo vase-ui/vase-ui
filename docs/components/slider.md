@@ -48,6 +48,8 @@ Bind the value with `v-model:value`. The root emits `valueChange` with the new v
 
 In the server HTML, the root already has the id of `Slider.Label` in `aria-labelledby`. So does the input of each thumb that has no name of its own from `aria-label`, `aria-labelledby` or `getAriaLabel`. The label can come before or after the control.
 
+Each thumb takes a value that a program or the browser writes into its input before the page hydrates. It also takes a value that the browser restores after a move back in the history or a reload. The root then emits `valueChange` with the reason `input-change` and `update:value`, one time for each thumb that changed. A `valueChange` listener can thus run after a move back with no action of the visitor.
+
 ## Examples
 
 ### Labeling a slider

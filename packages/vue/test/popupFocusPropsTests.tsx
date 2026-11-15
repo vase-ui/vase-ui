@@ -1,9 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import type { PropType, ShallowRef, VNode, VNodeChild } from 'vue';
-import { isInaccessible, screen, waitFor } from '@testing-library/dom';
+import { isInaccessible } from '@testing-library/dom';
+import { screen } from './queries';
+import { waitFor } from './waitFor';
 import type { InteractionType } from '../src/common/useEnhancedClickHandler';
-import type { FocusOption } from '../src/utils/popups/focus/FloatingFocusManager.vue';
+import type { FocusOption } from '../src/utils/popups/focus/FloatingFocusManager';
 import { waitForLaterMillisecond } from './createRenderer';
 import type { createRenderer } from './createRenderer';
 import { fireEvent } from './fireEvent';
@@ -81,19 +83,21 @@ export function popupFocusPropsTests(config: PopupFocusPropsTestsConfig) {
     }
   }
 
-  async function findClickableClose() {
-    const close = await screen.findByText('Close');
-    // Positioners ignore pointer events until they have been positioned.
-    await waitFor(() => {
-      expect(getComputedStyle(close).pointerEvents).not.toBe('none');
+  // The open mounts the control, and the press must not come in the millisecond of its listener.
+  function openAndFindClickableClose(open: () => Promise<unknown>) {
+    return waitForLaterMillisecond(async () => {
+      await open();
+      const close = await screen.findByText('Close');
+      // Positioners ignore pointer events until they have been positioned.
+      await waitFor(() => {
+        expect(getComputedStyle(close).pointerEvents).not.toBe('none');
+      });
+      return close;
     });
-    // The open mounts the control, and the press must not come in the millisecond of its listener.
-    await waitForLaterMillisecond();
-    return close;
   }
 
-  async function closeWithPointer(user: Awaited<ReturnType<typeof render>>['user']) {
-    await user.click(await findClickableClose());
+  async function openAndCloseWithPointer(user: Awaited<ReturnType<typeof render>>['user']) {
+    await user.click(await openAndFindClickableClose(() => user.click(getTrigger())));
   }
 
   if (testInitialFocus) {
@@ -233,13 +237,15 @@ export function popupFocusPropsTests(config: PopupFocusPropsTestsConfig) {
           />,
         );
 
-        await user.click(getTrigger());
-        await waitFor(() => {
-          expect(screen.getByTestId('inside-2')).toHaveFocus();
+        const close = await openAndFindClickableClose(async () => {
+          await user.click(getTrigger());
+          await waitFor(() => {
+            expect(screen.getByTestId('inside-2')).toHaveFocus();
+          });
+          expect(initialFocusSpy).toHaveBeenCalledTimes(1);
         });
-        expect(initialFocusSpy).toHaveBeenCalledTimes(1);
 
-        await closeWithPointer(user);
+        await user.click(close);
         await waitFor(() => {
           expect(getTrigger()).toHaveFocus();
         });
@@ -252,8 +258,7 @@ export function popupFocusPropsTests(config: PopupFocusPropsTestsConfig) {
     it('focuses the trigger by default', async () => {
       const { user } = await render(<Test />);
 
-      await user.click(getTrigger());
-      await closeWithPointer(user);
+      await openAndCloseWithPointer(user);
 
       await waitFor(() => {
         expect(getTrigger()).toHaveFocus();
@@ -263,8 +268,7 @@ export function popupFocusPropsTests(config: PopupFocusPropsTestsConfig) {
     it('focuses the element of a ref', async () => {
       const { user } = await render(<Test popupProps={{ finalFocus: ({ outside }) => outside }} />);
 
-      await user.click(getTrigger());
-      await closeWithPointer(user);
+      await openAndCloseWithPointer(user);
 
       await waitFor(() => {
         expect(screen.getByTestId('outside-target')).toHaveFocus();
@@ -295,8 +299,7 @@ export function popupFocusPropsTests(config: PopupFocusPropsTestsConfig) {
           />,
         );
 
-        await user.click(getTrigger());
-        await closeWithPointer(user);
+        await openAndCloseWithPointer(user);
 
         await waitFor(() => {
           expect(getFocused()).toHaveFocus();
@@ -308,8 +311,7 @@ export function popupFocusPropsTests(config: PopupFocusPropsTestsConfig) {
     it('does not move focus when `false`', async () => {
       const { user } = await render(<Test popupProps={{ finalFocus: false }} />);
 
-      await user.click(getTrigger());
-      await closeWithPointer(user);
+      await openAndCloseWithPointer(user);
       await waitFor(() => {
         expectClosed();
       });
@@ -341,10 +343,9 @@ export function popupFocusPropsTests(config: PopupFocusPropsTestsConfig) {
 
       const trigger = getTrigger();
 
-      await user.click(trigger);
       // user-event's synthetic clicks carry no pointer type, so the mouse press is dispatched
       // directly.
-      const close = await findClickableClose();
+      const close = await openAndFindClickableClose(() => user.click(trigger));
       await fireEvent.pointerDown(close, { pointerType: 'mouse' });
       await fireEvent.click(close, { detail: 1 });
       await waitFor(() => {

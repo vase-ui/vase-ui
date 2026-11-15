@@ -40,12 +40,13 @@ export interface TabsRootContext {
    */
   getTabPanelIdByValue(tabValue: TabsTabValue): string | undefined;
   /**
-   * Registers a tab one time, in `setup`. Call it with `undefined` to remove the registration.
-   * A server render of a part that comes later then has the `id`.
+   * Registers a tab one time, in `setup`, so that the server HTML of a panel has the `id`.
+   * Call it with `undefined` to remove the registration.
    */
   registerTab(source: symbol, registration: TabsPartRegistration | undefined): void;
   /**
-   * Registers a panel one time, in `setup`. Call it with `undefined` to remove the registration.
+   * Registers a panel one time, in `setup`, so that the server HTML of a tab has the `id`.
+   * Call it with `undefined` to remove the registration.
    */
   registerPanel(source: symbol, registration: TabsPartRegistration | undefined): void;
   /**
@@ -62,6 +63,8 @@ export interface TabsRootContext {
    * it to the composite root as `hasActiveItem`.
    */
   hasChosenTab: ComputedRef<boolean>;
+  /** Whether an id reference of the root reaches `element`. */
+  reaches(element: Element): boolean;
 }
 
 export const TabsRootContext: InjectionKey<TabsRootContext> = Symbol();

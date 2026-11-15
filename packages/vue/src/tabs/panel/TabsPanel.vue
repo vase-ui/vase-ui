@@ -36,8 +36,7 @@ export interface TabsPanelProps
   keepMounted?: boolean | undefined;
   /**
    * The id of the panel. The tab of the panel uses it for `aria-controls`.
-   * A server render writes the panel before it renders a tab that comes after it. The panel then
-   * has no `aria-labelledby` in the server HTML, and it gets it in the first flush on the client.
+   * Without an id, the panel has a generated id.
    */
   id?: string | undefined;
 }
@@ -45,8 +44,10 @@ export interface TabsPanelProps
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useIsHydrating } from '../../common/hydration';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
+import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import { transitionStatusMapping } from '../../internals/stateAttributesMapping';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -79,9 +80,15 @@ const {
   value: selectedValue,
   getTabIdByPanelValue,
   orientation,
+  reaches,
   registerPanel,
   tabActivationDirection,
 } = useTabsRootContext();
+
+// A tab registers its id in `setup`, and it can come after the panel.
+useDeferredServerRender();
+
+const isHydrating = useIsHydrating();
 
 const panelId = useVaseUiId(() => props.id);
 
@@ -103,6 +110,8 @@ const registrationSource = Symbol();
 useRegisteredId(
   () => (hidden.value && !props.keepMounted ? undefined : panelId.value),
   (getId) => registerPanel(registrationSource, getId && { value: () => props.value, id: getId }),
+  () => element.value,
+  reaches,
 );
 
 const state = computed<TabsPanelState>(() => ({
@@ -117,7 +126,11 @@ const { element, elementProps } = useRenderElement('div', props, {
   ref: [listItemRef],
   props: (attrs) => [
     {
-      'aria-labelledby': getTabIdByPanelValue(props.value),
+      // Hydration does not patch an attribute. `null` and `undefined` are different values, so
+      // the render after the mount removes an `aria-labelledby` of the server HTML that names a
+      // removed tab.
+      'aria-labelledby':
+        getTabIdByPanelValue(props.value) ?? (isHydrating.value ? null : undefined),
       // Vue writes `false` as the attribute `hidden="false"` on an element that is not HTML.
       hidden: hidden.value ? true : undefined,
       id: panelId.value,

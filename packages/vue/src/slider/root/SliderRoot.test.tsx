@@ -9,7 +9,7 @@ import {
   beforeEach,
   onTestFinished,
 } from 'vitest';
-import { Teleport, defineComponent, onMounted, onUnmounted, shallowRef } from 'vue';
+import { KeepAlive, Teleport, defineComponent, onMounted, onUnmounted, shallowRef } from 'vue';
 import type { CDPSession } from '@vitest/browser-playwright';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import type { TextDirection } from '@vase-ui/vue/direction-provider';
@@ -550,7 +550,8 @@ describe('<Slider.Root />', () => {
       expect(sliderOutput).toHaveAttribute('data-orientation', 'horizontal');
     });
 
-    it.skipIf(isJSDOM || !window.navigator.userAgent.includes('WebKit'))(
+    // eslint-disable-next-line @typescript-eslint/prefer-includes -- `pnpm parity:check` compares the text of the condition with the condition of Base UI.
+    it.skipIf(isJSDOM || !/WebKit/.test(window.navigator.userAgent))(
       'does not set the orientation via appearance for WebKit browsers',
       async () => {
         await render(<TestSlider orientation="vertical" />);
@@ -3983,6 +3984,55 @@ describe('<Slider.Root />', () => {
     });
   });
 
+  describe('KeepAlive', () => {
+    async function submitAfterHeldControlChanges(change: 'mount' | 'element') {
+      const handleSubmit = vi.fn();
+      const visible = shallowRef(true);
+      const hasControl = shallowRef(change === 'element');
+      const tag = shallowRef('input');
+      const Branch = defineComponent(() => () => (
+        <div>{hasControl.value ? <Field.Control as={tag.value} /> : null}</div>
+      ));
+      const { user } = await render(() => (
+        <Form onFormSubmit={handleSubmit}>
+          <Field.Root name="volume">
+            <Slider.Root defaultValue={5}>
+              <Slider.Control>
+                <Slider.Thumb />
+              </Slider.Control>
+            </Slider.Root>
+            <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>
+      ));
+
+      visible.value = false;
+      await flushMicrotasks();
+      if (change === 'mount') {
+        hasControl.value = true;
+      } else {
+        tag.value = 'textarea';
+      }
+      await flushMicrotasks();
+      await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+      return handleSubmit;
+    }
+
+    it('keeps the value of a shown slider when a control mounts while KeepAlive holds it', async () => {
+      const handleSubmit = await submitAfterHeldControlChanges('mount');
+
+      expect(handleSubmit.mock.lastCall?.[0]).toEqual({ volume: 5 });
+    });
+
+    it('keeps the value of a shown slider when a control that KeepAlive holds changes its element', async () => {
+      const handleSubmit = await submitAfterHeldControlChanges('element');
+
+      expect(handleSubmit.mock.lastCall?.[0]).toEqual({ volume: 5 });
+    });
+  });
+
   describe('in a native form', () => {
     function getFormData() {
       return [...new FormData(screen.getByTestId<HTMLFormElement>('form')).entries()];
@@ -4009,23 +4059,6 @@ describe('<Slider.Root />', () => {
       );
 
       expect(getFormData()).toEqual([['volume', '30']]);
-    });
-
-    it('writes its state to the inputs after a `pageshow` event, because a browser can restore the form state after the mount', async () => {
-      await render(
-        <Slider.Root defaultValue={[20, 80]}>
-          <Slider.Control>
-            <Slider.Thumb />
-            <Slider.Thumb />
-          </Slider.Control>
-        </Slider.Root>,
-      );
-      const [first, second] = getInputs();
-      first.value = '55';
-
-      window.dispatchEvent(new PageTransitionEvent('pageshow'));
-
-      expect([first.value, second.value]).toEqual(['20', '80']);
     });
 
     describe('BUG-6206: a native reset', () => {

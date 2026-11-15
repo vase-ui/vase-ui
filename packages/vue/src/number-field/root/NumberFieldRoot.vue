@@ -167,10 +167,9 @@ export type NumberFieldRootCommitEventDetails =
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, provide, shallowRef, watch } from 'vue';
-import { addEventListener } from '../../common/addEventListener';
 import { formatNumber } from '../../common/formatNumber';
-import { useIsHydrated } from '../../common/hydration';
-import { ownerDocument, ownerWindow } from '../../common/owner';
+import { useHiddenValueBeforeHydration, useIsHydrated } from '../../common/hydration';
+import { ownerDocument } from '../../common/owner';
 import { platform } from '../../common/platform';
 import { activeElement } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
@@ -180,12 +179,14 @@ import {
   createGenericEventDetails,
 } from '../../internals/createBaseUIEventDetails';
 import type { ReasonToEvent } from '../../internals/createBaseUIEventDetails';
+import { useFieldInput } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { useFormContext } from '../../internals/form-context';
 import { handleHiddenInputInvalid } from '../../internals/handleHiddenInputInvalid';
 import { useLabelableId } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useFormReset } from '../../internals/useFormReset';
+import { useFormRestoreAsInput } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFormatLocale } from '../../utils/useFormatLocale';
 import {
@@ -285,10 +286,9 @@ const minWithZeroDefault = computed(() => props.min ?? 0);
 const inputRef = shallowRef<HTMLInputElement | null>(null);
 const hiddenInputElement = shallowRef<HTMLInputElement | null>(null);
 
-// A template can mount the root that replaces this root before it unmounts this root. The root
-// then clears the input of the field only when the input is its own. A plain variable keeps the
-// render of the root from depending on the element.
+// A plain variable keeps the render of the root from depending on the element.
 let ownHiddenInput: HTMLInputElement | null = null;
+const giveFieldInput = useFieldInput();
 
 function setHiddenInputElement(next: unknown) {
   const input = next as HTMLInputElement | null;
@@ -296,14 +296,12 @@ function setHiddenInputElement(next: unknown) {
   if (input === ownHiddenInput) {
     return;
   }
-  if (input !== null || validation.inputRef.value === ownHiddenInput) {
-    validation.inputRef.value = input;
-  }
+  giveFieldInput(input);
   ownHiddenInput = input;
   hiddenInputElement.value = input;
 }
 
-const controlId = useLabelableId({ id: () => props.id });
+const controlId = useLabelableId({ id: () => props.id, element: () => element.value });
 
 const [numberValue, setValueUnwrapped] = useControlled<number | null>({
   controlled: () => props.value,
@@ -637,6 +635,8 @@ const hiddenInputText = computed(() =>
   numberValue.value === null ? '' : String(numberValue.value),
 );
 
+const writesHiddenValue = useHiddenValueBeforeHydration(() => hiddenInputElement.value);
+
 // The value that the hidden input had after the last event that the root handled. A write of Vue
 // or of the root sets it too.
 let handledValue: string | undefined;
@@ -645,7 +645,10 @@ function syncHandledValue() {
   handledValue = hiddenInputElement.value?.value;
 }
 
-onMounted(syncHandledValue);
+// Until the take of the hydration, the input can hold a value that the root did not handle.
+onMounted(() => {
+  handledValue = writesHiddenValue.value ? hiddenInputElement.value?.value : hiddenInputText.value;
+});
 watch(hiddenInputText, syncHandledValue, { flush: 'post' });
 
 // Vue writes the value to the input only when the root renders. The root does not render when a
@@ -708,18 +711,7 @@ useFormReset(hiddenInputElement, (event) => {
   clearFieldError(numberValue.value);
 });
 
-watch(
-  hiddenInputElement,
-  (input, _previous, onCleanup) => {
-    if (!input) {
-      return;
-    }
-
-    // A browser can restore the form state of a page after the mount, with no event on the input.
-    onCleanup(addEventListener(ownerWindow(input), 'pageshow', writeValueToHiddenInput));
-  },
-  { flush: 'post' },
-);
+useFormRestoreAsInput(hiddenInputElement, () => hiddenInputText.value, false);
 
 // The style is the constant itself, in an object that no `mergeProps` call makes.
 // `handleHiddenInputInvalid` then keeps the size that it writes.
@@ -730,7 +722,7 @@ function inputProps() {
     type: 'number',
     form: props.form,
     name: inputName.value,
-    value: hiddenInputText.value,
+    ...(writesHiddenValue.value ? { value: hiddenInputText.value } : undefined),
     min: props.min,
     max: props.max,
     // stepMismatch validation is broken unless an explicit `min` is added.

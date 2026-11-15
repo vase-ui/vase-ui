@@ -1,5 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
-import { defineComponent, h, KeepAlive, onMounted, shallowRef, Teleport, watch } from 'vue';
+import {
+  computed,
+  createSSRApp,
+  defineComponent,
+  h,
+  KeepAlive,
+  onMounted,
+  shallowRef,
+  Teleport,
+  watch,
+} from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import type { TextDirection } from '@vase-ui/vue/direction-provider';
 import { Field } from '@vase-ui/vue/field';
@@ -14,21 +24,32 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  hydrateAfter,
   isJSDOM,
   renderOnServer,
   screen,
+  takeReportedMessages,
+  within,
 } from '#test-utils';
+import RadioGroupBeforeHydration from './RadioGroupBeforeHydration.test.vue';
 import RadioGroupFieldHydration from './RadioGroupFieldHydration.test.vue';
 import RadioGroupHydration from './RadioGroupHydration.test.vue';
 
 const HYDRATION_FIXTURE = 'src/radio-group/RadioGroupHydration.test.vue';
 const FIELD_HYDRATION_FIXTURE = 'src/radio-group/RadioGroupFieldHydration.test.vue';
+const BEFORE_HYDRATION_FIXTURE = 'src/radio-group/RadioGroupBeforeHydration.test.vue';
 
 type RadioGroupInstance = { inputElement: HTMLInputElement | null };
 
 function getInputs() {
   return Array.from(document.querySelectorAll<HTMLInputElement>('input[type="radio"]'));
 }
+
+function getInput(testId: string) {
+  return screen.getByTestId(testId).nextElementSibling as HTMLInputElement;
+}
+
+const Placeholder = defineComponent(() => () => <span data-testid="placeholder" />);
 
 function renderRadios() {
   return (
@@ -629,6 +650,32 @@ describe('<RadioGroup />', () => {
 
     await fireEvent.click(screen.getByText('Remove second'));
     expect(group.value?.inputElement).toBe(null);
+  });
+
+  it('exposes the first enabled input when the value becomes null after the exposed radio unmounts', async () => {
+    const showSecond = shallowRef(true);
+    const value = shallowRef<string | null>('b');
+    const group = shallowRef<RadioGroupInstance | null>(null);
+    await render(() => (
+      <RadioGroup ref={group} value={value.value}>
+        <Radio.Root value="a" data-testid="radio-a" />
+        {showSecond.value && <Radio.Root value="b" data-testid="radio-b" />}
+      </RadioGroup>
+    ));
+    const inputA = getInput('radio-a');
+    const inputB = getInput('radio-b');
+
+    expect(group.value?.inputElement).toBe(inputB);
+
+    showSecond.value = false;
+    await flushMicrotasks();
+
+    expect(group.value?.inputElement).toBe(null);
+
+    value.value = null;
+    await flushMicrotasks();
+
+    expect(group.value?.inputElement).toBe(inputA);
   });
 
   it.skipIf(isJSDOM)(
@@ -3307,8 +3354,6 @@ describe('<RadioGroup />', () => {
   });
 
   describe('KeepAlive', () => {
-    const Placeholder = defineComponent(() => () => <span data-testid="placeholder" />);
-
     // The group stays active. `KeepAlive` hides and shows its radios.
     function createApp(getGroupProps: () => { defaultValue?: string; value?: string }) {
       const visible = shallowRef(true);
@@ -3333,10 +3378,6 @@ describe('<RadioGroup />', () => {
       ));
 
       return { App, visible, group, handleSubmit };
-    }
-
-    function getInput(testId: string) {
-      return screen.getByTestId(testId).nextElementSibling as HTMLInputElement;
     }
 
     it('takes the inputs of deactivated radios out of the group and the form, and gives them back when the radios activate', async () => {
@@ -3382,7 +3423,7 @@ describe('<RadioGroup />', () => {
       expect(handleSubmit).toHaveBeenCalledTimes(1);
     });
 
-    it('registers the inputs again in the order of the radios when the radios activate', async () => {
+    it('exposes and focuses the first radio when the radios activate', async () => {
       const { App, visible, group } = createApp(() => ({}));
       const { user } = await render(<App />);
       const inputA = getInput('a');
@@ -3423,9 +3464,9 @@ describe('<RadioGroup />', () => {
     });
 
     it.each([
-      { name: 'b after a', before: false },
-      { name: 'b before a', before: true },
-    ])('keeps a radio that mounts while held out of the form: $name', async ({ before }) => {
+      { name: 'b after a', before: false, first: 'a' },
+      { name: 'b before a', before: true, first: 'b' },
+    ])('keeps a radio that mounts while held out of the form: $name', async ({ before, first }) => {
       const visible = shallowRef(true);
       const extra = shallowRef(false);
       const group = shallowRef<RadioGroupInstance | null>(null);
@@ -3448,7 +3489,6 @@ describe('<RadioGroup />', () => {
         </Form>
       ));
       const { user } = await render(<App />);
-      const inputA = getInput('a');
 
       visible.value = false;
       await flushMicrotasks();
@@ -3464,16 +3504,16 @@ describe('<RadioGroup />', () => {
       visible.value = true;
       await flushMicrotasks();
 
-      expect(group.value?.inputElement).toBe(inputA);
+      expect(group.value?.inputElement).toBe(getInput(first));
 
       await user.click(screen.getByRole('button', { name: 'Submit' }));
 
       expect(handleSubmit).toHaveBeenCalledTimes(1);
-      expect(screen.getByTestId('a')).toHaveFocus();
+      expect(screen.getByTestId(first)).toHaveFocus();
     });
 
     // A radio that mounts in a held group registers its input, because the group is held too.
-    it('registers the inputs in the order of the radios when KeepAlive shows a held group', async () => {
+    it('focuses the first radio when KeepAlive shows a held group', async () => {
       const visible = shallowRef(true);
       const extra = shallowRef(false);
       const handleSubmit = vi.fn();
@@ -3503,6 +3543,351 @@ describe('<RadioGroup />', () => {
 
       expect(handleSubmit).not.toHaveBeenCalled();
       expect(screen.getByTestId('a')).toHaveFocus();
+    });
+  });
+
+  describe('VUE-81: the state that the input got before the hydration', () => {
+    async function hydratePressed(
+      props: Record<string, unknown>,
+      change: (serverContainer: HTMLElement) => void,
+    ) {
+      const serverHtml = await renderOnServer(BEFORE_HYDRATION_FIXTURE, props);
+      const { container } = await hydrateAfter(RadioGroupBeforeHydration, {
+        serverHtml,
+        props,
+        before: change,
+      });
+      await flushMicrotasks();
+      return within(container);
+    }
+
+    function pressLabel(testId: string) {
+      return (serverContainer: HTMLElement) => {
+        within(serverContainer).getByTestId(testId).click();
+      };
+    }
+
+    function getCheckedStates(fixture: ReturnType<typeof within>) {
+      return ['a', 'b', 'c'].map((value) => ({
+        input: (fixture.getByTestId(value).nextElementSibling as HTMLInputElement).checked,
+        radio: fixture.getByTestId(value).getAttribute('aria-checked'),
+      }));
+    }
+
+    it('takes the pressed radio of a named controlled group', async () => {
+      const fixture = await hydratePressed(
+        { mode: 'model', named: true, value: 'a' },
+        pressLabel('label-c'),
+      );
+
+      expect(fixture.getByTestId('model').textContent).toBe('c');
+      expect(fixture.getByTestId('changes').textContent).toBe('c (vase-ui)');
+      expect(getCheckedStates(fixture)).toEqual([
+        { input: false, radio: 'false' },
+        { input: false, radio: 'false' },
+        { input: true, radio: 'true' },
+      ]);
+    });
+
+    it('keeps the value of a parent that keeps it', async () => {
+      const fixture = await hydratePressed(
+        { mode: 'keeps', named: true, value: 'a' },
+        pressLabel('label-c'),
+      );
+
+      expect(fixture.getByTestId('changes').textContent).toBe('c (vase-ui)');
+      expect(getCheckedStates(fixture)).toEqual([
+        { input: true, radio: 'true' },
+        { input: false, radio: 'false' },
+        { input: false, radio: 'false' },
+      ]);
+    });
+
+    it('takes the pressed radio with a changed text control between', async () => {
+      const fixture = await hydratePressed(
+        { mode: 'model', named: true, value: 'a', textBetween: true },
+        (serverContainer) => {
+          within(serverContainer).getByTestId<HTMLInputElement>('text').value = 'hello';
+          within(serverContainer).getByTestId('label-c').click();
+        },
+      );
+
+      expect(fixture.getByTestId('model').textContent).toBe('c');
+      expect(fixture.getByTestId('text-model').textContent).toBe('hello');
+      expect(fixture.getByTestId('changes').textContent).toBe('c (vase-ui)');
+      expect(getCheckedStates(fixture)[2]).toEqual({ input: true, radio: 'true' });
+    });
+
+    it('marks its field dirty after a press before the hydration', async () => {
+      const fixture = await hydratePressed({ mode: 'field', value: 'a' }, pressLabel('label-b'));
+      expect(fixture.getByTestId('field')).toHaveAttribute('data-dirty', '');
+
+      await fireEvent.click(fixture.getByTestId('a'));
+
+      expect(fixture.getByTestId('a')).toHaveAttribute('aria-checked', 'true');
+      expect(fixture.getByTestId('field')).not.toHaveAttribute('data-dirty');
+    });
+
+    it.each([
+      { name: 'read-only', props: { readOnly: true } },
+      { name: 'disabled', props: { disabled: true } },
+    ])('takes nothing while it is $name', async ({ props }) => {
+      const fixture = await hydratePressed(
+        { named: true, value: 'a', ...props },
+        (serverContainer) => {
+          (
+            within(serverContainer).getByTestId('c').nextElementSibling as HTMLInputElement
+          ).checked = true;
+        },
+      );
+
+      expect(fixture.getByTestId('changes').textContent).toBe('');
+      expect(getCheckedStates(fixture)).toEqual([
+        { input: true, radio: 'true' },
+        { input: false, radio: 'false' },
+        { input: false, radio: 'false' },
+      ]);
+    });
+
+    it('keeps a client state that differs from the server HTML', async () => {
+      const serverHtml = await renderOnServer(BEFORE_HYDRATION_FIXTURE, {
+        named: true,
+        value: 'a',
+      });
+      const container = document.createElement('div');
+      document.body.append(container);
+      container.innerHTML = serverHtml;
+      // The client props differ from the server props, so `hydrateAfter` would throw on the
+      // mismatch. Vue does not write `checked` when it hydrates.
+      const app = createSSRApp(RadioGroupBeforeHydration, { named: true, value: 'b' });
+      onTestFinished(() => {
+        app.unmount();
+        container.remove();
+      });
+      app.mount(container);
+      await flushMicrotasks();
+
+      // Vue does not correct the attributes of a mismatch, so the case reads the inputs.
+      const fixture = within(container);
+      expect(getCheckedStates(fixture).map(({ input }) => input)).toEqual([false, true, false]);
+      expect(fixture.getByTestId('changes').textContent).toBe('');
+      expect(takeReportedMessages()).toEqual([
+        expect.stringMatching(
+          /^console\.warn: .*Hydration attribute mismatch[\s\S]*server: checked/,
+        ),
+        'console.error: Hydration completed but contains mismatches.',
+        expect.stringMatching(
+          /^console\.warn: .*Hydration attribute mismatch[\s\S]*client: checked/,
+        ),
+        expect.stringMatching(/^console\.warn: .*Hydration text content mismatch/),
+      ]);
+    });
+  });
+
+  describe('VUE-81: the form state that the browser restores', () => {
+    it('takes the checked input at a `pageshow` event', async () => {
+      const { container } = await render(
+        <RadioGroupBeforeHydration mode="model" named value="a" />,
+      );
+      const fixture = within(container);
+      (fixture.getByTestId('c').nextElementSibling as HTMLInputElement).checked = true;
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(fixture.getByTestId('model').textContent).toBe('c');
+      expect(fixture.getByTestId('changes').textContent).toBe('c (pageshow)');
+      expect(fixture.getByTestId('c')).toHaveAttribute('aria-checked', 'true');
+    });
+  });
+
+  describe('VUE-78: the first radio in the document', () => {
+    it('exposes and focuses a radio that mounts before the other radios', async () => {
+      const extra = shallowRef(false);
+      const group = shallowRef<RadioGroupInstance | null>(null);
+      const handleSubmit = vi.fn();
+      const App = defineComponent(() => () => (
+        <Form onFormSubmit={handleSubmit}>
+          <Field.Root name="fruit">
+            <RadioGroup ref={group} required>
+              {extra.value ? <Radio.Root key="b" value="b" data-testid="b" /> : null}
+              <Radio.Root key="a" value="a" data-testid="a" />
+              <Radio.Root key="c" value="c" data-testid="c" />
+            </RadioGroup>
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>
+      ));
+      const { user } = await render(<App />);
+
+      extra.value = true;
+      await flushMicrotasks();
+
+      expect(group.value?.inputElement).toBe(getInput('b'));
+
+      await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+      expect(handleSubmit).not.toHaveBeenCalled();
+      expect(screen.getByTestId('b')).toHaveFocus();
+    });
+
+    it('updates a computed of inputElement when a radio mounts before the other radios', async () => {
+      const extra = shallowRef(false);
+      const group = shallowRef<RadioGroupInstance | null>(null);
+      const exposedInput = computed(() => group.value?.inputElement);
+      await render(() => (
+        <RadioGroup ref={group}>
+          {extra.value ? <Radio.Root key="b" value="b" data-testid="b" /> : null}
+          <Radio.Root key="a" value="a" data-testid="a" />
+        </RadioGroup>
+      ));
+
+      expect(exposedInput.value).toBe(getInput('a'));
+
+      extra.value = true;
+      await flushMicrotasks();
+
+      expect(exposedInput.value).toBe(getInput('b'));
+    });
+
+    it('exposes and focuses the first radio after a keyed move', async () => {
+      const order = shallowRef(['a', 'b']);
+      const group = shallowRef<RadioGroupInstance | null>(null);
+      const handleSubmit = vi.fn();
+      const App = defineComponent(() => () => (
+        <Form onFormSubmit={handleSubmit}>
+          <Field.Root name="fruit">
+            <RadioGroup ref={group} required>
+              {order.value.map((value) => (
+                <Radio.Root key={value} value={value} data-testid={value} />
+              ))}
+            </RadioGroup>
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>
+      ));
+      const { user } = await render(<App />);
+
+      expect(group.value?.inputElement).toBe(getInput('a'));
+
+      order.value = ['b', 'a'];
+      await flushMicrotasks();
+
+      expect(group.value?.inputElement).toBe(getInput('b'));
+
+      await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+      expect(handleSubmit).not.toHaveBeenCalled();
+      expect(screen.getByTestId('b')).toHaveFocus();
+    });
+
+    it.each([
+      { name: 'keeps the first radio when another radio', removed: 'a', exposed: 'b' },
+      { name: 'gives null when the first radio', removed: 'b', exposed: null },
+    ])('$name unmounts after a keyed move', async ({ removed, exposed }) => {
+      const order = shallowRef(['a', 'b']);
+      const group = shallowRef<RadioGroupInstance | null>(null);
+      await render(() => (
+        <RadioGroup ref={group}>
+          {order.value.map((value) => (
+            <Radio.Root key={value} value={value} data-testid={value} />
+          ))}
+        </RadioGroup>
+      ));
+      order.value = ['b', 'a'];
+      await flushMicrotasks();
+
+      expect(group.value?.inputElement).toBe(getInput('b'));
+
+      order.value = ['b', 'a'].filter((value) => value !== removed);
+      await flushMicrotasks();
+
+      expect(group.value?.inputElement).toBe(exposed === null ? null : getInput(exposed));
+    });
+
+    it('focuses a radio of a branch that KeepAlive shows before a radio outside it', async () => {
+      const visible = shallowRef(true);
+      const handleSubmit = vi.fn();
+      const Radios = defineComponent(() => () => (
+        <>
+          <Radio.Root value="a" data-testid="a" />
+          <Radio.Root value="b" data-testid="b" />
+        </>
+      ));
+      const App = defineComponent(() => () => (
+        <Form onFormSubmit={handleSubmit}>
+          <Field.Root name="fruit">
+            <RadioGroup required>
+              <KeepAlive>{visible.value ? <Radios /> : <Placeholder />}</KeepAlive>
+              <Radio.Root value="x" data-testid="x" />
+            </RadioGroup>
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>
+      ));
+      const { user } = await render(<App />);
+
+      visible.value = false;
+      await flushMicrotasks();
+      visible.value = true;
+      await flushMicrotasks();
+      await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+      expect(handleSubmit).not.toHaveBeenCalled();
+      expect(screen.getByTestId('a')).toHaveFocus();
+    });
+
+    it('exposes the first enabled input when the value becomes null', async () => {
+      const extra = shallowRef(false);
+      const value = shallowRef<string | null>('a');
+      const group = shallowRef<RadioGroupInstance | null>(null);
+      const App = defineComponent(() => () => (
+        <RadioGroup ref={group} value={value.value}>
+          {extra.value ? <Radio.Root key="b" value="b" data-testid="b" /> : null}
+          <Radio.Root key="a" value="a" data-testid="a" />
+        </RadioGroup>
+      ));
+      await render(<App />);
+
+      extra.value = true;
+      await flushMicrotasks();
+
+      expect(group.value?.inputElement).toBe(getInput('a'));
+
+      value.value = null;
+      await flushMicrotasks();
+
+      expect(group.value?.inputElement).toBe(getInput('b'));
+    });
+
+    it('focuses the first radio for an error of the form', async () => {
+      const extra = shallowRef(false);
+      const errors = shallowRef<Form.Props['errors']>({});
+      const App = defineComponent(() => () => (
+        <Form
+          errors={errors.value}
+          onSubmit={(event: SubmitEvent) => {
+            event.preventDefault();
+            errors.value = { fruit: 'server error' };
+          }}
+        >
+          <Field.Root name="fruit">
+            <RadioGroup>
+              {extra.value ? <Radio.Root key="b" value="b" data-testid="b" /> : null}
+              <Radio.Root key="a" value="a" data-testid="a" />
+            </RadioGroup>
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>
+      ));
+      const { user } = await render(<App />);
+
+      extra.value = true;
+      await flushMicrotasks();
+      await user.click(screen.getByRole('button', { name: 'Submit' }));
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('b')).toHaveFocus();
     });
   });
 });

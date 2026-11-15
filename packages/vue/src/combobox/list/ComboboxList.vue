@@ -21,6 +21,7 @@ import { useCompositeList } from '../../internals/composite/list/useCompositeLis
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { stopEvent } from '../../utils/popups/event';
+import { useKeepAliveElementRef } from '../../utils/popups/useKeepAliveElementRef';
 import ComboboxCollection from '../collection/ComboboxCollection.vue';
 import { useComboboxPositionerContext } from '../positioner/ComboboxPositionerContext';
 import {
@@ -92,7 +93,8 @@ function setElements(list: HTMLElement | null) {
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: [setElements],
+  // The `aria-controls` of the input names the list, so the input is the owner of that reference.
+  ref: useKeepAliveElementRef(setElements, () => toRaw(store.state).inputElement),
   props: (attrs) => {
     const grid = store.select('grid');
     return [

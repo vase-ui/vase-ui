@@ -60,6 +60,8 @@ The manager has the same `add`, `close`, `update` and `promise` methods as `Toas
 
 All server requests share a manager of a module. A server render does not subscribe the provider to its manager, so a toast of one request does not go to another request.
 
+You can give one manager to more than one provider. Each provider then gets each toast of the manager. The `promise` method returns one promise for all the providers, so one handler handles its rejection.
+
 ## Stacking and animations
 
 Use the `--toast-index` CSS variable for the stacking order of the toasts. The toast with the index 0 is at the front.
@@ -345,6 +347,8 @@ To close all toasts, give no id:
 Makes an asynchronous toast with three states: `loading`, `success` and `error`.
 
 <<< ./toast/ManagerMethods.vue#promise{ts}
+
+It returns a promise. That promise resolves with the value of the given promise. When the given promise rejects, the toast gets the `error` state, and the returned promise rejects with the same reason. Handle that rejection with `.catch()`, or with `try` and `catch` around an `await`. Without a handler, the browser reports an unhandled rejection. The [Promise](#promise) demo handles it with `.catch()`.
 
 The `loading` state accepts the options of the `add` method. The `success` and `error` states accept the options of the `update` method:
 

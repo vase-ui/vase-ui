@@ -185,11 +185,10 @@ export type SliderRootCommitEventDetails = VaseUIGenericEventDetails<SliderRootC
 // vue-tsc resolves `Value` before it checks a listener of a template.
 // With no `value` and no `defaultValue`, the value is `min`, so the default is `number`.
 import { computed, provide, shallowRef, watch } from 'vue';
-import { addEventListener } from '../../common/addEventListener';
 import { areArraysEqual } from '../../common/areArraysEqual';
 import { clamp } from '../../common/clamp';
 import { useIsHydrating } from '../../common/hydration';
-import { ownerDocument, ownerWindow } from '../../common/owner';
+import { ownerDocument } from '../../common/owner';
 import { activeElement, contains } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
 import { warn } from '../../common/warn';
@@ -206,6 +205,7 @@ import { createLabelIdRegistry, useControlLabelId } from '../../internals/labela
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useFormReset } from '../../internals/useFormReset';
+import { isInTreeOf } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { asc } from '../utils/asc';
@@ -378,6 +378,8 @@ const values = computed<readonly number[]>(() => {
 
 const fieldValue = computed(() => (range.value ? values.value : values.value[0]));
 
+// The form focuses `validation.inputRef`, which can name the input of another control. The element
+// of the root shows whether `KeepAlive` holds the slider.
 useRegisterFieldControl(
   validation.inputRef,
   rootId,
@@ -385,6 +387,7 @@ useRegisterFieldControl(
   undefined,
   () => !isDisabled.value,
   () => props.name,
+  () => element.value,
 );
 
 const clearFieldError = useClearFieldError(inputName);
@@ -532,18 +535,6 @@ function getThumbInputs() {
   return inputs;
 }
 
-// Vue writes `value` to an input only when the value changes between two renders. Chromium restores
-// the form state of a page after `load`, with no event on the input. A form would then submit a
-// value that the slider does not show.
-function writeValuesToInputs() {
-  getThumbInputs().forEach((input, index) => {
-    const value = values.value[index];
-    if (input && value !== undefined && input.valueAsNumber !== value) {
-      input.value = String(value);
-    }
-  });
-}
-
 function resetToDefaultValue(event: Event) {
   const defaultValue = (props.defaultValue ?? props.min) as number | readonly number[];
   if (props.value !== undefined || areValuesEqual(defaultValue, valueUnwrapped.value)) {
@@ -607,6 +598,7 @@ provide(SliderRootContext, {
   labelId,
   rootLabelId,
   registerLabelId,
+  reaches: (target) => isInTreeOf(element.value, target),
   thumbMap,
   largeStep: computed(() => props.largeStep),
   lastUsedThumbIndex,
@@ -657,18 +649,6 @@ const { element, elementProps } = useRenderElement('div', props, {
   ],
   stateAttributesMapping: sliderStateAttributesMapping,
 });
-
-watch(
-  element,
-  (root, _previous, onCleanup) => {
-    if (!root) {
-      return;
-    }
-
-    onCleanup(addEventListener(ownerWindow(root), 'pageshow', writeValuesToInputs));
-  },
-  { flush: 'post' },
-);
 
 defineExpose({ element });
 </script>

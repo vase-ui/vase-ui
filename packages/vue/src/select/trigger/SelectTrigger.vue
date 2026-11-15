@@ -67,6 +67,7 @@ import { useButton } from '../../internals/use-button';
 import { REASONS } from '../../internals/reasons';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { isMouseWithinBounds } from '../../utils/getPseudoElementBounds';
+import { isReleaseAtPressPoint } from '../../utils/popups/isReleaseAtPressPoint';
 import { pressableTriggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
 import { resolveAriaLabelledBy } from '../../utils/resolveAriaLabelledBy';
 import { useSelectRootContext } from '../root/SelectRootContext';
@@ -119,7 +120,7 @@ const ariaControls = computed(() => {
   return list ? list.id || undefined : store.select('popupId');
 });
 
-useLabelableId({ id: () => props.id });
+useLabelableId({ id: () => props.id, element: () => element.value });
 
 const setFocused = useSetFieldFocused(isDisabled, () => element.value);
 
@@ -150,6 +151,9 @@ function removeMouseUpListener() {
 }
 
 function handleMouseUp(mouseEvent: MouseEvent) {
+  const press = store.context.triggerPressRef.value;
+  store.context.triggerPressRef.value = null;
+
   const trigger = element.value;
   if (!trigger) {
     return;
@@ -167,6 +171,10 @@ function handleMouseUp(mouseEvent: MouseEvent) {
   }
 
   if (isMouseWithinBounds(mouseEvent, trigger)) {
+    return;
+  }
+
+  if (press && isReleaseAtPressPoint(press, mouseEvent)) {
     return;
   }
 
@@ -290,6 +298,7 @@ const { element, elementProps } = useRenderElement('button', props, {
 
         removeMouseUpListener();
         mouseUpDocument = ownerDocument(event.currentTarget as Element);
+        store.context.triggerPressRef.value = event;
         mouseUpDocument.addEventListener('mouseup', handleMouseUp, { once: true });
       },
     },

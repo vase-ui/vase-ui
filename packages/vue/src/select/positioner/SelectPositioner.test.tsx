@@ -305,10 +305,8 @@ describe('<Select.Positioner />', () => {
   });
 
   describe('scroll lock', () => {
-    // The lock and the unlock each wait for a timer of 0 ms. The observers of `waitFor` do not see a
-    // document in a frame, so it polls.
-    const POLL = { interval: 5, timeout: 3000 };
-
+    // The lock and the unlock each wait for a timer of 0 ms. The observer of `waitFor` does not see
+    // a change in the document of an iframe. Its check in each frame sees the change.
     function lockCount() {
       return getScrollLockRegistry()?.lockCount ?? 0;
     }
@@ -368,10 +366,10 @@ describe('<Select.Positioner />', () => {
       await render(<ModalSelect />);
 
       open.value = true;
-      await waitFor(() => expect(isPageLocked(page)).toBe(true), POLL);
+      await waitFor(() => expect(isPageLocked(page)).toBe(true));
 
       actions.close();
-      await waitFor(() => expect(isPageLocked(page)).toBe(false), POLL);
+      await waitFor(() => expect(isPageLocked(page)).toBe(false));
       expect(lockCount()).toBe(0);
       expect(getPositioner(page)?.isConnected).toBe(true);
     });
@@ -390,7 +388,7 @@ describe('<Select.Positioner />', () => {
         await render(<ModalSelect />);
 
         open.value = true;
-        await waitFor(() => expect(getPositioner(page)?.dataset.side).toBe(side), POLL);
+        await waitFor(() => expect(getPositioner(page)?.dataset.side).toBe(side));
 
         expect(lockCount()).toBe(locks);
       },
@@ -407,13 +405,13 @@ describe('<Select.Positioner />', () => {
       await render(() => (
         <KeepAlive>{show.value ? <ModalSelect key="select" /> : <Other key="other" />}</KeepAlive>
       ));
-      await waitFor(() => expect(isPageLocked(page)).toBe(true), POLL);
+      await waitFor(() => expect(isPageLocked(page)).toBe(true));
 
       show.value = false;
-      await waitFor(() => expect(isPageLocked(page)).toBe(false), POLL);
+      await waitFor(() => expect(isPageLocked(page)).toBe(false));
 
       show.value = true;
-      await waitFor(() => expect(isPageLocked(page)).toBe(true), POLL);
+      await waitFor(() => expect(isPageLocked(page)).toBe(true));
     });
   });
 

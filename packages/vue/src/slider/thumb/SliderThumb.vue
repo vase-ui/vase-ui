@@ -71,7 +71,11 @@ import {
 import type { Component } from 'vue';
 import { clamp } from '../../common/clamp';
 import { formatNumber } from '../../common/formatNumber';
-import { useIsHydrating } from '../../common/hydration';
+import {
+  dispatchTakeEvents,
+  useHiddenValueBeforeHydration,
+  useIsHydrating,
+} from '../../common/hydration';
 import { ownerWindow } from '../../common/owner';
 import { contains } from '../../common/shadowDom';
 import { visuallyHidden } from '../../common/visuallyHidden';
@@ -88,11 +92,13 @@ import {
 } from '../../internals/composite/composite';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
+import { useFieldInput } from '../../internals/field-register-control';
 import { useFieldRootContext } from '../../internals/field-root-context';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
 import { useDeferredServerRender, useLabelableId } from '../../internals/labelable-provider';
 import type { HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useFormRestore } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { mergeProps } from '../../merge-props';
 import { matchesFocusVisible } from '../../utils/popups/element';
@@ -224,7 +230,7 @@ let restoringFocusVisible = false;
 
 const thumbId = useVaseUiId();
 const defaultInputId = useVaseUiId();
-const labelableId = useLabelableId();
+const labelableId = useLabelableId({ element: () => element.value });
 const inputId = computed(() => (range.value ? defaultInputId.value : labelableId.value));
 
 const thumbMetadata = computed<ThumbMetadata>(() => ({ inputId: inputId.value }));
@@ -359,18 +365,26 @@ function getThumbStyle() {
   };
 }
 
+const giveFieldInput = useFieldInput();
+
 function setInputElement(value: unknown) {
   const input = value as HTMLInputElement | null;
   // Vue calls a function ref again on each patch, with the same element.
   if (input === inputElement.value) {
     return;
   }
-  // Another thumb can hold the ref of the field. Only this thumb clears its own input.
-  if (input || validation.inputRef.value === inputElement.value) {
-    validation.inputRef.value = input;
-  }
+  giveFieldInput(input);
   inputElement.value = input;
 }
+
+const writesValue = useHiddenValueBeforeHydration(() => inputElement.value);
+
+useFormRestore(inputElement, () => {
+  const input = inputElement.value;
+  if (input && input.valueAsNumber !== thumbValue.value) {
+    dispatchTakeEvents(input, false);
+  }
+});
 
 // The value that the input had after the last `input` or `change` event that the thumb handled.
 // A `change` event with that value is the second event of one user action.
@@ -569,7 +583,7 @@ function inputProps() {
       },
       tabindex: props.tabindex,
       type: 'range',
-      value: value ?? '',
+      ...(writesValue.value ? { value: value ?? '' } : undefined),
     },
     (merged) => validation.getValidationProps(isDisabled.value, merged),
     {

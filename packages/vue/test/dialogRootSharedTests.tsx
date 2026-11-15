@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { screen, waitFor } from '@testing-library/dom';
+import { screen } from './queries';
+import { waitFor } from './waitFor';
 import type * as AlertDialog from '../src/alert-dialog/index.parts';
 import type * as Dialog from '../src/dialog/index.parts';
 import { REASONS } from '../src/internals/reasons';
@@ -38,7 +39,7 @@ export function dialogRootSharedTests(config: DialogRootSharedTestsConfig) {
         );
 
         const trigger = screen.getByRole('button', { name: 'Open' });
-        await user.click(trigger);
+        await waitForLaterMillisecond(() => user.click(trigger));
 
         expect(handleOpenChange).toHaveBeenCalledTimes(1);
         expect(handleOpenChange).toHaveBeenNthCalledWith(
@@ -47,7 +48,6 @@ export function dialogRootSharedTests(config: DialogRootSharedTestsConfig) {
           expect.objectContaining({ reason: REASONS.triggerPress, trigger }),
         );
 
-        await waitForLaterMillisecond();
         await user.click(screen.getByRole('button', { name: 'Close' }));
 
         expect(handleOpenChange).toHaveBeenCalledTimes(2);
@@ -151,10 +151,11 @@ export function dialogRootSharedTests(config: DialogRootSharedTestsConfig) {
         ));
 
         const trigger = screen.getByRole('button', { name: 'Open' });
-        await user.click(trigger);
-        expect(await screen.findByRole(popupRole)).toBeVisible();
+        await waitForLaterMillisecond(async () => {
+          await user.click(trigger);
+          expect(await screen.findByRole(popupRole)).toBeVisible();
+        });
 
-        await waitForLaterMillisecond();
         await user.click(screen.getByRole('button', { name: 'Close' }));
         await waitFor(() => {
           expect(trigger).toHaveAttribute('aria-expanded', 'false');
@@ -168,10 +169,11 @@ export function dialogRootSharedTests(config: DialogRootSharedTestsConfig) {
         });
 
         // The next close unmounts on its own again.
-        await user.click(trigger);
-        expect(await screen.findByRole(popupRole)).toBeVisible();
+        await waitForLaterMillisecond(async () => {
+          await user.click(trigger);
+          expect(await screen.findByRole(popupRole)).toBeVisible();
+        });
 
-        await waitForLaterMillisecond();
         await user.click(screen.getByRole('button', { name: 'Close' }));
         await waitFor(() => {
           expect(screen.queryByRole(popupRole, { hidden: true })).toBe(null);

@@ -1,6 +1,5 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import {
-  createSSRApp,
   defineComponent,
   h,
   KeepAlive,
@@ -10,7 +9,9 @@ import {
   shallowRef,
   useAttrs,
 } from 'vue';
+import type { VNode } from 'vue';
 import { Field } from '@vase-ui/vue/field';
+import { Form } from '@vase-ui/vue/form';
 import { Slider } from '@vase-ui/vue/slider';
 import type { VaseUIEvent } from '@vase-ui/vue/types';
 import {
@@ -20,11 +21,12 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  hydrateAfter,
   isJSDOM,
   mockRuntimeLocale,
+  recordInputEvents,
   renderOnServer,
   screen,
-  takeReportedMessages,
   waitFor,
   within,
 } from '#test-utils';
@@ -33,6 +35,8 @@ import { createTouches, getHorizontalSliderRect } from '../utils/test-utils';
 import SliderThumbHydration from './SliderThumbHydration.test.vue';
 
 const isWebKit = platform.engine.webkit;
+
+const FIXTURE = 'src/slider/thumb/SliderThumbHydration.test.vue';
 
 // Gives its root a new function ref in each render. It exposes its element.
 const UnstableRefThumb = defineComponent(
@@ -1905,11 +1909,61 @@ describe('<Slider.Thumb />', () => {
         expect(thumb.style.getPropertyValue('--position')).toBe('59%');
       });
     });
+
+    async function submitWithHeldSlider(name: string, shownControl: () => VNode) {
+      const handleSubmit = vi.fn();
+      const visible = shallowRef(true);
+      const extra = shallowRef(name === 'deactivated');
+      const Branch = defineComponent(() => () => (
+        <div>
+          {extra.value ? (
+            <Slider.Root key="held" defaultValue={5}>
+              <Slider.Control>
+                <Slider.Thumb />
+              </Slider.Control>
+            </Slider.Root>
+          ) : null}
+        </div>
+      ));
+      const { user } = await render(() => (
+        <Form onFormSubmit={handleSubmit}>
+          <Field.Root name="volume" data-testid="field">
+            {shownControl()}
+            <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>
+      ));
+
+      visible.value = false;
+      await flushMicrotasks();
+      extra.value = true;
+      await flushMicrotasks();
+      await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+      return handleSubmit;
+    }
+
+    it.each([{ name: 'held mount' }, { name: 'deactivated' }])(
+      'a held slider keeps the input of a shown required control: $name',
+      async ({ name }) => {
+        const handleSubmit = await submitWithHeldSlider(name, () => <Field.Control required />);
+
+        expect(handleSubmit).not.toHaveBeenCalled();
+        expect(screen.getByTestId('field')).toHaveAttribute('data-invalid', '');
+      },
+    );
+
+    it('a slider that mounts while KeepAlive holds it gives no value to its form', async () => {
+      const handleSubmit = await submitWithHeldSlider('held mount', () => (
+        <Field.Control defaultValue="shown" />
+      ));
+
+      expect(handleSubmit.mock.lastCall?.[0]).toEqual({ volume: 'shown' });
+    });
   });
 
   describe('hydration', () => {
-    const FIXTURE = 'src/slider/thumb/SliderThumbHydration.test.vue';
-
     it.each([
       { name: 'a single thumb', props: { defaultValue: 30 } },
       { name: 'a range with no index', props: { defaultValue: [25, 75] } },
@@ -1956,31 +2010,73 @@ describe('<Slider.Thumb />', () => {
         ).toEqual(positions.map((position) => ['', position]));
       },
     );
+  });
 
-    it('writes the state over a value that the browser restored, when it hydrates', async () => {
-      // A browser can restore the form state of a page before the app starts.
-      const props = { defaultValue: [25, 75] };
+  describe('VUE-81: the state that the input got before the hydration', () => {
+    async function hydrateWritten(props: Record<string, unknown>, written: string[]) {
       const serverHtml = await renderOnServer(FIXTURE, props);
-      const container = document.createElement('div');
-      document.body.append(container);
-      container.append(document.createRange().createContextualFragment(serverHtml));
-      const inputs = [...container.querySelectorAll<HTMLInputElement>('input[type="range"]')];
-      inputs[0].value = '55';
-      const app = createSSRApp(SliderThumbHydration, props);
-      onTestFinished(() => {
-        app.unmount();
-        container.remove();
+      let serverInputs: HTMLInputElement[] = [];
+      let events: string[] = [];
+      const { container } = await hydrateAfter(SliderThumbHydration, {
+        serverHtml,
+        props,
+        before(serverContainer) {
+          events = recordInputEvents(serverContainer);
+          serverInputs = [...serverContainer.querySelectorAll<HTMLInputElement>('input')];
+          written.forEach((value, index) => {
+            if (value !== '') {
+              serverInputs[index]!.value = value;
+            }
+          });
+        },
       });
+      await flushMicrotasks();
+      // Vue hydrated the nodes of the server HTML. It did not make new nodes.
+      expect([...container.querySelectorAll('input')]).toEqual(serverInputs);
+      return { fixture: within(container), inputs: serverInputs, events };
+    }
 
-      app.mount(container);
+    it('takes the value that the browser restored into one thumb', async () => {
+      const { fixture, inputs, events } = await hydrateWritten({ defaultValue: [25, 75] }, [
+        '55',
+        '',
+      ]);
+
+      expect(inputs.map((input) => input.value)).toEqual(['55', '75']);
+      expect(fixture.getByTestId('changes').textContent).toBe('55,75 (input-change)');
+      expect(events).toEqual(['input']);
+    });
+
+    it('gives a controlled range both thumbs that changed', async () => {
+      const { fixture, inputs, events } = await hydrateWritten(
+        { defaultValue: [25, 75], controlled: true },
+        ['35', '65'],
+      );
+
+      expect(fixture.getByTestId('model').textContent).toBe('35,65');
+      expect(fixture.getByTestId('changes').textContent).toBe(
+        '35,75 (input-change); 35,65 (input-change)',
+      );
+      expect(inputs.map((input) => input.value)).toEqual(['35', '65']);
+      expect(events).toEqual(['input', 'input']);
+    });
+  });
+
+  describe('VUE-81: the form state that the browser restores', () => {
+    it('takes the input at a `pageshow` event', async () => {
+      const { container } = await render(<SliderThumbHydration defaultValue={30} controlled />);
+      const fixture = within(container);
+      const events = recordInputEvents(container);
+      const input = container.querySelector<HTMLInputElement>('input[type="range"]')!;
+      input.value = '45';
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
       await flushMicrotasks();
 
-      expect(inputs.map((input) => input.value)).toEqual(['25', '75']);
-      // Vue hydrated the nodes of the server HTML. It did not make new nodes.
-      container.querySelectorAll('input[type="range"]').forEach((input, index) => {
-        expect(input).toBe(inputs[index]);
-      });
-      expect(takeReportedMessages()).toEqual([]);
+      expect(fixture.getByTestId('model').textContent).toBe('45');
+      expect(fixture.getByTestId('changes').textContent).toBe('45 (input-change)');
+      expect(input.value).toBe('45');
+      expect(events).toEqual(['input']);
     });
   });
 

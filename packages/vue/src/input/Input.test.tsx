@@ -9,10 +9,12 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  hydrateAfter,
   renderOnServer,
   screen,
   within,
 } from '#test-utils';
+import InputBeforeHydration from './InputBeforeHydration.test.vue';
 import InputHydration from './InputHydration.test.vue';
 
 describe('<Input />', () => {
@@ -134,6 +136,37 @@ describe('<Input />', () => {
       const { container } = await hydrate(InputHydration, { serverHtml, props });
 
       expect(within(container).getByTestId('input')).toHaveValue('foo');
+    });
+  });
+
+  describe('VUE-74: text that the user typed before the hydration', () => {
+    it('writes the text to v-model:value', async () => {
+      const serverHtml = await renderOnServer('src/input/InputBeforeHydration.test.vue');
+
+      const { container } = await hydrateAfter(InputBeforeHydration, {
+        serverHtml,
+        before(serverContainer) {
+          const serverInput = within(serverContainer).getByTestId<HTMLInputElement>('input');
+          serverInput.focus();
+          serverInput.value = 'foo bar';
+        },
+      });
+      await flushMicrotasks();
+
+      expect(within(container).getByTestId('input')).toHaveValue('foo bar');
+      expect(within(container).getByTestId('value').textContent).toBe('foo bar');
+    });
+  });
+
+  describe('VUE-81: the form state that the browser restores', () => {
+    it('writes a value that the browser restores to v-model:value', async () => {
+      const { container } = await render(<InputBeforeHydration />);
+      within(container).getByTestId<HTMLInputElement>('input').value = 'restored';
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(within(container).getByTestId('value').textContent).toBe('restored');
     });
   });
 });

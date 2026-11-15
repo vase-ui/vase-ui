@@ -54,10 +54,11 @@ export interface FieldControlProps
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, watch } from 'vue';
+import { useValueBeforeHydration } from '../../common/hydration';
 import { useTimeout } from '../../common/useTimeout';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { fieldValidityMapping } from '../../internals/field-constants';
-import { useRegisterFieldControl } from '../../internals/field-register-control';
+import { useFieldInput, useRegisterFieldControl } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
 import { useFormContext } from '../../internals/form-context';
@@ -69,6 +70,7 @@ import {
 import { REASONS as REASON_VALUES } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useFormReset } from '../../internals/useFormReset';
+import { useFormRestoreAsInput } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 
@@ -122,7 +124,7 @@ const state = computed<FieldControlState>(() => ({
   disabled: isDisabled.value,
 }));
 
-const controlId = useLabelableId({ id: () => props.id });
+const controlId = useLabelableId({ id: () => props.id, element: () => element.value });
 
 // The DOM value is always a string, so the comparisons for `dirty` use the string.
 const serializedValue = computed(() => (props.value == null ? undefined : String(props.value)));
@@ -130,11 +132,18 @@ const serializedDefaultValue = computed(() =>
   props.defaultValue == null ? undefined : String(props.defaultValue),
 );
 
+const writesValue = useValueBeforeHydration(props, () => element.value);
+
+// Until the hydration ends, the input can hold text that the part did not handle yet. The field
+// then takes the value of the props as the initial value, and the `input` event changes it.
 useRegisterFieldControl(
   () => element.value,
   controlId,
   () => serializedValue.value,
-  () => (element.value as HTMLInputElement | null)?.value,
+  () =>
+    writesValue.value
+      ? (element.value as HTMLInputElement | null)?.value
+      : (serializedValue.value ?? serializedDefaultValue.value ?? ''),
   () => !isDisabled.value,
   () => props.name,
 );
@@ -184,7 +193,7 @@ const enterValidationTimeout = useTimeout();
 // property `defaultValue` is the `value` attribute, and Vue sets it only when its value changes.
 function valueProps() {
   if (props.value !== undefined) {
-    return { value: props.value };
+    return writesValue.value ? { value: props.value } : undefined;
   }
   if (props.defaultValue === undefined) {
     return undefined;
@@ -289,20 +298,11 @@ function handleKeydown(event: KeyboardEvent) {
   }
 }
 
-// A template can mount the control that replaces this control before it unmounts this control.
-// The control then clears the input of the field only when the input is its own.
-let ownInput: HTMLInputElement | null = null;
-function setInput(next: HTMLElement | null) {
-  const input = next as HTMLInputElement | null;
-  if (input !== null || validation.inputRef.value === ownInput) {
-    validation.inputRef.value = input;
-  }
-  ownInput = input;
-}
+const giveFieldInput = useFieldInput();
 
 const { element, elementProps } = useRenderElement('input', props, {
   state,
-  ref: setInput,
+  ref: giveFieldInput,
   props: (attrs) => [
     {
       id: controlId.value,
@@ -332,6 +332,8 @@ useFormReset(element, () => {
   setDirty(value !== (validityData.value.initialValue ?? ''));
   clearFieldError(value);
 });
+
+useFormRestoreAsInput(element, () => handledValue, true);
 
 defineExpose({ element });
 </script>

@@ -64,6 +64,7 @@ export interface FormProps<FormValues extends Record<string, any> = Record<strin
 // With the default `any`, that check accepts a listener that has a typed parameter.
 import { computed, provide, shallowRef, toValue, watch } from 'vue';
 import { EMPTY_OBJECT } from '../common/empty';
+import { comesBeforeInSameTree } from '../internals/comesBeforeInSameTree';
 import { createGenericEventDetails } from '../internals/createBaseUIEventDetails';
 import { FormContext } from '../internals/form-context';
 import type { FormField } from '../internals/form-context';
@@ -117,14 +118,6 @@ watch(
   },
   { deep: true },
 );
-
-function comesBeforeInSameTree(element: Node, reference: Node) {
-  const position = element.compareDocumentPosition(reference);
-  return (
-    (position & Node.DOCUMENT_POSITION_DISCONNECTED) === 0 &&
-    (position & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
-  );
-}
 
 function focusFirstInvalid() {
   // A field can be invalid without a focusable control (for example a checkbox group whose

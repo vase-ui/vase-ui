@@ -2,9 +2,11 @@ import { inject } from 'vue';
 import type { ComputedRef, InjectionKey, Ref, ShallowRef } from 'vue';
 import type { CompositeListContextValue } from '../../internals/composite/list/CompositeListContext';
 import type { TextDirection } from '../../internals/direction-context/DirectionContext';
+import type { REASONS } from '../../internals/reasons';
 import type { Orientation } from '../../internals/types';
 import type { Layout, PanelConstraints } from '../utils/layout';
 import type {
+  ResizableRootActions,
   ResizableRootChangeEventDetails,
   ResizableRootCommitEventDetails,
 } from './ResizableRoot.vue';
@@ -24,6 +26,10 @@ export interface ResizablePanelRegistration {
   minSize: () => number | string;
   maxSize: () => number | string;
   defaultSize: number | string | undefined;
+  collapsible: () => boolean;
+  collapsedSize: () => number | string;
+  collapseThreshold: () => number | string | undefined;
+  disabled: () => boolean;
   element: Readonly<ShallowRef<HTMLElement | null>>;
   /**
    * Whether `KeepAlive` holds the panel. Such a panel is not in the layout.
@@ -31,17 +37,37 @@ export interface ResizablePanelRegistration {
   deactivated: Readonly<Ref<boolean>>;
 }
 
+/**
+ * A handle that moves a panel for a key or a double click.
+ */
+export interface ResizableHandleMove {
+  /**
+   * The index in `panels` of the panel before the handle.
+   */
+  pivot: number;
+  reason: typeof REASONS.keyboard | 'reset';
+  event: KeyboardEvent | MouseEvent;
+}
+
+/**
+ * What `useParentRoot()` gives: the orientation and the methods of the nearest root.
+ */
+export interface ResizableParentRoot extends ResizableRootActions {
+  orientation: ComputedRef<Orientation>;
+}
+
 export interface ResizableRootContext {
   orientation: ComputedRef<Orientation>;
   direction: ComputedRef<TextDirection>;
   /**
-   * The composite list around the root. A panel gives it to its content, so that an item in the
-   * panel joins that list and not the list of the panels.
+   * The list of the panels and the handles. They register with it through this context. The root
+   * does not provide the list, so an item of a composite around the root joins that composite.
    */
-  outerList: CompositeListContextValue<any> | undefined;
+  list: CompositeListContextValue<{ id?: string }>;
   disabled: ComputedRef<boolean>;
   step: ComputedRef<number>;
   largeStep: ComputedRef<number>;
+  pushPanels: ComputedRef<boolean>;
   /**
    * The panels in the order of the document, without a panel that `KeepAlive` holds.
    */
@@ -75,6 +101,32 @@ export interface ResizableRootContext {
    */
   changeLayout: (layout: Layout, details: ResizableRootChangeEventDetails) => Layout | undefined;
   commitLayout: (layout: Layout, details: ResizableRootCommitEventDetails) => void;
+  /**
+   * Collapses the panel to its collapsed size, and commits the change. It does nothing for a panel
+   * that is not collapsible or is collapsed. A handle (`handleMove`) moves the panel for a key.
+   * With no handle, the move is an action of the app.
+   */
+  collapsePanel: (id: string, handleMove?: ResizableHandleMove) => void;
+  /**
+   * Gives a collapsed panel the size that it had before it collapsed, or its least size, and
+   * commits the change. It does not collapse another panel, and it does nothing for a panel that
+   * is not collapsed.
+   */
+  expandPanel: (id: string, handleMove?: ResizableHandleMove) => void;
+  /**
+   * Gives the panel a size, and commits the change. It is an action of the app.
+   */
+  resizePanel: (id: string, size: number | string) => void;
+  /**
+   * Gives the panel the size that it has in the first layout, and commits the change. A double
+   * click on a handle (`handleMove`) does this. The result is `false` when the panel has that
+   * size already.
+   */
+  resetPanel: (id: string, handleMove: ResizableHandleMove) => boolean;
+  /**
+   * What `useParentRoot()` gives to a part inside the root.
+   */
+  actions: ResizableParentRoot;
 }
 
 export const ResizableRootContext: InjectionKey<ResizableRootContext> = Symbol();

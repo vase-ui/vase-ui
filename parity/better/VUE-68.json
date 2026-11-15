@@ -1,0 +1,15 @@
+{
+  "id": "VUE-68",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/menu/trigger/MenuTrigger.tsx#L130-L157",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/select/trigger/SelectTrigger.tsx#L171-L202",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/combobox/trigger/ComboboxTrigger.tsx#L213-L242",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/interactions/useClick.ts#L182-L190",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/getPseudoElementBounds.ts#L11-L14",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/select/item/SelectItem.tsx#L197-L205",
+    "https://www.w3.org/WAI/WCAG22/Understanding/pointer-cancellation.html",
+    "https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html"
+  ],
+  "behavior": "A press can open the popup of `Menu.Trigger`, `Select.Trigger` or `Combobox.Trigger`. The popup then stays open when the release comes within 8 px of the point of the press on each axis. This is also true when the trigger moved. The trigger opens its popup in the frame after the press, and a layout change in that frame can move the trigger. The release of a press that did not move then lands on another element. Base UI closes the popup for that release with the reason `cancel-open`. Base UI also closes the popup for a release more than 5 px off a trigger that did not move. Vase UI keeps the popup open for such a release when it is within 8 px of the press. A move of 8 px or less on each axis is not a drag. `Select.Item` of Base UI takes 8 px of vertical travel as the start of a drag. 8 px is less than half of the 24 px target of WCAG 2.2. A person whose hand moves 8 px or less on each axis thus keeps the popup. A release still closes the popup when it is more than 8 px from the point of the press on one axis. The release must also be off the popup and more than 5 px off the trigger.",
+  "dueWith": "packages/react/src/menu/trigger/MenuTrigger.tsx"
+}

@@ -1,21 +1,26 @@
 import { expect, describe, it, vi } from 'vitest';
-import { computed, defineComponent, provide } from 'vue';
+import { computed, defineComponent, provide, shallowRef } from 'vue';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import { NumberField } from '@vase-ui/vue/number-field';
 import {
   createRenderer,
   describeConformance,
+  flushMicrotasks,
   hydrate,
+  hydrateAfter,
   isJSDOM,
+  recordInputEvents,
   renderOnServer,
   screen,
+  within,
 } from '#test-utils';
 import { NOOP } from '../../internals/noop';
 import { ToolbarRootContext } from '../root/ToolbarRootContext';
 import type { Orientation } from '../../internals/types';
 import { CompositeRootContext } from '../../internals/composite/root/CompositeRootContext';
 import { ARROW_UP, ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT } from '../../internals/composite/composite';
+import ToolbarInputBeforeHydration from './ToolbarInputBeforeHydration.test.vue';
 import ToolbarInputHydration from './ToolbarInputHydration.test.vue';
 
 const HYDRATION_FIXTURE = 'src/toolbar/input/ToolbarInputHydration.test.vue';
@@ -395,6 +400,75 @@ describe('<Toolbar.Input />', () => {
 
       expect(readTabindexes(container)).toEqual(tabindexes);
       expect(container.querySelector('input')).toHaveValue('abcd');
+    });
+  });
+
+  describe('VUE-74: text that the user typed before the hydration', () => {
+    it.each([
+      { name: 'a value of the consumer', props: { controlled: true }, text: 'abcd' },
+      { name: 'a default value', props: { controlled: false }, text: 'abc' },
+    ])('runs the input listener one time for $name', async ({ props, text }) => {
+      const serverHtml = await renderOnServer(
+        'src/toolbar/input/ToolbarInputBeforeHydration.test.vue',
+        props,
+      );
+
+      const { container } = await hydrateAfter(ToolbarInputBeforeHydration, {
+        serverHtml,
+        props,
+        before(serverContainer) {
+          const serverInput = within(serverContainer).getByTestId<HTMLInputElement>('input');
+          serverInput.focus();
+          serverInput.value = 'abcd';
+        },
+      });
+      await flushMicrotasks();
+
+      const fixture = within(container);
+      expect(fixture.getByTestId('input')).toHaveValue('abcd');
+      expect(fixture.getByTestId('inputs').textContent).toBe('abcd');
+      expect(fixture.getByTestId('text').textContent).toBe(text);
+    });
+  });
+
+  describe('VUE-81: the form state that the browser restores', () => {
+    it.each([
+      { name: 'a value of the consumer', props: { controlled: true }, text: 'abcd' },
+      { name: 'a default value', props: { controlled: false }, text: 'abc' },
+    ])('sends the events of a restored value to an input with $name', async ({ props, text }) => {
+      const { container } = await render(<ToolbarInputBeforeHydration {...props} />);
+      const fixture = within(container);
+      const events = recordInputEvents(container);
+      fixture.getByTestId<HTMLInputElement>('input').value = 'abcd';
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(fixture.getByTestId('inputs').textContent).toBe('abcd');
+      expect(fixture.getByTestId('text').textContent).toBe(text);
+      expect(fixture.getByTestId('input')).toHaveValue('abcd');
+      expect(events).toEqual(['input', 'change', 'blur', 'focusout']);
+    });
+
+    it.each([
+      { name: 'the mount', text: 'abc' },
+      { name: 'a later render', text: 'abcd' },
+    ])('sends no event for the value of $name', async ({ text }) => {
+      const value = shallowRef('abc');
+      const { container } = await render(() => (
+        <Toolbar.Root>
+          <Toolbar.Input value={value.value} data-testid="input" />
+        </Toolbar.Root>
+      ));
+      const events = recordInputEvents(container);
+      value.value = text;
+      await flushMicrotasks();
+      expect(screen.getByTestId('input')).toHaveValue(text);
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(events).toEqual([]);
     });
   });
 });

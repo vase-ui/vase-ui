@@ -42,7 +42,7 @@ Each change has a state for each family that it touches:
 A change that touches no family has one of two other states:
 
 - `not started`: the change is in a part of Base UI that Vase UI has not ported yet.
-- `out of scope`: Vase UI does not port the changed files. The table shows the reason when a rule names the files.
+- `out of scope`: Vase UI does not port the changed files. The table shows the reason when a rule or a `notPorted` row of `parity/scope.json` names the files.
 
 <ParityChanges />
 

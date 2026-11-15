@@ -12,11 +12,14 @@ import {
   fireEvent,
   flushMicrotasks,
   isJSDOM,
+  nextEvent,
   popupFocusPropsTests,
   renderOnServer,
   screen,
   takeReportedMessages,
   waitFor,
+  waitForLaterMillisecond,
+  waitSingleFrame,
 } from '#test-utils';
 import SelectPopupHydration from './SelectPopupHydration.test.vue';
 
@@ -1202,6 +1205,8 @@ describe('<Select.Popup />', () => {
       popupMaxHeight?: string;
       /** Use uncontrolled open state so the component can close itself. */
       uncontrolledOpen?: boolean;
+      /** The `data-side` of the placement that the popup gets. */
+      side?: string;
     }) {
       const {
         viewportHeight,
@@ -1212,6 +1217,7 @@ describe('<Select.Popup />', () => {
         selectedTextTop,
         popupMaxHeight = 'none',
         uncontrolledOpen = false,
+        side = 'none',
       } = options;
 
       stubProperty(docEl, 'clientHeight', viewportHeight);
@@ -1299,7 +1305,7 @@ describe('<Select.Popup />', () => {
       const list = screen.getByTestId('list');
 
       await waitFor(() => {
-        expect(positioner).toHaveAttribute('data-side', 'none');
+        expect(positioner).toHaveAttribute('data-side', side);
       });
 
       return {
@@ -1581,26 +1587,30 @@ describe('<Select.Popup />', () => {
       });
     });
 
-    // In WebKit, a pinch-zoomed popup uses the anchored placement by design.
-    // https://github.com/mui/base-ui/pull/1139
-    it.skipIf(isWebKit)('ignores a pinch-zoomed visual viewport outside WebKit', async () => {
+    it('ignores a pinch-zoomed visual viewport outside WebKit', async () => {
       const { visualViewport } = window;
       if (visualViewport) {
         stubProperty(visualViewport, 'scale', 1.5);
       }
 
+      // In WebKit, the popup gets the anchored placement: https://github.com/mui/base-ui/pull/1139
+      const side = isWebKit ? 'bottom' : 'none';
       const { positioner } = await renderAligned({
         viewportHeight: 720,
         triggerTop: 300,
         positionerHeight: 200,
         listScrollHeight: 400,
         listClientHeight: 200,
+        side,
       });
 
       // Only WebKit mispositions pinch-zoomed popups, so other engines keep item alignment.
       await waitFor(() => {
-        expect(positioner).toHaveAttribute('data-side', 'none');
+        expect(positioner).toHaveAttribute('data-side', side);
       });
+      if (isWebKit) {
+        expect(positioner.style.height).toBe('');
+      }
     });
 
     it('ignores scroll events bubbling to the popup while a Select.List owns scrolling', async () => {
@@ -2052,6 +2062,47 @@ describe('<Select.Popup />', () => {
     await user.keyboard('[Escape]');
     expect(changes).toEqual([[false, 'escape-key']]);
     expect(screen.getByTestId('trigger')).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('VUE-82: keeps the focus on an item whose keydown listener calls preventVaseUIHandler()', async () => {
+    const { user } = await render(
+      <Select.Root defaultValue="a">
+        <Select.Trigger data-testid="trigger">
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              <Select.Item
+                value="a"
+                onKeydown={(event) => {
+                  if (event.key === 'ArrowDown') {
+                    event.preventVaseUIHandler();
+                  }
+                }}
+              >
+                a
+              </Select.Item>
+              <Select.Item value="b">b</Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>,
+    );
+
+    screen.getByTestId('trigger').focus();
+    await flushMicrotasks();
+    // The item takes the focus in an animation frame after the open.
+    await waitForLaterMillisecond(() =>
+      nextEvent(document, 'focusin', { action: () => user.keyboard('[Enter]') }),
+    );
+    const a = screen.getByRole('option', { name: 'a' });
+    expect(a).toHaveFocus();
+
+    await user.keyboard('[ArrowDown]');
+    await waitSingleFrame();
+
+    expect(a).toHaveFocus();
   });
 
   // In Vue 3.5.12, a `setup` that throws leaves the current instance set, and a later case of the

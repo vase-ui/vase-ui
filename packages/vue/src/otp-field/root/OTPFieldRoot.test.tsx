@@ -11,11 +11,15 @@ import {
   flushMicrotasks,
   hiddenInputSizeTests,
   hydrate,
+  hydrateAfter,
+  mockNavigationType,
   pasteText,
   renderOnServer,
   screen,
+  within,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
+import OTPFieldInputBeforeHydration from '../input/OTPFieldInputBeforeHydration.test.vue';
 import OTPFieldRootHydration from './OTPFieldRootHydration.test.vue';
 import OTPFieldRootReplace from './OTPFieldRootReplace.test.vue';
 
@@ -25,6 +29,8 @@ async function settleReset() {
   vi.advanceTimersByTime(0);
   await flushMicrotasks();
 }
+
+const BEFORE_HYDRATION_FIXTURE = 'src/otp-field/input/OTPFieldInputBeforeHydration.test.vue';
 
 function getHiddenInput(container: Element) {
   return container.querySelector<HTMLInputElement>('input[aria-hidden]')!;
@@ -2450,6 +2456,53 @@ describe('<OTPField.Root />', () => {
     });
   });
 
+  describe('VUE-81: the state that the input got before the hydration', () => {
+    async function hydrateFilled(navigationType: NavigationTimingType) {
+      mockNavigationType(navigationType);
+      const serverHtml = await renderOnServer(BEFORE_HYDRATION_FIXTURE);
+      const { container } = await hydrateAfter(OTPFieldInputBeforeHydration, {
+        serverHtml,
+        before(serverContainer) {
+          within(serverContainer).getByTestId('outside').focus();
+          getHiddenInput(serverContainer).value = '1234';
+        },
+      });
+      await flushMicrotasks();
+      const fixture = within(container);
+      return {
+        fixture,
+        hiddenInput: getHiddenInput(container),
+        slots: [0, 1, 2, 3].map((index) => fixture.getByTestId<HTMLInputElement>(`slot-${index}`)),
+      };
+    }
+
+    it('takes a code that an autofill wrote into the hidden input', async () => {
+      const { fixture, slots } = await hydrateFilled('navigate');
+
+      expect(fixture.getByTestId('model').textContent).toBe('1234');
+      expect(fixture.getByTestId('changes').textContent).toBe('1234 (input-change)');
+      expect(fixture.getByTestId('completes').textContent).toBe('1234 (input-change)');
+      expect(fixture.getByTestId('submits').textContent).toBe('1');
+      expect(slots.map((slot) => slot.value)).toEqual(['1', '2', '3', '4']);
+      expect(fixture.getByTestId('outside')).toHaveFocus();
+    });
+
+    it.each([
+      { name: 'a move in the history', type: 'back_forward' as const },
+      { name: 'a reload', type: 'reload' as const },
+    ])('takes no code from the hidden input after $name', async ({ type }) => {
+      const { fixture, hiddenInput, slots } = await hydrateFilled(type);
+
+      expect(hiddenInput.value).toBe('');
+      expect(slots.map((slot) => slot.value)).toEqual(['', '', '', '']);
+      expect(fixture.getByTestId('model').textContent).toBe('');
+      expect(fixture.getByTestId('changes').textContent).toBe('');
+      expect(fixture.getByTestId('completes').textContent).toBe('');
+      expect(fixture.getByTestId('submits').textContent).toBe('0');
+      expect(fixture.getByTestId('field')).not.toHaveAttribute('data-touched');
+    });
+  });
+
   describe('KeepAlive', () => {
     it('keeps the value, the form entry and the tab stop, and moves the focus after a change', async () => {
       const App = defineComponent({
@@ -2497,6 +2550,76 @@ describe('<OTPField.Root />', () => {
 
       expect(getValues()).toBe('1234');
       expect(document.activeElement).toBe(inputs[4]);
+    });
+
+    it.each([{ name: 'held mount' }, { name: 'deactivated' }])(
+      'a held required OTP field does not block the submit of its form: $name',
+      async ({ name }) => {
+        const handleSubmit = vi.fn();
+        const visible = shallowRef(true);
+        const extra = shallowRef(name === 'deactivated');
+        const Branch = defineComponent(() => () => (
+          <div>
+            {extra.value ? (
+              <OTPFieldBase.Root key="held" length={1} required>
+                <OTPFieldBase.Input />
+              </OTPFieldBase.Root>
+            ) : null}
+          </div>
+        ));
+        const { user } = await render(() => (
+          <Form onFormSubmit={handleSubmit}>
+            <Field.Root name="code" data-testid="field">
+              <Field.Control defaultValue="shown" />
+              <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+            </Field.Root>
+            <button type="submit">Submit</button>
+          </Form>
+        ));
+
+        visible.value = false;
+        await flushMicrotasks();
+        extra.value = true;
+        await flushMicrotasks();
+        await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+        expect(handleSubmit).toHaveBeenCalledTimes(1);
+        expect(screen.getByTestId('field')).not.toHaveAttribute('data-invalid');
+      },
+    );
+
+    it('the label does not name an OTP field that mounts while KeepAlive holds it', async () => {
+      const visible = shallowRef(true);
+      const extra = shallowRef(false);
+      const Branch = defineComponent(() => () => (
+        <div>
+          {extra.value ? (
+            <OTPFieldBase.Root key="held" length={1} id="held-otp-field">
+              <OTPFieldBase.Input />
+            </OTPFieldBase.Root>
+          ) : null}
+        </div>
+      ));
+      await render(() => (
+        <Field.Root>
+          <Field.Label data-testid="label">Code</Field.Label>
+          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+        </Field.Root>
+      ));
+      const label = screen.getByTestId('label');
+      const providerId = label.getAttribute('for');
+
+      visible.value = false;
+      await flushMicrotasks();
+      extra.value = true;
+      await flushMicrotasks();
+
+      expect(label.getAttribute('for')).toBe(providerId);
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(label).toHaveAttribute('for', 'held-otp-field');
     });
   });
 

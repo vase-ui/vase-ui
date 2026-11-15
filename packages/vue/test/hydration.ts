@@ -1,4 +1,4 @@
-import { onTestFinished } from 'vitest';
+import { onTestFinished, vi } from 'vitest';
 import { createApp, createSSRApp, nextTick } from 'vue';
 import type { App, Component } from 'vue';
 import { recordVueWarnings, takeReportedMessages } from './reportedMessages';
@@ -22,6 +22,14 @@ export interface HydrateResult {
   container: HTMLElement;
 }
 
+export interface HydrateAfterOptions extends HydrateOptions {
+  /**
+   * Gets the container with the server HTML, before the app mounts. It does what a user or a
+   * browser does before the scripts of a page run, such as a focus or a key press.
+   */
+  before: (container: HTMLElement) => void | Promise<void>;
+}
+
 /**
  * Renders a component on a server and returns its HTML.
  * The server render runs in Node with no DOM, through a Vitest browser command.
@@ -40,6 +48,38 @@ export async function renderOnServer(
   }
 
   return html;
+}
+
+// `innerHTML` does not run an inline script, and a server HTML can hold one.
+function insertServerHtml(serverHtml: string): HTMLElement {
+  const container = document.createElement('div');
+  document.body.append(container);
+  onTestFinished(() => {
+    container.remove();
+  });
+  const range = document.createRange();
+  range.selectNodeContents(container);
+  container.append(range.createContextualFragment(serverHtml));
+  return container;
+}
+
+// The hooks of `onTestFinished` run in reverse order, so the app unmounts before its container
+// goes.
+async function mountServerHtml(
+  component: Component,
+  props: Record<string, unknown> | undefined,
+  container: HTMLElement,
+) {
+  const app = createSSRApp(component, props);
+  recordVueWarnings(app);
+  onTestFinished(() => {
+    try {
+      app.unmount();
+    } catch {
+      // An app whose hydration failed can fail to unmount.
+    }
+  });
+  await mountAndSettle(app, container);
 }
 
 async function mountAndSettle(app: App, container: HTMLElement) {
@@ -63,26 +103,8 @@ export async function hydrate(
 ): Promise<HydrateResult> {
   const clientDom = await renderOnClient(component, props);
 
-  const container = document.createElement('div');
-  document.body.append(container);
-  const app = createSSRApp(component, props);
-  recordVueWarnings(app);
-
-  onTestFinished(() => {
-    try {
-      app.unmount();
-    } catch {
-      // An app whose hydration failed can fail to unmount.
-    }
-    container.remove();
-  });
-
-  // `innerHTML` does not run an inline script, and a server HTML can hold one.
-  const range = document.createRange();
-  range.selectNodeContents(container);
-  container.append(range.createContextualFragment(serverHtml));
-
-  await mountAndSettle(app, container);
+  const container = insertServerHtml(serverHtml);
+  await mountServerHtml(component, props, container);
   const hydratedDom = serializeChildren(container);
 
   // Vue writes some hydration messages only to the console.
@@ -101,6 +123,69 @@ export async function hydrate(
   }
 
   return { container };
+}
+
+/**
+ * Inserts the server HTML of a component, calls `before`, and then hydrates the HTML. It throws
+ * when Vue warns or a console call occurs. It does not compare the DOM with a client-only render,
+ * because `before` changes the DOM.
+ */
+export async function hydrateAfter(
+  component: Component,
+  { serverHtml, props, before }: HydrateAfterOptions,
+): Promise<HydrateResult> {
+  const container = insertServerHtml(serverHtml);
+  await before(container);
+  await mountServerHtml(component, props, container);
+
+  // Vue writes some hydration messages only to the console.
+  const messages = takeReportedMessages();
+  if (messages.length > 0) {
+    throw new Error(
+      `The hydration is not clean.\n\nVue and the console reported:\n${messages.join('\n')}`,
+    );
+  }
+
+  return { container };
+}
+
+/**
+ * Gives `type` as the type of the navigation of the page until the test ends. A part can read it
+ * before its first render, and a runner can load the test page in any way.
+ */
+export function mockNavigationType(type: NavigationTimingType): void {
+  const getEntriesByType = performance.getEntriesByType.bind(performance);
+  const spy = vi
+    .spyOn(performance, 'getEntriesByType')
+    .mockImplementation((entryType) =>
+      entryType === 'navigation'
+        ? [{ type } as PerformanceNavigationTiming]
+        : getEntriesByType(entryType),
+    );
+  onTestFinished(() => {
+    spy.mockRestore();
+  });
+}
+
+/**
+ * Records the type of each `input`, `change`, `blur` and `focusout` event that reaches `target`
+ * until the test ends.
+ */
+export function recordInputEvents(target: EventTarget): string[] {
+  const types: string[] = [];
+  const record = (event: Event) => {
+    types.push(event.type);
+  };
+  const eventTypes = ['input', 'change', 'blur', 'focusout'];
+  for (const type of eventTypes) {
+    target.addEventListener(type, record, true);
+  }
+  onTestFinished(() => {
+    for (const type of eventTypes) {
+      target.removeEventListener(type, record, true);
+    }
+  });
+  return types;
 }
 
 async function renderOnClient(
