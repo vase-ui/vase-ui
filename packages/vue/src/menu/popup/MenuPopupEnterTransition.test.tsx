@@ -1,7 +1,15 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { defineComponent } from 'vue';
 import * as Menu from '../index.parts';
-import { createRenderer, flushMicrotasks, isJSDOM, screen, wait, waitFor } from '#test-utils';
+import {
+  createRenderer,
+  flushMicrotasks,
+  isJSDOM,
+  screen,
+  wait,
+  waitFor,
+  waitSingleFrame,
+} from '#test-utils';
 import type { VaseUIRenderResult } from '#test-utils';
 
 /**
@@ -368,8 +376,9 @@ describe.skipIf(isJSDOM)('Menu enter transition', () => {
     await waitFor(() => {
       expect(screen.getByTestId('menu-popup')).toHaveAttribute('data-instant', 'click');
     });
-    // Give the reveal time to settle while the submenu popup is absent.
-    await wait(100);
+    // The submenu root requested the frame that ends its reveal when it mounted. The browser runs
+    // frame callbacks in the order of their requests, so the reveal is complete in this frame.
+    await waitSingleFrame();
 
     await setProps({ showPopup: true });
     await waitFor(() => {

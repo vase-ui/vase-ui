@@ -119,16 +119,9 @@ describe('<Fieldset.Root />', () => {
             ),
           }}
         />
-        <Fieldset.Root
-          disabled
-          v-slots={{
-            render: ({ props }: RenderSlotProps) => (
-              <CheckboxGroup {...props}>
-                <Checkbox.Root name="apple" data-testid="checkbox" />
-              </CheckboxGroup>
-            ),
-          }}
-        />
+        <Fieldset.Root disabled as={CheckboxGroup}>
+          <Checkbox.Root name="apple" data-testid="checkbox" />
+        </Fieldset.Root>
         <Fieldset.Root
           disabled
           v-slots={{
@@ -262,6 +255,26 @@ describe('<Fieldset.Root />', () => {
       );
 
       expect(screen.getByRole('group')).toHaveAttribute('aria-labelledby', 'other-legend');
+    });
+
+    it('names a checkbox group that the root renders with the id of the legend', async () => {
+      await render(
+        <Field.Root>
+          <Fieldset.Root as={CheckboxGroup}>
+            <Fieldset.Legend>Backup schedule</Fieldset.Legend>
+            <Field.Item>
+              <Checkbox.Root value="daily" />
+              <Field.Label>Daily</Field.Label>
+              <Field.Description>Daily at 00:00</Field.Description>
+            </Field.Item>
+          </Fieldset.Root>
+        </Field.Root>,
+      );
+
+      expect(screen.getByRole('group')).toHaveAttribute(
+        'aria-labelledby',
+        screen.getByText('Backup schedule').id,
+      );
     });
   });
 
