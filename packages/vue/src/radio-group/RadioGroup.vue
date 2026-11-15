@@ -69,6 +69,7 @@ export type RadioGroupChangeEventDetails = VaseUIChangeEventDetails<RadioGroupCh
 
 <script setup lang="ts" generic="Value = any">
 import { computed, provide, shallowRef } from 'vue';
+import { queueInputTake } from '../common/hydration';
 import { contains } from '../common/shadowDom';
 import { useControlled } from '../common/useControlled';
 import { isEligibleInput } from '../field/root/useFieldValidation';
@@ -84,6 +85,7 @@ import { useFormContext } from '../internals/form-context';
 import { useDeferredServerRender, useLabelableContext } from '../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../internals/types';
 import { useVaseUiId } from '../internals/useBaseUiId';
+import { useFormRestore } from '../internals/useFormRestore';
 import { isInTreeOf } from '../internals/useKeepAliveState';
 import { useRenderElement } from '../internals/useRenderElement';
 import { useValueChanged } from '../internals/useValueChanged';
@@ -160,6 +162,24 @@ if (checkedValue.value != null) {
 
 const touched = shallowRef(false);
 const inputSyncRequest = shallowRef(0);
+
+// The group asks all its radios in one flush. With one take for each radio, a take of another
+// part between two radios waits for a flush, and the write of the earlier radio unchecks the input
+// that the browser checked in a group with a name.
+const inputTakeRequest = shallowRef<{ event?: Event }>();
+let isInputTakeQueued = false;
+
+function takeInputsAfterMount() {
+  if (isInputTakeQueued) {
+    return;
+  }
+  isInputTakeQueued = true;
+  queueInputTake(() => {
+    isInputTakeQueued = false;
+    inputTakeRequest.value = {};
+    return true;
+  });
+}
 
 function setTouched(value: boolean) {
   touched.value = value;
@@ -315,6 +335,8 @@ provide(RadioGroupContext, {
   setTouched,
   touched,
   inputSyncRequest,
+  inputTakeRequest,
+  takeInputsAfterMount,
   reset,
   reaches: (target) => isInTreeOf(element.value, target),
 });
@@ -362,6 +384,10 @@ const { element, elementProps } = useRenderElement('div', props, {
     attrs,
     (merged) => validation.getValidationProps(isDisabled.value, merged),
   ],
+});
+
+useFormRestore(element, (event) => {
+  inputTakeRequest.value = { event };
 });
 
 defineExpose({

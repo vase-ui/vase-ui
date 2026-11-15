@@ -20,6 +20,7 @@ import {
   hiddenInputSizeTests,
   hiddenInputTypeTests,
   hydrate,
+  hydrateAfter,
   isJSDOM,
   nextAnimationsRead,
   nextEvent,
@@ -28,12 +29,14 @@ import {
   popupListConformanceTests,
   pressWithTouch,
   randomStringValue,
+  recordInputEvents,
   renderOnServer,
   screen,
   wait,
   waitFor,
   waitForLaterMillisecond,
   waitSingleFrame,
+  within,
 } from '#test-utils';
 import { actOnElement } from '../../../test/fixtures/actOnElement';
 import { isScrollLocked } from '../../../test/fixtures/scrollDocument';
@@ -43,7 +46,10 @@ import * as Popover from '../../popover/index.parts';
 import * as SelectSeparatorDataAttributes from '../../separator/SeparatorDataAttributes';
 import type { SelectStore } from '../store';
 import { useSelectRootContext } from './SelectRootContext';
+import SelectRootBeforeHydration from './SelectRootBeforeHydration.test.vue';
 import SelectRootHydration from './SelectRootHydration.test.vue';
+
+const BEFORE_HYDRATION_FIXTURE = 'src/select/root/SelectRootBeforeHydration.test.vue';
 
 type ChangeDetails = Select.Root.ChangeEventDetails;
 type OpenChangeDetails = Select.Root.OpenChangeEventDetails;
@@ -188,8 +194,7 @@ describe('<Select.Root />', () => {
       const { user } = await render(<App />);
       await user.click(screen.getByTestId('trigger'));
 
-      // The trigger opens the select in the frame after the press. A busy machine can hold that
-      // frame for more than the limit of `waitFor`, so the case waits for the event.
+      // The trigger opens the select in the frame after the press, so the case waits for the event.
       await closed.promise;
       expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
       // The press mounts the list while closed so its items can register; it isn't left closing.
@@ -250,8 +255,8 @@ describe('<Select.Root />', () => {
       );
     }
 
-    // The trigger opens the select in the frame after the press, and a busy machine can hold that
-    // frame for more than the limit of `waitFor`. The `openChange` event has no limit.
+    // The trigger opens the select in the frame after the press, so the helper waits for the
+    // `openChange` event.
     async function openWithClick(
       user: Awaited<ReturnType<typeof renderWithoutPopup>>['user'],
       opened: Promise<void>,
@@ -3963,8 +3968,7 @@ describe('<Select.Root />', () => {
     await user.click(screen.getByRole('button', { name: 'null' }));
     expect(screen.getByTestId('value')).toHaveTextContent('initial');
 
-    // The trigger opens the select in the frame after the press. A busy machine can hold that
-    // frame for more than the limit of `waitFor`, so the case waits for the event.
+    // The trigger opens the select in the frame after the press, so the case waits for the event.
     const opened = Promise.withResolvers<void>();
     onOpenChangeComplete.mockImplementation((open: boolean) => {
       if (open) {
@@ -8447,19 +8451,77 @@ describe('<Select.Root />', () => {
       expect(input.value).toBe('serif');
       expect(handleValueChange).toHaveBeenCalledTimes(0);
     });
+  });
 
-    it('writes its value to the input after a `pageshow` event', async () => {
-      await render(
-        <Select.Root name="font" defaultValue="serif">
-          <Select.Trigger />
-        </Select.Root>,
+  describe('VUE-81: the state that the input got before the hydration', () => {
+    async function hydrateWritten(props: Record<string, unknown>, written: string) {
+      const serverHtml = await renderOnServer(BEFORE_HYDRATION_FIXTURE, props);
+      let events: string[] = [];
+      const { container } = await hydrateAfter(SelectRootBeforeHydration, {
+        serverHtml,
+        props,
+        before(serverContainer) {
+          events = recordInputEvents(serverContainer);
+          serverContainer.querySelector<HTMLInputElement>('input[aria-hidden="true"]')!.value =
+            written;
+        },
+      });
+      await flushMicrotasks();
+      return { fixture: within(container), input: getHiddenInput(), events };
+    }
+
+    it.each([
+      { name: 'value', written: 'mono' },
+      { name: 'label of an item', written: 'Monospace' },
+    ])('takes the $name that a program wrote', async ({ written }) => {
+      const { fixture, input, events } = await hydrateWritten(
+        { name: 'font', value: 'serif' },
+        written,
       );
-      const input = getHiddenInput();
-      input.value = 'mono';
 
-      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      expect(fixture.getByTestId('model').textContent).toBe('mono');
+      expect(fixture.getByTestId('changes').textContent).toBe('mono (none)');
+      expect(fixture.getByTestId('value')).toHaveTextContent('Monospace');
+      expect(input.value).toBe('mono');
+      expect(events).toEqual(['input']);
+    });
+
+    it('puts the input back for a value with no item', async () => {
+      const { fixture, input } = await hydrateWritten({ name: 'font', value: 'serif' }, 'cursive');
 
       expect(input.value).toBe('serif');
+      expect(fixture.getByTestId('model').textContent).toBe('serif');
+      expect(fixture.getByTestId('changes').textContent).toBe('');
+    });
+
+    it('keeps the model of an input with no name', async () => {
+      const { fixture, input, events } = await hydrateWritten({ value: 'serif' }, 'mono');
+
+      expect(input).toHaveAttribute('type', 'hidden');
+      expect(input.value).toBe('serif');
+      expect(fixture.getByTestId('model').textContent).toBe('serif');
+      expect(fixture.getByTestId('changes').textContent).toBe('');
+      expect(events).toEqual([]);
+    });
+  });
+
+  describe('VUE-81: the form state that the browser restores', () => {
+    it.each([
+      { name: 'an item', restored: 'mono', model: 'mono', changes: 'mono (none)' },
+      { name: 'no item', restored: 'cursive', model: 'serif', changes: '' },
+    ])('takes the input at a `pageshow` event for $name', async ({ restored, ...expected }) => {
+      const { container } = await render(<SelectRootBeforeHydration name="font" value="serif" />);
+      const fixture = within(container);
+      const events = recordInputEvents(container);
+      getHiddenInput().value = restored;
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(fixture.getByTestId('model').textContent).toBe(expected.model);
+      expect(fixture.getByTestId('changes').textContent).toBe(expected.changes);
+      expect(getHiddenInput().value).toBe(expected.model);
+      expect(events).toEqual(['input']);
     });
   });
 

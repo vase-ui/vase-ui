@@ -52,6 +52,8 @@ Bind the value with `v-model:value`, the text of the input with `v-model:inputVa
 
 Text that a visitor types, or that the browser fills, before the page hydrates stays in `Combobox.Input`. After the hydration, the root emits `inputValueChange` and `update:inputValue` with that text, and the popup stays closed. When the visitor left the input before the page hydrated, the input then also gets `change`, `blur` and `focusout`.
 
+The root takes a value that a program or the browser writes into its hidden input before the page hydrates, as it takes an autofill. It also takes a value that the browser restores after a move back in the history or a reload. The root then emits `valueChange` and `update:value` one time. A `valueChange` listener can thus run after a move back with no action of the visitor. A combobox with no `name`, no field, no `autoComplete` and no `required` keeps its value, because its hidden input is `type="hidden"`.
+
 ## Item values
 
 Each `<Combobox.Item>` takes a `value` prop that identifies it. Pass the item being rendered. To render each filtered item, give `<Combobox.List>` the `item` slot. The slot gets `{ item, index }`:

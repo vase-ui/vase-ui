@@ -314,6 +314,64 @@ describe('FloatingPortalLite', () => {
     expect(input.value).toBe('typed');
   });
 
+  it('VUE-5: keeps the portal element out of the document when the part mounts while KeepAlive holds its branch', async () => {
+    const counts = { mounted: 0, unmounted: 0 };
+    const Content = defineComponent({
+      name: 'Content',
+      setup() {
+        onMounted(() => {
+          counts.mounted += 1;
+        });
+        onUnmounted(() => {
+          counts.unmounted += 1;
+        });
+        return () => <div data-testid="content" />;
+      },
+    });
+    const visible = shallowRef(true);
+    const hasPortal = shallowRef(false);
+    const Page = defineComponent({
+      name: 'Page',
+      setup: () => () => (
+        <div>
+          {hasPortal.value ? (
+            <FloatingPortalLite data-testid="portal">
+              <Content />
+            </FloatingPortalLite>
+          ) : null}
+        </div>
+      ),
+    });
+    await render(() => <KeepAlive>{visible.value ? <Page /> : null}</KeepAlive>);
+
+    visible.value = false;
+    await nextTick();
+    hasPortal.value = true;
+    await nextTick();
+
+    expect(screen.queryByTestId('portal')).toBe(null);
+    expect(counts).toEqual({ mounted: 1, unmounted: 0 });
+
+    visible.value = true;
+    await nextTick();
+
+    const portal = screen.getByTestId('portal');
+    expect(portal.parentElement).toBe(document.body);
+    expect(portal).toContainElement(screen.getByTestId('content'));
+
+    visible.value = false;
+    await nextTick();
+
+    expect(portal.isConnected).toBe(false);
+
+    visible.value = true;
+    await nextTick();
+
+    expect(screen.getByTestId('portal')).toBe(portal);
+    expect(portal.parentElement).toBe(document.body);
+    expect(counts).toEqual({ mounted: 1, unmounted: 0 });
+  });
+
   describe('hydration', () => {
     it('renders no portal element on a server, and hydrates with no message', async () => {
       const serverHtml = await renderOnServer(HYDRATION_FILE);

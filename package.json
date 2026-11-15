@@ -15,6 +15,7 @@
     "test:webkit": "pnpm --filter @vase-ui/vue test:webkit",
     "test:vapor": "pnpm --filter @vase-ui/vue test:vapor",
     "test:nuxt": "pnpm --filter @vase-ui/nuxt-fixture test",
+    "test:vite": "pnpm --filter @vase-ui/vite-fixture test",
     "test:lint-rules": "node --test eslint.config.test.js",
     "test:cost": "node --test scripts/cost/render.test.ts",
     "test:parity": "node --test \"scripts/parity/*.test.ts\"",
