@@ -97,6 +97,7 @@ The site imports the built package. Run `pnpm build` before `pnpm docs:typecheck
 - GitHub squashes each pull request, and the title becomes the commit on `main`.
 - Write the body in three parts: Why, What and Tests.
 - The check `required` must pass.
+- A pull request merges through the merge queue, which runs the same checks on the pull request on top of `main`.
 
 ## Source of the port
 
