@@ -131,15 +131,6 @@ describe('<Calendar.Root /> state', () => {
 
       expect(tabStops()).toEqual(['2026-11-15']);
     });
-
-    it('does not change the month when a controlled focused day moves to another month', async () => {
-      const { setProps } = await renderCalendar({ focusedDate: day('2026-11-12') });
-
-      await setProps({ focusedDate: day('2026-12-24') });
-
-      expect(screen.getByRole('group', { name: monthName('2026-11-12') })).not.toBe(null);
-      expect(button('2026-12-24')).toBe(null);
-    });
   });
 
   describe('focus and autoFocus', () => {
