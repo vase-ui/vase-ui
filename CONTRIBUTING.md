@@ -2423,7 +2423,7 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - A component of the site that shows a table puts the table in `<ScrollBox>` of `docs/.vitepress/components`. Give the box a `label` that names the table, such as `Props of Dialog.Root`. The box scrolls the table when the column is narrower than the table.
 - A keyboard user scrolls a box with the arrow keys, so the box or an element in it must be able to get the focus (WCAG 2.1.1). A table of the API reference has no such element. The box thus takes the focus while it scrolls, with the role `group` and its `label` as its name. A box that does not scroll is not in the sequence of the Tab key.
 - The role is `group`, not `region`. A `region` with a name is a landmark, and a table is not a part of the page that a reader goes to from the list of landmarks.
-- A Markdown table is not in a box. VitePress makes it scroll itself. No Markdown table of the site scrolls at 320 pixels. `pnpm docs:axe` fails when a table scrolls and no element in it can get the focus.
+- A Markdown table is not in a box. VitePress makes it scroll itself and gives it `tabindex="0"`, so a keyboard user can scroll it.
 - A heading that a component of the site writes follows the outline of its page (WCAG 1.3.1). The first level of its headings is one more than the level of the page heading above the component.
 - The text of a page follows [Voice](#voice).
 
