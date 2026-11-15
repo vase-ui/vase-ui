@@ -5,7 +5,6 @@ import {
   describeConformance,
   fireEvent,
   hydrate,
-  removedPartHydrationTests,
   renderOnServer,
   screen,
 } from '#test-utils';
@@ -294,60 +293,6 @@ describe('<TimeField.Input />', () => {
       });
 
       expect(typesOf(container)).toEqual(['hour', 'literal', 'minute', 'literal', 'dayPeriod']);
-    });
-  });
-
-  describe('hydration', () => {
-    removedPartHydrationTests({
-      file: 'src/time-field/root/TimeFieldRootHydration.test.vue',
-      component: TimeFieldRootHydration,
-      cases: [
-        {
-          name: 'a removed label',
-          props: {
-            locale: 'en-US',
-            label: 'after',
-            description: true,
-            labelId: 'label-a',
-            descriptionId: 'desc-a',
-            laterRemovedAtMount: true,
-          },
-          selector: '[data-testid="root"]',
-          attribute: 'aria-labelledby',
-          serverValue: 'label-a',
-          clientValue: null,
-        },
-        {
-          name: 'a removed description',
-          props: {
-            locale: 'en-US',
-            label: 'after',
-            description: true,
-            labelId: 'label-a',
-            descriptionId: 'desc-a',
-            laterRemovedAtMount: true,
-          },
-          selector: '[data-testid="root"]',
-          attribute: 'aria-describedby',
-          serverValue: 'desc-a',
-          clientValue: null,
-        },
-        {
-          name: 'the hidden input, a removed description',
-          props: {
-            locale: 'en-US',
-            label: 'after',
-            description: true,
-            labelId: 'label-a',
-            descriptionId: 'desc-a',
-            laterRemovedAtMount: true,
-          },
-          selector: 'input[aria-hidden]',
-          attribute: 'aria-describedby',
-          serverValue: 'desc-a',
-          clientValue: null,
-        },
-      ],
     });
   });
 });

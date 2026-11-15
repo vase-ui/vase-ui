@@ -3,7 +3,7 @@ import type { Component } from 'vue';
 import { hydrate, renderOnServer } from './hydration';
 
 /**
- * The shared cases of a part that binds an `aria-*` value that a later part gives. The fixture
+ * Adds the shared cases of a part that binds an `aria-*` value that a later part gives. The fixture
  * removes or changes the later part in the first flush after the mount. Each case asserts the
  * value of the server HTML, and the value after the hydration. `hydrate` also fails the case when
  * the hydrated DOM differs from a client-only render.

@@ -24,12 +24,12 @@ export { detachedTriggersConformanceTests } from './detachedTriggersConformanceT
 export { dialogRootSharedTests } from './dialogRootSharedTests';
 export { hiddenInputSizeTests } from './hiddenInputSizeTests';
 export { hiddenInputTypeTests } from './hiddenInputTypeTests';
-export { removedPartHydrationTests } from './removedPartHydrationTests';
 export { nextCall, popupAnatomyTests } from './popupAnatomyTests';
 export { popupConformanceTests } from './popupConformanceTests';
 export { popupFocusPropsTests } from './popupFocusPropsTests';
 export { popupListConformanceTests } from './popupListConformanceTests';
 export { positionerConformanceTests } from './positionerConformanceTests';
+export { removedPartHydrationTests } from './removedPartHydrationTests';
 export { viewportConformanceTests } from './viewportConformanceTests';
 export { isInaccessible } from '@testing-library/dom';
 export { screen, within } from './queries';

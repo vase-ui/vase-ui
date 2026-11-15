@@ -9,11 +9,13 @@ import {
   describeConformance,
   flushMicrotasks,
   hiddenInputSizeTests,
+  removedPartHydrationTests,
   screen,
 } from '#test-utils';
 import { formatter } from '../../internals/date-time/format';
 import { kindOf } from '../../internals/date-time/temporal';
 import type { TemporalValue } from '../../internals/date-time/temporal';
+import TimeFieldRootHydration from './TimeFieldRootHydration.test.vue';
 
 const segmentOf = (container: Element, type: string) =>
   container.querySelector<HTMLInputElement>(`input[data-type="${type}"]`)!;
@@ -508,6 +510,60 @@ describe('<TimeField.Root />', () => {
       );
 
       expect(container.querySelector('input[data-type]')).toHaveAttribute('id', 'alarm-time');
+    });
+  });
+
+  describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/time-field/root/TimeFieldRootHydration.test.vue',
+      component: TimeFieldRootHydration,
+      cases: [
+        {
+          name: 'a removed label',
+          props: {
+            locale: 'en-US',
+            label: 'after',
+            description: true,
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: '[data-testid="root"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description',
+          props: {
+            locale: 'en-US',
+            label: 'after',
+            description: true,
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: '[data-testid="root"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+        {
+          name: 'the hidden input, a removed description',
+          props: {
+            locale: 'en-US',
+            label: 'after',
+            description: true,
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: 'input[aria-hidden]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+      ],
     });
   });
 });
