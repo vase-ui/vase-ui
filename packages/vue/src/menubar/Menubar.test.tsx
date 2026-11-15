@@ -12,6 +12,7 @@ import {
   flushMicrotasks,
   hydrate,
   isJSDOM,
+  nextEvent,
   pressWithTouch,
   renderOnServer,
   screen,
@@ -55,6 +56,14 @@ async function focusTriggerWithKeyboard(trigger: HTMLElement) {
   await userEvent.tab();
   trigger.focus();
   await flushMicrotasks();
+  expect(trigger).toHaveFocus();
+}
+
+// A menu focuses a hovered submenu trigger in an animation frame, and a user reaches the submenu
+// after that frame. A pointer that reaches a submenu item before that frame moves the focus from
+// the menubar trigger to the item. `useFocus` of the menubar trigger then closes the menu.
+async function hoverSubmenuTrigger(trigger: HTMLElement) {
+  await nextEvent(trigger, 'focusin', { action: () => userEvent.hover(trigger) });
   expect(trigger).toHaveFocus();
 }
 
@@ -1131,7 +1140,7 @@ describe('<Menubar />', () => {
 
         // Now hover over the share submenu trigger
         const shareTrigger = await screen.findByTestId('share-trigger');
-        await userEvent.hover(shareTrigger);
+        await hoverSubmenuTrigger(shareTrigger);
 
         // The share submenu should open
         await waitFor(() => {
@@ -1185,7 +1194,7 @@ describe('<Menubar />', () => {
         await screen.findByTestId('view-menu');
 
         const layoutTrigger = screen.getByTestId('layout-trigger');
-        await userEvent.hover(layoutTrigger);
+        await hoverSubmenuTrigger(layoutTrigger);
 
         await screen.findByTestId('layout-menu');
 
@@ -1212,7 +1221,7 @@ describe('<Menubar />', () => {
         await screen.findByTestId('view-menu');
 
         const layoutTrigger = screen.getByTestId('layout-trigger');
-        await userEvent.hover(layoutTrigger);
+        await hoverSubmenuTrigger(layoutTrigger);
 
         await screen.findByTestId('layout-menu');
 
