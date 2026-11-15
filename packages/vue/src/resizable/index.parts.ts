@@ -17,6 +17,7 @@ import type {
   ResizableRootLayout,
   ResizableRootLayoutSnapshot,
   ResizableRootProps,
+  ResizableRootResizeMode,
   ResizableRootState,
 } from './root/ResizableRoot.vue';
 
@@ -24,6 +25,7 @@ import type {
  * Groups the panels and the handles of the layout.
  * Each panel and each handle must be a flex item of the root element. A wrapper element between
  * them needs `display: contents`.
+ * F6 and Shift+F6 move the focus to the first control of the next or the previous panel.
  * Renders a `<div>` element.
  */
 export const Root: typeof ResizableRoot = ResizableRoot;
@@ -33,6 +35,7 @@ export namespace Root {
   export type Actions = ResizableRootActions;
   export type Layout = ResizableRootLayout;
   export type LayoutSnapshot = ResizableRootLayoutSnapshot;
+  export type ResizeMode = ResizableRootResizeMode;
   export type ChangeEventReason = ResizableRootChangeEventReason;
   export type ChangeEventDetails = ResizableRootChangeEventDetails;
   export type CommitEventReason = ResizableRootCommitEventReason;
@@ -64,3 +67,4 @@ export namespace Handle {
 
 export { useParentPanel } from './utils/useParentPanel';
 export { useParentRoot } from './utils/useParentRoot';
+export { useLayoutStorage } from './utils/useLayoutStorage';

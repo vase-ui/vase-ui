@@ -75,6 +75,10 @@ export interface ResizableParentRoot extends ResizableRootActions {
 }
 
 export interface ResizableRootContext {
+  /**
+   * The element of the root.
+   */
+  element: Readonly<ShallowRef<HTMLElement | null>>;
   orientation: ComputedRef<Orientation>;
   direction: ComputedRef<TextDirection>;
   /**

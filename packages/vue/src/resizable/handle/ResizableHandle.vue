@@ -51,6 +51,28 @@ export interface ResizableHandleProps
    * @default 'previous'
    */
   primaryPanel?: 'previous' | 'next' | undefined;
+  /**
+   * A string value forwarded to the [`aria-valuetext`](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-valuetext) attribute of the handle.
+   * Ignored when `getAriaValueText` is provided.
+   * The handle has the attribute only while it has `aria-valuenow`.
+   */
+  ariaValuetext?: string | undefined;
+  /**
+   * A function which returns a string value for the [`aria-valuetext`](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-valuetext) attribute of the handle.
+   * This is important for screen reader users.
+   * It gets the size of the primary panel: the size in percent as text in the locale of the page,
+   * such as `'30%'`, the size in percent as a number, and the details. `pixelSize` is
+   * `undefined` until the root has read the page, which comes after the mount.
+   * The handle has the attribute only while it has `aria-valuenow`.
+   */
+  getAriaValueText?:
+    | ((
+        formattedValue: string,
+        value: number,
+        details: { collapsed: boolean; pixelSize: number | undefined },
+      ) => string)
+    | null
+    | undefined;
 }
 
 const stateAttributesMapping: StateAttributesMapping<ResizableHandleState> = {
@@ -72,6 +94,7 @@ import {
 import type { Component, CSSProperties } from 'vue';
 import { useIsHydrating } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
+import { formatNumber } from '../../common/formatNumber';
 import { activeElement } from '../../common/shadowDom';
 import {
   ARROW_DOWN,
@@ -88,13 +111,17 @@ import { createChangeEventDetails } from '../../internals/createBaseUIEventDetai
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
+import { isInHeldBranch } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { useFormatLocale } from '../../utils/useFormatLocale';
 import { useResizableRootContext } from '../root/ResizableRootContext';
 import { createHandleDrag } from '../utils/handleDrag';
 import { getHandleEnds } from '../utils/handleEnds';
 import { createHandlePress } from '../utils/handlePress';
 import { registerHandle } from '../utils/handleRegistry';
 import { adjustLayout, areLayoutsEqual, getHandleRange, isCollapsed } from '../utils/layout';
+import type { PanelConstraints } from '../utils/layout';
+import { getPanelSize } from '../utils/measure';
 import { getPreviewOffset } from '../utils/previewOffset';
 import ResizableHandleChildren from './ResizableHandleChildren.vue';
 import { ResizableHandleContext } from './ResizableHandleContext';
@@ -145,6 +172,27 @@ const primary = computed(() =>
 // the other panels are not exact either. Until then, no handle of the root has a value.
 const hasPendingLengths = computed(() => root.lengthPanels.value.size > 0);
 
+// A server cannot know the locale of the visitor, so the text has `en-US` until the mount.
+const formatLocale = useFormatLocale(undefined);
+
+function getValueText(panel: PanelConstraints, value: number) {
+  if (typeof props.getAriaValueText !== 'function') {
+    return props.ariaValuetext;
+  }
+  const space = root.measurement.value?.space;
+  return props.getAriaValueText(
+    formatNumber(value / 100, formatLocale.value, {
+      style: 'percent',
+      maximumFractionDigits: 0,
+    }),
+    value,
+    {
+      collapsed: isCollapsed(panel, value),
+      pixelSize: space === undefined ? undefined : getPanelSize(value, space).pixels,
+    },
+  );
+}
+
 const valueAttributes = computed(() => {
   const panel = primary.value;
   if (panel === undefined) {
@@ -157,15 +205,17 @@ const valueAttributes = computed(() => {
     panel,
     root.pushPanels.value,
   );
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The panel is in the constraints, so the layout has an entry for its id.
+  const value = root.shown.value[panel.id]!;
   return {
     'aria-controls': panel.id,
     ...(isDisabled.value || hasPendingLengths.value
       ? undefined
       : {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The panel is in the constraints, so the layout has an entry for its id.
-          'aria-valuenow': Math.round(root.shown.value[panel.id]!),
+          'aria-valuenow': Math.round(value),
           'aria-valuemin': Math.round(range.min),
           'aria-valuemax': Math.round(range.max),
+          'aria-valuetext': getValueText(panel, value),
         }),
   };
 });
@@ -180,8 +230,9 @@ const drag = createHandleDrag(root, {
 });
 const press = createHandlePress({ drag, orientation: () => root.orientation.value });
 
-// `KeepAlive` takes the handle out of the document. The root then does not count it.
-const deactivated = shallowRef(false);
+// `KeepAlive` takes the handle out of the document. The root then does not count it. A handle that
+// mounts while `KeepAlive` holds it gets no `onDeactivated` call.
+const deactivated = shallowRef(isInHeldBranch());
 root.registerHandle({ index, disabled: () => isDisabled.value, deactivated });
 
 const hitAreaElement = shallowRef<HTMLElement | null>(null);

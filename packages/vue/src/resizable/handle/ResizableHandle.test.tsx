@@ -9,7 +9,7 @@ import {
   screen,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
-import * as Resizable from '../index.parts';
+import { Resizable } from '@vase-ui/vue/resizable';
 
 describe('<Resizable.Handle />', () => {
   const { render } = createRenderer();
@@ -1968,6 +1968,98 @@ describe('<Resizable.Handle />', () => {
 
       expect(handle).toHaveTextContent('vertical');
       expect(handle).toHaveClass('vertical-false-false');
+    });
+  });
+
+  describe('prop: getAriaValueText', () => {
+    // After the mount, the text has the locale of the page.
+    const percent = (value: number) =>
+      new Intl.NumberFormat(undefined, { style: 'percent', maximumFractionDigits: 0 }).format(
+        value / 100,
+      );
+
+    it('gives the formatted percent, the value and the pixels after a drag', async () => {
+      const getAriaValueText = vi.fn(
+        (text: string, value: number, details: { pixelSize: number | undefined }) =>
+          `${text} ${value} ${String(details.pixelSize)}`,
+      );
+      await renderPanels({ handle: { getAriaValueText } });
+      const handle = screen.getByTestId('handle-1');
+
+      await drag(handle, 0, 100);
+
+      expect(getAriaValueText).toHaveBeenLastCalledWith(percent(60), 60, {
+        collapsed: false,
+        pixelSize: 600,
+      });
+      expect(handle).toHaveAttribute('aria-valuetext', `${percent(60)} 60 600`);
+    });
+
+    it('gives collapsed true after a collapse with Enter', async () => {
+      const getAriaValueText = vi.fn(() => 'Text');
+      await renderPanels({
+        handle: { getAriaValueText },
+        panels: [{ id: 'a', collapsible: true, collapsedSize: 5, minSize: 20 }, { id: 'b' }],
+      });
+      const handle = screen.getByTestId('handle-1');
+      handle.focus();
+
+      await fireEvent.keyDown(handle, { key: 'Enter' });
+
+      expect(handle).toHaveAttribute('aria-valuenow', '5');
+      expect(getAriaValueText).toHaveBeenLastCalledWith(percent(5), 5, {
+        collapsed: true,
+        pixelSize: 50,
+      });
+    });
+
+    it('gives the text of the function over ariaValuetext', async () => {
+      await renderPanels({
+        handle: { ariaValuetext: 'Half', getAriaValueText: () => 'From the function' },
+      });
+
+      expect(screen.getByTestId('handle-1')).toHaveAttribute(
+        'aria-valuetext',
+        'From the function',
+      );
+    });
+
+    it('renders ariaValuetext with no function', async () => {
+      await renderPanels({ handle: { ariaValuetext: 'Half' } });
+
+      expect(screen.getByTestId('handle-1')).toHaveAttribute('aria-valuetext', 'Half');
+    });
+
+    it('renders no aria-valuetext with neither', async () => {
+      await renderPanels();
+      const handle = screen.getByTestId('handle-1');
+
+      expect(handle).toHaveAttribute('aria-valuenow', '50');
+      expect(handle).not.toHaveAttribute('aria-valuetext');
+    });
+
+    it('renders no aria-valuetext on a disabled handle', async () => {
+      await renderPanels({ handle: { disabled: true, ariaValuetext: 'Half' } });
+      const handle = screen.getByTestId('handle-1');
+
+      expect(handle).toHaveAttribute('aria-disabled', 'true');
+      expect(handle).not.toHaveAttribute('aria-valuenow');
+      expect(handle).not.toHaveAttribute('aria-valuetext');
+    });
+
+    it('renders no aria-valuetext on a handle with no panel after it', async () => {
+      await render(
+        <div style={{ width: '1000px' }}>
+          <Resizable.Root>
+            <Resizable.Panel id="a" />
+            <Resizable.Handle data-testid="handle" ariaValuetext="Half" />
+          </Resizable.Root>
+        </div>,
+      );
+      const handle = screen.getByTestId('handle');
+
+      expect(handle).not.toHaveAttribute('tabindex');
+      expect(handle).not.toHaveAttribute('aria-valuetext');
     });
   });
 });

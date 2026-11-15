@@ -183,6 +183,7 @@ export interface ResizableRootActions {
 <script setup lang="ts">
 import {
   computed,
+  inject,
   onActivated,
   onDeactivated,
   onMounted,
@@ -196,6 +197,7 @@ import { addEventListener } from '../../common/addEventListener';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { useIsHydrated } from '../../common/hydration';
 import { ownerWindow } from '../../common/owner';
+import { contains, getTarget } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
 import { warn } from '../../common/warn';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
@@ -205,8 +207,10 @@ import {
 } from '../../internals/createBaseUIEventDetails';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import type { HTMLProps } from '../../internals/types';
+import { isInHeldBranch } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useMediaQuery } from '../../unstable-use-media-query';
+import { tabbable } from '../../utils/popups/focus/tabbable';
 import {
   adjustLayoutToSize,
   applyFixedSizes,
@@ -263,6 +267,10 @@ const emit = defineEmits<{
    * - `'none'` when a panel mounts that the layout does not name
    */
   layoutChange: [layout: ResizableRootLayout, eventDetails: ResizableRootChangeEventDetails];
+  /**
+   * Event handler called with the new layout after each change that no listener canceled.
+   * `v-model:layout` uses it.
+   */
   'update:layout': [layout: ResizableRootLayout];
   /**
    * Event handler called when the user ends a change of the layout: at the end of a drag that
@@ -540,8 +548,9 @@ if (process.env.NODE_ENV !== 'production') {
 // that the consumer asked for, so it has no change event.
 let mounted = false;
 // `KeepAlive` takes the panels of a deactivated root out of the list, and gives them back at the
-// activation. The panels are then the same, so the root keeps the ids that it knows.
-let deactivated = false;
+// activation. The panels are then the same, so the root keeps the ids that it knows. A root that
+// mounts while `KeepAlive` holds it gets no `onDeactivated` call, and its panels are held too.
+let deactivated = isInHeldBranch();
 let knownIds = new Set<string>();
 // The panels and the handles, in the order of the document.
 const listItems = shallowRef<readonly Element[]>([]);
@@ -574,6 +583,9 @@ const list = useCompositeList<{ id?: string }>({
 });
 
 onMounted(() => {
+  if (deactivated) {
+    return;
+  }
   mounted = true;
   measure();
 });
@@ -582,8 +594,18 @@ onDeactivated(() => {
   deactivated = true;
 });
 
+// The first activation of a root that mounted while held is its mount. `KeepAlive` runs the
+// `onActivated` hooks from the last part to the first, so the panels are active at this call.
 onActivated(() => {
+  if (!deactivated) {
+    return;
+  }
   deactivated = false;
+  if (!mounted) {
+    knownIds = new Set(constraints.value.map((panel) => panel.id));
+    mounted = true;
+    measure();
+  }
 });
 
 function registerPanel(panel: ResizablePanelRegistration) {
@@ -900,7 +922,78 @@ const hitAreaSize = computed(() => {
   return typeof size === 'number' ? size : isCoarse.value ? size.coarse : size.fine;
 });
 
+// The root of the panel that holds this root. `provide` below does not change what `inject` gives.
+const outerRoot = inject(ResizableRootContext, null);
+
+// The first control of the first panel in `items` that shows and has a control.
+function findPanelControl(items: readonly Element[]) {
+  for (const item of items) {
+    const panel = panels.value.find((entry) => entry.element.value === item);
+    const size = panel === undefined ? undefined : shown.value[panel.id.value];
+    const control = size !== undefined && size > 0 ? tabbable(item)[0] : undefined;
+    if (control !== undefined) {
+      return control;
+    }
+  }
+  return undefined;
+}
+
+// F6 moves the focus to the next panel, and Shift+F6 to the previous one, as the window splitter
+// pattern describes. A root in a panel of another root gives the key to that root at its last
+// panel. A root that a `Teleport` moves out of that panel gets no such bubble, so it goes on from
+// its other end, as the outermost root does.
+function onKeydown(event: KeyboardEvent) {
+  if (
+    event.key !== 'F6' ||
+    event.defaultPrevented ||
+    event.ctrlKey ||
+    event.altKey ||
+    event.metaKey
+  ) {
+    return;
+  }
+  const items = listItems.value;
+  const target = getTarget(event) as Element | null;
+  const from = items.findIndex((item) => contains(item, target));
+  if (from < 0) {
+    return;
+  }
+  const forward = !event.shiftKey;
+  const next = findPanelControl(
+    forward ? items.slice(from + 1) : items.slice(0, from).reverse(),
+  );
+  const isNested = outerRoot !== null && contains(outerRoot.element.value, element.value);
+  const control =
+    next ??
+    (isNested
+      ? undefined
+      : findPanelControl(forward ? items.slice(0, from + 1) : items.slice(from).reverse()));
+  if (control !== undefined) {
+    control.focus();
+    event.preventDefault();
+  }
+}
+
+const { element, elementProps } = useRenderElement('div', props, {
+  state,
+  children: true,
+  // The listener of the consumer runs first, so `event.preventVaseUIHandler()` stops F6.
+  props: (attrs) => [
+    {
+      style: {
+        display: 'flex',
+        flexDirection: props.orientation === 'horizontal' ? 'row' : 'column',
+        // The root is the containing block of the edge nodes, and the offset parent of the panels.
+        ...(props.dragEdges ? { position: 'relative' } : undefined),
+      },
+      onKeydown,
+    },
+    attrs,
+  ],
+});
+
 provide(ResizableRootContext, {
+  element,
   orientation,
   direction,
   list,
@@ -932,22 +1025,6 @@ provide(ResizableRootContext, {
   resizePanel,
   resetPanel,
   actions: { orientation, getLayout, setLayout, reset },
-});
-
-const { element, elementProps } = useRenderElement('div', props, {
-  state,
-  children: true,
-  props: (attrs) => [
-    {
-      style: {
-        display: 'flex',
-        flexDirection: props.orientation === 'horizontal' ? 'row' : 'column',
-        // The root is the containing block of the edge nodes, and the offset parent of the panels.
-        ...(props.dragEdges ? { position: 'relative' } : undefined),
-      },
-    },
-    attrs,
-  ],
 });
 
 const edges = useEdges({
