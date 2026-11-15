@@ -1042,7 +1042,8 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   // The open can put an item under a pointer that does not move. Thus an item ignores a release at
   // the point of the press that opened the popup (`VUE-84`). The trigger opens its popup in the
   // frame after the press, and the press can end before that frame. Thus the next press clears the
-  // event, not the release.
+  // event, not the release. The input opens its popup in the handler of its press, and a bubble
+  // listener on the window then gets that press too. Thus the listener is in the capture phase.
   let removeOpenPressListener: (() => void) | null = null;
 
   function clearOpenPress() {
