@@ -66,7 +66,7 @@ describe('VUE-81: a page that mounts before Chromium restores its form state', (
     await page.getByTestId('note').fill('typed');
     // Chromium saves the value of an input only when it differs from its `value` attribute, and
     // Vue writes that attribute with each value of the slider. A program writes the inputs with no
-    // event, so Chromium saves them. The values move both thumbs past the end of the range.
+    // event, so Chromium saves them. Both values are above the old value of the second thumb.
     await page.evaluate(() => {
       const values = ['85', '95'];
       document.querySelectorAll<HTMLInputElement>('input[name="range"]').forEach((input, index) => {
