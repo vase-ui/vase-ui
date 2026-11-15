@@ -11,6 +11,7 @@ import vueParser from 'vue-eslint-parser';
 const SOURCE_FILES = ['packages/vue/src/**/*.{ts,vue}'];
 const TEST_FILES = ['**/*.test.*', '**/*.spec.*'];
 const TEST_SCRIPT_FILES = TEST_FILES.map((testFiles) => [testFiles, '**/*.{js,mjs,ts,tsx,vue}']);
+const VUE_TEST_SCRIPT_FILES = TEST_SCRIPT_FILES.map((pair) => ['packages/vue/**', ...pair]);
 
 const MESSAGES = {
   getCurrentInstance:
@@ -33,6 +34,8 @@ const MESSAGES = {
   html: 'This name can render a string as HTML. Show data with text interpolation.',
   htmlDynamicArgument:
     'A dynamic argument can be `innerHTML`, which renders a string as HTML. Write the name of the attribute.',
+  waitLimit:
+    'This wait has a limit in seconds, and a busy machine can stall the page for longer. Use `waitFor`, `screen` or `within` of `#test-utils`. Their limit is a count of frames.',
   privateKeyword:
     'The `private` keyword is only a check of the compiler. Write an ECMAScript private member: `#name`.',
   reactEventProp: (reactKey, vueKey) =>
@@ -64,6 +67,23 @@ const RESTRICTED_PROPERTIES = [
   { property: '$el', message: MESSAGES.$el },
   { property: '$parent', message: MESSAGES.$parent },
   ...ARRAY_COPY_METHODS.map((property) => ({ property, message: MESSAGES.arrayCopyMethod })),
+];
+
+const RESTRICTED_TEST_IMPORTS = {
+  patterns: [
+    {
+      group: ['@testing-library/dom'],
+      importNamePattern: '^(waitFor|find|screen$|within$|queries$|getQueriesForElement$)',
+      message: MESSAGES.waitLimit,
+    },
+  ],
+};
+
+const RESTRICTED_TEST_PROPERTIES = [
+  { object: 'vi', property: 'waitFor', message: MESSAGES.waitLimit },
+  { object: 'vi', property: 'waitUntil', message: MESSAGES.waitLimit },
+  { object: 'expect', property: 'poll', message: MESSAGES.waitLimit },
+  { object: 'expect', property: 'element', message: MESSAGES.waitLimit },
 ];
 
 // The rule uses a fixed list of names. A pattern for a second capital also matches a
@@ -506,6 +526,16 @@ export default defineConfig([
   {
     files: [...TEST_SCRIPT_FILES, 'packages/vue/test/**/*.{ts,tsx,vue}'],
     rules: { 'no-restricted-syntax': ['error', ...RESTRICTED_REACT_EVENT_PROP_SYNTAX] },
+  },
+  {
+    // The tests of `fixtures/nuxt` run in Node and wait with Playwright and `expect.poll`. These
+    // rules are for `packages/vue` only. `test/queries.ts` wraps the queries of Testing Library.
+    files: [...VUE_TEST_SCRIPT_FILES, 'packages/vue/test/**/*.{ts,tsx,vue}'],
+    ignores: ['packages/vue/test/queries.ts'],
+    rules: {
+      'no-restricted-imports': ['error', RESTRICTED_TEST_IMPORTS],
+      'no-restricted-properties': ['error', ...RESTRICTED_TEST_PROPERTIES],
+    },
   },
   { files: PAGE_FILES, processor: pageProcessor },
   {

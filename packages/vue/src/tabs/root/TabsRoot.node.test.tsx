@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { defineComponent } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { Tabs } from '@vase-ui/vue/tabs';
 import TabsIndicatorHydration from '../indicator/TabsIndicatorHydration.test.vue';
@@ -105,23 +106,52 @@ describe('<Tabs.Root />', () => {
       expect(html).not.toContain('data-testid="unmounted"');
     });
 
-    it.each([
-      { name: 'a panel after the list', panel: 'after', controls: undefined, labelledby: 'tab-a' },
-      {
-        name: 'a panel before the list',
-        panel: 'before',
-        controls: 'panel-a',
-        labelledby: undefined,
-      },
-    ] as const)(
-      'gives only the second part the id of the first part, $name',
-      async ({ panel, controls, labelledby }) => {
-        const html = await renderToString(<TabsRootHydration defaultValue="a" panel={panel} />);
+    describe('VUE-80: the server HTML names the tab and the panel in each order', () => {
+      it.each([
+        { name: 'a panel after the list, with ids', panel: 'after', ids: true },
+        { name: 'a panel before the list, with ids', panel: 'before', ids: true },
+        { name: 'a panel after the list, no ids', panel: 'after', ids: false },
+        { name: 'a panel before the list, no ids', panel: 'before', ids: false },
+      ] as const)('names each part in the other part, $name', async ({ panel, ids }) => {
+        const html = await renderToString(
+          <TabsRootHydration defaultValue="a" panel={panel} ids={ids} />,
+        );
+        const tabId = readAttribute(html, 'data-testid="a"', 'id');
+        const panelId = readAttribute(html, 'data-testid="panel-a"', 'id');
 
-        expect(readAttribute(html, 'data-testid="a"', 'aria-controls')).toBe(controls);
-        expect(readAttribute(html, 'id="panel-a"', 'aria-labelledby')).toBe(labelledby);
-      },
-    );
+        expect({ tabId, panelId }).toEqual(
+          ids
+            ? { tabId: 'tab-a', panelId: 'panel-a' }
+            : { tabId: expect.any(String), panelId: expect.any(String) },
+        );
+        expect(readAttribute(html, 'data-testid="a"', 'aria-controls')).toBe(panelId);
+        expect(readAttribute(html, 'data-testid="panel-a"', 'aria-labelledby')).toBe(tabId);
+      });
+
+      // The macrotask lets the server write the tab before the panel runs `setup`.
+      it('has no aria-controls on a tab whose panel registers too late', async () => {
+        const PanelAfterAsyncSetup = defineComponent({
+          async setup() {
+            await new Promise((resolve) => {
+              setTimeout(resolve);
+            });
+            return () => <Tabs.Panel value="a" id="panel-a" data-testid="panel-a" />;
+          },
+        });
+
+        const html = await renderToString(
+          <Tabs.Root defaultValue="a">
+            <Tabs.List>
+              <Tabs.Tab value="a" id="tab-a" data-testid="a" />
+            </Tabs.List>
+            <PanelAfterAsyncSetup />
+          </Tabs.Root>,
+        );
+
+        expect(readTag(html, 'data-testid="a"')).not.toContain('aria-controls');
+        expect(readAttribute(html, 'data-testid="panel-a"', 'aria-labelledby')).toBe('tab-a');
+      });
+    });
 
     it('renders a hidden indicator with no style, and the script directly after it', async () => {
       const html = await renderToString(<TabsIndicatorHydration renderBeforeHydration />);
