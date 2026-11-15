@@ -28,19 +28,19 @@ function getDevElementIds(map: PopupTriggerMap) {
  * trigger from each reader and keeps its place.
  */
 export class PopupTriggerMap {
-  private idMap = new Map<string, Element>();
+  #idMap = new Map<string, Element>();
 
-  private inactiveIds = new Set<string>();
+  #inactiveIds = new Set<string>();
 
   /**
    * Hides the entry with the given ID from each reader while `active` is `false`. The entry keeps
    * its place in the order of the entries. A new entry for an ID is active.
    */
-  public setActive(id: string, active: boolean) {
+  setActive(id: string, active: boolean) {
     if (active) {
-      this.inactiveIds.delete(id);
-    } else if (this.idMap.has(id)) {
-      this.inactiveIds.add(id);
+      this.#inactiveIds.delete(id);
+    } else if (this.#idMap.has(id)) {
+      this.#inactiveIds.add(id);
     }
   }
 
@@ -49,7 +49,7 @@ export class PopupTriggerMap {
    *
    * The element must not be registered under another ID.
    */
-  public add(id: string, element: Element) {
+  add(id: string, element: Element) {
     if (process.env.NODE_ENV !== 'production') {
       const elementIds = getDevElementIds(this);
 
@@ -62,7 +62,7 @@ export class PopupTriggerMap {
 
       // A new element for an id evicts the old element. The old element must lose its claim on the
       // id. If not, a later registration of it under another id looks like a duplicate.
-      const previousElement = this.idMap.get(id);
+      const previousElement = this.#idMap.get(id);
       if (previousElement !== undefined && previousElement !== element) {
         elementIds.delete(previousElement);
       }
@@ -70,8 +70,8 @@ export class PopupTriggerMap {
       elementIds.set(element, id);
     }
 
-    this.idMap.set(id, element);
-    this.inactiveIds.delete(id);
+    this.#idMap.set(id, element);
+    this.#inactiveIds.delete(id);
   }
 
   /**
@@ -79,8 +79,8 @@ export class PopupTriggerMap {
    * that element, also when the entry is not active. Another trigger can take an ID before the
    * trigger that held it removes its entry.
    */
-  public delete(id: string, element?: Element) {
-    const registered = this.idMap.get(id);
+  delete(id: string, element?: Element) {
+    const registered = this.#idMap.get(id);
     if (element !== undefined && registered !== element) {
       return;
     }
@@ -91,14 +91,14 @@ export class PopupTriggerMap {
       }
     }
 
-    this.idMap.delete(id);
-    this.inactiveIds.delete(id);
+    this.#idMap.delete(id);
+    this.#inactiveIds.delete(id);
   }
 
   /**
    * Whether the given element is registered as a trigger.
    */
-  public hasElement(element: Element): boolean {
+  hasElement(element: Element): boolean {
     for (const registered of this.elements()) {
       if (registered === element) {
         return true;
@@ -111,7 +111,7 @@ export class PopupTriggerMap {
   /**
    * Whether a registered trigger element matches the given predicate.
    */
-  public hasMatchingElement(predicate: (el: Element) => boolean): boolean {
+  hasMatchingElement(predicate: (el: Element) => boolean): boolean {
     for (const element of this.elements()) {
       if (predicate(element)) {
         return true;
@@ -124,16 +124,16 @@ export class PopupTriggerMap {
   /**
    * Returns the trigger element for the given ID, or `undefined` when there is none.
    */
-  public getById(id: string): Element | undefined {
-    return this.inactiveIds.has(id) ? undefined : this.idMap.get(id);
+  getById(id: string): Element | undefined {
+    return this.#inactiveIds.has(id) ? undefined : this.#idMap.get(id);
   }
 
   /**
    * Returns an iterable of the registered trigger entries. Each entry is a tuple of [id, element].
    */
-  public *entries(): IterableIterator<[string, Element]> {
-    for (const entry of this.idMap.entries()) {
-      if (!this.inactiveIds.has(entry[0])) {
+  *entries(): IterableIterator<[string, Element]> {
+    for (const entry of this.#idMap.entries()) {
+      if (!this.#inactiveIds.has(entry[0])) {
         yield entry;
       }
     }
@@ -142,7 +142,7 @@ export class PopupTriggerMap {
   /**
    * Returns an iterable of the registered trigger elements.
    */
-  public *elements(): IterableIterator<Element> {
+  *elements(): IterableIterator<Element> {
     for (const [, element] of this.entries()) {
       yield element;
     }
@@ -151,7 +151,7 @@ export class PopupTriggerMap {
   /**
    * Returns the number of registered trigger elements.
    */
-  public get size(): number {
-    return this.idMap.size - this.inactiveIds.size;
+  get size(): number {
+    return this.#idMap.size - this.#inactiveIds.size;
   }
 }

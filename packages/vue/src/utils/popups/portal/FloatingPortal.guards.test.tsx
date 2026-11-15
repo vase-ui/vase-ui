@@ -287,6 +287,29 @@ describe('FloatingPortal', () => {
       expect(context!.afterOutsideRef.value).toBe(null);
     });
 
+    it('gives the focus manager no guards while the portal keeps only its owner element', async () => {
+      let context: PortalContextValue | undefined;
+      const Probe = defineComponent({
+        setup() {
+          context = usePortalContext();
+          return () => null;
+        },
+      });
+      await render(
+        <div data-testid="host">
+          <FloatingPortal>
+            <FocusManagerPart nextFocusableElement={appendUntabbableReference()}>
+              <Probe />
+            </FocusManagerPart>
+          </FloatingPortal>
+        </div>,
+      );
+
+      expect(listPlaceOfPortal(screen.getByTestId('host'))).toEqual(['owner']);
+      expect(context!.beforeOutsideRef.value).toBe(null);
+      expect(context!.afterOutsideRef.value).toBe(null);
+    });
+
     describe('the owner element', () => {
       it('is a span that the style of ownerVisuallyHidden hides', async () => {
         await render(
@@ -382,6 +405,26 @@ describe('FloatingPortal', () => {
 
         expect(screen.getByTestId('portal')).toHaveAttribute('id', 'second-portal');
         expect(owner).toHaveAttribute('aria-owns', 'second-portal');
+      });
+
+      it('has the role and names the id when the popup opens after the mount', async () => {
+        const open = shallowRef(false);
+        await render(() => (
+          <div data-testid="host">
+            <FloatingPortal portalOwnerRole="group" data-testid="portal">
+              <FocusManagerPart open={open.value} />
+            </FloatingPortal>
+          </div>
+        ));
+        const host = screen.getByTestId('host');
+        expect(listPlaceOfPortal(host)).toEqual([]);
+
+        open.value = true;
+        await nextTick();
+
+        const owner = getOwner(host);
+        expect(owner).toHaveAttribute('role', 'group');
+        expect(owner).toHaveAttribute('aria-owns', screen.getByTestId('portal').id);
       });
 
       it('names no id when the #render slot gives the portal element no id', async () => {

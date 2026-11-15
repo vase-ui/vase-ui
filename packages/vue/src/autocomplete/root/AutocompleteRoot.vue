@@ -204,11 +204,19 @@ const emit = defineEmits<{
    * Event handler called when the input value of the autocomplete changes.
    */
   valueChange: [value: string, eventDetails: AutocompleteRootChangeEventDetails];
+  /**
+   * Event handler called after `valueChange` with the new value, unless a listener cancels the
+   * change. `v-model:value` uses it.
+   */
   'update:value': [value: string];
   /**
    * Event handler called when the popup is opened or closed.
    */
   openChange: [open: boolean, eventDetails: AutocompleteRootOpenChangeEventDetails];
+  /**
+   * Event handler called after `openChange` with the new value, unless a listener cancels the
+   * change. `v-model:open` uses it.
+   */
   'update:open': [open: boolean];
   /**
    * Event handler called after any animations complete when the popup is opened or closed.
