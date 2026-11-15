@@ -272,7 +272,9 @@ describe('<NavigationMenu.Popup />', () => {
         <NavigationMenu.Root>
           <NavigationMenu.List>
             <NavigationMenu.Item value="products">
-              <NavigationMenu.Trigger data-testid="trigger-products">Products</NavigationMenu.Trigger>
+              <NavigationMenu.Trigger data-testid="trigger-products">
+                Products
+              </NavigationMenu.Trigger>
               <NavigationMenu.Content>
                 <NavigationMenu.Root>
                   <NavigationMenu.List>
@@ -306,9 +308,7 @@ describe('<NavigationMenu.Popup />', () => {
         </NavigationMenu.Root>,
       );
 
-      await waitForLaterMillisecond(() =>
-        fireEvent.click(screen.getByTestId('trigger-products')),
-      );
+      await waitForLaterMillisecond(() => fireEvent.click(screen.getByTestId('trigger-products')));
       await fireEvent.click(screen.getByTestId('trigger-guides'));
       await flushMicrotasks();
 
