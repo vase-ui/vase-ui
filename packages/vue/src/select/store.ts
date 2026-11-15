@@ -158,6 +158,14 @@ export class SelectStore extends ValuePopupStore<
     return state.triggerElement;
   }
 
+  // The trigger sets `forceMounted` when it gets the focus. Without this write, a popup that opens
+  // with no such focus leaves the DOM at the end of its close (`VUE-95`).
+  override setState(newState: Readonly<State>): void {
+    super.setState(
+      newState.mounted && !newState.forceMounted ? { ...newState, forceMounted: true } : newState,
+    );
+  }
+
   protected override prepareUnmount() {
     return {
       activeIndex: null,

@@ -8626,19 +8626,21 @@ describe('<Select.Root />', () => {
     it('is null for a new value after the items unmount', async () => {
       const value = shallowRef('a');
       const open = shallowRef(true);
+      const showPortal = shallowRef(true);
       await render(() => (
         <Select.Root value={value.value} open={open.value}>
           <StoreProbe />
           <Select.Trigger />
-          <Select.Portal>
-            <Select.Positioner>
-              {/* The trigger mounts the items when it gets the focus back. */}
-              <Select.Popup finalFocus={false}>
-                <Select.Item value="a">a</Select.Item>
-                <Select.Item value="b">b</Select.Item>
-              </Select.Popup>
-            </Select.Positioner>
-          </Select.Portal>
+          {showPortal.value ? (
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  <Select.Item value="a">a</Select.Item>
+                  <Select.Item value="b">b</Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          ) : null}
         </Select.Root>
       ));
       await flushMicrotasks();
@@ -8648,6 +8650,8 @@ describe('<Select.Root />', () => {
       await waitFor(() => {
         expect(screen.queryByRole('option')).toBe(null);
       });
+      showPortal.value = false;
+      await flushMicrotasks();
       value.value = 'b';
       await flushMicrotasks();
 
