@@ -15,7 +15,7 @@ export const InputGroup = withProps(Combobox.InputGroup, {
     'relative h-8 w-64 border border-neutral-950 bg-white focus-within:outline-2 focus-within:-outline-offset-1 focus-within:outline-neutral-950 dark:focus-within:outline-white dark:border-white dark:bg-neutral-950 [&>input]:pr-[2.5rem] has-[.combobox-clear]:[&>input]:pr-[calc(0.5rem+2rem*2)]',
 });
 
-const ClearWrapper: FunctionalComponent = (_, { attrs }) =>
+const ClearWrapper: FunctionalComponent = (_, { attrs, slots }) =>
   h(
     Combobox.Clear,
     mergeProps(
@@ -26,7 +26,7 @@ const ClearWrapper: FunctionalComponent = (_, { attrs }) =>
       },
       attrs,
     ),
-    () => h(XIcon),
+    { ...slots, default: () => h(XIcon) },
   );
 ClearWrapper.inheritAttrs = false;
 export const Clear = ClearWrapper as unknown as typeof Combobox.Clear;
@@ -47,20 +47,22 @@ export const Popup = withProps(Combobox.Popup, {
 
 const EmptyWrapper: FunctionalComponent = (_, { attrs, slots }) => {
   const { class: className, ...props } = attrs;
-  return h(Combobox.Empty, props, () =>
-    slots.default
-      ? h(
-          'div',
-          {
-            class: [
-              'py-4 pr-4 pl-2 text-sm leading-4 text-neutral-500 dark:text-neutral-400',
-              className,
-            ],
-          },
-          slots.default(),
-        )
-      : null,
-  );
+  return h(Combobox.Empty, props, {
+    ...slots,
+    default: () =>
+      slots.default
+        ? h(
+            'div',
+            {
+              class: [
+                'py-4 pr-4 pl-2 text-sm leading-4 text-neutral-500 dark:text-neutral-400',
+                className,
+              ],
+            },
+            slots.default(),
+          )
+        : null,
+  });
 };
 EmptyWrapper.inheritAttrs = false;
 export const Empty = EmptyWrapper as unknown as typeof Combobox.Empty;
