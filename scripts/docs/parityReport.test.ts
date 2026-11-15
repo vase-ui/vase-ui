@@ -13,11 +13,11 @@ import type {
   UpstreamCommit,
   UpstreamFile,
 } from '../parity/parityFiles.ts';
-import { vaseFiles } from '../parity/paths.ts';
+import { DOCS_FOLDER_PREFIX, vaseFiles } from '../parity/paths.ts';
 import { REPOSITORY_ROOT } from '../parity/repository.ts';
 import type { FamilyFiles } from '../parity/repository.ts';
 import { buildParityReport, loadParityReport, readScope } from './parityReport.ts';
-import type { ParityReport, ReportInput, ScopeFile } from './parityReport.ts';
+import type { Change, ParityReport, ReportInput, ScopeFile } from './parityReport.ts';
 import { renderStatusLine } from './status.ts';
 
 const [FIRST, SECOND, THIRD, FOURTH, CI, UNPORTED, UNPORTED_DOCS, ROOT_FILE] = [
@@ -69,7 +69,7 @@ const scope: ScopeFile = {
     { paths: ['.circleci/**'], reason: 'CI and repository automation.' },
     {
       paths: ['docs/**'],
-      except: ['docs/src/app/(docs)/react/components/**'],
+      except: ['docs/src/app/(docs)/react/components/*/**'],
       reason: 'The docs site.',
     },
   ],
@@ -206,7 +206,20 @@ test('a commit that no rule names is out-of-scope with no reason', () => {
   });
 });
 
-test('a root file, a settings file and an overview page have one reason, and a ported page and source file are not started', () => {
+function statesOfSinglePathCommits(paths: string[]): (path: string) => Change['other'] {
+  const shaOf = (path: string): string => String(paths.indexOf(path)).padStart(40, '0');
+  const commits = paths.map((path) => commit(shaOf(path), '2026-02-01T10:00:00+00:00', path));
+  const report = buildParityReport(
+    makeInput({
+      upstream: { ...upstream, commits },
+      families: [],
+      scope: readScope(REPOSITORY_ROOT),
+    }),
+  );
+  return (path) => changeOf(report, shaOf(path)).other;
+}
+
+test('a root file, a settings file and an overview page have one reason, and a source file is not started', () => {
   const oneReason = [
     'LICENSE',
     '.gitignore',
@@ -215,27 +228,31 @@ test('a root file, a settings file and an overview page have one reason, and a p
     '.vscode/settings.json',
     'docs/src/app/(docs)/react/overview/quick-start/page.mdx',
   ];
-  const notStarted = [
-    'docs/src/app/(docs)/react/components/dialog/page.mdx',
-    'packages/react/src/dialog/Dialog.tsx',
-  ];
-  const paths = [...oneReason, ...notStarted];
-  const shaOf = (path: string): string => String(paths.indexOf(path)).repeat(40);
-  const commits = paths.map((path) => commit(shaOf(path), '2026-02-01T10:00:00+00:00', path));
-  const report = buildParityReport(
-    makeInput({
-      upstream: { ...upstream, commit: shaOf(paths[paths.length - 1]), commits },
-      families: [],
-      scope: readScope(REPOSITORY_ROOT),
-    }),
-  );
+  const sourceFile = 'packages/react/src/dialog/Dialog.tsx';
+  const stateOf = statesOfSinglePathCommits([...oneReason, sourceFile]);
   for (const path of oneReason) {
-    const { other } = changeOf(report, shaOf(path));
+    const other = stateOf(path);
     assert.ok(other?.state === 'out-of-scope', path);
     assert.equal(other.reasons.length, 1, path);
   }
-  for (const path of notStarted) {
-    assert.deepEqual(changeOf(report, shaOf(path)).other, { state: 'not-started' }, path);
+  assert.deepEqual(stateOf(sourceFile), { state: 'not-started' });
+});
+
+test('the index page of a page group has one reason, and each file of a page folder is not started', () => {
+  const groups = ['components', 'utils', 'handbook'].map((group) => DOCS_FOLDER_PREFIX + group);
+  const indexPages = groups.map((group) => `${group}/page.mdx`);
+  const pageFiles = groups.flatMap((group) => [
+    `${group}/a-page/page.mdx`,
+    `${group}/a-page/demos/hero/css-modules/index.tsx`,
+  ]);
+  const stateOf = statesOfSinglePathCommits([...indexPages, ...pageFiles]);
+  for (const path of indexPages) {
+    const other = stateOf(path);
+    assert.ok(other?.state === 'out-of-scope', path);
+    assert.equal(other.reasons.length, 1, path);
+  }
+  for (const path of pageFiles) {
+    assert.deepEqual(stateOf(path), { state: 'not-started' }, path);
   }
 });
 
