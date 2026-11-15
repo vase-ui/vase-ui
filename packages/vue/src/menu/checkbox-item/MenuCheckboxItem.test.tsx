@@ -71,19 +71,13 @@ describe('<Menu.CheckboxItem />', () => {
 
     await fireEvent.keyDown(menuItems[0], { key: 'ArrowDown' }); // highlights '2'
 
-    await waitFor(
-      () => {
-        expect(renderItem1Spy.mock.calls.length).toBe(1); // '1' rerenders as it loses highlight
-      },
-      { timeout: 1000 },
-    );
+    await waitFor(() => {
+      expect(renderItem1Spy.mock.calls.length).toBe(1); // '1' rerenders as it loses highlight
+    });
 
-    await waitFor(
-      () => {
-        expect(renderItem2Spy.mock.calls.length).toBe(1); // '2' rerenders as it receives highlight
-      },
-      { timeout: 1000 },
-    );
+    await waitFor(() => {
+      expect(renderItem2Spy.mock.calls.length).toBe(1); // '2' rerenders as it receives highlight
+    });
 
     // neither the highlighted nor the selected state of these options changed,
     // so they don't need to rerender:

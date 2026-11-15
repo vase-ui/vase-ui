@@ -385,15 +385,39 @@ describe('<Calendar.Root /> state', () => {
   });
 
   describe('calendars', () => {
-    it('shows the days of a Persian month from its first day', async () => {
-      await renderCalendar({ calendar: 'persian' });
+    it.each([
+      {
+        name: 'persian',
+        props: { calendar: 'persian' },
+        iso: '2026-11-14',
+        days: 30,
+        first: '2026-10-23',
+      },
+      {
+        name: 'hebrew, a month of a leap year',
+        props: {
+          calendar: 'hebrew',
+          defaultMonth: day('2024-02-10').withCalendar('hebrew').toPlainYearMonth(),
+        },
+        iso: '2024-02-10',
+        days: 30,
+        first: '2024-02-10',
+      },
+      {
+        name: 'japanese',
+        props: { calendar: 'japanese' },
+        iso: '2026-11-14',
+        days: 30,
+        first: '2026-11-01',
+      },
+    ])('shows the month of the calendar $name', async ({ props, iso, days, first }) => {
+      await renderCalendar(props);
 
-      expect(
-        screen.getByRole('group', { name: monthName('2026-11-14', 'en-US', 'persian') }),
-      ).not.toBe(null);
-      const days = [...document.querySelectorAll('[data-date] button')];
-      expect(days).toHaveLength(30);
-      expect(days[0]!.closest('[data-date]')!.getAttribute('data-date')).toBe('2026-10-23');
+      const { calendar } = props;
+      expect(screen.getByRole('group', { name: monthName(iso, 'en-US', calendar) })).not.toBe(null);
+      const buttons = [...document.querySelectorAll('button[data-date], [data-date] button')];
+      expect(buttons).toHaveLength(days);
+      expect(buttons[0]!.closest('[data-date]')!.getAttribute('data-date')).toBe(first);
     });
 
     it('shows the calendar of the locale, and gregory turns it off', async () => {

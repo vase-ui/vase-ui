@@ -180,8 +180,7 @@ let shouldHonorDisabledDefaultValue = hasExplicitDefaultValue;
 let didRegisterTabs = false;
 
 const tabMap = shallowRef<TabMap>(new Map());
-// A tab and a panel register in `setup`, so that the server HTML of a part that renders later has
-// the `id`. A part that renders earlier gets it in the first flush on the client.
+// A tab and a panel register in `setup`, so that the server HTML of the other part has the `id`.
 const tabs = shallowReactive(new Map<symbol, TabsPartRegistration>());
 const panels = shallowReactive(new Map<symbol, TabsPartRegistration>());
 

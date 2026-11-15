@@ -1,5 +1,5 @@
-import { expect, onTestFinished, vi, describe, it } from 'vitest';
-import { createSSRApp, defineComponent, shallowRef } from 'vue';
+import { expect, vi, describe, it } from 'vitest';
+import { defineComponent, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Radio } from '@vase-ui/vue/radio';
 import { RadioGroup } from '@vase-ui/vue/radio-group';
@@ -9,12 +9,15 @@ import {
   fireEvent,
   flushMicrotasks,
   hiddenInputSizeTests,
+  hydrateAfter,
   renderOnServer,
   screen,
-  takeReportedMessages,
   waitFor,
+  within,
 } from '#test-utils';
-import RadioGroupHydration from '../../radio-group/RadioGroupHydration.test.vue';
+import RadioGroupBeforeHydration from '../../radio-group/RadioGroupBeforeHydration.test.vue';
+
+const BEFORE_HYDRATION_FIXTURE = 'src/radio-group/RadioGroupBeforeHydration.test.vue';
 
 describe('<Radio.Root />', () => {
   const { render } = createRenderer();
@@ -367,52 +370,6 @@ describe('<Radio.Root />', () => {
       expect(getInputs().map((input) => input.checked)).toEqual([true, false]);
     });
 
-    it('after the hydration of HTML whose inputs changed before', async () => {
-      const props = { defaultValue: 'b' };
-      const serverHtml = await renderOnServer(
-        'src/radio-group/RadioGroupHydration.test.vue',
-        props,
-      );
-      const container = document.createElement('div');
-      document.body.append(container);
-      container.innerHTML = serverHtml;
-      const inputs = getInputs();
-      expect(inputs.map((input) => input.checked)).toEqual([false, true, false]);
-      // A browser that restores the form state of the page.
-      inputs[0].checked = true;
-      inputs[1].checked = false;
-
-      const app = createSSRApp(RadioGroupHydration, props);
-      onTestFinished(() => {
-        app.unmount();
-        container.remove();
-      });
-      app.mount(container);
-      await flushMicrotasks();
-
-      expect(getInputs()).toEqual(inputs);
-      expect(inputs.map((input) => input.checked)).toEqual([false, true, false]);
-      expect(takeReportedMessages()).toEqual([]);
-    });
-
-    it('after a `pageshow` event, because a browser can restore the form state after the mount', async () => {
-      const handleChange = vi.fn();
-      await render(
-        <RadioGroup onValueChange={handleChange}>
-          <Radio.Root value="a" data-testid="radio" />
-        </RadioGroup>,
-      );
-      getInputs()[0].checked = true;
-
-      window.dispatchEvent(new PageTransitionEvent('pageshow'));
-
-      expect(getInputs()[0].checked).toBe(false);
-
-      await fireEvent.click(screen.getByTestId('radio'));
-
-      expect(handleChange.mock.calls.map(([value]) => value)).toEqual(['a']);
-    });
-
     it.each([
       { name: 'is not checked', value: 'a', checked: false },
       { name: 'is checked', value: '', checked: true },
@@ -453,6 +410,65 @@ describe('<Radio.Root />', () => {
 
       expect(handleChange).not.toHaveBeenCalled();
       expect(getInputs()[0].checked).toBe(false);
+    });
+  });
+
+  describe('VUE-81: the state that the input got before the hydration', () => {
+    it('gives the group the value of the input that the browser checked', async () => {
+      const props = { value: 'b' };
+      const serverHtml = await renderOnServer(BEFORE_HYDRATION_FIXTURE, props);
+      let serverInputs: HTMLInputElement[] = [];
+
+      const { container } = await hydrateAfter(RadioGroupBeforeHydration, {
+        serverHtml,
+        props,
+        before(serverContainer) {
+          serverInputs = [...serverContainer.querySelectorAll<HTMLInputElement>('input')];
+          expect(serverInputs.map((input) => input.checked)).toEqual([false, true, false]);
+          // A browser that restores the form state of the page.
+          serverInputs[0]!.checked = true;
+          serverInputs[1]!.checked = false;
+        },
+      });
+      await flushMicrotasks();
+
+      const fixture = within(container);
+      expect([...container.querySelectorAll('input')]).toEqual(serverInputs);
+      expect(serverInputs.map((input) => input.checked)).toEqual([true, false, false]);
+      expect(fixture.getByTestId('a')).toHaveAttribute('aria-checked', 'true');
+      expect(fixture.getByTestId('changes').textContent).toBe('a (vase-ui)');
+    });
+  });
+
+  describe('VUE-81: the form state that the browser restores', () => {
+    it('gives the group the value of the input at a `pageshow` event', async () => {
+      const handleChange = vi.fn();
+      const { container } = await render(
+        <RadioGroup onValueChange={handleChange}>
+          <Radio.Root value="a" data-testid="radio" />
+        </RadioGroup>,
+      );
+      container.querySelector<HTMLInputElement>('input[type="radio"]')!.checked = true;
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(handleChange.mock.calls.map(([value]) => value)).toEqual(['a']);
+      expect(screen.getByTestId('radio')).toHaveAttribute('aria-checked', 'true');
+
+      await fireEvent.click(screen.getByTestId('radio'));
+
+      expect(handleChange).toHaveBeenCalledTimes(1);
+    });
+
+    it('writes the state of a radio with no group at a `pageshow` event', async () => {
+      const { container } = await render(<Radio.Root value="a" />);
+      const input = container.querySelector<HTMLInputElement>('input[type="radio"]')!;
+      input.checked = true;
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+
+      expect(input.checked).toBe(false);
     });
   });
 

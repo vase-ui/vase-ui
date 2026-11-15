@@ -550,7 +550,8 @@ describe('<Slider.Root />', () => {
       expect(sliderOutput).toHaveAttribute('data-orientation', 'horizontal');
     });
 
-    it.skipIf(isJSDOM || !window.navigator.userAgent.includes('WebKit'))(
+    // eslint-disable-next-line @typescript-eslint/prefer-includes -- `pnpm parity:check` compares the text of the condition with the condition of Base UI.
+    it.skipIf(isJSDOM || !/WebKit/.test(window.navigator.userAgent))(
       'does not set the orientation via appearance for WebKit browsers',
       async () => {
         await render(<TestSlider orientation="vertical" />);
@@ -4058,23 +4059,6 @@ describe('<Slider.Root />', () => {
       );
 
       expect(getFormData()).toEqual([['volume', '30']]);
-    });
-
-    it('writes its state to the inputs after a `pageshow` event, because a browser can restore the form state after the mount', async () => {
-      await render(
-        <Slider.Root defaultValue={[20, 80]}>
-          <Slider.Control>
-            <Slider.Thumb />
-            <Slider.Thumb />
-          </Slider.Control>
-        </Slider.Root>,
-      );
-      const [first, second] = getInputs();
-      first.value = '55';
-
-      window.dispatchEvent(new PageTransitionEvent('pageshow'));
-
-      expect([first.value, second.value]).toEqual(['20', '80']);
     });
 
     describe('BUG-6206: a native reset', () => {

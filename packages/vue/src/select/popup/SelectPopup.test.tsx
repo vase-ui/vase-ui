@@ -1210,6 +1210,8 @@ describe('<Select.Popup />', () => {
       popupMaxHeight?: string;
       /** Use uncontrolled open state so the component can close itself. */
       uncontrolledOpen?: boolean;
+      /** The `data-side` of the placement that the popup gets. */
+      side?: string;
     }) {
       const {
         viewportHeight,
@@ -1220,6 +1222,7 @@ describe('<Select.Popup />', () => {
         selectedTextTop,
         popupMaxHeight = 'none',
         uncontrolledOpen = false,
+        side = 'none',
       } = options;
 
       stubProperty(docEl, 'clientHeight', viewportHeight);
@@ -1307,7 +1310,7 @@ describe('<Select.Popup />', () => {
       const list = screen.getByTestId('list');
 
       await waitFor(() => {
-        expect(positioner).toHaveAttribute('data-side', 'none');
+        expect(positioner).toHaveAttribute('data-side', side);
       });
 
       return {
@@ -1589,26 +1592,30 @@ describe('<Select.Popup />', () => {
       });
     });
 
-    // In WebKit, a pinch-zoomed popup uses the anchored placement by design.
-    // https://github.com/mui/base-ui/pull/1139
-    it.skipIf(isWebKit)('ignores a pinch-zoomed visual viewport outside WebKit', async () => {
+    it('ignores a pinch-zoomed visual viewport outside WebKit', async () => {
       const { visualViewport } = window;
       if (visualViewport) {
         stubProperty(visualViewport, 'scale', 1.5);
       }
 
+      // In WebKit, the popup gets the anchored placement: https://github.com/mui/base-ui/pull/1139
+      const side = isWebKit ? 'bottom' : 'none';
       const { positioner } = await renderAligned({
         viewportHeight: 720,
         triggerTop: 300,
         positionerHeight: 200,
         listScrollHeight: 400,
         listClientHeight: 200,
+        side,
       });
 
       // Only WebKit mispositions pinch-zoomed popups, so other engines keep item alignment.
       await waitFor(() => {
-        expect(positioner).toHaveAttribute('data-side', 'none');
+        expect(positioner).toHaveAttribute('data-side', side);
       });
+      if (isWebKit) {
+        expect(positioner.style.height).toBe('');
+      }
     });
 
     it('ignores scroll events bubbling to the popup while a Select.List owns scrolling', async () => {
