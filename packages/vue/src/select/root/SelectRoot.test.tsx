@@ -7446,7 +7446,7 @@ describe('<Select.Root />', () => {
   });
 
   describe('prop: highlightItemOnHover', () => {
-    it.skipIf(isWebKit)('highlights an item on mouse move by default', async () => {
+    it('highlights an item on mouse move by default', async () => {
       const { user } = await render(
         <Select.Root defaultOpen>
           <Select.Trigger data-testid="trigger">
@@ -7467,6 +7467,7 @@ describe('<Select.Root />', () => {
       await flushMicrotasks();
       const optionB = screen.getByRole('option', { name: 'b' });
       await user.hover(optionB);
+      await fireEvent.mouseMove(optionB, { movementX: 1 });
 
       await waitFor(() => {
         expect(optionB).toHaveAttribute('data-highlighted');
