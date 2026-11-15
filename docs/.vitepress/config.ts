@@ -1,10 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, postcssIsolateStyles } from 'vitepress';
 import type { MarkdownRenderer } from 'vitepress';
 import { createApiReferenceReader } from '../../scripts/docs/apiReference.ts';
 import { familyOfPage } from '../../scripts/docs/familyPages.ts';
 import { readNavigation } from '../../scripts/docs/navigation.ts';
+import { DEMO_VARIANT_STORAGE_KEY } from './components/demoVariant.ts';
 import { markdownHeadingBadge } from './markdownHeadingBadge.ts';
 import { postcssFollowSiteTheme } from './postcssFollowSiteTheme.ts';
 
@@ -67,10 +69,20 @@ export default defineConfig({
   description: manifest.description,
   base: '/',
   cleanUrls: true,
+  // The script runs before the first paint, so `DemoSource` shows the stored variant at once.
+  head: [
+    [
+      'script',
+      {},
+      `try{if(localStorage.getItem('${DEMO_VARIANT_STORAGE_KEY}')==='tailwind')document.documentElement.dataset.demoVariant='tailwind'}catch{}`,
+    ],
+  ],
   // A demo is inside an element with the class `vp-raw`. The first plugin keeps the styles of the
-  // theme out of it, so the style sheet of the demo is the only one that styles it. The second
-  // plugin makes that style sheet follow the theme of the site.
+  // theme out of it, so the style sheet of the demo is the only one that styles it. For a Tailwind
+  // demo, that is `docs/demos/tailwind.css`. The second plugin makes a copied style sheet follow
+  // the theme of the site. In `tailwind.css`, the variant `dark` does the same.
   vite: {
+    plugins: [tailwindcss()],
     css: {
       postcss: {
         plugins: [

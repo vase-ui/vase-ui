@@ -1,3 +1,4 @@
+import tailwindcss from '@tailwindcss/vite';
 import vue from '@vitejs/plugin-vue';
 import vueJsx from '@vitejs/plugin-vue-jsx';
 import { playwright } from '@vitest/browser-playwright';
@@ -7,7 +8,7 @@ import { renderOnServer } from './test/server/renderOnServer.ts';
 const contextOptions = { timezoneId: 'UTC' };
 
 export default defineConfig({
-  plugins: [vue(), vueJsx()],
+  plugins: [vue(), vueJsx(), tailwindcss()],
   define: {
     'process.env.NODE_ENV': JSON.stringify('test'),
   },
