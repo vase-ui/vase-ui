@@ -138,15 +138,17 @@ export function nestedPopupCloseTests(config: NestedPopupCloseTestsConfig) {
       ));
       const outerTrigger = screen.getByRole('button', { name: 'Open outer' });
 
-      await openAndWaitForFocus(outerTrigger, () => user.click(outerTrigger));
+      await waitForLaterMillisecond(() =>
+        openAndWaitForFocus(outerTrigger, () => user.click(outerTrigger)),
+      );
       const outerPopup = screen.getByTestId('outer-popup');
       expect(outerPopup.contains(document.activeElement)).toBe(true);
-      await waitForLaterMillisecond();
       const innerTrigger = screen.getByRole('button', { name: 'Open inner' });
-      await openAndWaitForFocus(innerTrigger, () => user.click(innerTrigger));
+      await waitForLaterMillisecond(() =>
+        openAndWaitForFocus(innerTrigger, () => user.click(innerTrigger)),
+      );
       const innerPopup = screen.getByTestId('inner-popup');
       expect(innerPopup.contains(document.activeElement)).toBe(true);
-      await waitForLaterMillisecond();
 
       const { focusAtExitStart, exits } = await startExit(
         outerPopup,
@@ -226,14 +228,14 @@ export function nestedPopupCloseTests(config: NestedPopupCloseTestsConfig) {
       ));
       const trigger = screen.getByRole('button', { name: 'Open' });
 
-      await openAndWaitForFocus(trigger, () => user.click(trigger));
+      await waitForLaterMillisecond(() => openAndWaitForFocus(trigger, () => user.click(trigger)));
       const outerPopup = screen.getByTestId('outer-popup');
       expect(outerPopup.contains(document.activeElement)).toBe(true);
       const listTrigger = screen.getByTestId('list-trigger');
-      await waitForLaterMillisecond();
-      await openAndWaitForFocus(listTrigger, () => user.keyboard('{Enter}'));
+      await waitForLaterMillisecond(() =>
+        openAndWaitForFocus(listTrigger, () => user.keyboard('{Enter}')),
+      );
       expect(screen.getByTestId('list-popup').contains(document.activeElement)).toBe(true);
-      await waitForLaterMillisecond();
 
       const { focusAtExitStart, exits } = await startExit(outerPopup, [], () =>
         user.keyboard('{ArrowDown}{Enter}'),
