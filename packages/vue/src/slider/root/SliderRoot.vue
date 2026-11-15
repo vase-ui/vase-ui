@@ -185,11 +185,10 @@ export type SliderRootCommitEventDetails = VaseUIGenericEventDetails<SliderRootC
 // vue-tsc resolves `Value` before it checks a listener of a template.
 // With no `value` and no `defaultValue`, the value is `min`, so the default is `number`.
 import { computed, provide, shallowRef, watch } from 'vue';
-import { addEventListener } from '../../common/addEventListener';
 import { areArraysEqual } from '../../common/areArraysEqual';
 import { clamp } from '../../common/clamp';
 import { useIsHydrating } from '../../common/hydration';
-import { ownerDocument, ownerWindow } from '../../common/owner';
+import { ownerDocument } from '../../common/owner';
 import { activeElement, contains } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
 import { warn } from '../../common/warn';
@@ -536,18 +535,6 @@ function getThumbInputs() {
   return inputs;
 }
 
-// Vue writes `value` to an input only when the value changes between two renders. Chromium restores
-// the form state of a page after `load`, with no event on the input. A form would then submit a
-// value that the slider does not show.
-function writeValuesToInputs() {
-  getThumbInputs().forEach((input, index) => {
-    const value = values.value[index];
-    if (input && value !== undefined && input.valueAsNumber !== value) {
-      input.value = String(value);
-    }
-  });
-}
-
 function resetToDefaultValue(event: Event) {
   const defaultValue = (props.defaultValue ?? props.min) as number | readonly number[];
   if (props.value !== undefined || areValuesEqual(defaultValue, valueUnwrapped.value)) {
@@ -662,18 +649,6 @@ const { element, elementProps } = useRenderElement('div', props, {
   ],
   stateAttributesMapping: sliderStateAttributesMapping,
 });
-
-watch(
-  element,
-  (root, _previous, onCleanup) => {
-    if (!root) {
-      return;
-    }
-
-    onCleanup(addEventListener(ownerWindow(root), 'pageshow', writeValuesToInputs));
-  },
-  { flush: 'post' },
-);
 
 defineExpose({ element });
 </script>

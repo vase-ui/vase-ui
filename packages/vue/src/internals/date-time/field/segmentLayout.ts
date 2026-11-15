@@ -21,6 +21,16 @@ export interface SegmentLayoutOptions {
   timeZoneName: boolean;
 }
 
+/**
+ * The greatest number of items in a layout, for each family of field. A layout joins two literals
+ * in a row, so it has a literal before, between and after the items that are not literals. A date
+ * layout has at most ten of these items: the era, the year (a year of the Chinese calendar can have
+ * `relatedYear` and `yearName`), the month, the day, the three time units, the day period and the
+ * time zone name. A time layout has at most five. The `Input` of a field renders a list of this
+ * length.
+ */
+export const MAX_LAYOUT_LENGTH = { date: 21, time: 11 } as const;
+
 export interface LayoutSegment {
   type: SegmentType;
   /** The text of a literal. Each other type has no text in a layout. */

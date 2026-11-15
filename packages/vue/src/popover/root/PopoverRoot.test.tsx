@@ -1126,12 +1126,9 @@ describe('<Popover.Root />', () => {
 
         await user.click(close);
 
-        await waitFor(
-          () => {
-            expect(toggle).toHaveFocus();
-          },
-          { timeout: 1500 },
-        );
+        await waitFor(() => {
+          expect(toggle).toHaveFocus();
+        });
       });
 
       it('restores temporarily disabled focus before focusing a reopened keepMounted popover', async () => {

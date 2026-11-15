@@ -43,6 +43,8 @@ Because of the hidden input, `Radio.Root` has more than one root node. A rule of
 
 Bind the value with `v-model:value`. The group emits `valueChange` with the new value and `eventDetails`, and then `update:value`. To stop the change, call `eventDetails.cancel()` before the `valueChange` listener returns. The group then emits no `update:value` and keeps its value.
 
+The group takes the radio whose input is checked when the visitor presses a native label before the page hydrates. It also takes the radio that the browser checks after a move back in the history or a reload. The group then emits `valueChange` and `update:value` one time, and the inputs follow the value. A `valueChange` listener can thus run after a move back with no action of the visitor.
+
 The group exposes `element` and `inputElement` through a template ref. `inputElement` is the input of the checked radio, or else the first input. A disabled input does not count.
 
 The group has one tab stop. A group with `disabled` has none. In the server HTML, the tab stop is on the checked radio. With no value, it is on the first radio that is not disabled.

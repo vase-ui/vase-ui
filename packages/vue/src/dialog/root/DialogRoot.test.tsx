@@ -2986,10 +2986,8 @@ describe('<Dialog.Root />', () => {
   });
 
   describe('scroll lock', () => {
-    // The lock and the unlock each wait for a timer of 0 ms. The observers of `waitFor` do not see a
-    // document in a frame, so it polls.
-    const POLL = { interval: 5, timeout: 3000 };
-
+    // The lock and the unlock each wait for a timer of 0 ms. The observer of `waitFor` does not see
+    // a change in the document of an iframe. Its check in each frame sees the change.
     function renderModalDialog(scrollDocument: ScrollDocument, rootProps: object = {}) {
       return (
         <Dialog.Root defaultOpen {...rootProps}>
@@ -3004,10 +3002,10 @@ describe('<Dialog.Root />', () => {
       const scrollDocument = await createScrollDocument();
       const handle = Dialog.createHandle();
       await render(() => renderModalDialog(scrollDocument, { handle }));
-      await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(true), POLL);
+      await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(true));
 
       handle.close();
-      await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(false), POLL);
+      await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(false));
       expect(getScrollLockRegistry()?.lockCount).toBe(0);
     });
 
@@ -3034,13 +3032,13 @@ describe('<Dialog.Root />', () => {
       await render(() => (
         <KeepAlive>{show.value ? <ModalDialog key="dialog" /> : <Other key="other" />}</KeepAlive>
       ));
-      await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(true), POLL);
+      await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(true));
 
       show.value = false;
-      await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(false), POLL);
+      await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(false));
 
       show.value = true;
-      await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(true), POLL);
+      await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(true));
     });
   });
 

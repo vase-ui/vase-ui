@@ -1,7 +1,8 @@
 import type { CSSProperties, VNode } from 'vue';
 import type { UserEvent } from '@testing-library/user-event';
 import { expect, vi, describe, it } from 'vitest';
-import { screen, waitFor } from '@testing-library/dom';
+import { screen } from './queries';
+import { waitFor } from './waitFor';
 import * as Dialog from '../src/dialog/index.parts';
 import { platform } from '../src/common/platform';
 import { isJSDOM } from '../src/common/testUtils';
