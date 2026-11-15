@@ -224,7 +224,9 @@ const {
   onUnmount() {
     const doc = ownerDocument(rootRef.value);
     const activeEl = activeElement(doc);
-    const element = transitionElement();
+    // A root with an inline viewport has no popup, positioner or backdrop part. Its content is in
+    // the viewport.
+    const element = transitionElement() ?? viewportElement.value;
 
     const isReturnFocusBlocked = closeReason ? blockedReturnFocusReasons.has(closeReason) : false;
 

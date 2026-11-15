@@ -69,6 +69,18 @@ function setWebKit(webkit: boolean) {
   });
 }
 
+// A browser without the `preventScroll` option does not read the options of `focus`. This function
+// does not read them either.
+function ignoreFocusOptions() {
+  const focus = HTMLElement.prototype.focus;
+  const spy = vi.spyOn(HTMLElement.prototype, 'focus').mockImplementation(function (
+    this: HTMLElement,
+  ) {
+    focus.call(this);
+  });
+  onTestFinished(() => spy.mockRestore());
+}
+
 type ManagerProps = Partial<Omit<FloatingFocusManagerProps, 'store'>>;
 type PopupStore = ReturnType<typeof useFloatingRootStore>;
 
@@ -1998,18 +2010,6 @@ describe('FloatingFocusManager', () => {
     });
 
     describe('press outside the popup, in a browser that gives no preventScroll option', () => {
-      // A browser without the option does not read the options of `focus`. This function does not
-      // read them either.
-      function ignoreFocusOptions() {
-        const focus = HTMLElement.prototype.focus;
-        const spy = vi.spyOn(HTMLElement.prototype, 'focus').mockImplementation(function (
-          this: HTMLElement,
-        ) {
-          focus.call(this);
-        });
-        onTestFinished(() => spy.mockRestore());
-      }
-
       const mousePress = () =>
         new PointerEvent('pointerdown', { pointerType: 'mouse', buttons: 1, pressure: 0.5 });
       // Chromium gives a press of a screen reader as a mouse event of 1 by 1 pixel with no pressure.
@@ -3016,12 +3016,7 @@ describe('FloatingFocusManager', () => {
       test('does not return focus to reference on outside press when preventScroll is not supported', async () => {
         // A browser reads the options of `focus`. Base UI runs this case only in jsdom, whose
         // `focus` reads none.
-        const focus = HTMLElement.prototype.focus;
-        vi.spyOn(HTMLElement.prototype, 'focus').mockImplementation(function focusWithNoOptions(
-          this: HTMLElement,
-        ) {
-          focus.call(this);
-        });
+        ignoreFocusOptions();
 
         const { user } = await render(<ClickDismissApp />);
 
