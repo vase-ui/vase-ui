@@ -1759,6 +1759,26 @@ describe('<Resizable.Handle />', () => {
       },
     );
 
+    it('gives the distance with three decimals at most', async () => {
+      // 10 px of a root of 300 px is 10/3 percent, and a number has no exact value for it.
+      await render(
+        <div style={{ width: '300px' }}>
+          <Resizable.Root resizeMode="on-release">
+            <Resizable.Panel />
+            <Resizable.Handle data-testid="handle" />
+            <Resizable.Panel />
+          </Resizable.Root>
+        </div>,
+      );
+      const handle = screen.getByTestId('handle');
+
+      await fireEvent.pointerDown(handle, pointerInit({ buttons: 1 }));
+      await fireEvent.pointerMove(handle, pointerInit({ clientX: 10, buttons: 1 }));
+
+      expect(preview(handle)).toMatch(/^\d+(\.\d{1,3})?px$/);
+      expect(Number.parseFloat(preview(handle))).toBeCloseTo(10, 2);
+    });
+
     it('stops the distance at a constraint of the layout', async () => {
       await renderPanels({ root: onRelease, panels: [{ id: 'a' }, { id: 'b', minSize: 40 }] });
       const handle = screen.getByTestId('handle-1');
