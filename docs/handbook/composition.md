@@ -17,7 +17,7 @@ For example, most triggers render a `<button>` by default. The sample below uses
 
 Give a component to `as` when you set none of its own props. Use `#render` when you set a prop of the component, such as `size`. With `strictTemplates`, the type check refuses a prop that the default element of the part does not have.
 
-The custom component needs one root element. Vue gives the attributes to that element by default. The part reads the element from the `element` that the component exposes. If the component exposes none, the part reads its root element. If the component sets `element` later than its `onMounted` hook, for example after an `await`, expose `element` as a ref so that the part sees the change.
+The custom component needs one root element. Vue gives the attributes to that element by default. The part reads the element from the `element` that the component exposes. If the component exposes none, the part reads its root element. The part cannot read the root element of a component in [Vapor mode](#vapor-mode), so that component must expose `element`. If the component sets `element` later than its `onMounted` hook, for example after an `await`, expose `element` as a ref so that the part sees the change.
 
 Under `#render`, the part does not render its default slot. Put the content in your element.
 
@@ -33,7 +33,7 @@ In this sample, `Tooltip.Trigger` renders `Dialog.Trigger`, `Dialog.Trigger` ren
 
 With `as`, a part has one set of attributes. The part takes the props that it declares. It gives the other attributes to the tag or component. For example, `Toolbar.Button` declares `disabled`. Set `disabled` on `Toolbar.Button`, and not on the component that you give to `as` or render in its slot. The toolbar then keeps the element in its keyboard navigation.
 
-With `#render`, the slot gets `props`. It holds the attributes, the listeners, the state data attributes, the class, the style and the `ref` setter. Bind it on your element with `v-bind="props"`.
+With `#render`, the slot gets `props`. It holds the attributes, the listeners, the state data attributes, the class, the style and the `ref` setter. Bind it on your element with `v-bind="props"`. In [Vapor mode](#vapor-mode), also bind the `ref` setter by name.
 
 Attributes that you write beside `v-bind="props"` follow the rules of Vue. When `v-bind="props"` comes first, Vue joins the `class` values and merges the `style` values. Vue calls both listeners, and it calls the listener of `props` first. For another attribute, such as `id` or `title`, the attribute that comes last wins.
 
@@ -68,3 +68,13 @@ The `#render` slot gives you complete control over where `props` go. It also let
 The default slot also gets `{ state }`. Some parts have nodes of their own. `Slider.Thumb` has a range input. Such a part gives `#render` a third slot prop, `children`. Mount `children` in your element. A development build shows a warning when the slot does not mount it.
 
 <<< ../examples/composition/RenderChildren.vue{10-12}
+
+## Vapor mode
+
+Vase UI parts are ordinary Vue components. An application in Vapor mode renders them with the `vaporInteropPlugin` of Vue.
+
+In a Vapor component (`<script setup vapor>`), bind the `ref` setter of `props` by name, beside `v-bind="props"`: `<a v-bind="props" :ref="props.ref">`. Vapor does not apply the `ref` key of a bound object. Vue shows no warning. Without `:ref`, the part gets no element. A development build then shows a warning that names this binding.
+
+The rule applies to each element and each component that gets `props`. With nested `#render` slots, bind the setter of each slot: `<Dialog.Trigger v-bind="tooltipTrigger" :ref="tooltipTrigger.ref">`. With `mergeProps`, bind the setter of the slot: `v-bind="mergeProps(props, own)" :ref="props.ref"`. To add a `ref` of your own, use the function ref of [How props are merged](#how-props-are-merged). It works in a Vapor component too.
+
+A custom component in Vapor mode must expose its element as `element`, with `defineExpose({ element })`. Make `element` a template ref of the root element. Vue gives a ref on a Vapor component only the values that the component exposes, so the part cannot read the root element. This rule applies to `as` and to `#render`, also when the component that renders the part is not in Vapor mode.

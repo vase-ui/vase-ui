@@ -255,7 +255,7 @@ A part that Base UI takes from another family is exported again and not copied: 
 - Your element takes one `ref`. Vue keeps the last `ref` key of an element. It gives no warning.
 - If your element needs a ref of your own, call `props.ref` in a function ref: `:ref="(el) => { props.ref(el); own = el }"`.
 - The setter must make no change when it gets the same element again. Vue calls a function ref again on each patch.
-- In a Vapor component (`<script setup vapor>`), bind the setter by name: `<a v-bind="props" :ref="props.ref">`. Vapor drops the `ref` key of a bound object. It gives no warning.
+- In a Vapor component (`<script setup vapor>`), bind the setter by name: `<a v-bind="props" :ref="props.ref">`. Vapor drops the `ref` key of a bound object, and Vue gives no warning. The part then gets no element, and its warning in the next bullet names this binding.
 - A development build shows a warning when the `#render` slot of a part gives no element and no component to the `ref` setter.
 - A component in the slot can set its exposed `element` later. A component whose exposed `element` is empty at the check thus gets no warning.
 - The part makes the check after each render in which the slot appears. A part with no element at mount thus gets the check when it renders its element.
@@ -412,6 +412,7 @@ One helper, `resolveElement(value)`, changes a value into an element:
 - If the exposed `element` has a value that is not an element and not empty, the next rule applies.
 - A prop with the name `element` is not an exposed element. The next rule applies.
 - Another component gives `$el` when that is an element. If not, the result is `null` and a development build shows a warning.
+- A ref on a Vapor component gives only the values that the component exposes, and no `$el`. A Vapor component thus gives an element only when it exposes `element`. If not, the result is `null` and a development build shows a warning.
 
 Rules:
 
