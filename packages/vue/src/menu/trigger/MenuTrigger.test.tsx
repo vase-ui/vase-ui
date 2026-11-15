@@ -604,9 +604,10 @@ describe('<Menu.Trigger />', () => {
         expect(screen.queryByRole('menu')).toBe(null);
       });
 
-      handle.open('trigger');
-      const item = await screen.findByRole('menuitem');
-      await waitForLaterMillisecond();
+      const item = await waitForLaterMillisecond(() => {
+        handle.open('trigger');
+        return screen.findByRole('menuitem');
+      });
       await fireEvent.mouseUp(item);
 
       expect(onClick).not.toHaveBeenCalled();

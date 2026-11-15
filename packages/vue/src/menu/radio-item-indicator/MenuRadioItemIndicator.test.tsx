@@ -5,7 +5,10 @@ import {
   createRenderer,
   describeConformance,
   fireEvent,
+  flushMicrotasks,
   isJSDOM,
+  nextAnimationsRead,
+  nextEvent,
   screen,
   takeReportedMessages,
   waitFor,
@@ -82,11 +85,6 @@ describe('<Menu.RadioItemIndicator />', () => {
   it.skipIf(isJSDOM)('should remove the indicator when the animation finishes', async () => {
     globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
 
-    let animationFinished = false;
-    const notifyAnimationFinished = () => {
-      animationFinished = true;
-    };
-
     const style = `
       @keyframes test-anim {
         to {
@@ -121,7 +119,6 @@ describe('<Menu.RadioItemIndicator />', () => {
                         class="animation-test-indicator"
                         data-testid="indicator"
                         keepMounted
-                        onAnimationend={notifyAnimationFinished}
                       />
                     </Menu.RadioItem>
                     <Menu.RadioItem value="b">
@@ -141,10 +138,9 @@ describe('<Menu.RadioItemIndicator />', () => {
     expect(screen.getByTestId('indicator')).not.toBe(null);
 
     const closeButton = screen.getByText('Close');
-    await user.click(closeButton);
-
-    await waitFor(() => {
-      expect(animationFinished).toBe(true);
+    await nextEvent(screen.getByTestId('indicator'), 'animationend', {
+      after: 'animationstart',
+      action: () => user.click(closeButton),
     });
   });
 
@@ -202,15 +198,20 @@ describe('<Menu.RadioItemIndicator />', () => {
 
       await render(<Test />);
 
-      expect(screen.getByTestId('indicator')).not.toBe(null);
+      const indicator = screen.getByTestId('indicator');
+      expect(indicator).not.toBe(null);
+
+      const read = nextAnimationsRead(indicator);
 
       await fireEvent.click(screen.getByText('Select b'));
 
-      expect(screen.getByTestId('indicator')).toHaveAttribute('data-ending-style');
+      expect(indicator).toHaveAttribute('data-ending-style');
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('indicator')).toBe(null);
-      });
+      const animations = await read;
+      await Promise.all(animations.map((animation) => animation.finished));
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('indicator')).toBe(null);
     },
   );
 

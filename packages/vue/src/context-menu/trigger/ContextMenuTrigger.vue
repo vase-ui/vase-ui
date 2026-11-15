@@ -26,6 +26,7 @@ import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useMenuRootContext } from '../../menu/root/MenuRootContext';
+import { findRootOwnerId } from '../../menu/utils/findRootOwnerId';
 import { stopEvent } from '../../utils/popups/event';
 import { pressableTriggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
 import { useContextMenuRootContext } from '../root/ContextMenuRootContext';
@@ -52,6 +53,7 @@ const {
   positionerRef,
   allowMouseUpTriggerRef,
   initialCursorPointRef,
+  rootId,
 } = useContextMenuRootContext(false);
 
 const { store } = useMenuRootContext(false);
@@ -120,6 +122,10 @@ function handleContextMenu(event: MouseEvent) {
       const mouseUpTarget = getTarget(mouseEvent) as Element | null;
 
       if (contains(positionerRef.value, mouseUpTarget)) {
+        return;
+      }
+
+      if (rootId.value && mouseUpTarget && findRootOwnerId(mouseUpTarget) === rootId.value) {
         return;
       }
 

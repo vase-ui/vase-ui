@@ -1350,10 +1350,11 @@ describe('<NavigationMenu.Root />', () => {
         await fireEvent.pointerEnter(trigger, { pointerType: 'touch' });
         await fireEvent.pointerDown(trigger, { pointerType: 'touch' });
         await fireEvent.pointerUp(trigger, { pointerType: 'touch' });
-        await fireEvent.click(trigger);
-        await flushMicrotasks();
-        // The click mounted the nested trigger in this millisecond of the fake clock.
-        await waitForLaterMillisecond();
+        // The click mounts the nested trigger.
+        await waitForLaterMillisecond(async () => {
+          await fireEvent.click(trigger);
+          await flushMicrotasks();
+        });
 
         const nestedTrigger2 = screen.getByTestId('nested-trigger-2');
         await fireEvent.pointerEnter(nestedTrigger2, { pointerType: 'touch' });
@@ -3100,8 +3101,11 @@ describe('<NavigationMenu.Root />', () => {
         await render(<TestInlineNestedNavigationMenu />);
         const trigger1 = screen.getByTestId('trigger-1');
 
-        await fireEvent.click(trigger1);
-        await flushMicrotasks();
+        // The click mounts the nested triggers.
+        await waitForLaterMillisecond(async () => {
+          await fireEvent.click(trigger1);
+          await flushMicrotasks();
+        });
 
         const popup1 = screen.getByTestId('popup-1');
         expect(popup1).not.toBe(null);
@@ -3110,8 +3114,6 @@ describe('<NavigationMenu.Root />', () => {
         expect(nestedTrigger1).toHaveAttribute('aria-expanded', 'true');
 
         const nestedTrigger2 = within(popup1).getByTestId('nested-trigger-2');
-        // The first click mounted the nested trigger in this millisecond of the fake clock.
-        await waitForLaterMillisecond();
         await fireEvent.click(nestedTrigger2);
         await flushMicrotasks();
 
@@ -3465,8 +3467,11 @@ describe('<NavigationMenu.Root />', () => {
           await render(<TestInlineNestedNavigationMenu keepMountedContent />);
           const trigger1 = screen.getByTestId('trigger-1');
 
-          await fireEvent.click(trigger1);
-          await flushMicrotasks();
+          // The click mounts the nested trigger.
+          await waitForLaterMillisecond(async () => {
+            await fireEvent.click(trigger1);
+            await flushMicrotasks();
+          });
 
           const popupRoot = screen.getByTestId('popup-root');
           const positioner = screen.getByTestId('positioner');
@@ -3488,8 +3493,6 @@ describe('<NavigationMenu.Root />', () => {
 
           popupHeight = 300;
           animations.start();
-          // The first click mounted the nested trigger in this millisecond of the fake clock.
-          await waitForLaterMillisecond();
           await fireEvent.click(screen.getByTestId('nested-trigger-2'));
           await flushMicrotasks();
 

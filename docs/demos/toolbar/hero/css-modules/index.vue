@@ -52,15 +52,11 @@ const CheckIcon: FunctionalComponent = (_, { attrs }) =>
     </Toolbar.Group>
     <Toolbar.Separator :class="styles.Separator" />
     <Select.Root default-value="Helvetica">
-      <Toolbar.Button :class="styles.Button" aria-label="Font">
-        <template #render="{ props }">
-          <Select.Trigger v-bind="props">
-            <Select.Value />
-            <Select.Icon>
-              <CaretUpDownIcon />
-            </Select.Icon>
-          </Select.Trigger>
-        </template>
+      <Toolbar.Button :as="Select.Trigger" :class="styles.Button" aria-label="Font">
+        <Select.Value />
+        <Select.Icon>
+          <CaretUpDownIcon />
+        </Select.Icon>
       </Toolbar.Button>
       <Select.Portal>
         <Select.Positioner
