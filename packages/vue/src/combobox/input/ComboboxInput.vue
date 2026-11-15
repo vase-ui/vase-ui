@@ -59,7 +59,7 @@ import {
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
 import { useDeferredServerRender, useLabelableContext } from '../../internals/labelable-provider';
 import { REASONS } from '../../internals/reasons';
-import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { getHighlightReason } from '../../utils/getHighlightReason';
@@ -417,7 +417,17 @@ function getChipIndexForKey(event: KeyboardEvent, input: HTMLInputElement, selec
   return nextIndex;
 }
 
-function handleKeydown(event: KeyboardEvent) {
+function handleKeydown(event: VaseUIEvent<KeyboardEvent>) {
+  const input = event.currentTarget as HTMLInputElement;
+
+  // A textarea keeps the Home and End keys of the browser, as each other textarea does. The call
+  // also stops the list navigation, which takes the two keys when the input is in the popup
+  // (`VUE-97`).
+  if (input.tagName !== 'INPUT' && (event.key === 'Home' || event.key === 'End')) {
+    event.preventVaseUIHandler();
+    return;
+  }
+
   if (event.ctrlKey || event.shiftKey || event.altKey || event.metaKey) {
     return;
   }
@@ -433,13 +443,10 @@ function handleKeydown(event: KeyboardEvent) {
     return;
   }
 
-  const input = event.currentTarget as HTMLInputElement;
   const scrollAmount = input.scrollWidth - input.clientWidth;
   const isRTL = direction.value === 'rtl';
-  // A textarea keeps the Home and End keys of the browser, as each other textarea does (`VUE-97`).
-  const isInputElement = input.tagName === 'INPUT';
 
-  if (isInputElement && event.key === 'Home') {
+  if (event.key === 'Home') {
     stopEvent(event);
     const cursor = platform.engine.gecko && isRTL ? input.value.length : 0;
     input.setSelectionRange(cursor, cursor);
@@ -447,7 +454,7 @@ function handleKeydown(event: KeyboardEvent) {
     return;
   }
 
-  if (isInputElement && event.key === 'End') {
+  if (event.key === 'End') {
     stopEvent(event);
     const cursor = platform.engine.gecko && isRTL ? 0 : input.value.length;
     input.setSelectionRange(cursor, cursor);
