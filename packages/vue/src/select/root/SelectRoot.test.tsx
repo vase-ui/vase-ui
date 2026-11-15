@@ -23,6 +23,7 @@ import {
   isJSDOM,
   nextAnimationsRead,
   nextEvent,
+  popupAnatomyTests,
   popupConformanceTests,
   popupListConformanceTests,
   pressWithTouch,
@@ -35,7 +36,6 @@ import {
 } from '#test-utils';
 import { actOnElement } from '../../../test/fixtures/actOnElement';
 import { isScrollLocked } from '../../../test/fixtures/scrollDocument';
-import { platform } from '../../common/platform';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import * as Popover from '../../popover/index.parts';
@@ -43,8 +43,6 @@ import * as SelectSeparatorDataAttributes from '../../separator/SeparatorDataAtt
 import type { SelectStore } from '../store';
 import { useSelectRootContext } from './SelectRootContext';
 import SelectRootHydration from './SelectRootHydration.test.vue';
-
-const isWebKit = platform.engine.webkit;
 
 type ChangeDetails = Select.Root.ChangeEventDetails;
 type OpenChangeDetails = Select.Root.OpenChangeEventDetails;
@@ -87,6 +85,24 @@ function getFormData(name: string) {
 
 describe('<Select.Root />', () => {
   const { render } = createRenderer();
+
+  popupAnatomyTests({
+    createComponent: ({ open, onOpenChangeComplete, content }) => (
+      <Select.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Select.Trigger>
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner data-testid="shown" class="shown">
+            Content
+            {content}
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>
+    ),
+    createPopup: () => <Select.Popup data-testid="popup">Popup</Select.Popup>,
+    render,
+  });
 
   describe('closing before the popup attaches', () => {
     it('finishes closing when a layout effect closes it on mount', async () => {
@@ -7762,11 +7778,7 @@ describe('<Select.Root />', () => {
 
       for (const item of [bottomEdgeItem, topEdgeItem]) {
         await user.hover(item);
-        if (isWebKit) {
-          // WebKit gives the hover of user-event a `mousemove` with no movement, and the list
-          // navigation ignores it. See https://github.com/mui/base-ui/issues/4002.
-          await fireEvent.mouseMove(item, { movementX: 1, movementY: 1 });
-        }
+        await fireEvent.mouseMove(item, { movementX: 1 });
         await waitFor(() => {
           expect(item).toHaveAttribute('data-highlighted');
         });

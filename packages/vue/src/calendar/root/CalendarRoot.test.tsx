@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createRenderer, describeConformance, screen } from '#test-utils';
+import { createRenderer, describeConformance, screen, takeReportedMessages } from '#test-utils';
 import CalendarAnatomy from './CalendarAnatomy.test.vue';
 import * as Calendar from '../index.parts';
 
@@ -361,6 +361,7 @@ describe('<Calendar.Root />', () => {
     const props = [
       { prop: 'disabledDates', attribute: 'data-disabled' },
       { prop: 'unavailableDates', attribute: 'data-unavailable' },
+      { prop: 'hiddenDates', attribute: 'data-hidden' },
     ];
 
     it.each(props.flatMap((entry) => forms.map((form) => ({ ...entry, ...form }))))(
@@ -400,6 +401,14 @@ describe('<Calendar.Root />', () => {
       expect(handlers.onValueChange).not.toHaveBeenCalled();
     });
 
+    it('renders no button for a hidden day, and an empty cell', async () => {
+      await renderCalendar({ hiddenDates: day('2026-11-11') });
+
+      expect(cell('2026-11-11')).not.toBe(null);
+      expect(button('2026-11-11')).toBe(null);
+      expect(cell('2026-11-11')).not.toHaveAttribute('aria-selected');
+    });
+
     it('hides the days of the months around the month', async () => {
       await renderCalendar();
 
@@ -436,6 +445,19 @@ describe('<Calendar.Root />', () => {
       expect(button('2026-11-10')).toHaveAttribute('data-selected');
     });
 
+    it('gives a day that a modifier matches the attribute of the name', async () => {
+      await renderCalendar({
+        modifiers: { holiday: day('2026-11-26'), isWorkDay: { dayOfWeek: [1, 2] } },
+      });
+
+      expect(cell('2026-11-26')).toHaveAttribute('data-holiday');
+      expect(button('2026-11-26')).toHaveAttribute('data-holiday');
+      expect(cell('2026-11-25')).not.toHaveAttribute('data-holiday');
+      expect(cell('2026-11-23')).toHaveAttribute('data-is-work-day');
+      expect(cell('2026-11-24')).toHaveAttribute('data-is-work-day');
+      expect(cell('2026-11-25')).not.toHaveAttribute('data-is-work-day');
+    });
+
     it('gives the state of a calendar to the root', async () => {
       await renderCalendar({ invalid: true, disabled: true });
 
@@ -446,5 +468,17 @@ describe('<Calendar.Root />', () => {
       expect(screen.getByRole('grid')).toHaveAttribute('aria-disabled', 'true');
       expect(button('2026-11-12')).toBeDisabled();
     });
+  });
+
+  // This case is the last of the file. In Vue 3.5.12, a `setup` that throws leaves the current
+  // instance set, and each later case then gets a warning about a slot.
+  it('throws when a modifier has the name of a state of a day', async () => {
+    await expect(renderCalendar({ modifiers: { selected: day('2026-11-11') } })).rejects.toThrow(
+      'Vase UI: The `modifiers` prop of <Calendar.Root> has the key `selected`. A day uses the attribute `data-selected` for a meaning of its own, so the attribute would have two meanings. Rename the modifier.',
+    );
+
+    expect(takeReportedMessages()).toEqual([
+      expect.stringContaining('Unhandled error during execution of setup function'),
+    ]);
   });
 });

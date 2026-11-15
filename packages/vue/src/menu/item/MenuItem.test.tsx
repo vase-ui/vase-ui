@@ -570,6 +570,35 @@ describe('<Menu.Item />', () => {
       }
     });
 
+    it.each([
+      { name: '8px right and 8px down', dx: 8, dy: 8, clicks: 0 },
+      { name: '9px right', dx: 9, dy: 0, clicks: 1 },
+      { name: '9px down', dx: 0, dy: 9, clicks: 1 },
+    ])('VUE-84: a release $name of the trigger press', async ({ dx, dy, clicks }) => {
+      const probe = createMenuStoreProbe();
+      const onClick = vi.fn();
+      await render(
+        <Menu.Root open>
+          <probe.Probe />
+          <Menu.Item closeOnClick={false} onClick={onClick}>
+            Item
+          </Menu.Item>
+        </Menu.Root>,
+      );
+
+      probe.store.context.allowMouseUpTriggerRef.value = true;
+      probe.store.context.triggerPressRef.value = new MouseEvent('mousedown', {
+        clientX: 100,
+        clientY: 50,
+      });
+      await fireEvent.mouseUp(screen.getByRole('menuitem'), {
+        clientX: 100 + dx,
+        clientY: 50 + dy,
+      });
+
+      expect(onClick).toHaveBeenCalledTimes(clicks);
+    });
+
     it('in a context menu, ignores the release at the point where the menu opened', async () => {
       // On macOS no other rule ignores the release of the right button.
       setMac(true);

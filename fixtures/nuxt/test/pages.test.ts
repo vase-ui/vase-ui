@@ -456,10 +456,8 @@ async function expectIndicatorUnderTab(
   );
 }
 
-// The server writes a part before it registers the parts that come after it. The part that comes
-// first then has no id of the other part in the server HTML. It gets the id in the first flush on
-// the client. Panel `a` is not mounted, so no tab names it.
-async function expectTabIds(page: Page, { hydrated }: { hydrated: boolean }) {
+// Panel `a` is not mounted, so no tab names it.
+async function expectTabIds(page: Page) {
   const after = await readTabsRoot(page, 'panels-after');
   const before = await readTabsRoot(page, 'panels-before');
 
@@ -470,19 +468,19 @@ async function expectTabIds(page: Page, { hydrated }: { hydrated: boolean }) {
     after.tabs[1].id,
     after.tabs[2].id,
   ]);
-  expect(after.tabs.map((tab) => tab.controls)).toEqual(
-    hydrated ? [null, after.panels[0].id, after.panels[1].id] : [null, null, null],
-  );
-  expect(before.tabs.map((tab) => tab.controls)).toEqual([null, before.panels[0].id]);
-  expect(before.panels.map((panel) => panel.labelledby)).toEqual([
-    hydrated ? before.tabs[1].id : null,
+  expect(after.tabs.map((tab) => tab.controls)).toEqual([
+    null,
+    after.panels[0].id,
+    after.panels[1].id,
   ]);
+  expect(before.tabs.map((tab) => tab.controls)).toEqual([null, before.panels[0].id]);
+  expect(before.panels.map((panel) => panel.labelledby)).toEqual([before.tabs[1].id]);
 }
 
 // The server cannot measure the layout, so the indicator is hidden and has no variable. The script
 // after it has the nonce of the provider. It does not run here, because this page has no JavaScript.
 async function expectTabsPage(page: Page) {
-  await expectTabIds(page, { hydrated: false });
+  await expectTabIds(page);
 
   expect(
     await page.locator('[role="tablist"] script').evaluateAll((scripts) =>
@@ -503,7 +501,7 @@ async function expectTabsPage(page: Page) {
 }
 
 async function expectHydratedTabsPage(page: Page) {
-  await expectTabIds(page, { hydrated: true });
+  await expectTabIds(page);
 
   expect(await page.locator('[role="tablist"] script').count()).toBe(0);
   await expectIndicatorUnderTab(page, 'tab-b', { left: '100px', right: '100px' });
@@ -854,6 +852,47 @@ async function expectOTPFieldPage(page: Page) {
   expect(await readFormData(page)).toEqual(['code=12']);
   expect(await readOTPSlots(page, 'pin', 'type')).toEqual(Array(4).fill('password'));
   expect(await readOTPSlotValues(page, 'pin')).toEqual(['5', '6', '', '']);
+}
+
+function readDateFieldSegments(page: Page, testId: string, attributeName: string) {
+  return page
+    .getByTestId(testId)
+    .locator('input[data-type]')
+    .evaluateAll((inputs, name) => inputs.map((input) => input.getAttribute(name)), attributeName);
+}
+
+function readDateFieldValues(page: Page, testId: string) {
+  return page
+    .getByTestId(testId)
+    .locator('input[data-type]')
+    .evaluateAll((inputs) => inputs.map((input) => (input as HTMLInputElement).value));
+}
+
+// The label of the first field comes after the field, and the server HTML names the group with it.
+// The hidden input has the name and the ISO text of the value.
+async function expectDateFieldPage(page: Page) {
+  const labelId = await page.getByTestId('when-label').getAttribute('id');
+  expect(labelId).toBeTruthy();
+  expect(await page.getByTestId('when').getAttribute('aria-labelledby')).toBe(labelId);
+  expect(await page.getByTestId('when').getAttribute('role')).toBe('group');
+  expect(await readDateFieldSegments(page, 'when', 'data-type')).toEqual(['month', 'day', 'year']);
+  expect(await readDateFieldValues(page, 'when')).toEqual(['11', '14', '2026']);
+  expect(await page.getByTestId('when-value').textContent()).toBe('2026-11-14');
+  expect(await readFormData(page)).toEqual(['when=2026-11-14']);
+  expect(await readDateFieldValues(page, 'card')).toEqual(['11', '2026']);
+}
+
+async function expectDateFieldPageOnServer(page: Page) {
+  await expectDateFieldPage(page);
+  // A server has no DOM, so it cannot find a native label.
+  expect(await page.getByTestId('card').getAttribute('aria-labelledby')).toBe(null);
+}
+
+async function expectHydratedDateFieldPage(page: Page) {
+  await expectDateFieldPage(page);
+  const labelId = await page.getByTestId('card-label').getAttribute('id');
+  expect(labelId).toBeTruthy();
+  expect(await page.getByTestId('card').getAttribute('aria-labelledby')).toBe(labelId);
 }
 
 async function expectOTPFieldPageOnServer(page: Page) {
@@ -1642,6 +1681,11 @@ const PAGES: PageCase[] = [
     expectPage: expectOTPFieldPageOnServer,
     expectHydratedPage: expectHydratedOTPFieldPage,
   },
+  {
+    path: '/date-field',
+    expectPage: expectDateFieldPageOnServer,
+    expectHydratedPage: expectHydratedDateFieldPage,
+  },
   { path: '/number-field', expectPage: expectNumberFieldPage },
   { path: '/providers', expectPage: expectProvidersPage },
   { path: '/use-render', expectPage: expectUseRenderPage },
@@ -1978,6 +2022,35 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     await page.getByTestId('pin-label').click();
 
     expect(await readFocusedTestId()).toBe('pin-1');
+    expect(messages).toEqual([]);
+  });
+
+  it('types a date into /date-field, and clears it with the Clear button, after hydration', async () => {
+    const page = await createPage('/date-field');
+    const messages = collectMessages(page);
+    const readFocusedTestId = () =>
+      page.evaluate(() => document.activeElement?.getAttribute('data-testid'));
+
+    await page.getByTestId('when-month').click();
+    await page.keyboard.type('12');
+
+    expect(await readFocusedTestId()).toBe('when-day');
+    expect(await readDateFieldValues(page, 'when')).toEqual(['12', '14', '2026']);
+    expect(await page.getByTestId('when-value').textContent()).toBe('2026-12-14');
+    expect(await readFormData(page)).toEqual(['when=2026-12-14']);
+
+    await page.getByTestId('when-clear').click();
+
+    expect(await readFocusedTestId()).toBe('when-month');
+    expect(await readDateFieldValues(page, 'when')).toEqual(['', '', '']);
+    expect(await page.getByTestId('when-value').textContent()).toBe('');
+    expect(await readFormData(page)).toEqual(['when=']);
+
+    await page.getByTestId('card-label').click();
+
+    expect(await page.evaluate(() => document.activeElement?.getAttribute('data-type'))).toBe(
+      'month',
+    );
     expect(messages).toEqual([]);
   });
 
