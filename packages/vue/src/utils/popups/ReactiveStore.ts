@@ -31,7 +31,7 @@ export class ReactiveStore<
    */
   readonly context: Context;
 
-  private readonly selectors: Selectors | undefined;
+  readonly #selectors: Selectors | undefined;
 
   /**
    * The store wraps `state` and does not copy it. A frozen object stays frozen, and Vue does not
@@ -40,7 +40,7 @@ export class ReactiveStore<
   constructor(state: State, context: Context = {} as Context, selectors?: Selectors) {
     this.state = shallowReactive(state);
     this.context = context;
-    this.selectors = selectors;
+    this.#selectors = selectors;
   }
 
   /**
@@ -52,7 +52,7 @@ export class ReactiveStore<
     ...args: SelectorArgs<Selectors[Key]>
   ): ReturnType<Selectors[Key]> {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- A call of `select` needs the selectors and one of their keys.
-    return this.selectors![key]!(this.state, ...args);
+    return this.#selectors![key]!(this.state, ...args);
   }
 
   /**
