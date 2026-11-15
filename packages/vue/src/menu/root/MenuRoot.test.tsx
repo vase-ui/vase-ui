@@ -1731,15 +1731,13 @@ describe('<Menu.Root />', () => {
                   <Menu.Item>Item 1</Menu.Item>
                   <Dialog.Root>
                     <Menu.Item
+                      as={Dialog.Trigger}
                       closeOnClick={false}
                       nativeButton
                       data-testid="dialog-trigger"
-                      v-slots={{
-                        render: ({ props }: { props: HTMLProps }) => (
-                          <Dialog.Trigger {...props}>Open Dialog</Dialog.Trigger>
-                        ),
-                      }}
-                    />
+                    >
+                      Open Dialog
+                    </Menu.Item>
                     <Dialog.Portal>
                       <Dialog.Popup data-testid="dialog-popup">
                         <button type="button" data-testid="dialog-button">
@@ -1801,15 +1799,13 @@ describe('<Menu.Root />', () => {
                     <Menu.Item>Item 1</Menu.Item>
                     <AlertDialog.Root>
                       <Menu.Item
+                        as={AlertDialog.Trigger}
                         closeOnClick={false}
                         nativeButton
                         data-testid="alert-dialog-trigger"
-                        v-slots={{
-                          render: ({ props }: { props: HTMLProps }) => (
-                            <AlertDialog.Trigger {...props}>Open Alert Dialog</AlertDialog.Trigger>
-                          ),
-                        }}
-                      />
+                      >
+                        Open Alert Dialog
+                      </Menu.Item>
                       <AlertDialog.Portal>
                         <AlertDialog.Backdrop data-testid="alert-dialog-backdrop" />
                         <AlertDialog.Popup data-testid="alert-dialog-popup">

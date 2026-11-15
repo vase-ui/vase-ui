@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { clearServerLogs, createPage, getServerLogs, setup, url } from '@nuxt/test-utils/e2e';
-import type { Locator, Page } from 'playwright-core';
+import type { Locator, Page, Route } from 'playwright-core';
 import { describe, expect, it } from 'vitest';
 import nuxtConfig from '../nuxt.config';
 
@@ -1579,6 +1579,47 @@ async function expectHydratedComboboxPage(page: Page) {
   ).toEqual({ role: null, tabindex: '-1', 'aria-haspopup': 'listbox' });
 }
 
+// The text that the case types into each control before hydration, and the value that the
+// control and the model of the page have after hydration.
+const TEXT_BEFORE_HYDRATION = [
+  { control: 'input', text: 'Ada', value: 'Ada', output: 'input-value', model: 'Ada' },
+  {
+    control: 'field-control',
+    text: 'ada@example.com',
+    value: 'ada@example.com',
+    output: 'field-value',
+    model: 'ada@example.com',
+  },
+  // The input lost the focus before hydration, so the root formats its text.
+  {
+    control: 'number-input',
+    text: '1234.5',
+    value: '1,234.5',
+    output: 'number-value',
+    model: '1234.5',
+  },
+  // The first slot takes the whole code, and the root gives each slot its character.
+  { control: 'otp-input-1', text: '1234', value: '1', output: 'otp-value', model: '1234' },
+  { control: 'combobox-input', text: 'Ban', value: 'Ban', output: 'combobox-value', model: 'Ban' },
+  {
+    control: 'autocomplete-input',
+    text: 'Che',
+    value: 'Che',
+    output: 'autocomplete-value',
+    model: 'Che',
+  },
+  // The last control keeps the focus.
+  { control: 'toolbar-input', text: 'red', value: 'red', output: 'toolbar-value', model: 'red' },
+];
+
+// Nobody typed, so each control and each model is empty.
+async function expectTextBeforeHydrationPage(page: Page) {
+  for (const { control, output } of TEXT_BEFORE_HYDRATION) {
+    expect(await page.getByTestId(control).inputValue()).toBe('');
+    expect(await page.getByTestId(output).textContent()).toBe('');
+  }
+}
+
 interface PageCase {
   path: string;
   expectPage: (page: Page) => Promise<void>;
@@ -1710,6 +1751,7 @@ const PAGES: PageCase[] = [
     expectPage: expectComboboxPageOnServer,
     expectHydratedPage: expectHydratedComboboxPage,
   },
+  { path: '/text-before-hydration', expectPage: expectTextBeforeHydrationPage },
 ];
 
 const MODES = [
@@ -2276,6 +2318,48 @@ describe.each(MODES)('in $name', async ({ dev }) => {
 
     expect(await input.inputValue()).toBe('Cherry');
     expect(await readFormData(page)).toEqual(['fruit=Cherry', 'tags=b', 'country=Sweden']);
+    expect(messages).toEqual([]);
+  });
+
+  it('keeps the text that a visitor types into /text-before-hydration while the scripts load', async () => {
+    const page = await createPage();
+    const messages = collectMessages(page);
+    const heldScripts: Route[] = [];
+    let holdsScripts = true;
+    await page.route('**/_nuxt/**', async (route) => {
+      if (holdsScripts && route.request().resourceType() === 'script') {
+        heldScripts.push(route);
+      } else {
+        await route.continue();
+      }
+    });
+
+    // The scripts of the page are modules, so `DOMContentLoaded` waits for them.
+    await page.goto(url('/text-before-hydration'), { waitUntil: 'commit' });
+    for (const { control, text } of TEXT_BEFORE_HYDRATION) {
+      await page.getByTestId(control).pressSequentially(text);
+    }
+    expect(heldScripts.length).toBeGreaterThan(0);
+    holdsScripts = false;
+    await Promise.all(heldScripts.map((route) => route.continue()));
+    await page.waitForFunction(
+      () =>
+        (window as { useNuxtApp?: () => { isHydrating: boolean } }).useNuxtApp?.().isHydrating ===
+        false,
+    );
+
+    for (const { control, value, output, model } of TEXT_BEFORE_HYDRATION) {
+      await expect.poll(() => page.getByTestId(output).textContent()).toBe(model);
+      await expect.poll(() => page.getByTestId(control).inputValue()).toBe(value);
+    }
+    expect(
+      await Promise.all(
+        [2, 3, 4].map((index) => page.getByTestId(`otp-input-${index}`).inputValue()),
+      ),
+    ).toEqual(['2', '3', '4']);
+    expect(await page.evaluate(() => document.activeElement?.getAttribute('data-testid'))).toBe(
+      'toolbar-input',
+    );
     expect(messages).toEqual([]);
   });
 
