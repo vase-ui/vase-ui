@@ -361,8 +361,10 @@ describe('<Popover.Root />', () => {
     );
 
     const trigger = screen.getByRole('button', { name: 'Trigger' });
-    await user.click(trigger);
-    const popup = await screen.findByTestId('popup');
+    const popup = await waitForLaterMillisecond(async () => {
+      await user.click(trigger);
+      return screen.findByTestId('popup');
+    });
 
     await fireEvent.pointerDown(popup, { pointerType: 'touch', button: 0 });
     await fireEvent.pointerUp(popup, { pointerType: 'touch', button: 0 });

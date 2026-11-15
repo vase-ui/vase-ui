@@ -23,6 +23,7 @@ export { describeConformance } from './describeConformance';
 export { detachedTriggersConformanceTests } from './detachedTriggersConformanceTests';
 export { dialogRootSharedTests } from './dialogRootSharedTests';
 export { heldMountFormResetTests } from './heldMountFormResetTests';
+export { heldMountListTests } from './heldMountListTests';
 export { hiddenInputSizeTests } from './hiddenInputSizeTests';
 export { hiddenInputTypeTests } from './hiddenInputTypeTests';
 export { nestedPopupCloseTests } from './nestedPopupCloseTests';

@@ -58,9 +58,6 @@ export function useRenderDialogRoot<Payload>(
       onOpenChangeComplete(nextOpen) {
         emit('openChangeComplete', nextOpen);
       },
-      // A dialog has no positioner. With no popup part, its backdrop is the part that shows.
-      getTransitionElement: (dialogStore) =>
-        dialogStore.context.popupRef.value ?? dialogStore.context.backdropRef.value,
     },
   );
 

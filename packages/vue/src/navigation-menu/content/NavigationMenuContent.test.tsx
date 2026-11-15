@@ -5,6 +5,7 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountListTests,
   nextEvent,
   screen,
   waitFor,
@@ -81,6 +82,32 @@ const Menu = defineComponent<MenuProps>(
 
 describe('<NavigationMenu.Content />', () => {
   const { render } = createRenderer();
+
+  heldMountListTests({
+    render,
+    renderList: (withLastItem) => (
+      <NavigationMenu.Root defaultValue="one">
+        <NavigationMenu.List>
+          <NavigationMenu.Item value="one">
+            <NavigationMenu.Content>
+              <NavigationMenu.Link href="#first">First link</NavigationMenu.Link>
+              {withLastItem ? (
+                <NavigationMenu.Link href="#second">Second link</NavigationMenu.Link>
+              ) : null}
+            </NavigationMenu.Content>
+          </NavigationMenu.Item>
+        </NavigationMenu.List>
+        <NavigationMenu.Viewport />
+      </NavigationMenu.Root>
+    ),
+    async check(user) {
+      screen.getByRole('link', { name: 'First link' }).focus();
+      await user.keyboard('[ArrowDown]');
+      await waitFor(() => {
+        expect(screen.getByRole('link', { name: 'Second link' })).toHaveFocus();
+      });
+    },
+  });
 
   describeConformance.skip(<NavigationMenu.Content />, () => ({
     refInstanceof: window.HTMLDivElement,

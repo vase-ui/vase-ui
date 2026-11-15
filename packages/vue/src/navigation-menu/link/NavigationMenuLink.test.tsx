@@ -7,6 +7,7 @@ import {
   flushMicrotasks,
   screen,
   waitFor,
+  waitForLaterMillisecond,
 } from '#test-utils';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 
@@ -59,10 +60,11 @@ describe('<NavigationMenu.Link />', () => {
 
       const trigger = screen.getByTestId('trigger-1');
 
-      await user.click(trigger);
-
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup-1')).not.toBe(null);
+      await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        await waitFor(() => {
+          expect(screen.queryByTestId('popup-1')).not.toBe(null);
+        });
       });
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
 
@@ -99,10 +101,11 @@ describe('<NavigationMenu.Link />', () => {
 
       const trigger = screen.getByTestId('trigger-1');
 
-      await user.click(trigger);
-
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup-1')).not.toBe(null);
+      await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        await waitFor(() => {
+          expect(screen.queryByTestId('popup-1')).not.toBe(null);
+        });
       });
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
 
@@ -340,10 +343,11 @@ describe('<NavigationMenu.Link />', () => {
     );
 
     const trigger = screen.getByRole('button', { name: 'Item 1' });
-    await user.click(trigger);
-    await flushMicrotasks();
-
-    const link = await screen.findByRole('link', { name: 'Link 1' });
+    const link = await waitForLaterMillisecond(async () => {
+      await user.click(trigger);
+      await flushMicrotasks();
+      return screen.findByRole('link', { name: 'Link 1' });
+    });
     await fireEvent.focusIn(link);
     await fireEvent.focusOut(link, { relatedTarget: null });
 
