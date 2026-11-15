@@ -246,18 +246,19 @@ const initialFocus = computed<FocusOption>(() => {
   };
 });
 
-// A closed root outside the menubar gives its store no node of the menubar, so the search finds the
-// open menu by its trigger in the menubar element.
+// After the close, a root outside the menubar writes its own node ids to its store, and the menubar
+// is not the parent of that node. The search thus finds the open menu by its trigger in the menubar
+// element.
 function getOpenMenubarTrigger() {
   const menuParent = parent.value;
   const menubarElement =
     menuParent.type === 'menubar' ? menuParent.context.contentElement.value : null;
-  const openMenu = store
+  const openNode = store
     .select('floatingTreeRoot')
     .nodesRef.value.find(
       (node) => node.context?.open && contains(menubarElement, node.context.elements.domReference),
     );
-  return openMenu?.context?.elements.domReference ?? true;
+  return openNode?.context?.elements.domReference ?? true;
 }
 
 // These targets are internal defaults, not targets of the consumer: the focus manager keeps a

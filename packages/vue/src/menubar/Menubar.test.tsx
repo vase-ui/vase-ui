@@ -1039,7 +1039,7 @@ describe('<Menubar />', () => {
       function createSiblingMenus({
         detached = false,
         filterableFile = false,
-        fileDefaultOpen,
+        fileDefaultOpen = false,
         controlledEdit = false,
       }: SiblingMenusOptions = {}) {
         const editOpen = shallowRef(false);
@@ -1130,7 +1130,7 @@ describe('<Menubar />', () => {
         return { SiblingMenus, onOpenChange, handles, editOpen };
       }
 
-      type SiblingMenus = ReturnType<typeof createSiblingMenus>;
+      type SiblingMenusFixture = ReturnType<typeof createSiblingMenus>;
 
       // Each focus that arrives in the document after the call, so a case can show that the focus
       // does not pass through the trigger of the menu that closed.
@@ -1157,12 +1157,10 @@ describe('<Menubar />', () => {
       // The trigger takes the focus in a microtask of the `mouseenter` of the hover. The open menu
       // focuses its popup one animation frame later, so the wait for that focus starts before that
       // frame.
-      async function hoverTrigger(name: SiblingMenuName) {
+      async function hoverTriggerAndWaitForMenuFocus(name: SiblingMenuName) {
         const trigger = screen.getByTestId(`${name}-trigger`);
         await nextEvent(trigger, 'focusin', { action: () => userEvent.hover(trigger) });
-        const nextFocus = nextEvent(document, 'focusin');
-        await flushMicrotasks();
-        return { nextFocus };
+        await nextEvent(document, 'focusin');
       }
 
       it.each([
@@ -1179,7 +1177,7 @@ describe('<Menubar />', () => {
 
           await openFileWithKeyboard();
           const focusTargets = recordFocusTargets();
-          const { nextFocus } = await hoverTrigger('edit');
+          await hoverTriggerAndWaitForMenuFocus('edit');
 
           expect(onOpenChange.file.mock.calls).toEqual([
             [true, 'trigger-press'],
@@ -1191,8 +1189,6 @@ describe('<Menubar />', () => {
           ]);
           expect(fileTrigger).not.toHaveAttribute('data-popup-open');
           expect(editTrigger).toHaveAttribute('data-popup-open');
-
-          await nextFocus;
           expect(focusTargets).toHaveLength(2);
           expect(focusTargets[0]).toBe(editTrigger);
           expect(screen.getByTestId('edit-menu')).toContainElement(
@@ -1212,14 +1208,13 @@ describe('<Menubar />', () => {
           document.activeElement as HTMLElement,
         );
 
-        const { nextFocus } = await hoverTrigger('edit');
+        await hoverTriggerAndWaitForMenuFocus('edit');
 
         expect(onOpenChange.file.mock.calls).toEqual([[false, 'sibling-open']]);
         expect(onOpenChange.edit.mock.calls).toEqual([
           [true, 'trigger-hover'],
           [true, 'trigger-focus'],
         ]);
-        await nextFocus;
         expect(screen.getByTestId('edit-menu')).toContainElement(
           document.activeElement as HTMLElement,
         );
@@ -1229,7 +1224,7 @@ describe('<Menubar />', () => {
         {
           name: 'its open prop',
           options: { controlledEdit: true },
-          openEdit: ({ editOpen }: SiblingMenus) => {
+          openEdit: ({ editOpen }: SiblingMenusFixture) => {
             editOpen.value = true;
           },
           editCalls: [[true, 'trigger-focus']],
@@ -1237,7 +1232,7 @@ describe('<Menubar />', () => {
         {
           name: 'its handle',
           options: { detached: true },
-          openEdit: ({ handles }: SiblingMenus) => handles?.edit.open('edit-trigger'),
+          openEdit: ({ handles }: SiblingMenusFixture) => handles?.edit.open('edit-trigger'),
           editCalls: [
             [true, 'imperative-action'],
             [true, 'trigger-focus'],
@@ -1246,15 +1241,15 @@ describe('<Menubar />', () => {
       ])(
         'keeps a menu that $name opens open while the focus is in another menu',
         async ({ options, openEdit, editCalls }) => {
-          const siblingMenus = createSiblingMenus(options);
-          const { SiblingMenus, onOpenChange } = siblingMenus;
+          const fixture = createSiblingMenus(options);
+          const { SiblingMenus, onOpenChange } = fixture;
           await render(<SiblingMenus />);
           const editTrigger = screen.getByTestId('edit-trigger');
 
           await openFileWithKeyboard();
-          await nextEvent(document, 'focusin', { action: () => openEdit(siblingMenus) });
+          await nextEvent(document, 'focusin', { action: () => openEdit(fixture) });
           expect(editTrigger).toHaveFocus();
-          await flushMicrotasks();
+          await nextEvent(document, 'focusin');
 
           expect(onOpenChange.file.mock.calls).toEqual([
             [true, 'trigger-press'],
@@ -1262,7 +1257,9 @@ describe('<Menubar />', () => {
           ]);
           expect(onOpenChange.edit.mock.calls).toEqual(editCalls);
           expect(editTrigger).toHaveAttribute('data-popup-open');
-          expect(screen.getByTestId('edit-menu')).toBeInTheDocument();
+          expect(screen.getByTestId('edit-menu')).toContainElement(
+            document.activeElement as HTMLElement,
+          );
         },
       );
     },
