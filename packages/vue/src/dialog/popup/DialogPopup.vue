@@ -90,6 +90,10 @@ const mounted = computed(() => store.select('mounted'));
 const nestedOpenDialogCount = computed(() => store.select('nestedOpenDialogCount'));
 const open = computed(() => store.select('open'));
 const openMethod = computed(() => store.select('openMethod'));
+// Base UI stops the focus manager when the popup unmounts. During an exit animation, the focus then
+// stays in the closing popup, and its focus guards, which have `aria-hidden`, stay in the tab
+// order (BUG-5519). This part stops the focus manager when the popup closes.
+const focusManagerDisabled = computed(() => !open.value);
 
 const defaultInitialFocus = createDefaultInitialFocus(store.context.popupRef);
 const resolvedInitialFocus = computed(() =>
@@ -152,7 +156,7 @@ useFloatingFocusManager(
   () => ({
     store,
     openInteractionType: openMethod.value,
-    disabled: !mounted.value,
+    disabled: focusManagerDisabled.value,
     closeOnFocusOut: !disablePointerDismissal.value,
     initialFocus: resolvedInitialFocus.value,
     returnFocus: props.finalFocus,

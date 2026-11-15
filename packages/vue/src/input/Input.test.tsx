@@ -157,4 +157,16 @@ describe('<Input />', () => {
       expect(within(container).getByTestId('value').textContent).toBe('foo bar');
     });
   });
+
+  describe('VUE-81: the form state that the browser restores', () => {
+    it('writes a value that the browser restores to v-model:value', async () => {
+      const { container } = await render(<InputBeforeHydration />);
+      within(container).getByTestId<HTMLInputElement>('input').value = 'restored';
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(within(container).getByTestId('value').textContent).toBe('restored');
+    });
+  });
 });

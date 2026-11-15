@@ -3,6 +3,7 @@ import type { ComponentPublicInstance, MaybeRefOrGetter, Ref } from 'vue';
 import { useIsHydrated } from '../../../common/hydration';
 import { ownerDocument } from '../../../common/owner';
 import { resolveElement } from '../../../internals/resolveElement';
+import { isInHeldBranch } from '../../../internals/useKeepAliveState';
 import { useRenderElement } from '../../../internals/useRenderElement';
 import type {
   UseRenderElementComponentProps,
@@ -99,8 +100,8 @@ export function useFloatingPortalNode(
 
   // A `Teleport` leaves its content in the target when `KeepAlive` deactivates the part. A
   // disabled `Teleport` keeps the content in its own place, and `KeepAlive` takes that place out
-  // of the document.
-  const deactivated = shallowRef(false);
+  // of the document. A part that mounts in a held branch gets no `onDeactivated` call.
+  const deactivated = shallowRef(isInHeldBranch());
   onDeactivated(() => {
     deactivated.value = true;
   });
