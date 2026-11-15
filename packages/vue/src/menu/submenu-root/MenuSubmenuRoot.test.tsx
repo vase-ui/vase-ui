@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
+import { userEvent as browserUserEvent } from 'vitest/browser';
 import { defineComponent, shallowRef } from 'vue';
 import * as Menu from '../index.parts';
 import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#test-utils';
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
+import { REASONS } from '../../internals/reasons';
 import type { MenuRootActions } from '../root/MenuRoot.vue';
 
 describe('<Menu.SubmenuRoot />', () => {
@@ -127,6 +129,69 @@ describe('<Menu.SubmenuRoot />', () => {
 
     expect(onUpdateOpen).not.toHaveBeenCalled();
     expect(screen.queryByTestId('submenu')).not.toBe(null);
+  });
+
+  it('VUE-69: moves the focus to the submenu trigger for Shift+Tab when the submenu root cancels the close', async () => {
+    const rootCloseReasons: string[] = [];
+    const submenuCloseReasons: string[] = [];
+    await render(
+      <Menu.Root
+        onOpenChange={(open: boolean, details: Menu.Root.ChangeEventDetails) => {
+          if (!open) {
+            rootCloseReasons.push(details.reason);
+          }
+        }}
+      >
+        <Menu.Trigger>Open</Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup data-testid="parent-menu">
+              <Menu.Item>Alpha</Menu.Item>
+              <Menu.SubmenuRoot
+                onOpenChange={(open: boolean, details: Menu.SubmenuRoot.ChangeEventDetails) => {
+                  if (!open) {
+                    submenuCloseReasons.push(details.reason);
+                    details.cancel();
+                  }
+                }}
+              >
+                <Menu.SubmenuTrigger>More</Menu.SubmenuTrigger>
+                <Menu.Portal>
+                  <Menu.Positioner>
+                    <Menu.Popup data-testid="submenu">
+                      <Menu.Item>Beta</Menu.Item>
+                    </Menu.Popup>
+                  </Menu.Positioner>
+                </Menu.Portal>
+              </Menu.SubmenuRoot>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>,
+    );
+
+    screen.getByRole('button', { name: 'Open' }).focus();
+    await browserUserEvent.keyboard('[ArrowDown]');
+    await waitFor(() => {
+      expect(screen.getByRole('menuitem', { name: 'Alpha' })).toHaveFocus();
+    });
+    await browserUserEvent.keyboard('[ArrowDown]');
+    const submenuTrigger = screen.getByRole('menuitem', { name: 'More' });
+    await waitFor(() => {
+      expect(submenuTrigger).toHaveFocus();
+    });
+    await browserUserEvent.keyboard('[ArrowRight]');
+    await waitFor(() => {
+      expect(screen.getByRole('menuitem', { name: 'Beta' })).toHaveFocus();
+    });
+
+    await browserUserEvent.keyboard('{Shift>}[Tab]{/Shift}');
+
+    expect(submenuTrigger).toHaveFocus();
+    expect(screen.getByTestId('submenu')).toBeInTheDocument();
+    expect(screen.getByTestId('parent-menu')).toBeInTheDocument();
+    expect(submenuCloseReasons).toEqual([REASONS.focusOut]);
+    expect(rootCloseReasons).toEqual([]);
   });
 
   it('emits itemHighlighted for an item of the submenu', async () => {

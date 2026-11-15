@@ -68,6 +68,7 @@ import { REASONS } from '../../internals/reasons';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { isMouseWithinBounds } from '../../utils/getPseudoElementBounds';
 import { getFloatingFocusElement } from '../../utils/popups/element';
+import { isReleaseAtPressPoint } from '../../utils/popups/isReleaseAtPressPoint';
 import { pressableTriggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
 import { resolveAriaLabelledBy } from '../../utils/resolveAriaLabelledBy';
 import { useSelectRootContext } from '../root/SelectRootContext';
@@ -141,10 +142,12 @@ function setTriggerElement(trigger: HTMLElement | null) {
 
 // The cleanup also runs on a server, so it removes the listener only from the document that got it.
 let mouseUpDocument: Document | null = null;
+let press: MouseEvent | null = null;
 
 function removeMouseUpListener() {
   mouseUpDocument?.removeEventListener('mouseup', handleMouseUp);
   mouseUpDocument = null;
+  press = null;
 }
 
 function handleMouseUp(mouseEvent: MouseEvent) {
@@ -165,6 +168,10 @@ function handleMouseUp(mouseEvent: MouseEvent) {
   }
 
   if (isMouseWithinBounds(mouseEvent, trigger)) {
+    return;
+  }
+
+  if (press && isReleaseAtPressPoint(press, mouseEvent)) {
     return;
   }
 
@@ -288,6 +295,7 @@ const { element, elementProps } = useRenderElement('button', props, {
 
         removeMouseUpListener();
         mouseUpDocument = ownerDocument(event.currentTarget as Element);
+        press = event;
         mouseUpDocument.addEventListener('mouseup', handleMouseUp, { once: true });
       },
     },

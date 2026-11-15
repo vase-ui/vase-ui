@@ -28,14 +28,6 @@
       "reason": "The case closes the menu with the Tab key. The list navigation of the menu root closes a menu for Tab and for Shift+Tab, and it gives the focus back to the trigger. `Menu.Root` has no list navigation yet, so the key does not close the menu."
     },
     {
-      "upstream": "packages/react/src/context-menu/trigger/ContextMenuTrigger.test.tsx",
-      "describe": ["<ContextMenu.Trigger />"],
-      "title": "keeps the root menu open when the context-menu gesture ends in a portaled submenu",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The trigger lacks the check of the root owner id at the `mouseup`, which needs `findRootOwnerId` of Menu. Vase UI does not have that file yet, so a `mouseup` in a submenu closes the menu."
-    },
-    {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "Positioner",
       "prop": "side",
