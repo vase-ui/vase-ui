@@ -11,6 +11,7 @@ import {
   randomStringValue,
   screen,
   waitFor,
+  waitSingleFrame,
 } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
 import * as PreviewCard from '../index.parts';
@@ -745,6 +746,9 @@ describe('<PreviewCard.Root />', () => {
       expect(screen.getByTestId('popup')).not.toHaveAttribute('data-closed');
 
       // Second cycle: once close lifecycle has fully finished, a fresh hover must honor OPEN_DELAY.
+      // The reopen keeps the ending status of the popup until the next frame. A close before that
+      // frame continues the exit of the first cycle, and the browser sends no `animationstart`.
+      await waitSingleFrame();
       await startExit(user, trigger1, name);
       expect(screen.getByTestId('popup')).toHaveAttribute('data-closed');
       finishExit(screen.getByTestId('popup'));
