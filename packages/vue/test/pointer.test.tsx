@@ -1,6 +1,7 @@
 import { expect, describe, it } from 'vitest';
 import { defineComponent } from 'vue';
-import { createRenderer, firePointer, screen } from '#test-utils';
+import { createRenderer, firePointer, penDrag, screen, touchDrag, waitFor } from '#test-utils';
+import { platform } from '../src/common/platform';
 
 describe('firePointer', () => {
   const { render } = createRenderer();
@@ -86,5 +87,62 @@ describe('firePointer', () => {
       /timeStamp must be greater than 0/,
     );
     expect(seen).toEqual([]);
+  });
+});
+
+// Only Chromium has the protocol that the two helpers use.
+describe('touchDrag and penDrag', () => {
+  const { render } = createRenderer();
+
+  async function renderTarget() {
+    const seen: { type: string; pointerType: string; clientX: number; clientY: number }[] = [];
+    const record = (event: PointerEvent) => {
+      seen.push({
+        type: event.type,
+        pointerType: event.pointerType,
+        clientX: Math.round(event.clientX),
+        clientY: Math.round(event.clientY),
+      });
+    };
+    await render(
+      <div
+        data-testid="target"
+        style={{ width: '300px', height: '100px', touchAction: 'none' }}
+        onPointerdown={record}
+        onPointermove={record}
+        onPointerup={record}
+      />,
+    );
+    const rect = screen.getByTestId('target').getBoundingClientRect();
+    return { seen, from: { x: rect.left + 20, y: rect.top + 30 } };
+  }
+
+  it.skipIf(!platform.engine.blink)('drags a real touch between two client points', async () => {
+    const { seen, from } = await renderTarget();
+
+    await touchDrag(from, { x: from.x + 60, y: from.y + 20 }, 3);
+
+    await waitFor(() => {
+      expect(seen.at(-1)?.type).toBe('pointerup');
+    });
+    expect(seen.every(({ pointerType }) => pointerType === 'touch')).toBe(true);
+    expect(seen[0]).toMatchObject({ type: 'pointerdown', clientX: from.x, clientY: from.y });
+    expect(seen.at(-1)).toMatchObject({ clientX: from.x + 60, clientY: from.y + 20 });
+  });
+
+  it.skipIf(!platform.engine.blink)('drags a real pen between two client points', async () => {
+    const { seen, from } = await renderTarget();
+
+    await penDrag(from, { x: from.x + 60, y: from.y + 20 }, 3);
+
+    await waitFor(() => {
+      expect(seen.at(-1)?.type).toBe('pointerup');
+    });
+    expect(seen.every(({ pointerType }) => pointerType === 'pen')).toBe(true);
+    expect(seen.find(({ type }) => type === 'pointerdown')).toMatchObject({
+      clientX: from.x,
+      clientY: from.y,
+    });
+    expect(seen.at(-1)).toMatchObject({ clientX: from.x + 60, clientY: from.y + 20 });
   });
 });

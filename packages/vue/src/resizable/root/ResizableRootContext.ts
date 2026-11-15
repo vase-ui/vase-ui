@@ -10,6 +10,7 @@ import type {
   ResizableRootActions,
   ResizableRootChangeEventDetails,
   ResizableRootCommitEventReason,
+  ResizableRootResizeMode,
 } from './ResizableRoot.vue';
 
 export interface ResizablePanelRegistration {
@@ -38,6 +39,18 @@ export interface ResizablePanelRegistration {
   element: Readonly<ShallowRef<HTMLElement | null>>;
   /**
    * Whether `KeepAlive` holds the panel. Such a panel is not in the layout.
+   */
+  deactivated: Readonly<Ref<boolean>>;
+}
+
+export interface ResizableHandleRegistration {
+  /**
+   * The position of the handle among the panels and the handles of the root.
+   */
+  index: ComputedRef<number>;
+  disabled: () => boolean;
+  /**
+   * Whether `KeepAlive` holds the handle. Such a handle is not at its place.
    */
   deactivated: Readonly<Ref<boolean>>;
 }
@@ -79,6 +92,19 @@ export interface ResizableRootContext {
   dragStep: ComputedRef<number | undefined>;
   pushPanels: ComputedRef<boolean>;
   /**
+   * The least size of the area that takes a press, in pixels. It follows the pointer of the device.
+   */
+  hitAreaSize: ComputedRef<number>;
+  /**
+   * The mode that a drag reads when it starts.
+   */
+  resizeMode: ComputedRef<ResizableRootResizeMode>;
+  /**
+   * The layout that the release of the drag that runs gives, in a root with `'on-release'`. It is
+   * `undefined` when no such drag runs.
+   */
+  pendingLayout: Readonly<ShallowRef<Layout | undefined>>;
+  /**
    * The panels in the order of the document, without a panel that `KeepAlive` holds.
    */
   panels: ComputedRef<readonly ResizablePanelRegistration[]>;
@@ -105,6 +131,11 @@ export interface ResizableRootContext {
    */
   registerPanel: (panel: ResizablePanelRegistration) => void;
   /**
+   * Adds a handle to the root until the scope of the caller ends. Call it in `setup`. The root
+   * needs the handles to know which boundaries of two panels have none.
+   */
+  registerHandle: (handle: ResizableHandleRegistration) => void;
+  /**
    * Reads the page again, before a drag, a key or a method. It gives the new measurement, or
    * `undefined` when the root has no room for its panels.
    */
@@ -113,7 +144,14 @@ export interface ResizableRootContext {
    * Starts a drag. It returns `false` while another drag of the root runs.
    */
   startDragging: () => boolean;
+  /**
+   * Ends the drag. It also clears the pending layout.
+   */
   stopDragging: () => void;
+  /**
+   * Gives the layout that the release of the drag gives. Call it only while a drag runs.
+   */
+  setPendingLayout: (layout: Layout) => void;
   /**
    * Gives `layout` to the root: it emits the change, and it keeps the layout unless a listener
    * cancels the change. The result is the layout that the root emitted, or `undefined` when a

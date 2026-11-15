@@ -1,6 +1,7 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, createSSRApp, defineComponent, nextTick, shallowRef } from 'vue';
 import type { ShallowRef } from 'vue';
+import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import {
   createRenderer,
@@ -998,6 +999,9 @@ describe('<Resizable.Root />', () => {
       { name: 'a vertical root', composition: 'vertical', grows: ['40', '60'] },
       { name: 'a collapsed panel', composition: 'collapsed', grows: ['0', '100'] },
       { name: 'the style of a consumer', composition: 'style', grows: ['30', '70'] },
+      { name: 'a handle before the first panel', composition: 'handleFirst', grows: ['50', '50'] },
+      { name: 'a hit area size in a number', composition: 'hitAreaNumber', grows: ['50', '50'] },
+      { name: 'a root with dragEdges', composition: 'edges', grows: ['50', '50'] },
     ])('hydrates $name with no warning and no mismatch left', async ({ composition, grows }) => {
       const props = { composition };
       const serverHtml = await renderOnServer(
@@ -1009,6 +1013,47 @@ describe('<Resizable.Root />', () => {
 
       expect(growsIn(container)).toEqual(grows);
       expect(container.querySelectorAll('[data-allow-mismatch]')).toHaveLength(0);
+    });
+
+    it('renders the edge node of a root with dragEdges after the mount, and not before', async () => {
+      const props = { composition: 'edges' };
+      const serverHtml = await renderOnServer(
+        'src/resizable/root/ResizableRootHydration.test.vue',
+        props,
+      );
+      expect(serverHtml).not.toContain('data-vase-ui-resizable-edge');
+
+      const { container } = await hydrate(ResizableRootHydration, { serverHtml, props });
+
+      await waitFor(() => {
+        expect(container.querySelectorAll('[data-vase-ui-resizable-edge]')).toHaveLength(1);
+      });
+      expect(container.querySelector('[data-testid="root"]')).toHaveStyle({ position: 'relative' });
+    });
+
+    it('hydrates the fine hit area size of the server, and gives the coarse size after the mount', async () => {
+      const { matchMedia } = window;
+      window.matchMedia = (query: string) =>
+        ({
+          matches: query === '(pointer: coarse)',
+          media: query,
+          addEventListener() {},
+          removeEventListener() {},
+        }) as unknown as MediaQueryList;
+      onTestFinished(() => {
+        window.matchMedia = matchMedia;
+      });
+      const props = { composition: 'hitAreaObject' };
+      const serverHtml = await renderOnServer(
+        'src/resizable/root/ResizableRootHydration.test.vue',
+        props,
+      );
+      expect(serverHtml).toContain('width:max(100%, 12px)');
+
+      const { container } = await hydrate(ResizableRootHydration, { serverHtml, props });
+
+      const area = container.querySelector<HTMLElement>('[data-vase-ui-resizable-hit-area]');
+      expect(area?.style.width).toBe('max(100%, 30px)');
     });
 
     it('has the state of the collapsed panel and of the handle after the hydration', async () => {
@@ -2223,6 +2268,784 @@ describe('<Resizable.Root />', () => {
         // The length of the first layout is 240 px of the present panel space.
         expect(widthOf('a')).toBeCloseTo(240, 0);
       });
+    });
+  });
+
+  describe('prop: resizeMode', () => {
+    const onRelease = { resizeMode: 'on-release' } as const;
+    const handleA = () => screen.getByTestId('handle-a');
+    const press = (clientX = 0) =>
+      fireEvent.pointerDown(handleA(), { ...pointer, clientX, buttons: 1 });
+    const moveTo = (clientX: number, buttons = 1) =>
+      fireEvent.pointerMove(handleA(), { ...pointer, clientX, buttons });
+
+    function trackEvents(calls: string[]) {
+      return {
+        onLayoutChange: (_layout: unknown, details: { reason: string }) => {
+          calls.push(`layoutChange ${details.reason}`);
+        },
+        'onUpdate:layout': () => {
+          calls.push('update:layout');
+        },
+        onLayoutCommitted: () => {
+          calls.push('layoutCommitted');
+        },
+        onDraggingChange: (dragging: boolean) => {
+          calls.push(`draggingChange ${String(dragging)}`);
+        },
+      };
+    }
+
+    it('keeps the layout, and emits no change, during the moves of a drag', async () => {
+      const calls: string[] = [];
+      await render(<Three root={{ ...onRelease, ...trackEvents(calls) }} />);
+      const before = screen.getByTestId('a').getBoundingClientRect().width;
+
+      await press();
+      await moveTo(100);
+      await moveTo(200);
+
+      expect(calls).toEqual(['draggingChange true']);
+      expect(screen.getByTestId('a').getBoundingClientRect().width).toBe(before);
+      expect(grows('a', 'b', 'c')).toEqual(['33.334', '33.333', '33.333']);
+    });
+
+    it('writes the layout one time at the release, with the change, the update and the commit in that order', async () => {
+      const calls: string[] = [];
+      await render(<Three root={{ ...onRelease, ...trackEvents(calls) }} />);
+
+      await press();
+      await moveTo(100);
+      await moveTo(200);
+      await fireEvent.pointerUp(handleA(), { ...pointer, clientX: 200 });
+
+      expect(calls).toEqual([
+        'draggingChange true',
+        'draggingChange false',
+        'layoutChange drag',
+        'update:layout',
+        'layoutCommitted',
+      ]);
+      expect(grows('a', 'b', 'c')).toEqual(['53.334', '13.333', '33.333']);
+    });
+
+    it('gives the release event to the change and to the commit', async () => {
+      const onLayoutChange = vi.fn();
+      const onLayoutCommitted = vi.fn();
+      await render(<Three root={{ ...onRelease, onLayoutChange, onLayoutCommitted }} />);
+
+      await press();
+      await moveTo(100);
+      await fireEvent.pointerUp(handleA(), { ...pointer, clientX: 100 });
+
+      expect(onLayoutChange.mock.calls[0]?.[1].event.type).toBe('pointerup');
+      expect(onLayoutCommitted.mock.calls[0]?.[1].event.type).toBe('pointerup');
+    });
+
+    it('writes the layout of a move with no button down', async () => {
+      const calls: string[] = [];
+      await render(<Three root={{ ...onRelease, ...trackEvents(calls) }} />);
+
+      await press();
+      await moveTo(100);
+      await moveTo(100, 0);
+
+      expect(calls).toContain('layoutCommitted');
+      expect(grows('a', 'b', 'c')).toEqual(['43.334', '23.333', '33.333']);
+    });
+
+    it.each([
+      {
+        name: 'pointercancel',
+        end: () => fireEvent.pointerCancel(handleA(), pointer),
+      },
+      {
+        name: 'lostpointercapture with no pointerup',
+        end: () => fireEvent.lostPointerCapture(handleA(), pointer),
+      },
+    ])('writes nothing after $name', async ({ end }) => {
+      const calls: string[] = [];
+      await render(<Three root={{ ...onRelease, ...trackEvents(calls) }} />);
+
+      await press();
+      await moveTo(100);
+      await end();
+
+      expect(calls).toEqual(['draggingChange true', 'draggingChange false']);
+      expect(grows('a', 'b', 'c')).toEqual(['33.334', '33.333', '33.333']);
+    });
+
+    it('writes nothing when the root becomes disabled during the drag', async () => {
+      const disabled = shallowRef(false);
+      const calls: string[] = [];
+      await render(() => (
+        <Three root={{ ...onRelease, ...trackEvents(calls), disabled: disabled.value }} />
+      ));
+
+      await press();
+      await moveTo(100);
+      disabled.value = true;
+      await nextTick();
+      await fireEvent.pointerUp(handleA(), { ...pointer, clientX: 100 });
+
+      expect(calls).toEqual(['draggingChange true', 'draggingChange false']);
+    });
+
+    it('writes nothing when a panel mounts during the drag', async () => {
+      const showLate = shallowRef(false);
+      const calls: string[] = [];
+      await render(() => (
+        <div style={{ width: '1000px' }}>
+          <Resizable.Root {...onRelease} {...trackEvents(calls)}>
+            <Resizable.Panel id="a" />
+            <Resizable.Handle data-testid="handle-a" />
+            <Resizable.Panel id="b" />
+            {showLate.value ? <Resizable.Panel id="late" /> : null}
+          </Resizable.Root>
+        </div>
+      ));
+
+      await press();
+      showLate.value = true;
+      await nextTick();
+      calls.length = 0;
+      await moveTo(100);
+      await fireEvent.pointerUp(handleA(), { ...pointer, clientX: 100 });
+
+      expect(calls).toEqual(['draggingChange false']);
+    });
+
+    it('emits no change for a release at the start point', async () => {
+      const calls: string[] = [];
+      await render(<Three root={{ ...onRelease, ...trackEvents(calls) }} />);
+
+      await press();
+      await moveTo(100);
+      await moveTo(0);
+      await fireEvent.pointerUp(handleA(), { ...pointer, clientX: 0 });
+
+      expect(calls).toEqual(['draggingChange true', 'draggingChange false']);
+    });
+
+    it('keeps the layout and emits no commit when a listener cancels the change at the release', async () => {
+      const onLayoutCommitted = vi.fn();
+      const onUpdate = vi.fn();
+      await render(
+        <Three
+          root={{
+            ...onRelease,
+            onLayoutChange: (_layout: unknown, details: { cancel: () => void }) => {
+              details.cancel();
+            },
+            'onUpdate:layout': onUpdate,
+            onLayoutCommitted,
+          }}
+        />,
+      );
+
+      await press();
+      await moveTo(100);
+      await fireEvent.pointerUp(handleA(), { ...pointer, clientX: 100 });
+
+      expect(onUpdate).not.toHaveBeenCalled();
+      expect(onLayoutCommitted).not.toHaveBeenCalled();
+      expect(grows('a', 'b', 'c')).toEqual(['33.334', '33.333', '33.333']);
+    });
+
+    it('writes a key at once, when no drag runs', async () => {
+      const calls: string[] = [];
+      await render(<Three root={{ ...onRelease, ...trackEvents(calls) }} />);
+
+      await fireEvent.keyDown(handleA(), { key: 'ArrowRight' });
+
+      expect(calls).toEqual(['layoutChange keyboard', 'update:layout', 'layoutCommitted']);
+    });
+
+    it('collapses a panel at the release when the pending layout is past the threshold', async () => {
+      await render(
+        <div style={{ width: '1000px' }}>
+          <Resizable.Root {...onRelease}>
+            <Resizable.Panel id="a" data-testid="a" collapsible minSize={20} defaultSize={40} />
+            <Resizable.Handle data-testid="handle-a" />
+            <Resizable.Panel id="b" data-testid="b" />
+          </Resizable.Root>
+        </div>,
+      );
+
+      await press(400);
+      await moveTo(0);
+      expect(screen.getByTestId('a')).not.toHaveAttribute('data-collapsed');
+      expect(handleA().style.getPropertyValue('--resizable-handle-preview-offset')).toBe('-400px');
+      await fireEvent.pointerUp(handleA(), { ...pointer, clientX: 0 });
+
+      expect(screen.getByTestId('a')).toHaveAttribute('data-collapsed');
+    });
+
+    it('snaps the pending layout as it snaps a live move', async () => {
+      await render(
+        <div style={{ width: '1000px' }}>
+          <Resizable.Root {...onRelease} dragStep={10}>
+            <Resizable.Panel id="a" />
+            <Resizable.Handle data-testid="handle-a" />
+            <Resizable.Panel id="b" />
+          </Resizable.Root>
+        </div>,
+      );
+
+      await press();
+      await moveTo(137);
+
+      expect(handleA().style.getPropertyValue('--resizable-handle-preview-offset')).toBe('100px');
+    });
+
+    it('shows the layout that the parent writes at the release in a controlled root', async () => {
+      const layout = shallowRef<Record<string, number>>({ a: 30, b: 30, c: 40 });
+      await render(() => (
+        <Three
+          root={{
+            ...onRelease,
+            layout: layout.value,
+            'onUpdate:layout': (next: Record<string, number>) => {
+              layout.value = next;
+            },
+          }}
+        />
+      ));
+
+      await press();
+      await moveTo(100);
+      expect(grows('a', 'b', 'c')).toEqual(['30', '30', '40']);
+      await fireEvent.pointerUp(handleA(), { ...pointer, clientX: 100 });
+
+      expect(grows('a', 'b', 'c')).toEqual(['40', '20', '40']);
+    });
+
+    it('reads the mode at the start of each drag', async () => {
+      const mode = shallowRef('live');
+      const onLayoutChange = vi.fn();
+      await render(() => <Three root={{ resizeMode: mode.value, onLayoutChange }} />);
+
+      await press();
+      mode.value = 'on-release';
+      await nextTick();
+      await moveTo(100);
+      expect(onLayoutChange).toHaveBeenCalledTimes(1);
+      await fireEvent.pointerUp(handleA(), { ...pointer, clientX: 100 });
+
+      await press(100);
+      await moveTo(200);
+      expect(onLayoutChange).toHaveBeenCalledTimes(1);
+      await fireEvent.pointerUp(handleA(), { ...pointer, clientX: 200 });
+      expect(onLayoutChange).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('prop: dragEdges', () => {
+    const edgesOf = (root: HTMLElement) =>
+      Array.from(root.querySelectorAll<HTMLElement>('[data-vase-ui-resizable-edge]'));
+    const widthOf = (id: string) => screen.getByTestId(id).getBoundingClientRect().width;
+    const heightOf = (id: string) => screen.getByTestId(id).getBoundingClientRect().height;
+
+    // The root is 400 px wide and 100 px high, so 1% of the panel space is 4 px on the horizontal
+    // axis and 1 px on the vertical axis.
+    function renderEdges(
+      root: Record<string, unknown> = {},
+      content: unknown = [
+        <Resizable.Panel key="a" id="a" data-testid="a" />,
+        <Resizable.Panel key="b" id="b" data-testid="b" />,
+      ],
+    ) {
+      return render(
+        <div style={{ width: '400px', height: '100px' }}>
+          <Resizable.Root data-testid="root" dragEdges style={{ height: '100%' }} {...root}>
+            {content}
+          </Resizable.Root>
+        </div>,
+      );
+    }
+
+    async function findEdges(count = 1) {
+      const root = screen.getByTestId('root');
+      await waitFor(() => {
+        expect(edgesOf(root)).toHaveLength(count);
+      });
+      return edgesOf(root);
+    }
+
+    // The nodes come after a read of the page. A root that has none gets no node later.
+    async function expectNoEdge() {
+      await waitSingleFrame();
+      await flushMicrotasks();
+      expect(edgesOf(screen.getByTestId('root'))).toHaveLength(0);
+    }
+
+    const boxOf = (edge: HTMLElement) => ({
+      left: edge.style.left,
+      top: edge.style.top,
+      width: edge.style.width,
+      height: edge.style.height,
+    });
+
+    it('renders no node with no dragEdges', async () => {
+      await renderEdges({ dragEdges: false });
+
+      await expectNoEdge();
+    });
+
+    it('renders one node on the boundary of two panels, after the mount', async () => {
+      await renderEdges();
+
+      const [edge, ...others] = await findEdges();
+
+      expect(others).toHaveLength(0);
+      expect(edge?.parentElement).toBe(screen.getByTestId('root'));
+      expect(edge?.tagName).toBe('SPAN');
+      expect(edge).toBeEmptyDOMElement();
+      expect(edge).not.toHaveAttribute('role');
+      expect(edge).not.toHaveAttribute('tabindex');
+      expect(screen.getByTestId('root').lastElementChild).toBe(edge);
+    });
+
+    it.each([
+      {
+        name: 'a horizontal root',
+        root: {},
+        box: { left: '195px', top: '0px', width: '10px', height: '100px' },
+      },
+      {
+        name: 'a vertical root',
+        root: { orientation: 'vertical' },
+        box: { left: '0px', top: '45px', width: '400px', height: '10px' },
+      },
+    ])('has the box of the boundary in $name', async ({ root, box }) => {
+      await renderEdges(root);
+
+      const [edge] = await findEdges();
+
+      expect(boxOf(edge as HTMLElement)).toEqual(box);
+      expect(edge).toHaveAttribute('data-orientation', root.orientation ?? 'horizontal');
+      expect(edge).toHaveStyle({ position: 'absolute', zIndex: '1', touchAction: 'none' });
+    });
+
+    it('gives position: relative to the root with dragEdges, and the style of the consumer wins', async () => {
+      await renderEdges();
+      expect(screen.getByTestId('root').style.position).toBe('relative');
+
+      await renderEdges({ style: { position: 'static' } });
+
+      expect(screen.getAllByTestId('root')[1]?.style.position).toBe('static');
+    });
+
+    it('gives no position to a root with no dragEdges', async () => {
+      await renderEdges({ dragEdges: false });
+
+      expect(screen.getByTestId('root').style.position).toBe('');
+    });
+
+    it.each([
+      {
+        name: 'a horizontal root',
+        direction: 'ltr',
+        orientation: 'horizontal',
+        move: 40,
+        size: widthOf,
+        expected: 240,
+      },
+      {
+        name: 'a vertical root',
+        direction: 'ltr',
+        orientation: 'vertical',
+        move: 20,
+        size: heightOf,
+        expected: 70,
+      },
+      {
+        name: 'a right-to-left root',
+        direction: 'rtl',
+        orientation: 'horizontal',
+        move: 40,
+        size: widthOf,
+        expected: 160,
+      },
+    ] as const)(
+      'moves the layout with a drag on the node in $name',
+      async ({ direction, orientation, move, size, expected }) => {
+        await render(
+          <DirectionProvider direction={direction}>
+            <div dir={direction} style={{ width: '400px', height: '100px' }}>
+              <Resizable.Root
+                data-testid="root"
+                dragEdges
+                orientation={orientation}
+                style={{ height: '100%' }}
+              >
+                <Resizable.Panel id="a" data-testid="a" />
+                <Resizable.Panel id="b" data-testid="b" />
+              </Resizable.Root>
+            </div>
+          </DirectionProvider>,
+        );
+        const [edge] = await findEdges();
+        const at = (distance: number) =>
+          orientation === 'horizontal' ? { clientX: distance } : { clientY: distance };
+
+        await fireEvent.pointerDown(edge as HTMLElement, { ...pointer, ...at(0), buttons: 1 });
+        await fireEvent.pointerMove(edge as HTMLElement, { ...pointer, ...at(move), buttons: 1 });
+        expect(size('a')).toBeCloseTo(expected, 0);
+        await fireEvent.pointerUp(edge as HTMLElement, { ...pointer, ...at(move) });
+
+        expect(size('a')).toBeCloseTo(expected, 0);
+      },
+    );
+
+    it.each([
+      { name: 'a touch', pointerType: 'touch' },
+      { name: 'a pen', pointerType: 'pen' },
+    ])('moves the layout with a drag of $name on the node', async ({ pointerType }) => {
+      await renderEdges();
+      const [edge] = await findEdges();
+
+      await fireEvent.pointerDown(edge as HTMLElement, {
+        ...pointer,
+        pointerType,
+        clientX: 0,
+        buttons: 1,
+      });
+      await fireEvent.pointerMove(edge as HTMLElement, {
+        ...pointer,
+        pointerType,
+        clientX: 40,
+        buttons: 1,
+      });
+
+      expect(widthOf('a')).toBeCloseTo(240, 0);
+    });
+
+    it('renders one node for three panels with one handle', async () => {
+      await renderEdges({ defaultLayout: { a: 25, b: 25, c: 50 } }, [
+        <Resizable.Panel key="a" id="a" data-testid="a" />,
+        <Resizable.Handle key="h" data-testid="handle" />,
+        <Resizable.Panel key="b" id="b" data-testid="b" />,
+        <Resizable.Panel key="c" id="c" data-testid="c" />,
+      ]);
+
+      const [edge, ...others] = await findEdges();
+
+      expect(others).toHaveLength(0);
+      // The boundary of the panels b and c is at 200 px.
+      expect(edge?.style.left).toBe('195px');
+    });
+
+    it('removes the node when a handle mounts between the panels, and gives it back when the handle unmounts', async () => {
+      const showHandle = shallowRef(false);
+      await render(() => (
+        <div style={{ width: '400px', height: '100px' }}>
+          <Resizable.Root data-testid="root" dragEdges style={{ height: '100%' }}>
+            <Resizable.Panel id="a" />
+            {showHandle.value ? <Resizable.Handle /> : null}
+            <Resizable.Panel id="b" />
+          </Resizable.Root>
+        </div>
+      ));
+      await findEdges();
+
+      showHandle.value = true;
+      await nextTick();
+      await expectNoEdge();
+
+      showHandle.value = false;
+      await nextTick();
+      await findEdges();
+    });
+
+    it.each([
+      {
+        name: 'a disabled handle between the panels',
+        content: [
+          <Resizable.Panel key="a" id="a" />,
+          <Resizable.Handle key="h" disabled />,
+          <Resizable.Panel key="b" id="b" />,
+        ],
+      },
+      {
+        name: 'a disabled root',
+        root: { disabled: true },
+      },
+      {
+        name: 'each panel before the boundary disabled',
+        content: [<Resizable.Panel key="a" id="a" disabled />, <Resizable.Panel key="b" id="b" />],
+      },
+      {
+        name: 'each panel after the boundary disabled',
+        content: [<Resizable.Panel key="a" id="a" />, <Resizable.Panel key="b" id="b" disabled />],
+      },
+    ])('renders no node for $name', async ({ root, content }) => {
+      await renderEdges(root, content);
+
+      await expectNoEdge();
+    });
+
+    it('renders no node for a size of 0 and no gap', async () => {
+      await renderEdges({ hitAreaSize: 0 });
+
+      await expectNoEdge();
+    });
+
+    it('renders a node of the width of the gap for a CSS gap of 16 px', async () => {
+      await renderEdges({ style: { height: '100%', gap: '16px' } });
+
+      const [edge, ...others] = await findEdges();
+
+      expect(others).toHaveLength(0);
+      expect(edge?.style.width).toBe('16px');
+      expect(edge?.style.left).toBe(`${screen.getByTestId('a').offsetWidth}px`);
+    });
+
+    it('renders a node on each panel edge, and one drag, for an element of 180 px between the panels', async () => {
+      await renderEdges({}, [
+        <Resizable.Panel key="a" id="a" data-testid="a" />,
+        <div key="x" data-testid="between" style={{ width: '180px', flex: 'none' }} />,
+        <Resizable.Panel key="b" id="b" data-testid="b" />,
+      ]);
+
+      const [first, second, ...others] = await findEdges(2);
+
+      expect(others).toHaveLength(0);
+      expect(first?.style.width).toBe('10px');
+      expect(second?.style.width).toBe('10px');
+      expect(
+        Number.parseFloat(second?.style.left ?? '0') - Number.parseFloat(first?.style.left ?? '0'),
+      ).toBeGreaterThan(170);
+      await fireEvent.pointerDown(first as HTMLElement, { ...pointer, clientX: 0, buttons: 1 });
+      expect(first).toHaveAttribute('data-dragging');
+      expect(second).toHaveAttribute('data-dragging');
+    });
+
+    it('moves the node with a drag', async () => {
+      await renderEdges();
+      const [edge] = await findEdges();
+      expect(edge?.style.left).toBe('195px');
+
+      await fireEvent.pointerDown(edge as HTMLElement, { ...pointer, clientX: 0, buttons: 1 });
+      await fireEvent.pointerMove(edge as HTMLElement, { ...pointer, clientX: 40, buttons: 1 });
+
+      await waitFor(() => {
+        expect(edge?.style.left).toBe('235px');
+      });
+    });
+
+    it('moves the node with a size change of the root', async () => {
+      await renderEdges();
+      const [edge] = await findEdges();
+      expect(edge?.style.left).toBe('195px');
+      await flushMicrotasks();
+
+      (screen.getByTestId('root').parentElement as HTMLElement).style.width = '300px';
+
+      await waitFor(() => {
+        expect(edge?.style.left).toBe('145px');
+      });
+    });
+
+    it('moves the node with a transition of the panels', async () => {
+      const instance: { current?: InstanceType<typeof Resizable.Root> } = {};
+      await render(() => (
+        <div style={{ width: '400px', height: '100px' }}>
+          <Resizable.Root
+            data-testid="root"
+            dragEdges
+            style={{ height: '100%' }}
+            ref={(value: unknown) => {
+              instance.current = value as InstanceType<typeof Resizable.Root>;
+            }}
+          >
+            <Resizable.Panel id="a" style={{ transition: 'flex-grow 100ms linear' }} />
+            <Resizable.Panel id="b" />
+          </Resizable.Root>
+        </div>
+      ));
+      const [edge] = await findEdges();
+      // The first layout has a transition too, so the boundary arrives in some frames.
+      await waitFor(() => {
+        expect(edge?.style.left).toBe('195px');
+      });
+      await flushMicrotasks();
+
+      instance.current?.setLayout({ a: 25, b: 75 });
+
+      await waitFor(() => {
+        expect(edge?.style.left).toBe('95px');
+      });
+    });
+
+    it('has the state of the boundary on the node', async () => {
+      await renderEdges({}, [
+        <Resizable.Panel key="a" id="a" data-testid="a" />,
+        <Resizable.Panel key="b" id="b" data-testid="b" minSize={40} />,
+      ]);
+      const [edge] = await findEdges();
+      expect(edge).toHaveAttribute('data-orientation', 'horizontal');
+      expect(edge).not.toHaveAttribute('data-dragging');
+      expect(edge).not.toHaveAttribute('data-at-min');
+      expect(edge).not.toHaveAttribute('data-at-max');
+
+      await fireEvent.pointerDown(edge as HTMLElement, { ...pointer, clientX: 0, buttons: 1 });
+      expect(edge).toHaveAttribute('data-dragging');
+      await fireEvent.pointerMove(edge as HTMLElement, { ...pointer, clientX: 300, buttons: 1 });
+      expect(edge).toHaveAttribute('data-at-max');
+      expect(edge).not.toHaveAttribute('data-at-min');
+      await fireEvent.pointerMove(edge as HTMLElement, { ...pointer, clientX: -300, buttons: 1 });
+
+      expect(edge).toHaveAttribute('data-at-min');
+      expect(edge).not.toHaveAttribute('data-at-max');
+    });
+
+    it('has the preview distance on the node in the mode on-release', async () => {
+      await renderEdges({ resizeMode: 'on-release' });
+      const [edge] = await findEdges();
+
+      await fireEvent.pointerDown(edge as HTMLElement, { ...pointer, clientX: 0, buttons: 1 });
+      expect(edge?.style.getPropertyValue('--resizable-handle-preview-offset')).toBe('0px');
+      await fireEvent.pointerMove(edge as HTMLElement, { ...pointer, clientX: 40, buttons: 1 });
+      expect(edge?.style.getPropertyValue('--resizable-handle-preview-offset')).toBe('40px');
+      expect(widthOf('a')).toBeCloseTo(200, 0);
+      await fireEvent.pointerUp(edge as HTMLElement, { ...pointer, clientX: 40 });
+
+      expect(edge?.style.getPropertyValue('--resizable-handle-preview-offset')).toBe('');
+      expect(widthOf('a')).toBeCloseTo(240, 0);
+    });
+
+    it('does nothing for a double click and a key', async () => {
+      const onLayoutChange = vi.fn();
+      await renderEdges({ onLayoutChange });
+      const [edge] = await findEdges();
+
+      await fireEvent.dblClick(edge as HTMLElement);
+      await fireEvent.keyDown(edge as HTMLElement, { key: 'ArrowRight' });
+      await fireEvent.keyDown(edge as HTMLElement, { key: 'Enter' });
+
+      expect(onLayoutChange).not.toHaveBeenCalled();
+    });
+
+    it('does not run a click listener of the root after a drag on the node, and runs it after a press with no move', async () => {
+      const onClick = vi.fn();
+      await renderEdges({ onClick });
+      const [edge] = await findEdges();
+
+      await fireEvent.pointerDown(edge as HTMLElement, { ...pointer, clientX: 0, buttons: 1 });
+      await fireEvent.pointerMove(edge as HTMLElement, { ...pointer, clientX: 40, buttons: 1 });
+      await fireEvent.pointerUp(edge as HTMLElement, { ...pointer, clientX: 40 });
+      await fireEvent.click(edge as HTMLElement, { detail: 1 });
+      expect(onClick).not.toHaveBeenCalled();
+
+      await fireEvent.pointerDown(edge as HTMLElement, { ...pointer, clientX: 0, buttons: 1 });
+      await fireEvent.pointerUp(edge as HTMLElement, { ...pointer, clientX: 0 });
+      await fireEvent.click(edge as HTMLElement, { detail: 1 });
+      expect(onClick).toHaveBeenCalledTimes(1);
+    });
+
+    it('prevents the default of the mousedown of a press on the node', async () => {
+      await renderEdges();
+      const [edge] = await findEdges();
+
+      await fireEvent.pointerDown(edge as HTMLElement, { ...pointer, buttons: 1 });
+      expect(await fireEvent.mouseDown(edge as HTMLElement)).toBe(false);
+      await fireEvent.pointerUp(edge as HTMLElement, pointer);
+
+      expect(await fireEvent.mouseDown(edge as HTMLElement)).toBe(true);
+    });
+
+    it('gets its node when a root that mounted with display: none shows', async () => {
+      const hidden = shallowRef(true);
+      await render(() => (
+        <div style={{ width: '400px', height: '100px', display: hidden.value ? 'none' : 'block' }}>
+          <Resizable.Root data-testid="root" dragEdges style={{ height: '100%' }}>
+            <Resizable.Panel id="a" />
+            <Resizable.Panel id="b" />
+          </Resizable.Root>
+        </div>
+      ));
+      await expectNoEdge();
+
+      hidden.value = false;
+      await nextTick();
+
+      await findEdges();
+    });
+
+    it('ends a drag on the node when the root is deactivated', async () => {
+      const onDraggingChange = vi.fn();
+      const Layout = defineComponent({
+        setup() {
+          return () => (
+            <div style={{ width: '400px', height: '100px' }}>
+              <Resizable.Root
+                data-testid="root"
+                dragEdges
+                style={{ height: '100%' }}
+                onDraggingChange={onDraggingChange}
+              >
+                <Resizable.Panel id="a" />
+                <Resizable.Panel id="b" />
+              </Resizable.Root>
+            </div>
+          );
+        },
+      });
+      const Other = defineComponent({ setup: () => () => <p>Other</p> });
+      const active = shallowRef(true);
+      await render(() => (
+        <KeepAlive>{active.value ? <Layout key="layout" /> : <Other key="other" />}</KeepAlive>
+      ));
+      const [edge] = await findEdges();
+      await fireEvent.pointerDown(edge as HTMLElement, { ...pointer, clientX: 0, buttons: 1 });
+      expect(edge).toHaveAttribute('data-dragging');
+
+      active.value = false;
+      await nextTick();
+      expect(onDraggingChange.mock.calls).toEqual([[true], [false]]);
+      active.value = true;
+      await nextTick();
+
+      expect(edge).not.toHaveAttribute('data-dragging');
+    });
+
+    it('gives the children slot prop to the #render slot of the root', async () => {
+      await render(
+        <div style={{ width: '400px', height: '100px' }}>
+          <Resizable.Root
+            data-testid="root"
+            dragEdges
+            style={{ height: '100%' }}
+            v-slots={{
+              render: ({ props, children: Children }: any) => (
+                <section {...props}>
+                  <Children>
+                    <Resizable.Panel id="a" />
+                    <Resizable.Panel id="b" />
+                  </Children>
+                </section>
+              ),
+            }}
+          />
+        </div>,
+      );
+
+      expect(screen.getByTestId('root').tagName).toBe('SECTION');
+      await findEdges();
+    });
+
+    it('warns when the #render slot of the root does not mount children', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      await render(
+        <Resizable.Root
+          data-testid="root"
+          v-slots={{ render: ({ props }: any) => <section {...props} /> }}
+        />,
+      );
+
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn.mock.calls[0]?.[0]).toContain('The `#render` slot did not mount `children`');
     });
   });
 
