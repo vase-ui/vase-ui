@@ -50,6 +50,8 @@ import * as TimeField from '../time-field/index.parts';
   <Slider.Thumb :aria-labelledby="null" />
   <!-- @vue-expect-error the prop `ariaDescribedby` takes no `null` -->
   <Slider.Thumb :aria-describedby="null" />
+  <!-- @vue-expect-error the prop `ariaValuetext` takes no `null` -->
+  <Slider.Thumb :aria-valuetext="null" />
   <!-- @vue-expect-error the prop `ariaLabel` takes no `null` -->
   <Switch.Root :aria-label="null" />
   <!-- @vue-expect-error the prop `ariaLabelledby` takes no `null` -->

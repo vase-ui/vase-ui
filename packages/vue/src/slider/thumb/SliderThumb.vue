@@ -9,7 +9,10 @@ export interface SliderThumbProps
   extends
     VaseUIComponentProps<SliderThumbState>,
     /* @vue-ignore */ Omit<
-      WithVaseUIEvent<HTMLAttributes, 'aria-describedby' | 'aria-label' | 'aria-labelledby'>,
+      WithVaseUIEvent<
+        HTMLAttributes,
+        'aria-describedby' | 'aria-label' | 'aria-labelledby' | 'aria-valuetext'
+      >,
       'tabindex'
     > {
   /**
