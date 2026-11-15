@@ -7,8 +7,11 @@ import {
   createRenderer,
   describeConformance,
   fireEvent,
+  flushMicrotasks,
   hydrate,
   isJSDOM,
+  nextAnimationsRead,
+  nextEvent,
   renderOnServer,
   screen,
   takeReportedMessages,
@@ -80,11 +83,6 @@ describe('<Radio.Indicator />', () => {
   it('should remove the indicator when the animation finishes', async () => {
     globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
 
-    let animationFinished = false;
-    const notifyAnimationFinished = () => {
-      animationFinished = true;
-    };
-
     const style = `
       @keyframes test-anim {
         to {
@@ -115,7 +113,6 @@ describe('<Radio.Indicator />', () => {
               <Radio.Indicator
                 class="animation-test-indicator"
                 keepMounted
-                onAnimationend={notifyAnimationFinished}
                 data-testid="indicator-a"
               />
             </Radio.Root>
@@ -132,10 +129,9 @@ describe('<Radio.Indicator />', () => {
     expect(screen.getByTestId('indicator-a')).not.toBe(null);
 
     const closeButton = screen.getByText('Close');
-    await user.click(closeButton);
-
-    await waitFor(() => {
-      expect(animationFinished).toBe(true);
+    await nextEvent(screen.getByTestId('indicator-a'), 'animationend', {
+      after: 'animationstart',
+      action: () => user.click(closeButton),
     });
   });
 
@@ -146,11 +142,6 @@ describe('<Radio.Indicator />', () => {
 
     it('triggers enter animation via data-starting-style when mounting', async () => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
-
-      let transitionFinished = false;
-      function notifyTransitionFinished() {
-        transitionFinished = true;
-      }
 
       const style = `
         .animation-test-indicator {
@@ -175,12 +166,8 @@ describe('<Radio.Indicator />', () => {
             <style>{style}</style>
             <button onClick={handleSelectA}>Select a</button>
             <RadioGroup value={value.value}>
-              <Radio.Root value="a">
-                <Radio.Indicator
-                  class="animation-test-indicator"
-                  data-testid="indicator-a"
-                  onTransitionend={notifyTransitionFinished}
-                />
+              <Radio.Root value="a" data-testid="radio-a">
+                <Radio.Indicator class="animation-test-indicator" data-testid="indicator-a" />
               </Radio.Root>
               <Radio.Root value="b">
                 <Radio.Indicator class="animation-test-indicator" data-testid="indicator-b" />
@@ -193,10 +180,11 @@ describe('<Radio.Indicator />', () => {
       const { user } = await render(<Test />);
       expect(screen.queryByTestId('indicator-a')).toBe(null);
 
-      await user.click(screen.getByText('Select a'));
-
-      await waitFor(() => {
-        expect(transitionFinished).toBe(true);
+      // Indicator b runs an exit transition in the same frames. Only the transitions of indicator a
+      // reach its radio.
+      await nextEvent(screen.getByTestId('radio-a'), 'transitionend', {
+        after: 'transitionrun',
+        action: () => user.click(screen.getByText('Select a')),
       });
 
       expect(screen.getByTestId('indicator-a')).not.toBe(null);
@@ -252,11 +240,13 @@ describe('<Radio.Indicator />', () => {
       observer.observe(indicatorA, { attributes: true, attributeFilter: ['data-ending-style'] });
       onTestFinished(() => observer.disconnect());
 
-      await fireEvent.click(screen.getByText('Select b'));
-
-      await waitFor(() => {
-        expect(screen.queryByTestId('indicator-a')).toBe(null);
+      const animations = await nextAnimationsRead(indicatorA, {
+        action: () => fireEvent.click(screen.getByText('Select b')),
       });
+      await Promise.all(animations.map((animation) => animation.finished));
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('indicator-a')).toBe(null);
       expect(hadEndingStyle).toBe(true);
     });
 
@@ -264,7 +254,6 @@ describe('<Radio.Indicator />', () => {
     it('reads no animation of an indicator that enters', async () => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
 
-      let transitionFinished = false;
       const getAnimations = vi.fn((): Animation[] => []);
 
       const style = `
@@ -289,12 +278,9 @@ describe('<Radio.Indicator />', () => {
             <style>{style}</style>
             <button onClick={handleSelectA}>Select a</button>
             <RadioGroup value={value.value}>
-              <Radio.Root value="a">
+              <Radio.Root value="a" data-testid="radio-a">
                 <Radio.Indicator
                   class="animation-test-indicator"
-                  onTransitionend={() => {
-                    transitionFinished = true;
-                  }}
                   v-slots={{
                     render: ({ props }: { props: Record<string, any> }) => (
                       <span
@@ -318,10 +304,9 @@ describe('<Radio.Indicator />', () => {
 
       const { user } = await render(<Test />);
 
-      await user.click(screen.getByText('Select a'));
-
-      await waitFor(() => {
-        expect(transitionFinished).toBe(true);
+      await nextEvent(screen.getByTestId('radio-a'), 'transitionend', {
+        after: 'transitionrun',
+        action: () => user.click(screen.getByText('Select a')),
       });
       expect(getAnimations).not.toHaveBeenCalled();
     });
@@ -377,11 +362,15 @@ describe('<Radio.Indicator />', () => {
       observer.observe(container, { childList: true, subtree: true });
       onTestFinished(() => observer.disconnect());
 
-      await user.click(screen.getByText('Select b'));
-
-      await waitFor(() => {
-        expect(screen.queryByTestId('indicator-0')).toBe(null);
+      // The batched lookup reads the animations of `indicator-0` on the element itself, and those
+      // of the other indicators on the root. `nextAnimationsRead` sees only a read on the element.
+      const animations = await nextAnimationsRead(screen.getByTestId('indicator-0'), {
+        action: () => user.click(screen.getByText('Select b')),
       });
+      await Promise.all(animations.map((animation) => animation.finished));
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('indicator-0')).toBe(null);
       expect(screen.queryByTestId('indicator-9')).toBe(null);
 
       expect(indicatorCounts).toContain(0);

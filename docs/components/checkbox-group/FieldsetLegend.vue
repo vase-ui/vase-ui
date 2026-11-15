@@ -7,24 +7,18 @@ import { Fieldset } from '@vase-ui/vue/fieldset';
 
 <template>
   <Field.Root>
-    <Fieldset.Root>
-      <template #render="{ props }">
-        <CheckboxGroup v-bind="props">
-          <Fieldset.Legend>Allowed network protocols</Fieldset.Legend>
-          <Field.Item>
-            <Field.Label>
-              <Checkbox.Root value="http" />
-              HTTP
-            </Field.Label>
-          </Field.Item>
-          <Field.Item>
-            <Field.Label>
-              <Checkbox.Root value="https" />
-              HTTPS
-            </Field.Label>
-          </Field.Item>
-        </CheckboxGroup>
-      </template>
+    <Fieldset.Root :as="CheckboxGroup">
+      <Fieldset.Legend>Backup schedule</Fieldset.Legend>
+      <Field.Item>
+        <Checkbox.Root value="daily" />
+        <Field.Label>Daily</Field.Label>
+        <Field.Description>Daily at 00:00</Field.Description>
+      </Field.Item>
+      <Field.Item>
+        <Checkbox.Root value="monthly" />
+        <Field.Label>Monthly</Field.Label>
+        <Field.Description>On the 5th of every month at 23:59</Field.Description>
+      </Field.Item>
     </Fieldset.Root>
   </Field.Root>
 </template>

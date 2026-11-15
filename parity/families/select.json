@@ -15,15 +15,6 @@
     },
     {
       "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
-      "describe": ["<Select.Root />", "prop: highlightItemOnHover"],
-      "title": "highlights an item on mouse move by default",
-      "kind": "engine",
-      "engine": "webkit",
-      "link": "https://github.com/mui/base-ui/issues/4002",
-      "reason": "WebKit sends a `mousemove` with no movement when a list scrolls under a pointer that does not move. In WebKit, the list navigation thus ignores a `mousemove` with no movement, and the hover of user-event sends one."
-    },
-    {
-      "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
       "describe": ["<Select.Root />"],
       "title": "does not dismiss when pressing portalled content inside the popup but outside the list",
       "kind": "replaced",
@@ -36,15 +27,6 @@
       "title": "replaces and unregisters its label in Strict Mode",
       "kind": "not-applicable",
       "reason": "The case tests React Strict Mode. Vue has no Strict Mode."
-    },
-    {
-      "upstream": "packages/react/src/select/item/SelectItem.test.tsx",
-      "describe": ["<Select.Item />"],
-      "title": "should highlight a hovered item and commit it with a mouse click",
-      "kind": "engine",
-      "engine": "webkit",
-      "link": "https://github.com/mui/base-ui/issues/4002",
-      "reason": "WebKit sends a `mousemove` with no movement when a list scrolls under a pointer that does not move. In WebKit, the list navigation thus ignores a `mousemove` with no movement, and the case dispatches one."
     },
     {
       "upstream": "packages/react/src/select/store.test.tsx",
