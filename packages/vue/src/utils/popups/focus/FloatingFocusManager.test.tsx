@@ -47,8 +47,8 @@ import {
 } from '../tree/FloatingTree';
 import { FloatingTreeStore } from '../tree/FloatingTreeStore';
 import type { PopupPositioningContext } from '../types';
-import FloatingFocusManager from './FloatingFocusManager.vue';
-import type { FloatingFocusManagerProps, FocusOption } from './FloatingFocusManager.vue';
+import { FloatingFocusManager } from '../../../../test/fixtures/floatingFocusManagerHarness';
+import type { FloatingFocusManagerProps, FocusOption } from './FloatingFocusManager';
 import FocusGuard from './FocusGuard.vue';
 
 // A module namespace is read-only. The mock gives `engine` as a plain object, so a case can set the
@@ -710,8 +710,8 @@ describe('FloatingFocusManager', () => {
   });
 
   describe('popup element that holds the guards', () => {
-    // A popup part renders the focus manager in its positioner. When that part renders no element
-    // that has the focusable marker, the positioner is the popup element, and the guards are in it.
+    // The element of a popup part is in its positioner. When that element has no focusable marker,
+    // the positioner is the popup element, and the guards are in it.
     const PositionerPopup = defineComponent({
       setup() {
         const open = shallowRef(false);
