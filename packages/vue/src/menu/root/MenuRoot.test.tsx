@@ -1757,17 +1757,19 @@ describe('<Menu.Root />', () => {
         const { user } = await render(<MenuWithNestedDialog />);
 
         const menuTrigger = screen.getByTestId('menu-trigger');
-        await user.click(menuTrigger);
-
-        await waitFor(() => {
-          expect(screen.queryByTestId('menu-popup')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.click(menuTrigger);
+          await waitFor(() => {
+            expect(screen.queryByTestId('menu-popup')).not.toBe(null);
+          });
         });
 
         const dialogTrigger = screen.getByTestId('dialog-trigger');
-        await user.click(dialogTrigger);
-
-        await waitFor(() => {
-          expect(screen.queryByTestId('dialog-popup')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.click(dialogTrigger);
+          await waitFor(() => {
+            expect(screen.queryByTestId('dialog-popup')).not.toBe(null);
+          });
         });
 
         const dialogButton = screen.getByTestId('dialog-button');
@@ -1825,9 +1827,10 @@ describe('<Menu.Root />', () => {
 
           const { user } = await render(<MenuWithNestedAlertDialog />);
 
-          await user.click(screen.getByTestId('menu-trigger'));
-
-          const alertDialogTrigger = await screen.findByTestId('alert-dialog-trigger');
+          const alertDialogTrigger = await waitForLaterMillisecond(async () => {
+            await user.click(screen.getByTestId('menu-trigger'));
+            return screen.findByTestId('alert-dialog-trigger');
+          });
           await user.click(alertDialogTrigger);
 
           const menuPopup = screen.getByTestId('menu-popup');
@@ -1886,7 +1889,10 @@ describe('<Menu.Root />', () => {
 
           const { user } = await render(<MenuWithNestedDialog />);
 
-          await user.click(screen.getByTestId('menu-trigger'));
+          const dialogTrigger = await waitForLaterMillisecond(async () => {
+            await user.click(screen.getByTestId('menu-trigger'));
+            return screen.findByTestId('dialog-trigger');
+          });
 
           const frameCallbacks = new Map<number, FrameRequestCallback>();
           let frameId = 0;
@@ -1904,7 +1910,6 @@ describe('<Menu.Root />', () => {
             });
 
           try {
-            const dialogTrigger = await screen.findByTestId('dialog-trigger');
             await fireEvent.click(dialogTrigger);
             await flushMicrotasks();
             await fireEvent.pointerLeave(dialogTrigger, {
