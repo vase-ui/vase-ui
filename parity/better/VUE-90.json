@@ -1,5 +1,5 @@
 {
-  "id": "VUE-89",
+  "id": "VUE-90",
   "evidence": [
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/toast/createToastManager.ts#L64-L82",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/toast/provider/ToastProvider.tsx#L40-L52",
