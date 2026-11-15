@@ -6,6 +6,7 @@ import { useFieldRootContext } from '../field-root-context/FieldRootContext';
 import { useKeepAliveState } from '../useKeepAliveState';
 
 // The inputs of the controls of one field, in the order in which each control gave its input last.
+// The inputs that one show gives are in document order.
 // The key is `validation.inputRef` of the field, so the list goes away with the field.
 const inputsOfField = new WeakMap<ShallowRef<HTMLInputElement | null>, HTMLInputElement[]>();
 // The inputs that the controls of one field gave again in the flush of a show.
@@ -20,9 +21,9 @@ const shownInputsOfField = new WeakMap<
  *
  * The field validates the last input that a control gave. It does not validate the input of a
  * control that `KeepAlive` holds. When `KeepAlive` shows the control again, the control gives its
- * input again. When the last input goes, the field validates the input before it. A template can
- * mount a new control before it unmounts the control that the new control replaces, and the new
- * input then stays last.
+ * input again. The inputs of one show go to the field in document order. When the last input goes,
+ * the field validates the input before it. A template can mount a new control before it unmounts
+ * the control that the new control replaces, and the new input then stays last.
  */
 export function useFieldInput(): (input: HTMLElement | null) => void {
   const { validation, reaches, setValidityData } = useFieldRootContext();

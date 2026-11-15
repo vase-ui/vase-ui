@@ -52,9 +52,10 @@ export function createHeldBranch(renderPart: () => VNodeChild, options: HeldBran
 
   // `KeepAlive` moves the branch into the document before the part mounts. The part thus mounts in
   // the document, and it gets its first `onActivated` call in the flush of its mount. With
-  // `fromProp`, the branch gets the mount as a prop, and `KeepAlive` mounts the part when it patches
-  // the branch. The part then gets `onMounted` before `onActivated`. Else the branch mounts the part
-  // in its own render, after the patch, and the part gets `onActivated` first.
+  // `fromProp`, the branch gets the mount as a prop. `KeepAlive` then mounts the part when it
+  // patches the branch, before it queues the hooks of the show, so the part gets `onMounted` first.
+  // Else the branch mounts the part in its own render. That render comes after `KeepAlive` queues
+  // the hooks of the show, so the part gets `onActivated` first.
   async function mountInActivation({ fromProp = false }: { fromProp?: boolean | undefined } = {}) {
     visible.value = true;
     (fromProp ? mountedByProp : mounted).value = true;

@@ -93,14 +93,14 @@ describe('useKeepAliveState', () => {
     ])('counts the activations of a part that $name', async ({ mount, hooks, counts }) => {
       const log: string[] = [];
       let shown: Readonly<Ref<number>> | undefined;
-      const Part = defineComponent(() => {
+      const RecordedPart = defineComponent(() => {
         ({ shown } = useKeepAliveState());
         onMounted(() => log.push('mounted'));
         onActivated(() => log.push('activated'));
         return () => <span />;
       });
       const { HeldBranch, hide, mountWhileHeld, show, mountInActivation } = createHeldBranch(
-        () => <Part />,
+        () => <RecordedPart />,
         { mounted: mount === 'with the branch' },
       );
 
