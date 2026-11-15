@@ -33,8 +33,9 @@ export function createTestApp(root: Component): App {
   if (!createVaporApp || !vaporInteropPlugin) {
     throw new Error(`The project \`vapor\` needs Vue 3.6. The installed Vue is ${Vue.version}.`);
   }
-  // Vapor calls each root prop as a getter, so the prop is a function that gives the component.
-  const app = createVaporApp(VaporRoot, { content: () => Vue.markRaw(root) });
+  // Vapor calls a root prop that is a function to get its value. Without the getter, Vapor calls
+  // a function component in place of the value.
+  const app = createVaporApp(VaporRoot, { content: () => root });
   app.use(vaporInteropPlugin);
   return app;
 }

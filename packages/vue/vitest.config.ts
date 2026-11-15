@@ -81,7 +81,8 @@ export default defineConfig({
                 }),
               },
               { browser: 'webkit', name: 'webkit' },
-              // Each test app is a Vapor app. The project needs Vue 3.6, so `pnpm test` leaves it out.
+              // `render` mounts each test in a Vapor app. The project needs Vue 3.6, so `pnpm test`
+              // leaves it out.
               { browser: 'chromium', name: 'vapor', provide: { testApp: 'vapor' } },
             ],
           },
