@@ -113,6 +113,8 @@ A server does not know the locale of the visitor. With no `locale` prop, the fie
 
 A server and a browser can have other `Intl` data for the same locale. The layout of the server can then differ from the layout of the browser, also in the number of its parts. The field marks the elements that can differ while it hydrates. After it mounts, the field compares its segments with its layout and makes them again where they differ. The hydration gives no warning.
 
+Digits that a visitor types into a segment before the page hydrates stay in the segment. After the hydration, the segment takes them as typed digits, and the root emits `valueChange` and `update:value` with the new value.
+
 On a Node.js version before 26, load a `Temporal` polyfill before the server starts. See the [guide](/handbook/dates-and-times#servers).
 
 ## Keyboard
