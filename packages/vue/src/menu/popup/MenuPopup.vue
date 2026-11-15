@@ -250,7 +250,8 @@ const initialFocus = computed<FocusOption>(() => {
 // open menu by its trigger in the menubar element.
 function getOpenMenubarTrigger() {
   const menuParent = parent.value;
-  const menubarElement = menuParent.type === 'menubar' ? menuParent.context.contentElement.value : null;
+  const menubarElement =
+    menuParent.type === 'menubar' ? menuParent.context.contentElement.value : null;
   const openMenu = store
     .select('floatingTreeRoot')
     .nodesRef.value.find(
@@ -262,12 +263,11 @@ function getOpenMenubarTrigger() {
 // These targets are internal defaults, not targets of the consumer: the focus manager keeps a
 // focus that moved. The input of a filtered parent menu holds the real focus while the parent
 // highlights an item. A menu of a menubar that closes for another menu gives the focus to the
-// trigger of that menu, because a focus on its own trigger opens it again.
+// trigger of that menu, because a focus on its own trigger can open it again.
 const dynamicReturnFocus = computed(
   () =>
     parentHandoff?.parentVirtualFocusRef ??
-    (parent.value.type === 'menubar' &&
-    store.select('lastOpenChangeReason') === REASONS.siblingOpen
+    (parent.value.type === 'menubar' && store.select('lastOpenChangeReason') === REASONS.siblingOpen
       ? getOpenMenubarTrigger
       : undefined),
 );
