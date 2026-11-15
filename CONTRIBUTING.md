@@ -2095,7 +2095,7 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - ESLint does not see HTML in a URL, such as the `:src` of an iframe with a `data:` or `blob:` URL. The rules do not apply to a script file outside `docs` that a `docs` file imports.
 - Because of these limits, a page shows text from `parity/` and from Base UI commits only through a component in `docs/.vitepress/components`.
 - A family is a component when its `upstreamPaths` name a path under `docs/src/app/(docs)/react/components/`.
-- The parity page shows the count of the components as `N of T`. N is the number of components with no `waits-on` row that names a source file, an entry of a `types.md` or a prop row.
+- The parity page shows the count of the components in the sentence "Vase UI has N of the T components of Base UI." N is the number of components with no `waits-on` row that names a source file, an entry of a `types.md` or a prop row.
 - T is the number of names in `components` of `parity/upstream.json`. The parity page lists each of these names that no family has in its `upstreamPaths`.
 - A component of Vase UI's own is in neither N nor T. The parity page lists it under Components of Vase UI's own.
 - The site extends the default theme of VitePress with the look of the Base UI docs. The folder `docs/.vitepress/theme` holds that extension and nothing else. Do not add a layout or a component there. A page imports its components from `docs/.vitepress/components`.
