@@ -300,10 +300,6 @@ watch(
   { deep: true },
 );
 
-// A select with no `Select.Popup` shows its positioner, so its close waits for the positioner.
-// The call below reads this ref before `store` exists, so a `watch` after the call writes it.
-const closeElement = shallowRef<HTMLElement | null>(null);
-
 const {
   store,
   open: isOpen,
@@ -374,7 +370,6 @@ const {
     ),
   {
     name: 'Select',
-    popupRef: closeElement,
     onOpenChange(nextOpen, eventDetails) {
       emit('openChange', nextOpen, eventDetails);
 
@@ -402,16 +397,6 @@ const {
       emit('openChangeComplete', nextOpen);
     },
   },
-);
-
-// The call above makes `post` jobs that read this element: the layout read of the enter and the
-// close wait. A `sync` copy gives them the element in the patch that mounts it.
-watch(
-  () => store.context.popupRef.value ?? store.select('positionerElement'),
-  (element) => {
-    closeElement.value = element;
-  },
-  { flush: 'sync', immediate: true },
 );
 
 const serializedValue = computed(() => {

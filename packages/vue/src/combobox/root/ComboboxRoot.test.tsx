@@ -32,6 +32,7 @@ import {
   hydrateAfter,
   isJSDOM,
   nextEvent,
+  popupAnatomyTests,
   popupConformanceTests,
   popupListConformanceTests,
   pressWithTouch,
@@ -268,6 +269,22 @@ function MultiplePopupCombobox(props: {
 
 describe('<Combobox.Root />', () => {
   const { render } = createRenderer();
+
+  popupAnatomyTests({
+    createComponent: ({ open, onOpenChangeComplete, content }) => (
+      <Combobox.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Combobox.Input />
+        <Combobox.Portal>
+          <Combobox.Positioner data-testid="shown" class="shown">
+            Content
+            {content}
+          </Combobox.Positioner>
+        </Combobox.Portal>
+      </Combobox.Root>
+    ),
+    createPopup: () => <Combobox.Popup data-testid="popup">Popup</Combobox.Popup>,
+    render,
+  });
 
   // `getFilter` keeps the filter for no locale, with the runtime locale of its first use. These
   // cases are thus the first cases of the file.

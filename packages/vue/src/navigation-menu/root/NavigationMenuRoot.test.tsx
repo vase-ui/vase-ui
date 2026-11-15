@@ -11,6 +11,8 @@ import {
   flushMicrotasks,
   hydrate,
   isJSDOM,
+  nextCall,
+  popupAnatomyTests,
   renderOnServer,
   screen,
   waitFor,
@@ -1003,6 +1005,29 @@ const PopupElement = defineComponent(() => {
 describe('<NavigationMenu.Root />', () => {
   const { render } = createRenderer();
 
+  popupAnatomyTests({
+    createComponent: ({ open, onOpenChangeComplete }) => (
+      <NavigationMenu.Root
+        value={open ? 'item-1' : null}
+        onOpenChangeComplete={onOpenChangeComplete}
+      >
+        <NavigationMenu.List>
+          <NavigationMenu.Item value="item-1">
+            <NavigationMenu.Trigger>Item 1</NavigationMenu.Trigger>
+            <NavigationMenu.Content>Content</NavigationMenu.Content>
+          </NavigationMenu.Item>
+        </NavigationMenu.List>
+        <NavigationMenu.Portal>
+          <NavigationMenu.Positioner data-testid="shown" class="shown">
+            <NavigationMenu.Viewport />
+          </NavigationMenu.Positioner>
+        </NavigationMenu.Portal>
+      </NavigationMenu.Root>
+    ),
+    render,
+    reportsOpen: false,
+  });
+
   beforeEach(() => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
   });
@@ -1501,6 +1526,44 @@ describe('<NavigationMenu.Root />', () => {
       await waitFor(() => {
         expect(screen.queryByTestId('popup-1')).toBe(null);
       });
+      expect(trigger).toHaveFocus();
+    });
+
+    it('VUE-72: returns the focus to the trigger after Escape closes a positioner with no popup part', async () => {
+      const onOpenChangeComplete = vi.fn();
+      const { user } = await render(
+        <NavigationMenu.Root onOpenChangeComplete={onOpenChangeComplete}>
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="item-1">
+              <NavigationMenu.Trigger data-testid="trigger-1">Item 1</NavigationMenu.Trigger>
+              <NavigationMenu.Content data-testid="popup-1">
+                <NavigationMenu.Link href="#link-1">Link 1</NavigationMenu.Link>
+              </NavigationMenu.Content>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          <NavigationMenu.Portal>
+            <NavigationMenu.Positioner data-testid="positioner">
+              <NavigationMenu.Viewport />
+            </NavigationMenu.Positioner>
+          </NavigationMenu.Portal>
+        </NavigationMenu.Root>,
+      );
+      const trigger = screen.getByTestId('trigger-1');
+
+      await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        await flushMicrotasks();
+      });
+      const link = screen.getByRole('link', { name: 'Link 1' });
+      link.focus();
+      await flushMicrotasks();
+      expect(link).toHaveFocus();
+
+      const closed = nextCall(onOpenChangeComplete);
+      await user.keyboard('{Escape}');
+      await closed;
+
+      expect(screen.queryByTestId('positioner')).toBe(null);
       expect(trigger).toHaveFocus();
     });
 

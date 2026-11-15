@@ -24,6 +24,7 @@ import {
   isJSDOM,
   nextAnimationsRead,
   nextEvent,
+  popupAnatomyTests,
   popupConformanceTests,
   popupListConformanceTests,
   pressWithTouch,
@@ -90,6 +91,24 @@ function getFormData(name: string) {
 
 describe('<Select.Root />', () => {
   const { render } = createRenderer();
+
+  popupAnatomyTests({
+    createComponent: ({ open, onOpenChangeComplete, content }) => (
+      <Select.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Select.Trigger>
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner data-testid="shown" class="shown">
+            Content
+            {content}
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>
+    ),
+    createPopup: () => <Select.Popup data-testid="popup">Popup</Select.Popup>,
+    render,
+  });
 
   describe('closing before the popup attaches', () => {
     it('finishes closing when a layout effect closes it on mount', async () => {
