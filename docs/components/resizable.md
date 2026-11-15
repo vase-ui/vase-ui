@@ -500,9 +500,11 @@ These can move at the mount:
 
 The primary panel of a handle is the panel before it, or the panel after it with `primaryPanel="next"`.
 
-F6 passes over a panel with a size of 0 and a panel with no control. A root in a panel of another root gives the key to that root after its last panel, so F6 goes on through the outer panels. The outermost root goes on from its other end. A disabled root keeps F6, because F6 changes no size. To stop F6, call `event.preventVaseUIHandler()` in a `keydown` listener of the root:
+F6 passes over a panel with a size of 0 and a panel with no control. A root in a panel of another root gives the key to that root after its last panel, or before its first panel with Shift+F6, so F6 goes on through the outer panels. A root that is not in a panel of another root goes on from its other end. A disabled root keeps F6, because F6 changes no size. To stop F6, call `event.preventVaseUIHandler()` in a `keydown` listener of the root:
 
 <<< ./resizable/StopF6.vue
+
+A root around it and the browser still get the key. To stop the key for each root and for the browser, call `event.preventDefault()`.
 
 ## Accessibility
 
