@@ -2019,10 +2019,13 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     }
     if (!(props.inputValueControlled ?? props.inputValue !== undefined)) {
       const defaultInputValue = getDefaultInputValue();
-      if (inputValue.value !== defaultInputValue) {
-        const details = createChangeEventDetails(REASONS.none, event);
-        setInputValue(defaultInputValue, details);
-        hasChanged ||= selectionMode.value === 'none' && !details.isCanceled;
+      const shownInputValue = inputValue.value;
+      // With `selectionMode: 'none'`, the input can show an inline completion of the default text
+      // while the typed text differs. The root part compares the default text with its typed text.
+      if (selectionMode.value === 'none' || shownInputValue !== defaultInputValue) {
+        setInputValue(defaultInputValue, createChangeEventDetails(REASONS.none, event));
+        // The watcher of the input value clears the flag, and it runs only when the text changes.
+        hasChanged ||= selectionMode.value === 'none' && inputValue.value !== shownInputValue;
       }
     }
     if (hasChanged) {
