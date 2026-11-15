@@ -4,6 +4,7 @@ import vueJsx from '@vitejs/plugin-vue-jsx';
 import { playwright } from '@vitest/browser-playwright';
 import { webkit } from 'playwright';
 import { configDefaults, defineConfig } from 'vitest/config';
+import { collectGarbage } from './test/server/collectGarbage.ts';
 import { renderOnServer } from './test/server/renderOnServer.ts';
 
 const contextOptions = { timezoneId: 'UTC' };
@@ -57,7 +58,7 @@ export default defineConfig({
             provider: playwright({ contextOptions }),
             headless: true,
             screenshotFailures: false,
-            commands: { renderOnServer },
+            commands: { collectGarbage, renderOnServer },
             instances: [
               { browser: 'chromium', name: 'chromium' },
               {
