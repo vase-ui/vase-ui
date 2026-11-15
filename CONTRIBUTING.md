@@ -1597,7 +1597,7 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 - The body of a ported case can have a better form than the body of the Base UI case. A better form never asserts less.
 - Examples are a wait with a limit in frames in place of `waitFor`, and a direct assertion in place of a negative assertion in `waitFor`. More examples are a real event of the browser in place of a dispatched event, and a stricter assertion. See [Test rules](#test-rules).
 - State each such change in the body of the pull request.
-- Only a rule of this section removes a Base UI assertion or makes it less strict. An example is the rule for a warning that only React DOM gives.
+- Only a rule of this section or an exception row removes a Base UI assertion or makes it less strict. An example is the rule for a warning that only React DOM gives.
 
 Where a case has no better form, it differs from the Base UI case only by these rules:
 
