@@ -51,7 +51,7 @@ export function usePageTransition(
   );
 
   const renderedPages = computed(() =>
-    [...pages.value, ...leaving.value].toSorted((a, b) => compareDates(a.first, b.first)),
+    [...pages.value, ...leaving.value].sort((a, b) => compareDates(a.first, b.first)),
   );
 
   return {
