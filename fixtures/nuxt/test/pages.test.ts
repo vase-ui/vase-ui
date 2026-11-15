@@ -1883,7 +1883,11 @@ async function expectResizablePercentPanels(page: Page) {
 async function expectResizablePageOnServer(page: Page) {
   await expectResizablePercentPanels(page);
   // A server cannot measure the page, so the length stays a length until the mount.
-  expect(await readResizablePanel(page, 'l-a')).toEqual({ flex: '0 1 240px', flexGrow: '0', size: '' });
+  expect(await readResizablePanel(page, 'l-a')).toEqual({
+    flex: '0 1 240px',
+    flexGrow: '0',
+    size: '',
+  });
   expect((await readResizablePanel(page, 'l-b')).flexGrow).toBe('100');
 }
 

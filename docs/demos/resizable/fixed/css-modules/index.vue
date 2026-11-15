@@ -5,7 +5,14 @@ import styles from './index.module.css';
 
 <template>
   <Resizable.Root :class="styles.Root">
-    <Resizable.Panel id="navigation" default-size="240px" min-size="10rem" max-size="50vw" root-resize-behavior="fixed" :class="styles.Panel">
+    <Resizable.Panel
+      id="navigation"
+      default-size="240px"
+      min-size="10rem"
+      max-size="50vw"
+      root-resize-behavior="fixed"
+      :class="styles.Panel"
+    >
       <p :class="styles.Label">Navigation</p>
       <p :class="styles.Description">Resize the window: the navigation keeps its width.</p>
     </Resizable.Panel>

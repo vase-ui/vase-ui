@@ -359,26 +359,26 @@ For equal sizes, give no size. For a preferred size, give a `defaultSize` and a 
 
 ## Events
 
-| Event             | Part   | When                                                                                       |
-| ----------------- | ------ | ------------------------------------------------------------------------------------------ |
-| `layoutChange`    | Root   | At each change of the layout. Call `details.cancel()` to keep the layout as it is.        |
-| `update:layout`   | Root   | After each change that no listener canceled. `v-model:layout` uses it.                     |
-| `layoutCommitted` | Root   | At the end of a change: the release of a drag, a key, a double click or a method.          |
-| `draggingChange`  | Root   | When a drag starts and when it ends.                                                       |
-| `resize`          | Panel  | When the size of the panel changes in percent or in pixels, after the DOM update.          |
-| `collapsedChange` | Panel  | When the panel collapses or expands, after the DOM update.                                 |
+| Event             | Part  | When                                                                               |
+| ----------------- | ----- | ---------------------------------------------------------------------------------- |
+| `layoutChange`    | Root  | At each change of the layout. Call `details.cancel()` to keep the layout as it is. |
+| `update:layout`   | Root  | After each change that no listener canceled. `v-model:layout` uses it.             |
+| `layoutCommitted` | Root  | At the end of a change: the release of a drag, a key, a double click or a method.  |
+| `draggingChange`  | Root  | When a drag starts and when it ends.                                               |
+| `resize`          | Panel | When the size of the panel changes in percent or in pixels, after the DOM update.  |
+| `collapsedChange` | Panel | When the panel collapses or expands, after the DOM update.                         |
 
 A size change of the root emits no layout event. It changes the pixels of the panels, so each panel emits `resize`.
 
 `details.reason` tells what made the change. `layoutCommitted` has each reason but `'none'`.
 
-| Reason                | Change                                     |
-| --------------------- | ------------------------------------------ |
-| `'drag'`              | A drag of a handle or of an edge           |
-| `'keyboard'`          | A key on a handle                          |
-| `'reset'`             | A double click on a handle                 |
-| `'imperative-action'` | A method of a panel or of the root         |
-| `'none'`              | A panel that mounts with no entry          |
+| Reason                | Change                             |
+| --------------------- | ---------------------------------- |
+| `'drag'`              | A drag of a handle or of an edge   |
+| `'keyboard'`          | A key on a handle                  |
+| `'reset'`             | A double click on a handle         |
+| `'imperative-action'` | A method of a panel or of the root |
+| `'none'`              | A panel that mounts with no entry  |
 
 To tell a change of the user from a change of the app, read `details.reason`. `details.event` is the native event, or `new Event('vase-ui')` when there is none. `details` of `layoutCommitted` also has `snapshot`, the layout with the size of each fixed panel in pixels.
 
@@ -398,10 +398,10 @@ A double click on a handle gives its primary panel the size of the first layout.
 
 `Resizable.useLayoutStorage()` keeps the layout in a storage, so that the user gets it again at the next visit. Give `layout` to `v-model:layout` and `save` to `@layout-committed`. A commit comes one time for each change of the user, so the save needs no debounce.
 
-| Option            | Default        | Description                                                         |
-| ----------------- | -------------- | ------------------------------------------------------------------- |
-| `key`             |                | The key of the item. A new key reads the item of that key.          |
-| `storage`         | `localStorage` | A storage with `getItem` and `setItem`, such as `sessionStorage`.   |
+| Option            | Default        | Description                                                          |
+| ----------------- | -------------- | -------------------------------------------------------------------- |
+| `key`             |                | The key of the item. A new key reads the item of that key.           |
+| `storage`         | `localStorage` | A storage with `getItem` and `setItem`, such as `sessionStorage`.    |
 | `userChangesOnly` | `false`        | Whether `save` ignores a change of a method (`'imperative-action'`). |
 
 The composable ignores an item that is not a layout, and a storage that throws, such as the `localStorage` of a browser that blocks the data of the site. It writes the `snapshot` of each commit, so each fixed panel keeps its pixels.
@@ -489,14 +489,14 @@ These can move at the mount:
 
 ## Keyboard
 
-| Key                         | Action                                                                                           |
-| --------------------------- | ------------------------------------------------------------------------------------------------ |
-| Arrow keys                  | Move the handle on the axis of the root by `step`, in the direction of the key on the screen.     |
-| Shift and an arrow key      | Move the handle by `largeStep`.                                                                  |
-| Page Up and Page Down       | Grow and shrink the primary panel by `largeStep`.                                                |
-| Home and End                | Give the primary panel its least and its greatest size.                                          |
-| Enter                       | Collapse a collapsible primary panel, or give it back its size.                                  |
-| F6 and Shift+F6             | Move the focus to the first control of the next or the previous panel.                           |
+| Key                    | Action                                                                                        |
+| ---------------------- | --------------------------------------------------------------------------------------------- |
+| Arrow keys             | Move the handle on the axis of the root by `step`, in the direction of the key on the screen. |
+| Shift and an arrow key | Move the handle by `largeStep`.                                                               |
+| Page Up and Page Down  | Grow and shrink the primary panel by `largeStep`.                                             |
+| Home and End           | Give the primary panel its least and its greatest size.                                       |
+| Enter                  | Collapse a collapsible primary panel, or give it back its size.                               |
+| F6 and Shift+F6        | Move the focus to the first control of the next or the previous panel.                        |
 
 The primary panel of a handle is the panel before it, or the panel after it with `primaryPanel="next"`.
 

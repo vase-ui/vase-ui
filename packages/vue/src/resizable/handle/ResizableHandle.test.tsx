@@ -2018,10 +2018,7 @@ describe('<Resizable.Handle />', () => {
         handle: { ariaValuetext: 'Half', getAriaValueText: () => 'From the function' },
       });
 
-      expect(screen.getByTestId('handle-1')).toHaveAttribute(
-        'aria-valuetext',
-        'From the function',
-      );
+      expect(screen.getByTestId('handle-1')).toHaveAttribute('aria-valuetext', 'From the function');
     });
 
     it('renders ariaValuetext with no function', async () => {

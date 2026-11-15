@@ -24,7 +24,14 @@ function toggle() {
     :class="styles.Button"
     @click="toggle"
   >
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" :class="styles.Icon">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="currentColor"
+      aria-hidden="true"
+      :class="styles.Icon"
+    >
       <path d="M10 4v8L5.5 8z" />
     </svg>
   </button>

@@ -959,9 +959,7 @@ function onKeydown(event: KeyboardEvent) {
     return;
   }
   const forward = !event.shiftKey;
-  const next = findPanelControl(
-    forward ? items.slice(from + 1) : items.slice(0, from).reverse(),
-  );
+  const next = findPanelControl(forward ? items.slice(from + 1) : items.slice(0, from).reverse());
   const isNested = outerRoot !== null && contains(outerRoot.element.value, element.value);
   const control =
     next ??

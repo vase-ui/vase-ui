@@ -24,7 +24,14 @@ function toggle() {
     @click="toggle"
   >
     <slot />
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" :class="styles.Icon">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="currentColor"
+      aria-hidden="true"
+      :class="styles.Icon"
+    >
       <path d="M4 6h8l-4 4.5z" />
     </svg>
   </button>

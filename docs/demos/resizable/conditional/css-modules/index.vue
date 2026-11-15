@@ -18,7 +18,11 @@ const showPreview = shallowRef(false);
         <p :class="styles.Description">The code of the page.</p>
       </Resizable.Panel>
       <template v-if="showPreview">
-        <Resizable.Handle primary-panel="next" aria-label="Resize the preview" :class="styles.Handle" />
+        <Resizable.Handle
+          primary-panel="next"
+          aria-label="Resize the preview"
+          :class="styles.Handle"
+        />
         <Resizable.Panel id="preview" default-size="40" :class="styles.Panel">
           <p :class="styles.Label">Preview</p>
           <p :class="styles.Description">The root gives room to this panel when it mounts.</p>

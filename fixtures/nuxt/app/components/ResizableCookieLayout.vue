@@ -25,7 +25,11 @@ function save(_layout: ResizableRootLayout, details: ResizableRootCommitEventDet
     @layout-committed="save"
   >
     <Resizable.Panel id="c-a" data-testid="c-a" root-resize-behavior="fixed" />
-    <Resizable.Handle data-testid="cookie-handle" aria-label="Resize the first panel" style="width: 0" />
+    <Resizable.Handle
+      data-testid="cookie-handle"
+      aria-label="Resize the first panel"
+      style="width: 0"
+    />
     <Resizable.Panel id="c-b" data-testid="c-b" />
   </Resizable.Root>
 </template>

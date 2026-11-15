@@ -16,7 +16,11 @@ import styles from './index.module.css';
           <p :class="styles.Label">Editor</p>
           <p :class="styles.Description">Press at the crossing to move both handles.</p>
         </Resizable.Panel>
-        <Resizable.Handle primary-panel="next" aria-label="Resize the terminal" :class="styles.Handle" />
+        <Resizable.Handle
+          primary-panel="next"
+          aria-label="Resize the terminal"
+          :class="styles.Handle"
+        />
         <Resizable.Panel id="terminal" default-size="35" :class="styles.Panel">
           <p :class="styles.Label">Terminal</p>
           <p :class="styles.Description">The output of the build.</p>
