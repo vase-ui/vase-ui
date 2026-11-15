@@ -7,12 +7,15 @@
     "hero/tailwind/index.tsx": "56a81381c79585a0726e2d13cc44a7bae5b5ed2870f7050ec74d378e67875f23"
   },
   "classes": {
-    "hero/tailwind": [
-      "flex gap-4",
-      "flex size-full items-center justify-center text-sm",
-      "inline-flex size-8 items-center justify-center overflow-hidden rounded-full bg-neutral-200 align-middle text-sm leading-none font-normal text-neutral-950 select-none dark:bg-neutral-800 dark:text-white",
-      "inline-flex size-8 items-center justify-center overflow-hidden rounded-full bg-neutral-200 align-middle text-sm leading-none font-normal text-neutral-950 select-none dark:bg-neutral-800 dark:text-white",
-      "size-full object-cover"
-    ]
-  }
+    "hero/tailwind": {
+      "Avatar.Fallback": ["flex size-full items-center justify-center text-sm"],
+      "Avatar.Image": ["size-full object-cover"],
+      "Avatar.Root": [
+        "inline-flex size-8 items-center justify-center overflow-hidden rounded-full bg-neutral-200 align-middle text-sm leading-none font-normal text-neutral-950 select-none dark:bg-neutral-800 dark:text-white",
+        "inline-flex size-8 items-center justify-center overflow-hidden rounded-full bg-neutral-200 align-middle text-sm leading-none font-normal text-neutral-950 select-none dark:bg-neutral-800 dark:text-white"
+      ],
+      "div": ["flex gap-4"]
+    }
+  },
+  "differentVariants": ["hero"]
 }

@@ -10,18 +10,24 @@
     "hero": ["radio"]
   },
   "classes": {
-    "hero/tailwind": [
-      "flex flex-col items-start gap-1 text-neutral-950 dark:text-white",
-      "flex items-center gap-2 text-sm font-normal text-neutral-950 dark:text-white",
-      "flex items-center gap-2 text-sm font-normal text-neutral-950 dark:text-white",
-      "flex items-center gap-2 text-sm font-normal text-neutral-950 dark:text-white",
-      "flex items-center justify-center data-unchecked:hidden before:size-2 before:rounded-full before:bg-current",
-      "flex items-center justify-center data-unchecked:hidden before:size-2 before:rounded-full before:bg-current",
-      "flex items-center justify-center data-unchecked:hidden before:size-2 before:rounded-full before:bg-current",
-      "flex size-4 shrink-0 items-center justify-center border rounded-full p-0 border-neutral-950 bg-white text-white dark:border-white dark:bg-neutral-950 dark:text-neutral-950 data-checked:bg-neutral-950 data-checked:text-white dark:data-checked:bg-white dark:data-checked:text-neutral-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white",
-      "flex size-4 shrink-0 items-center justify-center border rounded-full p-0 border-neutral-950 bg-white text-white dark:border-white dark:bg-neutral-950 dark:text-neutral-950 data-checked:bg-neutral-950 data-checked:text-white dark:data-checked:bg-white dark:data-checked:text-neutral-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white",
-      "flex size-4 shrink-0 items-center justify-center border rounded-full p-0 border-neutral-950 bg-white text-white dark:border-white dark:bg-neutral-950 dark:text-neutral-950 data-checked:bg-neutral-950 data-checked:text-white dark:data-checked:bg-white dark:data-checked:text-neutral-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white",
-      "text-sm font-bold"
-    ]
+    "hero/tailwind": {
+      "Radio.Indicator": [
+        "flex items-center justify-center data-unchecked:hidden before:size-2 before:rounded-full before:bg-current",
+        "flex items-center justify-center data-unchecked:hidden before:size-2 before:rounded-full before:bg-current",
+        "flex items-center justify-center data-unchecked:hidden before:size-2 before:rounded-full before:bg-current"
+      ],
+      "Radio.Root": [
+        "flex size-4 shrink-0 items-center justify-center border rounded-full p-0 border-neutral-950 bg-white text-white dark:border-white dark:bg-neutral-950 dark:text-neutral-950 data-checked:bg-neutral-950 data-checked:text-white dark:data-checked:bg-white dark:data-checked:text-neutral-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white",
+        "flex size-4 shrink-0 items-center justify-center border rounded-full p-0 border-neutral-950 bg-white text-white dark:border-white dark:bg-neutral-950 dark:text-neutral-950 data-checked:bg-neutral-950 data-checked:text-white dark:data-checked:bg-white dark:data-checked:text-neutral-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white",
+        "flex size-4 shrink-0 items-center justify-center border rounded-full p-0 border-neutral-950 bg-white text-white dark:border-white dark:bg-neutral-950 dark:text-neutral-950 data-checked:bg-neutral-950 data-checked:text-white dark:data-checked:bg-white dark:data-checked:text-neutral-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
+      ],
+      "RadioGroup": ["flex flex-col items-start gap-1 text-neutral-950 dark:text-white"],
+      "div": ["text-sm font-bold"],
+      "label": [
+        "flex items-center gap-2 text-sm font-normal text-neutral-950 dark:text-white",
+        "flex items-center gap-2 text-sm font-normal text-neutral-950 dark:text-white",
+        "flex items-center gap-2 text-sm font-normal text-neutral-950 dark:text-white"
+      ]
+    }
   }
 }

@@ -7,16 +7,23 @@
     "hero/tailwind/index.tsx": "fdad966d9b656e2226fd8462b71a305b53f37f376cd1abfd1d575c08ea14ff40"
   },
   "classes": {
-    "hero/tailwind": [
-      "border-l-0",
-      "border-r-0",
-      "cursor-ew-resize font-bold select-none",
-      "cursor-ew-resize text-sm font-bold text-neutral-950 dark:text-white",
-      "drop-shadow-[0_1px_1px_#0008] filter",
-      "flex flex-col items-start gap-1",
-      "flex h-8",
-      "flex h-full w-8 items-center justify-center border border-neutral-950 bg-white bg-clip-padding text-neutral-950 outline-0 select-none dark:border-white dark:bg-neutral-950 dark:text-white hover:not-data-disabled:bg-neutral-100 dark:hover:not-data-disabled:bg-neutral-800 active:not-data-disabled:bg-neutral-200 dark:active:not-data-disabled:bg-neutral-700 data-disabled:border-neutral-500 data-disabled:text-neutral-500 dark:data-disabled:border-neutral-400 dark:data-disabled:text-neutral-400",
-      "h-full w-[7ch] border border-neutral-950 bg-white px-2 text-left text-sm font-normal text-neutral-950 tabular-nums any-pointer-coarse:text-base dark:border-white dark:bg-neutral-950 dark:text-white focus:z-1 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white"
-    ]
+    "hero/tailwind": {
+      "NumberField.Decrement": [
+        "border-r-0",
+        "flex h-full w-8 items-center justify-center border border-neutral-950 bg-white bg-clip-padding text-neutral-950 outline-0 select-none dark:border-white dark:bg-neutral-950 dark:text-white hover:not-data-disabled:bg-neutral-100 dark:hover:not-data-disabled:bg-neutral-800 active:not-data-disabled:bg-neutral-200 dark:active:not-data-disabled:bg-neutral-700 data-disabled:border-neutral-500 data-disabled:text-neutral-500 dark:data-disabled:border-neutral-400 dark:data-disabled:text-neutral-400"
+      ],
+      "NumberField.Group": ["flex h-8"],
+      "NumberField.Increment": [
+        "border-l-0",
+        "flex h-full w-8 items-center justify-center border border-neutral-950 bg-white bg-clip-padding text-neutral-950 outline-0 select-none dark:border-white dark:bg-neutral-950 dark:text-white hover:not-data-disabled:bg-neutral-100 dark:hover:not-data-disabled:bg-neutral-800 active:not-data-disabled:bg-neutral-200 dark:active:not-data-disabled:bg-neutral-700 data-disabled:border-neutral-500 data-disabled:text-neutral-500 dark:data-disabled:border-neutral-400 dark:data-disabled:text-neutral-400"
+      ],
+      "NumberField.Input": [
+        "h-full w-[7ch] border border-neutral-950 bg-white px-2 text-left text-sm font-normal text-neutral-950 tabular-nums any-pointer-coarse:text-base dark:border-white dark:bg-neutral-950 dark:text-white focus:z-1 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white"
+      ],
+      "NumberField.Root": ["flex flex-col items-start gap-1"],
+      "NumberField.ScrubArea": ["cursor-ew-resize font-bold select-none"],
+      "NumberField.ScrubAreaCursor": ["drop-shadow-[0_1px_1px_#0008] filter"],
+      "label": ["cursor-ew-resize text-sm font-bold text-neutral-950 dark:text-white"]
+    }
   }
 }
