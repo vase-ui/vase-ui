@@ -93,9 +93,3 @@ void invalidGranularity;
     },
   }}
 />;
-
-// The `aria-labelledby` attribute and its prop have the same type.
-<DateField.Root aria-labelledby="id" />;
-<DateField.Root ariaLabelledby="id" />;
-// @ts-expect-error `aria-labelledby` is a string
-<DateField.Root aria-labelledby={5} />;

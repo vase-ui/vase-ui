@@ -4,7 +4,6 @@ import { shallowRef } from 'vue';
 import { expectType } from '#test-utils';
 import { DateField } from '@vase-ui/vue/date-field';
 
-const id = 'id';
 const day = shallowRef<Temporal.PlainDate | null>(null);
 const zoned = shallowRef<Temporal.ZonedDateTime | null>(null);
 
@@ -38,13 +37,6 @@ function onWrongKind(value: Temporal.PlainTime | null) {
   />
   <!-- @vue-expect-error the field gives a date, and a time does not fit it -->
   <DateField.Root :value="day" @value-change="onWrongKind" />
-
-  <DateField.Root aria-labelledby="id" />
-  <DateField.Root :aria-labelledby="id" />
-  <DateField.Root ariaLabelledby="id" />
-  <DateField.Root :ariaLabelledby="id" />
-  <!-- @vue-expect-error `aria-labelledby` is a string -->
-  <DateField.Root :aria-labelledby="5" />
 
   <!-- The slot narrows the part of the layout, so that each part gets what it needs. -->
   <DateField.Root>

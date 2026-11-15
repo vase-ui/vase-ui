@@ -2,6 +2,7 @@
 <script setup lang="ts">
 import * as Checkbox from '../src/checkbox/index.parts';
 import * as Combobox from '../src/combobox/index.parts';
+import * as DateField from '../src/date-field/index.parts';
 import * as OTPField from '../src/otp-field/index.parts';
 import * as Radio from '../src/radio/index.parts';
 import * as Slider from '../src/slider/index.parts';
@@ -19,6 +20,13 @@ const id = 'id';
   <Checkbox.Root :aria-label="5" />
   <!-- @vue-expect-error `aria-labelledby` is a string -->
   <Checkbox.Root :aria-labelledby="5" />
+
+  <DateField.Root aria-labelledby="id" />
+  <DateField.Root :aria-labelledby="id" />
+  <DateField.Root ariaLabelledby="id" />
+  <DateField.Root :ariaLabelledby="id" />
+  <!-- @vue-expect-error `aria-labelledby` is a string -->
+  <DateField.Root :aria-labelledby="5" />
 
   <OTPField.Root :length="6" aria-labelledby="id" />
   <OTPField.Root :length="6" :aria-labelledby="id" />
