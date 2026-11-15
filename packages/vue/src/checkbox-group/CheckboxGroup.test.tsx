@@ -5,6 +5,7 @@ import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -2981,23 +2982,24 @@ describe('<CheckboxGroup />', () => {
     });
 
     it('focuses a checkbox that mounted while held before the other checkboxes', async () => {
-      const shown = shallowRef(true);
-      const extra = shallowRef(false);
       const handleSubmit = vi.fn();
-      const Fruits = defineComponent(() => () => (
-        <>
-          {extra.value ? (
-            <Checkbox.Root key="banana" value="banana" required data-testid="banana" />
-          ) : null}
-          <Checkbox.Root key="apple" value="apple" required data-testid="apple" />
-          <Checkbox.Root key="cherry" value="cherry" required data-testid="cherry" />
-        </>
-      ));
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
+        () => <Checkbox.Root key="banana" value="banana" required data-testid="banana" />,
+        {
+          renderBranch: (part) => (
+            <>
+              {part}
+              <Checkbox.Root key="apple" value="apple" required data-testid="apple" />
+              <Checkbox.Root key="cherry" value="cherry" required data-testid="cherry" />
+            </>
+          ),
+        },
+      );
       const App = defineComponent(() => () => (
         <Form onFormSubmit={handleSubmit}>
           <Field.Root name="fruits">
             <CheckboxGroup>
-              <KeepAlive>{shown.value ? <Fruits key="fruits" /> : <Blank key="blank" />}</KeepAlive>
+              <HeldBranch />
             </CheckboxGroup>
           </Field.Root>
           <button type="submit">Submit</button>
@@ -3005,12 +3007,8 @@ describe('<CheckboxGroup />', () => {
       ));
       const { user } = await render(<App />);
 
-      shown.value = false;
-      await flushMicrotasks();
-      extra.value = true;
-      await flushMicrotasks();
-      shown.value = true;
-      await flushMicrotasks();
+      await mountWhileHeld();
+      await show();
       await user.click(screen.getByText('Submit'));
 
       expect(handleSubmit).not.toHaveBeenCalled();
@@ -3059,22 +3057,16 @@ describe('<CheckboxGroup />', () => {
     });
 
     it('the label keeps naming a shown control when a group mounts while KeepAlive holds it', async () => {
-      const visible = shallowRef(true);
-      const extra = shallowRef(false);
-      const Branch = defineComponent(() => () => (
-        <div>
-          {extra.value ? (
-            <CheckboxGroup key="held" defaultValue={[]}>
-              <Checkbox.Root value="apple" />
-            </CheckboxGroup>
-          ) : null}
-        </div>
+      const { HeldBranch, mountWhileHeld } = createHeldBranch(() => (
+        <CheckboxGroup key="held" defaultValue={[]}>
+          <Checkbox.Root value="apple" />
+        </CheckboxGroup>
       ));
       await render(() => (
         <Field.Root>
           <Field.Label data-testid="label">Fruit</Field.Label>
           <Field.Control data-testid="control" />
-          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+          <HeldBranch />
         </Field.Root>
       ));
       const label = screen.getByTestId('label');
@@ -3083,10 +3075,7 @@ describe('<CheckboxGroup />', () => {
 
       expect(label).toHaveAttribute('for', controlId);
 
-      visible.value = false;
-      await flushMicrotasks();
-      extra.value = true;
-      await flushMicrotasks();
+      await mountWhileHeld();
 
       expect(control).toHaveAttribute('id', controlId);
       expect(label).toHaveAttribute('for', controlId);

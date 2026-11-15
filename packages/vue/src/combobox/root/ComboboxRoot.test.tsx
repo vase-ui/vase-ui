@@ -23,6 +23,7 @@ import { Input } from '@vase-ui/vue/input';
 import { Popover } from '@vase-ui/vue/popover';
 import {
   createFormDataSpy,
+  createHeldBranch,
   createRenderer,
   fireEvent,
   flushMicrotasks,
@@ -978,9 +979,10 @@ describe('<Combobox.Root />', () => {
       );
 
       const trigger = screen.getByTestId('trigger');
-      await user.click(trigger);
-
-      const input = await screen.findByTestId('input');
+      const input = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        return screen.findByTestId('input');
+      });
       await waitFor(() => expect(input).toHaveFocus());
 
       await user.type(input, 'ban');
@@ -1031,8 +1033,11 @@ describe('<Combobox.Root />', () => {
       );
 
       const trigger = screen.getByTestId('trigger');
-      await user.click(trigger);
-      await user.type(await screen.findByTestId('input'), 'ban');
+      const input = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        return screen.findByTestId('input');
+      });
+      await user.type(input, 'ban');
       await user.keyboard('{Escape}');
 
       await waitFor(() => expect(screen.queryByRole('dialog')).toBe(null));
@@ -1082,8 +1087,10 @@ describe('<Combobox.Root />', () => {
         </Combobox.Root>,
       );
 
-      await user.click(screen.getByTestId('trigger'));
-      const input = await screen.findByTestId('input');
+      const input = await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('trigger'));
+        return screen.findByTestId('input');
+      });
       await user.type(input, 'ap');
       await user.click(screen.getByRole('option', { name: 'Apple' }));
 
@@ -1130,8 +1137,10 @@ describe('<Combobox.Root />', () => {
         );
 
         const trigger = screen.getByTestId('trigger');
-        await user.click(trigger);
-        const input = await screen.findByTestId('input');
+        const input = await waitForLaterMillisecond(async () => {
+          await user.click(trigger);
+          return screen.findByTestId('input');
+        });
         await user.clear(input);
         await user.type(input, 'banana');
 
@@ -1186,8 +1195,10 @@ describe('<Combobox.Root />', () => {
           </>,
         );
 
-        await user.click(screen.getByTestId('trigger'));
-        const input = await screen.findByTestId('input');
+        const input = await waitForLaterMillisecond(async () => {
+          await user.click(screen.getByTestId('trigger'));
+          return screen.findByTestId('input');
+        });
         await user.type(input, 'ap');
 
         const popup = screen.getByTestId('popup');
@@ -1298,9 +1309,11 @@ describe('<Combobox.Root />', () => {
       </Combobox.Root>,
     );
 
-    await user.click(screen.getByRole('button', { name: 'Open nested popover' }));
-
-    await user.click(await screen.findByRole('button', { name: 'Nested focusable content' }));
+    const nestedContent = await waitForLaterMillisecond(async () => {
+      await user.click(screen.getByRole('button', { name: 'Open nested popover' }));
+      return screen.findByRole('button', { name: 'Nested focusable content' });
+    });
+    await user.click(nestedContent);
 
     expect(screen.getByRole('listbox')).not.toBe(null);
   });
@@ -2948,31 +2961,25 @@ describe('<Combobox.Root />', () => {
       'a held required combobox does not block the submit of its form: $name',
       async ({ name }) => {
         const handleSubmit = vi.fn();
-        const visible = shallowRef(true);
-        const extra = shallowRef(name === 'deactivated');
-        const Branch = defineComponent(() => () => (
-          <div>
-            {extra.value ? (
-              <Combobox.Root key="held" items={cities} required>
-                <Combobox.Input />
-              </Combobox.Root>
-            ) : null}
-          </div>
-        ));
+        const { HeldBranch, mountWhileHeld } = createHeldBranch(
+          () => (
+            <Combobox.Root key="held" items={cities} required>
+              <Combobox.Input />
+            </Combobox.Root>
+          ),
+          { mounted: name === 'deactivated' },
+        );
         const { user } = await render(() => (
           <Form onFormSubmit={handleSubmit}>
             <Field.Root name="city" data-testid="field">
               <Field.Control defaultValue="shown" />
-              <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+              <HeldBranch />
             </Field.Root>
             <button type="submit">Submit</button>
           </Form>
         ));
 
-        visible.value = false;
-        await flushMicrotasks();
-        extra.value = true;
-        await flushMicrotasks();
+        await mountWhileHeld();
         await user.click(screen.getByRole('button', { name: 'Submit' }));
 
         expect(handleSubmit).toHaveBeenCalledTimes(1);
@@ -2981,35 +2988,25 @@ describe('<Combobox.Root />', () => {
     );
 
     it('the label does not name a combobox that mounts while KeepAlive holds it', async () => {
-      const visible = shallowRef(true);
-      const extra = shallowRef(false);
-      const Branch = defineComponent(() => () => (
-        <div>
-          {extra.value ? (
-            <Combobox.Root key="held" items={cities} id="held-combobox">
-              <Combobox.Input />
-            </Combobox.Root>
-          ) : null}
-        </div>
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Combobox.Root key="held" items={cities} id="held-combobox">
+          <Combobox.Input />
+        </Combobox.Root>
       ));
       await render(() => (
         <Field.Root>
           <Field.Label data-testid="label">City</Field.Label>
-          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+          <HeldBranch />
         </Field.Root>
       ));
       const label = screen.getByTestId('label');
       const providerId = label.getAttribute('for');
 
-      visible.value = false;
-      await flushMicrotasks();
-      extra.value = true;
-      await flushMicrotasks();
+      await mountWhileHeld();
 
       expect(label.getAttribute('for')).toBe(providerId);
 
-      visible.value = true;
-      await flushMicrotasks();
+      await show();
 
       expect(label).toHaveAttribute('for', 'held-combobox');
     });
@@ -3181,7 +3178,7 @@ describe('<Combobox.Root />', () => {
         );
 
         const input = screen.getByRole('combobox');
-        await user.click(input);
+        await waitForLaterMillisecond(() => user.click(input));
         expect(screen.getByRole('listbox')).not.toBe(null);
 
         onOpenChange.mockClear();
@@ -3223,8 +3220,10 @@ describe('<Combobox.Root />', () => {
         );
 
         const input = screen.getByRole('combobox');
-        await user.click(input);
-        await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+        await waitForLaterMillisecond(async () => {
+          await user.click(input);
+          await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+        });
 
         await user.keyboard('{ArrowDown}');
         onOpenChange.mockClear();
@@ -3267,9 +3266,10 @@ describe('<Combobox.Root />', () => {
 
         const input = screen.getByTestId('input');
         const trigger = screen.getByTestId('trigger');
-        await user.click(trigger);
-
-        expect(await screen.findByRole('listbox')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.click(trigger);
+          expect(await screen.findByRole('listbox')).not.toBe(null);
+        });
         expect(input).toHaveAttribute('aria-expanded', 'true');
 
         const appleOption = await screen.findByText('apple');
@@ -3285,8 +3285,10 @@ describe('<Combobox.Root />', () => {
         const { user } = await render(<AsyncItemsCombobox />);
 
         const input = screen.getByTestId('input');
-        await user.click(input);
-        await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+        await waitForLaterMillisecond(async () => {
+          await user.click(input);
+          await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+        });
 
         await user.click(screen.getByRole('option', { name: 'Cherry' }));
         await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
@@ -3384,9 +3386,10 @@ describe('<Combobox.Root />', () => {
         const input = screen.getByTestId('input');
         const trigger = screen.getByTestId('trigger');
 
-        await user.click(trigger);
-
-        const appleOption = await screen.findByText('apple');
+        const appleOption = await waitForLaterMillisecond(async () => {
+          await user.click(trigger);
+          return screen.findByText('apple');
+        });
         await user.click(appleOption);
 
         expect(input).toHaveValue('apple');
@@ -3427,8 +3430,10 @@ describe('<Combobox.Root />', () => {
         const input = screen.getByTestId('input');
         const trigger = screen.getByTestId('trigger');
 
-        await user.click(trigger);
-        const appleOption = await screen.findByText('apple');
+        const appleOption = await waitForLaterMillisecond(async () => {
+          await user.click(trigger);
+          return screen.findByText('apple');
+        });
         await user.click(appleOption);
 
         expect(input).toHaveValue('apple');
@@ -4052,8 +4057,10 @@ describe('<Combobox.Root />', () => {
             </Combobox.Root>,
           );
 
-          await user.click(screen.getByTestId('trigger'));
-          const input = await screen.findByTestId('input');
+          const input = await waitForLaterMillisecond(async () => {
+            await user.click(screen.getByTestId('trigger'));
+            return screen.findByTestId('input');
+          });
 
           // Move the highlight away from the selected item by filtering.
           await user.type(input, 'cherry');
@@ -4253,8 +4260,10 @@ describe('<Combobox.Root />', () => {
             </Combobox.Root>,
           );
 
-          await user.click(screen.getByTestId('trigger'));
-          const input = await screen.findByTestId('input');
+          const input = await waitForLaterMillisecond(async () => {
+            await user.click(screen.getByTestId('trigger'));
+            return screen.findByTestId('input');
+          });
           const list = screen.getByTestId('list');
           list.scrollTop = list.scrollHeight;
 
@@ -4310,8 +4319,10 @@ describe('<Combobox.Root />', () => {
           </Combobox.Root>,
         );
 
-        await user.click(screen.getByTestId('trigger'));
-        const input = await screen.findByTestId('input');
+        const input = await waitForLaterMillisecond(async () => {
+          await user.click(screen.getByTestId('trigger'));
+          return screen.findByTestId('input');
+        });
 
         // With autoHighlight, filtering strongly highlights the first match.
         await user.type(input, 'a');
@@ -4363,8 +4374,10 @@ describe('<Combobox.Root />', () => {
           </Combobox.Root>,
         );
 
-        await user.click(screen.getByTestId('trigger'));
-        const input = await screen.findByTestId('input');
+        const input = await waitForLaterMillisecond(async () => {
+          await user.click(screen.getByTestId('trigger'));
+          return screen.findByTestId('input');
+        });
 
         await user.type(input, 'cherry');
         onItemHighlighted.mockClear();
@@ -4459,8 +4472,10 @@ describe('<Combobox.Root />', () => {
           });
 
           const { user } = await render(<App />);
-          await user.click(screen.getByTestId('trigger'));
-          const input = await screen.findByTestId('input');
+          const input = await waitForLaterMillisecond(async () => {
+            await user.click(screen.getByTestId('trigger'));
+            return screen.findByTestId('input');
+          });
 
           await user.type(input, 'item-000');
           await screen.findByRole('option', { name: 'item-000' });
@@ -5068,8 +5083,10 @@ describe('<Combobox.Root />', () => {
 
         const { user } = await render(<App />);
 
-        await user.click(screen.getByTestId('trigger'));
-        const input = await screen.findByTestId('input');
+        const input = await waitForLaterMillisecond(async () => {
+          await user.click(screen.getByTestId('trigger'));
+          return screen.findByTestId('input');
+        });
 
         await user.type(input, 'banana');
         await waitFor(() => {
@@ -5115,8 +5132,10 @@ describe('<Combobox.Root />', () => {
           <MultiplePopupCombobox defaultValue={['banana', 'cherry']} />,
         );
 
-        await user.click(screen.getByTestId('trigger'));
-        const input = await screen.findByTestId('input');
+        const input = await waitForLaterMillisecond(async () => {
+          await user.click(screen.getByTestId('trigger'));
+          return screen.findByTestId('input');
+        });
         // Focus reaches the input asynchronously. Keys sent before it lands are lost.
         await waitFor(() => {
           expect(input).toHaveFocus();
@@ -5143,8 +5162,10 @@ describe('<Combobox.Root />', () => {
       it('keeps the toggled item highlighted when selecting with the keyboard while filtering', async () => {
         const { user } = await render(<MultiplePopupCombobox />);
 
-        await user.click(screen.getByTestId('trigger'));
-        const input = await screen.findByTestId('input');
+        const input = await waitForLaterMillisecond(async () => {
+          await user.click(screen.getByTestId('trigger'));
+          return screen.findByTestId('input');
+        });
 
         await user.type(input, 'cherry');
         await waitFor(() => {
@@ -5250,8 +5271,10 @@ describe('<Combobox.Root />', () => {
       it('restores the anchor rather than the toggled item when deselecting while filtering', async () => {
         const { user } = await render(<MultiplePopupCombobox />);
 
-        await user.click(screen.getByTestId('trigger'));
-        const input = await screen.findByTestId('input');
+        const input = await waitForLaterMillisecond(async () => {
+          await user.click(screen.getByTestId('trigger'));
+          return screen.findByTestId('input');
+        });
 
         await user.type(input, 'banana');
         await waitFor(() => {
@@ -5279,8 +5302,10 @@ describe('<Combobox.Root />', () => {
           <MultiplePopupCombobox onItemHighlighted={onItemHighlighted} />,
         );
 
-        await user.click(screen.getByTestId('trigger'));
-        const input = await screen.findByTestId('input');
+        const input = await waitForLaterMillisecond(async () => {
+          await user.click(screen.getByTestId('trigger'));
+          return screen.findByTestId('input');
+        });
 
         await user.type(input, 'banana');
         await waitFor(() => {
@@ -5315,8 +5340,10 @@ describe('<Combobox.Root />', () => {
           <MultiplePopupCombobox defaultValue={['apple']} onItemHighlighted={onItemHighlighted} />,
         );
 
-        await user.click(screen.getByTestId('trigger'));
-        const input = await screen.findByTestId('input');
+        const input = await waitForLaterMillisecond(async () => {
+          await user.click(screen.getByTestId('trigger'));
+          return screen.findByTestId('input');
+        });
         await user.type(input, 'cherry');
         const cherryItem = await screen.findByRole('option', { name: 'cherry' });
 
@@ -5354,8 +5381,10 @@ describe('<Combobox.Root />', () => {
       it('keeps the toggled item highlighted when deselecting a selected item', async () => {
         const { user } = await render(<MultiplePopupCombobox />);
 
-        await user.click(screen.getByTestId('trigger'));
-        const input = await screen.findByTestId('input');
+        const input = await waitForLaterMillisecond(async () => {
+          await user.click(screen.getByTestId('trigger'));
+          return screen.findByTestId('input');
+        });
         const appleItem = screen.getByRole('option', { name: 'apple' });
         const bananaItem = screen.getByRole('option', { name: 'banana' });
 
@@ -5379,8 +5408,10 @@ describe('<Combobox.Root />', () => {
       it('clears the highlight when filtering deselects the only selected item', async () => {
         const { user } = await render(<MultiplePopupCombobox defaultValue={['banana']} />);
 
-        await user.click(screen.getByTestId('trigger'));
-        const input = await screen.findByTestId('input');
+        const input = await waitForLaterMillisecond(async () => {
+          await user.click(screen.getByTestId('trigger'));
+          return screen.findByTestId('input');
+        });
         await user.type(input, 'banana');
         const bananaItem = await screen.findByRole('option', { name: 'banana' });
 
@@ -5405,8 +5436,10 @@ describe('<Combobox.Root />', () => {
           <MultiplePopupCombobox onItemHighlighted={onItemHighlighted} />,
         );
 
-        await user.click(screen.getByTestId('trigger'));
-        const input = await screen.findByTestId('input');
+        const input = await waitForLaterMillisecond(async () => {
+          await user.click(screen.getByTestId('trigger'));
+          return screen.findByTestId('input');
+        });
         await user.type(input, 'cherry');
         await waitFor(() => {
           expect(screen.queryByRole('option', { name: 'banana' })).toBe(null);
@@ -5450,8 +5483,10 @@ describe('<Combobox.Root />', () => {
             <MultiplePopupCombobox items={items} defaultValue={['item 90', 'item 80']} />,
           );
 
-          await user.click(screen.getByTestId('trigger'));
-          const input = await screen.findByTestId('input');
+          const input = await waitForLaterMillisecond(async () => {
+            await user.click(screen.getByTestId('trigger'));
+            return screen.findByTestId('input');
+          });
           await user.type(input, 'item 0');
           await waitFor(() => {
             expect(screen.queryByRole('option', { name: 'item 80' })).toBe(null);
@@ -5883,8 +5918,10 @@ describe('<Combobox.Root />', () => {
 
       const input = screen.getByTestId('input');
 
-      await user.click(input);
-      await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      await waitForLaterMillisecond(async () => {
+        await user.click(input);
+        await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      });
 
       // Highlight first item and select it
       await user.keyboard('{ArrowDown}');
@@ -5920,9 +5957,11 @@ describe('<Combobox.Root />', () => {
 
       const input = screen.getByTestId('input');
 
-      await user.click(input);
-      await waitFor(() => {
-        expect(screen.getByRole('listbox')).not.toBe(null);
+      await waitForLaterMillisecond(async () => {
+        await user.click(input);
+        await waitFor(() => {
+          expect(screen.getByRole('listbox')).not.toBe(null);
+        });
       });
 
       await user.type(input, 'c'); // filter to "cherry"
@@ -5960,9 +5999,11 @@ describe('<Combobox.Root />', () => {
 
       const input = screen.getByRole('combobox');
 
-      await user.click(input);
-      await waitFor(() => {
-        expect(screen.getByRole('listbox')).not.toBe(null);
+      await waitForLaterMillisecond(async () => {
+        await user.click(input);
+        await waitFor(() => {
+          expect(screen.getByRole('listbox')).not.toBe(null);
+        });
       });
 
       const listbox = screen.getByRole('listbox');
@@ -8187,8 +8228,10 @@ describe('<Combobox.Root />', () => {
 
       const { user } = await render(<App />);
 
-      await user.click(screen.getByTestId('open'));
-      const input = await screen.findByTestId('input');
+      const input = await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('open'));
+        return screen.findByTestId('input');
+      });
       await user.type(input, 'ap');
       const apple = await screen.findByRole('option', { name: 'apple' });
 
@@ -8580,8 +8623,10 @@ describe('<Combobox.Root />', () => {
 
       const { user } = await render(<App />);
 
-      await user.click(screen.getByTestId('trigger'));
-      const input = await screen.findByTestId('input');
+      const input = await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('trigger'));
+        return screen.findByTestId('input');
+      });
       await waitFor(() => expect(input).toHaveFocus());
 
       await user.type(input, 'ap');
@@ -8659,8 +8704,10 @@ describe('<Combobox.Root />', () => {
 
       const { user } = await render(<App />);
 
-      await user.click(screen.getByTestId('trigger'));
-      const input = await screen.findByTestId('input');
+      const input = await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('trigger'));
+        return screen.findByTestId('input');
+      });
       await waitFor(() => expect(input).toHaveFocus());
 
       await user.type(input, 'ap');
@@ -8711,8 +8758,10 @@ describe('<Combobox.Root />', () => {
       );
 
       const input = screen.getByTestId('input');
-      await user.type(input, 'ap');
-      const apple = await screen.findByRole('option', { name: 'apple' });
+      const apple = await waitForLaterMillisecond(async () => {
+        await user.type(input, 'ap');
+        return screen.findByRole('option', { name: 'apple' });
+      });
 
       const popup = screen.getByTestId('popup');
       await nextEvent(popup, 'animationstart', { action: () => user.click(apple) });
@@ -9275,8 +9324,10 @@ describe('<Combobox.Root />', () => {
       );
 
       const input = screen.getByTestId('input');
-      await user.type(input, 'app');
-      await flushMicrotasks();
+      await waitForLaterMillisecond(async () => {
+        await user.type(input, 'app');
+        await flushMicrotasks();
+      });
       await user.click(screen.getByRole('option', { name: 'apple' }));
       await flushMicrotasks();
 
@@ -9363,7 +9414,7 @@ describe('<Combobox.Root />', () => {
       );
 
       const input = screen.getByTestId('input');
-      await user.type(input, 'app');
+      await waitForLaterMillisecond(() => user.type(input, 'app'));
       await user.click(await screen.findByRole('option', { name: 'apple' }));
       await flushMicrotasks();
 
@@ -9401,7 +9452,7 @@ describe('<Combobox.Root />', () => {
       );
 
       const input = screen.getByTestId('input');
-      await user.type(input, 'app');
+      await waitForLaterMillisecond(() => user.type(input, 'app'));
       onInputValueChange.mockClear();
 
       await user.click(await screen.findByRole('option', { name: 'apple' }));
@@ -9520,9 +9571,10 @@ describe('<Combobox.Root />', () => {
       );
 
       const trigger = screen.getByTestId('trigger');
-      await user.click(trigger);
-
-      const input = await screen.findByTestId('input');
+      const input = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        return screen.findByTestId('input');
+      });
       await waitFor(() => expect(input).toHaveFocus());
 
       await user.type(input, 'app');
@@ -9700,9 +9752,10 @@ describe('<Combobox.Root />', () => {
         );
 
         const trigger = screen.getByTestId('trigger');
-        await user.click(trigger);
-
-        const input = await screen.findByTestId('input');
+        const input = await waitForLaterMillisecond(async () => {
+          await user.click(trigger);
+          return screen.findByTestId('input');
+        });
         await waitFor(() => expect(input).toHaveFocus());
 
         await user.type(input, 'app');
@@ -9798,9 +9851,10 @@ describe('<Combobox.Root />', () => {
       );
 
       const trigger = screen.getByTestId('trigger');
-      await user.click(trigger);
-
-      const input = await screen.findByTestId('input');
+      const input = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        return screen.findByTestId('input');
+      });
       await user.type(input, 'app');
       await user.click(screen.getByRole('option', { name: 'apple' }));
 
@@ -9837,9 +9891,10 @@ describe('<Combobox.Root />', () => {
       );
 
       const trigger = screen.getByTestId('trigger');
-      await user.click(trigger);
-
-      const input = await screen.findByTestId('input');
+      const input = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        return screen.findByTestId('input');
+      });
       await user.type(input, 'ban');
       await user.keyboard('{ArrowDown}{Enter}');
 
@@ -9903,9 +9958,10 @@ describe('<Combobox.Root />', () => {
         );
 
         const trigger = screen.getByTestId('trigger');
-        await user.click(trigger);
-
-        const input = await screen.findByTestId('input');
+        const input = await waitForLaterMillisecond(async () => {
+          await user.click(trigger);
+          return screen.findByTestId('input');
+        });
         await user.type(input, 'zz');
 
         await waitFor(() => {
@@ -9971,8 +10027,10 @@ describe('<Combobox.Root />', () => {
           </>,
         );
 
-        await user.click(screen.getByTestId('trigger'));
-        const input = await screen.findByTestId('input');
+        const input = await waitForLaterMillisecond(async () => {
+          await user.click(screen.getByTestId('trigger'));
+          return screen.findByTestId('input');
+        });
         await user.type(input, 'ap');
 
         const popup = screen.getByTestId('popup');
@@ -10026,9 +10084,10 @@ describe('<Combobox.Root />', () => {
         );
 
         const trigger = screen.getByTestId('trigger');
-        await user.click(trigger);
-
-        const input = await screen.findByTestId('input');
+        const input = await waitForLaterMillisecond(async () => {
+          await user.click(trigger);
+          return screen.findByTestId('input');
+        });
         await user.type(input, 'zz');
 
         await waitFor(() => {
@@ -10105,8 +10164,11 @@ describe('<Combobox.Root />', () => {
 
         const { user } = await render(<Test />);
         const trigger = screen.getByTestId('trigger');
-        await user.click(trigger);
-        await user.type(await screen.findByTestId('input'), 'zz');
+        const input = await waitForLaterMillisecond(async () => {
+          await user.click(trigger);
+          return screen.findByTestId('input');
+        });
+        await user.type(input, 'zz');
 
         const popup = screen.getByTestId('popup');
         await nextEvent(popup, 'animationstart', { action: () => user.keyboard('{Escape}') });
@@ -10188,9 +10250,10 @@ describe('<Combobox.Root />', () => {
         </Combobox.Root>,
       );
 
-      await user.click(screen.getByText('Open'));
-
-      const input = await screen.findByTestId('input');
+      const input = await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByText('Open'));
+        return screen.findByTestId('input');
+      });
       // Wait for the popup to finish opening so the input is interactive (the positioner is
       // `inert` until then).
       await screen.findByRole('option', { name: 'apple' });
@@ -10422,10 +10485,11 @@ describe('<Combobox.Root />', () => {
       const { user } = await render(<FilteredItemsCombobox />);
       const input = screen.getByRole('combobox');
 
-      await user.click(input);
-      await user.type(input, 'one');
-
-      await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(1));
+      await waitForLaterMillisecond(async () => {
+        await user.click(input);
+        await user.type(input, 'one');
+        await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(1));
+      });
       expect(screen.queryByRole('option', { name: 'orange' })).toBe(null);
 
       await user.click(screen.getByRole('option', { name: 'apple' }));
@@ -10477,8 +10541,10 @@ describe('<Combobox.Root />', () => {
       const { user } = await render(<FilteredItemsOnlyCombobox />);
       const input = screen.getByTestId('input');
 
-      await user.click(input);
-      await screen.findByRole('listbox');
+      await waitForLaterMillisecond(async () => {
+        await user.click(input);
+        await screen.findByRole('listbox');
+      });
       await user.click(screen.getByRole('option', { name: 'Apple' }));
 
       expect(screen.queryByRole('listbox')).toBe(null);
@@ -11872,8 +11938,10 @@ describe('<Combobox.Root />', () => {
 
       const input = screen.getByTestId('input');
 
-      await user.click(input);
-      await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      await waitForLaterMillisecond(async () => {
+        await user.click(input);
+        await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      });
 
       await user.click(screen.getByRole('option', { name: 'JavaScript' }));
       await user.click(screen.getByRole('option', { name: 'TypeScript' }));
@@ -11886,8 +11954,10 @@ describe('<Combobox.Root />', () => {
       expect(screen.queryByRole('listbox')).toBe(null);
 
       input.focus();
-      await user.keyboard('{ArrowDown}');
-      await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      await waitForLaterMillisecond(async () => {
+        await user.keyboard('{ArrowDown}');
+        await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      });
 
       await user.hover(screen.getByRole('option', { name: 'JavaScript' }));
       await moveOver(screen.getByRole('option', { name: 'JavaScript' }));
@@ -11942,8 +12012,10 @@ describe('<Combobox.Root />', () => {
 
       const input = screen.getByTestId('input');
 
-      await user.click(input);
-      await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      await waitForLaterMillisecond(async () => {
+        await user.click(input);
+        await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      });
 
       const typeScriptOption = screen.getByRole('option', { name: 'TypeScript' });
       await user.hover(typeScriptOption);
@@ -12007,8 +12079,10 @@ describe('<Combobox.Root />', () => {
       );
 
       const input = screen.getByTestId('input');
-      await user.click(input);
-      await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      await waitForLaterMillisecond(async () => {
+        await user.click(input);
+        await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      });
 
       const typeScriptOption = screen.getByRole('option', { name: 'TypeScript' });
       await user.hover(typeScriptOption);
@@ -12122,8 +12196,10 @@ describe('<Combobox.Root />', () => {
       );
 
       const input = screen.getByRole<HTMLInputElement>('combobox');
-      await user.click(input);
-      await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      await waitForLaterMillisecond(async () => {
+        await user.click(input);
+        await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      });
 
       // Select index 4
       await user.click(screen.getByRole('option', { name: 'epsilon' }));
@@ -12166,8 +12242,10 @@ describe('<Combobox.Root />', () => {
       const input = screen.getByTestId('input');
 
       // Open and select Apple
-      await user.click(input);
-      await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      await waitForLaterMillisecond(async () => {
+        await user.click(input);
+        await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      });
       await user.click(screen.getByRole('option', { name: 'Apple' }));
 
       // Edit input to "Ape" (matches Grape and Grapefruit)
@@ -12272,8 +12350,10 @@ describe('<Combobox.Root />', () => {
 
       const input = screen.getByRole('combobox');
 
-      await user.click(input);
-      await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      await waitForLaterMillisecond(async () => {
+        await user.click(input);
+        await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      });
       await user.type(input, 'app');
 
       // Reset history to focus on close events only.
@@ -12490,8 +12570,10 @@ describe('<Combobox.Root />', () => {
         </Combobox.Root>,
       );
 
-      await user.click(screen.getByTestId('trigger'));
-      await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('trigger'));
+        await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      });
       const input = screen.getByRole<HTMLInputElement>('combobox', { name: 'Search' });
 
       await user.type(input, 'ap');
@@ -12524,8 +12606,10 @@ describe('<Combobox.Root />', () => {
         </Combobox.Root>,
       );
 
-      await user.click(screen.getByTestId('trigger'));
-      await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('trigger'));
+        await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      });
       const input = screen.getByRole<HTMLInputElement>('combobox', { name: 'Search' });
 
       await user.type(input, 'ap');
@@ -12572,8 +12656,10 @@ describe('<Combobox.Root />', () => {
         </Combobox.Root>,
       );
 
-      await user.click(screen.getByTestId('trigger'));
-      await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('trigger'));
+        await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      });
       const input = screen.getByRole<HTMLInputElement>('combobox', { name: 'Search' });
 
       // The array is a single-select value, not a list of selected values.
@@ -13453,8 +13539,10 @@ describe('<Combobox.Root />', () => {
       );
 
       const trigger = screen.getByRole('button', { name: 'Choose fruit' });
-      await fireEvent.click(trigger);
-      let input = await screen.findByRole('combobox');
+      let input = await waitForLaterMillisecond(async () => {
+        await fireEvent.click(trigger);
+        return screen.findByRole('combobox');
+      });
       await waitFor(() => expect(input).toHaveFocus());
       await fireEvent.keyDown(input, { key: 'ArrowDown' });
       await fireEvent.keyDown(input, { key: 'ArrowDown' });
@@ -13466,8 +13554,10 @@ describe('<Combobox.Root />', () => {
       await flushMicrotasks();
       expect(screen.queryByRole('dialog')).toBe(null);
 
-      await fireEvent.click(trigger);
-      input = await screen.findByRole('combobox');
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.click(trigger);
+        input = await screen.findByRole('combobox');
+      });
       await waitFor(() => expect(input).toHaveFocus());
       expect(input).not.toHaveAttribute('aria-activedescendant');
       await fireEvent.keyDown(input, { key: 'ArrowDown' });
@@ -13499,8 +13589,10 @@ describe('<Combobox.Root />', () => {
       );
 
       const trigger = screen.getByRole('button', { name: 'Choose fruit' });
-      await fireEvent.click(trigger);
-      const done = await screen.findByRole('button', { name: 'Done' });
+      const done = await waitForLaterMillisecond(async () => {
+        await fireEvent.click(trigger);
+        return screen.findByRole('button', { name: 'Done' });
+      });
       // The input gives up the focus before the highlight, so its `focusout` cannot clear the
       // highlight when the dialog closes.
       done.focus();
@@ -13511,8 +13603,10 @@ describe('<Combobox.Root />', () => {
       await fireEvent.click(done);
       await waitFor(() => expect(screen.queryByRole('dialog')).toBe(null));
 
-      await fireEvent.click(trigger);
-      const input = await screen.findByRole('combobox');
+      const input = await waitForLaterMillisecond(async () => {
+        await fireEvent.click(trigger);
+        return screen.findByRole('combobox');
+      });
       await waitFor(() => expect(input).toHaveFocus());
       expect(input).not.toHaveAttribute('aria-activedescendant');
       await fireEvent.keyDown(input, { key: 'ArrowDown' });
@@ -13779,10 +13873,11 @@ describe('<Combobox.Root />', () => {
         const { user } = await render(<DialogSingleCombobox defaultOpen={false} />);
 
         const trigger = screen.getByTestId('dialog-trigger');
-        await user.click(trigger);
-
-        await screen.findByRole('dialog', { name: 'Fruit chooser' });
-        const input = await screen.findByTestId('dialog-input');
+        const input = await waitForLaterMillisecond(async () => {
+          await user.click(trigger);
+          await screen.findByRole('dialog', { name: 'Fruit chooser' });
+          return screen.findByTestId('dialog-input');
+        });
 
         await user.type(input, 'ap');
         await user.click(screen.getByRole('option', { name: 'Apple' }));
@@ -13799,10 +13894,11 @@ describe('<Combobox.Root />', () => {
         const { user } = await render(<DialogSingleCombobox defaultOpen={false} />);
 
         const trigger = screen.getByTestId('dialog-trigger');
-        await user.click(trigger);
-
-        await screen.findByRole('dialog', { name: 'Fruit chooser' });
-        const input = await screen.findByTestId('dialog-input');
+        const input = await waitForLaterMillisecond(async () => {
+          await user.click(trigger);
+          await screen.findByRole('dialog', { name: 'Fruit chooser' });
+          return screen.findByTestId('dialog-input');
+        });
 
         await user.type(input, 'ap');
         await user.click(screen.getByRole('option', { name: 'Apple' }));
@@ -15066,9 +15162,10 @@ describe('<Combobox.Root />', () => {
       const trigger = screen.getByTestId('trigger');
 
       await fireEvent.focusIn(trigger);
-      await fireEvent.click(trigger);
-
-      await flushMicrotasks();
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.click(trigger);
+        await flushMicrotasks();
+      });
 
       const popup = screen.getByRole('dialog');
 
@@ -15112,9 +15209,10 @@ describe('<Combobox.Root />', () => {
       const outside = screen.getByTestId('outside');
 
       await fireEvent.focusIn(trigger);
-      await fireEvent.click(trigger);
-
-      await flushMicrotasks();
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.click(trigger);
+        await flushMicrotasks();
+      });
 
       const popup = screen.getByRole('dialog');
 

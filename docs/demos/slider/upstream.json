@@ -4,15 +4,67 @@
   "files": {
     "edge-alignment/css-modules/index.module.css": "1f26715c72a8a1d085d175e60486a3e49b15c04e9bb047a8020858425d89e7cc",
     "edge-alignment/css-modules/index.tsx": "18a4e72433d0c630911eb466f718caebc2301f71f0b4862a498ba5de5182d261",
+    "edge-alignment/tailwind/index.tsx": "5d0ad2294922c0bffaf90391e26679cda49c66bda0526ee4caf20cc63aa660e5",
     "hero/css-modules/index.module.css": "1f26715c72a8a1d085d175e60486a3e49b15c04e9bb047a8020858425d89e7cc",
     "hero/css-modules/index.tsx": "57ad2a8b4d1d994004ef9746a319ca859fbd5914bbc1396733ffc9bcf38f461e",
+    "hero/tailwind/index.tsx": "45888a98743c07271fc8f04af11e0f330840ccba126bc1db2e40884e0e4b7617",
     "marks/css-modules/index.module.css": "934a938cac37240c26fdf30c4b3ca903d90edf0e550fa33ca8fea4e16704f835",
     "marks/css-modules/index.tsx": "7b5ac4d755d4dbd61611bbf1ff6a54ceb87fce053e9ad5224785efd65b803f69",
+    "marks/tailwind/index.tsx": "1c468d26131ffaf18facd2b64a2bb50467f6dbe0c333970c311435b5c346dfa2",
     "range-slider/css-modules/index.module.css": "1f26715c72a8a1d085d175e60486a3e49b15c04e9bb047a8020858425d89e7cc",
     "range-slider/css-modules/index.tsx": "6b3bb3419c70a74ce3c6fe22a8c6b81fd5bb563bfb0953f7a54f9430795f525f",
+    "range-slider/tailwind/index.tsx": "81b7c790209fe1bf590d4eef9fa80f6d65e5efd0eb6859ee0b2d024b26a1240c",
     "steps/css-modules/index.module.css": "caa47680c6924e503b8df7608d33cdd5a74eac306f36cd04376d35add13a0a0a",
     "steps/css-modules/index.tsx": "4d06bd957afc7fdd1151f89ce8240700ff763d86ea3252f32a7a2eff535f7b3f",
+    "steps/tailwind/index.tsx": "1b16f875aebe8b20d3bef3b107a1fd0c261176829ebe3792a12a775a57396807",
     "vertical/css-modules/index.module.css": "54b20152f9edf7bcb77a8b75ae0b1347f2c6bd4c9c5a034e29e3f9f7213dd89e",
-    "vertical/css-modules/index.tsx": "81f4109a835a69e0732baf6a1e208a4a2a2ef37a678555659f270455dad6c8bb"
+    "vertical/css-modules/index.tsx": "81f4109a835a69e0732baf6a1e208a4a2a2ef37a678555659f270455dad6c8bb",
+    "vertical/tailwind/index.tsx": "fff32f70449d06a4cb4645fb856d4a94d0f33406410a4d1d1c97aa9a970767c6"
+  },
+  "classes": {
+    "edge-alignment/tailwind": [
+      "bg-neutral-950 select-none dark:bg-white",
+      "flex w-56 touch-none items-center py-3 select-none",
+      "h-1 w-full bg-neutral-200 select-none dark:bg-neutral-800",
+      "size-4 border border-neutral-950 bg-white select-none has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-neutral-950 dark:has-[:focus-visible]:outline-white dark:border-white dark:bg-neutral-950"
+    ],
+    "hero/tailwind": [
+      "bg-neutral-950 select-none dark:bg-white",
+      "flex w-56 touch-none items-center py-3 select-none",
+      "h-1 w-full bg-neutral-200 select-none dark:bg-neutral-800",
+      "size-4 border border-neutral-950 bg-white select-none has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-neutral-950 dark:has-[:focus-visible]:outline-white dark:border-white dark:bg-neutral-950"
+    ],
+    "marks/tailwind": [
+      "absolute -translate-x-1/2 text-xs whitespace-nowrap text-neutral-600 dark:text-neutral-400",
+      "absolute top-1/2 h-2 w-px -translate-x-1/2 -translate-y-1/2 bg-neutral-950 dark:bg-white",
+      "bg-neutral-950 select-none dark:bg-white",
+      "flex touch-none items-center py-2.5 select-none",
+      "h-1 w-full bg-neutral-200 select-none dark:bg-neutral-800",
+      "relative h-4 select-none",
+      "size-4 border border-neutral-950 bg-white select-none has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-neutral-950 dark:has-[:focus-visible]:outline-white dark:border-white dark:bg-neutral-950",
+      "w-56"
+    ],
+    "range-slider/tailwind": [
+      "bg-neutral-950 select-none dark:bg-white",
+      "flex w-56 touch-none items-center py-3 select-none",
+      "h-1 w-full bg-neutral-200 select-none dark:bg-neutral-800",
+      "size-4 border border-neutral-950 bg-white select-none has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-neutral-950 dark:has-[:focus-visible]:outline-white dark:border-white dark:bg-neutral-950",
+      "size-4 border border-neutral-950 bg-white select-none has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-neutral-950 dark:has-[:focus-visible]:outline-white dark:border-white dark:bg-neutral-950"
+    ],
+    "steps/tailwind": [
+      "bg-neutral-950 select-none dark:bg-white",
+      "col-span-2 flex touch-none items-center py-3 select-none",
+      "cursor-default text-sm text-neutral-950 dark:text-white",
+      "grid w-56 grid-cols-2",
+      "h-1 w-full bg-neutral-200 select-none dark:bg-neutral-800",
+      "size-4 border border-neutral-950 bg-white select-none has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-neutral-950 dark:has-[:focus-visible]:outline-white dark:border-white dark:bg-neutral-950",
+      "text-end text-sm text-neutral-950 dark:text-white"
+    ],
+    "vertical/tailwind": [
+      "bg-neutral-200 select-none dark:bg-neutral-800 data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1",
+      "bg-neutral-950 select-none dark:bg-white",
+      "flex touch-none select-none data-[orientation=vertical]:h-32 data-[orientation=vertical]:px-3",
+      "size-4 border border-neutral-950 bg-white select-none has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-neutral-950 dark:has-[:focus-visible]:outline-white dark:border-white dark:bg-neutral-950"
+    ]
   }
 }

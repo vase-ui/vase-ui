@@ -6,7 +6,9 @@ description: An unstyled Vue collapsible component that displays a panel control
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoCollapsibleHero from '../demos/collapsible/hero/css-modules/index.vue';
+import DemoCollapsibleHeroTailwind from '../demos/collapsible/hero/tailwind/index.vue';
 </script>
 
 # Collapsible
@@ -15,7 +17,12 @@ A collapsible panel controlled by a button.
 
 <DemoFrame>
   <DemoCollapsibleHero />
+  <template #tailwind>
+    <DemoCollapsibleHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -24,6 +31,18 @@ A collapsible panel controlled by a button.
 <<< ../demos/collapsible/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/collapsible/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Anatomy
 

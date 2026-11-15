@@ -5,9 +5,9 @@ description: A guide to building forms with Vase UI components.
 
 <script setup lang="ts">
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
-import DemoFormsHero from '../demos/handbook-forms/hero/css-modules/index.vue';
-import DemoTanstackForm from '../demos/handbook-forms/tanstack-form/css-modules/index.vue';
-import DemoVeeValidate from '../demos/handbook-forms/vee-validate/css-modules/index.vue';
+import DemoFormsHero from '../demos/handbook-forms/hero/tailwind/index.vue';
+import DemoTanstackForm from '../demos/handbook-forms/tanstack-form/tailwind/index.vue';
+import DemoVeeValidate from '../demos/handbook-forms/vee-validate/tailwind/index.vue';
 </script>
 
 # Forms
@@ -16,19 +16,51 @@ A guide to building forms with Vase UI components.
 
 Vase UI form control components extend the native [constraint validation API](https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#the-constraint-validation-api). You can build forms that collect user input or give control over an interface. The components also work with form libraries such as [VeeValidate](#veevalidate) and [TanStack Form](#tanstack-form).
 
+The demos on this page use Tailwind CSS, and the files in `components` give each part its classes. The VeeValidate and TanStack Form demos use the same files.
+
 <DemoFrame>
-  <DemoFormsHero />
+  <template #tailwind>
+    <DemoFormsHero />
+  </template>
 </DemoFrame>
 
 ::: code-group
 
-<<< ../demos/handbook-forms/hero/css-modules/index.vue
+<<< ../demos/handbook-forms/hero/tailwind/index.vue
 
-<<< ../demos/handbook-forms/hero/css-modules/ExampleForm.vue
+<<< ../demos/handbook-forms/hero/tailwind/ExampleForm.vue
 
-<<< ../demos/handbook-forms/components/ToastProvider.vue
+<<< ../demos/handbook-forms/components/autocomplete.ts
 
-<<< ../examples/forms/layout.module.css
+<<< ../demos/handbook-forms/components/button.ts
+
+<<< ../demos/handbook-forms/components/checkbox-group.ts
+
+<<< ../demos/handbook-forms/components/checkbox.ts
+
+<<< ../demos/handbook-forms/components/combobox.ts
+
+<<< ../demos/handbook-forms/components/field.ts
+
+<<< ../demos/handbook-forms/components/fieldset.ts
+
+<<< ../demos/handbook-forms/components/form.ts
+
+<<< ../demos/handbook-forms/components/number-field.ts
+
+<<< ../demos/handbook-forms/components/radio-group.ts
+
+<<< ../demos/handbook-forms/components/radio.ts
+
+<<< ../demos/handbook-forms/components/select.ts
+
+<<< ../demos/handbook-forms/components/slider.ts
+
+<<< ../demos/handbook-forms/components/switch.ts
+
+<<< ../demos/handbook-forms/components/toast.ts
+
+<<< ../demos/handbook-forms/components/withProps.ts
 
 :::
 
@@ -155,14 +187,16 @@ Use `<Field.Error>` with no content to show the native error message of the fiel
 [VeeValidate](https://vee-validate.logaretm.com/v4/) is a form library for Vue. You can integrate it with Vase UI to manage the form state and the field state outside the components.
 
 <DemoFrame>
-  <DemoVeeValidate />
+  <template #tailwind>
+    <DemoVeeValidate />
+  </template>
 </DemoFrame>
 
 ::: code-group
 
-<<< ../demos/handbook-forms/vee-validate/css-modules/index.vue
+<<< ../demos/handbook-forms/vee-validate/tailwind/index.vue
 
-<<< ../demos/handbook-forms/vee-validate/css-modules/VeeValidateForm.vue
+<<< ../demos/handbook-forms/vee-validate/tailwind/VeeValidateForm.vue
 
 :::
 
@@ -206,14 +240,16 @@ Do not use `Form` here. A field that shows an error stops the `submit` event of 
 [TanStack Form](https://tanstack.com/form/latest/docs/framework/vue/quick-start) is a form library with a function-based API for validation. It also works with Vase UI.
 
 <DemoFrame>
-  <DemoTanstackForm />
+  <template #tailwind>
+    <DemoTanstackForm />
+  </template>
 </DemoFrame>
 
 ::: code-group
 
-<<< ../demos/handbook-forms/tanstack-form/css-modules/index.vue
+<<< ../demos/handbook-forms/tanstack-form/tailwind/index.vue
 
-<<< ../demos/handbook-forms/tanstack-form/css-modules/TanstackForm.vue
+<<< ../demos/handbook-forms/tanstack-form/tailwind/TanstackForm.vue
 
 :::
 

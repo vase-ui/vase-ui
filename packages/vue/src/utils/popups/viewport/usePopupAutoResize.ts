@@ -14,6 +14,7 @@ import { EMPTY_OBJECT, NOOP } from '../../../common/empty';
 import { useAnimationFrame } from '../../../common/useAnimationFrame';
 import type { Side } from '../../../internals/useAnchorPositioning';
 import { useAnimationsFinished } from '../../../internals/useAnimationsFinished';
+import { isInHeldBranch } from '../../../internals/useKeepAliveState';
 import { getCssDimensions } from '../../getCssDimensions';
 import * as CommonPositionerCssVars from '../positioning/CommonPositionerCssVars';
 import * as CommonPopupCssVars from './CommonPopupCssVars';
@@ -125,8 +126,8 @@ export function usePopupAutoResize(parameters: UsePopupAutoResizeParameters) {
   }
 
   // `KeepAlive` takes the elements out of the document, where they have no layout. A measurement
-  // then gives a size of 0.
-  const deactivated = shallowRef(false);
+  // then gives a size of 0. A part that mounts in a held branch gets no `onDeactivated` call.
+  const deactivated = shallowRef(isInHeldBranch());
   let cleanup: (() => void) | undefined;
 
   function stop() {
