@@ -25,17 +25,19 @@ const modules = import.meta.glob<{ default: Component }>(
 type Rgba = [number, number, number, number];
 
 // A 2D canvas gives the sRGB bytes of each color form that an engine writes, `oklch()` included.
-const canvas = document.createElement('canvas').getContext('2d', { willReadFrequently: true })!;
+const canvasContext = document
+  .createElement('canvas')
+  .getContext('2d', { willReadFrequently: true })!;
 
 function rgbaOf(color: string): Rgba {
-  canvas.clearRect(0, 0, 1, 1);
-  canvas.fillStyle = color;
-  canvas.fillRect(0, 0, 1, 1);
-  const [r, g, b, a] = canvas.getImageData(0, 0, 1, 1).data;
+  canvasContext.clearRect(0, 0, 1, 1);
+  canvasContext.fillStyle = color;
+  canvasContext.fillRect(0, 0, 1, 1);
+  const [r, g, b, a] = canvasContext.getImageData(0, 0, 1, 1).data;
   return [r, g, b, a];
 }
 
-function over([r1, g1, b1, a1]: Rgba, [r2, g2, b2]: Rgba): Rgba {
+function blendOver([r1, g1, b1, a1]: Rgba, [r2, g2, b2]: Rgba): Rgba {
   const alpha = a1 / 255;
   return [
     r1 * alpha + r2 * (1 - alpha),
@@ -76,7 +78,7 @@ function backgroundOf(element: Element): Rgba {
       break;
     }
   }
-  return layers.reduceRight<Rgba>((below, layer) => over(layer, below), [255, 255, 255, 255]);
+  return layers.reduceRight<Rgba>((below, layer) => blendOver(layer, below), [255, 255, 255, 255]);
 }
 
 /** The text of `root` that has the lowest WCAG contrast against the background behind it. */
@@ -89,7 +91,7 @@ function lowestContrastIn(root: Element) {
     )
     .map((element) => {
       const background = backgroundOf(element);
-      const text = luminance(over(rgbaOf(getComputedStyle(element).color), background));
+      const text = luminance(blendOver(rgbaOf(getComputedStyle(element).color), background));
       const behind = luminance(background);
       return {
         text: element.textContent.trim(),
@@ -136,8 +138,9 @@ async function typeInto(input: HTMLElement, text: string) {
   });
 }
 
-// Each row gives the element whose text the case measures, in the state of its name. The rows with
-// a held press are last: a real press gives the document the input modality of a mouse.
+// Each row gives the element whose text the case measures, in the state of its name. A real press
+// gives the document the input modality of a mouse, so the rows with a press come after the rows
+// that use the keyboard.
 const rows: { name: string; demo: string; reach: () => Promise<Element> }[] = [
   {
     name: 'placeholder of Select on hover',
@@ -162,7 +165,7 @@ const rows: { name: string; demo: string; reach: () => Promise<Element> }[] = [
     name: 'subtitle of a highlighted item',
     demo: 'combobox/async-single',
     async reach() {
-      // The demo fails 1 time in 100 at random.
+      // The demo fails a search 1 time in 100 at random, and a failed search shows no item.
       const random = vi.spyOn(Math, 'random').mockReturnValue(0.5);
       onTestFinished(() => {
         random.mockRestore();

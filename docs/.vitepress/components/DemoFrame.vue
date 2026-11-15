@@ -82,9 +82,10 @@ onMounted(restoreDemoVariant);
    `oklch(70.8% 0 0)` in the dark theme. Behind that text the trigger paints a hover color, a color
    for an open popup and a color for `:active`. In the light theme the contrast is 4.35:1 on the
    first two and 3.76:1 on the third. In the dark theme it is 4.01:1 on the third. These rules use
-   the next gray of the sheets that has 4.5:1 or more on each of these colors, in each state, so
-   the text does not change its color when the pointer comes. A trigger in `ActionButtons` shows
-   only an icon. The last selector is the class that gives the color in the Tailwind variant. */
+   the next gray of the sheets that has 4.5:1 or more on each of these colors. They apply in each
+   state, so the text keeps its color when the pointer moves onto the trigger. A trigger in
+   `ActionButtons` shows only an icon. The last selector is the class that gives the color in the
+   Tailwind variant. */
 .demo-frame
   :deep(
     :is(
