@@ -38,6 +38,15 @@ const isWebKit = platform.engine.webkit;
 
 const FIXTURE = 'src/slider/thumb/SliderThumbHydration.test.vue';
 
+// HTML moves the value of a range input to its step at a change of `step`. WebKit keeps the value.
+const stepMovesRangeValue = (() => {
+  const input = document.createElement('input');
+  input.type = 'range';
+  input.value = '33';
+  input.step = '10';
+  return input.value === '30';
+})();
+
 // Gives its root a new function ref in each render. It exposes its element.
 const UnstableRefThumb = defineComponent(
   (_props, { attrs, expose, slots }) => {
@@ -2146,13 +2155,29 @@ describe('<Slider.Thumb />', () => {
       expect(events).toEqual([]);
     });
 
+    async function expectNoTakeAfterChange(
+      props: Record<string, unknown>,
+      change: Record<string, unknown>,
+      thumb: string[],
+    ) {
+      const fixtureProps = shallowRef(props);
+      const { container } = await render(() => (
+        <SliderThumbHydration defaultValue={30} {...fixtureProps.value} />
+      ));
+      fixtureProps.value = { ...props, ...change };
+      await flushMicrotasks();
+      const events = recordInputEvents(container);
+      expect(readThumbs(container)).toEqual([thumb]);
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(readThumbs(container)).toEqual([thumb]);
+      expect(within(container).getByTestId('changes').textContent).toBe('');
+      expect(events).toEqual([]);
+    }
+
     it.each([
-      {
-        name: 'the step',
-        props: { defaultValue: 33, step: 1 },
-        change: { step: 10 },
-        thumb: ['30', '33'],
-      },
       {
         name: 'min',
         props: { defaultValue: 30, step: 10 },
@@ -2168,21 +2193,21 @@ describe('<Slider.Thumb />', () => {
     ])(
       'keeps the value at a `pageshow` event after a change of $name',
       async ({ props, change, thumb }) => {
-        const fixtureProps = shallowRef<Record<string, unknown>>(props);
-        const { container } = await render(() => (
-          <SliderThumbHydration defaultValue={30} {...fixtureProps.value} />
-        ));
-        fixtureProps.value = { ...props, ...change };
-        await flushMicrotasks();
-        const events = recordInputEvents(container);
-        expect(readThumbs(container)).toEqual([thumb]);
+        await expectNoTakeAfterChange(props, change, thumb);
+      },
+    );
 
-        window.dispatchEvent(new PageTransitionEvent('pageshow'));
-        await flushMicrotasks();
+    it.runIf(stepMovesRangeValue)(
+      'keeps the value at a `pageshow` event after a change of the step',
+      async () => {
+        await expectNoTakeAfterChange({ defaultValue: 33, step: 1 }, { step: 10 }, ['30', '33']);
+      },
+    );
 
-        expect(readThumbs(container)).toEqual([thumb]);
-        expect(within(container).getByTestId('changes').textContent).toBe('');
-        expect(events).toEqual([]);
+    it.runIf(!stepMovesRangeValue)(
+      'keeps the value at a `pageshow` event after a change of the step that the input keeps',
+      async () => {
+        await expectNoTakeAfterChange({ defaultValue: 33, step: 1 }, { step: 10 }, ['33', '33']);
       },
     );
 
