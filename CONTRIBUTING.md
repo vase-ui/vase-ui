@@ -606,6 +606,10 @@ A disable comment has the form `// eslint-disable-next-line <rule> -- <reason>`.
 - Write `import type` on its own line.
 - Write `void` before a promise that the code does not wait for.
 - An optional parameter has no `| undefined`. An optional prop has it, as [Props](#props) says.
+- Write a class member that only its class uses as an ECMAScript private member, such as `#attachedStores`. Do not write the `private` keyword, also where Base UI has it. The keyword is only a check of the compiler, and the member stays a public property at run time. ESLint refuses the keyword in the source of the package.
+- Keep `protected` for a member that a subclass uses, because ECMAScript has no such form. Do not write `public`. It is the default, and ESLint refuses it in the source of the package.
+- A member that is only a type keeps `private`: a field that has `declare`, and a member of a `declare class`. Such a member has no code at run time. TypeScript refuses `declare` on a `#` member, and a constructor cannot have a `#` name. The brand of `AlertDialogHandle` and the members of `ComboboxItemCollection` are examples.
+- A class with a `#` member whose objects a consumer can hold calls `markRaw(this)` in its constructor, as `BasePopupHandle` does. [Popup store](#popup-store) says what a reactive proxy does to such an object.
 - A test file can keep the `!` and the casts of the Base UI test.
 
 ## Rules for the source
@@ -882,7 +886,7 @@ The state of a popup is in a store. The code is in `src/utils/popups`. `tooltip/
 - A root can call a listener of the consumer when its props change. The close of a disabled root does this. The call runs in `onMounted` and in a `watch` with no `immediate`, so a server render calls no listener.
 - A trigger that has a handle calls `usePopupHandleStore(() => props.handle)` in `setup`. The result is the inert store of the handle while the trigger hydrates, and then the store that the handle points at. Hydration does not patch an attribute of a bound object, which is how a part binds its attributes. A trigger that reads the store of the root while it hydrates then keeps the attribute values of the server HTML.
 - When two roots take one handle, the newest root controls it. When the newest root unmounts, control returns to the older root. A development build warns when two roots are still attached one frame later.
-- `BasePopupHandle` calls `markRaw(this)`. Vue then makes no reactive proxy of a handle. A proxy, from `ref()` or the `data` option, would unwrap the pointer ref and fail at the next write to it.
+- `BasePopupHandle` calls `markRaw(this)`. Vue then makes no reactive proxy of a handle. A consumer can hold a handle in `ref()`, `reactive()`, `readonly()` or the `data` option. Without the call, a method of the handle throws a `TypeError` on such a proxy, because it reads a private member.
 - A family makes a subclass of `BasePopupStore`. The subclass overrides only the steps where it differs: `isOpenChangeIgnored`, `getCloseTrigger`, `prepareOpenChange`, `prepareUnmount` and `anchorsToActiveTrigger`.
 - A family store keeps a timer of its own in `context` as a `Timeout`. Its root clears the timer in `onScopeDispose`.
 - A family that picks a value from a list makes a subclass of `ValuePopupStore` from `utils/popups/value-popup`. The subclass gives `getAnchorElement`. The store writes that element to `anchorElement` in each write that changes the anchor, the open state or the positioner element.

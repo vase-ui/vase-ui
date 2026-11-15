@@ -1,10 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { computed, createSSRApp, nextTick, ref, watchEffect } from 'vue';
+import { computed, createSSRApp, nextTick, reactive, readonly, ref, watchEffect } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import {
   PopupHandleFixtureStore,
   createPopupHandleFixture,
 } from '../../../test/fixtures/PopupHandleFixture';
+import type { PopupHandleFixture } from '../../../test/fixtures/PopupHandleFixture';
 import PopupHandleHydration from './PopupHandleHydration.test.vue';
 
 describe('BasePopupHandle', () => {
@@ -43,13 +44,30 @@ describe('BasePopupHandle', () => {
     expect(isOpen.value).toBe(false);
   });
 
-  it('keeps its pointer when Vue makes the handle reactive', () => {
+  // The `data` option gives a handle as a key of a reactive object.
+  it.each([
+    { name: 'ref()', hold: (handle: PopupHandleFixture) => ref(handle).value },
+    { name: 'reactive()', hold: (handle: PopupHandleFixture) => reactive(handle) },
+    { name: 'readonly()', hold: (handle: PopupHandleFixture) => readonly(handle) },
+    {
+      name: 'a key of a reactive object',
+      hold: (handle: PopupHandleFixture) => reactive({ handle }).handle,
+    },
+  ])('controls its root when the consumer holds the handle in $name', ({ hold }) => {
     const handle = createPopupHandleFixture();
     const rootStore = new PopupHandleFixtureStore();
-    const reactiveHandle = ref(handle).value;
+    const held = hold(handle);
 
-    const detach = reactiveHandle.attachStore(rootStore);
+    const detach = held.attachStore(rootStore);
     expect(handle.store).toBe(rootStore);
+
+    held.open(null);
+    expect(held.isOpen).toBe(true);
+    held.close();
+    expect(held.isOpen).toBe(false);
+    expect(() => {
+      held.open('missing');
+    }).toThrow('FixtureHandle.open() was called with the trigger id "missing"');
 
     detach();
     expect(handle.store).toBe(handle.fallback);
