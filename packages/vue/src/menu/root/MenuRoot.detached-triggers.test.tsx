@@ -8,7 +8,6 @@ import {
   flushMicrotasks,
   isJSDOM,
   nextAnimationsRead,
-  nextEvent,
   screen,
   wait,
   waitFor,
@@ -184,8 +183,9 @@ describe('<MenuRoot />', () => {
         });
       }
 
-      // The handoff itself legitimately renders `trigger-change` while closing
-      // the previous trigger's popup. Only the close that follows matters.
+      // The switch to trigger 2 closes the popup and opens it again in one task. The popup thus
+      // starts an exit and reverses it in the next frame, and the events of that exit can come
+      // after the setup. Only the close that follows matters.
       instantsWhileEnding.length = 0;
 
       return {
@@ -201,10 +201,13 @@ describe('<MenuRoot />', () => {
     it('does not apply the trigger-change instant to a hover close after switching triggers', async () => {
       const { user, trigger2, popup, instantsWhileEnding } = await renderHoverDetachedTriggers();
 
-      // The ending style lasts only while the exit runs, so the case waits for the start of the exit.
-      await nextEvent(popup, 'transitionrun', { action: () => user.unhover(trigger2) });
-      expect(popup).toHaveAttribute('data-ending-style');
+      // Only the close makes the part read the animations of the popup.
+      const exitAnimations = await nextAnimationsRead(popup, {
+        action: () => user.unhover(trigger2),
+      });
 
+      expect(exitAnimations.length).toBeGreaterThan(0);
+      expect(popup).toHaveAttribute('data-ending-style');
       expect(instantsWhileEnding).not.toContain('trigger-change');
     });
 
@@ -343,7 +346,12 @@ describe('<MenuRoot />', () => {
       });
       expect(switchAnimations.length).toBeGreaterThan(0);
 
-      await nextEvent(popup, 'transitionrun', { action: () => user.unhover(trigger2) });
+      // Only the close makes the part read the animations of the popup.
+      const exitAnimations = await nextAnimationsRead(popup, {
+        action: () => user.unhover(trigger2),
+      });
+      expect(exitAnimations.length).toBeGreaterThan(0);
+      expect(popup).toHaveAttribute('data-ending-style');
 
       // The case takes each promise before it ends the animation. A canceled animation gets a new
       // promise that never settles.
