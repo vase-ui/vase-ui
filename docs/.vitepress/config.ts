@@ -6,7 +6,7 @@ import type { MarkdownRenderer } from 'vitepress';
 import { createApiReferenceReader } from '../../scripts/docs/apiReference.ts';
 import { familyOfPage } from '../../scripts/docs/familyPages.ts';
 import { readNavigation } from '../../scripts/docs/navigation.ts';
-import { DEMO_VARIANT_STORAGE_KEY } from './components/demoVariant.ts';
+import { DEMO_VARIANT_STORAGE_KEY } from './components/demoVariantStorageKey.ts';
 import { markdownHeadingBadge } from './markdownHeadingBadge.ts';
 import { postcssFollowSiteTheme } from './postcssFollowSiteTheme.ts';
 

@@ -17,6 +17,9 @@ function shownVariant(): DemoVariant {
     : 'css-modules';
 }
 
+// The select has `autocomplete="off"`. Firefox restores the value of a select when the page loads
+// again. That value can differ from the stored choice, and the select then shows another variant
+// than the demos.
 function select(event: Event) {
   const control = event.currentTarget;
   if (control instanceof HTMLSelectElement) {
@@ -34,7 +37,7 @@ onMounted(restoreDemoVariant);
       <slot v-else />
     </div>
     <div v-if="$slots.tailwind && $slots.default" class="demo-toolbar">
-      <select aria-label="Styling method" :value="demoVariant" @change="select">
+      <select aria-label="Styling method" autocomplete="off" :value="demoVariant" @change="select">
         <option value="css-modules">CSS Modules</option>
         <option value="tailwind">Tailwind v4</option>
       </select>

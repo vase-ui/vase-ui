@@ -2,9 +2,13 @@
 @layer __vitepress_base, theme, base, utilities;
 @import 'tailwindcss/theme.css' layer(theme);
 
-/* Only the frame of a Tailwind demo and a popup of a demo get the reset and the utilities. */
+/*
+ * Only the frame of a Tailwind demo gets the reset. The popup of a demo is outside the frame, and
+ * the base styles of VitePress reset it already. The reset of Tailwind would change the popups of
+ * the CSS-module demos. The utilities also apply in a portal element, so a popup gets its classes.
+ */
 @layer base {
-  :where([data-demo='tailwind'], [data-vase-ui-portal]) {
+  :where([data-demo='tailwind']) {
     @import 'tailwindcss/preflight.css';
   }
 }

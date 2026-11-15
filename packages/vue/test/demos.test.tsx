@@ -1,8 +1,18 @@
 /// <reference types="vite/client" />
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { h } from 'vue';
 import type { Component } from 'vue';
-import { createRenderer, expectNoAxeViolations, hydrate, renderOnServer } from '#test-utils';
+import {
+  createRenderer,
+  expectNoAxeViolations,
+  hydrate,
+  renderOnServer,
+  waitFor,
+} from '#test-utils';
+import DemoFrame from '../../../docs/.vitepress/components/DemoFrame.vue';
+import DemoSource from '../../../docs/.vitepress/components/DemoSource.vue';
+import { demoVariant } from '../../../docs/.vitepress/components/demoVariant.ts';
+import { DEMO_VARIANT_STORAGE_KEY } from '../../../docs/.vitepress/components/demoVariantStorageKey.ts';
 import '../../../docs/demos/tailwind.css';
 
 const modules = import.meta.glob<{ default: Component }>(
@@ -65,10 +75,10 @@ describe('the style sheet of the Tailwind demos', () => {
       expected: { height: '32px', 'padding-top': '0px' },
     },
     {
-      name: 'a portal element gets utilities',
+      name: 'a portal element gets utilities only',
       vnode: () => h('div', { 'data-vase-ui-portal': '' }, h('div', { class: 'h-8' })),
       selector: '.h-8',
-      expected: { height: '32px' },
+      expected: { height: '32px', 'box-sizing': 'content-box' },
     },
     {
       name: 'a CSS-module frame gets nothing',
@@ -83,6 +93,124 @@ describe('the style sheet of the Tailwind demos', () => {
     expect(
       Object.fromEntries(Object.keys(expected).map((name) => [name, style.getPropertyValue(name)])),
     ).toEqual(expected);
+  });
+});
+
+describe('the frame of a demo', () => {
+  const { render } = createRenderer();
+
+  afterEach(() => {
+    demoVariant.value = 'css-modules';
+    delete document.documentElement.dataset.demoVariant;
+    localStorage.removeItem(DEMO_VARIANT_STORAGE_KEY);
+    scrollTo(0, 0);
+  });
+
+  /** The last step of a selection is a call of `scrollBy`, so the test can wait for it. */
+  function spyOnScroll() {
+    const spy = vi.spyOn(window, 'scrollBy');
+    onTestFinished(() => {
+      spy.mockRestore();
+    });
+    return spy;
+  }
+
+  it('shows the other variant, keeps the choice and swaps the sources when the reader selects it', async () => {
+    const scrollBy = spyOnScroll();
+    const { container, getByRole, user } = await render(() =>
+      h('div', [
+        h(DemoFrame, null, { default: () => 'CSS Modules demo', tailwind: () => 'Tailwind demo' }),
+        h(DemoSource, { variant: 'css-modules' }, () => 'CSS Modules source'),
+        h(DemoSource, { variant: 'tailwind' }, () => 'Tailwind source'),
+      ]),
+    );
+    const frame = container.querySelector('.demo-frame');
+    const [cssSource, tailwindSource] = container.querySelectorAll('.demo-source');
+    const select = getByRole('combobox', { name: 'Styling method' });
+    expect(frame).toHaveAttribute('data-demo', 'css-modules');
+    expect(frame).toHaveTextContent('CSS Modules demo');
+    expect(select).toHaveValue('css-modules');
+    expect(select).toHaveAttribute('autocomplete', 'off');
+    expect(getComputedStyle(cssSource).display).toBe('block');
+    expect(getComputedStyle(tailwindSource).display).toBe('none');
+
+    await user.selectOptions(select, 'tailwind');
+    await waitFor(() => expect(scrollBy).toHaveBeenCalledTimes(1));
+
+    expect(frame).toHaveAttribute('data-demo', 'tailwind');
+    expect(frame).toHaveTextContent('Tailwind demo');
+    expect(document.documentElement.dataset.demoVariant).toBe('tailwind');
+    expect(localStorage.getItem(DEMO_VARIANT_STORAGE_KEY)).toBe('tailwind');
+    expect(getComputedStyle(cssSource).display).toBe('none');
+    expect(getComputedStyle(tailwindSource).display).toBe('block');
+
+    await user.selectOptions(select, 'css-modules');
+    await waitFor(() => expect(scrollBy).toHaveBeenCalledTimes(2));
+
+    expect(frame).toHaveAttribute('data-demo', 'css-modules');
+    expect(document.documentElement.dataset.demoVariant).toBeUndefined();
+    expect(localStorage.getItem(DEMO_VARIANT_STORAGE_KEY)).toBe('css-modules');
+    expect(getComputedStyle(cssSource).display).toBe('block');
+    expect(getComputedStyle(tailwindSource).display).toBe('none');
+  });
+
+  it('shows the stored variant after the mount, as the script in the head set it', async () => {
+    document.documentElement.dataset.demoVariant = 'tailwind';
+
+    const { container, getByRole } = await render(
+      h(DemoFrame, null, { default: () => 'CSS Modules demo', tailwind: () => 'Tailwind demo' }),
+    );
+
+    const frame = container.querySelector('.demo-frame');
+    expect(frame).toHaveAttribute('data-demo', 'tailwind');
+    expect(frame).toHaveTextContent('Tailwind demo');
+    expect(getByRole('combobox', { name: 'Styling method' })).toHaveValue('tailwind');
+  });
+
+  it.each([
+    {
+      name: 'only the default slot',
+      slots: { default: () => 'CSS Modules demo' },
+      variant: 'css-modules',
+      text: 'CSS Modules demo',
+    },
+    {
+      name: 'only the tailwind slot',
+      slots: { tailwind: () => 'Tailwind demo' },
+      variant: 'tailwind',
+      text: 'Tailwind demo',
+    },
+  ])('shows its slot and no select with $name', async ({ slots, variant, text }) => {
+    const { container, queryByRole } = await render(h(DemoFrame, null, slots));
+
+    const frame = container.querySelector('.demo-frame');
+    expect(frame).toHaveAttribute('data-demo', variant);
+    expect(frame).toHaveTextContent(text);
+    expect(queryByRole('combobox')).toBeNull();
+  });
+
+  it('keeps the select at its place in the window when the demo above it changes height', async () => {
+    const scrollBy = spyOnScroll();
+    const { container, getByRole, user } = await render(() =>
+      h('div', [
+        h('div', { style: { height: '2000px' } }),
+        h(DemoFrame, null, {
+          default: () => h('div', { style: { height: '100px' } }),
+          tailwind: () => h('div', { style: { height: '400px' } }),
+        }),
+      ]),
+    );
+    const select = getByRole('combobox', { name: 'Styling method' });
+    const frame = container.querySelector('.demo-frame')!;
+    scrollTo(0, document.documentElement.scrollHeight);
+    const top = select.getBoundingClientRect().top;
+    const height = frame.getBoundingClientRect().height;
+
+    await user.selectOptions(select, 'tailwind');
+    await waitFor(() => expect(scrollBy).toHaveBeenCalledTimes(1));
+
+    expect(frame.getBoundingClientRect().height).toBeGreaterThan(height + 200);
+    expect(Math.abs(select.getBoundingClientRect().top - top)).toBeLessThan(1);
   });
 });
 

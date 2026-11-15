@@ -1,9 +1,7 @@
 import { nextTick, ref } from 'vue';
+import { DEMO_VARIANT_STORAGE_KEY } from './demoVariantStorageKey.ts';
 
 export type DemoVariant = 'css-modules' | 'tailwind';
-
-/** The key of `localStorage` that keeps the variant. A script in the head of each page reads it. */
-export const DEMO_VARIANT_STORAGE_KEY = 'vase-ui-demo-variant';
 
 /**
  * The variant that each demo of the site shows. The server renders the default, and the first
