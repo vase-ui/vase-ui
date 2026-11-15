@@ -2070,18 +2070,45 @@ describe('<Slider.Thumb />', () => {
       expect(events).toEqual(['input']);
     });
 
-    it('gives a controlled range both thumbs that changed', async () => {
-      const { fixture, inputs, events } = await hydrateWritten(
-        { defaultValue: [25, 75], controlled: true },
-        ['35', '65'],
-      );
+    it.each([
+      {
+        name: 'a controlled range',
+        props: { defaultValue: [25, 75], controlled: true },
+        written: ['35', '65'],
+        result: '35,65',
+      },
+      {
+        name: 'a controlled range past its end',
+        props: { defaultValue: [20, 80], controlled: true },
+        written: ['85', '95'],
+        result: '85,95',
+      },
+      {
+        name: 'a range with a minimum distance',
+        props: { defaultValue: [20, 80], minStepsBetweenValues: 10 },
+        written: ['75', '95'],
+        result: '75,95',
+      },
+    ])('takes each changed thumb of $name in one change', async ({ props, written, result }) => {
+      const { fixture, inputs, events } = await hydrateWritten(props, written);
 
-      expect(fixture.getByTestId('model').textContent).toBe('35,65');
-      expect(fixture.getByTestId('changes').textContent).toBe(
-        '35,75 (input-change); 35,65 (input-change)',
+      expect(fixture.getByTestId('model').textContent).toBe(
+        props.controlled ? result : String(props.defaultValue),
       );
-      expect(inputs.map((input) => input.value)).toEqual(['35', '65']);
+      expect(fixture.getByTestId('changes').textContent).toBe(`${result} (input-change)`);
+      expect(inputs.map((input) => input.value)).toEqual(result.split(','));
       expect(events).toEqual(['input', 'input']);
+    });
+
+    it('stops one thumb that the browser restored past its neighbour at the neighbour', async () => {
+      const { fixture, inputs, events } = await hydrateWritten({ defaultValue: [25, 75] }, [
+        '90',
+        '',
+      ]);
+
+      expect(fixture.getByTestId('changes').textContent).toBe('75,75 (input-change)');
+      expect(inputs.map((input) => input.value)).toEqual(['75', '75']);
+      expect(events).toEqual(['input']);
     });
   });
 
@@ -2090,6 +2117,14 @@ describe('<Slider.Thumb />', () => {
       return [...container.querySelectorAll<HTMLInputElement>('input[type="range"]')].map(
         (input) => [input.value, input.getAttribute('aria-valuenow')],
       );
+    }
+
+    function writeInputs(container: HTMLElement, written: string[]) {
+      const inputs = [...container.querySelectorAll<HTMLInputElement>('input[type="range"]')];
+      written.forEach((value, index) => {
+        inputs[index]!.value = value;
+      });
+      return inputs;
     }
 
     it('takes the input at a `pageshow` event', async () => {
@@ -2246,6 +2281,126 @@ describe('<Slider.Thumb />', () => {
 
       expect(events).toEqual([]);
       expect(onValueChange).toHaveBeenCalledTimes(1);
+    });
+
+    it.each([
+      {
+        name: 'a controlled range',
+        props: { defaultValue: [25, 75], controlled: true },
+        written: ['35', '65'],
+        result: '35,65',
+      },
+      {
+        name: 'a range',
+        props: { defaultValue: [25, 75] },
+        written: ['35', '65'],
+        result: '35,65',
+      },
+      {
+        name: 'a range that moves up past its end',
+        props: { defaultValue: [20, 80] },
+        written: ['85', '95'],
+        result: '85,95',
+      },
+      {
+        name: 'a controlled range that moves down',
+        props: { defaultValue: [20, 80], controlled: true },
+        written: ['5', '15'],
+        result: '5,15',
+      },
+      {
+        name: 'a range with a minimum distance',
+        props: { defaultValue: [20, 80], minStepsBetweenValues: 10 },
+        written: ['75', '95'],
+        result: '75,95',
+      },
+      {
+        name: 'inputs in the wrong order',
+        props: { defaultValue: [20, 80] },
+        written: ['95', '85'],
+        result: '85,95',
+      },
+    ])(
+      'takes each changed thumb of $name at a `pageshow` event in one change',
+      async ({ props, written, result }) => {
+        const { container } = await render(<SliderThumbHydration {...props} />);
+        const fixture = within(container);
+        const events = recordInputEvents(container);
+        writeInputs(container, written);
+
+        window.dispatchEvent(new PageTransitionEvent('pageshow'));
+        await flushMicrotasks();
+
+        expect(fixture.getByTestId('model').textContent).toBe(
+          props.controlled ? result : String(props.defaultValue),
+        );
+        expect(fixture.getByTestId('changes').textContent).toBe(`${result} (input-change)`);
+        expect(readThumbs(container)).toEqual(result.split(',').map((value) => [value, value]));
+        expect(events).toEqual(['input']);
+      },
+    );
+
+    it('keeps the second thumb when the take of the first thumb comes in its own task', async () => {
+      const { container } = await render(<SliderThumbHydration defaultValue={[25, 75]} />);
+      const inputs = writeInputs(container, ['35', '65']);
+
+      // A browser runs the microtasks after each listener of `pageshow`. The take of the first
+      // thumb thus renders the second thumb before the listener of the second thumb runs.
+      inputs[0]!.dispatchEvent(new InputEvent('input', { bubbles: true, composed: true }));
+      await flushMicrotasks();
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(within(container).getByTestId('changes').textContent).toBe('35,65 (input-change)');
+      expect(readThumbs(container)).toEqual([
+        ['35', '35'],
+        ['65', '65'],
+      ]);
+    });
+
+    it('puts each input back when a listener cancels the restore', async () => {
+      const onValueChange = vi.fn((_value: unknown, details: { cancel: () => void }) => {
+        details.cancel();
+      });
+      const { container } = await render(
+        <Slider.Root defaultValue={[25, 75]} onValueChange={onValueChange}>
+          <Slider.Control>
+            <Slider.Thumb />
+            <Slider.Thumb />
+          </Slider.Control>
+        </Slider.Root>,
+      );
+      writeInputs(container, ['35', '65']);
+      expect(readThumbs(container)).toEqual([
+        ['35', '25'],
+        ['65', '75'],
+      ]);
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(readThumbs(container)).toEqual([
+        ['25', '25'],
+        ['75', '75'],
+      ]);
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+      expect(onValueChange.mock.lastCall?.[0]).toEqual([35, 65]);
+    });
+
+    it('refuses values that a program wrote closer than the minimum distance', async () => {
+      const { container } = await render(
+        <SliderThumbHydration defaultValue={[20, 80]} minStepsBetweenValues={10} />,
+      );
+      writeInputs(container, ['50', '55']);
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(within(container).getByTestId('changes').textContent).toBe('');
+      expect(readThumbs(container)).toEqual([
+        ['20', '20'],
+        ['80', '80'],
+      ]);
     });
 
     it('takes a value that the browser restores into a thumb whose value is off the step', async () => {

@@ -5,11 +5,13 @@ import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
 import { Field } from '@vase-ui/vue/field';
 import { Radio } from '@vase-ui/vue/radio';
 import { RadioGroup } from '@vase-ui/vue/radio-group';
+import { Slider } from '@vase-ui/vue/slider';
 
 const SIZES = ['s', 'm', 'l'];
 
 const letters = ref<string[]>([]);
 const size = ref('s');
+const range = ref([20, 80]);
 // For each part, the value and the type of the event of each change.
 const changes = reactive<Record<string, string[]>>({});
 
@@ -53,8 +55,18 @@ function record(name: string, value: unknown, details: { event: Event }) {
         @value-change="(value, details) => record('note', value, details)"
       />
     </Field.Root>
+    <Slider.Root
+      v-model:value="range"
+      name="range"
+      @value-change="(value, details) => record('range', value, details)"
+    >
+      <Slider.Control style="position: relative; width: 200px; height: 10px">
+        <Slider.Thumb aria-label="Minimum" style="width: 20px; height: 10px" />
+        <Slider.Thumb aria-label="Maximum" style="width: 20px; height: 10px" />
+      </Slider.Control>
+    </Slider.Root>
   </form>
-  <output data-testid="models">{{ JSON.stringify({ letters, size }) }}</output>
+  <output data-testid="models">{{ JSON.stringify({ letters, size, range }) }}</output>
   <output data-testid="changes">{{ JSON.stringify(changes) }}</output>
   <a href="./away.html" data-testid="away">Away</a>
 </template>

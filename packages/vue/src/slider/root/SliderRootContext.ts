@@ -16,6 +16,17 @@ export interface ThumbMetadata {
   inputId: string | undefined;
 }
 
+/** The range input of a thumb, for a change that takes the inputs of several thumbs. */
+export interface ThumbInput {
+  /**
+   * Gives the index of the thumb and the value of its input when the input changed with no event
+   * that the slider handled. The thumb then counts that value as handled.
+   */
+  take: () => { index: number; value: number } | undefined;
+  /** Writes the value of the thumb to its input. */
+  writeValue: () => void;
+}
+
 export interface SliderRootContext {
   /**
    * The index of the active thumb.
@@ -34,6 +45,8 @@ export interface SliderRootContext {
    */
   format: ComputedRef<Intl.NumberFormatOptions | undefined>;
   handleInputChange: (valueInput: number, index: number, event: KeyboardEvent | Event) => void;
+  /** Adds the input of a thumb. Gives the function that removes it. */
+  registerThumbInput: (thumbInput: ThumbInput) => () => void;
   /**
    * The positions of the first thumb and of the last thumb of an inset slider, as percentages.
    */

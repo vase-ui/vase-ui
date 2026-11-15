@@ -64,6 +64,15 @@ describe('VUE-81: a page that mounts before Chromium restores its form state', (
       await page.getByTestId(label).click();
     }
     await page.getByTestId('note').fill('typed');
+    // Chromium saves the value of an input only when it differs from its `value` attribute, and
+    // Vue writes that attribute with each value of the slider. A program writes the inputs with no
+    // event, so Chromium saves them. The values move both thumbs past the end of the range.
+    await page.evaluate(() => {
+      const values = ['85', '95'];
+      document.querySelectorAll<HTMLInputElement>('input[name="range"]').forEach((input, index) => {
+        input.value = values[index] ?? input.value;
+      });
+    });
     await page.getByTestId('away').click();
     await page.waitForURL('**/away.html');
 
@@ -78,13 +87,22 @@ describe('VUE-81: a page that mounts before Chromium restores its form state', (
     // A checked input gives the `pageshow` event to its change. The second change of the group
     // holds both items, so the group had the first change in its props.
     expect(await readPage(page)).toEqual({
-      formData: ['news=on', 'letters=a', 'letters=b', 'size=l', 'note=typed'],
-      models: { letters: ['a', 'b'], size: 'l' },
+      formData: [
+        'news=on',
+        'letters=a',
+        'letters=b',
+        'size=l',
+        'note=typed',
+        'range=85',
+        'range=95',
+      ],
+      models: { letters: ['a', 'b'], size: 'l', range: [85, 95] },
       changes: {
         news: ['true (pageshow)'],
         letters: ['a (pageshow)', 'a,b (pageshow)'],
         size: ['l (pageshow)'],
         note: ['typed (input)'],
+        range: ['85,95 (input)'],
       },
       dirty: { news: true, note: true },
     });

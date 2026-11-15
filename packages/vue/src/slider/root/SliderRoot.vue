@@ -184,7 +184,7 @@ export type SliderRootCommitEventDetails = VaseUIGenericEventDetails<SliderRootC
 <script setup lang="ts" generic="Value extends number | readonly number[] = number">
 // vue-tsc resolves `Value` before it checks a listener of a template.
 // With no `value` and no `defaultValue`, the value is `min`, so the default is `number`.
-import { computed, provide, shallowRef, watch } from 'vue';
+import { computed, nextTick, provide, shallowRef, watch } from 'vue';
 import { areArraysEqual } from '../../common/areArraysEqual';
 import { clamp } from '../../common/clamp';
 import { useIsHydrating } from '../../common/hydration';
@@ -212,7 +212,7 @@ import { asc } from '../utils/asc';
 import { getSliderValue } from '../utils/getSliderValue';
 import { validateMinimumDistance } from '../utils/validateMinimumDistance';
 import { SliderRootContext } from './SliderRootContext';
-import type { ThumbMetadata } from './SliderRootContext';
+import type { ThumbInput, ThumbMetadata } from './SliderRootContext';
 import { sliderStateAttributesMapping } from './stateAttributesMapping';
 
 defineOptions({ inheritAttrs: false });
@@ -459,15 +459,37 @@ function onValueCommitted(
   emit('valueCommitted', newValue as Value extends number ? number : Value, data);
 }
 
+const thumbInputs = new Set<ThumbInput>();
+
+function registerThumbInput(thumbInput: ThumbInput) {
+  thumbInputs.add(thumbInput);
+  return () => {
+    thumbInputs.delete(thumbInput);
+  };
+}
+
+// A form restore can change the inputs of several thumbs. The change of one thumb stops at the old
+// value of its neighbour, so the slider takes each changed input in one change.
+function takeChangedInputs(valueInput: number, index: number) {
+  const nextValues = values.value.slice();
+  nextValues[index] = valueInput;
+  const taken: ThumbInput[] = [];
+  for (const thumbInput of thumbInputs) {
+    const input = thumbInput.take();
+    // During its own take of the hydration, the input of the thumb of the event still counts.
+    if (input !== undefined && input.index !== index) {
+      nextValues[input.index] = input.value;
+      taken.push(thumbInput);
+    }
+  }
+  return taken.length > 0 ? { values: nextValues.sort(asc), taken } : undefined;
+}
+
 function handleInputChange(valueInput: number, index: number, event: KeyboardEvent | Event) {
-  const newValue = getSliderValue(
-    valueInput,
-    index,
-    props.min,
-    props.max,
-    range.value,
-    values.value,
-  );
+  const changedInputs = takeChangedInputs(valueInput, index);
+  const newValue =
+    changedInputs?.values ??
+    getSliderValue(valueInput, index, props.min, props.max, range.value, values.value);
 
   if (validateMinimumDistance(newValue, props.step, props.minStepsBetweenValues)) {
     const reason = 'key' in event ? REASONS.keyboard : REASONS.inputChange;
@@ -485,6 +507,15 @@ function handleInputChange(valueInput: number, index: number, event: KeyboardEve
         createGenericEventDetails(reason, event as KeyboardEvent) as SliderRootCommitEventDetails,
       );
     }
+  }
+
+  if (changedInputs) {
+    // A listener can cancel the change, and a parent that controls the slider can keep its value.
+    void nextTick(() => {
+      changedInputs.taken.forEach((thumbInput) => {
+        thumbInput.writeValue();
+      });
+    });
   }
 }
 
@@ -591,6 +622,7 @@ provide(SliderRootContext, {
   validation,
   format: computed(() => props.format),
   handleInputChange,
+  registerThumbInput,
   indicatorPosition,
   setIndicatorPosition,
   inset: computed(() => props.thumbAlignment !== 'center'),
