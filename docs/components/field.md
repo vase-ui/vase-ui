@@ -6,7 +6,9 @@ description: An unstyled Vue field component that provides labeling and validati
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoFieldHero from '../demos/field/hero/css-modules/index.vue';
+import DemoFieldHeroTailwind from '../demos/field/hero/tailwind/index.vue';
 </script>
 
 # Field
@@ -15,7 +17,12 @@ A component that provides labeling and validation for form controls.
 
 <DemoFrame>
   <DemoFieldHero />
+  <template #tailwind>
+    <DemoFieldHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -24,6 +31,18 @@ A component that provides labeling and validation for form controls.
 <<< ../demos/field/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/field/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Anatomy
 

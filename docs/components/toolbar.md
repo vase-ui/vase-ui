@@ -6,7 +6,9 @@ description: An unstyled Vue toolbar component that groups a set of buttons and 
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoToolbarHero from '../demos/toolbar/hero/css-modules/index.vue';
+import DemoToolbarHeroTailwind from '../demos/toolbar/hero/tailwind/index.vue';
 </script>
 
 # Toolbar
@@ -15,7 +17,12 @@ A container that groups a set of buttons and controls.
 
 <DemoFrame>
   <DemoToolbarHero />
+  <template #tailwind>
+    <DemoToolbarHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -24,6 +31,18 @@ A container that groups a set of buttons and controls.
 <<< ../demos/toolbar/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/toolbar/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Usage guidelines
 

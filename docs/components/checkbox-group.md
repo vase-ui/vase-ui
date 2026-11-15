@@ -6,7 +6,9 @@ description: An unstyled Vue checkbox group component that provides shared state
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoCheckboxGroupHero from '../demos/checkbox-group/hero/css-modules/index.vue';
+import DemoCheckboxGroupHeroTailwind from '../demos/checkbox-group/hero/tailwind/index.vue';
 import DemoCheckboxGroupNested from '../demos/checkbox-group/nested/css-modules/index.vue';
 import DemoCheckboxGroupParent from '../demos/checkbox-group/parent/css-modules/index.vue';
 </script>
@@ -17,7 +19,12 @@ Provides shared state to a series of checkboxes.
 
 <DemoFrame>
   <DemoCheckboxGroupHero />
+  <template #tailwind>
+    <DemoCheckboxGroupHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -26,6 +33,18 @@ Provides shared state to a series of checkboxes.
 <<< ../demos/checkbox-group/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/checkbox-group/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Usage guidelines
 

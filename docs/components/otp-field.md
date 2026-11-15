@@ -6,11 +6,16 @@ description: An unstyled Vue OTP field component for one-time password and verif
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoOTPFieldAlphanumeric from '../demos/otp-field/alphanumeric/css-modules/index.vue';
+import DemoOTPFieldAlphanumericTailwind from '../demos/otp-field/alphanumeric/tailwind/index.vue';
 import DemoOTPFieldCustomNormalize from '../demos/otp-field/custom-sanitize/css-modules/index.vue';
 import DemoOTPFieldGrouped from '../demos/otp-field/grouped/css-modules/index.vue';
+import DemoOTPFieldGroupedTailwind from '../demos/otp-field/grouped/tailwind/index.vue';
 import DemoOTPFieldHero from '../demos/otp-field/hero/css-modules/index.vue';
+import DemoOTPFieldHeroTailwind from '../demos/otp-field/hero/tailwind/index.vue';
 import DemoOTPFieldPassword from '../demos/otp-field/password/css-modules/index.vue';
+import DemoOTPFieldPasswordTailwind from '../demos/otp-field/password/tailwind/index.vue';
 </script>
 
 # OTP Field
@@ -19,7 +24,12 @@ A one-time password input with one slot for each character.
 
 <DemoFrame>
   <DemoOTPFieldHero />
+  <template #tailwind>
+    <DemoOTPFieldHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -28,6 +38,18 @@ A one-time password input with one slot for each character.
 <<< ../demos/otp-field/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/otp-field/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Usage guidelines
 
@@ -69,7 +91,12 @@ Set `validationType` to `alphanumeric` for recovery, backup or invite codes that
 
 <DemoFrame>
   <DemoOTPFieldAlphanumeric />
+  <template #tailwind>
+    <DemoOTPFieldAlphanumericTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -79,13 +106,30 @@ Set `validationType` to `alphanumeric` for recovery, backup or invite codes that
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/otp-field/alphanumeric/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Grouped layouts
 
 Put sets of inputs in your own layout elements. Add `OTPField.Separator` to show the code in smaller groups, such as `123-456`.
 
 <DemoFrame>
   <DemoOTPFieldGrouped />
+  <template #tailwind>
+    <DemoOTPFieldGroupedTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -94,6 +138,18 @@ Put sets of inputs in your own layout elements. Add `OTPField.Separator` to show
 <<< ../demos/otp-field/grouped/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/otp-field/grouped/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ### Custom normalization
 
@@ -121,7 +177,12 @@ Set `mask` to hide the code while the user types it.
 
 <DemoFrame>
   <DemoOTPFieldPassword />
+  <template #tailwind>
+    <DemoOTPFieldPasswordTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -130,6 +191,18 @@ Set `mask` to hide the code while the user types it.
 <<< ../demos/otp-field/password/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/otp-field/password/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## API reference
 
