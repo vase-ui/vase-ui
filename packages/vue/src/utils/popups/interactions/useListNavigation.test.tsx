@@ -1,4 +1,4 @@
-import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import {
   defineComponent,
   inject,
@@ -20,6 +20,7 @@ import {
   screen,
   useTestInteractions,
   waitFor,
+  waitForLaterMillisecond,
   waitSingleFrame,
 } from '#test-utils';
 import CompositeList from '../../../../test/fixtures/CompositeListPart.vue';
@@ -2818,6 +2819,90 @@ describe('useListNavigation', () => {
       expect(list.proposals).toEqual([0, 1]);
       await keyDown(menu(), 'ArrowDown');
       expect(focused()).toBe('item-2');
+    });
+  });
+
+  describe('a popup in a portal that is not modal', () => {
+    // A mocked clock moves only in `render`, `rerender`, `setProps` and `waitForLaterMillisecond`.
+    // The focus of the consumer thus comes in the millisecond in which Vue attached the listeners of
+    // the items.
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date('2026-01-01T00:00:00Z'));
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('highlights an item that the consumer focuses in the millisecond of the open', async () => {
+      const FocusSecondItemOnMount = defineComponent(() => {
+        onMounted(() => {
+          screen.getByTestId('item-1').focus();
+        });
+        return () => null;
+      });
+      const PortalApp = defineComponent(() => {
+        const open = shallowRef(false);
+        const listRef = shallowRef<(HTMLLIElement | null)[]>([]);
+        const activeIndex = shallowRef<null | number>(null);
+        const { refs, context } = useFloating({
+          open,
+          onOpenChange(nextOpen) {
+            open.value = nextOpen;
+          },
+        });
+        const { getReferenceProps, getFloatingProps, getItemProps } = useTestInteractions([
+          useClick(context.rootStore),
+          useListNavigation(context.rootStore, {
+            listRef,
+            activeIndex,
+            onNavigate(index) {
+              activeIndex.value = index;
+            },
+          }),
+        ]);
+
+        return () => (
+          <>
+            <button {...getReferenceProps({ ref: refs.setReference })} />
+            {open.value && (
+              <FloatingPortal>
+                <div role="menu" {...getFloatingProps({ ref: refs.setFloating })}>
+                  <ul>
+                    {['one', 'two', 'three'].map((string, index) => (
+                      <li
+                        data-testid={`item-${index}`}
+                        aria-selected={activeIndex.value === index}
+                        key={string}
+                        tabindex={-1}
+                        {...getItemProps({
+                          ref(node) {
+                            listRef.value[index] = node as HTMLLIElement | null;
+                          },
+                        })}
+                      >
+                        {string}
+                      </li>
+                    ))}
+                  </ul>
+                  <FocusSecondItemOnMount />
+                </div>
+              </FloatingPortal>
+            )}
+          </>
+        );
+      });
+      const { user } = await render(<PortalApp />);
+
+      // The key comes after the clock moves, so Vue runs the key listeners of the new popup.
+      await waitForLaterMillisecond(() => fireEvent.click(screen.getByRole('button')));
+      await waitFor(() => {
+        expect(screen.getByTestId('item-1')).toHaveFocus();
+      });
+
+      expect(screen.getByTestId('item-1')).toHaveAttribute('aria-selected', 'true');
+      await user.keyboard('{ArrowDown}');
+      expect(screen.getByTestId('item-2')).toHaveFocus();
     });
   });
 });

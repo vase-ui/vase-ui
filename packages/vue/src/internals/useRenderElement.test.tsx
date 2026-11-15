@@ -25,6 +25,7 @@ import {
   screen,
   takeReportedMessages,
   waitFor,
+  waitForLaterMillisecond,
 } from '#test-utils';
 import OverridingStylePart from '../../test/fixtures/OverridingStylePart.vue';
 import { EMPTY_OBJECT } from '../common/empty';
@@ -1124,6 +1125,191 @@ describe('useRenderElement', () => {
 
       expect(first).not.toHaveBeenCalled();
       expect(second).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('focus listeners in the millisecond of the mount', () => {
+    // A mocked clock moves only in `render`, `rerender`, `setProps` and `waitForLaterMillisecond`.
+    // A focus in the flush of a mount or an update thus comes in the millisecond of the attach.
+    function mockClock() {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date('2026-01-01T00:00:00Z'));
+      onTestFinished(() => {
+        vi.useRealTimers();
+      });
+    }
+
+    function createFocusPart() {
+      const focusin = vi.fn();
+      const focusout = vi.fn();
+      const withHandlers = shallowRef(true);
+      const Part = defineComponent(
+        (props: TestComponentProps, { slots, expose }) => {
+          const { element, elementProps } = useRenderElement('div', props, {
+            props: (attrs) => [
+              withHandlers.value
+                ? { tabindex: 0, onFocusin: focusin, onFocusout: focusout }
+                : { tabindex: 0 },
+              attrs,
+            ],
+          });
+          expose({ element });
+          return () => renderPart(props, slots, elementProps, EMPTY_OBJECT);
+        },
+        { props: ['as'], inheritAttrs: false },
+      );
+      return { Part, focusin, focusout, withHandlers };
+    }
+
+    // It focuses the element with the test id `target` in `onMounted`. A capture listener on its
+    // element is the first Vue listener of each focus inside it.
+    const FocusOnMount = defineComponent((_, { slots }) => {
+      onMounted(() => {
+        screen.getByTestId('target').focus();
+      });
+      return () => <div>{slots.default?.()}</div>;
+    });
+
+    function stampFirst() {}
+
+    it('runs the focusin handler of a part that gets the focus in the millisecond of its mount', async () => {
+      mockClock();
+      const { Part, focusin } = createFocusPart();
+
+      await render(
+        <FocusOnMount onFocusinCapture={stampFirst}>
+          <Part data-testid="target" />
+        </FocusOnMount>,
+      );
+
+      expect(focusin).toHaveBeenCalledTimes(1);
+    });
+
+    it('runs the focusin handler of an ancestor part when its child gets the focus in that millisecond', async () => {
+      mockClock();
+      const { Part, focusin } = createFocusPart();
+
+      await render(
+        <FocusOnMount>
+          <Part>
+            <input data-testid="target" onFocusin={stampFirst} />
+          </Part>
+        </FocusOnMount>,
+      );
+
+      expect(focusin).toHaveBeenCalledTimes(1);
+      expect(focusin).toHaveBeenCalledWith(
+        expect.objectContaining({ target: screen.getByTestId('target') }),
+      );
+    });
+
+    it('runs each focus handler one time when Vue runs it', async () => {
+      const { Part, focusin, focusout } = createFocusPart();
+      await render(<Part data-testid="target" />);
+      const element = screen.getByTestId('target');
+
+      element.focus();
+      element.blur();
+
+      expect(focusin).toHaveBeenCalledTimes(1);
+      expect(focusout).toHaveBeenCalledTimes(1);
+    });
+
+    it('runs the focus handler of each part one time when a part renders as another part', async () => {
+      mockClock();
+      const outer = createFocusPart();
+      const inner = createFocusPart();
+
+      await render(
+        <FocusOnMount onFocusinCapture={stampFirst}>
+          <outer.Part data-testid="target" as={inner.Part} />
+        </FocusOnMount>,
+      );
+
+      expect(outer.focusin).toHaveBeenCalledTimes(1);
+      expect(inner.focusin).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not run the focus handler for an element that the part left', async () => {
+      const { Part, focusin } = createFocusPart();
+      const Test = defineComponent(
+        (props: { bindSecond: boolean }) => () => (
+          <Part
+            v-slots={{
+              render: ({ props: partProps }: { props: HTMLProps }) => [
+                <button data-testid="first" {...(props.bindSecond ? {} : partProps)} />,
+                <button data-testid="second" {...(props.bindSecond ? partProps : {})} />,
+              ],
+            }}
+          />
+        ),
+        { props: ['bindSecond'] },
+      );
+      const { setProps } = await render(<Test bindSecond={false} />);
+
+      await setProps({ bindSecond: true });
+      screen.getByTestId('first').focus();
+      expect(focusin).not.toHaveBeenCalled();
+      screen.getByTestId('second').focus();
+      expect(focusin).toHaveBeenCalledTimes(1);
+    });
+
+    it('runs the focus handler one time after a render removes it and adds it again', async () => {
+      const { Part, focusin, withHandlers } = createFocusPart();
+      await render(<Part data-testid="target" />);
+
+      withHandlers.value = false;
+      await nextTick();
+      await waitForLaterMillisecond(() => {
+        withHandlers.value = true;
+        return nextTick();
+      });
+      screen.getByTestId('target').focus();
+
+      expect(focusin).toHaveBeenCalledTimes(1);
+    });
+
+    it('runs the focusin handler that a render adds when the focus comes in the millisecond of that render', async () => {
+      mockClock();
+      const { Part, focusin, withHandlers } = createFocusPart();
+      withHandlers.value = false;
+      await render(
+        <div onFocusinCapture={stampFirst}>
+          <Part data-testid="target" />
+        </div>,
+      );
+
+      withHandlers.value = true;
+      await nextTick();
+      screen.getByTestId('target').focus();
+
+      expect(focusin).toHaveBeenCalledTimes(1);
+    });
+
+    it('runs the focusin handler of a part that gets the focus in the millisecond of its hydration', async () => {
+      mockClock();
+      const { Part, focusin } = createFocusPart();
+      const container = document.createElement('div');
+      document.body.append(container);
+      // The slot of `FocusOnMount` renders a fragment, so the server HTML has its two comments.
+      container.innerHTML =
+        '<div><!--[--><div tabindex="0" data-testid="target"></div><!--]--></div>';
+      const app = createSSRApp({
+        render: () => (
+          <FocusOnMount onFocusinCapture={stampFirst}>
+            <Part data-testid="target" />
+          </FocusOnMount>
+        ),
+      });
+      onTestFinished(() => {
+        app.unmount();
+        container.remove();
+      });
+
+      app.mount(container);
+
+      expect(focusin).toHaveBeenCalledTimes(1);
+      expect(takeReportedMessages()).toEqual([]);
     });
   });
 });
