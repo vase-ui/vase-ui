@@ -48,7 +48,7 @@ function observeFieldsets(root: Node, callback: () => void): () => void {
  * each control in it, except a control in its first `<legend>` child.
  * https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#concept-fe-disabled
  */
-export function isInDisabledFieldset(element: Element): boolean {
+function isInDisabledFieldset(element: Element): boolean {
   for (
     let fieldset = element.parentElement?.closest('fieldset');
     fieldset;
@@ -70,7 +70,7 @@ export function useFieldsetDisabled(
   element: MaybeRefOrGetter<Element | null | undefined>,
 ): ComputedRef<boolean> {
   const fieldset = useFieldsetRootContext(true);
-  const isInDisabled = shallowRef(false);
+  const isNativeFieldsetDisabled = shallowRef(false);
   // `KeepAlive` moves a held part into a detached element, which is its root node until the next
   // activation.
   const { isHeld, shown } = useKeepAliveState();
@@ -85,16 +85,27 @@ export function useFieldsetDisabled(
           return;
         }
 
+        let observedRoot: Node | undefined;
+        let stopObserver: (() => void) | undefined;
+
+        // A `Teleport` can move the element into another document or shadow root. The observer of
+        // the old root node sees the move, and the new root node then gets the observer.
         const update = () => {
-          isInDisabled.value = isInDisabledFieldset(partElement);
+          isNativeFieldsetDisabled.value = isInDisabledFieldset(partElement);
+          const root = partElement.getRootNode();
+          if (root !== observedRoot) {
+            stopObserver?.();
+            observedRoot = root;
+            stopObserver = observeFieldsets(root, update);
+          }
         };
 
         update();
-        onCleanup(observeFieldsets(partElement.getRootNode(), update));
+        onCleanup(() => stopObserver?.());
       },
       { flush: 'post', immediate: true },
     );
   });
 
-  return computed(() => (fieldset?.disabled.value ?? false) || isInDisabled.value);
+  return computed(() => (fieldset?.disabled.value ?? false) || isNativeFieldsetDisabled.value);
 }

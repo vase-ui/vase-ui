@@ -4425,6 +4425,28 @@ describe('<RadioGroup />', () => {
       expect(within(container).getByTestId('a')).toHaveAttribute('aria-disabled', 'true');
     });
 
+    it('follows a fieldset in a shadow root after a move into that shadow root', async () => {
+      const host = document.createElement('div');
+      const fieldset = document.createElement('fieldset');
+      host.attachShadow({ mode: 'open' }).append(fieldset);
+      document.body.append(host);
+      onTestFinished(() => host.remove());
+      const inShadowRoot = shallowRef(false);
+      await render(() => (
+        <Teleport to={fieldset} disabled={!inShadowRoot.value}>
+          <RadioGroup data-testid="group">{radio('a')}</RadioGroup>
+        </Teleport>
+      ));
+
+      inShadowRoot.value = true;
+      await flushMicrotasks();
+      fieldset.disabled = true;
+      await flushMicrotasks();
+
+      expect(within(fieldset).getByTestId('group')).toHaveAttribute('aria-disabled', 'true');
+      expect(within(fieldset).getByTestId('a')).toHaveAttribute('aria-disabled', 'true');
+    });
+
     it('follows a fieldset around a group that mounted while KeepAlive held it', async () => {
       const disabled = shallowRef(false);
       const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
