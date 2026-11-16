@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 import type { HTMLAttributes, VNode } from 'vue';
-import { createRenderer, screen, waitFor } from '#test-utils';
+import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#test-utils';
 import { Checkbox } from '@vase-ui/vue/checkbox';
 import { DateField } from '@vase-ui/vue/date-field';
 import { Dialog } from '@vase-ui/vue/dialog';
@@ -9,6 +9,7 @@ import { Field } from '@vase-ui/vue/field';
 import { Fieldset } from '@vase-ui/vue/fieldset';
 import { Menu } from '@vase-ui/vue/menu';
 import { Meter } from '@vase-ui/vue/meter';
+import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { OTPField } from '@vase-ui/vue/otp-field';
 import { Radio } from '@vase-ui/vue/radio';
 import { Slider } from '@vase-ui/vue/slider';
@@ -55,6 +56,8 @@ interface Row {
   blanks?: Blank[];
   // The element that has the name. The default is the element of the part.
   getNamed?: () => HTMLElement;
+  // The step that shows the part, for a part that the render does not show.
+  show?: () => Promise<void>;
 }
 
 interface Blank {
@@ -64,6 +67,33 @@ interface Blank {
 
 const EMPTY: Blank = { name: 'an empty value', value: '' };
 const WHITE_SPACE: Blank = { name: 'white space', value: '\n\t ' };
+
+function createNavigationMenu(attrs: Record<string, string>) {
+  return (
+    <NavigationMenu.Root>
+      <NavigationMenu.List>
+        <NavigationMenu.Item value="products">
+          <NavigationMenu.Trigger data-testid="trigger">Products</NavigationMenu.Trigger>
+          <NavigationMenu.Content>
+            <NavigationMenu.Link href="#products">All products</NavigationMenu.Link>
+          </NavigationMenu.Content>
+        </NavigationMenu.Item>
+      </NavigationMenu.List>
+      <NavigationMenu.Portal>
+        <NavigationMenu.Positioner>
+          <NavigationMenu.Popup data-testid="part" {...attrs}>
+            <NavigationMenu.Viewport />
+          </NavigationMenu.Popup>
+        </NavigationMenu.Positioner>
+      </NavigationMenu.Portal>
+    </NavigationMenu.Root>
+  );
+}
+
+async function showNavigationMenu() {
+  await fireEvent.click(screen.getByTestId('trigger'));
+  await flushMicrotasks();
+}
 
 const rows: Row[] = [
   {
@@ -168,6 +198,22 @@ const rows: Row[] = [
     expected: 'Storage',
   },
   {
+    name: 'NavigationMenu.Popup aria-label',
+    attribute: 'aria-label',
+    // An empty string is falsy, and `resolvePopupLabel` reads the `aria-label` by its truth.
+    blanks: [WHITE_SPACE],
+    createNode: createNavigationMenu,
+    show: showNavigationMenu,
+    expected: 'Products',
+  },
+  {
+    name: 'NavigationMenu.Popup aria-labelledby',
+    attribute: 'aria-labelledby',
+    createNode: createNavigationMenu,
+    show: showNavigationMenu,
+    expected: 'Products',
+  },
+  {
     name: 'OTPField.Root in a field',
     attribute: 'aria-labelledby',
     createNode: (attrs) => (
@@ -266,8 +312,9 @@ describe('VUE-106: a blank aria-label or aria-labelledby of the consumer', () =>
 
   it.each(cases)(
     'keeps the name of $name for $blank',
-    async ({ attribute, createNode, expected, getNamed, value }) => {
+    async ({ attribute, createNode, expected, getNamed, show, value }) => {
       await render(createNode({ [attribute]: value }));
+      await show?.();
 
       await waitFor(() => {
         expect((getNamed ?? (() => screen.getByTestId('part')))()).toHaveAccessibleName(expected);
