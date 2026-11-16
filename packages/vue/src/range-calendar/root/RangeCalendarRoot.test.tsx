@@ -71,6 +71,20 @@ describe('<RangeCalendar.Root />', () => {
     expect(screen.getByRole('group')).not.toHaveAttribute('data-selecting');
   });
 
+  it('names RangeCalendar in the message of a default month that changes', async () => {
+    const { setProps } = await renderRange({
+      defaultMonth: Temporal.PlainYearMonth.from('2026-11'),
+    });
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    await setProps({ defaultMonth: Temporal.PlainYearMonth.from('2026-12') });
+
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+    expect(errorSpy.mock.calls[0]![0]).toContain(
+      'A component is changing the default month state of an uncontrolled RangeCalendar after being initialized.',
+    );
+  });
+
   describe('the press sequence', () => {
     it('starts a range at the first press, and shows it as a range of one day', async () => {
       const handlers = listeners();

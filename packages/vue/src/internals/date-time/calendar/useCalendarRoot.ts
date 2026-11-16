@@ -116,6 +116,7 @@ export function useCalendarRoot({
 }: UseCalendarRootOptions): CalendarRootController {
   const formatLocale = useFormatLocale(() => props.locale);
   const direction = useDirection();
+  const name = part.replace(/\.Root$/, '');
 
   // The dates of an ISO grid and of a Gregorian grid are the same, so the dates of the grid and
   // the months that the root emits are ISO and not Gregorian. The text still follows the locale.
@@ -192,7 +193,7 @@ export function useCalendarRoot({
   const [monthState, setMonthState] = useControlled<Temporal.PlainYearMonth | undefined>({
     controlled: () => props.month,
     default: () => props.defaultMonth,
-    name: 'Calendar',
+    name,
     state: 'month',
   });
   // The limits apply only to a first page that the root picks. The root shows a month of the
@@ -206,7 +207,7 @@ export function useCalendarRoot({
   const [focusedDateState, setFocusedDateState] = useControlled<Temporal.PlainDate | null>({
     controlled: () => props.focusedDate,
     default: () => props.defaultFocusedDate ?? null,
-    name: 'Calendar',
+    name,
     state: 'focusedDate',
   });
 
