@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { shallowRef } from 'vue';
+import { shallowRef, Transition } from 'vue';
 import { DateField } from '@vase-ui/vue/date-field';
 import { DatePicker } from '@vase-ui/vue/date-picker';
 import { Field } from '@vase-ui/vue/field';
@@ -682,6 +682,36 @@ describe('<DatePicker.Root />', () => {
         await waitFor(() => {
           expect(screen.getByTestId('trigger')).toHaveAttribute('data-disabled');
         });
+      });
+
+      // The leave transition keeps the element of the trigger in the fieldset after the unmount.
+      it('reads no fieldset at the trigger after the trigger unmounts', async () => {
+        const hasTrigger = shallowRef(true);
+        await render(() => (
+          <DatePicker.Root locale="en-US" open>
+            <fieldset disabled>
+              <Transition duration={{ enter: 0, leave: 100_000 }}>
+                {hasTrigger.value ? (
+                  <DatePicker.Trigger data-testid="trigger">Open</DatePicker.Trigger>
+                ) : null}
+              </Transition>
+            </fieldset>
+            <DatePicker.Portal>
+              <DatePicker.Positioner>
+                <DatePicker.Popup aria-label="Choose date">
+                  <DatePicker.Calendar data-testid="calendar" today={today()} />
+                </DatePicker.Popup>
+              </DatePicker.Positioner>
+            </DatePicker.Portal>
+          </DatePicker.Root>
+        ));
+        expect(await screen.findByTestId('calendar')).toHaveAttribute('data-disabled');
+
+        hasTrigger.value = false;
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('trigger')).toBeInTheDocument();
+        expect(screen.getByTestId('calendar')).not.toHaveAttribute('data-disabled');
       });
     });
   });
