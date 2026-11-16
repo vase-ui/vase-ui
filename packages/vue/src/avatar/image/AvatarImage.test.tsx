@@ -123,6 +123,8 @@ describe('<Avatar.Image />', () => {
   });
 
   describeConformance(<Avatar.Image src="test.png" />, () => ({
+    // The call needs no action: the file mocks `Image`, and the element appears in the flush after
+    // the mount.
     render: (node) => {
       return render(<Avatar.Root>{node}</Avatar.Root>);
     },

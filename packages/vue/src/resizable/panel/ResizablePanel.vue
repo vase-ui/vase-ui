@@ -164,6 +164,7 @@ import { computed, onActivated, onDeactivated, provide, shallowRef, watch } from
 import { useIsHydrating, useServerElement } from '../../common/hydration';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
+import { useReferencedId } from '../../internals/labelable-provider/useRegisteredId';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { isInHeldBranch } from '../../internals/useKeepAliveState';
 import { useVaseUiId } from '../../internals/useBaseUiId';
@@ -304,6 +305,7 @@ onActivated(() => {
 
 root.registerPanel({
   id,
+  referencedId: useReferencedId(() => id.value, element),
   index,
   minSize: () => props.minSize,
   maxSize: () => props.maxSize,

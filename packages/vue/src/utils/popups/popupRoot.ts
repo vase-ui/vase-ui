@@ -127,7 +127,7 @@ export interface UsePopupRootOptions<Store extends PopupRootStore> {
 
 type CreatePopupRootStore<Store extends PopupRootStore> = (
   initialState: PopupRootInitialState,
-  defaultPopupId: string | undefined,
+  defaultPopupId: string,
 ) => Store;
 
 export type UseSingleAnchorPopupRootOptions<Store extends PopupRootStore> = Pick<
@@ -152,28 +152,15 @@ export function getPopupTransitionElement(store: PopupRootStore) {
  * the composable then follows `open` and `triggerId`.
  * @param createStore Makes the store one time. The store belongs to the root, and the handle
  * attaches to it.
+ * A prop that the store also holds, such as `disabled`, goes into the first state here, and one
+ * `watch` writes each later change. A server runs no `watch`, so the server HTML has the first
+ * state.
  * @param options What differs between the popup roots.
  * @returns The store, the state that the root renders, and the actions that the part exposes.
  */
 export function usePopupRoot<Store extends PopupRootStore>(
   props: PopupRootProps,
   createStore: CreatePopupRootStore<Store>,
-  options: UsePopupRootOptions<Store>,
-) {
-  return usePopupRootWithPopupId(props, createStore, useVaseUiId(), options);
-}
-
-/**
- * Does what `usePopupRoot` does, for a root that gives its own default popup id instead of a
- * generated one. Call it in `setup` of the root.
- *
- * @param defaultPopupId The default popup id, or a ref or a getter of it. `undefined` leaves the
- * popup with no default id. The store follows each change of the id.
- */
-export function usePopupRootWithPopupId<Store extends PopupRootStore>(
-  props: PopupRootProps,
-  createStore: CreatePopupRootStore<Store>,
-  defaultPopupId: MaybeRefOrGetter<string | undefined>,
   options: UsePopupRootOptions<Store>,
 ) {
   const store = usePopupRootStore(
@@ -184,7 +171,6 @@ export function usePopupRootWithPopupId<Store extends PopupRootStore>(
       triggerIdProp: props.triggerId,
     },
     createStore,
-    defaultPopupId,
     options,
   );
   usePopupRootOpenState(store, props, options.name);
@@ -322,7 +308,6 @@ export function useSingleAnchorPopupRoot<Store extends PopupRootStore>(
       triggerIdProp: undefined,
     },
     createStore,
-    useVaseUiId(),
     options,
   );
   usePopupRootOpenState(store, props, options.name);
@@ -336,20 +321,15 @@ export function useSingleAnchorPopupRoot<Store extends PopupRootStore>(
 }
 
 /**
- * Makes the store of a popup root, gives it the functions of the part, and keeps the default popup
- * id and `nested` current.
+ * Makes the store of a popup root with a generated default popup id, gives it the functions of the
+ * part, and keeps `nested` current.
  */
 function usePopupRootStore<Store extends PopupRootStore>(
   initialState: PopupRootInitialState,
   createStore: CreatePopupRootStore<Store>,
-  defaultPopupId: MaybeRefOrGetter<string | undefined>,
   options: Pick<UsePopupRootOptions<Store>, 'onOpenChange' | 'onOpenChangeComplete'>,
 ) {
-  const store = createStore(initialState, toValue(defaultPopupId));
-  watch(
-    () => toValue(defaultPopupId),
-    (id) => store.set('defaultPopupId', id),
-  );
+  const store = createStore(initialState, useVaseUiId().value);
   store.context.onOpenChange = options.onOpenChange;
   store.context.onOpenChangeComplete = options.onOpenChangeComplete;
 

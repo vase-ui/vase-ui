@@ -13,6 +13,12 @@ export interface NumberFieldRootContext {
   minWithDefault: ComputedRef<number>;
   maxWithDefault: ComputedRef<number>;
   id: ComputedRef<string>;
+  /**
+   * The id that a stepper names in `aria-controls`: `id` before the mount, and the `id` of the
+   * input element from the mount on. It is `undefined` after the mount while there is no input
+   * element, and while its `id` is empty.
+   */
+  inputId: ComputedRef<string | undefined>;
   form: ComputedRef<string | undefined>;
   setValue: (value: number | null, details: NumberFieldRootChangeEventDetails) => boolean;
   getStepAmount: (event?: EventWithOptionalKeyState) => number;

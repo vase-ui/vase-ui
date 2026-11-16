@@ -24,14 +24,13 @@ import type {
 } from 'vue';
 import { addEventListener } from '../common/addEventListener';
 import { EMPTY_OBJECT } from '../common/empty';
+import { getServerElement } from '../common/hydration';
 import { mergeObjects } from '../common/mergeObjects';
 import { warn } from '../common/warn';
 import { mergeClassNames, mergeProps, mergePropsN } from '../merge-props';
-import { removeBlankIdReferences } from './blankIdReference';
-import { removeBlankNames } from './blankName';
 import { getStateAttributesProps } from './getStateAttributesProps';
-import { omitUndefinedAttributes } from './omitUndefinedAttributes';
 import type { StateAttributesMapping } from './getStateAttributesProps';
+import { givenAttributes } from './givenAttributes';
 import { resolveElement } from './resolveElement';
 import type { HTMLProps, VaseUIComponentProps } from './types';
 
@@ -64,8 +63,9 @@ export function markChildrenMounted(): void {
 }
 
 // Vue skips a Vue listener that it attached in the millisecond of an event when an earlier Vue
-// listener got the event. `focus` and `blur` do not bubble, and no part has a Vue listener for them
-// in the capture phase. The Vue listener of the target thus gets each of them first.
+// listener got the event. A part or the consumer can move the focus to a new element in that
+// millisecond. `focus` and `blur` do not bubble, and no part has a Vue listener for them in the
+// capture phase. The Vue listener of the target thus gets each of them first.
 const FOCUS_KEYS = {
   onFocusin: { type: 'focusin', capture: false },
   onFocusout: { type: 'focusout', capture: false },
@@ -101,6 +101,67 @@ function hasStyleValue(style: Record<string, unknown>): boolean {
   return false;
 }
 
+// While Vue hydrates an element, it writes no attribute that a `v-bind` object gives. It compares
+// only the attributes of its lists of known attributes, and these names are not in those lists.
+// `aria-hidden` is not here: the lock of a modal popup writes it to the elements outside the popup,
+// and a part can hydrate after that.
+function isUncomparedAttribute(name: string): boolean {
+  return (
+    name === 'role' ||
+    name === 'abbr' ||
+    name.startsWith('data-') ||
+    (name.startsWith('aria-') && name !== 'aria-hidden')
+  );
+}
+
+// Gives each such attribute of the props the value of the server element when the two differ. The
+// render after the mount has the client value again, and Vue then writes or removes each attribute
+// that changed. It returns `true` when a value differs.
+function takeServerAttributes(
+  props: Record<string, any>,
+  state: Record<string, any>,
+  mapping: StateAttributesMapping<any> | undefined,
+  serverElement: Element,
+): boolean {
+  // The default mapping gives no key for a state that is `false`, and Vue removes an attribute only
+  // when the earlier render has its key. A `data-*` attribute that is no state of the part can
+  // come from another source, such as a browser extension, so it gets no key.
+  for (const key in state) {
+    const name = `data-${key.toLowerCase()}`;
+    if (
+      !(name in props) &&
+      !(mapping && Object.hasOwn(mapping, key)) &&
+      serverElement.hasAttribute(name)
+    ) {
+      props[name] = undefined;
+    }
+  }
+
+  let differs = false;
+  for (const name in props) {
+    if (!isUncomparedAttribute(name)) {
+      continue;
+    }
+    const value: unknown = props[name];
+    // A server and a browser write a string, a number or a Boolean as the same text. The step does
+    // not compare another value.
+    if (
+      value != null &&
+      typeof value !== 'string' &&
+      typeof value !== 'number' &&
+      typeof value !== 'boolean'
+    ) {
+      continue;
+    }
+    const serverValue = serverElement.getAttribute(name);
+    if (serverValue !== (value == null ? null : String(value))) {
+      props[name] = serverValue ?? undefined;
+      differs = true;
+    }
+  }
+  return differs;
+}
+
 /**
  * Makes the props of the element of a part. A part calls it in `setup`.
  * The template of the part calls `elementProps()` and binds the result on its element.
@@ -133,6 +194,10 @@ export function useRenderElement<
   let heldElement: RenderedElementType | null = null;
 
   const instance = getCurrentInstance();
+  // The element of the server HTML while Vue hydrates the part. It is `null` on a server, in a
+  // client-only mount, after the mount and with `serverAttributes: false`.
+  let serverElement = params.serverAttributes === false ? null : getServerElement();
+  const mounted = shallowRef(false);
   const focusListeners = new Map<FocusKey, FocusListeners>();
 
   function createFocusListeners(): FocusListeners {
@@ -204,13 +269,7 @@ export function useRenderElement<
       class: classAttribute,
       style: styleAttribute,
       ...consumerAttrs
-    } = omitUndefinedAttributes(attrs);
-    // An empty `id` counts as no `id` (`VUE-93`), so the part keeps its own id.
-    if (consumerAttrs.id === '') {
-      delete consumerAttrs.id;
-    }
-    removeBlankNames(consumerAttrs);
-    removeBlankIdReferences(consumerAttrs);
+    } = givenAttributes(attrs);
 
     const stateProps = getStateAttributesProps(state, params.stateAttributesMapping);
 
@@ -274,6 +333,15 @@ export function useRenderElement<
       }
     }
 
+    if (
+      serverElement &&
+      takeServerAttributes(outProps, state, params.stateAttributesMapping, serverElement)
+    ) {
+      // Only a render that took a value of the server reads `mounted`. Thus only a part whose
+      // values differ from the server HTML renders again after the mount.
+      toValue(mounted);
+    }
+
     return outProps as HTMLProps;
   }
 
@@ -282,6 +350,12 @@ export function useRenderElement<
   // get that element, and never the root element of such a target.
   onMounted(update);
   onUpdated(update);
+  if (serverElement) {
+    onMounted(() => {
+      serverElement = null;
+      mounted.value = true;
+    });
+  }
 
   if (process.env.NODE_ENV !== 'production') {
     let slotWasRendered = false;
@@ -359,9 +433,8 @@ export type UseRenderElementParameters<State, RenderedElementType extends Elemen
    */
   state?: MaybeRefOrGetter<State> | undefined;
   /**
-   * A function that gets the attributes and listeners of the consumer, without `class`, `style`,
-   * each attribute whose value is `undefined`, an empty `id`, a blank `aria-label`, and each blank
-   * ID reference attribute, such as `aria-labelledby`, `aria-describedby` or `for`.
+   * A function that gets the attributes and listeners of the consumer, without `class`, `style`
+   * and each attribute that `givenAttributes` leaves out.
    * It returns the props of the part, or an array of props, in merge order. The rightmost wins.
    * A set can be `undefined`, or a function that gets the props merged so far.
    * The default is the attributes of the consumer.
@@ -388,6 +461,11 @@ export type UseRenderElementParameters<State, RenderedElementType extends Elemen
    * `stateStyle`. The composable merges it last. `undefined` or an empty object adds no style.
    */
   overridingStyle?: (() => CSSProperties | undefined) | undefined;
+  /**
+   * With `false`, `elementProps` gives no value of the server HTML while Vue hydrates the part.
+   * `useRender` passes `false`, because the template of a consumer can start with another element.
+   */
+  serverAttributes?: boolean | undefined;
 };
 
 export type UseRenderElementComponentProps<State> = VaseUIComponentProps<State>;
@@ -400,6 +478,9 @@ export interface UseRenderElementReturnValue<RenderedElementType extends Element
   /**
    * Makes the props for the element: the state data attributes, the attributes and listeners,
    * `class`, `style` and `ref`. The template calls it on each render.
+   * In a render before the mount of a part that Vue hydrates, a `role`, `abbr`, `data-*` or
+   * `aria-*` key (except `aria-hidden`) whose value differs from the server HTML has the server
+   * value: a string, or `undefined` when the server element has no such attribute.
    */
   elementProps: () => HTMLProps;
 }

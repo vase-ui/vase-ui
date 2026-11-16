@@ -26,7 +26,7 @@ export interface FloatingPortalProps
 </script>
 
 <script setup lang="ts">
-import { computed, onUpdated, provide, shallowRef, watch } from 'vue';
+import { computed, provide, shallowRef, watch } from 'vue';
 import type { Component } from 'vue';
 import { addEventListener } from '../../../common/addEventListener';
 import { EMPTY_OBJECT } from '../../../common/empty';
@@ -37,6 +37,7 @@ import { REASONS } from '../../../internals/reasons';
 import type { HTMLProps } from '../../../internals/types';
 import { createFocusGuardElement } from '../focus/createFocusGuardElement';
 import { useElementSiblings } from '../focus/useElementSiblings';
+import { useElementId } from '../useElementId';
 import type { ElementSiblings } from '../focus/useElementSiblings';
 import {
   disableFocusInside,
@@ -135,15 +136,9 @@ const shouldRenderGuards = computed(
   () => shouldRenderOwner.value && !focusManagerState.value?.hasNextFocusableElement,
 );
 
-// The `id` attribute and the `#render` slot can replace the generated id. The owner element must
-// name the id that the DOM has, so the part reads it after each DOM update.
-const nodeId = shallowRef<string | undefined>();
-
-function readNodeId() {
-  nodeId.value = element.value?.id || undefined;
-}
-
-onUpdated(readNodeId);
+// The `id` attribute and the `#render` slot can replace the generated id, and the owner element
+// names the id that the DOM has.
+const nodeId = useElementId(element);
 
 // Vue gives a ref of a `Teleport` the node that marks the place of the `Teleport`: a comment in a
 // development build, and an empty text node in a production build. The guards and the owner
@@ -201,7 +196,7 @@ watch(
       return;
     }
     setOrRemoveAttribute(placeNodes.owner, 'role', role);
-    setOrRemoveAttribute(placeNodes.owner, 'aria-owns', id);
+    setOrRemoveAttribute(placeNodes.owner, 'aria-owns', id || undefined);
   },
   { flush: 'post' },
 );

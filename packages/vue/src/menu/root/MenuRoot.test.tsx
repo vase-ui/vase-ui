@@ -5515,29 +5515,6 @@ describe('<Menu.Root />', () => {
     });
   });
 
-  it('gives the id that the popup registers to the store', async () => {
-    const probe = createProbe();
-    await render(
-      <Menu.Root>
-        <probe.Probe />
-      </Menu.Root>,
-    );
-    const { context, store } = probe;
-    const generated = context.generatedPopupId;
-
-    expect(store.select('defaultPopupId')).toBe(generated);
-
-    context.setRenderedPopupId('custom');
-    await flushMicrotasks();
-
-    expect(store.select('defaultPopupId')).toBe('custom');
-
-    context.setRenderedPopupId(undefined);
-    await flushMicrotasks();
-
-    expect(store.select('defaultPopupId')).toBe(generated);
-  });
-
   describe('itemHighlighted', () => {
     function createItems(...ids: string[]) {
       return ids.map((id) => {

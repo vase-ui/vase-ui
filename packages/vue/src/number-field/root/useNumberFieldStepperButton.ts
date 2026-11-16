@@ -35,7 +35,7 @@ export function useNumberFieldStepperButton(props: StepperButtonProps, isIncreme
     allowInputSyncRef,
     formatOptionsRef,
     getStepAmount,
-    id,
+    inputId,
     incrementValue,
     inputRef,
     focusInput,
@@ -170,7 +170,7 @@ export function useNumberFieldStepperButton(props: StepperButtonProps, isIncreme
       {
         disabled: disabled.value ? '' : undefined,
         'aria-label': isIncrement ? 'Increase' : 'Decrease',
-        'aria-controls': id.value,
+        'aria-controls': inputId.value,
         // Keyboard users shouldn't have access to the buttons, since they can use the input
         // element to change the value. On the other hand, `aria-hidden` is not applied because
         // touch screen readers should be able to use the buttons.
