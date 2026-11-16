@@ -2456,6 +2456,7 @@ A case that acts between the server render and the hydration calls `hydrateAfter
 - A test belongs in the file of the part whose prop or behavior it asserts.
 - For text in a locale format, compute the expected text with the same locale and options as the component.
 - To test a server whose `Intl` data give another layout than the browser, give the server render a `-u-hc-`, `-u-ca-`, `-u-fw-` or `-u-rg-` keyword in `locale`. Hydrate with the plain locale. A locale that only one engine lacks, such as `is-IS` in Chromium, tests nothing in the other engines.
+- The page `date-layout` of the Nuxt fixture uses `is-IS` with no keyword, because the tests of the fixture read it only in Chromium. A case of the page fails when Node and Chromium give the same hour cycle for `is-IS`. Then give the page a locale for which the two give another hour cycle.
 - A case of a date part gives the part `today`, or a value and a time zone, so that the case does not depend on the clock of the machine. A case that must see the read of the clock spies on `Temporal.Now.plainDateISO`, and it does not fake the timers.
 - A hydration case of a calendar root that reads its clock calls `mockBrowserToday`. When the page moves in a fixture with a generated id, such as the id of `Calendar.Caption`, the case hydrates by hand, because the new month gets a new id.
 - Do not write a generated id in a test. The id holds a count of the earlier `useId` calls, so a new call in a part changes later ids. Read the id from the element or from the HTML.
