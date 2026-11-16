@@ -7,6 +7,8 @@ const props = defineProps<{
   locale?: string;
   hourCycle?: 12 | 24;
   view?: 'hour' | 'minute' | 'second';
+  // The root renders its element in the `#render` slot.
+  renderSlot?: boolean;
 }>();
 
 const defaultValue = props.time ? Temporal.PlainTime.from(props.time) : null;
@@ -14,6 +16,30 @@ const defaultValue = props.time ? Temporal.PlainTime.from(props.time) : null;
 
 <template>
   <TimeClock.Root
+    v-if="renderSlot"
+    aria-label="Start time"
+    :default-value="defaultValue"
+    :default-view="view"
+    :hour-cycle="hourCycle"
+    :locale="locale"
+  >
+    <template #render="{ props: rootProps }">
+      <div v-bind="rootProps">
+        <TimeClock.ViewTrigger view="hour" />
+        <TimeClock.ViewTrigger view="minute" />
+        <TimeClock.DayPeriod value="am" />
+        <TimeClock.DayPeriod value="pm" />
+        <TimeClock.Face>
+          <TimeClock.Hand />
+          <template #number="{ number }">
+            <TimeClock.Number :number="number" />
+          </template>
+        </TimeClock.Face>
+      </div>
+    </template>
+  </TimeClock.Root>
+  <TimeClock.Root
+    v-else
     aria-label="Start time"
     :default-value="defaultValue"
     :default-view="view"
