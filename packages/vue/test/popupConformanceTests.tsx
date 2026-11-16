@@ -9,7 +9,7 @@ import { ownerDocument } from '../src/common/owner';
 import { activeElement } from '../src/common/shadowDom';
 import { isJSDOM } from '../src/common/testUtils';
 import { REASONS } from '../src/internals/reasons';
-import { nextAnimationsRead, seekBeforeEnd } from './animation';
+import { nextAnimationsRead, nextEndingStyle, seekBeforeEnd } from './animation';
 import type { createRenderer } from './createRenderer';
 import { fireEvent } from './fireEvent';
 import { flushMicrotasks } from './flushMicrotasks';
@@ -725,14 +725,13 @@ export function popupConformanceTests(config: PopupTestConfig) {
               })}
             </div>,
           );
-          expect(getPopup()).toBeVisible();
+          const popup = getPopup()!;
+          expect(popup).toBeVisible();
 
-          await user.keyboard('[Escape]');
-          await waitFor(() => {
-            expect(getPopup()).toHaveAttribute('data-ending-style');
-          });
+          await nextEndingStyle(popup, { action: () => user.keyboard('[Escape]') });
+          expect(popup).toHaveAttribute('data-ending-style');
           // The part can stop its wait before it reads the animations, so the case reads them.
-          const animations = getPopup()!.getAnimations();
+          const animations = popup.getAnimations();
           const finished = Promise.all(animations.map((animation) => animation.finished));
           seekBeforeEnd(animations, 50);
           await finished;
@@ -832,6 +831,7 @@ export function popupConformanceTests(config: PopupTestConfig) {
         'hides the kept-mounted popup once the exit animation finishes',
         async () => {
           const animationName = `anim-${randomStringValue()}`;
+          const onOpenChangeComplete = vi.fn();
 
           function Test(props: { open: boolean }) {
             const style = `
@@ -854,7 +854,7 @@ export function popupConformanceTests(config: PopupTestConfig) {
               <div>
                 <style>{style}</style>
                 {prepareComponent({
-                  root: { open: props.open },
+                  root: { open: props.open, onOpenChangeComplete },
                   // Popups that stay mounted after opening don't accept `keepMounted`.
                   portal: alwaysMounted ? {} : { keepMounted: true },
                   popup: {
@@ -866,6 +866,11 @@ export function popupConformanceTests(config: PopupTestConfig) {
           }
 
           const { setProps } = await renderPopup(<Test open />);
+          // The root reads the animations of the popup in a frame after the mount, to report the
+          // end of the open. The wait for the read of the close must start after that read.
+          await waitFor(() => {
+            expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+          });
           const popup = getPopup()!;
 
           // The popup stays visible while the exit animation runs...

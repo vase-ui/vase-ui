@@ -97,6 +97,7 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { isInHeldBranch } from '../../internals/useKeepAliveState';
 import { getCssDimensions } from '../../utils/getCssDimensions';
 import { stopEvent } from '../../utils/popups/event';
 import { useFloatingRootStore } from '../../utils/popups/floating-root/useFloatingRootStore';
@@ -148,7 +149,9 @@ const {
   setActivationDirection,
   setFloatingRootStore,
   popupElement,
+  popupElementId,
   viewportElement,
+  viewportElementId,
   rootRef,
   beforeOutsideRef,
   afterOutsideRef,
@@ -494,7 +497,7 @@ const { element, elementProps } = useRenderElement('button', props, {
       onPointerenter: handleSetPointerType,
       onPointerdown: handleTriggerPointerDown,
       'aria-expanded': isActiveItem.value,
-      'aria-controls': (isActiveItem.value && popupElement.value?.id) || undefined,
+      'aria-controls': (isActiveItem.value && popupElementId.value) || undefined,
       [NAVIGATION_MENU_TRIGGER_IDENTIFIER]: '',
       onFocusin() {
         if (isActiveItem.value) {
@@ -527,7 +530,7 @@ function openHoveredTrigger() {
   hoverProps.onMousemove?.(createHoverEvent('mousemove', trigger));
 }
 
-let isDeactivated = false;
+let isDeactivated = isInHeldBranch();
 
 onMounted(openHoveredTrigger);
 
@@ -587,7 +590,7 @@ function releaseOutsideGuards() {
 }
 
 watch(
-  [outsideSiblings, () => viewportElement.value?.id],
+  [outsideSiblings, viewportElementId],
   ([siblings, viewportId]) => {
     if (!outsideNodes) {
       return;

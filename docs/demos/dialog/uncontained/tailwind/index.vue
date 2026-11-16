@@ -32,6 +32,7 @@ const XIcon: FunctionalComponent = () =>
       />
       <Dialog.Viewport class="fixed inset-0 grid place-items-center px-4 py-12 xl:py-6">
         <Dialog.Popup
+          aria-label="Uncontained dialog"
           class="group/popup relative flex h-full w-full max-w-[70rem] xl:max-w-none justify-center pointer-events-none transition-opacity duration-150 data-starting-style:opacity-0 data-ending-style:opacity-0"
         >
           <Dialog.Close

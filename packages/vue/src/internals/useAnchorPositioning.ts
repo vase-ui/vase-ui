@@ -246,7 +246,8 @@ export function useAnchorPositioning(
     (a, b) => a.top === b.top && a.right === b.right && a.bottom === b.bottom && a.left === b.left,
   );
 
-  // `true` from the mount to the unmount, except while a `KeepAlive` holds the component.
+  // `true` from the mount to the unmount, except from a deactivation by `KeepAlive` to the next
+  // activation. A component that mounts in a held branch is active from its mount.
   const isActive = shallowRef(false);
   onMounted(() => {
     isActive.value = true;
@@ -940,7 +941,7 @@ export interface UseAnchorPositioningReturnValue {
   anchorHidden: ComputedRef<boolean>;
   /**
    * The element or the virtual element that the popup is positioned against. It is `null` while
-   * the popup is not mounted and while `KeepAlive` holds the component.
+   * the popup is not mounted, and from a deactivation by `KeepAlive` to the next activation.
    */
   reference: ComputedRef<Element | VirtualElement | null>;
   isPositioned: Readonly<Ref<boolean>>;

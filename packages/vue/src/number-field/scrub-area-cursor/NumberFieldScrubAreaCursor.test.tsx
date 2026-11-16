@@ -1,5 +1,5 @@
-import { describe, expect, vi, it } from 'vitest';
-import { defineComponent, provide, shallowRef } from 'vue';
+import { describe, expect, onTestFinished, vi, it } from 'vitest';
+import { defineComponent, defineCustomElement, provide, shallowRef, Teleport } from 'vue';
 import { NumberField } from '@vase-ui/vue/number-field';
 import {
   createRenderer,
@@ -7,6 +7,7 @@ import {
   flushMicrotasks,
   screen,
   takeReportedMessages,
+  waitFor,
 } from '#test-utils';
 import { platform } from '../../common/platform';
 import { NumberFieldScrubAreaContext } from '../scrub-area/NumberFieldScrubAreaContext';
@@ -19,12 +20,37 @@ const defaultScrubAreaContext: NumberFieldScrubAreaContext = {
   isTouchInput: shallowRef(false),
   isPointerLockDenied: shallowRef(false),
   scrubAreaCursorRef: shallowRef<HTMLSpanElement | null>(null),
+  scrubAreaElement: shallowRef<HTMLElement | null>(null),
 };
 
 const ScrubAreaContextProvider = defineComponent((_, { slots }) => {
   provide(NumberFieldScrubAreaContext, defaultScrubAreaContext);
   return () => slots.default?.();
 });
+
+const CURSOR_CSS = '.cursor { width: 20px; height: 10px; }';
+
+// Vue renders this element in a shadow root, and it puts `styles` in that root.
+const CURSOR_ELEMENT_NAME = 'vase-ui-test-scrub-cursor';
+customElements.define(
+  CURSOR_ELEMENT_NAME,
+  defineCustomElement({
+    styles: [CURSOR_CSS],
+    render: () => (
+      <NumberField.Root>
+        <NumberField.Input />
+        <NumberField.ScrubArea data-testid="scrub-area">
+          <NumberField.ScrubAreaCursor class="cursor" data-testid="cursor" />
+        </NumberField.ScrubArea>
+      </NumberField.Root>
+    ),
+  }),
+);
+
+function getCenter(element: Element) {
+  const rect = element.getBoundingClientRect();
+  return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+}
 
 // This component doesn't render on WebKit.
 describe.skipIf(isWebKit)('<NumberField.ScrubAreaCursor />', () => {
@@ -259,6 +285,201 @@ describe.skipIf(isWebKit)('<NumberField.ScrubAreaCursor />', () => {
       } finally {
         pointerLock.mockRestore();
       }
+    });
+  });
+
+  describe('VUE-108: the container of the cursor', () => {
+    it('renders the cursor in the shadow root of its scrub area, where the styles of that root apply', async () => {
+      const pointerLock = vi
+        .spyOn(document.body, 'requestPointerLock')
+        .mockImplementation(() => Promise.resolve());
+      const host = document.body.appendChild(document.createElement(CURSOR_ELEMENT_NAME));
+
+      try {
+        await flushMicrotasks();
+        const shadowRoot = host.shadowRoot!;
+        shadowRoot
+          .querySelector('[data-testid="scrub-area"]')!
+          .dispatchEvent(
+            new PointerEvent('pointerdown', { bubbles: true, clientX: 200, clientY: 150 }),
+          );
+        await flushMicrotasks();
+
+        const cursor = shadowRoot.querySelector('[data-testid="cursor"]')!;
+        const portal = cursor.parentElement!;
+        expect(portal).toHaveAttribute('data-vase-ui-portal');
+        expect(portal.parentNode).toBe(shadowRoot);
+        expect(getComputedStyle(cursor).width).toBe('20px');
+
+        window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+        await waitFor(() => {
+          expect(portal).not.toBeInTheDocument();
+        });
+        expect(shadowRoot.querySelector('[data-vase-ui-portal]')).toBe(null);
+      } finally {
+        pointerLock.mockRestore();
+        host.remove();
+        // Vue unmounts the app of the element in a microtask after the removal.
+        await flushMicrotasks();
+      }
+    });
+
+    // The field is in a shadow root below an ancestor with `style`. The press is at `200, 150`.
+    async function pressScrubAreaBelow(style: string) {
+      const pointerLock = vi
+        .spyOn(document.body, 'requestPointerLock')
+        .mockImplementation(() => Promise.resolve());
+      onTestFinished(() => pointerLock.mockRestore());
+      const ancestor = document.body.appendChild(document.createElement('div'));
+      onTestFinished(() => ancestor.remove());
+      ancestor.style.cssText = style;
+      const shadowRoot = ancestor
+        .appendChild(document.createElement('div'))
+        .attachShadow({ mode: 'open' });
+      const styleElement = document.createElement('style');
+      // The rule for `div` shows that the styles of the page do not move the cursor.
+      styleElement.textContent = `${CURSOR_CSS} div { margin: 9px; padding: 3px; }`;
+      const container = document.createElement('div');
+      shadowRoot.append(styleElement, container);
+
+      await render(
+        <Teleport to={container}>
+          <NumberField.Root>
+            <NumberField.Input />
+            <NumberField.ScrubArea data-testid="scrub-area">
+              <NumberField.ScrubAreaCursor class="cursor" data-testid="cursor" />
+            </NumberField.ScrubArea>
+          </NumberField.Root>
+        </Teleport>,
+      );
+      shadowRoot
+        .querySelector('[data-testid="scrub-area"]')!
+        .dispatchEvent(
+          new PointerEvent('pointerdown', { bubbles: true, clientX: 200, clientY: 150 }),
+        );
+      await flushMicrotasks();
+
+      return { ancestor, cursor: shadowRoot.querySelector('[data-testid="cursor"]')! };
+    }
+
+    it.each([
+      {
+        name: 'a translation and a border',
+        style: 'transform: translate(100px, 40px); border: 7px solid',
+      },
+      { name: 'a scale', style: 'transform: scale(0.5); transform-origin: 0 0' },
+    ])(
+      'puts the cursor at the pointer when an ancestor of the shadow host has $name',
+      async ({ style }) => {
+        const { cursor } = await pressScrubAreaBelow(style);
+        expect(getCenter(cursor).x).toBeCloseTo(200, 1);
+        expect(getCenter(cursor).y).toBeCloseTo(150, 1);
+
+        window.dispatchEvent(
+          new PointerEvent('pointermove', { bubbles: true, movementX: 30, movementY: 10 }),
+        );
+
+        expect(getCenter(cursor).x).toBeCloseTo(230, 1);
+        expect(getCenter(cursor).y).toBeCloseTo(160, 1);
+        // The box that reads the containing block is gone.
+        expect(cursor.parentElement!.children).toHaveLength(1);
+      },
+    );
+
+    it('keeps the cursor at the pointer when the containing block moves during the scrub', async () => {
+      const { ancestor, cursor } = await pressScrubAreaBelow('transform: translate(100px, 40px)');
+      ancestor.style.transform = 'translate(150px, 60px)';
+
+      window.dispatchEvent(
+        new PointerEvent('pointermove', { bubbles: true, movementX: 30, movementY: 10 }),
+      );
+
+      expect(getCenter(cursor).x).toBeCloseTo(230, 1);
+      expect(getCenter(cursor).y).toBeCloseTo(160, 1);
+    });
+
+    it('renders the cursor in the document of its scrub area', async () => {
+      const frame = document.body.appendChild(document.createElement('iframe'));
+      onTestFinished(() => frame.remove());
+      const frameDocument = frame.contentDocument!;
+      const styleElement = frameDocument.createElement('style');
+      styleElement.textContent = CURSOR_CSS;
+      frameDocument.head.append(styleElement);
+      const pointerLock = vi
+        .spyOn(frameDocument.body, 'requestPointerLock')
+        .mockImplementation(() => Promise.resolve());
+
+      try {
+        await render(
+          <Teleport to={frameDocument.body}>
+            <NumberField.Root>
+              <NumberField.Input />
+              <NumberField.ScrubArea data-testid="scrub-area">
+                <NumberField.ScrubAreaCursor class="cursor" data-testid="cursor" />
+              </NumberField.ScrubArea>
+            </NumberField.Root>
+          </Teleport>,
+        );
+        frameDocument
+          .querySelector('[data-testid="scrub-area"]')!
+          .dispatchEvent(
+            new PointerEvent('pointerdown', { bubbles: true, clientX: 50, clientY: 20 }),
+          );
+        await flushMicrotasks();
+
+        const cursor = frameDocument.querySelector('[data-testid="cursor"]')!;
+        expect(cursor.parentElement!.parentElement).toBe(frameDocument.body);
+        // The coordinates of the pointer and of the cursor are those of the frame.
+        expect(getCenter(cursor)).toEqual({ x: 50, y: 20 });
+      } finally {
+        pointerLock.mockRestore();
+      }
+    });
+
+    it('renders the cursor in the root node of the scrub area after the field moves to another root', async () => {
+      const pointerLock = vi
+        .spyOn(document.body, 'requestPointerLock')
+        .mockImplementation(() => Promise.resolve());
+      onTestFinished(() => pointerLock.mockRestore());
+      const host = document.body.appendChild(document.createElement('div'));
+      const documentTarget = document.body.appendChild(document.createElement('div'));
+      onTestFinished(() => {
+        host.remove();
+        documentTarget.remove();
+      });
+      const shadowRoot = host.attachShadow({ mode: 'open' });
+      const target = shallowRef(shadowRoot.appendChild(document.createElement('div')));
+      await render(() => (
+        <Teleport to={target.value}>
+          <NumberField.Root>
+            <NumberField.Input />
+            <NumberField.ScrubArea data-testid="scrub-area">
+              <NumberField.ScrubAreaCursor data-testid="cursor" />
+            </NumberField.ScrubArea>
+          </NumberField.Root>
+        </Teleport>
+      ));
+      const scrubArea = shadowRoot.querySelector('[data-testid="scrub-area"]')!;
+      scrubArea.dispatchEvent(
+        new PointerEvent('pointerdown', { bubbles: true, clientX: 10, clientY: 10 }),
+      );
+      await flushMicrotasks();
+      const portal = shadowRoot.querySelector('[data-testid="cursor"]')!.parentElement!;
+      expect(portal.parentNode).toBe(shadowRoot);
+      window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+      await waitFor(() => {
+        expect(portal).not.toBeInTheDocument();
+      });
+
+      target.value = documentTarget;
+      await flushMicrotasks();
+      expect(documentTarget.contains(scrubArea)).toBe(true);
+      scrubArea.dispatchEvent(
+        new PointerEvent('pointerdown', { bubbles: true, clientX: 10, clientY: 10 }),
+      );
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('cursor').parentElement!.parentElement).toBe(document.body);
     });
   });
 

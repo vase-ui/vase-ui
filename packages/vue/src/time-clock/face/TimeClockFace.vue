@@ -41,6 +41,7 @@ import { computed, nextTick, onScopeDispose, provide, shallowRef } from 'vue';
 import type { Component } from 'vue';
 import { formatNumber } from '../../common/formatNumber';
 import { visuallyHiddenInput } from '../../common/visuallyHidden';
+import { givenName } from '../../internals/blankName';
 import {
   ARROW_DOWN,
   ARROW_LEFT,
@@ -135,10 +136,12 @@ function onInput(event: Event) {
 }
 
 function inputProps() {
+  const ariaLabelledby = givenName(props.ariaLabelledby);
   return mergeProps<'input'>(
     {
-      'aria-label': props.ariaLabel ?? (props.ariaLabelledby == null ? label.value : undefined),
-      'aria-labelledby': props.ariaLabelledby,
+      'aria-label':
+        givenName(props.ariaLabel) ?? (ariaLabelledby == null ? label.value : undefined),
+      'aria-labelledby': ariaLabelledby,
       'aria-describedby': props.ariaDescribedby,
       'aria-readonly': root.readOnly.value ? 'true' : undefined,
       'aria-valuenow': root.selectedNumber.value.value,

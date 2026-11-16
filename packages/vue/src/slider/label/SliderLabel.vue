@@ -32,7 +32,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, SliderLabelState>;
 }>();
 
-const { state, registerLabelId, reaches, controlElement, rootLabelId } = useSliderRootContext();
+const { state, registerLabelId, controlElement, rootLabelId } = useSliderRootContext();
 
 function focusControl(event: MouseEvent, controlId: string | undefined) {
   if (controlId) {
@@ -53,8 +53,6 @@ function focusControl(event: MouseEvent, controlId: string | undefined) {
 const labelProps = useLabel({
   id: rootLabelId,
   registerLabelId,
-  reaches,
-  element: () => element.value,
   focusControl,
 });
 

@@ -49,7 +49,7 @@
   }
 
   @media (hover: hover) {
-    &:hover:not([data-disabled]) {
+    &:hover:not([data-disabled], [data-active], [data-selected]) {
       background-color: oklch(97% 0 0deg);
 
       @media (prefers-color-scheme: dark) {
@@ -209,7 +209,7 @@
   }
 
   &[data-disabled] {
-    color: oklch(50% 0 0deg);
+    color: oklch(43.9% 0 0deg);
 
     @media (prefers-color-scheme: dark) {
       color: oklch(70.8% 0 0deg);

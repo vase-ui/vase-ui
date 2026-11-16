@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { shallowRef } from 'vue';
 import type { VNode } from 'vue';
 import type * as Dialog from '../src/dialog/index.parts';
@@ -10,6 +10,7 @@ import { waitForLaterMillisecond } from './createRenderer';
 import type { createRenderer } from './createRenderer';
 import { flushMicrotasks } from './flushMicrotasks';
 import { screen } from './queries';
+import { waitFor } from './waitFor';
 
 type PopupParts = Pick<typeof Dialog, 'Root' | 'Trigger' | 'Portal' | 'Popup'>;
 
@@ -83,6 +84,14 @@ export function nestedPopupCloseTests(config: NestedPopupCloseTestsConfig) {
     await nextEvent(document, 'focusin', { action });
   }
 
+  // A root reads the animations of its popup in a frame after the open, to report the end of the
+  // open. The wait for the read of a close must start after that read.
+  async function waitForOpenChangeComplete(onOpenChangeComplete: ReturnType<typeof vi.fn>) {
+    await waitFor(() => {
+      expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+    });
+  }
+
   it.each([
     { name: 'both popups animate', innerAnimates: true, modal: true },
     { name: 'only the outer popup animates', innerAnimates: false, modal: true },
@@ -93,6 +102,8 @@ export function nestedPopupCloseTests(config: NestedPopupCloseTestsConfig) {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
       const outerOpen = shallowRef(false);
       const innerOpen = shallowRef(false);
+      const onOuterOpenChangeComplete = vi.fn();
+      const onInnerOpenChangeComplete = vi.fn();
       const { user } = await render(() => (
         <div>
           <style>{exitStyle(innerAnimates ? ['outer', 'inner'] : ['outer'])}</style>
@@ -102,6 +113,7 @@ export function nestedPopupCloseTests(config: NestedPopupCloseTestsConfig) {
             onOpenChange={(open: boolean) => {
               outerOpen.value = open;
             }}
+            onOpenChangeComplete={onOuterOpenChangeComplete}
           >
             <Trigger>Open outer</Trigger>
             <Portal>
@@ -113,6 +125,7 @@ export function nestedPopupCloseTests(config: NestedPopupCloseTestsConfig) {
                     onOpenChange={(open: boolean) => {
                       innerOpen.value = open;
                     }}
+                    onOpenChangeComplete={onInnerOpenChangeComplete}
                   >
                     <Trigger>Open inner</Trigger>
                     <Portal>
@@ -149,6 +162,10 @@ export function nestedPopupCloseTests(config: NestedPopupCloseTestsConfig) {
       );
       const innerPopup = screen.getByTestId('inner-popup');
       expect(innerPopup.contains(document.activeElement)).toBe(true);
+      await waitForOpenChangeComplete(onOuterOpenChangeComplete);
+      if (innerAnimates) {
+        await waitForOpenChangeComplete(onInnerOpenChangeComplete);
+      }
 
       const { focusAtExitStart, exits } = await startExit(
         outerPopup,
@@ -202,6 +219,7 @@ export function nestedPopupCloseTests(config: NestedPopupCloseTestsConfig) {
     async ({ list, modal }) => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
       const open = shallowRef(false);
+      const onOpenChangeComplete = vi.fn();
       const closePopup = () => {
         open.value = false;
       };
@@ -214,6 +232,7 @@ export function nestedPopupCloseTests(config: NestedPopupCloseTestsConfig) {
             onOpenChange={(nextOpen: boolean) => {
               open.value = nextOpen;
             }}
+            onOpenChangeComplete={onOpenChangeComplete}
           >
             <Trigger>Open</Trigger>
             <Portal>
@@ -236,6 +255,7 @@ export function nestedPopupCloseTests(config: NestedPopupCloseTestsConfig) {
         openAndWaitForFocus(listTrigger, () => user.keyboard('{Enter}')),
       );
       expect(screen.getByTestId('list-popup').contains(document.activeElement)).toBe(true);
+      await waitForOpenChangeComplete(onOpenChangeComplete);
 
       const { focusAtExitStart, exits } = await startExit(outerPopup, [], () =>
         user.keyboard('{ArrowDown}{Enter}'),

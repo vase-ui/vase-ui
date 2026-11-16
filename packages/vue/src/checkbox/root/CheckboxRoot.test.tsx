@@ -17,9 +17,11 @@ import {
   hydrate,
   hydrateAfter,
   isJSDOM,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   takeReportedMessages,
+  wait,
   waitFor,
   within,
 } from '#test-utils';
@@ -1883,6 +1885,22 @@ describe('<Checkbox.Root />', () => {
     expect(siblingLabelled).toHaveAccessibleName('Sibling label');
   });
 
+  it.each([
+    { name: 'an empty aria-label', ariaLabel: '' },
+    { name: 'an aria-label of white space', ariaLabel: '\n\t ' },
+  ])('VUE-106: writes no aria-label for $name', async ({ ariaLabel }) => {
+    await render(
+      <label>
+        <Checkbox.Root aria-label={ariaLabel} />
+        Terms
+      </label>,
+    );
+
+    const checkbox = screen.getByRole('checkbox');
+    expect(checkbox).not.toHaveAttribute('aria-label');
+    expect(checkbox).toHaveAccessibleName('Terms');
+  });
+
   describe.each(['native', 'Field.Label'])('dynamic %s label', (labelType) => {
     function TestCase({
       ariaLabel,
@@ -2987,7 +3005,7 @@ describe('<Checkbox.Root />', () => {
       screen.getByRole('checkbox').focus();
 
       await userEvent.keyboard('{Enter}');
-      await flushMicrotasks();
+      await wait(0);
 
       expect(handleKeydown.mock.results.at(-1)?.value).toBe(false);
       expect(handleSubmit).not.toHaveBeenCalled();
@@ -3028,10 +3046,11 @@ describe('<Checkbox.Root />', () => {
       screen.getByRole('checkbox').focus();
 
       await userEvent.keyboard('{Enter}');
-      await flushMicrotasks();
 
+      await waitFor(() => {
+        expect(handleSubmit).toHaveBeenCalledTimes(1);
+      });
       expect(handleKeydown.mock.results.at(-1)?.value).toBe(false);
-      expect(handleSubmit).toHaveBeenCalledTimes(1);
       expect(screen.getByRole('checkbox')).toHaveAttribute('aria-checked', 'false');
     });
   });
@@ -3296,6 +3315,45 @@ describe('<Checkbox.Root />', () => {
   });
 
   describe('server-side rendering', () => {
+    removedPartHydrationTests({
+      file: 'src/checkbox/root/CheckboxRootHydration.test.vue',
+      component: CheckboxRootHydration,
+      cases: [
+        {
+          name: 'a removed label',
+          props: { label: 'field-after', laterRemovedAtMount: true },
+          selector: '[data-testid="checkbox"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description',
+          props: { label: 'field-after', laterRemovedAtMount: true },
+          selector: '[data-testid="checkbox"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+        {
+          name: 'the input, a removed description',
+          props: { label: 'field-after', laterRemovedAtMount: true },
+          selector: 'input',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description after another',
+          props: { label: 'field-after', descriptionBefore: true, laterRemovedAtMount: true },
+          selector: '[data-testid="checkbox"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-0 desc-a',
+          clientValue: 'desc-0',
+        },
+      ],
+    });
+
     it.each([
       { name: 'a checkbox that is off', props: {}, indeterminate: false },
       {

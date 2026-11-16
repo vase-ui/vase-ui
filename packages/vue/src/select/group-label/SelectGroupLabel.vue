@@ -32,7 +32,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, SelectGroupLabelState>;
 }>();
 
-const { registerLabelId, reaches } = useSelectGroupContext();
+const { registerLabelId } = useSelectGroupContext();
 
 const labelId = useVaseUiId(() => props.id);
 
@@ -41,8 +41,6 @@ const source = Symbol();
 useRegisteredId(
   () => labelId.value,
   (getId) => registerLabelId(source, getId),
-  () => element.value,
-  reaches,
 );
 
 const state: SelectGroupLabelState = EMPTY_OBJECT;

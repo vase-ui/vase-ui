@@ -17,6 +17,7 @@ import {
   renderOnServer,
   screen,
   takeReportedMessages,
+  waitSingleFrame,
   within,
 } from '#test-utils';
 import FieldErrorHydration from './FieldErrorHydration.test.vue';
@@ -476,6 +477,9 @@ describe('<Field.Error />', () => {
       await fireEvent.input(input, { target: { value: 'bad' } });
       const error = screen.getByTestId('error');
       expect(error).toHaveTextContent('Bad value');
+      // The error mounts when the field becomes invalid, and it reads its animations in the frame
+      // after the mount. The wait for the read of the exit must start after that read.
+      await waitSingleFrame();
 
       // After a stall, one frame can start and end the exit, and the part then removes the error.
       // Chromium then sends no `animationstart` to it, so the case reads the text when the part

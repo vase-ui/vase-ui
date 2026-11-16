@@ -24,13 +24,15 @@ export interface ResizableHandleState {
    */
   crossing: boolean;
   /**
-   * Whether the handle is at the end of its travel on the left, or at the top in a vertical root:
-   * it cannot move that way. The side is a side of the screen, also in a right-to-left root.
+   * Whether the handle cannot move to the left, or up in a vertical root: it is at the end of its
+   * travel, or it has no panel on one side. It is `false` while the handle is disabled. The side is
+   * a side of the screen, also in a right-to-left root.
    */
   atMin: boolean;
   /**
-   * Whether the handle is at the end of its travel on the right, or at the bottom in a vertical
-   * root: it cannot move that way. The side is a side of the screen, also in a right-to-left root.
+   * Whether the handle cannot move to the right, or down in a vertical root: it is at the end of
+   * its travel, or it has no panel on one side. It is `false` while the handle is disabled. The
+   * side is a side of the screen, also in a right-to-left root.
    */
   atMax: boolean;
 }
@@ -93,7 +95,7 @@ import {
   watch,
 } from 'vue';
 import type { Component, CSSProperties } from 'vue';
-import { useIsHydrating } from '../../common/hydration';
+import { useAriaAfterHydration, useIsHydrating } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
 import { formatNumber } from '../../common/formatNumber';
 import { activeElement } from '../../common/shadowDom';
@@ -148,6 +150,7 @@ const root = useResizableRootContext();
 useDeferredServerRender();
 
 const hydrating = useIsHydrating();
+const ariaAfterHydration = useAriaAfterHydration();
 const { ref: listItemRef, index } = useCompositeListItem({ list: root.list });
 const isDisabled = computed(() => root.disabled.value || props.disabled);
 
@@ -161,7 +164,10 @@ const pivot = computed(() => {
 const isFocusable = computed(() => !isDisabled.value && pivot.value >= 0);
 // While the page hydrates, the handle can render before the panel after it registers. Vue compares
 // `tabindex` and `style`, so the server HTML and that render give each handle that is not disabled
-// its tab stop and a hit area that takes presses.
+// its tab stop and a hit area that takes presses. That render also gives no end attribute. In a
+// client-only mount, the root reads the layout in `onMounted`, before the next render, so the
+// browser computes the style of that render. With both end attributes in it, a CSS transition for
+// the state of a handle that cannot move would start on each handle.
 const hasTabStop = computed(() => isFocusable.value || (hydrating.value && !isDisabled.value));
 const primary = computed(() =>
   pivot.value < 0
@@ -221,9 +227,14 @@ const valueAttributes = computed(() => {
   };
 });
 
-const ends = computed(() =>
-  isDisabled.value ? { atMin: false, atMax: false } : getHandleEnds(root, pivot.value),
-);
+const ends = computed(() => {
+  if (isDisabled.value) {
+    return { atMin: false, atMax: false };
+  }
+  // A handle that is not disabled has no tab stop only after the mount, and only when it has no
+  // panel on one side.
+  return hasTabStop.value ? getHandleEnds(root, pivot.value) : { atMin: true, atMax: true };
+});
 
 const drag = createHandleDrag(root, {
   pivot: () => pivot.value,
@@ -250,7 +261,7 @@ const hitAreaStyle = computed<CSSProperties>(() => {
       ? { top: 0, bottom: 0, left: '50%', width: size, translate: '-50% 0' }
       : { left: 0, right: 0, top: '50%', height: size, translate: '0 -50%' }),
     zIndex: 1,
-    // A press beside a handle that cannot move goes to the content under the hit area.
+    // A press beside a handle with no tab stop goes to the content under the hit area.
     ...(hasTabStop.value ? undefined : { pointerEvents: 'none' }),
   };
 });
@@ -444,6 +455,16 @@ const { element, elementProps } = useRenderElement('div', props, {
       },
     },
     attrs,
+    // The first client render can come before the `setup` of the panel after the handle.
+    // `valueAttributes` then has none of these keys, so this getter adds them.
+    (merged) => ({
+      ...merged,
+      'aria-controls': ariaAfterHydration(merged['aria-controls']),
+      'aria-valuenow': ariaAfterHydration(merged['aria-valuenow']),
+      'aria-valuemin': ariaAfterHydration(merged['aria-valuemin']),
+      'aria-valuemax': ariaAfterHydration(merged['aria-valuemax']),
+      'aria-valuetext': ariaAfterHydration(merged['aria-valuetext']),
+    }),
   ],
 });
 

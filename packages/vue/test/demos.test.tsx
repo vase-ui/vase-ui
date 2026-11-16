@@ -50,25 +50,28 @@ function sourcesThatMatch(pattern: RegExp) {
     .map(([path]) => path);
 }
 
-// Vitest cuts a `$name` value after 40 characters. The variant has its own value, so the two titles
-// of a long name stay different.
-describe.each(demos)('$name ($variant)', ({ file, variant, Demo }) => {
-  const { render } = createRenderer();
+// Vitest cuts a `$name` value after 40 characters, so two long names can get one title. A `%s`
+// value is not cut.
+describe.each(demos.map((demo) => [`${demo.name} (${demo.variant})`, demo] as const))(
+  '%s',
+  (_title, { file, variant, Demo }) => {
+    const { render } = createRenderer();
 
-  it('mounts with no Vue warning and has no axe violation', async () => {
-    // Do not write JSX here. The dependency scan of Vite cannot parse JSX in a file that has
-    // `import.meta.glob`.
-    const { container } = await render(h('div', { 'data-demo': variant }, h(Demo)));
+    it('mounts with no Vue warning and has no axe violation', async () => {
+      // Do not write JSX here. The dependency scan of Vite cannot parse JSX in a file that has
+      // `import.meta.glob`.
+      const { container } = await render(h('div', { 'data-demo': variant }, h(Demo)));
 
-    await expectNoAxeViolations(container);
-  });
+      await expectNoAxeViolations(container);
+    });
 
-  it('hydrates the server render with no mismatch', async () => {
-    const serverHtml = await renderOnServer(file);
+    it('hydrates the server render with no mismatch', async () => {
+      const serverHtml = await renderOnServer(file);
 
-    await hydrate(Demo, { serverHtml });
-  });
-});
+      await hydrate(Demo, { serverHtml });
+    });
+  },
+);
 
 describe('the style sheet of the Tailwind demos', () => {
   const { render } = createRenderer();
@@ -351,23 +354,36 @@ describe('the form library demos of the Forms page', () => {
   );
 });
 
-describe('the demos of the Forms page', () => {
+describe.each([
+  { page: 'Toast', family: 'toast' },
+  { page: 'Navigation Menu', family: 'navigation-menu' },
+  { page: 'Forms', family: 'handbook-forms' },
+])('the demos of the $page page', ({ family }) => {
   const { render } = createRenderer();
+  const pageDemos = demos.filter(({ name }) => name.startsWith(`${family}/`));
+  const methods = [...new Set(pageDemos.map(({ variant }) => variant))];
 
-  it('have no axe violation when the page shows them together', async () => {
-    const pageDemos = demos.filter(({ name }) => name.startsWith('handbook-forms/'));
-    expect(pageDemos).not.toHaveLength(0);
-    await render(
-      h(
-        'div',
-        pageDemos.map(({ variant, Demo }) => h('div', { 'data-demo': variant }, h(Demo))),
-      ),
-    );
+  it.each(methods.map((method) => ({ method })))(
+    'have no axe violation when the page shows them together ($method)',
+    async ({ method }) => {
+      // The frame shows the other variant of a demo that does not have the selected one.
+      const shown = pageDemos.filter(
+        ({ name, variant }) =>
+          variant === method ||
+          !pageDemos.some((other) => other.name === name && other.variant === method),
+      );
+      await render(
+        h(
+          'div',
+          shown.map(({ variant, Demo }) => h('div', { 'data-demo': variant }, h(Demo))),
+        ),
+      );
 
-    // axe compares the landmarks of the demos only when it reads them together. The viewport of
-    // a toast provider is a landmark in a portal, outside the element of the render.
-    await expectNoAxeViolations(document.body);
-  });
+      // axe compares the landmarks of the demos only when it reads them together. The viewport of
+      // a toast provider is a landmark in a portal, outside the element of the render.
+      await expectNoAxeViolations(document.body);
+    },
+  );
 });
 
 describe('demos', () => {

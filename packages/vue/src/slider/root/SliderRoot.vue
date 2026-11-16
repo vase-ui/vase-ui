@@ -187,11 +187,12 @@ export type SliderRootCommitEventDetails = VaseUIGenericEventDetails<SliderRootC
 import { computed, nextTick, provide, shallowRef, watch } from 'vue';
 import { areArraysEqual } from '../../common/areArraysEqual';
 import { clamp } from '../../common/clamp';
-import { useIsHydrating } from '../../common/hydration';
+import { useAriaAfterHydration, useIsHydrating } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
 import { activeElement, contains } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
 import { warn } from '../../common/warn';
+import { givenName } from '../../internals/blankName';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import type { CompositeMetadata } from '../../internals/composite/list/useCompositeList';
 import {
@@ -204,7 +205,6 @@ import { useFormContext } from '../../internals/form-context';
 import { createLabelIdRegistry, useControlLabelId } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
-import { isInTreeOf } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { asc } from '../utils/asc';
@@ -307,7 +307,9 @@ const fieldLabelId = useControlLabelId();
 const { labelId: localLabelId, registerLabelId } = createLabelIdRegistry();
 const isHydrating = useIsHydrating();
 
-const labelId = computed(() => props.ariaLabelledby ?? fieldLabelId.value ?? localLabelId.value);
+const labelId = computed(
+  () => givenName(props.ariaLabelledby) ?? fieldLabelId.value ?? localLabelId.value,
+);
 
 const isDisabled = computed(() => fieldDisabled.value || props.disabled);
 const inputName = computed(() => fieldName.value ?? props.name);
@@ -358,11 +360,12 @@ function setIndicatorPosition(edge: 0 | 1, position: number | undefined) {
 
 const thumbMap = shallowRef<ReadonlyMap<Element, CompositeMetadata<ThumbMetadata>>>(new Map());
 
-useCompositeList<ThumbMetadata>({
+const thumbList = useCompositeList<ThumbMetadata>({
   elementsRef: thumbRefs,
   onMapChange(map) {
     thumbMap.value = map;
   },
+  provide: false,
 });
 
 const range = computed(() => Array.isArray(valueUnwrapped.value));
@@ -377,8 +380,7 @@ const values = computed<readonly number[]>(() => {
 
 const fieldValue = computed(() => (range.value ? values.value : values.value[0]));
 
-// The form focuses `validation.inputRef`, which can name the input of another control. The element
-// of the root shows whether `KeepAlive` holds the slider.
+// The form focuses `validation.inputRef`.
 useRegisterFieldControl(
   validation.inputRef,
   rootId,
@@ -386,7 +388,6 @@ useRegisterFieldControl(
   undefined,
   () => !isDisabled.value,
   () => props.name,
-  () => element.value,
 );
 
 const clearFieldError = useClearFieldError(inputName);
@@ -627,9 +628,9 @@ provide(SliderRootContext, {
   labelId,
   rootLabelId,
   registerLabelId,
-  reaches: (target) => isInTreeOf(element.value, target),
   reset,
   thumbMap,
+  thumbList,
   largeStep: computed(() => props.largeStep),
   lastUsedThumbIndex,
   lastChangeReasonRef,
@@ -657,25 +658,28 @@ provide(SliderRootContext, {
   values,
 });
 
+// The attributes of the consumer have no blank `aria-label` (VUE-106).
 function hasAriaLabel(attrs: Record<string, unknown>) {
-  const ariaLabel = attrs['aria-label'];
-  return typeof ariaLabel === 'string' && ariaLabel.trim() !== '';
+  return typeof attrs['aria-label'] === 'string';
 }
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('div', props, {
   state,
   props: (attrs) => [
     {
       // A server writes the attributes of the root before the `setup` of `Slider.Label`, so the
       // root assumes that label until it is mounted.
-      'aria-labelledby':
+      'aria-labelledby': ariaAfterHydration(
         labelId.value ??
-        (isHydrating.value && !hasAriaLabel(attrs) ? rootLabelId.value : undefined),
+          (isHydrating.value && !hasAriaLabel(attrs) ? rootLabelId.value : undefined),
+      ),
       id: rootId.value,
       role: 'group',
     },
     attrs,
     (merged) => validation.getValidationProps(isDisabled.value, merged),
+    (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),
   ],
   stateAttributesMapping: sliderStateAttributesMapping,
 });

@@ -18,7 +18,7 @@ const { layout, save } = Resizable.useLayoutStorage({ key: 'vase-ui-docs-resizab
     </Resizable.Panel>
     <Resizable.Handle
       aria-label="Resize the navigation"
-      class="w-px flex-none cursor-col-resize bg-neutral-200 outline-none focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 data-[at-max]:cursor-w-resize data-[at-min]:cursor-e-resize data-[disabled]:cursor-default dark:bg-neutral-800 dark:focus-visible:outline-white"
+      class="w-px flex-none cursor-col-resize bg-neutral-200 outline-none focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 data-at-max:cursor-w-resize data-at-min:cursor-e-resize data-at-min:data-at-max:cursor-default data-disabled:cursor-default dark:bg-neutral-800 dark:focus-visible:outline-white"
     />
     <Resizable.Panel id="editor" class="box-border overflow-hidden p-4">
       <p class="text-sm font-medium text-neutral-950 dark:text-white">Editor</p>

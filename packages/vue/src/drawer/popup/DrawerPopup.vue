@@ -164,7 +164,6 @@ import {
   onMounted,
   onScopeDispose,
   shallowRef,
-  toRaw,
   watch,
 } from 'vue';
 import { EMPTY_OBJECT, NOOP } from '../../common/empty';
@@ -437,7 +436,7 @@ function setPopup(popup: HTMLElement | null) {
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: useKeepAliveElementRef(setPopup, () => toRaw(store.state).activeTriggerElement),
+  ref: useKeepAliveElementRef(setPopup),
   stateAttributesMapping,
   props: (attrs) => [
     store.select('popupProps'),

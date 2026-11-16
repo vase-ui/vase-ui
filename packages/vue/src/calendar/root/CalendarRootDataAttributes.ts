@@ -3,7 +3,7 @@
  */
 export const disabled = 'data-disabled';
 /**
- * Present when the user cannot select a day.
+ * Present when the user cannot select a day or a month.
  */
 export const readonly = 'data-readonly';
 /**
@@ -11,9 +11,14 @@ export const readonly = 'data-readonly';
  */
 export const invalid = 'data-invalid';
 /**
- * Present when no day is selected.
+ * Present when no day or month is selected.
  */
 export const empty = 'data-empty';
+/**
+ * Indicates what the grid shows: the days of the months, the months of a year, or a page of years.
+ * @type {'day' | 'month' | 'year'}
+ */
+export const view = 'data-view';
 /**
  * Present when the grid shows more than one month.
  */

@@ -9,7 +9,7 @@ import ToastList from './ToastList.vue';
   <Toast.Provider>
     <UndoForm />
     <Toast.Portal>
-      <Toast.Viewport :class="styles.Viewport">
+      <Toast.Viewport :class="styles.Viewport" aria-label="Undo notifications">
         <ToastList />
       </Toast.Viewport>
     </Toast.Portal>

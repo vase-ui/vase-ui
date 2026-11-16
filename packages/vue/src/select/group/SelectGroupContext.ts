@@ -5,8 +5,6 @@ import type { RegisterId } from '../../internals/labelable-provider/LabelableCon
 export interface SelectGroupContext {
   labelId: ComputedRef<string | undefined>;
   registerLabelId: RegisterId;
-  /** Whether an id reference of the group reaches `element`. */
-  reaches: (element: Element) => boolean;
 }
 
 export const SelectGroupContext: InjectionKey<SelectGroupContext> = Symbol();

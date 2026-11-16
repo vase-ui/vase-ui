@@ -135,11 +135,12 @@ import {
 } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { getDefaultFormSubmitter } from '../../common/getDefaultFormSubmitter';
-import { queueInputTake, useIsHydrated } from '../../common/hydration';
+import { queueInputTake, useAriaAfterHydration, useIsHydrated } from '../../common/hydration';
 import { useControlled } from '../../common/useControlled';
 import { useTimeout } from '../../common/useTimeout';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { useFieldItemContext } from '../../field/item/FieldItemContext';
+import { givenName } from '../../internals/blankName';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { useRegisterFieldControl } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
@@ -210,7 +211,6 @@ const {
   disabled: fieldDisabled,
   name: fieldName,
   validation: fieldValidation,
-  reaches: fieldReaches,
 } = useFieldRootContext();
 const fieldItemContext = useFieldItemContext();
 const { getDescriptionProps, registerControlId } = useLabelableContext();
@@ -260,7 +260,7 @@ let unregisterInput: (() => void) | void;
 // `KeepAlive` takes the input out of the document, and the field must not use an input that is not
 // in the document. A held required checkbox that is off would block the submit of the form, and its
 // value would stay in the values of the form.
-const { isHeld, shown } = useKeepAliveState(() => element.value, group?.reaches ?? fieldReaches);
+const { isHeld, shown } = useKeepAliveState();
 
 function updateInputRegistration() {
   unregisterInput?.();
@@ -297,8 +297,9 @@ function releaseInput() {
 
 onDeactivated(releaseInput);
 
-// The `ref` setter of a checkbox that mounts in a held branch registers the input.
-watch(isHeld, (held) => {
+// The `ref` setter of a checkbox that mounts in a held branch registers the input. `isHeld` is
+// already `true` then, so the input is a source of the `watch`.
+watch([isHeld, inputElement], ([held]) => {
   if (held) {
     releaseInput();
   }
@@ -326,11 +327,9 @@ const rootId = useVaseUiId();
 // of them would render the same id. A `Field.Item` opens a scope that the checkbox does own. The
 // provider chain does not change, so `setup` makes this choice one time.
 const ownsControlId = group?.registerControlId !== registerControlId;
-// An empty `id` is not an own id: the control takes the id of the provider.
 const controlId = useLabelableId({
-  id: () => props.id || undefined,
+  id: () => props.id,
   enabled: ownsControlId,
-  element: () => element.value,
 });
 const hiddenInputId = computed(() => (props.nativeButton ? undefined : controlId.value));
 
@@ -602,6 +601,7 @@ provide(CheckboxRootContext, state);
 
 const stateAttributesMapping = getCheckboxStateAttributesMapping(state);
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('span', props, {
   state,
   ref: [buttonRef],
@@ -613,8 +613,8 @@ const { element, elementProps } = useRenderElement('span', props, {
       'aria-checked': isIndeterminate.value ? 'mixed' : isChecked.value,
       'aria-readonly': props.readOnly || undefined,
       'aria-required': props.required || undefined,
-      'aria-label': props.ariaLabel,
-      'aria-labelledby': ariaLabelledBy.value,
+      'aria-label': givenName(props.ariaLabel),
+      'aria-labelledby': ariaAfterHydration(ariaLabelledBy.value),
       'data-parent': props.parent ? '' : undefined,
       onFocusin() {
         setFocused(true);
@@ -655,6 +655,7 @@ const { element, elementProps } = useRenderElement('span', props, {
     getButtonProps,
     getDescriptionProps,
     (merged) => validation.getValidationProps(isDisabled.value, merged),
+    (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),
   ],
 });
 
@@ -702,8 +703,10 @@ watch(
 // The style is the constant itself, in an object that no `mergeProps` call makes.
 // `handleHiddenInputInvalid` then keeps the size that it writes.
 function inputProps() {
+  const validationProps = validation.getValidationProps(isDisabled.value, getDescriptionProps({}));
   return {
-    ...validation.getValidationProps(isDisabled.value, getDescriptionProps({})),
+    ...validationProps,
+    'aria-describedby': ariaAfterHydration(validationProps['aria-describedby']),
     ref: setInputElement,
     checked: isChecked.value,
     disabled: isDisabled.value,

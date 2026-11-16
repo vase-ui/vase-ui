@@ -16,6 +16,7 @@ import type { TextDirection } from '@vase-ui/vue/direction-provider';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import { Slider } from '@vase-ui/vue/slider';
+import { Toolbar } from '@vase-ui/vue/toolbar';
 import {
   createHeldBranch,
   createRenderer,
@@ -26,6 +27,7 @@ import {
   heldMountListTests,
   hydrate,
   isJSDOM,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   waitFor,
@@ -185,6 +187,35 @@ describe('<Slider.Root />', () => {
   });
 
   describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/slider/root/SliderRootHydration.test.vue',
+      component: SliderRootHydration,
+      cases: [
+        {
+          name: 'a removed description',
+          props: { id: 'volume', defaultValue: 30, field: true, laterRemovedAtMount: true },
+          selector: '[data-testid="root"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+        {
+          name: 'a slider label and a removed field label',
+          props: {
+            id: 'volume',
+            defaultValue: 30,
+            field: true,
+            sliderLabel: 'before',
+            laterRemovedAtMount: true,
+          },
+          selector: '[data-testid="root"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: 'volume-label',
+        },
+      ],
+    });
+
     it('hydrates a root that names a label that does not exist, and the root then names none', async () => {
       const props = { id: 'volume', defaultValue: 30 };
       const serverHtml = await renderOnServer(
@@ -4002,6 +4033,31 @@ describe('<Slider.Root />', () => {
         'aria-describedby',
         `external-description ${screen.getByTestId('description').id}`,
       );
+    });
+  });
+
+  describe('elements that are not thumbs', () => {
+    it('VUE-87: join the composite around the root, and the thumbs keep their values', async () => {
+      await render(
+        <Toolbar.Root>
+          <Slider.Root defaultValue={[20, 80]}>
+            <Toolbar.Button data-testid="in-root">In the root</Toolbar.Button>
+            <Slider.Control>
+              <Slider.Thumb />
+              <Slider.Thumb />
+            </Slider.Control>
+          </Slider.Root>
+          <Toolbar.Button data-testid="after-root">After the root</Toolbar.Button>
+        </Toolbar.Root>,
+      );
+      const inRoot = screen.getByTestId('in-root');
+      inRoot.focus();
+
+      await fireEvent.keyDown(inRoot, { key: 'ArrowRight' });
+      expect(screen.getByTestId('after-root')).toHaveFocus();
+      expect(
+        screen.getAllByRole('slider').map((input) => input.getAttribute('aria-valuenow')),
+      ).toEqual(['20', '80']);
     });
   });
 

@@ -27,6 +27,7 @@ export interface CollapsibleTriggerProps
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useAriaAfterHydration } from '../../common/hydration';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { transitionStatusMapping } from '../../internals/stateAttributesMapping';
@@ -76,12 +77,13 @@ const { getButtonProps, buttonRef } = useButton({
   native: () => props.nativeButton,
 });
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('button', props, {
   state,
   ref: buttonRef,
   props: (attrs) => [
     {
-      'aria-controls': open.value ? panelId.value : undefined,
+      'aria-controls': ariaAfterHydration(open.value ? panelId.value : undefined),
       'aria-expanded': open.value,
       onClick: handleTrigger,
     },

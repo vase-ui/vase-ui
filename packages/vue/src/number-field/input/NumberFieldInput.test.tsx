@@ -13,6 +13,7 @@ import {
   hydrate,
   hydrateAfter,
   mockRuntimeLocale,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   takeReportedMessages,
@@ -2531,6 +2532,39 @@ describe('<NumberField.Input />', () => {
   });
 
   describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/number-field/input/NumberFieldInputHydration.test.vue',
+      component: NumberFieldInputHydration,
+      cases: [
+        {
+          name: 'a removed label',
+          props: {
+            parts: ['input', 'label', 'description'],
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: '[data-testid="input"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description',
+          props: {
+            parts: ['input', 'label', 'description'],
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: '[data-testid="input"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+      ],
+    });
+
     it.each([
       {
         name: 'the label first, the description last',

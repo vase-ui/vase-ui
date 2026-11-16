@@ -158,12 +158,13 @@ export type OTPFieldRootCompleteEventDetails =
 <script setup lang="ts">
 import { computed, nextTick, onMounted, provide, shallowRef, watch } from 'vue';
 import { clamp } from '../../common/clamp';
-import { useHiddenValueBeforeHydration } from '../../common/hydration';
+import { useAriaAfterHydration, useHiddenValueBeforeHydration } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
 import { activeElement, contains } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { warn } from '../../common/warn';
+import { givenName } from '../../internals/blankName';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import {
   createChangeEventDetails,
@@ -291,7 +292,7 @@ const firstInput = () => (inputElements.value[0] as HTMLInputElement | undefined
 // value and removes slots. An element that left the document is then still in the list.
 const getConnectedInputs = () => inputElements.value.filter((input) => input?.isConnected);
 
-const controlId = useLabelableId({ id: () => props.id, element: () => element.value });
+const controlId = useLabelableId({ id: () => props.id });
 const ariaLabelledBy = useAriaLabelledBy(
   () => props.ariaLabelledby,
   useControlLabelId(),
@@ -300,7 +301,7 @@ const ariaLabelledBy = useAriaLabelledBy(
   controlId,
 );
 const inputAriaLabelledBy = computed(() =>
-  props.ariaLabelledby == null ? ariaLabelledBy.value : undefined,
+  givenName(props.ariaLabelledby) == null ? ariaLabelledBy.value : undefined,
 );
 
 const validationConfig = computed(() => getOTPValidationConfig(props.validationType));
@@ -326,11 +327,12 @@ const activeIndex = computed(() =>
 setFilled(filled.value);
 watch(filled, setFilled);
 
-useCompositeList({
+const inputList = useCompositeList({
   elementsRef: inputElements,
   onMapChange(newMap) {
     inputCount.value = newMap.size;
   },
+  provide: false,
 });
 
 if (process.env.NODE_ENV !== 'production') {
@@ -568,6 +570,7 @@ provide(OTPFieldRootContext, {
   getInputId,
   handleInputBlur,
   handleInputFocus,
+  inputList,
   inputMode: resolvedInputMode,
   inputAriaLabelledBy,
   invalid,
@@ -592,6 +595,7 @@ function mergeAriaIds(...values: (string | undefined)[]) {
   return ids.length > 0 ? Array.from(new Set(ids)).join(' ') : undefined;
 }
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('div', props, {
   state,
   stateAttributesMapping: rootStateAttributesMapping,
@@ -601,14 +605,15 @@ const { element, elementProps } = useRenderElement('div', props, {
       {
         role: 'group',
         // `null` of the consumer removes the ids of the descriptions (VUE-103).
-        'aria-describedby':
+        'aria-describedby': ariaAfterHydration(
           ariaDescribedBy === null
             ? null
             : mergeAriaIds(
                 ariaDescribedBy as string | undefined,
                 getDescriptionProps({})['aria-describedby'] as string | undefined,
               ),
-        'aria-labelledby': ariaLabelledBy.value,
+        ),
+        'aria-labelledby': ariaAfterHydration(ariaLabelledBy.value),
       },
       elementAttrs,
     ];
@@ -735,8 +740,10 @@ watch(
 // The style is the constant itself, in an object that no `mergeProps` call makes.
 // `handleHiddenInputInvalid` then keeps the size that it writes.
 function hiddenInputProps() {
+  const validationProps = validation.getValidationProps(isDisabled.value);
   return {
-    ...validation.getValidationProps(isDisabled.value),
+    ...validationProps,
+    'aria-describedby': ariaAfterHydration(validationProps['aria-describedby']),
     ref: setHiddenInput,
     type: 'text',
     id: controlId.value && inputName.value == null ? `${controlId.value}-hidden-input` : undefined,

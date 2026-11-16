@@ -15,10 +15,13 @@ import {
   hydrate,
   hydrateAfter,
   isJSDOM,
+  mockPageBeforeLoad,
   recordInputEvents,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   takeReportedMessages,
+  wait,
   waitFor,
   within,
 } from '#test-utils';
@@ -521,7 +524,7 @@ describe('<Field.Control />', () => {
     const control = screen.getByRole<HTMLInputElement>('textbox');
 
     await userEvent.type(control, '[Enter]');
-    await flushMicrotasks();
+    await wait(0);
 
     expect(validate).toHaveBeenCalledTimes(1);
     expect(handleSubmit).toHaveBeenCalledTimes(1);
@@ -544,9 +547,10 @@ describe('<Field.Control />', () => {
     const control = screen.getByDisplayValue<HTMLInputElement>('a');
 
     await userEvent.type(control, '[Enter]');
-    await flushMicrotasks();
 
-    expect(validate).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(validate).toHaveBeenCalledTimes(1);
+    });
     expect(handleSubmit).not.toHaveBeenCalled();
   });
 
@@ -571,9 +575,10 @@ describe('<Field.Control />', () => {
       const control = screen.getByRole<HTMLInputElement>('textbox');
 
       await userEvent.type(control, '[Enter]');
-      await flushMicrotasks();
 
-      expect(validate).toHaveBeenCalledTimes(1);
+      await waitFor(() => {
+        expect(validate).toHaveBeenCalledTimes(1);
+      });
       expect(handleSubmit).not.toHaveBeenCalled();
     },
   );
@@ -1459,6 +1464,45 @@ describe('<Field.Control />', () => {
   });
 
   describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/field/control/FieldControlHydration.test.vue',
+      component: FieldControlHydration,
+      cases: [
+        {
+          name: 'a removed label after the control',
+          props: { label: 'after', laterRemovedAtMount: true },
+          selector: '[data-testid="control"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description',
+          props: { description: 'after', laterRemovedAtMount: true },
+          selector: '[data-testid="control"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description after another',
+          props: { description: 'both', laterRemovedAtMount: true },
+          selector: '[data-testid="control"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-0 desc-a',
+          clientValue: 'desc-0',
+        },
+        {
+          name: 'a removed label after another label',
+          props: { label: 'both', laterRemovedAtMount: true },
+          selector: '[data-testid="control"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: 'label-0',
+        },
+      ],
+    });
+
     it.each([
       {
         name: 'the label and the messages first',
@@ -1724,6 +1768,26 @@ describe('<Field.Control />', () => {
       expect(events).toEqual([]);
       expect(fixture.getByTestId('changes').textContent).toBe('');
       expect(fixture.getByTestId('root')).not.toHaveAttribute('data-touched');
+    });
+
+    it('sends no event at the page show after a new value of Field.Control', async () => {
+      mockPageBeforeLoad();
+      const value = shallowRef('a');
+      const { container } = await render(() => (
+        <Field.Root>
+          <Field.Control value={value.value} data-testid="input" />
+        </Field.Root>
+      ));
+      const recorded = recordInputEvents(container);
+      screen.getByTestId<HTMLInputElement>('input').value = 'restored';
+
+      value.value = 'b';
+      await flushMicrotasks();
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('input')).toHaveValue('b');
+      expect(recorded).toEqual([]);
     });
   });
 });

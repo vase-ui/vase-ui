@@ -41,7 +41,13 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, CalendarMonthsState>;
 }>();
 
-const { state: rootState, pages, renderedPages, navigationDirection } = useCalendarRootContext();
+const {
+  state: rootState,
+  view,
+  pages,
+  renderedPages,
+  navigationDirection,
+} = useCalendarRootContext();
 
 const state = computed<CalendarMonthsState>(() => ({
   ...rootState.value,
@@ -65,6 +71,8 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"><template v-for="month in renderedPages" :key="getPageKey(month)"><slot name="month" :month="month" :index="indexOf(month)" /></template></component>
+  <template v-if="view === 'day'">
+    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+    <component :is="as" v-else v-bind="elementProps()"><template v-for="month in renderedPages" :key="getPageKey(month)"><slot name="month" :month="month" :index="indexOf(month)" /></template></component>
+  </template>
 </template>

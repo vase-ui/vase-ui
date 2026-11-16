@@ -120,6 +120,7 @@ import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useUnmountAfterClose } from '../../internals/useUnmountAfterClose';
 import type { FloatingRootStore } from '../../utils/popups/floating-root/FloatingRootStore';
+import { useElementId } from '../../utils/popups/useElementId';
 import {
   provideFloatingNode,
   provideFloatingTree,
@@ -193,6 +194,9 @@ const viewportTargetElement = shallowRef<HTMLElement | null>(null);
 const activationDirection = shallowRef<NavigationMenuActivationDirection>(null);
 const floatingRootStore = shallowRef<FloatingRootStore | undefined>(undefined);
 const viewportInert = shallowRef(false);
+
+const popupElementId = useElementId(popupElement);
+const viewportElementId = useElementId(viewportElement);
 
 const prevTriggerElementRef = shallowRef<Element | null | undefined>(null);
 const currentContentRef = shallowRef<HTMLElement | null>(null);
@@ -353,8 +357,10 @@ provide(NavigationMenuRootContext, {
   transitionStatus,
   positionerElement,
   popupElement,
+  popupElementId,
   backdropElement,
   viewportElement,
+  viewportElementId,
   viewportTargetElement,
   activationDirection: computed(() => (open.value ? activationDirection.value : null)),
   setActivationDirection(direction) {

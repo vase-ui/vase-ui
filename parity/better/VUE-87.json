@@ -1,0 +1,14 @@
+{
+  "id": "VUE-87",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/tabs/root/TabsRoot.tsx#L344-L347",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/accordion/root/AccordionRoot.tsx#L119-L122",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/slider/root/SliderRoot.tsx#L391-L396",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/otp-field/root/OTPFieldRoot.tsx#L416-L424",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/combobox/chips/ComboboxChips.tsx#L46-L49",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/internals/composite/list/useCompositeListItem.ts#L37",
+    "https://www.w3.org/WAI/ARIA/apg/patterns/toolbar/"
+  ],
+  "behavior": "`Tabs.Root`, `Accordion.Root`, `Slider.Root`, `OTPField.Root` and `Combobox.Chips` give the list of their own parts only to those parts. An item of a composite around such a part, such as a `Toolbar.Button`, thus stays in that composite, as a child of the part and in a part of the list, such as a panel of Tabs. The parts after it keep their index. Base UI gives the list to the whole tree of the part, so such an item joins that list. The arrow keys of the composite around the part then skip the item. Each later panel of Tabs and each later item of Accordion gets a `data-index` that is too high. A range slider gives its first thumb the value of the second thumb. An OTP input shows the character of the next slot. Backspace on a chip removes the value of another chip.",
+  "dueWith": "packages/react/src/tabs/root/TabsRoot.tsx"
+}

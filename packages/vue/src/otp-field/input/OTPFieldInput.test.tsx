@@ -13,6 +13,7 @@ import {
   hydrateAfter,
   mockNavigationType,
   pasteText,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   takeReportedMessages,
@@ -932,6 +933,25 @@ describe('<OTPField.Input />', () => {
     }
   });
 
+  it.each([
+    { name: 'an empty aria-label', ariaLabel: '' },
+    { name: 'an aria-label of white space', ariaLabel: '\n\t ' },
+  ])('VUE-106: does not warn for $name on the first slot', async ({ ariaLabel }) => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    try {
+      await render(
+        <OTPField.Root length={1}>
+          <OTPField.Input aria-label={ariaLabel} />
+        </OTPField.Root>,
+      );
+
+      expect(warnSpy).not.toHaveBeenCalled();
+    } finally {
+      warnSpy.mockRestore();
+    }
+  });
+
   it('does not warn for a first-slot aria-label when a native label is associated', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
@@ -1375,6 +1395,28 @@ describe('<OTPField.Input />', () => {
   });
 
   describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/otp-field/root/OTPFieldRootHydration.test.vue',
+      component: OTPFieldRootHydration,
+      cases: [
+        {
+          name: 'a removed label',
+          props: {
+            label: 'after',
+            description: true,
+            inputs: 4,
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: 'input:not([aria-hidden])',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+      ],
+    });
+
     it.each([
       { name: 'an empty field', props: {} },
       { name: 'a field with a value', props: { defaultValue: '12', name: 'otp' } },

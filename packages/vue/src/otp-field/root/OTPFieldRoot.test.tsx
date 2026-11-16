@@ -4,6 +4,7 @@ import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import { Input } from '@vase-ui/vue/input';
 import { OTPField as OTPFieldBase } from '@vase-ui/vue/otp-field';
+import { Toolbar } from '@vase-ui/vue/toolbar';
 import {
   createHeldBranch,
   createRenderer,
@@ -17,6 +18,7 @@ import {
   hydrateAfter,
   mockNavigationType,
   pasteText,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   within,
@@ -956,6 +958,27 @@ describe('<OTPField.Root />', () => {
 
       expect(screen.getByRole('group')).toHaveAttribute('aria-labelledby', 'custom');
     });
+
+    it.each([
+      { name: 'an empty aria-labelledby', ariaLabelledby: '' },
+      { name: 'an aria-labelledby of white space', ariaLabelledby: '\n\t ' },
+    ])(
+      'VUE-106: gives the group and each input the label of the field for $name',
+      async ({ ariaLabelledby }) => {
+        await render(
+          <Field.Root>
+            <Field.Label data-testid="label">Verification code</Field.Label>
+            <OTPField aria-labelledby={ariaLabelledby} />
+          </Field.Root>,
+        );
+
+        const labelId = screen.getByTestId('label').id;
+        expect(screen.getByRole('group')).toHaveAttribute('aria-labelledby', labelId);
+        for (const input of screen.getAllByRole('textbox')) {
+          expect(input).toHaveAttribute('aria-labelledby', labelId);
+        }
+      },
+    );
 
     it('validates the value of the root when the form submits', async () => {
       const validate = vi.fn((value: unknown) => (value === '123456' ? null : 'Wrong code'));
@@ -2493,6 +2516,58 @@ describe('<OTPField.Root />', () => {
   });
 
   describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/otp-field/root/OTPFieldRootHydration.test.vue',
+      component: OTPFieldRootHydration,
+      cases: [
+        {
+          name: 'a removed label',
+          props: {
+            label: 'after',
+            description: true,
+            inputs: 4,
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: '[data-testid="root"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description',
+          props: {
+            label: 'after',
+            description: true,
+            inputs: 4,
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: '[data-testid="root"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+        {
+          name: 'the hidden input, a removed description',
+          props: {
+            label: 'after',
+            description: true,
+            inputs: 4,
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: 'input[aria-hidden]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+      ],
+    });
+
     it.each([
       { name: 'an empty field', props: {} },
       { name: 'a field with a value and a name', props: { defaultValue: '12', name: 'otp' } },
@@ -2815,6 +2890,27 @@ describe('<OTPField.Root />', () => {
     await render(<OTPField id="verification-code" />);
 
     expect(document.querySelector('#verification-code-hidden-input')).not.toBeNull();
+  });
+
+  it('VUE-87: an item of a composite around the root joins that composite, and the inputs keep their slots', async () => {
+    await render(
+      <Toolbar.Root>
+        <OTPFieldBase.Root defaultValue="12" length={3}>
+          <Toolbar.Button data-testid="in-root">In the root</Toolbar.Button>
+          <OTPFieldBase.Input />
+          <OTPFieldBase.Input />
+          <OTPFieldBase.Input />
+        </OTPFieldBase.Root>
+        <Toolbar.Button data-testid="after-root">After the root</Toolbar.Button>
+      </Toolbar.Root>,
+    );
+    const inRoot = screen.getByTestId('in-root');
+    inRoot.focus();
+
+    await fireEvent.keyDown(inRoot, { key: 'ArrowRight' });
+    expect(screen.getByTestId('after-root')).toHaveFocus();
+    const inputs = screen.getAllByRole<HTMLInputElement>('textbox');
+    expect(inputs.map((input) => input.value)).toEqual(['1', '2', '']);
   });
 
   it('warns when length does not match the rendered input count', async () => {

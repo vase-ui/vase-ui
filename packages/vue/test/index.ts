@@ -34,12 +34,14 @@ export { popupConformanceTests } from './popupConformanceTests';
 export { popupFocusPropsTests } from './popupFocusPropsTests';
 export { popupListConformanceTests } from './popupListConformanceTests';
 export { positionerConformanceTests } from './positionerConformanceTests';
+export { removedPartHydrationTests } from './removedPartHydrationTests';
 export { viewportConformanceTests } from './viewportConformanceTests';
 export { isInaccessible } from '@testing-library/dom';
 export { screen, within } from './queries';
 export { waitFor } from './waitFor';
 export { fireEvent } from './fireEvent';
 export { flushMicrotasks } from './flushMicrotasks';
+export { getFocusableUnderAriaHidden } from './getFocusableUnderAriaHidden';
 export { createHeldBranch } from './heldBranch';
 export { cloneElement } from './cloneElement';
 export { createDescribe } from './createDescribe';
@@ -49,6 +51,7 @@ export {
   hydrate,
   hydrateAfter,
   mockNavigationType,
+  mockPageBeforeLoad,
   recordInputEvents,
 } from './hydration';
 export { takeReportedMessages } from './reportedMessages';

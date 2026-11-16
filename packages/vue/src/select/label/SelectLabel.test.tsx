@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { createApp, shallowRef } from 'vue';
+import { Popover } from '@vase-ui/vue/popover';
 import { Select } from '@vase-ui/vue/select';
 import {
   createHeldBranch,
@@ -7,6 +9,7 @@ import {
   flushMicrotasks,
   screen,
 } from '#test-utils';
+import { recordVueWarnings } from '../../../test/reportedMessages';
 
 describe('<Select.Label />', () => {
   const { render } = createRenderer();
@@ -72,5 +75,43 @@ describe('<Select.Label />', () => {
 
     await show();
     expect(trigger).toHaveAttribute('aria-labelledby', screen.getByTestId('label').id);
+  });
+
+  it('names a trigger in a popover from a label that mounts after it in an app in a detached element', async () => {
+    const labelMounted = shallowRef(false);
+    const container = document.createElement('div');
+    const app = createApp(() => (
+      <Select.Root id="font">
+        {labelMounted.value && <Select.Label>Font</Select.Label>}
+        <Popover.Root defaultOpen>
+          <Popover.Portal>
+            <Popover.Positioner>
+              <Popover.Popup>
+                <Select.Trigger data-testid="trigger">
+                  <Select.Value />
+                </Select.Trigger>
+              </Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>
+      </Select.Root>
+    ));
+    recordVueWarnings(app);
+    app.mount(container);
+    try {
+      await flushMicrotasks();
+      labelMounted.value = true;
+      await flushMicrotasks();
+      document.body.append(container);
+      await flushMicrotasks();
+
+      expect(document.querySelector('[data-testid="trigger"]')).toHaveAttribute(
+        'aria-labelledby',
+        'font-label',
+      );
+    } finally {
+      app.unmount();
+      container.remove();
+    }
   });
 });

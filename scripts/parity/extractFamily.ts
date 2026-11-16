@@ -1,5 +1,7 @@
 import { basename, dirname } from 'node:path';
 import { isSuiteRow, readTestRows } from './cases.ts';
+import { splitHeadingBadge } from './headingBadge.ts';
+import type { HeadingBadge } from './headingBadge.ts';
 import type { FamilyExtract, FamilyFile } from './parityFiles.ts';
 import {
   DOCS_FOLDER_PREFIX,
@@ -11,6 +13,8 @@ import {
   matchesAny,
 } from './paths.ts';
 import { readTypesMd } from './typesMd.ts';
+
+type Page = FamilyExtract['pages'][number];
 
 /** A path exists when it is a file, or a folder with a file in it. */
 export function pathExists(files: readonly string[], path: string): boolean {
@@ -32,10 +36,36 @@ export function missingPaths(
 
 /**
  * The names of the `<Types…>` tags that start a line of a `page.mdx`, in the sequence of the page.
- * Only these tags hold the sequence in which the page shows the parts of its API reference.
+ * Only these tags hold the sequence in which the page shows the parts of its API reference. The
+ * result also has the badge of each tag whose heading has one. A badge belongs to its heading, so
+ * each tag below the heading has it, until the next heading.
  */
-function readReferenceTags(text: string): string[] {
-  return Array.from(text.matchAll(/^<(Types\w*(?:\.\w+)?)/gm), ([, name]) => name);
+function readReference(text: string): Pick<Page, 'referenceTags' | 'referenceBadges'> {
+  const referenceTags: string[] = [];
+  const referenceBadges: Record<string, HeadingBadge> = {};
+  let badge: HeadingBadge | undefined;
+  let inFence = false;
+  for (const line of text.split('\n')) {
+    if (line.startsWith('```')) {
+      inFence = !inFence;
+    }
+    // A line of a code sample that starts with `#` is a comment of a shell, not a heading.
+    const heading = inFence ? null : /^(#{1,6})\s+(.*)$/.exec(line);
+    if (heading) {
+      // As on the site of Base UI, a heading of level 1 does not take a badge.
+      badge = heading[1] === '#' ? undefined : splitHeadingBadge(heading[2])?.badge;
+    }
+    const tag = /^<(Types\w*(?:\.\w+)?)/.exec(line)?.[1];
+    if (tag !== undefined) {
+      referenceTags.push(tag);
+      if (badge !== undefined) {
+        referenceBadges[tag] = badge;
+      }
+    }
+  }
+  return Object.keys(referenceBadges).length > 0
+    ? { referenceTags, referenceBadges }
+    : { referenceTags };
 }
 
 export function buildExtract(
@@ -70,7 +100,7 @@ export function buildExtract(
     pages: matched
       .filter((file) => file.endsWith('/page.mdx'))
       .sort()
-      .map((file) => ({ file, referenceTags: readReferenceTags(read(file)) })),
+      .map((file) => ({ file, ...readReference(read(file)) })),
   };
 }
 

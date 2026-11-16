@@ -6,9 +6,13 @@ description: An unstyled Vue time field with a segment for each part of a time, 
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoTimeFieldHero from '../demos/time-field/hero/css-modules/index.vue';
+import DemoTimeFieldHeroTailwind from '../demos/time-field/hero/tailwind/index.vue';
 import DemoTimeFieldHourCycle from '../demos/time-field/hour-cycle/css-modules/index.vue';
+import DemoTimeFieldHourCycleTailwind from '../demos/time-field/hour-cycle/tailwind/index.vue';
 import DemoTimeFieldSeconds from '../demos/time-field/seconds/css-modules/index.vue';
+import DemoTimeFieldSecondsTailwind from '../demos/time-field/seconds/tailwind/index.vue';
 </script>
 
 # Time Field
@@ -19,7 +23,12 @@ Base UI has no time field. This one follows the [spinbutton pattern](https://www
 
 <DemoFrame>
   <DemoTimeFieldHero />
+  <template #tailwind>
+    <DemoTimeFieldHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -28,6 +37,18 @@ Base UI has no time field. This one follows the [spinbutton pattern](https://www
 <<< ../demos/time-field/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/time-field/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Usage guidelines
 
@@ -67,7 +88,12 @@ Set `granularity` to `second` to add the seconds.
 
 <DemoFrame>
   <DemoTimeFieldSeconds />
+  <template #tailwind>
+    <DemoTimeFieldSecondsTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -77,13 +103,30 @@ Set `granularity` to `second` to add the seconds.
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/time-field/seconds/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Hour cycle
 
 A 12-hour cycle adds a day period segment. The locale sets where the segment goes: after the minute in `en-US`, and before the hour in `ko-KR`. A 24-hour cycle has no day period.
 
 <DemoFrame>
   <DemoTimeFieldHourCycle />
+  <template #tailwind>
+    <DemoTimeFieldHourCycleTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -92,6 +135,18 @@ A 12-hour cycle adds a day period segment. The locale sets where the segment goe
 <<< ../demos/time-field/hour-cycle/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/time-field/hour-cycle/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ### Limits and steps
 

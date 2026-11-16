@@ -34,8 +34,8 @@ const store = useComboboxRootContext();
 const hasSelectionChips = computed(() => store.select('hasSelectionChips'));
 
 const chipsRef = shallowRef<(HTMLButtonElement | null)[]>([]);
-useCompositeList({ elementsRef: chipsRef });
-provide(ComboboxChipsContext, { chipsRef });
+const chipList = useCompositeList({ elementsRef: chipsRef, provide: false });
+provide(ComboboxChipsContext, { chipsRef, chipList });
 
 // A template can mount the chips part that replaces this part before it unmounts this part. The
 // part then clears the container of the root only when the root holds its own container.

@@ -588,6 +588,7 @@ describe('<Popover.Root />', () => {
 
       const testPopover = Popover.createHandle<number>();
       const instantsWhileEnding: (string | undefined)[] = [];
+      const onOpenChangeComplete = vi.fn();
 
       const utils = await render(
         <div style={{ position: 'relative', width: '400px', height: '200px' }}>
@@ -614,6 +615,7 @@ describe('<Popover.Root />', () => {
 
           <Popover.Root
             handle={testPopover}
+            onOpenChangeComplete={onOpenChangeComplete}
             v-slots={{
               default: ({ payload }: NumberPayload) => (
                 <Popover.Portal>
@@ -659,8 +661,11 @@ describe('<Popover.Root />', () => {
       // The root reads the animations of the popup when the popup loses `data-starting-style`, one
       // frame after the open. A switch before that frame removes the attribute and starts an exit.
       // The next frame cancels the exit, and the root reads the animations of the popup again,
-      // after the setup. `startExit` would take that read for the read of a close.
-      await waitSingleFrame();
+      // after the setup. `startExit` would take that read for the read of a close. The end of the
+      // open comes after the first read, so the case waits for it before the switch.
+      await waitFor(() => {
+        expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+      });
 
       const switchAnimations = await nextAnimationsRead(screen.getByTestId('positioner'), {
         action: () => utils.user.hover(trigger2),
@@ -673,9 +678,9 @@ describe('<Popover.Root />', () => {
         await settleTriggerChange();
       }
 
-      // The switch to trigger 2 closes the popup and opens it again in one task. The popup thus
-      // has the ending status until the next frame, and it renders with that status. Only the
-      // close that follows matters.
+      // `user.hover` gives the leave event no `relatedTarget`, so the switch to trigger 2 closes
+      // the popup and opens it again in one task. The popup thus has the ending status until the
+      // next frame, and it renders with that status. Only the close that follows matters.
       instantsWhileEnding.length = 0;
 
       return {
@@ -766,6 +771,7 @@ describe('<Popover.Root />', () => {
       const endingInstants: (string | undefined)[] = [];
       const open = shallowRef(false);
       const triggerId = shallowRef<string | null>(null);
+      const onOpenChangeComplete = vi.fn();
 
       const Test = defineComponent({
         setup() {
@@ -782,6 +788,7 @@ describe('<Popover.Root />', () => {
                   }
                   open.value = nextOpen;
                 }}
+                onOpenChangeComplete={onOpenChangeComplete}
               >
                 <Popover.Trigger
                   id="t1"
@@ -831,6 +838,11 @@ describe('<Popover.Root />', () => {
         expect(screen.getByTestId('popup')).not.toBe(null);
       });
       await waitForPositioned(screen.getByTestId('positioner'));
+      // The root reads the animations of the popup in a frame after the open, to report the end of
+      // the open. The wait for the read of the close must start after that read.
+      await waitFor(() => {
+        expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+      });
 
       triggerId.value = 't2';
       await flushMicrotasks();

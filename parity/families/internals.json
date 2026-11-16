@@ -222,7 +222,7 @@
       "upstream": "packages/react/src/internals/resolveRenderedId.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/menu/popup/MenuPopup.test.tsx",
-      "reason": "Vase UI has no such function. The block `prop: id` of this test covers the id that the root gets, the generated id after a removal, and the release at unmount. `packages/vue/src/filter-dropdown/list/FilterDropdownList.test.tsx` covers the release for the list, and `packages/vue/src/menu/filter-root/MenuFilterRoot.test.tsx` covers an empty id. The cases with a `render` element are for React."
+      "reason": "Vase UI has no such function. The block `prop: id` of this test covers the id that the root gets, the generated id after a removal, and the release at unmount. `packages/vue/src/filter-dropdown/list/FilterDropdownList.test.tsx` covers the release for the list, and `packages/vue/src/menu/filter-root/MenuFilterRoot.test.tsx` covers an empty id, which counts as no id (`VUE-93`). The cases with a `render` element are for React."
     },
     {
       "upstream": "packages/react/test/addVitestMatchers.ts",

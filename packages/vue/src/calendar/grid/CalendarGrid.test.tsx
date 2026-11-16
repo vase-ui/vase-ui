@@ -54,6 +54,26 @@ describe('<Calendar.Grid />', () => {
     expect(grid).toHaveAccessibleName('Departure');
   });
 
+  it.each([
+    { name: 'an empty aria-label', props: { 'aria-label': '' } },
+    { name: 'an aria-label of white space', props: { 'aria-label': ' ' } },
+    { name: 'an empty aria-labelledby', props: { 'aria-labelledby': '' } },
+    { name: 'an aria-labelledby of white space', props: { 'aria-labelledby': ' ' } },
+  ])('VUE-106: keeps the name of the month for $name of the consumer', async ({ props }) => {
+    await render(
+      <CalendarAncestors level="month">
+        <Calendar.Grid {...props} />
+      </CalendarAncestors>,
+    );
+
+    await flushMicrotasks();
+
+    const grid = screen.getByRole('grid');
+    expect(grid).toHaveAttribute('aria-label', monthName);
+    expect(grid).not.toHaveAttribute('aria-labelledby');
+    expect(grid).toHaveAccessibleName(monthName);
+  });
+
   it('VUE-103: keeps the name of the month for an aria-labelledby of null', async () => {
     await render(
       <CalendarAncestors level="month">

@@ -89,9 +89,12 @@ export interface RadioRootProps<Value = any>
 
 <script setup lang="ts" generic="Value = any">
 import { computed, nextTick, onDeactivated, provide, shallowRef, watch } from 'vue';
+import { useAriaAfterHydration } from '../../common/hydration';
 import { mergeCleanups } from '../../common/mergeCleanups';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { useFieldItemContext } from '../../field/item/FieldItemContext';
+import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
+import { givenName } from '../../internals/blankName';
 import { ACTIVE_COMPOSITE_ITEM } from '../../internals/composite/constants';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -143,11 +146,13 @@ const {
 const fieldItem = useFieldItemContext();
 const { getDescriptionProps } = useLabelableContext();
 
+const fieldsetDisabled = useFieldsetDisabled(() => element.value);
 const isDisabled = computed(
   () =>
     fieldDisabled.value ||
     fieldItem.disabled.value ||
     (group?.disabled.value ?? false) ||
+    fieldsetDisabled.value ||
     props.disabled,
 );
 const isReadOnly = computed(() => (group?.readOnly.value ?? false) || props.readOnly);
@@ -198,7 +203,7 @@ if (!group && checked.value) {
 }
 
 const rootId = useVaseUiId();
-const controlId = useLabelableId({ id: () => props.id, element: () => element.value });
+const controlId = useLabelableId({ id: () => props.id });
 const hiddenInputId = computed(() => (props.nativeButton ? undefined : controlId.value));
 
 const ariaLabelledBy = useAriaLabelledBy(
@@ -277,7 +282,7 @@ if (group) {
 
   // `KeepAlive` takes the input out of the document and calls no `ref` setter. The input must not
   // stay in the group and in the field: the field would validate an input that the user cannot reach.
-  const { isHeld, shown } = useKeepAliveState(() => element.value, group.reaches);
+  const { isHeld, shown } = useKeepAliveState();
 
   function releaseRegisteredInput() {
     releaseInput?.();
@@ -286,8 +291,9 @@ if (group) {
 
   onDeactivated(releaseRegisteredInput);
 
-  // The `ref` setter of a radio that mounts in a held branch registers the input.
-  watch(isHeld, (held) => {
+  // The `ref` setter of a radio that mounts in a held branch registers the input. `isHeld` is
+  // already `true` then, so the input is a source of the `watch`.
+  watch([isHeld, inputElement], ([held]) => {
     if (held) {
       releaseRegisteredInput();
     }
@@ -374,6 +380,7 @@ provide(RadioRootContext, state);
 // time.
 const item = group ? useCompositeItem({ active: checked, disabled: isDisabled }) : undefined;
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('span', props, {
   state,
   ref: item ? [item.compositeRef, buttonRef] : [buttonRef],
@@ -384,8 +391,8 @@ const { element, elementProps } = useRenderElement('span', props, {
       id: props.nativeButton ? controlId.value : rootId.value,
       role: 'radio',
       'aria-checked': checked.value,
-      'aria-label': props.ariaLabel,
-      'aria-labelledby': ariaLabelledBy.value,
+      'aria-label': givenName(props.ariaLabel),
+      'aria-labelledby': ariaAfterHydration(ariaLabelledBy.value),
       [ACTIVE_COMPOSITE_ITEM]: checked.value ? '' : undefined,
       // Only a fully disabled group leaves the tab order. A single disabled radio keeps the
       // composite tab index.
@@ -439,6 +446,7 @@ const { element, elementProps } = useRenderElement('span', props, {
     getButtonProps,
     getDescriptionProps,
     group && ((merged) => group.validation.getValidationProps(isDisabled.value, merged)),
+    (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),
   ],
 });
 

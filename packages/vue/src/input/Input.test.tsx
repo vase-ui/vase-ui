@@ -10,6 +10,8 @@ import {
   flushMicrotasks,
   hydrate,
   hydrateAfter,
+  mockPageBeforeLoad,
+  recordInputEvents,
   renderOnServer,
   screen,
   within,
@@ -167,6 +169,22 @@ describe('<Input />', () => {
       await flushMicrotasks();
 
       expect(within(container).getByTestId('value').textContent).toBe('restored');
+    });
+
+    it('sends no event at the page show after a new value of Input', async () => {
+      mockPageBeforeLoad();
+      const value = shallowRef('a');
+      const { container } = await render(() => <Input value={value.value} data-testid="input" />);
+      const recorded = recordInputEvents(container);
+      screen.getByTestId<HTMLInputElement>('input').value = 'restored';
+
+      value.value = 'b';
+      await flushMicrotasks();
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('input')).toHaveValue('b');
+      expect(recorded).toEqual([]);
     });
   });
 });

@@ -33,7 +33,7 @@
       "describe": ["<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>", "accessible names"],
       "title": "omits aria-controls when the list renders with an explicitly empty id",
       "kind": "not-applicable",
-      "reason": "The case gives a React element with an `id` as `render`. In Vue `#render` is a slot, which is a function, so the part does not see the `id` of the element of the slot. The `id` prop gives the same result."
+      "reason": "The case gives a React element with an `id` as `render`. In Vue `#render` is a slot, which is a function, so the part does not see the `id` of the element of the slot. An empty `id` prop counts as no `id` (`VUE-93`), so the list keeps its generated id, and `Menu.Input` names it in `aria-controls`."
     },
     {
       "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",

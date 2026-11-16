@@ -67,9 +67,16 @@ const zoned = Temporal.ZonedDateTime.from('2026-11-14T09:30[Asia/Tokyo]');
   month={Temporal.PlainYearMonth.from('2026-11')}
   onMonthChange={(month, details) => {
     expectType<Temporal.PlainYearMonth, typeof month>(month);
-    expectType<'day-press' | 'keyboard' | 'month-change' | 'none', typeof details.reason>(
-      details.reason,
-    );
+    expectType<
+      | 'day-press'
+      | 'month-press'
+      | 'year-press'
+      | 'trigger-press'
+      | 'keyboard'
+      | 'month-change'
+      | 'none',
+      typeof details.reason
+    >(details.reason);
   }}
   focusedDate={date}
   onFocusedDateChange={(focused) => {
@@ -101,6 +108,7 @@ const rootState: Calendar.Root.State = {
   readOnly: false,
   invalid: false,
   empty: true,
+  view: 'day',
   multipleMonths: false,
   navigationDirection: 'none',
   broadcastCalendar: false,
@@ -148,3 +156,69 @@ const buttonProps: Calendar.PreviousButton.Props = { disabled: true, nativeButto
 
 // @ts-expect-error The order of the years is asc or desc.
 const yearOrder: Calendar.YearSelect.Props = { order: 'random' };
+
+// A year and month is a value too. It gives back the kind that it got, single or in a list.
+const yearMonth = Temporal.PlainYearMonth.from('2026-11');
+
+<Calendar.Root
+  value={yearMonth}
+  onValueChange={(value) => {
+    expectType<Temporal.PlainYearMonth, typeof value>(value);
+  }}
+/>;
+
+<Calendar.Root
+  multiple
+  defaultValue={[yearMonth]}
+  onValueChange={(value) => {
+    expectType<Temporal.PlainYearMonth[], typeof value>(value);
+  }}
+/>;
+
+// @ts-expect-error A time is not a value of a calendar.
+<Calendar.Root value={Temporal.PlainTime.from('09:30')} />;
+
+// The views, and the functions that disable a month or a year.
+<Calendar.Root
+  view="year"
+  defaultView="month"
+  visibleYears={5}
+  disabledMonths={(month) => month.month === 2}
+  disabledYears={(year) => year.year % 2 === 0}
+  onViewChange={(view, details) => {
+    expectType<Calendar.Root.View, typeof view>(view);
+    expectType<Calendar.Root.ChangeEventDetails, typeof details>(details);
+  }}
+  {...{
+    'onUpdate:view': (view: Calendar.Root.View) => {
+      expectType<'day' | 'month' | 'year', typeof view>(view);
+    },
+  }}
+/>;
+
+// @ts-expect-error A view is the days, the months or the years.
+<Calendar.Root view="week" />;
+
+const viewTriggerProps: Calendar.ViewTrigger.Props = { view: 'month', disabled: true };
+const viewTriggerState: Calendar.ViewTrigger.State = {
+  disabled: false,
+  readOnly: false,
+  invalid: false,
+  empty: true,
+  view: 'year',
+  active: false,
+};
+const monthGridProps: Calendar.MonthGrid.Props = { columns: 4 };
+const monthCellProps: Calendar.MonthCell.Props = { month: yearMonth, format: 'long' };
+const monthCellState: Calendar.MonthCell.State = { selected: true, disabled: false, current: true };
+const yearGridProps: Calendar.YearGrid.Props = { columns: 4 };
+const yearCellProps: Calendar.YearCell.Props = { year: yearMonth, format: '2-digit' };
+
+// @ts-expect-error A month cell has a month.
+const missingMonth: Calendar.MonthCell.Props = {};
+
+// @ts-expect-error The format of a year is numeric or 2-digit.
+const longYear: Calendar.YearCell.Props = { year: yearMonth, format: 'long' };
+
+// @ts-expect-error A trigger shows the months or the years.
+const dayTrigger: Calendar.ViewTrigger.Props = { view: 'day' };
