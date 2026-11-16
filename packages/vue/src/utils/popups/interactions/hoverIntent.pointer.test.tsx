@@ -109,6 +109,7 @@ describe.skipIf(isJSDOM)('HoverIntent with a real pointer', () => {
     await waitFor(() => {
       expect(popup).not.toBeInTheDocument();
     });
+    expect(screen.queryByTestId('popup')).toBe(null);
     expect(onOpenChange).toHaveBeenLastCalledWith(
       false,
       expect.objectContaining({ reason: REASONS.triggerHover }),
