@@ -2,11 +2,15 @@
 <script setup lang="ts">
 import { shallowRef } from 'vue';
 import { expectType } from '#test-utils';
+import type { Calendar } from '@vase-ui/vue/calendar';
 import { DatePicker } from '@vase-ui/vue/date-picker';
 
 const day = shallowRef<Temporal.PlainDate | null>(null);
 const zoned = shallowRef<Temporal.ZonedDateTime | null>(null);
 const open = shallowRef(false);
+const month = shallowRef(Temporal.PlainYearMonth.from('2026-11'));
+const view = shallowRef<'day' | 'month' | 'year'>('day');
+const focusedDate = shallowRef(Temporal.PlainDate.from('2026-11-14'));
 
 function onDayChange(
   value: Temporal.PlainDate | null,
@@ -53,5 +57,17 @@ function onWrongKind(value: Temporal.PlainTime | null) {
     <DatePicker.Calendar :min-date="Temporal.PlainDate.from('2026-11-14')" />
     <!-- @vue-expect-error the root owns the name of the form entry -->
     <DatePicker.Field name="when" />
+    <!-- The calendar gives the events of `Calendar.Root` that are not about the value. -->
+    <DatePicker.Calendar
+      v-model:month="month"
+      v-model:view="view"
+      v-model:focused-date="focusedDate"
+      @month-change="
+        (next, details) => {
+          expectType<Temporal.PlainYearMonth, typeof next>(next);
+          expectType<Calendar.Root.ChangeEventDetails, typeof details>(details);
+        }
+      "
+    />
   </DatePicker.Root>
 </template>

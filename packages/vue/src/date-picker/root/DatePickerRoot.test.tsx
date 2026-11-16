@@ -155,6 +155,28 @@ describe('<DatePicker.Root />', () => {
       expect(hiddenInputOf(container).value).toBe('2026-11-18');
     });
 
+    it('keeps the value when a press outside closes the popup', async () => {
+      const onValueChange = vi.fn();
+      const onOpenChange = vi.fn();
+      const { user, container } = await renderPicker({
+        defaultValue: day('2026-11-18'),
+        onValueChange,
+        onOpenChange,
+      });
+      const popup = await open(user);
+      await waitFor(() => {
+        expect(dayButton('2026-11-18')).toHaveFocus();
+      });
+
+      await user.keyboard('{ArrowRight}');
+      await user.click(document.body);
+
+      await expectClosed(popup);
+      expect(onOpenChange.mock.lastCall?.[1].reason).toBe('outside-press');
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(hiddenInputOf(container).value).toBe('2026-11-18');
+    });
+
     it('goes to the day when Alt+Down in a segment opens the popup', async () => {
       const { user } = await renderPicker({ defaultValue: day('2026-11-18') });
 

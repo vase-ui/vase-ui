@@ -1,5 +1,10 @@
 <script lang="ts">
-import type { CalendarRootProps, CalendarRootState } from '../../calendar/root/CalendarRoot.vue';
+import type {
+  CalendarRootChangeEventDetails,
+  CalendarRootProps,
+  CalendarRootState,
+  CalendarRootView,
+} from '../../calendar/root/CalendarRoot.vue';
 
 export interface DatePickerCalendarState extends CalendarRootState {}
 
@@ -47,7 +52,42 @@ import type {
 
 defineOptions({ inheritAttrs: false });
 
-const props = withDefaults(defineProps<DatePickerCalendarProps>(), { as: 'div' });
+// `Calendar.Root` reads an absent `showOutsideDays` as the default of its broadcast calendar. Vue
+// changes an absent Boolean prop to `false`, so the prop has the default `undefined`.
+const props = withDefaults(defineProps<DatePickerCalendarProps>(), {
+  as: 'div',
+  showOutsideDays: undefined,
+});
+
+const emit = defineEmits<{
+  /**
+   * Callback fired when the month that the grid shows changes.
+   */
+  monthChange: [month: Temporal.PlainYearMonth, eventDetails: CalendarRootChangeEventDetails];
+  /**
+   * Event handler called after `monthChange` with the new month, unless a listener cancels the
+   * change. `v-model:month` uses it.
+   */
+  'update:month': [month: Temporal.PlainYearMonth];
+  /**
+   * Callback fired when the day that has the tab stop changes.
+   */
+  focusedDateChange: [date: Temporal.PlainDate, eventDetails: CalendarRootChangeEventDetails];
+  /**
+   * Event handler called after `focusedDateChange` with the new day, unless a listener cancels the
+   * change. `v-model:focusedDate` uses it.
+   */
+  'update:focusedDate': [date: Temporal.PlainDate];
+  /**
+   * Callback fired when the grid shows another view.
+   */
+  viewChange: [view: CalendarRootView, eventDetails: CalendarRootChangeEventDetails];
+  /**
+   * Event handler called after `viewChange` with the new view, unless a listener cancels the
+   * change. `v-model:view` uses it.
+   */
+  'update:view': [view: CalendarRootView];
+}>();
 
 defineSlots<{
   default(props: { state: DatePickerCalendarState }): unknown;
@@ -115,7 +155,27 @@ function handleClick(event: MouseEvent) {
   }
 }
 
-const calendarHandlers = { onClick: handleClick };
+const calendarHandlers = {
+  onClick: handleClick,
+  onMonthChange: (month: Temporal.PlainYearMonth, details: CalendarRootChangeEventDetails) => {
+    emit('monthChange', month, details);
+  },
+  'onUpdate:month': (month: Temporal.PlainYearMonth) => {
+    emit('update:month', month);
+  },
+  onFocusedDateChange: (date: Temporal.PlainDate, details: CalendarRootChangeEventDetails) => {
+    emit('focusedDateChange', date, details);
+  },
+  'onUpdate:focusedDate': (date: Temporal.PlainDate) => {
+    emit('update:focusedDate', date);
+  },
+  onViewChange: (view: CalendarRootView, details: CalendarRootChangeEventDetails) => {
+    emit('viewChange', view, details);
+  },
+  'onUpdate:view': (view: CalendarRootView) => {
+    emit('update:view', view);
+  },
+};
 
 // `Calendar.Root` has a type parameter for the kind of its value, and vue-tsc takes it from the
 // props. The picker has any kind, so the value and the default value have the type `any`. The
