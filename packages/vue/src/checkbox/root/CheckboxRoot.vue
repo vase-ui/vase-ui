@@ -326,9 +326,8 @@ const rootId = useVaseUiId();
 // of them would render the same id. A `Field.Item` opens a scope that the checkbox does own. The
 // provider chain does not change, so `setup` makes this choice one time.
 const ownsControlId = group?.registerControlId !== registerControlId;
-// An empty `id` is not an own id: the control takes the id of the provider.
 const controlId = useLabelableId({
-  id: () => props.id || undefined,
+  id: () => props.id,
   enabled: ownsControlId,
   element: () => element.value,
 });

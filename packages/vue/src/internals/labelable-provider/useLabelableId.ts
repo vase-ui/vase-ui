@@ -1,7 +1,7 @@
 import { computed, onMounted, onScopeDispose, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { NOOP } from '../noop';
-import { useVaseUiId } from '../useBaseUiId';
+import { givenId, useVaseUiId } from '../useBaseUiId';
 import { useKeepAliveState } from '../useKeepAliveState';
 import { useLabelableContext } from './LabelableContext';
 
@@ -15,7 +15,7 @@ export function useLabelableId(params: UseLabelableIdParameters = {}): ComputedR
   const defaultId = useVaseUiId();
 
   const source = Symbol();
-  const id = () => toValue(params.id);
+  const id = () => givenId(toValue(params.id));
   const isEnabled = () => toValue(params.enabled) ?? true;
 
   let hasRegistered = false;

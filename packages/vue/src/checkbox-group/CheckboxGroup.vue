@@ -66,7 +66,7 @@ import {
   useLabelableId,
 } from '../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../internals/types';
-import { useVaseUiId } from '../internals/useBaseUiId';
+import { givenId, useVaseUiId } from '../internals/useBaseUiId';
 import { isInTreeOf } from '../internals/useKeepAliveState';
 import { useRenderElement } from '../internals/useRenderElement';
 import { useValueChanged } from '../internals/useValueChanged';
@@ -254,7 +254,7 @@ const { element, elementProps } = useRenderElement('div', props, {
   state,
   stateAttributesMapping: fieldValidityMapping,
   props: (attrs) => [
-    { id: props.id, role: 'group', 'aria-labelledby': labelId.value },
+    { id: givenId(props.id), role: 'group', 'aria-labelledby': labelId.value },
     attrs,
     getDescriptionProps,
   ],

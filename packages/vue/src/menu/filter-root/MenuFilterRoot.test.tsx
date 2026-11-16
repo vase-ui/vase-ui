@@ -5332,7 +5332,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       expect(screen.getByRole('menu')).toHaveAttribute('aria-labelledby', trigger.id);
     });
 
-    it('omits aria-controls when the list has an explicitly empty id', async () => {
+    it('VUE-93: names the generated id of a list with an empty id in aria-controls', async () => {
       await render(
         <Menu.FilterProvider>
           <Menu.Root defaultOpen>
@@ -5352,8 +5352,11 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       );
 
       const input = screen.getByRole('searchbox', { name: 'Filter actions' });
-      expect(input).not.toHaveAttribute('aria-controls');
-      expect(screen.getByRole('menu').id).toBe('');
+      const list = screen.getByRole('menu');
+      expect(list.id).toMatch(/^vase-ui-/);
+      await waitFor(() => {
+        expect(input).toHaveAttribute('aria-controls', list.id);
+      });
     });
 
     it('omits the list label when the trigger renders with an explicitly empty id', async () => {

@@ -3,6 +3,14 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
+      "upstream": "packages/react/src/field/description/FieldDescription.test.tsx",
+      "describe": ["<Field.Description />"],
+      "title": "does not register an empty description id",
+      "kind": "replaced",
+      "test": "packages/vue/src/field/description/FieldDescription.test.tsx",
+      "reason": "An empty `id` counts as no `id` (`VUE-93`). The description then has the generated id, and the control names it in `aria-describedby` after the id of the consumer. The case `VUE-93: registers the generated id of a description with an empty id` asserts it."
+    },
+    {
       "upstream": "packages/react/src/field/root/FieldRoot.react17.test.tsx",
       "kind": "not-applicable",
       "reason": "The file tests the paths for React 17. It mocks `SafeReact`, so that React has no `useId` and no `captureOwnerStack`. Vue `useId` gives the ids, and Vue has no owner stack."

@@ -18,6 +18,7 @@ import {
 } from '#test-utils';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { REASONS } from '../../internals/reasons';
+import type { HTMLProps } from '../../internals/types';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import { allowTopLevelViewportWarning } from '../utils/test-utils';
 import NavigationMenuTriggerHydration from './NavigationMenuTriggerHydration.test.vue';
@@ -940,11 +941,11 @@ describe('<NavigationMenu.Trigger />', () => {
       ));
     }
 
-    function popupParts(popupProps: { id?: string } = {}) {
+    function popupParts(popupSlots: Record<string, unknown> = {}) {
       return (
         <NavigationMenu.Portal>
           <NavigationMenu.Positioner>
-            <NavigationMenu.Popup {...popupProps} data-testid="popup">
+            <NavigationMenu.Popup data-testid="popup" v-slots={popupSlots}>
               <NavigationMenu.Viewport />
             </NavigationMenu.Popup>
           </NavigationMenu.Positioner>
@@ -953,7 +954,13 @@ describe('<NavigationMenu.Trigger />', () => {
     }
 
     it('has no aria-controls while the popup has an empty id', async () => {
-      await renderMenu(() => popupParts({ id: '' }));
+      // An empty `id` of the part counts as no `id` (VUE-93). Only the `#render` slot can give the
+      // element an empty `id`.
+      await renderMenu(() =>
+        popupParts({
+          render: ({ props }: { props: HTMLProps }) => <nav {...props} id="" />,
+        }),
+      );
       await flushMicrotasks();
 
       const trigger = screen.getByTestId('trigger');

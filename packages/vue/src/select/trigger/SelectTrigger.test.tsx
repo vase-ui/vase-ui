@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { KeepAlive, defineComponent, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Select } from '@vase-ui/vue/select';
+import type { HTMLProps } from '../../internals/types';
 import {
   createHeldBranch,
   createRenderer,
@@ -766,11 +767,17 @@ describe('<Select.Trigger />', () => {
   });
 
   describe('VUE-73: aria-controls names only an element in the document', () => {
+    // An empty `id` of the part counts as no `id` (VUE-93). Only the `#render` slot can give the
+    // element an empty `id`.
+    const emptyIdSlot = {
+      render: ({ props }: { props: HTMLProps }) => <div {...props} id="" />,
+    };
+
     it.each([
       {
         name: 'popup',
         parts: () => (
-          <Select.Popup id="" data-testid="named">
+          <Select.Popup data-testid="named" v-slots={emptyIdSlot}>
             <Select.Item value="a">A</Select.Item>
           </Select.Popup>
         ),
@@ -779,7 +786,7 @@ describe('<Select.Trigger />', () => {
         name: 'list',
         parts: () => (
           <Select.Popup>
-            <Select.List id="" data-testid="named">
+            <Select.List data-testid="named" v-slots={emptyIdSlot}>
               <Select.Item value="a">A</Select.Item>
             </Select.List>
           </Select.Popup>

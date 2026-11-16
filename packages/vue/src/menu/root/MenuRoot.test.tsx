@@ -5496,11 +5496,6 @@ describe('<Menu.Root />', () => {
 
     expect(store.select('defaultPopupId')).toBe('custom');
 
-    context.setRenderedPopupId('');
-    await flushMicrotasks();
-
-    expect(store.select('defaultPopupId')).toBe(undefined);
-
     context.setRenderedPopupId(undefined);
     await flushMicrotasks();
 

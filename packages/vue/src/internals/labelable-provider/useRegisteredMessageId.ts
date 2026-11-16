@@ -6,7 +6,7 @@ import { useRegisteredId } from './useRegisteredId';
 /**
  * A part that describes the control calls it in `setup`, such as a description or an error.
  * The control then has the `id` in its `aria-describedby`.
- * An empty or absent `id` registers nothing.
+ * An absent `id` registers nothing.
  * @param element The element of the part.
  */
 export function useRegisteredMessageId(
@@ -17,7 +17,7 @@ export function useRegisteredMessageId(
   const source = Symbol();
 
   useRegisteredId(
-    () => toValue(id) || undefined,
+    () => toValue(id),
     (getId) => registerMessageId(source, getId),
     element,
     reaches,

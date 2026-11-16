@@ -24,7 +24,7 @@ import ComboboxListPart from '../../../test/fixtures/ComboboxListPart.vue';
 import ComboboxPartsReplacement from '../../../test/fixtures/ComboboxPartsReplacement.vue';
 import PopupRootNodeScoped from '../../utils/popups/focus/PopupRootNodeScoped.test.vue';
 import { REASONS } from '../../internals/reasons';
-import type { VaseUIEvent } from '../../internals/types';
+import type { HTMLProps, VaseUIEvent } from '../../internals/types';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
 import type { ComboboxStore } from '../store';
 import ComboboxInputBeforeHydration from './ComboboxInputBeforeHydration.test.vue';
@@ -2129,7 +2129,14 @@ describe('<Combobox.Input />', () => {
           <Combobox.Portal>
             <Combobox.Positioner>
               <Combobox.Popup>
-                <Combobox.List id="" data-testid="list" />
+                <Combobox.List
+                  data-testid="list"
+                  v-slots={{
+                    // An empty `id` of the part counts as no `id` (VUE-93). Only the `#render`
+                    // slot can give the element an empty `id`.
+                    render: ({ props }: { props: HTMLProps }) => <div {...props} id="" />,
+                  }}
+                />
               </Combobox.Popup>
             </Combobox.Positioner>
           </Combobox.Portal>
@@ -2171,8 +2178,9 @@ describe('<Combobox.Input />', () => {
       id.value = '';
       await flushMicrotasks();
 
-      expect(screen.getByTestId('list').id).toBe('');
-      expect(input).not.toHaveAttribute('aria-controls');
+      const generatedId = screen.getByTestId('list').id;
+      expect(generatedId).toMatch(/^vase-ui-/);
+      expect(input).toHaveAttribute('aria-controls', generatedId);
     });
   });
 

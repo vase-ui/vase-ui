@@ -1058,7 +1058,14 @@ describe('<Combobox.Trigger />', () => {
             <Combobox.Trigger data-testid="trigger" />
             <Combobox.Portal>
               <Combobox.Positioner>
-                <Combobox.Popup id="" data-testid="popup">
+                <Combobox.Popup
+                  data-testid="popup"
+                  v-slots={{
+                    // An empty `id` of the part counts as no `id` (VUE-93). Only the `#render`
+                    // slot can give the element an empty `id`.
+                    render: ({ props }: { props: HTMLProps }) => <div {...props} id="" />,
+                  }}
+                >
                   <Combobox.Input />
                 </Combobox.Popup>
               </Combobox.Positioner>

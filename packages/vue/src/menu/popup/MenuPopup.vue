@@ -62,6 +62,7 @@ import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMou
 import { REASONS } from '../../internals/reasons';
 import { resolvePopupLabel } from '../../internals/resolvePopupLabel';
 import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/types';
+import { givenId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
 import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
@@ -105,7 +106,7 @@ const activeTriggerElement = computed(
   () => store.select('activeTriggerElement') as HTMLElement | null,
 );
 
-const popupId = computed(() => props.id ?? generatedPopupId);
+const popupId = computed(() => givenId(props.id) ?? generatedPopupId);
 
 // The root names the popup with the id that the popup renders. A generated id is not a request, so
 // removing an explicit id gives the generated id back.

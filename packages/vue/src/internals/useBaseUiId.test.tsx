@@ -36,6 +36,20 @@ describe('useVaseUiId', () => {
     expect(id).not.toBe(otherId);
   });
 
+  it('VUE-93: gives the generated id for an empty override', async () => {
+    const { setProps } = await render(<IdComponent />);
+    const generatedId = screen.getByTestId('id').id;
+
+    await setProps({ id: '' });
+    expect(screen.getByTestId('id')).toHaveAttribute('id', generatedId);
+
+    await setProps({ id: 'custom' });
+    expect(screen.getByTestId('id')).toHaveAttribute('id', 'custom');
+
+    await setProps({ id: '' });
+    expect(screen.getByTestId('id')).toHaveAttribute('id', generatedId);
+  });
+
   it('follows a change of the override', async () => {
     const { setProps } = await render(<IdComponent />);
     const generatedId = screen.getByTestId('id').id;
