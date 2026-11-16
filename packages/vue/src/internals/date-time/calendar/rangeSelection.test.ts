@@ -93,6 +93,17 @@ describe('useRangeSelection', () => {
       ]);
     });
 
+    it('gives a new end of an empty controlled range the kind of an end of defaultValue', () => {
+      const { press, changes } = createSelection({
+        value: [null, null],
+        defaultValue: [null, Temporal.ZonedDateTime.from('2026-11-04T17:30[Asia/Tokyo]')],
+      });
+
+      press('2026-11-10');
+
+      expect(changes()).toEqual([['2026-11-10T17:30:00+09:00[Asia/Tokyo]', null]]);
+    });
+
     it('gives a new end of an empty range a date in the ISO calendar', () => {
       const { press, selection } = createSelection({ defaultValue: [null, null] });
 
@@ -319,13 +330,16 @@ describe('useRangeSelection', () => {
       expect(changes()).toEqual([['2026-11-05', '2026-11-11']]);
     });
 
-    it('changes nothing when the range would not be valid', () => {
+    it('changes nothing when the range would not be valid, and keeps the first day', () => {
       const { extend, changes } = createSelection({ maxDays: 2 });
 
       extend('2026-11-11', '2026-11-10');
       extend('2026-11-12', '2026-11-11');
-
       expect(changes()).toEqual([['2026-11-10', '2026-11-11']]);
+      extend('2026-11-11', '2026-11-12');
+      extend('2026-11-10', '2026-11-11');
+
+      expect(changes().at(-1)).toEqual(['2026-11-10', '2026-11-10']);
     });
   });
 
@@ -375,6 +389,20 @@ describe('useRangeSelection', () => {
       expect(selection.displayRange.value).toEqual({
         start: day('2026-11-03'),
         end: day('2026-11-05'),
+      });
+    });
+
+    it('shows nothing of a preview in a read-only range', () => {
+      const { selection } = createSelection({
+        readOnly: true,
+        defaultValue: [day('2026-11-10'), null],
+      });
+
+      selection.preview(day('2026-11-14'));
+
+      expect(selection.displayRange.value).toEqual({
+        start: day('2026-11-10'),
+        end: day('2026-11-10'),
       });
     });
 
@@ -491,26 +519,33 @@ describe('useRangeSelection', () => {
       expect(selection.takeClickSuppression(new MouseEvent('click', { detail: 1 }))).toBe(false);
     });
 
-    it('makes no range that is not valid, and still swallows the click', () => {
+    it('ends the range at the last day toward the pointer that keeps maxDays', () => {
       const { selection, changes } = createSelection({ maxDays: 2 });
 
       selection.beginDrag(day('2026-11-10'), 1);
+      selection.dragTo(day('2026-11-14'));
+      expect(selection.displayRange.value).toEqual({
+        start: day('2026-11-10'),
+        end: day('2026-11-11'),
+      });
       selection.endDrag(day('2026-11-14'), up());
 
-      expect(changes()).toEqual([]);
-      expect(selection.takeClickSuppression(new MouseEvent('click', { detail: 1 }))).toBe(true);
+      expect(changes()).toEqual([['2026-11-10', '2026-11-11']]);
     });
 
-    it('shows the first day alone while the range that the pointer reaches is not valid', () => {
-      const { selection } = createSelection({ maxDays: 2 });
+    it('makes no range when no day reaches minDays, and still swallows the click', () => {
+      const { selection, changes } = createSelection({ minDays: 3 });
 
       selection.beginDrag(day('2026-11-10'), 1);
-      selection.dragTo(day('2026-11-14'));
-
+      selection.dragTo(day('2026-11-11'));
       expect(selection.displayRange.value).toEqual({
         start: day('2026-11-10'),
         end: day('2026-11-10'),
       });
+      selection.endDrag(day('2026-11-11'), up());
+
+      expect(changes()).toEqual([]);
+      expect(selection.takeClickSuppression(new MouseEvent('click', { detail: 1 }))).toBe(true);
     });
 
     it.each([
@@ -524,16 +559,20 @@ describe('useRangeSelection', () => {
       expect(selection.isDragging(1)).toBe(false);
     });
 
-    it('ignores a day that the user cannot select, and another pointer', () => {
+    it('stops before a day that the user cannot select, and ignores another pointer', () => {
       const { selection, changes } = createSelection({ unavailableDates: day('2026-11-12') });
 
       selection.beginDrag(day('2026-11-10'), 1);
-      selection.dragTo(day('2026-11-12'));
+      selection.dragTo(day('2026-11-14'));
+      expect(selection.displayRange.value).toEqual({
+        start: day('2026-11-10'),
+        end: day('2026-11-11'),
+      });
       expect(selection.isDragging(1)).toBe(true);
       expect(selection.isDragging(2)).toBe(false);
-      selection.endDrag(day('2026-11-12'), up());
+      selection.endDrag(day('2026-11-14'), up());
 
-      expect(changes()).toEqual([]);
+      expect(changes()).toEqual([['2026-11-10', '2026-11-11']]);
     });
 
     it('stops when the drag is cancelled', () => {
@@ -548,13 +587,14 @@ describe('useRangeSelection', () => {
       expect(selection.selecting.value).toBe(false);
     });
 
-    it('ends the drag with Escape and tells that the key was handled', () => {
+    it('ends the drag with Escape, tells that the key was handled, and swallows the click', () => {
       const { selection, changes } = createSelection();
 
       selection.beginDrag(day('2026-11-10'), 1);
 
       expect(selection.cancel(escape())).toBe(true);
       expect(selection.isDragging(1)).toBe(false);
+      expect(selection.takeClickSuppression(new MouseEvent('click', { detail: 1 }))).toBe(true);
       expect(changes()).toEqual([]);
     });
   });

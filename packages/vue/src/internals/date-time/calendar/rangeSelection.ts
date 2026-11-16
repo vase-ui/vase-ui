@@ -26,7 +26,7 @@ type RangeInput = readonly [DateValue | null, DateValue | null];
 export type RangeChangeEventReason = CalendarChangeEventReason | typeof REASONS.drag;
 export type RangeChangeEventDetails = VaseUIChangeEventDetails<RangeChangeEventReason>;
 
-/** The first and the last day of a range, in the calendar of the grid. */
+/** The first and the last day of a range. The parts compare them by their ISO days. */
 export interface DayRange {
   start: Temporal.PlainDate;
   end: Temporal.PlainDate;
@@ -70,11 +70,14 @@ export interface RangeSelection extends CalendarSelection {
    * its first day.
    */
   selecting: ComputedRef<boolean>;
-  /** Shows the range that a press on `date` makes. It does nothing when no range is in progress. */
+  /**
+   * Shows the range that a press on `date` makes. It does nothing when no range is in progress, and
+   * in a read-only range.
+   */
   preview: (date: Temporal.PlainDate) => void;
   /**
-   * Puts back the range from before the first press, or an empty range, and ends a drag. It
-   * returns `false` when there is nothing to end.
+   * Ends a drag in progress. With no drag, it puts back the range from before the first press of
+   * the range in progress, or an empty range. It returns `false` when there is nothing to end.
    */
   cancel: (event: KeyboardEvent) => boolean;
   /**
@@ -83,11 +86,15 @@ export interface RangeSelection extends CalendarSelection {
    */
   beginDrag: (date: Temporal.PlainDate, pointerId: number) => boolean;
   isDragging: (pointerId: number) => boolean;
-  /** Moves the end of the drag to `date`. A day that the user cannot select does not count. */
+  /**
+   * Moves the end of the drag toward `date`. The end is the last day from the first day of the drag
+   * to `date` that makes a valid range.
+   */
   dragTo: (date: Temporal.PlainDate) => void;
   /**
-   * Ends the drag at `date`, or at the last day of the drag when `date` is `null`. A drag that
-   * left its first day makes the range. A drag that did not is a click.
+   * Moves the end of the drag toward `date` as `dragTo` does, and ends the drag. A drag that left
+   * its first day makes the range. A drag that did not is a click. With a `null` date, the end
+   * stays where it is.
    */
   endDrag: (date: Temporal.PlainDate | null, event: PointerEvent) => void;
   cancelDrag: () => void;
@@ -96,8 +103,8 @@ export interface RangeSelection extends CalendarSelection {
   /** Gives a day button to the drag, so that the drag finds the day under the pointer. */
   registerButton: (element: Element, getDate: () => Temporal.PlainDate) => () => void;
   /**
-   * Whether `event` is the click after a drag. A click after a drag has the pointer button down
-   * and up on different days, so it is not a press.
+   * Whether `event` is the click after a drag, or after a drag that Escape ended. Such a click is
+   * not a press: the pointer went down and up on different days, or the user cancelled the drag.
    */
   takeClickSuppression: (event: MouseEvent) => boolean;
 }
@@ -147,7 +154,8 @@ interface Drag {
 /**
  * The selection of a range of days. A press on a day starts a range. A press on a second day ends
  * it, in the order of the calendar. A press that would make a range that is not valid starts a new
- * range at that day. A drag from one day to another makes a range in one change.
+ * range at that day. A drag from one day to another makes a range in one change. It ends at the
+ * last day toward the pointer that makes a valid range.
  *
  * A range is not valid when it has fewer days than `minDays` or more than `maxDays`, or when it
  * crosses a day that the user cannot select and `allowNonContiguousRanges` is off.
@@ -205,24 +213,38 @@ export function useRangeSelection(
     return isDisabledDay(date, blocking.value) || matches(date, props.unavailableDates);
   }
 
-  function hasBlockedDay({ start, end }: DayRange) {
-    for (let day = start; compareDates(day, end) <= 0; day = day.add({ days: 1 })) {
-      if (isBlocked(day)) {
-        return true;
+  /**
+   * The last day from `anchor` to `date` that ends a valid range with `anchor`, or `null`. A day
+   * that the user cannot select ends no range.
+   */
+  function lastValidEnd(anchor: Temporal.PlainDate, date: Temporal.PlainDate) {
+    const step = compareDates(date, anchor) < 0 ? -1 : 1;
+    const minDays = props.minDays ?? 1;
+    const maxDays = props.maxDays ?? Infinity;
+    let end: Temporal.PlainDate | null = null;
+    for (let day = anchor, count = 1; count <= maxDays; day = day.add({ days: step }), count += 1) {
+      const blocked = isBlocked(day);
+      if (blocked && props.allowNonContiguousRanges !== true) {
+        break;
+      }
+      if (!blocked && count >= minDays) {
+        end = day;
+      }
+      if (isSameDay(day, date)) {
+        break;
       }
     }
-    return false;
+    return end;
   }
 
   /** The range from `a` to `b`, or `null` when that range is not valid. */
   function rangeBetween(a: Temporal.PlainDate, b: Temporal.PlainDate): DayRange | null {
     const first = a.withCalendar(b.calendarId);
-    const range = compareDates(first, b) <= 0 ? { start: first, end: b } : { start: b, end: first };
-    const days = range.start.until(range.end, { largestUnit: 'days' }).days + 1;
-    if (days < (props.minDays ?? 1) || days > (props.maxDays ?? Infinity)) {
+    const end = lastValidEnd(first, b);
+    if (!end || !isSameDay(end, b)) {
       return null;
     }
-    return props.allowNonContiguousRanges === true || !hasBlockedDay(range) ? range : null;
+    return compareDates(first, b) <= 0 ? { start: first, end: b } : { start: b, end: first };
   }
 
   const displayRange = computed<DayRange | null>(() => {
@@ -254,11 +276,13 @@ export function useRangeSelection(
   }
 
   // A new end has the kind, the calendar, the time and the zone of the end that it replaces, else
-  // of another end. Without one, it is a date in the ISO calendar.
+  // of another end, else of an end of `defaultValue`. Without one, it is a date in the ISO calendar.
   function createEnds(first: Temporal.PlainDate, second: Temporal.PlainDate | null): RangeValue {
     const [before1, before2] = valueBefore();
     const [current1, current2] = value.value;
-    const fallback = before1 ?? before2 ?? current1 ?? current2 ?? undefined;
+    const [default1, default2] = props.defaultValue ?? EMPTY_RANGE;
+    const fallback =
+      before1 ?? before2 ?? current1 ?? current2 ?? default1 ?? default2 ?? undefined;
     const create = (date: Temporal.PlainDate, like: DateValue | undefined) =>
       like ? withDate(like, date) : date.withCalendar('iso8601');
     return [create(first, before1 ?? fallback), second && create(second, before2 ?? fallback)];
@@ -309,15 +333,16 @@ export function useRangeSelection(
   ) {
     const anchor =
       lone.value ?? (extension && isSameDay(extension.last, from) ? extension.anchor : from);
+    // A key that gives a range that is not valid changes nothing, and the next key keeps the anchor.
+    extension = { anchor, last: date };
     const range = rangeBetween(anchor, date);
     if (range) {
       commitRange(range, details);
-      extension = { anchor, last: date };
     }
   }
 
   function preview(date: Temporal.PlainDate) {
-    if (lone.value && !isBlocked(date)) {
+    if (lone.value && props.readOnly !== true && !isBlocked(date)) {
       previewDate.value = date;
     }
   }
@@ -325,6 +350,8 @@ export function useRangeSelection(
   function cancel(event: KeyboardEvent) {
     if (drag.value) {
       drag.value = null;
+      // The release after Escape still clicks the button that holds the pointer.
+      suppressClick = true;
       return true;
     }
     const day = lone.value;
@@ -353,28 +380,27 @@ export function useRangeSelection(
 
   function dragTo(date: Temporal.PlainDate) {
     const dragged = drag.value;
-    if (!dragged || isBlocked(date) || isSameDay(date, dragged.current)) {
-      return;
-    }
-    drag.value = {
-      ...dragged,
-      current: date,
-      moved: dragged.moved || !isSameDay(date, dragged.anchor),
-    };
-  }
-
-  function endDrag(date: Temporal.PlainDate | null, event: PointerEvent) {
-    const dragged = drag.value;
-    drag.value = null;
     if (!dragged) {
       return;
     }
-    const end = date && !isBlocked(date) ? date : dragged.current;
-    if (!dragged.moved && isSameDay(end, dragged.anchor)) {
+    const current = lastValidEnd(dragged.anchor, date) ?? dragged.anchor;
+    const moved = dragged.moved || !isSameDay(date, dragged.anchor);
+    if (moved !== dragged.moved || !isSameDay(current, dragged.current)) {
+      drag.value = { ...dragged, current, moved };
+    }
+  }
+
+  function endDrag(date: Temporal.PlainDate | null, event: PointerEvent) {
+    if (date) {
+      dragTo(date);
+    }
+    const dragged = drag.value;
+    drag.value = null;
+    if (!dragged?.moved) {
       return;
     }
     suppressClick = true;
-    const range = rangeBetween(dragged.anchor, end);
+    const range = rangeBetween(dragged.anchor, dragged.current);
     if (range) {
       commitRange(range, createChangeEventDetails(REASONS.drag, event));
     }

@@ -43,12 +43,13 @@ export interface RangeCalendarRootProps<Value extends DateValue = Temporal.Plain
   minDays?: number | undefined;
   /**
    * The greatest number of days of a range. Both ends count. A press that would make a longer
-   * range starts a new range at the pressed day.
+   * range starts a new range at the pressed day. A drag stops at this number of days.
    */
   maxDays?: number | undefined;
   /**
    * Whether a range can cross a day that is disabled or unavailable. Without it, a press that
-   * would make such a range starts a new range at the pressed day. The crossed day is not selected.
+   * would make such a range starts a new range at the pressed day, and a drag stops before that
+   * day. With it, the crossed day is in the range and is not selected.
    * @default false
    */
   allowNonContiguousRanges?: boolean | undefined;

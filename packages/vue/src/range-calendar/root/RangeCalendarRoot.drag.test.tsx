@@ -155,7 +155,11 @@ describe('<RangeCalendar.Root /> with a drag', () => {
 
       expect(shown().end).toEqual(['2026-11-11']);
 
-      await fireEvent.pointerUp(first, pointer('mouse', button('2026-11-12'), 0));
+      await fireEvent.pointerMove(first, pointer('mouse', button('2026-11-13')));
+
+      expect(shown().end).toEqual(['2026-11-11']);
+
+      await fireEvent.pointerUp(first, pointer('mouse', button('2026-11-13'), 0));
 
       expect(ends(onValueChange.mock.calls[0]!)).toEqual(['2026-11-10', '2026-11-11']);
     });
@@ -191,7 +195,7 @@ describe('<RangeCalendar.Root /> with a drag', () => {
       expect(shown()).toEqual({ start: [], middle: [], end: [] });
     });
 
-    it('ends a drag with Escape', async () => {
+    it('ends a drag with Escape, and the click after the release makes no press', async () => {
       const { onValueChange } = await renderRange();
       const first = button('2026-11-10');
 
@@ -199,6 +203,8 @@ describe('<RangeCalendar.Root /> with a drag', () => {
       await fireEvent.pointerMove(first, pointer('mouse', button('2026-11-12')));
       expect(await fireEvent.keyDown(first, { key: 'Escape' })).toBe(false);
       await fireEvent.pointerUp(first, pointer('mouse', button('2026-11-12'), 0));
+      // The button that holds the pointer gets the click of the release.
+      await fireEvent.click(first, { detail: 1 });
 
       expect(onValueChange).not.toHaveBeenCalled();
       expect(shown()).toEqual({ start: [], middle: [], end: [] });

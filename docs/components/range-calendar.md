@@ -76,8 +76,8 @@ The root emits `valueChange` with the new value and `eventDetails`, and then `up
 - The second press gives the two days in the order of the calendar. A press on the first day again gives a range of one day.
 - A press on a day after a complete range starts a new range.
 - A press that would give a range that is not valid starts a new range at the pressed day. A range is not valid when it has fewer days than `minDays` or more days than `maxDays`. It is also not valid when it crosses a day that is disabled or unavailable. Set `allowNonContiguousRanges` to allow that. The crossed day has `data-range-middle` and is not selected.
-- A drag with the mouse, a pen or a finger from one day to another gives the range in one `valueChange`. A drag over days that the user cannot select ends at the last day that the user can select. A press and a release on one day is a press, not a drag. The day buttons have `touch-action: none`, so that a finger can drag over the days. To let the page scroll from a day, give the button a `style` with another `touch-action`.
-- `readOnly` and `disabled` stop each press and each drag.
+- A drag with the mouse, a pen or a finger from one day to another gives the range in one `valueChange`. The range ends at the day under the pointer. When that range is not valid, it ends at the last day between the first day and the pointer that gives a valid range, such as the day before a disabled day. A drag that reaches no valid range changes nothing. A press and a release on one day is a press, not a drag. Escape ends a drag, and the release after it changes nothing. The day buttons have `touch-action: none`, so that a finger can drag over the days. To let the page scroll from a day, give the button a `style` with another `touch-action`.
+- `readOnly` and `disabled` stop each press, each drag and the preview.
 
 A day has `data-range-start` when it is the first day of the range, `data-range-end` when it is the last day and `data-range-middle` when it is between them. A range of one day has the first two attributes and no third. A day in the range that the user can select has `data-selected` and `aria-selected="true"`.
 
@@ -173,7 +173,7 @@ The focus is in the grid of days, and one day has the tab stop. Left and Right s
 | Enter, Space                   | Picks the day. The first press starts the range, and the second press ends it.                                                                                                   |
 | Shift+Left, Shift+Right        | Moves a day, and makes the range from the first day to that day. The first day is the first day of a range in progress, or else the day that had the focus before the first key. |
 | Shift+Up, Shift+Down           | Moves a week, and makes the range in the same way.                                                                                                                               |
-| Escape                         | Puts back the range from before the first press, and ends a drag. The calendar prevents the key only then.                                                                       |
+| Escape                         | Ends a drag. Else, puts back the range from before the first press of a range in progress. The calendar prevents the key only in these two cases.                                |
 
 ## Accessibility
 
