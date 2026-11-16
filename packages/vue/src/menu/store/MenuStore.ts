@@ -239,8 +239,7 @@ export class MenuStore<Payload> extends BasePopupStore<
     this.set('highlightedItemId', toRaw(this.state).highlightedItem?.id);
   });
 
-  // A store makes no watcher, so this method does the work that follows a write of a key. It shares
-  // the refs of a new `parent`. It copies the id of a new `highlightedItem`.
+  // A store makes no watcher, so this method does the work that follows a write of a key.
   override setState(newState: Readonly<State<Payload>>): void {
     const current = toRaw(this.state);
     const previousParent = current.parent;
