@@ -585,7 +585,7 @@ describe('<Menu.List /> in a plain menu', () => {
       </Menu.Root>
     ));
     const trigger = screen.getByRole('button', { name: 'Actions' });
-    await waitForRendersOfOpen();
+    await screen.findByTestId('list');
     expect(trigger).toHaveAttribute('aria-controls', 'slot-list');
 
     id.value = 'second-list';
