@@ -233,11 +233,11 @@ const fieldContext = useFieldRootContext();
 const fieldsetDisabled = useFieldsetDisabled(
   () => picker.fieldElement.value ?? picker.triggerElement.value,
 );
-const disabled = computed(
+const isDisabled = computed(
   () => props.disabled || (fieldContext.disabled.value ?? false) || fieldsetDisabled.value,
 );
 
-provide(DatePickerRootContext, { ...picker, props, disabled });
+provide(DatePickerRootContext, { ...picker, props, disabled: isDisabled });
 
 const popover = useTemplateRef<DatePickerRootActions>('popover');
 
