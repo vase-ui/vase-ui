@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
+import { shallowRef } from 'vue';
 import { NumberField } from '@vase-ui/vue/number-field';
 import {
   createRenderer,
@@ -287,5 +288,23 @@ describe('<NumberField.Increment />', () => {
       await fireEvent.click(button);
       expect(input).toHaveValue('1');
     });
+  });
+
+  it('VUE-121: names no input in aria-controls while the root has no input element', async () => {
+    const shown = shallowRef(false);
+    await render(() => (
+      <NumberField.Root>
+        <NumberField.Increment data-testid="increment" />
+        {shown.value ? <NumberField.Input /> : null}
+      </NumberField.Root>
+    ));
+    const button = screen.getByTestId('increment');
+
+    expect(button).not.toHaveAttribute('aria-controls');
+
+    shown.value = true;
+    await flushMicrotasks();
+
+    expect(button).toHaveAttribute('aria-controls', screen.getByRole('textbox').id);
   });
 });

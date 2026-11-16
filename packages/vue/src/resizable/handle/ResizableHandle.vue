@@ -169,11 +169,11 @@ const isFocusable = computed(() => !isDisabled.value && pivot.value >= 0);
 // computes the style of that render. With both end attributes in it, a CSS transition for the
 // state of a handle that cannot move would start on each handle.
 const hasTabStop = computed(() => isFocusable.value || (hydrating.value && !isDisabled.value));
-const primary = computed(() =>
-  pivot.value < 0
-    ? undefined
-    : root.constraints.value[pivot.value + (props.primaryPanel === 'next' ? 1 : 0)],
+// The index in `panels` and in `constraints` of the primary panel.
+const primaryIndex = computed(() =>
+  pivot.value < 0 ? -1 : pivot.value + (props.primaryPanel === 'next' ? 1 : 0),
 );
+const primary = computed(() => root.constraints.value[primaryIndex.value]);
 
 // A panel whose size is a length has no size in percent before the first measurement. The sizes of
 // the other panels are not exact either. Until then, no handle of the root has a value.
@@ -215,7 +215,7 @@ const valueAttributes = computed(() => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The panel is in the constraints, so the layout has an entry for its id.
   const value = root.shown.value[panel.id]!;
   return {
-    'aria-controls': panel.id,
+    'aria-controls': root.panels.value[primaryIndex.value]?.referencedId.value,
     ...(isDisabled.value || hasPendingLengths.value
       ? undefined
       : {

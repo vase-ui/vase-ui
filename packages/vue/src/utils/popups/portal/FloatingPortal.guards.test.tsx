@@ -6,11 +6,13 @@ import {
   createHeldBranch,
   createRenderer,
   describeConformance,
+  flushMicrotasks,
   hydrate,
   renderOnServer,
   screen,
 } from '#test-utils';
 import FocusManagerPart from '../../../../test/fixtures/FocusManagerPart.vue';
+import OwnIdElement from '../../../../test/fixtures/OwnIdElement.vue';
 import { REASONS } from '../../../internals/reasons';
 import { createAttribute } from '../createAttribute';
 import { usePortalContext } from './FloatingPortalContext';
@@ -408,10 +410,44 @@ describe('FloatingPortal', () => {
         expect(owner).toHaveAttribute('aria-owns', 'first-portal');
 
         id.value = 'second-portal';
-        await nextTick();
+        await flushMicrotasks();
 
         expect(screen.getByTestId('portal')).toHaveAttribute('id', 'second-portal');
         expect(owner).toHaveAttribute('aria-owns', 'second-portal');
+      });
+
+      it('VUE-124: names the id that a component in the #render slot gives, and follows each change', async () => {
+        const ownId = shallowRef('first');
+        await render(
+          <div data-testid="host">
+            <FloatingPortal
+              v-slots={{
+                render: ({ props, children }: RenderSlotProps) => (
+                  <OwnIdElement {...props} tag="div" ownId={ownId}>
+                    {h(children, null, () => (
+                      <FocusManagerPart />
+                    ))}
+                  </OwnIdElement>
+                ),
+              }}
+            />
+          </div>,
+        );
+        const owner = getOwner(screen.getByTestId('host'));
+        await flushMicrotasks();
+        const steps = [owner.getAttribute('aria-owns')];
+
+        ownId.value = 'second';
+        await flushMicrotasks();
+        steps.push(owner.getAttribute('aria-owns'));
+        const element = document.getElementById('second');
+
+        ownId.value = '';
+        await flushMicrotasks();
+        steps.push(owner.getAttribute('aria-owns'));
+
+        expect(steps).toEqual(['first', 'second', null]);
+        expect(element).not.toBeNull();
       });
 
       it('has the role and names the id when the popup opens after the mount', async () => {

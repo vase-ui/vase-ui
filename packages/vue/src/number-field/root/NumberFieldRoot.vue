@@ -185,6 +185,7 @@ import { useClearFieldError, useFieldRootContext } from '../../internals/field-r
 import { useFormContext } from '../../internals/form-context';
 import { handleHiddenInputInvalid } from '../../internals/handleHiddenInputInvalid';
 import { useLabelableId } from '../../internals/labelable-provider';
+import { useReferencedId } from '../../internals/labelable-provider/useRegisteredId';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestoreAsInput } from '../../internals/useFormRestore';
@@ -306,6 +307,7 @@ function setHiddenInputElement(next: unknown) {
 }
 
 const controlId = useLabelableId({ id: () => props.id, element: inputRef });
+const inputId = useReferencedId(() => controlId.value, inputRef);
 
 const [numberValue, setValueUnwrapped] = useControlled<number | null>({
   controlled: () => props.value,
@@ -599,6 +601,7 @@ provide(NumberFieldRootContext, {
   minWithDefault,
   maxWithDefault,
   id: controlId,
+  inputId,
   form: computed(() => props.form),
   setValue,
   getStepAmount,
