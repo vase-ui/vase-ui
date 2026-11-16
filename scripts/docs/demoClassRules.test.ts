@@ -37,7 +37,7 @@ test('the class names of the Tailwind demos that have no rule are the names of t
           `The class name ${className} adds no rule to docs/demos/tailwind.css. Folders: ${[...(folders.get(className) ?? [])].join(', ')}. ${
             ported.has(className)
               ? 'Add the color to the theme when the theme of the Base UI docs has it. Else add the name to CLASS_NAMES_WITHOUT_RULE with its reason.'
-              : 'Base UI does not have this demo. Use a class name that gives a rule, with a color of the theme.'
+              : 'Base UI does not have this demo. Use a class name that gives a rule, with a color of the theme. Add only a marker, such as group, to CLASS_NAMES_WITHOUT_RULE.'
           }`,
       ),
     ...[...CLASS_NAMES_WITHOUT_RULE]
