@@ -63,8 +63,8 @@ export function useAriaAfterHydration(): <Value>(value: Value) => Value | null {
  * mount.
  *
  * A part whose first client render cannot know a value of the server HTML reads that value from
- * the element. The first client render then equals the server HTML, and Vue writes each value
- * that the render after the mount changes.
+ * the element. The first client render then gives the value of the server HTML, and Vue writes
+ * each value that the render after the mount changes.
  */
 export function useServerElement(): () => HTMLElement | null {
   const node: unknown = getCurrentInstance()?.vnode.el;
