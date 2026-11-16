@@ -19,17 +19,22 @@ function isBeforePageshow(win: Window) {
  * Chromium can restore the form state of a page after the app is mounted, before `pageshow`, with
  * no event on the input. A page from the back/forward cache keeps its script state, so the part
  * has nothing to take.
+ *
+ * `KeepAlive` takes the input out of the document, and the part then has no listener. When `load`
+ * ends while `KeepAlive` holds a part that waits, the part calls `onRestore` with no event at its
+ * next activation.
  * @param input An element of the part, such as its input. A ref that a `ref` setter writes.
- * @param onRestore Gets the `pageshow` event.
+ * @param onRestore Gets the `pageshow` event. Gets no event at an activation.
  * @returns Gives `true` from a mount or an activation before the `pageshow` event of the page until
- * the part gets that event. Gives `false` while `KeepAlive` holds the part.
+ * the part gets that event or calls `onRestore`. The value does not change while `KeepAlive` holds
+ * the part.
  */
 export function useFormRestore(
   input: Readonly<Ref<Element | null>>,
-  onRestore: (event: PageTransitionEvent) => void,
+  onRestore: (event?: PageTransitionEvent) => void,
 ): () => boolean {
-  // `KeepAlive` takes the input out of the document. The flag is a source of the `watch`, so its
-  // cleanup removes the listener of the window and ends the wait for `pageshow`.
+  // The flag is a source of the `watch`, so its cleanup removes the listener while `KeepAlive`
+  // holds the part.
   const isDeactivated = shallowRef(isInHeldBranch());
   onDeactivated(() => {
     isDeactivated.value = true;
@@ -48,17 +53,20 @@ export function useFormRestore(
       }
 
       const win = ownerWindow(element);
-      waitsForPageshow = isBeforePageshow(win);
+      if (!waitsForPageshow) {
+        waitsForPageshow = isBeforePageshow(win);
+      } else if (!isBeforePageshow(win)) {
+        // The page showed while `KeepAlive` held the part.
+        waitsForPageshow = false;
+        onRestore();
+      }
       const removeListener = addEventListener(win, 'pageshow', (event) => {
         waitsForPageshow = false;
         if (!event.persisted) {
           onRestore(event);
         }
       });
-      onCleanup(() => {
-        waitsForPageshow = false;
-        removeListener();
-      });
+      onCleanup(removeListener);
     },
     { flush: 'post' },
   );

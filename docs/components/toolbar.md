@@ -58,7 +58,7 @@ Import the component and assemble its parts:
 
 Text that a visitor types, or that the browser fills, before the page hydrates stays in `Toolbar.Input`. After the hydration, an `input` listener of `Toolbar.Input` runs with that text. When the visitor left the input before the page hydrated, the input then also gets `change`, `blur` and `focusout`.
 
-Chromium can restore the form state of a page after its app is mounted, with no event. At the `pageshow` event, an `input` listener of `Toolbar.Input` runs with a restored value. An input that does not have the focus then also gets `change`, `blur` and `focusout`.
+Chromium can restore the form state of a page after its app is mounted, with no event. At the `pageshow` event, an `input` listener of `Toolbar.Input` runs with a restored value. An input that does not have the focus then also gets `change`, `blur` and `focusout`. For an input that `KeepAlive` holds at that event, the listener runs when `KeepAlive` shows the input again.
 
 ## Examples
 
