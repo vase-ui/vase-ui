@@ -420,12 +420,24 @@ for (const tag of ['TypesSample.createHandle', 'TypesSample']) {
 
 const read = createApiReferenceReader(REPOSITORY_ROOT);
 
-for (const family of ['select', 'combobox', 'autocomplete']) {
-  test(`the exposed members of ${family} follow defineExpose`, () => {
-    const root = read(family).parts.find(({ name }) => name.endsWith('.Root'));
+const ROOT_MEMBERS = ['unmount', 'close', 'inputElement'];
+
+for (const { family, part, members } of [
+  { family: 'select', part: 'Select.Root', members: ROOT_MEMBERS },
+  { family: 'combobox', part: 'Combobox.Root', members: ROOT_MEMBERS },
+  { family: 'autocomplete', part: 'Autocomplete.Root', members: ROOT_MEMBERS },
+  {
+    family: 'resizable',
+    part: 'Resizable.Panel',
+    members: ['element', 'collapse', 'expand', 'resize', 'isCollapsed', 'getSize'],
+  },
+]) {
+  test(`the exposed members of ${part} keep the sequence of defineExpose`, () => {
     assert.deepEqual(
-      root?.exposed.map(({ name }) => name),
-      ['unmount', 'close', 'inputElement'],
+      read(family)
+        .parts.find(({ name }) => name === part)
+        ?.exposed.map(({ name }) => name),
+      members,
     );
   });
 }

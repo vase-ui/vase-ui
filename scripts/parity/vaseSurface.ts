@@ -458,7 +458,7 @@ export function createVaseProject(tsconfig: string): VaseProject {
   const expressionPropertyNames = (expression: ts.Expression): string[] => {
     if (ts.isIdentifier(expression)) {
       const declaration = typeChecker().getSymbolAtLocation(expression)?.valueDeclaration;
-      // The generated SFC stores the argument of `defineExpose` in a variable.
+      // The generated code of an SFC stores the argument of `defineExpose` in a variable.
       if (declaration && ts.isVariableDeclaration(declaration) && declaration.initializer) {
         return expressionPropertyNames(declaration.initializer);
       }
@@ -721,6 +721,9 @@ export function createVaseProject(tsconfig: string): VaseProject {
             },
           ]),
         ),
+        // vue-component-meta lists the members in the order of the checker. For an object with a
+        // spread, the checker lists the parts from the last to the first. `defineExpose` keeps the
+        // sequence of the source.
         exposed: new Map([
           ...exposedNames(file).flatMap((name): [string, MemberSurface][] => {
             const member = exposed.get(name);
