@@ -9,6 +9,8 @@ import type {
 
 const saved = useCookie<ResizableRootLayoutSnapshot | undefined>('resizable-layout');
 // The root reads its default layout one time, at the start.
+// A visitor can change the cookie. The root ignores an entry that is not a size, so the cookie
+// needs no check.
 const defaultLayout = saved.value ?? { 'c-a': 25, 'c-b': 75 };
 
 // The snapshot has the pixels of the fixed panel, so it keeps its width at the next visit.

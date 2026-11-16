@@ -1,4 +1,4 @@
-import { expect, vi, describe, it } from 'vitest';
+import { expect, vi, describe, it, onTestFinished } from 'vitest';
 import { defineComponent, KeepAlive, onMounted, shallowRef, watch } from 'vue';
 import type { HTMLAttributes } from 'vue';
 import { Collapsible } from '@vase-ui/vue/collapsible';
@@ -33,6 +33,17 @@ function fireBeforeMatch(element: Element) {
       cancelable: false,
     }),
   );
+}
+
+// A reopen sets `data-starting-style`, and a later frame removes it. The observer records it.
+function recordStartingStyle(panel: HTMLElement) {
+  let seen = false;
+  const observer = new MutationObserver(() => {
+    seen ||= panel.hasAttribute('data-starting-style');
+  });
+  observer.observe(panel, { attributes: true, attributeFilter: ['data-starting-style'] });
+  onTestFinished(() => observer.disconnect());
+  return { seen: () => seen };
 }
 
 function waitForAnimationFrame() {
@@ -510,10 +521,14 @@ describe('<Collapsible.Panel />', () => {
       await nextEndingStyle(panel, { action: () => user.click(trigger) });
       expect(panel).toHaveAttribute('data-ending-style');
 
+      const startingStyle = recordStartingStyle(panel);
       await user.click(trigger);
 
       await waitFor(() => {
         expect(panel).toHaveAttribute('data-open');
+      });
+      await waitFor(() => {
+        expect(startingStyle.seen()).toBe(true);
       });
       await waitFor(() => {
         expect(panel).not.toHaveAttribute('data-starting-style');
@@ -651,9 +666,13 @@ describe('<Collapsible.Panel />', () => {
           expect(closeAnimationStarted).toBe(true);
         });
 
+        const startingStyle = recordStartingStyle(panel);
         await fireEvent.click(trigger);
         await waitFor(() => {
           expect(panel).toHaveAttribute('data-open');
+        });
+        await waitFor(() => {
+          expect(startingStyle.seen()).toBe(true);
         });
         await waitFor(() => {
           expect(panel).not.toHaveAttribute('data-starting-style');

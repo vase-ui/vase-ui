@@ -527,18 +527,18 @@ Give the same handle from `Menu.createHandle()` to the root and to its detached 
 
 `Menu.useFilter` returns the functions `contains`, `startsWith` and `endsWith`. They compare a text with a query in the locale of the user. Use them when you filter the items yourself.
 
-<ApiReference name="Menu.useFilter" />
+<ApiReference name="Menu.useFilter" :heading-level="3" />
 
 ## createHandle
 
 Creates a handle that connects a `<Menu.Root>` with detached `<Menu.Trigger>` parts. The type argument of the function is the type of the payload.
 
-<ApiReference name="Menu.createHandle" />
+<ApiReference name="Menu.createHandle" :heading-level="3" />
 
 ### Handle
 
 `Menu.createHandle()` returns a `Menu.Handle`. Give it to the `handle` prop of the root and of each trigger outside the root.
 
-<ApiReference name="Menu.Handle" />
+<ApiReference name="Menu.Handle" :heading-level="4" />
 
 While a root is mounted, `open()` throws when the handle has no trigger with that `id`.

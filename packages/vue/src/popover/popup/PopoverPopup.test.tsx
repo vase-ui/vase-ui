@@ -400,9 +400,7 @@ describe('<Popover.Popup />', () => {
     expect(screen.queryByTestId('old')).toBe(null);
 
     await user.keyboard('[Escape]');
-    await waitFor(() => {
-      expect(screen.queryByTestId('new')).toBe(null);
-    });
+    expect(screen.queryByTestId('new')).toBe(null);
   });
 
   it('focuses the popup itself and not its field after a touch open', async () => {

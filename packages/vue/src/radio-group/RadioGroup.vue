@@ -200,45 +200,52 @@ function setCheckedValue(value: Value, eventDetails: RadioGroupChangeEventDetail
 // document. The field validates each registered input, so the group does not write
 // `validation.inputRef`. A stale input of an unmounted radio there would block the submit of the
 // form.
-const exposedInput = shallowRef<HTMLInputElement | null>(null);
 const radioInputs = new Set<HTMLInputElement>();
+// `inputElement` is `null` after the radio of the input that it gives unmounts, as in Base UI. The
+// registration of an input whose `disabled` property is `false` and a value that becomes `null` end
+// this state.
+const isExposedInputDetached = shallowRef(false);
 
-function findFirstEnabledInput() {
+// A keyed move and a change of a native `<fieldset>` run no registration, so the group reads its
+// inputs at each read. `:disabled` also matches an input in a disabled `<fieldset>`, and the browser
+// does not focus that input. The `disabled` property gives only the attribute.
+function getExposedInput() {
+  if (isExposedInputDetached.value) {
+    return null;
+  }
+
   let firstInput: HTMLInputElement | null = null;
   for (const input of radioInputs) {
-    if (!input.disabled && (!firstInput || comesBeforeInSameTree(input, firstInput))) {
+    if (input.matches(':disabled')) {
+      continue;
+    }
+    if (input.checked) {
+      return input;
+    }
+    if (!firstInput || comesBeforeInSameTree(input, firstInput)) {
       firstInput = input;
     }
   }
   return firstInput;
 }
 
-// A keyed move runs no registration, and `exposedInput` keeps the input of a radio that becomes
-// disabled. The group thus applies the rule at each read.
-function getExposedInput() {
-  const input = exposedInput.value;
-  if (input == null) {
-    return null;
-  }
-  return input.checked && !input.disabled ? input : findFirstEnabledInput();
-}
-
 function registerInputRef(input: HTMLInputElement) {
   radioInputs.add(input);
 
-  if (!input.disabled && (input.checked || exposedInput.value == null)) {
-    exposedInput.value = input;
+  // A fieldset that becomes enabled runs no registration, so an input that only a fieldset
+  // disables also ends the detach.
+  if (!input.disabled) {
+    isExposedInputDetached.value = false;
   }
-  // A `computed` that reads `inputElement` then follows each registration, also a registration
-  // that does not change `exposedInput`.
-  triggerRef(exposedInput);
+  // A `computed` that reads `inputElement` then follows each registration.
+  triggerRef(isExposedInputDetached);
 
-  // `inputElement` is `null` after the radio of the input that it gives unmounts, as in Base UI.
-  // After a keyed move or a change of `disabled`, that input can differ from `exposedInput`.
   return () => {
     const givenInput = getExposedInput();
     radioInputs.delete(input);
-    exposedInput.value = givenInput === input ? null : givenInput;
+    if (givenInput === input) {
+      isExposedInputDetached.value = true;
+    }
   };
 }
 
@@ -284,9 +291,8 @@ useValueChanged(checkedValue, () => {
     validation.change(checkedValue.value);
   }
 
-  const fallbackInput = checkedValue.value == null ? findFirstEnabledInput() : null;
-  if (fallbackInput) {
-    exposedInput.value = fallbackInput;
+  if (checkedValue.value == null) {
+    isExposedInputDetached.value = false;
   }
 });
 

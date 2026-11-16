@@ -826,9 +826,7 @@ describe('<Drawer.Root />', () => {
       });
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
       await user.click(screen.getByRole('button', { name: 'Close' }));
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
-      });
+      expect(screen.queryByTestId('popup')).toBe(null);
       expect(trigger).toHaveAttribute('aria-expanded', 'false');
     }
 
@@ -871,7 +869,7 @@ describe('<Drawer.Root />', () => {
     handle.open('trigger-2');
     await flushMicrotasks();
     await waitFor(() => {
-      expect(screen.queryByRole('dialog')).not.toBe(null);
+      expect(screen.getByRole('dialog')).not.toBe(null);
     });
 
     expect(screen.getByTestId('content').textContent).toBe('2');
@@ -883,15 +881,13 @@ describe('<Drawer.Root />', () => {
 
     handle.close();
     await flushMicrotasks();
-    await waitFor(() => {
-      expect(screen.queryByRole('dialog')).toBe(null);
-    });
+    expect(screen.queryByRole('dialog')).toBe(null);
     expect(trigger2).toHaveAttribute('aria-expanded', 'false');
 
     handle.openWithPayload(8);
     await flushMicrotasks();
     await waitFor(() => {
-      expect(screen.queryByRole('dialog')).not.toBe(null);
+      expect(screen.getByRole('dialog')).not.toBe(null);
     });
     expect(screen.getByTestId('content').textContent).toBe('8');
     expect(trigger1).toHaveAttribute('aria-expanded', 'false');

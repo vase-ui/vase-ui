@@ -386,12 +386,12 @@ To open a dialog from a menu, control the open state of the dialog with `v-model
 
 Creates a handle that connects a `Dialog.Root` with detached `Dialog.Trigger` parts. The type argument of the function is the type of the payload.
 
-<ApiReference name="Dialog.createHandle" />
+<ApiReference name="Dialog.createHandle" :heading-level="3" />
 
 ### Handle
 
 `Dialog.Handle` is the class of the handle.
 
-<ApiReference name="Dialog.Handle" />
+<ApiReference name="Dialog.Handle" :heading-level="4" />
 
 When no trigger has the `id` that `open()` gets, it opens the dialog with no trigger, and a development build shows a warning. A `computed` that reads `isOpen` follows the open state.

@@ -163,6 +163,15 @@ describe('<Resizable.Root />', () => {
 
       expect(grows('a', 'b', 'c')).toEqual(['33.334', '33.333', '33.333']);
     });
+
+    it('gives a panel whose entry is not a size the size that is left, and warns', async () => {
+      await render(<Three root={{ defaultLayout: { a: '1fr', b: 30 } }} />);
+
+      expect(grows('a', 'b', 'c')).toEqual(['35', '30', '35']);
+      expect(takeReportedMessages()).toEqual([
+        'console.warn: Vase UI: The layout gives the panel "a" the size "1fr", which is not valid. The root ignores this size, so the panel takes its `defaultSize`, or an equal share of the space that is left. Use a number of 0 or more, or a string of such a number with an optional unit: "%", "px", "em", "rem", "vh" or "vw".',
+      ]);
+    });
   });
 
   describe('prop: layout', () => {
@@ -3119,10 +3128,11 @@ describe('<Resizable.Root />', () => {
       await findEdges();
     });
 
+    // Vitest makes this table one time for all runs of its cases, and a vnode is for one mount.
     it.each([
       {
         name: 'a disabled handle between the panels',
-        content: [
+        content: () => [
           <Resizable.Panel key="a" id="a" />,
           <Resizable.Handle key="h" disabled />,
           <Resizable.Panel key="b" id="b" />,
@@ -3134,14 +3144,20 @@ describe('<Resizable.Root />', () => {
       },
       {
         name: 'each panel before the boundary disabled',
-        content: [<Resizable.Panel key="a" id="a" disabled />, <Resizable.Panel key="b" id="b" />],
+        content: () => [
+          <Resizable.Panel key="a" id="a" disabled />,
+          <Resizable.Panel key="b" id="b" />,
+        ],
       },
       {
         name: 'each panel after the boundary disabled',
-        content: [<Resizable.Panel key="a" id="a" />, <Resizable.Panel key="b" id="b" disabled />],
+        content: () => [
+          <Resizable.Panel key="a" id="a" />,
+          <Resizable.Panel key="b" id="b" disabled />,
+        ],
       },
     ])('renders no node for $name', async ({ root, content }) => {
-      await renderEdges(root, content);
+      await renderEdges(root, content?.());
 
       await expectNoEdge();
     });

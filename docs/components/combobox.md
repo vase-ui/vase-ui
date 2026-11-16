@@ -409,16 +409,16 @@ Matches items against a query using `Intl.Collator` for robust string matching. 
 
 With no `locale`, the filter uses `en-US` until the component mounts. The server and the first client render then give the same list.
 
-<ApiReference name="Combobox.useFilter" />
+<ApiReference name="Combobox.useFilter" :heading-level="3" />
 
 ## useFilteredItems
 
 Returns the items that the filter of `Combobox.Root` keeps. Call it inside `Combobox.Root`. It returns a `ComputedRef`: read `.value` in a script, and treat the list as read-only.
 
-<ApiReference name="Combobox.useFilteredItems" />
+<ApiReference name="Combobox.useFilteredItems" :heading-level="3" />
 
 ## createItems
 
 Normalizes items into a collection for the `items` prop of `Combobox.Root`. It derives the selection value and the label of each item before the list renders them.
 
-<ApiReference name="Combobox.createItems" />
+<ApiReference name="Combobox.createItems" :heading-level="3" />

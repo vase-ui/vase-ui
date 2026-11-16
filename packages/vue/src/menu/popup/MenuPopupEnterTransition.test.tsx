@@ -153,7 +153,7 @@ describe.skipIf(isJSDOM)('Menu enter transition', () => {
     );
 
     await waitFor(() => {
-      expect(screen.queryByTestId('submenu-popup')).not.toBe(null);
+      expect(screen.getByTestId('submenu-popup')).not.toBe(null);
     });
     await waitFor(() => {
       expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
@@ -193,7 +193,7 @@ describe.skipIf(isJSDOM)('Menu enter transition', () => {
     await user.click(screen.getByRole('menuitem', { name: 'Submenu' }));
 
     await waitFor(() => {
-      expect(screen.queryByTestId('submenu-popup')).not.toBe(null);
+      expect(screen.getByTestId('submenu-popup')).not.toBe(null);
     });
     await waitFor(() => {
       expect(submenuTracker.seen()).toBe(true);
@@ -210,7 +210,7 @@ describe.skipIf(isJSDOM)('Menu enter transition', () => {
     await user.click(screen.getByRole('button', { name: 'Trigger' }));
 
     await waitFor(() => {
-      expect(screen.queryByTestId('submenu-popup')).not.toBe(null);
+      expect(screen.getByTestId('submenu-popup')).not.toBe(null);
     });
     await waitFor(() => {
       expect(submenuTracker.seen()).toBe(true);
@@ -227,7 +227,7 @@ describe.skipIf(isJSDOM)('Menu enter transition', () => {
     await user.click(screen.getByRole('button', { name: 'Trigger' }));
 
     await waitFor(() => {
-      expect(screen.queryByTestId('submenu-popup')).not.toBe(null);
+      expect(screen.getByTestId('submenu-popup')).not.toBe(null);
     });
     await waitFor(() => {
       expect(submenuTracker.seen()).toBe(true);
@@ -270,7 +270,7 @@ describe.skipIf(isJSDOM)('Menu enter transition', () => {
     await openWithEnter(user);
 
     await waitFor(() => {
-      expect(screen.queryByTestId('submenu-popup')).not.toBe(null);
+      expect(screen.getByTestId('submenu-popup')).not.toBe(null);
     });
     await waitFor(() => {
       expect(submenuTracker.seen()).toBe(true);
@@ -289,7 +289,7 @@ describe.skipIf(isJSDOM)('Menu enter transition', () => {
     await openWithEnter(user);
 
     await waitFor(() => {
-      expect(screen.queryByTestId('submenu-popup')).not.toBe(null);
+      expect(screen.getByTestId('submenu-popup')).not.toBe(null);
     });
     expect(screen.getByTestId('menu-popup')).toHaveAttribute('data-instant', 'click');
     // The submenu carries the inherited value during its enter frames only: it is cleared once
@@ -306,25 +306,29 @@ describe.skipIf(isJSDOM)('Menu enter transition', () => {
     // The inherited `instantType` must not outlive the initial reveal: controlled `open` flips
     // bypass `setOpen`, so a value that stuck around would render `[data-instant]` on every
     // subsequent open and suppress transitions that should play.
+    const submenuInstantTracker = trackSelector(
+      '[data-testid="submenu-popup"][data-instant="click"]',
+    );
     const { user, setProps } = await render(() => <App submenuOpen />);
 
     await openWithEnter(user);
 
     await waitFor(() => {
-      expect(screen.queryByTestId('submenu-popup')).not.toBe(null);
+      expect(screen.getByTestId('submenu-popup')).not.toBe(null);
+    });
+    await waitFor(() => {
+      expect(submenuInstantTracker.seen()).toBe(true);
     });
     await waitFor(() => {
       expect(screen.getByTestId('submenu-popup')).not.toHaveAttribute('data-instant');
     });
 
     await setProps({ submenuOpen: false });
-    await waitFor(() => {
-      expect(screen.queryByTestId('submenu-popup')).toBe(null);
-    });
+    expect(screen.queryByTestId('submenu-popup')).toBe(null);
 
     await setProps({ submenuOpen: true });
     await waitFor(() => {
-      expect(screen.queryByTestId('submenu-popup')).not.toBe(null);
+      expect(screen.getByTestId('submenu-popup')).not.toBe(null);
     });
     expect(screen.getByTestId('submenu-popup')).not.toHaveAttribute('data-instant');
   });
@@ -348,18 +352,20 @@ describe.skipIf(isJSDOM)('Menu enter transition', () => {
     await openWithEnter(user);
 
     await waitFor(() => {
-      expect(screen.queryByTestId('submenu-popup')).not.toBe(null);
+      expect(screen.getByTestId('submenu-popup')).not.toBe(null);
     });
+    const submenuPopup = screen.getByTestId('submenu-popup');
 
     // Close before the 300ms enter transition finishes, then reopen.
     await setProps({ submenuOpen: false });
     await waitFor(() => {
-      expect(screen.queryByTestId('submenu-popup')).toBe(null);
+      expect(submenuPopup).not.toBeInTheDocument();
     });
+    expect(screen.queryByTestId('submenu-popup')).toBe(null);
 
     await setProps({ submenuOpen: true });
     await waitFor(() => {
-      expect(screen.queryByTestId('submenu-popup')).not.toBe(null);
+      expect(screen.getByTestId('submenu-popup')).not.toBe(null);
     });
     expect(screen.getByTestId('submenu-popup')).not.toHaveAttribute('data-instant');
   });
@@ -382,7 +388,7 @@ describe.skipIf(isJSDOM)('Menu enter transition', () => {
 
     await setProps({ showPopup: true });
     await waitFor(() => {
-      expect(screen.queryByTestId('submenu-popup')).not.toBe(null);
+      expect(screen.getByTestId('submenu-popup')).not.toBe(null);
     });
     expect(screen.getByTestId('submenu-popup')).not.toHaveAttribute('data-instant');
   });
@@ -398,14 +404,14 @@ describe.skipIf(isJSDOM)('Menu enter transition', () => {
     await openWithEnter(user);
 
     await waitFor(() => {
-      expect(screen.queryByTestId('menu-popup')).not.toBe(null);
+      expect(screen.getByTestId('menu-popup')).not.toBe(null);
     });
     expect(screen.getByTestId('menu-popup')).toHaveAttribute('data-instant', 'click');
 
     await setProps({ submenuOpen: true });
 
     await waitFor(() => {
-      expect(screen.queryByTestId('submenu-popup')).not.toBe(null);
+      expect(screen.getByTestId('submenu-popup')).not.toBe(null);
     });
     expect(screen.getByTestId('submenu-popup')).not.toHaveAttribute('data-instant');
   });

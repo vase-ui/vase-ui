@@ -713,7 +713,7 @@ describe('usePopupRoot', () => {
       const open = shallowRef(false);
       const follow = shallowRef(true);
       const updates: boolean[] = [];
-      const { getByText, queryByRole } = await render(() => (
+      const { getByRole, getByText, queryByRole } = await render(() => (
         <PopupRootPart
           open={open.value}
           {...{
@@ -737,17 +737,19 @@ describe('usePopupRoot', () => {
       await fireEvent.click(getByText('trigger'));
       expect(updates).toEqual([true, false]);
       expect(queryByRole('dialog')).not.toBe(null);
+      const dialog = getByRole('dialog');
 
       open.value = false;
       await waitFor(() => {
-        expect(queryByRole('dialog')).toBe(null);
+        expect(dialog).not.toBeInTheDocument();
       });
+      expect(queryByRole('dialog')).toBe(null);
     });
 
     it('forgets the trigger of a controlled popup that the open prop closed', async () => {
       const open = shallowRef(false);
       const root = createRootRef();
-      const { getByText, queryByRole } = await render(() => (
+      const { getByRole, getByText, queryByRole } = await render(() => (
         <PopupRootPart
           ref={root.ref}
           open={open.value}
@@ -758,12 +760,14 @@ describe('usePopupRoot', () => {
       ));
       await fireEvent.click(getByText('trigger'));
       expect(root.current.store.state.activeTriggerId).toBe('trigger');
+      const dialog = getByRole('dialog');
 
       // A close through the prop makes no request, so the request of the press is still in the store.
       open.value = false;
       await waitFor(() => {
-        expect(queryByRole('dialog')).toBe(null);
+        expect(dialog).not.toBeInTheDocument();
       });
+      expect(queryByRole('dialog')).toBe(null);
 
       expect(root.current.store.state.activeTriggerId).toBe(null);
     });
@@ -853,7 +857,7 @@ describe('usePopupRoot', () => {
     it('closes with the reason imperative-action from its close action', async () => {
       const reasons: string[] = [];
       const root = createRootRef();
-      const { queryByRole } = await render(() => (
+      const { getByRole, queryByRole } = await render(() => (
         <PopupRootPart
           ref={root.ref}
           defaultOpen
@@ -863,12 +867,14 @@ describe('usePopupRoot', () => {
         </PopupRootPart>
       ));
       expect(queryByRole('dialog')).not.toBe(null);
+      const dialog = getByRole('dialog');
 
       root.current.close();
 
       await waitFor(() => {
-        expect(queryByRole('dialog')).toBe(null);
+        expect(dialog).not.toBeInTheDocument();
       });
+      expect(queryByRole('dialog')).toBe(null);
       expect(reasons).toEqual(['imperative-action']);
     });
 
@@ -969,7 +975,7 @@ describe('usePopupRoot', () => {
       async ({ calls }) => {
         const completions: boolean[] = [];
         const root = createRootRef();
-        const { queryByRole } = await render(() => (
+        const { getByRole, queryByRole } = await render(() => (
           <PopupRootPart
             ref={root.ref}
             defaultOpen
@@ -984,13 +990,15 @@ describe('usePopupRoot', () => {
           </PopupRootPart>
         ));
         expect(queryByRole('dialog')).not.toBe(null);
+        const dialog = getByRole('dialog');
 
         for (const call of calls) {
           root.current[call]();
         }
         await waitFor(() => {
-          expect(queryByRole('dialog')).toBe(null);
+          expect(dialog).not.toBeInTheDocument();
         });
+        expect(queryByRole('dialog')).toBe(null);
 
         expect(completions.filter((open) => !open)).toHaveLength(1);
       },
@@ -1005,7 +1013,7 @@ describe('usePopupRoot', () => {
         const open = shallowRef(true);
         const completions: boolean[] = [];
         const root = createRootRef();
-        const { queryByRole } = await render(() => (
+        const { getByRole, queryByRole } = await render(() => (
           <PopupRootPart
             ref={root.ref}
             open={open.value}
@@ -1021,13 +1029,15 @@ describe('usePopupRoot', () => {
           </PopupRootPart>
         ));
         expect(queryByRole('dialog')).not.toBe(null);
+        const dialog = getByRole('dialog');
 
         for (const call of calls) {
           root.current[call]();
         }
         await waitFor(() => {
-          expect(queryByRole('dialog')).toBe(null);
+          expect(dialog).not.toBeInTheDocument();
         });
+        expect(queryByRole('dialog')).toBe(null);
 
         expect(completions.filter((nextOpen) => !nextOpen)).toHaveLength(1);
       },
@@ -1235,7 +1245,7 @@ describe('usePopupRoot', () => {
     it('closes with the reason none when the active trigger unmounts while the popup is open', async () => {
       const showTrigger = shallowRef(true);
       const changes: unknown[] = [];
-      const { getByText, queryByRole } = await render(() => (
+      const { getByRole, getByText, queryByRole } = await render(() => (
         <PopupRootPart onOpenChange={(open, details) => changes.push([open, details.reason])}>
           {showTrigger.value ? <PopupTriggerPart id="a">a</PopupTriggerPart> : null}
           <PopupPart>popup</PopupPart>
@@ -1243,12 +1253,14 @@ describe('usePopupRoot', () => {
       ));
       await fireEvent.click(getByText('a'));
       expect(queryByRole('dialog')).not.toBe(null);
+      const dialog = getByRole('dialog');
 
       showTrigger.value = false;
 
       await waitFor(() => {
-        expect(queryByRole('dialog')).toBe(null);
+        expect(dialog).not.toBeInTheDocument();
       });
+      expect(queryByRole('dialog')).toBe(null);
       expect(changes).toEqual([
         [true, 'trigger-press'],
         [false, 'none'],
@@ -1758,7 +1770,7 @@ describe('usePopupRoot', () => {
         name: 'Branch',
         setup: () => () => <PopupTriggerPart id="trigger">trigger</PopupTriggerPart>,
       });
-      const { getByText, queryByRole } = await render(() => (
+      const { getByRole, getByText, queryByRole } = await render(() => (
         <PopupRootPart onOpenChange={(open, details) => changes.push([open, details.reason])}>
           <KeepAlive>{show.value ? <Branch key="branch" /> : <Other key="other" />}</KeepAlive>
           <PopupPart>popup</PopupPart>
@@ -1766,12 +1778,14 @@ describe('usePopupRoot', () => {
       ));
       await fireEvent.click(getByText('trigger'));
       expect(queryByRole('dialog')).not.toBe(null);
+      const dialog = getByRole('dialog');
 
       show.value = false;
 
       await waitFor(() => {
-        expect(queryByRole('dialog')).toBe(null);
+        expect(dialog).not.toBeInTheDocument();
       });
+      expect(queryByRole('dialog')).toBe(null);
       expect(changes).toEqual([
         [true, 'trigger-press'],
         [false, 'none'],
@@ -2181,7 +2195,7 @@ describe('useSingleAnchorPopupRoot', () => {
     const open = shallowRef(false);
     const changes: boolean[] = [];
     const root = createRootRef<SingleAnchorRootInstance>();
-    const { getByText, queryByRole } = await render(() => (
+    const { getByRole, getByText, queryByRole } = await render(() => (
       <SingleAnchorRoot
         ref={root.ref}
         open={open.value}
@@ -2194,11 +2208,13 @@ describe('useSingleAnchorPopupRoot', () => {
     expect(queryByRole('dialog')).not.toBe(null);
     // A controlled root holds the last request in `state.open`.
     expect(root.current.store.state.open).toBe(true);
+    const dialog = getByRole('dialog');
 
     open.value = false;
     await waitFor(() => {
-      expect(queryByRole('dialog')).toBe(null);
+      expect(dialog).not.toBeInTheDocument();
     });
+    expect(queryByRole('dialog')).toBe(null);
 
     expect(root.current.store.state.open).toBe(false);
     // The popup is closed, so a close request has nothing to close.
@@ -2229,7 +2245,7 @@ describe('useSingleAnchorPopupRoot', () => {
   it('closes with the reason imperative-action from its close action', async () => {
     const reasons: string[] = [];
     const root = createRootRef<SingleAnchorRootInstance>();
-    const { queryByRole } = await render(() => (
+    const { getByRole, queryByRole } = await render(() => (
       <SingleAnchorRoot
         ref={root.ref}
         defaultOpen
@@ -2237,12 +2253,14 @@ describe('useSingleAnchorPopupRoot', () => {
       />
     ));
     expect(queryByRole('dialog')).not.toBe(null);
+    const dialog = getByRole('dialog');
 
     root.current.close();
 
     await waitFor(() => {
-      expect(queryByRole('dialog')).toBe(null);
+      expect(dialog).not.toBeInTheDocument();
     });
+    expect(queryByRole('dialog')).toBe(null);
     expect(reasons).toEqual(['imperative-action']);
   });
 

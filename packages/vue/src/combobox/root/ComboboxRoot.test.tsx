@@ -679,7 +679,7 @@ describe('<Combobox.Root />', () => {
       await user.click(screen.getByRole('combobox'));
       await screen.findByRole('listbox');
       await user.keyboard('{Escape}');
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(onOpenChangeComplete.mock.calls.filter(([open]) => !open)).toHaveLength(1);
 
       // Calling the action after the automatic unmount must not repeat the completion.
@@ -715,7 +715,7 @@ describe('<Combobox.Root />', () => {
       await setProps({ open: true });
       await screen.findByRole('listbox');
       await setProps({ open: false });
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(onOpenChangeComplete.mock.calls.filter(([open]) => !open)).toHaveLength(2);
     });
 
@@ -738,7 +738,7 @@ describe('<Combobox.Root />', () => {
       expect(onOpenChangeComplete).not.toHaveBeenCalledWith(false);
       await setProps({ open: true });
       await setProps({ open: false });
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(onOpenChangeComplete.mock.calls.filter(([open]) => !open)).toHaveLength(1);
     });
 
@@ -761,7 +761,7 @@ describe('<Combobox.Root />', () => {
       expect(screen.queryByRole('listbox')).not.toBe(null);
       cancel = false;
       await user.click(screen.getByRole('option'));
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
     });
 
     it('keeps the opt-out when a controlled close is applied in a transition', async () => {
@@ -880,7 +880,7 @@ describe('<Combobox.Root />', () => {
       expect(screen.queryByRole('listbox')).not.toBe(null);
 
       await user.keyboard('{Escape}');
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
     });
 
@@ -925,7 +925,7 @@ describe('<Combobox.Root />', () => {
 
       optOut = false;
       await user.click(screen.getByRole('option'));
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(onOpenChangeComplete.mock.calls.filter(([open]) => !open)).toHaveLength(2);
     });
 
@@ -1032,7 +1032,7 @@ describe('<Combobox.Root />', () => {
       await user.type(input, 'ban');
       await user.keyboard('{ArrowDown}{Enter}');
 
-      await waitFor(() => expect(screen.queryByRole('dialog')).toBe(null));
+      expect(screen.queryByRole('dialog')).toBe(null);
       expect(trigger).toHaveFocus();
       expect(trigger).toHaveTextContent('Banana');
 
@@ -1084,7 +1084,7 @@ describe('<Combobox.Root />', () => {
       await user.type(input, 'ban');
       await user.keyboard('{Escape}');
 
-      await waitFor(() => expect(screen.queryByRole('dialog')).toBe(null));
+      expect(screen.queryByRole('dialog')).toBe(null);
       expect(trigger).toHaveFocus();
       expect(trigger).toHaveTextContent('Apple');
       expect(onValueChange).not.toHaveBeenCalled();
@@ -1321,9 +1321,7 @@ describe('<Combobox.Root />', () => {
 
     await user.click(screen.getByTestId('pad'));
 
-    await waitFor(() => {
-      expect(screen.queryByRole('listbox')).toBe(null);
-    });
+    expect(screen.queryByRole('listbox')).toBe(null);
   });
 
   it('does not dismiss when pressing content inside a nested popover', async () => {
@@ -1450,7 +1448,7 @@ describe('<Combobox.Root />', () => {
     await user.click(screen.getByTestId('input'));
 
     await waitFor(() => {
-      expect(screen.queryByRole('listbox')).not.toBe(null);
+      expect(screen.getByRole('listbox')).not.toBe(null);
     });
 
     const outside = screen.getByTestId('outside');
@@ -1532,9 +1530,7 @@ describe('<Combobox.Root />', () => {
 
     await user.click(endDismissButton);
 
-    await waitFor(() => {
-      expect(screen.queryByRole('listbox')).toBe(null);
-    });
+    expect(screen.queryByRole('listbox')).toBe(null);
   });
 
   it('renders an internal dismiss button for the input-outside-popup pattern', async () => {
@@ -1574,9 +1570,7 @@ describe('<Combobox.Root />', () => {
 
     await user.click(startDismissButton);
 
-    await waitFor(() => {
-      expect(screen.queryByRole('listbox')).toBe(null);
-    });
+    expect(screen.queryByRole('listbox')).toBe(null);
   });
 
   describe('events', () => {
@@ -3373,9 +3367,7 @@ describe('<Combobox.Root />', () => {
         onOpenChange.mockClear();
         await user.click(screen.getByRole('option', { name: 'apple' }));
 
-        await waitFor(() => {
-          expect(screen.queryByRole('listbox')).toBe(null);
-        });
+        expect(screen.queryByRole('listbox')).toBe(null);
 
         expect(onOpenChange.mock.calls.length).toBe(1);
         expect(onOpenChange.mock.lastCall?.[0]).toBe(false);
@@ -3418,9 +3410,7 @@ describe('<Combobox.Root />', () => {
         onOpenChange.mockClear();
         await user.keyboard('{Enter}');
 
-        await waitFor(() => {
-          expect(screen.queryByRole('listbox')).toBe(null);
-        });
+        expect(screen.queryByRole('listbox')).toBe(null);
 
         expect(onOpenChange.mock.calls.length).toBe(1);
         expect(onOpenChange.mock.lastCall?.[0]).toBe(false);
@@ -3464,9 +3454,7 @@ describe('<Combobox.Root />', () => {
         const appleOption = await screen.findByText('apple');
         await user.click(appleOption);
 
-        await waitFor(() => {
-          expect(screen.queryByRole('listbox')).toBe(null);
-        });
+        expect(screen.queryByRole('listbox')).toBe(null);
         expect(input).toHaveAttribute('aria-expanded', 'false');
       });
 
@@ -3480,7 +3468,7 @@ describe('<Combobox.Root />', () => {
         });
 
         await user.click(screen.getByRole('option', { name: 'Cherry' }));
-        await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+        expect(screen.queryByRole('listbox')).toBe(null);
 
         await user.click(input);
         await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
@@ -3792,9 +3780,7 @@ describe('<Combobox.Root />', () => {
           await user.click(input);
           await user.click(screen.getByRole('button', { name: 'Change value' }));
 
-          await waitFor(() => {
-            expect(input).not.toHaveAttribute('aria-activedescendant');
-          });
+          expect(input).not.toHaveAttribute('aria-activedescendant');
           expect(screen.getByRole('option', { name: 'cherry' })).not.toHaveAttribute(
             'data-highlighted',
           );
@@ -3890,9 +3876,7 @@ describe('<Combobox.Root />', () => {
           await user.click(input);
           await user.keyboard('b');
 
-          await waitFor(() => {
-            expect(screen.queryByRole('option', { name: 'cherry' })).toBe(null);
-          });
+          expect(screen.queryByRole('option', { name: 'cherry' })).toBe(null);
 
           // Typing without `autoHighlight` clears the highlight; it must not be re-derived from
           // a stale unfiltered index onto a different item.
@@ -4082,9 +4066,7 @@ describe('<Combobox.Root />', () => {
 
           const input = screen.getByTestId('input');
           const b1 = await screen.findByRole('option', { name: 'b1' });
-          await waitFor(() => {
-            expect(screen.queryByRole('option', { name: 'sel' })).toBe(null);
-          });
+          expect(screen.queryByRole('option', { name: 'sel' })).toBe(null);
 
           expect(b1).not.toHaveAttribute('data-highlighted');
           expect(input).not.toHaveAttribute('aria-activedescendant');
@@ -4166,9 +4148,7 @@ describe('<Combobox.Root />', () => {
           });
 
           await user.unhover(apple);
-          await waitFor(() => {
-            expect(apple).not.toHaveAttribute('data-highlighted');
-          });
+          expect(apple).not.toHaveAttribute('data-highlighted');
 
           scrollIntoView.mockClear();
           await setProps({ items: ['apple', 'banana', 'cherry'] });
@@ -4253,9 +4233,7 @@ describe('<Combobox.Root />', () => {
 
           // Move the highlight away from the selected item by filtering.
           await user.type(input, 'cherry');
-          await waitFor(() => {
-            expect(screen.queryByRole('option', { name: 'banana' })).toBe(null);
-          });
+          expect(screen.queryByRole('option', { name: 'banana' })).toBe(null);
 
           scrollIntoView.mockClear();
 
@@ -4406,7 +4384,7 @@ describe('<Combobox.Root />', () => {
 
         const input = screen.getByTestId('input');
         await user.type(input, 'cherry');
-        await waitFor(() => expect(screen.queryByRole('option', { name: 'banana' })).toBe(null));
+        expect(screen.queryByRole('option', { name: 'banana' })).toBe(null);
 
         await user.clear(input);
 
@@ -4795,9 +4773,7 @@ describe('<Combobox.Root />', () => {
         });
 
         await user.keyboard('{Escape}');
-        await waitFor(() => {
-          expect(screen.queryByRole('listbox')).toBe(null);
-        });
+        expect(screen.queryByRole('listbox')).toBe(null);
 
         await user.click(screen.getByTestId('external-clear'));
         await waitFor(() => {
@@ -4861,9 +4837,7 @@ describe('<Combobox.Root />', () => {
         });
 
         await user.keyboard('{Escape}');
-        await waitFor(() => {
-          expect(screen.queryByRole('listbox')).toBe(null);
-        });
+        expect(screen.queryByRole('listbox')).toBe(null);
 
         await user.click(screen.getByTestId('external-set'));
         await waitFor(() => {
@@ -4966,9 +4940,7 @@ describe('<Combobox.Root />', () => {
         expect(screen.getByRole('listbox')).not.toBe(null);
 
         await user.keyboard('{Escape}');
-        await waitFor(() => {
-          expect(screen.queryByRole('listbox')).toBe(null);
-        });
+        expect(screen.queryByRole('listbox')).toBe(null);
         // Closing reconciles the index to the new selection (cherry).
         expect(screen.getByTestId('selected-index').textContent).toBe('2');
 
@@ -5046,9 +5018,7 @@ describe('<Combobox.Root />', () => {
         });
 
         await user.keyboard('{Escape}');
-        await waitFor(() => {
-          expect(screen.queryByRole('listbox')).toBe(null);
-        });
+        expect(screen.queryByRole('listbox')).toBe(null);
 
         // Rerender while closed so the value object is recreated with the same id.
         await fireEvent.click(screen.getByTestId('force'));
@@ -5278,9 +5248,7 @@ describe('<Combobox.Root />', () => {
         });
 
         await user.type(input, 'banana');
-        await waitFor(() => {
-          expect(screen.queryByRole('option', { name: 'apple' })).toBe(null);
-        });
+        expect(screen.queryByRole('option', { name: 'apple' })).toBe(null);
 
         await user.click(screen.getByRole('option', { name: 'banana' }));
         await waitFor(() => {
@@ -5357,9 +5325,7 @@ describe('<Combobox.Root />', () => {
         });
 
         await user.type(input, 'cherry');
-        await waitFor(() => {
-          expect(screen.queryByRole('option', { name: 'apple' })).toBe(null);
-        });
+        expect(screen.queryByRole('option', { name: 'apple' })).toBe(null);
 
         await user.keyboard('{ArrowDown}');
         await waitFor(() => {
@@ -5466,9 +5432,7 @@ describe('<Combobox.Root />', () => {
         });
 
         await user.type(input, 'banana');
-        await waitFor(() => {
-          expect(screen.queryByRole('option', { name: 'apple' })).toBe(null);
-        });
+        expect(screen.queryByRole('option', { name: 'apple' })).toBe(null);
 
         await user.click(screen.getByRole('option', { name: 'banana' }));
         await waitFor(() => {
@@ -5497,9 +5461,7 @@ describe('<Combobox.Root />', () => {
         });
 
         await user.type(input, 'banana');
-        await waitFor(() => {
-          expect(screen.queryByRole('option', { name: 'apple' })).toBe(null);
-        });
+        expect(screen.queryByRole('option', { name: 'apple' })).toBe(null);
 
         onItemHighlighted.mockClear();
         await user.clear(input);
@@ -5630,14 +5592,10 @@ describe('<Combobox.Root />', () => {
           return screen.findByTestId('input');
         });
         await user.type(input, 'cherry');
-        await waitFor(() => {
-          expect(screen.queryByRole('option', { name: 'banana' })).toBe(null);
-        });
+        expect(screen.queryByRole('option', { name: 'banana' })).toBe(null);
 
         await user.keyboard('{Escape}');
-        await waitFor(() => {
-          expect(screen.queryByRole('listbox')).toBe(null);
-        });
+        expect(screen.queryByRole('listbox')).toBe(null);
 
         onItemHighlighted.mockClear();
         await user.click(screen.getByTestId('trigger'));
@@ -5677,9 +5635,7 @@ describe('<Combobox.Root />', () => {
             return screen.findByTestId('input');
           });
           await user.type(input, 'item 0');
-          await waitFor(() => {
-            expect(screen.queryByRole('option', { name: 'item 80' })).toBe(null);
-          });
+          expect(screen.queryByRole('option', { name: 'item 80' })).toBe(null);
 
           scrollIntoView.mockClear();
           await user.clear(input);
@@ -5727,7 +5683,7 @@ describe('<Combobox.Root />', () => {
         const input = screen.getByTestId('input');
         await user.click(input);
         await user.type(input, 'banana');
-        await waitFor(() => expect(screen.queryByRole('option', { name: 'apple' })).toBe(null));
+        expect(screen.queryByRole('option', { name: 'apple' })).toBe(null);
 
         // Opening already highlights the first selected item in this layout, so clearing
         // the query returns to the same anchor.
@@ -5849,9 +5805,7 @@ describe('<Combobox.Root />', () => {
         await waitFor(() => {
           expect(screen.getByTestId('selected-index').textContent).toBe('2');
         });
-        await waitFor(() => {
-          expect(screen.queryByRole('listbox')).toBe(null);
-        });
+        expect(screen.queryByRole('listbox')).toBe(null);
 
         await user.click(input);
         expect(await screen.findByRole('listbox')).not.toBe(null);
@@ -5908,9 +5862,7 @@ describe('<Combobox.Root />', () => {
         });
 
         await user.keyboard('{Escape}');
-        await waitFor(() => {
-          expect(screen.queryByRole('listbox')).toBe(null);
-        });
+        expect(screen.queryByRole('listbox')).toBe(null);
 
         await user.click(screen.getByTestId('external-clear'));
         await waitFor(() => {
@@ -6069,9 +6021,7 @@ describe('<Combobox.Root />', () => {
 
       await user.keyboard('{Escape}');
 
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
 
       await user.keyboard('{ArrowUp}');
 
@@ -7603,9 +7553,7 @@ describe('<Combobox.Root />', () => {
       expect(await screen.findByRole('listbox')).toHaveAttribute('aria-readonly', 'true');
 
       await user.keyboard('{Escape}');
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
 
       await user.click(screen.getByTestId('trigger'));
       expect(await screen.findByRole('listbox')).not.toBe(null);
@@ -8542,7 +8490,7 @@ describe('<Combobox.Root />', () => {
 
       await user.click(input);
       await user.keyboard('{Backspace}');
-      await waitFor(() => expect(screen.queryAllByRole('option')).toHaveLength(1));
+      await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(1));
 
       const popup = screen.getByTestId('popup');
       await nextEvent(popup, 'animationstart', { action: () => user.keyboard('{Escape}') });
@@ -8554,7 +8502,7 @@ describe('<Combobox.Root />', () => {
       await flushMicrotasks();
 
       expect(input).toHaveValue('apple');
-      await waitFor(() => expect(screen.queryAllByRole('option')).toHaveLength(1));
+      await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(1));
     });
 
     it('does not re-emit a clear when closing again without typing (multiple, input outside popup)', async () => {
@@ -8767,7 +8715,7 @@ describe('<Combobox.Root />', () => {
 
       const input = screen.getByTestId('input');
       await user.type(input, 'ap');
-      await waitFor(() => expect(screen.queryAllByRole('option')).toHaveLength(2));
+      await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(2));
 
       // The close request clears the input and freezes the query for the exit animation,
       // but the consumer keeps the popup open, so the frozen query must stop filtering.
@@ -8775,7 +8723,7 @@ describe('<Combobox.Root />', () => {
       await flushMicrotasks();
 
       expect(input).toHaveValue('');
-      await waitFor(() => expect(screen.queryAllByRole('option')).toHaveLength(3));
+      await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(3));
     });
 
     it('opens blank when the input only mirrors the selection (single, input inside popup)', async () => {
@@ -8831,7 +8779,7 @@ describe('<Combobox.Root />', () => {
       await waitFor(() => expect(input).toHaveFocus());
 
       await user.type(input, 'ap');
-      await waitFor(() => expect(screen.queryAllByRole('option')).toHaveLength(2));
+      await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(2));
 
       const apple = screen.getByRole('option', { name: 'apple' });
       const popup = screen.getByTestId('popup');
@@ -8844,7 +8792,7 @@ describe('<Combobox.Root />', () => {
 
       const inputAfter = await screen.findByTestId('input');
       await waitFor(() => expect(inputAfter).toHaveValue(''));
-      await waitFor(() => expect(screen.queryAllByRole('option')).toHaveLength(3));
+      await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(3));
     });
 
     it('keeps an input value set in the same batch as a controlled reopen (input inside popup)', async () => {
@@ -8912,7 +8860,7 @@ describe('<Combobox.Root />', () => {
       await waitFor(() => expect(input).toHaveFocus());
 
       await user.type(input, 'ap');
-      await waitFor(() => expect(screen.queryAllByRole('option')).toHaveLength(2));
+      await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(2));
 
       const popup = screen.getByTestId('popup');
       await nextEvent(popup, 'animationstart', { action: () => user.keyboard('{Escape}') });
@@ -9628,7 +9576,7 @@ describe('<Combobox.Root />', () => {
 
       await user.keyboard('{Escape}');
 
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(input).toHaveValue('');
     });
 
@@ -9787,7 +9735,7 @@ describe('<Combobox.Root />', () => {
       // The cleanup clear that runs after the popup closes doesn't carry `isItemPress`, so the
       // recipe doesn't cancel it and the next open starts with a fresh filter.
       await user.keyboard('{Escape}');
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
 
       await user.click(trigger);
 
@@ -10060,7 +10008,7 @@ describe('<Combobox.Root />', () => {
       await user.click(screen.getByRole('option', { name: 'apple' }));
 
       await waitFor(() => {
-        expect(screen.queryByRole('listbox')).not.toBe(null);
+        expect(screen.getByRole('listbox')).not.toBe(null);
       });
       expect(input).toHaveValue('');
     });
@@ -10109,7 +10057,7 @@ describe('<Combobox.Root />', () => {
       );
 
       await user.keyboard('{Escape}');
-      await waitFor(() => expect(screen.queryByRole('dialog')).toBe(null));
+      expect(screen.queryByRole('dialog')).toBe(null);
       expect(trigger).toHaveFocus();
 
       await user.click(trigger);
@@ -10187,8 +10135,9 @@ describe('<Combobox.Root />', () => {
         }
         await Promise.all(animations.map((animation) => animation.finished));
         await waitFor(() => {
-          expect(screen.queryByTestId('popup')).toBe(null);
+          expect(popup).not.toBeInTheDocument();
         });
+        expect(screen.queryByTestId('popup')).toBe(null);
 
         await user.click(trigger);
 
@@ -10493,7 +10442,7 @@ describe('<Combobox.Root />', () => {
       // Close without selecting
       await user.keyboard('{Escape}');
 
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(input).toHaveValue('');
       expect(onInput.mock.lastCall?.[0]).toBe('');
       expect(onInput.mock.lastCall?.[1].reason).toBe(REASONS.inputClear);
@@ -10609,7 +10558,7 @@ describe('<Combobox.Root />', () => {
       await screen.findByRole('listbox');
 
       await waitFor(() => {
-        expect(screen.queryByRole('option', { name: 'Spirited Away' })).not.toBe(null);
+        expect(screen.getByRole('option', { name: 'Spirited Away' })).not.toBe(null);
       });
     });
   });
@@ -10701,7 +10650,7 @@ describe('<Combobox.Root />', () => {
       await user.click(input);
 
       await waitFor(() => {
-        expect(screen.queryByRole('option', { name: 'orange' })).not.toBe(null);
+        expect(screen.getByRole('option', { name: 'orange' })).not.toBe(null);
       });
     });
 
@@ -10754,7 +10703,7 @@ describe('<Combobox.Root />', () => {
       await screen.findByRole('listbox');
 
       await waitFor(() => {
-        expect(screen.queryByRole('option', { name: 'Banana' })).not.toBe(null);
+        expect(screen.getByRole('option', { name: 'Banana' })).not.toBe(null);
       });
     });
 
@@ -11968,7 +11917,7 @@ describe('<Combobox.Root />', () => {
 
       await user.type(input, 'a');
       await waitFor(() => {
-        expect(screen.queryByRole('listbox')).not.toBe(null);
+        expect(screen.getByRole('listbox')).not.toBe(null);
       });
       await waitFor(() => expect(input).toHaveAttribute('aria-activedescendant'));
 
@@ -12040,7 +11989,7 @@ describe('<Combobox.Root />', () => {
 
       await user.type(input, 'ba');
       await waitFor(() => {
-        expect(screen.queryByRole('listbox')).not.toBe(null);
+        expect(screen.getByRole('listbox')).not.toBe(null);
       });
 
       const activeId = input.getAttribute('aria-activedescendant');
@@ -13802,7 +13751,7 @@ describe('<Combobox.Root />', () => {
       expect(screen.getByRole('option', { name: 'Banana' })).toHaveAttribute('data-highlighted');
 
       await fireEvent.click(done);
-      await waitFor(() => expect(screen.queryByRole('dialog')).toBe(null));
+      expect(screen.queryByRole('dialog')).toBe(null);
 
       const input = await waitForLaterMillisecond(async () => {
         await fireEvent.click(trigger);
@@ -14017,7 +13966,7 @@ describe('<Combobox.Root />', () => {
 
         expect(input).toHaveValue('');
         await waitFor(() => {
-          expect(screen.queryByRole('option', { name: 'Banana' })).not.toBe(null);
+          expect(screen.getByRole('option', { name: 'Banana' })).not.toBe(null);
         });
         expect(input).toHaveAttribute('aria-activedescendant');
       });
@@ -14037,7 +13986,7 @@ describe('<Combobox.Root />', () => {
 
         expect(input).toHaveValue('');
         await waitFor(() => {
-          expect(screen.queryByRole('option', { name: 'Banana' })).not.toBe(null);
+          expect(screen.getByRole('option', { name: 'Banana' })).not.toBe(null);
         });
         expect(input).toHaveAttribute('aria-activedescendant');
 
@@ -15035,12 +14984,8 @@ describe('<Combobox.Root />', () => {
 
       await user.click(optionB);
 
-      await waitFor(() => {
-        expect(input).not.toHaveAttribute('data-dirty');
-      });
-      await waitFor(() => {
-        expect(trigger).not.toHaveAttribute('data-dirty');
-      });
+      expect(input).not.toHaveAttribute('data-dirty');
+      expect(trigger).not.toHaveAttribute('data-dirty');
     });
 
     it('removes [data-dirty] when an equal object value is reselected (different reference)', async () => {
@@ -15097,9 +15042,7 @@ describe('<Combobox.Root />', () => {
       // than by reference.
       await user.click(screen.getByRole('option', { name: 'a' }));
 
-      await waitFor(() => {
-        expect(trigger).not.toHaveAttribute('data-dirty');
-      });
+      expect(trigger).not.toHaveAttribute('data-dirty');
     });
 
     it('keeps [data-dirty] when the same values are reselected in a different order', async () => {
@@ -16151,7 +16094,7 @@ describe('<Combobox.Root />', () => {
       await waitFor(() => expect(canada).toHaveAttribute('data-highlighted'));
 
       await user.click(canada);
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
 
       await user.click(trigger);
 
