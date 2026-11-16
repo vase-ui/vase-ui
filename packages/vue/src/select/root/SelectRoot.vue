@@ -338,6 +338,7 @@ const {
         },
         triggerElement: null,
         listElement: null,
+        listElementId: undefined,
         popupSide: null,
         scrollUpArrowVisible: false,
         scrollDownArrowVisible: false,

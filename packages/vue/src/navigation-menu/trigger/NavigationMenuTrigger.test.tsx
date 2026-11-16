@@ -1047,6 +1047,71 @@ describe('<NavigationMenu.Trigger />', () => {
     });
   });
 
+  describe('VUE-86: the active trigger follows the ids of the popup and the viewport', () => {
+    function menuWithIds(ids: { popup?: string; viewport?: string }) {
+      return (
+        <NavigationMenu.Root defaultValue="one">
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="one">
+              <NavigationMenu.Trigger data-testid="trigger">One</NavigationMenu.Trigger>
+              <NavigationMenu.Content>Content</NavigationMenu.Content>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          <NavigationMenu.Portal>
+            <NavigationMenu.Positioner>
+              <NavigationMenu.Popup id={ids.popup} data-testid="popup">
+                <NavigationMenu.Viewport id={ids.viewport} data-testid="viewport" />
+              </NavigationMenu.Popup>
+            </NavigationMenu.Positioner>
+          </NavigationMenu.Portal>
+        </NavigationMenu.Root>
+      );
+    }
+
+    it('follows the id of the popup in aria-controls', async () => {
+      const id = shallowRef('first');
+      await render(() => menuWithIds({ popup: id.value }));
+      await flushMicrotasks();
+
+      const trigger = screen.getByTestId('trigger');
+      expect(trigger).toHaveAttribute('aria-controls', 'first');
+
+      id.value = 'second';
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('popup').id).toBe('second');
+      expect(trigger).toHaveAttribute('aria-controls', 'second');
+
+      id.value = '';
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('popup').id).toBe('');
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+    });
+
+    it('follows the id of the viewport in aria-owns', async () => {
+      const id = shallowRef('first');
+      await render(() => menuWithIds({ viewport: id.value }));
+      await flushMicrotasks();
+
+      const owner = screen.getByTestId('trigger').parentElement!.querySelector('[aria-owns]');
+      expect(owner).toHaveAttribute('aria-owns', 'first');
+
+      id.value = 'second';
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('viewport').id).toBe('second');
+      expect(owner).toHaveAttribute('aria-owns', 'second');
+
+      id.value = '';
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('viewport').id).toBe('');
+      expect(owner).not.toHaveAttribute('aria-owns');
+    });
+  });
+
   describe('popup size', () => {
     // Base UI asserts pixel sizes of the default font of Chromium. These cases compare the size
     // variables of the positioner with the measured size of the content, so that they run in each
