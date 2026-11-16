@@ -44,10 +44,12 @@ export function useInputRegistration(
     }
   }
 
-  // The input registers in its `ref` setter. At a hydration, Vue runs the `onMounted` hooks before
-  // the jobs of the default flush.
+  // The input registers in its `ref` setter, so an `onMounted` hook of a hydration sees it. A
+  // hydration runs these hooks before the jobs of the default flush.
   watch(input, registerInput, { flush: 'sync' });
 
+  // The release runs in the `onDeactivated` hook of `KeepAlive`, so an `onUpdated` hook of the same
+  // flush sees no held input.
   watch(
     isHeld,
     (held) => {
@@ -58,7 +60,8 @@ export function useInputRegistration(
     { flush: 'sync' },
   );
 
-  // The `ref` setter of a part that mounts in a held branch registers the input.
+  // The `ref` setter of a part that mounts in a held branch registers the input, and `isHeld` does
+  // not change.
   watch(input, () => {
     if (isHeld.value) {
       releaseInput();
