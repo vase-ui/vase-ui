@@ -51,7 +51,7 @@ export function useRender<
   const { element, elementProps } = useRenderElement<State, RenderedElementType>(
     getDefaultTag,
     componentProps,
-    elementParams,
+    { ...elementParams, serverAttributes: false },
   );
   const tag = computed(() => componentProps.as ?? getDefaultTag());
 

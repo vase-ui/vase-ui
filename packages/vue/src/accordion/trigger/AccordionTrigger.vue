@@ -39,11 +39,10 @@ const stateAttributesMapping: StateAttributesMapping<AccordionItemState> = {
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useCollapsibleRootContext } from '../../collapsible/root/CollapsibleRootContext';
-import { useAriaAfterHydration } from '../../common/hydration';
+import { given } from '../../internals/givenAttributes';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { givenId } from '../../internals/useBaseUiId';
 import { useButton } from '../../internals/use-button';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useAccordionItemContext } from '../item/AccordionItemContext';
@@ -75,13 +74,12 @@ const { getButtonProps, buttonRef } = useButton({
 
 const { defaultTriggerId, registerTriggerId, state: itemState } = useAccordionItemContext();
 
-const triggerId = computed(() => givenId(props.id) ?? defaultTriggerId.value);
-
-const source = Symbol();
+const triggerId = computed(() => given('id', props.id) ?? defaultTriggerId.value);
 
 useRegisteredId(
   () => triggerId.value,
-  (getId) => registerTriggerId(source, getId),
+  registerTriggerId,
+  () => element.value,
 );
 
 const state = computed<AccordionTriggerState>(() => ({
@@ -89,13 +87,12 @@ const state = computed<AccordionTriggerState>(() => ({
   disabled: isDisabled.value,
 }));
 
-const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('button', props, {
   state,
   ref: buttonRef,
   props: (attrs) => [
     {
-      'aria-controls': ariaAfterHydration(open.value ? panelId.value : undefined),
+      'aria-controls': open.value ? panelId.value : undefined,
       'aria-expanded': open.value,
       id: triggerId.value,
       onClick: handleTrigger,

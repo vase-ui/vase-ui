@@ -65,6 +65,8 @@ function createComboboxStore(initialState: Partial<State> = {}) {
     listElementId: undefined,
     popupElementId: undefined,
     triggerElement: null,
+    highlightedItem: null,
+    highlightedItemId: undefined,
     inputElement: null,
     inputGroupElement: null,
     popupSide: null,

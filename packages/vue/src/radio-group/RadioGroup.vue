@@ -69,7 +69,7 @@ export type RadioGroupChangeEventDetails = VaseUIChangeEventDetails<RadioGroupCh
 
 <script setup lang="ts" generic="Value = any">
 import { computed, provide, shallowRef, triggerRef } from 'vue';
-import { queueInputTake, useAriaAfterHydration } from '../common/hydration';
+import { queueInputTake } from '../common/hydration';
 import { contains } from '../common/shadowDom';
 import { useControlled } from '../common/useControlled';
 import { isEligibleInput } from '../field/root/useFieldValidation';
@@ -83,9 +83,10 @@ import { fieldValidityMapping } from '../internals/field-constants/constants';
 import { useRegisterFieldControl } from '../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../internals/field-root-context';
 import { useFormContext } from '../internals/form-context';
+import { given } from '../internals/givenAttributes';
 import { useDeferredServerRender, useLabelableContext } from '../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../internals/types';
-import { givenId, useVaseUiId } from '../internals/useBaseUiId';
+import { useVaseUiId } from '../internals/useBaseUiId';
 import { useFormRestore } from '../internals/useFormRestore';
 import { useRenderElement } from '../internals/useRenderElement';
 import { useValueChanged } from '../internals/useValueChanged';
@@ -353,7 +354,6 @@ const composite = useCompositeRoot({
   hasActiveItem: () => checkedValue.value != null,
 });
 
-const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('div', props, {
   state,
   ref: [composite.rootRef],
@@ -361,12 +361,12 @@ const { element, elementProps } = useRenderElement('div', props, {
   props: (attrs) => [
     composite.props,
     {
-      id: givenId(props.id),
+      id: given('id', props.id),
       role: 'radiogroup',
       'aria-required': props.required || undefined,
       'aria-disabled': isDisabled.value || undefined,
       'aria-readonly': props.readOnly || undefined,
-      'aria-labelledby': ariaAfterHydration(labelId.value ?? fieldset?.legendId.value),
+      'aria-labelledby': labelId.value ?? fieldset?.legendId.value,
       onFocusout(event: FocusEvent) {
         if (
           !contains(event.currentTarget as Element | null, event.relatedTarget as Element | null)
@@ -389,7 +389,6 @@ const { element, elementProps } = useRenderElement('div', props, {
     },
     attrs,
     (merged) => validation.getValidationProps(isDisabled.value, merged),
-    (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),
   ],
 });
 

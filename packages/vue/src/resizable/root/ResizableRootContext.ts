@@ -15,9 +15,15 @@ import type {
 
 export interface ResizablePanelRegistration {
   /**
-   * The id of the panel element and the key of the panel in the layout.
+   * The id that the panel binds to its element, and the key of the panel in the layout.
    */
   id: ComputedRef<string>;
+  /**
+   * The id that a handle names in `aria-controls`: `id` before the mount, and the `id` of the panel
+   * element from the mount on. It is `undefined` after the mount while the `id` of the element is
+   * empty.
+   */
+  referencedId: ComputedRef<string | undefined>;
   /**
    * The position of the panel among the panels and the handles of the root.
    */

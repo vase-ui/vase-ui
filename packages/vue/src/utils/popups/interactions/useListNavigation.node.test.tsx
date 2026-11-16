@@ -11,7 +11,7 @@ const List = defineComponent({
   setup() {
     store = useFloatingRootStore({ open: true });
     const navigation = useListNavigation(store, {
-      id: 'list',
+      activeItemId: 'list-1',
       listRef: shallowRef([]),
       activeIndex: 1,
       virtual: true,

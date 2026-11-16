@@ -196,6 +196,8 @@ export function focusable(container: Element) {
   return candidates.filter(isFocusableElement);
 }
 
+// A browser visits an element with a positive `tabindex` first. This list keeps the order of the
+// document for it, as Base UI does.
 export function tabbable(container: Element) {
   const candidates = focusable(container);
   return candidates.filter(

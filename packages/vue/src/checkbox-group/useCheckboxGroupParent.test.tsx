@@ -4,6 +4,7 @@ import { Checkbox } from '@vase-ui/vue/checkbox';
 import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
 import type { HTMLProps } from '@vase-ui/vue/types';
 import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
+import OwnIdElement from '../../test/fixtures/OwnIdElement.vue';
 
 describe('useCheckboxGroupParent', () => {
   const { render } = createRenderer();
@@ -615,6 +616,39 @@ describe('useCheckboxGroupParent', () => {
       await flushMicrotasks();
 
       expect(screen.getByTestId('parent')).toHaveAttribute('aria-controls', 'second');
+    });
+
+    it('VUE-124: names the id that a component in the #render slot of a child gives, and follows each change', async () => {
+      const ownId = shallowRef('first');
+      await render(
+        <CheckboxGroup allValues={['a', 'b']}>
+          <Checkbox.Root parent data-testid="parent" />
+          <Checkbox.Root
+            value="a"
+            v-slots={{
+              render: ({ props }: { props: HTMLProps }) => (
+                <OwnIdElement {...props} tag="span" ownId={ownId} />
+              ),
+            }}
+          />
+          <Checkbox.Root value="b" id="plain" nativeButton as="button" />
+        </CheckboxGroup>,
+      );
+      const parent = screen.getByTestId('parent');
+      await flushMicrotasks();
+      const steps = [parent.getAttribute('aria-controls')];
+
+      ownId.value = 'second';
+      await flushMicrotasks();
+      steps.push(parent.getAttribute('aria-controls'));
+      const element = document.getElementById('second');
+
+      ownId.value = '';
+      await flushMicrotasks();
+      steps.push(parent.getAttribute('aria-controls'));
+
+      expect(steps).toEqual(['first plain', 'second plain', 'plain']);
+      expect(element).not.toBeNull();
     });
 
     it('drops a child that KeepAlive holds, and lists it again when KeepAlive shows it', async () => {

@@ -36,11 +36,10 @@ const { registerLabelId } = useMenuGroupRootContext();
 
 const labelId = useVaseUiId(() => props.id);
 
-const source = Symbol();
-
 useRegisteredId(
   () => labelId.value,
-  (getId) => registerLabelId(source, getId),
+  registerLabelId,
+  () => element.value,
 );
 
 const state: MenuGroupLabelState = EMPTY_OBJECT;

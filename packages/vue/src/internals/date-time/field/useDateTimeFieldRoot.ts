@@ -1,5 +1,6 @@
 import {
   computed,
+  inject,
   nextTick,
   onDeactivated,
   onMounted,
@@ -59,6 +60,7 @@ import type {
 } from './DateTimeFieldContext';
 import { PARTIAL_MESSAGE, getInputLimits, getLimitMessage } from './customValidity';
 import type { ValueLimits } from './customValidity';
+import { PickerResetCountContext } from './PickerResetCountContext';
 import { getSegmentAttributes } from './segmentAttributes';
 import { getDayPeriodTexts, getFixedSegmentTexts, getSegmentLayout } from './segmentLayout';
 import type { EditableSegmentType, SegmentLayoutOptions, TimeUnit } from './segmentLayout';
@@ -721,6 +723,36 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   // error of the field in that callback, and the change starts no validation.
   let isResetChangePending = false;
 
+  // A picker gives the value to this root. It counts a reset before it changes the value, and the
+  // new value reaches the root only with the next render. The root thus marks that change as the
+  // change of a reset, whichever listener of the reset runs first. A picker with two fields counts
+  // each reset one time, so the field whose part hears of the reset last gets the mark too.
+  const pickerResetCount = inject(PickerResetCountContext, null);
+  let keyBeforePickerReset = '';
+
+  if (pickerResetCount) {
+    watch(
+      pickerResetCount,
+      () => {
+        keyBeforePickerReset = validityKey.value;
+        isResetChangePending = true;
+      },
+      { flush: 'sync' },
+    );
+    // `useValueChanged` calls no callback for a reset that leaves the value, and a mark that stays
+    // set skips the validation of the next change. The listener of the reset in this root clears
+    // the error of such a reset. A root that is not in the form of the reset keeps its error.
+    watch(
+      pickerResetCount,
+      () => {
+        if (validityKey.value === keyBeforePickerReset) {
+          isResetChangePending = false;
+        }
+      },
+      { flush: 'post' },
+    );
+  }
+
   useValueChanged(validityKey, () => {
     clearErrors(inputName.value);
     setDirty(!isSameValue(value.value, validityData.value.initialValue));
@@ -962,10 +994,10 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     return [
       {
         role: 'group',
-        'aria-describedby': ariaAfterHydration(
-          getDescriptionProps({ 'aria-describedby': ariaDescribedBy })['aria-describedby'],
-        ),
-        'aria-labelledby': ariaAfterHydration(ariaLabelledBy.value),
+        'aria-describedby': getDescriptionProps({ 'aria-describedby': ariaDescribedBy })[
+          'aria-describedby'
+        ],
+        'aria-labelledby': ariaLabelledBy.value,
         onFocusout: handleFocusout,
       },
       elementAttrs,
