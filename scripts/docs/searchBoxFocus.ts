@@ -1,8 +1,8 @@
 import { serveBuiltSite, vueRequire } from './builtSite.ts';
 
-// On macOS, the Tab key of WebKit skips a link, and it skips a button while full keyboard access is
-// off. Only that engine shows the Tab fault of the search box, and CI runs on Linux.
-const ENGINES = process.platform === 'darwin' ? ['chromium', 'webkit'] : ['chromium'];
+// Firefox can skip a link with tabindex="0" when accessibility.tabfocus is 1. WebKit on macOS
+// needs that attribute on links, and on buttons when full keyboard access is off.
+const ENGINES = ['chromium', 'firefox', ...(process.platform === 'darwin' ? ['webkit'] : [])];
 
 const BOX = '.VPLocalSearchBox';
 const FIELD = `${BOX} .search-input`;
@@ -10,7 +10,9 @@ const SELECTED_RESULT = `${BOX} .result.selected`;
 
 interface Locator {
   click(options?: { modifiers: ['ControlOrMeta'] }): Promise<void>;
+  count(): Promise<number>;
   first(): Locator;
+  nth(index: number): Locator;
   focus(): Promise<void>;
   fill(text: string): Promise<void>;
   getAttribute(name: string): Promise<string | null>;
@@ -30,6 +32,8 @@ interface Tab {
 interface PageElement {
   localName: string;
   id: string;
+  selectionStart?: number | null;
+  selectionEnd?: number | null;
   getAttribute(name: string): string | null;
 }
 
@@ -229,6 +233,53 @@ const CASES: { name: string; width: number; run: Case }[] = [
       return focusOn(tab, tab.locator(`${BOX} .result`).first(), 'the first result');
     },
   },
+  ...[
+    { width: 1440, name: 'wide' },
+    { width: 390, name: 'narrow' },
+  ].map(({ width, name }) => ({
+    name: `Tab and Shift+Tab cycle through each control of a ${name} box`,
+    width,
+    run: async (tab: Tab, open: (page: string) => Promise<void>) => {
+      await open('/quick-start');
+      await openFromButton(tab);
+      await tab.locator(FIELD).fill('Quick start');
+      await tab.locator(SELECTED_RESULT).waitFor();
+      const results = tab.locator(`${BOX} .result`);
+      const count = await results.count();
+      if (count < 2) {
+        return 'the search needs at least two results to check the order between results.';
+      }
+      const controls = [
+        ...(width === 390 ? [{ target: tab.locator(`${BOX} .back-button`), name: 'Back' }] : []),
+        { target: tab.locator(FIELD), name: 'the search field' },
+        { target: tab.locator(`${BOX} .clear-button`), name: 'Reset' },
+        ...Array.from({ length: count }, (_, index) => ({
+          target: results.nth(index),
+          name: `result ${String(index + 1)}`,
+        })),
+      ];
+      const start = width === 390 ? 1 : 0;
+      for (const direction of [1, -1]) {
+        const key = direction === 1 ? 'Tab' : 'Shift+Tab';
+        await tab.locator(FIELD).fill('Quick start');
+        for (let step = 1; step <= controls.length; step++) {
+          await tab.keyboard.press(key);
+          const expected = controls[(start + direction * step + controls.length) % controls.length];
+          const problem = await focusOn(tab, expected.target, expected.name);
+          if (problem !== undefined) {
+            return `${key}, step ${String(step)}: ${problem}`;
+          }
+        }
+        const selection = await tab
+          .locator(FIELD)
+          .evaluate((element) => [element.selectionStart, element.selectionEnd]);
+        if (selection[0] !== 0 || selection[1] !== 'Quick start'.length) {
+          return `${key} does not select the search text on return to the field.`;
+        }
+      }
+      return undefined;
+    },
+  })),
 ];
 
 async function main(): Promise<void> {
@@ -238,7 +289,9 @@ async function main(): Promise<void> {
 
   try {
     for (const engine of ENGINES) {
-      const browser = await playwright[engine].launch();
+      const browser = await playwright[engine].launch(
+        engine === 'firefox' ? { firefoxUserPrefs: { 'accessibility.tabfocus': 1 } } : {},
+      );
       try {
         for (const { name, width, run } of CASES) {
           const context = await browser.newContext({ viewport: { width, height: 900 } });
