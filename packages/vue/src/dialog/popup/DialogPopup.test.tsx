@@ -328,9 +328,7 @@ describe('<Dialog.Popup />', () => {
 
     const { user } = await render(<App />);
     await user.click(await screen.findByRole('button', { name: 'Got it' }));
-    await waitFor(() => {
-      expect(screen.queryByRole('button', { name: 'Got it' })).toBe(null);
-    });
+    expect(screen.queryByRole('button', { name: 'Got it' })).toBe(null);
     (document.activeElement as HTMLElement).blur();
 
     const close = await waitForLaterMillisecond(async () => {
@@ -342,9 +340,7 @@ describe('<Dialog.Popup />', () => {
     });
     await user.keyboard('[Escape]');
 
-    await waitFor(() => {
-      expect(screen.queryByRole('dialog')).toBe(null);
-    });
+    expect(screen.queryByRole('dialog')).toBe(null);
     await flushMicrotasks();
     expect(screen.getByRole('button', { name: 'Tip' })).not.toHaveFocus();
   });
@@ -853,8 +849,9 @@ describe('<Dialog.Popup />', () => {
       // animations has no time limit.
       await Promise.all(finished);
       await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
+        expect(popup).not.toBeInTheDocument();
       });
+      expect(screen.queryByTestId('popup')).toBe(null);
     }
 
     it('BUG-5519: keeps no focusable content under aria-hidden during the exit animation', async () => {
@@ -908,12 +905,14 @@ describe('<Dialog.Popup />', () => {
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Open' })).toHaveFocus();
     });
-    expect(screen.getByTestId('popup')).toHaveAttribute('data-closed');
+    const popup = screen.getByTestId('popup');
+    expect(popup).toHaveAttribute('data-closed');
 
     root.unmount();
     await waitFor(() => {
-      expect(screen.queryByTestId('popup')).toBe(null);
+      expect(popup).not.toBeInTheDocument();
     });
+    expect(screen.queryByTestId('popup')).toBe(null);
   });
 
   describe('BUG-5519: a popup in the popup that closes with it', () => {

@@ -620,9 +620,7 @@ describe('<Popover.Trigger />', () => {
     expect(document.activeElement).toBe(trigger);
 
     await userEvent.keyboard('[Enter]');
-    await waitFor(() => {
-      expect(screen.queryByText('Content')).toBe(null);
-    });
+    expect(screen.queryByText('Content')).toBe(null);
 
     await userEvent.keyboard('[Enter]');
     expect(screen.queryByText('Content')).not.toBe(null);
