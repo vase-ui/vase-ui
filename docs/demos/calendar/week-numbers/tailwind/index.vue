@@ -49,7 +49,7 @@ const selected = shallowRef<Temporal.PlainDate | null>(null);
                 <Calendar.Week :week="week">
                   <Calendar.WeekNumber
                     :week="week"
-                    class="p-0 text-center text-xs font-normal tabular-nums text-neutral-600 dark:text-neutral-400"
+                    class="p-0 text-center text-xs leading-5 font-normal tabular-nums text-neutral-600 dark:text-neutral-400"
                   />
                   <template #day="{ day }">
                     <Calendar.Day :day="day" class="p-0 text-center">
