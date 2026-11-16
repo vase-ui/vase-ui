@@ -3405,4 +3405,57 @@ describe('<Checkbox.Root />', () => {
       ).toBe(indeterminate);
     });
   });
+
+  describe('VUE-112: a disabled fieldset', () => {
+    // A checkbox has no size of its own, and Playwright clicks only an element that has a size.
+    const checkboxStyle = 'display:inline-block;width:20px;height:20px';
+
+    it('shows the disabled state and leaves the tab order in a disabled fieldset', async () => {
+      await render(() => (
+        <>
+          <button type="button" data-testid="before">
+            before
+          </button>
+          <fieldset disabled>
+            <Checkbox.Root data-testid="checkbox" style={checkboxStyle} />
+          </fieldset>
+          <button type="button" data-testid="after">
+            after
+          </button>
+        </>
+      ));
+      const checkbox = screen.getByTestId('checkbox');
+
+      expect(checkbox).toHaveAttribute('data-disabled');
+      expect(checkbox).toHaveAttribute('aria-disabled', 'true');
+
+      screen.getByTestId('before').focus();
+      await userEvent.keyboard('{Tab}');
+
+      expect(screen.getByTestId('after')).toHaveFocus();
+    });
+
+    it('keeps the state when the user presses it or presses Space in a disabled fieldset', async () => {
+      const handleCheckedChange = vi.fn();
+      await render(() => (
+        <fieldset disabled>
+          <Checkbox.Root
+            data-testid="checkbox"
+            style={checkboxStyle}
+            onCheckedChange={handleCheckedChange}
+          />
+        </fieldset>
+      ));
+      const checkbox = screen.getByTestId('checkbox');
+
+      await userEvent.click(checkbox, { force: true });
+      checkbox.focus();
+      expect(checkbox).toHaveFocus();
+      await userEvent.keyboard(' ');
+      await flushMicrotasks();
+
+      expect(handleCheckedChange).not.toHaveBeenCalled();
+      expect(checkbox).toHaveAttribute('aria-checked', 'false');
+    });
+  });
 });
