@@ -728,6 +728,37 @@ describe('useTriggerDataForwarding', () => {
     expect(store.state.activeTriggerElement).toBe(second);
   });
 
+  it('VUE-22: gives an open popup that has no active trigger to a trigger that mounts while KeepAlive holds it', async () => {
+    const store = createTestPopupStore();
+    const heldElement = document.createElement('button');
+    const shownElement = document.createElement('button');
+    store.update({ open: true, mounted: true });
+    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+      <TestForwardedTrigger id="held" store={store} element={heldElement} payload="held" />
+    ));
+    const hasShownTrigger = shallowRef(false);
+    await render(() => (
+      <>
+        <HeldBranch />
+        {hasShownTrigger.value ? (
+          <TestForwardedTrigger id="shown" store={store} element={shownElement} payload="shown" />
+        ) : null}
+      </>
+    ));
+
+    await mountWhileHeld();
+    expect(store.state.activeTriggerId).toBe('held');
+
+    hasShownTrigger.value = true;
+    await nextTick();
+    expect(store.state.activeTriggerId).toBe('held');
+    expect(store.state.payload).toBe('held');
+
+    await show();
+    expect(store.state.activeTriggerId).toBe('held');
+    expect(store.state.activeTriggerElement).toBe(heldElement);
+  });
+
   describe('for a detached trigger of a handle', () => {
     it('registers in the store that the handle gives, and gives its payload to the root', async () => {
       const handle = new TestHandle();
