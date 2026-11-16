@@ -191,6 +191,7 @@ patchedDependencies:
   '@vitest/browser-playwright@5.1.0': 3aceb4fa638d57552fb9515c58179b74bf1e3a2b88f6be68dbcbaa07d86c8bd0
   '@vue/language-core@3.3.14': b0600b610df34c0755af5559e7235d0c942a659d0a7401de99303091f7e27d48
   rolldown-plugin-dts@0.30.1: cf1d1a226d8a5d9c9674460fe7e6577c94b941be8d70a66f9ad6daf7c5429a3e
+  vitepress@2.0.0-alpha.21: c99486e2133aefd10113f89480a1c460ce63afe7c2271774ed7285a2330f30c2
   vue-component-meta@3.3.14: bd0e33f045984d61a55ca71d28d763fc7d62b9d8af52876b8acdd2a3986c302d
 
 importers:
@@ -289,7 +290,7 @@ importers:
         version: 4.15.1(vue@3.5.45(typescript@6.0.3))
       vitepress:
         specifier: 2.0.0-alpha.21
-        version: 2.0.0-alpha.21(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(postcss@8.5.32)(terser@5.51.2)(typescript@6.0.3)
+        version: 2.0.0-alpha.21(patch_hash=c99486e2133aefd10113f89480a1c460ce63afe7c2271774ed7285a2330f30c2)(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(postcss@8.5.32)(terser@5.51.2)(typescript@6.0.3)
       vue:
         specifier: 3.5.45
         version: 3.5.45(typescript@6.0.3)
@@ -9487,7 +9488,7 @@ snapshots:
       jiti: 2.7.0
       terser: 5.51.2
 
-  vitepress@2.0.0-alpha.21(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(postcss@8.5.32)(terser@5.51.2)(typescript@6.0.3):
+  vitepress@2.0.0-alpha.21(patch_hash=c99486e2133aefd10113f89480a1c460ce63afe7c2271774ed7285a2330f30c2)(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(postcss@8.5.32)(terser@5.51.2)(typescript@6.0.3):
     dependencies:
       '@docsearch/css': 4.7.1
       '@docsearch/js': 4.7.1
