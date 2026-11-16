@@ -501,7 +501,7 @@ Rules:
 
 - Each part that renders an element calls the internal composable `useRenderElement` in setup. It returns `element`, which the part exposes, and the function `elementProps`.
 - `useRenderElement` leaves out each attribute of the consumer with the value `undefined`. The `props` function thus gets no such key.
-- `useRenderElement` also leaves out a blank `aria-label` and a blank `aria-labelledby`, with `removeBlankNames` of `src/internals/blankName.ts`. A part that reads a name of the consumer in `props` thus makes no check for a blank value (`VUE-106`).
+- `useRenderElement` also leaves out a blank `aria-label` and a blank `aria-labelledby`, with `removeBlankNames` of `src/internals/blankName.ts`. A part that reads a name of the consumer in `props` thus makes no check for a blank value (`VUE-106`). A part that reads a name with `useAttrs()`, outside `props`, reads it through `givenName` of the same file. `OTPFieldInput.vue` does this for its warning.
 - A part that reads an attribute of the consumer in `props` reads `null` as a removal of that attribute. `Menu.RadioGroup` then gives no `aria-labelledby`, and `Field.Control` gives no `aria-describedby`. `Calendar.Grid` then has no label, so it keeps the name of the month in `aria-label`.
 - `useRenderElement` takes its `ref` callbacks one time, in `setup`. It calls a callback only when the element changes. A change of a prop that keeps the element calls none.
 - A part that chooses a holder from a prop reads the prop in the callback. A `watch` of the prop moves the element to the other holder. `ScrollAreaScrollbar.vue` is the model.

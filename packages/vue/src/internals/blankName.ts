@@ -5,9 +5,11 @@ function isBlank(value: unknown): boolean {
 }
 
 /**
- * Returns the `aria-label` or the `aria-labelledby` that the consumer gave to a declared prop, or
- * `undefined` for a blank value: an empty string, or a string of white space only.
+ * Returns the `aria-label` or the `aria-labelledby` that the consumer gave, or `undefined` for a
+ * blank value: an empty string, or a string of white space only.
  * A blank value gives an element no accessible name, so it counts as not given (`VUE-106`).
+ * Use it for a declared prop and for an attribute that a part reads with `useAttrs()`. The `props`
+ * function of `useRenderElement` gets no blank name, so a call there is not needed.
  */
 export function givenName<Name extends string | null | undefined>(name: Name): Name | undefined {
   return isBlank(name) ? undefined : name;
