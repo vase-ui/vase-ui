@@ -526,7 +526,7 @@ export function useCalendarRoot({
     }
     const hasMoved = moveFocus(target, () => createChangeEventDetails(REASONS.keyboard, event));
     if (hasMoved && action.extend && canChange() && canSelect(getStateOfDate(target))) {
-      selection.extend(target, createChangeEventDetails(REASONS.keyboard, event));
+      selection.extend(target, createChangeEventDetails(REASONS.keyboard, event), date);
     }
   }
 

@@ -1,0 +1,9 @@
+{
+  "standard": [
+    "https://www.w3.org/WAI/ARIA/apg/patterns/grid/",
+    "https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/examples/datepicker-dialog/"
+  ],
+  "reason": "Base UI has no range calendar. A person picks the first day and the last day of a range on one grid, with a press, a drag or the keyboard.",
+  "parts": ["Root", "Day", "DayButton"],
+  "types": ["RangeCalendar.Root.ChangeEventReason"]
+}

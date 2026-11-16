@@ -1,0 +1,482 @@
+import { describe, expect, it, vi } from 'vitest';
+import { DirectionProvider } from '@vase-ui/vue/direction-provider';
+import {
+  createRenderer,
+  describeConformance,
+  fireEvent,
+  flushMicrotasks,
+  screen,
+} from '#test-utils';
+import * as RangeCalendar from '../index.parts';
+import RangeCalendarAnatomy from './RangeCalendarAnatomy.test.vue';
+
+const day = (text: string) => Temporal.PlainDate.from(text);
+
+// 2026-11-14 is a Saturday. With `en-US`, the weeks start on Sunday and 2026-11-01 is a Sunday.
+const today = () => day('2026-11-14');
+
+function cell(iso: string) {
+  return document.querySelector<HTMLElement>(`[data-date="${iso}"]`)!;
+}
+
+function button(iso: string) {
+  return cell(iso).querySelector<HTMLElement>('button')!;
+}
+
+// The cells that have each range attribute, as the text of their dates.
+function shown() {
+  const find = (name: string) =>
+    [...document.querySelectorAll(`td[${name}]`)].map((element) =>
+      element.getAttribute('data-date'),
+    );
+  return {
+    start: find('data-range-start'),
+    middle: find('data-range-middle'),
+    end: find('data-range-end'),
+  };
+}
+
+function ends(call: readonly unknown[]) {
+  return (call[0] as (Temporal.PlainDate | null)[]).map((end) => end?.toString() ?? null);
+}
+
+describe('<RangeCalendar.Root />', () => {
+  const { render } = createRenderer();
+
+  // The props go through a spread, because the fixture declares none.
+  function renderRange(props: Record<string, unknown> = {}) {
+    return render(<RangeCalendarAnatomy {...{ today: today(), locale: 'en-US', ...props }} />);
+  }
+
+  function listeners() {
+    return { onValueChange: vi.fn(), 'onUpdate:value': vi.fn() };
+  }
+
+  describeConformance(<RangeCalendar.Root today={today()} />, () => ({
+    refInstanceof: window.HTMLDivElement,
+    render,
+  }));
+
+  it('renders a group that the visible month names, and a grid with more than one selection', async () => {
+    await renderRange();
+
+    const name = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'UTC',
+      month: 'long',
+      year: 'numeric',
+    }).format(Date.parse('2026-11-14'));
+    expect(screen.getByRole('group', { name })).not.toBe(null);
+    expect(screen.getByRole('grid')).toHaveAttribute('aria-multiselectable', 'true');
+    expect(screen.getByRole('group')).toHaveAttribute('data-empty');
+    expect(screen.getByRole('group')).not.toHaveAttribute('data-selecting');
+  });
+
+  describe('the press sequence', () => {
+    it('starts a range at the first press, and shows it as a range of one day', async () => {
+      const handlers = listeners();
+      const { user } = await renderRange(handlers);
+
+      await user.click(button('2026-11-10'));
+
+      expect(handlers.onValueChange).toHaveBeenCalledTimes(1);
+      const [value, details] = handlers.onValueChange.mock.calls[0]!;
+      expect(ends([value])).toEqual(['2026-11-10', null]);
+      expect(details.reason).toBe('day-press');
+      expect(details.event).toBeInstanceOf(MouseEvent);
+      expect(ends([handlers['onUpdate:value'].mock.calls[0]![0]])).toEqual(['2026-11-10', null]);
+      expect(shown()).toEqual({ start: ['2026-11-10'], middle: [], end: ['2026-11-10'] });
+      expect(cell('2026-11-10')).toHaveAttribute('aria-selected', 'true');
+      expect(cell('2026-11-10')).toHaveAttribute('data-selected');
+      expect(screen.getByRole('group')).toHaveAttribute('data-selecting');
+      expect(screen.getByRole('group')).not.toHaveAttribute('data-empty');
+    });
+
+    it('ends the range at the second press', async () => {
+      const handlers = listeners();
+      const { user } = await renderRange(handlers);
+
+      await user.click(button('2026-11-10'));
+      await user.click(button('2026-11-14'));
+
+      expect(handlers.onValueChange).toHaveBeenCalledTimes(2);
+      expect(ends(handlers.onValueChange.mock.calls[1]!)).toEqual(['2026-11-10', '2026-11-14']);
+      expect(shown()).toEqual({
+        start: ['2026-11-10'],
+        middle: ['2026-11-11', '2026-11-12', '2026-11-13'],
+        end: ['2026-11-14'],
+      });
+      expect(cell('2026-11-12')).toHaveAttribute('aria-selected', 'true');
+      expect(cell('2026-11-15')).toHaveAttribute('aria-selected', 'false');
+      expect(screen.getByRole('group')).not.toHaveAttribute('data-selecting');
+    });
+
+    it('gives a range of one day the start and the end, and no middle', async () => {
+      const { user } = await renderRange();
+
+      await user.click(button('2026-11-10'));
+      await user.click(button('2026-11-10'));
+
+      expect(shown()).toEqual({ start: ['2026-11-10'], middle: [], end: ['2026-11-10'] });
+      expect(screen.getByRole('group')).not.toHaveAttribute('data-selecting');
+    });
+
+    it('presses the focused day with Enter and Space', async () => {
+      const handlers = listeners();
+      const { user } = await renderRange(handlers);
+
+      button('2026-11-10').focus();
+      await user.keyboard('{Enter}{ArrowRight}{ArrowRight} ');
+
+      expect(handlers.onValueChange).toHaveBeenCalledTimes(2);
+      expect(ends(handlers.onValueChange.mock.calls[1]!)).toEqual(['2026-11-10', '2026-11-12']);
+      expect(handlers.onValueChange.mock.calls[1]![1].reason).toBe('day-press');
+    });
+
+    it('keeps the old range when a listener cancels the change', async () => {
+      const handlers = {
+        onValueChange: vi.fn((_value: unknown, details: { cancel: () => void }) => {
+          details.cancel();
+        }),
+        'onUpdate:value': vi.fn(),
+      };
+      const { user } = await renderRange({
+        defaultValue: [day('2026-11-03'), day('2026-11-05')],
+        ...handlers,
+      });
+
+      await user.click(button('2026-11-10'));
+
+      expect(handlers.onValueChange).toHaveBeenCalledTimes(1);
+      expect(handlers['onUpdate:value']).not.toHaveBeenCalled();
+      expect(shown().start).toEqual(['2026-11-03']);
+    });
+
+    it('does not pick a day of a read-only range, and a day that cannot be selected', async () => {
+      const handlers = listeners();
+      const readOnly = await renderRange({ readOnly: true, ...handlers });
+
+      await readOnly.user.click(button('2026-11-10'));
+      expect(handlers.onValueChange).not.toHaveBeenCalled();
+      expect(screen.getByRole('grid')).toHaveAttribute('aria-readonly', 'true');
+      readOnly.unmount();
+
+      const limited = await renderRange({ unavailableDates: day('2026-11-10'), ...handlers });
+      await limited.user.click(button('2026-11-10'));
+      expect(handlers.onValueChange).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      { name: 'minDays', props: { minDays: 3 }, last: '2026-11-11' },
+      { name: 'maxDays', props: { maxDays: 3 }, last: '2026-11-14' },
+      {
+        name: 'a disabled day in the range',
+        props: { disabledDates: day('2026-11-12') },
+        last: '2026-11-14',
+      },
+      {
+        name: 'an unavailable day in the range',
+        props: { unavailableDates: day('2026-11-12') },
+        last: '2026-11-14',
+      },
+    ])('starts a new range at the pressed day because of $name', async ({ props, last }) => {
+      const handlers = listeners();
+      const { user } = await renderRange({ ...props, ...handlers });
+
+      await user.click(button('2026-11-10'));
+      await user.click(button(last));
+
+      expect(ends(handlers.onValueChange.mock.calls[1]!)).toEqual([last, null]);
+    });
+
+    it.each([
+      { name: 'a disabled day', props: { disabledDates: day('2026-11-12') } },
+      { name: 'an unavailable day', props: { unavailableDates: day('2026-11-12') } },
+    ])('makes a range over $name with allowNonContiguousRanges', async ({ props }) => {
+      const handlers = listeners();
+      const { user } = await renderRange({
+        allowNonContiguousRanges: true,
+        ...props,
+        ...handlers,
+      });
+
+      await user.click(button('2026-11-10'));
+      await user.click(button('2026-11-14'));
+
+      expect(ends(handlers.onValueChange.mock.calls[1]!)).toEqual(['2026-11-10', '2026-11-14']);
+      // The day in the middle is in the range, and the user cannot select it.
+      expect(cell('2026-11-12')).toHaveAttribute('data-range-middle');
+      expect(cell('2026-11-12')).toHaveAttribute('aria-selected', 'false');
+      expect(cell('2026-11-11')).toHaveAttribute('aria-selected', 'true');
+    });
+  });
+
+  describe('the value', () => {
+    it('leaves the range of a controlled calendar to its value', async () => {
+      const handlers = listeners();
+      const { user, setProps } = await renderRange({ value: [null, null], ...handlers });
+
+      await user.click(button('2026-11-10'));
+
+      expect(handlers.onValueChange).toHaveBeenCalledTimes(1);
+      expect(shown()).toEqual({ start: [], middle: [], end: [] });
+
+      await setProps({ value: [day('2026-11-10'), null] });
+
+      expect(shown()).toEqual({ start: ['2026-11-10'], middle: [], end: ['2026-11-10'] });
+      expect(screen.getByRole('group')).toHaveAttribute('data-selecting');
+    });
+
+    it('shows a controlled range with a null end as a range in progress, and ends it', async () => {
+      const handlers = listeners();
+      const { user } = await renderRange({ value: [day('2026-11-10'), null], ...handlers });
+
+      expect(screen.getByRole('group')).toHaveAttribute('data-selecting');
+      await user.click(button('2026-11-14'));
+
+      expect(ends(handlers.onValueChange.mock.calls[0]!)).toEqual(['2026-11-10', '2026-11-14']);
+    });
+
+    it('shows a range that the consumer gives in the reverse order', async () => {
+      await renderRange({ value: [day('2026-11-14'), day('2026-11-10')] });
+
+      expect(shown().start).toEqual(['2026-11-10']);
+      expect(shown().end).toEqual(['2026-11-14']);
+    });
+
+    it('gives each end the time and the zone of the end that it replaces', async () => {
+      const handlers = listeners();
+      const { user } = await renderRange({
+        defaultValue: [
+          Temporal.ZonedDateTime.from('2026-11-02T09:00[Asia/Tokyo]'),
+          Temporal.ZonedDateTime.from('2026-11-04T17:30[Asia/Tokyo]'),
+        ],
+        ...handlers,
+      });
+
+      await user.click(button('2026-11-10'));
+      await user.click(button('2026-11-12'));
+
+      const [value] = handlers.onValueChange.mock.calls[1]!;
+      expect(value.map((end: Temporal.ZonedDateTime) => end.toString())).toEqual([
+        '2026-11-10T09:00:00+09:00[Asia/Tokyo]',
+        '2026-11-12T17:30:00+09:00[Asia/Tokyo]',
+      ]);
+    });
+  });
+
+  describe('the preview', () => {
+    it('shows the range to the day that the pointer is over', async () => {
+      const { user } = await renderRange();
+
+      await user.click(button('2026-11-10'));
+      await user.hover(button('2026-11-13'));
+
+      expect(shown()).toEqual({
+        start: ['2026-11-10'],
+        middle: ['2026-11-11', '2026-11-12'],
+        end: ['2026-11-13'],
+      });
+      expect(cell('2026-11-12')).toHaveAttribute('aria-selected', 'true');
+      expect(screen.getByRole('group')).toHaveAttribute('data-selecting');
+
+      await user.hover(button('2026-11-08'));
+
+      expect(shown()).toEqual({
+        start: ['2026-11-08'],
+        middle: ['2026-11-09'],
+        end: ['2026-11-10'],
+      });
+    });
+
+    it('shows the range to the day that has the focus', async () => {
+      const { user } = await renderRange();
+
+      await user.click(button('2026-11-10'));
+      button('2026-11-12').focus();
+      await flushMicrotasks();
+
+      expect(shown()).toEqual({
+        start: ['2026-11-10'],
+        middle: ['2026-11-11'],
+        end: ['2026-11-12'],
+      });
+    });
+
+    it('ends the range at the previewed day when the day is pressed', async () => {
+      const handlers = listeners();
+      const { user } = await renderRange(handlers);
+
+      await user.click(button('2026-11-10'));
+      await user.keyboard('{ArrowRight}{ArrowRight}');
+      expect(shown().end).toEqual(['2026-11-12']);
+      await user.keyboard('{Enter}');
+
+      expect(ends(handlers.onValueChange.mock.calls[1]!)).toEqual(['2026-11-10', '2026-11-12']);
+    });
+
+    it('shows the day that a press would start a new range at, when the range is not valid', async () => {
+      const { user } = await renderRange({ maxDays: 3 });
+
+      await user.click(button('2026-11-10'));
+      await user.hover(button('2026-11-20'));
+
+      expect(shown()).toEqual({ start: ['2026-11-20'], middle: [], end: ['2026-11-20'] });
+    });
+
+    it('shows no preview when no range is in progress', async () => {
+      const { user } = await renderRange({ defaultValue: [day('2026-11-03'), day('2026-11-05')] });
+
+      await user.hover(button('2026-11-13'));
+
+      expect(shown().end).toEqual(['2026-11-05']);
+    });
+
+    it('shows no preview for a touch pointer, which does not hover', async () => {
+      const { user } = await renderRange();
+
+      await user.click(button('2026-11-10'));
+      await fireEvent.pointerEnter(button('2026-11-20'), { pointerType: 'touch' });
+
+      expect(shown().end).toEqual(['2026-11-10']);
+    });
+  });
+
+  describe('Escape', () => {
+    it('puts back the range from before the first press, and prevents the key', async () => {
+      const handlers = listeners();
+      const { user } = await renderRange({
+        defaultValue: [day('2026-11-03'), day('2026-11-05')],
+        ...handlers,
+      });
+
+      await user.click(button('2026-11-10'));
+      expect(shown().start).toEqual(['2026-11-10']);
+      expect(await fireEvent.keyDown(button('2026-11-10'), { key: 'Escape' })).toBe(false);
+
+      expect(ends(handlers.onValueChange.mock.calls[1]!)).toEqual(['2026-11-03', '2026-11-05']);
+      expect(handlers.onValueChange.mock.calls[1]![1].reason).toBe('keyboard');
+      expect(shown()).toEqual({
+        start: ['2026-11-03'],
+        middle: ['2026-11-04'],
+        end: ['2026-11-05'],
+      });
+      expect(screen.getByRole('group')).not.toHaveAttribute('data-selecting');
+    });
+
+    it('does not prevent the key when no range is in progress', async () => {
+      const handlers = listeners();
+      await renderRange({ defaultValue: [day('2026-11-03'), day('2026-11-05')], ...handlers });
+
+      expect(await fireEvent.keyDown(button('2026-11-10'), { key: 'Escape' })).toBe(true);
+      expect(handlers.onValueChange).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Shift with an arrow key', () => {
+    async function pressKeys(keys: string, { props = {}, rtl = false, from = '2026-11-11' } = {}) {
+      const handlers = listeners();
+      const calendar = (
+        <RangeCalendarAnatomy {...{ today: today(), locale: 'en-US', ...props, ...handlers }} />
+      );
+      const { user } = await render(
+        rtl ? <DirectionProvider direction="rtl">{calendar}</DirectionProvider> : calendar,
+      );
+      button(from).focus();
+      await user.keyboard(keys);
+      return handlers;
+    }
+
+    const rangesOf = (handlers: ReturnType<typeof listeners>) =>
+      handlers.onValueChange.mock.calls.map((call) => ends(call));
+
+    it.each([
+      {
+        keys: '{Shift>}{ArrowRight}{/Shift}',
+        range: ['2026-11-11', '2026-11-12'],
+        focus: '2026-11-12',
+      },
+      {
+        keys: '{Shift>}{ArrowLeft}{/Shift}',
+        range: ['2026-11-10', '2026-11-11'],
+        focus: '2026-11-10',
+      },
+      {
+        keys: '{Shift>}{ArrowDown}{/Shift}',
+        range: ['2026-11-11', '2026-11-18'],
+        focus: '2026-11-18',
+      },
+      {
+        keys: '{Shift>}{ArrowUp}{/Shift}',
+        range: ['2026-11-04', '2026-11-11'],
+        focus: '2026-11-04',
+      },
+    ])('makes the range $range for $keys', async ({ keys, range, focus }) => {
+      const handlers = await pressKeys(keys);
+
+      expect(rangesOf(handlers)).toEqual([range]);
+      expect(handlers.onValueChange.mock.calls[0]![1].reason).toBe('keyboard');
+      expect(document.activeElement).toBe(button(focus));
+      expect(screen.getByRole('group')).not.toHaveAttribute('data-selecting');
+    });
+
+    it('extends the range from the day where it started, as the keys go on', async () => {
+      const handlers = await pressKeys(
+        '{Shift>}{ArrowRight}{ArrowRight}{ArrowDown}{ArrowLeft}{/Shift}',
+      );
+
+      expect(rangesOf(handlers)).toEqual([
+        ['2026-11-11', '2026-11-12'],
+        ['2026-11-11', '2026-11-13'],
+        ['2026-11-11', '2026-11-20'],
+        ['2026-11-11', '2026-11-19'],
+      ]);
+    });
+
+    it('starts again from the day that has the focus after a key with no Shift', async () => {
+      const handlers = await pressKeys(
+        '{Shift>}{ArrowRight}{/Shift}{ArrowRight}{Shift>}{ArrowRight}{/Shift}',
+      );
+
+      expect(rangesOf(handlers)).toEqual([
+        ['2026-11-11', '2026-11-12'],
+        ['2026-11-13', '2026-11-14'],
+      ]);
+    });
+
+    it('ends a range in progress at the day of the key', async () => {
+      const handlers = await pressKeys('{Shift>}{ArrowDown}{/Shift}', {
+        props: { defaultValue: [day('2026-11-05'), null] },
+      });
+
+      expect(rangesOf(handlers)).toEqual([['2026-11-05', '2026-11-18']]);
+    });
+
+    it('swaps Left and Right in a right-to-left page', async () => {
+      const handlers = await pressKeys('{Shift>}{ArrowLeft}{/Shift}', { rtl: true });
+
+      expect(rangesOf(handlers)).toEqual([['2026-11-11', '2026-11-12']]);
+    });
+
+    it('moves the page and not a month when the key leaves the page', async () => {
+      const handlers = await pressKeys('{Shift>}{ArrowRight}{/Shift}', { from: '2026-11-30' });
+
+      expect(rangesOf(handlers)).toEqual([['2026-11-30', '2026-12-01']]);
+      expect(document.activeElement).toBe(button('2026-12-01'));
+    });
+
+    it('moves the focus over a day that cannot be selected, and makes no range over it', async () => {
+      const props = { disabledDates: day('2026-11-12') };
+      const handlers = await pressKeys('{Shift>}{ArrowRight}{/Shift}', { props });
+
+      expect(rangesOf(handlers)).toEqual([]);
+      expect(document.activeElement).toBe(button('2026-11-13'));
+    });
+
+    it('makes the range over a day that cannot be selected with allowNonContiguousRanges', async () => {
+      const props = { disabledDates: day('2026-11-12'), allowNonContiguousRanges: true };
+      const handlers = await pressKeys('{Shift>}{ArrowRight}{/Shift}', { props });
+
+      expect(rangesOf(handlers)).toEqual([['2026-11-11', '2026-11-13']]);
+    });
+  });
+});
