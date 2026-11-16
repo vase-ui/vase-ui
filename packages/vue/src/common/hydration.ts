@@ -63,32 +63,13 @@ export function useAriaAfterHydration(): <Value>(value: Value) => Value | null {
   return (value) => (hydrated.value ? value : null);
 }
 
-/**
- * Gives the element of the server HTML that Vue hydrates for the component that calls it, until
- * the component is mounted. It gives `null` on a server, in a client-only mount and after the
- * mount.
- *
- * A part whose first client render cannot know a value of the server HTML reads that value from
- * the element. The first client render then gives the value of the server HTML, and Vue writes
- * each value that the render after the mount changes.
- */
-export function useServerElement(): () => HTMLElement | null {
-  const node: unknown = getCurrentInstance()?.vnode.el;
-  if (!isNode(node)) {
-    return () => null;
-  }
-  // The render of a `#render` slot is a fragment, which starts with a comment.
-  const element = isHTMLElement(node) ? node : node.nextSibling;
-  const hydrated = useIsHydrated();
-  return () => (hydrated.value || !isHTMLElement(element) ? null : element);
-}
-
 // The first element that Vue hydrates for the component. A component whose template starts with a
 // fragment, such as a part with a `#render` slot, starts with the comment `[`, and the fragment ends
-// with the comment `]`.
-function serverElementOf(first: Node | null): Element | null {
+// with the comment `]`. A component that renders only a comment has no element. The walk thus
+// stops before the nodes of the next component, and it does not give the element of that component.
+function serverElementOf(first: unknown): Element | null {
   let depth = 0;
-  for (let node = first; node !== null; node = node.nextSibling) {
+  for (let node = isNode(first) ? first : null; node !== null; node = node.nextSibling) {
     if (node.nodeType === 1) {
       return node as Element;
     }
@@ -99,6 +80,24 @@ function serverElementOf(first: Node | null): Element | null {
     }
   }
   return null;
+}
+
+/**
+ * Gives the element of the server HTML that Vue hydrates for the component that calls it, until
+ * the component is mounted. It gives `null` on a server, in a client-only mount and after the
+ * mount.
+ *
+ * A part whose first client render cannot know a value of the server HTML reads that value from
+ * the element. The first client render then gives the value of the server HTML, and Vue writes
+ * each value that the render after the mount changes.
+ */
+export function useServerElement(): () => HTMLElement | null {
+  const element = serverElementOf(getCurrentInstance()?.vnode.el);
+  if (!isHTMLElement(element)) {
+    return () => null;
+  }
+  const hydrated = useIsHydrated();
+  return () => (hydrated.value ? null : element);
 }
 
 /**
@@ -117,9 +116,7 @@ export function useServerValue<Value>(
   parse: (text: string) => Value | undefined,
   write: (value: Value) => string = String,
 ): { value: ComputedRef<Value>; attributes: () => Record<string, string> | undefined } {
-  // The DOM renderer of Vue keeps a DOM node in `vnode.el`.
-  const first = (getCurrentInstance()?.vnode.el ?? null) as Node | null;
-  const text = serverElementOf(first)?.getAttribute(attribute);
+  const text = serverElementOf(getCurrentInstance()?.vnode.el)?.getAttribute(attribute);
   const serverValue = text == null ? undefined : parse(text);
   const isHydrating = useIsHydrating();
   const value = computed(() =>
