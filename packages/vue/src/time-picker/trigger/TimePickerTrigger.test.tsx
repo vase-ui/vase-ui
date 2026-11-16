@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { TimePicker } from '@vase-ui/vue/time-picker';
-import { createRenderer, describeConformance, screen } from '#test-utils';
+import { createRenderer, describeConformance, screen, takeReportedMessages } from '#test-utils';
 import { formatText } from '../../internals/date-time/calendar/formatText';
 
 const time = Temporal.PlainTime.from('15:04');
@@ -155,5 +155,14 @@ describe('<TimePicker.Trigger />', () => {
 
       expect(screen.getByRole('button')).toBeDisabled();
     });
+  });
+
+  it('throws outside the root of a time picker', async () => {
+    await expect(render(<TimePicker.Trigger />)).rejects.toThrow(
+      'Vase UI: A part of Time Picker must be inside <TimePicker.Root>. Without a root the part has no value and no popup to share. Put the part inside <TimePicker.Root>.',
+    );
+    expect(takeReportedMessages()).toEqual([
+      expect.stringContaining('Unhandled error during execution of setup function'),
+    ]);
   });
 });

@@ -3,6 +3,7 @@ import type {
   TimeClockRootProps,
   TimeClockRootState,
 } from '../../time-clock/root/TimeClockRoot.vue';
+import type { TimeClockView } from '../../time-clock/utils/clockViews';
 
 export interface TimePickerClockState extends TimeClockRootState {}
 
@@ -15,6 +16,7 @@ export interface TimePickerClockProps extends Omit<
   TimeClockRootProps,
   | 'value'
   | 'defaultValue'
+  | 'defaultView'
   | 'granularity'
   | 'hourCycle'
   | 'minTime'
@@ -23,11 +25,19 @@ export interface TimePickerClockProps extends Omit<
   | 'locale'
   | 'disabled'
   | 'readOnly'
-> {}
+> {
+  /**
+   * The unit that an uncontrolled clock shows each time that the popup opens.
+   *
+   * To render a controlled view, use the `view` prop instead.
+   * @default 'hour'
+   */
+  defaultView?: TimeClockView | undefined;
+}
 </script>
 
 <script setup lang="ts">
-import { computed, shallowRef, useAttrs, useTemplateRef } from 'vue';
+import { computed, shallowRef, useAttrs, useTemplateRef, watch } from 'vue';
 import { usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
 import { withTime } from '../../internals/date-time/temporal';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -37,7 +47,6 @@ import type {
   TimeClockRootCommitEventDetails,
 } from '../../time-clock/root/TimeClockRoot.vue';
 import { nextView } from '../../time-clock/utils/clockViews';
-import type { TimeClockView } from '../../time-clock/utils/clockViews';
 import { useTimePickerRootContext } from '../root/TimePickerRootContext';
 import { useFocusPartOnOpen } from '../utils/useFocusPartOnOpen';
 import type { TimePickerRootValue } from '../root/TimePickerRoot.vue';
@@ -103,6 +112,14 @@ useFocusPartOnOpen(popup, () =>
 // last commit.
 const shownView = shallowRef<TimeClockView>(props.defaultView ?? 'hour');
 const view = computed(() => props.view ?? shownView.value);
+// A clock in a popup that mounts at each open starts at its first view. The part thus gives the
+// view to `TimeClock.Root`, and it shows the first view again each time that a popup that stays
+// mounted opens.
+watch(popup.open, (open) => {
+  if (open) {
+    shownView.value = props.defaultView ?? 'hour';
+  }
+});
 const isLastView = computed(
   () => nextView(view.value, picker.props.granularity ?? 'minute') === undefined,
 );
@@ -147,6 +164,7 @@ function clockProps() {
     ...attrs,
     ...props,
     ...valueProps,
+    view: view.value,
     granularity: root.granularity,
     hourCycle: root.hourCycle,
     minTime: root.minTime,

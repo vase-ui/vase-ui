@@ -569,6 +569,48 @@ describe('<TimePicker.Root />', () => {
 
       await expectClosed(popup);
     });
+
+    // A clock in a popup that mounts at each open starts at its first view.
+    it.each([
+      {
+        name: 'the hours',
+        granularity: 'minute',
+        clockProps: {},
+        firstView: 'hour',
+        nextView: 'minute',
+      },
+      {
+        name: 'the view of `defaultView`',
+        granularity: 'second',
+        clockProps: { defaultView: 'minute' },
+        firstView: 'minute',
+        nextView: 'second',
+      },
+    ])(
+      'shows $name each time that a popup that stays mounted opens',
+      async ({ granularity, clockProps, firstView, nextView }) => {
+        const { user } = await renderPicker({
+          clock: true,
+          keepMounted: true,
+          defaultValue: time('15:30'),
+          granularity,
+          clockProps,
+        });
+        await open(user);
+        await pressFaceAt(120);
+        await waitFor(() => {
+          expect(screen.getByTestId('clock')).toHaveAttribute('data-view', nextView);
+        });
+        await user.keyboard('{Escape}');
+        await waitFor(() => {
+          expect(screen.getByTestId('trigger')).toHaveFocus();
+        });
+
+        await open(user);
+
+        expect(screen.getByTestId('clock')).toHaveAttribute('data-view', firstView);
+      },
+    );
   });
 
   describe('the value', () => {
