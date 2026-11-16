@@ -1,0 +1,169 @@
+<script lang="ts">
+import type { CalendarRootProps, CalendarRootState } from '../../calendar/root/CalendarRoot.vue';
+
+export interface DatePickerCalendarState extends CalendarRootState {}
+
+/**
+ * The props of `Calendar.Root` that the picker does not own. The root of the picker owns the
+ * value, the limits, the locale, the calendar, the time zone and the states `disabled` and
+ * `readOnly`. The calendar takes the focus when the popup opens, so it has no `autoFocus`.
+ */
+export interface DatePickerCalendarProps extends Omit<
+  CalendarRootProps,
+  | 'value'
+  | 'defaultValue'
+  | 'multiple'
+  | 'minDays'
+  | 'maxDays'
+  | 'minDate'
+  | 'maxDate'
+  | 'unavailableDates'
+  | 'locale'
+  | 'calendar'
+  | 'timeZone'
+  | 'disabled'
+  | 'readOnly'
+  | 'autoFocus'
+> {}
+</script>
+
+<script setup lang="ts">
+import { isElement } from '@floating-ui/utils/dom';
+import { computed, useAttrs, useTemplateRef } from 'vue';
+import CalendarRoot from '../../calendar/root/CalendarRoot.vue';
+import { closest, getTarget } from '../../common/shadowDom';
+import { useFocusOnOpen, usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
+import { isKind } from '../../internals/date-time/temporal';
+import type { DateValue } from '../../internals/date-time/temporal';
+import { omitUndefinedAttributes } from '../../internals/omitUndefinedAttributes';
+import { REASONS } from '../../internals/reasons';
+import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { mergeProps } from '../../merge-props';
+import { useDatePickerRootContext } from '../root/DatePickerRootContext';
+import type {
+  DatePickerRootChangeEventDetails,
+  DatePickerRootValue,
+} from '../root/DatePickerRoot.vue';
+
+defineOptions({ inheritAttrs: false });
+
+const props = withDefaults(defineProps<DatePickerCalendarProps>(), { as: 'div' });
+
+defineSlots<{
+  default(props: { state: DatePickerCalendarState }): unknown;
+  render: ComponentRenderFn<HTMLProps, DatePickerCalendarState>;
+}>();
+
+const attrs = useAttrs();
+const picker = useDatePickerRootContext();
+const popup = usePickerPopup();
+
+// This part renders `Calendar.Root` and makes no element of its own. The template has one form for
+// `#render` and one for the content. A `v-if` on a slot template makes the slots of
+// `Calendar.Root` dynamic. Vue then renders `Calendar.Root` again each time this part renders.
+const calendar = useTemplateRef<{
+  element: HTMLElement | null;
+  focus: (date?: DateValue) => void;
+}>('calendar');
+const element = computed(() => calendar.value?.element ?? null);
+
+// The popup puts the focus on the first tabbable element, which is a navigation button. The day
+// that has the tab stop is the element that the date picker pattern names.
+useFocusOnOpen(popup, () => calendar.value?.focus());
+
+function handleValueChange(
+  value: DatePickerRootValue | null,
+  details: DatePickerRootChangeEventDetails,
+) {
+  picker.commit(value, details);
+  if (
+    !details.isCanceled &&
+    picker.closeOnSelect.value &&
+    (details.reason === REASONS.dayPress || details.reason === REASONS.monthPress)
+  ) {
+    popup.closeAfterSelection(details.event);
+  }
+}
+
+// A press on the selected day changes no value, so the calendar emits no change for it. The press
+// still picks that day, and the popup closes as it does for a new day. The attributes of the cell
+// say if the press picked the day: the grid of days selects for a date, and the grid of months for
+// a year and month.
+function handleClick(event: MouseEvent) {
+  const root = event.currentTarget;
+  const target = getTarget(event);
+  if (
+    !isElement(root) ||
+    !isElement(target) ||
+    !picker.closeOnSelect.value ||
+    !popup.open.value ||
+    picker.disabled.value ||
+    picker.props.readOnly ||
+    root.getAttribute('data-view') !==
+      (isKind(picker.template.value, 'yearMonth') ? 'month' : 'day')
+  ) {
+    return;
+  }
+  const button = closest(target, 'button');
+  const cell = closest(button, '[role="gridcell"]');
+  if (
+    cell?.getAttribute('aria-selected') === 'true' &&
+    cell.getAttribute('aria-disabled') !== 'true' &&
+    button?.getAttribute('aria-disabled') !== 'true'
+  ) {
+    popup.closeAfterSelection(event);
+  }
+}
+
+const calendarHandlers = { onClick: handleClick };
+
+// `Calendar.Root` has a type parameter for the kind of its value, and vue-tsc takes it from the
+// props. The picker has any kind, so the value and the default value have the type `any`. The
+// default value gives the kind of a new value, the same kind as for the field.
+function calendarProps() {
+  const root = picker.props;
+  const valueProps: Record<string, any> = {
+    value: picker.value.value,
+    defaultValue: picker.template.value,
+  };
+  return {
+    ...mergeProps(calendarHandlers, omitUndefinedAttributes(attrs)),
+    ...props,
+    ...valueProps,
+    minDate: root.minDate,
+    maxDate: root.maxDate,
+    unavailableDates: root.unavailableDates,
+    locale: root.locale,
+    calendar: root.calendar,
+    timeZone: root.timeZone,
+    disabled: picker.disabled.value,
+    readOnly: root.readOnly,
+  };
+}
+
+defineExpose({
+  element,
+  /** Gives the focus to `date`, or to the day that has the tab stop. */
+  focus: (date?: DateValue) => {
+    calendar.value?.focus(date);
+  },
+});
+</script>
+
+<template>
+  <CalendarRoot
+    v-if="$slots.render"
+    ref="calendar"
+    v-bind="calendarProps()"
+    @value-change="handleValueChange"
+  >
+    <template #render="slotProps">
+      <slot name="render" v-bind="slotProps" />
+    </template>
+  </CalendarRoot>
+  <CalendarRoot v-else ref="calendar" v-bind="calendarProps()" @value-change="handleValueChange">
+    <template #default="slotProps">
+      <slot v-bind="slotProps" />
+    </template>
+  </CalendarRoot>
+</template>
