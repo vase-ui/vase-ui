@@ -1,4 +1,4 @@
-import { computed, inject, onBeforeUnmount, provide } from 'vue';
+import { computed, inject, onBeforeUnmount, provide, unref } from 'vue';
 import type { ComputedRef, InjectionKey } from 'vue';
 import { createChangeEventDetails } from '../../createBaseUIEventDetails';
 import { REASONS } from '../../reasons';
@@ -86,7 +86,7 @@ function getFirstInDocument(elements: (Element | null | undefined)[]) {
  * focus manager would take the first tabbable element, which is a navigation button. A popup with
  * no element from a target keeps the default of `Popover.Popup`.
  * @param initialFocus The `initialFocus` prop of the part. A value of the consumer replaces the
- * default, also `false`.
+ * default, also `false`. `true`, `null` and no value ask for the default.
  */
 export function usePickerInitialFocus(
   initialFocus: () => FocusOption | undefined,
@@ -99,7 +99,19 @@ export function usePickerInitialFocus(
   const pickerDefault = (interactionType: InteractionType) =>
     getFirstInDocument([...targets].map((target) => target())) ?? popupDefault(interactionType);
 
-  return computed(() => initialFocus() ?? pickerDefault);
+  // `true` and `null` ask for the default behavior, and the default of a picker is its target. The
+  // same holds for the result of a function.
+  return computed(() => {
+    const option = initialFocus();
+    if (typeof option === 'function') {
+      return (interactionType: InteractionType) => {
+        const result = option(interactionType);
+        return result === true || result === null ? pickerDefault(interactionType) : result;
+      };
+    }
+    const value = unref(option);
+    return value === undefined || value === null || value === true ? pickerDefault : value;
+  });
 }
 
 /**

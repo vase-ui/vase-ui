@@ -149,7 +149,7 @@ describe('<DatePicker.Root />', () => {
         expect(screen.getByTestId('trigger')).toHaveFocus();
       });
 
-      it('moves the focus to the first tabbable element for `true`', async () => {
+      it('moves the focus to the default element for `true`', async () => {
         const { user } = await renderPicker({
           defaultValue: day('2026-11-18'),
           popupProps: { initialFocus: true },
@@ -158,9 +158,28 @@ describe('<DatePicker.Root />', () => {
         await open(user);
 
         await waitFor(() => {
-          expect(screen.getByTestId('previous')).toHaveFocus();
+          expect(dayButton('2026-11-18')).toHaveFocus();
         });
       });
+
+      it.each([
+        { name: '`true`', result: true },
+        { name: '`null`', result: null },
+      ])(
+        'moves the focus to the default element when a function gives $name',
+        async ({ result }) => {
+          const { user } = await renderPicker({
+            defaultValue: day('2026-11-18'),
+            popupProps: { initialFocus: () => result },
+          });
+
+          await open(user);
+
+          await waitFor(() => {
+            expect(dayButton('2026-11-18')).toHaveFocus();
+          });
+        },
+      );
 
       it('moves the focus to the element that a function gives', async () => {
         const { user } = await renderPicker({

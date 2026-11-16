@@ -65,7 +65,7 @@ Import the component and assemble its parts:
 
 `DatePicker.Root` renders `Popover.Root` and no element of its own. It holds the value and shares it with its parts. `DatePicker.Field` renders `DateField.Root`, `DatePicker.Calendar` renders `Calendar.Root`, and `DatePicker.TimeField` renders `TimeField.Root`. Write the parts of those components inside them, as the pages of [Date Field](/components/date-field), [Calendar](/components/calendar) and [Time Field](/components/time-field) show.
 
-`DatePicker.Trigger` and `DatePicker.Positioner` render `Popover.Trigger` and `Popover.Positioner`. The other parts of the popup are the parts of [Popover](/components/popover): `DatePicker.Portal`, `DatePicker.Popup`, `DatePicker.Arrow`, `DatePicker.Backdrop`, `DatePicker.Close`, `DatePicker.Title` and `DatePicker.Description`. The positioner puts the popup against the field, and against the trigger when the picker has no field.
+`DatePicker.Trigger`, `DatePicker.Positioner` and `DatePicker.Popup` render `Popover.Trigger`, `Popover.Positioner` and `Popover.Popup`. The other parts of the popup are the parts of [Popover](/components/popover): `DatePicker.Portal`, `DatePicker.Arrow`, `DatePicker.Backdrop`, `DatePicker.Close`, `DatePicker.Title` and `DatePicker.Description`. The positioner puts the popup against the field, and against the trigger when the picker has no field.
 
 `DatePicker.Field` and `DatePicker.TimeField` have a hidden `<input>` after their element, so a rule of `<style scoped>` does not match them, and `v-show` has no effect on them. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
 

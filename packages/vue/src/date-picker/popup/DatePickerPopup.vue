@@ -8,14 +8,15 @@ export interface DatePickerPopupProps extends PopoverPopupProps {
    * Determines the element to focus when the popup is opened.
    * By default, focus moves to the day of the calendar that has the tab stop: the selected day, or
    * else today. The calendar of a month picker has the month in its place. A popup with no
-   * calendar keeps the default of the popover: the first tabbable element, except when the popup is
+   * calendar uses the default of the popover: the first tabbable element, except when the popup is
    * opened by touch — then the popup itself is focused to avoid opening the virtual keyboard.
    *
    * - `false`: Do not move focus.
-   * - `true`: Move focus to the first tabbable element inside the popup, or else to the popup.
-   * - An element, a component, or a ref of one: Move focus to that element.
+   * - `true`: Move focus to the default element.
+   * - An element, a component, or a ref of one: Move focus to that element. An empty ref uses the
+   *   default element.
    * - `function`: Called with the interaction type (`mouse`, `touch`, `pen`, or `keyboard`).
-   *   Return an element to focus, `true` or `null` to use the default behavior, or `false` or
+   *   Return an element to focus, `true` or `null` to use the default element, or `false` or
    *   `undefined` to do nothing.
    */
   initialFocus?: PopoverPopupProps['initialFocus'] | undefined;
