@@ -956,12 +956,14 @@ describe('<Select.Trigger />', () => {
   describe('VUE-86: aria-controls follows the id of the list', () => {
     it('follows the id of the list while the popup is open', async () => {
       const id = shallowRef('first');
+      // The popup has an id too, so a trigger that names the popup in place of a list with an empty
+      // `id` fails the case.
       await render(() => (
         <Select.Root defaultOpen>
           <Select.Trigger data-testid="trigger" />
           <Select.Portal>
             <Select.Positioner>
-              <Select.Popup>
+              <Select.Popup id="popup">
                 <Select.List id={id.value} data-testid="list">
                   <Select.Item value="a">A</Select.Item>
                 </Select.List>
