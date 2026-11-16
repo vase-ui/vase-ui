@@ -549,8 +549,7 @@ test('the events keep the sequence of defineEmits, and not the sequence of the c
     () => {
       // The checker makes the names of the events in the reverse sequence when it reads the seed first.
       project.readUnionValues(join(SAMPLE, 'index.ts'), 'SampleRootEventSeed');
-      return project.readComponent(project.findExports(join(SAMPLE, 'index.ts'), 'Root')[0]!)
-        ?.emits;
+      return project.readComponent(project.findExports(join(SAMPLE, 'index.ts'), 'Root')[0])?.emits;
     },
   );
   assert.deepEqual([...(emits?.keys() ?? [])], ['openChange', 'update:open', 'openChangeComplete']);
@@ -573,7 +572,7 @@ test('the slot props keep the sequence of their declarations, also the propertie
       // The checker makes the keys in the reverse sequence when it reads the seed first.
       project.readUnionValues(join(SAMPLE, 'index.ts'), 'SlotSeed');
       return project
-        .readComponent(project.findExports(join(SAMPLE, 'index.ts'), 'Popup')[0]!)
+        .readComponent(project.findExports(join(SAMPLE, 'index.ts'), 'Popup')[0])
         ?.slots.get('default')
         ?.props.map(({ name }) => name);
     },

@@ -231,7 +231,8 @@ export function createVaseProject(tsconfig: string): VaseProject {
   };
   const resolve = (symbol: ts.Symbol): ts.Symbol =>
     symbol.flags & ts.SymbolFlags.Alias ? typeChecker().getAliasedSymbol(symbol) : symbol;
-  // The flags and the clean-up are those of vue-component-meta, so a slot prop reads like a prop.
+  // The flags and the clean-up are those of vue-component-meta, so each text has the form that
+  // vue-component-meta gives a prop.
   const typeText = (type: ts.Type): string =>
     typeChecker()
       .typeToString(
