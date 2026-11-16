@@ -8,6 +8,7 @@ import type { FamilyFile } from '../parity/parityFiles.ts';
 import { REPOSITORY_ROOT } from '../parity/repository.ts';
 import {
   checkDemos,
+  demoFamilyNames,
   expectedFiles,
   loadDemoFamilies,
   loadEntryPoints,
@@ -248,6 +249,7 @@ function makeRecord(commit = COMMIT): DemoRecord {
 function makeDemoFamily(overrides: Partial<DemoFamily> = {}): DemoFamily {
   return {
     name: 'button',
+    own: false,
     matchedCommit: COMMIT,
     record: makeRecord(),
     files: new Map([
@@ -331,6 +333,7 @@ const FORM_CLASS = 'flex w-full max-w-3xs flex-col gap-5 sm:max-w-[20rem]';
 function makeFormsFamily(overrides: Partial<DemoFamily> = {}): DemoFamily {
   return {
     name: 'handbook-forms',
+    own: false,
     matchedCommit: COMMIT,
     record: {
       commit: COMMIT,
@@ -604,11 +607,75 @@ const OWN_RECORD = JSON.stringify({
   parts: ['Root'],
 });
 
-test('an own component with a page and a demo folder is not a demo family, so the check has no problem', () => {
-  const root = makeRoot({ 'parity/own/sample.json': OWN_RECORD });
+const OWN_CSS_MODULES = 'docs/demos/sample/hero/css-modules/index.vue';
+const OWN_TAILWIND = 'docs/demos/sample/hero/tailwind/index.vue';
+
+function makeOwnRoot(files: Record<string, string>): string {
+  return makeRoot({ 'parity/own/sample.json': OWN_RECORD, ...files });
+}
+
+test('an own component with a page and a demo folder is a demo family with no record, and the command leaves it out', () => {
+  const root = makeOwnRoot({ 'docs/demos/sample/upstream.json': 'not a record' });
+  assert.deepEqual(
+    loadDemoFamilies(root).map(({ name, own, matchedCommit, record }) => ({
+      name,
+      own,
+      matchedCommit,
+      record,
+    })),
+    [{ name: 'sample', own: true, matchedCommit: undefined, record: undefined }],
+  );
+  assert.deepEqual(demoFamilyNames(root, new Set(['sample'])), []);
+});
+
+test('an own demo whose two variants differ only in their classes has no problem', () => {
+  const root = makeOwnRoot({
+    [OWN_CSS_MODULES]: '<template><p :class="styles.Text">Open</p></template>\n',
+    [OWN_TAILWIND]: '<template><p class="text-sm">Open</p></template>\n',
+  });
   const families = loadDemoFamilies(root);
-  assert.deepEqual(families, []);
+  assert.deepEqual(
+    families.map(({ name }) => name),
+    ['sample'],
+  );
   assert.deepEqual(checkDemos(families, ENTRY_POINTS), []);
+});
+
+test('the class strings of an own demo come with the family, by its Tailwind folders', () => {
+  const root = makeOwnRoot({
+    [OWN_CSS_MODULES]: '<template><p class="plain">Open</p></template>\n',
+    [OWN_TAILWIND]: '<template><p :class="textClass">Open</p></template>\n',
+    'docs/demos/sample/hero/tailwind/classes.ts': "export const textClass = 'text-sm';\n",
+    'docs/demos/sample/loading/tailwind/index.vue': '<template><p class="a  b" /></template>\n',
+  });
+  const [family] = loadDemoFamilies(root);
+  assert.deepEqual(
+    family?.vueClasses,
+    new Map([
+      ['hero/tailwind', { p: ['text-sm'] }],
+      ['loading/tailwind', { p: ['a b'] }],
+    ]),
+  );
+});
+
+test('an own demo with one variant is a problem that names the absent file', () => {
+  const root = makeOwnRoot({
+    'docs/demos/sample/loading/tailwind/index.vue': '<template></template>\n',
+  });
+  assert.deepEqual(checkDemos(loadDemoFamilies(root), ENTRY_POINTS), [
+    "docs/demos/sample/hero/tailwind/index.vue does not exist. A demo of a component of Vase UI's own has the two variants. Add the Tailwind demo.",
+    "docs/demos/sample/loading/css-modules/index.vue does not exist. A demo of a component of Vase UI's own has the two variants. Add the CSS-module demo.",
+  ]);
+});
+
+test('an own demo whose Tailwind variant has another text is a problem that names the difference', () => {
+  const root = makeOwnRoot({
+    [OWN_CSS_MODULES]: '<template><p>Open</p></template>\n',
+    [OWN_TAILWIND]: '<template><p class="text-sm">Close</p></template>\n',
+  });
+  assert.deepEqual(checkDemos(loadDemoFamilies(root), ENTRY_POINTS), [
+    'docs/demos/sample/hero: the Tailwind demo differs from the CSS-module demo in more than its classes. css-modules/index.vue has "Open" where tailwind/index.vue has "Close". Make the two demos equal apart from the classes.',
+  ]);
 });
 
 test('a page with neither a family file nor an own record is a demo family, so the check reports it', () => {

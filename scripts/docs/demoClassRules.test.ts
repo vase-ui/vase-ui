@@ -10,7 +10,10 @@ test('a class name of a color in the theme has a rule, and a class name of anoth
 
 test('the class names of the Tailwind demos that have no rule are the names of the list, and no other', async () => {
   const folders = new Map<string, Set<string>>();
-  for (const { name, vueClasses } of loadDemoFamilies(REPOSITORY_ROOT)) {
+  // A class string of a ported demo is that of Base UI, so the name stays. A demo of Vase UI's own
+  // has class strings of its own, so the name is corrected there.
+  const ported = new Set<string>();
+  for (const { name, own, vueClasses } of loadDemoFamilies(REPOSITORY_ROOT)) {
     for (const [key, row] of vueClasses) {
       for (const className of Object.values(row)
         .flat()
@@ -19,6 +22,9 @@ test('the class names of the Tailwind demos that have no rule are the names of t
           className,
           (folders.get(className) ?? new Set()).add(`docs/demos/${name}/${key}`),
         );
+        if (!own) {
+          ported.add(className);
+        }
       }
     }
   }
@@ -28,7 +34,11 @@ test('the class names of the Tailwind demos that have no rule are the names of t
       .filter((className) => !CLASS_NAMES_WITHOUT_RULE.has(className))
       .map(
         (className) =>
-          `The class name ${className} adds no rule to docs/demos/tailwind.css. Folders: ${[...(folders.get(className) ?? [])].join(', ')}. Add the color to the theme when the theme of the Base UI docs has it. Else add the name to CLASS_NAMES_WITHOUT_RULE with its reason.`,
+          `The class name ${className} adds no rule to docs/demos/tailwind.css. Folders: ${[...(folders.get(className) ?? [])].join(', ')}. ${
+            ported.has(className)
+              ? 'Add the color to the theme when the theme of the Base UI docs has it. Else add the name to CLASS_NAMES_WITHOUT_RULE with its reason.'
+              : 'Base UI does not have this demo. Use a class name that gives a rule, with a color of the theme. Add only a marker, such as group, to CLASS_NAMES_WITHOUT_RULE.'
+          }`,
       ),
     ...[...CLASS_NAMES_WITHOUT_RULE]
       .filter((className) => !withoutRule.includes(className))

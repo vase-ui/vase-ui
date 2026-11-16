@@ -20,6 +20,7 @@ import {
   renderOnServer,
   screen,
   takeReportedMessages,
+  wait,
   waitFor,
   within,
 } from '#test-utils';
@@ -2987,7 +2988,7 @@ describe('<Checkbox.Root />', () => {
       screen.getByRole('checkbox').focus();
 
       await userEvent.keyboard('{Enter}');
-      await flushMicrotasks();
+      await wait(0);
 
       expect(handleKeydown.mock.results.at(-1)?.value).toBe(false);
       expect(handleSubmit).not.toHaveBeenCalled();
@@ -3028,10 +3029,11 @@ describe('<Checkbox.Root />', () => {
       screen.getByRole('checkbox').focus();
 
       await userEvent.keyboard('{Enter}');
-      await flushMicrotasks();
 
+      await waitFor(() => {
+        expect(handleSubmit).toHaveBeenCalledTimes(1);
+      });
       expect(handleKeydown.mock.results.at(-1)?.value).toBe(false);
-      expect(handleSubmit).toHaveBeenCalledTimes(1);
       expect(screen.getByRole('checkbox')).toHaveAttribute('aria-checked', 'false');
     });
   });

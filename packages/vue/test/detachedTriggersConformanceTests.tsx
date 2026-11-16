@@ -11,6 +11,7 @@ import type { createRenderer } from './createRenderer';
 import { fireEvent } from './fireEvent';
 import { flushMicrotasks } from './flushMicrotasks';
 import { takeReportedMessages } from './reportedMessages';
+import { wait } from './wait';
 
 /**
  * Behavior shared by every popup that supports multiple triggers and detached triggers
@@ -203,6 +204,10 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
       await fireEvent.mouseLeave(from);
       await fireEvent.mouseEnter(to);
       await fireEvent.mouseMove(to);
+    } else if (interaction === 'focus') {
+      to.focus();
+      // The focus out of `from` starts a 0 ms timer that must not close the popup.
+      await wait(0);
     } else {
       await openWith(interaction, user, to);
     }
@@ -216,6 +221,16 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
 
   function expectPopupClosed() {
     expect(screen.queryByTestId('popup')).toBe(null);
+  }
+
+  // After `blur()`, a popup closes in a 0 ms timer, so `closeWith` can resolve before the close.
+  async function expectPopupClosedAfter(close: () => Promise<void>) {
+    const popup = screen.getByTestId('popup');
+    await close();
+    await waitFor(() => {
+      expect(popup).not.toBeInTheDocument();
+    });
+    expectPopupClosed();
   }
 
   async function waitForContent(text: string) {
@@ -284,8 +299,7 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
                 await waitForPopupOpen();
                 expectActiveTrigger(number, 3);
 
-                await closeWith(interaction, user, trigger);
-                expectPopupClosed();
+                await expectPopupClosedAfter(() => closeWith(interaction, user, trigger));
                 expectActiveTrigger(null, 3);
               }
             },
@@ -798,8 +812,7 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
           await openWith(primaryInteraction, user, getTrigger(1));
           await waitForPopupOpen();
           expectActiveTrigger(1, 1);
-          await closeWith(primaryInteraction, user, getTrigger(1));
-          expectPopupClosed();
+          await expectPopupClosedAfter(() => closeWith(primaryInteraction, user, getTrigger(1)));
         }
 
         it.each([

@@ -20,7 +20,9 @@ interface Tailwind {
 
 /**
  * The class names of the Tailwind demos that add no rule to `docs/demos/tailwind.css` and are
- * correct. A class string of a demo is that of Base UI, so each name stays.
+ * correct. A class string of a ported demo is that of Base UI, so each name stays. A demo of a
+ * component of Vase UI's own has no name here other than a marker, because its class strings can
+ * change.
  */
 export const CLASS_NAMES_WITHOUT_RULE: ReadonlySet<string> = new Set([
   // Markers of Tailwind. The `group-*` variant of another class names the marker.
