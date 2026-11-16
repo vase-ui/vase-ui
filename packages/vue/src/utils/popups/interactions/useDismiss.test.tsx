@@ -301,8 +301,9 @@ async function clickWithNoPress(target: Element) {
   await fireEvent.click(target, { detail: 0 });
 }
 
-// The browser sends the click to the common ancestor of both ends of the drag.
+// A real drag. The browser sends the click to the common ancestor of both ends of the drag.
 async function dragOnto(target: Element, outside: Element) {
+  // The real pointer needs a box at the end of the drag, and the backdrop of the fixture has none.
   target.setAttribute(
     'style',
     'position: absolute; left: 350px; top: 20px; width: 60px; height: 60px',
@@ -313,7 +314,11 @@ async function dragOnto(target: Element, outside: Element) {
       await userEvent.pointer({ keys: '[/MouseLeft]', coords: { x: 0, y: 0 } });
     }
   });
+  // The press names its target, because the browser command scrolls to a target. The outside
+  // element is not in the viewport of the test page.
   await userEvent.pointer({ target: outside, keys: '[MouseLeft>]' });
+  // A person holds the button for more than one task, so each 0 ms timer of the press runs before
+  // the release.
   await wait(0);
   await userEvent.pointer({ target, keys: '[/MouseLeft]' });
   held = false;
@@ -2161,7 +2166,8 @@ describe('useDismiss', () => {
       await fireEvent.pointerDown(scrubber, { pointerType: 'mouse', button: 0 });
       await fireEvent.mouseDown(scrubber, { button: 0 });
       await wait(0);
-      // The release and its immediate click precede the suppression timer.
+      // The release starts the 0 ms timer that ends the suppression. The immediate click comes
+      // before that timer.
       await Promise.all([
         fireEvent.pointerUp(document.body, { pointerType: 'mouse', button: 0 }),
         fireEvent.mouseUp(document.body, { button: 0 }),
@@ -2211,7 +2217,8 @@ describe('useDismiss', () => {
       await fireEvent.pointerDown(scrubber, { pointerType: 'mouse', button: 0 });
       await fireEvent.mouseDown(scrubber, { button: 0 });
       await wait(0);
-      // This case covers a synthetic click before the suppression timer.
+      // The cancel starts the 0 ms timer that ends the suppression. The immediate click comes
+      // before that timer.
       await Promise.all([
         fireEvent.pointerCancel(document.body, { pointerType: 'mouse' }),
         fireEvent.click(document.body),
