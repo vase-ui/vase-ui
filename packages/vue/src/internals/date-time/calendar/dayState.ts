@@ -67,6 +67,22 @@ export function ownsDay(page: CalendarPage, date: Temporal.PlainDate): boolean {
   return compareDates(date, page.first) >= 0 && compareDates(date, page.last) <= 0;
 }
 
+/** The rules that disable a day. */
+export type DisabledRules = Pick<DayRules, 'disabled' | 'minDate' | 'maxDate' | 'disabledDates'>;
+
+/**
+ * Whether `date` can neither take focus nor be selected: the calendar is disabled, the day is
+ * before `minDate` or after `maxDate`, or `disabledDates` matches it.
+ */
+export function isDisabledDay(date: Temporal.PlainDate, rules: DisabledRules): boolean {
+  return (
+    rules.disabled ||
+    (rules.minDate !== undefined && compareDates(date, rules.minDate) < 0) ||
+    (rules.maxDate !== undefined && compareDates(date, rules.maxDate) > 0) ||
+    matches(date, rules.disabledDates)
+  );
+}
+
 /**
  * The state of `date` in `page`. With no page, the day is not outside any month and no other
  * page shows it, so only `hiddenDates` can hide it.
@@ -77,8 +93,6 @@ export function getDayState(
   rules: DayRules,
 ): DayState {
   const outsideMonth = page !== null && !page.isDuration && !isInMonth(date, page.yearMonth);
-  const isBeforeMin = rules.minDate !== undefined && compareDates(date, rules.minDate) < 0;
-  const isAfterMax = rules.maxDate !== undefined && compareDates(date, rules.maxDate) > 0;
   // Two pages that share a day show it one time: in the page that owns it. A broadcast page with
   // fixed weeks ends with days of its own month that the next broadcast page owns.
   const isOwnedByOtherPage =
@@ -87,7 +101,7 @@ export function getDayState(
     rules.pages.some((other) => other !== page && ownsDay(other, date));
   return {
     selected: rules.isSelected(date),
-    disabled: rules.disabled || isBeforeMin || isAfterMax || matches(date, rules.disabledDates),
+    disabled: isDisabledDay(date, rules),
     unavailable: matches(date, rules.unavailableDates),
     hidden:
       (outsideMonth && !rules.showOutsideDays) ||
