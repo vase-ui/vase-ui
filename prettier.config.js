@@ -6,7 +6,8 @@ export default {
   overrides: [
     {
       // Prettier pads each cell of a Markdown table to the width of its column. With
-      // `proseWrap: 'never'`, it writes a table that is wider than `printWidth` with no padding.
+      // `proseWrap: 'never'`, it removes that padding when the padded table is wider than
+      // `printWidth`.
       files: 'CONTRIBUTING.md',
       options: { proseWrap: 'never' },
     },
