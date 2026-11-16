@@ -319,8 +319,9 @@ export function createVaseProject(tsconfig: string): VaseProject {
         union.texts.push(typeText(key));
         union.covered.add(key);
       }
-    } else if (ts.isUnionTypeNode(node)) {
-      for (const member of node.types) {
+    } else if (ts.isUnionTypeNode(node) || ts.isTypeLiteralNode(node)) {
+      // An optional property adds `undefined` to the type of its type literal.
+      for (const member of ts.isUnionTypeNode(node) ? node.types : [node]) {
         const memberType = typeChecker().getTypeFromTypeNode(member);
         const inner = declaredUnion(memberType, member);
         if (inner) {
@@ -375,34 +376,24 @@ export function createVaseProject(tsconfig: string): VaseProject {
       : text;
   };
   /** The declaration of an anonymous object type, such as the member that an `Extract` gives. */
-  const typeLiteralOf = (
-    type: ts.Type,
-    node: ts.TypeNode | undefined,
-  ): ts.TypeLiteralNode | undefined => {
+  const typeLiteralOf = (type: ts.Type): ts.TypeLiteralNode | undefined => {
     if (!(type.flags & ts.TypeFlags.Object)) {
       return undefined;
     }
     const [declaration, ...others] = type.getSymbol()?.declarations ?? [];
-    const literal =
-      node && ts.isTypeLiteralNode(node)
-        ? node
-        : declaration && others.length === 0 && ts.isTypeLiteralNode(declaration)
-          ? declaration
-          : undefined;
     // The checker writes the name of an alias, such as `type Named = { … }`, and not its literal.
-    return literal &&
+    return declaration &&
+      others.length === 0 &&
+      ts.isTypeLiteralNode(declaration) &&
       typeChecker().typeToTypeNode(type, undefined, ts.NodeBuilderFlags.NoTruncation)?.kind ===
         ts.SyntaxKind.TypeLiteral
-      ? literal
+      ? declaration
       : undefined;
   };
   // The text of the checker, `{ name: type; }`, with each property type from its declaration. The
   // checker writes a quoted key with the quotes of the source, so such a literal keeps its text.
   const typeLiteralText = (type: ts.Type, literal: ts.TypeLiteralNode): string | undefined => {
-    if (
-      literal.members.length === 0 ||
-      literal.members.length !== typeChecker().getPropertiesOfType(type).length
-    ) {
+    if (literal.members.length === 0) {
       return undefined;
     }
     const texts = literal.members.map((member) => {
@@ -427,7 +418,7 @@ export function createVaseProject(tsconfig: string): VaseProject {
       const nullables = nullableTexts(type).filter((text) => !union.written.has(text));
       return [...union.texts, ...nullables].join(' | ');
     }
-    const literal = typeLiteralOf(type, withoutParentheses(declared));
+    const literal = typeLiteralOf(type);
     return (literal && typeLiteralText(type, literal)) ?? typeText(type);
   };
   // The checker names a property with a symbol key `__@iterator@<id>`, and the id changes with each

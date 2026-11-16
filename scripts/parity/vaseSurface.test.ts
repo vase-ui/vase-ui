@@ -225,6 +225,7 @@ const SEQUENCE = [
   '  literalKeys: keyof { first: string; second: string };',
   '  optionalKeys?: keyof { first: string; second: string };',
   '  segment: Extract<Segment, { editable: false }>;',
+  "  options?: { readonly kind?: 'first' | 'second' };",
   '  listener?: ((kind: string) => void) | null;',
   "  held: Maybe | 'second';",
   '}',
@@ -245,6 +246,7 @@ test('a type text writes the members of each union in the sequence of the declar
       ['literalKeys', '"first" | "second"'],
       ['optionalKeys', '"first" | "second" | undefined'],
       ['segment', '{ kind: "first" | "second"; editable: false; }'],
+      ['options', '{ readonly kind?: "first" | "second" | undefined; } | undefined'],
       ['listener', '((kind: string) => void) | null | undefined'],
       ['held', 'Maybe | "second"'],
     ],
@@ -256,12 +258,14 @@ const FORM = [
   'export interface Form {',
   '  named: Named;',
   "  quoted: { 'data-first': string };",
+  '  method: { open(): void };',
   '  empty: {};',
   "  flag: true | 'second' | false;",
+  "  absorbed: string | 'second' | null;",
   '}',
 ].join('\n');
 
-test('a type text keeps each other form of the checker: an alias of a type literal, a quoted key, an empty type literal and boolean', () => {
+test('a type text keeps each other form of the checker: an alias of a type literal, a quoted key, a method, an empty type literal, boolean and a literal that a wider member covers', () => {
   const properties = withParts(HANDLE, `${FORM}\n\n${HANDLE}`, () =>
     project.readProperties(exportOf('Form')),
   );
@@ -270,9 +274,23 @@ test('a type text keeps each other form of the checker: an alias of a type liter
     [
       ['named', 'Named'],
       ['quoted', "{ 'data-first': string; }"],
+      ['method', '{ open(): void; }'],
       ['empty', '{}'],
       ['flag', 'boolean | "second"'],
+      ['absorbed', 'string | null'],
     ],
+  );
+});
+
+test('a union that names a type parameter keeps the text of the checker for the type argument', () => {
+  const properties = withParts(
+    HANDLE,
+    `interface Box<T> {\n  value: T | null;\n}\nexport interface FirstBox extends Box<'first'> {}\n\n${HANDLE}`,
+    () => project.readProperties(exportOf('FirstBox')),
+  );
+  assert.deepEqual(
+    properties?.map(({ name, type }) => [name, type]),
+    [['value', '"first" | null']],
   );
 });
 
