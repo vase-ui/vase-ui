@@ -27,7 +27,6 @@ export interface DatePickerTimeFieldProps extends Omit<
   | 'name'
   | 'form'
   | 'autoComplete'
-  | 'ariaLabelledby'
 > {}
 </script>
 

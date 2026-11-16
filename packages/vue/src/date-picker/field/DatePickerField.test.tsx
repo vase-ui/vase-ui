@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { DateField } from '@vase-ui/vue/date-field';
 import { DatePicker } from '@vase-ui/vue/date-picker';
 import { Field } from '@vase-ui/vue/field';
+import { Form } from '@vase-ui/vue/form';
 import {
   createFormDataSpy,
   createRenderer,
@@ -11,6 +12,7 @@ import {
   wait,
   waitFor,
 } from '#test-utils';
+import { recordResetListeners } from '../../internals/date-time/picker/test-utils';
 import DatePickerAnatomy from '../root/DatePickerAnatomy.test.vue';
 import { createPartRef } from '../root/test-utils';
 
@@ -89,7 +91,7 @@ describe('<DatePicker.Field />', () => {
     expect(segmentOf(container, 'day').value).toBe('');
   });
 
-  // The part has no prop for the names. The attribute reaches `DateField.Root`, which reads it.
+  // The part gives the names to `DateField.Root`, which reads them.
   it('names the group with the elements of `aria-labelledby`, and not with the label of the field', async () => {
     await render(
       <Field.Root name="when">
@@ -467,4 +469,105 @@ describe('<DatePicker.Field />', () => {
       expect(hiddenInputOf(container).validity[flag as 'valueMissing']).toBe(true);
     });
   });
+
+  // The root of the field and the field part of the picker each listen for the reset of the form.
+  // The root hears of it first, and the cases run again with the part first.
+  describe.each([{ order: 'the root first' }, { order: 'the part first' }])(
+    'VUE-21: a native reset clears the error of the field, with $order',
+    ({ order }) => {
+      // The reset value, `null`, is also an error, so a validation after the reset shows.
+      const createValidate = () =>
+        vi.fn((value: unknown) => (value === null ? 'Choose a date' : 'Wrong date'));
+
+      function renderForm(
+        validate: ReturnType<typeof createValidate>,
+        pickerProps: { defaultValue?: Temporal.PlainDate } = {},
+        errors?: Record<string, string>,
+      ) {
+        return (
+          <Form data-testid="form" errors={errors}>
+            <Field.Root
+              data-testid="root"
+              name="when"
+              validate={validate}
+              validationMode="onChange"
+            >
+              <DatePicker.Root locale="en-US" referenceDate={day} {...pickerProps}>
+                <DatePicker.Field>
+                  <DateField.Input />
+                </DatePicker.Field>
+              </DatePicker.Root>
+              <Field.Error data-testid="error" />
+            </Field.Root>
+          </Form>
+        );
+      }
+
+      // A program that fills the form sends the whole date in one event.
+      async function fill(container: Element, text: string) {
+        const input = hiddenInputOf(container);
+        input.value = text;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        await flushMicrotasks();
+      }
+
+      async function resetForm(resets: ReturnType<typeof recordResetListeners>) {
+        if (order === 'the part first') {
+          // The listener of the root and the listener of the part.
+          resets.reverse(2);
+        }
+        screen.getByTestId<HTMLFormElement>('form').reset();
+        // Each timeout of the reset starts before this one, and a flush of Vue comes after each.
+        await wait(0);
+        await flushMicrotasks();
+      }
+
+      function expectNeutralField() {
+        expect(screen.queryByTestId('error')).toBe(null);
+        expect(screen.getByTestId('root')).not.toHaveAttribute('data-invalid');
+        expect(screen.getByTestId('root')).not.toHaveAttribute('data-valid');
+      }
+
+      it('starts no validation for the value of the reset, and validates the next entry', async () => {
+        const validate = createValidate();
+        const resets = recordResetListeners(document);
+        const { container } = await render(renderForm(validate));
+        await fill(container, '2026-11-14');
+        expect(screen.getByTestId('error')).toHaveTextContent('Wrong date');
+        validate.mockClear();
+
+        await resetForm(resets);
+
+        expect(hiddenInputOf(container).value).toBe('');
+        expect(segmentOf(container, 'day').value).toBe('');
+        expect(validate).not.toHaveBeenCalled();
+        expectNeutralField();
+
+        await fill(container, '2026-11-15');
+
+        expect(validate).toHaveBeenCalledTimes(1);
+        expect(screen.getByTestId('error')).toHaveTextContent('Wrong date');
+      });
+
+      it('clears the error of the form when the reset leaves the value, and validates the next entry', async () => {
+        const validate = createValidate();
+        const resets = recordResetListeners(document);
+        const { container } = await render(
+          renderForm(validate, { defaultValue: day }, { when: 'Server error' }),
+        );
+        expect(screen.getByTestId('error')).toHaveTextContent('Server error');
+
+        await resetForm(resets);
+
+        expect(hiddenInputOf(container).value).toBe('2026-11-14');
+        expect(validate).not.toHaveBeenCalled();
+        expectNeutralField();
+
+        await fill(container, '2026-11-15');
+
+        expect(validate).toHaveBeenCalledTimes(1);
+        expect(screen.getByTestId('error')).toHaveTextContent('Wrong date');
+      });
+    },
+  );
 });
