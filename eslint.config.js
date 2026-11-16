@@ -566,7 +566,7 @@ export default defineConfig([
   },
   {
     // No test runner runs a type test, so a vnode of a type test never mounts.
-    files: ['**/*.spec.{ts,tsx}'],
+    files: ['**/*.spec.{ts,tsx,vue}'],
     rules: {
       'no-restricted-syntax': [
         'error',

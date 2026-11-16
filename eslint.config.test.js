@@ -607,6 +607,11 @@ const reported = [
       "it.each([{ name: 'a button', node: <button /> }])('renders $name', () => {});\n",
     ],
     [
+      'a fragment in a row of it.each in a test file',
+      `${SRC}/DialogRoot.test.tsx`,
+      "it.each([{ name: 'a text', node: <>Open</> }])('renders $name', () => {});\n",
+    ],
+    [
       'a vnode in a row of describe.each in a test file',
       `${SRC}/DialogRoot.test.tsx`,
       "describe.each([['a button', <button />]])('%s', () => {});\n",
@@ -852,6 +857,11 @@ const passed = [
     name: 'a vnode in a constant of the module in a type test',
     file: `${SRC}/DialogRoot.spec.tsx`,
     code: 'const element = <div />;\n',
+  },
+  {
+    name: 'a vnode in a constant of a type test of a template',
+    file: `${SRC}/DialogRootInTemplate.spec.vue`,
+    code: `<script setup lang="ts">\nimport { h } from 'vue';\n\nconst element = h('div');\n</script>\n\n<template>\n  <component :is="element" />\n</template>\n`,
   },
   {
     name: 'expect.poll in a test of the Nuxt fixture',
