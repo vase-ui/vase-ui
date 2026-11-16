@@ -23,8 +23,9 @@ export function resolveElement(
   }
 
   // The public instance of a component with no `expose` also gives its props. A `<script setup>`
-  // component has such an instance only when its template is inline, as in a production build.
-  // A value that is the prop of that name is thus not an exposed element.
+  // component has such an instance only when its template is inline, as in a production build. The
+  // SFC compiler adds an empty `expose()` call when the template is not inline. A value that is the
+  // prop of that name is thus not an exposed element.
   if ('element' in value) {
     const exposed = value.element;
     // A ref on a Vapor component gives no `$props`.

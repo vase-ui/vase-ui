@@ -568,11 +568,11 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 
 - `actionsRef` becomes methods that the part exposes. A consumer reads them through a template ref.
 - Popup roots expose `close()` and `unmount()`. `Field.Root` exposes `validate()`. Its prop `validate` is the validator function. `Form` exposes `validate(name?)`. The types are `DialogRootActions` and so on.
-- A part that Base UI does not have exposes its methods in the same way, with the type `<Part>.Actions`. `Resizable.Panel` is the model.
+- A part that Base UI does not have exposes its methods in the same way. `Resizable.Panel` is the model, with the type `Resizable.Panel.Actions`.
 - A ref prop of upstream (`inputRef`) becomes an exposed element (`inputElement`) beside `element`.
 - Handles are upstream's objects, with no change: `Dialog.createHandle<Payload>()`, `handle`, `payload`, `triggerId`, `open()`, `openWithPayload()`, `close()`, `isOpen`.
 - Function children become a default scoped slot with named props: `{ payload }` on a root, `{ validity }` on `Field.Validity`, `{ item, index }` on `Combobox.Collection`, `{ value }` on `Select.Value`.
-- A part that renders a list has a slot that has the name of its item, as `Combobox.List` has the slot `item` and `Calendar.Week` has the slot `day`. Its props are the item and its `index`, such as `{ day, index }`.
+- A part that renders a list has a slot that has the name of its item. `Combobox.List` has the slot `item`, and `Calendar.Week` has the slot `day`. Its props are the item and its `index`, such as `{ day, index }`.
 - A list part of a component that Base UI does not have can have a default slot. The default slot holds the nodes before the items. `Calendar.WeekNumber` is in the default slot of `Calendar.Week`. The `#render` slot does not render the default slot.
 - A part can take nodes or a function that renders each item as its children, such as `Combobox.List`. Its default slot holds the nodes, and the slot `item` with `{ item, index }` is the function. A slot does not show at run time if it takes slot props, so one slot cannot be both.
 - Type the slots with `defineSlots`. Write each slot except `#render` as a method, as the Vue documentation does: `default(props: { state: ButtonState }): unknown`. A slot with no slot props is `default(): unknown`. A root with a value type uses `generic="Value"`.
@@ -605,7 +605,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 
 ## TypeScript
 
-- Run `pnpm lint:fix`, and then `pnpm typecheck` and `pnpm lint`. The last two show the reports that need hand work.
+- Run `pnpm lint:fix`. Then run `pnpm typecheck` and `pnpm lint`. These two show the reports that need hand work.
 - A branch that merges `main` runs these three commands.
 
 ### Compiler flags
