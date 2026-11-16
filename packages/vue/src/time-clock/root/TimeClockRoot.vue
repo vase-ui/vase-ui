@@ -145,6 +145,7 @@ export type TimeClockRootCommitEventDetails =
 
 <script setup lang="ts" generic="Value extends TimeValue = Temporal.PlainTime">
 import { computed, provide, shallowRef, watch } from 'vue';
+import { useServerValue } from '../../common/hydration';
 import { useControlled } from '../../common/useControlled';
 import { warn } from '../../common/warn';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -164,6 +165,7 @@ import {
   isTimeAllowed,
   isValidStep,
   nextView,
+  parseHourCycle,
   stepOf,
   stepValue,
   timeOfDayPeriod,
@@ -279,7 +281,13 @@ const [view, setViewState] = useControlled<TimeClockView>({
 
 const dragging = shallowRef(false);
 
-const hourCycle = computed(() => props.hourCycle ?? hourCycleOf(formatLocale.value));
+// A server and a browser can have other `Intl` data for the locale, and the hour cycle changes the
+// numbers of the face and the day periods.
+const { value: hourCycle, attributes: hourCycleAttributes } = useServerValue(
+  'data-vase-ui-hour-cycle',
+  () => props.hourCycle ?? hourCycleOf(formatLocale.value),
+  parseHourCycle,
+);
 const step = computed(() => stepOf(view.value, props.minuteStep, props.secondStep));
 const grid = computed(() => gridOf(view.value, hourCycle.value, step.value));
 const limits = computed<TimeLimits>(() => ({
@@ -460,7 +468,7 @@ provide(TimeClockRootContext, {
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  props: (attrs) => [{ role: 'group' }, attrs],
+  props: (attrs) => [{ role: 'group', ...hourCycleAttributes() }, attrs],
 });
 
 defineExpose({ element });
