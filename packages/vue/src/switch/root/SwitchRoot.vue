@@ -368,7 +368,7 @@ const { element, elementProps } = useRenderElement('span', props, {
       'aria-readonly': props.readOnly || undefined,
       'aria-required': props.required || undefined,
       'aria-label': givenName(props.ariaLabel),
-      'aria-labelledby': ariaAfterHydration(ariaLabelledBy.value),
+      'aria-labelledby': ariaLabelledBy.value,
       onFocusin() {
         setFocused(true);
       },
@@ -403,7 +403,6 @@ const { element, elementProps } = useRenderElement('span', props, {
     attrs,
     getButtonProps,
     (merged) => validation.getValidationProps(isDisabled.value, merged),
-    (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),
   ],
 });
 

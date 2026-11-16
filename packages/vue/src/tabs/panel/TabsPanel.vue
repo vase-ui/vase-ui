@@ -44,7 +44,6 @@ export interface TabsPanelProps
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useAriaAfterHydration } from '../../common/hydration';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
@@ -88,8 +87,6 @@ const {
 // A tab registers its id in `setup`, and it can come after the panel.
 useDeferredServerRender();
 
-const ariaAfterHydration = useAriaAfterHydration();
-
 const panelId = useVaseUiId(() => props.id);
 
 const { ref: listItemRef, index } = useCompositeListItem({ list: panelList });
@@ -124,7 +121,7 @@ const { element, elementProps } = useRenderElement('div', props, {
   ref: [listItemRef],
   props: (attrs) => [
     {
-      'aria-labelledby': ariaAfterHydration(getTabIdByPanelValue(props.value)),
+      'aria-labelledby': getTabIdByPanelValue(props.value),
       // Vue writes `false` as the attribute `hidden="false"` on an element that is not HTML.
       hidden: hidden.value ? true : undefined,
       id: panelId.value,

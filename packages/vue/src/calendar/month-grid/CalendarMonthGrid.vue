@@ -19,7 +19,6 @@ export interface CalendarMonthGridProps
 
 <script setup lang="ts">
 import { computed, provide } from 'vue';
-import { useAriaAfterHydration } from '../../common/hydration';
 import { formatFieldName } from '../../internals/date-time/calendar/formatText';
 import { getRows } from '../../internals/date-time/calendar/viewPages';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -47,14 +46,13 @@ provide(CalendarViewGridContext, { columns });
 
 const rows = computed(() => getRows(monthCells.value, columns.value));
 const label = computed(() => formatFieldName('month', locale.value));
-const ariaAfterHydration = useAriaAfterHydration();
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
   props: (attrs) => [
     {
       role: 'grid',
-      'aria-label': ariaAfterHydration(label.value),
+      'aria-label': label.value,
       'aria-multiselectable': multiselectable.value && selectsMonths.value ? true : undefined,
     },
     attrs,

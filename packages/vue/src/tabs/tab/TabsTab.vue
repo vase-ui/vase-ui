@@ -77,7 +77,6 @@ export interface TabsTabProps
 
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue';
-import { useAriaAfterHydration } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
 import { activeElement, contains } from '../../common/shadowDom';
 import { ACTIVE_COMPOSITE_ITEM } from '../../internals/composite/constants';
@@ -121,8 +120,6 @@ const { highlightedIndex, onHighlightedIndexChange } = useCompositeRootContext()
 
 // A panel registers its id in `setup`, and it can come after the tab.
 useDeferredServerRender();
-
-const ariaAfterHydration = useAriaAfterHydration();
 
 const tabId = useVaseUiId(() => props.id);
 const active = computed(() => props.value === activeTabValue.value);
@@ -270,7 +267,7 @@ const { element, elementProps } = useRenderElement('button', props, {
     compositeProps.value,
     {
       role: 'tab',
-      'aria-controls': ariaAfterHydration(getTabPanelIdByValue(props.value)),
+      'aria-controls': getTabPanelIdByValue(props.value),
       'aria-selected': active.value,
       id: tabId.value,
       onClick,

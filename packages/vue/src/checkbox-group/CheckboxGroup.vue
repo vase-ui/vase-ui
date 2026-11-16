@@ -55,7 +55,6 @@ export type CheckboxGroupChangeEventDetails =
 import { computed, provide, watch } from 'vue';
 import { areArraysEqual } from '../common/areArraysEqual';
 import { EMPTY_ARRAY } from '../common/empty';
-import { useAriaAfterHydration } from '../common/hydration';
 import { useControlled } from '../common/useControlled';
 import { isEligibleInput } from '../field/root/useFieldValidation';
 import { useFieldsetDisabled } from '../fieldset/root/useFieldsetDisabled';
@@ -254,15 +253,13 @@ provide(CheckboxGroupContext, {
   reset,
 });
 
-const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('div', props, {
   state,
   stateAttributesMapping: fieldValidityMapping,
   props: (attrs) => [
-    { id: givenId(props.id), role: 'group', 'aria-labelledby': ariaAfterHydration(labelId.value) },
+    { id: givenId(props.id), role: 'group', 'aria-labelledby': labelId.value },
     attrs,
     getDescriptionProps,
-    (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),
   ],
 });
 

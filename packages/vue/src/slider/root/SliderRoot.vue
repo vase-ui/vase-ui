@@ -187,7 +187,7 @@ export type SliderRootCommitEventDetails = VaseUIGenericEventDetails<SliderRootC
 import { computed, nextTick, provide, shallowRef, watch } from 'vue';
 import { areArraysEqual } from '../../common/areArraysEqual';
 import { clamp } from '../../common/clamp';
-import { useAriaAfterHydration, useIsHydrating } from '../../common/hydration';
+import { useIsHydrating } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
 import { activeElement, contains } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
@@ -665,23 +665,20 @@ function hasAriaLabel(attrs: Record<string, unknown>) {
   return typeof attrs['aria-label'] === 'string';
 }
 
-const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('div', props, {
   state,
   props: (attrs) => [
     {
       // A server writes the attributes of the root before the `setup` of `Slider.Label`, so the
       // root assumes that label until it is mounted.
-      'aria-labelledby': ariaAfterHydration(
+      'aria-labelledby':
         labelId.value ??
-          (isHydrating.value && !hasAriaLabel(attrs) ? rootLabelId.value : undefined),
-      ),
+        (isHydrating.value && !hasAriaLabel(attrs) ? rootLabelId.value : undefined),
       id: rootId.value,
       role: 'group',
     },
     attrs,
     (merged) => validation.getValidationProps(isDisabled.value, merged),
-    (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),
   ],
   stateAttributesMapping: sliderStateAttributesMapping,
 });

@@ -31,7 +31,7 @@ export interface TimeClockViewTriggerProps
 <script setup lang="ts">
 import { computed, useSlots } from 'vue';
 import { formatNumber } from '../../common/formatNumber';
-import { useAriaAfterHydration, useIsHydrating } from '../../common/hydration';
+import { useIsHydrating } from '../../common/hydration';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -57,7 +57,6 @@ const slots = useSlots();
 const root = useTimeClockRootContext();
 const formatLocale = useFormatLocale(root.locale);
 const isHydrating = useIsHydrating();
-const ariaAfterHydration = useAriaAfterHydration();
 
 const state = computed<TimeClockViewTriggerState>(() => ({
   ...root.state.value,
@@ -100,7 +99,7 @@ const { element, elementProps } = useRenderElement('button', props, {
     const { form, type, ...elementAttrs } = attrs;
     return [
       {
-        'aria-label': ariaAfterHydration(slots.default ? undefined : label.value),
+        'aria-label': slots.default ? undefined : label.value,
         'aria-pressed': state.value.active,
         // A server and a browser can have another version of the `Intl` data.
         'data-allow-mismatch': isHydrating.value ? 'text' : undefined,
