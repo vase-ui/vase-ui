@@ -43,6 +43,9 @@ const RUN_EACH_TEST = [
   // the shell script.
   /^packages\/vue\/test\/server\//,
   /^packages\/vue\/test\/[^/]+\.sh$/,
+  // `test/demos.ownVariants.test.tsx` reads the names of these records with `import.meta.glob`.
+  // Vitest selects no test file for a record.
+  /^parity\/own\//,
 ];
 
 /**
