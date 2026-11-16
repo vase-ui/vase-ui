@@ -194,7 +194,7 @@ export class HoverIntent {
    */
   addHoverTrigger(element: HoverTriggerElement) {
     this.#hoverTriggers.add(element);
-    // A popup that takes the scope element over restores the block of this popup first.
+    // A popup that blocks the same scope element first restores the block of this popup.
     if (this.#blockedPointerEvents) {
       this.#unblockHoverTrigger(element);
     }

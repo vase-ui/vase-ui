@@ -105,7 +105,8 @@ describe('HoverIntent with a real pointer', () => {
         </Popover.Root>
       </div>
     ));
-    // Trigger 2 stops opening on hover after the mount, so the hover intent must forget it.
+    // The change after the mount disables the hover of trigger 2, so the hover intent must remove
+    // the trigger.
     secondOpensOnHover.value = false;
     await nextTick();
 
