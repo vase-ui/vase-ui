@@ -49,10 +49,11 @@ export function useIsHydrating(): ComputedRef<boolean> {
  * browser can have other `Intl` data. With `null` in the first client render, the render after the
  * mount always writes its value.
  *
- * Give the function only `aria-*` values, or the value of an attribute that the element allows to
- * differ with `data-allow-mismatch` and the category `attribute`, such as the `abbr` of
- * `Calendar.Weekday`. Vue compares other attributes, such as `id` and `tabindex`, while it
- * hydrates, and it warns when they differ.
+ * Give the function only the value of an attribute that Vue does not compare while it hydrates, or
+ * of an attribute that the element allows to differ with `data-allow-mismatch` and the category
+ * `attribute`. Vue does not compare `aria-*` attributes or other attributes outside its list of
+ * known HTML attributes, such as the `abbr` of `Calendar.Weekday`. Vue compares the attributes of
+ * that list, such as `id` and `tabindex`, and it warns when they differ.
  */
 export function useAriaAfterHydration(): <Value>(value: Value) => Value | null {
   if (getCurrentInstance()?.vnode.el == null) {
