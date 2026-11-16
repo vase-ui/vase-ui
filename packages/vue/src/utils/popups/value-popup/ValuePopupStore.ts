@@ -2,7 +2,7 @@ import { toRaw } from 'vue';
 import type { ShallowRef } from 'vue';
 import type { InteractionType } from '../../../common/useEnhancedClickHandler';
 import type { Side } from '../../../internals/useAnchorPositioning';
-import { BasePopupStore, popupStoreSelectors } from '../store';
+import { BasePopupStore, createElementIdObserver, popupStoreSelectors } from '../store';
 import type { PopupOpenChangeEventDetails, PopupStoreContext, PopupStoreState } from '../store';
 
 /**
@@ -30,6 +30,10 @@ export type ValuePopupState = PopupStoreState<unknown> & {
 
   triggerElement: HTMLElement | null;
   listElement: HTMLElement | null;
+  /**
+   * The `id` of the list element. The store follows each change of the attribute.
+   */
+  listElementId: string | undefined;
   popupSide: Side | null;
 
   disabled: boolean;
@@ -72,6 +76,7 @@ export const valuePopupSelectors = {
 
   triggerElement: (state: S) => state.triggerElement,
   listElement: (state: S) => state.listElement,
+  listElementId: (state: S) => state.listElementId,
   popupSide: (state: S) => state.popupSide,
   // The popup anchors to the element that the root keeps in `anchorElement`, not to the element
   // that opened it. The parameter has the base state type. With `ValuePopupState`, the store of a
@@ -99,21 +104,30 @@ export abstract class ValuePopupStore<
    */
   protected abstract getAnchorElement(state: Readonly<State>): Element | null;
 
+  // A render can give the list element a new `id` and write nothing to the store. The id comes from
+  // the root, an attribute of the list or the `#render` slot of the list.
+  readonly #observeListId = createElementIdObserver(() => {
+    this.set('listElementId', toRaw(this.state).listElement?.id);
+  });
+
   override setState(newState: Readonly<State>): void {
     const previous = toRaw(this.state);
+    let next = newState;
+    if (next.listElement !== previous.listElement) {
+      next = { ...next, listElementId: this.#observeListId(next.listElement) };
+    }
     // A press on another element and positioning both change `anchorElement`, so the store puts it
     // back when the anchor, the open state or the positioner element changes. The store does this
     // in the write itself and not in a watcher, so the change and the anchor come in the same write.
-    const anchorElement = this.getAnchorElement(newState);
+    const anchorElement = this.getAnchorElement(next);
     if (
       anchorElement !== this.getAnchorElement(previous) ||
-      popupStoreSelectors.open(newState) !== popupStoreSelectors.open(previous) ||
-      newState.positionerElement !== previous.positionerElement
+      popupStoreSelectors.open(next) !== popupStoreSelectors.open(previous) ||
+      next.positionerElement !== previous.positionerElement
     ) {
-      super.setState({ ...newState, anchorElement });
-      return;
+      next = { ...next, anchorElement };
     }
-    super.setState(newState);
+    super.setState(next);
   }
 
   protected override anchorsToActiveTrigger() {

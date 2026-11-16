@@ -955,6 +955,45 @@ describe('<Select.Trigger />', () => {
     });
   });
 
+  describe('VUE-86: aria-controls follows the id of the list', () => {
+    it('follows the id of the list while the popup is open', async () => {
+      const id = shallowRef('first');
+      // The popup has an id too, so a trigger that names the popup in place of a list with an empty
+      // `id` fails the case.
+      await render(() => (
+        <Select.Root defaultOpen>
+          <Select.Trigger data-testid="trigger" />
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup id="popup">
+                <Select.List id={id.value} data-testid="list">
+                  <Select.Item value="a">A</Select.Item>
+                </Select.List>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+      ));
+      await flushMicrotasks();
+
+      const trigger = screen.getByTestId('trigger');
+      expect(trigger).toHaveAttribute('aria-controls', 'first');
+
+      id.value = 'second';
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('list').id).toBe('second');
+      expect(trigger).toHaveAttribute('aria-controls', 'second');
+
+      id.value = '';
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('list').id).toBe('');
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+    });
+  });
+
   it('throws a descriptive error when rendered outside <Select.Root>', async () => {
     await expect(render(<Select.Trigger />)).rejects.toThrow(
       'Vase UI: A part of Select must be inside <Select.Root>.',
