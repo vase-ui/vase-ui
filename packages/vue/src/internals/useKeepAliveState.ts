@@ -14,7 +14,7 @@ interface KeepAliveInstance {
  * it in `setup`. With no current component, it gives `false` and no warning. Vue reads the same
  * flags before it calls an `onActivated` or `onDeactivated` hook.
  */
-export function isInHeldBranch(): boolean {
+function isInHeldBranch(): boolean {
   for (
     let instance: KeepAliveInstance | null = getCurrentInstance();
     instance;
@@ -34,8 +34,8 @@ export interface KeepAliveState {
    */
   isHeld: Readonly<Ref<boolean>>;
   /**
-   * Counts the activations by `KeepAlive`. The activation in the flush of the mount does not count
-   * when the part mounts with its branch. It counts when the part mounts in the flush in which
+   * Counts the activations by `KeepAlive`. The `onActivated` call of the mount does not count when
+   * the part mounts with its branch. It counts when the part mounts in the flush in which
    * `KeepAlive` shows the branch.
    */
   shown: Readonly<Ref<number>>;
@@ -43,6 +43,9 @@ export interface KeepAliveState {
 
 /**
  * Follows whether `KeepAlive` holds a part and counts its activations. Call it in `setup`.
+ *
+ * React to a change of `isHeld` with a `watch`. With `flush: 'sync'`, the callback runs in the
+ * `onDeactivated` or `onActivated` hook that changes `isHeld`.
  *
  * An app that mounts in a detached element is not held, because no `KeepAlive` holds it.
  */
@@ -62,6 +65,9 @@ export function useKeepAliveState(): KeepAliveState {
   });
 
   onDeactivated(() => {
+    // A hold and a show can both come in the flush of the mount. That show is not the call of the
+    // mount.
+    isMountFlush = false;
     isHeld.value = true;
   });
 

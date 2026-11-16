@@ -1,4 +1,4 @@
-import { onActivated, onDeactivated, onMounted, onScopeDispose, toValue, watch } from 'vue';
+import { onMounted, onScopeDispose, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 import { isOverflowElement } from '@floating-ui/utils/dom';
 import { addEventListener } from './addEventListener';
@@ -6,7 +6,7 @@ import { platform } from './platform';
 import { ownerDocument, ownerWindow } from './owner';
 import { Timeout } from './useTimeout';
 import { AnimationFrame } from './useAnimationFrame';
-import { isInHeldBranch } from '../internals/useKeepAliveState';
+import { useKeepAliveState } from '../internals/useKeepAliveState';
 
 type OwnerWindow = ReturnType<typeof ownerWindow>;
 
@@ -348,12 +348,12 @@ export function useScrollLock(
   referenceElement: MaybeRefOrGetter<Element | null> = null,
 ): void {
   let releaseLock: (() => void) | undefined;
-  let deactivated = isInHeldBranch();
+  const { isHeld } = useKeepAliveState();
 
   function update() {
     releaseLock?.();
     releaseLock = undefined;
-    if (!deactivated && toValue(enabled)) {
+    if (!isHeld.value && toValue(enabled)) {
       releaseLock = acquire(toValue(referenceElement));
     }
   }
@@ -361,17 +361,7 @@ export function useScrollLock(
   // A server calls no `onMounted` hook and runs no such `watch`, so a server render takes no lock.
   onMounted(update);
   watch([() => toValue(enabled), () => toValue(referenceElement)], update, { flush: 'post' });
-  onDeactivated(() => {
-    deactivated = true;
-    update();
-  });
-  // `onActivated` also runs at the first mount in a `KeepAlive`.
-  onActivated(() => {
-    if (deactivated) {
-      deactivated = false;
-      update();
-    }
-  });
+  watch(isHeld, update, { flush: 'sync' });
   onScopeDispose(() => {
     releaseLock?.();
     releaseLock = undefined;

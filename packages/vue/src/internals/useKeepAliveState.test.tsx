@@ -1,5 +1,5 @@
 import { describe, expect, it, onTestFinished } from 'vitest';
-import { createApp, defineComponent, onActivated, onMounted, shallowRef } from 'vue';
+import { createApp, defineComponent, onActivated, onDeactivated, onMounted, shallowRef } from 'vue';
 import type { Ref, VNodeChild } from 'vue';
 import {
   createHeldBranch,
@@ -112,6 +112,27 @@ describe('useKeepAliveState', () => {
       expect(log.slice(0, 2)).toEqual(hooks);
       expect([countAtShow, shown?.value]).toEqual(counts);
     });
+  });
+
+  it('shows a part that KeepAlive holds and shows again in the flush of its mount', async () => {
+    const isPresent = shallowRef(false);
+    let state: KeepAliveState | undefined;
+    const RecordedPart = defineComponent(() => {
+      state = useKeepAliveState();
+      onMounted(() => void hide());
+      onDeactivated(() => void show());
+      return () => <span />;
+    });
+    const { HeldBranch, hide, show } = createHeldBranch(() => <RecordedPart />, { mounted: true });
+    await render(() => <div>{isPresent.value ? <HeldBranch /> : null}</div>);
+
+    // The hooks of the first render of an app run in `mount`, outside a flush of the scheduler.
+    // This mount comes in a flush, so the hide and the show of the hooks come in that flush too.
+    isPresent.value = true;
+    await flushMicrotasks();
+
+    expect(state?.isHeld.value).toBe(false);
+    expect(state?.shown.value).toBe(1);
   });
 
   it('counts the next activation of a part whose mount flush ends with a render error', async () => {

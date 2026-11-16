@@ -25,8 +25,8 @@ export interface ToastProviderProps {
 </script>
 
 <script setup lang="ts">
-import { onActivated, onDeactivated, onMounted, onScopeDispose, provide, watch } from 'vue';
-import { isInHeldBranch } from '../../internals/useKeepAliveState';
+import { onMounted, onScopeDispose, provide, watch } from 'vue';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import type { ToastManagerEvent } from '../createToastManager';
 import { ToastStore } from '../store';
 import { ToastContext } from './ToastProviderContext';
@@ -56,10 +56,7 @@ store.disposeEffect()();
 
 let releaseTimers: (() => void) | undefined;
 let unsubscribe: (() => void) | undefined;
-// `KeepAlive` also calls `onActivated` at the first mount. A provider that mounts with its branch
-// holds its timers from the mount. A provider that mounts in a held branch holds them from the
-// activation.
-let deactivated = isInHeldBranch();
+const { isHeld } = useKeepAliveState();
 
 function handleManagerEvent({ action, options }: ToastManagerEvent) {
   const id = options.id;
@@ -105,22 +102,12 @@ function release() {
 }
 
 onMounted(() => {
-  if (!deactivated) {
+  if (!isHeld.value) {
     hold();
   }
 });
 
-onDeactivated(() => {
-  deactivated = true;
-  release();
-});
-
-onActivated(() => {
-  if (deactivated) {
-    deactivated = false;
-    hold();
-  }
-});
+watch(isHeld, (held) => (held ? release() : hold()), { flush: 'sync' });
 
 onScopeDispose(release);
 

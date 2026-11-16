@@ -85,15 +85,7 @@ const stateAttributesMapping: StateAttributesMapping<ResizableHandleState> = {
 </script>
 
 <script setup lang="ts">
-import {
-  computed,
-  onActivated,
-  onDeactivated,
-  onScopeDispose,
-  provide,
-  shallowRef,
-  watch,
-} from 'vue';
+import { computed, onScopeDispose, provide, shallowRef, watch } from 'vue';
 import type { Component, CSSProperties } from 'vue';
 import { useIsHydrating, useServerElement } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
@@ -114,7 +106,7 @@ import { createChangeEventDetails } from '../../internals/createBaseUIEventDetai
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
-import { isInHeldBranch } from '../../internals/useKeepAliveState';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFormatLocale } from '../../utils/useFormatLocale';
 import { useResizableRootContext } from '../root/ResizableRootContext';
@@ -256,10 +248,9 @@ const drag = createHandleDrag(root, {
 });
 const press = createHandlePress({ drag, orientation: () => root.orientation.value });
 
-// `KeepAlive` takes the handle out of the document. The root then does not count it. A handle that
-// mounts while `KeepAlive` holds it gets no `onDeactivated` call.
-const deactivated = shallowRef(isInHeldBranch());
-root.registerHandle({ index, disabled: () => isDisabled.value, deactivated });
+// `KeepAlive` takes the handle out of the document. The root then does not count it.
+const { isHeld } = useKeepAliveState();
+root.registerHandle({ index, disabled: () => isDisabled.value, isHeld });
 
 const hitAreaElement = shallowRef<HTMLElement | null>(null);
 
@@ -419,14 +410,15 @@ watch(isFocusable, (focusable) => {
 });
 
 // `KeepAlive` takes the handle out of the document and sends no pointer event.
-onDeactivated(() => {
-  deactivated.value = true;
-  endDrags();
-});
-
-onActivated(() => {
-  deactivated.value = false;
-});
+watch(
+  isHeld,
+  (held) => {
+    if (held) {
+      endDrags();
+    }
+  },
+  { flush: 'sync' },
+);
 
 onScopeDispose(endDrags);
 

@@ -257,8 +257,6 @@ function canSwipeFromScrollEdgeOnMove(
 <script setup lang="ts">
 import {
   computed,
-  onActivated,
-  onDeactivated,
   onMounted,
   onScopeDispose,
   provide,
@@ -269,7 +267,6 @@ import {
 } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { clamp } from '../../common/clamp';
-import { NOOP } from '../../common/empty';
 import { ownerDocument } from '../../common/owner';
 import { getTarget } from '../../common/shadowDom';
 import { useAnimationFrame } from '../../common/useAnimationFrame';
@@ -281,9 +278,9 @@ import { givenAttributes } from '../../internals/givenAttributes';
 import { REASONS } from '../../internals/reasons';
 import * as TransitionStatusDataAttributes from '../../internals/TransitionStatusDataAttributes';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { isInHeldBranch } from '../../internals/useKeepAliveState';
 import { mergeProps } from '../../merge-props';
 import { getElementAtPoint } from '../../utils/getElementAtPoint';
+import { useDomEffect } from '../../utils/popups/useDomEffect';
 import { findScrollableTouchTarget } from '../../utils/scrollable';
 import { getDisplacement, useSwipeDismiss } from '../../utils/useSwipeDismiss';
 import type { UseSwipeDismissProgressDetails } from '../../utils/useSwipeDismiss';
@@ -999,68 +996,45 @@ function processTouchMove(
 
 // `KeepAlive` takes the viewport out of the document. The listener on the document then stops
 // until the activation.
-let deactivated = isInHeldBranch();
-let removeTouchMoveListener = NOOP;
-
-function listenToTouchMove() {
-  removeTouchMoveListener();
-  removeTouchMoveListener = NOOP;
-
-  const rootElement = store.select('viewportElement') ?? store.select('popupElement');
-  // A non-passive document listener makes all touch scrolling wait on the main thread.
-  if (!rootElement || !open.value || !mounted.value || deactivated) {
-    return;
-  }
-
-  const resolvedRootElement: HTMLElement = rootElement;
-  const doc = ownerDocument(resolvedRootElement);
-
-  function handleNativeTouchMove(event: TouchEvent) {
-    // The virtual keyboard provider observes the move to tell a tap apart from a drag.
-    // It must run even when the swipe gesture below claims the event with
-    // `stopPropagation()`, which would otherwise prevent the touch listeners of the elements
-    // (and the provider) from ever seeing the move.
-    virtualKeyboard?.onTouchmove(event);
-
-    if (ignoreTouchSwipe) {
-      return;
-    }
-
-    const touchState = touchScrollState;
-    const touch = event.touches[0];
-    if (!touch || !touchState) {
-      return;
-    }
-
-    processTouchMove(event, touchState, touch, resolvedRootElement, doc);
-    updateTouchScrollPosition(touchState, touch);
-  }
-
-  removeTouchMoveListener = addEventListener(doc, 'touchmove', handleNativeTouchMove, {
-    passive: false,
-    capture: true,
-  });
-}
-
-onMounted(listenToTouchMove);
-watch(
+useDomEffect(
   [() => store.select('viewportElement') ?? store.select('popupElement'), open, mounted],
-  listenToTouchMove,
-  { flush: 'post' },
+  () => {
+    const rootElement = store.select('viewportElement') ?? store.select('popupElement');
+    // A non-passive document listener makes all touch scrolling wait on the main thread.
+    if (!rootElement || !open.value || !mounted.value) {
+      return undefined;
+    }
+
+    const resolvedRootElement: HTMLElement = rootElement;
+    const doc = ownerDocument(resolvedRootElement);
+
+    function handleNativeTouchMove(event: TouchEvent) {
+      // The virtual keyboard provider observes the move to tell a tap apart from a drag.
+      // It must run even when the swipe gesture below claims the event with
+      // `stopPropagation()`, which would otherwise prevent the touch listeners of the elements
+      // (and the provider) from ever seeing the move.
+      virtualKeyboard?.onTouchmove(event);
+
+      if (ignoreTouchSwipe) {
+        return;
+      }
+
+      const touchState = touchScrollState;
+      const touch = event.touches[0];
+      if (!touch || !touchState) {
+        return;
+      }
+
+      processTouchMove(event, touchState, touch, resolvedRootElement, doc);
+      updateTouchScrollPosition(touchState, touch);
+    }
+
+    return addEventListener(doc, 'touchmove', handleNativeTouchMove, {
+      passive: false,
+      capture: true,
+    });
+  },
 );
-
-onDeactivated(() => {
-  deactivated = true;
-  listenToTouchMove();
-});
-
-onActivated(() => {
-  if (!deactivated) {
-    return;
-  }
-  deactivated = false;
-  listenToTouchMove();
-});
 
 function applyRestingSnapPointProgress() {
   if (!snapPointRange.value || swipe.swiping.value) {
@@ -1105,7 +1079,6 @@ onMounted(() => {
 });
 
 onScopeDispose(() => {
-  removeTouchMoveListener();
   notifyParentSwipeProgressChange?.(0);
   visualStateStore?.set({ swipeProgress: 0, frontmostHeight: 0 });
   setBackdropSwipingAttribute(mountedBackdrop, false);
