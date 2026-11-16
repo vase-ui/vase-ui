@@ -300,9 +300,7 @@ describe('filterable menu initial highlight', () => {
     });
 
     await setProps({ open: false });
-    await waitFor(() => {
-      expect(screen.queryByRole('searchbox', { name: 'Filter actions' })).toBe(null);
-    });
+    expect(screen.queryByRole('searchbox', { name: 'Filter actions' })).toBe(null);
     await setProps({ open: true });
 
     const reopenedInput = await screen.findByRole('searchbox', { name: 'Filter actions' });

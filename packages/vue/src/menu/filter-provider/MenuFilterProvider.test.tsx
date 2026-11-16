@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import * as Menu from '../index.parts';
-import { createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
+import { createRenderer, flushMicrotasks, screen } from '#test-utils';
 
 describe('<Menu.FilterProvider />', () => {
   const { render } = createRenderer();
@@ -68,18 +68,14 @@ describe('<Menu.FilterProvider />', () => {
 
     await user.type(input, 'del');
 
-    await waitFor(() => {
-      expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
-    });
+    expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
     expect(query.value).toBe('del');
 
     query.value = 'ren';
     await flushMicrotasks();
 
     expect(input).toHaveValue('ren');
-    await waitFor(() => {
-      expect(screen.queryByRole('menuitem', { name: 'Delete' })).toBe(null);
-    });
+    expect(screen.queryByRole('menuitem', { name: 'Delete' })).toBe(null);
   });
 
   it('keeps the query and emits no update:value when valueChange is canceled', async () => {
@@ -124,9 +120,7 @@ describe('<Menu.FilterProvider />', () => {
     await renderMenu({ defaultValue: 'ren' });
 
     expect(screen.getByRole('searchbox', { name: 'Filter actions' })).toHaveValue('ren');
-    await waitFor(() => {
-      expect(screen.queryByRole('menuitem', { name: 'Delete' })).toBe(null);
-    });
+    expect(screen.queryByRole('menuitem', { name: 'Delete' })).toBe(null);
     expect(screen.getByRole('menuitem', { name: 'Rename' })).toBeInTheDocument();
   });
 });

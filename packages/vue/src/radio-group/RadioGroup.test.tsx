@@ -10,6 +10,7 @@ import {
   Teleport,
   watch,
 } from 'vue';
+import type { VNode, VNodeChild } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import type { TextDirection } from '@vase-ui/vue/direction-provider';
 import { Field } from '@vase-ui/vue/field';
@@ -4050,6 +4051,190 @@ describe('<RadioGroup />', () => {
       group.value?.inputElement?.focus();
 
       expect(screen.getByTestId('a')).toHaveFocus();
+    });
+
+    it.each<{
+      name: string;
+      value: string | undefined;
+      expected: string | null;
+      layout: (group: (children: VNodeChild) => VNode) => VNode;
+    }>([
+      {
+        name: 'the fieldset holds the group',
+        value: 'b',
+        expected: null,
+        layout: (group) => (
+          <fieldset disabled>
+            {group([
+              <Radio.Root value="a" data-testid="a" />,
+              <Radio.Root value="b" data-testid="b" />,
+            ])}
+          </fieldset>
+        ),
+      },
+      {
+        name: 'the fieldset holds the checked radio',
+        value: 'b',
+        expected: 'a',
+        layout: (group) =>
+          group([
+            <Radio.Root value="a" data-testid="a" />,
+            <fieldset disabled>
+              <Radio.Root value="b" data-testid="b" />
+            </fieldset>,
+          ]),
+      },
+      {
+        name: 'the fieldset holds the first radio',
+        value: undefined,
+        expected: 'b',
+        layout: (group) =>
+          group([
+            <fieldset disabled>
+              <Radio.Root value="a" data-testid="a" />
+            </fieldset>,
+            <Radio.Root value="b" data-testid="b" />,
+          ]),
+      },
+      {
+        name: 'the legend holds the first radio',
+        value: 'b',
+        expected: 'a',
+        layout: (group) =>
+          group(
+            <fieldset disabled>
+              <legend>
+                <Radio.Root value="a" data-testid="a" />
+              </legend>
+              <Radio.Root value="b" data-testid="b" />
+            </fieldset>,
+          ),
+      },
+    ])(
+      'skips an input that a disabled fieldset disables when $name',
+      async ({ value, expected, layout }) => {
+        const group = shallowRef<RadioGroupInstance | null>(null);
+        await render(() =>
+          layout((children) => (
+            <RadioGroup ref={group} defaultValue={value}>
+              {children}
+            </RadioGroup>
+          )),
+        );
+
+        expect(group.value?.inputElement).toBe(expected === null ? null : getInput(expected));
+      },
+    );
+
+    it('focuses an enabled radio through inputElement when a disabled fieldset holds the checked radio', async () => {
+      const group = shallowRef<RadioGroupInstance | null>(null);
+      await render(() => (
+        <RadioGroup ref={group} defaultValue="b">
+          <Radio.Root value="a" data-testid="a" />
+          <fieldset disabled>
+            <Radio.Root value="b" data-testid="b" />
+          </fieldset>
+        </RadioGroup>
+      ));
+
+      expect(screen.getByTestId('a')).not.toHaveFocus();
+
+      group.value?.inputElement?.focus();
+
+      expect(screen.getByTestId('a')).toHaveFocus();
+    });
+
+    it('gives the first input after a fieldset is enabled when a radio unmounted while it was disabled', async () => {
+      const disabled = shallowRef(true);
+      const showLast = shallowRef(true);
+      const group = shallowRef<RadioGroupInstance | null>(null);
+      await render(() => (
+        <fieldset disabled={disabled.value}>
+          <RadioGroup ref={group}>
+            <Radio.Root value="a" data-testid="a" />
+            <Radio.Root value="b" data-testid="b" />
+            {showLast.value && <Radio.Root value="c" data-testid="c" />}
+          </RadioGroup>
+        </fieldset>
+      ));
+
+      showLast.value = false;
+      await flushMicrotasks();
+
+      expect(group.value?.inputElement).toBe(null);
+
+      disabled.value = false;
+      await flushMicrotasks();
+
+      expect(group.value?.inputElement).toBe(getInput('a'));
+    });
+
+    it('gives the first input after a fieldset is enabled when the value became null in it after an unmount', async () => {
+      const disabled = shallowRef(false);
+      const showSecond = shallowRef(true);
+      const value = shallowRef<string | null>('b');
+      const group = shallowRef<RadioGroupInstance | null>(null);
+      await render(() => (
+        <fieldset disabled={disabled.value}>
+          <RadioGroup ref={group} value={value.value}>
+            <Radio.Root value="a" data-testid="a" />
+            {showSecond.value && <Radio.Root value="b" data-testid="b" />}
+          </RadioGroup>
+        </fieldset>
+      ));
+
+      expect(group.value?.inputElement).toBe(getInput('b'));
+
+      showSecond.value = false;
+      await flushMicrotasks();
+
+      expect(group.value?.inputElement).toBe(null);
+
+      disabled.value = true;
+      value.value = null;
+      await flushMicrotasks();
+
+      expect(group.value?.inputElement).toBe(null);
+
+      disabled.value = false;
+      await flushMicrotasks();
+
+      expect(group.value?.inputElement).toBe(getInput('a'));
+    });
+
+    it('gives a radio that mounted in a disabled fieldset after an unmount when the fieldset is enabled', async () => {
+      const disabled = shallowRef(false);
+      const showFirst = shallowRef(true);
+      const group = shallowRef<RadioGroupInstance | null>(null);
+      await render(() => (
+        <fieldset disabled={disabled.value}>
+          <RadioGroup ref={group}>
+            {showFirst.value && <Radio.Root value="a" data-testid="a" />}
+            <Radio.Root value="b" data-testid="b" />
+          </RadioGroup>
+        </fieldset>
+      ));
+
+      expect(group.value?.inputElement).toBe(getInput('a'));
+
+      showFirst.value = false;
+      await flushMicrotasks();
+
+      expect(group.value?.inputElement).toBe(null);
+
+      // Vue patches the children of an element before its props. In one flush, the radio would thus
+      // mount in an enabled fieldset.
+      disabled.value = true;
+      await flushMicrotasks();
+      showFirst.value = true;
+      await flushMicrotasks();
+
+      expect(group.value?.inputElement).toBe(null);
+
+      disabled.value = false;
+      await flushMicrotasks();
+
+      expect(group.value?.inputElement).toBe(getInput('a'));
     });
   });
 });

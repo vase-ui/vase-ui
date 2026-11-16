@@ -279,9 +279,7 @@ describe('<Avatar.Image />', () => {
 
       await fireEvent.load(screen.getByTestId('image'));
 
-      await waitFor(() => {
-        expect(screen.queryByText('JD')).toBe(null);
-      });
+      expect(screen.queryByText('JD')).toBe(null);
       expect(onLoadingStatusChange.mock.calls.map(([status]) => status)).toEqual([
         'loading',
         'loaded',
@@ -352,9 +350,7 @@ describe('<Avatar.Image />', () => {
       await waitFor(() => {
         expect(onLoad).toHaveBeenCalledTimes(1);
       });
-      await waitFor(() => {
-        expect(screen.queryByText('JD')).toBe(null);
-      });
+      expect(screen.queryByText('JD')).toBe(null);
     });
 
     it('lets a user handler prevent the status update', async () => {
@@ -406,9 +402,7 @@ describe('<Avatar.Image />', () => {
 
       await fireEvent.load(screen.getByTestId('image'));
 
-      await waitFor(() => {
-        expect(screen.queryByText('JD')).toBe(null);
-      });
+      expect(screen.queryByText('JD')).toBe(null);
       onLoadingStatusChange.mockClear();
 
       await rerender(<Test src="avatar-2.png" />);
@@ -421,9 +415,7 @@ describe('<Avatar.Image />', () => {
       // The reset status must be able to resolve again from the new load.
       await fireEvent.load(screen.getByTestId('image'));
 
-      await waitFor(() => {
-        expect(screen.queryByText('JD')).toBe(null);
-      });
+      expect(screen.queryByText('JD')).toBe(null);
       expect(onLoadingStatusChange.mock.calls.map(([status]) => status)).toEqual([
         'loading',
         'loaded',
@@ -452,9 +444,7 @@ describe('<Avatar.Image />', () => {
 
       await fireEvent.load(screen.getByTestId('image'));
 
-      await waitFor(() => {
-        expect(screen.queryByText('JD')).toBe(null);
-      });
+      expect(screen.queryByText('JD')).toBe(null);
       onLoadingStatusChange.mockClear();
 
       await rerender(<Test src="avatar-2.png" />);
@@ -548,9 +538,7 @@ describe('<Avatar.Image />', () => {
         </Avatar.Root>,
       );
 
-      await waitFor(() => {
-        expect(screen.queryByText('JD')).toBe(null);
-      });
+      expect(screen.queryByText('JD')).toBe(null);
       expect(screen.getByTestId('image')).toHaveAttribute('src', TRANSPARENT_IMAGE_DATA_URI);
       expect(constructed.length).toBe(0);
     });
@@ -607,9 +595,7 @@ describe('<Avatar.Image />', () => {
 
       const { rerender } = await render(<Test className="initial" />);
 
-      await waitFor(() => {
-        expect(screen.queryByText('JD')).toBe(null);
-      });
+      expect(screen.queryByText('JD')).toBe(null);
       onLoadingStatusChange.mockClear();
 
       await rerender(<Test className="updated" />);
@@ -634,9 +620,7 @@ describe('<Avatar.Image />', () => {
 
       await fireEvent.load(screen.getByTestId('image'));
 
-      await waitFor(() => {
-        expect(screen.getByTestId('image')).not.toHaveAttribute('aria-hidden');
-      });
+      expect(screen.getByTestId('image')).not.toHaveAttribute('aria-hidden');
       expect(screen.getByRole('img', { name: 'Jane Doe' })).not.toBe(null);
     });
 
@@ -675,9 +659,7 @@ describe('<Avatar.Image />', () => {
 
       await fireEvent.load(screen.getByTestId('image'));
 
-      await waitFor(() => {
-        expect(screen.getByTestId('image')).not.toHaveAttribute('aria-hidden');
-      });
+      expect(screen.getByTestId('image')).not.toHaveAttribute('aria-hidden');
 
       await rerender(<Test src="avatar-2.png" />);
 
@@ -706,9 +688,7 @@ describe('<Avatar.Image />', () => {
 
       await fireEvent.load(screen.getByTestId('image'));
 
-      await waitFor(() => {
-        expect(screen.queryByText('JD')).toBe(null);
-      });
+      expect(screen.queryByText('JD')).toBe(null);
       expect(screen.getByTestId('image')).toHaveAttribute('aria-hidden', 'false');
     });
 
@@ -726,9 +706,7 @@ describe('<Avatar.Image />', () => {
 
       await fireEvent.load(screen.getByTestId('image'));
 
-      await waitFor(() => {
-        expect(screen.getByTestId('image')).not.toHaveAttribute('data-loading');
-      });
+      expect(screen.getByTestId('image')).not.toHaveAttribute('data-loading');
       expect(screen.getByTestId('image')).not.toHaveAttribute('data-error');
 
       await fireEvent.error(screen.getByTestId('image'));
@@ -831,10 +809,12 @@ describe('<Avatar.Image />', () => {
         }
 
         const { rerender } = await render(<Test className="initial" />);
+        const fallback = screen.getByText('JD');
 
         await waitFor(() => {
-          expect(screen.queryByText('JD')).toBe(null);
+          expect(fallback).not.toBeInTheDocument();
         });
+        expect(screen.queryByText('JD')).toBe(null);
 
         // Without an element to read, the read must not overwrite the status the `load` event
         // already reported, or the fallback reappears over a loaded image.
@@ -885,9 +865,7 @@ describe('<Avatar.Image />', () => {
         image.addEventListener('load', () => resolve(), { once: true });
       });
 
-      await waitFor(() => {
-        expect(screen.queryByText('JD')).toBe(null);
-      });
+      expect(screen.queryByText('JD')).toBe(null);
       await firstLoad;
 
       // The server answers the request for the missing source in its own time, and the 180 frames
@@ -1027,7 +1005,8 @@ describe('<Avatar.Image />', () => {
       });
 
       await render(<Test />);
-      expect(screen.getByTestId('image')).not.toBe(null);
+      const image = screen.getByTestId('image');
+      expect(image).not.toBe(null);
 
       // `user.click` can yield a frame, which is long enough for the 1ms animation to finish.
       await fireEvent.click(screen.getByText('Hide image'));
@@ -1035,8 +1014,9 @@ describe('<Avatar.Image />', () => {
       expect(screen.getByTestId('image')).toHaveAttribute('data-ending-style');
 
       await waitFor(() => {
-        expect(screen.queryByTestId('image')).toBe(null);
+        expect(image).not.toBeInTheDocument();
       });
+      expect(screen.queryByTestId('image')).toBe(null);
     });
 
     it('does not apply the not-loaded state attributes without keepMounted', async () => {
@@ -1128,9 +1108,7 @@ describe('<Avatar.Image />', () => {
 
       const { rerender } = await render(<Test src={TRANSPARENT_IMAGE_DATA_URI} />);
 
-      await waitFor(() => {
-        expect(screen.getByTestId('image')).not.toHaveAttribute('data-loading');
-      });
+      expect(screen.getByTestId('image')).not.toHaveAttribute('data-loading');
 
       // The element never unmounts, so an exit animation would run and then reverse itself.
       // `data-loading` carries the state instead.

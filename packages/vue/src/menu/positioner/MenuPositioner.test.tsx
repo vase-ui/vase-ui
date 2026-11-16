@@ -1238,16 +1238,16 @@ describe('<Menu.Positioner />', () => {
 
       await userEvent.click(trigger, { delay: 20 });
       await waitFor(() => {
-        expect(screen.queryByRole('menu', { hidden: false })).not.toBe(null);
+        expect(screen.getByRole('menu', { hidden: false })).not.toBe(null);
       });
       expect(isInaccessible(screen.queryByRole('menu', { hidden: false })!)).toBe(false);
 
       await userEvent.click(trigger, { delay: 20 });
       await waitFor(() => {
-        expect(screen.queryByRole('menu', { hidden: true })).not.toBe(null);
+        expect(screen.getByRole('menu', { hidden: true })).not.toBe(null);
       });
       await waitFor(() => {
-        expect(isInaccessible(screen.queryByRole('menu', { hidden: true })!)).toBe(true);
+        expect(isInaccessible(screen.getByRole('menu', { hidden: true }))).toBe(true);
       });
     });
 
@@ -1273,14 +1273,16 @@ describe('<Menu.Positioner />', () => {
       await userEvent.click(trigger, { delay: 20 });
       await flushMicrotasks();
       await waitFor(() => {
-        expect(screen.queryByRole('menu', { hidden: false })).not.toBe(null);
+        expect(screen.getByRole('menu', { hidden: false })).not.toBe(null);
       });
       expect(isInaccessible(screen.queryByRole('menu', { hidden: false })!)).toBe(false);
+      const menu = screen.getByRole('menu', { hidden: true });
 
       await userEvent.click(trigger, { delay: 20 });
       await waitFor(() => {
-        expect(screen.queryByRole('menu', { hidden: true })).toBe(null);
+        expect(menu).not.toBeInTheDocument();
       });
+      expect(screen.queryByRole('menu', { hidden: true })).toBe(null);
     });
   });
 

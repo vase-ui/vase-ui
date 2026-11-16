@@ -443,8 +443,9 @@ describe('<Combobox.Clear />', () => {
       action: () => user.click(clear),
     });
     await waitFor(() => {
-      expect(screen.queryByTestId('clear')).toBe(null);
+      expect(clear).not.toBeInTheDocument();
     });
+    expect(screen.queryByTestId('clear')).toBe(null);
 
     expect(counter.counts).toEqual({ enter: 0, exit: 1 });
   });
