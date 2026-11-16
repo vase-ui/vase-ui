@@ -138,8 +138,8 @@ describe('look comparison', () => {
     { name: 'transition-duration', first: '0.2s', second: '0.4s' },
     { name: 'text-decoration-line', first: 'none', second: 'underline' },
   ])('reports a difference in $name', async ({ name, first, second }) => {
-    const cssModules = await render(<span style={{ [name]: first }}>Demo</span>);
-    const tailwind = await render(<span style={{ [name]: second }}>Demo</span>);
+    const cssModules = await render(h('span', { style: { [name]: first } }, 'Demo'));
+    const tailwind = await render(h('span', { style: { [name]: second } }, 'Demo'));
 
     expect(differences(lookOfFrame(cssModules.container), lookOfFrame(tailwind.container))).toEqual(
       [`<span> "Demo" ${name}: ${first} in the CSS-module demo, ${second} in the Tailwind demo`],
