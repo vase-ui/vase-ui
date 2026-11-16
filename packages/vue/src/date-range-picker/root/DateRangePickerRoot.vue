@@ -152,6 +152,7 @@ export interface DateRangePickerRootProps<Value extends DateValue = DateValue> e
 
 <script setup lang="ts" generic="Value extends DateValue = DateValue">
 import { computed, provide, shallowRef, useTemplateRef } from 'vue';
+import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { useDateTimePickerRoot } from '../../internals/date-time/picker/useDateTimePickerRoot';
 import { assertTemporal } from '../../internals/date-time/temporal';
 import { useFieldRootContext } from '../../internals/field-root-context';
@@ -243,7 +244,11 @@ const picker = useDateTimePickerRoot<DateRangePickerRange, DateRangePickerRootCh
 });
 
 const fieldContext = useFieldRootContext();
-const disabled = computed(() => props.disabled || (fieldContext.disabled.value ?? false));
+// The root has no element. Its start field is at the place of the picker.
+const fieldsetDisabled = useFieldsetDisabled(() => picker.fieldElement.value);
+const disabled = computed(
+  () => props.disabled || (fieldContext.disabled.value ?? false) || fieldsetDisabled.value,
+);
 
 // The two fields of one form hear the same `reset` event, and the picker has one value.
 let lastResetEvent: Event | undefined;

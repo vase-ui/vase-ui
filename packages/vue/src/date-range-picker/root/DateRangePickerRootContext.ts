@@ -39,7 +39,10 @@ export interface DateRangePickerRootContext {
   endFieldElement: ShallowRef<HTMLElement | null>;
   /** The props of the root. Its parts read the props that they share. */
   props: Readonly<DateRangePickerRootProps>;
-  /** Whether the picker ignores user interaction: its `disabled` prop, or a disabled field around it. */
+  /**
+   * Whether the picker ignores user interaction: its `disabled` prop, or a disabled field or
+   * fieldset around it.
+   */
   disabled: ComputedRef<boolean>;
 }
 

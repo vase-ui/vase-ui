@@ -853,6 +853,31 @@ describe('<DateRangePicker.Root />', () => {
     });
   });
 
+  describe('VUE-112: a disabled fieldset', () => {
+    // The root has no element, so its start field tells it which fieldset it is in.
+    it('disables the trigger and the calendar of a picker in a disabled fieldset', async () => {
+      await render(() => (
+        <fieldset disabled>
+          <DateRangePickerAnatomy
+            {...{
+              locale: 'en-US',
+              timeZone: 'UTC',
+              calendarProps: { today: today() },
+              defaultValue: range('2026-11-18', '2026-11-20'),
+              defaultOpen: true,
+            }}
+          />
+        </fieldset>
+      ));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('calendar')).toHaveAttribute('data-disabled');
+      });
+      expect(screen.getByTestId('trigger')).toHaveAttribute('data-disabled');
+      expect(dayButton('2026-11-18')).toHaveAttribute('data-disabled');
+    });
+  });
+
   describe('form', () => {
     it('submits one entry for each end, with the names of the root', async () => {
       const { container } = await render(

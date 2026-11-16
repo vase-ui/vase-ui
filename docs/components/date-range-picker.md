@@ -130,7 +130,7 @@ The segments, the trigger and the calendar keep their own keys: see [Date Field]
 - `DateRangePicker.StartField` and `DateRangePicker.EndField` have `role="group"` and an `id`. Their default names are `Start date` and `End date`. A `<label>` element whose `for` is the `id` of a field, or its `aria-labelledby`, replaces its name. The label of a `Field` joins the name of each field: `aria-labelledby` holds the `id` of the group and the `id` of the label, so the name is `Start date Trip dates`.
 - `DateRangePicker.Popup` has `role="dialog"`. Give it a name with `aria-label` or `DateRangePicker.Title`.
 - When the popup opens, the focus goes to the day that has the tab stop: the first day of the range, else today. When it closes, the focus goes back to the trigger.
-- A picker that is `disabled` or `readOnly` has a disabled trigger, and Alt and Down does nothing.
+- A picker that is `disabled`, in a disabled fieldset or `readOnly` has a disabled trigger, and Alt and Down does nothing.
 - The default labels are in English. The dates in them follow the locale.
 
 ## API reference
