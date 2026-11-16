@@ -2763,7 +2763,8 @@ describe('<Select.Root />', () => {
         await new Promise<void>((resolve) => {
           requestAnimationFrame(() => resolve());
         });
-        await flushMicrotasks();
+        // A lock comes in a 0 ms timer after the open.
+        await wait(0);
 
         expect(isScrollLocked(trigger.ownerDocument)).toBe(false);
       });

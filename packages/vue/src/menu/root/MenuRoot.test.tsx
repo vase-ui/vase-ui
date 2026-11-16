@@ -2820,7 +2820,8 @@ describe('<Menu.Root />', () => {
             const doc = menu.ownerDocument;
 
             await waitSingleFrame();
-            await flushMicrotasks();
+            // A lock comes in a 0 ms timer after the open.
+            await wait(0);
 
             expect(isScrollLocked(doc)).toBe(false);
           },
