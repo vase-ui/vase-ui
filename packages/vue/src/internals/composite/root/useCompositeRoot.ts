@@ -223,7 +223,7 @@ export function useCompositeRoot<Metadata>(
       return;
     }
 
-    // The tab stop stays where the user or a removal put it, unless the keys skip that item.
+    // The tab stop stays where it is, unless the keys skip that item.
     moveTabStopOffSkippedItem(elements, activeItem.index);
   }
 
