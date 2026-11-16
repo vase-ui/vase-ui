@@ -11,6 +11,7 @@ import {
   waitFor,
   wait,
   waitForLaterMillisecond,
+  waitSingleFrame,
 } from '#test-utils';
 import type { VaseUIRenderResult } from '#test-utils';
 import DateRangePickerAnatomy from './DateRangePickerAnatomy.test.vue';
@@ -174,6 +175,67 @@ describe('<DateRangePicker.Root />', () => {
         expect(screen.getByTestId('trigger')).toHaveAttribute('aria-expanded', 'true');
       },
     );
+
+    describe('prop: initialFocus of the popup', () => {
+      // The day has the focus by default, so each case shows that the value of the consumer wins.
+      it('moves no focus for `false`', async () => {
+        const { user } = await renderPicker({
+          defaultValue: range('2026-11-18', '2026-11-20'),
+          popupProps: { initialFocus: false },
+        });
+
+        await open(user);
+        await waitSingleFrame();
+        await waitSingleFrame();
+
+        expect(screen.getByTestId('trigger')).toHaveFocus();
+      });
+
+      it('moves the focus to the default element for `true`', async () => {
+        const { user } = await renderPicker({
+          defaultValue: range('2026-11-18', '2026-11-20'),
+          popupProps: { initialFocus: true },
+        });
+
+        await open(user);
+
+        await waitFor(() => {
+          expect(dayButton('2026-11-18')).toHaveFocus();
+        });
+      });
+
+      it.each([
+        { name: '`true`', result: true },
+        { name: '`null`', result: null },
+      ])(
+        'moves the focus to the default element when a function gives $name',
+        async ({ result }) => {
+          const { user } = await renderPicker({
+            defaultValue: range('2026-11-18', '2026-11-20'),
+            popupProps: { initialFocus: () => result },
+          });
+
+          await open(user);
+
+          await waitFor(() => {
+            expect(dayButton('2026-11-18')).toHaveFocus();
+          });
+        },
+      );
+
+      it('moves the focus to the element that a function gives', async () => {
+        const { user } = await renderPicker({
+          defaultValue: range('2026-11-18', '2026-11-20'),
+          popupProps: { initialFocus: () => screen.getByRole('button', { name: 'Close' }) },
+        });
+
+        await open(user);
+
+        await waitFor(() => {
+          expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus();
+        });
+      });
+    });
 
     it('goes back to the trigger when Escape closes the popup, and the range stays', async () => {
       const onValueChange = vi.fn();

@@ -32,7 +32,11 @@ export interface DateRangePickerCalendarProps extends Omit<
 import { computed, provide, useAttrs, useTemplateRef } from 'vue';
 import { RangeCalendarHostContext } from '../../internals/date-time/calendar/rangeCalendarHost';
 import type { DateValue } from '../../internals/date-time/temporal';
-import { useFocusOnOpen, usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
+import {
+  getCalendarTabStop,
+  usePickerFocusTarget,
+  usePickerPopup,
+} from '../../internals/date-time/picker/usePickerPopup';
 import { omitUndefinedAttributes } from '../../internals/omitUndefinedAttributes';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -91,9 +95,10 @@ const calendar = useTemplateRef<{
 }>('calendar');
 const element = computed(() => calendar.value?.element ?? null);
 
-// The popup puts the focus on the first tabbable element, which is a navigation button. The day
-// that has the tab stop is the element that the date picker pattern names.
-useFocusOnOpen(popup, () => calendar.value?.focus());
+// The focus manager of the popup puts the focus on the first tabbable element, which is a
+// navigation button. The day that has the tab stop is the element that the date picker pattern
+// names. The popup part gives it as its `initialFocus`.
+usePickerFocusTarget(() => getCalendarTabStop(element.value));
 
 // The first press makes a range with one end, and the popup stays open for the second press. A drag
 // makes the whole range in one change. A key that extends the range does not close the popup,

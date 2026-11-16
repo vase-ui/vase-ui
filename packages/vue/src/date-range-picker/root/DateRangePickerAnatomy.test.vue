@@ -6,15 +6,16 @@ import * as DateRangePicker from '../index.parts';
 
 defineOptions({ inheritAttrs: false });
 
-// The attributes go to the root. `calendarProps` goes to the calendar.
+// The attributes go to the root. `calendarProps` goes to the calendar, and `popupProps` to the popup.
 withDefaults(
   defineProps<{
     calendarProps?: Record<string, unknown>;
+    popupProps?: Record<string, unknown>;
     hasFields?: boolean;
     trigger?: boolean;
     keepMounted?: boolean;
   }>(),
-  { calendarProps: () => ({}), hasFields: true, trigger: true },
+  { calendarProps: () => ({}), popupProps: () => ({}), hasFields: true, trigger: true },
 );
 
 // The parts expose their members. A test reads them through `root`, `startField`, `endField` and
@@ -51,7 +52,7 @@ defineExpose({ root, startField, endField, calendar });
     <DateRangePicker.Trigger v-if="trigger" data-testid="trigger">Open</DateRangePicker.Trigger>
     <DateRangePicker.Portal :keep-mounted="keepMounted">
       <DateRangePicker.Positioner data-testid="positioner">
-        <DateRangePicker.Popup aria-label="Choose dates" data-testid="popup">
+        <DateRangePicker.Popup aria-label="Choose dates" data-testid="popup" v-bind="popupProps">
           <DateRangePicker.Calendar ref="calendar" v-bind="calendarProps" data-testid="calendar">
             <RangeCalendar.PreviousButton data-testid="previous" />
             <RangeCalendar.NextButton data-testid="next" />

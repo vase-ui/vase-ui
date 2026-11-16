@@ -8,7 +8,7 @@ export { default as DateRangePickerTrigger } from './trigger/DateRangePickerTrig
 export { default as DateRangePickerPositioner } from './positioner/DateRangePickerPositioner.vue';
 export { default as DateRangePickerCalendar } from './calendar/DateRangePickerCalendar.vue';
 export { default as DateRangePickerPortal } from '../popover/portal/PopoverPortal.vue';
-export { default as DateRangePickerPopup } from '../popover/popup/PopoverPopup.vue';
+export { default as DateRangePickerPopup } from './popup/DateRangePickerPopup.vue';
 export { default as DateRangePickerArrow } from '../popover/arrow/PopoverArrow.vue';
 export { default as DateRangePickerBackdrop } from '../popover/backdrop/PopoverBackdrop.vue';
 export { default as DateRangePickerClose } from '../popover/close/PopoverClose.vue';
@@ -19,6 +19,7 @@ export type * from './root/DateRangePickerRoot.vue';
 export type * from './start-field/DateRangePickerStartField.vue';
 export type * from './end-field/DateRangePickerEndField.vue';
 export type * from './trigger/DateRangePickerTrigger.vue';
+export type * from './popup/DateRangePickerPopup.vue';
 export type * from './positioner/DateRangePickerPositioner.vue';
 export type * from './calendar/DateRangePickerCalendar.vue';
 
@@ -26,10 +27,6 @@ export type {
   PopoverPortalProps as DateRangePickerPortalProps,
   PopoverPortalState as DateRangePickerPortalState,
 } from '../popover/portal/PopoverPortal.vue';
-export type {
-  PopoverPopupProps as DateRangePickerPopupProps,
-  PopoverPopupState as DateRangePickerPopupState,
-} from '../popover/popup/PopoverPopup.vue';
 export type {
   PopoverArrowProps as DateRangePickerArrowProps,
   PopoverArrowState as DateRangePickerArrowState,

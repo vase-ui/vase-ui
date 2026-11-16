@@ -59,7 +59,7 @@ Import the component and assemble its parts:
 
 `DateRangePicker.Root` renders `Popover.Root` and no element of its own. It holds the range and shares it with its parts. `DateRangePicker.StartField` and `DateRangePicker.EndField` render `DateField.Root`, and `DateRangePicker.Calendar` renders `RangeCalendar.Root`. Write the parts of those components inside them, as the pages of [Date Field](/components/date-field) and [Range Calendar](/components/range-calendar) show.
 
-`DateRangePicker.Trigger` and `DateRangePicker.Positioner` render `Popover.Trigger` and `Popover.Positioner`. The other parts of the popup are the parts of [Popover](/components/popover): `DateRangePicker.Portal`, `DateRangePicker.Popup`, `DateRangePicker.Arrow`, `DateRangePicker.Backdrop`, `DateRangePicker.Close`, `DateRangePicker.Title` and `DateRangePicker.Description`. The positioner puts the popup against the box around the two fields, and against the trigger when the picker has no field.
+`DateRangePicker.Trigger`, `DateRangePicker.Positioner` and `DateRangePicker.Popup` render `Popover.Trigger`, `Popover.Positioner` and `Popover.Popup`. The other parts of the popup are the parts of [Popover](/components/popover): `DateRangePicker.Portal`, `DateRangePicker.Arrow`, `DateRangePicker.Backdrop`, `DateRangePicker.Close`, `DateRangePicker.Title` and `DateRangePicker.Description`. The positioner puts the popup against the box around the two fields, and against the trigger when the picker has no field.
 
 Each field has a hidden `<input>` after its element. A rule of `<style scoped>` thus does not match the fields, and `v-show` has no effect on them. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
 
@@ -129,7 +129,7 @@ The segments, the trigger and the calendar keep their own keys: see [Date Field]
 - `DateRangePicker.Trigger` has `aria-haspopup="dialog"`. Its default name is `Choose dates`. With a range that has two ends, its name is `Change dates,` and the range in full. Give it an `aria-label` to change it.
 - `DateRangePicker.StartField` and `DateRangePicker.EndField` have `role="group"` and an `id`. Their default names are `Start date` and `End date`. A `<label>` element whose `for` is the `id` of a field, or its `aria-labelledby`, replaces its name. The label of a `Field` joins the name of each field: `aria-labelledby` holds the `id` of the group and the `id` of the label, so the name is `Start date Trip dates`.
 - `DateRangePicker.Popup` has `role="dialog"`. Give it a name with `aria-label` or `DateRangePicker.Title`.
-- When the popup opens, the focus goes to the day that has the tab stop: the first day of the range, else today. When it closes, the focus goes back to the trigger.
+- When the popup opens, the focus goes to the day that has the tab stop: the first day of the range, else today. When it closes, the focus goes back to the trigger. Give `initialFocus` to `DateRangePicker.Popup` to move the focus to another element, or `false` to move none.
 - A picker that is `disabled`, in a disabled fieldset or `readOnly` has a disabled trigger, and Alt and Down does nothing.
 - The default labels are in English. The dates in them follow the locale.
 

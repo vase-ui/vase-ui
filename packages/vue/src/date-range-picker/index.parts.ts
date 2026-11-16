@@ -9,6 +9,11 @@ import type {
   DateRangePickerEndFieldProps,
   DateRangePickerEndFieldState,
 } from './end-field/DateRangePickerEndField.vue';
+import DateRangePickerPopup from './popup/DateRangePickerPopup.vue';
+import type {
+  DateRangePickerPopupProps,
+  DateRangePickerPopupState,
+} from './popup/DateRangePickerPopup.vue';
 import DateRangePickerPositioner from './positioner/DateRangePickerPositioner.vue';
 import type {
   DateRangePickerPositionerProps,
@@ -110,4 +115,14 @@ export namespace Calendar {
   export type Props = DateRangePickerCalendarProps;
 }
 
-export { Arrow, Backdrop, Close, Description, Popup, Portal, Title } from '../popover/index.parts';
+/**
+ * A container for the popup content.
+ * Renders a `<div>` element.
+ */
+export const Popup: typeof DateRangePickerPopup = DateRangePickerPopup;
+export namespace Popup {
+  export type State = DateRangePickerPopupState;
+  export type Props = DateRangePickerPopupProps;
+}
+
+export { Arrow, Backdrop, Close, Description, Portal, Title } from '../popover/index.parts';
