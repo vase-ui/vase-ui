@@ -22,7 +22,7 @@ describe('<DateRangePicker.Root /> hydration', () => {
       name: 'Persian dates',
       props: { value: ['2026-11-14', '2026-11-20'], calendar: 'persian' },
     },
-    { name: 'a layout that Node and Chromium format in another way', props: { locale: 'is-IS' } },
+    { name: 'a layout that the browser changes', props: { locale: 'is-IS' } },
     { name: 'a disabled picker', props: { value: ['2026-11-14', '2026-11-20'], disabled: true } },
     { name: 'a label of a Field before the fields', props: { label: 'Trip dates' } },
     {
