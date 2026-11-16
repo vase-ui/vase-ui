@@ -12,6 +12,7 @@ import {
   waitFor,
 } from '#test-utils';
 import CalendarAnatomy from './CalendarAnatomy.test.vue';
+import CalendarRenderHydration from './CalendarRenderHydration.test.vue';
 import CalendarRootHydration from './CalendarRootHydration.test.vue';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
@@ -569,6 +570,18 @@ describe('<Calendar.Root /> state', () => {
         expect(document.querySelectorAll('[aria-current]')).toHaveLength(1);
         expect(tabStops()).toEqual([browserDay]);
         expect(document.querySelector('[data-vase-ui-today]')).toBe(null);
+      });
+
+      // The server HTML of a part with a `#render` slot starts with the comment of a fragment.
+      it("shows the browser's today after the hydration of a root with a #render slot", async () => {
+        const serverHtml = await renderOnServer(
+          'src/calendar/root/CalendarRenderHydration.test.vue',
+        );
+        const browserDay = mockBrowserToday('month').toString();
+
+        await hydrate(CalendarRenderHydration, { serverHtml });
+
+        expect(todayDates()).toEqual([browserDay, browserDay]);
       });
 
       it("shows the month of the browser's today when the clock picked the page", async () => {
