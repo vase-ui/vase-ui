@@ -48,7 +48,7 @@ const locale = useFormatLocale(() => picker.props.locale);
 const ariaAfterHydration = useAriaAfterHydration();
 
 // A picker that the user cannot change has nothing to choose.
-const disabled = computed(() => props.disabled || picker.disabled.value || picker.props.readOnly);
+const isDisabled = computed(() => props.disabled || picker.disabled.value || picker.props.readOnly);
 
 function describe(start: DateValue, end: DateValue): string {
   return formatRangeText(
@@ -87,7 +87,7 @@ function triggerProps() {
   return {
     ...attrs,
     ...props,
-    disabled: disabled.value,
+    disabled: isDisabled.value,
     'aria-label': ariaAfterHydration(label()),
   };
 }

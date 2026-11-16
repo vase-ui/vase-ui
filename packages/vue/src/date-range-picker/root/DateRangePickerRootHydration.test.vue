@@ -21,7 +21,7 @@ const props = defineProps<{
 }>();
 
 // A template reads only the globals that Vue lists, and `Temporal` is not one of them.
-const today = Temporal.PlainDate.from(props.today);
+const todayDate = Temporal.PlainDate.from(props.today);
 
 function toEnd(text: string | null) {
   if (text === null) {
@@ -43,7 +43,7 @@ const anatomyProps = {
   endName: props.endName,
   disabled: props.disabled,
   defaultOpen: props.open,
-  calendarProps: { today },
+  calendarProps: { today: todayDate },
 };
 </script>
 

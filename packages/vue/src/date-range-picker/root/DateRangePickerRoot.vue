@@ -249,7 +249,7 @@ const fieldContext = useFieldRootContext();
 const fieldsetDisabled = useFieldsetDisabled(
   () => picker.fieldElement.value ?? picker.triggerElement.value,
 );
-const disabled = computed(
+const isDisabled = computed(
   () => props.disabled || (fieldContext.disabled.value ?? false) || fieldsetDisabled.value,
 );
 
@@ -271,7 +271,7 @@ provide(DateRangePickerRootContext, {
   endFieldElement: shallowRef<HTMLElement | null>(null),
   triggerElement: picker.triggerElement,
   props,
-  disabled,
+  disabled: isDisabled,
 });
 
 const popover = useTemplateRef<DateRangePickerRootActions>('popover');

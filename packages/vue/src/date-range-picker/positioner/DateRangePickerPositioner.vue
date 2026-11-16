@@ -77,7 +77,7 @@ const fieldsAnchor = computed(() => {
     },
   };
 });
-const anchor = () => toValue(props.anchor) ?? fieldsAnchor.value;
+const anchorOf = () => toValue(props.anchor) ?? fieldsAnchor.value;
 
 // This part renders `Popover.Positioner` and makes no element of its own. The template has one form
 // for `#render` and one for the content. A `v-if` on a slot template makes the slots of
@@ -90,12 +90,16 @@ defineExpose({ element });
 </script>
 
 <template>
-  <PopoverPositioner v-if="$slots.render" ref="positioner" v-bind="{ ...$attrs, ...props, anchor }">
+  <PopoverPositioner
+    v-if="$slots.render"
+    ref="positioner"
+    v-bind="{ ...$attrs, ...props, anchor: anchorOf }"
+  >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
     </template>
   </PopoverPositioner>
-  <PopoverPositioner v-else ref="positioner" v-bind="{ ...$attrs, ...props, anchor }">
+  <PopoverPositioner v-else ref="positioner" v-bind="{ ...$attrs, ...props, anchor: anchorOf }">
     <template #default="slotProps">
       <slot v-bind="slotProps" />
     </template>
