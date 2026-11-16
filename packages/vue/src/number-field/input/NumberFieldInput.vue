@@ -21,7 +21,7 @@ export interface NumberFieldInputProps
 <script setup lang="ts">
 import { onMounted, watch } from 'vue';
 import { formatNumber } from '../../common/formatNumber';
-import { useValueBeforeHydration } from '../../common/hydration';
+import { useAriaAfterHydration, useValueBeforeHydration } from '../../common/hydration';
 import { useTimeout } from '../../common/useTimeout';
 import { warn } from '../../common/warn';
 import {
@@ -548,6 +548,7 @@ function setOwnInput(next: HTMLElement | null) {
   ownInput = input;
 }
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('input', props, {
   state,
   ref: setOwnInput,
@@ -573,7 +574,7 @@ const { element, elementProps } = useRenderElement('input', props, {
         spellcheck: 'false',
         'aria-roledescription': 'Number field',
         'aria-invalid': !state.value.disabled && invalid.value ? true : undefined,
-        'aria-labelledby': labelId.value,
+        'aria-labelledby': ariaAfterHydration(labelId.value),
         onFocusin: handleFocusin,
         onFocusout: handleFocusout,
         onInput: handleInput,
@@ -587,6 +588,10 @@ const { element, elementProps } = useRenderElement('input', props, {
       },
       elementAttrs,
       (merged) => validation.getValidationProps(state.value.disabled, merged),
+      (merged) => ({
+        ...merged,
+        'aria-describedby': ariaAfterHydration(merged['aria-describedby']),
+      }),
     ];
   },
   stateAttributesMapping,

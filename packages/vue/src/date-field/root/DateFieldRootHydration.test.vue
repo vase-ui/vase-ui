@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onMounted, shallowRef } from 'vue';
 import { DateField } from '@vase-ui/vue/date-field';
 import { Field } from '@vase-ui/vue/field';
 import type { DateFieldRootValue } from './DateFieldRoot.vue';
@@ -23,9 +24,13 @@ const props = withDefaults(
     readOnly?: boolean;
     required?: boolean;
     label?: 'none' | 'before' | 'after' | 'native';
+    description?: boolean;
     clear?: boolean;
     useSegmentSlot?: boolean;
     useRenderSlot?: boolean;
+    labelId?: string | undefined;
+    descriptionId?: string | undefined;
+    laterRemovedAtMount?: boolean;
   }>(),
   {
     value: undefined,
@@ -41,8 +46,15 @@ const props = withDefaults(
     name: undefined,
     id: undefined,
     label: 'none',
+    labelId: undefined,
+    descriptionId: undefined,
   },
 );
+
+const isMounted = shallowRef(false);
+onMounted(() => {
+  isMounted.value = true;
+});
 
 function toValue(text: string | undefined): DateFieldRootValue | undefined {
   if (text === undefined) {
@@ -104,7 +116,12 @@ function rootProps() {
         </DateField.Input>
         <DateField.Clear v-if="clear" data-testid="clear" />
       </DateField.Root>
-      <Field.Label v-if="label === 'after'" data-testid="label">Date</Field.Label>
+      <template v-if="!(laterRemovedAtMount && isMounted)">
+        <Field.Label v-if="label === 'after'" :id="labelId" data-testid="label">Date</Field.Label>
+        <Field.Description v-if="description" :id="descriptionId" data-testid="description">
+          Pick a date.
+        </Field.Description>
+      </template>
     </Field.Root>
   </form>
 </template>

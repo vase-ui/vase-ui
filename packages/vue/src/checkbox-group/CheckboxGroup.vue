@@ -53,6 +53,7 @@ export type CheckboxGroupChangeEventDetails =
 import { computed, provide, watch } from 'vue';
 import { areArraysEqual } from '../common/areArraysEqual';
 import { EMPTY_ARRAY } from '../common/empty';
+import { useAriaAfterHydration } from '../common/hydration';
 import { useControlled } from '../common/useControlled';
 import { isEligibleInput } from '../field/root/useFieldValidation';
 import { fieldValidityMapping } from '../internals/field-constants/constants';
@@ -250,13 +251,15 @@ provide(CheckboxGroupContext, {
   reaches: (target) => isInTreeOf(element.value, target),
 });
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('div', props, {
   state,
   stateAttributesMapping: fieldValidityMapping,
   props: (attrs) => [
-    { id: props.id, role: 'group', 'aria-labelledby': labelId.value },
+    { id: props.id, role: 'group', 'aria-labelledby': ariaAfterHydration(labelId.value) },
     attrs,
     getDescriptionProps,
+    (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),
   ],
 });
 

@@ -30,6 +30,7 @@ import {
   hydrate,
   hydrateAfter,
   isJSDOM,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   takeReportedMessages,
@@ -4235,6 +4236,31 @@ describe('<RadioGroup />', () => {
       await flushMicrotasks();
 
       expect(group.value?.inputElement).toBe(getInput('a'));
+    });
+  });
+
+  describe('hydration', () => {
+    removedPartHydrationTests({
+      file: FIELD_HYDRATION_FIXTURE,
+      component: RadioGroupFieldHydration,
+      cases: [
+        {
+          name: 'a removed label',
+          props: { defaultValue: 'a', laterRemovedAtMount: true },
+          selector: '[data-testid="group"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description',
+          props: { defaultValue: 'a', laterRemovedAtMount: true },
+          selector: '[data-testid="group"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+      ],
     });
   });
 });

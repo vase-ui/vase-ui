@@ -44,7 +44,11 @@ export interface ComboboxInputProps
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, provide, shallowRef, toRaw, watch } from 'vue';
-import { isTextControl, useValueBeforeHydration } from '../../common/hydration';
+import {
+  isTextControl,
+  useAriaAfterHydration,
+  useValueBeforeHydration,
+} from '../../common/hydration';
 import { platform } from '../../common/platform';
 import { useTimeout } from '../../common/useTimeout';
 import { addInputFocusListeners } from '../../filter-dropdown/input/FilterDropdownInput';
@@ -551,6 +555,7 @@ function handleKeydown(event: VaseUIEvent<KeyboardEvent>) {
   }
 }
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('input', props, {
   state,
   ref: setInputElement,
@@ -570,7 +575,7 @@ const { element, elementProps } = useRenderElement('input', props, {
         ...(writesValue.value ? { value: composingValue.value ?? inputValue.value } : undefined),
         'aria-readonly': readOnly.value || undefined,
         'aria-required': required || undefined,
-        'aria-labelledby': fieldLabelId.value,
+        'aria-labelledby': ariaAfterHydration(fieldLabelId.value),
         disabled: isDisabled.value ? '' : undefined,
         readonly: readOnly.value ? '' : undefined,
         required: selectionMode.value === 'none' && required ? '' : undefined,
@@ -588,6 +593,10 @@ const { element, elementProps } = useRenderElement('input', props, {
       hasPositionerParent
         ? undefined
         : (merged) => validation.getValidationProps(isDisabled.value, merged),
+      (merged) => ({
+        ...merged,
+        'aria-describedby': ariaAfterHydration(merged['aria-describedby']),
+      }),
     ];
   },
   stateAttributesMapping: triggerStateAttributesMapping,

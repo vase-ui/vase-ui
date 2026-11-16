@@ -135,7 +135,7 @@ import {
 } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { getDefaultFormSubmitter } from '../../common/getDefaultFormSubmitter';
-import { queueInputTake, useIsHydrated } from '../../common/hydration';
+import { queueInputTake, useAriaAfterHydration, useIsHydrated } from '../../common/hydration';
 import { useControlled } from '../../common/useControlled';
 import { useTimeout } from '../../common/useTimeout';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
@@ -602,6 +602,7 @@ provide(CheckboxRootContext, state);
 
 const stateAttributesMapping = getCheckboxStateAttributesMapping(state);
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('span', props, {
   state,
   ref: [buttonRef],
@@ -614,7 +615,7 @@ const { element, elementProps } = useRenderElement('span', props, {
       'aria-readonly': props.readOnly || undefined,
       'aria-required': props.required || undefined,
       'aria-label': props.ariaLabel,
-      'aria-labelledby': ariaLabelledBy.value,
+      'aria-labelledby': ariaAfterHydration(ariaLabelledBy.value),
       'data-parent': props.parent ? '' : undefined,
       onFocusin() {
         setFocused(true);
@@ -655,6 +656,7 @@ const { element, elementProps } = useRenderElement('span', props, {
     getButtonProps,
     getDescriptionProps,
     (merged) => validation.getValidationProps(isDisabled.value, merged),
+    (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),
   ],
 });
 
@@ -702,8 +704,10 @@ watch(
 // The style is the constant itself, in an object that no `mergeProps` call makes.
 // `handleHiddenInputInvalid` then keeps the size that it writes.
 function inputProps() {
+  const validationProps = validation.getValidationProps(isDisabled.value, getDescriptionProps({}));
   return {
-    ...validation.getValidationProps(isDisabled.value, getDescriptionProps({})),
+    ...validationProps,
+    'aria-describedby': ariaAfterHydration(validationProps['aria-describedby']),
     ref: setInputElement,
     checked: isChecked.value,
     disabled: isDisabled.value,

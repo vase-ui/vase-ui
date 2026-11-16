@@ -34,6 +34,7 @@ export { popupConformanceTests } from './popupConformanceTests';
 export { popupFocusPropsTests } from './popupFocusPropsTests';
 export { popupListConformanceTests } from './popupListConformanceTests';
 export { positionerConformanceTests } from './positionerConformanceTests';
+export { removedPartHydrationTests } from './removedPartHydrationTests';
 export { viewportConformanceTests } from './viewportConformanceTests';
 export { isInaccessible } from '@testing-library/dom';
 export { screen, within } from './queries';

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onMounted, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { OTPField } from '@vase-ui/vue/otp-field';
 
@@ -16,6 +17,9 @@ const props = withDefaults(
     name?: string | undefined;
     id?: string | undefined;
     validationType?: 'numeric' | 'alpha' | 'alphanumeric' | 'none';
+    labelId?: string | undefined;
+    descriptionId?: string | undefined;
+    laterRemovedAtMount?: boolean;
   }>(),
   {
     label: 'none',
@@ -25,8 +29,15 @@ const props = withDefaults(
     name: undefined,
     id: undefined,
     validationType: 'numeric',
+    labelId: undefined,
+    descriptionId: undefined,
   },
 );
+
+const isMounted = shallowRef(false);
+onMounted(() => {
+  isMounted.value = true;
+});
 
 function rootProps() {
   return {
@@ -57,8 +68,12 @@ function rootProps() {
       <OTPField.Root v-else data-testid="root" v-bind="rootProps()">
         <OTPField.Input v-for="index in inputs" :key="index" />
       </OTPField.Root>
-      <Field.Label v-if="label === 'after'" data-testid="label">Code</Field.Label>
-      <Field.Description v-if="description" data-testid="description">Enter it.</Field.Description>
+      <template v-if="!(laterRemovedAtMount && isMounted)">
+        <Field.Label v-if="label === 'after'" :id="labelId" data-testid="label">Code</Field.Label>
+        <Field.Description v-if="description" :id="descriptionId" data-testid="description">
+          Enter it.
+        </Field.Description>
+      </template>
     </Field.Root>
   </form>
 </template>

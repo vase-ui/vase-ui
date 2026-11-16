@@ -39,6 +39,7 @@ const stateAttributesMapping: StateAttributesMapping<AccordionItemState> = {
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useCollapsibleRootContext } from '../../collapsible/root/CollapsibleRootContext';
+import { useAriaAfterHydration } from '../../common/hydration';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -95,12 +96,13 @@ const state = computed<AccordionTriggerState>(() => ({
   disabled: isDisabled.value,
 }));
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('button', props, {
   state,
   ref: buttonRef,
   props: (attrs) => [
     {
-      'aria-controls': open.value ? panelId.value : undefined,
+      'aria-controls': ariaAfterHydration(open.value ? panelId.value : undefined),
       'aria-expanded': open.value,
       id: triggerId.value,
       onClick: handleTrigger,
