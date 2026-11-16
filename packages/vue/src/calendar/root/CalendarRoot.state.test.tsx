@@ -190,6 +190,21 @@ describe('<Calendar.Root /> state', () => {
         expect(button('2026-11-14')).toHaveFocus();
       });
     });
+
+    // Each change gives the day a new element.
+    it.each([
+      { name: 'firstDayOfWeek', first: { firstDayOfWeek: 7 }, next: { firstDayOfWeek: 1 } },
+      { name: 'calendar', first: { calendar: 'gregory' }, next: { calendar: 'persian' } },
+    ])('keeps the focus on its day when $name changes', async ({ first, next }) => {
+      const { setProps } = await renderCalendar(first);
+      button('2026-11-10')!.focus();
+
+      await setProps(next);
+
+      await waitFor(() => {
+        expect(button('2026-11-10')).toHaveFocus();
+      });
+    });
   });
 
   describe('the month', () => {

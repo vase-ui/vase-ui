@@ -656,8 +656,8 @@ export function useCalendarRoot({
   }
 
   // A new calendar or first day of the week gives the grid new elements, and the focus falls to
-  // `<body>`. The data of the browser after the mount is an example. The day that had the focus
-  // takes it again. When that day left the grid, the day that has the tab stop takes it.
+  // `<body>`. The data of the browser after the mount is an example. The day, month or year that
+  // had the focus takes it again. When it left the grid, the cell that has the tab stop takes it.
   watch([calendar, firstDay], () => {
     const [someDayElement] = dayElements.values();
     const doc = ownerDocument(someDayElement);

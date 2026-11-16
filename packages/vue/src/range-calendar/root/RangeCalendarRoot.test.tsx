@@ -496,6 +496,7 @@ describe('<RangeCalendar.Root />', () => {
       expect(rangesOf(handlers)).toEqual([['2026-11-11', '2026-11-13']]);
     });
   });
+
   describe('the server render', () => {
     const file = 'src/range-calendar/root/RangeCalendarRootHydration.test.vue';
 

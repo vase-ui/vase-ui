@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hydrate, renderOnServer } from '#test-utils';
+import { hydrate, hydrateAfter, renderOnServer, screen, waitFor } from '#test-utils';
 import CalendarViewsHydration from './CalendarViewsHydration.test.vue';
 
 const file = 'src/calendar/root/CalendarViewsHydration.test.vue';
@@ -57,6 +57,42 @@ describe('<Calendar.Root /> views hydration', () => {
 
     expect(container.querySelectorAll('[role="gridcell"]')).toHaveLength(12);
     expect(container).toHaveTextContent('2026');
+  });
+
+  // The cell of the server that has the focus is not in the grid of the browser, so the cell that
+  // has the tab stop takes the focus.
+  it.each([
+    {
+      name: 'the months of a Hebrew server',
+      server: 'en-US-u-ca-hebrew',
+      view: 'month' as const,
+      cell: new Intl.DateTimeFormat('en-US', {
+        timeZone: 'UTC',
+        month: 'long',
+        year: 'numeric',
+      }).format(Date.parse('2026-11-01')),
+    },
+    {
+      name: 'the years of a Persian server',
+      server: 'en-US-u-ca-persian',
+      view: 'year' as const,
+      cell: '2026',
+    },
+  ])('keeps the focus in $name after the hydration', async ({ server, view, cell }) => {
+    const props = { ...base, view, locale: 'en-US' };
+    const serverHtml = await renderOnServer(file, { ...props, locale: server });
+
+    await hydrateAfter(CalendarViewsHydration, {
+      serverHtml,
+      props,
+      before: (container) => {
+        container.querySelector<HTMLElement>('[role="gridcell"][tabindex="0"]')!.focus();
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('gridcell', { name: cell })).toHaveFocus();
+    });
   });
 
   it.each([
