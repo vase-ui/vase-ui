@@ -62,7 +62,10 @@ defineSlots<{
 const root = useCalendarRootContext();
 const isHydrating = useIsHydrating();
 
-const isDisabled = computed(() => props.disabled || root.state.value.disabled);
+// A calendar with `visibleDuration` shows days only, so a press could not show another view.
+const isDisabled = computed(
+  () => props.disabled || root.state.value.disabled || !root.hasViews.value,
+);
 const state = computed<CalendarViewTriggerState>(() => ({
   ...root.state.value,
   disabled: isDisabled.value,

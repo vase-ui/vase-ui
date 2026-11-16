@@ -135,6 +135,8 @@ export interface CalendarRootController {
   focus: (date?: DateValue) => void;
   /** What the grid shows. A root with no views shows `day`. */
   view: ComputedRef<CalendarView>;
+  /** Whether the grid can show months and years. A calendar with `visibleDuration` cannot. */
+  hasViews: ComputedRef<boolean>;
   /** Whether a press on a month selects it, because the value is a year and month. */
   selectsMonths: ComputedRef<boolean>;
   /** The months of the year that the grid of months shows. */
@@ -218,8 +220,9 @@ export function useCalendarRoot({
     state: 'view',
   });
   // A calendar of weeks or days shows days only, and a year and month has no days.
+  const hasViews = computed(() => views !== undefined && duration.value === undefined);
   const view = computed<CalendarView>(() => {
-    if (!views || duration.value) {
+    if (!hasViews.value) {
       return 'day';
     }
     const requested = viewState.value ?? 'day';
@@ -268,7 +271,10 @@ export function useCalendarRoot({
   const visibleMonth = computed(() =>
     monthState.value
       ? toGridDate(monthState.value).toPlainYearMonth()
-      : clampMonth(toGridDate(initialDate).toPlainYearMonth()),
+      : clampMonth(
+          toGridDate(initialDate).toPlainYearMonth(),
+          view.value === 'day' ? undefined : 1,
+        ),
   );
 
   const [focusedDateState, setFocusedDateState] = useControlled<Temporal.PlainDate | null>({
@@ -643,8 +649,17 @@ export function useCalendarRoot({
     },
   );
   watch(() => props.month?.toString(), keepFocusInGrid);
-  // The grid that the focus was in is gone. The cell that has the tab stop in the new grid takes it.
-  watch(view, keepFocusInGrid);
+  watch(view, (next) => {
+    // A grid of months or of years can show the month of `maxDate`. When the consumer shows the
+    // days again, the pages of days then keep to the limits, as after a press on the trigger.
+    const month = next === 'day' ? clampMonth(visibleMonth.value) : visibleMonth.value;
+    if (!month.equals(visibleMonth.value)) {
+      setMonth(month, createChangeEventDetails(REASONS.none));
+    }
+    // The grid that the focus was in is gone. The cell that has the tab stop in the new grid takes
+    // it.
+    keepFocusInGrid();
+  });
 
   const canChange = () => props.readOnly !== true;
 
@@ -695,7 +710,7 @@ export function useCalendarRoot({
   }
 
   function setView(next: CalendarView, details: CalendarChangeEventDetails) {
-    if (!views || duration.value || next === view.value) {
+    if (!views || !hasViews.value || next === view.value) {
       return false;
     }
     views.emit('viewChange', next, details);
@@ -987,6 +1002,7 @@ export function useCalendarRoot({
     registerDay,
     focus,
     view,
+    hasViews,
     selectsMonths: isMonthValue,
     monthCells,
     yearCells,

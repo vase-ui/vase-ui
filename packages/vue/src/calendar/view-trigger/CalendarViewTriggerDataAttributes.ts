@@ -1,5 +1,5 @@
 /**
- * Present when the calendar or the button is disabled.
+ * Present when the calendar or the button is disabled, or when the calendar shows days only.
  */
 export const disabled = 'data-disabled';
 /**

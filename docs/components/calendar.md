@@ -118,7 +118,7 @@ A page that the user leaves stays until its animations end. It has `data-ending-
 
 </DemoSource>
 
-Use `view` and `v-model:view`, or `defaultView`, to choose the view. A calendar with `visibleDuration` shows days only. `columns` gives the cells of a row of `Calendar.MonthGrid` and `Calendar.YearGrid`, and Up and Down move the focus by a row. A page of years has `visibleYears` years, 12 by default, and it starts with a year that is a multiple of that number. The page of 2026 thus has the years from 2016 to 2027.
+Use `view` and `v-model:view`, or `defaultView`, to choose the view. A calendar with `visibleDuration` shows days only, and its `Calendar.ViewTrigger` is disabled. `columns` gives the cells of a row of `Calendar.MonthGrid` and `Calendar.YearGrid`, and Up and Down move the focus by a row. A page of years has `visibleYears` years, 12 by default, and it starts with a year that is a multiple of that number. The page of 2026 thus has the years from 2016 to 2027.
 
 <<< ./calendar/Months.vue
 

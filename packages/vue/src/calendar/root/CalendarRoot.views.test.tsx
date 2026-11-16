@@ -192,6 +192,13 @@ describe('<Calendar.Root /> views', () => {
       expect(root()).toHaveAttribute('data-view', 'month');
     });
 
+    it('is disabled in a calendar with visibleDuration, which shows days only', async () => {
+      await renderViews({ visibleDuration: { weeks: 2 } });
+
+      expect(yearTrigger()).toBeDisabled();
+      expect(yearTrigger()).toHaveAttribute('data-disabled');
+    });
+
     it('keeps the focus on the trigger when the view changes', async () => {
       const { user } = await renderViews();
 
@@ -613,6 +620,47 @@ describe('<Calendar.Root /> views', () => {
           year: 'numeric',
         }).formatRange(Date.parse('2026-12-01'), Date.parse('2027-01-01')),
       );
+    });
+
+    it('first shows the year of today in the month of maxDate, also with two months', async () => {
+      await renderViews({
+        defaultView: 'month',
+        numberOfMonths: 2,
+        maxDate: day('2027-01-15'),
+        today: day('2027-01-10'),
+      });
+
+      expect(root()).toHaveAttribute('aria-label', '2027');
+      expect(monthCell('2027-01-01')).toHaveAttribute('tabindex', '0');
+    });
+
+    it('moves the month inside the limits when the consumer shows the days again', async () => {
+      const onMonthChange = vi.fn();
+      const { user, setProps } = await renderViews({
+        view: 'month',
+        numberOfMonths: 2,
+        maxDate: day('2027-01-15'),
+        onMonthChange,
+      });
+      await user.click(screen.getByTestId('next'));
+      expect(monthTrigger()).toHaveTextContent('2027');
+
+      await setProps({ view: 'day' });
+
+      expect(root()).toHaveAttribute(
+        'aria-label',
+        new Intl.DateTimeFormat('en-US', {
+          timeZone: 'UTC',
+          month: 'long',
+          year: 'numeric',
+        }).formatRange(Date.parse('2026-12-01'), Date.parse('2027-01-01')),
+      );
+      expect(
+        onMonthChange.mock.calls.map(([month, { reason }]) => [month.toString(), reason]),
+      ).toEqual([
+        ['2027-01', 'month-change'],
+        ['2026-12', 'none'],
+      ]);
     });
 
     it('keeps the page inside the limits for a move past them', async () => {
