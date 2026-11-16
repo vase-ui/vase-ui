@@ -60,10 +60,12 @@ export interface TimePickerRootProps<
    */
   granularity?: TimePickerRootGranularity | undefined;
   /**
-   * A value that gives its kind, its date and its time zone to a new value.
-   * The segments of the field that the user did not fill start with the numbers of this value. The
-   * clock shows its time while the picker has no value, and a column sets one unit of that time.
-   * With no reference date, a new value is a `Temporal.PlainTime`, and the time starts at midnight.
+   * A value that gives its kind, its date and its time zone to the first value of the picker.
+   * The segments of the field that the user did not fill start with the numbers of this value.
+   * While the picker has no value, the clock shows its time, and a column sets one unit of it.
+   * With no reference date, the time starts at midnight and the first value is a
+   * `Temporal.PlainTime`. A default value, or a value that the picker had earlier, gives its kind in
+   * the place of this value.
    */
   referenceDate?: Value | undefined;
   /**

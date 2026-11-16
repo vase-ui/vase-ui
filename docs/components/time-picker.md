@@ -17,7 +17,7 @@ import DemoTimePickerHeroTailwind from '../demos/time-picker/hero/tailwind/index
 
 # Time Picker
 
-A time picker has a field to type a time in and a popup to pick one. The popup has a list of times, columns of hours, minutes and seconds, or a clock face. The field and the popup share one value.
+A time picker has a field to type a time in and a popup to pick one. The popup has a list of times, columns of hours, minutes, seconds and day periods, or a clock face. The field and the popup share one value.
 
 Base UI has no time picker. This one follows the [dialog pattern](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/) of the WAI-ARIA Authoring Practices Guide for its popup, and the [listbox pattern](https://www.w3.org/WAI/ARIA/apg/patterns/listbox/) for its list and its columns. Its types need TypeScript 6.0, or `skipLibCheck`. The [dates and times guide](/handbook/dates-and-times) has the details, and the polyfill for an engine with no `Temporal`.
 
@@ -79,7 +79,7 @@ The value is a `Temporal` object, and `v-model:value` gives back the same kind: 
 
 The root owns the props that its parts share: `granularity`, `referenceDate`, `hourCycle`, `forceLeadingZeros`, `hideTimeZone`, `minTime`, `maxTime`, `locale`, `disabled`, `readOnly`, `required`, `name` and `form`. The field gives the value to a form through its hidden input. The list, the columns and the clock give no value to a form.
 
-With no value, the clock shows the time of `referenceDate`, or midnight, and a pick in a column sets one unit of that time. A new value has the kind, the date and the time zone of `referenceDate`, and it is a `Temporal.PlainTime` when the picker has no `referenceDate`. A picker that the user empties keeps the kind of its last value.
+With no value, the clock shows the time of `referenceDate`, or midnight, and a pick in a column sets one unit of that time. A new value has the kind, the date and the time zone of the default value, else of the last value that the picker had, else of `referenceDate`. With none of them, it is a `Temporal.PlainTime`.
 
 `minTime` and `maxTime` limit the time. The list starts at `minTime` and ends at `maxTime`. The columns and the clock disable a value that has no time in the limits, and a pick moves the time into them. The hidden input of the field gives `rangeUnderflow` and `rangeOverflow` to a time that the user typed. The `step` of `TimePicker.List` is in minutes. `TimePicker.Field` has its own `step`, the step of its hidden input in seconds, as in [Time Field](/components/time-field).
 

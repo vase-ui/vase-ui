@@ -50,9 +50,8 @@ const ariaAfterHydration = useAriaAfterHydration();
 // A picker that the user cannot change has nothing to choose.
 const disabled = computed(() => props.disabled || picker.disabled.value || picker.readOnly.value);
 
-// The name has the time and not the date, because the picker sets the time. It shows what the field
-// shows: the seconds for a granularity of seconds, and the name of the time zone for a value in a
-// time zone.
+// The name has the time and not the date, because the picker sets the time. It has the seconds for
+// a granularity of seconds, and the name of the time zone for a value in a time zone.
 function describe(value: TimePickerRootValue): string {
   return formatText(
     value,
