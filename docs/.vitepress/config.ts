@@ -7,6 +7,7 @@ import { createApiReferenceReader } from '../../scripts/docs/apiReference.ts';
 import { familyOfPage } from '../../scripts/docs/familyPages.ts';
 import { readNavigation } from '../../scripts/docs/navigation.ts';
 import { searchIndexHtml } from '../../scripts/docs/searchIndex.ts';
+import { REPOSITORY_ROOT } from '../../scripts/parity/repository.ts';
 import { DEMO_VARIANT_STORAGE_KEY } from './components/demoVariantStorageKey.ts';
 import { markdownHeadingBadge } from './markdownHeadingBadge.ts';
 import { postcssFollowSiteTheme } from './postcssFollowSiteTheme.ts';
@@ -16,7 +17,14 @@ const manifest: { description: string; homepage: string } = JSON.parse(
   readFileSync(join(docsRoot, '../packages/vue/package.json'), 'utf8'),
 );
 const { nav, sidebar } = readNavigation(docsRoot);
-const readApiReference = createApiReferenceReader();
+// A build reads the reference of a family for its page. It reads the reference two more times for
+// the search index, because VitePress makes the index two times. The reader thus keeps each
+// reference in a build. `vitepress build` sets `NODE_ENV` to `production` before it loads this
+// file. The development server has one reader for its life, so a cache there keeps a reference
+// until the server restarts.
+const readApiReference = createApiReferenceReader(REPOSITORY_ROOT, {
+  cache: process.env.NODE_ENV === 'production',
+});
 
 // These colors of the GitHub themes of Shiki become the syntax colors that the Base UI docs give to
 // the same tokens. `docs/.vitepress/theme/tokens.css` sets these colors for light and dark.
