@@ -28,13 +28,14 @@ export interface DateFieldActions {
  * `setup`. It binds one end of the range of the picker to the `DateField.Root` that the part renders.
  * @param end The end that the field shows.
  * @param field The ref of the `DateField.Root` that the part renders.
- * @param props The declared props of the part.
+ * @param props The declared props of the part. The prop `ariaLabelledby` is the name that the
+ * consumer gives to the group.
  * @param defaultLabel The name of the field when the consumer gives none.
  */
 export function useDateRangePickerField(
   end: 'start' | 'end',
   field: Readonly<Ref<DateFieldActions | null>>,
-  props: object,
+  props: { ariaLabelledby?: string | undefined },
   defaultLabel: string,
 ) {
   const attrs = useAttrs();
@@ -92,11 +93,10 @@ export function useDateRangePickerField(
   }
 
   // The name of the group is its own name and the label of a `Field`, as in React Aria. A name that
-  // the consumer gives with `aria-labelledby` replaces both. `DateField.Root` takes that attribute as
-  // its prop `ariaLabelledby`, so the part gives the prop only when it has a value.
+  // the consumer gives with `aria-labelledby` replaces both.
   function ariaLabelledby() {
     const labelId = fieldLabelId.value;
-    if (labelId === undefined || givenName(attrs['aria-labelledby']) !== undefined) {
+    if (labelId === undefined || givenName(props.ariaLabelledby) !== undefined) {
       return undefined;
     }
     return typeof ariaLabel() === 'string' ? `${groupId} ${labelId}` : labelId;
@@ -110,7 +110,7 @@ export function useDateRangePickerField(
       ...mergeProps(fieldHandlers, omitUndefinedAttributes(attrs)),
       ...props,
       'aria-label': ariaLabel(),
-      ...(labelledby !== undefined && { ariaLabelledby: labelledby }),
+      ariaLabelledby: labelledby ?? props.ariaLabelledby,
       value: picker.range.value[index],
       // The end that gives the kind of a new end is the same kind for both fields.
       defaultValue: picker.template.value,

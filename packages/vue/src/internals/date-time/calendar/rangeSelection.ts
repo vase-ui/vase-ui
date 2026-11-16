@@ -167,7 +167,7 @@ interface Drag {
 export function useRangeSelection(
   props: RangeSelectionProps,
   emit: RangeSelectionEmit,
-  host?: RangeCalendarHost | undefined,
+  host?: RangeCalendarHost,
 ): RangeSelection {
   const [value, setValue] = useControlled<RangeInput>({
     controlled: () => props.value,

@@ -245,8 +245,9 @@ describe('laterMinimum', () => {
     },
     { name: 'a later date', a: '2026-11-12', b: '2026-11-10T17:00', expected: '2026-11-12' },
   ])('gives the later of two minimums with $name', ({ a, b, expected }) => {
-    const parse = (text: string) => (text.includes('T') ? at(text) : day(text));
+    const parse = (text: string | null | undefined) =>
+      text == null ? undefined : text.includes('T') ? at(text) : day(text);
 
-    expect(laterMinimum(a && parse(a), b && parse(b))?.toString()).toBe(expected);
+    expect(laterMinimum(parse(a), parse(b))?.toString()).toBe(expected);
   });
 });
