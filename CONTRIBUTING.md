@@ -1849,17 +1849,18 @@ Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>. Without a root the trigg
 - A change of one of these files runs `test-nuxt` and each test file:
   - `.github`, `scripts/ci`, each `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `patches` and `.node-version`.
   - Each `tsconfig` file and `packages/vue/vitest.config.ts`.
-  - `packages/vue/test/server` and each shell script in `packages/vue/test`.
+  - `packages/vue/test/server`, each shell script in `packages/vue/test`, and `parity/own`.
   - A file that the script does not name.
-- A pull request with only the files below and no file of the list above runs no test job and no `test-nuxt`. No test reads them:
+- A pull request with only the files below and no file of the list above runs no test job and no `test-nuxt`. No test of `packages/vue` and no fixture reads them:
   - The Markdown files of the root and of `docs`, `LICENSE` and `docs/public`.
-  - `parity`, `cost` and `scripts`, except `scripts/ci`.
+  - `parity`, `cost` and `scripts`, except `parity/own` and `scripts/ci`.
   - `eslint.config.js`, `eslint.config.test.js` and `prettier.config.js`.
-- `test-nuxt` runs for a file of `fixtures` and for a file of `packages/vue` that the build can read. No test job reads `fixtures`. A test file, a type test and a file in `packages/vue/test` are not such files.
+- `test-nuxt` runs for a file of `fixtures` and for a file of `packages/vue` that the build can read. The build does not read `packages/vue/test`, or a file with `.test` or `.spec` before its extension. No test job reads `fixtures`.
 - For each other changed file of `packages/vue/src`, `packages/vue/test`, `packages/vue/scripts` or `docs`, a test job runs `vitest related`. Vitest runs the test files that import the changed file, directly or through other modules.
+- `test-nuxt` and each test file also run when the list for `vitest related` has more than 500 paths. They also run when a path of the list has a character other than `A`–`Z`, `a`–`z`, `0`–`9`, `_`, `@`, `.`, `+`, `/` and `-`.
 - Vitest does not know a file that a test reads by a path at run time, such as the `file` of `renderOnServer`. The script thus adds the test files in the folder of each changed file of `packages/vue/src` and `packages/vue/test`. It also adds the test files in each folder above it, up to `src` or `test`. A changed test file adds none.
-- Keep a file that a test reads by a path in the folder of the test or below it. For a file elsewhere, add its path to the list of files in `scripts/ci/selectTests.ts` that run each test file.
-- A deleted file of `docs` runs each test file, unless it is a Markdown file or a file of `docs/public`. `packages/vue/test/demos.test.tsx` and `packages/vue/test/demos.contrast.test.tsx` read the folders of the demos with `import.meta.glob`, and the module graph does not hold a deleted file.
+- Keep a file that a test reads by a path, and does not import, in the folder of the test or below it. For a file elsewhere, add its path to the list of files in `scripts/ci/selectTests.ts` that run each test file.
+- A deleted file of `docs` runs each test file, unless it is a Markdown file or a file of `docs/public`. Test files of `packages/vue/test`, such as `demos.test.tsx`, read the folders of the demos with `import.meta.glob`. The module graph does not hold a deleted file.
 - `required` fails when a test job or `test-nuxt` is skipped and `select` did not say that it has nothing to run.
 - CI does not run the scripts `test:node`, `test:chromium` and the others. The action `.github/actions/vitest` runs `vitest` with the same project names.
 - Set the `timeout-minutes` of a CI job to 1.5 times the 95th percentile of the time of its passed runs. Use the runs of the merge queue, not of a pull request. A job of a pull request can run only some of the test files. If the result is not a multiple of 5 minutes, increase it to the next multiple. For a job with a matrix, use the slowest entry. When a passed run takes more than two thirds of the limit of its job, measure the job again.
