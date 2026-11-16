@@ -771,6 +771,114 @@ describe('<ContextMenu.Root />', () => {
     });
   });
 
+  describe('VUE-107: Tab in a submenu', () => {
+    async function openSubmenus(depth: 1 | 2) {
+      const onRootOpenChange = vi.fn();
+      const onSubmenuOpenChange = vi.fn();
+      const { user } = await render(
+        <ContextMenu.Root onOpenChange={onRootOpenChange}>
+          <ContextMenu.Trigger as="button" data-testid="surface">
+            Surface
+          </ContextMenu.Trigger>
+          <ContextMenu.Portal>
+            <ContextMenu.Positioner>
+              <ContextMenu.Popup data-testid="context-popup">
+                <ContextMenu.Item>Copy</ContextMenu.Item>
+                <ContextMenu.SubmenuRoot onOpenChange={onSubmenuOpenChange}>
+                  <ContextMenu.SubmenuTrigger data-testid="submenu-trigger">
+                    Share
+                  </ContextMenu.SubmenuTrigger>
+                  <ContextMenu.Portal>
+                    <ContextMenu.Positioner>
+                      <ContextMenu.Popup data-testid="submenu-popup">
+                        <ContextMenu.Item data-testid="submenu-item">Email</ContextMenu.Item>
+                        <ContextMenu.SubmenuRoot>
+                          <ContextMenu.SubmenuTrigger data-testid="nested-submenu-trigger">
+                            More
+                          </ContextMenu.SubmenuTrigger>
+                          <ContextMenu.Portal>
+                            <ContextMenu.Positioner>
+                              <ContextMenu.Popup data-testid="nested-submenu-popup">
+                                <ContextMenu.Item data-testid="nested-submenu-item">
+                                  Message
+                                </ContextMenu.Item>
+                              </ContextMenu.Popup>
+                            </ContextMenu.Positioner>
+                          </ContextMenu.Portal>
+                        </ContextMenu.SubmenuRoot>
+                      </ContextMenu.Popup>
+                    </ContextMenu.Positioner>
+                  </ContextMenu.Portal>
+                </ContextMenu.SubmenuRoot>
+              </ContextMenu.Popup>
+            </ContextMenu.Positioner>
+          </ContextMenu.Portal>
+        </ContextMenu.Root>,
+      );
+
+      const surface = screen.getByTestId('surface');
+      surface.focus();
+      await waitForLaterMillisecond(() =>
+        nextEvent(document, 'focusin', {
+          action: () => fireEvent.contextMenu(surface, { clientX: 10, clientY: 10, button: 2 }),
+        }),
+      );
+      await user.keyboard('{ArrowDown}{ArrowDown}');
+      expect(screen.getByTestId('submenu-trigger')).toHaveFocus();
+      await waitForLaterMillisecond(() =>
+        nextEvent(document, 'focusin', { action: () => user.keyboard('{ArrowRight}') }),
+      );
+      expect(screen.getByTestId('submenu-item')).toHaveFocus();
+
+      if (depth === 2) {
+        await user.keyboard('{ArrowDown}');
+        await waitForLaterMillisecond(() =>
+          nextEvent(document, 'focusin', { action: () => user.keyboard('{ArrowRight}') }),
+        );
+        expect(screen.getByTestId('nested-submenu-item')).toHaveFocus();
+      }
+
+      return { user, surface, onRootOpenChange, onSubmenuOpenChange };
+    }
+
+    it.each([
+      { name: 'a submenu', depth: 1 },
+      { name: 'a submenu of a submenu', depth: 2 },
+    ] as const)('closes every menu for Tab in $name', async ({ depth }) => {
+      const { user, surface, onRootOpenChange, onSubmenuOpenChange } = await openSubmenus(depth);
+      const contextPopup = screen.getByTestId('context-popup');
+
+      await user.keyboard('{Tab}');
+      await waitFor(() => {
+        expect(contextPopup).not.toBeInTheDocument();
+      });
+
+      expect(screen.queryByTestId('context-popup')).toBe(null);
+      expect(screen.queryByTestId('submenu-popup')).toBe(null);
+      expect(surface).toHaveFocus();
+      expect(onRootOpenChange.mock.lastCall?.[0]).toBe(false);
+      expect(onRootOpenChange.mock.lastCall?.[1].reason).toBe(REASONS.focusOut);
+      expect(onSubmenuOpenChange.mock.lastCall?.[0]).toBe(false);
+      expect(onSubmenuOpenChange.mock.lastCall?.[1].reason).toBe(REASONS.focusOut);
+    });
+
+    it('closes only the submenu for Shift+Tab in a submenu', async () => {
+      const { user, onRootOpenChange, onSubmenuOpenChange } = await openSubmenus(1);
+      const submenuPopup = screen.getByTestId('submenu-popup');
+
+      await user.keyboard('{Shift>}{Tab}{/Shift}');
+      await waitFor(() => {
+        expect(submenuPopup).not.toBeInTheDocument();
+      });
+
+      expect(screen.queryByTestId('submenu-popup')).toBe(null);
+      expect(screen.getByTestId('submenu-trigger')).toHaveFocus();
+      expect(screen.getByTestId('context-popup')).toBeInTheDocument();
+      expect(onSubmenuOpenChange.mock.lastCall?.[1].reason).toBe(REASONS.focusOut);
+      expect(onRootOpenChange.mock.calls.map(([open]) => open)).toEqual([true]);
+    });
+  });
+
   describe('hydration', () => {
     it.each([
       { name: 'a closed root', props: {} },

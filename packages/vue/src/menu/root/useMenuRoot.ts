@@ -22,6 +22,7 @@ import { useAnimationsFinished } from '../../internals/useAnimationsFinished';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { mergeProps } from '../../merge-props';
 import { getHighlightReason } from '../../utils/getHighlightReason';
+import { stopEvent } from '../../utils/popups/event';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
 import { useListNavigation } from '../../utils/popups/interactions/useListNavigation';
 import { useOpenMethodTriggerProps } from '../../utils/popups/interactions/useOpenInteractionType';
@@ -504,6 +505,24 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
     store.set('allowMouseEnter', true);
   }
 
+  // The popup of a root context menu is modal. Its focus manager takes back the focus that Tab
+  // moves out of a submenu, so only the submenu would close. Each menu of the context menu closes
+  // instead, as for Tab in the root and for Tab in a submenu of a menu with a trigger (`VUE-107`).
+  function closeContextMenuForTab(event: KeyboardEvent) {
+    const menuParent = parent.value;
+    if (
+      event.key !== 'Tab' ||
+      event.shiftKey ||
+      menuParent.type !== 'menu' ||
+      !isInContextMenu(menuParent)
+    ) {
+      return;
+    }
+
+    stopEvent(event);
+    floatingTreeRoot.value.events.emit('close', { domEvent: event, reason: REASONS.focusOut });
+  }
+
   const popupListeners = {
     onMousemove() {
       store.set('allowMouseEnter', true);
@@ -517,6 +536,7 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
       }
     },
     onKeydown(event: KeyboardEvent) {
+      closeContextMenuForTab(event);
       // The Menubar's CompositeRoot captures keyboard events via event delegation. This works well
       // when Menu.Root is nested inside Menubar, but with detached triggers we need to manually
       // forward the event to the CompositeRoot.
@@ -626,6 +646,12 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
   }
 
   return { payload, actions, context };
+}
+
+function isInContextMenu(menuParent: MenuParent): boolean {
+  return menuParent.type === 'menu'
+    ? isInContextMenu(menuParent.store.select('parent'))
+    : menuParent.type === 'context-menu';
 }
 
 function isShallowEqual(a: Record<string, unknown>, b: Record<string, unknown>) {
