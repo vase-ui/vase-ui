@@ -592,8 +592,16 @@ describe('<Calendar.Root /> pages', () => {
     });
 
     it.each([
-      { name: 'the month select', selector: '[data-testid="month-select"]', label: fieldName('month') },
-      { name: 'the year select', selector: '[data-testid="year-select"]', label: fieldName('year') },
+      {
+        name: 'the month select',
+        selector: '[data-testid="month-select"]',
+        label: fieldName('month'),
+      },
+      {
+        name: 'the year select',
+        selector: '[data-testid="year-select"]',
+        label: fieldName('year'),
+      },
       {
         name: 'a week number',
         selector: 'th[scope="row"]',

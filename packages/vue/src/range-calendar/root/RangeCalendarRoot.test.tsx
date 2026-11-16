@@ -515,7 +515,10 @@ describe('<RangeCalendar.Root />', () => {
       {
         name: 'a day button',
         selector: '[data-date="2026-11-14"] button',
-        label: format({ weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }, '2026-11-14'),
+        label: format(
+          { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' },
+          '2026-11-14',
+        ),
       },
     ])(
       'gives $name the aria-label of the browser when the server wrote another text',
