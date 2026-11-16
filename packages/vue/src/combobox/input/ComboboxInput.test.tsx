@@ -4,6 +4,7 @@ import { defineComponent, h, nextTick, shallowRef, Transition, vShow, withDirect
 import type { Directive, VNode } from 'vue';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
+import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import { Field } from '@vase-ui/vue/field';
 import {
   createRenderer,
@@ -1063,6 +1064,57 @@ describe('<Combobox.Input />', () => {
 
       expect(handleValueChange.mock.calls.length).toBe(1);
       expect(handleValueChange.mock.calls[0][0]).toEqual(['apple', 'banana']);
+    });
+
+    it.each([
+      { name: 'uncontrolled LTR', controlled: false, direction: 'ltr', key: 'ArrowLeft' },
+      { name: 'controlled LTR', controlled: true, direction: 'ltr', key: 'ArrowLeft' },
+      { name: 'uncontrolled RTL', controlled: false, direction: 'rtl', key: 'ArrowRight' },
+      { name: 'controlled RTL', controlled: true, direction: 'rtl', key: 'ArrowRight' },
+    ] as const)(
+      'VUE-122: keeps the arrow key on the input with a null value inside chips: $name',
+      async ({ controlled, direction, key }) => {
+        const handleValueChange = vi.fn();
+        await render(
+          <DirectionProvider direction={direction}>
+            <Combobox.Root
+              {...(controlled ? { value: null } : {})}
+              onValueChange={handleValueChange}
+            >
+              <Combobox.Chips>
+                <Combobox.Input />
+              </Combobox.Chips>
+            </Combobox.Root>
+          </DirectionProvider>,
+        );
+
+        const input = screen.getByRole<HTMLInputElement>('combobox');
+        const result = await pressKeys(input, `{${key}}`, 0);
+
+        expect(result).toEqual({ selection: [0, 0], prevented: [false] });
+        expect(input).toHaveFocus();
+        expect(input).toHaveValue('');
+        expect(handleValueChange).not.toHaveBeenCalled();
+      },
+    );
+
+    it('VUE-122: keeps the arrow key on the input with a string value inside chips', async () => {
+      await render(
+        <Combobox.Root defaultValue="apple">
+          <Combobox.Chips>
+            <Combobox.Input />
+          </Combobox.Chips>
+        </Combobox.Root>,
+      );
+
+      const input = screen.getByRole<HTMLInputElement>('combobox');
+      expect(input).toHaveValue('apple');
+
+      // A string has a length, but it holds no chip.
+      const result = await pressKeys(input, '{ArrowLeft}', 0);
+
+      expect(result).toEqual({ selection: [0, 0], prevented: [false] });
+      expect(input).toHaveFocus();
     });
 
     it('keeps focus on the input when navigating toward chips but none are rendered', async () => {
