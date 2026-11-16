@@ -20,9 +20,8 @@ export type TimePickerRootValue = TimeValue;
 
 export type TimePickerRootGranularity = TimeFieldRootGranularity;
 
-// A press on a view of the clock changes the view and not the value.
 export type TimePickerRootChangeEventReason =
-  TimeFieldRootChangeEventReason | Exclude<TimeClockRootChangeEventReason, 'trigger-press'>;
+  TimeFieldRootChangeEventReason | TimeClockRootChangeEventReason;
 export type TimePickerRootChangeEventDetails =
   VaseUIChangeEventDetails<TimePickerRootChangeEventReason>;
 
@@ -62,9 +61,9 @@ export interface TimePickerRootProps<
   granularity?: TimePickerRootGranularity | undefined;
   /**
    * A value that gives its kind, its date and its time zone to a new value.
-   * The field and the clock start at the time of this value while the picker has no value, and
-   * a column sets a unit of that time. With no reference date, they start at midnight, and a new
-   * value is a `Temporal.PlainTime`.
+   * The segments of the field that the user did not fill start with the numbers of this value. The
+   * clock shows its time while the picker has no value, and a column sets one unit of that time.
+   * With no reference date, a new value is a `Temporal.PlainTime`, and the time starts at midnight.
    */
   referenceDate?: Value | undefined;
   /**

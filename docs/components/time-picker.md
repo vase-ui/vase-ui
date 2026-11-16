@@ -79,13 +79,13 @@ The value is a `Temporal` object, and `v-model:value` gives back the same kind: 
 
 The root owns the props that its parts share: `granularity`, `referenceDate`, `hourCycle`, `forceLeadingZeros`, `hideTimeZone`, `minTime`, `maxTime`, `locale`, `disabled`, `readOnly`, `required`, `name` and `form`. The field gives the value to a form through its hidden input. The list, the columns and the clock give no value to a form.
 
-With no value, a pick starts at the time of `referenceDate`, or at midnight, and it has the kind that `referenceDate` gives. A pick in a column then sets one unit of that time. A picker that the user empties keeps the kind of its last value.
+With no value, the clock shows the time of `referenceDate`, or midnight, and a pick in a column sets one unit of that time. A new value has the kind, the date and the time zone of `referenceDate`, and it is a `Temporal.PlainTime` when the picker has no `referenceDate`. A picker that the user empties keeps the kind of its last value.
 
 `minTime` and `maxTime` limit the time. The list starts at `minTime` and ends at `maxTime`. The columns and the clock disable a value that has no time in the limits, and a pick moves the time into them. The hidden input of the field gives `rangeUnderflow` and `rangeOverflow` to a time that the user typed. The `step` of `TimePicker.List` is in minutes. `TimePicker.Field` has its own `step`, the step of its hidden input in seconds, as in [Time Field](/components/time-field).
 
 ### Close at a selection
 
-`closeOnSelect` says if a selection closes the popup. A press on a time of the list closes it. The commit of the last view of the clock closes it. A press in a column does not, because the user sets more than one unit. Set `closeOnSelect` to `true` or to `false` to change this for each part. Escape and a press outside the popup close it and keep the value.
+`closeOnSelect` says if a selection closes the popup. A press on a time of the list closes it. The commit of the last view of the clock closes it. A press in a column does not, because the user sets more than one unit. Set `closeOnSelect` on the root to change this for the list, the columns and the clock. Escape and a press outside the popup close it and keep the value.
 
 ## Examples
 
