@@ -914,20 +914,20 @@ function getLayout() {
   return { ...shown.value };
 }
 
-function setLayout(snapshot: ResizableRootLayoutSnapshot | null) {
+function setLayout(layout: ResizableRootLayoutSnapshot | null) {
   if (!canChange()) {
     return;
   }
-  const { layout, pins: exact } = normalize(snapshot ?? EMPTY_OBJECT);
-  const resolvedLayout = resolveLayout(buildConstraints(false), layout);
+  const { layout: requestedLayout, pins: exact } = normalize(layout ?? EMPTY_OBJECT);
+  const resolvedLayout = resolveLayout(buildConstraints(false), requestedLayout);
   const current = toRequestedLayout(shown.value, requested.value);
-  if (areLayoutsEqual(toRequestedLayout(resolvedLayout, layout), current)) {
+  if (areLayoutsEqual(toRequestedLayout(resolvedLayout, requestedLayout), current)) {
     return;
   }
   const applied = changeLayout(
     resolvedLayout,
     createChangeEventDetails(REASONS.imperativeAction),
-    layout,
+    requestedLayout,
   );
   if (applied) {
     // The pixels of a length are exact, and the percent of the layout has three decimals.

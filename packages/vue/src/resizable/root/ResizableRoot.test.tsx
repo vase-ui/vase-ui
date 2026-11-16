@@ -214,7 +214,7 @@ describe('<Resizable.Root />', () => {
       expect(grows('a', 'b', 'c')).toEqual(['33.334', '33.333', '33.333']);
     });
 
-    it('gives each panel its size with no entry for a null layout, and stays controlled', async () => {
+    it('reads a null layout as a layout with no entries, and stays controlled', async () => {
       const onLayoutChange = vi.fn();
       await render(<Three root={{ layout: null, onLayoutChange }} />);
       expect(grows('a', 'b', 'c')).toEqual(['33.334', '33.333', '33.333']);
@@ -228,9 +228,10 @@ describe('<Resizable.Root />', () => {
       expect(grows('a', 'b', 'c')).toEqual(['33.334', '33.333', '33.333']);
     });
 
-    it('gives each panel its size with no entry when the layout changes to null', async () => {
+    it('reads a layout that changes to null as a layout with no entries, not as the default layout', async () => {
       const layout = shallowRef<Record<string, number> | null>({ a: 20, b: 30, c: 50 });
-      await render(() => <Three root={{ layout: layout.value }} />);
+      const defaultLayout = { a: 50, b: 25, c: 25 };
+      await render(() => <Three root={{ layout: layout.value, defaultLayout }} />);
       expect(grows('a', 'b', 'c')).toEqual(['20', '30', '50']);
 
       layout.value = null;
@@ -1783,7 +1784,7 @@ describe('<Resizable.Root />', () => {
       expect(grows('a', 'b', 'c')).toEqual(['37.5', '37.5', '25']);
     });
 
-    it('gives each panel its size with no entry for setLayout(null)', async () => {
+    it('reads setLayout(null) as a layout with no entries', async () => {
       const getRoot = await renderRoot({ defaultLayout: { a: 20, b: 30, c: 50 } });
       expect(grows('a', 'b', 'c')).toEqual(['20', '30', '50']);
 
