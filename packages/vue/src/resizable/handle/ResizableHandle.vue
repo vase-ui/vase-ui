@@ -93,7 +93,7 @@ import {
   watch,
 } from 'vue';
 import type { Component, CSSProperties } from 'vue';
-import { useIsHydrating } from '../../common/hydration';
+import { useAriaAfterHydration, useIsHydrating } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
 import { formatNumber } from '../../common/formatNumber';
 import { activeElement } from '../../common/shadowDom';
@@ -148,6 +148,7 @@ const root = useResizableRootContext();
 useDeferredServerRender();
 
 const hydrating = useIsHydrating();
+const ariaAfterHydration = useAriaAfterHydration();
 const { ref: listItemRef, index } = useCompositeListItem({ list: root.list });
 const isDisabled = computed(() => root.disabled.value || props.disabled);
 
@@ -444,6 +445,16 @@ const { element, elementProps } = useRenderElement('div', props, {
       },
     },
     attrs,
+    // The first client render can come before the `setup` of the panel after the handle.
+    // `valueAttributes` then has none of these keys, so this getter adds them.
+    (merged) => ({
+      ...merged,
+      'aria-controls': ariaAfterHydration(merged['aria-controls']),
+      'aria-valuenow': ariaAfterHydration(merged['aria-valuenow']),
+      'aria-valuemin': ariaAfterHydration(merged['aria-valuemin']),
+      'aria-valuemax': ariaAfterHydration(merged['aria-valuemax']),
+      'aria-valuetext': ariaAfterHydration(merged['aria-valuetext']),
+    }),
   ],
 });
 

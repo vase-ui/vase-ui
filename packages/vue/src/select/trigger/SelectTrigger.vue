@@ -49,6 +49,7 @@ export interface SelectTriggerProps<Value = any>
 
 <script setup lang="ts" generic="Value = any">
 import { computed, onActivated, onDeactivated, onMounted, onScopeDispose, toRaw, watch } from 'vue';
+import { useAriaAfterHydration } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
 import { useTimeout } from '../../common/useTimeout';
 import { contains, getTarget } from '../../common/shadowDom';
@@ -245,6 +246,7 @@ const stateAttributesMapping: StateAttributesMapping<SelectTriggerState<Value>> 
   value: () => null,
 };
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('button', props, {
   state,
   ref: [buttonRef, setTriggerElement],
@@ -257,7 +259,9 @@ const { element, elementProps } = useRenderElement('button', props, {
       'aria-expanded': isOpen.value,
       'aria-haspopup': 'listbox',
       'aria-controls': ariaControls.value,
-      'aria-labelledby': resolveAriaLabelledBy(fieldLabelId.value, store.context.labelId.value),
+      'aria-labelledby': ariaAfterHydration(
+        resolveAriaLabelledBy(fieldLabelId.value, store.context.labelId.value),
+      ),
       'aria-readonly': isReadOnly.value || undefined,
       'aria-required': store.select('required') || undefined,
       tabindex: isDisabled.value ? -1 : 0,
@@ -306,6 +310,7 @@ const { element, elementProps } = useRenderElement('button', props, {
     getButtonProps,
     // `getButtonProps` gives an element that is not a native button the role `button`.
     (merged) => ({ ...validation.getValidationProps(isDisabled.value, merged), role: 'combobox' }),
+    (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),
   ],
 });
 

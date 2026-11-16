@@ -17,6 +17,7 @@ import {
   hydrateAfter,
   mockNavigationType,
   pasteText,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   within,
@@ -2493,6 +2494,58 @@ describe('<OTPField.Root />', () => {
   });
 
   describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/otp-field/root/OTPFieldRootHydration.test.vue',
+      component: OTPFieldRootHydration,
+      cases: [
+        {
+          name: 'a removed label',
+          props: {
+            label: 'after',
+            description: true,
+            inputs: 4,
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: '[data-testid="root"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description',
+          props: {
+            label: 'after',
+            description: true,
+            inputs: 4,
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: '[data-testid="root"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+        {
+          name: 'the hidden input, a removed description',
+          props: {
+            label: 'after',
+            description: true,
+            inputs: 4,
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: 'input[aria-hidden]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+      ],
+    });
+
     it.each([
       { name: 'an empty field', props: {} },
       { name: 'a field with a value and a name', props: { defaultValue: '12', name: 'otp' } },

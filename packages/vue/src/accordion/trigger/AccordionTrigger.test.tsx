@@ -6,8 +6,10 @@ import {
   createHeldBranch,
   createRenderer,
   flushMicrotasks,
+  removedPartHydrationTests,
   screen,
 } from '#test-utils';
+import AccordionRootHydration from '../root/AccordionRootHydration.test.vue';
 import { useAccordionItemContext } from '../item/AccordionItemContext';
 import type { AccordionItemContext } from '../item/AccordionItemContext';
 import AccordionTriggerReplacement from './AccordionTriggerReplacement.test.vue';
@@ -335,6 +337,23 @@ describe('<Accordion.Trigger />', () => {
 
       expect(panel).toHaveAttribute('data-open');
       expect(panel).not.toHaveAttribute('aria-labelledby');
+    });
+  });
+
+  describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/accordion/root/AccordionRootHydration.test.vue',
+      component: AccordionRootHydration,
+      cases: [
+        {
+          name: 'a removed panel',
+          props: { defaultValue: [0], panelId: 'panel-a', laterRemovedAtMount: true },
+          selector: '[data-testid="trigger"]',
+          attribute: 'aria-controls',
+          serverValue: 'panel-a',
+          clientValue: null,
+        },
+      ],
     });
   });
 });

@@ -78,7 +78,11 @@ import {
 import type { Component } from 'vue';
 import { clamp } from '../../common/clamp';
 import { formatNumber } from '../../common/formatNumber';
-import { useHiddenValueBeforeHydration, useIsHydrating } from '../../common/hydration';
+import {
+  useAriaAfterHydration,
+  useHiddenValueBeforeHydration,
+  useIsHydrating,
+} from '../../common/hydration';
 import { ownerWindow } from '../../common/owner';
 import { contains } from '../../common/shadowDom';
 import { visuallyHidden } from '../../common/visuallyHidden';
@@ -253,6 +257,7 @@ const thumbValuePercent = computed(() => valueToPercent(thumbValue.value, min.va
 
 const positionPercent = shallowRef<number | undefined>();
 const isHydrating = useIsHydrating();
+const ariaAfterHydration = useAriaAfterHydration();
 
 const safeLastUsedThumbIndex = computed(() =>
   lastUsedThumbIndex.value >= 0 && lastUsedThumbIndex.value < sliderValues.value.length
@@ -456,7 +461,7 @@ function inputProps() {
     cssWritingMode = rtl.value ? 'vertical-rl' : 'vertical-lr';
   }
 
-  return mergeProps<'input'>(
+  const merged = mergeProps<'input'>(
     {
       'aria-label': ariaLabel,
       'aria-labelledby': props.ariaLabelledby ?? (ariaLabel == null ? labelId.value : undefined),
@@ -639,6 +644,11 @@ function inputProps() {
       ref: setInputElement,
     },
   );
+  return {
+    ...merged,
+    'aria-labelledby': ariaAfterHydration(merged['aria-labelledby']),
+    'aria-describedby': ariaAfterHydration(merged['aria-describedby']),
+  };
 }
 
 provide(SliderThumbContext, {

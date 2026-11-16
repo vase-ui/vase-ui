@@ -10,12 +10,14 @@ import {
   flushMicrotasks,
   hiddenInputSizeTests,
   hydrateAfter,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   waitFor,
   within,
 } from '#test-utils';
 import RadioGroupBeforeHydration from '../../radio-group/RadioGroupBeforeHydration.test.vue';
+import RadioGroupFieldHydration from '../../radio-group/RadioGroupFieldHydration.test.vue';
 
 const BEFORE_HYDRATION_FIXTURE = 'src/radio-group/RadioGroupBeforeHydration.test.vue';
 
@@ -502,5 +504,30 @@ describe('<Radio.Root />', () => {
     await flushMicrotasks();
 
     expect(handleChange).not.toHaveBeenCalled();
+  });
+
+  describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/radio-group/RadioGroupFieldHydration.test.vue',
+      component: RadioGroupFieldHydration,
+      cases: [
+        {
+          name: 'a removed label',
+          props: { defaultValue: 'a', laterRemovedAtMount: true },
+          selector: '[data-testid="a"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description',
+          props: { defaultValue: 'a', laterRemovedAtMount: true },
+          selector: '[data-testid="a"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+      ],
+    });
   });
 });

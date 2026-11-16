@@ -26,6 +26,7 @@ import {
   heldMountListTests,
   hydrate,
   isJSDOM,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   waitFor,
@@ -185,6 +186,35 @@ describe('<Slider.Root />', () => {
   });
 
   describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/slider/root/SliderRootHydration.test.vue',
+      component: SliderRootHydration,
+      cases: [
+        {
+          name: 'a removed description',
+          props: { id: 'volume', defaultValue: 30, field: true, laterRemovedAtMount: true },
+          selector: '[data-testid="root"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+        {
+          name: 'a slider label and a removed field label',
+          props: {
+            id: 'volume',
+            defaultValue: 30,
+            field: true,
+            sliderLabel: 'before',
+            laterRemovedAtMount: true,
+          },
+          selector: '[data-testid="root"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: 'volume-label',
+        },
+      ],
+    });
+
     it('hydrates a root that names a label that does not exist, and the root then names none', async () => {
       const props = { id: 'volume', defaultValue: 30 };
       const serverHtml = await renderOnServer(

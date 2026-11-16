@@ -1,11 +1,14 @@
 <script setup lang="ts">
+import { onMounted, shallowRef } from 'vue';
+import { Field } from '@vase-ui/vue/field';
 import { Switch } from '@vase-ui/vue/switch';
 import LabelableLabel from '../../../test/fixtures/LabelableLabel.vue';
 import LabelableScope from '../../../test/fixtures/LabelableScope.vue';
 
 const props = withDefaults(
   defineProps<{
-    label?: 'aria-label' | 'native' | 'before' | 'after';
+    label?: 'aria-label' | 'native' | 'before' | 'after' | 'field-after';
+    laterRemovedAtMount?: boolean;
     defaultChecked?: boolean;
     checked?: boolean | undefined;
     disabled?: boolean;
@@ -25,6 +28,11 @@ const props = withDefaults(
   },
 );
 
+const isMounted = shallowRef(false);
+onMounted(() => {
+  isMounted.value = true;
+});
+
 function switchProps() {
   return {
     as: props.nativeButton ? 'button' : undefined,
@@ -43,7 +51,16 @@ function switchProps() {
 
 <template>
   <form data-testid="form">
-    <label v-if="label === 'native'" data-testid="label">
+    <Field.Root v-if="label === 'field-after'">
+      <Switch.Root data-testid="switch" v-bind="switchProps()">
+        <Switch.Thumb data-testid="thumb" />
+      </Switch.Root>
+      <template v-if="!(laterRemovedAtMount && isMounted)">
+        <Field.Label id="label-a">Notifications</Field.Label>
+        <Field.Description id="desc-a">Get a mail.</Field.Description>
+      </template>
+    </Field.Root>
+    <label v-else-if="label === 'native'" data-testid="label">
       <Switch.Root data-testid="switch" v-bind="switchProps()">
         <Switch.Thumb data-testid="thumb" />
       </Switch.Root>

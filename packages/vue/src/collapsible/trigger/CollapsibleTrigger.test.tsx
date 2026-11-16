@@ -1,6 +1,13 @@
 import { expect, vi, describe, it } from 'vitest';
 import { Collapsible } from '@vase-ui/vue/collapsible';
-import { createRenderer, describeConformance, screen, takeReportedMessages } from '#test-utils';
+import {
+  createRenderer,
+  describeConformance,
+  removedPartHydrationTests,
+  screen,
+  takeReportedMessages,
+} from '#test-utils';
+import CollapsiblePanelHydration from '../panel/CollapsiblePanelHydration.test.vue';
 
 describe('<Collapsible.Trigger />', () => {
   const { render } = createRenderer();
@@ -78,6 +85,36 @@ describe('<Collapsible.Trigger />', () => {
       'id',
       'custom-trigger-id',
     );
+  });
+
+  describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/collapsible/panel/CollapsiblePanelHydration.test.vue',
+      component: CollapsiblePanelHydration,
+      cases: [
+        {
+          name: 'a removed panel',
+          props: { defaultOpen: true, panelId: 'panel-a', laterRemovedAtMount: true },
+          selector: '[data-testid="trigger"]',
+          attribute: 'aria-controls',
+          serverValue: 'panel-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed panel after another panel',
+          props: {
+            defaultOpen: true,
+            panelId: 'panel-a',
+            panelBefore: true,
+            laterRemovedAtMount: true,
+          },
+          selector: '[data-testid="trigger"]',
+          attribute: 'aria-controls',
+          serverValue: 'panel-a',
+          clientValue: 'panel-0',
+        },
+      ],
+    });
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
