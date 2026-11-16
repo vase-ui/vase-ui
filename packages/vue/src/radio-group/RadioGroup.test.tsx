@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import {
   computed,
   createSSRApp,
@@ -4235,6 +4236,57 @@ describe('<RadioGroup />', () => {
       await flushMicrotasks();
 
       expect(group.value?.inputElement).toBe(getInput('a'));
+    });
+  });
+
+  describe('VUE-113: the tab stop of a radio that becomes disabled', () => {
+    function renderGroup(disabled: () => string[]) {
+      return defineComponent(() => () => (
+        <div>
+          <button type="button" data-testid="before" />
+          <RadioGroup>
+            {['a', 'b', 'c'].map((value) => (
+              <Radio.Root
+                key={value}
+                value={value}
+                data-testid={value}
+                disabled={disabled().includes(value)}
+              />
+            ))}
+          </RadioGroup>
+          <button type="button" data-testid="after" />
+        </div>
+      ));
+    }
+
+    it('moves the tab stop off a radio that becomes disabled in a group with no value', async () => {
+      const disabled = shallowRef<string[]>([]);
+      const Group = renderGroup(() => disabled.value);
+      await render(<Group />);
+
+      disabled.value = ['a'];
+      await flushMicrotasks();
+      screen.getByTestId('before').focus();
+      await userEvent.keyboard('{Tab}');
+
+      expect(screen.getByTestId('b')).toHaveFocus();
+    });
+
+    it('moves the tab stop off a radio that becomes disabled while it has the focus', async () => {
+      const disabled = shallowRef<string[]>([]);
+      const Group = renderGroup(() => disabled.value);
+      await render(<Group />);
+      screen.getByTestId('before').focus();
+      await userEvent.keyboard('{Tab}');
+      expect(screen.getByTestId('a')).toHaveFocus();
+
+      disabled.value = ['a'];
+      await flushMicrotasks();
+      await userEvent.keyboard('{Tab}');
+      expect(screen.getByTestId('after')).toHaveFocus();
+      await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+
+      expect(screen.getByTestId('b')).toHaveFocus();
     });
   });
 });

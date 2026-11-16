@@ -58,10 +58,7 @@ export function useCompositeRoot<Metadata>(
   let highlightedElement: HTMLElement | null = null;
   let tabStopObserver: MutationObserver | null = null;
   let canHaveUnmountedTabStop = true;
-  let lastActiveItem: { item: HTMLElement | null; canHoldTabStop: boolean } = {
-    item: null,
-    canHoldTabStop: false,
-  };
+  let lastActiveItem: HTMLElement | null = null;
   let activeItemObserver: MutationObserver | null = null;
 
   const id = useId();
@@ -153,7 +150,7 @@ export function useCompositeRoot<Metadata>(
       }
     }
 
-    lastActiveItem = readActiveItem(elementsRef.value);
+    lastActiveItem = readActiveItem(elementsRef.value).item;
 
     scrollIntoViewIfNeeded(rootElement, activeItem, direction.value, getOrientation());
   }
@@ -200,13 +197,13 @@ export function useCompositeRoot<Metadata>(
     }
 
     const activeItem = readActiveItem(elements);
-    const hasChanged =
-      activeItem.item !== lastActiveItem.item ||
-      activeItem.canHoldTabStop !== lastActiveItem.canHoldTabStop;
+    // Only another active item is a change. An active item that becomes disabled keeps the tab
+    // stop, as a disabled active item does at the first map.
+    const hasChanged = activeItem.item !== lastActiveItem;
     // An active item that leaves the list is a removal, and `onMapChange` has already moved the
     // tab stop for it, as in Base UI.
-    const isRemoval = lastActiveItem.item !== null && !elements.includes(lastActiveItem.item);
-    lastActiveItem = activeItem;
+    const isRemoval = lastActiveItem !== null && !elements.includes(lastActiveItem);
+    lastActiveItem = activeItem.item;
 
     if (contains(rootElement, activeElement(ownerDocument(rootElement)))) {
       return;
@@ -217,23 +214,56 @@ export function useCompositeRoot<Metadata>(
       return;
     }
 
-    // With no change of the active item, the composite keeps the tab stop of the user.
     if (hasChanged && !isRemoval) {
       highlightIndex(elements.findIndex((_, index) => canHoldTabStop(elements, index)));
+      return;
+    }
+
+    // The tab stop stays where the user or a removal put it, unless the keys skip that item.
+    moveTabStopOffSkippedItem(elements, activeItem.index);
+  }
+
+  // An item that the keys skip must not be the entry point, as at the first map. The active item
+  // is the exception while it can get focus: the Tab key then enters on a checked radio that is
+  // disabled, as at the first map and as in Base UI.
+  function moveTabStopOffSkippedItem(
+    elements: readonly (HTMLElement | null)[],
+    activeIndex: number,
+  ) {
+    const index = highlightedIndex.value;
+    const disabledIndices = toValue(params.disabledIndices);
+    // With an empty `disabledIndices`, the test finds only an item that cannot get focus.
+    const canKeepTabStop = !isListIndexDisabled(
+      elements,
+      index,
+      index === activeIndex ? EMPTY_ARRAY : disabledIndices,
+    );
+    if (canKeepTabStop) {
+      return;
+    }
+
+    const fallbackIndex = getFallbackIndex(elements, disabledIndices);
+    if (elements[fallbackIndex] && !isListIndexDisabled(elements, fallbackIndex, disabledIndices)) {
+      highlightIndex(fallbackIndex);
     }
   }
 
   // The APG radio and tabs patterns put the focus on the active item when the focus enters the
-  // composite. A composite with no active item keeps the item that had the focus last.
+  // composite. A composite with no active item keeps the item that had the focus last, unless the
+  // keys skip that item.
   function onFocusout(event: FocusEvent) {
     if (contains(rootElement, event.relatedTarget as Element | null)) {
       return;
     }
 
-    const activeItem = readActiveItem(elementsRef.value);
+    const elements = elementsRef.value;
+    const activeItem = readActiveItem(elements);
     if (activeItem.canHoldTabStop) {
       highlightIndex(activeItem.index);
+      return;
     }
+
+    moveTabStopOffSkippedItem(elements, activeItem.index);
   }
 
   useCompositeList<Metadata>({
@@ -637,7 +667,8 @@ export interface UseCompositeRootParameters<Metadata> {
   stopEventPropagation?: MaybeRefOrGetter<boolean | undefined> | undefined;
   /**
    * The indexes of the items that the composite treats as disabled.
-   * Use it for items that can get focus when they are disabled.
+   * Use it for items that can get focus when they are disabled. The keys then reach a disabled
+   * item that is not in it, and such an item can keep the tab stop.
    */
   disabledIndices?: MaybeRefOrGetter<number[] | undefined> | undefined;
   /**

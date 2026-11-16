@@ -1,4 +1,5 @@
 import { expect, vi, describe, it } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { defineComponent, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Radio } from '@vase-ui/vue/radio';
@@ -305,6 +306,27 @@ describe('<Radio.Root />', () => {
 
       expect(screen.getByTestId('a')).toHaveAttribute('tabindex', '0');
       expect(screen.getByTestId('b')).toHaveAttribute('tabindex', '-1');
+    });
+
+    it('keeps the tab stop on a checked radio that becomes disabled', async () => {
+      const disabled = shallowRef(false);
+      const Group = defineComponent(() => () => (
+        <div>
+          <button type="button" data-testid="before" />
+          <RadioGroup defaultValue="b">
+            <Radio.Root value="a" data-testid="a" />
+            <Radio.Root value="b" disabled={disabled.value} data-testid="b" />
+          </RadioGroup>
+        </div>
+      ));
+      await render(<Group />);
+
+      disabled.value = true;
+      await flushMicrotasks();
+      screen.getByTestId('before').focus();
+      await userEvent.keyboard('{Tab}');
+
+      expect(screen.getByTestId('b')).toHaveFocus();
     });
   });
 
