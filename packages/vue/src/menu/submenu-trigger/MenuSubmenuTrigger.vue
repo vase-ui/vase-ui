@@ -125,6 +125,8 @@ const open = computed(() => store.select('open'));
 const floatingTreeRoot = computed(() => store.select('floatingTreeRoot'));
 const popupId = computed(() => store.select('triggerPopupId', thisTriggerId.value));
 
+// Base UI also writes the active trigger to the store when the part registers. For an open submenu,
+// `useImplicitActiveTrigger` does this work.
 const { registerTrigger } = useTriggerRegistration(thisTriggerId, store);
 
 const triggerElement = shallowRef<HTMLElement | null>(null);

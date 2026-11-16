@@ -49,6 +49,8 @@ import type { CompositeGridNavigator } from './gridNavigation';
 export function useCompositeRoot<Metadata>(
   params: UseCompositeRootParameters<Metadata>,
 ): UseCompositeRootReturnValue {
+  // Base UI gives `direction` as a parameter. A handler here reads it when a key comes, so a change
+  // of `DirectionProvider` applies.
   const direction = useDirection();
   const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
 

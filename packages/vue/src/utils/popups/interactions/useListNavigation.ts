@@ -286,7 +286,8 @@ interface SyncState {
  * The result is a `ComputedRef` of one object with `reference`, `floating`, `item` and `trigger`.
  * `reference` and `floating` can hold `aria-activedescendant`, which changes. `item` and `trigger`
  * hold only listeners, and each is one object for the life of the composable. An item part that
- * gets `item` as a prop thus renders again only when its own state changes.
+ * gets `item` as a prop thus renders again only when its own state changes. Base UI gives an empty
+ * object while `enabled` is `false`. Here each handler does nothing in that state.
  * @see https://floating-ui.com/docs/useListNavigation
  */
 export function useListNavigation(

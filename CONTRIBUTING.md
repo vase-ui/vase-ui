@@ -1105,7 +1105,7 @@ The state of a popup is in a store. The code is in `src/utils/popups`. `tooltip/
 - `openByTrigger` and `closePopup` of `BasePopupHandle` call `deferToHeldRoot` first. It finds the nearest popup root above the caller with `inject` of `HeldRootCallContext`, which `usePopupRootWithPopupId` provides. A root takes only a call of its own handle while its store is detached, and it gives a call of another handle to the root above it. A call with no current component, such as a call in an event handler, gets no root, because `hasInjectionContext()` is `false`. A method that a family handle adds, such as `openWithPayload()` of `DialogHandle`, also calls `deferToHeldRoot` first.
 - The kept call runs the method of the handle again. It thus reaches the newest attached root, as the effect of the part does in Base UI.
 - A root of a popup with one anchor and no trigger registry, such as Select and Combobox, calls `useSingleAnchorPopupRoot(props, createStore, options)` in `setup`. The call returns `store`, `open`, `mounted`, `transitionStatus` and `actions`. Such a root has no handle, no payload and no trigger id.
-- The animations of one element end each open change of a popup root. `options.getTransitionElement(store)` of `usePopupRoot` and `useSingleAnchorPopupRoot` gives another element than the default. The root emits `openChangeComplete`, and a popup part emits none.
+- The animations of one element end each open change of a popup root. The element is the popup element, else the positioner element, else the backdrop element. `options.getTransitionElement(store)` of `usePopupRoot` and `useSingleAnchorPopupRoot` gives another element than the default. The root emits `openChangeComplete`, and a popup part emits none.
 - Such a root gives each prop that the store holds through the getter of `usePopupInteractionProps`. The call writes the props in `setup` and in each flush in which a source changed, so the root needs no `watch` of its own for them.
 - A key of the getter can depend on a key that a part writes in its `ref` callback or in `onMounted`. Until the root is mounted, such a key keeps the value of the first state, because a server calls neither. `inputOwnsFormValue` of Combobox does this, so the server HTML has one named input.
 - A part writes a key in `onMounted` when a part after it renders an attribute from the key. It does not write such a key in its `ref` callback. Vue calls the `ref` callback while it hydrates the element, before it hydrates the later part. Hydration does not patch an attribute. A write in the `ref` callback thus leaves the server attributes on the later part. `Combobox.Input` writes `inputInsidePopup` in this way, and `Combobox.Trigger` reads it. A client-only mount renders the later part again in the flush after the mount, before a paint.
@@ -1153,7 +1153,7 @@ The viewport of a popup, in `src/utils/popups/viewport`, shows the old content w
 
 The focus helpers of a popup are in `src/utils/popups/focus`.
 
-- `FocusGuard.vue` is the guard that a focus trap puts at the edge of its content. It gives the attributes and listeners of a consumer to its `span`, and it exposes its element as `element`.
+- `FocusGuard.vue` is the guard that a focus trap puts at the edge of its content. It gives the attributes and listeners of a consumer to its `span`, and it exposes its element as `element`. In WebKit on an Apple system, a guard has `role="button"`. The comments of `focusGuardAttributes.ts` say why.
 - A trigger that Base UI gives focus guards beside its element does not write them in its template. `NavigationMenu.Viewport` in a positioner also does not write its two inside guards in its template. The focus manager of a popup part also does not write its two inside guards in a template. Guards in the template would give the part more than one root node. [Parts with a hidden input](#parts-with-a-hidden-input) gives the effects.
 - These parts make their guards with `createFocusGuardElement(document)` and give them to `useElementSiblings(element, siblings)`. The composable keeps the nodes before and after the element in the DOM. `NavigationMenuTrigger.vue` is the model.
 - Vue does not know the nodes of `useElementSiblings`. The comments of that composable say how a `MutationObserver` keeps the nodes beside the element, and when the composable removes them.
@@ -1167,7 +1167,7 @@ The focus helpers of a popup are in `src/utils/popups/focus`.
 - The popup part gives the focus manager the guard before the trigger in `getInsideElements`, and the guard after the trigger as `nextFocusableElement`. It gives functions that read the refs, because the trigger writes the refs after the popup opens. It also gives the two refs of the store context for the inside guards. `MenuPopup.vue` is the model.
 - `useFloatingFocusManager(props, element)` of `FloatingFocusManager.ts` moves the focus into a popup when it opens, and it returns the focus when the popup closes. It keeps the Tab key in a modal popup. A popup part calls it in `setup`, after `useRenderElement`, with a getter of its props and its `element`.
 - Each prop takes its default only when its value is `undefined`, as `withDefaults` does. `null` has its own meaning for `openInteractionType` and `returnFocus`.
-- The JSDoc of each prop of `useFloatingFocusManager` gives its forms and its default. The comments of `FloatingFocusManager.ts` give the initial focus, the return of the focus and the close for a focus outside the popup. The comments of `markOthers.ts` give the marks on the other elements.
+- The JSDoc of each prop of `useFloatingFocusManager` gives its forms and its default. The comments of `FloatingFocusManager.ts` give the initial focus, the return of the focus, the close for a focus outside the popup, and the context that each focus manager gives to the focus managers below. The comments of `markOthers.ts` give the marks on the other elements.
 - The part keeps its effects in one list. `update` runs each effect whose sources changed, in the sequence of the list: first its last cleanup, then its setup. `onMounted` and one `watch` with `flush: 'post'` call `update`.
 - Under `KeepAlive`, the two hooks only set a flag, because the portal has not put the popup back at `onActivated`. The `update` after the DOM update of the hook then releases the listeners of the document and the marks, and takes them back.
 - The deactivation moves the focus to `<body>`, so the initial focus moves again at the activation. The popup keeps its open state.
@@ -1221,7 +1221,7 @@ The delay group is in `src/utils/popups/delay-group`. The popups of a group shar
 
 - `provideFloatingDelayGroup({ delay, timeoutMs })` replaces the component `FloatingDelayGroup`. A part calls it in `setup`, and it gives the group to the parts below.
 - `useDelayGroup(store, { open })` makes the caller a member of the group above it. `store` is a store, a ref or a getter, because a detached trigger moves from the store of its handle to the store of a root. The store has `closeForSibling()`, which closes its popup because another popup of the group opened.
-- The comments of `FloatingDelayGroup.ts` say when a member updates its group, and what a member that unmounts leaves.
+- The comments of `FloatingDelayGroup.ts` say when a member updates its group, and what a member that unmounts leaves. The parts with no provider share the default group of the module, and only a mounted part writes to it.
 - A trigger that calls `useDelayGroup` writes `isInstantPhase` to its store in `onMounted`, and in a `watch` of the ref and the store with the default flush. A detached trigger thus writes the value to the store of the root that it moves to. A trigger that unmounts in its instant phase leaves the value `true` in the store. The write at the mount of the next trigger of that store ends the phase, as `useSyncedValue` of Base UI does. `tooltip/trigger/TooltipTrigger.vue` is the model.
 - `KeepAlive` does not stop the timer of a group. The instant phase thus ends on time while `KeepAlive` holds the provider.
 
@@ -1245,6 +1245,7 @@ The scroll lock stops the scroll of the page under a modal popup. The code is in
 
 - Call `useAnchoredPopupScrollLock` in `setup` of the positioner of an anchored popup. Call `useScrollLock` in `setup` of the root of a Dialog.
 - A lock exists only while the part is enabled, is mounted and is not held by `KeepAlive`. A server render takes no lock.
+- One plain object on `globalThis[Symbol.for('vase-ui.scroll-lock')]` holds the state. Its fields are `version`, `lockCount`, `restore` and `stableGutter`. Two copies of the library then share one count (`VUE-6`). Each copy keeps its own timers.
 - The probe for `scrollbar-gutter` writes styles and reads the layout. In WebKit, that can stop a transition that runs on the page. Thus each document gets one probe, and `stableGutter` keeps the result (`BUG-6119`).
 - A test of the lock uses a document of its own from `createScrollDocument` in `test/fixtures/scrollDocument.ts`. A case that needs scrollbars that take space asks `probeStrategy`. It runs only in an engine that has them. A case of the gutter way sets `mockedScrollbarWidth`, so that the window reports a scrollbar. It then runs in each engine.
 
@@ -1257,7 +1258,7 @@ The scroll lock stops the scroll of the page under a modal popup. The code is in
 - Where a trigger of Base UI sets the attribute `CLICK_TRIGGER_IDENTIFIER`, the trigger part sets the same constant of `src/internals/constants.ts`.
 - A trigger that listens on its document for the release of a press, as `Menu.Trigger` does, keeps that document in a variable. It removes the listener and clears the variable when it unmounts and when `KeepAlive` deactivates it.
 - `Menu.Trigger` and `Select.Trigger` write the `mousedown` event of the press to `triggerPressRef` of the store context, because their items read it. `useAriaCombobox` writes the `mousedown` event of each press that opens the popup to `openPressRef` of the store context: a press of the trigger, the input, the input group or the chips. `Combobox.Trigger` and the items read it there.
-- `isReleaseAtPressPoint.ts` and the rows `VUE-68` and `VUE-84` of `parity/better` give the rules for the release of the press that opened a popup.
+- `isReleaseAtPressPoint.ts` and the rows `VUE-68` and `VUE-84` of `parity/better` give the rules for the release of the press that opened a popup. The rules use one distance between the release and the press.
 - `PRESS_POINT_TOLERANCE` of `isReleaseAtPressPoint.ts` is the only value of that distance. A move of 8 px or less on each axis is not a drag. `Select.Item` of Base UI takes 8 px of vertical travel as the start of a drag across its items. The value is less than half of the 24 px target of WCAG 2.2. A pointer that moves 8 px or less from the center of an item of that size stays on that item. A release reports no pointer type, so one value applies to a mouse and to a pen. Do not use the 5 px of `isMouseWithinBounds` for it. That value is the margin of Base UI around the trigger.
 - A submenu reads `triggerPressRef` of its parent menu. `Select.Trigger` clears the event at the release, because a `Select` item also takes a later drag while the popup stays open. `useAriaCombobox` clears `openPressRef` at the next `mousedown` in the window. The trigger opens its popup in the frame after the press, so that press can end before the write. `useAriaCombobox` removes its `mousedown` listener and clears `openPressRef` when its scope ends and when `KeepAlive` deactivates the root.
 
@@ -1266,7 +1267,7 @@ The scroll lock stops the scroll of the page under a modal popup. The code is in
 `useListNavigation(store, options)` moves the highlight of a list with the arrow keys, with real focus or with virtual focus. The code is in `src/utils/popups/interactions/useListNavigation.ts`.
 
 - A root calls it one time in `setup`. It also works while the popup is closed, because a key of the reference opens the popup.
-- The JSDoc of each option of `useListNavigation` gives its forms. The composable does not write the active index. It calls `onNavigate`, and the consumer writes the index or declines.
+- The result is a `ComputedRef` of one object with `reference`, `floating`, `item` and `trigger`. The JSDoc of each option of `useListNavigation` gives its forms. The composable does not write the active index. It calls `onNavigate`, and the consumer writes the index or declines.
 - A root that merges `reference` or `floating` with other props merges them in a `computed`. The merge then follows a change of `aria-activedescendant`.
 - The popup of a root with virtual focus does not need `aria-activedescendant`, because the input holds it. Such a root drops the key and keeps one props object for the popup while the highlight moves. A new object renders the popup part again, and Vue then patches each item again. `useMenuRoot` does this.
 - The orientation goes to `context.orientation` of the store in `onBeforeMount`, and a `watch` follows a change. A list below reads it through the popup tree. A server render writes nothing to the store. A store with a frozen context, such as `getEmptyRootStore()`, throws at that write, so give the composable the store of the root.
@@ -1290,7 +1291,7 @@ The toasts of one `Toast.Provider` are in a `ToastStore`. The code is in `src/to
 
 ### Toast parts
 
-- The comments of each part in `src/toast` give its rules, and `parity/better` has a row for each behavior where Toast does more than Base UI.
+- `Toast.Title` and `Toast.Description` are the label parts. The comments of each part in `src/toast` give its rules, and `parity/better` has a row for each behavior where Toast does more than Base UI.
 - While `KeepAlive` holds the provider, it releases its timers and the subscription to its manager. The activation takes them back, and each timer continues with the time that was left. A provider that mounts in a held branch takes its timers and its subscription first at the activation.
 - `Toast.Root` measures no height while `KeepAlive` holds it, also when it mounts in a held branch. It measures at the activation. A new toast keeps `data-starting-style` until then, so its enter transition plays when it shows.
 - `Toast.Root` ends a swipe in progress with no dismissal when `KeepAlive` deactivates it.
@@ -1345,6 +1346,7 @@ The item registry:
 
 - An item registers its element in its ref callback, and it removes the element there.
 - A function that a ref callback calls must not read reactive state. Vue calls the callback during a render, and the read makes that render depend on the state.
+- The list sorts the elements by their position in the document. It does this at mount and in a `watch` with `flush: 'post'`, after the DOM update that follows a registration.
 - `KeepAlive` takes the element of an item out of the document and calls no ref callback. The item removes its element in `onDeactivated` and registers it again in `onActivated`.
 - An item that mounts while `KeepAlive` holds its branch gets no `onDeactivated` call. The list skips its element, because the element is not in a document. The item thus starts its `deactivated` flag with `isInHeldBranch()`, and its first `onActivated` call registers the element again.
 - `KeepAlive` empties the composite map while the item parts still exist. A root that falls back when its items are gone decides a removal by a registry of the item parts, not by the map. `tabs/root/TabsRoot.vue` is the model.

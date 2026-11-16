@@ -63,6 +63,8 @@ export interface UseTypeaheadProps {
 /**
  * Provides a matching callback that can be used to focus an item as the user
  * types, often used in tandem with `useListNavigation()`.
+ * Base UI gives an empty object while `enabled` is `false`. Here each handler does nothing in that
+ * state.
  * @see https://floating-ui.com/docs/useTypeahead
  */
 export function useTypeahead(
