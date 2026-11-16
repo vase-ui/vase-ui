@@ -13,6 +13,18 @@
   & > [data-vase-ui-resizable-edge] {
     cursor: col-resize;
 
+    &[data-at-min] {
+      cursor: e-resize;
+    }
+
+    &[data-at-max] {
+      cursor: w-resize;
+    }
+
+    &[data-at-min][data-at-max] {
+      cursor: default;
+    }
+
     &:hover {
       background-color: oklch(92.2% 0 0deg);
 

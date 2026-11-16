@@ -91,6 +91,10 @@
     cursor: n-resize;
   }
 
+  &[data-at-min][data-at-max] {
+    cursor: default;
+  }
+
   &[data-disabled] {
     cursor: default;
   }

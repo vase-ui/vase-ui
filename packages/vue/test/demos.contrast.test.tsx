@@ -8,6 +8,8 @@ import DemoFrame from '../../../docs/.vitepress/components/DemoFrame.vue';
 import '../../../docs/.vitepress/theme/tokens.css';
 import '../../../docs/.vitepress/theme/look.css';
 import '../../../docs/demos/tailwind.css';
+import { rgbaOf } from './rgbaOf';
+import type { Rgba } from './rgbaOf';
 
 // Each demo of a row. A demo with a Tailwind file gets the cases of that file too.
 const modules = import.meta.glob<{ default: Component }>(
@@ -27,21 +29,6 @@ const modules = import.meta.glob<{ default: Component }>(
   ],
   { eager: true },
 );
-
-type Rgba = [number, number, number, number];
-
-// A 2D canvas gives the sRGB bytes of each color form that an engine writes, `oklch()` included.
-const canvasContext = document
-  .createElement('canvas')
-  .getContext('2d', { willReadFrequently: true })!;
-
-function rgbaOf(color: string): Rgba {
-  canvasContext.clearRect(0, 0, 1, 1);
-  canvasContext.fillStyle = color;
-  canvasContext.fillRect(0, 0, 1, 1);
-  const [r, g, b, a] = canvasContext.getImageData(0, 0, 1, 1).data;
-  return [r, g, b, a];
-}
 
 function blendOver([r1, g1, b1, a1]: Rgba, [r2, g2, b2]: Rgba): Rgba {
   const alpha = a1 / 255;
