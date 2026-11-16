@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Checkbox } from '@vase-ui/vue/checkbox';
+import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { DateField } from '@vase-ui/vue/date-field';
 import { Field } from '@vase-ui/vue/field';
@@ -499,6 +500,67 @@ describe('<Field.Label />', () => {
       );
 
       expect(screen.getByTestId('control')).toHaveAttribute('aria-labelledby', 'own-label');
+    });
+
+    it('names the element of the control that KeepAlive shows', async () => {
+      const shown = shallowRef<'a' | 'b'>('a');
+      const renderInputWithId =
+        (id: string) =>
+        ({ props }: { props: HTMLProps }) => <input {...props} id={id} />;
+
+      await render(() => (
+        <Field.Root>
+          <Field.Label data-testid="label">Label</Field.Label>
+          <KeepAlive>
+            {shown.value === 'a' ? (
+              <Field.Control key="a" v-slots={{ render: renderInputWithId('a') }} />
+            ) : (
+              <Field.Control key="b" v-slots={{ render: renderInputWithId('b') }} />
+            )}
+          </KeepAlive>
+        </Field.Root>
+      ));
+
+      const label = screen.getByTestId('label');
+      expect(label).toHaveAttribute('for', 'a');
+
+      shown.value = 'b';
+      await flushMicrotasks();
+
+      expect(label).toHaveAttribute('for', 'b');
+
+      shown.value = 'a';
+      await flushMicrotasks();
+
+      expect(label).toHaveAttribute('for', 'a');
+    });
+
+    it('gives no for to the label of a group of native button checkboxes', async () => {
+      await render(
+        <Field.Root>
+          <Field.Label data-testid="label">Label</Field.Label>
+          <CheckboxGroup>
+            <Checkbox.Root value="a" nativeButton as="button" />
+            <Checkbox.Root value="b" nativeButton as="button" />
+          </CheckboxGroup>
+        </Field.Root>,
+      );
+
+      expect(screen.getByTestId('label')).not.toHaveAttribute('for');
+    });
+
+    it('keeps the id of the field when the #render slot gives an empty id', async () => {
+      await render(
+        <Field.Root>
+          <Field.Label data-testid="label">Label</Field.Label>
+          <Field.Control
+            id="prop"
+            v-slots={{ render: ({ props }: { props: HTMLProps }) => <input {...props} id="" /> }}
+          />
+        </Field.Root>,
+      );
+
+      expect(screen.getByTestId('label')).toHaveAttribute('for', 'prop');
     });
   });
 

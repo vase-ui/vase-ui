@@ -26,8 +26,8 @@ export interface LabelableContext {
   resetControlId: () => void;
   /**
    * The `id` that a label names: the `id` of the control element. A `#render` slot can give that
-   * element another `id` than `controlId`. It is `controlId` on a server, and while a control
-   * element has that `id` or no control element has an `id`.
+   * element another `id` than `controlId`. It is `controlId` on a server, while `controlId` is
+   * `null`, and while a control element has that `id` or no control element has an `id`.
    */
   controlElementId: ComputedRef<string | null | undefined>;
   registerControlElementId: RegisterId;
