@@ -7372,7 +7372,10 @@
         "TypesMenu.useFilter",
         "TypesMenu.createHandle",
         "TypesMenu.Handle"
-      ]
+      ],
+      "referenceBadges": {
+        "TypesMenu.FilterProvider": "Preview"
+      }
     }
   ]
 }

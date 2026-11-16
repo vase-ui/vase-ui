@@ -1,8 +1,6 @@
 import type { MarkdownRenderer } from 'vitepress';
-
-// These are the words of `HEADING_TAGS` in the Base UI docs. Each other text in brackets stays in
-// the heading.
-const TRAILING_BADGE = /\s+\[(New|Preview)\]\s*$/;
+import { splitHeadingBadge } from '../../scripts/parity/headingBadge.ts';
+import { HEADING_BADGE_CLASS } from './components/headingBadgeClass.ts';
 
 /**
  * Shows the `[New]` or `[Preview]` at the end of a heading of level 2 to 6 as a badge, as the Base UI
@@ -21,15 +19,14 @@ export function markdownHeadingBadge(md: MarkdownRenderer): void {
       if (!children || last?.type !== 'text') {
         continue;
       }
-      const found = TRAILING_BADGE.exec(last.content);
-      if (!found) {
+      const split = splitHeadingBadge(last.content);
+      if (!split) {
         continue;
       }
-      last.content = last.content.slice(0, found.index);
+      last.content = split.text;
       // The anchor plugin leaves an `html_inline` token out of the slug and of the permalink label.
-      // The outline of the default theme leaves out an element with the class `ignore-header`.
       const badge = new state.Token('html_inline', '', 0);
-      badge.content = ` <span class="heading-badge ignore-header">${found[1]}</span>`;
+      badge.content = ` <span class="${HEADING_BADGE_CLASS}">${split.badge}</span>`;
       children.push(badge);
     }
   });

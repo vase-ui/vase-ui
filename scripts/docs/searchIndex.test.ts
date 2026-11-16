@@ -57,6 +57,7 @@ const reference: ApiReference = {
   parts: [
     {
       name: 'Sample.Root',
+      badge: null,
       description: 'Groups the parts.',
       hasChildren: false,
       props: [
