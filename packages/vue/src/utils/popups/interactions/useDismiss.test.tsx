@@ -2629,6 +2629,80 @@ describe('useDismiss', () => {
   });
 
   describe('popups below the popup in the component tree', () => {
+    const intentional = { outsidePressEvent: 'intentional' } as const;
+    const popupTree = ['parent', 'child', 'grandchild'];
+
+    function renderPopupTree() {
+      return render(
+        <Tree>
+          <Popup name="parent" node dismiss={intentional}>
+            <Popup name="child" node teleport dismiss={intentional}>
+              <Popup name="grandchild" node teleport dismiss={intentional}>
+                <button
+                  type="button"
+                  data-testid="scrubber"
+                  onPointerdown={(event: PointerEvent) => event.preventDefault()}
+                >
+                  Scrub
+                </button>
+              </Popup>
+            </Popup>
+          </Popup>
+        </Tree>,
+      );
+    }
+
+    it.each([
+      { name: 'pointerdown', press: fireEvent.pointerDown, release: fireEvent.pointerUp },
+      { name: 'mousedown', press: fireEvent.mouseDown, release: fireEvent.mouseUp },
+    ])(
+      'VUE-4: a $name drag from a descendant keeps each ancestor open',
+      async ({ press, release }) => {
+        await renderPopupTree();
+
+        await press(screen.getByTestId('grandchild'), { pointerType: 'mouse', button: 0 });
+        // The inside marker expires before the release.
+        await wait(0);
+        await release(document.body, { pointerType: 'mouse', button: 0 });
+        await fireEvent.click(document.body);
+        expect(popupTree.map(isOpen)).toEqual([true, true, true]);
+
+        await fireEvent.click(document.body);
+        expect(popupTree.map(isOpen)).toEqual([false, false, false]);
+      },
+    );
+
+    it('VUE-4: the suppression of a prevented press in a descendant expires in each ancestor', async () => {
+      await renderPopupTree();
+
+      await fireEvent.pointerDown(screen.getByTestId('scrubber'), {
+        pointerType: 'mouse',
+        button: 0,
+      });
+      await wait(0);
+      await fireEvent.pointerUp(document.body, { pointerType: 'mouse', button: 0 });
+      // A prevented press can produce no click, so only the timer ends its suppression.
+      await wait(0);
+      await fireEvent.click(document.body);
+      expect(popupTree.map(isOpen)).toEqual([false, false, false]);
+    });
+
+    it('VUE-4: a press in a descendant outside the popup tree suppresses no later click', async () => {
+      await render(
+        <Popup name="parent" dismiss={intentional}>
+          <Popup name="child" teleport dismiss={intentional} />
+        </Popup>,
+      );
+
+      await pressAndClick(screen.getByTestId('child'));
+      expect(['parent', 'child'].map(isOpen)).toEqual([true, true]);
+
+      // The inside marker of the click expires.
+      await wait(0);
+      await fireEvent.click(document.body);
+      expect(['parent', 'child'].map(isOpen)).toEqual([false, false]);
+    });
+
     it('VUE-4: a press in a child popup that Teleport moved does not close the parent popup', async () => {
       const outside = addOutsideElement();
       await render(
