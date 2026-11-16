@@ -27,7 +27,7 @@ const XIcon: FunctionalComponent = () =>
     <Dialog.Portal>
       <Dialog.Backdrop :class="styles.Backdrop" />
       <Dialog.Viewport :class="styles.Viewport">
-        <Dialog.Popup :class="styles.PopupRoot">
+        <Dialog.Popup :class="styles.PopupRoot" aria-label="Uncontained dialog">
           <Dialog.Close :class="styles.Close" aria-label="Close">
             <XIcon />
           </Dialog.Close>
