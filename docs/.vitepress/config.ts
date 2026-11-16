@@ -6,6 +6,7 @@ import type { MarkdownRenderer } from 'vitepress';
 import { createApiReferenceReader } from '../../scripts/docs/apiReference.ts';
 import { familyOfPage } from '../../scripts/docs/familyPages.ts';
 import { readNavigation } from '../../scripts/docs/navigation.ts';
+import { searchIndexHtml } from '../../scripts/docs/searchIndex.ts';
 import { DEMO_VARIANT_STORAGE_KEY } from './components/demoVariantStorageKey.ts';
 import { markdownHeadingBadge } from './markdownHeadingBadge.ts';
 import { postcssFollowSiteTheme } from './postcssFollowSiteTheme.ts';
@@ -105,6 +106,41 @@ export default defineConfig({
     nav,
     sidebar,
     outline: { level: [2, 3] },
+    search: {
+      provider: 'local',
+      options: {
+        // The detailed view mounts the page component of each result with the data of the open
+        // page, so `ApiReference` throws on a page that has no reference.
+        detailedView: false,
+        // The index reads the Markdown of a page before Vue renders its components, so
+        // `searchIndexHtml` adds the text of `<ApiReference />`. With `_render`, VitePress does not
+        // read `search: false` of the front matter. This function reads it after the render,
+        // because the render fills `env.frontmatter`.
+        async _render(source, env, md) {
+          const html = await md.renderAsync(source, env);
+          if (env.frontmatter?.search === false) {
+            return '';
+          }
+          const family = familyOfPage(env.relativePath);
+          return searchIndexHtml(html, family === undefined ? undefined : readApiReference(family));
+        },
+        miniSearch: {
+          searchOptions: {
+            // Without the factor, a section that repeats the term can come before the page whose
+            // title is the term. MiniSearch gives the function the word of the index that matched,
+            // so for `menu` the page Menubar also gets the factor. VitePress writes the source of
+            // this function into the client, so the function uses no name of this module.
+            boostDocument: (_id, term, storedFields) => {
+              const { title, titles } = storedFields as { title: string; titles: string[] };
+              return titles.length === 0 && title.toLowerCase() === term ? 1.5 : 1;
+            },
+            // With the default weight of a prefix, 0.375, Menubar thus comes before Menu for `menu`.
+            // The type of `weights` needs both keys, so `fuzzy` has its default.
+            weights: { fuzzy: 0.45, prefix: 0.15 },
+          },
+        },
+      },
+    },
     socialLinks: [{ icon: 'github', link: 'https://github.com/vase-ui/vase-ui' }],
     notFound: {
       title: 'Page not found',
