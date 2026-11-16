@@ -9,6 +9,10 @@ export interface NumberFieldScrubAreaContext {
    * The element of the cursor. `NumberField.ScrubAreaCursor` writes it.
    */
   scrubAreaCursorRef: ShallowRef<HTMLSpanElement | null>;
+  /**
+   * The element of the scrub area. `NumberField.ScrubAreaCursor` renders in its root node.
+   */
+  scrubAreaElement: Readonly<ShallowRef<HTMLElement | null>>;
 }
 
 export const NumberFieldScrubAreaContext: InjectionKey<NumberFieldScrubAreaContext> = Symbol();
