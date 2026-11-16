@@ -1831,6 +1831,39 @@ describe('<Combobox.Input />', () => {
       expect(handleInputValueChange.mock.lastCall?.[1].event.type).toBe('compositionend');
     });
 
+    it('keeps a new composition when the previous composition timer runs', async () => {
+      const onInputValueChange = vi.fn();
+      await render(
+        <Combobox.Root onInputValueChange={onInputValueChange}>
+          <Combobox.Input />
+        </Combobox.Root>,
+      );
+      const input = getInput();
+      vi.useFakeTimers();
+      try {
+        await fireEvent.compositionStart(input);
+        await type('a', 'insertCompositionText');
+        await fireEvent.compositionEnd(input);
+        expect(onInputValueChange).toHaveBeenCalledTimes(1);
+
+        await fireEvent.compositionStart(input);
+        await type('ab', 'insertCompositionText');
+        await vi.advanceTimersByTimeAsync(0);
+
+        expect(input).toHaveValue('ab');
+        expect(onInputValueChange).toHaveBeenCalledTimes(1);
+
+        await fireEvent.compositionEnd(input);
+        await vi.advanceTimersByTimeAsync(0);
+
+        expect(input).toHaveValue('ab');
+        expect(onInputValueChange).toHaveBeenCalledTimes(2);
+        expect(onInputValueChange).toHaveBeenLastCalledWith('ab', expect.anything());
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
     it('shows a new input value of the root during a composition', async () => {
       const value = shallowRef<string | null>(null);
       await render(() => (

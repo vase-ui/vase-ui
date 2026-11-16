@@ -1,5 +1,5 @@
 import { expect, vi, describe, it, onTestFinished } from 'vitest';
-import { defineComponent, KeepAlive, onMounted, shallowRef, watch } from 'vue';
+import { defineComponent, KeepAlive, nextTick, onMounted, shallowRef, watch } from 'vue';
 import type { HTMLAttributes } from 'vue';
 import { Collapsible } from '@vase-ui/vue/collapsible';
 import type { HTMLProps } from '@vase-ui/vue/types';
@@ -1704,6 +1704,54 @@ describe('<Collapsible.Panel />', () => {
 
   // An engine with no `beforematch` cannot run these cases.
   describe.skipIf(!('onbeforematch' in window) || isJSDOM)('prop: hiddenUntilFound', () => {
+    it.each([
+      { name: 'the decision timer', afterTimer: false },
+      { name: 'the revert frame', afterTimer: true },
+    ])('cancels $name when KeepAlive deactivates the panel', async ({ afterTimer }) => {
+      const active = shallowRef(true);
+      const searchable = shallowRef(true);
+      await render(() => (
+        <KeepAlive>
+          {active.value ? (
+            <Collapsible.Root key="panel" open={false}>
+              <Collapsible.Panel
+                hiddenUntilFound={searchable.value}
+                keepMounted
+                data-testid="panel"
+              >
+                Content
+              </Collapsible.Panel>
+            </Collapsible.Root>
+          ) : null}
+        </KeepAlive>
+      ));
+      const panel = screen.getByTestId('panel');
+      expect(panel).toHaveAttribute('hidden', 'until-found');
+
+      vi.useFakeTimers();
+      try {
+        await fireBeforeMatch(panel);
+        panel.removeAttribute('hidden');
+        if (afterTimer) {
+          vi.advanceTimersByTime(0);
+        }
+
+        active.value = false;
+        await nextTick();
+        expect(panel).not.toBeInTheDocument();
+        searchable.value = false;
+        active.value = true;
+        await nextTick();
+        expect(panel).toHaveAttribute('hidden', '');
+
+        await vi.advanceTimersByTimeAsync(32);
+
+        expect(panel).toHaveAttribute('hidden', '');
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
     it('does not open or suppress the next trigger open when beforematch is canceled', async () => {
       const handleOpenChange = vi.fn(
         (nextOpen: boolean, eventDetails: Collapsible.Root.ChangeEventDetails) => {
