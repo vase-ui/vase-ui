@@ -377,6 +377,25 @@ describe('<RangeCalendar.Root />', () => {
       expect(screen.getByRole('group')).not.toHaveAttribute('data-selecting');
     });
 
+    it('puts back the range when the focus is on a button that is not a day', async () => {
+      const handlers = listeners();
+      const { user } = await renderRange({
+        defaultValue: [day('2026-11-03'), day('2026-11-05')],
+        nextButton: true,
+        ...handlers,
+      });
+      await user.click(button('2026-11-10'));
+      expect(shown().start).toEqual(['2026-11-10']);
+      screen.getByTestId('next').focus();
+
+      expect(await fireEvent.keyDown(screen.getByTestId('next'), { key: 'Escape' })).toBe(false);
+
+      expect(ends(handlers.onValueChange.mock.calls[1]!)).toEqual(['2026-11-03', '2026-11-05']);
+      expect(handlers.onValueChange.mock.calls[1]![1].reason).toBe('keyboard');
+      expect(shown().start).toEqual(['2026-11-03']);
+      expect(screen.getByRole('group')).not.toHaveAttribute('data-selecting');
+    });
+
     it('does not prevent the key when no range is in progress', async () => {
       const handlers = listeners();
       await renderRange({ defaultValue: [day('2026-11-03'), day('2026-11-05')], ...handlers });

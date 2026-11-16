@@ -85,16 +85,16 @@ Put the picker in a `Field` to show the errors of its validation. Do not give a 
 
 The root emits `valueChange` and `update:value` for each change of the range. It emits `openChange` and `update:open` when the popup opens or closes, and `openChangeComplete` after its animations end. A `details.cancel()` in `valueChange` or `openChange` stops the change and its `update` event.
 
-| Reason of `valueChange` | When                                                        |
-| ----------------------- | ----------------------------------------------------------- |
-| `day-press`             | A press or Enter or Space on a day.                         |
-| `drag`                  | A drag over the days.                                       |
-| `keyboard`              | A key in the calendar or in a segment, and Escape on a day. |
-| `input-change`          | Typing or autofill in a segment.                            |
-| `input-clear`           | The user removes a digit with the text input.               |
-| `input-paste`           | A paste in a segment.                                       |
-| `clear-press`           | A press on a clear button.                                  |
-| `none`                  | A reset of the form, or a call of `clear()` of a field.     |
+| Reason of `valueChange` | When                                                     |
+| ----------------------- | -------------------------------------------------------- |
+| `day-press`             | A press or Enter or Space on a day.                      |
+| `drag`                  | A drag over the days.                                    |
+| `keyboard`              | A key in the calendar, Escape included, or in a segment. |
+| `input-change`          | Typing or autofill in a segment.                         |
+| `input-clear`           | The user removes a digit with the text input.            |
+| `input-paste`           | A paste in a segment.                                    |
+| `clear-press`           | A press on a clear button.                               |
+| `none`                  | A reset of the form, or a call of `clear()` of a field.  |
 
 | Reason of `openChange` | When                                                                 |
 | ---------------------- | -------------------------------------------------------------------- |
@@ -117,12 +117,12 @@ On a Node.js version before 26, load a `Temporal` polyfill before the server sta
 
 The segments, the trigger and the calendar keep their own keys: see [Date Field](/components/date-field#keyboard) and [Range Calendar](/components/range-calendar#keyboard). The picker adds these.
 
-| Key                      | Result                                                                                                                                               |
-| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Alt and Down, in a field | Opens the popup. The focus goes to the day that has the tab stop.                                                                                    |
-| Enter, Space             | On the trigger, opens the popup. On a day, picks it. The second pick closes the popup, unless `closeOnSelect` is `false`.                            |
-| Escape                   | Closes the popup and gives the focus back to the trigger. On a day, it first puts back the range from before the first press of a range in progress. |
-| Tab                      | Moves through the popup in the order of the page, after the trigger.                                                                                 |
+| Key                      | Result                                                                                                                                                                     |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Alt and Down, in a field | Opens the popup. The focus goes to the day that has the tab stop.                                                                                                          |
+| Enter, Space             | On the trigger, opens the popup. On a day, picks it. The second pick closes the popup, unless `closeOnSelect` is `false`.                                                  |
+| Escape                   | Closes the popup and gives the focus back to the trigger. With the focus in the calendar, it first puts back the range from before the first press of a range in progress. |
+| Tab                      | Moves through the popup in the order of the page, after the trigger.                                                                                                       |
 
 ## Accessibility
 

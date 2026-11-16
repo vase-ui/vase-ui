@@ -149,6 +149,14 @@ const rootState = computed<RangeCalendarRootState>(() => ({
 provide(CalendarRootContext, { ...controller, state });
 provide(RangeCalendarRootContext, selection);
 
+// Escape ends a drag, or puts back the range from before the first press of a range in progress.
+// The root handles it for each element in the calendar, such as a button that changes the month.
+function onKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape' && selection.cancel(event)) {
+    event.preventDefault();
+  }
+}
+
 const { element, elementProps } = useRenderElement('div', props, {
   state: rootState,
   stateAttributesMapping: calendarRootStateAttributesMapping,
@@ -158,6 +166,7 @@ const { element, elementProps } = useRenderElement('div', props, {
       // The label that the consumer gives replaces the name of the month. An `aria-labelledby` of
       // `null` gives no label, so the root keeps the name of the month.
       'aria-label': attrs['aria-labelledby'] == null ? controller.label.value : undefined,
+      onKeydown,
     },
     attrs,
   ],

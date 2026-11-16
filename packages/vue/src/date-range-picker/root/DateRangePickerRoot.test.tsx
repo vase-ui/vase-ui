@@ -455,6 +455,25 @@ describe('<DateRangePicker.Root />', () => {
         expect(screen.getByTestId('trigger')).toHaveFocus();
       });
     });
+
+    it('puts back the range when the focus is on a button of the calendar that is not a day', async () => {
+      const onValueChange = vi.fn();
+      const { user, container } = await renderPicker({
+        defaultValue: range('2026-11-10', '2026-11-12'),
+        onValueChange,
+      });
+      const popup = await open(user);
+      await user.click(dayButton('2026-11-16'));
+      expect(hiddenInputsOf(container)).toEqual(['2026-11-16', '']);
+      screen.getByTestId('next').focus();
+
+      await user.keyboard('{Escape}');
+
+      await expectClosed(popup);
+      expect(endsOf(onValueChange.mock.lastCall)).toEqual(['2026-11-10', '2026-11-12']);
+      expect(onValueChange.mock.lastCall?.[1].reason).toBe('keyboard');
+      expect(hiddenInputsOf(container)).toEqual(['2026-11-10', '2026-11-12']);
+    });
   });
 
   describe('a press outside the popup', () => {
