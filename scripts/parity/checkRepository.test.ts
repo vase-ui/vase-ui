@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
-import { test } from 'node:test';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+import { after, test } from 'node:test';
 import type { TestRow } from './cases.ts';
 import { checkBetter, checkRepository, formatSummary } from './checkRepository.ts';
 import type { BetterRow, FamilyExtract, FamilyFile, UpstreamFile } from './parityFiles.ts';
@@ -333,4 +336,38 @@ test('a test file that the reader refuses is one problem, and the other families
     formatSummary(result).map((line) => line.split(':')[0]),
     ['other', 'refused', 'parity/better'],
   );
+});
+
+test('a name of `<script setup>` that is also a prop is a problem for an SFC of the package source, and not for the SFC of a test', () => {
+  const root = mkdtempSync(join(tmpdir(), 'parity-hidden-props-'));
+  after(() => {
+    rmSync(root, { recursive: true, force: true });
+  });
+  const sfc = (constant: string): string =>
+    `<script setup lang="ts">\nconst props = defineProps<{ open?: boolean | undefined }>();\nconst ${constant} = props.open === true;\n</script>\n\n<template>\n  <slot :open="${constant}" />\n</template>\n`;
+  const sources = {
+    'packages/vue/src/sample/root/SampleRoot.vue': sfc('open'),
+    'packages/vue/src/sample/popup/SamplePopup.vue': sfc('isOpen'),
+    'packages/vue/src/sample/root/SampleRootHydration.test.vue': sfc('open'),
+    'packages/vue/src/sample/root/SampleRootInTemplate.spec.vue': sfc('open'),
+    'packages/vue/test/fixtures/OpenPart.vue': sfc('open'),
+  };
+  for (const [path, source] of Object.entries(sources)) {
+    mkdirSync(dirname(join(root, path)), { recursive: true });
+    writeFileSync(join(root, path), source);
+  }
+  const parity = makeParity();
+  parity.families = [];
+  const { problems } = checkRepository({
+    parity,
+    files: vaseFiles(Object.keys(sources)),
+    root,
+    rowsOf: () => [],
+    project: () => {
+      throw new Error('The check for a hidden prop must not make the project.');
+    },
+  });
+  assert.deepEqual(problems, [
+    'packages/vue/src/sample/root/SampleRoot.vue: `<script setup>` declares or imports the name `open`, and `open` is also a prop. The SFC compiler then reports no prop `open`, and the API reference does not list it. Give the declaration or the import another name.',
+  ]);
 });
