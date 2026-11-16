@@ -10,6 +10,7 @@ import { NullStore } from '../../utils/popups/NullStore';
 import type { AdaptiveOriginMiddleware } from '../../utils/popups/positioning/adaptiveOriginConstants';
 import {
   BasePopupStore,
+  createElementIdObserver,
   createInitialPopupStoreState,
   createPopupStoreContext,
   popupStoreSelectors,
@@ -59,6 +60,11 @@ export type State<Payload> = PopupStoreState<Payload> & {
   inputFocused: boolean;
   /** The element at `activeIndex` once the item list settles. Only virtual focus publishes it. */
   highlightedItem: HTMLElement | undefined;
+  /**
+   * The `id` that `highlightedItem` has. A read of `highlightedItem.id` in a selector does not
+   * follow a change of the id, so the store copies the id here.
+   */
+  highlightedItemId: string | undefined;
   hoverEnabled: boolean;
   instantType: 'dismiss' | 'click' | 'group' | 'trigger-change' | undefined;
   openChangeReason: MenuRootChangeEventReason | null;
@@ -160,7 +166,7 @@ const selectors = {
   // does not encounter the invalid attribute.
   webkitAriaSelected: (state: State<unknown>, highlighted: boolean) =>
     platform.engine.webkit && state.inputFocused && highlighted ? true : undefined,
-  highlightedItemId: (state: State<unknown>) => state.highlightedItem?.id || undefined,
+  highlightedItemId: (state: State<unknown>) => state.highlightedItemId || undefined,
   isActive: (state: State<unknown>, itemIndex: number) => state.activeIndex === itemIndex,
   highlightedWhileOpen: (state: State<unknown>, highlighted: boolean) =>
     highlighted && popupStoreSelectors.open(state),
@@ -227,10 +233,25 @@ export class MenuStore<Payload> extends BasePopupStore<
     this.#shareMouseUpRefs(toRaw(this.state).parent);
   }
 
-  // A store makes no watcher, so the write that changes `parent` shares the refs of the new parent.
+  // A render can give the highlighted item a new `id` and write nothing to the store. The id comes
+  // from the `id` prop or the `#render` slot of the item.
+  readonly #observeHighlightedItemId = createElementIdObserver(() => {
+    this.set('highlightedItemId', toRaw(this.state).highlightedItem?.id);
+  });
+
+  // A store makes no watcher, so this method does the work that follows a write of a key. It shares
+  // the refs of a new `parent`. It copies the id of a new `highlightedItem`.
   override setState(newState: Readonly<State<Payload>>): void {
-    const previousParent = toRaw(this.state).parent;
-    super.setState(newState);
+    const current = toRaw(this.state);
+    const previousParent = current.parent;
+    super.setState(
+      newState.highlightedItem === current.highlightedItem
+        ? newState
+        : {
+            ...newState,
+            highlightedItemId: this.#observeHighlightedItemId(newState.highlightedItem ?? null),
+          },
+    );
     const parent = toRaw(this.state).parent;
     if (parent !== previousParent) {
       this.#shareMouseUpRefs(parent);
@@ -413,6 +434,7 @@ function createInitialState<Payload>(
     inputProps: EMPTY_OBJECT,
     inputFocused: false,
     highlightedItem: undefined,
+    highlightedItemId: undefined,
     hoverEnabled: true,
     instantType: undefined,
     openChangeReason: null,
