@@ -1,3 +1,4 @@
+import type { Calendar } from '@vase-ui/vue/calendar';
 import type { DateField } from '@vase-ui/vue/date-field';
 import type { RangeCalendar } from '@vase-ui/vue/range-calendar';
 import type { TemporalPart } from '@vase-ui/vue/temporal-part';
@@ -8,6 +9,7 @@ import type { TimeField } from '@vase-ui/vue/time-field';
 declare const day: Temporal.PlainDate;
 declare const time: Temporal.PlainTime;
 
+export const calendarProps: Calendar.Root.Props = { value: day };
 export const dateFieldProps: DateField.Root.Props = { value: day };
 export const rangeCalendarProps: RangeCalendar.Root.Props = { value: [day, null] };
 export const temporalPartProps: TemporalPart.Props = { value: day };

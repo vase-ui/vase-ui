@@ -70,9 +70,17 @@ const zoned = Temporal.ZonedDateTime.from('2026-11-14T09:30[Asia/Tokyo]');
   focusedDate={date}
   onMonthChange={(month, details) => {
     expectType<Temporal.PlainYearMonth, typeof month>(month);
-    expectType<'day-press' | 'drag' | 'keyboard' | 'month-change' | 'none', typeof details.reason>(
-      details.reason,
-    );
+    expectType<
+      | 'day-press'
+      | 'month-press'
+      | 'year-press'
+      | 'trigger-press'
+      | 'drag'
+      | 'keyboard'
+      | 'month-change'
+      | 'none',
+      typeof details.reason
+    >(details.reason);
   }}
 />;
 
@@ -84,6 +92,7 @@ const rootState: RangeCalendar.Root.State = {
   readOnly: false,
   invalid: false,
   empty: true,
+  view: 'day',
   multipleMonths: false,
   navigationDirection: 'none',
   broadcastCalendar: false,
