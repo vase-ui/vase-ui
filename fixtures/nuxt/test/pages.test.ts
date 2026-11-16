@@ -883,6 +883,43 @@ async function expectDateFieldPage(page: Page) {
   expect(await readDateFieldValues(page, 'card')).toEqual(['11', '2026']);
 }
 
+// The days of a calendar and the months of a year and month. Each has one tab stop, on its selected
+// day or month, and each shows its grid in the server HTML.
+async function expectCalendarPage(page: Page) {
+  const days = page.getByTestId('days');
+  expect(await days.getAttribute('role')).toBe('group');
+  expect(await days.getAttribute('aria-label')).toBe('November 2026');
+  expect(await days.getAttribute('data-view')).toBe('day');
+  expect(await days.locator('[data-date] button[tabindex="0"]').evaluateAll(readDates)).toEqual([
+    '2026-11-10',
+  ]);
+  expect(await page.getByTestId('day-value').textContent()).toBe('2026-11-10');
+
+  const months = page.getByTestId('months');
+  expect(await months.getAttribute('data-view')).toBe('month');
+  expect(await months.locator('[role="gridcell"]').count()).toBe(12);
+  expect(await months.locator('table').count()).toBe(0);
+  expect(await readTabStops(months)).toEqual(['March 2026']);
+  expect(await readSelected(months)).toEqual(['March 2026']);
+  expect(await page.getByTestId('month-value').textContent()).toBe('2026-03');
+}
+
+function readDates(buttons: Element[]) {
+  return buttons.map((button) => button.closest('[data-date]')!.getAttribute('data-date'));
+}
+
+function readTabStops(calendar: Locator) {
+  return calendar
+    .locator('[role="gridcell"][tabindex="0"]')
+    .evaluateAll((cells) => cells.map((cell) => cell.getAttribute('aria-label')));
+}
+
+function readSelected(calendar: Locator) {
+  return calendar
+    .locator('[role="gridcell"][aria-selected="true"]')
+    .evaluateAll((cells) => cells.map((cell) => cell.getAttribute('aria-label')));
+}
+
 async function expectDateFieldPageOnServer(page: Page) {
   await expectDateFieldPage(page);
   // A server has no DOM, so it cannot find a native label.
@@ -1965,6 +2002,7 @@ const PAGES: PageCase[] = [
     expectPage: expectOTPFieldPageOnServer,
     expectHydratedPage: expectHydratedOTPFieldPage,
   },
+  { path: '/calendar', expectPage: expectCalendarPage },
   {
     path: '/date-field',
     expectPage: expectDateFieldPageOnServer,
@@ -2312,6 +2350,29 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     await page.getByTestId('pin-label').click();
 
     expect(await readFocusedTestId()).toBe('pin-1');
+    expect(messages).toEqual([]);
+  });
+
+  it('shows the years, the months and the days of /calendar, and selects a day and a month, after hydration', async () => {
+    const page = await createPage('/calendar');
+    const messages = collectMessages(page);
+    const days = page.getByTestId('days');
+
+    await page.getByTestId('days-year').click();
+    expect(await days.getAttribute('data-view')).toBe('year');
+    await days.getByRole('gridcell', { name: '2027' }).click();
+    expect(await days.getAttribute('data-view')).toBe('month');
+    await days.getByRole('gridcell', { name: 'March 2027' }).click();
+
+    expect(await days.getAttribute('data-view')).toBe('day');
+    expect(await days.getAttribute('aria-label')).toBe('March 2027');
+    await days.getByRole('button', { name: /March 5, 2027/ }).click();
+    expect(await page.getByTestId('day-value').textContent()).toBe('2027-03-05');
+
+    const months = page.getByTestId('months');
+    await months.getByRole('gridcell', { name: 'November 2026' }).click();
+    expect(await page.getByTestId('month-value').textContent()).toBe('2026-11');
+    expect(await readSelected(months)).toEqual(['November 2026']);
     expect(messages).toEqual([]);
   });
 
