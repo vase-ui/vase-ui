@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { useData } from 'vitepress';
 import type { ApiReference, ApiClass } from '../../../scripts/docs/apiReference.ts';
 import TextWithCode from './TextWithCode.vue';
+import { HEADING_BADGE_CLASS } from './headingBadgeClass.ts';
 
 const props = defineProps<{
   /**
@@ -205,6 +206,7 @@ function idOf(name: string): string {
   <section v-for="part in parts" :key="part.name">
     <h3 :id="idOf(part.name)" tabindex="-1">
       {{ part.name }}
+      <span v-if="part.badge" :class="HEADING_BADGE_CLASS">{{ part.badge }}</span>
       <a
         class="header-anchor"
         :href="`#${idOf(part.name)}`"

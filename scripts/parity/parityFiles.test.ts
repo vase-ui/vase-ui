@@ -542,3 +542,26 @@ test('validateExtract needs each key and a row of each kind to have its fields',
     /cases\[0\]\.rows\[0\]: needs the key "title"\./,
   );
 });
+
+test('validateExtract accepts a badge of a Base UI heading for a tag of a page, and refuses another word', () => {
+  const extract = (badge: string): Json => ({
+    commit: COMMIT,
+    upstreamPaths: ['a/**'],
+    sources: [],
+    typeTests: [],
+    cases: [],
+    surface: [],
+    pages: [
+      {
+        file: 'a/page.mdx',
+        referenceTags: ['TypesA.Root'],
+        referenceBadges: { 'TypesA.Root': badge },
+      },
+    ],
+  });
+  assert.deepEqual(validateExtract('x.upstream.json', extract('Preview')), []);
+  assert.deepEqual(validateExtract('x.upstream.json', extract('New')), []);
+  assert.deepEqual(validateExtract('x.upstream.json', extract('Beta')), [
+    'x.upstream.json: pages[0].referenceBadges.TypesA.Root: must be one of "New", "Preview".',
+  ]);
+});
