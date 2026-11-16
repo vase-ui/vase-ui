@@ -8,7 +8,10 @@ import { matches } from '../matchers';
 import type { DateMatcher } from '../matchers';
 import { compareDates, isSameDay, toPlainDate, withDate } from '../temporal';
 import type { DateValue } from '../temporal';
-import type { CalendarChangeEventDetails, CalendarChangeEventReason } from './calendarProps';
+import type {
+  CalendarBaseChangeEventDetails,
+  CalendarBaseChangeEventReason,
+} from './calendarProps';
 import type { CalendarSelection } from './daySelection';
 import { isDisabledDay } from './dayState';
 
@@ -23,7 +26,7 @@ export type RangeValue<Value extends DateValue = DateValue> = [
 
 type RangeInput = readonly [DateValue | null, DateValue | null];
 
-export type RangeChangeEventReason = CalendarChangeEventReason | typeof REASONS.drag;
+export type RangeChangeEventReason = CalendarBaseChangeEventReason | typeof REASONS.drag;
 export type RangeChangeEventDetails = VaseUIChangeEventDetails<RangeChangeEventReason>;
 
 /** The first and the last day of a range. The parts compare them by their ISO days. */
@@ -331,7 +334,7 @@ export function useRangeSelection(
     }
   }
 
-  function press(date: Temporal.PlainDate, details: CalendarChangeEventDetails) {
+  function press(date: Temporal.PlainDate, details: CalendarBaseChangeEventDetails) {
     extension = null;
     const first = lone.value;
     const range = first && rangeBetween(first, date);
@@ -344,7 +347,7 @@ export function useRangeSelection(
 
   function extend(
     date: Temporal.PlainDate,
-    details: CalendarChangeEventDetails,
+    details: CalendarBaseChangeEventDetails,
     from: Temporal.PlainDate,
   ) {
     const anchor =

@@ -4,15 +4,22 @@ import type { DateMatcher } from '../matchers';
 import type { DateValue, DayOfWeek } from '../temporal';
 import type { VisibleDuration } from './weeks';
 
-export type CalendarChangeEventReason =
+/** The reasons that each calendar root has, whatever its selection and its views. */
+export type CalendarBaseChangeEventReason =
   | typeof REASONS.dayPress
-  | typeof REASONS.monthPress
-  | typeof REASONS.yearPress
-  | typeof REASONS.triggerPress
   | typeof REASONS.keyboard
   | typeof REASONS.monthChange
   | typeof REASONS.none;
 
+/** The reasons that only a calendar with the views of months and years has. */
+export type CalendarViewChangeEventReason =
+  typeof REASONS.monthPress | typeof REASONS.yearPress | typeof REASONS.triggerPress;
+
+export type CalendarChangeEventReason =
+  CalendarBaseChangeEventReason | CalendarViewChangeEventReason;
+
+export type CalendarBaseChangeEventDetails =
+  VaseUIChangeEventDetails<CalendarBaseChangeEventReason>;
 export type CalendarChangeEventDetails = VaseUIChangeEventDetails<CalendarChangeEventReason>;
 
 /** What a calendar can select: a day, or a year and month. */

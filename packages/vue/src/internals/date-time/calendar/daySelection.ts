@@ -3,13 +3,20 @@ import type { ComputedRef } from 'vue';
 import { EMPTY_ARRAY } from '../../../common/empty';
 import { useControlled } from '../../../common/useControlled';
 import { compareDates, withDate } from '../temporal';
-import type { CalendarChangeEventDetails, CalendarValue } from './calendarProps';
+import type {
+  CalendarBaseChangeEventDetails,
+  CalendarChangeEventDetails,
+  CalendarValue,
+} from './calendarProps';
 
 /**
  * How a calendar selects days. `useCalendarRoot` takes one. A selection owns the value of the
  * calendar: its model, its events and the rules of a press.
+ *
+ * `Details` is the type of the details that `press` and `extend` take. The selection of a root with
+ * views also takes the reason `month-press`, from a press on a month.
  */
-export interface CalendarSelection {
+export interface CalendarSelection<Details = CalendarBaseChangeEventDetails> {
   /** The values of the selection: none, one, or each value of a list. */
   values: ComputedRef<readonly CalendarValue[]>;
   /**
@@ -26,16 +33,12 @@ export interface CalendarSelection {
   /** Whether `date` is in the selection. It reads the selection, so a `computed` follows it. */
   isSelected: (date: Temporal.PlainDate) => boolean;
   /** A press on a day that the user can select. */
-  press: (date: Temporal.PlainDate, details: CalendarChangeEventDetails) => void;
+  press: (date: Temporal.PlainDate, details: Details) => void;
   /**
    * The move of the focus by Shift with an arrow key to a day that the user can select. `from` is
    * the day that had the focus before the key.
    */
-  extend: (
-    date: Temporal.PlainDate,
-    details: CalendarChangeEventDetails,
-    from: Temporal.PlainDate,
-  ) => void;
+  extend: (date: Temporal.PlainDate, details: Details, from: Temporal.PlainDate) => void;
 }
 
 type DayValueInput = CalendarValue | readonly CalendarValue[] | null | undefined;
@@ -82,7 +85,7 @@ function toValues(value: DayValueInput): readonly CalendarValue[] {
 export function useDaySelection(
   props: DaySelectionProps,
   emit: DaySelectionEmit,
-): CalendarSelection {
+): CalendarSelection<CalendarChangeEventDetails> {
   const [value, setValue] = useControlled<DayValueInput>({
     controlled: () => props.value,
     default: () => props.defaultValue ?? (props.multiple ? EMPTY_ARRAY : null),
