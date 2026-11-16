@@ -72,6 +72,30 @@ jobs:
       - run: pnpm docs:typecheck
       - run: pnpm docs:build
 
+  # CONTRIBUTING.md, "Pull requests", gives the form of a title. On a pull request, this job reads
+  # the title. In the merge queue, it reads the first line of each commit that the queue adds to
+  # `main`. The commit of a squash merge has the title of its pull request.
+  pr-title:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The script compares the commits of the merge queue with `main`.
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - run: node scripts/ci/checkTitle.ts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PULL_REQUEST: ${{ github.event.pull_request.number }}
+
   test-node:
     needs: select
     # `select` has the result `skipped` in the merge queue. Without `!cancelled()`, a job that
@@ -257,7 +281,7 @@ jobs:
     # Do not use `always()`. It starts this job in a cancelled run. The job waits for a runner
     # and holds the concurrency group, so the run of the new commit starts no job.
     if: ${{ !cancelled() }}
-    needs: [select, check, docs-axe, test-node, test-browser, test-vue-floor, test-nuxt]
+    needs: [select, check, pr-title, docs-axe, test-node, test-browser, test-vue-floor, test-nuxt]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions: {}
@@ -269,6 +293,7 @@ jobs:
           contains(needs.*.result, 'failure')
           || contains(needs.*.result, 'cancelled')
           || needs.check.result == 'skipped'
+          || needs.pr-title.result == 'skipped'
           || needs.docs-axe.result == 'skipped'
           || (needs.select.result == 'skipped') != (github.event_name != 'pull_request')
           || (needs.test-node.result == 'skipped') != (needs.select.outputs.tests == 'none')
