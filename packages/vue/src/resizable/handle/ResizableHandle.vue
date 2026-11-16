@@ -165,8 +165,8 @@ const isFocusable = computed(() => !isDisabled.value && pivot.value >= 0);
 // `tabindex` and `style`, so the server HTML and that render give each handle that is not disabled
 // its tab stop and a hit area that takes presses. That render also gives no end attribute. In a
 // client-only mount, the root reads the layout in `onMounted`, before the next render, so the
-// browser computes the style of that render. With both end attributes in it, a CSS transition would
-// start on each handle.
+// browser computes the style of that render. With both end attributes in it, a CSS transition for
+// the state of a handle that cannot move would start on each handle.
 const hasTabStop = computed(() => isFocusable.value || (hydrating.value && !isDisabled.value));
 const primary = computed(() =>
   pivot.value < 0
