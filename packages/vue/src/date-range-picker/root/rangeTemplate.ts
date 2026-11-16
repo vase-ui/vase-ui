@@ -1,4 +1,4 @@
-import { isKind, today } from '../../internals/date-time/temporal';
+import { today } from '../../internals/date-time/temporal';
 import type { DateValue } from '../../internals/date-time/temporal';
 import type { DateRangePickerRootGranularity } from './DateRangePickerRoot.vue';
 
@@ -13,11 +13,6 @@ export function createRangeTemplate(
 ): DateValue {
   const midnight = today(timeZone).toPlainDateTime();
   return granularity === undefined || granularity === 'day' ? midnight.toPlainDate() : midnight;
-}
-
-/** Whether an end has a time of day. */
-export function hasTime(end: DateValue): boolean {
-  return isKind(end, 'dateTime') || isKind(end, 'zonedDateTime');
 }
 
 /** The first end that has a value, or `undefined`. */

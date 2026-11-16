@@ -147,13 +147,14 @@ export interface DateRangePickerRootProps<Value extends DateValue = DateValue> e
 
 <script setup lang="ts" generic="Value extends DateValue = DateValue">
 import { computed, provide, shallowRef, useTemplateRef } from 'vue';
+import { hasTime } from '../../date-picker/root/pickerTemplate';
 import { useDateTimePickerRoot } from '../../internals/date-time/picker/useDateTimePickerRoot';
 import { assertTemporal } from '../../internals/date-time/temporal';
 import { useFieldRootContext } from '../../internals/field-root-context';
 import PopoverRoot from '../../popover/root/PopoverRoot.vue';
 import { DateRangePickerRootContext } from './DateRangePickerRootContext';
 import type { DateRangePickerRange } from './DateRangePickerRootContext';
-import { createRangeTemplate, firstEnd, hasTime } from './rangeTemplate';
+import { createRangeTemplate, firstEnd } from './rangeTemplate';
 
 const props = withDefaults(defineProps<DateRangePickerRootProps<Value>>(), {
   open: undefined,
