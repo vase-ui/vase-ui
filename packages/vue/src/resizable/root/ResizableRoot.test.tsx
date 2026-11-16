@@ -251,7 +251,7 @@ describe('<Resizable.Root />', () => {
       layout.value = undefined;
       await nextTick();
 
-      expect(error).toHaveBeenCalledWith(
+      expect(error).toHaveBeenCalledExactlyOnceWith(
         expect.stringMatching(
           /^Vase UI: A component is changing the controlled layout state of Resizable to be uncontrolled\./,
         ),

@@ -105,7 +105,7 @@ describe('<Accordion.Root />', () => {
         </Accordion.Root>,
       );
 
-      expect(warnSpy).toHaveBeenCalledWith(
+      expect(warnSpy).toHaveBeenCalledExactlyOnceWith(
         'Vase UI: The `keepMounted` prop of `Accordion.Root` is `false` and `hiddenUntilFound` is enabled. The panels must stay mounted while they are closed, so `keepMounted` has no effect. Remove `keepMounted`, or remove `hiddenUntilFound`.',
       );
       expect(screen.getByText('Panel').getAttribute('hidden')).toBe('until-found');
@@ -440,6 +440,63 @@ describe('<Accordion.Root />', () => {
         expect(screen.queryByText(PANEL_CONTENT_1)).toHaveAttribute('data-open');
 
         expect(screen.queryByText(PANEL_CONTENT_2)).toBe(null);
+      });
+
+      it('VUE-114: reads a null value as an empty value, and stays controlled', async () => {
+        const handleValueChange = vi.fn();
+        await render(
+          <Accordion.Root value={null} defaultValue={['b']} onValueChange={handleValueChange}>
+            <Accordion.Item value="a">
+              <Accordion.Header>
+                <Accordion.Trigger>Trigger 1</Accordion.Trigger>
+              </Accordion.Header>
+              <Accordion.Panel>{PANEL_CONTENT_1}</Accordion.Panel>
+            </Accordion.Item>
+            <Accordion.Item value="b">
+              <Accordion.Header>
+                <Accordion.Trigger>Trigger 2</Accordion.Trigger>
+              </Accordion.Header>
+              <Accordion.Panel>{PANEL_CONTENT_2}</Accordion.Panel>
+            </Accordion.Item>
+          </Accordion.Root>,
+        );
+        const [trigger1, trigger2] = screen.getAllByRole('button');
+        expect(trigger1).toHaveAttribute('aria-expanded', 'false');
+        expect(trigger2).toHaveAttribute('aria-expanded', 'false');
+
+        await fireEvent.click(trigger1);
+
+        expect(handleValueChange).toHaveBeenCalledTimes(1);
+        expect(handleValueChange.mock.calls[0][0]).toEqual(['a']);
+        expect(trigger1).toHaveAttribute('aria-expanded', 'false');
+        expect(screen.queryByText(PANEL_CONTENT_1)).toBe(null);
+      });
+
+      it('VUE-114: reads a value that changes to null as an empty value, not as the default value', async () => {
+        const { setProps } = await render(
+          <Accordion.Root value={['a']} defaultValue={['b']}>
+            <Accordion.Item value="a">
+              <Accordion.Header>
+                <Accordion.Trigger>Trigger 1</Accordion.Trigger>
+              </Accordion.Header>
+              <Accordion.Panel>{PANEL_CONTENT_1}</Accordion.Panel>
+            </Accordion.Item>
+            <Accordion.Item value="b">
+              <Accordion.Header>
+                <Accordion.Trigger>Trigger 2</Accordion.Trigger>
+              </Accordion.Header>
+              <Accordion.Panel>{PANEL_CONTENT_2}</Accordion.Panel>
+            </Accordion.Item>
+          </Accordion.Root>,
+        );
+        const [trigger1, trigger2] = screen.getAllByRole('button');
+        expect(trigger1).toHaveAttribute('aria-expanded', 'true');
+        expect(trigger2).toHaveAttribute('aria-expanded', 'false');
+
+        await setProps({ value: null });
+
+        expect(trigger1).toHaveAttribute('aria-expanded', 'false');
+        expect(trigger2).toHaveAttribute('aria-expanded', 'false');
       });
     });
   });

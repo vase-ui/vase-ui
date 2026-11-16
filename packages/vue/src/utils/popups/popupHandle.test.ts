@@ -59,14 +59,6 @@ function getSetOpenCall(store: FakeStore) {
   return { open, details };
 }
 
-const DETACHED_WARNING = 'no root that uses this handle is mounted';
-
-function countWarnings(consoleWarn: { mock: { calls: unknown[][] } }, text: string) {
-  return consoleWarn.mock.calls.filter(
-    ([message]) => typeof message === 'string' && message.includes(text),
-  ).length;
-}
-
 describe('BasePopupHandle', () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -212,10 +204,7 @@ describe('BasePopupHandle', () => {
       const handle = new TestHandle();
       const rootStore = createStore();
       registerTrigger(handle.fallback, 'trigger');
-
-      handle.open('trigger');
-      handle.close();
-      expect(consoleWarn.mock.calls).toEqual([
+      const detachedWarnings = [
         [
           'Vase UI: TestHandle.open() was called while no root that uses this handle is mounted. ' +
             'The handle ignored the call. Mount a root with this handle before you call open().',
@@ -224,15 +213,18 @@ describe('BasePopupHandle', () => {
           'Vase UI: TestHandle.close() was called while no root that uses this handle is mounted. ' +
             'The handle ignored the call. Mount a root with this handle before you call close().',
         ],
-      ]);
-      expect(handle.fallback.setOpen).not.toHaveBeenCalled();
-
-      handle.attachStore(rootStore)();
-      consoleWarn.mockClear();
+      ];
 
       handle.open('trigger');
       handle.close();
-      expect(countWarnings(consoleWarn, DETACHED_WARNING)).toBe(2);
+      expect(consoleWarn.mock.calls).toEqual(detachedWarnings);
+      expect(handle.fallback.setOpen).not.toHaveBeenCalled();
+
+      handle.attachStore(rootStore)();
+
+      handle.open('trigger');
+      handle.close();
+      expect(consoleWarn.mock.calls).toEqual([...detachedWarnings, ...detachedWarnings]);
       expect(rootStore.setOpen).not.toHaveBeenCalled();
       expect(handle.fallback.setOpen).not.toHaveBeenCalled();
     });
@@ -388,8 +380,10 @@ describe('concrete popup handles', () => {
       handle.close();
 
       expect(handle.isOpen).toBe(false);
-      expect(countWarnings(consoleWarn, `${warningName}Handle.open() was called while`)).toBe(1);
-      expect(countWarnings(consoleWarn, `${warningName}Handle.close() was called while`)).toBe(1);
+      expect(consoleWarn.mock.calls).toEqual([
+        [expect.stringContaining(`${warningName}Handle.open() was called while`)],
+        [expect.stringContaining(`${warningName}Handle.close() was called while`)],
+      ]);
     },
   );
 

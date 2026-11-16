@@ -105,7 +105,7 @@ describe('<Drawer.Popup />', () => {
     );
 
     await waitFor(() => {
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect(consoleErrorSpy).toHaveBeenCalledExactlyOnceWith(
         'Vase UI: <Drawer.Popup> expected to be rendered within <Drawer.Viewport>. ' +
           'Omitting the viewport disables drawer swipe handling and touch scroll locking. ' +
           'Wrap <Drawer.Popup> in <Drawer.Viewport>.',

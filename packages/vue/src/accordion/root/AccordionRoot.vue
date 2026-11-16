@@ -34,16 +34,18 @@ export interface AccordionRootProps<Value = any>
     /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
   /**
    * The controlled value of the item(s) that should be expanded.
+   * `null` is an empty value, and the accordion stays controlled.
    *
    * To render an uncontrolled accordion, use the `defaultValue` prop instead.
    */
-  value?: AccordionValue<Value> | undefined;
+  value?: AccordionValue<Value> | null | undefined;
   /**
    * The uncontrolled value of the item(s) that should be initially expanded.
+   * `null` is an empty value.
    *
    * To render a controlled accordion, use the `value` prop instead.
    */
-  defaultValue?: AccordionValue<Value> | undefined;
+  defaultValue?: AccordionValue<Value> | null | undefined;
   /**
    * Whether the component should ignore user interaction.
    * @default false
@@ -139,7 +141,8 @@ if (process.env.NODE_ENV !== 'production') {
 const itemList = useCompositeList({ elementsRef: shallowRef([]), provide: false });
 
 const [openValues, setOpenValues] = useControlled<AccordionValue<Value>>({
-  controlled: () => props.value,
+  // `undefined` makes the part uncontrolled, so only `null` becomes an empty value.
+  controlled: () => (props.value === null ? EMPTY_ARRAY : props.value),
   default: () => props.defaultValue ?? EMPTY_ARRAY,
   name: 'Accordion',
   state: 'value',

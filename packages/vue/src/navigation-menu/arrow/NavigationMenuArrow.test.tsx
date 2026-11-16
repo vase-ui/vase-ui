@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
   createRenderer,
   describeConformance,
@@ -47,21 +47,15 @@ describe('<NavigationMenu.Arrow />', () => {
   });
 
   it('throws a descriptive error when rendered outside <NavigationMenu.Positioner>', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    try {
-      await expect(
-        render(
-          <NavigationMenu.Root>
-            <NavigationMenu.Arrow />
-          </NavigationMenu.Root>,
-        ),
-      ).rejects.toThrow(
-        'Vase UI: <NavigationMenu.Positioner> is missing. The popup and the arrow read their side and their alignment from the positioner. Put the part inside <NavigationMenu.Positioner>.',
-      );
-    } finally {
-      errorSpy.mockRestore();
-    }
+    await expect(
+      render(
+        <NavigationMenu.Root>
+          <NavigationMenu.Arrow />
+        </NavigationMenu.Root>,
+      ),
+    ).rejects.toThrow(
+      'Vase UI: <NavigationMenu.Positioner> is missing. The popup and the arrow read their side and their alignment from the positioner. Put the part inside <NavigationMenu.Positioner>.',
+    );
 
     // Vue also warns about the error of `setup`.
     expect(takeReportedMessages()).toEqual([

@@ -9,6 +9,7 @@ import {
   isJSDOM,
   nextAnimationsRead,
   screen,
+  takeReportedMessages,
   waitFor,
   waitForLaterMillisecond,
   waitForPositioned,
@@ -17,8 +18,6 @@ import {
 import { PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
 import type { HTMLProps } from '../../internals/types';
 import * as Popover from '../index.parts';
-
-const DETACHED_WARNING = 'no root that uses this handle is mounted';
 
 async function tick(ms: number) {
   await flushMicrotasks();
@@ -31,7 +30,6 @@ describe('<Popover.Root />', () => {
 
   it('opens by trigger from a descendant layout effect on initial mount', async () => {
     const handle = Popover.createHandle();
-    const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     const OpenOnMount = defineComponent({
       setup() {
@@ -49,12 +47,7 @@ describe('<Popover.Root />', () => {
       </Popover.Root>
     ));
 
-    const detachedWarned = consoleWarn.mock.calls.some(
-      ([message]) => typeof message === 'string' && message.includes(DETACHED_WARNING),
-    );
-    consoleWarn.mockRestore();
-
-    expect(detachedWarned).toBe(false);
+    expect(takeReportedMessages()).toEqual([]);
     expect(handle.isOpen).toBe(true);
     expect(screen.getByRole('button', { name: 'Trigger' })).toHaveAttribute(
       'aria-expanded',

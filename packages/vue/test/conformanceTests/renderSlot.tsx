@@ -37,13 +37,16 @@ export function testRenderSlot(element: VNode, getOptions: () => VaseUiConforman
             ...(button && { nativeButton }),
           },
           {
-            render: ({ props }: any) => (
+            // The slot mounts `children`, so the part gives only the warning for the ref.
+            render: ({ props, children: Children }: any) => (
               <Element
                 {...props}
                 ref={(value: unknown) => {
                   own = value;
                 }}
-              />
+              >
+                {Children && <Children />}
+              </Element>
             ),
           },
         );
@@ -52,10 +55,9 @@ export function testRenderSlot(element: VNode, getOptions: () => VaseUiConforman
 
       expect(own).toBeInstanceOf(window.HTMLElement);
       expect(component!.element).toBe(null);
-      const messages = warnSpy.mock.calls.map(([message]) => String(message));
-      expect(
-        messages.filter((message) => message.includes('The `#render` slot gave no element')),
-      ).toHaveLength(1);
+      expect(warnSpy.mock.calls).toEqual([
+        [expect.stringContaining('The `#render` slot gave no element')],
+      ]);
     });
 
     if (childrenSelector !== undefined) {

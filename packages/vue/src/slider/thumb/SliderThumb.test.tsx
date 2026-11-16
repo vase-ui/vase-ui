@@ -1026,13 +1026,14 @@ describe('<Slider.Thumb />', () => {
 
       await setProps({ max: 0 });
 
-      expect(warnSpy).toHaveBeenCalledWith(
+      expect(warnSpy).toHaveBeenCalledExactlyOnceWith(
         'Vase UI: Slider `max` must be greater than `min`. With `max` at or below `min`, the slider has no range of values to choose from. Set `max` above `min`.',
       );
 
       await waitFor(() => {
         expect(thumb.style.visibility).toBe('hidden');
       });
+      expect(warnSpy).toHaveBeenCalledTimes(1);
     });
 
     it.skipIf(isJSDOM).each([

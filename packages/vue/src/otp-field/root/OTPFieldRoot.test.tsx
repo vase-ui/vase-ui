@@ -1237,7 +1237,7 @@ describe('<OTPField.Root />', () => {
         expect(lastInput).toHaveFocus();
 
         // The slot-count dev warning lags one commit behind a runtime `length` change.
-        vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
         await setProps({ length: 3, value: '' });
 
@@ -1247,6 +1247,9 @@ describe('<OTPField.Root />', () => {
         expect(inputs[0]).toHaveFocus();
         expect(inputs[0]).toHaveAttribute('tabindex', '0');
         expect(inputs[2]).toHaveAttribute('tabindex', '-1');
+        expect(warnSpy).toHaveBeenCalledExactlyOnceWith(
+          'Vase UI: <OTPField.Root> `length` must match the number of rendered <OTPField.Input /> parts. Received `length={3}` but rendered 6 inputs.',
+        );
       });
 
       it('keeps focus on a slot that is still reachable after a controlled value shrinks', async () => {
@@ -2478,6 +2481,9 @@ describe('<OTPField.Root />', () => {
         const { container } = await render(<OTPFieldBase.Root length={0} />);
 
         expect(container.querySelector('input')).toBe(null);
+        expect(warnSpy).toHaveBeenCalledExactlyOnceWith(
+          'Vase UI: <OTPField.Root> `length` must be a positive integer. Received `length={0}`.',
+        );
       } finally {
         warnSpy.mockRestore();
       }
@@ -2780,8 +2786,7 @@ describe('<OTPField.Root />', () => {
 
     it('is kept when a previously focused slot unmounts after focus moves to a sibling', async () => {
       // `inputCount` trails `length` by a render, so shrinking both at once warns about a
-      // mismatch that never reaches the DOM. Silencing it keeps the test from passing only on
-      // CI's retry, where `warn`'s dedupe swallows the message it failed on the first time.
+      // mismatch that never reaches the DOM.
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       function TestCase(props: { firstMounted?: boolean }) {
@@ -2815,15 +2820,16 @@ describe('<OTPField.Root />', () => {
         expect(second).toHaveFocus();
         expect(screen.getByTestId('field')).toHaveAttribute('data-focused', '');
         expect(screen.getByTestId('otp')).toHaveAttribute('data-focused', '');
+        expect(warnSpy).toHaveBeenCalledExactlyOnceWith(
+          'Vase UI: <OTPField.Root> `length` must match the number of rendered <OTPField.Input /> parts. Received `length={2}` but rendered 3 inputs.',
+        );
       } finally {
         warnSpy.mockRestore();
       }
     });
 
     it('is removed when the focused slot unmounts but its field remains', async () => {
-      // Unmounting one slot leaves `length` out of sync with the rendered inputs, which is
-      // irrelevant to what this test asserts. `warn` dedupes on the message, so `length={3}`
-      // keeps this silenced warning from consuming the messages other tests assert.
+      // After one slot unmounts, `length` is larger than the number of inputs, so the root warns.
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       function TestCase(props: { firstMounted?: boolean }) {
@@ -2851,6 +2857,9 @@ describe('<OTPField.Root />', () => {
 
         expect(screen.getByTestId('field')).not.toHaveAttribute('data-focused');
         expect(screen.getByTestId('otp')).not.toHaveAttribute('data-focused');
+        expect(warnSpy).toHaveBeenCalledExactlyOnceWith(
+          'Vase UI: <OTPField.Root> `length` must match the number of rendered <OTPField.Input /> parts. Received `length={3}` but rendered 2 inputs.',
+        );
       } finally {
         warnSpy.mockRestore();
       }

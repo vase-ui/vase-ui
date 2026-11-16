@@ -181,7 +181,7 @@ describe('<Slider.Root />', () => {
 
     await render(<TestSlider defaultValue={10} min={10} max={10} />);
 
-    expect(warnSpy).toHaveBeenCalledWith(
+    expect(warnSpy).toHaveBeenCalledExactlyOnceWith(
       'Vase UI: Slider `max` must be greater than `min`. With `max` at or below `min`, the slider has no range of values to choose from. Set `max` above `min`.',
     );
   });
