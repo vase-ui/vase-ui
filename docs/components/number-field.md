@@ -70,7 +70,7 @@ The root also takes a number that a program or the browser writes into its hidde
 
 The part renders its element in a `Teleport`, in the `<body>` of the document of the scrub area. When the scrub area is in a shadow root, such as the root of a Vue custom element, the element is in that root. The styles of the root then apply to it. A rule of `<style scoped>`, `v-show` and a custom directive on the part do not reach the element. `:deep()` does not reach it either. Write the element in the `#render` slot of the part, or use a CSS module or a `style` binding.
 
-The cursor has `position: fixed`. Its containing block is the viewport, or else the nearest ancestor that has a transform, a filter or containment. The scrub area reads the place and the scale of that block, and it puts the cursor at the pointer. It does not correct a rotation or a skew of the block. If the block clips its content, it also clips the cursor.
+The cursor has `position: fixed`. Its containing block is the viewport, or else the nearest ancestor that has a transform, a filter or containment. At each move of the cursor, the scrub area reads the place and the scale of that block, and it puts the cursor at the pointer. It does not correct a rotation or a skew of the block. If the block or an ancestor of the block clips its content, that element also clips the cursor.
 
 ## API reference
 

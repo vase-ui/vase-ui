@@ -82,7 +82,6 @@ let didMove = false;
 let pointerDownTarget: EventTarget | null = null;
 let nativeClickReceived = false;
 let virtualCursorCoords = { x: 0, y: 0 };
-let containingBlock = { left: 0, top: 0, scaleX: 1, scaleY: 1 };
 
 const scrubAreaCursorRef = shallowRef<HTMLSpanElement | null>(null);
 
@@ -111,10 +110,11 @@ function updateCursorTransform(virtualCursor: HTMLSpanElement, x: number, y: num
   // scale with the content on pinch-zoom.
   const scale = ownerWindow(virtualCursor).visualViewport?.scale ?? 1;
   // `x` and `y` are in the viewport. A block with a scale changes the size of the cursor, so the
-  // center of the cursor converts to the block, not its corner.
-  const { left, top, scaleX, scaleY } = containingBlock;
+  // center of the cursor converts to the block, not its corner. The block can move during a scrub,
+  // for example when the page scrolls, so each placement reads it again.
   const halfWidth = virtualCursor.offsetWidth / 2;
   const halfHeight = virtualCursor.offsetHeight / 2;
+  const { left, top, scaleX, scaleY } = readContainingBlock(virtualCursor);
   const blockX = (x + halfWidth - left) / scaleX - halfWidth;
   const blockY = (y + halfHeight - top) / scaleY - halfHeight;
   virtualCursor.style.transform = `translate3d(${blockX}px,${blockY}px,0) scale(${1 / scale})`;
@@ -173,8 +173,6 @@ async function onScrubbingChange(scrubbingValue: boolean, { clientX, clientY }: 
   if (!virtualCursor) {
     return;
   }
-
-  containingBlock = readContainingBlock(virtualCursor);
 
   const initialCoords = {
     x: clientX - virtualCursor.offsetWidth / 2,

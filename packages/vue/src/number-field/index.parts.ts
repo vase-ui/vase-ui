@@ -107,9 +107,10 @@ export namespace ScrubArea {
  * in Safari to avoid a layout shift that this notification causes there.
  *
  * The part renders its element in a `Teleport`. The element is in the shadow root that holds the
- * scrub area, or else in `<body>`. Vue gives the scope id of `<style scoped>`, `v-show` and a custom
- * directive only to a root element, so they do not reach this element. Put them on your element in
- * the `#render` slot, or use a CSS module or a `style` binding.
+ * scrub area, or else in the `<body>` of the document of the scrub area. Vue gives the scope id of
+ * `<style scoped>`, `v-show` and a custom directive only to a root element, so they do not reach
+ * this element. Put them on your element in the `#render` slot, or use a CSS module or a `style`
+ * binding.
  */
 export const ScrubAreaCursor: typeof NumberFieldScrubAreaCursor = NumberFieldScrubAreaCursor;
 export namespace ScrubAreaCursor {
