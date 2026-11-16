@@ -864,6 +864,11 @@ const passed = [
     code: `<script setup lang="ts">\nimport { h } from 'vue';\n\nconst element = h('div');\n</script>\n\n<template>\n  <component :is="element" />\n</template>\n`,
   },
   {
+    name: 'a vnode in a constant of the script setup of a test SFC',
+    file: `${SRC}/DialogRootInTemplate.test.vue`,
+    code: `<script setup lang="ts">\nimport { h } from 'vue';\n\nconst element = h('span');\n</script>\n\n<template>\n  <component :is="element" />\n</template>\n`,
+  },
+  {
     name: 'expect.poll in a test of the Nuxt fixture',
     file: 'fixtures/nuxt/test/pages.test.ts',
     code: "import { expect } from 'vitest';\n\nexport const poll = expect.poll(() => 1);\n",

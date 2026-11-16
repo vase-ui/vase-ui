@@ -565,8 +565,8 @@ export default defineConfig([
     rules: { 'no-restricted-syntax': ['error', ...RESTRICTED_TEST_SYNTAX] },
   },
   {
-    // No test runner runs a type test, so a vnode of a type test never mounts.
-    files: ['**/*.spec.{ts,tsx,vue}'],
+    // No test runner runs a type test, and Vue runs the `<script setup>` of a test SFC at each mount, so a vnode there never mounts twice.
+    files: ['**/*.spec.{ts,tsx,vue}', '**/*.{test,spec}.vue', 'packages/vue/test/**/*.vue'],
     rules: {
       'no-restricted-syntax': [
         'error',
