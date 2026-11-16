@@ -140,7 +140,7 @@ describe('<DatePicker.Calendar />', () => {
     expect(onUpdateMonth).not.toHaveBeenCalled();
     expect(dayButton('2026-11-18')).not.toBe(null);
 
-    onMonthChange.mockImplementation(() => {});
+    onMonthChange.mockImplementation(() => undefined);
     await user.click(screen.getByTestId('next'));
 
     expect(onUpdateMonth.mock.lastCall?.[0].toString()).toBe('2026-12');
