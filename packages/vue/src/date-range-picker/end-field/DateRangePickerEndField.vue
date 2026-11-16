@@ -7,7 +7,8 @@ export interface DateRangePickerEndFieldState extends DateFieldRootState {}
 /**
  * The props of `DateField.Root` that the picker does not own. They are the props of
  * `DateRangePicker.StartField`. A value in this field that is before the first end of the range makes
- * the field invalid. A field that shows a time compares the time too.
+ * the field invalid. A field that shows a time compares the time too, and two zoned ends compare
+ * by the moment.
  */
 export interface DateRangePickerEndFieldProps extends DateRangePickerStartFieldProps {}
 </script>

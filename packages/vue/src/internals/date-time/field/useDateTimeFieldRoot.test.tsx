@@ -1257,6 +1257,16 @@ describe('useDateTimeFieldRoot', () => {
         message: 'earlier',
       },
       {
+        name: 'a zoned value before a least limit in another zone',
+        // 19:00 in New York on 9 November is 00:00 UTC, and 10:00 in Tokyo is 01:00 UTC.
+        props: {
+          defaultValue: '2026-11-09T19:00[America/New_York]',
+          minDate: Temporal.ZonedDateTime.from('2026-11-10T10:00[Asia/Tokyo]'),
+        },
+        prepare: '',
+        message: 'later',
+      },
+      {
         name: 'a year and month after the greatest',
         props: { defaultValue: '2026-12', maxDate: '2026-11-20' },
         prepare: '',
@@ -1371,6 +1381,14 @@ describe('useDateTimeFieldRoot', () => {
         props: {
           defaultValue: '2026-11-14T10:00[Asia/Tokyo]',
           minDate: Temporal.PlainDateTime.from('2026-11-14T10:00'),
+        },
+      },
+      {
+        name: 'a zoned value after a least limit in another zone',
+        // 05:00 in New York on 10 November is 10:00 UTC, and 10:00 in Tokyo is 01:00 UTC.
+        props: {
+          defaultValue: '2026-11-10T05:00[America/New_York]',
+          minDate: Temporal.ZonedDateTime.from('2026-11-10T10:00[Asia/Tokyo]'),
         },
       },
       {

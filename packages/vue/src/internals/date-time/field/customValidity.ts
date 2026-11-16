@@ -6,7 +6,8 @@ import type { DateValue, TemporalKind, TemporalValue } from '../temporal';
 
 /**
  * The limits of a value. A `minDate` or a `maxDate` that is a date limits whole days. One that has a
- * time is a moment: it limits the time of a value that has a time.
+ * time is a moment: it limits the time of a value that has a time. A zoned moment limits a zoned
+ * value by the moment, and any other value by its wall clock.
  */
 export interface ValueLimits {
   minDate?: DateValue | undefined;
@@ -41,6 +42,30 @@ function formatLimit(
   return format.format(epoch);
 }
 
+/**
+ * The text of a limit for the message about a zoned value. A zoned limit shows in the zone of the
+ * value, which is the zone that the field shows. A least limit rounds up to the next minute, so
+ * that the value that the message names is valid, and a greatest limit shows as its minute.
+ */
+function formatLimitForZoned(
+  limit: DateValue,
+  zone: string,
+  isLeast: boolean,
+  locale: Intl.LocalesArgument | undefined,
+  calendar: string,
+): string {
+  if (isKind(limit, 'date')) {
+    return formatLimit(limit, locale, calendar);
+  }
+  const local = isKind(limit, 'zonedDateTime') ? limit.withTimeZone(zone) : limit;
+  const wallClock = toWallClock(local);
+  return formatLimit(
+    isLeast ? wallClock.round({ smallestUnit: 'minute', roundingMode: 'ceil' }) : wallClock,
+    locale,
+    calendar,
+  );
+}
+
 function formatTime(time: Temporal.PlainTime, locale: Intl.LocalesArgument | undefined): string {
   const [format, epoch] = formatter(time, { hour: 'numeric', minute: '2-digit' }, locale);
   return format.format(epoch);
@@ -52,10 +77,14 @@ function toWallClock(value: DateValue): Temporal.PlainDateTime {
 }
 
 /**
- * Negative, 0 or positive, by the day and then by the time. A date is the start of its day. Two
- * calendars and two time zones compare by their wall clocks, as `compareDates` compares by the day.
+ * Negative, 0 or positive. Two zoned values compare by the moment, also when their time zones
+ * differ. Else the values compare by their wall clocks, by the day and then by the time, and a date
+ * is the start of its day. Two calendars compare by their days, as `compareDates` does.
  */
 export function compareMoments(a: DateValue, b: DateValue): number {
+  if (isKind(a, 'zonedDateTime') && isKind(b, 'zonedDateTime')) {
+    return Temporal.ZonedDateTime.compare(a, b);
+  }
   return Temporal.PlainDateTime.compare(toWallClock(a), toWallClock(b));
 }
 
@@ -84,7 +113,9 @@ function isAfterMaximum(value: DateValue, maximum: DateValue): boolean {
 /**
  * The `min` and `max` of the hidden input, as text. Only the native types have them. A `minDate` or
  * a `maxDate` that is a date limits whole days, so a date and time gets the first and the last
- * moment of that day. A limit with a time gives that time, in the unit that the field shows.
+ * moment of that day. A limit with a time gives that time, in the unit that the input has: a minute,
+ * or a second when `showSeconds`. The text of a value has no more than that unit, and the step base
+ * of the input is its `min`, so a least limit rounds up and a greatest limit rounds down.
  */
 export function getInputLimits(
   kind: TemporalKind,
@@ -92,18 +123,27 @@ export function getInputLimits(
   showSeconds: boolean,
 ): { min: string | undefined; max: string | undefined } {
   const day = (date: DateValue) => toInputText(toPlainDate(date), false);
-  const moment = (limit: DateValue) => toInputText(toWallClock(limit), showSeconds);
+  const leastMoment = (limit: DateValue) =>
+    toInputText(
+      toWallClock(limit).round({
+        smallestUnit: showSeconds ? 'second' : 'minute',
+        roundingMode: 'ceil',
+      }),
+      showSeconds,
+    );
+  // The text of a moment has no more than the unit, so it already rounds down.
+  const greatestMoment = (limit: DateValue) => toInputText(toWallClock(limit), showSeconds);
   if (kind === 'date') {
     return { min: minDate && day(minDate), max: maxDate && day(maxDate) };
   }
   if (kind === 'dateTime') {
     return {
-      min: minDate && (isKind(minDate, 'date') ? `${day(minDate)}T00:00` : moment(minDate)),
+      min: minDate && (isKind(minDate, 'date') ? `${day(minDate)}T00:00` : leastMoment(minDate)),
       max:
         maxDate &&
         (isKind(maxDate, 'date')
           ? `${day(maxDate)}T23:59${showSeconds ? ':59' : ''}`
-          : moment(maxDate)),
+          : greatestMoment(maxDate)),
     };
   }
   if (kind === 'time') {
@@ -121,7 +161,7 @@ export function getInputLimits(
  * the range of a zoned value and of a year and month, the time of a date and time, and the dates
  * that are not available. A year and month is in the range when one of its days is. A date of a
  * message is in `calendar`, the calendar that the field shows. A limit that is a date limits whole
- * days. A limit with a time limits the time of a zoned value too.
+ * days. A limit with a time limits the time of a zoned value too, as `compareMoments` compares.
  */
 export function getLimitMessage(
   value: TemporalValue,
@@ -133,11 +173,12 @@ export function getLimitMessage(
   const notAfter = (text: string) => `Enter ${text} or earlier.`;
 
   if (isKind(value, 'zonedDateTime')) {
+    const zone = value.timeZoneId;
     if (minDate && isBeforeMinimum(value, minDate)) {
-      return notBefore(formatLimit(minDate, locale, calendar));
+      return notBefore(formatLimitForZoned(minDate, zone, true, locale, calendar));
     }
     if (maxDate && isAfterMaximum(value, maxDate)) {
-      return notAfter(formatLimit(maxDate, locale, calendar));
+      return notAfter(formatLimitForZoned(maxDate, zone, false, locale, calendar));
     }
   }
 

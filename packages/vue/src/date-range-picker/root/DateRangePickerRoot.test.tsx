@@ -818,6 +818,34 @@ describe('<DateRangePicker.Root />', () => {
       },
     );
 
+    // The ends of a trip can be in two zones. The end field compares the moments, and not the wall
+    // clocks: 20:00 in Tokyo is 11:00 UTC, and 10:00 in New York on the same day is 15:00 UTC.
+    it.each([
+      {
+        name: 'later by the moment and earlier by the wall clock',
+        start: '2026-11-10T20:00[Asia/Tokyo]',
+        end: '2026-11-10T10:00[America/New_York]',
+        isValid: true,
+      },
+      {
+        name: 'earlier by the moment and later by the wall clock',
+        start: '2026-11-10T10:00[America/New_York]',
+        end: '2026-11-10T20:00[Asia/Tokyo]',
+        isValid: false,
+      },
+    ])('compares the ends in two time zones by the moment: the end is $name', async (row) => {
+      const { container } = await renderPicker({
+        defaultValue: [
+          Temporal.ZonedDateTime.from(row.start),
+          Temporal.ZonedDateTime.from(row.end),
+        ],
+        hourCycle: 24,
+      });
+      const end = container.querySelectorAll<HTMLInputElement>('input[aria-hidden]')[1]!;
+
+      expect(end.validity.valid).toBe(row.isValid);
+    });
+
     it('takes the later of the start and `minDate` for the limit of the end field, by the time too', async () => {
       const { container } = await renderPicker({
         defaultValue: [

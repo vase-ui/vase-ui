@@ -51,6 +51,32 @@ describe('getInputLimits', () => {
     },
   );
 
+  // The step base of a `datetime-local` input is its `min`, and the text of a value has no more than
+  // the unit of the input. A least limit thus rounds up to that unit, and a greatest limit down.
+  it.each([
+    { seconds: false, min: '2026-11-02T10:16', max: '2026-11-20T17:30' },
+    { seconds: true, min: '2026-11-02T10:15:31', max: '2026-11-20T17:30:45' },
+  ])(
+    'rounds the limits of a date and time to the unit of the input, with seconds $seconds',
+    (row) => {
+      const moments = {
+        minDate: Temporal.PlainDateTime.from('2026-11-02T10:15:30.5'),
+        maxDate: Temporal.PlainDateTime.from('2026-11-20T17:30:45.9'),
+      };
+
+      expect(getInputLimits('dateTime', moments, row.seconds)).toEqual({
+        min: row.min,
+        max: row.max,
+      });
+    },
+  );
+
+  it('gives a least limit that is on a whole minute as it is', () => {
+    const moments = { minDate: Temporal.PlainDateTime.from('2026-11-02T10:15') };
+
+    expect(getInputLimits('dateTime', moments, false).min).toBe('2026-11-02T10:15');
+  });
+
   it('gives no limit for a limit that is not set', () => {
     expect(getInputLimits('date', {}, false)).toEqual({ min: undefined, max: undefined });
   });
@@ -123,6 +149,41 @@ describe('getLimitMessage', () => {
           momentText(expected === 'later' ? limits.minDate : limits.maxDate),
         );
       }
+    });
+
+    it('checks a zoned value against a limit in another zone by the moment, and names the limit in the zone of the value', () => {
+      // 10:00 in Tokyo is 01:00 UTC. 05:00 in New York on 10 November is 10:00 UTC.
+      const tokyo = { minDate: Temporal.ZonedDateTime.from('2026-11-10T10:00[Asia/Tokyo]') };
+      const after = Temporal.ZonedDateTime.from('2026-11-10T05:00[America/New_York]');
+      const before = Temporal.ZonedDateTime.from('2026-11-09T19:00[America/New_York]');
+
+      expect(message(after, tokyo)).toBe('');
+      const result = message(before, tokyo);
+      expect(result).toContain('later');
+      expect(result).toContain(
+        momentText(Temporal.ZonedDateTime.from('2026-11-09T20:00[America/New_York]')),
+      );
+    });
+
+    it('checks the greatest limit in another zone by the moment too', () => {
+      const tokyo = { maxDate: Temporal.ZonedDateTime.from('2026-11-10T10:00[Asia/Tokyo]') };
+
+      expect(
+        message(Temporal.ZonedDateTime.from('2026-11-09T19:00[America/New_York]'), tokyo),
+      ).toBe('');
+      expect(
+        message(Temporal.ZonedDateTime.from('2026-11-09T21:00[America/New_York]'), tokyo),
+      ).toContain('earlier');
+    });
+
+    it('names a least limit with seconds by the next minute, so that the value that it names is valid', () => {
+      const limits = { minDate: Temporal.PlainDateTime.from('2026-11-14T10:00:30') };
+      const named = Temporal.ZonedDateTime.from('2026-11-14T10:01[Asia/Tokyo]');
+
+      expect(
+        message(Temporal.ZonedDateTime.from('2026-11-14T10:00[Asia/Tokyo]'), limits),
+      ).toContain(momentText(named));
+      expect(message(named, limits)).toBe('');
     });
 
     it('compares a date that is a limit by the day, whatever the time of the value', () => {
@@ -201,16 +262,27 @@ describe('compareMoments', () => {
     ).toBe(expected);
   });
 
-  it('counts a date as the start of its day, and compares the wall clocks of two zones', () => {
+  it('counts a date as the start of its day, and a zoned value by its wall clock against a date and time', () => {
     expect(compareMoments(day('2026-11-10'), Temporal.PlainDateTime.from('2026-11-10T00:00'))).toBe(
       0,
     );
     expect(
       compareMoments(
         Temporal.ZonedDateTime.from('2026-11-10T10:00[Asia/Tokyo]'),
-        Temporal.ZonedDateTime.from('2026-11-10T10:00[America/New_York]'),
+        Temporal.PlainDateTime.from('2026-11-10T10:00'),
       ),
     ).toBe(0);
+  });
+
+  // 10:00 in Tokyo is 01:00 UTC, and 10:00 in New York on 10 November is 15:00 UTC.
+  it.each([
+    { name: 'a moment that is before', b: '2026-11-10T10:00[America/New_York]', expected: -1 },
+    { name: 'the same moment', b: '2026-11-09T20:00[America/New_York]', expected: 0 },
+    { name: 'a moment that is after', b: '2026-11-09T19:00[America/New_York]', expected: 1 },
+  ])('compares two zoned values by the moment: $name', ({ b, expected }) => {
+    const tokyo = Temporal.ZonedDateTime.from('2026-11-10T10:00[Asia/Tokyo]');
+
+    expect(Math.sign(compareMoments(tokyo, Temporal.ZonedDateTime.from(b)))).toBe(expected);
   });
 });
 
