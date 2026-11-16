@@ -8,8 +8,7 @@ export interface DatePickerFieldState extends DateFieldRootState {}
 
 /**
  * The props of `DateField.Root` that the picker does not own. The root of the picker owns the
- * value, the limits, the locale, the calendar, the time zone and the props of the form. The part
- * has the attribute `aria-labelledby` in the place of the prop `ariaLabelledby`.
+ * value, the limits, the locale, the calendar, the time zone and the props of the form.
  */
 export interface DatePickerFieldProps extends Omit<
   DateFieldRootProps,
@@ -31,7 +30,6 @@ export interface DatePickerFieldProps extends Omit<
   | 'required'
   | 'name'
   | 'form'
-  | 'ariaLabelledby'
 > {}
 </script>
 

@@ -91,7 +91,7 @@ describe('<DatePicker.Field />', () => {
     expect(segmentOf(container, 'day').value).toBe('');
   });
 
-  // The part has no prop for the names. The attribute reaches `DateField.Root`, which reads it.
+  // The part gives the names to `DateField.Root`, which reads them.
   it('names the group with the elements of `aria-labelledby`, and not with the label of the field', async () => {
     await render(
       <Field.Root name="when">

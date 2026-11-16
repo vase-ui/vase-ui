@@ -1015,6 +1015,7 @@ The date and time families call `Temporal` and `Intl` directly, through the func
 - The focus manager of a popup moves the focus to the first tabbable element one frame after the popup opens, but not when the focus is in the popup by then. The calendar of a picker thus focuses its tab stop each time that the popup opens, with `useFocusOnOpen`.
 - `Alt` with `ArrowDown` opens the popup from the field, as a press of the first trigger does. The segment ignores a key with `Alt`, so the key reaches the field. A disabled or read-only picker opens no popup: its trigger is disabled, and its field ignores the key.
 - The popup is below the root of the picker in the component tree, and a portal only moves it in the document. A time field in the popup thus provides the default context of a field and a new labelable context. It is then not a control of the field around the picker, and it has no id and no label of that field.
+- A part of a picker that renders a field root declares the `aria-*` props of that root: `DatePicker.Field` and `DatePicker.TimeField` declare `ariaLabelledby`. TSX then takes `ariaLabelledby` on the part, as on the root.
 
 ### Popup store
 
