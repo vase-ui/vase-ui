@@ -1084,12 +1084,10 @@ describe('independent menu focus inside a filterable menu', () => {
     it('does not trap a popup opened by an assistive technology click', async () => {
       await render(<OpenMethodMenu />);
 
-      // An assistive technology activation reports no pointer type.
-      const trigger = screen.getByRole('button', { name: 'Actions' });
-      await fireEvent.pointerDown(trigger, { pointerType: '' });
-      await fireEvent.mouseDown(trigger);
-      await fireEvent.click(trigger, { detail: 1 });
-      await screen.findByTestId('popup');
+      screen.getByRole('button', { name: 'Actions' }).click();
+      await waitFor(() => {
+        expect(screen.getByRole('searchbox', { name: 'Filter actions' })).toHaveFocus();
+      });
 
       expect(isHiddenFromAssistiveTechnology(screen.getByTestId('after'))).toBe(false);
     });

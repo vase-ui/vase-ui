@@ -6,9 +6,11 @@ import {
   fireEvent,
   flushMicrotasks,
   heldMountListTests,
+  nextAnimationsRead,
   nextEvent,
   screen,
   waitFor,
+  waitSingleFrame,
 } from '#test-utils';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
@@ -176,14 +178,24 @@ describe('<NavigationMenu.Content />', () => {
 
     it('holds the element of a content that opens again while its exit transition runs', async () => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
-      await render(<Menu duration={5000} />);
-      await fireEvent.click(screen.getByTestId('trigger-one'));
+      const { container } = await render(<Menu />);
+      await nextEvent(container, 'transitionend', {
+        after: 'transitionrun',
+        action: () => fireEvent.click(screen.getByTestId('trigger-one')),
+      });
       const content = screen.getByTestId('content-one');
-      await fireEvent.click(screen.getByTestId('trigger-two'));
+      content.style.transitionDuration = '100s';
+      const exitAnimations = await nextAnimationsRead(content, {
+        action: () => fireEvent.click(screen.getByTestId('trigger-two')),
+      });
+      expect(exitAnimations).not.toHaveLength(0);
       expect(content).toHaveAttribute('data-ending-style');
       expect(rootContext!.currentContentRef.value).toBe(screen.getByTestId('content-two'));
+      await waitSingleFrame();
+      expect(content).toBeInTheDocument();
 
       await fireEvent.click(screen.getByTestId('trigger-one'));
+      await waitSingleFrame();
 
       expect(screen.getByTestId('content-one')).toBe(content);
       expect(rootContext!.currentContentRef.value).toBe(content);
