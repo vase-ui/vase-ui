@@ -5,7 +5,7 @@ description: Learn how to style Vase UI components with your preferred styling e
 
 # Styling
 
-A guide to styling Vase UI components with your preferred styling engine.
+A guide to styling Vase UI components with your favorite styling engine.
 
 Vase UI components are unstyled and ship no styles. Use [Tailwind CSS](https://tailwindcss.com), CSS Modules, scoped styles or any other styling solution that you prefer. You keep full control of your styling layer.
 
