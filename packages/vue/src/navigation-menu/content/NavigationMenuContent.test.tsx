@@ -191,10 +191,12 @@ describe('<NavigationMenu.Content />', () => {
       expect(exitAnimations).not.toHaveLength(0);
       expect(content).toHaveAttribute('data-ending-style');
       expect(rootContext!.currentContentRef.value).toBe(screen.getByTestId('content-two'));
+      // One frame later, a content with no exit animation is gone.
       await waitSingleFrame();
       expect(content).toBeInTheDocument();
 
       await fireEvent.click(screen.getByTestId('trigger-one'));
+      // The content loses the status of its exit in the next frame.
       await waitSingleFrame();
 
       expect(screen.getByTestId('content-one')).toBe(content);
