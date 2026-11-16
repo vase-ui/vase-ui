@@ -10,7 +10,7 @@ import styles from './index.module.css';
     <Popover.Trigger :class="styles.Trigger">Trigger</Popover.Trigger>
     <Popover.Portal>
       <Popover.Positioner :class="styles.Positioner" :side-offset="8">
-        <Popover.Popup :class="styles.Popup">
+        <Popover.Popup :class="styles.Popup" aria-label="Animated popover">
           <template #render="{ props, state }">
             <motion.div
               v-bind="props as MotionProps"

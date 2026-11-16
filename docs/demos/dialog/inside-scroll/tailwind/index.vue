@@ -113,6 +113,7 @@ const CONTENT_SECTIONS = [
           </div>
           <div
             class="flex-auto overflow-y-auto overscroll-contain focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
+            tabindex="0"
           >
             <section
               v-for="item in CONTENT_SECTIONS"
