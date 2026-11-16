@@ -83,7 +83,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, MenuPopupState>;
 }>();
 
-const { store, generatedPopupId, setRenderedPopupId, orientation, virtualFocus } =
+const { store, generatedPopupId, setRenderedPopupId, popupLabelId, orientation, virtualFocus } =
   useMenuRootContext();
 const inheritedSubmenuRootContext = useMenuSubmenuRootContext();
 const { side, align } = useMenuPositionerContext();
@@ -190,11 +190,7 @@ const { element, elementProps } = useRenderElement('div', props, {
             role: 'menu',
             // `menu` is implicitly vertical, so only the non-default value needs to be rendered.
             'aria-orientation': orientation.value === 'horizontal' ? 'horizontal' : undefined,
-            'aria-labelledby': resolvePopupLabel(
-              attrs,
-              store.select('activeTriggerElement'),
-              store.select('activeTriggerId'),
-            ),
+            'aria-labelledby': resolvePopupLabel(attrs, popupLabelId.value),
           }),
       onKeydown(event: VaseUIEvent<KeyboardEvent>) {
         // The handlers to the left also handle the keys of the items and of `Menu.Input`. A call of

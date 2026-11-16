@@ -48,6 +48,7 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
+import { useElementId } from '../../utils/popups/useElementId';
 import { useKeepAliveElementRef } from '../../utils/popups/useKeepAliveElementRef';
 import { useNavigationMenuPositionerContext } from '../positioner/NavigationMenuPositionerContext';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
@@ -68,6 +69,7 @@ const positioning = useNavigationMenuPositionerContext();
 const direction = useDirection();
 
 const popupId = useVaseUiId(() => props.id);
+const triggerId = useElementId(prevTriggerElementRef);
 
 const state = computed<NavigationMenuPopupState>(() => ({
   open: open.value,
@@ -107,7 +109,7 @@ const { element, elementProps } = useRenderElement('nav', props, {
       // Each navigation landmark of a page needs a name of its own, and a nested menu opens two
       // popups. The root clears `floatingRootStore` at the close, but `prevTriggerElementRef`
       // keeps the trigger until the popup unmounts.
-      'aria-labelledby': resolvePopupLabel(attrs, prevTriggerElementRef.value ?? null, null),
+      'aria-labelledby': resolvePopupLabel(attrs, triggerId.value),
     },
     getDisabledMountTransitionStyles(transitionStatus.value),
     attrs,

@@ -36,6 +36,7 @@ import {
   useFloatingNodeId,
   useFloatingParentNodeId,
 } from '../../utils/popups/tree/FloatingTree';
+import { useElementId } from '../../utils/popups/useElementId';
 import { MenuStore } from '../store/MenuStore';
 import type { MenuCommittedOpenState } from '../store/MenuStore';
 import type {
@@ -603,6 +604,14 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
     inputProps: virtualFocus ? listNavigation.value.reference : EMPTY_OBJECT,
   }));
 
+  const activeTriggerElement = computed(() => store.select('activeTriggerElement'));
+  const activeTriggerElementId = useElementId(activeTriggerElement);
+  // The `#render` slot of a trigger can give its element an id of its own, and an empty id names
+  // no element. The registered id thus names the trigger only while no trigger element exists.
+  const popupLabelId = computed(() =>
+    activeTriggerElement.value ? activeTriggerElementId.value : store.select('activeTriggerId'),
+  );
+
   const context: MenuRootContext<Payload> = {
     store,
     parent: parentFromContext,
@@ -613,6 +622,7 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
     setRenderedPopupId(id) {
       renderedPopupId.value = id;
     },
+    popupLabelId,
     virtualFocus,
     parentVirtualFocus,
     syncHighlightedItem,

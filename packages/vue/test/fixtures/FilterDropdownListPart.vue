@@ -40,7 +40,7 @@ const { element, elementProps } = useRenderElement('div', props, {
   props: (attrs) =>
     list.props({
       role: 'menu',
-      'aria-labelledby': resolvePopupLabel(attrs, null, triggerId.value ?? null),
+      'aria-labelledby': resolvePopupLabel(attrs, triggerId.value),
       ...attrs,
     }),
 });

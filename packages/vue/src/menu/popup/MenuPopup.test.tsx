@@ -95,6 +95,45 @@ describe('<Menu.Popup />', () => {
     );
   });
 
+  it('VUE-109: follows a new id that the #render slot gives the trigger', async () => {
+    const id = shallowRef('first');
+    await render(
+      <Menu.Root defaultOpen>
+        <Menu.Trigger
+          v-slots={{
+            render: ({ props }: { props: Record<string, unknown> }) => (
+              <button type="button" {...props} id={id.value}>
+                Actions
+              </button>
+            ),
+          }}
+        />
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup data-testid="popup">
+              <Menu.Item>Rename</Menu.Item>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>,
+    );
+    // Each render of the popup reads the id of the trigger, and the popup renders again after the
+    // open. The case waits for these renders before it changes the id. Only the change of the id
+    // can then give the popup its new name.
+    await waitSingleFrame();
+    await waitSingleFrame();
+    await flushMicrotasks();
+    const popup = screen.getByTestId('popup');
+    expect(popup).toHaveAttribute('aria-labelledby', 'first');
+
+    id.value = 'second';
+
+    await waitFor(() => {
+      expect(popup).toHaveAttribute('aria-labelledby', 'second');
+    });
+    expect(screen.getByRole('menu', { name: 'Actions' })).toBe(popup);
+  });
+
   it('stops toolbar navigation keys without blocking ordinary key events', async () => {
     const onParentKeyDown = vi.fn();
     const container = shallowRef<HTMLElement | null>(null);
