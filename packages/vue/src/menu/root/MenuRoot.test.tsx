@@ -1623,7 +1623,6 @@ describe('<Menu.Root />', () => {
           await user.click(mainTrigger);
           await screen.findByTestId('menu');
         });
-        const menu = screen.getByTestId('menu');
 
         const submenuTrigger = await screen.findByTestId('submenu-trigger');
         await waitForLaterMillisecond(async () => {
@@ -1637,9 +1636,6 @@ describe('<Menu.Root />', () => {
         expect(submenuItem).toHaveFocus();
 
         await user.keyboard('{Tab}');
-        await waitFor(() => {
-          expect(menu).not.toBeInTheDocument();
-        });
 
         expect(screen.queryByTestId('menu')).toBe(null);
         expect(screen.queryByTestId('submenu')).toBe(null);

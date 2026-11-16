@@ -846,12 +846,8 @@ describe('<ContextMenu.Root />', () => {
       { name: 'a submenu of a submenu', depth: 2 },
     ] as const)('closes every menu for Tab in $name', async ({ depth }) => {
       const { user, surface, onRootOpenChange, onSubmenuOpenChange } = await openSubmenus(depth);
-      const contextPopup = screen.getByTestId('context-popup');
 
       await user.keyboard('{Tab}');
-      await waitFor(() => {
-        expect(contextPopup).not.toBeInTheDocument();
-      });
 
       expect(screen.queryByTestId('context-popup')).toBe(null);
       expect(screen.queryByTestId('submenu-popup')).toBe(null);
@@ -864,12 +860,8 @@ describe('<ContextMenu.Root />', () => {
 
     it('closes only the submenu for Shift+Tab in a submenu', async () => {
       const { user, onRootOpenChange, onSubmenuOpenChange } = await openSubmenus(1);
-      const submenuPopup = screen.getByTestId('submenu-popup');
 
       await user.keyboard('{Shift>}{Tab}{/Shift}');
-      await waitFor(() => {
-        expect(submenuPopup).not.toBeInTheDocument();
-      });
 
       expect(screen.queryByTestId('submenu-popup')).toBe(null);
       expect(screen.getByTestId('submenu-trigger')).toHaveFocus();
