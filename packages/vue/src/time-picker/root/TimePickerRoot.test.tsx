@@ -183,6 +183,20 @@ describe('<TimePicker.Root />', () => {
       });
     });
 
+    it('goes to the first hour in the limits of a column when the picker has no value', async () => {
+      const { user } = await renderPicker({
+        columns: true,
+        minTime: time('09:00'),
+        maxTime: time('17:00'),
+      });
+
+      await open(user);
+
+      await waitFor(() => {
+        expect(columnItem('hour-column', '9')).toHaveFocus();
+      });
+    });
+
     it('goes to the first list or column, and not to a column that comes after it', async () => {
       const { user } = await renderPicker({
         list: true,
