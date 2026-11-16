@@ -63,7 +63,6 @@ const {
 } = useCalendarRootContext();
 const { labelRoot, getAriaLabelledBy } = useLabelId();
 
-const month = computed(() => props.month);
 const isLeaving = computed(() => isPageLeaving(props.month));
 
 // A month that mounts after the page changed starts its enter transition. The first render of a
@@ -83,7 +82,7 @@ const state = computed<CalendarMonthState>(() => ({
 }));
 
 provide(CalendarMonthContext, {
-  month,
+  month: computed(() => props.month),
   text: computed(() => formatPage(props.month, locale.value)),
   isLeaving,
   labelRoot,

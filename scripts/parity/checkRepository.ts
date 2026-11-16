@@ -1,3 +1,4 @@
+import { join } from 'node:path';
 import { isSuiteRow } from './cases.ts';
 import type { TestRow } from './cases.ts';
 import { checkFamily } from './checkFamily.ts';
@@ -6,16 +7,18 @@ import { checkOwnComponent } from './checkOwn.ts';
 import { checkSurface } from './checkSurface.ts';
 import type { SurfaceSummary, Tally } from './checkSurface.ts';
 import type { BetterRow, FamilyFile, UpstreamFile } from './parityFiles.ts';
-import { hasCounterpart, isTestFile, matchesAny } from './paths.ts';
+import { hasCounterpart, isTestFile, matchesAny, VASE_SOURCE_ROOT } from './paths.ts';
 import type { VaseFiles } from './paths.ts';
 import {
   extractCommand,
   extractFile,
   familyFile,
+  readRepositoryFile,
   TRACK_COMMAND,
   UPSTREAM_FILE,
 } from './repository.ts';
 import type { FamilyFiles, ParityFiles } from './repository.ts';
+import { readHiddenProps } from './vaseSurface.ts';
 import type { VaseProject } from './vaseSurface.ts';
 
 export interface BetterSummary {
@@ -120,6 +123,27 @@ export function checkBetter(
   return { problems, summary: { total: rows.length, due: due.length } };
 }
 
+/**
+ * Checks each SFC of the package source for a top-level name of a script block that is also a prop.
+ * The API reference does not list such a prop. The SFC of a test is not in the API reference.
+ */
+function checkHiddenProps(files: VaseFiles, root: string): string[] {
+  return [...files.paths]
+    .filter(
+      (path) =>
+        path.startsWith(`${VASE_SOURCE_ROOT}/`) &&
+        path.endsWith('.vue') &&
+        !/\.(test|spec)\.vue$/.test(path),
+    )
+    .sort()
+    .flatMap((path) =>
+      readHiddenProps(readRepositoryFile(root, path), join(root, path)).map(
+        (name) =>
+          `${path}: \`<script>\` or \`<script setup>\` declares or imports the name \`${name}\` at the top level, and \`${name}\` is also a prop. The bindings of the SFC compiler then have no prop \`${name}\`, and the API reference does not list it. Give the declaration or the import another name.`,
+      ),
+    );
+}
+
 export function checkRepository(input: CheckInput): CheckResult {
   const { parity, files, root } = input;
   const problems = [...parity.problems];
@@ -196,6 +220,7 @@ export function checkRepository(input: CheckInput): CheckResult {
       .flatMap((path) => rowsOf(path)),
   );
   problems.push(...better.problems);
+  problems.push(...checkHiddenProps(files, root));
   return { problems, families, better: better.summary };
 }
 
