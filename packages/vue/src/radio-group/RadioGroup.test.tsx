@@ -31,6 +31,7 @@ import {
   hydrate,
   hydrateAfter,
   isJSDOM,
+  mockPageBeforeLoad,
   removedPartHydrationTests,
   renderOnServer,
   screen,
@@ -3733,6 +3734,26 @@ describe('<RadioGroup />', () => {
 
       expect(fixture.getByTestId('model').textContent).toBe('c');
       expect(fixture.getByTestId('changes').textContent).toBe('c (pageshow)');
+      expect(fixture.getByTestId('c')).toHaveAttribute('aria-checked', 'true');
+    });
+
+    it('takes the checked input at the activation after a page show while KeepAlive held the group', async () => {
+      const showPage = mockPageBeforeLoad();
+      const { HeldBranch, hide, show } = createHeldBranch(
+        () => <RadioGroupBeforeHydration mode="model" named value="a" />,
+        { mounted: true },
+      );
+      const { container } = await render(<HeldBranch />);
+      const fixture = within(container);
+      (fixture.getByTestId('c').nextElementSibling as HTMLInputElement).checked = true;
+
+      await hide();
+      showPage();
+      await show();
+      await flushMicrotasks();
+
+      expect(fixture.getByTestId('model').textContent).toBe('c');
+      expect(fixture.getByTestId('changes').textContent).toBe('c (vase-ui)');
       expect(fixture.getByTestId('c')).toHaveAttribute('aria-checked', 'true');
     });
   });
