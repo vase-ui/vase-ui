@@ -62,4 +62,4 @@ Use this composable to read the current text direction. It is useful for a porta
 
 Call it in `setup`. It returns a `ComputedRef` of `'ltr'` or `'rtl'`. Read `.value` where you use the direction. When no `DirectionProvider` is above the component, it gives `'ltr'`.
 
-<ApiReference name="useDirection" />
+<ApiReference name="useDirection" :heading-level="4" />

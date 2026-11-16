@@ -371,7 +371,7 @@ Manages the toasts. Call it in `setup` of a component inside a `<Toast.Provider>
 
 It returns `toasts` as a `ComputedRef` of the list. Read `toasts.value` in a script. A template unwraps a `toasts` that you destructure at the top level of `<script setup>`.
 
-<ApiReference name="Toast.useToastManager" />
+<ApiReference name="Toast.useToastManager" :heading-level="3" />
 
 ### `add` method
 

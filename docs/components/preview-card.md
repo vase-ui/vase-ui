@@ -213,12 +213,12 @@ The viewport is optional. Use it only when more than one trigger opens one popup
 
 Creates a handle that connects a `PreviewCard.Root` with detached `PreviewCard.Trigger` parts. The type argument of the function is the type of the payload.
 
-<ApiReference name="PreviewCard.createHandle" />
+<ApiReference name="PreviewCard.createHandle" :heading-level="3" />
 
 ### Handle
 
 `PreviewCard.Handle` is the class of the handle.
 
-<ApiReference name="PreviewCard.Handle" />
+<ApiReference name="PreviewCard.Handle" :heading-level="4" />
 
 While a root is mounted, `open()` throws when the handle has no trigger with that `id`.
