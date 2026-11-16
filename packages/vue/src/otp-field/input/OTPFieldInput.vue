@@ -73,6 +73,7 @@ const {
   getInputId,
   handleInputBlur,
   handleInputFocus,
+  inputList,
   inputMode,
   inputAriaLabelledBy,
   invalid,
@@ -88,7 +89,6 @@ const {
   state,
   validationType,
   value,
-  inputList,
 } = useOTPFieldRootContext();
 
 const { ref: listItemRef, index } = useCompositeListItem({ list: inputList });

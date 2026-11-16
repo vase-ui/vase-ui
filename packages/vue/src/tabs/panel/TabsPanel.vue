@@ -80,10 +80,10 @@ const {
   value: selectedValue,
   getTabIdByPanelValue,
   orientation,
+  panelList,
   reaches,
   registerPanel,
   tabActivationDirection,
-  panelList,
 } = useTabsRootContext();
 
 // A tab registers its id in `setup`, and it can come after the panel.

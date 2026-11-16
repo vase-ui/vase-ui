@@ -15,14 +15,14 @@ export interface AccordionRootContext<Value = any> {
     eventDetails: AccordionRootChangeEventDetails,
   ) => void;
   hiddenUntilFound: ComputedRef<boolean>;
-  keepMounted: ComputedRef<boolean>;
-  state: ComputedRef<AccordionRootState<Value>>;
-  value: ComputedRef<AccordionValue<Value>>;
   /**
    * The list of the items. The items register with it through this context. The root does not
    * provide the list, so an item of a composite around the root joins that composite.
    */
   itemList: CompositeListContextValue<unknown>;
+  keepMounted: ComputedRef<boolean>;
+  state: ComputedRef<AccordionRootState<Value>>;
+  value: ComputedRef<AccordionValue<Value>>;
 }
 
 export const AccordionRootContext: InjectionKey<AccordionRootContext> = Symbol();

@@ -178,10 +178,10 @@ provide(AccordionRootContext, {
   disabled: computed(() => props.disabled),
   handleValueChange,
   hiddenUntilFound: computed(() => props.hiddenUntilFound),
+  itemList,
   keepMounted: computed(() => props.keepMounted ?? false),
   state,
   value: openValues,
-  itemList,
 });
 
 const { element, elementProps } = useRenderElement('div', props, {
