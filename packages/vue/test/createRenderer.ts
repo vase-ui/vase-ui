@@ -38,10 +38,10 @@ function markClock(): ClockMark {
 /**
  * Waits until `Date.now()` is later than each stamp that Vue can give a listener that it attaches
  * after `mark`. Vue stamps a listener with `Date.now()` when it attaches it.
- * No wait covers a step back of the wall clock between the end of the wait and the event. In
+ * No wait covers a step back of the wall clock between the end of the wait and the next event. In
  * Firefox and WebKit, `performance.now()` gives whole milliseconds, so the wait can end too early
- * after a step back during the change. No wait covers a late read of `Date.now()` when Vue stamps
- * a listener.
+ * when the wall clock steps back after `mark`. No wait covers a late read of `Date.now()`, as
+ * `isWallClockLaterThan` describes it, when Vue stamps a listener.
  */
 async function waitPastStampsSince(mark: ClockMark) {
   // The system can set the wall clock back by some milliseconds. `Date.now()` is then smaller than
@@ -55,7 +55,8 @@ async function waitPastStampsSince(mark: ClockMark) {
     // mocked clock does not move during the loop below, so the loop would not end.
     // `vi.setSystemTime` runs no timer and moves each pending timer with the clock, but the frames
     // stay at their times. A move of whole frames thus keeps each frame callback in its frame. A
-    // frame callback that the mount requests runs at the next `vi.advanceTimersToNextFrame()`.
+    // frame callback that a part requested before the move runs at the next
+    // `vi.advanceTimersToNextFrame()`.
     // With a mocked `Date` and a real `performance.now()`, the stamp can be more than one frame
     // after `Date.now()`.
     // Each move makes a mocked `Date.now()` at least 16 ms later. A part that measures a time with

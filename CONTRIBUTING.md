@@ -2167,7 +2167,7 @@ Where a case has no better form, it differs from the Base UI case only by these 
 
 ### Test helpers
 
-The helpers are in `packages/vue/test`. `#test-utils` is `packages/vue/test/index.ts`. The JSDoc of a helper is its contract, and the helper must obey it. The helpers keep upstream's names. This section gives only the rules that the JSDoc of one helper cannot give.
+The helpers are in `packages/vue/test`. `#test-utils` is `packages/vue/test/index.ts`. The types and the JSDoc of a helper are its contract, and the helper must obey them. The helpers keep upstream's names. This section gives only the rules that the code of one helper cannot give.
 
 - `user` of the result of `render` is `userEvent.setup({ document })` of `@testing-library/user-event`, at the version that upstream pins.
 - `user` waits for a timer after each action, so it does not return under a fake clock that does not move. A fake clock that moves with real time can end a timer of a part between two awaited steps. A browser can run the 0 ms timer of `user` in less than 1 ms. Thus a call of `user` does not wait for a later millisecond.
@@ -2190,17 +2190,17 @@ The helpers are in `packages/vue/test`. `#test-utils` is `packages/vue/test/inde
   - `removedPartHydrationTests`: the test of a part that binds an `aria-*` value or a state attribute that a later part gives.
   - `popupFocusPropsTests`: the test of a popup that has `initialFocus` and `finalFocus`.
   - `popupAnatomyTests`: the test of a popup root with no popup part (`VUE-72`), and of a modal root whose positioner has not mounted (`VUE-61`).
-- `internals/date-time/temporal.polyfill.node.test.ts` runs the cases of the `.test` files of the helpers on `temporal-polyfill`. It calls `useTemporalPolyfill()` of `test/temporalPolyfill.ts` and then imports those files with `await import()`. A static import runs before the call, so a case table that reads `Temporal` when its file loads would get the native `Temporal`.
+- `internals/date-time/temporal.polyfill.node.test.ts` runs the cases of the `.test` files of the date and time helpers on `temporal-polyfill`. It calls `useTemporalPolyfill()` of `test/temporalPolyfill.ts` and then imports those files with `await import()`. A static import runs before the call, so a case table that reads `Temporal` when its file loads would get the native `Temporal`.
 - A `.polyfill.node.test` file does not import a file that has a case with `vi.unstubAllGlobals()`, because that call removes the polyfill. To compare the server HTML of the native `Temporal` with the HTML of the polyfill, the file renders the native HTML before it calls `useTemporalPolyfill()`. `internals/date-time/field/field.polyfill.node.test.tsx` does this.
 - The root of each date or time family has such a file beside its `.node.test.tsx` file. `time-clock/root/TimeClockRoot.polyfill.node.test.tsx` is an example.
-- `test/animation.ts` has the helpers for a test of a transition or an animation. Their JSDoc is their contract. [Test rules](#test-rules) gives the rules for a case that uses them.
+- `test/animation.ts` has the helpers for a test of a transition or an animation. [Test rules](#test-rules) gives the rules for a case that uses them.
 - A limit of `waitFor`, of a `findBy` query or of a helper of `test/animation.ts` is a count of frames. It is not a time. A busy machine can stall the page for some seconds. The page renders no frame during the stall, so the stall uses no frame of a limit. The browser ends a transition or an animation only in a frame. A part can move the focus into a popup in a frame.
 - A test file does not write a `KeepAlive` branch with a flag for a later mount. A case of a part that mounts in a held branch renders `HeldBranch` of `createHeldBranch` in the place of the part. A form that a case needs goes into the helper.
 - `expectType` is in `src/common/testUtils.ts`. In a `.ts` or `.tsx` file, put the `@ts-expect-error` of a call that must fail on the line before the name `expectType`.
 
 The hydration helpers:
 
-- `test/hydration.ts` has `renderOnServer(file, props)`, which renders a component on a server, and `hydrate` and `hydrateAfter`, which hydrate that HTML. Their JSDoc is their contract.
+- `test/hydration.ts` has `renderOnServer(file, props)`, which renders a component on a server, and `hydrate` and `hydrateAfter`, which hydrate that HTML.
 - A composition of parts, or a composable, needs a fixture SFC as `file`. Give it a name that ends in `.test.vue`, and keep it in the folder of its test. Vitest does not run such a file, and the lint rules of the source do not apply to it. Examples are `ProgressRootHydration.test.vue` and `UseIsHydratingProbe.test.vue`.
 - A fixture part is a part that tests use in place of a part of a family, such as `CompositeRootPart.vue`. It is an SFC in `packages/vue/test/fixtures`. A composition of parts stays in the folder of its tests, also when more than one test file imports it.
 - The props go to Node as JSON, so a prop cannot be a function.
