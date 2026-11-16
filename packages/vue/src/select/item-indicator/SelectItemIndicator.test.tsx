@@ -1,7 +1,7 @@
 import { expect, describe, it } from 'vitest';
 import { defineComponent } from 'vue';
 import { Select } from '@vase-ui/vue/select';
-import { createRenderer, describeConformance, flushMicrotasks, screen, waitFor } from '#test-utils';
+import { createRenderer, describeConformance, flushMicrotasks, screen } from '#test-utils';
 
 describe('<Select.ItemIndicator />', () => {
   const { render } = createRenderer();
@@ -69,15 +69,11 @@ describe('<Select.ItemIndicator />', () => {
 
     await user.click(screen.getByRole('option', { name: 'a' }));
 
-    await waitFor(() => {
-      expect(indicator).not.toHaveAttribute('data-selected');
-    });
+    expect(indicator).not.toHaveAttribute('data-selected');
 
     // A kept-mounted indicator must not be left advertising an exit transition once the
     // deselection has finished, or `[data-ending-style]` CSS would stick permanently.
-    await waitFor(() => {
-      expect(indicator).not.toHaveAttribute('data-ending-style');
-    });
+    expect(indicator).not.toHaveAttribute('data-ending-style');
   });
 
   it('mounts only while selected when keepMounted is false', async () => {
@@ -145,9 +141,7 @@ describe('<Select.ItemIndicator />', () => {
 
     expect(screen.getByTestId('indicator')).toBe(indicator);
     expect(indicator).not.toHaveAttribute('data-selected');
-    await waitFor(() => {
-      expect(indicator).not.toHaveAttribute('data-ending-style');
-    });
+    expect(indicator).not.toHaveAttribute('data-ending-style');
 
     await setProps({ value: 'a' });
 

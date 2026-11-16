@@ -1,4 +1,4 @@
-import { expect, vi, describe, it } from 'vitest';
+import { expect, vi, describe, it, onTestFinished } from 'vitest';
 import { defineComponent, KeepAlive, onMounted, shallowRef, watch } from 'vue';
 import type { HTMLAttributes } from 'vue';
 import { Collapsible } from '@vase-ui/vue/collapsible';
@@ -11,6 +11,7 @@ import {
   flushMicrotasks,
   hydrate,
   isJSDOM,
+  nextEndingStyle,
   nextEvent,
   renderOnServer,
   screen,
@@ -32,6 +33,17 @@ function fireBeforeMatch(element: Element) {
       cancelable: false,
     }),
   );
+}
+
+// A reopen sets `data-starting-style`, and a later frame removes it. The observer records it.
+function recordStartingStyle(panel: HTMLElement) {
+  let seen = false;
+  const observer = new MutationObserver(() => {
+    seen ||= panel.hasAttribute('data-starting-style');
+  });
+  observer.observe(panel, { attributes: true, attributeFilter: ['data-starting-style'] });
+  onTestFinished(() => observer.disconnect());
+  return { seen: () => seen };
 }
 
 function waitForAnimationFrame() {
@@ -333,15 +345,14 @@ describe('<Collapsible.Panel />', () => {
         expect(panel.style.getPropertyValue('--collapsible-panel-height')).toBe('auto');
       });
 
-      await user.click(trigger);
+      // With animations off, the panel leaves the document one frame after it gets the ending
+      // style. The case reads the size in the update that gives the style.
+      await nextEndingStyle(panel, { action: () => user.click(trigger) });
 
-      // Both hold only mid-transition, so check them in one snapshot.
-      await waitFor(() => {
-        expect({
-          endingStyle: panel.hasAttribute('data-ending-style'),
-          height: panel.style.getPropertyValue('--collapsible-panel-height'),
-        }).toEqual({ endingStyle: true, height: expect.stringMatching(/px$/) });
-      });
+      expect({
+        endingStyle: panel.hasAttribute('data-ending-style'),
+        height: panel.style.getPropertyValue('--collapsible-panel-height'),
+      }).toEqual({ endingStyle: true, height: expect.stringMatching(/px$/) });
     });
 
     it('unmounts a zero-size panel without waiting for unrelated transitions', async () => {
@@ -478,7 +489,7 @@ describe('<Collapsible.Panel />', () => {
 
     it('keeps exit transitions working after a close is interrupted by reopening', async () => {
       // Keep the close running long enough for a slow run to interrupt it. Without animations,
-      // `data-ending-style` only lasts a frame and `waitFor` can miss it.
+      // the close ends one frame after `data-ending-style`.
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
       const { user } = await render(
         <>
@@ -507,26 +518,25 @@ describe('<Collapsible.Panel />', () => {
       const trigger = screen.getByRole('button', { name: 'Trigger' });
       const panel = screen.getByTestId('panel');
 
-      await user.click(trigger);
+      await nextEndingStyle(panel, { action: () => user.click(trigger) });
+      expect(panel).toHaveAttribute('data-ending-style');
 
-      await waitFor(() => {
-        expect(panel).toHaveAttribute('data-ending-style');
-      });
-
+      const startingStyle = recordStartingStyle(panel);
       await user.click(trigger);
 
       await waitFor(() => {
         expect(panel).toHaveAttribute('data-open');
       });
       await waitFor(() => {
+        expect(startingStyle.seen()).toBe(true);
+      });
+      await waitFor(() => {
         expect(panel).not.toHaveAttribute('data-starting-style');
       });
 
-      await fireEvent.click(trigger);
-
-      await waitFor(() => {
-        expect(panel).toHaveAttribute('data-ending-style');
-      });
+      // The wait resolves only for an ending style that comes after the click.
+      await nextEndingStyle(panel, { action: () => fireEvent.click(trigger) });
+      expect(panel).toHaveAttribute('data-ending-style');
       expect(screen.getByTestId('panel')).toBe(panel);
     });
 
@@ -656,9 +666,13 @@ describe('<Collapsible.Panel />', () => {
           expect(closeAnimationStarted).toBe(true);
         });
 
+        const startingStyle = recordStartingStyle(panel);
         await fireEvent.click(trigger);
         await waitFor(() => {
           expect(panel).toHaveAttribute('data-open');
+        });
+        await waitFor(() => {
+          expect(startingStyle.seen()).toBe(true);
         });
         await waitFor(() => {
           expect(panel).not.toHaveAttribute('data-starting-style');

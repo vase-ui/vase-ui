@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { defineComponent } from 'vue';
 import { Combobox } from '@vase-ui/vue/combobox';
-import { createRenderer, describeConformance, screen, waitFor } from '#test-utils';
+import { createRenderer, describeConformance, screen } from '#test-utils';
 
 describe('<Combobox.ItemIndicator />', () => {
   const { render } = createRenderer();
@@ -138,9 +138,7 @@ describe('<Combobox.ItemIndicator />', () => {
 
     expect(screen.getByTestId('indicator')).toBe(indicator);
     expect(indicator).not.toHaveAttribute('data-selected');
-    await waitFor(() => {
-      expect(indicator).not.toHaveAttribute('data-ending-style');
-    });
+    expect(indicator).not.toHaveAttribute('data-ending-style');
 
     await setProps({ value: 'a' });
 

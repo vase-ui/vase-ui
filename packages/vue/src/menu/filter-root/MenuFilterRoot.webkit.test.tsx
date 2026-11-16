@@ -205,9 +205,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider> (WebKit)', () 
     );
 
     await setProps({ close: true });
-    await waitFor(() =>
-      expect(screen.queryByRole('searchbox', { name: 'Filter actions' })).toBe(null),
-    );
+    expect(screen.queryByRole('searchbox', { name: 'Filter actions' })).toBe(null);
 
     await user.hover(screen.getByRole('button', { name: 'Actions' }));
     const reopenedInput = await screen.findByRole('searchbox', { name: 'Filter actions' });

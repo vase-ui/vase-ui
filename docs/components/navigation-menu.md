@@ -93,7 +93,7 @@ Put a `NavigationMenu.Root` in a `NavigationMenu.Content` to make a menu with mo
 
 A second level can stay in the panel of the first level. Then the nested root has no `NavigationMenu.Portal`. Give it a `NavigationMenu.List`, a `NavigationMenu.Viewport` and a `defaultValue`.
 
-Show a viewport inline only in a nested root. A top-level root with no `NavigationMenu.Positioner` does not close on Escape, on a click outside or on a second click on its trigger.
+Show a viewport inline only in a nested root. A top-level root with no `NavigationMenu.Positioner` does not close on Escape, on a click outside or on a second click on its trigger. A development build shows a warning for an inline viewport in a top-level root.
 
 <DemoFrame>
   <DemoNavigationMenuNestedInline />

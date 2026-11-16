@@ -161,9 +161,7 @@ describe('<Combobox.Popup />', () => {
     // directly.
     await fireEvent.pointerDown(option, { pointerType: 'mouse' });
     await fireEvent.click(option, { detail: 1 });
-    await waitFor(() => {
-      expect(screen.queryByRole('listbox')).toBe(null);
-    });
+    expect(screen.queryByRole('listbox')).toBe(null);
     expect(finalFocus).toHaveBeenLastCalledWith('mouse');
 
     input.focus();
@@ -173,9 +171,7 @@ describe('<Combobox.Popup />', () => {
       await screen.findByRole('listbox');
     });
     await user.keyboard('{ArrowDown}{Enter}');
-    await waitFor(() => {
-      expect(screen.queryByRole('listbox')).toBe(null);
-    });
+    expect(screen.queryByRole('listbox')).toBe(null);
     expect(finalFocus).toHaveBeenLastCalledWith('keyboard');
   });
 

@@ -1,4 +1,4 @@
-import { defineComponent, h } from 'vue';
+import { defineComponent, h, mergeProps } from 'vue';
 import type { FunctionalComponent } from 'vue';
 import { Toast } from '@vase-ui/vue/toast';
 
@@ -44,22 +44,28 @@ const Toasts = defineComponent(() => {
     );
 });
 
-export const ToastProvider = defineComponent((_, { slots }) => {
-  return () =>
-    h(Toast.Provider, { limit: 1 }, () => [
-      slots.default?.(),
-      h(Toast.Portal, null, () =>
-        h(
-          Toast.Viewport,
-          {
-            class:
-              'fixed z-10 top-auto right-[1rem] bottom-[1rem] mx-auto flex w-[250px] sm:right-[2rem] sm:bottom-[2rem] sm:w-[360px]',
-          },
-          () => h(Toasts),
+export const ToastProvider = defineComponent(
+  (_, { attrs, slots }) => {
+    return () =>
+      h(Toast.Provider, { limit: 1 }, () => [
+        slots.default?.(),
+        h(Toast.Portal, null, () =>
+          h(
+            Toast.Viewport,
+            mergeProps(
+              {
+                class:
+                  'fixed z-10 top-auto right-[1rem] bottom-[1rem] mx-auto flex w-[250px] sm:right-[2rem] sm:bottom-[2rem] sm:w-[360px]',
+              },
+              attrs,
+            ),
+            () => h(Toasts),
+          ),
         ),
-      ),
-    ]);
-});
+      ]);
+  },
+  { inheritAttrs: false },
+);
 
 export const useToastManager = Toast.useToastManager;
 

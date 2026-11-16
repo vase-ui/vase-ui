@@ -1,0 +1,10 @@
+{
+  "id": "VUE-105",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/navigation-menu/popup/NavigationMenuPopup.tsx#L49-L68",
+    "https://www.w3.org/WAI/ARIA/apg/practices/landmark-regions/",
+    "https://www.w3.org/TR/wai-aria-1.2/#navigation"
+  ],
+  "behavior": "A Navigation Menu popup takes its accessible name from its trigger: `aria-labelledby` has the id of the active trigger, and each trigger has an id. Each open popup is thus a navigation landmark with a name of its own, also in a nested menu. The popup keeps the name until it unmounts. When the consumer gives the popup an `aria-label` or an `aria-labelledby`, the popup takes the name of the consumer. Base UI gives the popup no name. Thus two open popups, or one popup beside a root with no name, are two navigation landmarks with no name.",
+  "dueWith": "packages/react/src/navigation-menu/popup/NavigationMenuPopup.tsx"
+}

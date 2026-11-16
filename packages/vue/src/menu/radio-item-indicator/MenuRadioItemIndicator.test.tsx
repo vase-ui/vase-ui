@@ -11,7 +11,6 @@ import {
   nextEvent,
   screen,
   takeReportedMessages,
-  waitFor,
 } from '#test-utils';
 
 describe('<Menu.RadioItemIndicator />', () => {
@@ -76,9 +75,7 @@ describe('<Menu.RadioItemIndicator />', () => {
 
       await fireEvent.click(screen.getByText('Close'));
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('indicator')).toBe(null);
-      });
+      expect(screen.queryByTestId('indicator')).toBe(null);
     },
   );
 
