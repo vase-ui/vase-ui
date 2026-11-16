@@ -104,12 +104,6 @@ describe('VUE-54: the tab stop follows the active item', () => {
   it.each([
     { name: 'no item is active', disabled: ['a'], nextActive: null, nextDisabled: ['a'] },
     {
-      name: 'the active item becomes disabled',
-      disabled: ['a'],
-      nextActive: 'c',
-      nextDisabled: ['a', 'c'],
-    },
-    {
       name: 'a disabled active item loses its state',
       disabled: ['a', 'c'],
       nextActive: null,
@@ -129,6 +123,19 @@ describe('VUE-54: the tab stop follows the active item', () => {
       expect(readTabindexes()).toEqual(['-1', '0', '-1']);
     },
   );
+
+  // A disabled active item takes the tab stop at the first map, as in Base UI. An active item that
+  // becomes disabled keeps it in the same way.
+  it('keeps the tab stop on an active item that becomes disabled', async () => {
+    const { List, disabled } = createList({ active: 'c', disabled: ['a'] });
+    await render(<List />);
+    expect(readTabindexes()).toEqual(['-1', '-1', '0']);
+
+    disabled.value = ['a', 'c'];
+    await flushMicrotasks();
+
+    expect(readTabindexes()).toEqual(['-1', '-1', '0']);
+  });
 
   it('moves the tab stop to the first enabled item when a disabled item becomes active', async () => {
     const { List, active } = createList({ active: null, disabled: ['a'] });
@@ -280,5 +287,102 @@ describe('VUE-54: the tab stop follows the active item', () => {
 
       expect(readTabindexes()).toEqual(['0', '-1', '-1']);
     });
+  });
+});
+
+describe('VUE-113: the tab stop leaves an item that the keys skip', () => {
+  const { render } = createRenderer();
+
+  it('moves the tab stop off an item that becomes disabled', async () => {
+    const { List, disabled } = createList({ active: null });
+    await render(<List />);
+    expect(readTabindexes()).toEqual(['0', '-1', '-1']);
+
+    disabled.value = ['a'];
+    await flushMicrotasks();
+
+    expect(readTabindexes()).toEqual(['-1', '0', '-1']);
+  });
+
+  it('moves the tab stop off the item of the user when it becomes disabled', async () => {
+    const { List, disabled } = createList({ active: null });
+    await render(<List />);
+    await focusItem('c');
+    await blurItem('c');
+    expect(readTabindexes()).toEqual(['-1', '-1', '0']);
+
+    disabled.value = ['c'];
+    await flushMicrotasks();
+
+    expect(readTabindexes()).toEqual(['0', '-1', '-1']);
+  });
+
+  it('moves the tab stop off an item that became disabled with the focus when the focus leaves', async () => {
+    const { List, disabled } = createList({ active: null });
+    await render(<List />);
+    await focusItem('a');
+
+    disabled.value = ['a'];
+    await flushMicrotasks();
+    expect(readTabindexes()).toEqual(['0', '-1', '-1']);
+
+    await blurItem('a');
+
+    expect(readTabindexes()).toEqual(['-1', '0', '-1']);
+  });
+
+  it('keeps the tab stop on a disabled item that is not in disabledIndices', async () => {
+    const disabled = shallowRef<string[]>([]);
+    const List = defineComponent(() => () => (
+      <CompositeRoot disabledIndices={[]}>
+        {ITEMS.map((testId) => renderItem(testId, null, disabled.value))}
+      </CompositeRoot>
+    ));
+    await render(<List />);
+
+    disabled.value = ['a'];
+    await flushMicrotasks();
+
+    expect(readTabindexes()).toEqual(['0', '-1', '-1']);
+  });
+
+  it('moves the tab stop to a disabled active item that the keys reach', async () => {
+    const isNativeDisabled = shallowRef(false);
+    const List = defineComponent(() => () => (
+      <CompositeRoot disabledIndices={[]}>
+        <CompositeItem
+          data-testid="a"
+          v-slots={{
+            render: ({ props }: { props: Record<string, unknown> }) => (
+              <button {...props} type="button" disabled={isNativeDisabled.value} />
+            ),
+          }}
+        />
+        {renderItem('b', 'c')}
+        {renderItem('c', 'c', ['c'])}
+      </CompositeRoot>
+    ));
+    await render(<List />);
+    await focusItem('a');
+    await blurItem('a');
+    expect(readTabindexes()).toEqual(['0', '-1', '-1']);
+
+    isNativeDisabled.value = true;
+    await flushMicrotasks();
+
+    expect(readTabindexes()).toEqual(['-1', '-1', '0']);
+  });
+
+  it('keeps the tab stop when the keys reach no item', async () => {
+    const { List, disabled } = createList({ active: null });
+    await render(<List />);
+    await focusItem('c');
+    await blurItem('c');
+    expect(readTabindexes()).toEqual(['-1', '-1', '0']);
+
+    disabled.value = ['a', 'b', 'c'];
+    await flushMicrotasks();
+
+    expect(readTabindexes()).toEqual(['-1', '-1', '0']);
   });
 });
