@@ -26,7 +26,8 @@ import { computed, provide } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useLabelId } from '../../utils/useRegisteredLabelId';
-import { FieldsetRootContext, useFieldsetRootContext } from './FieldsetRootContext';
+import { FieldsetRootContext } from './FieldsetRootContext';
+import { useFieldsetDisabled } from './useFieldsetDisabled';
 
 defineOptions({ inheritAttrs: false });
 
@@ -37,8 +38,9 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, FieldsetRootState>;
 }>();
 
-const parentDisabled = useFieldsetRootContext(true)?.disabled;
-const isDisabled = computed(() => (parentDisabled?.value ?? false) || props.disabled);
+// An outer `Fieldset.Root` or a native `<fieldset>` around this one disables it, as HTML does.
+const outerDisabled = useFieldsetDisabled(() => element.value);
+const isDisabled = computed(() => outerDisabled.value || props.disabled);
 const state = computed<FieldsetRootState>(() => ({ disabled: isDisabled.value }));
 
 const { labelId, labelRoot, getAriaLabelledBy } = useLabelId();

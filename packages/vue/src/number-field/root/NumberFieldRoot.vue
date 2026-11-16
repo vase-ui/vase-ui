@@ -174,6 +174,7 @@ import { platform } from '../../common/platform';
 import { activeElement } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
+import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import {
   createChangeEventDetails,
   createGenericEventDetails,
@@ -272,7 +273,10 @@ const {
 } = useFieldRootContext();
 const { clearErrors } = useFormContext();
 
-const isDisabled = computed(() => (fieldDisabled.value ?? false) || props.disabled);
+const fieldsetDisabled = useFieldsetDisabled(() => element.value);
+const isDisabled = computed(
+  () => (fieldDisabled.value ?? false) || fieldsetDisabled.value || props.disabled,
+);
 const inputName = computed(() => fieldName.value ?? props.name);
 const clearFieldError = useClearFieldError(inputName);
 const stepAmount = computed(() => (props.step === 'any' ? 1 : props.step));

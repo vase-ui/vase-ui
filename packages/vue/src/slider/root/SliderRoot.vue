@@ -192,6 +192,7 @@ import { ownerDocument } from '../../common/owner';
 import { activeElement, contains } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
 import { warn } from '../../common/warn';
+import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { givenName } from '../../internals/blankName';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import type { CompositeMetadata } from '../../internals/composite/list/useCompositeList';
@@ -311,7 +312,8 @@ const labelId = computed(
   () => givenName(props.ariaLabelledby) ?? fieldLabelId.value ?? localLabelId.value,
 );
 
-const isDisabled = computed(() => fieldDisabled.value || props.disabled);
+const fieldsetDisabled = useFieldsetDisabled(() => element.value);
+const isDisabled = computed(() => fieldDisabled.value || fieldsetDisabled.value || props.disabled);
 const inputName = computed(() => fieldName.value ?? props.name);
 
 // The internal value is potentially unsorted, e.g. to support frozen arrays

@@ -56,6 +56,7 @@ export interface FieldControlProps
 import { computed, nextTick, onBeforeUpdate, onMounted, watch } from 'vue';
 import { useAriaAfterHydration, useValueBeforeHydration } from '../../common/hydration';
 import { useTimeout } from '../../common/useTimeout';
+import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { fieldValidityMapping } from '../../internals/field-constants';
 import { useFieldInput, useRegisterFieldControl } from '../../internals/field-register-control';
@@ -116,7 +117,10 @@ const { labelId } = useLabelableContext();
 // after it.
 useDeferredServerRender();
 
-const isDisabled = computed(() => (fieldDisabled.value ?? false) || props.disabled);
+const fieldsetDisabled = useFieldsetDisabled(() => element.value);
+const isDisabled = computed(
+  () => (fieldDisabled.value ?? false) || fieldsetDisabled.value || props.disabled,
+);
 const controlName = computed(() => fieldName.value ?? props.name);
 const clearFieldError = useClearFieldError(controlName);
 const state = computed<FieldControlState>(() => ({

@@ -164,6 +164,7 @@ import { isElementDisabled } from '../../common/isElementDisabled';
 import { useControlled } from '../../common/useControlled';
 import type { InteractionType } from '../../common/useEnhancedClickHandler';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
+import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { useFieldInput, useRegisterFieldControl } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
@@ -261,7 +262,11 @@ const controlId = useLabelableId({
   id: () => props.id,
 });
 
-const isDisabled = computed(() => Boolean(fieldDisabled.value || props.disabled));
+// The root has no element. Its hidden input is at the place of the root.
+const fieldsetDisabled = useFieldsetDisabled(() => inputElement.value);
+const isDisabled = computed(() =>
+  Boolean(fieldDisabled.value || fieldsetDisabled.value || props.disabled),
+);
 const isMultiple = computed(() => Boolean(props.multiple));
 const inputName = computed(() => fieldName.value ?? props.name);
 const comparer = computed(() => props.isItemEqualToValue ?? defaultItemEquality);

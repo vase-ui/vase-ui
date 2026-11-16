@@ -4380,4 +4380,26 @@ describe('<NumberField />', () => {
       expect(input).toHaveValue(newExpectedValue);
     });
   });
+
+  describe('VUE-112: a disabled fieldset', () => {
+    it('shows the disabled state on each part in a disabled fieldset', async () => {
+      await render(() => (
+        <fieldset disabled>
+          <NumberFieldBase.Root data-testid="root">
+            <NumberFieldBase.Group data-testid="group">
+              <NumberFieldBase.Decrement data-testid="decrement" />
+              <NumberFieldBase.Input data-testid="input" />
+              <NumberFieldBase.Increment data-testid="increment" />
+            </NumberFieldBase.Group>
+          </NumberFieldBase.Root>
+        </fieldset>
+      ));
+
+      for (const testId of ['root', 'group', 'input', 'decrement', 'increment']) {
+        expect(screen.getByTestId(testId)).toHaveAttribute('data-disabled');
+      }
+      expect(screen.getByTestId('decrement')).toHaveAttribute('aria-disabled', 'true');
+      expect(screen.getByTestId('increment')).toHaveAttribute('aria-disabled', 'true');
+    });
+  });
 });
