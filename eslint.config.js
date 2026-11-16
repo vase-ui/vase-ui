@@ -43,6 +43,34 @@ const MESSAGES = {
     'The `private` keyword is only a check of the compiler. Write an ECMAScript private member: `#name`.',
   vnodeAtCollection:
     'Vitest makes this vnode one time, when it collects the file, and Vue mounts a vnode one time. Write a function that returns the vnode. Call it in the case.',
+  baseUiName:
+    'A page can hold Base UI and Vase UI, and the two libraries must not share a marker. Write `vase-ui`.',
+  baseUiImport:
+    'The package does not depend on Base UI. Import the port of the file by a relative path, such as `../common/owner`.',
+  commonImport:
+    '`common` is not an entry point, so the built package has no such path. Import the file by a relative path, such as `../common/owner`.',
+  prehydrationImport:
+    'The build writes this subpath import. A test job has no `dist`, and Vite cannot resolve the import. Write `./prehydrationScript.min`.',
+  useFloating:
+    '`useAnchorPositioning` is the only caller of `useFloating`. Call `usePopupPositioner` in a positioner part.',
+  watchPostEffect:
+    "`watchPostEffect` runs again for each value that the effect reads. Use `watch` with the dependencies of the Base UI effect and `flush: 'post'`.",
+  transition:
+    'CSS drives each animation through `data-starting-style`, `data-ending-style` and `getAnimations()`. Use `useTransitionStatus`.',
+  defineModel:
+    '`defineModel` writes the value before a parent can cancel the change. Use `useControlled`.',
+  groupBy:
+    'No browser that the build supports has `groupBy`, and the build adds no polyfill. Group the items in a loop.',
+  withResolvers:
+    'No browser that the build supports has `Promise.withResolvers`, and the build adds no polyfill. Use `new Promise`.',
+  resourceManagement:
+    'No browser that the build supports has `Symbol.dispose`, and the build adds no polyfill. Call the cleanup in a `finally` block.',
+  temporalInstanceof:
+    'Another realm and a polyfill have other `Temporal` classes. Use `kindOf` or `isKind` of `internals/date-time/temporal`.',
+  toLocaleString:
+    '`Intl` must get a number, a zone and a calendar, and never a `Temporal` object. Format a date or a time with `formatter()` of `internals/date-time/format`, and a number with `formatNumber` of `common/formatNumber`.',
+  vendorStyleKey:
+    "A server render writes this key with no hyphen at its start, and the result is not a CSS property. Write the CSS form, such as `'-webkit-user-select'`.",
   reactEventProp: (reactKey, vueKey) =>
     `Vue makes the event name from the key, so \`${reactKey}\` listens to an event that no browser sends. Use \`${vueKey}\`.`,
 };
@@ -56,6 +84,15 @@ const RESTRICTED_IMPORTS = [
     message: MESSAGES.customDirective,
   },
   { name: 'vue', importNames: ['defineComponent'], message: MESSAGES.defineComponent },
+  { name: 'vue', importNames: ['watchPostEffect'], message: MESSAGES.watchPostEffect },
+  { name: 'vue', importNames: ['Transition', 'TransitionGroup'], message: MESSAGES.transition },
+  { name: '@floating-ui/vue', importNames: ['useFloating'], message: MESSAGES.useFloating },
+];
+
+const RESTRICTED_IMPORT_PATTERNS = [
+  { regex: '^@base-ui/', message: MESSAGES.baseUiImport },
+  { regex: '^@vase-ui/vue/common(?:/|$)', message: MESSAGES.commonImport },
+  { regex: '^#prehydration/', message: MESSAGES.prehydrationImport },
 ];
 
 const RESTRICTED_GLOBALS = {
@@ -72,6 +109,32 @@ const RESTRICTED_PROPERTIES = [
   { property: '$el', message: MESSAGES.$el },
   { property: '$parent', message: MESSAGES.$parent },
   ...ARRAY_COPY_METHODS.map((property) => ({ property, message: MESSAGES.arrayCopyMethod })),
+  { object: 'Map', property: 'groupBy', message: MESSAGES.groupBy },
+  { object: 'Object', property: 'groupBy', message: MESSAGES.groupBy },
+  { object: 'Promise', property: 'withResolvers', message: MESSAGES.withResolvers },
+  { object: 'Symbol', property: 'dispose', message: MESSAGES.resourceManagement },
+  { object: 'Symbol', property: 'asyncDispose', message: MESSAGES.resourceManagement },
+  { property: 'toLocaleString', message: MESSAGES.toLocaleString },
+];
+
+// HTML ignores the case of an attribute name, so the pattern ignores the case.
+const BASE_UI_NAME = '/base-ui/i';
+const VENDOR_STYLE_KEY = '/^(?:Webkit|Moz|ms)[A-Z]/';
+
+// A template expression has these nodes too, so the script and the template share this list.
+const RESTRICTED_EXPRESSION_SYNTAX = [
+  {
+    // The import rules report the source of an import, so this rule does not.
+    selector: [
+      `Literal[value=${BASE_UI_NAME}]:not(:matches(ImportDeclaration, ExportNamedDeclaration, ExportAllDeclaration) > Literal)`,
+      `TemplateElement[value.cooked=${BASE_UI_NAME}]`,
+    ].join(', '),
+    message: MESSAGES.baseUiName,
+  },
+  {
+    selector: `Property[key.name=${VENDOR_STYLE_KEY}], Property[key.value=${VENDOR_STYLE_KEY}]`,
+    message: MESSAGES.vendorStyleKey,
+  },
 ];
 
 const RESTRICTED_TEST_IMPORTS = {
@@ -213,6 +276,14 @@ const RESTRICTED_SYNTAX = [
       ":not(ClassDeclaration[declare=true] > ClassBody) > [accessibility='private']:not([declare=true])",
     message: MESSAGES.privateKeyword,
   },
+  {
+    selector:
+      "BinaryExpression[operator='instanceof']:matches([right.object.name='Temporal'], [right.object.property.name='Temporal'])",
+    message: MESSAGES.temporalInstanceof,
+  },
+  { selector: "CallExpression[callee.name='defineModel']", message: MESSAGES.defineModel },
+  { selector: 'VariableDeclaration[kind=/using$/]', message: MESSAGES.resourceManagement },
+  ...RESTRICTED_EXPRESSION_SYNTAX,
   ...RESTRICTED_REACT_EVENT_PROP_SYNTAX,
 ];
 
@@ -244,6 +315,21 @@ const RESTRICTED_TEMPLATE_SYNTAX = [
     selector: `MemberExpression[computed=false][property.name=/^(?:${ARRAY_COPY_METHODS.join('|')})$/]`,
     message: MESSAGES.arrayCopyMethod,
   },
+  {
+    selector:
+      "MemberExpression[computed=false][object.name=/^(?:Map|Object)$/][property.name='groupBy']",
+    message: MESSAGES.groupBy,
+  },
+  {
+    selector: "MemberExpression[computed=false][property.name='toLocaleString']",
+    message: MESSAGES.toLocaleString,
+  },
+  { selector: 'VElement[name=/^transition(?:-?group)?$/]', message: MESSAGES.transition },
+  {
+    selector: `VAttribute[directive=false] > VIdentifier[name=${BASE_UI_NAME}], VLiteral[value=${BASE_UI_NAME}]`,
+    message: MESSAGES.baseUiName,
+  },
+  ...RESTRICTED_EXPRESSION_SYNTAX,
 ];
 
 // The sinks of the Trusted Types API that take `TrustedHTML`, and the methods of the HTML Sanitizer
@@ -539,7 +625,10 @@ export default defineConfig([
     files: SOURCE_FILES,
     ignores: TEST_FILES,
     rules: {
-      'no-restricted-imports': ['error', { paths: RESTRICTED_IMPORTS }],
+      'no-restricted-imports': [
+        'error',
+        { paths: RESTRICTED_IMPORTS, patterns: RESTRICTED_IMPORT_PATTERNS },
+      ],
       'no-restricted-globals': ['error', RESTRICTED_GLOBALS],
       'no-restricted-properties': ['error', ...RESTRICTED_PROPERTIES],
       'no-restricted-syntax': ['error', ...RESTRICTED_SYNTAX],
@@ -607,6 +696,18 @@ export default defineConfig([
           element: 'style',
           message:
             'A CSS-module demo takes its styles from the copied style sheet of Base UI. A Tailwind demo takes them from its class names. Remove the style block.',
+        },
+      ],
+    },
+  },
+  {
+    files: ['packages/vue/src/internals/useAnchorPositioning.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: RESTRICTED_IMPORTS.filter(({ message }) => message !== MESSAGES.useFloating),
+          patterns: RESTRICTED_IMPORT_PATTERNS,
         },
       ],
     },

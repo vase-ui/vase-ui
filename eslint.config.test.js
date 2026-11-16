@@ -653,6 +653,210 @@ const reported = [
     ruleId: 'no-restricted-syntax',
     hint: VNODE_HINT,
   })),
+  ...[
+    [
+      'a Base UI package',
+      "import { ownerDocument } from '@base-ui/utils/owner';\n\nexport const owner = ownerDocument;\n",
+      'does not depend on Base UI',
+    ],
+    [
+      'a type of a Base UI package',
+      "import type { Dialog } from '@base-ui/react/dialog';\n\nexport type Root = typeof Dialog;\n",
+      'does not depend on Base UI',
+    ],
+    [
+      'the common folder through the name of the package',
+      "import { ownerDocument } from '@vase-ui/vue/common/owner';\n\nexport const owner = ownerDocument;\n",
+      'not an entry point',
+    ],
+    [
+      'the common folder with no file',
+      "import { ownerDocument } from '@vase-ui/vue/common';\n\nexport const owner = ownerDocument;\n",
+      'not an entry point',
+    ],
+    [
+      'a prehydration script through its subpath',
+      "import { script } from '#prehydration/tabs/indicator';\n\nexport const text = script;\n",
+      './prehydrationScript.min',
+    ],
+    [
+      'useFloating',
+      "import { useFloating } from '@floating-ui/vue';\n\nexport const position = useFloating;\n",
+      'usePopupPositioner',
+    ],
+    [
+      'watchPostEffect',
+      "import { watchPostEffect } from 'vue';\n\nexport const effect = watchPostEffect;\n",
+      "flush: 'post'",
+    ],
+    [
+      'Transition',
+      "import { Transition } from 'vue';\n\nexport const component = Transition;\n",
+      'data-starting-style',
+    ],
+    [
+      'TransitionGroup',
+      "import { TransitionGroup } from 'vue';\n\nexport const component = TransitionGroup;\n",
+      'data-starting-style',
+    ],
+  ].map(([name, code, hint]) => ({
+    name: `an import of ${name}`,
+    file: `${SRC}/useRoot.ts`,
+    code,
+    ruleId: 'no-restricted-imports',
+    hint,
+  })),
+  {
+    name: 'an import of getCurrentInstance in useAnchorPositioning.ts',
+    file: 'packages/vue/src/internals/useAnchorPositioning.ts',
+    code: "import { getCurrentInstance } from 'vue';\n\nexport const instance = getCurrentInstance();\n",
+    ruleId: 'no-restricted-imports',
+    hint: 'provide',
+  },
+  {
+    name: 'an import of a prehydration script through its subpath in useAnchorPositioning.ts',
+    file: 'packages/vue/src/internals/useAnchorPositioning.ts',
+    code: "import { script } from '#prehydration/tabs/indicator';\n\nexport const text = script;\n",
+    ruleId: 'no-restricted-imports',
+    hint: './prehydrationScript.min',
+  },
+  ...['Transition', 'transition', 'TransitionGroup', 'transition-group'].map((tag) => ({
+    name: `the element ${tag} in a template`,
+    file: `${SRC}/DialogRoot.vue`,
+    code: `<script setup lang="ts"></script>\n\n<template>\n  <${tag}><div /></${tag}>\n</template>\n`,
+    ruleId: 'vue/no-restricted-syntax',
+    hint: 'data-starting-style',
+  })),
+  {
+    name: 'defineModel',
+    file: `${SRC}/DialogRoot.vue`,
+    code: `<script setup lang="ts">\nconst open = defineModel<boolean>('open');\n</script>\n\n<template>\n  <div>{{ open }}</div>\n</template>\n`,
+    ruleId: 'no-restricted-syntax',
+    hint: 'useControlled',
+  },
+  ...[
+    [
+      'Map.groupBy',
+      'export const groups = (items: number[]) => Map.groupBy(items, (item) => item % 2);\n',
+      'Group the items',
+    ],
+    [
+      'Object.groupBy',
+      'export const groups = (items: number[]) => Object.groupBy(items, (item) => item % 2);\n',
+      'Group the items',
+    ],
+    [
+      'Promise.withResolvers',
+      'export const deferred = Promise.withResolvers<void>();\n',
+      'new Promise',
+    ],
+    ['Symbol.dispose', 'export const resource = { [Symbol.dispose]() {} };\n', 'finally'],
+    [
+      'Symbol.asyncDispose',
+      'export const resource = { async [Symbol.asyncDispose]() {} };\n',
+      'finally',
+    ],
+    [
+      'toLocaleString',
+      'export const text = (value: number) => value.toLocaleString();\n',
+      'formatter()',
+    ],
+  ].map(([name, code, hint]) => ({
+    name: `a read of ${name}`,
+    file: `${SRC}/useRoot.ts`,
+    code,
+    ruleId: 'no-restricted-properties',
+    hint,
+  })),
+  ...[
+    ['Object.groupBy', 'Object.groupBy(items, (item) => item % 2)', 'Group the items'],
+    ['toLocaleString', 'items.length.toLocaleString()', 'formatter()'],
+  ].map(([name, expression, hint]) => ({
+    name: `a read of ${name} in a template`,
+    file: `${SRC}/DialogRoot.vue`,
+    code: `<script setup lang="ts">\nconst items = [2, 1];\n</script>\n\n<template>\n  <div>{{ ${expression} }}</div>\n</template>\n`,
+    ruleId: 'vue/no-restricted-syntax',
+    hint,
+  })),
+  ...[
+    [
+      'a using declaration',
+      'export function read(open: () => Disposable) {\n  using resource = open();\n  return resource;\n}\n',
+      'finally',
+    ],
+    [
+      'an await using declaration',
+      'export async function read(open: () => AsyncDisposable) {\n  await using resource = open();\n  return resource;\n}\n',
+      'finally',
+    ],
+    [
+      'instanceof a Temporal class',
+      'export const check = (value: unknown) => value instanceof Temporal.PlainDate;\n',
+      'kindOf',
+    ],
+    [
+      'instanceof a Temporal class through globalThis',
+      'export const check = (value: unknown) => value instanceof globalThis.Temporal.PlainDate;\n',
+      'kindOf',
+    ],
+    [
+      'a style key that has the Webkit prefix',
+      "export const style = { WebkitUserSelect: 'none' };\n",
+      '-webkit-user-select',
+    ],
+    [
+      'a style key in quotes that has the Moz prefix',
+      "export const style = { 'MozUserSelect': 'none' };\n",
+      '-webkit-user-select',
+    ],
+    [
+      'a style key that has the ms prefix',
+      "export const style = { msOverflowStyle: 'none' };\n",
+      '-webkit-user-select',
+    ],
+    [
+      'an attribute name of Base UI',
+      "export const INERT = 'data-base-ui-inert';\n",
+      'share a marker',
+    ],
+    [
+      'an attribute name of Base UI with capitals',
+      "export const INERT = 'data-Base-UI-inert';\n",
+      'share a marker',
+    ],
+    [
+      'an attribute name of Base UI in a template literal',
+      'export const attribute = (name: string) => `data-base-ui-${name}`;\n',
+      'share a marker',
+    ],
+    ['an event name of Base UI', "export const event = new Event('base-ui');\n", 'share a marker'],
+  ].map(([name, code, hint]) => ({
+    name,
+    file: `${SRC}/useRoot.ts`,
+    code,
+    ruleId: 'no-restricted-syntax',
+    hint,
+  })),
+  ...[
+    [
+      'a style key that has the Webkit prefix',
+      `<div :style="{ WebkitUserSelect: 'none' }" />`,
+      '-webkit-user-select',
+    ],
+    ['an attribute name of Base UI', '<div data-base-ui-inert="" />', 'share a marker'],
+    ['a class of Base UI', '<div class="base-ui-disable-scrollbar" />', 'share a marker'],
+    [
+      'an attribute name of Base UI in an expression',
+      `<div v-bind="{ 'data-base-ui-inert': '' }" />`,
+      'share a marker',
+    ],
+  ].map(([name, template, hint]) => ({
+    name: `${name} in a template`,
+    file: `${SRC}/DialogRoot.vue`,
+    code: `<script setup lang="ts"></script>\n\n<template>\n  ${template}\n</template>\n`,
+    ruleId: 'vue/no-restricted-syntax',
+    hint,
+  })),
   {
     name: 'a style block in a Tailwind demo',
     file: 'docs/demos/sample/hero/tailwind/index.vue',
@@ -869,6 +1073,61 @@ const passed = [
     code: `<script setup lang="ts">\nimport { h } from 'vue';\n\nconst element = h('span');\n</script>\n\n<template>\n  <component :is="element" />\n</template>\n`,
   },
   {
+    name: 'an import of useFloating in useAnchorPositioning.ts',
+    file: 'packages/vue/src/internals/useAnchorPositioning.ts',
+    code: "import { useFloating } from '@floating-ui/vue';\n\nexport const position = useFloating;\n",
+  },
+  {
+    name: 'an import of a middleware and a type of Floating UI, and of watch',
+    file: `${SRC}/useRoot.ts`,
+    code: "import { offset } from '@floating-ui/vue';\nimport type { Placement } from '@floating-ui/vue';\nimport { watch } from 'vue';\n\nexport const used = [offset, watch];\nexport type Side = Placement;\n",
+  },
+  {
+    name: 'an import by a relative path of a common file, a prehydration script and a file that keeps BaseUi in its name',
+    file: `${SRC}/useRoot.ts`,
+    code: "import { ownerDocument } from '../common/owner';\nimport { useVaseUiId } from '../internals/useBaseUiId';\nimport { script } from './prehydrationScript.min';\n\nexport const used = [ownerDocument, useVaseUiId, script];\n",
+  },
+  {
+    name: 'the names of Vase UI and a link to Base UI in a comment',
+    file: `${SRC}/useRoot.ts`,
+    code: "// https://github.com/mui/base-ui/issues/979\nexport const INERT = 'data-vase-ui-inert';\nexport const attribute = (name: string) => `data-vase-ui-${name}`;\nexport const event = new Event('vase-ui');\n",
+  },
+  {
+    name: 'an attribute name of Vase UI and a component whose name starts with Transition in a template',
+    file: `${SRC}/DialogRoot.vue`,
+    code: `<script setup lang="ts">\nimport TransitionStatusProbe from './TransitionStatusProbe.vue';\n</script>\n\n<template>\n  <TransitionStatusProbe data-vase-ui-inert="" class="vase-ui-disable-scrollbar" />\n</template>\n`,
+  },
+  {
+    name: 'a style key that has a vendor prefix in its CSS form',
+    file: `${SRC}/useRoot.ts`,
+    code: "export const style = { 'user-select': 'none', '-webkit-user-select': 'none' };\n",
+  },
+  {
+    name: 'a key that has ms inside it and a key that has no capital after a vendor prefix',
+    file: `${SRC}/useRoot.ts`,
+    code: "export const labels = { itemsPerPage: 1, msg: 'a', Mozilla: 'b' };\n",
+  },
+  {
+    name: 'a method of Temporal and a constant that has the name using',
+    file: `${SRC}/useRoot.ts`,
+    code: 'export const order = (a: Temporal.PlainTime, b: Temporal.PlainTime) =>\n  Temporal.PlainTime.compare(a, b);\nexport const using = 1;\n',
+  },
+  {
+    name: 'a groupBy method of another object',
+    file: `${SRC}/useRoot.ts`,
+    code: 'export const groups = (collection: { groupBy(): unknown }) => collection.groupBy();\n',
+  },
+  {
+    name: 'a groupBy method of another object in a template',
+    file: `${SRC}/DialogRoot.vue`,
+    code: '<script setup lang="ts">\nconst collection = { groupBy: () => 1 };\n</script>\n\n<template>\n  <div>{{ collection.groupBy() }}</div>\n</template>\n',
+  },
+  {
+    name: 'a dispose method of another object',
+    file: `${SRC}/useRoot.ts`,
+    code: 'export const stop = (resource: { dispose(): void; asyncDispose(): void }) => {\n  resource.dispose();\n  resource.asyncDispose();\n};\n',
+  },
+  {
     name: 'expect.poll in a test of the Nuxt fixture',
     file: 'fixtures/nuxt/test/pages.test.ts',
     code: "import { expect } from 'vitest';\n\nexport const poll = expect.poll(() => 1);\n",
@@ -898,6 +1157,17 @@ test('reports a row that has a vnode in a vnode one time', async () => {
   assert.deepEqual(
     messages.map(({ ruleId }) => ruleId),
     ['no-restricted-syntax'],
+  );
+});
+
+test('reports an import of a Base UI package one time', async () => {
+  const messages = await lint(
+    `${SRC}/useRoot.ts`,
+    "import { ownerDocument } from '@base-ui/utils/owner';\n\nexport { ownerWindow } from '@base-ui/utils/owner';\nexport * from '@base-ui/utils/owner';\nexport const owner = ownerDocument;\n",
+  );
+  assert.deepEqual(
+    messages.map(({ ruleId }) => ruleId),
+    ['no-restricted-imports', 'no-restricted-imports', 'no-restricted-imports'],
   );
 });
 
