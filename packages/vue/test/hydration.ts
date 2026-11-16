@@ -193,11 +193,18 @@ export function mockNavigationType(type: NavigationTimingType): void {
 }
 
 /**
- * Gives a `back_forward` navigation whose `load` event has not ended, until the test ends. A part
- * that mounts then waits for the `pageshow` event of the page.
+ * Gives a `back_forward` navigation until the test ends. Its `load` event ends only when the case
+ * calls the returned function. A part that mounts before then waits for the `pageshow` event of the
+ * page.
+ * @returns Ends `load` and sends `pageshow`, in the order of the browser.
  */
-export function mockPageBeforeLoad(): void {
-  mockNavigation({ type: 'back_forward', loadEventEnd: 0 });
+export function mockPageBeforeLoad(): () => void {
+  const navigation = { type: 'back_forward' as const, loadEventEnd: 0 };
+  mockNavigation(navigation);
+  return () => {
+    navigation.loadEventEnd = performance.now();
+    window.dispatchEvent(new PageTransitionEvent('pageshow'));
+  };
 }
 
 /**

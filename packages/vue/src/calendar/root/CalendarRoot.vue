@@ -194,7 +194,7 @@ const selection = useDaySelection(props, emit);
 // A value that is a year and month makes a grid of months that selects.
 const isMonthValue = computed(() => isKind(selection.template.value, 'yearMonth'));
 
-const { focus, ...controller } = useCalendarRoot({
+const { focus, hydrationAttributes, ...controller } = useCalendarRoot({
   part: 'Calendar.Root',
   props,
   emit,
@@ -232,6 +232,7 @@ const { element, elementProps } = useRenderElement('div', props, {
       'aria-label': ariaAfterHydration(
         attrs['aria-labelledby'] == null ? controller.label.value : undefined,
       ),
+      ...hydrationAttributes(),
     },
     attrs,
   ],

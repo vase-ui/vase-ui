@@ -45,8 +45,8 @@ export type State<Payload> = PopupStoreState<Payload> & {
   /** The `Menu.List` element, which takes the `menu` role from the popup when rendered. */
   listElement: HTMLElement | null;
   /**
-   * The id that `Menu.List` renders. A read of `listElement.id` in a selector does not follow a
-   * change of the id, so the list writes the id here too.
+   * The `id` that `listElement` has. A read of `listElement.id` in a selector does not follow a
+   * change of the id, so the store copies the id here.
    */
   listElementId: string | undefined;
   /**
@@ -239,18 +239,27 @@ export class MenuStore<Payload> extends BasePopupStore<
     this.set('highlightedItemId', toRaw(this.state).highlightedItem?.id);
   });
 
+  // A render can give the list element a new `id` and write nothing to the store. The id comes from
+  // the `id` prop or the `#render` slot of the list.
+  readonly #observeListId = createElementIdObserver(() => {
+    this.set('listElementId', toRaw(this.state).listElement?.id);
+  });
+
   // A store makes no watcher, so this method does the work that follows a write of a key.
   override setState(newState: Readonly<State<Payload>>): void {
     const current = toRaw(this.state);
     const previousParent = current.parent;
-    super.setState(
-      newState.highlightedItem === current.highlightedItem
-        ? newState
-        : {
-            ...newState,
-            highlightedItemId: this.#observeHighlightedItemId(newState.highlightedItem ?? null),
-          },
-    );
+    let next = newState;
+    if (next.highlightedItem !== current.highlightedItem) {
+      next = {
+        ...next,
+        highlightedItemId: this.#observeHighlightedItemId(next.highlightedItem ?? null),
+      };
+    }
+    if (next.listElement !== current.listElement) {
+      next = { ...next, listElementId: this.#observeListId(next.listElement) };
+    }
+    super.setState(next);
     const parent = toRaw(this.state).parent;
     if (parent !== previousParent) {
       this.#shareMouseUpRefs(parent);

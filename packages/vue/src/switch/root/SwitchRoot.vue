@@ -108,6 +108,7 @@ import { computed, nextTick, provide, shallowRef, watch } from 'vue';
 import { queueInputTake, useAriaAfterHydration } from '../../common/hydration';
 import { useControlled } from '../../common/useControlled';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
+import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { givenName } from '../../internals/blankName';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { useFieldInput, useRegisterFieldControl } from '../../internals/field-register-control';
@@ -173,7 +174,8 @@ const {
   validation,
 } = useFieldRootContext();
 
-const isDisabled = computed(() => fieldDisabled.value || props.disabled);
+const fieldsetDisabled = useFieldsetDisabled(() => element.value);
+const isDisabled = computed(() => fieldDisabled.value || fieldsetDisabled.value || props.disabled);
 const inputName = computed(() => fieldName.value ?? props.name);
 const clearFieldError = useClearFieldError(inputName);
 
@@ -193,7 +195,10 @@ function setInputElement(value: unknown) {
 const setFocused = useSetFieldFocused(isDisabled, () => element.value);
 
 const rootId = useVaseUiId();
-const controlId = useLabelableId({ id: () => props.id });
+const controlId = useLabelableId({
+  id: () => props.id,
+  element: () => (props.nativeButton ? element.value : null),
+});
 const hiddenInputId = computed(() => (props.nativeButton ? undefined : controlId.value));
 
 const [isChecked, setCheckedState] = useControlled({

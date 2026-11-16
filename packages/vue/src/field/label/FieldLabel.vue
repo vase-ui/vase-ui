@@ -54,6 +54,7 @@ const state = computed<FieldLabelState>(() => ({
 
 const labelProps = useLabel({
   id: () => props.id,
+  element: () => element.value,
   native: () => props.nativeLabel,
 });
 

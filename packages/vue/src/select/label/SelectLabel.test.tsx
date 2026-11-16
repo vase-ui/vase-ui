@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createApp, shallowRef } from 'vue';
+import { Field } from '@vase-ui/vue/field';
 import { Popover } from '@vase-ui/vue/popover';
 import { Select } from '@vase-ui/vue/select';
 import {
@@ -48,6 +49,28 @@ describe('<Select.Label />', () => {
         <Select.Label data-testid="label">Font</Select.Label>
         <Select.Trigger data-testid="trigger" />
       </Select.Root>,
+    );
+
+    screen.getByTestId('label').click();
+    await flushMicrotasks();
+
+    expect(screen.getByTestId('trigger')).toHaveFocus();
+  });
+
+  it('VUE-116: focuses a trigger whose #render slot gives an id that the field does not have', async () => {
+    await render(
+      <Field.Root>
+        <Select.Root>
+          <Select.Label data-testid="label">Font</Select.Label>
+          <Select.Trigger
+            v-slots={{
+              render: ({ props }: { props: Record<string, unknown> }) => (
+                <button type="button" {...props} id="own" data-testid="trigger" />
+              ),
+            }}
+          />
+        </Select.Root>
+      </Field.Root>,
     );
 
     screen.getByTestId('label').click();

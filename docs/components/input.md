@@ -56,7 +56,7 @@ Import the component and use it as a single part:
 
 Text that a visitor types, or that the browser fills, before the page hydrates stays in the input. After the hydration, `Input` emits `valueChange` and `update:value` with that text. When the visitor left the input before the page hydrated, the input then also gets `change`, `blur` and `focusout`.
 
-Chromium can restore the form state of a page after its app is mounted, with no event. At the `pageshow` event, `Input` takes a restored value as one `input` event, and it emits `valueChange` and `update:value`. An input that does not have the focus then also gets `change`, `blur` and `focusout`.
+Chromium can restore the form state of a page after its app is mounted, with no event. At the `pageshow` event, `Input` takes a restored value as one `input` event, and it emits `valueChange` and `update:value`. An input that does not have the focus then also gets `change`, `blur` and `focusout`. An input that `KeepAlive` holds at that event takes the value when `KeepAlive` shows it again.
 
 ## API reference
 

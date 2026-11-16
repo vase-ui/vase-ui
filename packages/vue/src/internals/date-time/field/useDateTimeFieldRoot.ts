@@ -16,6 +16,7 @@ import { ownerWindow } from '../../../common/owner';
 import { contains } from '../../../common/shadowDom';
 import { useControlled } from '../../../common/useControlled';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../../common/visuallyHidden';
+import { useFieldsetDisabled } from '../../../fieldset/root/useFieldsetDisabled';
 import { useFormatLocale } from '../../../utils/useFormatLocale';
 import { createChangeEventDetails } from '../../createBaseUIEventDetails';
 import { useRegisterFieldControl } from '../../field-register-control';
@@ -228,8 +229,12 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   const { clearErrors } = useFormContext();
   const { getDescriptionProps } = useLabelableContext();
 
+  const fieldsetDisabled = useFieldsetDisabled(() => rootElement.value);
   const isDisabled = computed(
-    () => (fieldDisabled.value ?? false) || (toValue(parameters.disabled) ?? false),
+    () =>
+      (fieldDisabled.value ?? false) ||
+      fieldsetDisabled.value ||
+      (toValue(parameters.disabled) ?? false),
   );
   const isReadOnly = computed(() => toValue(parameters.readOnly) ?? false);
   const isRequired = computed(() => toValue(parameters.required) ?? false);
@@ -383,6 +388,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
 
   const controlId = useLabelableId({
     id: () => toValue(parameters.id),
+    element: () => firstSegment.value,
   });
 
   // The name of a month depends on its year in a calendar with leap months. The value can have
