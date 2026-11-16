@@ -54,11 +54,6 @@ export function viewsOf(granularity: TimeClockView): readonly TimeClockView[] {
   return VIEWS.slice(0, VIEWS.indexOf(granularity) + 1);
 }
 
-/** The hour cycle that a locale uses. */
-export function hourCycleOf(locale: Intl.LocalesArgument): TimeClockHourCycle {
-  return new Intl.DateTimeFormat(locale, { hour: 'numeric' }).resolvedOptions().hour12 ? 12 : 24;
-}
-
 /** The hour cycle of the text of an attribute, or `undefined` for another text. */
 export function parseHourCycle(text: string): TimeClockHourCycle | undefined {
   return text === '12' ? 12 : text === '24' ? 24 : undefined;

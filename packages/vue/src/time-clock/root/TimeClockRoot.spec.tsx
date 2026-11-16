@@ -50,10 +50,13 @@ export const plainTimeClock = (
     defaultValue={plainTime}
     onValueChange={(value, details) => {
       expectType<Temporal.PlainTime, typeof value>(value);
-      expectType<
-        'drag' | 'keyboard' | 'input-change' | 'item-press' | 'trigger-press',
-        typeof details.reason
-      >(details.reason);
+      expectType<'drag' | 'keyboard' | 'input-change' | 'item-press', typeof details.reason>(
+        details.reason,
+      );
+    }}
+    onViewChange={(view, details) => {
+      expectType<TimeClockView, typeof view>(view);
+      expectType<'trigger-press' | 'drag' | 'keyboard', typeof details.reason>(details.reason);
     }}
     onValueCommitted={(value, details) => {
       expectType<Temporal.PlainTime, typeof value>(value);

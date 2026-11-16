@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createRenderer, flushMicrotasks, screen, waitFor, waitForPositioned } from '#test-utils';
 import DatePickerPositionerSlots from '../src/date-picker/positioner/DatePickerPositionerSlots.test.vue';
 import DateRangePickerPositionerSlots from '../src/date-range-picker/positioner/DateRangePickerPositionerSlots.test.vue';
+import TimePickerPositionerSlots from '../src/time-picker/positioner/TimePickerPositionerSlots.test.vue';
 import ContextMenuPositionerSlots from './ContextMenuPositionerSlots.test.vue';
 import DrawerViewportSlots from './DrawerViewportSlots.test.vue';
 
@@ -25,6 +26,11 @@ const partsWithPopup = [
     name: 'Drawer.Viewport',
     Fixture: DrawerViewportSlots,
     waitForPart: async () => screen.findByTestId('inner'),
+  },
+  {
+    name: 'TimePicker.Positioner',
+    Fixture: TimePickerPositionerSlots,
+    waitForPart: async () => waitForPositioned(await screen.findByTestId('positioner')),
   },
 ];
 

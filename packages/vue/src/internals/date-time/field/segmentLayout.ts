@@ -1,4 +1,4 @@
-import { formatter } from '../format';
+import { dayPeriodText, formatter } from '../format';
 import { isKind } from '../temporal';
 import type { TemporalValue } from '../temporal';
 
@@ -208,13 +208,5 @@ export function getFixedSegmentTexts(
 
 /** The text of the two day periods of a locale, such as `AM` and `PM`. */
 export function getDayPeriodTexts(locale: Intl.LocalesArgument): Record<'am' | 'pm', string> {
-  const text = (time: string) => {
-    const [format, epoch] = formatter(
-      Temporal.PlainTime.from(time),
-      { hour: 'numeric', hourCycle: 'h12' },
-      locale,
-    );
-    return format.formatToParts(epoch).find((part) => part.type === 'dayPeriod')?.value ?? '';
-  };
-  return { am: text('03:00'), pm: text('15:00') };
+  return { am: dayPeriodText('am', locale), pm: dayPeriodText('pm', locale) };
 }

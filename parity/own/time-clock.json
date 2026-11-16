@@ -5,6 +5,7 @@
   "types": [
     "TimeClock.Root.ChangeEventReason",
     "TimeClock.Root.CommitEventReason",
+    "TimeClock.Root.ViewChangeEventReason",
     "TimeClockDayPeriodValue",
     "TimeClockFaceNumber",
     "TimeClockView"
