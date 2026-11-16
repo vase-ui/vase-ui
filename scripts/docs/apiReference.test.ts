@@ -428,7 +428,7 @@ for (const tag of ['TypesSample.createHandle', 'TypesSample']) {
   });
 }
 
-const read = createApiReferenceReader(REPOSITORY_ROOT, { cache: true });
+const read = createApiReferenceReader(REPOSITORY_ROOT);
 
 test('each family page has an API reference with one part, function or type or more', () => {
   const pages = listFamilyPages(join(REPOSITORY_ROOT, 'docs'));
@@ -460,7 +460,7 @@ test('each prop and each event of each family page has a type, and each event ha
 
 test('the reference of a family page does not change with the families that the reader read before', () => {
   const families = listFamilyPages(join(REPOSITORY_ROOT, 'docs')).map(({ family }) => family);
-  const readBackward = createApiReferenceReader(REPOSITORY_ROOT, { cache: true });
+  const readBackward = createApiReferenceReader(REPOSITORY_ROOT);
   const backward = new Map(families.toReversed().map((family) => [family, readBackward(family)]));
   for (const family of families) {
     assert.deepEqual(

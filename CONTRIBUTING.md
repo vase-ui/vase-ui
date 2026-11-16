@@ -2058,7 +2058,6 @@ Each behavior where Vase UI does more than Base UI has a file `parity/better/<ID
 
 The site is the VitePress project in `docs`, the workspace package `@vase-ui/docs`. A push to `main` publishes it to <https://vase-ui.com/>.
 
-- The API reader of `pnpm docs:dev` reloads source files before each family read. Source edits appear in the next reference read. The site build keeps one reference per family.
 - GitHub Pages serves the site at the root of the domain `vase-ui.com`, so `base` in `docs/.vitepress/config.ts` must be `/`. The Pages settings of the repository hold the domain. Do not add a `CNAME` file, because GitHub Pages ignores that file when a workflow publishes the site.
 - A page is a Markdown file in `docs`. `scripts/docs/navigation.ts` makes the navigation from these files. Do not add a page to `docs/.vitepress/config.ts`.
 - A code sample is a Vue file. A page shows its source with `<<<`. `pnpm docs:typecheck` checks the file against the built package.
@@ -2168,6 +2167,7 @@ A family that Base UI documents in `docs/src/app/(docs)/react/utils/`, such as `
 - The docs package has no router. A sample that imports one, such as `RouterLink` of `vue-router` or `NuxtLink` of Nuxt, is a component of the Nuxt fixture in `fixtures/nuxt/app/components`. The page shows it with `<<< ../../fixtures/nuxt/app/components/<Name>.vue`. The type check of the Nuxt fixture checks it. The link samples of the Navigation Menu page are the examples.
 - A page can show a part of a sample. Mark the part with `// #region <name>` and `// #endregion <name>` in the script of the sample. Show it with `<<< ./<family>/<Name>.vue#<name>{ts}`. The `ts` gives it the colors of TypeScript.
 - Write `<ApiReference />` under the heading `## API reference`. The site build makes the reference from the types and the JSDoc of the source. The reference lists the parts in the sequence of the Base UI page, which the extract records. Do not write a table by hand. To change a text of the reference, change the JSDoc.
+- The development server, `pnpm docs:dev`, makes the reference of a page each time it renders the page. It does not render a page again after an edit of a file in `packages/vue/src`. To see such an edit on a page, save the page file again. After a change of a file in `parity` or of an installed package, start the server again. The site build keeps one reference for each family.
 - A Base UI page can end the heading of a part of its API reference with `[New]` or `[Preview]`, as in `### FilterProvider [Preview]`. The extract records the word, and the reference shows it as a badge on the heading of the part. Do not write the word on the page.
 - A Base UI page can also end another heading of its API reference with `[New]` or `[Preview]`, such as the heading of a function. The extract records the word. The page of the site writes that heading, so the reference cannot show the badge. The site build and `pnpm test:docs` then fail, and the message says what to do.
 - The description of an event is its JSDoc in `defineEmits`. Write a JSDoc for each event, `update:x` included.
