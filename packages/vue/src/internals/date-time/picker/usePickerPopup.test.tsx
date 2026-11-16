@@ -1,6 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createRenderer, screen, waitFor, waitForLaterMillisecond } from '#test-utils';
+import { DatePicker } from '@vase-ui/vue/date-picker';
+import {
+  createHeldBranch,
+  createRenderer,
+  screen,
+  waitFor,
+  waitForLaterMillisecond,
+} from '#test-utils';
 import type { VaseUIRenderResult } from '#test-utils';
+import PickerFocusTargetButton from './PickerFocusTargetButton.test.vue';
 import PickerFocusTargetsFixture from './PickerFocusTargetsFixture.test.vue';
 
 describe('usePickerFocusTarget', () => {
@@ -66,6 +74,36 @@ describe('usePickerFocusTarget', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('second')).toHaveFocus();
+    });
+  });
+
+  // The part stays registered while `KeepAlive` holds it, and its element is out of the document.
+  it('skips a target whose part KeepAlive holds', async () => {
+    const { HeldBranch, hide } = createHeldBranch(
+      () => <PickerFocusTargetButton data-testid="held">Held</PickerFocusTargetButton>,
+      { mounted: true },
+    );
+    const { user } = await render(
+      <DatePicker.Root>
+        <DatePicker.Trigger data-testid="trigger">Open</DatePicker.Trigger>
+        <DatePicker.Portal keepMounted>
+          <DatePicker.Positioner>
+            <DatePicker.Popup aria-label="Choose date">
+              <button type="button" data-testid="plain">
+                Plain
+              </button>
+              <HeldBranch />
+            </DatePicker.Popup>
+          </DatePicker.Positioner>
+        </DatePicker.Portal>
+      </DatePicker.Root>,
+    );
+    await hide();
+
+    await open(user);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('plain')).toHaveFocus();
     });
   });
 });

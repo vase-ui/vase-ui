@@ -740,13 +740,13 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
       { flush: 'sync' },
     );
     // `useValueChanged` calls no callback for a reset that leaves the value, and a mark that stays
-    // set skips the validation of the next change.
+    // set skips the validation of the next change. The listener of the reset in this root clears
+    // the error of such a reset. A root that is not in the form of the reset keeps its error.
     watch(
       pickerResetCount,
       () => {
         if (validityKey.value === keyBeforePickerReset) {
           isResetChangePending = false;
-          clearFieldError(value.value);
         }
       },
       { flush: 'post' },

@@ -589,4 +589,47 @@ describe('<DatePicker.Field />', () => {
       });
     },
   );
+
+  // The portal moves the popup out of the form. A field root there is below the picker, but a
+  // reset of the form does not reach its input.
+  it('keeps the error of a field in the popup at a reset of the form of the picker', async () => {
+    const { container } = await render(
+      <Form data-testid="form">
+        <DatePicker.Root locale="en-US" defaultValue={day} open>
+          <DatePicker.Field>
+            <DateField.Input />
+          </DatePicker.Field>
+          <DatePicker.Portal>
+            <DatePicker.Positioner>
+              <DatePicker.Popup aria-label="Choose date">
+                <Field.Root name="other" validate={() => 'Wrong date'} validationMode="onChange">
+                  <DateField.Root locale="en-US">
+                    <DateField.Input />
+                  </DateField.Root>
+                  <Field.Error data-testid="other-error" />
+                </Field.Root>
+              </DatePicker.Popup>
+            </DatePicker.Positioner>
+          </DatePicker.Portal>
+        </DatePicker.Root>
+      </Form>,
+    );
+    for (const [input, text] of [
+      [hiddenInputOf(container), '2026-11-15'],
+      [hiddenInputOf(await screen.findByRole('dialog')), '2026-11-20'],
+    ] as const) {
+      input.value = text;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      await flushMicrotasks();
+    }
+    expect(screen.getByTestId('other-error')).toHaveTextContent('Wrong date');
+
+    screen.getByTestId<HTMLFormElement>('form').reset();
+    // Each timeout of the reset starts before this one, and a flush of Vue comes after each.
+    await wait(0);
+    await flushMicrotasks();
+
+    expect(hiddenInputOf(container).value).toBe('2026-11-14');
+    expect(screen.getByTestId('other-error')).toHaveTextContent('Wrong date');
+  });
 });

@@ -13,8 +13,8 @@ export interface DatePickerPopupProps extends PopoverPopupProps {
    *
    * - `false`: Do not move focus.
    * - `true`: Move focus to the default element.
-   * - An element, a component, or a ref of one: Move focus to that element. An empty ref uses the
-   *   default element.
+   * - An element, a component, or a ref of one: Move focus to that element. `null` and an empty ref
+   *   use the default element.
    * - `function`: Called with the interaction type (`mouse`, `touch`, `pen`, or `keyboard`).
    *   Return an element to focus, `true` or `null` to use the default element, or `false` or
    *   `undefined` to do nothing.
@@ -44,7 +44,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, DatePickerPopupState>;
 }>();
 
-const initialFocus = usePickerInitialFocus(() => props.initialFocus);
+const pickerInitialFocus = usePickerInitialFocus(() => props.initialFocus);
 
 // This part renders `Popover.Popup` and makes no element of its own. The template has one form for
 // `#render` and one for the content. A `v-if` on a slot template makes the slots of
@@ -57,12 +57,20 @@ defineExpose({ element });
 </script>
 
 <template>
-  <PopoverPopup v-if="$slots.render" ref="popup" v-bind="{ ...$attrs, ...props, initialFocus }">
+  <PopoverPopup
+    v-if="$slots.render"
+    ref="popup"
+    v-bind="{ ...$attrs, ...props, initialFocus: pickerInitialFocus }"
+  >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
     </template>
   </PopoverPopup>
-  <PopoverPopup v-else ref="popup" v-bind="{ ...$attrs, ...props, initialFocus }">
+  <PopoverPopup
+    v-else
+    ref="popup"
+    v-bind="{ ...$attrs, ...props, initialFocus: pickerInitialFocus }"
+  >
     <template #default="slotProps">
       <slot v-bind="slotProps" />
     </template>
