@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { defineComponent, shallowRef } from 'vue';
 import type { ComponentPublicInstance } from 'vue';
 import {
@@ -776,44 +777,47 @@ describe('<ContextMenu.Root />', () => {
       const onRootOpenChange = vi.fn();
       const onSubmenuOpenChange = vi.fn();
       const { user } = await render(
-        <ContextMenu.Root onOpenChange={onRootOpenChange}>
-          <ContextMenu.Trigger as="button" data-testid="surface">
-            Surface
-          </ContextMenu.Trigger>
-          <ContextMenu.Portal>
-            <ContextMenu.Positioner>
-              <ContextMenu.Popup data-testid="context-popup">
-                <ContextMenu.Item>Copy</ContextMenu.Item>
-                <ContextMenu.SubmenuRoot onOpenChange={onSubmenuOpenChange}>
-                  <ContextMenu.SubmenuTrigger data-testid="submenu-trigger">
-                    Share
-                  </ContextMenu.SubmenuTrigger>
-                  <ContextMenu.Portal>
-                    <ContextMenu.Positioner>
-                      <ContextMenu.Popup data-testid="submenu-popup">
-                        <ContextMenu.Item data-testid="submenu-item">Email</ContextMenu.Item>
-                        <ContextMenu.SubmenuRoot>
-                          <ContextMenu.SubmenuTrigger data-testid="nested-submenu-trigger">
-                            More
-                          </ContextMenu.SubmenuTrigger>
-                          <ContextMenu.Portal>
-                            <ContextMenu.Positioner>
-                              <ContextMenu.Popup data-testid="nested-submenu-popup">
-                                <ContextMenu.Item data-testid="nested-submenu-item">
-                                  Message
-                                </ContextMenu.Item>
-                              </ContextMenu.Popup>
-                            </ContextMenu.Positioner>
-                          </ContextMenu.Portal>
-                        </ContextMenu.SubmenuRoot>
-                      </ContextMenu.Popup>
-                    </ContextMenu.Positioner>
-                  </ContextMenu.Portal>
-                </ContextMenu.SubmenuRoot>
-              </ContextMenu.Popup>
-            </ContextMenu.Positioner>
-          </ContextMenu.Portal>
-        </ContextMenu.Root>,
+        <div>
+          <ContextMenu.Root onOpenChange={onRootOpenChange}>
+            <ContextMenu.Trigger as="button" data-testid="surface">
+              Surface
+            </ContextMenu.Trigger>
+            <ContextMenu.Portal>
+              <ContextMenu.Positioner>
+                <ContextMenu.Popup data-testid="context-popup">
+                  <ContextMenu.Item>Copy</ContextMenu.Item>
+                  <ContextMenu.SubmenuRoot onOpenChange={onSubmenuOpenChange}>
+                    <ContextMenu.SubmenuTrigger data-testid="submenu-trigger">
+                      Share
+                    </ContextMenu.SubmenuTrigger>
+                    <ContextMenu.Portal>
+                      <ContextMenu.Positioner>
+                        <ContextMenu.Popup data-testid="submenu-popup">
+                          <ContextMenu.Item data-testid="submenu-item">Email</ContextMenu.Item>
+                          <ContextMenu.SubmenuRoot>
+                            <ContextMenu.SubmenuTrigger data-testid="nested-submenu-trigger">
+                              More
+                            </ContextMenu.SubmenuTrigger>
+                            <ContextMenu.Portal>
+                              <ContextMenu.Positioner>
+                                <ContextMenu.Popup data-testid="nested-submenu-popup">
+                                  <ContextMenu.Item data-testid="nested-submenu-item">
+                                    Message
+                                  </ContextMenu.Item>
+                                </ContextMenu.Popup>
+                              </ContextMenu.Positioner>
+                            </ContextMenu.Portal>
+                          </ContextMenu.SubmenuRoot>
+                        </ContextMenu.Popup>
+                      </ContextMenu.Positioner>
+                    </ContextMenu.Portal>
+                  </ContextMenu.SubmenuRoot>
+                </ContextMenu.Popup>
+              </ContextMenu.Positioner>
+            </ContextMenu.Portal>
+          </ContextMenu.Root>
+          <input data-testid="after" />
+        </div>,
       );
 
       const surface = screen.getByTestId('surface');
@@ -845,9 +849,11 @@ describe('<ContextMenu.Root />', () => {
       { name: 'a submenu', depth: 1 },
       { name: 'a submenu of a submenu', depth: 2 },
     ] as const)('closes every menu for Tab in $name', async ({ depth }) => {
-      const { user, surface, onRootOpenChange, onSubmenuOpenChange } = await openSubmenus(depth);
+      const { surface, onRootOpenChange, onSubmenuOpenChange } = await openSubmenus(depth);
 
-      await user.keyboard('{Tab}');
+      // A native Tab runs the microtasks of the close, which return the focus to the surface,
+      // before its default action. A Tab that no handler prevents then moves the focus to the input.
+      await userEvent.keyboard('{Tab}');
 
       expect(screen.queryByTestId('context-popup')).toBe(null);
       expect(screen.queryByTestId('submenu-popup')).toBe(null);
@@ -866,6 +872,7 @@ describe('<ContextMenu.Root />', () => {
       expect(screen.queryByTestId('submenu-popup')).toBe(null);
       expect(screen.getByTestId('submenu-trigger')).toHaveFocus();
       expect(screen.getByTestId('context-popup')).toBeInTheDocument();
+      expect(onSubmenuOpenChange.mock.lastCall?.[0]).toBe(false);
       expect(onSubmenuOpenChange.mock.lastCall?.[1].reason).toBe(REASONS.focusOut);
       expect(onRootOpenChange.mock.calls.map(([open]) => open)).toEqual([true]);
     });

@@ -506,9 +506,9 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
   }
 
   // The popup of a root context menu is modal. When Tab moves the focus out of a submenu, a focus
-  // guard of that popup gives the focus to its first tabbable element, and only the submenu closes.
-  // This handler closes each menu of the context menu, as Tab in the root and Tab in a submenu of a
-  // menu with a trigger do (`VUE-107`).
+  // guard of that popup focuses its first tabbable element. Each submenu then closes, but the root
+  // stays open. This handler closes each menu of the context menu, as Tab in the root does
+  // (`VUE-107`).
   function closeContextMenuForTab(event: KeyboardEvent) {
     const menuParent = parent.value;
     if (
