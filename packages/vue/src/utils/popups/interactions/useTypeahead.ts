@@ -225,6 +225,8 @@ export function useTypeahead(
   }
 
   watch([() => store.select('open'), getSelectedIndex], ([open, selectedIndex]) => {
+    // Each key on the trigger of a closed Select changes the selected item, and the session must
+    // continue.
     if (!open && selectedIndex !== null) {
       return;
     }

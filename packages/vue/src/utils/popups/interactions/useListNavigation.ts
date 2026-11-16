@@ -280,6 +280,13 @@ interface SyncState {
  * focus or virtual focus.
  *
  * Call it in the `setup` of the root of the popup.
+ * A component calls it one time. A second call in the same component replaces the function that
+ * the first call provides.
+ *
+ * The result is a `ComputedRef` of one object with `reference`, `floating`, `item` and `trigger`.
+ * `reference` and `floating` can hold `aria-activedescendant`, which changes. `item` and `trigger`
+ * hold only listeners, and each is one object for the life of the composable. An item part that
+ * gets `item` as a prop thus renders again only when its own state changes.
  * @see https://floating-ui.com/docs/useListNavigation
  */
 export function useListNavigation(
@@ -447,6 +454,9 @@ export function useListNavigation(
     };
   }
 
+  // Separate post watchers run in the sequence of the writes, so they would lose the sequence of
+  // Base UI. One function runs the blocks in that sequence, in `onMounted` and in one `watch` with
+  // `flush: 'post'`.
   // Each block is one effect of Base UI. It runs when one of its dependencies changed since its
   // last run. `state` holds the values of one DOM update, as a render of React does: a block that
   // calls `onNavigate` does not change what the blocks after it read.
