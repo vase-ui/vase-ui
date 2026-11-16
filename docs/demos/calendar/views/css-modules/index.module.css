@@ -24,22 +24,6 @@
   margin-bottom: 0.5rem;
 }
 
-.Nav {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  display: flex;
-  gap: 0.25rem;
-}
-
-.Caption {
-  display: flex;
-  align-items: center;
-  height: 2rem;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-}
-
 .Button,
 .Title {
   height: 2rem;

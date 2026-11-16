@@ -24,22 +24,6 @@
   margin-bottom: 0.5rem;
 }
 
-.Nav {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  display: flex;
-  gap: 0.25rem;
-}
-
-.Caption {
-  display: flex;
-  align-items: center;
-  height: 2rem;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-}
-
 .Button,
 .Title {
   height: 2rem;
@@ -84,32 +68,9 @@
   font-weight: 600;
 }
 
-.Grid {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-}
-
-.Weekday {
-  padding: 0.25rem 0;
-  font-size: 0.75rem;
-  font-weight: 500;
-  text-align: center;
-  color: oklch(43.9% 0 0deg);
-
-  @media (prefers-color-scheme: dark) {
-    color: oklch(70.8% 0 0deg);
-  }
-}
-
-.Day {
-  padding: 0;
-  text-align: center;
-}
-
-.DayButton,
 .Cell {
   box-sizing: border-box;
+  height: 2.5rem;
   margin: 0;
   padding: 0;
   border: 1px solid transparent;
@@ -127,7 +88,6 @@
     }
   }
 
-  &[data-today],
   &[data-current] {
     border-color: oklch(70.8% 0 0deg);
   }
@@ -140,10 +100,6 @@
       color: oklch(14.5% 0 0deg);
       background-color: white;
     }
-  }
-
-  &[data-outside-month]:not([data-selected]) {
-    color: oklch(55.6% 0 0deg);
   }
 
   &[disabled] {
@@ -161,11 +117,6 @@
   }
 }
 
-.DayButton {
-  width: 2.25rem;
-  height: 2.25rem;
-}
-
 .Rows {
   display: flex;
   flex-direction: column;
@@ -176,8 +127,4 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.25rem;
-}
-
-.Cell {
-  height: 2.5rem;
 }
