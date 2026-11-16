@@ -31,6 +31,7 @@ import { useRenderElement } from '../../internals/useRenderElement';
 import { useNavigationMenuPositionerContext } from '../positioner/NavigationMenuPositionerContext';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import { createElementSetter } from '../../utils/popups/createElementSetter';
+import { useKeepAliveElementRef } from '../../utils/popups/useKeepAliveElementRef';
 import NavigationMenuViewportChildren from './NavigationMenuViewportChildren.vue';
 import { useNavigationMenuViewportSiblingGuards } from './useNavigationMenuViewportGuards';
 
@@ -54,6 +55,7 @@ const viewportId = useVaseUiId(() => props.id);
 const {
   nested,
   viewportElement,
+  shownViewportElement,
   floatingRootStore,
   prevTriggerElementRef,
   viewportInert,
@@ -106,7 +108,13 @@ const { element, elementProps } = useRenderElement<NavigationMenuViewportState, 
   'div',
   props,
   {
-    ref: createElementSetter(viewportElement),
+    // `NavigationMenu.Content` teleports into `viewportElement`, and it must stay there while
+    // `KeepAlive` holds the viewport. Only the element that the owner element names follows
+    // `KeepAlive`.
+    ref: [
+      createElementSetter(viewportElement),
+      useKeepAliveElementRef(createElementSetter(shownViewportElement)),
+    ],
     props: (attrs) => [
       {
         id: viewportId.value,
