@@ -1182,6 +1182,7 @@ The scroll lock stops the scroll of the page under a modal popup. The code is in
 - A root whose input names the highlighted item itself gives no `activeItemId`, as `useMenuRoot` does. `reference` and `floating` then hold no `aria-activedescendant`, and the props of the popup stay one object while the highlight moves. A new object renders the popup part again, and Vue then patches each item again.
 - The JSDoc of each option of `useListNavigation` gives its forms. The composable does not write the active index. It calls `onNavigate`, and the consumer writes the index or declines.
 - The orientation goes to `context.orientation` of the store in `onBeforeMount`, and a `watch` follows a change. A list below reads it through the popup tree. A server render writes nothing to the store. A store with a frozen context, such as `getEmptyRootStore()`, throws at that write, so give the composable the store of the root.
+- The comments of `useListNavigation.ts` give the relay of a `keydown` from a list that `Teleport` moved to the list above (`VUE-46`).
 - `KeepAlive` takes the list out of the document, and the active item loses the focus. While `KeepAlive` holds the list, the composable stops its frames. At the activation, the active item gets the focus again, and the highlight does not change. A list that mounts open in a held branch sets its highlight and its focus at the activation, as a list in a shown branch does at its mount.
 
 ### Popup typeahead
