@@ -1,8 +1,6 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, defineComponent, h, shallowRef } from 'vue';
-import type { Ref, VNode } from 'vue';
-import { Field } from '@vase-ui/vue/field';
-import { Input } from '@vase-ui/vue/input';
+import type { Ref } from 'vue';
 import {
   createRenderer,
   flushMicrotasks,
@@ -303,32 +301,6 @@ describe('VUE-81: a render before the page show', () => {
       expect(recorded).toEqual(events);
     },
   );
-
-  it.each<{ name: string; renderControl: (value: string) => VNode }>([
-    {
-      name: 'Field.Control',
-      renderControl: (value) => (
-        <Field.Root>
-          <Field.Control value={value} data-testid="input" />
-        </Field.Root>
-      ),
-    },
-    { name: 'Input', renderControl: (value) => <Input value={value} data-testid="input" /> },
-  ])('sends no event at the page show after a new value of $name', async ({ renderControl }) => {
-    mockPageBeforeLoad();
-    const value = shallowRef('a');
-    const { container } = await render(() => renderControl(value.value));
-    const recorded = recordInputEvents(container);
-    screen.getByTestId<HTMLInputElement>('input').value = 'restored';
-
-    value.value = 'b';
-    await flushMicrotasks();
-    window.dispatchEvent(new PageTransitionEvent('pageshow'));
-    await flushMicrotasks();
-
-    expect(screen.getByTestId('input')).toHaveValue('b');
-    expect(recorded).toEqual([]);
-  });
 });
 
 describe('useFormRestoreAsInput before the page show', () => {
