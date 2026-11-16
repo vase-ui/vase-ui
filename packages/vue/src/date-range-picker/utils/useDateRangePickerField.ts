@@ -1,13 +1,16 @@
-import { computed, useAttrs, watch } from 'vue';
+import { computed, provide, useAttrs, watch } from 'vue';
 import type { Ref } from 'vue';
 import { givenName } from '../../internals/blankName';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import type { DateTimeFieldChangeEventDetails } from '../../internals/date-time/field/DateTimeFieldContext';
+import { DateTimeFieldHostContext } from '../../internals/date-time/field/dateTimeFieldHost';
 import { usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
 import { laterMinimum } from '../../internals/date-time/field/customValidity';
 import type { DateValue } from '../../internals/date-time/temporal';
+import { useControlLabelId } from '../../internals/labelable-provider';
 import { omitUndefinedAttributes } from '../../internals/omitUndefinedAttributes';
 import { REASONS } from '../../internals/reasons';
+import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useFormReset } from '../../internals/useFormReset';
 import { mergeProps } from '../../merge-props';
 import { createElementSetter } from '../../utils/popups/createElementSetter';
@@ -38,6 +41,13 @@ export function useDateRangePickerField(
   const picker = useDateRangePickerRootContext();
   const popup = usePickerPopup();
   const index = end === 'start' ? 0 : 1;
+
+  // The label of a `Field` around the picker names the picker, so it joins the name of each field. The
+  // end field has a labelable context of its own, so each field reads the label here. The group of
+  // the field has an id, so that `aria-labelledby` can name the group itself: its `aria-label`.
+  const fieldLabelId = useControlLabelId();
+  const groupId = useVaseUiId().value;
+  provide(DateTimeFieldHostContext, { groupId });
 
   const element = computed(() => field.value?.element ?? null);
   const inputElement = computed(() => field.value?.inputElement ?? null);
@@ -81,13 +91,26 @@ export function useDateRangePickerField(
       : defaultLabel;
   }
 
+  // The name of the group is its own name and the label of a `Field`, as in React Aria. A name that
+  // the consumer gives with `aria-labelledby` replaces both. `DateField.Root` takes that attribute as
+  // its prop `ariaLabelledby`, so the part gives the prop only when it has a value.
+  function ariaLabelledby() {
+    const labelId = fieldLabelId.value;
+    if (labelId === undefined || givenName(attrs['aria-labelledby']) !== undefined) {
+      return undefined;
+    }
+    return typeof ariaLabel() === 'string' ? `${groupId} ${labelId}` : labelId;
+  }
+
   function fieldProps() {
     const root = picker.props;
     const [start] = picker.range.value;
+    const labelledby = ariaLabelledby();
     return {
       ...mergeProps(fieldHandlers, omitUndefinedAttributes(attrs)),
       ...props,
       'aria-label': ariaLabel(),
+      ...(labelledby !== undefined && { ariaLabelledby: labelledby }),
       value: picker.range.value[index],
       // The end that gives the kind of a new end is the same kind for both fields.
       defaultValue: picker.template.value,

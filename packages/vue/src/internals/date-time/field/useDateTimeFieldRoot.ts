@@ -49,6 +49,7 @@ import {
 } from '../temporal';
 import type { DateValue, TemporalKind, TemporalValue } from '../temporal';
 import { DateTimeFieldContext } from './DateTimeFieldContext';
+import { useDateTimeFieldHost } from './dateTimeFieldHost';
 import type {
   DateTimeFieldChangeEventDetails,
   DateTimeFieldRootState,
@@ -227,6 +228,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   } = useFieldRootContext();
   const { clearErrors } = useFormContext();
   const { getDescriptionProps } = useLabelableContext();
+  const host = useDateTimeFieldHost();
 
   const isDisabled = computed(
     () => (fieldDisabled.value ?? false) || (toValue(parameters.disabled) ?? false),
@@ -962,6 +964,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     return [
       {
         role: 'group',
+        id: host?.groupId,
         'aria-describedby': ariaAfterHydration(
           getDescriptionProps({ 'aria-describedby': ariaDescribedBy })['aria-describedby'],
         ),

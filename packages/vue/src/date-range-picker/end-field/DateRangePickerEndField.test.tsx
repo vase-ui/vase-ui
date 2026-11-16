@@ -169,15 +169,22 @@ describe('<DateRangePicker.EndField />', () => {
       expect(new Set(ids).size).toBe(ids.length);
     });
 
-    it('is not named by the label of the Field, which names the start field', async () => {
+    // The label of the Field names the picker, so it joins the own name of each field.
+    it('is named by its own name and by the label of the Field, as the start field is', async () => {
       const { user } = await renderInField();
+      const label = screen.getByText('Trip dates');
+      const start = screen.getByTestId('start');
+      const end = screen.getByTestId('end');
 
-      expect(screen.getByRole('group', { name: 'Trip dates' })).toBe(screen.getByTestId('start'));
-      expect(screen.getByRole('group', { name: 'End date' })).toBe(screen.getByTestId('end'));
+      expect(screen.getByRole('group', { name: 'Start date Trip dates' })).toBe(start);
+      expect(screen.getByRole('group', { name: 'End date Trip dates' })).toBe(end);
+      expect(start).toHaveAttribute('aria-labelledby', `${start.id} ${label.id}`);
+      expect(end).toHaveAttribute('aria-labelledby', `${end.id} ${label.id}`);
 
-      await user.click(screen.getByText('Trip dates'));
+      // The label is the label of the control of the Field, which is the start field.
+      await user.click(label);
 
-      expect(screen.getByTestId('start').querySelector('input[data-type="month"]')).toHaveFocus();
+      expect(start.querySelector('input[data-type="month"]')).toHaveFocus();
     });
 
     it('gets the description of the Field, as the start field does', async () => {

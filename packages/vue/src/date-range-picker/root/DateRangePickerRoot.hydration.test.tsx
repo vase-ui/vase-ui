@@ -24,6 +24,11 @@ describe('<DateRangePicker.Root /> hydration', () => {
     },
     { name: 'a layout that Node and Chromium format in another way', props: { locale: 'is-IS' } },
     { name: 'a disabled picker', props: { value: ['2026-11-14', '2026-11-20'], disabled: true } },
+    { name: 'a label of a Field before the fields', props: { label: 'Trip dates' } },
+    {
+      name: 'a label of a Field after the fields',
+      props: { label: 'Trip dates', labelAfter: true },
+    },
   ])('hydrates a picker with $name with no warning', async ({ props }) => {
     const fixtureProps = {
       today: '2026-11-14',
@@ -42,6 +47,14 @@ describe('<DateRangePicker.Root /> hydration', () => {
 
     expect(screen.getByTestId('trigger')).toHaveAttribute('aria-haspopup', 'dialog');
     expect(container.querySelector('[role="dialog"]')).toBe(null);
+    if ('label' in props) {
+      expect(screen.getByRole('group', { name: 'Start date Trip dates' })).toBe(
+        screen.getByTestId('start-field'),
+      );
+      expect(screen.getByRole('group', { name: 'End date Trip dates' })).toBe(
+        screen.getByTestId('end-field'),
+      );
+    }
   });
 
   it('has the values in the hidden inputs and the range in the trigger name, from the server HTML', async () => {

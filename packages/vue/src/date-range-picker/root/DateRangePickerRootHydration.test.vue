@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import * as Field from '../../field/index.parts';
 import DateRangePickerAnatomy from './DateRangePickerAnatomy.test.vue';
 
 // The props of a server render go to Node as JSON, so an end is a text. The form of the text gives
@@ -14,6 +15,9 @@ const props = defineProps<{
   endName?: string | undefined;
   disabled?: boolean | undefined;
   open?: boolean | undefined;
+  // The text of the label of a `Field` around the picker, and where the label is.
+  label?: string | undefined;
+  labelAfter?: boolean | undefined;
 }>();
 
 // A template reads only the globals that Vue lists, and `Temporal` is not one of them.
@@ -29,20 +33,25 @@ function toEnd(text: string | null) {
   return text.includes('T') ? Temporal.PlainDateTime.from(text) : Temporal.PlainDate.from(text);
 }
 
-const defaultValue = props.value && [toEnd(props.value[0]), toEnd(props.value[1])];
+const anatomyProps = {
+  defaultValue: props.value && [toEnd(props.value[0]), toEnd(props.value[1])],
+  granularity: props.granularity,
+  locale: props.locale,
+  calendar: props.calendar,
+  timeZone: props.timeZone,
+  startName: props.startName,
+  endName: props.endName,
+  disabled: props.disabled,
+  defaultOpen: props.open,
+  calendarProps: { today },
+};
 </script>
 
 <template>
-  <DateRangePickerAnatomy
-    :default-value="defaultValue"
-    :granularity="props.granularity"
-    :locale="props.locale"
-    :calendar="props.calendar"
-    :time-zone="props.timeZone"
-    :start-name="props.startName"
-    :end-name="props.endName"
-    :disabled="props.disabled"
-    :default-open="props.open"
-    :calendar-props="{ today }"
-  />
+  <Field.Root v-if="props.label !== undefined">
+    <Field.Label v-if="!props.labelAfter">{{ props.label }}</Field.Label>
+    <DateRangePickerAnatomy v-bind="anatomyProps" />
+    <Field.Label v-if="props.labelAfter">{{ props.label }}</Field.Label>
+  </Field.Root>
+  <DateRangePickerAnatomy v-else v-bind="anatomyProps" />
 </template>

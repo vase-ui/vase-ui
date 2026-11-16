@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { DateField } from '@vase-ui/vue/date-field';
 import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
+import { Field } from '@vase-ui/vue/field';
 import { createRenderer, screen, waitFor } from '#test-utils';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
@@ -81,6 +82,51 @@ describe.each(FIELDS)('the $end field of a date range picker', ({ part: Part, na
       );
 
       expect(screen.getByTestId('field')).toHaveAttribute('aria-label', name);
+    });
+  });
+
+  // The label of a Field names the picker, so it joins the name of each field.
+  describe('name in a Field', () => {
+    function renderInField(partProps: Record<string, unknown> = {}) {
+      return render(
+        <Field.Root>
+          <Field.Label>Trip dates</Field.Label>
+          <span id="other">Check-in</span>
+          <DateRangePicker.Root defaultValue={range('2026-11-18', '2026-11-20')}>
+            <Part data-testid="field" {...partProps}>
+              <DateField.Input />
+            </Part>
+          </DateRangePicker.Root>
+        </Field.Root>,
+      );
+    }
+
+    it('is its own name and the label of the Field', async () => {
+      await renderInField();
+
+      expect(screen.getByRole('group', { name: `${name} Trip dates` })).toBe(
+        screen.getByTestId('field'),
+      );
+    });
+
+    it('is the name of the consumer and the label of the Field', async () => {
+      await renderInField({ 'aria-label': 'Check-in' });
+
+      expect(screen.getByRole('group', { name: 'Check-in Trip dates' })).toBe(
+        screen.getByTestId('field'),
+      );
+    });
+
+    it('is the label of the Field when the consumer removes the own name', async () => {
+      await renderInField({ 'aria-label': null });
+
+      expect(screen.getByRole('group', { name: 'Trip dates' })).toBe(screen.getByTestId('field'));
+    });
+
+    it('is the elements of `aria-labelledby` when the consumer gives it', async () => {
+      await renderInField({ 'aria-labelledby': 'other' });
+
+      expect(screen.getByRole('group', { name: 'Check-in' })).toBe(screen.getByTestId('field'));
     });
   });
 

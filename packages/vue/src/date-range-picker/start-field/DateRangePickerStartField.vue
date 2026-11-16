@@ -9,7 +9,8 @@ export interface DateRangePickerStartFieldState extends DateFieldRootState {}
 /**
  * The props of `DateField.Root` that the picker does not own. The root of the picker owns the
  * value, the limits, the locale, the calendar, the time zone and the props of the form. The part
- * has the attribute `aria-labelledby` in the place of the prop `ariaLabelledby`.
+ * has the attribute `aria-labelledby` in the place of the prop `ariaLabelledby`. The default name of
+ * the field is `Start date`. The label of a `Field` joins that name.
  */
 export interface DateRangePickerStartFieldProps extends Omit<
   DateFieldRootProps,

@@ -2,6 +2,7 @@ import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { renderToString } from 'vue/server-renderer';
 import { DateField } from '@vase-ui/vue/date-field';
 import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
+import { Field } from '@vase-ui/vue/field';
 import { takeReportedMessages } from '../../../test/reportedMessages';
 import { formatRangeText } from '../../internals/date-time/calendar/formatText';
 
@@ -56,6 +57,32 @@ describe('<DateRangePicker.Root /> on a server', () => {
       ),
     );
     expect(html).toMatch(/<button[^>]* aria-expanded="false"/);
+  });
+
+  it('names each field by its own name and by the label of a Field, also for a label after the fields', async () => {
+    const html = await renderToString(
+      <Field.Root>
+        <DateRangePicker.Root locale="en-US">
+          <DateRangePicker.StartField>
+            <DateField.Input />
+          </DateRangePicker.StartField>
+          <DateRangePicker.EndField>
+            <DateField.Input />
+          </DateRangePicker.EndField>
+        </DateRangePicker.Root>
+        <Field.Label>Trip dates</Field.Label>
+      </Field.Root>,
+    );
+
+    const labelId = /<label[^>]* id="([^"]+)"/.exec(html)?.[1];
+    const groups = [...html.matchAll(/<div[^>]* role="group"[^>]*>/g)].map((match) => match[0]);
+    expect(labelId).toBeDefined();
+    expect(groups).toHaveLength(2);
+    for (const group of groups) {
+      const id = /\sid="([^"]+)"/.exec(group)?.[1];
+      expect(id).toBeDefined();
+      expect(group).toContain(`aria-labelledby="${id} ${labelId}"`);
+    }
   });
 
   it('names the trigger for a picker with no range, and for a range with one end', async () => {
