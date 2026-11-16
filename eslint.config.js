@@ -41,6 +41,8 @@ const MESSAGES = {
     'A query for an absence passes before the element appears, so this wait can end before the change. Assert the absence directly, or wait on an element that you got before the action. For a presence, use a `getBy` query.',
   privateKeyword:
     'The `private` keyword is only a check of the compiler. Write an ECMAScript private member: `#name`.',
+  vnodeAtCollection:
+    'Vitest makes this vnode one time, when it collects the file, and Vue mounts a vnode one time. Write a function that returns the vnode. Call it in the case.',
   reactEventProp: (reactKey, vueKey) =>
     `Vue makes the event name from the key, so \`${reactKey}\` listens to an event that no browser sends. Use \`${vueKey}\`.`,
 };
@@ -161,6 +163,13 @@ const RESTRICTED_REACT_EVENT_PROP_SYNTAX = Object.entries(VUE_KEY_OF_REACT_EVENT
     })),
 );
 
+const VNODE = ":matches(JSXElement, JSXFragment, CallExpression[callee.name='h'])";
+const TABLE = 'CallExpression[callee.property.name=/^(?:each|for)$/] > ArrayExpression';
+const CONSTANT = 'VariableDeclaration > VariableDeclarator';
+// A call such as `describe(…)`, `describe.skipIf(…)(…)` or `describe.each(…)(…)`.
+const DESCRIBE =
+  ":matches(CallExpression[callee.name='describe'], CallExpression[callee.callee.object.name='describe'])";
+
 // A later block with `no-restricted-syntax` for a test file replaces the list of an earlier block.
 // Thus each selector for the test files is in this one list.
 const RESTRICTED_TEST_SYNTAX = [
@@ -171,6 +180,15 @@ const RESTRICTED_TEST_SYNTAX = [
       "CallExpression[callee.name='waitFor'] CallExpression[callee.property.name=/^query(All)?By/]",
     ].join(', '),
     message: MESSAGES.absenceWait,
+  },
+  {
+    // The first selector reports the outermost vnode of a row, and no vnode in a function of a row.
+    selector: [
+      `${TABLE} ${VNODE}:not(${TABLE} :function ${VNODE}):not(${VNODE} *)`,
+      `Program > ${CONSTANT} > ${VNODE}`,
+      `${DESCRIBE} > :function > BlockStatement > ${CONSTANT} > ${VNODE}`,
+    ].join(', '),
+    message: MESSAGES.vnodeAtCollection,
   },
 ];
 
@@ -545,6 +563,16 @@ export default defineConfig([
   {
     files: [...TEST_SCRIPT_FILES, 'packages/vue/test/**/*.{ts,tsx,vue}'],
     rules: { 'no-restricted-syntax': ['error', ...RESTRICTED_TEST_SYNTAX] },
+  },
+  {
+    // No test runner runs a type test, so a vnode of a type test never mounts.
+    files: ['**/*.spec.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        ...RESTRICTED_TEST_SYNTAX.filter(({ message }) => message !== MESSAGES.vnodeAtCollection),
+      ],
+    },
   },
   {
     // The tests of `fixtures/nuxt` run in Node and wait with Playwright and `expect.poll`. These

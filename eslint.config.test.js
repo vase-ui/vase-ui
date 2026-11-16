@@ -61,6 +61,8 @@ const WAIT_FILES = [
   ['a test file', `${SRC}/DialogRoot.test.tsx`],
   ['a shared suite', 'packages/vue/test/popupConformanceTests.tsx'],
 ];
+const VNODE_HINT = 'mounts a vnode one time';
+const VNODE_IMPORT = "import { describe, it } from 'vitest';\n\n";
 
 const reported = [
   {
@@ -598,6 +600,54 @@ const reported = [
       hint: ABSENCE_HINT,
     })),
   ),
+  ...[
+    [
+      'a vnode in a row of it.each in a test file',
+      `${SRC}/DialogRoot.test.tsx`,
+      "it.each([{ name: 'a button', node: <button /> }])('renders $name', () => {});\n",
+    ],
+    [
+      'a vnode in a row of describe.each in a test file',
+      `${SRC}/DialogRoot.test.tsx`,
+      "describe.each([['a button', <button />]])('%s', () => {});\n",
+    ],
+    [
+      'a vnode in a row of it.skipIf().each in a test file',
+      `${SRC}/DialogRoot.test.tsx`,
+      "it.skipIf(false).each([{ name: 'a list', nodes: [<li key=\"a\" />] }])('renders $name', () => {});\n",
+    ],
+    [
+      'a vnode of h in a row of it.for in a .test.ts file',
+      `${SRC}/DialogRoot.test.ts`,
+      "declare function h(type: string): unknown;\nit.for([{ name: 'a button', node: h('button') }])('renders $name', () => {});\n",
+    ],
+    [
+      'a vnode in a constant of the module in a test file',
+      `${SRC}/DialogRoot.test.tsx`,
+      "const popup = <div />;\n\nit('renders', () => {\n  void popup;\n});\n",
+    ],
+    [
+      'a vnode in a constant of a describe in a test file',
+      `${SRC}/DialogRoot.test.tsx`,
+      "describe('a root', () => {\n  const popup = <div />;\n\n  it('renders', () => {\n    void popup;\n  });\n});\n",
+    ],
+    [
+      'a vnode in a constant of a describe.skipIf in a test file',
+      `${SRC}/DialogRoot.test.tsx`,
+      "describe.skipIf(false)('a root', () => {\n  const popup = <div />;\n\n  it('renders', () => {\n    void popup;\n  });\n});\n",
+    ],
+    [
+      'a vnode in a row of it.each in a shared suite',
+      'packages/vue/test/popupConformanceTests.tsx',
+      "it.each([{ name: 'a button', node: <button /> }])('renders $name', () => {});\n",
+    ],
+  ].map(([name, file, code]) => ({
+    name,
+    file,
+    code: `${VNODE_IMPORT}${code}`,
+    ruleId: 'no-restricted-syntax',
+    hint: VNODE_HINT,
+  })),
   {
     name: 'a style block in a Tailwind demo',
     file: 'docs/demos/sample/hero/tailwind/index.vue',
@@ -789,6 +839,21 @@ const passed = [
     code: "import { getQueriesForElement, queries } from '@testing-library/dom';\n\nexport const used = [getQueriesForElement, queries];\n",
   },
   {
+    name: 'a function that returns a vnode in a row of it.each and in a constant of the module',
+    file: `${SRC}/DialogRoot.test.tsx`,
+    code: `import { it } from 'vitest';\n\nconst popup = () => <div />;\n\nit.each([{ name: 'a button', node: () => <button>{popup()}</button> }])(\n  'renders $name',\n  ({ node }) => {\n    void node();\n  },\n);\n`,
+  },
+  {
+    name: 'a vnode in a case and as the argument of a shared suite',
+    file: `${SRC}/DialogRoot.test.tsx`,
+    code: `${VNODE_IMPORT}declare function describeConformance(element: unknown): void;\n\ndescribe('a root', () => {\n  describeConformance(<div />);\n\n  it('renders', () => {\n    const node = <div />;\n    void node;\n  });\n});\n`,
+  },
+  {
+    name: 'a vnode in a constant of the module in a type test',
+    file: `${SRC}/DialogRoot.spec.tsx`,
+    code: 'const element = <div />;\n',
+  },
+  {
     name: 'expect.poll in a test of the Nuxt fixture',
     file: 'fixtures/nuxt/test/pages.test.ts',
     code: "import { expect } from 'vitest';\n\nexport const poll = expect.poll(() => 1);\n",
@@ -809,6 +874,17 @@ for (const { name, file, code } of passed) {
     assert.deepEqual(await lint(file, code), []);
   });
 }
+
+test('reports a row that has a vnode in a vnode one time', async () => {
+  const messages = await lint(
+    `${SRC}/DialogRoot.test.tsx`,
+    `import { it } from 'vitest';\n\nit.each([\n  {\n    name: 'a list',\n    node: (\n      <ul>\n        <li />\n      </ul>\n    ),\n  },\n])('renders $name', () => {});\n`,
+  );
+  assert.deepEqual(
+    messages.map(({ ruleId }) => ruleId),
+    ['no-restricted-syntax'],
+  );
+});
 
 test('does not lint a file that has a test name and is not a script', async () => {
   assert.equal(await eslint.calculateConfigForFile('packages/vue/tsconfig.test.json'), undefined);
