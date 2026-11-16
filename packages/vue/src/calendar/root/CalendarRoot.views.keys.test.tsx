@@ -141,6 +141,17 @@ describe('<Calendar.Root /> keys of the grids of months and years', () => {
       expect(monthCell(to)).toHaveFocus();
     });
 
+    it('reaches the month of maxDate in the next year, also with two months', async () => {
+      await pressKeys({
+        from: '2026-12-01',
+        keys: '{ArrowRight}',
+        props: { numberOfMonths: 2, maxDate: day('2027-01-15') },
+      });
+
+      expect(monthCell('2027-01-01')).toHaveFocus();
+      expect(title()).toHaveTextContent('2027');
+    });
+
     it('stops at minDate', async () => {
       await pressKeys({
         from: '2026-03-01',

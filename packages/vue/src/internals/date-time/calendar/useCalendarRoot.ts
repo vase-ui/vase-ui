@@ -170,7 +170,7 @@ export function useCalendarRoot({
   // The dates of an ISO grid and of a Gregorian grid are the same, so the dates of the grid and
   // the months that the root emits are ISO and not Gregorian. The text still follows the locale.
   const calendar = computed(() => {
-    const id = displayCalendar(props.calendar, selection.values.value[0], formatLocale.value);
+    const id = displayCalendar(props.calendar, selection.template.value, formatLocale.value);
     return id === 'gregory' ? 'iso8601' : id;
   });
 
@@ -228,9 +228,10 @@ export function useCalendarRoot({
   const yearCount = computed(() => Math.max(1, Math.floor(views?.props.visibleYears ?? 12)));
 
   const timeZone = computed(() => {
-    const first = selection.values.value[0];
+    const template = selection.template.value;
     return (
-      props.timeZone ?? (first && isKind(first, 'zonedDateTime') ? first.timeZoneId : undefined)
+      props.timeZone ??
+      (template && isKind(template, 'zonedDateTime') ? template.timeZoneId : undefined)
     );
   });
   // The clock is read in `setup`, and again when the first page or the time zone changes. A page
@@ -627,9 +628,14 @@ export function useCalendarRoot({
     () => {
       if (props.focusedDate) {
         const date = clampDate(toGridDate(props.focusedDate));
-        const isOnPage =
-          view.value === 'day' ? isShown(date) || isOwned(date) : isOnCellPage(cellOf(date));
-        if (!isOnPage) {
+        if (view.value !== 'day') {
+          if (!isOnCellPage(cellOf(date))) {
+            setMonth(
+              clampMonth(date.toPlainYearMonth(), 1),
+              createChangeEventDetails(REASONS.none),
+            );
+          }
+        } else if (!isShown(date) && !isOwned(date)) {
           showDate(date, () => createChangeEventDetails(REASONS.none));
         }
       }
@@ -702,11 +708,15 @@ export function useCalendarRoot({
   }
 
   function toggleView(target: 'month' | 'year', event: MouseEvent) {
-    const first = isMonthValue.value ? 'month' : 'day';
-    setView(
-      view.value === target ? first : target,
-      createChangeEventDetails(REASONS.triggerPress, event),
-    );
+    const next = view.value === target ? (isMonthValue.value ? 'month' : 'day') : target;
+    const createDetails = () => createChangeEventDetails(REASONS.triggerPress, event);
+    // A grid of months or of years can show the month of `maxDate`. The pages of days that follow
+    // it then keep to the limits.
+    const month = clampMonth(visibleMonth.value);
+    if (next === 'day' && !month.equals(visibleMonth.value) && !setMonth(month, createDetails())) {
+      return;
+    }
+    setView(next, createDetails());
   }
 
   // The day that a new focus in a grid of months or of years keeps: the focused day, else the first
@@ -730,13 +740,18 @@ export function useCalendarRoot({
       : cell.year === visibleMonth.value.year;
   }
 
-  // A cell of another page makes that page the page of the root.
+  // A cell of another page makes that page the page of the root. `date` is the day that the focus
+  // takes in the cell.
   function moveCellFocus(
     cell: Temporal.PlainYearMonth,
     createDetails: () => CalendarChangeEventDetails,
+    date = dateOfCell(cell),
   ) {
-    const target = clampDate(dateOfCell(cell));
-    if (!isOnCellPage(cell) && !setMonth(clampMonth(target.toPlainYearMonth()), createDetails())) {
+    const target = clampDate(date);
+    if (
+      !isOnCellPage(cell) &&
+      !setMonth(clampMonth(target.toPlainYearMonth(), 1), createDetails())
+    ) {
       return false;
     }
     if (!setFocusedDate(target, createDetails())) {
@@ -802,6 +817,7 @@ export function useCalendarRoot({
     }
     const target = clampMonth(
       visibleMonth.value.add({ years: year.year - visibleMonth.value.year }),
+      1,
     );
     if (
       target.equals(visibleMonth.value) ||
@@ -822,7 +838,7 @@ export function useCalendarRoot({
     if (view.value !== 'day') {
       const cell = cellOf(target);
       if (!getCellState(cell).disabled) {
-        moveCellFocus(cell, () => createChangeEventDetails(REASONS.none));
+        moveCellFocus(cell, () => createChangeEventDetails(REASONS.none), target);
       }
       return;
     }
@@ -868,10 +884,14 @@ export function useCalendarRoot({
   });
 
   // When fewer months than the pages are between the limits, `maxDate` wins, as in React Aria's
-  // calendar. The first pages then start before `minDate`.
-  function clampMonth(month: Temporal.PlainYearMonth) {
+  // calendar. The first pages then start before `minDate`. A grid of months or of years shows the
+  // year of one month, so it passes `1` as the count of months.
+  function clampMonth(
+    month: Temporal.PlainYearMonth,
+    pageMonths = duration.value ? 1 : monthCount.value,
+  ) {
     const { min, max } = monthLimits.value;
-    const last = max?.subtract({ months: duration.value ? 0 : monthCount.value - 1 });
+    const last = max?.subtract({ months: pageMonths - 1 });
     const first = min && Temporal.PlainYearMonth.compare(month, min) < 0 ? min : month;
     return last && Temporal.PlainYearMonth.compare(first, last) > 0 ? last : first;
   }
@@ -894,6 +914,7 @@ export function useCalendarRoot({
     if (view.value !== 'day') {
       const target = clampMonth(
         visibleMonth.value.add({ years: step * navigationStep.value.count }),
+        1,
       );
       return (
         !target.equals(visibleMonth.value) && setMonth(target, createDetails()) && canContinue()

@@ -69,7 +69,7 @@ The value is a `Temporal` object, and `v-model:value` gives back the same kind. 
 | `Temporal.ZonedDateTime`  | A day, and the value keeps its time and zone. |
 | `Temporal.PlainYearMonth` | A month, in the grid of months.               |
 
-With no value, the calendar makes a `Temporal.PlainDate`. While `value` is `null`, `defaultValue` still gives the kind of a new value. To make a month picker that starts with no month selected, give `value` the `null` and `defaultValue` a `Temporal.PlainYearMonth`.
+With no value, the calendar makes a `Temporal.PlainDate`. While `value` is `null`, `defaultValue` still gives the kind of a new value. To make a month picker that starts with no month selected, give `value` the `null` and `defaultValue` a `Temporal.PlainYearMonth`. A value that becomes `null` or an empty list keeps the kind, the calendar and the time zone of the last value, so a month picker stays a month picker.
 
 The value is `null` when nothing is selected. With `multiple`, the value is a list, and a press on a selected day removes it down to `minDays`. A press past `maxDays` changes nothing. In a single selection, a press on the selected day changes nothing. `readOnly` keeps the days focusable and selects nothing.
 

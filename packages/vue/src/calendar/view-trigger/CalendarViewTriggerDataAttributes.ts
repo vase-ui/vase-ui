@@ -1,9 +1,9 @@
 /**
- * Present when the calendar is disabled.
+ * Present when the calendar or the button is disabled.
  */
 export const disabled = 'data-disabled';
 /**
- * Present when the user cannot select a day.
+ * Present when the user cannot select a day or a month.
  */
 export const readonly = 'data-readonly';
 /**
@@ -11,7 +11,7 @@ export const readonly = 'data-readonly';
  */
 export const invalid = 'data-invalid';
 /**
- * Present when no day is selected.
+ * Present when no day or month is selected.
  */
 export const empty = 'data-empty';
 /**

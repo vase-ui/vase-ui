@@ -17,7 +17,7 @@ export interface CalendarState {
    */
   disabled: boolean;
   /**
-   * Whether the user should be unable to select a day.
+   * Whether the user should be unable to select a day or a month.
    */
   readOnly: boolean;
   /**
@@ -25,7 +25,7 @@ export interface CalendarState {
    */
   invalid: boolean;
   /**
-   * Whether no day is selected.
+   * Whether no day or month is selected.
    */
   empty: boolean;
 }
@@ -70,7 +70,8 @@ export interface CalendarRootProps<
   /**
    * The selected day, or the list of selected days with `multiple`. A value that is a
    * `Temporal.PlainYearMonth` is a selected month, and the grid of months selects it. A new value
-   * has the kind, the time, the time zone and the calendar of the value that the calendar has.
+   * has the kind, the time, the time zone and the calendar of the value that the calendar has. A
+   * value that becomes `null` or empty keeps them for the next value.
    * This is the controlled counterpart of `defaultValue`.
    */
   value?: CalendarInputValue<Value, Multiple> | undefined;
@@ -189,14 +190,8 @@ defineSlots<{
 
 const selection = useDaySelection(props, emit);
 
-// The kind of the value is the kind of its first item, and else the kind of the first item of the
-// default value. A value that is a year and month makes a grid of months that selects.
-const isMonthValue = computed(() => {
-  const first = [props.value, props.defaultValue]
-    .flat()
-    .find((item) => item !== null && item !== undefined);
-  return isKind(first, 'yearMonth');
-});
+// A value that is a year and month makes a grid of months that selects.
+const isMonthValue = computed(() => isKind(selection.template.value, 'yearMonth'));
 
 const { focus, ...controller } = useCalendarRoot({
   part: 'Calendar.Root',

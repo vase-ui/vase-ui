@@ -1,4 +1,4 @@
-import { computed } from 'vue';
+import { computed, shallowRef, watch } from 'vue';
 import type { ComputedRef } from 'vue';
 import { EMPTY_ARRAY } from '../../../common/empty';
 import { useControlled } from '../../../common/useControlled';
@@ -12,6 +12,12 @@ import type { CalendarChangeEventDetails, CalendarValue } from './calendarProps'
 export interface CalendarSelection {
   /** The values of the selection: none, one, or each value of a list. */
   values: ComputedRef<readonly CalendarValue[]>;
+  /**
+   * The value that gives the kind, the calendar, the time and the zone of a new value: the first
+   * value, else the first value of `defaultValue`, else the last value that the selection had. A
+   * value that becomes empty thus keeps its kind, as the type of its model does.
+   */
+  template: ComputedRef<CalendarValue | undefined>;
   /**
    * Whether the grid selects more than one day. The grid then has `aria-multiselectable`, and
    * Shift with an arrow key calls `extend` and does not move a month or a year.
@@ -80,14 +86,27 @@ export function useDaySelection(
   const values = computed(() => toValues(value.value));
   const multiselectable = computed(() => props.multiple === true);
 
+  const lastValue = shallowRef<CalendarValue>();
+  watch(
+    () => values.value[0],
+    (first) => {
+      if (first) {
+        lastValue.value = first;
+      }
+    },
+    { immediate: true, flush: 'sync' },
+  );
+  const template = computed(
+    () => values.value[0] ?? toValues(props.defaultValue)[0] ?? lastValue.value,
+  );
+
   function isSelected(date: Temporal.PlainDate) {
     return values.value.some((item) => isOnDay(item, date));
   }
 
-  // A new value takes the kind, the time, the zone and the calendar of a value that the calendar
-  // has or that its `defaultValue` has. Without one, it is a date in the ISO calendar.
+  // Without a template, a new value is a date in the ISO calendar.
   function createValue(date: Temporal.PlainDate): CalendarValue {
-    const like = values.value[0] ?? toValues(props.defaultValue)[0];
+    const like = template.value;
     return like ? withDate(like, date) : date.withCalendar('iso8601');
   }
 
@@ -127,5 +146,5 @@ export function useDaySelection(
     }
   }
 
-  return { values, multiselectable, isSelected, press, extend };
+  return { values, template, multiselectable, isSelected, press, extend };
 }

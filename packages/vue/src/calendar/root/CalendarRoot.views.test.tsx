@@ -381,6 +381,47 @@ describe('<Calendar.Root /> views', () => {
       expect(onValueChange.mock.calls[0]![0].toString()).toBe('2026-03');
     });
 
+    it('keeps the grid of months and the kind after the consumer empties a list of months', async () => {
+      const onValueChange = vi.fn();
+      const { user, setProps } = await renderViews({
+        multiple: true,
+        value: [yearMonth('2026-11')],
+        onValueChange,
+      });
+
+      await user.click(monthCell('2026-11-01'));
+      await setProps({ value: onValueChange.mock.lastCall![0] });
+      expect(onValueChange.mock.lastCall![0]).toEqual([]);
+
+      expect(root()).toHaveAttribute('data-view', 'month');
+      await user.click(monthCell('2026-03-01'));
+      const [value] = onValueChange.mock.lastCall!;
+      expect(value.map(String)).toEqual(['2026-03']);
+      expect(value[0]).toBeInstanceOf(Temporal.PlainYearMonth);
+    });
+
+    it('keeps the months of a Persian value that the consumer sets to null', async () => {
+      const persian = day('2026-11-14').withCalendar('persian').toPlainYearMonth();
+      const next = persian.add({ months: 1 });
+      const onValueChange = vi.fn();
+      const { user, setProps } = await renderViews({ value: persian, onValueChange });
+
+      await setProps({ value: null });
+      await user.click(
+        screen.getByRole('gridcell', {
+          name: monthLabel(
+            next.toPlainDate({ day: 1 }).withCalendar('iso8601').toString(),
+            'en-US',
+            'persian',
+          ),
+        }),
+      );
+
+      const [value] = onValueChange.mock.lastCall!;
+      expect(value.calendarId).toBe('persian');
+      expect(value.toString()).toBe(next.toString());
+    });
+
     describe('with multiple', () => {
       it('adds a month, and removes a month that a press reaches again', async () => {
         const onValueChange = vi.fn();
@@ -546,6 +587,32 @@ describe('<Calendar.Root /> views', () => {
         previous,
       );
       expect(screen.getByTestId('next').getAttribute('aria-disabled') === 'true').toBe(next);
+    });
+
+    it('shows the year of maxDate with two months, and then pages of days inside the limits', async () => {
+      const { user } = await renderViews({
+        defaultView: 'month',
+        numberOfMonths: 2,
+        maxDate: day('2027-01-15'),
+      });
+
+      await user.click(screen.getByTestId('next'));
+
+      expect(monthTrigger()).toHaveTextContent('2027');
+      expect(monthCell('2027-01-01')).not.toHaveAttribute('data-disabled');
+      expect(monthCell('2027-02-01')).toHaveAttribute('data-disabled');
+
+      await user.click(monthTrigger());
+
+      expect(root()).toHaveAttribute('data-view', 'day');
+      expect(root()).toHaveAttribute(
+        'aria-label',
+        new Intl.DateTimeFormat('en-US', {
+          timeZone: 'UTC',
+          month: 'long',
+          year: 'numeric',
+        }).formatRange(Date.parse('2026-12-01'), Date.parse('2027-01-01')),
+      );
     });
 
     it('keeps the page inside the limits for a move past them', async () => {
@@ -720,6 +787,21 @@ describe('<Calendar.Root /> views', () => {
       expect(onMonthChange.mock.calls[0]![1].reason).toBe('none');
     });
 
+    it('shows the year of a focused date in the month of maxDate, also with two months', async () => {
+      const { setProps } = await renderViews({
+        defaultView: 'month',
+        numberOfMonths: 2,
+        maxDate: day('2027-01-15'),
+        focusedDate: day('2026-11-14'),
+      });
+
+      await setProps({ focusedDate: day('2027-01-10') });
+
+      await waitFor(() => {
+        expect(monthTrigger()).toHaveTextContent('2027');
+      });
+    });
+
     it('shows no other page for a focused date in the year that the grid shows', async () => {
       const onMonthChange = vi.fn();
       const { setProps } = await renderViews({
@@ -772,7 +854,8 @@ describe('<Calendar.Root /> views', () => {
     });
 
     it('focuses the cell of a date, and shows its page first', async () => {
-      const root = await renderWithApi({ defaultView: 'month' });
+      const onFocusedDateChange = vi.fn();
+      const root = await renderWithApi({ defaultView: 'month', onFocusedDateChange });
 
       root.focus(day('2027-06-20'));
 
@@ -780,6 +863,9 @@ describe('<Calendar.Root /> views', () => {
         expect(monthCell('2027-06-01')).toHaveFocus();
       });
       expect(monthTrigger()).toHaveTextContent('2027');
+      expect(onFocusedDateChange.mock.calls.map(([date]) => date.toString())).toEqual([
+        '2027-06-20',
+      ]);
     });
 
     it('focuses the cell of a year, and shows its page first', async () => {
