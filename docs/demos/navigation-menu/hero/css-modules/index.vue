@@ -64,7 +64,7 @@ const handbookLinks = [
 </script>
 
 <template>
-  <NavigationMenu.Root :class="styles.Root">
+  <NavigationMenu.Root :class="styles.Root" aria-label="Example">
     <NavigationMenu.List :class="styles.List">
       <NavigationMenu.Item>
         <NavigationMenu.Trigger :class="styles.Trigger">
