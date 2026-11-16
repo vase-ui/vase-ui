@@ -179,4 +179,24 @@ describe('<Field.Item />', () => {
       expect.stringContaining('Unhandled error during execution of setup function'),
     ]);
   });
+
+  describe('VUE-112: a disabled fieldset', () => {
+    it('shows the disabled state on an item in a disabled fieldset', async () => {
+      await render(() => (
+        <Field.Root data-testid="root">
+          <fieldset disabled>
+            <Field.Item data-testid="item">
+              <Checkbox.Root data-testid="checkbox" />
+              <Field.Label data-testid="label">Label</Field.Label>
+            </Field.Item>
+          </fieldset>
+        </Field.Root>
+      ));
+
+      for (const testId of ['item', 'checkbox', 'label']) {
+        expect(screen.getByTestId(testId)).toHaveAttribute('data-disabled');
+      }
+      expect(screen.getByTestId('root')).not.toHaveAttribute('data-disabled');
+    });
+  });
 });

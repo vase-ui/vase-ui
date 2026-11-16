@@ -9126,4 +9126,20 @@ describe('<Select.Root />', () => {
       expect(trigger).toHaveTextContent('Pick a font');
     });
   });
+
+  describe('VUE-112: a disabled fieldset', () => {
+    it('shows the disabled state on the trigger in a disabled fieldset', async () => {
+      await render(() => (
+        <fieldset disabled>
+          <Select.Root>
+            <Select.Trigger data-testid="trigger">
+              <Select.Value />
+            </Select.Trigger>
+          </Select.Root>
+        </fieldset>
+      ));
+
+      expect(screen.getByTestId('trigger')).toHaveAttribute('data-disabled');
+    });
+  });
 });

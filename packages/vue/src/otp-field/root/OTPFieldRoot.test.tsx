@@ -2981,4 +2981,22 @@ describe('<OTPField.Root />', () => {
       }
     },
   );
+
+  describe('VUE-112: a disabled fieldset', () => {
+    it('shows the disabled state on the root and each input in a disabled fieldset', async () => {
+      await render(() => (
+        <fieldset disabled>
+          <OTPFieldBase.Root data-testid="root" length={3}>
+            {['a', 'b', 'c'].map((testId) => (
+              <OTPFieldBase.Input key={testId} data-testid={testId} />
+            ))}
+          </OTPFieldBase.Root>
+        </fieldset>
+      ));
+
+      for (const testId of ['root', 'a', 'b', 'c']) {
+        expect(screen.getByTestId(testId)).toHaveAttribute('data-disabled');
+      }
+    });
+  });
 });

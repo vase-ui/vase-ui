@@ -798,4 +798,48 @@ describe('<DateField.Root />', () => {
     defaultState: ['11', '14', '2026'],
     changedState: ['2', '3', '2027'],
   });
+
+  describe('VUE-112: a disabled fieldset', () => {
+    it('shows the disabled state on the root, the input and each segment in a disabled fieldset', async () => {
+      await render(() => (
+        <fieldset disabled>
+          <DateField.Root data-testid="root" locale="en-US">
+            <DateField.Input data-testid="input" />
+          </DateField.Root>
+        </fieldset>
+      ));
+
+      expect(screen.getByTestId('root')).toHaveAttribute('data-disabled');
+      expect(screen.getByTestId('input')).toHaveAttribute('data-disabled');
+      const segments = screen.getAllByRole('spinbutton');
+      expect(segments).toHaveLength(3);
+      for (const segment of segments) {
+        expect(segment).toHaveAttribute('data-disabled');
+      }
+    });
+
+    it('leaves a date field in a disabled fieldset out of the form values', async () => {
+      const handleSubmit = vi.fn();
+      const { user } = await render(() => (
+        <Form onFormSubmit={handleSubmit}>
+          <Field.Root name="date">
+            <fieldset disabled>
+              <DateField.Root locale="en-US" defaultValue={Temporal.PlainDate.from('2026-11-14')}>
+                <DateField.Input />
+              </DateField.Root>
+            </fieldset>
+          </Field.Root>
+          <Field.Root name="other">
+            <Field.Control defaultValue="sent" />
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>
+      ));
+
+      await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+      expect(handleSubmit.mock.lastCall?.[0]).toEqual({ other: 'sent' });
+    });
+  });
 });

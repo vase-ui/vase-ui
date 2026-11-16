@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { KeepAlive, defineComponent, shallowRef } from 'vue';
+import type { VNode } from 'vue';
 import { NumberField } from '@vase-ui/vue/number-field';
 import { createRenderer, fireEvent, flushMicrotasks, isJSDOM, screen } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
@@ -858,4 +860,46 @@ describe('useNumberFieldStepperButton', () => {
       });
     },
   );
+
+  describe('VUE-112: a disabled fieldset', () => {
+    it.each<{ name: string; content: (onValueChange: () => void) => VNode }>([
+      {
+        name: 'a stepper in a disabled fieldset',
+        content: (onValueChange) => (
+          <fieldset disabled>
+            <NumberField.Root defaultValue={1} onValueChange={onValueChange}>
+              <NumberField.Group>
+                <NumberField.Input />
+                <NumberField.Increment data-testid="increment" />
+              </NumberField.Group>
+            </NumberField.Root>
+          </fieldset>
+        ),
+      },
+      {
+        name: 'a stepper alone in a disabled fieldset',
+        content: (onValueChange) => (
+          <NumberField.Root defaultValue={1} onValueChange={onValueChange}>
+            <NumberField.Group>
+              <NumberField.Input />
+              <fieldset disabled>
+                <NumberField.Increment data-testid="increment" />
+              </fieldset>
+            </NumberField.Group>
+          </NumberField.Root>
+        ),
+      },
+    ])('keeps the value when the user presses $name', async ({ content }) => {
+      const handleValueChange = vi.fn();
+      await render(() => content(handleValueChange));
+      const increment = screen.getByTestId('increment');
+
+      await userEvent.click(increment, { force: true });
+      await flushMicrotasks();
+
+      expect(handleValueChange).not.toHaveBeenCalled();
+      expect(screen.getByRole('textbox')).toHaveValue('1');
+      expect(increment).toHaveAttribute('data-disabled');
+    });
+  });
 });

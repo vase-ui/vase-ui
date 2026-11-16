@@ -16802,4 +16802,32 @@ describe('<Combobox.Root />', () => {
       expect(input).toHaveFocus();
     });
   });
+
+  describe('VUE-112: a disabled fieldset', () => {
+    it('shows the disabled state on the input and the trigger in a disabled fieldset', async () => {
+      await render(() => (
+        <fieldset disabled>
+          <Combobox.Root items={['a', 'b']}>
+            <Combobox.Input data-testid="input" />
+            <Combobox.Trigger data-testid="trigger" />
+          </Combobox.Root>
+        </fieldset>
+      ));
+
+      expect(screen.getByTestId('input')).toHaveAttribute('data-disabled');
+      expect(screen.getByTestId('trigger')).toHaveAttribute('data-disabled');
+    });
+
+    it('shows the disabled state on the input of an autocomplete in a disabled fieldset', async () => {
+      await render(() => (
+        <fieldset disabled>
+          <Autocomplete.Root items={['a', 'b']}>
+            <Autocomplete.Input data-testid="input" />
+          </Autocomplete.Root>
+        </fieldset>
+      ));
+
+      expect(screen.getByTestId('input')).toHaveAttribute('data-disabled');
+    });
+  });
 });
