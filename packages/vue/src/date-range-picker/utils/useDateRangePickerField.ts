@@ -4,7 +4,7 @@ import { givenName } from '../../internals/blankName';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import type { DateTimeFieldChangeEventDetails } from '../../internals/date-time/field/DateTimeFieldContext';
 import { usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
-import { compareDates } from '../../internals/date-time/temporal';
+import { laterMinimum } from '../../internals/date-time/field/customValidity';
 import type { DateValue } from '../../internals/date-time/temporal';
 import { omitUndefinedAttributes } from '../../internals/omitUndefinedAttributes';
 import { REASONS } from '../../internals/reasons';
@@ -18,11 +18,6 @@ export interface DateFieldActions {
   element: HTMLElement | null;
   inputElement: HTMLInputElement | null;
   clear: () => void;
-}
-
-/** The later of two days. */
-function laterDay(a: DateValue | undefined, b: DateValue | null): DateValue | undefined {
-  return b !== null && (a === undefined || compareDates(b, a) > 0) ? b : a;
 }
 
 /**
@@ -101,8 +96,9 @@ export function useDateRangePickerField(
       hourCycle: root.hourCycle,
       forceLeadingZeros: root.forceLeadingZeros,
       hideTimeZone: root.hideTimeZone,
-      // An end that is before the start makes the end field invalid.
-      minDate: end === 'end' ? laterDay(root.minDate, start) : root.minDate,
+      // An end that is before the start makes the end field invalid. A start with a time limits the
+      // time of the end too.
+      minDate: end === 'end' ? laterMinimum(root.minDate, start) : root.minDate,
       maxDate: root.maxDate,
       unavailableDates: root.unavailableDates,
       locale: root.locale,

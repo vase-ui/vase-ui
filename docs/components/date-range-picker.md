@@ -77,7 +77,7 @@ With no value, a new end has the kind that `granularity` and `referenceDate` giv
 
 Each field gives its end to a form through its hidden input. Name them with `startName` and `endName`. The hidden inputs have the type of the ends, so `minDate` and `maxDate` give `rangeUnderflow` and `rangeOverflow`, and `required` gives `valueMissing` for each empty end. Each field sets a `customError` for a date that `unavailableDates` matches, for a field with some segments empty, and for the limits that the input type cannot check.
 
-The end field is invalid when its day is before the first day of the range, or before `minDate`. Its `minDate` is the later of the two days, so its hidden input gives `rangeUnderflow`, or a `customError` for a zoned value. A change of the first day to a later day than the last day also makes the end field invalid. The check compares days, and not the times of one day.
+The end field is invalid when it is before the first end of the range, or before `minDate`. Its `minDate` is the later of the two, so its hidden input gives `rangeUnderflow`, or a `customError` for a zoned value. A change of the first end to a later moment than the last end also makes the end field invalid. A field that shows a time compares the time too, so a time that is before the first time of the same day is invalid. A field that shows no time compares days.
 
 Put the picker in a `Field` to show the errors of its validation. Do not give a `name` to that `Field`: it replaces `startName` and `endName` for both fields. A reset of the form puts an uncontrolled picker back to its default range.
 

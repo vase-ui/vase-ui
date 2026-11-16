@@ -84,12 +84,14 @@ export interface DateRangePickerRootProps<Value extends DateValue = DateValue> e
   hideTimeZone?: boolean | undefined;
   /**
    * The earliest date that the picker accepts. The calendar disables an earlier day, and an earlier
-   * date in a field makes the picker invalid.
+   * date in a field makes the picker invalid. A limit with a time also limits the time of a field
+   * that shows a time.
    */
   minDate?: DateValue | undefined;
   /**
    * The latest date that the picker accepts. The calendar disables a later day, and a later date in
-   * a field makes the picker invalid.
+   * a field makes the picker invalid. A limit with a time also limits the time of a field that shows
+   * a time.
    */
   maxDate?: DateValue | undefined;
   /**

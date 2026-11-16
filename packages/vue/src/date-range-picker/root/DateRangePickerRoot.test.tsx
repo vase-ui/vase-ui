@@ -714,6 +714,59 @@ describe('<DateRangePicker.Root />', () => {
       expect(end).toHaveAttribute('min', '2026-11-19');
     });
 
+    // The two ends have a time, so the end field compares the time of a day too.
+    it.each([
+      {
+        name: 'dates with a time',
+        make: (text: string) => Temporal.PlainDateTime.from(text),
+        validity: 'rangeUnderflow',
+        texts: ['2026-11-18T09:00', '2026-11-18T08:00'],
+      },
+      {
+        name: 'dates with a time in a zone',
+        make: (text: string) => Temporal.ZonedDateTime.from(`${text}[Asia/Tokyo]`),
+        validity: 'customError',
+        texts: ['2026-11-18T09:00+09:00[Asia/Tokyo]', '2026-11-18T08:00+09:00[Asia/Tokyo]'],
+      },
+    ] as const)(
+      'makes the end field invalid for $name when its time is before the start time of one day',
+      async ({ make, validity, texts }) => {
+        const { user, container } = await renderPicker({
+          defaultValue: [make('2026-11-18T09:00'), make('2026-11-18T17:00')],
+          hourCycle: 24,
+        });
+        const [start, end] = [
+          ...container.querySelectorAll<HTMLInputElement>('input[aria-hidden]'),
+        ];
+        expect(end!.validity.valid).toBe(true);
+
+        segmentOf('end', 'hour').focus();
+        await user.keyboard('{ArrowDown}'.repeat(9));
+
+        expect(hiddenInputsOf(container)).toEqual(texts);
+        expect(end!.validity[validity]).toBe(true);
+        expect(start!.validity.valid).toBe(true);
+
+        await user.keyboard('{ArrowUp}');
+
+        expect(end!.validity.valid).toBe(true);
+      },
+    );
+
+    it('takes the later of the start and `minDate` for the limit of the end field, by the time too', async () => {
+      const { container } = await renderPicker({
+        defaultValue: [
+          Temporal.PlainDateTime.from('2026-11-18T09:00'),
+          Temporal.PlainDateTime.from('2026-11-20T17:00'),
+        ],
+        minDate: Temporal.PlainDateTime.from('2026-11-18T08:00'),
+      });
+      const [start, end] = [...container.querySelectorAll<HTMLInputElement>('input[aria-hidden]')];
+
+      expect(start).toHaveAttribute('min', '2026-11-18T08:00');
+      expect(end).toHaveAttribute('min', '2026-11-18T09:00');
+    });
+
     it('shows the error in a Field, with the message of the end field', async () => {
       const { user, container } = await render(
         <Field.Root validationMode="onChange" data-testid="field">

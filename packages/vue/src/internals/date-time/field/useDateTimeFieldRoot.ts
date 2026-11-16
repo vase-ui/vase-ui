@@ -678,13 +678,19 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     () => toValue(parameters.name),
   );
 
-  const limits = computed<ValueLimits>(() => ({
-    minDate: toValue(parameters.minDate),
-    maxDate: toValue(parameters.maxDate),
-    minTime: toValue(parameters.minTime),
-    maxTime: toValue(parameters.maxTime),
-    unavailableDates: toValue(parameters.unavailableDates),
-  }));
+  // A field that shows no time compares days, because the user cannot change the time of its
+  // value. A limit then loses its time.
+  const limits = computed<ValueLimits>(() => {
+    const limitOf = (limit: DateValue | undefined) =>
+      limit && !isTimeUnit(granularity.value) ? toPlainDate(limit) : limit;
+    return {
+      minDate: limitOf(toValue(parameters.minDate)),
+      maxDate: limitOf(toValue(parameters.maxDate)),
+      minTime: toValue(parameters.minTime),
+      maxTime: toValue(parameters.maxTime),
+      unavailableDates: toValue(parameters.unavailableDates),
+    };
+  });
   // The hidden input checks the limits that its type has. The others, and the partial entry, are
   // a custom error of the input.
   const customMessage = computed(() => {
