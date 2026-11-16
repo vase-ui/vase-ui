@@ -58,6 +58,176 @@ describe('useRegisteredLabelId', () => {
     expect(target).toHaveAttribute('aria-labelledby', 'new-label');
   });
 
+  it('keeps the label of the root when the id of an older label changes', async () => {
+    const olderId = shallowRef('older');
+    const App = defineComponent(() => {
+      const { labelId, labelRoot } = useLabelId();
+
+      return () => (
+        <>
+          <div data-testid="target" aria-labelledby={labelId.value} />
+          <Label id={olderId.value} root={labelRoot} />
+          <Label id="newer" root={labelRoot} />
+        </>
+      );
+    });
+    await render(<App />);
+    const target = screen.getByTestId('target');
+    expect(target).toHaveAttribute('aria-labelledby', 'newer');
+
+    olderId.value = 'changed';
+    await flushMicrotasks();
+
+    expect(target).toHaveAttribute('aria-labelledby', 'newer');
+  });
+
+  describe('the id of the element', () => {
+    const SlotLabel = defineComponent(
+      (props: { id?: string; elementId: string; root: LabelIdRoot }) => {
+        const element = shallowRef<HTMLElement | null>(null);
+        useRegisteredLabelId(() => props.id ?? 'bound', props.root, element);
+
+        return () => <span ref={element} id={props.elementId} />;
+      },
+      { props: ['id', 'elementId', 'root'] },
+    );
+
+    function setup(other?: 'before' | 'after') {
+      const elementId = shallowRef('first');
+      const shown = shallowRef(true);
+      const kept = shallowRef(true);
+      const App = defineComponent(() => {
+        const { labelId, labelRoot } = useLabelId();
+
+        return () => (
+          <>
+            <div data-testid="target" aria-labelledby={labelId.value} />
+            {other === 'before' && <Label id="other" root={labelRoot} />}
+            <KeepAlive>
+              {kept.value && shown.value ? (
+                <SlotLabel elementId={elementId.value} root={labelRoot} />
+              ) : null}
+            </KeepAlive>
+            {other === 'after' && <Label id="other" root={labelRoot} />}
+          </>
+        );
+      });
+      return { App, elementId, kept, shown };
+    }
+
+    it('names the id that the element of the label has, and follows a change of it', async () => {
+      const { App, elementId } = setup();
+      await render(<App />);
+      const target = screen.getByTestId('target');
+      const steps = [target.getAttribute('aria-labelledby')];
+
+      elementId.value = 'second';
+      await flushMicrotasks();
+      steps.push(target.getAttribute('aria-labelledby'));
+
+      expect(steps).toEqual(['first', 'second']);
+    });
+
+    it('names the id of the element of a label that mounts after the root', async () => {
+      const { App, shown } = setup();
+      shown.value = false;
+      await render(<App />);
+      const target = screen.getByTestId('target');
+
+      shown.value = true;
+      await flushMicrotasks();
+
+      expect(target).toHaveAttribute('aria-labelledby', 'first');
+    });
+
+    it('names no label while the element of the label has an empty id', async () => {
+      const { App, elementId } = setup();
+      await render(<App />);
+      const target = screen.getByTestId('target');
+
+      elementId.value = '';
+      await flushMicrotasks();
+      const empty = target.getAttribute('aria-labelledby');
+      elementId.value = 'second';
+      await flushMicrotasks();
+
+      expect(empty).toBeNull();
+      expect(target).toHaveAttribute('aria-labelledby', 'second');
+    });
+
+    it('keeps the label of the root when the element of an older label gets an empty id', async () => {
+      const { App, elementId } = setup('after');
+      await render(<App />);
+      const target = screen.getByTestId('target');
+      expect(target).toHaveAttribute('aria-labelledby', 'other');
+
+      elementId.value = '';
+      await flushMicrotasks();
+
+      expect(target).toHaveAttribute('aria-labelledby', 'other');
+    });
+
+    it('keeps the label of the root when a label whose element has an empty id mounts later', async () => {
+      const { App, elementId, shown } = setup('before');
+      elementId.value = '';
+      shown.value = false;
+      await render(<App />);
+      const target = screen.getByTestId('target');
+
+      shown.value = true;
+      await flushMicrotasks();
+
+      expect(target).toHaveAttribute('aria-labelledby', 'other');
+    });
+
+    it('names the id of the element again when KeepAlive shows the label', async () => {
+      const { App, kept } = setup();
+      await render(<App />);
+      const target = screen.getByTestId('target');
+
+      kept.value = false;
+      await flushMicrotasks();
+      const held = target.getAttribute('aria-labelledby');
+      kept.value = true;
+      await flushMicrotasks();
+
+      expect(held).toBeNull();
+      expect(target).toHaveAttribute('aria-labelledby', 'first');
+    });
+
+    it('names an earlier label when KeepAlive shows a later label whose element has an empty id', async () => {
+      const visible = shallowRef(true);
+      const Branch = defineComponent(
+        (props: { root: LabelIdRoot }) => () => (
+          <>
+            <SlotLabel id="earlier" elementId="earlier" root={props.root} />
+            <SlotLabel id="later" elementId="" root={props.root} />
+          </>
+        ),
+        { props: ['root'] },
+      );
+      const App = defineComponent(() => {
+        const { labelId, labelRoot } = useLabelId();
+
+        return () => (
+          <>
+            <div data-testid="target" aria-labelledby={labelId.value} />
+            <KeepAlive>{visible.value ? <Branch root={labelRoot} /> : null}</KeepAlive>
+          </>
+        );
+      });
+      await render(<App />);
+      const target = screen.getByTestId('target');
+
+      visible.value = false;
+      await flushMicrotasks();
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(target).toHaveAttribute('aria-labelledby', 'earlier');
+    });
+  });
+
   describe('under `KeepAlive`', () => {
     const Labels = defineComponent(
       (props: { root: LabelIdRoot }) => () => (

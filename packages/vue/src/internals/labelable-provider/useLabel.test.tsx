@@ -153,7 +153,8 @@ describe('useLabel', () => {
 
   it('does not focus the control when a composed click originates inside a nested button', async () => {
     const Test = defineComponent(() => {
-      const labelProps = useLabel({ fallbackControlId: 'control' });
+      const element = shallowRef<HTMLElement | null>(null);
+      const labelProps = useLabel({ element, fallbackControlId: 'control' });
 
       function attachShadowTarget(host: Element | ComponentPublicInstance | null) {
         const span = host as HTMLSpanElement | null;
@@ -166,7 +167,7 @@ describe('useLabel', () => {
 
       return () => (
         <>
-          <div {...labelProps.value}>
+          <div ref={element} {...labelProps.value}>
             Label
             <button type="button">
               Action
@@ -400,12 +401,14 @@ describe('useLabel', () => {
     describe('param: focusControl', () => {
       const FocusLabel = defineComponent(
         (props: { focusControl: (event: MouseEvent, controlId: string | undefined) => void }) => {
+          const element = shallowRef<HTMLElement | null>(null);
           const labelProps = useLabel({
+            element,
             fallbackControlId: 'fallback',
             focusControl: (event, controlId) => props.focusControl(event, controlId),
           });
           return () => (
-            <div data-testid="label" {...labelProps.value}>
+            <div ref={element} data-testid="label" {...labelProps.value}>
               Label
             </div>
           );
@@ -445,11 +448,12 @@ describe('useLabel', () => {
     describe('param: controlElement', () => {
       it('focuses the control element, and not the element that has the id of the control', async () => {
         const Test = defineComponent(() => {
+          const element = shallowRef<HTMLElement | null>(null);
           const controlElement = shallowRef<HTMLElement | null>(null);
-          const labelProps = useLabel({ fallbackControlId: 'named', controlElement });
+          const labelProps = useLabel({ element, fallbackControlId: 'named', controlElement });
           return () => (
             <>
-              <div data-testid="label" {...labelProps.value}>
+              <div ref={element} data-testid="label" {...labelProps.value}>
                 Label
               </div>
               <input id="named" />
@@ -559,8 +563,9 @@ describe('useLabel', () => {
       it('gives no id to the field or to the root while KeepAlive holds a label that mounted in a held branch', async () => {
         const { labelId, registerLabelId } = createLabelIdRegistry();
         const HeldLabel = defineComponent(() => {
-          const labelProps = useLabel({ id: 'held-label', registerLabelId });
-          return () => <div {...labelProps.value} />;
+          const element = shallowRef<HTMLElement | null>(null);
+          const labelProps = useLabel({ id: 'held-label', element, registerLabelId });
+          return () => <div ref={element} {...labelProps.value} />;
         });
         const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => <HeldLabel />);
         const FieldLabelId = defineComponent(() => {

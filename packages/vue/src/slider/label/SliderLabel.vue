@@ -52,6 +52,7 @@ function focusControl(event: MouseEvent, controlId: string | undefined) {
 
 const labelProps = useLabel({
   id: rootLabelId,
+  element: () => element.value,
   registerLabelId,
   focusControl,
 });

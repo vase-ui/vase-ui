@@ -106,10 +106,10 @@ const { mounted, transitionStatus, setMounted } = useTransitionStatus(
 const hidden = computed(() => !mounted.value);
 
 // The tab names a panel that is in the document. A hidden panel with no `keepMounted` has no element.
-const registrationSource = Symbol();
 useRegisteredId(
   () => (hidden.value && !props.keepMounted ? undefined : panelId.value),
-  (getId) => registerPanel(registrationSource, getId && { value: () => props.value, id: getId }),
+  (source, getId) => registerPanel(source, getId && { value: () => props.value, id: getId }),
+  () => element.value,
 );
 
 const state = computed<TabsPanelState>(() => ({

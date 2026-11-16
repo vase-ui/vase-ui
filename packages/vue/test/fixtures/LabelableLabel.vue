@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useAttrs } from 'vue';
+import { shallowRef, useAttrs } from 'vue';
 import { useLabel } from '../../src/internals/labelable-provider';
 
 defineOptions({ inheritAttrs: false });
@@ -15,8 +15,10 @@ const props = withDefaults(
 );
 
 const attrs = useAttrs();
+const element = shallowRef<HTMLElement | null>(null);
 const labelProps = useLabel({
   id: () => props.id,
+  element,
   native: () => props.native,
   registerLabelId: (source, getLabelId) => props.registerLabelId?.(source, getLabelId),
 });
@@ -27,5 +29,7 @@ function elementProps() {
 </script>
 
 <template>
-  <component :is="native ? 'label' : 'div'" v-bind="elementProps()"><slot /></component>
+  <component :is="native ? 'label' : 'div'" ref="element" v-bind="elementProps()"
+    ><slot
+  /></component>
 </template>
