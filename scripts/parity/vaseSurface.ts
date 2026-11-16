@@ -120,6 +120,8 @@ export interface VaseProject {
   updateFile: (path: string, text: string) => void;
 }
 
+const NULLABLE = ts.TypeFlags.Null | ts.TypeFlags.Undefined;
+
 function jsDocText(node: ts.Node): string {
   return ts
     .getJSDocCommentsAndTags(node)
@@ -240,6 +242,229 @@ export function createVaseProject(tsconfig: string): VaseProject {
       .replace(/import\(.*?\)\./g, '');
   const documentationOf = (symbol: ts.Symbol): string =>
     ts.displayPartsToString(symbol.getDocumentationComment(typeChecker()));
+  const membersOf = (type: ts.Type): readonly ts.Type[] => (type.isUnion() ? type.types : [type]);
+  const nullableTexts = (type: ts.Type): string[] =>
+    (
+      [
+        [ts.TypeFlags.Null, 'null'],
+        [ts.TypeFlags.Undefined, 'undefined'],
+      ] as const
+    ).flatMap(([flag, text]) =>
+      membersOf(type).some((member) => member.flags & flag) ? [text] : [],
+    );
+  const withoutParentheses = (node: ts.TypeNode | undefined): ts.TypeNode | undefined =>
+    node && ts.isParenthesizedTypeNode(node) ? withoutParentheses(node.type) : node;
+  /** The type node of the one declaration of `symbol`, when it is a property, a parameter or a getter. */
+  const declaredTypeNode = (symbol: ts.Symbol): ts.TypeNode | undefined => {
+    const [declaration, ...others] = symbol.declarations ?? [];
+    return declaration &&
+      others.length === 0 &&
+      (ts.isPropertySignature(declaration) ||
+        ts.isPropertyDeclaration(declaration) ||
+        ts.isParameter(declaration) ||
+        ts.isGetAccessorDeclaration(declaration))
+      ? declaration.type
+      : undefined;
+  };
+  /** `X['key']` gives the type node of the declaration of the property `key` of `X`. */
+  const followPropertyAccess = (node: ts.TypeNode | undefined): ts.TypeNode | undefined => {
+    const bare = withoutParentheses(node);
+    if (
+      !bare ||
+      !ts.isIndexedAccessTypeNode(bare) ||
+      !ts.isLiteralTypeNode(bare.indexType) ||
+      !ts.isStringLiteral(bare.indexType.literal)
+    ) {
+      return bare;
+    }
+    const property = typeChecker()
+      .getTypeFromTypeNode(bare.objectType)
+      .getProperty(bare.indexType.literal.text);
+    const target = property && declaredTypeNode(property);
+    return target ? followPropertyAccess(target) : bare;
+  };
+
+  interface DeclaredUnion {
+    /** The text of each member that is not `null` or `undefined`, in the sequence of the declaration. */
+    texts: string[];
+    /** The members of the union of the checker that the declaration names. */
+    covered: Set<ts.Type>;
+    /** `null` and `undefined` where a member text already includes them, as the alias `FocusOption` includes `null`. */
+    written: Set<string>;
+  }
+
+  // The checker keeps one type for each set of members of a union, whatever their sequence in the
+  // source. It writes the members in the order in which it made their types, and that order changes
+  // with each file that it read before, such as a file of another family. The type node of the
+  // declaration keeps the sequence of the source.
+  const declaredUnion = (
+    type: ts.Type,
+    declared: ts.TypeNode | undefined,
+  ): DeclaredUnion | undefined => {
+    const node = followPropertyAccess(declared);
+    if (!node || !type.isUnion()) {
+      return undefined;
+    }
+    const union: DeclaredUnion = { texts: [], covered: new Set(), written: new Set() };
+    if (ts.isTypeOperatorNode(node) && node.operator === ts.SyntaxKind.KeyOfKeyword) {
+      // The checker writes `keyof X` for a type with a name, and else the keys, in its own order.
+      if (typeText(type).startsWith('keyof ')) {
+        return undefined;
+      }
+      for (const property of typeChecker().getPropertiesOfType(
+        typeChecker().getTypeFromTypeNode(node.type),
+      )) {
+        const key = typeChecker().getStringLiteralType(property.getName());
+        union.texts.push(typeText(key));
+        union.covered.add(key);
+      }
+    } else if (ts.isUnionTypeNode(node)) {
+      for (const member of node.types) {
+        const memberType = typeChecker().getTypeFromTypeNode(member);
+        const inner = declaredUnion(memberType, member);
+        if (inner) {
+          union.texts.push(...inner.texts);
+          inner.covered.forEach((covered) => union.covered.add(covered));
+          inner.written.forEach((text) => union.written.add(text));
+          continue;
+        }
+        for (const covered of membersOf(memberType)) {
+          union.covered.add(covered);
+        }
+        if (!(memberType.flags & NULLABLE)) {
+          union.texts.push(memberText(memberType, member));
+          nullableTexts(memberType).forEach((text) => union.written.add(text));
+        }
+      }
+    } else {
+      return undefined;
+    }
+    // A declaration in terms of a type parameter, such as `T | null`, does not name the members of
+    // the type that the checker gives for an instance.
+    const actual = new Set(type.types);
+    const same =
+      type.types.every((member) => union.covered.has(member) || member.flags & NULLABLE) &&
+      [...union.covered].every((member) => actual.has(member) || member.flags & NULLABLE);
+    if (!same) {
+      return undefined;
+    }
+    // The checker writes `true` and `false` as one member `boolean`.
+    const booleans =
+      union.texts.includes('boolean') ||
+      (union.texts.includes('true') && union.texts.includes('false'));
+    const texts = booleans
+      ? union.texts.map((text) => (text === 'true' || text === 'false' ? 'boolean' : text))
+      : union.texts;
+    return { ...union, texts: [...new Set(texts)] };
+  };
+  // The checker writes a function, a constructor, a conditional type and an intersection in
+  // parentheses when it is a member of a union.
+  const memberText = (type: ts.Type, node: ts.TypeNode): string => {
+    const text = declaredText(type, node);
+    const kind = typeChecker().typeToTypeNode(
+      type,
+      undefined,
+      ts.NodeBuilderFlags.NoTruncation,
+    )?.kind;
+    return kind === ts.SyntaxKind.FunctionType ||
+      kind === ts.SyntaxKind.ConstructorType ||
+      kind === ts.SyntaxKind.ConditionalType ||
+      kind === ts.SyntaxKind.IntersectionType
+      ? `(${text})`
+      : text;
+  };
+  /** The declaration of an anonymous object type, such as the member that an `Extract` gives. */
+  const typeLiteralOf = (
+    type: ts.Type,
+    node: ts.TypeNode | undefined,
+  ): ts.TypeLiteralNode | undefined => {
+    if (!(type.flags & ts.TypeFlags.Object)) {
+      return undefined;
+    }
+    const [declaration, ...others] = type.getSymbol()?.declarations ?? [];
+    const literal =
+      node && ts.isTypeLiteralNode(node)
+        ? node
+        : declaration && others.length === 0 && ts.isTypeLiteralNode(declaration)
+          ? declaration
+          : undefined;
+    // The checker writes the name of an alias, such as `type Named = { … }`, and not its literal.
+    return literal &&
+      typeChecker().typeToTypeNode(type, undefined, ts.NodeBuilderFlags.NoTruncation)?.kind ===
+        ts.SyntaxKind.TypeLiteral
+      ? literal
+      : undefined;
+  };
+  // The text of the checker, `{ name: type; }`, with each property type from its declaration. The
+  // checker writes a quoted key with the quotes of the source, so such a literal keeps its text.
+  const typeLiteralText = (type: ts.Type, literal: ts.TypeLiteralNode): string | undefined => {
+    if (
+      literal.members.length === 0 ||
+      literal.members.length !== typeChecker().getPropertiesOfType(type).length
+    ) {
+      return undefined;
+    }
+    const texts = literal.members.map((member) => {
+      if (!ts.isPropertySignature(member) || !ts.isIdentifier(member.name)) {
+        return undefined;
+      }
+      const property = type.getProperty(member.name.text);
+      if (!property) {
+        return undefined;
+      }
+      const readonly = member.modifiers?.some(({ kind }) => kind === ts.SyntaxKind.ReadonlyKeyword);
+      const text = declaredText(typeChecker().getTypeOfSymbol(property), member.type);
+      return `${readonly ? 'readonly ' : ''}${property.getName()}${member.questionToken ? '?' : ''}: ${text};`;
+    });
+    return texts.every((text) => text !== undefined) ? `{ ${texts.join(' ')} }` : undefined;
+  };
+  /** The text of `type`, as `typeText` writes it, with each union of `declared` in the sequence of the declaration. */
+  const declaredText = (type: ts.Type, declared: ts.TypeNode | undefined): string => {
+    const union = declaredUnion(type, declared);
+    if (union) {
+      // The checker writes `null` and then `undefined` after the other members.
+      const nullables = nullableTexts(type).filter((text) => !union.written.has(text));
+      return [...union.texts, ...nullables].join(' | ');
+    }
+    const literal = typeLiteralOf(type, withoutParentheses(declared));
+    return (literal && typeLiteralText(type, literal)) ?? typeText(type);
+  };
+  // The checker names a property with a symbol key `__@iterator@<id>`, and the id changes with each
+  // symbol that it read before. `symbolToString` gives the key as the source writes it.
+  const propertyName = (property: ts.Symbol): string => {
+    // A property of an `Omit` or a `Pick` has the declarations of the property that it copies, but
+    // no `valueDeclaration`.
+    const [declaration] = property.declarations ?? [];
+    const name = declaration && ts.getNameOfDeclaration(declaration);
+    return name &&
+      ts.isComputedPropertyName(name) &&
+      typeChecker().getTypeAtLocation(name.expression).flags & ts.TypeFlags.ESSymbolLike
+      ? typeChecker().symbolToString(property)
+      : property.getName();
+  };
+  const symbolTypeText = (symbol: ts.Symbol): string =>
+    declaredText(typeChecker().getTypeOfSymbol(symbol), declaredTypeNode(symbol));
+  // The checker lists the properties of a mapped type, such as an `Omit`, in the order of its keys,
+  // which is the order in which it made their types. Each run of properties that one interface or
+  // type literal declares thus takes the sequence of that declaration.
+  const inDeclarationOrder = (properties: readonly ts.Symbol[]): ts.Symbol[] => {
+    const declarationOf = (property: ts.Symbol): ts.Declaration | undefined =>
+      property.declarations?.[0];
+    const runs: ts.Symbol[][] = [];
+    for (const property of properties) {
+      const run = runs.at(-1);
+      const previous = run?.at(-1);
+      const parent = declarationOf(property)?.parent;
+      if (run && previous && parent && declarationOf(previous)?.parent === parent) {
+        run.push(property);
+      } else {
+        runs.push([property]);
+      }
+    }
+    return runs.flatMap((run) =>
+      run.toSorted((a, b) => (declarationOf(a)?.pos ?? 0) - (declarationOf(b)?.pos ?? 0)),
+    );
+  };
   // `getJsDocTags` gives a property that an interface declares again with no tag the tags of the
   // declaration in the base interface. The declarations of a property of an `Omit` or a `Pick` are
   // those of the property that it copies, so such a property keeps its tags.
@@ -251,7 +476,12 @@ export function createVaseProject(tsconfig: string): VaseProject {
   };
   const returnTypeOf = (signatures: readonly ts.Signature[]): string => {
     const texts = signatures.map((signature) =>
-      typeText(typeChecker().getReturnTypeOfSignature(signature)),
+      declaredText(
+        typeChecker().getReturnTypeOfSignature(signature),
+        signature.declaration && !ts.isJSDocSignature(signature.declaration)
+          ? signature.declaration.type
+          : undefined,
+      ),
     );
     return [...new Set(texts)].join(' | ');
   };
@@ -269,7 +499,7 @@ export function createVaseProject(tsconfig: string): VaseProject {
         const declaration = parameter.valueDeclaration;
         return {
           name: parameter.getName(),
-          type: typeText(typeChecker().getTypeOfSymbol(parameter)),
+          type: symbolTypeText(parameter),
           optional:
             (declaration !== undefined &&
               ts.isParameter(declaration) &&
@@ -367,7 +597,7 @@ export function createVaseProject(tsconfig: string): VaseProject {
       required: declaration.questionToken === undefined,
       default: null,
       description: documentationOf(prop),
-      type: typeText(typeChecker().getTypeOfSymbol(prop)),
+      type: symbolTypeText(prop),
       ignored: ownTags(prop).some(({ tagName }) => tagName.text === 'ignore'),
     };
   };
@@ -408,6 +638,7 @@ export function createVaseProject(tsconfig: string): VaseProject {
       const listenerProps = new Set(
         meta.events.map(({ name }) => `on${name.charAt(0).toUpperCase()}${name.slice(1)}`),
       );
+      const propsType = propsTypeOf(symbol);
       const props = new Map<string, PropSurface>();
       for (const name of readPropNames(source, file)) {
         const prop = documented.get(name);
@@ -420,35 +651,44 @@ export function createVaseProject(tsconfig: string): VaseProject {
           props.set(name, declaredProp(symbol, name, file));
           continue;
         }
+        const declaration = propsType?.getProperty(name);
+        if (!declaration) {
+          throw new Error(`${file}: the props type of the component has no property "${name}".`);
+        }
         props.set(name, {
           required: prop.required,
           default: prop.default ?? null,
           description: prop.description,
-          type: prop.type,
+          // vue-component-meta writes the members of a union in the order of the checker.
+          type: symbolTypeText(declaration),
           ignored: prop.tags.some((tag) => tag.name === 'ignore'),
         });
       }
       const declaredEmits = readEmits(source, file);
+      const listed = new Set(meta.events.map(({ name }) => name));
       return {
         description: documentationOf(resolve(symbol)),
         props,
-        emits: new Map(
-          meta.events.map(({ name, type }) => [
-            name,
-            declaredEmits.get(name) ?? { type, description: '' },
-          ]),
-        ),
+        // vue-component-meta lists the events in the order of the keys of a mapped type, which is
+        // the order in which the checker made their types. `defineEmits` keeps the sequence of the
+        // source.
+        emits: new Map([
+          ...[...declaredEmits].filter(([name]) => listed.has(name)),
+          ...meta.events.flatMap(({ name, type }): [string, MemberSurface][] =>
+            declaredEmits.has(name) ? [] : [[name, { type, description: '' }]],
+          ),
+        ]),
         slots: new Map(
           meta.slots.map((slot) => [
             slot.name,
             {
               description: slot.description,
-              props: typeChecker()
-                .getPropertiesOfType(slot.getTypeObject())
-                .map((property) => ({
-                  name: property.getName(),
-                  type: typeText(typeChecker().getTypeOfSymbol(property)),
-                })),
+              props: inDeclarationOrder(
+                typeChecker().getPropertiesOfType(slot.getTypeObject()),
+              ).map((property) => ({
+                name: propertyName(property),
+                type: symbolTypeText(property),
+              })),
             },
           ]),
         ),
@@ -481,14 +721,25 @@ export function createVaseProject(tsconfig: string): VaseProject {
         return undefined;
       }
       // The checker gives the members of a union in the order in which it made their types. The
-      // nodes of the declaration keep the order that the source shows.
-      const nodes = ts.isUnionTypeNode(declaration.type)
-        ? declaration.type.types
-        : [declaration.type];
-      const members = nodes.flatMap((node) => {
-        const type = typeChecker().getTypeFromTypeNode(node);
-        return type.isUnion() ? type.types : [type];
-      });
+      // nodes of the declaration keep the order that the source shows, also through an alias of
+      // another union, such as `Calendar.Root.ChangeEventReason`.
+      const declaredMembers = (node: ts.TypeNode): readonly ts.Type[] => {
+        if (ts.isParenthesizedTypeNode(node)) {
+          return declaredMembers(node.type);
+        }
+        if (ts.isUnionTypeNode(node)) {
+          return node.types.flatMap(declaredMembers);
+        }
+        const target =
+          ts.isTypeReferenceNode(node) && !node.typeArguments
+            ? typeChecker().getSymbolAtLocation(node.typeName)
+            : undefined;
+        const alias = target && resolve(target).declarations?.find(ts.isTypeAliasDeclaration);
+        return alias && !alias.typeParameters
+          ? declaredMembers(alias.type)
+          : membersOf(typeChecker().getTypeFromTypeNode(node));
+      };
+      const members = declaredMembers(declaration.type);
       const values = members.flatMap((member) => (member.isStringLiteral() ? [member.value] : []));
       return values.length === members.length ? [...new Set(values)] : undefined;
     },
@@ -528,15 +779,20 @@ export function createVaseProject(tsconfig: string): VaseProject {
         return undefined;
       }
       const type = typeChecker().getDeclaredTypeOfSymbol(resolved);
-      // A union of literals has the properties of its apparent type, such as `String`. They are not its own.
-      if (!(type.flags & (ts.TypeFlags.Object | ts.TypeFlags.Intersection))) {
+      // A union of literals has the properties of its apparent type, such as `String`, and an array
+      // or a tuple has the properties of `Array`. They are not its own.
+      if (
+        !(type.flags & (ts.TypeFlags.Object | ts.TypeFlags.Intersection)) ||
+        typeChecker().isArrayType(type) ||
+        typeChecker().isTupleType(type)
+      ) {
         return [];
       }
       return typeChecker()
         .getPropertiesOfType(type)
         .map((property) => ({
-          name: property.getName(),
-          type: typeText(typeChecker().getTypeOfSymbol(property)),
+          name: propertyName(property),
+          type: symbolTypeText(property),
           optional: (property.flags & ts.SymbolFlags.Optional) !== 0,
           default: tagText(property, 'default') ?? null,
           description: documentationOf(property),
@@ -567,8 +823,8 @@ export function createVaseProject(tsconfig: string): VaseProject {
         properties: members
           .filter((member) => !(member.flags & ts.SymbolFlags.Method))
           .map((property) => ({
-            name: property.getName(),
-            type: typeText(typeChecker().getTypeOfSymbol(property)),
+            name: propertyName(property),
+            type: symbolTypeText(property),
             readonly: (property.declarations ?? []).every(
               (declaration) =>
                 ts.isGetAccessorDeclaration(declaration) ||
@@ -578,7 +834,7 @@ export function createVaseProject(tsconfig: string): VaseProject {
           })),
         methods: members.flatMap((member) => {
           const method = member.flags & ts.SymbolFlags.Method ? functionOf(member) : undefined;
-          return method ? [{ name: member.getName(), ...method }] : [];
+          return method ? [{ name: propertyName(member), ...method }] : [];
         }),
       };
     },

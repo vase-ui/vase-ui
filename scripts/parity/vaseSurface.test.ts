@@ -192,6 +192,105 @@ test('a union of strings has its values in the sequence of its declaration', () 
   assert.deepEqual(openReason, ['none', 'escape-key', 'trigger-press']);
 });
 
+test('a union of strings that names another union has the values of that declaration, in its sequence', () => {
+  const values = withText(
+    ROOT,
+    [
+      [
+        "export type SampleRootChangeEventReason = 'trigger-press' | 'escape-key' | 'none';",
+        "export type SampleRootChangeEventReason = 'trigger-press' | 'escape-key' | 'none';\nexport type SampleRootReversedReason = 'none' | 'escape-key' | 'trigger-press';\nexport type SampleRootCloseEventReason = SampleRootChangeEventReason;",
+      ],
+    ],
+    // The reversed union is read first, so the checker makes its strings in the reverse sequence.
+    () =>
+      ['SampleRootReversedReason', 'SampleRootCloseEventReason'].map((name) =>
+        project.readUnionValues(ENTRY, name),
+      ),
+  );
+  assert.deepEqual(values, [
+    ['none', 'escape-key', 'trigger-press'],
+    ['trigger-press', 'escape-key', 'none'],
+  ]);
+});
+
+const SEQUENCE = [
+  "export type Seed = 'second' | 'first';",
+  "type Segment = { kind: 'first' | 'second'; editable: false } | { kind: 'other'; editable: true };",
+  "type Maybe = 'first' | undefined;",
+  'export interface Keys {\n  first: string;\n  second: string;\n}',
+  'export interface Sequence {',
+  "  union: 'first' | 'second' | undefined;",
+  "  access: Sequence['union'];",
+  '  keys: keyof Keys;',
+  '  literalKeys: keyof { first: string; second: string };',
+  '  optionalKeys?: keyof { first: string; second: string };',
+  '  segment: Extract<Segment, { editable: false }>;',
+  '  listener?: ((kind: string) => void) | null;',
+  "  held: Maybe | 'second';",
+  '}',
+].join('\n');
+
+test('a type text writes the members of each union in the sequence of the declaration, and not in the sequence of the checker', () => {
+  const properties = withParts(HANDLE, `${SEQUENCE}\n\n${HANDLE}`, () => {
+    // The checker makes "second" before "first" when it reads `Seed` first.
+    project.readUnionValues(ENTRY, 'Sample.Seed');
+    return project.readProperties(exportOf('Sequence'));
+  });
+  assert.deepEqual(
+    properties?.map(({ name, type }) => [name, type]),
+    [
+      ['union', '"first" | "second" | undefined'],
+      ['access', '"first" | "second" | undefined'],
+      ['keys', 'keyof Keys'],
+      ['literalKeys', '"first" | "second"'],
+      ['optionalKeys', '"first" | "second" | undefined'],
+      ['segment', '{ kind: "first" | "second"; editable: false; }'],
+      ['listener', '((kind: string) => void) | null | undefined'],
+      ['held', 'Maybe | "second"'],
+    ],
+  );
+});
+
+const FORM = [
+  'type Named = { first: string };',
+  'export interface Form {',
+  '  named: Named;',
+  "  quoted: { 'data-first': string };",
+  '  empty: {};',
+  "  flag: true | 'second' | false;",
+  '}',
+].join('\n');
+
+test('a type text keeps each other form of the checker: an alias of a type literal, a quoted key, an empty type literal and boolean', () => {
+  const properties = withParts(HANDLE, `${FORM}\n\n${HANDLE}`, () =>
+    project.readProperties(exportOf('Form')),
+  );
+  assert.deepEqual(
+    properties?.map(({ name, type }) => [name, type]),
+    [
+      ['named', 'Named'],
+      ['quoted', "{ 'data-first': string; }"],
+      ['empty', '{}'],
+      ['flag', 'boolean | "second"'],
+    ],
+  );
+});
+
+test('a parameter, a return value and a class property write a union in the sequence of the declaration', () => {
+  const code = [
+    "export type CodeSeed = 'second' | 'first';",
+    "export function pick(side: 'first' | 'second'): 'first' | 'second' {\n  return side;\n}",
+    "export class Picker {\n  side: 'first' | 'second' = 'first';\n}",
+  ].join('\n');
+  const texts = withParts(HANDLE, `${code}\n\n${HANDLE}`, () => {
+    project.readUnionValues(ENTRY, 'Sample.CodeSeed');
+    const pick = project.readFunction(exportOf('pick'));
+    const picker = project.readClass(exportOf('Picker'));
+    return [pick?.parameters[0]?.type, pick?.returns.type, picker?.properties[0]?.type];
+  });
+  assert.deepEqual(texts, ['"first" | "second"', '"first" | "second"', '"first" | "second"']);
+});
+
 test('the export at a path can be in a namespace of a namespace, and a union of strings in a namespace has its values', () => {
   const read = withParts(
     CREATE_HANDLE,
@@ -284,6 +383,27 @@ test('a class has its public properties and methods, in the sequence of the decl
 test('an export that is not a type has no properties', () => {
   assert.equal(project.readProperties(exportOf('createHandle')), undefined);
   assert.equal(project.readProperties(exportOf('Popup')), undefined);
+});
+
+test('an array and a tuple have no property, although their apparent type has some', () => {
+  const properties = withParts(
+    HANDLE,
+    `export type List = string[];\nexport type Pair = [string, number];\n\n${HANDLE}`,
+    () => ['List', 'Pair'].map((name) => project.readProperties(exportOf(name))),
+  );
+  assert.deepEqual(properties, [[], []]);
+});
+
+test('a property with a symbol key has the name that the source writes', () => {
+  const names = withParts(
+    HANDLE,
+    `export interface Bag {\n  [Symbol.iterator](): Iterator<string>;\n  size: number;\n}\nexport type Copied = Omit<Bag, 'size'>;\n\n${HANDLE}`,
+    () =>
+      ['Bag', 'Copied'].map((type) =>
+        project.readProperties(exportOf(type))?.map(({ name }) => name),
+      ),
+  );
+  assert.deepEqual(names, [['size', '[Symbol.iterator]'], ['[Symbol.iterator]']]);
 });
 
 test('a union of literals has no property, although its apparent type has some', () => {

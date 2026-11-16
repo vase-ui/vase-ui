@@ -84,7 +84,7 @@ test('a prop has its type, documented default, required mark and description, an
     props.find(({ name }) => name === 'side'),
     {
       name: 'side',
-      type: '"bottom" | "top" | undefined',
+      type: '"top" | "bottom" | undefined',
       default: "'bottom'",
       required: false,
       description: 'Which side of the trigger the popup uses.',
@@ -446,6 +446,19 @@ test('each prop and each event of each family page has a type, and each event ha
     ]),
   );
   assert.deepEqual(missing, []);
+});
+
+test('the reference of a family page does not change with the families that the reader read before', () => {
+  const families = listFamilyPages(join(REPOSITORY_ROOT, 'docs')).map(({ family }) => family);
+  const readBackward = createApiReferenceReader(REPOSITORY_ROOT);
+  const backward = new Map(families.toReversed().map((family) => [family, readBackward(family)]));
+  for (const family of families) {
+    assert.deepEqual(
+      backward.get(family),
+      read(family),
+      `The reference of ${family} changes with the sequence of the reads.`,
+    );
+  }
 });
 
 test('the reference of merge-props has mergeProps with a and b required, and c, d and e optional', () => {
