@@ -376,6 +376,7 @@ Matches Base UI 1.9.0. Includes later Base UI changes through `315eba7a` (2026-1
 - Read the held state of each part from useKeepAliveState. Handle a hold and show in the mount flush. ([#575](https://github.com/vase-ui/vase-ui/pull/575))
 - Name the id that an element has now in the other ID references. ([#580](https://github.com/vase-ui/vase-ui/pull/580))
 - Start the held state of each part from useKeepAliveState. ([#588](https://github.com/vase-ui/vase-ui/pull/588))
+- List each prop that a local of setup hid in the API reference. ([#591](https://github.com/vase-ui/vase-ui/pull/591))
 
 ### Removed
 
