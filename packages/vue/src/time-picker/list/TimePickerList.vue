@@ -37,7 +37,7 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import TimePickerItem from '../item/TimePickerItem.vue';
 import { useTimePickerRootContext } from '../root/TimePickerRootContext';
-import { useFocusItemOnOpen } from '../utils/useFocusItemOnOpen';
+import { findOptionToFocus, useFocusPartOnOpen } from '../utils/useFocusPartOnOpen';
 import { DEFAULT_LIST_STEP, isValidListStep, listTimes } from '../utils/timeList';
 
 defineOptions({ inheritAttrs: false });
@@ -122,7 +122,7 @@ const { element, elementProps } = useRenderElement('div', props, {
   ],
 });
 
-useFocusItemOnOpen(popup, element);
+useFocusPartOnOpen(popup, () => findOptionToFocus(element.value));
 
 defineExpose({ element });
 </script>

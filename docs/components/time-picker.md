@@ -207,9 +207,9 @@ A key goes over a disabled item.
 - `TimePicker.Trigger` has `aria-haspopup="dialog"`. Its default name is `Choose time`. With a value, its name is `Change time,` and the time. Give it an `aria-label` to change it.
 - `TimePicker.Popup` has `role="dialog"`. Give it a name with `aria-label` or `TimePicker.Title`.
 - `TimePicker.List` and `TimePicker.Column` are listboxes, and each item is an option with `aria-selected`. The default name of the list is `Time`, and the default name of a column is the name of its unit in the locale. Give them an `aria-label` or an `aria-labelledby` to change it.
-- When the popup opens, the focus goes to the selected item of the list or of the first column, or to the first item when no item is selected. With a clock, it goes to the clock face. When the popup closes, the focus goes back to the trigger.
+- When the popup opens, the focus goes to the first of these parts that the popup has: the selected item of the list or of a column, or the first item when no item is selected, or the clock face. When the popup closes, the focus goes back to the trigger.
 - A picker that is `disabled` or `readOnly` has a disabled trigger, and Alt and Down does nothing. A list and a column in a picker that the user cannot change have `aria-disabled` or `aria-readonly`, and their items do not select.
-- The default names are in English. The times in them follow the locale.
+- The default names of the trigger and of the list are in English, and the time in the name of the trigger follows the locale. The default name of a column is the name of its unit in the locale.
 
 ## API reference
 

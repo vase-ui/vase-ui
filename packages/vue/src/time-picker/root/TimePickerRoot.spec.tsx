@@ -40,7 +40,6 @@ function assertValueChange(details: TimePicker.Root.ChangeEventDetails) {
     | 'keyboard'
     | 'input-change'
     | 'item-press'
-    | 'trigger-press'
     | 'input-clear'
     | 'input-paste'
     | 'clear-press'

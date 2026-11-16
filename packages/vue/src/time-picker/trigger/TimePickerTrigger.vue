@@ -48,17 +48,19 @@ const locale = useFormatLocale(() => picker.props.locale);
 // A picker that the user cannot change has nothing to choose.
 const disabled = computed(() => props.disabled || picker.disabled.value || picker.readOnly.value);
 
-// The name has the time and not the date, because the picker sets the time. A value in a time zone
-// also has the name of the zone, and a field that shows seconds also has the seconds.
+// The name has the time and not the date, because the picker sets the time. It shows what the field
+// shows: the seconds for a granularity of seconds, and the name of the time zone for a value in a
+// time zone.
 function describe(value: TimePickerRootValue): string {
-  const timeStyle = isKind(value, 'zonedDateTime')
-    ? 'long'
-    : picker.props.granularity === 'second'
-      ? 'medium'
-      : 'short';
   return formatText(
     value,
-    { timeStyle, hourCycle: hourCycleOption(picker.props.hourCycle) },
+    {
+      hour: 'numeric',
+      minute: '2-digit',
+      second: picker.props.granularity === 'second' ? '2-digit' : undefined,
+      timeZoneName: isKind(value, 'zonedDateTime') ? 'short' : undefined,
+      hourCycle: hourCycleOption(picker.props.hourCycle),
+    },
     locale.value,
   );
 }

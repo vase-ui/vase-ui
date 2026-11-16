@@ -936,7 +936,8 @@ async function expectDatePickerPage(page: Page) {
 // The text that a time picker gives to the name of its trigger, as `Intl` makes it in Node.js.
 function formatTime(hour: number) {
   return new Intl.DateTimeFormat('en-US', {
-    timeStyle: 'short',
+    hour: 'numeric',
+    minute: '2-digit',
     hourCycle: 'h12',
     timeZone: 'UTC',
   }).format(Date.UTC(1970, 0, 1, hour));

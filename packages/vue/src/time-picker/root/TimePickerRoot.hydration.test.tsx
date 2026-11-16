@@ -50,7 +50,7 @@ describe('<TimePicker.Root /> hydration', () => {
     expect(
       template.content.querySelector('[data-testid="trigger"]')?.getAttribute('aria-label'),
     ).toBe(
-      `Change time, ${formatText(Temporal.PlainTime.from('15:04'), { timeStyle: 'short' }, 'en-US')}`,
+      `Change time, ${formatText(Temporal.PlainTime.from('15:04'), { hour: 'numeric', minute: '2-digit' }, 'en-US')}`,
     );
     expect(template.content.querySelector('[role="dialog"]')).toBe(null);
   });

@@ -50,7 +50,7 @@ import { isValidStep } from '../../time-clock/utils/clockViews';
 import TimePickerColumnItem from '../column-item/TimePickerColumnItem.vue';
 import { useTimePickerRootContext } from '../root/TimePickerRootContext';
 import { columnValues, selectedColumnValue } from '../utils/columns';
-import { useFocusItemOnOpen } from '../utils/useFocusItemOnOpen';
+import { findOptionToFocus, useFocusPartOnOpen } from '../utils/useFocusPartOnOpen';
 import { useTimePickerFormat } from '../utils/useTimePickerFormat';
 import { TimePickerColumnContext } from './TimePickerColumnContext';
 
@@ -141,7 +141,7 @@ const { element, elementProps } = useRenderElement('div', props, {
   ],
 });
 
-useFocusItemOnOpen(popup, element);
+useFocusPartOnOpen(popup, () => findOptionToFocus(element.value));
 
 defineExpose({ element });
 </script>

@@ -20,8 +20,9 @@ export type TimePickerRootValue = TimeValue;
 
 export type TimePickerRootGranularity = TimeFieldRootGranularity;
 
+// A press on a view of the clock changes the view and not the value.
 export type TimePickerRootChangeEventReason =
-  TimeFieldRootChangeEventReason | TimeClockRootChangeEventReason;
+  TimeFieldRootChangeEventReason | Exclude<TimeClockRootChangeEventReason, 'trigger-press'>;
 export type TimePickerRootChangeEventDetails =
   VaseUIChangeEventDetails<TimePickerRootChangeEventReason>;
 

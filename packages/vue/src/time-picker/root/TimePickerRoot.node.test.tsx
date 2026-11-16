@@ -30,7 +30,11 @@ describe('<TimePicker.Root /> on a server', () => {
     expect(html).toContain('data-type="hour"');
     expect(hiddenInputOf(html)).toMatch(/^<input type="time" name="start"[^>]* value="15:04"/);
     expect(hiddenInputOf(html)).toMatch(/ required[ >]/);
-    const text = formatText(Temporal.PlainTime.from('15:04'), { timeStyle: 'short' }, 'en-US');
+    const text = formatText(
+      Temporal.PlainTime.from('15:04'),
+      { hour: 'numeric', minute: '2-digit' },
+      'en-US',
+    );
     expect(html).toMatch(
       new RegExp(`<button[^>]* aria-haspopup="dialog"[^>]* aria-label="Change time, ${text}"`),
     );
@@ -52,7 +56,7 @@ describe('<TimePicker.Root /> on a server', () => {
 
     expect(empty).toContain('aria-label="Choose time"');
     expect(inZone).toContain(
-      `aria-label="Change time, ${formatText(zoned, { timeStyle: 'long' }, 'en-US')}"`,
+      `aria-label="Change time, ${formatText(zoned, { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }, 'en-US')}"`,
     );
   });
 

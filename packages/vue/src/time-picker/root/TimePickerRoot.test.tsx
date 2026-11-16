@@ -29,7 +29,7 @@ const dayPeriodText = (hour: number, locale = 'en-US') =>
     .formatToParts(Date.UTC(1970, 0, 1, hour))
     .find((part) => part.type === 'dayPeriod')?.value ?? '';
 const triggerName = (text: string, locale = 'en-US') =>
-  `Change time, ${formatText(time(text), { timeStyle: 'short', hourCycle: 'h12' }, locale)}`;
+  `Change time, ${formatText(time(text), { hour: 'numeric', minute: '2-digit', hourCycle: 'h12' }, locale)}`;
 
 const hiddenInputOf = (container: Element) =>
   container.querySelector<HTMLInputElement>('input[aria-hidden]')!;
@@ -189,6 +189,19 @@ describe('<TimePicker.Root />', () => {
         columns: true,
         defaultValue: time('15:30'),
       });
+
+      await open(user);
+
+      await waitFor(() => {
+        expect(listItem('15:30')).toHaveFocus();
+      });
+      await waitSingleFrame();
+      await waitSingleFrame();
+      expect(listItem('15:30')).toHaveFocus();
+    });
+
+    it('goes to the list and not to a clock that comes after it', async () => {
+      const { user } = await renderPicker({ list: true, clock: true, defaultValue: time('15:30') });
 
       await open(user);
 

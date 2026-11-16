@@ -6,6 +6,7 @@ import { formatText } from '../../internals/date-time/calendar/formatText';
 const time = Temporal.PlainTime.from('15:04');
 
 // The text of the default name follows the options of the part.
+const SHORT: Intl.DateTimeFormatOptions = { hour: 'numeric', minute: '2-digit' };
 const changeTime = (
   value: Temporal.PlainTime | Temporal.PlainDateTime | Temporal.ZonedDateTime,
   options: Intl.DateTimeFormatOptions,
@@ -51,20 +52,25 @@ describe('<TimePicker.Trigger />', () => {
     const zoned = Temporal.ZonedDateTime.from('2026-11-14T15:04[Asia/Tokyo]');
 
     it.each([
-      { name: 'a time', value: time, props: {}, options: { timeStyle: 'short' } },
-      { name: 'a date and time', value: dateTime, props: {}, options: { timeStyle: 'short' } },
-      { name: 'a time in a zone', value: zoned, props: {}, options: { timeStyle: 'long' } },
+      { name: 'a time', value: time, props: {}, options: SHORT },
+      { name: 'a date and time', value: dateTime, props: {}, options: SHORT },
+      {
+        name: 'a time in a zone',
+        value: zoned,
+        props: {},
+        options: { ...SHORT, timeZoneName: 'short' },
+      },
       {
         name: 'a time with a granularity of seconds',
         value: time,
         props: { granularity: 'second' },
-        options: { timeStyle: 'medium' },
+        options: { ...SHORT, second: '2-digit' },
       },
       {
         name: 'a time in a 24-hour cycle',
         value: time,
         props: { hourCycle: 24 },
-        options: { timeStyle: 'short', hourCycle: 'h23' },
+        options: { ...SHORT, hourCycle: 'h23' },
       },
     ] as const)(
       'has the time, and not the date, in its name for $name',
@@ -88,16 +94,13 @@ describe('<TimePicker.Trigger />', () => {
           <TimePicker.Trigger />
         </TimePicker.Root>,
       );
-      expect(screen.getByRole('button')).toHaveAttribute(
-        'aria-label',
-        changeTime(time, { timeStyle: 'short' }),
-      );
+      expect(screen.getByRole('button')).toHaveAttribute('aria-label', changeTime(time, SHORT));
 
       await setProps({ value: Temporal.PlainTime.from('09:30'), locale: 'de-DE' });
 
       expect(screen.getByRole('button')).toHaveAttribute(
         'aria-label',
-        changeTime(Temporal.PlainTime.from('09:30'), { timeStyle: 'short' }, 'de-DE'),
+        changeTime(Temporal.PlainTime.from('09:30'), SHORT, 'de-DE'),
       );
     });
 
