@@ -44,9 +44,9 @@ export function useIsHydrating(): ComputedRef<boolean> {
  * server HTML. The first client render does not know a later part yet. When the page removes or
  * changes that part at the mount, the render after the mount can give the value of the first
  * client render. Vue then writes nothing, and the element keeps the value of the server HTML. A
- * date that `Intl` formats keeps the text of the server in the same way, because each client
- * render gives the text of the browser. With `null` in the first client render, the render after
- * the mount always writes its value.
+ * date that `Intl` formats can keep the text of the server in the same way. The server and the
+ * browser can have other `Intl` data. With `null` in the first client render, the render after the
+ * mount always writes its value.
  *
  * Give the function only `aria-*` values, or the value of an attribute that the element allows to
  * differ with `data-allow-mismatch` and the category `attribute`, such as the `abbr` of
