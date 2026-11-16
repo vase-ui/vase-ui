@@ -2,6 +2,7 @@ import { computed, nextTick, onMounted, shallowRef, useSlots, watch } from 'vue'
 // eslint-disable-next-line no-restricted-imports -- Vue sets `vnode.el` before `setup` only when it hydrates the component from server HTML. Vue has no public API for this fact, and Nuxt reads the same field. In Vapor mode the instance is `null`, and each composable then acts as in a client-only mount.
 import { getCurrentInstance } from 'vue';
 import type { ComputedRef, Ref, RendererNode } from 'vue';
+import { isHTMLElement, isNode } from '@floating-ui/utils/dom';
 import { ownerDocument, ownerWindow } from './owner';
 import { activeElement } from './shadowDom';
 
@@ -59,6 +60,26 @@ export function useAriaAfterHydration(): <Value>(value: Value) => Value | null {
   }
   const hydrated = useIsHydrated();
   return (value) => (hydrated.value ? value : null);
+}
+
+/**
+ * Gives the element of the server HTML that Vue hydrates for the component that calls it, until
+ * the component is mounted. It gives `null` on a server, in a client-only mount and after the
+ * mount.
+ *
+ * A part whose first client render cannot know a value of the server HTML reads that value from
+ * the element. The first client render then gives the value of the server HTML, and Vue writes
+ * each value that the render after the mount changes.
+ */
+export function useServerElement(): () => HTMLElement | null {
+  const node: unknown = getCurrentInstance()?.vnode.el;
+  if (!isNode(node)) {
+    return () => null;
+  }
+  // The render of a `#render` slot is a fragment, which starts with a comment.
+  const element = isHTMLElement(node) ? node : node.nextSibling;
+  const hydrated = useIsHydrated();
+  return () => (hydrated.value || !isHTMLElement(element) ? null : element);
 }
 
 type TextControl = HTMLInputElement | HTMLTextAreaElement;
