@@ -180,11 +180,6 @@ export class HoverIntent {
     }
   }
 
-  #ownsBlock() {
-    const blocked = this.#blockedPointerEvents;
-    return blocked !== null && pointerEventsOwnerByScopeElement.get(blocked.scopeElement) === this;
-  }
-
   #unblockHoverTrigger(element: HoverTriggerElement) {
     if (element.style.getPropertyValue('pointer-events') === '') {
       element.style.pointerEvents = 'auto';
@@ -199,7 +194,8 @@ export class HoverIntent {
    */
   addHoverTrigger(element: HoverTriggerElement) {
     this.#hoverTriggers.add(element);
-    if (this.#ownsBlock()) {
+    // A popup that takes the scope element over restores the block of this popup first.
+    if (this.#blockedPointerEvents) {
       this.#unblockHoverTrigger(element);
     }
   }
@@ -215,7 +211,8 @@ export class HoverIntent {
     }
   }
 
-  // In the wrapper (delegated) mode, the hover trigger is a wrapper that contains the triggers.
+  // A leave can name an element inside a hover trigger, such as its icon. In the wrapper
+  // (delegated) mode, the hover trigger is a wrapper that contains the triggers.
   #isInsideHoverTrigger(target: EventTarget | null) {
     if (!isInsideEnabledTrigger(target, this.#store.context.triggerElements)) {
       return false;

@@ -38,7 +38,8 @@ export interface UseHoverTriggerInteractionProps {
   isActiveTrigger?: MaybeRefOrGetter<boolean | undefined>;
   /**
    * The element of the trigger. The safe polygon and `KeepAlive` close the popup only when this
-   * element is the anchor of the store.
+   * element is the anchor of the store. While the composable is enabled, the element is a hover
+   * trigger of the popup (`HoverIntent.addHoverTrigger`).
    */
   triggerElement?: MaybeRefOrGetter<Element | null | undefined>;
   getHandleCloseContext?: (() => HandleCloseContextBase | null) | undefined;
