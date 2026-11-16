@@ -571,12 +571,14 @@ describe('useImplicitActiveTrigger', () => {
     const element = document.createElement('button');
     store.set('open', true);
     const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
-      <>
-        <ImplicitActiveTriggerTest store={store} />
-        <TestTrigger id="trigger" store={store} element={element} />
-      </>
+      <ImplicitActiveTriggerTest store={store} />
     ));
-    await render(<HeldBranch />);
+    await render(
+      <>
+        <TestTrigger id="trigger" store={store} element={element} />
+        <HeldBranch />
+      </>,
+    );
 
     await mountWhileHeld();
     await flushMicrotasks();

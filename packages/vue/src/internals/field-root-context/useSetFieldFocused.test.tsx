@@ -241,6 +241,7 @@ describe('useSetFieldFocused', () => {
         </FieldScope>,
       );
       await mountWhileHeld();
+      expect(screen.getByTestId('root')).not.toHaveAttribute('data-focused');
       document.addEventListener('focusin', (event) => event.stopImmediatePropagation(), {
         capture: true,
         once: true,

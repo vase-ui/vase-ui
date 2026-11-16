@@ -181,7 +181,7 @@ describe('<Toast.Content />', () => {
     const height = shallowRef(10);
     // `KeepAlive` holds only the content, so the provider, the viewport and the root stay active.
     const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
-      <Toast.Content>
+      <Toast.Content data-testid="content">
         <div style={{ height: `${height.value}px` }} />
       </Toast.Content>
     ));
@@ -206,7 +206,12 @@ describe('<Toast.Content />', () => {
     await flushMicrotasks();
     const root = screen.getByTestId('toast');
 
+    const observe = vi.spyOn(ResizeObserver.prototype, 'observe');
+    onTestFinished(() => observe.mockRestore());
     await mountWhileHeld();
+    expect(
+      observe.mock.calls.some(([target]) => target.getAttribute('data-testid') === 'content'),
+    ).toBe(true);
     height.value = 20;
     await flushMicrotasks();
     await show();

@@ -1252,6 +1252,59 @@ describe('<Collapsible.Panel />', () => {
       });
     });
 
+    it('gives a closed keyframe panel with hiddenUntilFound that mounts while KeepAlive holds it the attributes of a shown mount at the activation', async () => {
+      async function readAfterMount(heldMount: boolean) {
+        const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
+          () => (
+            <Collapsible.Root>
+              <Collapsible.Trigger>Trigger</Collapsible.Trigger>
+              <Collapsible.Panel class="animation-test-panel" data-testid="panel" hiddenUntilFound>
+                {PANEL_CONTENT}
+              </Collapsible.Panel>
+            </Collapsible.Root>
+          ),
+          { mounted: !heldMount },
+        );
+        const { unmount } = await render(
+          <>
+            <style>{`
+              @keyframes panel-slide-up {
+                from {
+                  height: var(--collapsible-panel-height);
+                }
+
+                to {
+                  height: 0;
+                }
+              }
+
+              .animation-test-panel[data-closed] {
+                overflow: hidden;
+                animation: panel-slide-up 100ms linear;
+              }
+            `}</style>
+            <HeldBranch />
+          </>,
+        );
+        if (heldMount) {
+          await mountWhileHeld();
+          await show();
+        }
+        const panel = screen.getByTestId('panel');
+        const attributes = Object.fromEntries(
+          Array.from(panel.attributes, ({ name, value }) => [name, value]),
+        );
+        unmount();
+        return attributes;
+      }
+
+      const shownMount = await readAfterMount(false);
+      const heldMount = await readAfterMount(true);
+
+      expect(shownMount).not.toHaveProperty('data-starting-style');
+      expect(heldMount).toEqual({ ...shownMount, 'data-starting-style': '' });
+    });
+
     it('does not replay open keyframe animations when revealing a panel opened by the user', async () => {
       const App = defineComponent(() => {
         const visible = shallowRef(true);

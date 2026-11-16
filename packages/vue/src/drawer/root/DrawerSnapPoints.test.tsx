@@ -337,10 +337,12 @@ describe('Drawer snap point composition', () => {
     ));
 
     await mountWhileHeld();
+    expect(snapPoints.viewportHeight.value).toBe(400);
     viewportHeight.value = 200;
     await flushMicrotasks();
     await nextAnimationFrame();
     await nextAnimationFrame();
+    expect(snapPoints.viewportHeight.value).toBe(200);
     await show();
 
     expect(snapPoints.viewportHeight.value).toBe(200);

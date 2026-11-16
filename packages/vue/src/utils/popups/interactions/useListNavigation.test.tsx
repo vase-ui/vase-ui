@@ -2845,6 +2845,8 @@ describe('useListNavigation', () => {
       await waitSingleFrame();
       await waitSingleFrame();
 
+      expect(list.proposals).toEqual([1]);
+      expect(document.body).toHaveFocus();
       await show();
       await waitSingleFrame();
       await waitSingleFrame();

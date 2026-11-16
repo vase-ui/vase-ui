@@ -153,7 +153,7 @@ describe('<ScrollArea.Content />', () => {
       const height = shallowRef(50);
       // `KeepAlive` is in the viewport and holds only the content, so the viewport stays active.
       const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
-        <ScrollArea.Content>
+        <ScrollArea.Content data-testid="content">
           <div style={{ height: `${height.value}px` }} />
         </ScrollArea.Content>
       ));
@@ -166,7 +166,12 @@ describe('<ScrollArea.Content />', () => {
       );
       const root = screen.getByTestId('root');
 
+      const observe = vi.spyOn(ResizeObserver.prototype, 'observe');
+      onTestFinished(() => observe.mockRestore());
       await mountWhileHeld();
+      expect(
+        observe.mock.calls.some(([target]) => target.getAttribute('data-testid') === 'content'),
+      ).toBe(true);
       await show();
       await waitSingleFrame();
       await waitSingleFrame();

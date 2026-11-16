@@ -1242,6 +1242,7 @@ describe('useAnchorPositioning', () => {
       await render(<HeldBranch />);
 
       await mountWhileHeld();
+      expect(autoUpdateSpy).toHaveBeenCalledTimes(1);
       trigger.style.left = '60px';
       await show();
 

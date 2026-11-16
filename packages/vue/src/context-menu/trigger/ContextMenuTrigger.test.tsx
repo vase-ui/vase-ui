@@ -815,7 +815,10 @@ describe('<ContextMenu.Trigger />', () => {
           <HeldBranch />
         </div>,
       );
+      const listen = vi.spyOn(document, 'addEventListener');
+      onTestFinished(() => listen.mockRestore());
       await mountWhileHeld();
+      expect(listen.mock.calls.some(([type]) => type === 'contextmenu')).toBe(true);
       await show();
       probe.context.backdropRef.value = getByTestId('backdrop') as HTMLDivElement;
 

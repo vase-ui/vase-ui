@@ -106,7 +106,10 @@ describe('useFocus', () => {
     });
     const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => <App />);
     await render(<HeldBranch />);
+    const listen = vi.spyOn(window, 'addEventListener');
+    onTestFinished(() => listen.mockRestore());
     await mountWhileHeld();
+    expect(listen.mock.calls.some(([type]) => type === 'blur')).toBe(true);
     await show();
     const button = screen.getByRole('button');
 

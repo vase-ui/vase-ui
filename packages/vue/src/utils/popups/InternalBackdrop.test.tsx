@@ -311,6 +311,7 @@ describe('InternalBackdrop', () => {
       await render(<HeldBranch />);
 
       await mountWhileHeld();
+      expect(startSpy).toHaveBeenCalledTimes(1);
       cutout.style.top = '60px';
       await show();
       await waitForFirstNotifications();

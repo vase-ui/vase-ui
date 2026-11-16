@@ -1969,7 +1969,11 @@ describe('<Slider.Thumb />', () => {
       const value = shallowRef(30);
       const width = shallowRef(200);
       const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
-        <Slider.Root value={value.value} thumbAlignment="edge" style={{ width: `${width.value}px` }}>
+        <Slider.Root
+          value={value.value}
+          thumbAlignment="edge"
+          style={{ width: `${width.value}px` }}
+        >
           <Slider.Control style={{ position: 'relative', width: '100%', height: '10px' }}>
             <Slider.Thumb data-testid="thumb" style={{ width: '20px', height: '10px' }} />
           </Slider.Control>
@@ -1977,7 +1981,12 @@ describe('<Slider.Thumb />', () => {
       ));
       await render(<HeldBranch />);
 
+      const observe = vi.spyOn(ResizeObserver.prototype, 'observe');
+      onTestFinished(() => observe.mockRestore());
       await mountWhileHeld();
+      expect(
+        observe.mock.calls.some(([target]) => target.getAttribute('data-testid') === 'thumb'),
+      ).toBe(true);
       value.value = 60;
       await flushMicrotasks();
       await show();
