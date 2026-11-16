@@ -630,6 +630,24 @@ describe('<Select.Value />', () => {
 
       expect(renderValue.mock.calls[0]?.[0]).toEqual([]);
     });
+
+    it('VUE-115: gives an empty array to the slot for a null value', async () => {
+      const renderValue = vi.fn();
+
+      const { setProps } = await render(
+        <Select.Root multiple value={null} defaultValue={['sans']}>
+          <Select.Value v-slots={{ default: ({ value }: ValueSlotProps) => renderValue(value) }} />
+        </Select.Root>,
+      );
+
+      expect(renderValue.mock.lastCall?.[0]).toEqual([]);
+
+      await setProps({ value: ['serif'] });
+      expect(renderValue.mock.lastCall?.[0]).toEqual(['serif']);
+
+      await setProps({ value: null });
+      expect(renderValue.mock.lastCall?.[0]).toEqual([]);
+    });
   });
 
   describe('prop: placeholder', () => {
