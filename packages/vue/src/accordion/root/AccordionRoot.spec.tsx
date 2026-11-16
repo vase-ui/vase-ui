@@ -24,6 +24,9 @@ export const inferredFromDefaultValue = (
 
 export const explicitValue = <Accordion.Root<'a' | 'b'> value={['a']} />;
 
+// `null` is an empty value.
+export const nullValue = <Accordion.Root value={null} defaultValue={null} />;
+
 export const explicitHandler = (
   <Accordion.Root<'a' | 'b'>
     onValueChange={(value) => {
