@@ -190,9 +190,10 @@ describe('<MenuRoot />', () => {
         });
       }
 
-      // The switch to trigger 2 closes the popup and opens it again in one task. The popup thus
-      // starts an exit and reverses it in the next frame, and the events of that exit can come
-      // after the setup. Only the close that follows matters.
+      // `user.hover` gives the leave event no `relatedTarget`, so the switch to trigger 2 closes
+      // the popup and opens it again in one task. The popup thus starts an exit and reverses it in
+      // the next frame, and the events of that exit can come after the setup. Only the close that
+      // follows matters.
       instantsWhileEnding.length = 0;
 
       return {
