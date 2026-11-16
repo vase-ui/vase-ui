@@ -1234,7 +1234,7 @@ describe('useAnchorPositioning', () => {
       expect(autoUpdateSpy).toHaveBeenCalledTimes(2);
     });
 
-    it('starts anchor updates at the first activation after a held mount', async () => {
+    it('VUE-5: starts anchor updates at the first activation after a held mount', async () => {
       const trigger = createAnchor();
       const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
         <PositionerPart trigger={trigger} {...popupProps} />

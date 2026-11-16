@@ -566,7 +566,7 @@ describe('useImplicitActiveTrigger', () => {
     expect(store.state.activeTriggerElement).toBe(inside);
   });
 
-  it('claims the only trigger at the first activation after a held mount', async () => {
+  it('VUE-22: claims the only trigger at the first activation after a held mount', async () => {
     const store = createTestPopupStore();
     const element = document.createElement('button');
     store.set('open', true);

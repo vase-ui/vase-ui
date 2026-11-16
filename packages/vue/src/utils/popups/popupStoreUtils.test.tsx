@@ -486,7 +486,7 @@ describe('useTriggerRegistration', () => {
       expect(store.state.triggerCount).toBe(4);
     });
 
-    it('hides a trigger entry from a held mount until the first activation', async () => {
+    it('VUE-22: hides a trigger entry from a held mount until the first activation', async () => {
       const store = createTestPopupStore();
       store.set('open', true);
       const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
