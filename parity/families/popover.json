@@ -36,12 +36,12 @@
     {
       "entry": "Title",
       "prop": "id",
-      "reason": "The part reads `id` to register it with the root for `aria-labelledby` of the popup, so it is a declared prop. Base UI reads it from the native attributes of the title, and `types.md` has no row for a native attribute."
+      "reason": "The part reads `id` to give it to its element, or a generated id when `id` is absent, so it is a declared prop. The popup names the `id` that the element has in `aria-labelledby`. Base UI reads it from the native attributes of the title, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Description",
       "prop": "id",
-      "reason": "The part reads `id` to register it with the root for `aria-describedby` of the popup, so it is a declared prop. Base UI reads it from the native attributes of the description, and `types.md` has no row for a native attribute."
+      "reason": "The part reads `id` to give it to its element, or a generated id when `id` is absent, so it is a declared prop. The popup names the `id` that the element has in `aria-describedby`. Base UI reads it from the native attributes of the description, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Close",
