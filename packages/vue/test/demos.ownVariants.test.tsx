@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 import { afterEach, describe, expect, it } from 'vitest';
 import { h } from 'vue';
-import type { Component } from 'vue';
+import type { Component, CSSProperties } from 'vue';
 import { createRenderer, fireEvent, screen, waitFor } from '#test-utils';
 import DemoFrame from '../../../docs/.vitepress/components/DemoFrame.vue';
 import '../../../docs/.vitepress/theme/tokens.css';
@@ -67,6 +67,17 @@ function bytesOf(color: string) {
   return rgbaOf(color).join(',');
 }
 
+/**
+ * One value of a list of a transition for each property of `transition-property`. The engine
+ * repeats a list that has fewer values than the properties, so `0.2s` and `0.2s, 0.2s` are one
+ * look for two properties.
+ */
+function valueOfEachProperty(list: string, properties: number) {
+  // A comma between the parentheses of a curve does not start a value.
+  const values = list.split(/,\s*(?![^(]*\))/);
+  return Array.from({ length: properties }, (_, index) => values[index % values.length]).join(', ');
+}
+
 function lookOf(element: Element): Record<string, string> {
   const style = getComputedStyle(element);
   // The clip of a hidden input of a part leaves nothing to paint. The reset of Tailwind changes the
@@ -76,10 +87,18 @@ function lookOf(element: Element): Record<string, string> {
   }
   const look: Record<string, string> = {
     cursor: style.cursor,
-    'transition-timing-function': style.transitionTimingFunction,
-    'transition-duration': style.transitionDuration,
     'text-decoration-line': style.textDecorationLine,
   };
+  // A transition with no property changes nothing. `transition: none` of a style sheet also sets
+  // its duration to zero, and `transition-none` of Tailwind keeps the duration.
+  if (style.transitionProperty !== 'none') {
+    const properties = style.transitionProperty.split(',').length;
+    look['transition-duration'] = valueOfEachProperty(style.transitionDuration, properties);
+    look['transition-timing-function'] = valueOfEachProperty(
+      style.transitionTimingFunction,
+      properties,
+    );
+  }
   // The engine paints a native checkbox, and it paints none of these colors.
   if (style.appearance === 'auto' && element.matches('input[type=checkbox]')) {
     return look;
@@ -133,17 +152,52 @@ it("finds the demos of the components of Vase UI's own", () => {
 describe('look comparison', () => {
   const { render } = createRenderer();
 
+  async function differencesOfStyles(cssModules: CSSProperties, tailwind: CSSProperties) {
+    const frames = [
+      await render(h('span', { style: cssModules }, 'Demo')),
+      await render(h('span', { style: tailwind }, 'Demo')),
+    ];
+    return differences(lookOfFrame(frames[0].container), lookOfFrame(frames[1].container));
+  }
+
   it.each([
     { name: 'transition-timing-function', first: 'ease', second: 'linear' },
     { name: 'transition-duration', first: '0.2s', second: '0.4s' },
     { name: 'text-decoration-line', first: 'none', second: 'underline' },
   ])('reports a difference in $name', async ({ name, first, second }) => {
-    const cssModules = await render(h('span', { style: { [name]: first } }, 'Demo'));
-    const tailwind = await render(h('span', { style: { [name]: second } }, 'Demo'));
+    expect(await differencesOfStyles({ [name]: first }, { [name]: second })).toEqual([
+      `<span> "Demo" ${name}: ${first} in the CSS-module demo, ${second} in the Tailwind demo`,
+    ]);
+  });
 
-    expect(differences(lookOfFrame(cssModules.container), lookOfFrame(tailwind.container))).toEqual(
-      [`<span> "Demo" ${name}: ${first} in the CSS-module demo, ${second} in the Tailwind demo`],
-    );
+  const curve = 'cubic-bezier(0.4, 0, 0.2, 1)';
+  const shorthand = { transition: `opacity 0.2s ${curve}, translate 0.2s ${curve}` };
+  const longhands = { transitionProperty: 'opacity, translate', transitionDuration: '0.2s' };
+
+  it('reports no difference when one variant repeats the values of a transition', async () => {
+    expect(
+      await differencesOfStyles(shorthand, { ...longhands, transitionTimingFunction: curve }),
+    ).toEqual([]);
+  });
+
+  it('reports a difference in the second property of a transition', async () => {
+    expect(
+      await differencesOfStyles(shorthand, {
+        ...longhands,
+        transitionTimingFunction: `${curve}, linear`,
+      }),
+    ).toEqual([
+      `<span> "Demo" transition-timing-function: ${curve}, ${curve} in the CSS-module demo, ${curve}, linear in the Tailwind demo`,
+    ]);
+  });
+
+  it('reports no difference between two transitions that have no property', async () => {
+    expect(
+      await differencesOfStyles(
+        { transition: 'none' },
+        { transitionProperty: 'none', transitionDuration: '0.2s', transitionTimingFunction: curve },
+      ),
+    ).toEqual([]);
   });
 });
 
