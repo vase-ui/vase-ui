@@ -1919,7 +1919,7 @@ describe('<Combobox.Trigger />', () => {
 
     trigger.focus();
     expect(trigger).toHaveFocus();
-    // The focus timer must not mount content for a disabled trigger.
+    // An enabled trigger mounts the popup content in a 0 ms timer after its focus.
     await wait(0);
     expect(onMount).not.toHaveBeenCalled();
 

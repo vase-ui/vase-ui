@@ -624,7 +624,7 @@ describe('<Select.Trigger />', () => {
       active.value = false;
       await nextTick();
       expect(trigger).not.toBeInTheDocument();
-      // The focus timer must stop before it mounts content in the held branch.
+      // A shown trigger mounts the popup content in a 0 ms timer after its focus.
       await wait(0);
       expect(onMount).not.toHaveBeenCalled();
 

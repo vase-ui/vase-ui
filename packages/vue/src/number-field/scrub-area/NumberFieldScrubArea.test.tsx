@@ -222,7 +222,7 @@ describe('<NumberField.ScrubArea />', () => {
   it.each([
     { name: 'clicks after a press with no move', movementX: 0, clicks: 1 },
     { name: 'does not click after a scrub', movementX: 10, clicks: 0 },
-  ])('$name with no native click', async ({ movementX, clicks }) => {
+  ])('$name when the area gets no native click', async ({ movementX, clicks }) => {
     const onClick = vi.fn();
     const onValueCommitted = vi.fn();
     await render(
