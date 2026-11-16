@@ -403,8 +403,8 @@ function handleFocusout() {
   }
 }
 
-function getChipIndexForKey(event: KeyboardEvent, input: HTMLInputElement, selectedValue: any) {
-  if (!chipsContext) {
+function getChipIndexForKey(event: KeyboardEvent, input: HTMLInputElement, selectedValue: unknown) {
+  if (!chipsContext || !Array.isArray(selectedValue)) {
     return undefined;
   }
 
