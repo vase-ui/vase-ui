@@ -93,6 +93,14 @@ export function createRenderer() {
   const mounted: { unmount: () => void; container: HTMLElement }[] = [];
 
   afterEach(() => {
+    // `vi.resetAllMocks()` of the test setup runs after this hook. Without this reset, a console
+    // spy that the case did not restore takes each message of the unmount.
+    for (const method of ['warn', 'error'] as const) {
+      const spy = console[method];
+      if (vi.isMockFunction(spy)) {
+        spy.mockReset();
+      }
+    }
     for (const { unmount, container } of mounted.splice(0)) {
       unmount();
       container.remove();
