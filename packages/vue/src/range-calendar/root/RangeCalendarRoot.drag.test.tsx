@@ -2,6 +2,8 @@ import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { createRenderer, fireEvent, screen, touchDrag } from '#test-utils';
 import { platform } from '../../common/platform';
+import * as RangeCalendar from '../index.parts';
+import RangeCalendarAncestors from './RangeCalendarAncestors.test.vue';
 import RangeCalendarAnatomy from './RangeCalendarAnatomy.test.vue';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
@@ -162,6 +164,68 @@ describe('<RangeCalendar.Root /> with a drag', () => {
       await fireEvent.pointerUp(first, pointer('mouse', button('2026-11-13'), 0));
 
       expect(ends(onValueChange.mock.calls[0]!)).toEqual(['2026-11-10', '2026-11-11']);
+    });
+
+    it('ends the drag at its last day when a move comes with no button pressed', async () => {
+      const { onValueChange } = await renderRange();
+      const first = button('2026-11-10');
+
+      await fireEvent.pointerDown(first, pointer('mouse', first));
+      await fireEvent.pointerMove(first, pointer('mouse', button('2026-11-12')));
+      // Another element got the release, so the next move goes to the day under the pointer.
+      await fireEvent.pointerMove(button('2026-11-14'), pointer('mouse', button('2026-11-14'), 0));
+
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+      expect(ends(onValueChange.mock.calls[0]!)).toEqual(['2026-11-10', '2026-11-12']);
+      expect(onValueChange.mock.calls[0]![1].reason).toBe('drag');
+      expect(screen.getByRole('group')).not.toHaveAttribute('data-selecting');
+
+      await fireEvent.pointerMove(button('2026-11-20'), pointer('mouse', button('2026-11-20'), 0));
+
+      expect(shown().end).toEqual(['2026-11-12']);
+    });
+
+    it('finds the day of a button whose slot renders an element', async () => {
+      await render(
+        <RangeCalendarAncestors level="month">
+          <RangeCalendar.Grid>
+            <RangeCalendar.GridBody
+              v-slots={{
+                week: ({ week }: { week: RangeCalendar.Week.Props['week'] }) => (
+                  <RangeCalendar.Week
+                    week={week}
+                    v-slots={{
+                      day: ({ day: date }: { day: Temporal.PlainDate }) => (
+                        <RangeCalendar.Day day={date}>
+                          <RangeCalendar.DayButton
+                            v-slots={{
+                              default: ({ text }: { text: string }) => (
+                                <span style={{ display: 'block', padding: '8px' }}>{text}</span>
+                              ),
+                            }}
+                          />
+                        </RangeCalendar.Day>
+                      ),
+                    }}
+                  />
+                ),
+              }}
+            />
+          </RangeCalendar.Grid>
+        </RangeCalendarAncestors>,
+      );
+      const first = button('2026-11-10');
+      const last = button('2026-11-12');
+      expect(document.elementFromPoint(centerOf(last).x, centerOf(last).y)?.tagName).toBe('SPAN');
+
+      await fireEvent.pointerDown(first, pointer('mouse', first));
+      await fireEvent.pointerMove(first, pointer('mouse', last));
+
+      expect(shown()).toEqual({
+        start: ['2026-11-10'],
+        middle: ['2026-11-11'],
+        end: ['2026-11-12'],
+      });
     });
 
     it('stops the drag when the browser cancels the pointer', async () => {

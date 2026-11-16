@@ -101,7 +101,7 @@ export interface RangeSelection extends CalendarSelection {
   /** The day of the button under the point, or `null`. A press holds the pointer on one button. */
   dayAtPoint: (from: Element, clientX: number, clientY: number) => Temporal.PlainDate | null;
   /** Gives a day button to the drag, so that the drag finds the day under the pointer. */
-  registerButton: (element: Element, getDate: () => Temporal.PlainDate) => () => void;
+  registerButton: (element: Element, date: Temporal.PlainDate) => () => void;
   /**
    * Whether `event` is the click after a drag, or after a drag that Escape ended. Such a click is
    * not a press: the pointer went down and up on different days, or the user cancelled the drag.
@@ -199,7 +199,7 @@ export function useRangeSelection(
   // The first day of a range that Shift with an arrow key extends, and the last day of that range.
   let extension: { anchor: Temporal.PlainDate; last: Temporal.PlainDate } | null = null;
   let suppressClick = false;
-  const buttons = new Map<Element, () => Temporal.PlainDate>();
+  const buttons = new Map<Element, Temporal.PlainDate>();
 
   const blocking = computed(() => ({
     disabled: props.disabled === true,
@@ -361,9 +361,11 @@ export function useRangeSelection(
     extension = null;
     const [first, second] =
       pending && isSameDay(pending.anchor, day) ? pending.before : EMPTY_RANGE;
-    commit([first, second], createChangeEventDetails(REASONS.keyboard, event));
-    pending = null;
-    previewDate.value = null;
+    // A listener that cancels the change keeps the range in progress, so the next Escape puts
+    // back the same range.
+    if (commit([first, second], createChangeEventDetails(REASONS.keyboard, event))) {
+      pending = null;
+    }
     return true;
   }
 
@@ -413,9 +415,9 @@ export function useRangeSelection(
       element;
       element = element.parentElement
     ) {
-      const getDate = buttons.get(element);
-      if (getDate) {
-        return getDate();
+      const date = buttons.get(element);
+      if (date) {
+        return date;
       }
     }
     return null;
@@ -439,12 +441,10 @@ export function useRangeSelection(
       drag.value = null;
     },
     dayAtPoint,
-    registerButton(element, getDate) {
-      buttons.set(element, getDate);
+    registerButton(element, date) {
+      buttons.set(element, date);
       return () => {
-        if (buttons.get(element) === getDate) {
-          buttons.delete(element);
-        }
+        buttons.delete(element);
       };
     },
     takeClickSuppression(event) {

@@ -89,11 +89,19 @@ function onPointerdown(event: PointerEvent) {
 }
 
 function onPointermove(event: PointerEvent) {
-  if (range.isDragging(event.pointerId)) {
-    const date = range.dayAtPoint(event.currentTarget as Element, event.clientX, event.clientY);
-    if (date) {
-      range.dragTo(date);
-    }
+  if (!range.isDragging(event.pointerId)) {
+    return;
+  }
+  // A move with no button comes after a release that another element got, such as when the page
+  // of the first day left during the drag. The drag ends at its last day, and a hover does not
+  // move it.
+  if (event.buttons === 0) {
+    range.endDrag(null, event);
+    return;
+  }
+  const date = range.dayAtPoint(event.currentTarget as Element, event.clientX, event.clientY);
+  if (date) {
+    range.dragTo(date);
   }
 }
 
@@ -141,7 +149,7 @@ const { element, elementProps, text } = useDayButton(props, {
     onPointerup,
   },
   // A drag finds the day under the pointer here.
-  register: (button, date) => range.registerButton(button, () => date),
+  register: range.registerButton,
 });
 
 defineExpose({ element });

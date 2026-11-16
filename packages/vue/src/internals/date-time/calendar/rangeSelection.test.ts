@@ -277,6 +277,33 @@ describe('useRangeSelection', () => {
       expect(changes()).toEqual([]);
     });
 
+    it('keeps the range from before the first press when a listener cancels the change', () => {
+      let cancelNext = false;
+      const emit = vi.fn((name: string, _value: unknown, details?: { cancel: () => void }) => {
+        if (name === 'valueChange' && cancelNext) {
+          cancelNext = false;
+          details?.cancel();
+        }
+      });
+      const selection = useRangeSelection(
+        { defaultValue: [day('2026-11-03'), day('2026-11-05')] },
+        emit,
+      );
+      selection.press(day('2026-11-10'), createChangeEventDetails(REASONS.dayPress));
+      selection.preview(day('2026-11-12'));
+
+      cancelNext = true;
+      expect(selection.cancel(escape())).toBe(true);
+      expect(texts(selection.values.value)).toEqual(['2026-11-10']);
+      expect(selection.displayRange.value).toEqual({
+        start: day('2026-11-10'),
+        end: day('2026-11-12'),
+      });
+
+      selection.cancel(escape());
+      expect(texts(selection.values.value)).toEqual(['2026-11-03', '2026-11-05']);
+    });
+
     it('gives the key as the reason of the change', () => {
       const { press, cancel, emit } = withCancel({});
 
