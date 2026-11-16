@@ -578,7 +578,9 @@ describe('useHoverTriggerInteraction', () => {
                     register('second')(node);
                     secondElement.value = node as Element | null;
                   }}
-                />
+                >
+                  <span data-testid="second-label" />
+                </button>
               )}
               {open.value && (
                 <div data-testid="popup" style={{ ...BOX, left: '200px' }} ref={refs.setFloating} />
@@ -959,7 +961,10 @@ describe('useHoverTriggerInteraction', () => {
       const second = screen.getByTestId('second');
       await enter(getTrigger());
 
-      await fireEvent.mouseLeave(getTrigger(), { relatedTarget: second });
+      // The leave names an element inside the second trigger, as a leave to an icon of it does.
+      await fireEvent.mouseLeave(getTrigger(), {
+        relatedTarget: screen.getByTestId('second-label'),
+      });
       await enter(second);
 
       expect(calls.map((call) => [call.open, call.trigger])).toEqual([

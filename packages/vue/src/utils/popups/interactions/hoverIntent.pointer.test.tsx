@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
+import { nextTick, shallowRef } from 'vue';
 import { userEvent } from 'vitest/browser';
-import { createRenderer, isJSDOM, screen, waitFor, waitForPositioned } from '#test-utils';
+import { clientCenter, createRenderer, screen, waitFor, waitForPositioned } from '#test-utils';
 import { REASONS } from '../../../internals/reasons';
 import * as Menu from '../../../menu/index.parts';
 import * as Popover from '../../../popover/index.parts';
@@ -10,12 +11,12 @@ import * as Popover from '../../../popover/index.parts';
 
 const TRIGGER_STYLE = { position: 'absolute', top: '20px', width: '80px', height: '24px' } as const;
 
-function center(element: Element) {
-  const rect = element.getBoundingClientRect();
-  return { x: Math.round(rect.left + rect.width / 2), y: Math.round(rect.top + rect.height / 2) };
+async function movePointerTo(element: Element) {
+  const { clientX, clientY } = clientCenter(element);
+  await userEvent.pointer({ coords: { x: clientX, y: clientY } });
 }
 
-describe.skipIf(isJSDOM)('HoverIntent with a real pointer', () => {
+describe('HoverIntent with a real pointer', () => {
   const { render } = createRenderer();
 
   it('VUE-94: moves a menu to the next hover trigger with no close', async () => {
@@ -63,7 +64,7 @@ describe.skipIf(isJSDOM)('HoverIntent with a real pointer', () => {
     const popup = screen.getByTestId('popup');
     onOpenChange.mockClear();
 
-    await userEvent.pointer({ coords: center(trigger2) });
+    await movePointerTo(trigger2);
     await waitFor(() => {
       expect(screen.getByTestId('content').textContent).toBe('2');
     });
@@ -77,7 +78,8 @@ describe.skipIf(isJSDOM)('HoverIntent with a real pointer', () => {
   it('VUE-94: closes a popover when the pointer moves to a trigger that does not open on hover', async () => {
     const onOpenChange = vi.fn();
     const handle = Popover.createHandle();
-    await render(
+    const secondOpensOnHover = shallowRef(true);
+    await render(() => (
       <div style={{ position: 'relative', height: '200px' }}>
         <Popover.Trigger
           handle={handle}
@@ -87,7 +89,11 @@ describe.skipIf(isJSDOM)('HoverIntent with a real pointer', () => {
         >
           Trigger 1
         </Popover.Trigger>
-        <Popover.Trigger handle={handle} style={{ ...TRIGGER_STYLE, left: '100px' }}>
+        <Popover.Trigger
+          handle={handle}
+          openOnHover={secondOpensOnHover.value}
+          style={{ ...TRIGGER_STYLE, left: '100px' }}
+        >
           Trigger 2
         </Popover.Trigger>
         <Popover.Root handle={handle} onOpenChange={onOpenChange}>
@@ -97,14 +103,17 @@ describe.skipIf(isJSDOM)('HoverIntent with a real pointer', () => {
             </Popover.Positioner>
           </Popover.Portal>
         </Popover.Root>
-      </div>,
-    );
+      </div>
+    ));
+    // Trigger 2 stops opening on hover after the mount, so the hover intent must forget it.
+    secondOpensOnHover.value = false;
+    await nextTick();
 
     await userEvent.hover(screen.getByRole('button', { name: 'Trigger 1' }));
     await waitForPositioned(screen.getByTestId('positioner'));
     const popup = screen.getByTestId('popup');
 
-    await userEvent.pointer({ coords: center(screen.getByRole('button', { name: 'Trigger 2' })) });
+    await movePointerTo(screen.getByRole('button', { name: 'Trigger 2' }));
 
     await waitFor(() => {
       expect(popup).not.toBeInTheDocument();

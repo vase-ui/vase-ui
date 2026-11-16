@@ -86,6 +86,7 @@ describe('HoverIntent', () => {
         const before = document.createElement('button');
         const after = document.createElement('button');
         intent.addHoverTrigger(before);
+        expect(before.style.pointerEvents).toBe('');
 
         intent.blockOutsidePointerEvents(elements);
         intent.addHoverTrigger(after);
