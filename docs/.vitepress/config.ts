@@ -127,14 +127,15 @@ export default defineConfig({
         miniSearch: {
           searchOptions: {
             // Without the factor, a section that repeats the term can come before the page whose
-            // title is the term. VitePress writes the source of this function into the client, so
-            // the function uses no name of this module.
+            // title is the term. MiniSearch gives the function the word of the index that matched,
+            // so for `menu` the page Menubar also gets the factor. VitePress writes the source of
+            // this function into the client, so the function uses no name of this module.
             boostDocument: (_id, term, storedFields) => {
               const { title, titles } = storedFields as { title: string; titles: string[] };
               return titles.length === 0 && title.toLowerCase() === term ? 1.5 : 1;
             },
-            // The default weight of a prefix, 0.375, puts Menubar before Menu for `menu`. The type
-            // of `weights` needs both keys, so `fuzzy` has its default.
+            // With the default weight of a prefix, 0.375, Menubar thus comes before Menu for `menu`.
+            // The type of `weights` needs both keys, so `fuzzy` has its default.
             weights: { fuzzy: 0.45, prefix: 0.15 },
           },
         },

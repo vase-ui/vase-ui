@@ -38,15 +38,16 @@ const HEADING_CONTENT = /(.*)<a.*? href="#(.*?)".*?>.*?<\/a>/i;
 function sectionsOf(
   html: string,
 ): { level: number; title: string; anchor: string; text: string }[] {
-  const parts = html.split(HEADING).slice(1);
+  const [, ...parts] = html.split(HEADING);
   const sections = [];
   for (let index = 0; index < parts.length; index += 3) {
-    const [, title = '', anchor = ''] = HEADING_CONTENT.exec(parts[index + 1] ?? '') ?? [];
+    const [level, heading, content] = parts.slice(index, index + 3);
+    const [, title = '', anchor = ''] = HEADING_CONTENT.exec(heading) ?? [];
     sections.push({
-      level: Number(parts[index]),
+      level: Number(level),
       title: title.replace(/<[^>]*>/g, '').trim(),
       anchor,
-      text: (parts[index + 2] ?? '').replace(/<[^>]*>/g, ''),
+      text: content.replace(/<[^>]*>/g, ''),
     });
   }
   return sections;
@@ -84,7 +85,24 @@ const reference: ApiReference = {
       returns: { type: 'Sample.Handle', description: 'The new handle.' },
     },
   ],
-  classes: [],
+  classes: [
+    {
+      name: 'Sample.Handle',
+      properties: [
+        { name: 'isOpen', type: 'boolean', readonly: true, description: 'Whether it is open.' },
+      ],
+      methods: [
+        {
+          name: 'open',
+          description: 'Opens the popup.',
+          parameters: [
+            { name: 'triggerId', type: 'string', optional: false, description: 'The trigger.' },
+          ],
+          returns: { type: 'boolean', description: 'Whether the popup opened.' },
+        },
+      ],
+    },
+  ],
   types: [],
 };
 
@@ -107,17 +125,26 @@ test('a part is one section, with the id of its heading on the page, its names a
 });
 
 test('a named reference adds text to the section of the page heading above it, and no section', () => {
-  const html = apiReferenceSearchHtml(reference, 'Sample.createHandle');
+  const functionHtml = apiReferenceSearchHtml(reference, 'Sample.createHandle');
+  const classHtml = apiReferenceSearchHtml(reference, 'Sample.Handle');
 
-  assert.deepEqual(sectionsOf(html), []);
-  assert.ok(html.includes('options The options.'));
-  assert.ok(html.includes('The new handle.'));
+  assert.deepEqual(sectionsOf(functionHtml + classHtml), []);
+  for (const text of ['options The options.', 'The new handle.']) {
+    assert.ok(functionHtml.includes(text), text);
+  }
+  for (const text of [
+    'isOpen Whether it is open.',
+    'open Opens the popup. Whether the popup opened.',
+    'triggerId The trigger.',
+  ]) {
+    assert.ok(classHtml.includes(text), text);
+  }
 });
 
 test('the text of the reference cannot add an element', () => {
   const html = searchIndexHtml('<ApiReference />', {
     ...reference,
-    parts: [{ ...reference.parts[0]!, description: 'Takes <b>bold</b> & more.' }],
+    parts: reference.parts.map((part) => ({ ...part, description: 'Takes <b>bold</b> & more.' })),
   });
 
   assert.ok(html.includes('Takes &lt;b&gt;bold&lt;/b&gt; &amp; more.'));
@@ -172,5 +199,5 @@ test('the site: the ranking function runs with no name of the module, as it does
 
   assert.equal(boost('/components/menu', 'menu', { title: 'Menu', titles: [] }), 1.5);
   assert.equal(boost('/components/menu#items', 'menu', { title: 'Items', titles: ['Menu'] }), 1);
-  assert.equal(boost('/components/menubar', 'menu', { title: 'Menubar', titles: [] }), 1);
+  assert.equal(boost('/components/context-menu', 'menu', { title: 'Context Menu', titles: [] }), 1);
 });
