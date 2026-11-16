@@ -594,9 +594,9 @@ describe('<Combobox.Popup />', () => {
 
       await nextEvent(popup, 'animationstart', { action: () => user.keyboard('{Escape}') });
       record();
-      // The read of the open can come after the wait for the focus, and
-      // `nextAnimationsRead` would resolve with it. The animation of 100 s still runs after
-      // `animationstart`, so the case reads the list itself.
+      // The read of the open can come after the wait for the focus, and `nextAnimationsRead` would
+      // resolve with it. The animation of 100 s still runs after `animationstart`, so the case reads
+      // the list itself.
       const animations = popup.getAnimations();
       for (const animation of animations) {
         animation.finish();
