@@ -729,10 +729,9 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   // error of the field in that callback, and the change starts no validation.
   let isResetChangePending = false;
 
-  // A picker gives the value to this root. It counts a reset before it changes the value, and the
-  // new value reaches the root only with the next render. The root thus marks that change as the
-  // change of a reset, whichever listener of the reset runs first. A picker with two fields counts
-  // each reset one time, so the field whose part hears of the reset last gets the mark too.
+  // The reset count marks the next value from the picker as a reset. This watcher runs before the
+  // next render gives that value to the field, whichever reset listener runs first. A picker with
+  // two fields counts each reset one time, so both fields get the mark.
   const pickerResetCount = inject(PickerResetCountContext, null);
   let keyBeforePickerReset = '';
 
