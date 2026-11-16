@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { shallowRef } from 'vue';
+import { shallowRef, Transition } from 'vue';
 import { DateField } from '@vase-ui/vue/date-field';
 import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
 import { Field } from '@vase-ui/vue/field';
@@ -1004,6 +1004,36 @@ describe('<DateRangePicker.Root />', () => {
       await waitFor(() => {
         expect(screen.getByTestId('trigger')).toHaveAttribute('data-disabled');
       });
+    });
+
+    // The leave transition keeps the element of the trigger in the fieldset after the unmount.
+    it('reads no fieldset at the trigger after the trigger unmounts', async () => {
+      const hasTrigger = shallowRef(true);
+      await render(() => (
+        <DateRangePicker.Root locale="en-US" open>
+          <fieldset disabled>
+            <Transition duration={{ enter: 0, leave: 100_000 }}>
+              {hasTrigger.value ? (
+                <DateRangePicker.Trigger data-testid="trigger">Open</DateRangePicker.Trigger>
+              ) : null}
+            </Transition>
+          </fieldset>
+          <DateRangePicker.Portal>
+            <DateRangePicker.Positioner>
+              <DateRangePicker.Popup aria-label="Choose dates">
+                <DateRangePicker.Calendar data-testid="calendar" today={today()} />
+              </DateRangePicker.Popup>
+            </DateRangePicker.Positioner>
+          </DateRangePicker.Portal>
+        </DateRangePicker.Root>
+      ));
+      expect(await screen.findByTestId('calendar')).toHaveAttribute('data-disabled');
+
+      hasTrigger.value = false;
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('trigger')).toBeInTheDocument();
+      expect(screen.getByTestId('calendar')).not.toHaveAttribute('data-disabled');
     });
 
     it('disables the trigger of a picker that has no field, in a disabled fieldset', async () => {
