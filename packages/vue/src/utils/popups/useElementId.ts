@@ -17,8 +17,8 @@ export function useElementId(
   const observeId = createElementIdObserver(() => {
     id.value = element.value?.id;
   });
-  // The id changes in the write that changes the element. A render thus does not read the id of
-  // the element before.
+  // The id changes in the write that changes the element. Thus no reader, also outside a render,
+  // gets the id of the element before.
   watch(
     element,
     (value) => {

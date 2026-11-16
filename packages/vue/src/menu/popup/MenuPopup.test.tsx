@@ -39,6 +39,15 @@ const ToolbarProvider = defineComponent((_, { slots }) => {
   return () => slots.default?.();
 });
 
+// Each render of the popup reads the id of the trigger, and the popup renders again after the
+// open. A case that changes the id of the trigger waits for these renders first. Only the change
+// of the id can then give the popup its new name.
+async function waitForRendersOfOpen() {
+  await waitSingleFrame();
+  await waitSingleFrame();
+  await flushMicrotasks();
+}
+
 describe('<Menu.Popup />', () => {
   const { render } = createRenderer();
 
@@ -117,12 +126,7 @@ describe('<Menu.Popup />', () => {
         </Menu.Portal>
       </Menu.Root>,
     );
-    // Each render of the popup reads the id of the trigger, and the popup renders again after the
-    // open. The case waits for these renders before it changes the id. Only the change of the id
-    // can then give the popup its new name.
-    await waitSingleFrame();
-    await waitSingleFrame();
-    await flushMicrotasks();
+    await waitForRendersOfOpen();
     const popup = screen.getByTestId('popup');
     expect(popup).toHaveAttribute('aria-labelledby', 'first');
 
@@ -130,6 +134,43 @@ describe('<Menu.Popup />', () => {
 
     await waitFor(() => {
       expect(popup).toHaveAttribute('aria-labelledby', 'second');
+    });
+    expect(screen.getByRole('menu', { name: 'Actions' })).toBe(popup);
+  });
+
+  it('takes the registered id of the trigger until the trigger element exists', async () => {
+    const showTrigger = shallowRef(false);
+    await render(() => (
+      <Menu.Root defaultOpen defaultTriggerId="actions">
+        {showTrigger.value && (
+          <Menu.Trigger
+            id="actions"
+            v-slots={{
+              render: ({ props }: { props: Record<string, unknown> }) => (
+                <button type="button" {...props} id="rendered">
+                  Actions
+                </button>
+              ),
+            }}
+          />
+        )}
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup data-testid="popup">
+              <Menu.Item>Rename</Menu.Item>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>
+    ));
+    await waitForRendersOfOpen();
+    const popup = screen.getByTestId('popup');
+    expect(popup).toHaveAttribute('aria-labelledby', 'actions');
+
+    showTrigger.value = true;
+
+    await waitFor(() => {
+      expect(popup).toHaveAttribute('aria-labelledby', 'rendered');
     });
     expect(screen.getByRole('menu', { name: 'Actions' })).toBe(popup);
   });
