@@ -17,14 +17,13 @@ const manifest: { description: string; homepage: string } = JSON.parse(
   readFileSync(join(docsRoot, '../packages/vue/package.json'), 'utf8'),
 );
 const { nav, sidebar } = readNavigation(docsRoot);
+// `vitepress build` sets `NODE_ENV` to `production` before it loads this file.
+const isBuild = process.env.NODE_ENV === 'production';
 // A build reads the reference of a family for its page. It reads the reference two more times for
 // the search index, because VitePress makes the index two times. The reader thus keeps each
-// reference in a build. `vitepress build` sets `NODE_ENV` to `production` before it loads this
-// file. The development server has one reader for its life, so a cache there keeps a reference
-// until the server restarts.
-const readApiReference = createApiReferenceReader(REPOSITORY_ROOT, {
-  cache: process.env.NODE_ENV === 'production',
-});
+// reference in a build. The development server has one reader for its life, so a cache there keeps
+// a reference until the server restarts.
+const readApiReference = createApiReferenceReader(REPOSITORY_ROOT, { cache: isBuild });
 
 // These colors of the GitHub themes of Shiki become the syntax colors that the Base UI docs give to
 // the same tokens. `docs/.vitepress/theme/tokens.css` sets these colors for light and dark.
@@ -103,7 +102,10 @@ export default defineConfig({
       },
     },
   },
-  markdown: { colorReplacements: SYNTAX_COLORS, config: markdownConfig },
+  // VitePress keeps the render of a page, with its page data, for each text of the page file. In
+  // the development server, a page file that gets an earlier text again would thus show the API
+  // reference of that earlier render.
+  markdown: { cache: isBuild, colorReplacements: SYNTAX_COLORS, config: markdownConfig },
   transformPageData(pageData) {
     const family = familyOfPage(pageData.relativePath);
     return family === undefined ? undefined : { apiReference: readApiReference(family) };
