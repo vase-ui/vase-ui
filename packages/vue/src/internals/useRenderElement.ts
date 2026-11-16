@@ -27,11 +27,9 @@ import { EMPTY_OBJECT } from '../common/empty';
 import { mergeObjects } from '../common/mergeObjects';
 import { warn } from '../common/warn';
 import { mergeClassNames, mergeProps, mergePropsN } from '../merge-props';
-import { removeBlankIdReferences } from './blankIdReference';
-import { removeBlankNames } from './blankName';
 import { getStateAttributesProps } from './getStateAttributesProps';
-import { omitUndefinedAttributes } from './omitUndefinedAttributes';
 import type { StateAttributesMapping } from './getStateAttributesProps';
+import { givenAttributes } from './givenAttributes';
 import { resolveElement } from './resolveElement';
 import type { HTMLProps, VaseUIComponentProps } from './types';
 
@@ -204,13 +202,7 @@ export function useRenderElement<
       class: classAttribute,
       style: styleAttribute,
       ...consumerAttrs
-    } = omitUndefinedAttributes(attrs);
-    // An empty `id` counts as no `id` (`VUE-93`), so the part keeps its own id.
-    if (consumerAttrs.id === '') {
-      delete consumerAttrs.id;
-    }
-    removeBlankNames(consumerAttrs);
-    removeBlankIdReferences(consumerAttrs);
+    } = givenAttributes(attrs);
 
     const stateProps = getStateAttributesProps(state, params.stateAttributesMapping);
 
@@ -359,9 +351,8 @@ export type UseRenderElementParameters<State, RenderedElementType extends Elemen
    */
   state?: MaybeRefOrGetter<State> | undefined;
   /**
-   * A function that gets the attributes and listeners of the consumer, without `class`, `style`,
-   * each attribute whose value is `undefined`, an empty `id`, a blank `aria-label`, and each blank
-   * ID reference attribute, such as `aria-labelledby`, `aria-describedby` or `for`.
+   * A function that gets the attributes and listeners of the consumer, without `class`, `style`
+   * and each attribute that `givenAttributes` leaves out.
    * It returns the props of the part, or an array of props, in merge order. The rightmost wins.
    * A set can be `undefined`, or a function that gets the props merged so far.
    * The default is the attributes of the consumer.

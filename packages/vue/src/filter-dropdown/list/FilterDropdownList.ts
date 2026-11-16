@@ -1,7 +1,7 @@
 import { provide, toValue } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 import { getTarget } from '../../common/shadowDom';
-import { givenId } from '../../internals/useBaseUiId';
+import { given } from '../../internals/givenAttributes';
 import type { UseRenderElementParameters } from '../../internals/useRenderElement';
 import { createElementSetter } from '../../utils/popups/createElementSetter';
 import { useKeepAliveElementRef } from '../../utils/popups/useKeepAliveElementRef';
@@ -49,7 +49,7 @@ export function useFilterDropdownList(
       {
         // Chromium includes scrollable elements in sequential focus navigation by default.
         tabindex: -1,
-        id: givenId(toValue(params.id)) ?? context.defaultListId.value,
+        id: given('id', toValue(params.id)) ?? context.defaultListId.value,
         ...listeners,
       },
       attrs,

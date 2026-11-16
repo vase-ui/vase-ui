@@ -43,10 +43,10 @@ import { useCollapsiblePanel } from '../../collapsible/panel/useCollapsiblePanel
 import { useCollapsibleRootContext } from '../../collapsible/root/CollapsibleRootContext';
 import { useAriaAfterHydration } from '../../common/hydration';
 import { warn } from '../../common/warn';
+import { given } from '../../internals/givenAttributes';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { givenId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useAccordionItemContext } from '../item/AccordionItemContext';
 import { accordionStateAttributesMapping } from '../item/stateAttributesMapping';
@@ -99,7 +99,7 @@ const {
   transitionStatus,
 } = useCollapsibleRootContext();
 
-const panelId = computed(() => givenId(props.id) ?? defaultPanelId.value);
+const panelId = computed(() => given('id', props.id) ?? defaultPanelId.value);
 
 const source = Symbol();
 

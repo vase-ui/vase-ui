@@ -42,8 +42,6 @@ import type { Component } from 'vue';
 import { formatNumber } from '../../common/formatNumber';
 import { useAriaAfterHydration } from '../../common/hydration';
 import { visuallyHiddenInput } from '../../common/visuallyHidden';
-import { givenIdReference } from '../../internals/blankIdReference';
-import { givenName } from '../../internals/blankName';
 import {
   ARROW_DOWN,
   ARROW_LEFT,
@@ -58,6 +56,7 @@ import {
   createChangeEventDetails,
   createGenericEventDetails,
 } from '../../internals/createBaseUIEventDetails';
+import { given } from '../../internals/givenAttributes';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -139,15 +138,16 @@ function onInput(event: Event) {
 }
 
 function inputProps() {
-  const ariaLabelledby = givenName(props.ariaLabelledby);
+  const ariaLabelledby = given('aria-labelledby', props.ariaLabelledby);
   return mergeProps<'input'>(
     {
       'aria-label':
         ariaAfterHydration(
-          givenName(props.ariaLabel) ?? (ariaLabelledby == null ? label.value : undefined),
+          given('aria-label', props.ariaLabel) ??
+            (ariaLabelledby == null ? label.value : undefined),
         ) ?? undefined,
       'aria-labelledby': ariaLabelledby,
-      'aria-describedby': givenIdReference(props.ariaDescribedby),
+      'aria-describedby': given('aria-describedby', props.ariaDescribedby),
       'aria-readonly': root.readOnly.value ? 'true' : undefined,
       'aria-valuenow': root.selectedNumber.value.value,
       'aria-valuetext':

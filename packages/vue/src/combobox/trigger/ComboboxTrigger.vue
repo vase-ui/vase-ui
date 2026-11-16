@@ -63,6 +63,7 @@ import { useTimeout } from '../../common/useTimeout';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { useFieldRootContext } from '../../internals/field-root-context';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
+import { given } from '../../internals/givenAttributes';
 import {
   useDeferredServerRender,
   useLabelableContext,
@@ -71,7 +72,6 @@ import {
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
-import { givenId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { isMouseWithinBounds } from '../../utils/getPseudoElementBounds';
 import { stopEvent } from '../../utils/popups/event';
@@ -128,7 +128,7 @@ useLabelableId({
   id: () => (inputInsidePopup.value ? props.id : undefined),
 });
 const triggerId = computed(() =>
-  inputInsidePopup.value ? (givenId(props.id) ?? store.select('id')) : givenId(props.id),
+  inputInsidePopup.value ? (given('id', props.id) ?? store.select('id')) : given('id', props.id),
 );
 
 // An element with no id has an empty `id`, and the trigger then has no `aria-controls`.
