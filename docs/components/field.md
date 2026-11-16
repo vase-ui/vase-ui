@@ -52,6 +52,8 @@ Import the component and assemble its parts:
 
 In the server HTML, `Field.Control` already has the id of the label in `aria-labelledby` and the ids of the messages in `aria-describedby`. The parts can be in any order. A screen reader can name the control before the page hydrates. `Field.Control` has the id of `Field.Error` in `aria-describedby` only while the error shows.
 
+An `id` that the `#render` slot of a part gives replaces the id of the part on its element. The other parts of the field name that `id` after the part mounts. In the server HTML, they name the id of the part. To name the element in the server HTML too, give the `id` prop to the part.
+
 A native reset of the form puts an uncontrolled `Field.Control` back to its default value. The field then clears its error, and `data-filled` and `data-dirty` follow the new value. The reset starts no validation.
 
 `Field.Root` exposes `validate()`. Call it through a template ref to validate the field.
