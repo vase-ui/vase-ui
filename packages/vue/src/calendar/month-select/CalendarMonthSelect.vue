@@ -19,6 +19,7 @@ export interface CalendarMonthSelectProps
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useAriaAfterHydration } from '../../common/hydration';
 import { formatFieldName, formatText } from '../../internals/date-time/calendar/formatText';
 import type { HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -74,6 +75,7 @@ const { onChange } = useCalendarSelect({
 });
 
 const label = computed(() => formatFieldName('month', locale.value));
+const ariaAfterHydration = useAriaAfterHydration();
 
 const { element, elementProps } = useRenderElement<CalendarState, HTMLSelectElement>(
   'select',
@@ -83,7 +85,7 @@ const { element, elementProps } = useRenderElement<CalendarState, HTMLSelectElem
     children: true,
     props: (attrs) => [
       {
-        'aria-label': label.value,
+        'aria-label': ariaAfterHydration(label.value),
         disabled: state.value.disabled ? true : undefined,
         onChange,
       },

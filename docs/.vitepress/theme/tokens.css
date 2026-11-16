@@ -82,6 +82,9 @@
   --vp-sidebar-bg-color: var(--vp-c-bg);
   --vp-nav-bg-color: var(--vp-c-bg);
   --vp-nav-divider-color: transparent;
+  /* The mark is not the logo of Base UI, so its height is not a value of the Base UI docs.
+     The logo of Base UI is 24 px high. The default of VitePress is 1.5rem. */
+  --vp-nav-logo-height: 1.25rem;
   --vp-local-nav-divider-color: var(--vase-color-border);
 
   /* Base UI scales its code font to 13.5/14 of the size.

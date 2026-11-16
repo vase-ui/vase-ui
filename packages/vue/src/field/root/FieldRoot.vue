@@ -76,7 +76,7 @@ export interface FieldRootProps
 
 <script setup lang="ts">
 import { computed, provide, shallowRef, watch } from 'vue';
-import { useFieldsetRootContext } from '../../fieldset/root/FieldsetRootContext';
+import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { DEFAULT_VALIDITY_STATE, fieldValidityMapping } from '../../internals/field-constants';
 import { useFieldControlRegistration } from '../../internals/field-register-control';
 import { FieldRootContext } from '../../internals/field-root-context/FieldRootContext';
@@ -103,10 +103,10 @@ defineSlots<{
 }>();
 
 const { errors, validationMode: formValidationMode, submitCountRef } = useFormContext();
-const fieldsetContext = useFieldsetRootContext(true);
 const labelable = provideLabelableContext();
 
-const isDisabled = computed(() => (fieldsetContext?.disabled.value ?? false) || props.disabled);
+const fieldsetDisabled = useFieldsetDisabled(() => element.value);
+const isDisabled = computed(() => fieldsetDisabled.value || props.disabled);
 const resolvedValidationMode = computed(() => props.validationMode ?? formValidationMode.value);
 
 const touchedState = shallowRef(false);

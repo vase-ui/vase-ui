@@ -18,6 +18,7 @@ export interface FieldItemProps
 
 <script setup lang="ts">
 import { computed, provide } from 'vue';
+import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { fieldValidityMapping } from '../../internals/field-constants';
 import { useFieldRootContext } from '../../internals/field-root-context';
 import { provideLabelableContext } from '../../internals/labelable-provider';
@@ -36,7 +37,10 @@ defineSlots<{
 
 const { state: fieldState, disabled: rootDisabled } = useFieldRootContext(false);
 
-const isDisabled = computed(() => (rootDisabled.value ?? false) || props.disabled);
+const fieldsetDisabled = useFieldsetDisabled(() => element.value);
+const isDisabled = computed(
+  () => (rootDisabled.value ?? false) || fieldsetDisabled.value || props.disabled,
+);
 const state = computed<FieldItemState>(() => ({ ...fieldState.value, disabled: isDisabled.value }));
 
 provideLabelableContext();

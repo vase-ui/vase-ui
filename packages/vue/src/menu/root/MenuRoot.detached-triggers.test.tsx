@@ -209,7 +209,7 @@ describe('<MenuRoot />', () => {
     it('does not apply the trigger-change instant to a hover close after switching triggers', async () => {
       const { user, trigger2, popup, instantsWhileEnding } = await renderHoverDetachedTriggers();
 
-      // Only the close makes the part read the animations of the popup.
+      // Only the close makes the root read the animations of the popup.
       const exitAnimations = await nextAnimationsRead(popup, {
         action: () => user.unhover(trigger2),
       });
@@ -354,7 +354,7 @@ describe('<MenuRoot />', () => {
       });
       expect(switchAnimations.length).toBeGreaterThan(0);
 
-      // Only the close makes the part read the animations of the popup.
+      // Only the close makes the root read the animations of the popup.
       const exitAnimations = await nextAnimationsRead(popup, {
         action: () => user.unhover(trigger2),
       });

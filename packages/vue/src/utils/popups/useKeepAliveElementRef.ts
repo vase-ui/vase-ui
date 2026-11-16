@@ -2,12 +2,12 @@ import { shallowRef, watch } from 'vue';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 
 /**
- * Makes the `ref` callback of a part whose element a trigger names in `aria-controls`. Call it in
- * `setup`.
+ * Makes the `ref` callback of a part whose element another element names in `aria-controls` or
+ * `aria-owns`. Call it in `setup`.
  *
  * `KeepAlive` takes the element out of the document and calls no `ref` callback. `setElement` thus
  * gets `null` when `isHeld` of `useKeepAliveState` becomes `true`, and the element when it becomes
- * `false`. A part that mounts in a held branch gives no element until the activation. The trigger
+ * `false`. A part that mounts in a held branch gives no element until the activation. That element
  * then names no element that `KeepAlive` took out of the document.
  * @param setElement The setter of the part. It writes the element to the store or to the context.
  */

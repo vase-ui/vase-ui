@@ -77,9 +77,13 @@ export function useFieldsetDisabled(
 
   // A part declares its element after it calls this composable, and a `watch` reads its sources at
   // once. The `watch` thus starts at the mount.
+  // A `Fieldset.Root` above writes its `disabled` attribute in the flush that changes its context.
+  // The context is a source, so the read runs again in that flush, after the DOM update. Nested
+  // roots thus follow in one flush. The observer alone calls back only after the flush, one level
+  // of nesting at a time.
   onMounted(() => {
     watch(
-      [() => toValue(element), isHeld],
+      [() => toValue(element), isHeld, () => fieldset?.disabled.value],
       ([partElement, held], _previous, onCleanup) => {
         if (!partElement || held) {
           return;

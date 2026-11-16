@@ -164,6 +164,7 @@ import { activeElement, contains } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { warn } from '../../common/warn';
+import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { givenName } from '../../internals/blankName';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import {
@@ -265,7 +266,10 @@ const {
 const { clearErrors } = useFormContext();
 const { getDescriptionProps } = useLabelableContext();
 
-const isDisabled = computed(() => (fieldDisabled.value ?? false) || props.disabled);
+const fieldsetDisabled = useFieldsetDisabled(() => element.value);
+const isDisabled = computed(
+  () => (fieldDisabled.value ?? false) || fieldsetDisabled.value || props.disabled,
+);
 const inputName = computed(() => fieldName.value ?? props.name);
 const clearFieldError = useClearFieldError(inputName);
 
@@ -292,7 +296,7 @@ const firstInput = () => (inputElements.value[0] as HTMLInputElement | undefined
 // value and removes slots. An element that left the document is then still in the list.
 const getConnectedInputs = () => inputElements.value.filter((input) => input?.isConnected);
 
-const controlId = useLabelableId({ id: () => props.id });
+const controlId = useLabelableId({ id: () => props.id, element: firstInput });
 const ariaLabelledBy = useAriaLabelledBy(
   () => props.ariaLabelledby,
   useControlLabelId(),

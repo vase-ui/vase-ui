@@ -1790,4 +1790,16 @@ describe('<Field.Control />', () => {
       expect(recorded).toEqual([]);
     });
   });
+
+  describe('VUE-112: a disabled fieldset', () => {
+    it('shows the disabled state in a disabled fieldset with no Field.Root', async () => {
+      await render(() => (
+        <fieldset disabled>
+          <Field.Control data-testid="control" />
+        </fieldset>
+      ));
+
+      expect(screen.getByTestId('control')).toHaveAttribute('data-disabled');
+    });
+  });
 });

@@ -25,6 +25,7 @@ import {
 } from '#test-utils';
 import { useFieldRootContext } from '../../internals/field-root-context';
 import * as Select from '../../select/index.parts';
+import FieldRenderIdHydration from './FieldRenderIdHydration.test.vue';
 import SelectInFieldHydration from './SelectInFieldHydration.test.vue';
 
 type FieldRootInstance = InstanceType<typeof Field.Root>;
@@ -334,6 +335,21 @@ describe('<Field.Root />', () => {
     expect(label).not.toHaveAttribute('for');
     expect(group).toHaveAttribute('aria-labelledby', label.id);
   });
+
+  it.skipIf(isJSDOM)(
+    'VUE-118: hydrates the ids of #render slots with no mismatch, and names them after the mount',
+    async () => {
+      const serverHtml = await renderOnServer('src/field/root/FieldRenderIdHydration.test.vue');
+
+      const { container } = await hydrate(FieldRenderIdHydration, { serverHtml });
+
+      expect(container.querySelector('[data-testid="label"]')).toHaveAttribute('for', 'own');
+      expect(container.querySelector('[data-testid="control"]')).toHaveAttribute(
+        'aria-describedby',
+        'own-description',
+      );
+    },
+  );
 
   it.skipIf(isJSDOM)(
     'keeps `aria-labelledby` valid when toggling from Checkbox.Root to Select.Root after hydration',
@@ -3275,6 +3291,53 @@ describe('<Field.Root />', () => {
       await fireEvent.input(screen.getByTestId('control'), { target: { value: 'a' } });
 
       expect(validate).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('VUE-112: a disabled fieldset', () => {
+    it('shows the disabled state on the field and its parts in a disabled fieldset', async () => {
+      await render(() => (
+        <fieldset disabled>
+          <Field.Root data-testid="root">
+            <Field.Label data-testid="label">Name</Field.Label>
+            <Field.Control data-testid="control" />
+            <Field.Description data-testid="description">Description</Field.Description>
+            <Field.Error data-testid="error" match>
+              Error
+            </Field.Error>
+          </Field.Root>
+        </fieldset>
+      ));
+
+      for (const testId of ['root', 'label', 'control', 'description', 'error']) {
+        expect(screen.getByTestId(testId)).toHaveAttribute('data-disabled');
+      }
+    });
+
+    it('leaves a field in a disabled fieldset out of the form values', async () => {
+      const handleFormSubmit = vi.fn();
+      await render(() => (
+        <Form data-testid="form" onFormSubmit={handleFormSubmit}>
+          <fieldset disabled>
+            <Field.Root name="text">
+              <Field.Control defaultValue="x" />
+            </Field.Root>
+          </fieldset>
+          <Field.Root name="other">
+            <Field.Control defaultValue="sent" />
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>
+      ));
+
+      expect([...new FormData(screen.getByTestId<HTMLFormElement>('form')).keys()]).toEqual([
+        'other',
+      ]);
+
+      await fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+
+      expect(handleFormSubmit).toHaveBeenCalledTimes(1);
+      expect(handleFormSubmit.mock.lastCall?.[0]).toEqual({ other: 'sent' });
     });
   });
 });

@@ -4,7 +4,7 @@ import CalendarViewsAnatomy from './CalendarViewsAnatomy.test.vue';
 // A server render takes its props as JSON, so each date is a text that this fixture reads. A year
 // and month has no day, as in `2026-11`.
 const props = defineProps<{
-  today: string;
+  today?: string | undefined;
   value?: string | undefined;
   view?: 'day' | 'month' | 'year' | undefined;
   minDate?: string | undefined;

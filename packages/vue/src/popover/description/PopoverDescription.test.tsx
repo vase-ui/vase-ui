@@ -8,6 +8,7 @@ import {
   flushMicrotasks,
   screen,
 } from '#test-utils';
+import type { HTMLProps } from '../../internals/types';
 
 describe('<Popover.Description />', () => {
   const { render } = createRenderer();
@@ -96,5 +97,40 @@ describe('<Popover.Description />', () => {
 
     await show();
     expect(popup).toHaveAttribute('aria-describedby', 'held-description');
+  });
+
+  it('VUE-119: follows the id that the #render slot gives the description', async () => {
+    const id = shallowRef('slot-description');
+    await render(() => (
+      <Popover.Root open>
+        <Popover.Portal>
+          <Popover.Positioner>
+            <Popover.Popup>
+              <Popover.Description
+                v-slots={{
+                  render: ({ props }: { props: HTMLProps }) => (
+                    <p {...props} id={id.value}>
+                      Text
+                    </p>
+                  ),
+                }}
+              />
+            </Popover.Popup>
+          </Popover.Positioner>
+        </Popover.Portal>
+      </Popover.Root>
+    ));
+    await flushMicrotasks();
+    const popup = screen.getByRole('dialog');
+    expect(popup).toHaveAttribute('aria-describedby', 'slot-description');
+
+    id.value = 'other-description';
+    await flushMicrotasks();
+    expect(popup).toHaveAttribute('aria-describedby', 'other-description');
+
+    id.value = '';
+    await flushMicrotasks();
+    expect(screen.getByText('Text').id).toBe('');
+    expect(popup).not.toHaveAttribute('aria-describedby');
   });
 });

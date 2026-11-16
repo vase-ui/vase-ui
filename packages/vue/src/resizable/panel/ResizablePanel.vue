@@ -161,7 +161,7 @@ export interface ResizablePanelActions {
 
 <script setup lang="ts">
 import { computed, onActivated, onDeactivated, provide, shallowRef, watch } from 'vue';
-import { useIsHydrating } from '../../common/hydration';
+import { useIsHydrating, useServerElement } from '../../common/hydration';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -235,7 +235,15 @@ const length = computed(() => root.lengthPanels.value.get(id.value));
 // A panel that `KeepAlive` holds is not in the layout. It keeps its last size and its last
 // `collapsed` state until it shows again.
 // A panel that mounts while `KeepAlive` holds it has no size until it shows.
-const size = computed<number>((previous) => root.shown.value[id.value] ?? previous ?? 0);
+// While Vue hydrates the panel, the layout knows only the panels before it. The size then comes
+// from the server HTML, which has the layout of all the panels.
+const serverElement = useServerElement();
+const size = computed<number>((previous) => {
+  const serverSize = serverElement()?.style.getPropertyValue(
+    ResizablePanelCssVariables.resizablePanelSize,
+  );
+  return serverSize ? Number(serverSize) : (root.shown.value[id.value] ?? previous ?? 0);
+});
 const collapsed = computed<boolean>((previous) => {
   const constraints = root.constraints.value.find((panel) => panel.id === id.value);
   // A panel that waits for its first measurement has no size, and it is not collapsed.
@@ -270,9 +278,6 @@ const { element, elementProps } = useRenderElement('div', props, {
   props: (attrs) => [
     {
       id: id.value,
-      // While the page hydrates, the first render of this panel knows only the panels that
-      // registered before it, so its size can differ from the size in the server HTML.
-      'data-allow-mismatch': hydrating.value ? 'style' : undefined,
       style: {
         flex: length.value === undefined ? `${size.value} 1 0px` : `0 1 ${length.value}`,
         [root.orientation.value === 'horizontal' ? 'minWidth' : 'minHeight']: 0,

@@ -4536,4 +4536,24 @@ describe('<Slider.Root />', () => {
       );
     });
   });
+
+  describe('VUE-112: a disabled fieldset', () => {
+    it('shows the disabled state on each part in a disabled fieldset', async () => {
+      await render(() => (
+        <fieldset disabled>
+          <Slider.Root data-testid="root" defaultValue={50}>
+            <Slider.Control data-testid="control">
+              <Slider.Track>
+                <Slider.Thumb data-testid="thumb" />
+              </Slider.Track>
+            </Slider.Control>
+          </Slider.Root>
+        </fieldset>
+      ));
+
+      for (const testId of ['root', 'control', 'thumb']) {
+        expect(screen.getByTestId(testId)).toHaveAttribute('data-disabled');
+      }
+    });
+  });
 });

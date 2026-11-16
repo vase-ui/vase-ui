@@ -102,7 +102,7 @@ A zone change can skip an hour, and a time in that hour does not exist. When a p
 
 A server does not know the locale and the time zone of a visitor. With no `locale` prop, a component formats with `en-US` until it mounts. The server HTML and the first render of the browser are then equal.
 
-`Calendar` reads today to mark the day and to pick its first month. Give it the prop `today`, and the server HTML and the first render of the browser use the same day. With no `today`, give it the prop `timeZone`, and both read the clock in the same zone.
+`Calendar` reads today to mark the day and to pick its first month. With no `today` prop, the server HTML and the first render of the browser have the day of the clock of the server. After the mount, the calendar shows the day of the browser. Give it the prop `timeZone` when the server knows the time zone of the visitor, or `today` when it knows the day. The server HTML then has the day of the visitor.
 
 A date field with no value reads today. In a calendar with leap months, such as `hebrew`, the year decides how many months the month segment allows. The server HTML and the first render of the browser can then differ. Give the field the prop `referenceDate`, and both use the same year. A time field does not read the day.
 

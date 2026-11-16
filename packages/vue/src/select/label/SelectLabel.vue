@@ -34,7 +34,7 @@ const store = useSelectRootContext();
 
 const labelProps = useLabel({
   id: () => getDefaultLabelId(store.select('id')),
-  fallbackControlId: () => store.select('triggerElement')?.id ?? store.select('id'),
+  controlElement: () => store.select('triggerElement'),
   registerLabelId: store.context.registerLabelId,
 });
 

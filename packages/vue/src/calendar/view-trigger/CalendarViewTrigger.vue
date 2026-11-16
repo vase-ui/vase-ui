@@ -39,7 +39,7 @@ export interface CalendarViewTriggerProps
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useIsHydrating } from '../../common/hydration';
+import { useAriaAfterHydration, useIsHydrating } from '../../common/hydration';
 import type { HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -61,6 +61,7 @@ defineSlots<{
 
 const root = useCalendarRootContext();
 const isHydrating = useIsHydrating();
+const ariaAfterHydration = useAriaAfterHydration();
 
 // A calendar with `visibleDuration` shows days only, so a press could not show another view.
 const isDisabled = computed(
@@ -85,7 +86,9 @@ const { element, elementProps } = useRenderElement('button', props, {
   props: (attrs) => [
     {
       // The name starts with the visible text, so that voice control finds the button by it.
-      'aria-label': `${text.value}, ${props.view === 'month' ? 'choose the month' : 'choose the year'}`,
+      'aria-label': ariaAfterHydration(
+        `${text.value}, ${props.view === 'month' ? 'choose the month' : 'choose the year'}`,
+      ),
       // The text changes in place when a button moves the pages, so a screen reader reads it.
       'aria-live': 'polite',
       // The name of the month and the digits of the year come from the data of `Intl` in the

@@ -56,7 +56,6 @@ const READ_BY_NO_TEST = [
   /^[^/]+\.md$/,
   /^LICENSE$/,
   /^parity\//,
-  /^cost\//,
   /^scripts\//,
   /^eslint\.config(?:\.test)?\.js$/,
   /^prettier\.config\.js$/,
