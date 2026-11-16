@@ -375,8 +375,9 @@ describe('<Tabs.Panel />', () => {
       await user.click(screen.getByRole('tab', { name: 'Two' }));
 
       await waitFor(() => {
-        expect(screen.queryByTestId('panel-one')).toBeNull();
+        expect(panelOne).not.toBeInTheDocument();
       });
+      expect(screen.queryByTestId('panel-one')).toBeNull();
       expect(hadEndingStyle).toBe(true);
     });
   });

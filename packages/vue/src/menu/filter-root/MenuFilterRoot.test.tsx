@@ -624,9 +624,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
         await user.clear(input);
 
-        await waitFor(() => {
-          expect(input).not.toHaveAttribute('aria-activedescendant');
-        });
+        expect(input).not.toHaveAttribute('aria-activedescendant');
         expect(screen.getByRole('menuitem', { name: 'Rename' })).not.toHaveAttribute(
           'data-highlighted',
         );
@@ -662,9 +660,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
         await user.click(screen.getByLabelText('Clear filter'));
 
-        await waitFor(() => {
-          expect(input).not.toHaveAttribute('aria-activedescendant');
-        });
+        expect(input).not.toHaveAttribute('aria-activedescendant');
         expect(deleteItem).not.toHaveAttribute('data-highlighted');
       });
 
@@ -725,9 +721,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         const input = screen.getByRole('searchbox', { name: 'Filter actions' });
         await user.type(input, 'missing');
 
-        await waitFor(() => {
-          expect(input).not.toHaveAttribute('aria-activedescendant');
-        });
+        expect(input).not.toHaveAttribute('aria-activedescendant');
         expect(screen.queryAllByRole('menuitem')).toHaveLength(0);
       });
 
@@ -924,9 +918,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
         // Only Delete matches, so it moves to the top of the list, away from the resting pointer.
         await user.keyboard('l');
-        await waitFor(() => {
-          expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
-        });
+        expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
         await fireEvent.pointerLeave(deleteItem, { pointerType: 'mouse' });
 
         expect(input).toHaveAttribute('aria-activedescendant', deleteItem.id);
@@ -1321,9 +1313,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         await user.keyboard(' ');
 
         expect(onRenameClick).toHaveBeenCalledTimes(1);
-        await waitFor(() => {
-          expect(screen.queryByRole('menu')).toBe(null);
-        });
+        expect(screen.queryByRole('menu')).toBe(null);
       });
 
       it('does nothing while the input is empty and no item is highlighted', async () => {
@@ -1437,9 +1427,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         expect(submenuInput).toHaveFocus();
 
         await user.keyboard('[ArrowLeft]');
-        await waitFor(() => {
-          expect(screen.queryByRole('searchbox', { name: 'Filter folders' })).toBe(null);
-        });
+        expect(screen.queryByRole('searchbox', { name: 'Filter folders' })).toBe(null);
         expect(parentInput).toHaveFocus();
       });
     });
@@ -1509,9 +1497,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       await user.type(input, 'ren');
       await user.keyboard('[ArrowDown]');
 
-      await waitFor(() => {
-        expect(screen.getByTestId('file-group')).not.toBeVisible();
-      });
+      expect(screen.getByTestId('file-group')).not.toBeVisible();
       expect(screen.getByTestId('manage-group')).toBeVisible();
       expect(screen.getByRole('menuitem', { name: 'Rename' })).toBeVisible();
 
@@ -1577,9 +1563,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       await waitFor(() => {
         expect(screen.getByTestId('after')).toHaveFocus();
       });
-      await waitFor(() => {
-        expect(screen.queryByRole('searchbox', { name: 'Filter actions' })).toBe(null);
-      });
+      expect(screen.queryByRole('searchbox', { name: 'Filter actions' })).toBe(null);
     });
 
     // Only the submenu filters here; the outer menu is an ordinary one.
@@ -1697,9 +1681,8 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       });
 
       // The exit of the parent popup ends with no time limit. Its read gives the transitions.
-      const parentPopup = screen
-        .getByRole('searchbox', { name: 'Filter actions' })
-        .closest<HTMLElement>('.filter-popup')!;
+      const parentInput = screen.getByRole('searchbox', { name: 'Filter actions' });
+      const parentPopup = parentInput.closest<HTMLElement>('.filter-popup')!;
       const animations = await nextAnimationsRead(parentPopup, { action: () => user.tab() });
       const finished = animations.map((animation) => animation.finished);
 
@@ -1708,8 +1691,9 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       });
       await Promise.all(finished);
       await waitFor(() => {
-        expect(screen.queryByRole('searchbox', { name: 'Filter actions' })).toBe(null);
+        expect(parentInput).not.toBeInTheDocument();
       });
+      expect(screen.queryByRole('searchbox', { name: 'Filter actions' })).toBe(null);
     });
 
     it('focuses a click-opened filterable submenu input so typing filters the submenu', async () => {
@@ -1762,9 +1746,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       await user.keyboard('em');
 
       expect(submenuInput).toHaveValue('em');
-      await waitFor(() => {
-        expect(screen.queryByRole('menuitem', { name: 'Link' })).toBe(null);
-      });
+      expect(screen.queryByRole('menuitem', { name: 'Link' })).toBe(null);
       expect(screen.getByRole('menuitem', { name: 'Email' })).toBeVisible();
       // The parent list did not filter: its own items are all still present.
       expect(screen.getByRole('menuitem', { name: 'Share' })).toBeVisible();
@@ -2209,9 +2191,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       await user.click(screen.getByRole('button', { name: 'Remove id' }));
 
-      await waitFor(() => {
-        expect(popup).not.toHaveAttribute('id', 'custom-popup');
-      });
+      expect(popup).not.toHaveAttribute('id', 'custom-popup');
       expect(trigger.getAttribute('aria-controls')).toBe(popup.id);
       expect(screen.getByRole('menuitem', { name: 'Apple' }).id).not.toBe('');
     });
@@ -2441,9 +2421,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       await user.keyboard('[ArrowRight]');
 
-      await waitFor(() => {
-        expect(screen.queryByRole('searchbox', { name: 'Filter folders' })).toBe(null);
-      });
+      expect(screen.queryByRole('searchbox', { name: 'Filter folders' })).toBe(null);
       expect(parentInput).toHaveFocus();
       expect(parentInput).toHaveAttribute(
         'aria-activedescendant',
@@ -2926,9 +2904,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       await user.keyboard('[ArrowLeft]');
 
-      await waitFor(() => {
-        expect(screen.queryByRole('searchbox', { name: 'Filter folders' })).toBe(null);
-      });
+      expect(screen.queryByRole('searchbox', { name: 'Filter folders' })).toBe(null);
       await waitFor(() => {
         expect(parentInput).toHaveFocus();
       });
@@ -3518,9 +3494,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       await user.type(parentInput, 'rename');
 
       expect(screen.queryByRole('menuitem', { name: 'Move to folder' })).toBe(null);
-      await waitFor(() => {
-        expect(screen.queryByRole('searchbox', { name: 'Filter folders' })).toBe(null);
-      });
+      expect(screen.queryByRole('searchbox', { name: 'Filter folders' })).toBe(null);
       expect(screen.getByRole('menuitem', { name: 'Rename' })).toBeVisible();
     });
 
@@ -3574,9 +3548,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       // The query really ran: it matches nothing, so only the canceled submenu trigger survives.
       expect(parentInput).toHaveValue('zzz');
-      await waitFor(() => {
-        expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
-      });
+      expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
 
       expect(screen.getByRole('menuitem', { name: 'Move to folder' })).toBeVisible();
       expect(screen.getByRole('searchbox', { name: 'Filter folders' })).toBeVisible();
@@ -3750,9 +3722,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       // Past the last item the highlight is released back to the input, matching Combobox.
       await user.keyboard('[ArrowDown]');
-      await waitFor(() => {
-        expect(input).not.toHaveAttribute('aria-activedescendant');
-      });
+      expect(input).not.toHaveAttribute('aria-activedescendant');
 
       await user.keyboard('[ArrowDown]');
       await waitFor(() => {
@@ -3774,9 +3744,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       });
 
       await user.keyboard('[Escape]');
-      await waitFor(() => {
-        expect(screen.queryByRole('menu')).toBe(null);
-      });
+      expect(screen.queryByRole('menu')).toBe(null);
 
       const reopenedInput = await openWithKeyboard(user);
       expect(reopenedInput).toHaveAttribute(
@@ -3835,9 +3803,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       });
 
       await user.type(input, 'e');
-      await waitFor(() => {
-        expect(input).not.toHaveAttribute('aria-activedescendant');
-      });
+      expect(input).not.toHaveAttribute('aria-activedescendant');
 
       await user.keyboard('[ArrowDown]');
       await waitFor(() => {
@@ -3875,9 +3841,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       });
 
       await user.keyboard('d');
-      await waitFor(() => {
-        expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
-      });
+      expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
       expect(input).not.toHaveAttribute('aria-activedescendant');
     });
   });
@@ -3921,9 +3885,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     const input = screen.getByRole('searchbox', { name: 'Filter actions' });
 
     await user.type(input, 'del');
-    await waitFor(() => {
-      expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
-    });
+    expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
 
     await fireEvent.input(input, { target: { value: 'ren' } });
 
@@ -4023,9 +3985,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     const input = screen.getByRole('searchbox', { name: 'Filter actions' });
     await waitForLaterMillisecond(async () => {
       await user.type(input, 'ban');
-      await waitFor(() => {
-        expect(screen.queryByRole('menuitem', { name: 'Apple' })).toBe(null);
-      });
+      expect(screen.queryByRole('menuitem', { name: 'Apple' })).toBe(null);
     });
 
     // Banana is now index 0.
@@ -4038,9 +3998,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     await user.click(screen.getByLabelText('Clear filter'));
 
     // Apple takes index 0 back, so a kept highlight would activate the wrong item.
-    await waitFor(() => {
-      expect(input).not.toHaveAttribute('aria-activedescendant');
-    });
+    expect(input).not.toHaveAttribute('aria-activedescendant');
     await user.keyboard('[Enter]');
     expect(onClick).toHaveBeenCalledTimes(0);
   });
@@ -4098,15 +4056,15 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     const { user } = await render(<App />);
 
     await user.type(screen.getByRole('searchbox', { name: 'Filter actions' }), 'ren');
-    await waitFor(() => {
-      expect(screen.queryByRole('menuitem', { name: 'Delete' })).toBe(null);
-    });
+    expect(screen.queryByRole('menuitem', { name: 'Delete' })).toBe(null);
 
     const toggle = screen.getByRole('button', { name: 'toggle' });
+    const menu = screen.getByRole('menu');
     toggle.click();
     await waitFor(() => {
-      expect(screen.queryByRole('menu')).toBe(null);
+      expect(menu).not.toBeInTheDocument();
     });
+    expect(screen.queryByRole('menu')).toBe(null);
 
     toggle.click();
 
@@ -4115,9 +4073,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     await waitFor(() => {
       expect(input).toHaveFocus();
     });
-    await waitFor(() => {
-      expect(screen.queryByRole('menuitem', { name: 'Delete' })).toBe(null);
-    });
+    expect(screen.queryByRole('menuitem', { name: 'Delete' })).toBe(null);
     expect(screen.getByRole('menuitem', { name: 'Rename' })).toBeVisible();
   });
 
@@ -4210,9 +4166,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     const { user } = await render(<App />);
 
     await user.type(screen.getByRole('searchbox', { name: 'Filter actions' }), 'rename');
-    await waitFor(() => {
-      expect(screen.queryByRole('menuitem', { name: 'Archive' })).toBe(null);
-    });
+    expect(screen.queryByRole('menuitem', { name: 'Archive' })).toBe(null);
 
     // The item is unmounted, so its text can only come from the rendered children.
     await user.click(screen.getByRole('button', { name: 'rename' }));
@@ -4499,16 +4453,12 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
     const input = screen.getByRole('searchbox', { name: 'Filter actions' });
     await user.type(input, 'app');
-    await waitFor(() => {
-      expect(screen.queryByRole('menuitem', { name: 'Banana' })).toBe(null);
-    });
+    expect(screen.queryByRole('menuitem', { name: 'Banana' })).toBe(null);
     expect(screen.getByRole('menuitem', { name: 'Fruit one' })).toBeVisible();
 
     await user.clear(input);
     await user.type(input, 'fruit');
-    await waitFor(() => {
-      expect(screen.queryByRole('menuitem', { name: 'Fruit one' })).toBe(null);
-    });
+    expect(screen.queryByRole('menuitem', { name: 'Fruit one' })).toBe(null);
   });
 
   it('removes Empty once the query matches again', async () => {
@@ -4541,9 +4491,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
     await user.clear(input);
     await user.type(input, 'ren');
-    await waitFor(() => {
-      expect(screen.queryByText('No actions found')).toBe(null);
-    });
+    expect(screen.queryByText('No actions found')).toBe(null);
     // The text of a message that appears again has a marker for a moment, so the text query alone
     // cannot see that the message is still there.
     expect(screen.queryByRole('status')).toBe(null);
@@ -4655,9 +4603,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       await user.hover(screen.getByRole('menuitem', { name: 'Rename' }));
 
-      await waitFor(() => {
-        expect(screen.queryByRole('searchbox', { name: 'Filter sharing options' })).toBe(null);
-      });
+      expect(screen.queryByRole('searchbox', { name: 'Filter sharing options' })).toBe(null);
     });
 
     it('closes when the pointer leaves the submenu popup', async () => {
@@ -4667,9 +4613,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       await user.hover(await screen.findByRole('menuitem', { name: 'Email' }));
       await user.hover(screen.getByRole('menuitem', { name: 'Duplicate' }));
 
-      await waitFor(() => {
-        expect(screen.queryByRole('searchbox', { name: 'Filter sharing options' })).toBe(null);
-      });
+      expect(screen.queryByRole('searchbox', { name: 'Filter sharing options' })).toBe(null);
     });
 
     it('closes and resets after a query was typed into the hover-opened submenu', async () => {
@@ -4687,9 +4631,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       await user.hover(screen.getByRole('menuitem', { name: 'Rename' }));
 
-      await waitFor(() => {
-        expect(screen.queryByRole('searchbox', { name: 'Filter sharing options' })).toBe(null);
-      });
+      expect(screen.queryByRole('searchbox', { name: 'Filter sharing options' })).toBe(null);
 
       // Reopening starts from an empty query rather than the previous one.
       await user.hover(screen.getByRole('menuitem', { name: 'Share' }));
@@ -4854,8 +4796,9 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
         animations.forEach((animation) => animation.finish());
         await waitFor(() => {
-          expect(screen.queryByTestId('popup')).toBe(null);
+          expect(popup).not.toBeInTheDocument();
         });
+        expect(screen.queryByTestId('popup')).toBe(null);
         await waitFor(() => {
           expect(onValueChange).toHaveBeenLastCalledWith('', 'popup-close');
         });
@@ -5017,9 +4960,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       root.unmount();
       await flushMicrotasks();
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
-      });
+      expect(screen.queryByTestId('popup')).toBe(null);
       expect(onValueChange).toHaveBeenLastCalledWith('', 'popup-close');
     });
 
@@ -5055,11 +4996,13 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         expect(screen.getByTestId('popup')).toHaveAttribute('data-ending-style');
         expect(onValueChange).not.toHaveBeenCalledWith('', 'popup-close');
 
+        const trigger = screen.getByRole('button', { name: 'Fruit' });
         animations.forEach((animation) => animation.finish());
 
         await waitFor(() => {
-          expect(screen.queryByRole('button', { name: 'Fruit' })).toBe(null);
+          expect(trigger).not.toBeInTheDocument();
         });
+        expect(screen.queryByRole('button', { name: 'Fruit' })).toBe(null);
         expect(onValueChange).toHaveBeenLastCalledWith('', 'popup-close');
       },
     );
@@ -5243,9 +5186,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       expect(onValueChange).toHaveBeenCalledTimes(1);
       expect(onValueChange.mock.calls[0][0]).toBe('日本');
-      await waitFor(() => {
-        expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
-      });
+      expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
       expect(screen.getByRole('menuitem', { name: '日本語' })).toBeVisible();
     });
   });
@@ -5411,9 +5352,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       );
 
       const input = screen.getByRole('searchbox', { name: 'Filter actions' });
-      await waitFor(() => {
-        expect(input).not.toHaveAttribute('aria-controls');
-      });
+      expect(input).not.toHaveAttribute('aria-controls');
       expect(screen.getByRole('menu').id).toBe('');
     });
 
@@ -5840,9 +5779,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       });
       await fireEvent.mouseMove(item, { movementX: 1 });
       expect(item).toHaveFocus();
-      await waitFor(() => {
-        expect(input).not.toHaveAttribute('data-highlighted');
-      });
+      expect(input).not.toHaveAttribute('data-highlighted');
 
       await fireEvent.mouseOver(trigger);
       expect(input).toHaveFocus();
@@ -5897,9 +5834,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       });
 
       await user.hover(screen.getByRole('menuitem', { name: 'Rename' }));
-      await waitFor(() => {
-        expect(submenuInput).not.toBeInTheDocument();
-      });
+      expect(submenuInput).not.toBeInTheDocument();
 
       const rootInput = screen.getByRole('searchbox', { name: 'Filter actions' });
       await waitFor(() => {
@@ -6075,9 +6010,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       await user.keyboard('[Escape]');
 
       // Escape closes outright; it does not clear the query first.
-      await waitFor(() => {
-        expect(screen.queryByRole('menu')).toBe(null);
-      });
+      expect(screen.queryByRole('menu')).toBe(null);
       await waitFor(() => {
         expect(screen.getByRole('button', { name: 'Actions' })).toHaveFocus();
       });
@@ -6094,9 +6027,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       await browserUserEvent.keyboard('{Shift>}[Tab]{/Shift}');
 
       // Backward tabbing mirrors a plain menu: the popup closes and the trigger regains focus.
-      await waitFor(() => {
-        expect(screen.queryByRole('menu')).toBe(null);
-      });
+      expect(screen.queryByRole('menu')).toBe(null);
       await waitFor(() => {
         expect(screen.getByRole('button', { name: 'Actions' })).toHaveFocus();
       });
@@ -6168,9 +6099,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       const input = await screen.findByRole('searchbox', { name: 'Filter actions' });
       await user.type(input, 'ren');
-      await waitFor(() => {
-        expect(screen.queryByRole('menuitem', { name: 'Delete' })).toBe(null);
-      });
+      expect(screen.queryByRole('menuitem', { name: 'Delete' })).toBe(null);
 
       await user.keyboard('[ArrowDown]');
       expect(input).toHaveAttribute(
@@ -6264,9 +6193,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       await user.unhover(item);
 
       // The mirror of the `autoHighlight="always"` case, which retains the highlight.
-      await waitFor(() => {
-        expect(item).not.toHaveAttribute('data-highlighted');
-      });
+      expect(item).not.toHaveAttribute('data-highlighted');
     });
   });
 
@@ -6462,9 +6389,7 @@ describe('filterable menu navigation regressions', () => {
         });
         await waitFor(() => expect(child).toHaveFocus());
         await user.keyboard(closeKey);
-        await waitFor(() =>
-          expect(screen.queryByRole('menuitem', { name: 'Child action' })).toBe(null),
-        );
+        expect(screen.queryByRole('menuitem', { name: 'Child action' })).toBe(null);
         await waitFor(() => expect(input).toHaveFocus());
         await user.keyboard('ren');
         expect(input).toHaveValue('ren');

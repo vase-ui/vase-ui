@@ -4,7 +4,7 @@ import TanstackForm from './TanstackForm.vue';
 </script>
 
 <template>
-  <ToastProvider>
+  <ToastProvider aria-label="TanStack Form notifications">
     <TanstackForm />
   </ToastProvider>
 </template>

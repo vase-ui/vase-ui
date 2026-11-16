@@ -1105,9 +1105,7 @@ export function popupListConformanceTests(config: PopupListTestConfig) {
         expect(screen.getByTestId('dialog')).toBeVisible();
 
         await user.keyboard('{Escape}');
-        await waitFor(() => {
-          expect(screen.queryByTestId('dialog')).toBe(null);
-        });
+        expect(screen.queryByTestId('dialog')).toBe(null);
       });
     });
   });
