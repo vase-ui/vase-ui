@@ -64,8 +64,9 @@ export function markChildrenMounted(): void {
 }
 
 // Vue skips a Vue listener that it attached in the millisecond of an event when an earlier Vue
-// listener got the event. `focus` and `blur` do not bubble, and no part has a Vue listener for them
-// in the capture phase. The Vue listener of the target thus gets each of them first.
+// listener got the event. A part or the consumer can move the focus to a new element in that
+// millisecond. `focus` and `blur` do not bubble, and no part has a Vue listener for them in the
+// capture phase. The Vue listener of the target thus gets each of them first.
 const FOCUS_KEYS = {
   onFocusin: { type: 'focusin', capture: false },
   onFocusout: { type: 'focusout', capture: false },
