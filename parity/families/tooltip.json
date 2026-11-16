@@ -32,12 +32,12 @@
     {
       "entry": "Trigger",
       "stateField": "disabled",
-      "reason": "VUE-112 exposes the disabled state of a native button within a disabled fieldset. Base UI lacks this state."
+      "reason": "The state of a native button in a disabled fieldset (`VUE-112`). Base UI has no such state."
     },
     {
       "entry": "TooltipTriggerDataAttributes",
       "constant": "disabled",
-      "reason": "VUE-112 exposes data-disabled for a native button within a disabled fieldset. Base UI lacks this attribute."
+      "reason": "`data-disabled` of a native button in a disabled fieldset (`VUE-112`). Base UI has no such attribute."
     },
     {
       "entry": "Trigger",

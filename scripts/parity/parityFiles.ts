@@ -47,7 +47,9 @@ export interface SurfaceAddition {
   exposed?: string;
   /** A change reason that the `ChangeEventReason` type of the part has and Base UI lacks. */
   changeEventReason?: string;
+  /** A field that the state type of the part has and Base UI lacks. */
   stateField?: string;
+  /** A constant that the export `entry` has and Base UI lacks. */
   constant?: string;
   reason: string;
 }
