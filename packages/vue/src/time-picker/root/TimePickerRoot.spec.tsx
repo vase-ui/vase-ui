@@ -34,13 +34,14 @@ declare const zoned: Temporal.ZonedDateTime;
 // @ts-expect-error `minTime` is a `Temporal.PlainTime`
 <TimePicker.Root minTime="09:00" />;
 
+// The clock gives its reasons for a change of the time, and not the reason of a press on its view
+// trigger, which changes the view.
 function assertValueChange(details: TimePicker.Root.ChangeEventDetails) {
   expectType<
     | 'drag'
     | 'keyboard'
     | 'input-change'
     | 'item-press'
-    | 'trigger-press'
     | 'input-clear'
     | 'input-paste'
     | 'clear-press'

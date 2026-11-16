@@ -258,3 +258,7 @@ A key goes over a disabled number. The Left Arrow and the Right Arrow do not cha
 ### TimeClock.Root.CommitEventReason
 
 <ApiReference name="TimeClock.Root.CommitEventReason" />
+
+### TimeClock.Root.ViewChangeEventReason
+
+<ApiReference name="TimeClock.Root.ViewChangeEventReason" />

@@ -10,6 +10,7 @@ import type {
   TimeClockRootChangeEventDetails,
   TimeClockRootCommitEventDetails,
   TimeClockRootState,
+  TimeClockRootViewChangeEventDetails,
 } from './TimeClockRoot.vue';
 
 export interface TimeClockRootContext {
@@ -47,7 +48,7 @@ export interface TimeClockRootContext {
     dayPeriod: TimeClockDayPeriodValue,
     details: TimeClockRootChangeEventDetails,
   ) => void;
-  setView: (view: TimeClockView, details: TimeClockRootChangeEventDetails) => void;
+  setView: (view: TimeClockView, details: TimeClockRootViewChangeEventDetails) => void;
   commit: (details: TimeClockRootCommitEventDetails) => void;
 }
 

@@ -18,6 +18,8 @@ import type {
   TimeClockRootCommitEventReason,
   TimeClockRootProps,
   TimeClockRootState,
+  TimeClockRootViewChangeEventDetails,
+  TimeClockRootViewChangeEventReason,
 } from './root/TimeClockRoot.vue';
 import TimeClockViewTrigger from './view-trigger/TimeClockViewTrigger.vue';
 import type {
@@ -37,6 +39,8 @@ export namespace Root {
   export type ChangeEventDetails = TimeClockRootChangeEventDetails;
   export type CommitEventReason = TimeClockRootCommitEventReason;
   export type CommitEventDetails = TimeClockRootCommitEventDetails;
+  export type ViewChangeEventReason = TimeClockRootViewChangeEventReason;
+  export type ViewChangeEventDetails = TimeClockRootViewChangeEventDetails;
 }
 
 /**

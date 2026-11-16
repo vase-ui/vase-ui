@@ -45,6 +45,7 @@ import TimeClockRoot from '../../time-clock/root/TimeClockRoot.vue';
 import type {
   TimeClockRootChangeEventDetails,
   TimeClockRootCommitEventDetails,
+  TimeClockRootViewChangeEventDetails,
 } from '../../time-clock/root/TimeClockRoot.vue';
 import { nextView } from '../../time-clock/utils/clockViews';
 import { useTimePickerRootContext } from '../root/TimePickerRootContext';
@@ -79,7 +80,7 @@ const emit = defineEmits<{
    *
    * To stop the change, call `eventDetails.cancel()` before the listener returns.
    */
-  viewChange: [view: TimeClockView, eventDetails: TimeClockRootChangeEventDetails];
+  viewChange: [view: TimeClockView, eventDetails: TimeClockRootViewChangeEventDetails];
   /**
    * Event handler called after `viewChange` with the new view, unless a listener cancels the
    * change. `v-model:view` uses it.
@@ -141,7 +142,7 @@ function handleValueCommitted(
 
 // `TimeClock.Root` reads `details.isCanceled` after this emit returns, so a listener can stop the
 // change of the view.
-function handleViewChange(next: TimeClockView, details: TimeClockRootChangeEventDetails) {
+function handleViewChange(next: TimeClockView, details: TimeClockRootViewChangeEventDetails) {
   emit('viewChange', next, details);
 }
 

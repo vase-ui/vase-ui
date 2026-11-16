@@ -61,7 +61,7 @@ function onWrongKind(value: Temporal.PlainDate | null) {
       @view-change="
         (next, details) => {
           expectType<TimeClockView, typeof next>(next);
-          expectType<TimeClock.Root.ChangeEventDetails, typeof details>(details);
+          expectType<TimeClock.Root.ViewChangeEventDetails, typeof details>(details);
         }
       "
       @value-committed="
