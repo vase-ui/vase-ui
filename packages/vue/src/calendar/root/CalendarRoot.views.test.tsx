@@ -722,6 +722,22 @@ describe('<Calendar.Root /> views', () => {
 
       expect(cellsWith('data-selected')).toEqual([monthLabel('2026-03-01')]);
     });
+
+    it('does not make the grid of months multiselectable for a list of days', async () => {
+      await renderViews({
+        defaultView: 'month',
+        multiple: true,
+        defaultValue: [day('2026-03-10'), day('2026-05-02')],
+      });
+
+      expect(screen.getByRole('grid', { name: fieldName('month') })).not.toHaveAttribute(
+        'aria-multiselectable',
+      );
+      expect(cellsWith('data-selected')).toEqual([
+        monthLabel('2026-03-01'),
+        monthLabel('2026-05-01'),
+      ]);
+    });
   });
 
   describe('the tab stop', () => {
