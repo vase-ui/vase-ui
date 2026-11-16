@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { TimePicker } from '@vase-ui/vue/time-picker';
-import { createRenderer, describeConformance, screen, takeReportedMessages } from '#test-utils';
+import {
+  createRenderer,
+  describeConformance,
+  heldMountListTests,
+  screen,
+  takeReportedMessages,
+  waitFor,
+} from '#test-utils';
 import { formatText } from '../../internals/date-time/calendar/formatText';
 
 const time = (text: string) => Temporal.PlainTime.from(text);
@@ -26,6 +33,28 @@ describe('<TimePicker.List />', () => {
     refInstanceof: window.HTMLDivElement,
     render: (node) => render(<TimePicker.Root>{node}</TimePicker.Root>),
   }));
+
+  heldMountListTests({
+    render,
+    renderList: (withLastItem) => (
+      <TimePicker.Root locale="en-US">
+        <TimePicker.List
+          step={360}
+          v-slots={{
+            item: ({ time: itemTime, index }: { time: Temporal.PlainTime; index: number }) =>
+              index < 3 || withLastItem ? <TimePicker.Item time={itemTime} /> : null,
+          }}
+        />
+      </TimePicker.Root>
+    ),
+    async check(user) {
+      screen.getByRole('option', { name: timeText('00:00') }).focus();
+      await user.keyboard('{End}');
+      await waitFor(() => {
+        expect(screen.getByRole('option', { name: timeText('18:00') })).toHaveFocus();
+      });
+    },
+  });
 
   function renderList(
     listProps: Record<string, unknown> = {},

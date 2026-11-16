@@ -6,7 +6,9 @@ import {
   createFormDataSpy,
   createRenderer,
   describeConformance,
+  fireEvent,
   flushMicrotasks,
+  heldMountFormResetTests,
   screen,
   wait,
   waitFor,
@@ -310,6 +312,22 @@ describe('<TimePicker.Field />', () => {
   });
 
   describe('form', () => {
+    heldMountFormResetTests({
+      render,
+      renderControl: () => (
+        <TimePicker.Root name="time" locale="en-US" defaultValue={Temporal.PlainTime.from('10:30')}>
+          <TimePicker.Field>
+            <TimeField.Input />
+          </TimePicker.Field>
+        </TimePicker.Root>
+      ),
+      change: () => fireEvent.input(hiddenInputOf(document.body), { target: { value: '11:45' } }),
+      readState: () =>
+        screen.getAllByRole('spinbutton').map((segment) => segment.getAttribute('aria-valuenow')),
+      defaultState: ['10', '30', '0'],
+      changedState: ['11', '45', '0'],
+    });
+
     it('submits one entry with the ISO text of the value', async () => {
       const onSubmit = createFormDataSpy('when');
       const { container } = await render(

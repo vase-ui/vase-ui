@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { TimePicker } from '@vase-ui/vue/time-picker';
-import { createRenderer, describeConformance, screen, takeReportedMessages } from '#test-utils';
+import {
+  createRenderer,
+  describeConformance,
+  heldMountListTests,
+  screen,
+  takeReportedMessages,
+  waitFor,
+} from '#test-utils';
 import { formatNumber } from '../../common/formatNumber';
 
 const time = (text: string) => Temporal.PlainTime.from(text);
@@ -32,6 +39,29 @@ describe('<TimePicker.Column />', () => {
     refInstanceof: window.HTMLDivElement,
     render: (node) => render(<TimePicker.Root>{node}</TimePicker.Root>),
   }));
+
+  heldMountListTests({
+    render,
+    renderList: (withLastItem) => (
+      <TimePicker.Root locale="en-US" hourCycle={24}>
+        <TimePicker.Column
+          unit="hour"
+          step={6}
+          v-slots={{
+            item: ({ value, index }: { value: TimePicker.Column.Value; index: number }) =>
+              index < 3 || withLastItem ? <TimePicker.ColumnItem value={value} /> : null,
+          }}
+        />
+      </TimePicker.Root>
+    ),
+    async check(user) {
+      screen.getByRole('option', { name: twoDigits(0) }).focus();
+      await user.keyboard('{End}');
+      await waitFor(() => {
+        expect(screen.getByRole('option', { name: twoDigits(18) })).toHaveFocus();
+      });
+    },
+  });
 
   function renderColumn(
     columnProps: Record<string, unknown>,
@@ -90,7 +120,7 @@ describe('<TimePicker.Column />', () => {
         expected: ['12', ...range(11, 1, 1).map(String)],
       },
       {
-        name: 'the hours of a 24-hour cycle, with two digits',
+        name: 'two-digit hours of a 24-hour cycle',
         unit: 'hour',
         hourCycle: 24,
         step: undefined,
@@ -125,7 +155,7 @@ describe('<TimePicker.Column />', () => {
         expected: ['00', '15', '30', '45'],
       },
       {
-        name: 'the minutes with a step that does not divide an hour',
+        name: 'the minutes with a step of 25',
         unit: 'minute',
         hourCycle: 12,
         step: 25,
