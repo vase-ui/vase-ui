@@ -50,25 +50,28 @@ function sourcesThatMatch(pattern: RegExp) {
     .map(([path]) => path);
 }
 
-// Vitest cuts a `$name` value after 40 characters. The variant has its own value, so the two titles
-// of a long name stay different.
-describe.each(demos)('$name ($variant)', ({ file, variant, Demo }) => {
-  const { render } = createRenderer();
+// Vitest cuts a `$name` value after 40 characters, so two long names can get one title. A `%s`
+// value is not cut.
+describe.each(demos.map((demo) => [`${demo.name} (${demo.variant})`, demo] as const))(
+  '%s',
+  (_title, { file, variant, Demo }) => {
+    const { render } = createRenderer();
 
-  it('mounts with no Vue warning and has no axe violation', async () => {
-    // Do not write JSX here. The dependency scan of Vite cannot parse JSX in a file that has
-    // `import.meta.glob`.
-    const { container } = await render(h('div', { 'data-demo': variant }, h(Demo)));
+    it('mounts with no Vue warning and has no axe violation', async () => {
+      // Do not write JSX here. The dependency scan of Vite cannot parse JSX in a file that has
+      // `import.meta.glob`.
+      const { container } = await render(h('div', { 'data-demo': variant }, h(Demo)));
 
-    await expectNoAxeViolations(container);
-  });
+      await expectNoAxeViolations(container);
+    });
 
-  it('hydrates the server render with no mismatch', async () => {
-    const serverHtml = await renderOnServer(file);
+    it('hydrates the server render with no mismatch', async () => {
+      const serverHtml = await renderOnServer(file);
 
-    await hydrate(Demo, { serverHtml });
-  });
-});
+      await hydrate(Demo, { serverHtml });
+    });
+  },
+);
 
 describe('the style sheet of the Tailwind demos', () => {
   const { render } = createRenderer();

@@ -9,6 +9,7 @@ import {
   firePointer,
   flushMicrotasks,
   waitFor,
+  waitForLaterMillisecond,
   within,
 } from '#test-utils';
 import DemoFrame from '../../../docs/.vitepress/components/DemoFrame.vue';
@@ -22,10 +23,10 @@ import '../../../docs/demos/tailwind.css';
 
 // The case checks each popup in its open state, not its motion. A wait for the transitions of the
 // style sheets makes the file five times slower.
-const still = document.createElement('style');
-still.textContent =
+const noMotionStyle = document.createElement('style');
+noMotionStyle.textContent =
   '*, *::before, *::after { transition: none !important; animation: none !important; }';
-document.head.append(still);
+document.head.append(noMotionStyle);
 
 const modules = import.meta.glob<{ default: Component }>(
   [
@@ -197,10 +198,15 @@ function runningAnimations() {
 }
 
 /**
- * The triggers at `depth`. `before` holds the elements of the portals from before the last open, so
- * that the triggers of an earlier popup are not in the list.
+ * The triggers at `depth`. The triggers of an earlier popup are in `portalElementsBeforeOpen`, so
+ * they are not in the list.
  */
-function triggersAt(name: string, depth: number, frame: HTMLElement, before: Set<Element>) {
+function triggersAt(
+  name: string,
+  depth: number,
+  frame: HTMLElement,
+  portalElementsBeforeOpen: Set<Element>,
+) {
   if (depth === 0) {
     return [...markedTriggers(frame), ...unmarkedTriggers(name, depth, frame)];
   }
@@ -210,24 +216,27 @@ function triggersAt(name: string, depth: number, frame: HTMLElement, before: Set
     ...(outside.length > 0 ? unmarkedTriggers(name, depth, document.body) : []),
   ].filter(
     (trigger) =>
-      !before.has(trigger.element) && outside.some((portal) => portal.contains(trigger.element)),
+      !portalElementsBeforeOpen.has(trigger.element) &&
+      outside.some((portal) => portal.contains(trigger.element)),
   );
 }
 
 // What axe reports and a user does not meet. Each row is a rule and the elements that are correct.
 const ACCEPTED: Record<string, (element: Element) => boolean> = {
-  // In WebKit on an Apple system, a focus guard is a button. A menu has the guards of a submenu
-  // trigger as children.
+  // In WebKit on an Apple system, a focus guard is a button. A menu has the guards of its submenu
+  // triggers as children, and a menubar has the guards of its menus.
   'aria-required-children': (element) => {
     const buttons = [...element.querySelectorAll('[role="button"]')];
     return (
-      buttons.length > 0 && buttons.every((button) => button.matches('[data-vase-ui-focus-guard]'))
+      element.matches('[role="menu"], [role="menubar"]') &&
+      buttons.length > 0 &&
+      buttons.every((button) => button.matches('[data-vase-ui-focus-guard]'))
     );
   },
   // In WebKit, VoiceOver needs `aria-selected` on the highlighted item of a menu that has an input.
   'aria-allowed-attr': (element) => element.matches('[role="menuitem"][aria-selected="true"]'),
   // The arrow keys of the input move the highlight of a list, and the list scrolls to it.
-  'scrollable-region-focusable': (element) => element.closest('[role="listbox"]') !== null,
+  'scrollable-region-focusable': (element) => element.matches('[role="listbox"] *'),
 };
 
 function expectNoViolationsInOpenState(element: Element) {
@@ -272,22 +281,26 @@ describe.each(demos.map((demo) => [`${demo.name} (${demo.variant})`, demo] as co
       for (const path of paths) {
         const view = await mount(render, variant, Demo);
         const frame = view.container.querySelector<HTMLElement>('.demo-frame')!;
-        let before = new Set<Element>();
+        let portalElementsBeforeOpen = new Set<Element>();
         for (const [depth, index] of path.entries()) {
-          const trigger = triggersAt(name, depth, frame, before)[index]!;
-          before = new Set(document.querySelectorAll('[data-vase-ui-portal] *'));
+          const trigger = triggersAt(name, depth, frame, portalElementsBeforeOpen)[index]!;
+          portalElementsBeforeOpen = new Set(document.querySelectorAll('[data-vase-ui-portal] *'));
           const openBefore = new Set(openPopups());
-          await trigger.open(view.user);
-          await waitFor(() => {
-            expect(openPopups().filter((popup) => !openBefore.has(popup))).not.toHaveLength(0);
-          });
-          // A popup has its starting style until the frame after its mount. A style sheet gives that
-          // style `opacity: 0`, and axe gives no contrast for text that a reader cannot see.
-          await waitFor(() => {
-            expect([...document.querySelectorAll('[data-starting-style]')]).toEqual([]);
-          });
-          await waitFor(() => {
-            expect(runningAnimations()).toEqual([]);
+          // The next open can click a trigger of this popup. Vue skips a listener for an event in
+          // the millisecond in which Vue attached the listener.
+          await waitForLaterMillisecond(async () => {
+            await trigger.open(view.user);
+            await waitFor(() => {
+              expect(openPopups().filter((popup) => !openBefore.has(popup))).not.toHaveLength(0);
+            });
+            // A popup has its starting style until the frame after its mount. A style sheet gives
+            // that style `opacity: 0`, and axe gives no contrast for text that a reader cannot see.
+            await waitFor(() => {
+              expect([...document.querySelectorAll('[data-starting-style]')]).toEqual([]);
+            });
+            await waitFor(() => {
+              expect(runningAnimations()).toEqual([]);
+            });
           });
         }
 
@@ -297,13 +310,11 @@ describe.each(demos.map((demo) => [`${demo.name} (${demo.variant})`, demo] as co
         }
 
         if (path.length < 3) {
-          triggersAt(name, path.length, frame, before).forEach((_, index) =>
+          triggersAt(name, path.length, frame, portalElementsBeforeOpen).forEach((_, index) =>
             paths.push([...path, index]),
           );
         }
         view.unmount();
-        // The next mount starts after the flush of the unmount.
-        await flushMicrotasks();
       }
     });
   },
