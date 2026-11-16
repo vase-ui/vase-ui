@@ -52,14 +52,17 @@ describe('<Menu.GroupLabel />', () => {
       expect(groupLabel).toHaveAttribute('aria-hidden', 'true');
     });
 
-    it('allows overriding aria-hidden', async () => {
+    it.each([
+      { name: 'undefined', value: undefined, expected: 'true' },
+      { name: 'null', value: null, expected: null },
+    ])('VUE-103: aria-hidden of the consumer is $name', async ({ value, expected }) => {
       await render(
         <Menu.Root open>
           <Menu.Portal>
             <Menu.Positioner>
               <Menu.Popup>
                 <Menu.Group>
-                  <Menu.GroupLabel aria-hidden={undefined}>Test group</Menu.GroupLabel>
+                  <Menu.GroupLabel aria-hidden={value}>Test group</Menu.GroupLabel>
                 </Menu.Group>
               </Menu.Popup>
             </Menu.Positioner>
@@ -68,7 +71,7 @@ describe('<Menu.GroupLabel />', () => {
       );
 
       const groupLabel = screen.getByText('Test group');
-      expect(groupLabel).not.toHaveAttribute('aria-hidden');
+      expect(groupLabel.getAttribute('aria-hidden')).toBe(expected);
     });
 
     it("should reference the generated id in Group's `aria-labelledby`", async () => {

@@ -36,7 +36,10 @@ export interface CheckboxRootProps
   extends
     NonNativeButtonProps,
     VaseUIComponentProps<CheckboxRootState>,
-    /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes>, 'id' | 'onChange'> {
+    /* @vue-ignore */ Omit<
+      WithVaseUIEvent<HTMLAttributes, 'aria-label' | 'aria-labelledby'>,
+      'id' | 'onChange'
+    > {
   /**
    * The id of the hidden input element.
    *

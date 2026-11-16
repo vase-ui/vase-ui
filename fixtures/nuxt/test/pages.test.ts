@@ -1697,7 +1697,7 @@ const FORM_STATE_CHANGED: Omit<FormState, 'submits' | 'completes'> = {
     quantity: 1,
     code: 1,
     volume: 1,
-    range: 2,
+    range: 1,
     when: 1,
     alarm: 1,
   },
@@ -1855,6 +1855,53 @@ async function openFormStatePage({ engine }: { engine: BrowserType }) {
   return { page, messages: collectMessages(page) };
 }
 
+const RESIZABLE_PANELS = ['p-a', 'p-b', 'p-c', 'l-a', 'l-b', 'c-a', 'c-b'];
+
+function readResizablePanel(page: Page, testId: string) {
+  return page.getByTestId(testId).evaluate((element) => {
+    const { style } = element as HTMLElement;
+    return {
+      flex: style.flex,
+      flexGrow: style.flexGrow,
+      size: style.getPropertyValue('--resizable-panel-size'),
+    };
+  });
+}
+
+async function expectResizablePercentPanels(page: Page) {
+  const panels = await Promise.all(['p-a', 'p-b', 'p-c'].map((id) => readResizablePanel(page, id)));
+  expect(panels.map(({ flexGrow, size }) => [flexGrow, size])).toEqual([
+    ['30', '30'],
+    ['35', '35'],
+    ['35', '35'],
+  ]);
+  expect(
+    await page.getByTestId('percent').getByRole('separator').first().getAttribute('aria-valuenow'),
+  ).toBe('30');
+}
+
+async function expectResizablePageOnServer(page: Page) {
+  await expectResizablePercentPanels(page);
+  // A server cannot measure the page, so the length stays a length until the mount.
+  expect(await readResizablePanel(page, 'l-a')).toEqual({
+    flex: '0 1 240px',
+    flexGrow: '0',
+    size: '',
+  });
+  expect((await readResizablePanel(page, 'l-b')).flexGrow).toBe('100');
+}
+
+async function expectHydratedResizablePage(page: Page) {
+  await expectResizablePercentPanels(page);
+  expect((await readResizablePanel(page, 'l-a')).flexGrow).toBe('40');
+}
+
+async function readResizableWidths(page: Page) {
+  return Promise.all(
+    RESIZABLE_PANELS.map(async (testId) => (await page.getByTestId(testId).boundingBox())?.width),
+  );
+}
+
 interface PageCase {
   path: string;
   expectPage: (page: Page) => Promise<void>;
@@ -1988,6 +2035,11 @@ const PAGES: PageCase[] = [
   },
   { path: '/text-before-hydration', expectPage: expectTextBeforeHydrationPage },
   { path: '/form-state', expectPage: expectFormStatePage },
+  {
+    path: '/resizable',
+    expectPage: expectResizablePageOnServer,
+    expectHydratedPage: expectHydratedResizablePage,
+  },
 ];
 
 const MODES = [
@@ -2707,6 +2759,85 @@ describe.each(MODES)('in $name', async ({ dev }) => {
       },
       60_000,
     );
+  });
+
+  it('renders the layout of the cookie of /resizable on a server', async () => {
+    const cookie = {
+      name: 'resizable-layout',
+      value: encodeURIComponent(JSON.stringify({ 'c-a': '180px', 'c-b': 70 })),
+      url: url('/'),
+    };
+    const serverPage = await createPage(undefined, { javaScriptEnabled: false });
+    await serverPage.context().addCookies([cookie]);
+
+    await serverPage.goto(url('/resizable'));
+
+    expect((await readResizablePanel(serverPage, 'c-a')).flex).toBe('0 1 180px');
+
+    const page = await createPage();
+    await page.context().addCookies([cookie]);
+    const messages = collectMessages(page);
+
+    await page.goto(url('/resizable'), { waitUntil: 'hydration' });
+    await waitForTwoFrames(page);
+
+    const { width } = (await page.getByTestId('c-a').boundingBox())!;
+    expect(Math.abs(width - 180)).toBeLessThanOrEqual(1);
+    expect(messages).toEqual([]);
+  });
+
+  it('keeps each panel rectangle of /resizable when the scripts run', async () => {
+    const serverPage = await createPage(undefined, { javaScriptEnabled: false });
+    await serverPage.goto(url('/resizable'));
+    const serverWidths = await readResizableWidths(serverPage);
+
+    const page = await createPage();
+    const messages = collectMessages(page);
+    await page.goto(url('/resizable'), { waitUntil: 'hydration' });
+    await waitForTwoFrames(page);
+    const widths = await readResizableWidths(page);
+
+    expect(serverWidths).toHaveLength(RESIZABLE_PANELS.length);
+    for (const [index, width] of widths.entries()) {
+      expect(Math.abs(width! - serverWidths[index]!)).toBeLessThanOrEqual(1);
+    }
+    expect(messages).toEqual([]);
+  });
+
+  it('saves the layout of /resizable in its cookie after a key on the handle', async () => {
+    const page = await createPage();
+    const messages = collectMessages(page);
+    await page.goto(url('/resizable'), { waitUntil: 'hydration' });
+    await waitForTwoFrames(page);
+
+    await page.getByTestId('cookie-handle').focus();
+    await page.keyboard.press('ArrowRight');
+    await page.waitForFunction(() => document.cookie.includes('resizable-layout='));
+
+    const cookie = await page.evaluate(() =>
+      decodeURIComponent(
+        document.cookie
+          .split('; ')
+          .find((entry) => entry.startsWith('resizable-layout='))!
+          .slice('resizable-layout='.length),
+      ),
+    );
+    expect(JSON.parse(cookie)).toEqual({ 'c-a': '156px', 'c-b': 74 });
+    expect(messages).toEqual([]);
+  });
+
+  it('shows the stored layout of /resizable after the mount', async () => {
+    const page = await createPage();
+    const messages = collectMessages(page);
+    await page.addInitScript(() => {
+      localStorage.setItem('nuxt-resizable', JSON.stringify({ 's-a': 20, 's-b': 80 }));
+    });
+
+    await page.goto(url('/resizable'), { waitUntil: 'hydration' });
+    await waitForTwoFrames(page);
+
+    expect((await readResizablePanel(page, 's-a')).flexGrow).toBe('20');
+    expect(messages).toEqual([]);
   });
 
   it('shows the media query of the visitor after hydration', async () => {

@@ -664,6 +664,11 @@ describe('<Popover.Root />', () => {
       await waitFor(() => {
         expect(screen.getByTestId('content').textContent).toBe('1');
       });
+      // The root reads the animations of the popup when the popup loses `data-starting-style`, one
+      // frame after the open. A switch before that frame removes the attribute and starts an exit.
+      // The next frame cancels the exit, and the root reads the animations of the popup again,
+      // after the setup. `startExit` would take that read for the read of a close.
+      await waitSingleFrame();
 
       const switchAnimations = await nextAnimationsRead(screen.getByTestId('positioner'), {
         action: () => utils.user.hover(trigger2),
@@ -676,8 +681,9 @@ describe('<Popover.Root />', () => {
         await settleTriggerChange();
       }
 
-      // The handoff itself legitimately renders `trigger-change` while closing
-      // the previous trigger's popup. Only the close that follows matters.
+      // The switch to trigger 2 closes the popup and opens it again in one task. The popup thus
+      // has the ending status until the next frame, and it renders with that status. Only the
+      // close that follows matters.
       instantsWhileEnding.length = 0;
 
       return {
@@ -690,13 +696,20 @@ describe('<Popover.Root />', () => {
       };
     }
 
+    /**
+     * Runs `close` and waits until the root reads the animations of the exit. After the setup,
+     * only a close makes the root read the animations of the popup.
+     */
+    async function startExit(popup: HTMLElement, close: () => unknown) {
+      const exitAnimations = await nextAnimationsRead(popup, { action: close });
+      expect(exitAnimations.length).toBeGreaterThan(0);
+      expect(popup).toHaveAttribute('data-ending-style');
+    }
+
     it('does not apply the trigger-change instant to a hover close after switching triggers', async () => {
       const { user, trigger2, popup, instantsWhileEnding } = await renderHoverDetachedTriggers();
 
-      await user.unhover(trigger2);
-      await waitFor(() => {
-        expect(popup).toHaveAttribute('data-ending-style');
-      });
+      await startExit(popup, () => user.unhover(trigger2));
 
       expect(instantsWhileEnding).not.toContain('trigger-change');
     });
@@ -708,10 +721,7 @@ describe('<Popover.Root />', () => {
         }),
       );
 
-      await fireEvent.click(screen.getByRole('button', { name: 'Close' }));
-      await waitFor(() => {
-        expect(popup).toHaveAttribute('data-ending-style');
-      });
+      await startExit(popup, () => fireEvent.click(screen.getByRole('button', { name: 'Close' })));
 
       expect(instantsWhileEnding).not.toContain('trigger-change');
     });
@@ -726,10 +736,7 @@ describe('<Popover.Root />', () => {
       await settleTriggerChange();
       instantsWhileEnding.length = 0;
 
-      await user.unhover(trigger1);
-      await waitFor(() => {
-        expect(screen.getByTestId('popup')).toHaveAttribute('data-ending-style');
-      });
+      await startExit(screen.getByTestId('popup'), () => user.unhover(trigger1));
 
       expect(instantsWhileEnding).not.toContain('trigger-change');
     });
@@ -743,10 +750,7 @@ describe('<Popover.Root />', () => {
       });
       expect(switchAnimations.length).toBeGreaterThan(0);
 
-      await user.unhover(trigger2);
-      await waitFor(() => {
-        expect(screen.getByTestId('popup')).toHaveAttribute('data-ending-style');
-      });
+      await startExit(screen.getByTestId('popup'), () => user.unhover(trigger2));
 
       await user.hover(trigger2);
       await waitFor(() => {
@@ -754,6 +758,7 @@ describe('<Popover.Root />', () => {
       });
 
       const reopenedPopup = screen.getByTestId('popup');
+      await waitSingleFrame();
       switchAnimations.forEach((animation) => animation.finish());
       await waitSingleFrame();
       await flushMicrotasks();
@@ -999,13 +1004,16 @@ describe('<Popover.Root />', () => {
       });
       expect(switchAnimations.length).toBeGreaterThan(0);
 
-      await user.unhover(trigger2);
-      await waitFor(() => {
-        expect(popup).toHaveAttribute('data-ending-style');
-      });
+      await startExit(popup, () => user.unhover(trigger2));
+      await waitSingleFrame();
 
-      switchAnimations.forEach((animation) => animation.finish());
-      await Promise.all(switchAnimations.map((animation) => animation.finished));
+      // The case takes each promise before it ends the animation. A canceled animation gets a new
+      // promise that never settles.
+      const finished = switchAnimations.map((animation) => animation.finished);
+      for (const animation of switchAnimations) {
+        animation.finish();
+      }
+      await Promise.all(finished);
       await flushMicrotasks();
 
       // Still mid-exit: the stale callback must not have marked it instant and

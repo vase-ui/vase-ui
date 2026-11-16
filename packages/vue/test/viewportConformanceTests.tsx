@@ -7,7 +7,7 @@ import { waitFor } from './waitFor';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import { isJSDOM } from '../src/common/testUtils';
 import type { Side } from '../src/internals/useAnchorPositioning';
-import { nextAnimationsRead, nextEvent } from './animation';
+import { nextAnimationsRead, nextEndingStyle, nextEvent } from './animation';
 import { waitForLaterMillisecond } from './createRenderer';
 import type { createRenderer } from './createRenderer';
 import { flushMicrotasks } from './flushMicrotasks';
@@ -472,24 +472,20 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
         // Allow `useAnimationsFinished` to begin waiting before replacing the current container.
         await waitSingleFrame();
 
-        await activateTrigger(screen.getByTestId('trigger3'), user);
-        await waitSingleFrame();
+        // The viewport keeps one container for the previous content, and that container has the
+        // ending style of the first switch. A frame after the switch, the containers move from
+        // starting to ending styles. The wait resolves only for an ending style of this switch.
+        const previousContainer = document.querySelector('[data-previous]')!;
+        await nextEndingStyle(previousContainer, {
+          action: () => activateTrigger(screen.getByTestId('trigger3'), user),
+        });
 
         const currentContainer = screen.getByText('Content 3').closest('[data-current]');
         expect(currentContainer?.getAnimations()).toHaveLength(1);
         expect(screen.getByTestId('viewport')).toHaveAttribute('data-transitioning', '');
         expect(document.querySelector('[data-previous]')).toHaveTextContent('Content 2');
-
-        // A frame after the switch, the containers move from starting to ending styles.
-        await waitFor(() => {
-          expect(document.querySelector('[data-previous]')).toHaveAttribute(
-            'data-ending-style',
-            '',
-          );
-        });
-        expect(screen.getByText('Content 3').closest('[data-current]')).not.toHaveAttribute(
-          'data-starting-style',
-        );
+        expect(document.querySelector('[data-previous]')).toHaveAttribute('data-ending-style', '');
+        expect(currentContainer).not.toHaveAttribute('data-starting-style');
       });
 
       it('cleans up the transition when a lagging payload remounts the current container', async () => {

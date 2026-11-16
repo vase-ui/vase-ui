@@ -22,6 +22,7 @@ concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+# CONTRIBUTING.md, "Where a test runs", gives the rule for each `timeout-minutes`.
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -48,7 +49,7 @@ jobs:
 
   test-node:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     permissions:
       contents: read
     steps:
@@ -125,7 +126,7 @@ jobs:
 
   test-nuxt:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     permissions:
       contents: read
     steps:
@@ -170,7 +171,7 @@ jobs:
   # The version is the dist-tag `rc` of `vue` on npm.
   test-vue-rc:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     continue-on-error: true
     permissions:
       contents: read

@@ -1,9 +1,11 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import { KeepAlive, createSSRApp, defineComponent, nextTick, shallowRef } from 'vue';
+import { userEvent } from 'vitest/browser';
+import { KeepAlive, Teleport, createSSRApp, defineComponent, nextTick, shallowRef } from 'vue';
 import type { ShallowRef } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -18,7 +20,7 @@ import {
   within,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
-import * as Resizable from '../index.parts';
+import { Resizable } from '@vase-ui/vue/resizable';
 import ResizableRootHydration from './ResizableRootHydration.test.vue';
 import ResizableRootLatePanel from './ResizableRootLatePanel.test.vue';
 
@@ -878,6 +880,297 @@ describe('<Resizable.Root />', () => {
     });
   });
 
+  describe('F6', () => {
+    interface PanesOptions {
+      root?: Record<string, unknown>;
+      a?: unknown;
+      b?: unknown;
+      c?: unknown;
+      panelB?: Record<string, unknown>;
+    }
+
+    // A listener on the document reads the key after each listener of the root. It then stops the
+    // action of the browser: Firefox moves the focus out of the page for an F6 that no listener
+    // prevented, and the focus of a later case then starts outside the page.
+    function recordPrevented() {
+      const prevented: boolean[] = [];
+      const listener = (event: KeyboardEvent) => {
+        if (event.key === 'F6') {
+          prevented.push(event.defaultPrevented);
+          event.preventDefault();
+        }
+      };
+      document.addEventListener('keydown', listener);
+      onTestFinished(() => {
+        document.removeEventListener('keydown', listener);
+      });
+      return prevented;
+    }
+
+    // Each case presses a real key, so each engine gets the key as a user gives it. The result is
+    // the record of `recordPrevented`.
+    async function renderPanes({
+      root,
+      a = <button type="button">A</button>,
+      b = <button type="button">B</button>,
+      c = <button type="button">C</button>,
+      panelB,
+    }: PanesOptions = {}) {
+      const prevented = recordPrevented();
+      await render(
+        <div style={{ width: '1000px' }}>
+          <Resizable.Root data-testid="root" {...root}>
+            <Resizable.Panel id="a" data-testid="a">
+              {a}
+            </Resizable.Panel>
+            <Resizable.Handle data-testid="handle-a" aria-label="Resize a" />
+            <Resizable.Panel id="b" data-testid="b" {...panelB}>
+              {b}
+            </Resizable.Panel>
+            <Resizable.Handle data-testid="handle-b" aria-label="Resize b" />
+            <Resizable.Panel id="c" data-testid="c">
+              {c}
+            </Resizable.Panel>
+          </Resizable.Root>
+        </div>,
+      );
+      return prevented;
+    }
+
+    const button = (name: string) => screen.getByRole('button', { name });
+
+    it.each([
+      { name: 'F6 from a control', from: 'B', keys: '{F6}', to: 'C' },
+      { name: 'Shift+F6 from a control', from: 'B', keys: '{Shift>}{F6}{/Shift}', to: 'A' },
+      { name: 'F6 from a handle', from: 'handle-a', keys: '{F6}', to: 'B' },
+      { name: 'Shift+F6 from a handle', from: 'handle-a', keys: '{Shift>}{F6}{/Shift}', to: 'A' },
+    ])('moves the focus to the next pane: $name', async ({ from, keys, to }) => {
+      const prevented = await renderPanes();
+      (from.startsWith('handle') ? screen.getByTestId(from) : button(from)).focus();
+
+      await userEvent.keyboard(keys);
+
+      expect(button(to)).toHaveFocus();
+      expect(prevented).toEqual([true]);
+    });
+
+    it('passes over a panel with no tabbable element', async () => {
+      await renderPanes({ b: 'Text' });
+      button('A').focus();
+
+      await userEvent.keyboard('{F6}');
+
+      expect(button('C')).toHaveFocus();
+    });
+
+    it('passes over a panel whose size is 0', async () => {
+      const instance: { current?: InstanceType<typeof Resizable.Panel> } = {};
+      await render(() => (
+        <div style={{ width: '1000px' }}>
+          <Resizable.Root>
+            <Resizable.Panel id="a">
+              <button type="button">A</button>
+            </Resizable.Panel>
+            <Resizable.Handle aria-label="Resize a" />
+            <Resizable.Panel
+              id="b"
+              data-testid="b"
+              collapsible
+              collapsedSize={0}
+              minSize={10}
+              ref={(value: unknown) => {
+                instance.current = value as InstanceType<typeof Resizable.Panel>;
+              }}
+            >
+              <button type="button">B</button>
+            </Resizable.Panel>
+            <Resizable.Handle aria-label="Resize b" />
+            <Resizable.Panel id="c">
+              <button type="button">C</button>
+            </Resizable.Panel>
+          </Resizable.Root>
+        </div>
+      ));
+      instance.current?.collapse();
+      await nextTick();
+      expect(screen.getByTestId('b').style.flexGrow).toBe('0');
+      button('A').focus();
+
+      await userEvent.keyboard('{F6}');
+
+      expect(button('C')).toHaveFocus();
+    });
+
+    it('wraps from the last panel to the first, and back with Shift+F6', async () => {
+      await renderPanes();
+      button('C').focus();
+
+      await userEvent.keyboard('{F6}');
+
+      expect(button('A')).toHaveFocus();
+
+      await userEvent.keyboard('{Shift>}{F6}{/Shift}');
+
+      expect(button('C')).toHaveFocus();
+    });
+
+    it('gives the key to the outer root at the last panel of a nested root', async () => {
+      await renderPanes({
+        b: (
+          <Resizable.Root orientation="vertical" style={{ height: '200px' }}>
+            <Resizable.Panel id="inner-a">
+              <button type="button">Inner A</button>
+            </Resizable.Panel>
+            <Resizable.Handle aria-label="Resize inner a" />
+            <Resizable.Panel id="inner-b">
+              <button type="button">Inner B</button>
+            </Resizable.Panel>
+          </Resizable.Root>
+        ),
+      });
+      button('Inner B').focus();
+
+      await userEvent.keyboard('{F6}');
+
+      expect(button('C')).toHaveFocus();
+
+      button('Inner A').focus();
+
+      await userEvent.keyboard('{F6}');
+
+      expect(button('Inner B')).toHaveFocus();
+    });
+
+    it('wraps in a root that a Teleport moves out of the outer root', async () => {
+      await renderPanes({
+        b: (
+          <Teleport to="body">
+            <div style={{ width: '400px' }}>
+              <Resizable.Root>
+                <Resizable.Panel id="moved-a">
+                  <button type="button">Moved A</button>
+                </Resizable.Panel>
+                <Resizable.Handle aria-label="Resize moved a" />
+                <Resizable.Panel id="moved-b">
+                  <button type="button">Moved B</button>
+                </Resizable.Panel>
+              </Resizable.Root>
+            </div>
+          </Teleport>
+        ),
+      });
+      button('Moved B').focus();
+
+      await userEvent.keyboard('{F6}');
+
+      expect(button('Moved A')).toHaveFocus();
+    });
+
+    it('wraps in a root that is in an element of the outer root that is not a panel', async () => {
+      const prevented = recordPrevented();
+      await render(
+        <div style={{ width: '1000px' }}>
+          <Resizable.Root>
+            <Resizable.Panel id="a">
+              <button type="button">A</button>
+            </Resizable.Panel>
+            <Resizable.Handle aria-label="Resize a" />
+            <Resizable.Panel id="b">
+              <button type="button">B</button>
+            </Resizable.Panel>
+            <div style={{ width: '400px' }}>
+              <Resizable.Root>
+                <Resizable.Panel id="side-a">
+                  <button type="button">Side A</button>
+                </Resizable.Panel>
+                <Resizable.Handle aria-label="Resize side a" />
+                <Resizable.Panel id="side-b">
+                  <button type="button">Side B</button>
+                </Resizable.Panel>
+              </Resizable.Root>
+            </div>
+          </Resizable.Root>
+        </div>,
+      );
+      button('Side B').focus();
+
+      await userEvent.keyboard('{F6}');
+
+      expect(button('Side A')).toHaveFocus();
+      expect(prevented).toEqual([true]);
+    });
+
+    it('does not prevent the key when no pane has a control', async () => {
+      const prevented = await renderPanes({ a: 'A', b: 'B', c: 'C' });
+      const handle = screen.getByTestId('handle-a');
+      handle.focus();
+
+      await userEvent.keyboard('{F6}');
+
+      expect(handle).toHaveFocus();
+      expect(prevented).toEqual([false]);
+    });
+
+    it('does nothing when a listener prevented the key', async () => {
+      await renderPanes({
+        b: (
+          <button
+            type="button"
+            onKeydown={(event: KeyboardEvent) => {
+              event.preventDefault();
+            }}
+          >
+            B
+          </button>
+        ),
+      });
+      button('B').focus();
+
+      await userEvent.keyboard('{F6}');
+
+      expect(button('B')).toHaveFocus();
+    });
+
+    it('does nothing when a keydown listener on the root calls preventVaseUIHandler', async () => {
+      const prevented = await renderPanes({
+        root: {
+          onKeydown: (event: KeyboardEvent & { preventVaseUIHandler: () => void }) => {
+            event.preventVaseUIHandler();
+          },
+        },
+      });
+      button('B').focus();
+
+      await userEvent.keyboard('{F6}');
+
+      expect(button('B')).toHaveFocus();
+      expect(prevented).toEqual([false]);
+    });
+
+    it.each([
+      { name: 'Control', keys: '{Control>}{F6}{/Control}' },
+      { name: 'Alt', keys: '{Alt>}{F6}{/Alt}' },
+      { name: 'Meta', keys: '{Meta>}{F6}{/Meta}' },
+    ])('does nothing with F6 and $name', async ({ keys }) => {
+      const prevented = await renderPanes();
+      button('B').focus();
+
+      await userEvent.keyboard(keys);
+
+      expect(button('B')).toHaveFocus();
+      expect(prevented).toEqual([false]);
+    });
+
+    it('moves the focus in a disabled root', async () => {
+      await renderPanes({ root: { disabled: true } });
+      button('A').focus();
+
+      await userEvent.keyboard('{F6}');
+
+      expect(button('B')).toHaveFocus();
+    });
+  });
+
   describe('KeepAlive', () => {
     it('ends a drag when the root is deactivated', async () => {
       const Layout = defineComponent({
@@ -975,6 +1268,74 @@ describe('<Resizable.Root />', () => {
 
       expect(grows('a', 'b', 'c')).toEqual(['33.334', '33.333', '33.333']);
       expect(onLayoutChange).not.toHaveBeenCalled();
+    });
+
+    it('gives no room to a panel that mounts while KeepAlive holds it', async () => {
+      const onLayoutChange = vi.fn();
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
+        () => <Resizable.Panel id="c" data-testid="c" />,
+        { renderBranch: (part) => part },
+      );
+      await render(
+        <div style={{ width: '1000px' }}>
+          <Resizable.Root defaultLayout={{ a: 60, b: 20, c: 20 }} onLayoutChange={onLayoutChange}>
+            <Resizable.Panel id="a" data-testid="a" />
+            <Resizable.Handle data-testid="handle-a" />
+            <Resizable.Panel id="b" data-testid="b" />
+            <Resizable.Handle data-testid="handle-b" primaryPanel="next" />
+            <HeldBranch />
+          </Resizable.Root>
+        </div>,
+      );
+      const handle = screen.getByTestId('handle-b');
+
+      await mountWhileHeld();
+
+      expect(grows('a', 'b')).toEqual(['75', '25']);
+      expect(handle).not.toHaveAttribute('aria-controls');
+      expect(onLayoutChange).not.toHaveBeenCalled();
+
+      await show();
+
+      expect(grows('a', 'b', 'c')).toEqual(['60', '20', '20']);
+      expect(handle).toHaveAttribute('aria-controls', 'c');
+      expect(onLayoutChange).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      {
+        name: 'mounts while held',
+        mount: async (branch: ReturnType<typeof createHeldBranch>) => {
+          await branch.mountWhileHeld();
+          await branch.show();
+        },
+      },
+      {
+        name: 'mounts in the show from a state',
+        mount: async (branch: ReturnType<typeof createHeldBranch>) => {
+          await branch.hide();
+          await branch.mountInActivation();
+        },
+      },
+      {
+        name: 'mounts in the show from a prop',
+        mount: async (branch: ReturnType<typeof createHeldBranch>) => {
+          await branch.hide();
+          await branch.mountInActivation({ fromProp: true });
+        },
+      },
+    ])('emits no change at the first show of a root that $name', async ({ mount }) => {
+      const onLayoutChange = vi.fn();
+      const branch = createHeldBranch(() => <Three root={{ onLayoutChange }} />);
+      await render(<branch.HeldBranch />);
+
+      await mount(branch);
+      await waitSingleFrame();
+
+      expect(grows('a', 'b', 'c')).toEqual(['33.334', '33.333', '33.333']);
+      expect(onLayoutChange).not.toHaveBeenCalled();
+      expect(screen.getByTestId('handle-a')).toHaveAttribute('aria-valuenow', '33');
+      expect(screen.getByTestId('handle-b')).toHaveAttribute('aria-valuenow', '33');
     });
   });
 

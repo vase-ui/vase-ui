@@ -1,0 +1,130 @@
+.Root {
+  box-sizing: border-box;
+  width: 100%;
+  height: 12rem;
+  overflow: hidden;
+  border: 1px solid oklch(92.2% 0 0deg);
+  border-radius: 0.375rem;
+
+  @media (prefers-color-scheme: dark) {
+    border-color: oklch(26.9% 0 0deg);
+  }
+}
+
+.Sidebar {
+  box-sizing: border-box;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: flex-grow 200ms;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.Root[data-dragging] > .Sidebar {
+  transition: none;
+}
+
+.SidebarHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+
+.Panel {
+  box-sizing: border-box;
+  padding: 1rem;
+  overflow: hidden;
+}
+
+.Button {
+  box-sizing: border-box;
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid oklch(92.2% 0 0deg);
+  border-radius: 0.375rem;
+  background-color: transparent;
+  color: oklch(14.5% 0 0deg);
+  outline: none;
+
+  @media (prefers-color-scheme: dark) {
+    border-color: oklch(26.9% 0 0deg);
+    color: white;
+  }
+
+  &:focus-visible {
+    outline: 2px solid oklch(14.5% 0 0deg);
+    outline-offset: 2px;
+
+    @media (prefers-color-scheme: dark) {
+      outline-color: white;
+    }
+  }
+}
+
+.Button[aria-expanded='false'] > .Icon {
+  rotate: 180deg;
+}
+
+.Label {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  color: oklch(14.5% 0 0deg);
+
+  @media (prefers-color-scheme: dark) {
+    color: white;
+  }
+}
+
+.Description {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: oklch(43.9% 0 0deg);
+
+  @media (prefers-color-scheme: dark) {
+    color: oklch(70.8% 0 0deg);
+  }
+}
+
+.Handle {
+  flex: none;
+  width: 1px;
+  background-color: oklch(92.2% 0 0deg);
+  outline: none;
+  cursor: col-resize;
+
+  @media (prefers-color-scheme: dark) {
+    background-color: oklch(26.9% 0 0deg);
+  }
+
+  &[data-at-min] {
+    cursor: e-resize;
+  }
+
+  &[data-at-max] {
+    cursor: w-resize;
+  }
+
+  &[data-disabled] {
+    cursor: default;
+  }
+
+  &:focus-visible {
+    outline: 2px solid oklch(14.5% 0 0deg);
+    outline-offset: -1px;
+
+    @media (prefers-color-scheme: dark) {
+      outline-color: white;
+    }
+  }
+}

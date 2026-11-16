@@ -28,6 +28,7 @@ import { mergeObjects } from '../common/mergeObjects';
 import { warn } from '../common/warn';
 import { mergeClassNames, mergeProps, mergePropsN } from '../merge-props';
 import { getStateAttributesProps } from './getStateAttributesProps';
+import { omitUndefinedAttributes } from './omitUndefinedAttributes';
 import type { StateAttributesMapping } from './getStateAttributesProps';
 import { resolveElement } from './resolveElement';
 import type { HTMLProps, VaseUIComponentProps } from './types';
@@ -197,7 +198,11 @@ export function useRenderElement<
 
     const defaultTag = toValue(element);
     const state = toValue(params.state) ?? (EMPTY_OBJECT as State);
-    const { class: classAttribute, style: styleAttribute, ...consumerAttrs } = attrs;
+    const {
+      class: classAttribute,
+      style: styleAttribute,
+      ...consumerAttrs
+    } = omitUndefinedAttributes(attrs);
 
     const stateProps = getStateAttributesProps(state, params.stateAttributesMapping);
 
@@ -346,7 +351,8 @@ export type UseRenderElementParameters<State, RenderedElementType extends Elemen
    */
   state?: MaybeRefOrGetter<State> | undefined;
   /**
-   * A function that gets the attributes and listeners of the consumer, without `class` and `style`.
+   * A function that gets the attributes and listeners of the consumer, without `class`, `style`
+   * and each attribute whose value is `undefined`.
    * It returns the props of the part, or an array of props, in merge order. The rightmost wins.
    * A set can be `undefined`, or a function that gets the props merged so far.
    * The default is the attributes of the consumer.

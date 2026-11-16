@@ -56,14 +56,17 @@ describe('<Combobox.GroupLabel />', () => {
       expect(screen.getByText('Label')).toHaveAttribute('aria-hidden', 'true');
     });
 
-    it('allows overriding aria-hidden', async () => {
+    it.each([
+      { name: 'undefined', value: undefined, expected: 'true' },
+      { name: 'null', value: null, expected: null },
+    ])('VUE-103: aria-hidden of the consumer is $name', async ({ value, expected }) => {
       await render(
         <Combobox.Root open>
           <Combobox.Portal>
             <Combobox.Positioner>
               <Combobox.Popup>
                 <Combobox.Group>
-                  <Combobox.GroupLabel aria-hidden={undefined}>Label</Combobox.GroupLabel>
+                  <Combobox.GroupLabel aria-hidden={value}>Label</Combobox.GroupLabel>
                 </Combobox.Group>
               </Combobox.Popup>
             </Combobox.Positioner>
@@ -71,7 +74,7 @@ describe('<Combobox.GroupLabel />', () => {
         </Combobox.Root>,
       );
 
-      expect(screen.getByText('Label')).not.toHaveAttribute('aria-hidden');
+      expect(screen.getByText('Label').getAttribute('aria-hidden')).toBe(expected);
     });
 
     it('uses provided id in aria-labelledby', async () => {

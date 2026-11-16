@@ -848,6 +848,22 @@ describe('<OTPField.Input />', () => {
     });
   });
 
+  it('VUE-103: removes the Field label of a slot for an aria-labelledby of null', async () => {
+    await render(
+      <Field.Root>
+        <Field.Label data-testid="label">Verification code</Field.Label>
+        <OTPField.Root length={2}>
+          <OTPField.Input data-testid="labelled" />
+          <OTPField.Input aria-labelledby={null} data-testid="unlabelled" />
+        </OTPField.Root>
+      </Field.Root>,
+    );
+
+    const label = screen.getByTestId('label');
+    expect(screen.getByTestId('labelled')).toHaveAttribute('aria-labelledby', label.id);
+    expect(screen.getByTestId('unlabelled')).not.toHaveAttribute('aria-labelledby');
+  });
+
   it('applies a native label to every slot', async () => {
     await render(
       <>

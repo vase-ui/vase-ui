@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createSSRApp } from 'vue';
 import { renderToString } from 'vue/server-renderer';
-import * as Resizable from '../index.parts';
+import { Resizable } from '@vase-ui/vue/resizable';
 import ResizableRootHydration from './ResizableRootHydration.test.vue';
 import ResizableRootLatePanel from './ResizableRootLatePanel.test.vue';
 
@@ -124,6 +124,28 @@ describe('<Resizable.Root /> on a server', () => {
     expect(html).toContain('data-disabled');
     expect(html).not.toContain('tabindex');
     expect(html).not.toContain('aria-valuenow');
+  });
+
+  it('renders the value text of getAriaValueText with en-US and no pixelSize', async () => {
+    const getAriaValueText = vi.fn(
+      (text: string, _value: number, details: { pixelSize: number | undefined }) =>
+        `${text} ${String(details.pixelSize)}`,
+    );
+    const html = await renderToString(
+      <Resizable.Root>
+        <Resizable.Panel id="a" defaultSize={30} />
+        <Resizable.Handle getAriaValueText={getAriaValueText} />
+        <Resizable.Panel id="b" />
+        <Resizable.Handle />
+        <Resizable.Panel id="c" />
+      </Resizable.Root>,
+    );
+
+    expect(html).toContain('aria-valuetext="30% undefined"');
+    expect(getAriaValueText).toHaveBeenCalledWith('30%', 30, {
+      collapsed: false,
+      pixelSize: undefined,
+    });
   });
 
   describe('a first size that is a length', () => {

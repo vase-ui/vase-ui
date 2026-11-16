@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import {
   createRenderer,
@@ -13,6 +13,7 @@ import {
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import type { NavigationMenuRootContext } from '../root/NavigationMenuRootContext';
+import { allowTopLevelViewportWarning } from '../utils/test-utils';
 
 // The root waits for the animations of its popup element before it unmounts the popup. This
 // component gives the root an element to wait for.
@@ -81,6 +82,8 @@ const Menu = defineComponent<MenuProps>(
 );
 
 describe('<NavigationMenu.Content />', () => {
+  beforeEach(allowTopLevelViewportWarning);
+
   const { render } = createRenderer();
 
   heldMountListTests({
