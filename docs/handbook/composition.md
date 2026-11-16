@@ -37,7 +37,7 @@ An attribute with the value `undefined` counts as not set, as a prop does in Vue
 
 This rule is for the attributes that you give to a part. Two other places keep the rule of Vue, in which `undefined` replaces a value: an attribute that you write beside `v-bind="props"` in the `#render` slot, and a later set of `mergeProps`.
 
-An empty `id` also counts as not set, as an attribute or as a prop, because HTML does not allow an empty id. The part keeps its own id, so a title still names its dialog and a label still names its control.
+An empty `id` that you give to a part also counts as not set, as an attribute or as a prop, because HTML does not allow an empty id. The part keeps its own id, so a title still names its dialog and a label still names its control.
 
 With `#render`, the slot gets `props`. It holds the attributes, the listeners, the state data attributes, the class, the style and the `ref` setter. Bind it on your element with `v-bind="props"`. In [Vapor mode](#vapor-mode), also bind the `ref` setter by name.
 
