@@ -1,5 +1,6 @@
 import {
   computed,
+  inject,
   nextTick,
   onDeactivated,
   onMounted,
@@ -59,6 +60,7 @@ import type {
 } from './DateTimeFieldContext';
 import { PARTIAL_MESSAGE, getInputLimits, getLimitMessage } from './customValidity';
 import type { ValueLimits } from './customValidity';
+import { PickerResetCountContext } from './PickerResetCountContext';
 import { getSegmentAttributes } from './segmentAttributes';
 import { getDayPeriodTexts, getFixedSegmentTexts, getSegmentLayout } from './segmentLayout';
 import type { EditableSegmentType, SegmentLayoutOptions, TimeUnit } from './segmentLayout';
@@ -722,6 +724,36 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   // The change of a reset reaches `useValueChanged` after the reset timeout. The root clears the
   // error of the field in that callback, and the change starts no validation.
   let isResetChangePending = false;
+
+  // A picker gives the value to this root. It counts a reset before it changes the value, and the
+  // new value reaches the root only with the next render. The root thus marks that change as the
+  // change of a reset, whichever listener of the reset runs first. A picker with two fields counts
+  // each reset one time, so the field whose part hears of the reset last gets the mark too.
+  const pickerResetCount = inject(PickerResetCountContext, null);
+  let keyBeforePickerReset = '';
+
+  if (pickerResetCount) {
+    watch(
+      pickerResetCount,
+      () => {
+        keyBeforePickerReset = validityKey.value;
+        isResetChangePending = true;
+      },
+      { flush: 'sync' },
+    );
+    // `useValueChanged` calls no callback for a reset that leaves the value, and a mark that stays
+    // set skips the validation of the next change.
+    watch(
+      pickerResetCount,
+      () => {
+        if (validityKey.value === keyBeforePickerReset) {
+          isResetChangePending = false;
+          clearFieldError(value.value);
+        }
+      },
+      { flush: 'post' },
+    );
+  }
 
   useValueChanged(validityKey, () => {
     clearErrors(inputName.value);

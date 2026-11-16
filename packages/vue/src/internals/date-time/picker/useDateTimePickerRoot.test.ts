@@ -1,6 +1,7 @@
-import { describe, expect, it, vi } from 'vitest';
-import { shallowRef } from 'vue';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { createApp, shallowRef } from 'vue';
 import { useDateTimePickerRoot } from './useDateTimePickerRoot';
+import type { DateTimePickerContext } from './useDateTimePickerRoot';
 
 interface Details {
   isCanceled: boolean;
@@ -8,6 +9,22 @@ interface Details {
 }
 
 const details = (isCanceled = false): Details => ({ isCanceled, reason: 'test' });
+
+// The composable gives a context to the parts below the root, so it runs in the `setup` of a part.
+function runInSetup<Result>(setup: () => Result): Result {
+  let result!: Result;
+  const app = createApp({
+    setup() {
+      result = setup();
+      return () => null;
+    },
+  });
+  app.mount(document.createElement('div'));
+  onTestFinished(() => {
+    app.unmount();
+  });
+  return result;
+}
 
 function createPicker(
   options: {
@@ -21,16 +38,18 @@ function createPicker(
   const value = shallowRef(options.value);
   const updateValue = vi.fn();
   const valueChange = options.valueChange ?? vi.fn();
-  const picker = useDateTimePickerRoot<string, Details>({
-    part: 'Picker',
-    value: value,
-    defaultValue: () => options.defaultValue,
-    fallback: 'fallback',
-    closeOnSelect: () => options.closeOnSelect,
-    hasTime: options.hasTime ?? (() => false),
-    valueChange,
-    updateValue,
-  });
+  const picker: DateTimePickerContext<string, Details> = runInSetup(() =>
+    useDateTimePickerRoot<string, Details>({
+      part: 'Picker',
+      value: value,
+      defaultValue: () => options.defaultValue,
+      fallback: 'fallback',
+      closeOnSelect: () => options.closeOnSelect,
+      hasTime: options.hasTime ?? (() => false),
+      valueChange,
+      updateValue,
+    }),
+  );
   return { picker, value, valueChange, updateValue };
 }
 

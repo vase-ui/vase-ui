@@ -1,6 +1,7 @@
-import { computed, shallowRef, toValue, watch } from 'vue';
+import { computed, provide, shallowRef, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter, ShallowRef } from 'vue';
 import { useControlled } from '../../../common/useControlled';
+import { PickerResetCountContext } from '../field/PickerResetCountContext';
 
 /** What a picker root gives to its parts. The root of a family adds the props that its parts share. */
 export interface DateTimePickerContext<Value, Details extends { isCanceled: boolean }> {
@@ -58,7 +59,8 @@ export interface UseDateTimePickerRootParameters<Value, Details extends { isCanc
  * The state that each picker root shares: its value, the rule that closes the popup and the field
  * that the popup is positioned against. The root of a family calls it in `setup`, after
  * `assertTemporal`, and gives the result to its parts. The open state is not here: the root renders
- * a popover root, and its parts read the store of that root.
+ * a popover root, and its parts read the store of that root. It also provides the count of the
+ * resets, `PickerResetCountContext`, to the field roots below the root.
  */
 export function useDateTimePickerRoot<Value, Details extends { isCanceled: boolean }>(
   parameters: UseDateTimePickerRootParameters<Value, Details>,
@@ -102,10 +104,15 @@ export function useDateTimePickerRoot<Value, Details extends { isCanceled: boole
     setValue(next);
   }
 
+  // The field roots get the value of a reset with the next render, so the count comes first.
+  const resetCount = shallowRef(0);
+  provide(PickerResetCountContext, resetCount);
+
   // A controlled picker does not change. The field of a controlled picker also does not change for
   // a reset, so the parent decides.
   function reset(details: Details) {
     if (toValue(parameters.value) === undefined) {
+      resetCount.value += 1;
       commit(toValue(parameters.defaultValue) ?? null, details);
     }
   }
