@@ -168,7 +168,9 @@ export interface CalendarBaseProps {
   modifiers?: Record<string, DateMatcher> | undefined;
   /**
    * The day that is today. The default is the day of the clock in `timeZone`.
-   * Give it when a server renders the calendar, so that the server and the browser agree.
+   * A server render and the hydration show the day of the clock of the server. After the mount, the
+   * calendar shows the day of the clock of the browser. Give `today` when the server knows the day
+   * of the visitor.
    */
   today?: DateValue | undefined;
   /**

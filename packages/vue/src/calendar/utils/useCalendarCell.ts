@@ -63,10 +63,12 @@ export function useCalendarCell({
           'aria-selected': state.value.selected,
           'aria-current': state.value.current ? 'date' : undefined,
           ...(state.value.disabled && { 'aria-disabled': true }),
-          // The tab stop of a server can be another cell than the tab stop of the browser, because
-          // the clock of a server can differ. The text also comes from the data of `Intl` in the
-          // engine. Hydration does not patch an attribute, so the string differs from the number
-          // that the button gives after the mount, and Vue then writes the attribute again.
+          // The first client render can put the tab stop on another cell than the server HTML: the
+          // `Intl` data of the engine can give another calendar, and a root with no day of the
+          // server in the server HTML reads the clock of the browser. The text also comes from the
+          // data of `Intl` in the engine. Hydration does not patch an attribute, so the string
+          // differs from the number that the button gives after the mount, and Vue then writes the
+          // attribute again.
           tabindex: isHydrating.value ? String(tabindex) : tabindex,
           'data-allow-mismatch': isHydrating.value ? 'attribute,text' : undefined,
           onClick: press,

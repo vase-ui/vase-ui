@@ -6,6 +6,7 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  mockBrowserToday,
   renderOnServer,
   screen,
   setAttributeInHtml,
@@ -545,6 +546,31 @@ describe('<RangeCalendar.Root />', () => {
 
       expect(container.querySelector('[data-date="2026-11-14"] button')).toHaveTextContent(text);
       expect(container).not.toHaveTextContent('other');
+    });
+
+    it.each([
+      { name: 'another day', distance: 'day' as const },
+      { name: 'another month', distance: 'month' as const },
+    ])("shows the browser's today after the hydration: $name", async ({ distance }) => {
+      const clockProps = { locale: 'en-US' };
+      const serverHtml = await renderOnServer(file, clockProps);
+      const browserDay = mockBrowserToday(distance).toString();
+
+      await hydrate(RangeCalendarRootHydration, { serverHtml, props: clockProps });
+
+      const todayDates = [...document.querySelectorAll<HTMLElement>('[data-today]')].map(
+        (element) => element.closest<HTMLElement>('[data-date]')!.dataset.date,
+      );
+      expect(todayDates).toEqual([browserDay, browserDay]);
+      expect(button(browserDay)).toHaveAttribute('aria-current', 'date');
+      const tabStops = [...document.querySelectorAll<HTMLElement>('button[tabindex="0"]')];
+      expect(tabStops).toEqual([button(browserDay)]);
+      const pageMonths = new Set(
+        [...document.querySelectorAll<HTMLElement>('[data-date]:not([data-outside-month])')].map(
+          (element) => element.dataset.date!.slice(0, 7),
+        ),
+      );
+      expect(pageMonths).toEqual(new Set([browserDay.slice(0, 7)]));
     });
   });
 });

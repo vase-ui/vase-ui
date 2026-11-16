@@ -124,7 +124,7 @@ defineSlots<{
 }>();
 
 const selection = useRangeSelection(props, emit);
-const { focus, ...controller } = useCalendarRoot({
+const { focus, hydrationAttributes, ...controller } = useCalendarRoot({
   part: 'RangeCalendar.Root',
   props,
   emit,
@@ -163,6 +163,7 @@ const { element, elementProps } = useRenderElement('div', props, {
       'aria-label': ariaAfterHydration(
         attrs['aria-labelledby'] == null ? controller.label.value : undefined,
       ),
+      ...hydrationAttributes(),
     },
     attrs,
   ],
