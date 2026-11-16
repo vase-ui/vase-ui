@@ -216,13 +216,13 @@
     {
       "upstream": "packages/react/src/internals/resolveRenderedId.ts",
       "kind": "not-applicable",
-      "reason": "The file reads the id of a React element that is given as `render`. It gives the id to the owner through a ref callback. In Vue, `#render` is a slot, so the id of a part is its `id` prop. `MenuPopup.vue` and `useFilterDropdownList` give that id to their root with a `watch`."
+      "reason": "The file reads the id of a React element that is given as `render`. It gives the id to the owner through a ref callback. In Vue, `#render` is a slot, so a part reads the `id` of the element only after the render. `MenuPopup.vue` gives its `id` prop to its root with a `watch`. The filter root reads the `id` of the list element with `useElementId`. The title and the description of a dialog or a popover read the `id` of their own element in the same way."
     },
     {
       "upstream": "packages/react/src/internals/resolveRenderedId.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/menu/popup/MenuPopup.test.tsx",
-      "reason": "Vase UI has no such function. The block `prop: id` of this test covers the id that the root gets, the generated id after a removal, and the release at unmount. `packages/vue/src/filter-dropdown/list/FilterDropdownList.test.tsx` covers the release for the list, and `packages/vue/src/menu/filter-root/MenuFilterRoot.test.tsx` covers an empty id, which counts as no id (`VUE-93`). The cases with a `render` element are for React."
+      "reason": "Vase UI has no such function. The block `prop: id` of this test covers the id that the root gets, the generated id after a removal, and the release at unmount. `packages/vue/src/filter-dropdown/list/FilterDropdownList.test.tsx` covers the release for the list and the id that the `#render` slot gives the list (`VUE-117`). `packages/vue/src/menu/filter-root/MenuFilterRoot.test.tsx` covers an empty `id` prop, which counts as no id (`VUE-93`), and an empty id from the `#render` slot. The cases that read the props of a `render` element are for React."
     },
     {
       "upstream": "packages/react/test/addVitestMatchers.ts",

@@ -341,4 +341,19 @@ describe('<Fieldset.Root />', () => {
       );
     });
   });
+
+  describe('VUE-112: a disabled fieldset', () => {
+    it('shows the disabled state of a root in a disabled native fieldset', async () => {
+      await render(() => (
+        <fieldset disabled>
+          <Fieldset.Root data-testid="root">
+            <Fieldset.Legend data-testid="legend">Legend</Fieldset.Legend>
+          </Fieldset.Root>
+        </fieldset>
+      ));
+
+      expect(screen.getByTestId('root')).toHaveAttribute('data-disabled');
+      expect(screen.getByTestId('legend')).toHaveAttribute('data-disabled');
+    });
+  });
 });

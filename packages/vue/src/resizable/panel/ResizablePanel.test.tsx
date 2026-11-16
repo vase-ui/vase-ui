@@ -6,6 +6,9 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  hydrate,
+  removedPartHydrationTests,
+  renderOnServer,
   screen,
   takeReportedMessages,
   waitFor,
@@ -13,6 +16,7 @@ import {
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
 import { Resizable } from '@vase-ui/vue/resizable';
+import ResizableRootHydration from '../root/ResizableRootHydration.test.vue';
 
 describe('<Resizable.Panel />', () => {
   const { render } = createRenderer();
@@ -148,12 +152,6 @@ describe('<Resizable.Panel />', () => {
 
       expect(panel.style.flexBasis).toBe('auto');
       expect(panel.style.color).toBe('red');
-    });
-
-    it('has no data-allow-mismatch after the mount', async () => {
-      await renderPanels({ panels: [{}, {}] });
-
-      expect(screen.getByTestId('panel-0')).not.toHaveAttribute('data-allow-mismatch');
     });
 
     it('fills the root by its size', async () => {
@@ -1886,6 +1884,45 @@ describe('<Resizable.Panel />', () => {
         expect(onResize).toHaveBeenCalledTimes(2);
       });
       expect(sizes(onResize)[1]?.[0]).toEqual({ percent: 30, pixels: 600 });
+    });
+  });
+
+  describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/resizable/root/ResizableRootHydration.test.vue',
+      component: ResizableRootHydration,
+      cases: [
+        {
+          name: 'a removed panel, data-collapsed',
+          props: { composition: 'collapsed', laterRemovedAtMount: true },
+          selector: '[data-testid="a"]',
+          attribute: 'data-collapsed',
+          serverValue: '',
+          clientValue: null,
+        },
+        {
+          name: 'a stored layout, data-collapsed',
+          props: { composition: 'stored' },
+          selector: '[data-testid="a"]',
+          attribute: 'data-collapsed',
+          serverValue: '',
+          clientValue: null,
+        },
+      ],
+    });
+
+    it('gives the state of the server HTML to stateClass and the slot while it hydrates', async () => {
+      const props = { composition: 'stateFunctions' };
+      const serverHtml = await renderOnServer(
+        'src/resizable/root/ResizableRootHydration.test.vue',
+        props,
+      );
+
+      const { container } = await hydrate(ResizableRootHydration, { serverHtml, props });
+
+      const panel = container.querySelector('[data-testid="a"]');
+      expect(panel).toHaveClass('collapsed');
+      expect(panel?.textContent).toBe('Closed');
     });
   });
 

@@ -1,10 +1,13 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { createSSRApp, nextTick } from 'vue';
 import {
   createRenderer,
   hydrate,
+  mockBrowserToday,
   renderOnServer,
   screen,
   setAttributeInHtml,
+  takeReportedMessages,
   waitFor,
 } from '#test-utils';
 import CalendarNavigationAnatomy from './CalendarNavigationAnatomy.test.vue';
@@ -646,5 +649,41 @@ describe('<Calendar.Root /> pages', () => {
         expect(container).not.toHaveTextContent('other');
       },
     );
+
+    // The page that the clock of the browser gives mounts a new `Calendar.Caption`, whose id then
+    // differs from a client-only render. `hydrate` thus cannot compare, and the case hydrates by
+    // hand.
+    async function hydrateByHand(serverHtml: string, props: Record<string, unknown>) {
+      const container = document.createElement('div');
+      document.body.append(container);
+      container.innerHTML = serverHtml;
+      const root = container.querySelector('[role="group"]');
+      const app = createSSRApp(CalendarNavigationHydration, props);
+      onTestFinished(() => {
+        app.unmount();
+        container.remove();
+      });
+      app.mount(container);
+      expect(takeReportedMessages()).toEqual([]);
+      await nextTick();
+      await nextTick();
+      expect(container.querySelector('[role="group"]')).toBe(root);
+      expect(takeReportedMessages()).toEqual([]);
+      return container;
+    }
+
+    it("runs the years of the year select around the browser's today", async () => {
+      const props = { locale: 'en-US', selects: true };
+      const serverHtml = await renderOnServer(file, props);
+      const browserDay = mockBrowserToday('year');
+
+      const container = await hydrateByHand(serverHtml, props);
+
+      const options = [
+        ...container.querySelectorAll<HTMLOptionElement>('[data-testid="year-select"] option'),
+      ];
+      expect(options[0]!.textContent).toBe(String(browserDay.year - 100));
+      expect(options.at(-1)!.textContent).toBe(String(browserDay.year + 100));
+    });
   });
 });

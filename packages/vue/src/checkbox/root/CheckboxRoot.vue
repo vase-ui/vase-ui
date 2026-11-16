@@ -140,6 +140,7 @@ import { useControlled } from '../../common/useControlled';
 import { useTimeout } from '../../common/useTimeout';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { useFieldItemContext } from '../../field/item/FieldItemContext';
+import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { givenName } from '../../internals/blankName';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { useRegisterFieldControl } from '../../internals/field-register-control';
@@ -218,11 +219,13 @@ const { getDescriptionProps, registerControlId } = useLabelableContext();
 // The field of the group owns the inputs of the checkboxes of the group.
 const validation = group?.validation ?? fieldValidation;
 
+const fieldsetDisabled = useFieldsetDisabled(() => element.value);
 const isDisabled = computed(
   () =>
     fieldDisabled.value ||
     fieldItemContext.disabled.value ||
     (group?.disabled.value ?? false) ||
+    fieldsetDisabled.value ||
     props.disabled,
 );
 const inputName = computed(() => fieldName.value ?? props.name);
@@ -330,6 +333,7 @@ const ownsControlId = group?.registerControlId !== registerControlId;
 const controlId = useLabelableId({
   id: () => props.id,
   enabled: ownsControlId,
+  element: () => (props.nativeButton ? element.value : null),
 });
 const hiddenInputId = computed(() => (props.nativeButton ? undefined : controlId.value));
 

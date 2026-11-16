@@ -1,10 +1,9 @@
 import { readdirSync } from 'node:fs';
-import { createRequire } from 'node:module';
 import { availableParallelism } from 'node:os';
 import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
 import { DEMO_VARIANT_STORAGE_KEY } from '../../docs/.vitepress/components/demoVariantStorageKey.ts';
 import { REPOSITORY_ROOT } from '../parity/repository.ts';
+import { serveBuiltSite, vueRequire } from './builtSite.ts';
 
 // 1440 is a desktop width: the site shows the sidebar and the outline. 320 is the width of the
 // Reflow criterion of WCAG (1.4.10): the tables of the API reference scroll there.
@@ -65,8 +64,6 @@ declare const axe: {
 };
 
 const DIST = join(REPOSITORY_ROOT, 'docs/.vitepress/dist');
-const docsRequire = createRequire(join(REPOSITORY_ROOT, 'docs/package.json'));
-const vueRequire = createRequire(join(REPOSITORY_ROOT, 'packages/vue/package.json'));
 
 /** `components/dialog.html` is the page `/components/dialog`, as the site links it. */
 function listPages(): string[] {
@@ -77,14 +74,10 @@ function listPages(): string[] {
 }
 
 async function main(): Promise<void> {
-  // The root package does not depend on VitePress, Playwright or axe-core. The release job `stage`
-  // installs the root dependencies in a step that can get an OIDC token.
-  const vitepress = await import(pathToFileURL(docsRequire.resolve('vitepress')).href);
   const { chromium } = vueRequire('playwright');
   const axeSource: string = vueRequire('axe-core').source;
 
-  const server = await vitepress.serve({ root: join(REPOSITORY_ROOT, 'docs'), port: 0 });
-  const origin = `http://127.0.0.1:${String(server.server.address().port)}`;
+  const { origin, close } = await serveBuiltSite();
   const browser = await chromium.launch();
   const problems: string[] = [];
   const seenKnownFaults = new Set<(typeof KNOWN_FAULTS)[number]>();
@@ -202,7 +195,7 @@ async function main(): Promise<void> {
     );
   } finally {
     await browser.close();
-    server.server.close();
+    close();
   }
 
   for (const row of KNOWN_FAULTS) {

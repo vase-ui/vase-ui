@@ -55,6 +55,8 @@ const labelProps = useLabel({
   id: () => getDefaultLabelId(store.select('id')),
   fallbackControlId: () =>
     store.select('triggerElement')?.id ?? (inputInsidePopup.value ? store.select('id') : undefined),
+  // While the input is outside the popup, the input is the control of a field.
+  controlElement: () => (inputInsidePopup.value ? store.select('triggerElement') : null),
   registerLabelId: store.context.registerLabelId,
 });
 

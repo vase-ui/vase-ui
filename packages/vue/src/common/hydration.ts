@@ -2,6 +2,7 @@ import { computed, nextTick, onMounted, shallowRef, useSlots, watch } from 'vue'
 // eslint-disable-next-line no-restricted-imports -- Vue sets `vnode.el` before `setup` only when it hydrates the component from server HTML. Vue has no public API for this fact, and Nuxt reads the same field. In Vapor mode the instance is `null`, and each composable then acts as in a client-only mount.
 import { getCurrentInstance } from 'vue';
 import type { ComputedRef, Ref, RendererNode } from 'vue';
+import { isHTMLElement, isNode } from '@floating-ui/utils/dom';
 import { ownerDocument, ownerWindow } from './owner';
 import { activeElement } from './shadowDom';
 
@@ -48,10 +49,11 @@ export function useIsHydrating(): ComputedRef<boolean> {
  * browser can have other `Intl` data. With `null` in the first client render, the render after the
  * mount always writes its value.
  *
- * Give the function only `aria-*` values, or the value of an attribute that the element allows to
- * differ with `data-allow-mismatch` and the category `attribute`, such as the `abbr` of
- * `Calendar.Weekday`. Vue compares other attributes, such as `id` and `tabindex`, while it
- * hydrates, and it warns when they differ.
+ * Give the function only the value of an attribute that Vue does not compare while it hydrates, or
+ * of an attribute that the element allows to differ with `data-allow-mismatch` and the category
+ * `attribute`. Vue does not compare `aria-*` attributes or other attributes outside its list of
+ * known HTML attributes, such as the `abbr` of `Calendar.Weekday`. Vue compares the attributes of
+ * that list, such as `id` and `tabindex`, and it warns when they differ.
  */
 export function useAriaAfterHydration(): <Value>(value: Value) => Value | null {
   if (getCurrentInstance()?.vnode.el == null) {
@@ -59,6 +61,71 @@ export function useAriaAfterHydration(): <Value>(value: Value) => Value | null {
   }
   const hydrated = useIsHydrated();
   return (value) => (hydrated.value ? value : null);
+}
+
+// The first element that Vue hydrates for the component. A component whose template starts with a
+// fragment, such as a part with a `#render` slot, starts with the comment `[`, and the fragment ends
+// with the comment `]`. A component that renders only a comment has no element. The walk thus
+// stops before the nodes of the next component, and it does not give the element of that component.
+function serverElementOf(first: unknown): Element | null {
+  let depth = 0;
+  for (let node = isNode(first) ? first : null; node !== null; node = node.nextSibling) {
+    if (node.nodeType === 1) {
+      return node as Element;
+    }
+    const text = node.nodeType === 8 ? (node as Comment).data : undefined;
+    depth += text === '[' ? 1 : text === ']' ? -1 : 0;
+    if (depth <= 0) {
+      return null;
+    }
+  }
+  return null;
+}
+
+/**
+ * Gives the element of the server HTML that Vue hydrates for the component that calls it, until
+ * the component is mounted. It gives `null` on a server, in a client-only mount and after the
+ * mount.
+ *
+ * A part whose first client render cannot know a value of the server HTML reads that value from
+ * the element. The first client render then gives the value of the server HTML, and Vue writes
+ * each value that the render after the mount changes.
+ */
+export function useServerElement(): () => HTMLElement | null {
+  const element = serverElementOf(getCurrentInstance()?.vnode.el);
+  if (!isHTMLElement(element)) {
+    return () => null;
+  }
+  const hydrated = useIsHydrated();
+  return () => (hydrated.value ? null : element);
+}
+
+/**
+ * Gives a value that changes which elements the part renders and that a server can give in another
+ * way than the browser, such as the hour cycle of a locale in the `Intl` data of the server. The
+ * server HTML keeps the value in `attribute` of the element of the part. While Vue hydrates the
+ * part from server HTML, the value is the one of that attribute, so the hydration renders the
+ * elements of the server. On a server, in a client-only mount and after the mount, the value is
+ * `read()`. Bind `attributes()` to the element of the part.
+ * @param parse Gives the value of the text of the attribute, or `undefined` for a text that is not
+ * valid. The value is then `read()`.
+ */
+export function useServerValue<Value>(
+  attribute: `data-vase-ui-${string}`,
+  read: () => Value,
+  parse: (text: string) => Value | undefined,
+  write: (value: Value) => string = String,
+): { value: ComputedRef<Value>; attributes: () => Record<string, string> | undefined } {
+  const text = serverElementOf(getCurrentInstance()?.vnode.el)?.getAttribute(attribute);
+  const serverValue = text == null ? undefined : parse(text);
+  const isHydrating = useIsHydrating();
+  const value = computed(() =>
+    isHydrating.value && serverValue !== undefined ? serverValue : read(),
+  );
+  return {
+    value,
+    attributes: () => (isHydrating.value ? { [attribute]: write(value.value) } : undefined),
+  };
 }
 
 type TextControl = HTMLInputElement | HTMLTextAreaElement;

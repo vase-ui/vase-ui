@@ -6,7 +6,9 @@ import {
   describeConformance,
   expectNoAxeViolations,
   fireEvent,
+  hydrate,
   removedPartHydrationTests,
+  renderOnServer,
   screen,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
@@ -1454,6 +1456,15 @@ describe('<Resizable.Handle />', () => {
         });
       });
 
+      it('takes a press beside a handle that has a disabled panel on one side', async () => {
+        await renderPanels({ panels: [{ id: 'a', disabled: true }, { id: 'b' }] });
+        const handle = screen.getByTestId('handle-1');
+
+        expect(handle).toHaveAttribute('data-at-min');
+        expect(handle).toHaveAttribute('data-at-max');
+        expect(handle.lastElementChild).toHaveStyle({ pointerEvents: 'auto' });
+      });
+
       it('takes a press when the handle can move, and when it becomes able to move', async () => {
         const disabled = shallowRef(true);
         await render(() => (
@@ -2075,7 +2086,45 @@ describe('<Resizable.Handle />', () => {
           serverValue: 'Quarter',
           clientValue: null,
         },
+        {
+          name: 'a removed panel, data-at-min',
+          props: { composition: 'removedLast', laterRemovedAtMount: true },
+          selector: '[data-testid="handle-a"]',
+          attribute: 'data-at-min',
+          serverValue: '',
+          clientValue: null,
+        },
+        {
+          name: 'a stored layout, data-at-min',
+          props: { composition: 'stored' },
+          selector: '[data-testid="handle-a"]',
+          attribute: 'data-at-min',
+          serverValue: '',
+          clientValue: null,
+        },
+        {
+          name: 'a render slot, data-at-max',
+          props: { composition: 'stored' },
+          selector: '[data-testid="handle-b"]',
+          attribute: 'data-at-max',
+          serverValue: '',
+          clientValue: null,
+        },
       ],
+    });
+
+    it('gives the state of the server HTML to stateClass and stateStyle while it hydrates', async () => {
+      const props = { composition: 'stateFunctions' };
+      const serverHtml = await renderOnServer(
+        'src/resizable/root/ResizableRootHydration.test.vue',
+        props,
+      );
+
+      const { container } = await hydrate(ResizableRootHydration, { serverHtml, props });
+
+      const handle = container.querySelector('[data-testid="handle-a"]');
+      expect(handle).toHaveClass('at-min');
+      expect(handle).toHaveStyle({ opacity: '0.5' });
     });
   });
 
