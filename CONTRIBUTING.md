@@ -54,6 +54,7 @@ pnpm --filter @vase-ui/vue exec playwright install chromium firefox webkit
 | `pnpm release:check-tag <tag>`                   | Fails when the tag is not `v` plus the version in `packages/vue/package.json`, or when that version does not have the form `YYYY.M.MICRO`.                                                                                                                                                  |
 | `pnpm docs:typecheck`                            | Runs vue-tsc on the site configuration, the site components, the data loaders, the code samples and the demos in `docs`.                                                                                                                                                                    |
 | `pnpm docs:build`                                | Builds the site into `docs/.vitepress/dist`. It fails when the check of `pnpm parity:check` fails. `pnpm docs:preview` then serves the built site.                                                                                                                                          |
+| `pnpm docs:axe`                                  | Runs axe-core in Chromium on each built page, in both themes, at 1440 and 320 pixels, and in each styling method of the demos. It fails on a violation that `KNOWN_FAULTS` in `scripts/docs/axeSite.ts` does not list, and on a row that matches none. Run `pnpm docs:build` first.         |
 | `pnpm docs:dev`                                  | Starts the development server of the site.                                                                                                                                                                                                                                                  |
 | `pnpm --filter @vase-ui/nuxt-fixture dev`        | Starts the development server of the Nuxt fixture, `fixtures/nuxt`. Run `pnpm build` first.                                                                                                                                                                                                 |
 | `pnpm --filter @vase-ui/nuxt-fixture typecheck`  | Runs `nuxt prepare`. Then it runs the vue-tsc of `packages/vue` on the app of the Nuxt fixture. Run `pnpm build` first.                                                                                                                                                                     |
@@ -107,6 +108,8 @@ The site imports the built package. Run `pnpm build` before `pnpm docs:typecheck
 - Write the body in three parts: Why, What and Tests.
 - The check `required` must pass.
 - A pull request merges through the merge queue, which runs the same checks on the pull request on top of `main`.
+- When the checks pass, `main` moves to the commit that the merge queue tested. That commit thus has the checks of the merge queue.
+- A push to `main` starts no CI run. A commit that goes to `main` without the merge queue thus has no CI run.
 
 ## Source of the port
 
@@ -2390,7 +2393,7 @@ Each behavior where Vase UI does more than Base UI has a file `parity/better/<ID
 
 ## Documentation site
 
-The site is the VitePress project in `docs`, the workspace package `@vase-ui/docs`. A push to `main` publishes it to <https://vase-ui.com/>. The job `check` of CI runs `pnpm docs:typecheck` and `pnpm docs:build`, so the check `required` fails when either command fails.
+The site is the VitePress project in `docs`, the workspace package `@vase-ui/docs`. A push to `main` publishes it to <https://vase-ui.com/>. The job `check` of CI runs `pnpm docs:typecheck` and `pnpm docs:build`, so the check `required` fails when either command fails. The job `docs-axe` builds the site again and runs `pnpm docs:axe`, and `required` needs it too.
 
 - GitHub Pages serves the site at the root of the domain `vase-ui.com`, so `base` in `docs/.vitepress/config.ts` must be `/`. The Pages settings of the repository hold the domain. Do not add a `CNAME` file, because GitHub Pages ignores that file when a workflow publishes the site.
 - A page is a Markdown file in `docs`. `scripts/docs/navigation.ts` makes the navigation from these files. Do not add a page to `docs/.vitepress/config.ts`.
@@ -2472,6 +2475,11 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - A style that the site writes uses the class `dark`, as `DemoFrame.vue` does.
 - A copied style sheet can give text less than the AA contrast of WCAG, in one state of a part or in each state. Do not edit the sheet. For a popup, add a rule to `look.css` with the nearest value of the sheets that passes. A popup is in an element with `data-vase-ui-portal`, outside the frame of a demo, so the rule reaches it. For text in the frame, add the rule to `DemoFrame.vue` with `:deep()`. Vite adds a prefix and a suffix to each class of a CSS module, so the selector names only the middle part, as `[class*='_LinkDescription_']` does. Name the part and its state, not the demo. For the Tailwind variant, name the utility that gives the color, as `[class~='data-placeholder:text-neutral-500']` does. Where no value of the sheets passes, use the next step of the same color of the Tailwind palette. Give each selector of a rule a row in `packages/vue/test/demos.contrast.test.tsx`. A row measures the text in one state, in both themes and in each variant of the demo. Where a rule applies in each state, add a row for each state that changes the background behind the text.
 - A plugin of the site is a file in `docs/.vitepress`, and its test is beside it, as `<name>.test.ts`.
+- A component of the site that shows a table puts the table in `<ScrollBox>` of `docs/.vitepress/components`. Give the box a `label` that names the table, such as `Props of Dialog.Root`. The box scrolls the table when the column is narrower than the table.
+- A keyboard user scrolls a box with the arrow keys, so the box or an element in it must be able to get the focus (WCAG 2.1.1). A table of the API reference has no such element. The box thus takes the focus while it scrolls, with the role `group` and its `label` as its name. A box that does not scroll is not in the sequence of the Tab key.
+- The role is `group`, not `region`. A `region` with a name is a landmark, and a table is not a part of the page that a reader goes to from the list of landmarks.
+- A Markdown table is not in a box. VitePress makes it scroll itself and gives it `tabindex="0"`, so a keyboard user can scroll it.
+- A heading that a component of the site writes follows the outline of its page (WCAG 1.3.1). The first level of its headings is one more than the level of the page heading above the component.
 - The text of a page follows [Voice](#voice).
 
 ### Component pages
@@ -2482,7 +2490,7 @@ A family that Base UI documents in `docs/src/app/(docs)/react/utils/`, such as `
 
 - The page has the title and one intro line. It has the sections of the Base UI page, with the code in Vue. It also has each demo of the family and the API reference.
 - The front matter has `order: 1`. The group then shows its pages in the sequence of their titles.
-- A demo has one Vue file for each variant that Base UI has: `docs/demos/<family>/<demo>/css-modules/index.vue` and `docs/demos/<family>/<demo>/tailwind/index.vue`. Each file keeps the elements and the attributes of the Base UI file `demos/<demo>/<variant>/index.tsx`.
+- A demo has one Vue file for each variant that Base UI has: `docs/demos/<family>/<demo>/css-modules/index.vue` and `docs/demos/<family>/<demo>/tailwind/index.vue`. Each file keeps the elements and the attributes of the Base UI file `demos/<demo>/<variant>/index.tsx`. A heading of a demo follows the outline of its page. The hero demo of Accordion is directly below the title, so its `Accordion.Header` has `as="h2"`. Base UI's demo has the default `h3`.
 - A Tailwind demo has the class strings of the Base UI file. Do not add, remove, sort or correct a class name.
 - In a Tailwind demo, write `class` in the place of `className`. A constant that holds class names keeps its name and its text in `<script setup>`, and the template binds it with `:class="name"`. Write an array in `:class` in the place of `clsx` or a template literal. Keep each part of a string that Base UI makes with `+`. Do not write the object form of `:class`.
 - The name of a constant that holds class names ends with `Class`, `ClassName` or `Classes`.
@@ -2530,7 +2538,7 @@ A family that Base UI documents in `docs/src/app/(docs)/react/utils/`, such as `
 - The reference leaves out a prop with the tag `@ignore`, as the Base UI page does. `pnpm parity:check` still reads that prop.
 - A component of Vase UI's own has no extract and no Base UI page. Its reference lists the parts, functions and types of its record, each list in the sequence of the record.
 - A `types.md` can repeat the parts of another family. The `types.md` of Radio Group repeats `Radio.Root` and `Radio.Indicator`. The reference reads such a part from the entry file of the family that exports it. The page of Radio Group thus shows both parts.
-- `<ApiReference name="<name>" />` shows one function, class or type of the family, with no heading and no description. The name is the path of the export, such as `mergeProps`, `Tooltip.Handle`, `useRender.Parameters` or `ToastManagerAddOptions`. A type is an entry of the section API Reference or Additional Types of the `types.md`. The page writes the heading and the text. The build fails when the reference has no function, class or type with that name.
+- `<ApiReference name="<name>" />` shows one function, class or type of the family, with no heading for its name and no description. The name is the path of the export, such as `mergeProps`, `Tooltip.Handle`, `useRender.Parameters` or `ToastManagerAddOptions`. A type is an entry of the section API Reference or Additional Types of the `types.md`. The page writes the heading and the text. The build fails when the reference has no function, class or type with that name. For a function or a class, the component writes headings, such as Parameters and Return value. Give it `:heading-level` one more than the level of the heading above it: `<ApiReference name="Dialog.createHandle" :heading-level="3" />` below `## createHandle`. The build fails when such a reference has no `heading-level`. Base UI writes these headings at level 3 in each place.
 - When the Base UI page has the section Additional types, write `## Additional types` at the end of the page. Under it, write a `### <name>` heading and `<ApiReference name="<name>" />` for each type that `showAdditionalTypes` of the Base UI page names.
 - For a function, the component shows a table of its parameters (`c?` is an optional parameter) and then its return value. For a type, it shows one table of its properties in the sequence of their names, with a column Default when a property has a default. For a union of strings, it shows the values in the sequence of the declaration.
 - For a class, the component shows a table of its public properties and then a table of its public methods, in the sequence of the declaration. A member with the `@internal` tag is not in the tables.
@@ -2571,7 +2579,7 @@ To make a release:
 
 1. Do the step that [Thanks page](#thanks-page) gives for a release.
 2. Merge a pull request that changes `version` in `packages/vue/package.json` and adds the section of that version to `CHANGELOG.md`.
-3. Make sure that CI passes on that commit of `main`. The workflow does not run `pnpm test`.
+3. Make sure that the check `required` passed on that commit of `main`. [Pull requests](#pull-requests) says which run gives the commit its checks. The workflow does not run `pnpm test`.
 4. As an organization admin, push the tag of that commit: `git tag v2026.12.0 <commit>`, then `git push origin v2026.12.0`.
 5. On npmjs.com, approve the staged version with two-factor authentication. Only a maintainer of the package can do this. The version is then public. When more than one version is staged, approve them in order, from the lowest version to the highest.
 6. Make the GitHub Release of the tag. Its text is the section of that version in `CHANGELOG.md`.

@@ -24,7 +24,7 @@ const PlusIcon: FunctionalComponent = () =>
 <template>
   <Accordion.Root :class="styles.Accordion">
     <Accordion.Item :class="styles.Item">
-      <Accordion.Header :class="styles.Header">
+      <Accordion.Header as="h2" :class="styles.Header">
         <Accordion.Trigger :class="styles.Trigger">
           What is Vase UI?
           <PlusIcon :class="styles.Icon" />
@@ -39,7 +39,7 @@ const PlusIcon: FunctionalComponent = () =>
     </Accordion.Item>
 
     <Accordion.Item :class="styles.Item">
-      <Accordion.Header :class="styles.Header">
+      <Accordion.Header as="h2" :class="styles.Header">
         <Accordion.Trigger :class="styles.Trigger">
           How do I get started?
           <PlusIcon :class="styles.Icon" />
@@ -54,7 +54,7 @@ const PlusIcon: FunctionalComponent = () =>
     </Accordion.Item>
 
     <Accordion.Item :class="styles.Item">
-      <Accordion.Header :class="styles.Header">
+      <Accordion.Header as="h2" :class="styles.Header">
         <Accordion.Trigger :class="styles.Trigger">
           Can I use it for my project?
           <PlusIcon :class="styles.Icon" />

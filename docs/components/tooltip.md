@@ -241,12 +241,12 @@ Use `Tooltip.Viewport` only when one popup has more than one trigger, the conten
 
 Creates a handle that connects a `<Tooltip.Root>` with detached `<Tooltip.Trigger>` parts. The type argument of the function is the type of the payload.
 
-<ApiReference name="Tooltip.createHandle" />
+<ApiReference name="Tooltip.createHandle" :heading-level="3" />
 
 ### Handle
 
 `Tooltip.createHandle()` returns a `Tooltip.Handle`. Give it to the `handle` prop of the root and of each trigger outside the root.
 
-<ApiReference name="Tooltip.Handle" />
+<ApiReference name="Tooltip.Handle" :heading-level="4" />
 
 While a root is mounted, `open()` throws when the handle has no trigger with that `id`.
