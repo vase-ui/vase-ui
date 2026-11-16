@@ -219,6 +219,38 @@ describe('<NumberField.ScrubArea />', () => {
     });
   });
 
+  it.each([
+    { name: 'clicks after a press with no move', movementX: 0, clicks: 1 },
+    { name: 'does not click after a scrub', movementX: 10, clicks: 0 },
+  ])('$name when the area gets no native click', async ({ movementX, clicks }) => {
+    const onClick = vi.fn();
+    const onValueCommitted = vi.fn();
+    await render(
+      <NumberField.Root defaultValue={0} onValueCommitted={onValueCommitted}>
+        <NumberField.Input />
+        <NumberField.ScrubArea data-testid="scrub-area" onClick={onClick} />
+      </NumberField.Root>,
+    );
+    const scrubArea = screen.getByTestId('scrub-area');
+    vi.useFakeTimers();
+    try {
+      scrubArea.dispatchEvent(createPointerDownEvent(scrubArea));
+      await flushMicrotasks();
+      window.dispatchEvent(createPointerMoveEvent({ movementX }));
+      await nextTick();
+      expect(screen.getByRole('textbox')).toHaveValue(String(movementX));
+
+      // A pointer lock can send the native click to the body instead of the area.
+      window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+      await vi.advanceTimersByTimeAsync(100);
+
+      expect(onValueCommitted).toHaveBeenCalledExactlyOnceWith(movementX, expect.anything());
+      expect(onClick).toHaveBeenCalledTimes(clicks);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   // Only run the following tests in Chromium/Firefox.
   if (isJSDOM || isWebKit) {
     return;

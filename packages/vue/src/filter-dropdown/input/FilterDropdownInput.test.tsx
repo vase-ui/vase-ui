@@ -8,6 +8,49 @@ import type { FilterDropdownRootChangeEventDetails } from '../root/FilterDropdow
 describe('useFilterDropdownInput', () => {
   const { render } = createRenderer();
 
+  it('keeps a new composition when the previous composition timer runs', async () => {
+    const value = shallowRef('');
+    const onValueChange = vi.fn((nextValue: string) => {
+      value.value = nextValue;
+    });
+    await render(() => (
+      <FilterDropdown.Root
+        open
+        value={value.value}
+        listRef={shallowRef([])}
+        getActiveIndex={() => null}
+        setActiveIndex={NOOP}
+        onValueChange={onValueChange}
+      >
+        <FilterDropdown.Input aria-label="Filter" />
+      </FilterDropdown.Root>
+    ));
+    const input = screen.getByRole<HTMLInputElement>('searchbox', { name: 'Filter' });
+    vi.useFakeTimers();
+    try {
+      await fireEvent.compositionStart(input);
+      await fireEvent.input(input, { target: { value: 'a' }, inputType: 'insertCompositionText' });
+      await fireEvent.compositionEnd(input);
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+
+      await fireEvent.compositionStart(input);
+      await fireEvent.input(input, { target: { value: 'ab' }, inputType: 'insertCompositionText' });
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(input).toHaveValue('ab');
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+
+      await fireEvent.compositionEnd(input);
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(input).toHaveValue('ab');
+      expect(onValueChange).toHaveBeenCalledTimes(2);
+      expect(onValueChange).toHaveBeenLastCalledWith('ab', expect.anything());
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('shows the value of the root after a change that a listener cancels', async () => {
     const onValueChange = vi.fn((_value: string, details: FilterDropdownRootChangeEventDetails) =>
       details.cancel(),

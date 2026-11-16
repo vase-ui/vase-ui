@@ -617,6 +617,34 @@ describe('useHoverPopupInteraction', () => {
         });
       });
 
+      it('stays open after one child closes while another child is open', async () => {
+        await render(
+          <Tree>
+            <Layer name="parent">
+              <Layer name="first" />
+              <Layer name="second" />
+            </Layer>
+          </Tree>,
+        );
+        await openByHover(stores.parent);
+        await openByHover(stores.first);
+        await openByHover(stores.second);
+
+        await fireEvent.mouseLeave(screen.getByTestId('parent'));
+        await fireEvent.mouseLeave(screen.getByTestId('first'));
+        await tick(0);
+
+        expect(isOpen('first')).toBe(false);
+        expect(isOpen('second')).toBe(true);
+        expect(isOpen('parent')).toBe(true);
+
+        await fireEvent.mouseLeave(screen.getByTestId('second'));
+        await tick(0);
+
+        expect(isOpen('second')).toBe(false);
+        expect(isOpen('parent')).toBe(false);
+      });
+
       it('stays open when the pointer enters it before the popup below it closes', async () => {
         const { parent, child } = await renderLayers();
         await fireEvent.mouseLeave(parent);
