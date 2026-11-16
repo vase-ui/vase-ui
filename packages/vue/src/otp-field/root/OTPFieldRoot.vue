@@ -326,11 +326,12 @@ const activeIndex = computed(() =>
 setFilled(filled.value);
 watch(filled, setFilled);
 
-useCompositeList({
+const inputList = useCompositeList({
   elementsRef: inputElements,
   onMapChange(newMap) {
     inputCount.value = newMap.size;
   },
+  provide: false,
 });
 
 if (process.env.NODE_ENV !== 'production') {
@@ -568,6 +569,7 @@ provide(OTPFieldRootContext, {
   getInputId,
   handleInputBlur,
   handleInputFocus,
+  inputList,
   inputMode: resolvedInputMode,
   inputAriaLabelledBy,
   invalid,

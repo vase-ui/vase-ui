@@ -85,14 +85,15 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, AccordionItemState>;
 }>();
 
-const { ref: listItemRef, index } = useCompositeListItem();
-
 const {
   disabled: contextDisabled,
   handleValueChange,
+  itemList,
   state: rootState,
   value: openValues,
 } = useAccordionRootContext();
+
+const { ref: listItemRef, index } = useCompositeListItem({ list: itemList });
 
 const fallbackValue = useVaseUiId();
 

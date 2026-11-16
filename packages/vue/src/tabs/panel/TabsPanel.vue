@@ -83,6 +83,7 @@ const {
   reaches,
   registerPanel,
   tabActivationDirection,
+  panelList,
 } = useTabsRootContext();
 
 // A tab registers its id in `setup`, and it can come after the panel.
@@ -92,7 +93,7 @@ const isHydrating = useIsHydrating();
 
 const panelId = useVaseUiId(() => props.id);
 
-const { ref: listItemRef, index } = useCompositeListItem();
+const { ref: listItemRef, index } = useCompositeListItem({ list: panelList });
 
 const open = computed(() => props.value === selectedValue.value);
 // The getter for `element` runs after `setup`, so the later declaration of `element` is in scope.

@@ -373,6 +373,10 @@ const hasChosenTab = computed(
   () => activeTabValue.value != null && (isControlled || hasExplicitDefaultValue),
 );
 
+// The panels register their elements in this list, to get their `data-index`.
+const panelElements = shallowRef<(HTMLElement | null)[]>([]);
+const panelList = useCompositeList({ elementsRef: panelElements, provide: false });
+
 provide(TabsRootContext, {
   value: activeTabValue,
   onValueChange,
@@ -388,11 +392,8 @@ provide(TabsRootContext, {
   tabActivationDirection,
   hasChosenTab,
   reaches: (target) => isInTreeOf(element.value, target),
+  panelList,
 });
-
-// The panels register their elements in this list, to get their `data-index`.
-const panelElements = shallowRef<(HTMLElement | null)[]>([]);
-useCompositeList({ elementsRef: panelElements });
 
 const state = computed<TabsRootState>(() => ({
   orientation: props.orientation,

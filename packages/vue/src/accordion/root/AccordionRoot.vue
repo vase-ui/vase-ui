@@ -136,7 +136,7 @@ if (process.env.NODE_ENV !== 'production') {
   watch([() => props.hiddenUntilFound, () => props.keepMounted], warnWhenKeepMountedIsIgnored);
 }
 
-useCompositeList({ elementsRef: shallowRef([]) });
+const itemList = useCompositeList({ elementsRef: shallowRef([]), provide: false });
 
 const [openValues, setOpenValues] = useControlled<AccordionValue<Value>>({
   controlled: () => props.value,
@@ -181,6 +181,7 @@ provide(AccordionRootContext, {
   keepMounted: computed(() => props.keepMounted ?? false),
   state,
   value: openValues,
+  itemList,
 });
 
 const { element, elementProps } = useRenderElement('div', props, {

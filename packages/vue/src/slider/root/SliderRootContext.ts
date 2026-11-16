@@ -1,5 +1,6 @@
 import { inject } from 'vue';
 import type { ComputedRef, InjectionKey, Ref, ShallowRef } from 'vue';
+import type { CompositeListContextValue } from '../../internals/composite/list/CompositeListContext';
 import type { CompositeMetadata } from '../../internals/composite/list/useCompositeList';
 import type { UseFieldValidationReturnValue } from '../../internals/field-root-context/FieldRootContext';
 import type { RegisterId } from '../../internals/labelable-provider/LabelableContext';
@@ -74,6 +75,11 @@ export interface SliderRootContext {
    */
   reset: (event: Event) => void;
   thumbMap: Readonly<Ref<ReadonlyMap<Element, CompositeMetadata<ThumbMetadata>>>>;
+  /**
+   * The list of the thumbs. The thumbs register with it through this context. The root does not
+   * provide the list, so an item of a composite around the root joins that composite.
+   */
+  thumbList: CompositeListContextValue<ThumbMetadata>;
   largeStep: ComputedRef<number>;
   lastChangeReasonRef: Ref<SliderRootChangeEventReason>;
   locale: ComputedRef<Intl.LocalesArgument | undefined>;
