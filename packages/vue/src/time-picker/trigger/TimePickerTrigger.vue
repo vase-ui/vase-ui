@@ -17,7 +17,7 @@ export interface TimePickerTriggerProps extends Omit<
 </script>
 
 <script setup lang="ts">
-import { computed, useAttrs, useTemplateRef, watch } from 'vue';
+import { computed, onBeforeUnmount, useAttrs, useTemplateRef, watch } from 'vue';
 import { useAriaAfterHydration } from '../../common/hydration';
 import { givenName } from '../../internals/blankName';
 import { formatText } from '../../internals/date-time/calendar/formatText';
@@ -85,9 +85,13 @@ const label = computed(() => {
 const trigger = useTemplateRef<{ element: HTMLElement | null }>('trigger');
 const element = computed(() => trigger.value?.element ?? null);
 
-// The root reads the native fieldset at the place of the trigger when the picker has no field.
+// The root reads the native fieldset at the place of the trigger when the picker has no field. Vue
+// stops the `watch` before it unmounts `Popover.Trigger`, so the `watch` never gets `null`.
 const setTriggerElement = createElementSetter(picker.triggerElement);
 watch(element, setTriggerElement, { immediate: true, flush: 'post' });
+onBeforeUnmount(() => {
+  setTriggerElement(null);
+});
 
 function triggerProps() {
   return { ...attrs, ...props, disabled: isDisabled.value, 'aria-label': label.value };
