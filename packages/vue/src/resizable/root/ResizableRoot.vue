@@ -384,8 +384,8 @@ function buildConstraints(useFirstDefaultSizes: boolean): PanelConstraints[] {
 const constraints = computed(() => buildConstraints(true));
 
 // A visitor can change a layout that the app reads from a cookie or a storage, so the root ignores
-// an entry that is not a size. A size prop of a part comes from the template of the app, and it
-// throws.
+// an entry that is not a size. The template of the app gives a size prop, so a size prop that is
+// not valid throws.
 function normalize(snapshot: ResizableRootLayoutSnapshot) {
   if (process.env.NODE_ENV !== 'production') {
     for (const [id, size] of Object.entries(snapshot)) {
