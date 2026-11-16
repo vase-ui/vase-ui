@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
+import { shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { TimeField } from '@vase-ui/vue/time-field';
 import { TimePicker } from '@vase-ui/vue/time-picker';
@@ -256,11 +257,15 @@ describe('<TimePicker.Root />', () => {
       });
 
       // The first tabbable element of the clock is a view trigger, and the default element is the face.
-      it('moves the focus to the default element for `true`', async () => {
+      it.each([
+        { name: '`true`', createOption: () => true },
+        { name: '`null`', createOption: () => null },
+        { name: 'an empty ref', createOption: () => shallowRef(null) },
+      ])('moves the focus to the default element for $name', async ({ createOption }) => {
         const { user } = await renderPicker({
           clock: true,
           defaultValue: time('15:30'),
-          popupProps: { initialFocus: true },
+          popupProps: { initialFocus: createOption() },
         });
 
         await open(user);
@@ -820,6 +825,29 @@ describe('<TimePicker.Root />', () => {
       await userEvent.click(listItem('15:00'), { force: true });
 
       expect(onValueChange).not.toHaveBeenCalled();
+    });
+
+    it('reads the fieldset at the trigger after the field unmounts', async () => {
+      const hasField = shallowRef(true);
+      await render(() => (
+        <TimePicker.Root locale="en-US">
+          {hasField.value ? (
+            <TimePicker.Field>
+              <TimeField.Input />
+            </TimePicker.Field>
+          ) : null}
+          <fieldset disabled>
+            <TimePicker.Trigger data-testid="trigger">Open</TimePicker.Trigger>
+          </fieldset>
+        </TimePicker.Root>
+      ));
+      expect(screen.getByTestId('trigger')).not.toHaveAttribute('data-disabled');
+
+      hasField.value = false;
+
+      await waitFor(() => {
+        expect(screen.getByTestId('trigger')).toHaveAttribute('data-disabled');
+      });
     });
   });
 
