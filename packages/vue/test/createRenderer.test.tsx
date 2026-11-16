@@ -165,6 +165,7 @@ describe('createRenderer', () => {
     describe('when the wall clock steps by 3 ms', () => {
       let offset = 0;
       let stepAfter = Number.POSITIVE_INFINITY;
+      let lateReadAfter = Number.POSITIVE_INFINITY;
 
       function stepBack() {
         offset -= 3;
@@ -174,18 +175,25 @@ describe('createRenderer', () => {
       // thus do not depend on the timer resolution of the browser, which is 1 ms in Firefox and
       // WebKit. A click right after a mount comes in the millisecond of the mount, unless the helper
       // waits. `Date.now()` adds `offset`. At its first read that is later than `stepAfter`, it steps
-      // back.
+      // back. At its first read after the time `lateReadAfter` of `performance.now()`, it gives a
+      // time that is 3 ms later, one time. The clocks do not step.
       function mockClocks() {
         let microseconds = Date.now() * 1000;
         offset = 0;
         stepAfter = Number.POSITIVE_INFINITY;
+        lateReadAfter = Number.POSITIVE_INFINITY;
         const read = () => {
           microseconds += 10;
           return microseconds / 1000;
         };
         const performanceNow = vi.spyOn(performance, 'now').mockImplementation(read);
         const dateNow = vi.spyOn(Date, 'now').mockImplementation(() => {
-          const now = Math.floor(read()) + offset;
+          const time = read();
+          const now = Math.floor(time) + offset;
+          if (time > lateReadAfter) {
+            lateReadAfter = Number.POSITIVE_INFINITY;
+            return now + 3;
+          }
           if (now > stepAfter) {
             stepAfter = Number.POSITIVE_INFINITY;
             stepBack();
@@ -209,6 +217,16 @@ describe('createRenderer', () => {
       const StepBackAfterMount = defineComponent(() => {
         onMounted(() => {
           stepAfter = Date.now();
+        });
+        return () => null;
+      });
+
+      // The helper reads each clock one time to find the latest stamp, and each read moves the
+      // clocks by 0.01 ms. A late read that comes 0.05 ms after `onMounted` is thus a read of the
+      // loop that waits, not a read of the latest stamp.
+      const LateReadAfterMount = defineComponent(() => {
+        onMounted(() => {
+          lateReadAfter = performance.now() + 0.05;
         });
         return () => null;
       });
@@ -263,6 +281,16 @@ describe('createRenderer', () => {
           shown.value = true;
           return nextTick();
         });
+        getByTestId('target').click();
+
+        expect(target.calls()).toEqual({ capture: 1, bubble: 1 });
+      });
+
+      it('runs both listeners for one read during the wait that is 3 ms too late', async () => {
+        mockClocks();
+        const target = createTarget(<LateReadAfterMount />);
+        const { getByTestId } = await render(target.vnode);
+
         getByTestId('target').click();
 
         expect(target.calls()).toEqual({ capture: 1, bubble: 1 });
