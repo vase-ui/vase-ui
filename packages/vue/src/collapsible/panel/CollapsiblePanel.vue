@@ -41,9 +41,9 @@ export interface CollapsiblePanelProps
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue';
 import { warn } from '../../common/warn';
+import { given } from '../../internals/givenAttributes';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { givenId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useCollapsibleRootContext } from '../root/CollapsibleRootContext';
 import { collapsibleStateAttributesMapping } from '../root/stateAttributesMapping';
@@ -90,13 +90,12 @@ const {
   transitionStatus,
 } = useCollapsibleRootContext();
 
-const panelId = computed(() => givenId(props.id) ?? defaultPanelId.value);
-
-const source = Symbol();
+const panelId = computed(() => given('id', props.id) ?? defaultPanelId.value);
 
 useRegisteredId(
   () => panelId.value,
-  (getId) => registerPanelId(source, getId),
+  registerPanelId,
+  () => element.value,
 );
 
 const {

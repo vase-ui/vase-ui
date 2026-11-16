@@ -50,6 +50,12 @@ describe('useVaseUiId', () => {
     expect(screen.getByTestId('id')).toHaveAttribute('id', generatedId);
   });
 
+  it('VUE-93: keeps an override of white space only, as Base UI does', async () => {
+    await render(<IdComponent id=" " />);
+
+    expect(screen.getByTestId('id')).toHaveAttribute('id', ' ');
+  });
+
   it('follows a change of the override', async () => {
     const { setProps } = await render(<IdComponent />);
     const generatedId = screen.getByTestId('id').id;

@@ -17,7 +17,7 @@
     {
       "entry": "Popup",
       "prop": "id",
-      "reason": "The part replaces an absent `id` with a generated id and gives the id to the root, which the trigger names in `aria-controls`. Base UI declares `id` as a prop with the tag `@ignore`, so `types.md` has no row for it."
+      "reason": "The part gives its element the `id` prop, or the default id of the popup when the prop is absent. A trigger that names the popup in `aria-controls` names the `id` that the element has. Base UI declares `id` as a prop with the tag `@ignore`, so `types.md` has no row for it."
     },
     {
       "entry": "Item",

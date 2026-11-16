@@ -696,6 +696,8 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
           triggerElement: null,
           inputElement: null,
           inputGroupElement: null,
+          highlightedItem: null,
+          highlightedItemId: undefined,
           popupSide: null,
           openMethod: null,
           inputInsidePopup: true,
@@ -1763,7 +1765,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
 
   const listNavigation = useListNavigation(store.interactions, {
     enabled: () => !disabled.value,
-    id,
+    activeItemId: () => store.select('highlightedItemId'),
     listRef,
     activeIndex,
     selectedIndex,

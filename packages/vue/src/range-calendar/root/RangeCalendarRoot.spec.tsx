@@ -70,17 +70,23 @@ const zoned = Temporal.ZonedDateTime.from('2026-11-14T09:30[Asia/Tokyo]');
   focusedDate={date}
   onMonthChange={(month, details) => {
     expectType<Temporal.PlainYearMonth, typeof month>(month);
-    expectType<
-      | 'day-press'
-      | 'month-press'
-      | 'year-press'
-      | 'trigger-press'
-      | 'drag'
-      | 'keyboard'
-      | 'month-change'
-      | 'none',
-      typeof details.reason
-    >(details.reason);
+    expectType<'day-press' | 'drag' | 'keyboard' | 'month-change' | 'none', typeof details.reason>(
+      details.reason,
+    );
+  }}
+/>;
+
+// A range calendar has no views, so no event has the reason of a press on a month, a year or the
+// view trigger.
+const changeReason = null as unknown as RangeCalendar.Root.ChangeEventReason;
+expectType<'day-press' | 'drag' | 'keyboard' | 'month-change' | 'none', typeof changeReason>(
+  changeReason,
+);
+
+<RangeCalendar.Root
+  onFocusedDateChange={(focusedDate, details) => {
+    expectType<Temporal.PlainDate, typeof focusedDate>(focusedDate);
+    expectType<RangeCalendar.Root.ChangeEventDetails, typeof details>(details);
   }}
 />;
 

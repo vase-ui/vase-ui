@@ -33,6 +33,8 @@ const CURSOR_STYLE: CSSProperties = {
 
 // A style that is scoped to the portal elements of the page reaches the cursor in this element.
 // The element makes no box, so its container gets no new box during a scrub.
+// A `<Transition>` of the consumer around the part gets this element in Vue 3.5.41 and later, and
+// in Vue 3.6.0-rc.3 and later. It does not animate the cursor, because the element has no box.
 // The element is in this template and not in `FloatingPortalLite`, because that portal renders its
 // slot after the mount of this part. The checks of the `#render` slot run in the hooks of this part,
 // and they then do not see the element.
@@ -53,6 +55,7 @@ const { isScrubbing, isTouchInput, isPointerLockDenied, scrubAreaCursorRef, scru
 
 // The styles of a shadow root apply only in that root. The coordinates of the pointer are those of
 // the document of the scrub area.
+// A function reads the root node, because `getRootNode()` is not reactive.
 function getContainer() {
   const scrubArea = scrubAreaElement.value;
   const root = scrubArea?.getRootNode();

@@ -131,6 +131,7 @@ export function provideFloatingNode(id: MaybeRefOrGetter<string | undefined>): v
  *
  * `externalTree` is a store, a ref or a getter, and the parts below follow a change of it. With no
  * tree, the part provides one tree of its own.
+ * The result is the tree as a `ComputedRef`.
  * @see https://floating-ui.com/docs/FloatingTree
  */
 export function provideFloatingTree(

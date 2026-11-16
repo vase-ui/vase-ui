@@ -13,7 +13,6 @@ import { hydrate, hydrateAfter, renderOnServer } from '#test-utils';
 import ClassedElement from './fixtures/ClassedElement.vue';
 import HydrationFixture from './fixtures/HydrationFixture.vue';
 import LabelForControl from './fixtures/LabelForControl.vue';
-import PlainPart from './fixtures/PlainPart.vue';
 import RemountedRegion from './fixtures/RemountedRegion.vue';
 import StyledElement from './fixtures/StyledElement.vue';
 
@@ -72,26 +71,13 @@ describe('hydrate', () => {
     ).rejects.toThrow(/Hydration attribute mismatch/);
   });
 
-  it('fails with the DOM difference only for a seeded aria-pressed mismatch on the part', async () => {
+  it('fails with the DOM difference only for a seeded attribute that Vue does not compare', async () => {
     const serverHtml = await renderOnServer(FIXTURE);
 
-    // Vue does not compare `aria-*`, and it does not patch an attribute of a `v-bind` object.
+    // Vue does not compare `data-*`, and it does not remove an attribute that no render gives.
     const error = await hydrate(HydrationFixture, {
-      serverHtml: serverHtml.replace('aria-pressed="false"', 'aria-pressed="true"'),
+      serverHtml: serverHtml.replace('<section', '<section data-seeded="1"'),
     }).catch((caught: unknown) => caught);
-
-    expect(error).toBeInstanceOf(Error);
-    expect((error as Error).message).toMatch(/The hydrated DOM differs from a client-only render/);
-    expect((error as Error).message).not.toMatch(/Vue and the console reported/);
-  });
-
-  it('fails with the DOM difference only for a server render with another state', async () => {
-    const serverHtml = await renderOnServer('test/fixtures/PlainPart.vue', { active: true });
-
-    // Vue does not compare `data-*`.
-    const error = await hydrate(PlainPart, { serverHtml, props: { active: false } }).catch(
-      (caught: unknown) => caught,
-    );
 
     expect(error).toBeInstanceOf(Error);
     expect((error as Error).message).toMatch(/The hydrated DOM differs from a client-only render/);

@@ -77,7 +77,6 @@ export interface TabsTabProps
 
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue';
-import { useAriaAfterHydration } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
 import { activeElement, contains } from '../../common/shadowDom';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
@@ -123,17 +122,15 @@ const { highlightedIndex, onHighlightedIndexChange } = useCompositeRootContext()
 // A panel registers its id in `setup`, and it can come after the tab.
 useDeferredServerRender();
 
-const ariaAfterHydration = useAriaAfterHydration();
-
 const tabId = useVaseUiId(() => props.id);
 const active = computed(() => props.value === activeTabValue.value);
 const fieldsetDisabled = useFieldsetDisabled(() => element.value);
 const isDisabled = computed(() => props.disabled || (props.nativeButton && fieldsetDisabled.value));
 
-const registrationSource = Symbol();
 useRegisteredId(
   () => tabId.value,
-  (getId) => registerTab(registrationSource, getId && { value: () => props.value, id: getId }),
+  (source, getId) => registerTab(source, getId && { value: () => props.value, id: getId }),
+  () => element.value,
 );
 
 // A fieldset blocks interaction but keeps the selected panel. Only the prop selects a fallback.
@@ -275,7 +272,7 @@ const { element, elementProps } = useRenderElement('button', props, {
     compositeProps.value,
     {
       role: 'tab',
-      'aria-controls': ariaAfterHydration(getTabPanelIdByValue(props.value)),
+      'aria-controls': getTabPanelIdByValue(props.value),
       'aria-selected': active.value,
       id: tabId.value,
       onClick,

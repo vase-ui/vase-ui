@@ -22,15 +22,21 @@ export interface FieldsetDisabledTestsConfig {
     props: FieldsetButtonTestProps,
     slots: { default: (props: { state: { disabled: boolean } }) => VNodeChild },
   ) => VNode;
-  /** Returns the providers of the part, outside the fieldset. */
+  /**
+   * Returns the providers of the part around `children`. The suite puts each fieldset in
+   * `children`, so the providers are outside the fieldset.
+   */
   root: (children: VNode) => VNode;
-  /** The tooltip prop disables its popup, and does not disable its button. */
+  /** Set it for `Tooltip.Trigger`. Its `disabled` prop disables the tooltip and not the button. */
   tooltip?: boolean;
-  /** The part opens on hover after 100 ms. */
+  /**
+   * Set it for a trigger that opens its popup 100 ms after a hover. The suite then also asserts
+   * that a disabled fieldset stops that open.
+   */
   hover?: boolean;
 }
 
-/** Tests the fieldset state at the element of a native button part. */
+/** The shared suite of a native button part in a disabled fieldset (`VUE-112`). */
 export function fieldsetDisabledTests(config: FieldsetDisabledTestsConfig) {
   const { render, part, root, tooltip, hover } = config;
 

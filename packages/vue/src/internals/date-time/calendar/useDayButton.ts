@@ -1,6 +1,6 @@
 import { computed, watch } from 'vue';
 import type { HTMLAttributes, Ref } from 'vue';
-import { useAriaAfterHydration, useIsHydrating } from '../../../common/hydration';
+import { useIsHydrating } from '../../../common/hydration';
 import type { StateAttributesMapping } from '../../getStateAttributesProps';
 import type { NativeButtonProps, VaseUIComponentProps } from '../../types';
 import { useButton } from '../../use-button';
@@ -59,7 +59,6 @@ export function useDayButton<State extends DayState>(
   }: UseDayButtonOptions<State>,
 ) {
   const isHydrating = useIsHydrating();
-  const ariaAfterHydration = useAriaAfterHydration();
 
   // The button of a month that leaves has no tab stop, and the root does not focus it.
   const isTabStop = computed(
@@ -81,7 +80,7 @@ export function useDayButton<State extends DayState>(
       const tabindex = isTabStop.value ? 0 : -1;
       return [
         {
-          'aria-label': ariaAfterHydration(label.value),
+          'aria-label': label.value,
           'aria-current': state.value.today ? 'date' : undefined,
           // The button of a disabled day gets `disabled` or `aria-disabled` from `useButton`. A key
           // with the value `undefined` here would replace that attribute.

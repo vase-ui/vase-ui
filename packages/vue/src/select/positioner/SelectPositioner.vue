@@ -57,6 +57,9 @@ import { clearStyles } from '../popup/utils';
 import { useSelectRootContext } from '../root/SelectRootContext';
 import { SelectPositionerContext } from './SelectPositionerContext';
 
+// While the popup places the selected item over the trigger, the style is only `position: fixed`.
+// The popup writes `left`, `top` or `bottom`, `height`, `max-height` and the margins to the
+// positioner element. Vue keeps these declarations, because this style has none of those keys.
 const FIXED: CSSProperties = { position: 'fixed' };
 
 defineOptions({ inheritAttrs: false });
@@ -124,6 +127,8 @@ useAnchoredPopupScrollLock(
   () => store.select('triggerElement'),
 );
 
+// `usePopupPositioner` needs `instant` in the state, and this state has none. This part has
+// `keepMounted: true` and no portal context, so it works outside `Select.Portal`.
 const positioning = useAnchorPositioning({
   anchor: () => props.anchor,
   positionMethod: () => props.positionMethod,

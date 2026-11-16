@@ -21,6 +21,11 @@ export interface UseTestInteractionsReturn {
   getTriggerProps: (userProps?: UserProps) => Record<string, unknown>;
 }
 
+/**
+ * Merges the props that the interaction composables return. An entry of `propsList` is a props
+ * object, or a ref or a getter that gives one. Each returned function reads the entries when it
+ * runs.
+ */
 export function useTestInteractions(
   propsList: MaybeRefOrGetter<TestElementProps | void>[] = [],
 ): UseTestInteractionsReturn {
