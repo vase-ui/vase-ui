@@ -370,6 +370,59 @@ test('a surfaceAdditions row accepts a change reason that Base UI lacks, and the
   assert.deepEqual(withEdits(ROOT, edits, () => check(withRow)).problems, []);
 });
 
+test('a surfaceAdditions row accepts only the named state field that Base UI lacks', () => {
+  const family = makeFamily();
+  const row = { entry: 'Popup', stateField: 'extra', reason: 'A reason.' };
+  family.surfaceAdditions.push(row);
+  const edits: [string, string][] = [
+    ['  disabled: boolean;\n}', '  disabled: boolean;\n  extra: boolean;\n  unlisted: boolean;\n}'],
+  ];
+  assert.deepEqual(withEdits(POPUP, edits, () => check(family)).problems, [
+    'sample: surface difference sample/Popup: state field `unlisted` of `SamplePopupState` is not in Base UI. Remove it.',
+  ]);
+  row.entry = 'Root';
+  assert.ok(
+    withEdits(POPUP, edits, () => check(family)).problems.includes(
+      'sample: surface difference sample/Popup: state field `extra` of `SamplePopupState` is not in Base UI. Remove it.',
+    ),
+  );
+  family.surfaceAdditions.pop();
+  assert.deepEqual(withEdits(POPUP, edits, () => check(family)).problems, [
+    'sample: surface difference sample/Popup: state field `extra` of `SamplePopupState` is not in Base UI. Remove it.',
+    'sample: surface difference sample/Popup: state field `unlisted` of `SamplePopupState` is not in Base UI. Remove it.',
+  ]);
+});
+
+test('a surfaceAdditions row accepts only the named constant that Base UI lacks', () => {
+  const family = makeFamily();
+  const row = {
+    entry: 'SamplePopupDataAttributes',
+    constant: 'extra',
+    reason: 'A reason.',
+  };
+  family.surfaceAdditions.push(row);
+  const edits: [string, string][] = [
+    [
+      "export const closed = 'data-closed';",
+      "export const closed = 'data-closed';\nexport const extra = 'data-extra';\nexport const unlisted = 'data-unlisted';",
+    ],
+  ];
+  assert.deepEqual(withEdits(DATA_ATTRIBUTES, edits, () => check(family)).problems, [
+    'sample: surface difference sample/SamplePopupDataAttributes: constant `unlisted` of `SamplePopupDataAttributes` is not in Base UI. Remove it.',
+  ]);
+  row.entry = 'Root';
+  assert.ok(
+    withEdits(DATA_ATTRIBUTES, edits, () => check(family)).problems.includes(
+      'sample: surface difference sample/SamplePopupDataAttributes: constant `extra` of `SamplePopupDataAttributes` is not in Base UI. Remove it.',
+    ),
+  );
+  family.surfaceAdditions.pop();
+  assert.deepEqual(withEdits(DATA_ATTRIBUTES, edits, () => check(family)).problems, [
+    'sample: surface difference sample/SamplePopupDataAttributes: constant `extra` of `SamplePopupDataAttributes` is not in Base UI. Remove it.',
+    'sample: surface difference sample/SamplePopupDataAttributes: constant `unlisted` of `SamplePopupDataAttributes` is not in Base UI. Remove it.',
+  ]);
+});
+
 const staleAdditions: {
   name: string;
   row: FamilyFile['surfaceAdditions'][number];
@@ -405,6 +458,30 @@ const staleAdditions: {
     row: { entry: 'Root', changeEventReason: 'none', reason: 'A reason.' },
     place: 'Root, changeEventReason none',
     message: 'the change reasons of the part have no `none` that Base UI lacks',
+  },
+  {
+    name: 'a state field that the type does not have',
+    row: { entry: 'Popup', stateField: 'extra', reason: 'A reason.' },
+    place: 'Popup, stateField extra',
+    message: 'the state of the part has no field `extra` that Base UI lacks',
+  },
+  {
+    name: 'a state field that Base UI has',
+    row: { entry: 'Popup', stateField: 'disabled', reason: 'A reason.' },
+    place: 'Popup, stateField disabled',
+    message: 'the state of the part has no field `disabled` that Base UI lacks',
+  },
+  {
+    name: 'a constant that the type does not have',
+    row: { entry: 'SamplePopupDataAttributes', constant: 'extra', reason: 'A reason.' },
+    place: 'SamplePopupDataAttributes, constant extra',
+    message: 'the entry has no constant `extra` that Base UI lacks',
+  },
+  {
+    name: 'a constant that Base UI has',
+    row: { entry: 'SamplePopupDataAttributes', constant: 'open', reason: 'A reason.' },
+    place: 'SamplePopupDataAttributes, constant open',
+    message: 'the entry has no constant `open` that Base UI lacks',
   },
 ];
 

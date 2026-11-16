@@ -88,6 +88,7 @@ import {
 } from 'vue';
 import { closest, contains } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
+import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
 import { ownerVisuallyHidden, PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -177,14 +178,16 @@ const triggerId = useVaseUiId();
 const triggerElement = shallowRef<HTMLElement | null>(null);
 const stickIfOpen = shallowRef(true);
 const pointerType = shallowRef('');
+const fieldsetDisabled = useFieldsetDisabled(() => element.value);
+const isDisabled = computed(() => props.disabled || (props.nativeButton && fieldsetDisabled.value));
 
 const isActiveItem = computed(() => open.value && value.value === itemValue.value);
 const interactionsEnabled = computed(
-  () => (positionerElement.value != null || value.value == null) && !props.disabled,
+  () => (positionerElement.value != null || value.value == null) && !isDisabled.value,
 );
 const hoverPopupElement = computed(() => positionerElement.value || viewportElement.value);
 const hoverInteractionsEnabled = computed(
-  () => (hoverPopupElement.value != null || value.value == null) && !props.disabled,
+  () => (hoverPopupElement.value != null || value.value == null) && !isDisabled.value,
 );
 const shouldBlockSafePolygonPointerEvents = computed(() => pointerType.value !== 'touch');
 
@@ -385,7 +388,7 @@ function handleActivation(event: MouseEvent | KeyboardEvent) {
 }
 
 async function handleOpenEvent(event: MouseEvent | KeyboardEvent) {
-  if (props.disabled) {
+  if (isDisabled.value) {
     return;
   }
 
@@ -463,11 +466,11 @@ function handleFocusout(event: FocusEvent) {
 
 const state = computed<NavigationMenuTriggerState>(() => ({
   open: isActiveItem.value,
-  disabled: props.disabled,
+  disabled: isDisabled.value,
 }));
 
 const { getButtonProps, buttonRef } = useButton({
-  disabled: () => props.disabled,
+  disabled: isDisabled,
   focusableWhenDisabled: true,
   native: () => props.nativeButton,
 });

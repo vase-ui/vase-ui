@@ -75,6 +75,7 @@ import {
 import { ownerDocument } from '../../common/owner';
 import { contains, getTarget } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
+import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
 import { useCompositeRootContext } from '../../internals/composite/root/CompositeRootContext';
 import { useButton } from '../../internals/use-button';
@@ -172,9 +173,13 @@ const isOpenedByThisTrigger = computed(() =>
 );
 const controlsId = computed(() => store.value.select('triggerControlsId', thisTriggerId.value));
 
+const fieldsetDisabled = useFieldsetDisabled(() => element.value);
 const isDisabled = computed(
   () =>
-    props.disabled || store.value.select('disabled') || (menubarContext?.disabled.value ?? false),
+    props.disabled ||
+    store.value.select('disabled') ||
+    (menubarContext?.disabled.value ?? false) ||
+    (props.nativeButton && fieldsetDisabled.value),
 );
 
 const { getButtonProps, buttonRef } = useButton({

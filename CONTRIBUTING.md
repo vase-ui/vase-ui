@@ -143,13 +143,16 @@ Each family has a file `parity/families/<family>.json`. It has six keys. `pnpm p
 | `upstreamPaths`         | The Base UI paths that the family ports, as globs. A family with a docs folder also names that folder: `docs/src/app/(docs)/react/components/<family>/**`, or `docs/src/app/(docs)/react/utils/<family>/**`. |
 | `matchedCommit`         | The Base UI commit that the family matches.                                                                                                                                                                  |
 | `exceptions`            | The exception rows of the family. See [Exception rows](#exception-rows).                                                                                                                                     |
-| `surfaceAdditions`      | The props, emits, slots and exposed members of a part that no Base UI row maps to, and the change reasons that Base UI lacks, each with its reason.                                                          |
+| `surfaceAdditions`      | The props, emits, slots, exposed members, change reasons, state fields and constants that Base UI lacks, each with its reason.                                                                               |
 | `returnTypeDifferences` | The functions that return a different type from the type that Base UI documents, each with the Vase UI type and the reason.                                                                                  |
 | `notApplicableCommits`  | The Base UI commits that touch these paths and do not apply to Vue, each with its reason.                                                                                                                    |
 
 - A `surfaceAdditions` row names one member of one part: `{ "entry": "Button", "prop": "disabled", "reason": "…" }`.
 - `entry` is the title of the part in the `types.md`. The key of the member is `prop`, `emit`, `slot` or `exposed`.
 - A row can name one change reason instead: `{ "entry": "Root", "changeEventReason": "none", "reason": "…" }`. It accepts a reason that the `ChangeEventReason` type of the part has and Base UI lacks. `pnpm parity:check` reports the row as stale when Base UI has that reason, or when the type does not have it.
+- A row can name one state field: `{ "entry": "Trigger", "stateField": "disabled", "reason": "…" }`.
+- A row can name one constant: `{ "entry": "TooltipTriggerDataAttributes", "constant": "disabled", "reason": "…" }`. Its `entry` names the type.
+- These rows accept only the named member. A row is stale when Base UI has the member, or Vase UI lacks it.
 - A `types.md` has no row for a native attribute that the React part reads, such as `disabled` of Button. The prop of the Vase UI part then needs a `surfaceAdditions` row.
 - A `types.md` can also have a prop row for a native attribute that the React part does not read. An example is `aria-valuetext` of `Progress.Root`. Do not declare that prop: the attribute goes to the element through `$attrs`, with its type from `HTMLAttributes`. Give the row a `not-applicable` exception row. The part can give such an attribute a default, as `NumberField.Input` does for `aria-roledescription`. The part sets the default before the attributes of the consumer, so the attribute of the consumer wins.
 - A `returnTypeDifferences` row names one function: `{ "entry": "useDirection", "returns": "ComputedRef<TextDirection>", "reason": "…" }`.
@@ -305,6 +308,8 @@ A part that Base UI takes from another family is exported again and not copied: 
 - Omit a native attribute that the part declares as a prop with the same key: `Omit<ButtonHTMLAttributes, 'disabled'>`. Do not omit an `aria-*` attribute. See [Props](#props).
 - A consumer handler runs before the handler of the part. `event.preventVaseUIHandler()` stops the handler of the part. The exception is a native event that the part declares as an emit. See [Other callbacks](#other-callbacks).
 - There is no `asChild` prop, and no part clones a vnode.
+- Native button parts read `useFieldsetDisabled` with their own element (`VUE-112`). This includes `Button`, `Toggle`, `Accordion.Trigger`, `Collapsible.Trigger` and `Tabs.Tab`. It also includes the triggers of Dialog, Alert Dialog, Drawer, Menu, Popover and Navigation Menu. Their `nativeButton` prop gates this state. A fieldset thus leaves a custom element enabled. The effective state controls `data-disabled`, the slot state, button handlers and hover eligibility. `Tabs.Tab` keeps only its explicit `disabled` prop in selection metadata, so a disabled fieldset does not change the selected panel.
+- `Tooltip.Trigger` checks whether its element is a native button, because it has no `nativeButton` prop. A fieldset that disables that button adds `data-disabled` and the `disabled` slot state, and prevents a tooltip open on hover or focus. The `disabled` prop still suppresses only the tooltip. The attribute `data-trigger-disabled` describes that suppression from a prop, the root, or a fieldset.
 
 The template of each such part has two lines and no wrapper component:
 

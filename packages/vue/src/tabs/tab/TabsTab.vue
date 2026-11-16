@@ -80,6 +80,7 @@ import { computed, onMounted, watch } from 'vue';
 import { useAriaAfterHydration } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
 import { activeElement, contains } from '../../common/shadowDom';
+import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { ACTIVE_COMPOSITE_ITEM } from '../../internals/composite/constants';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
 import { useCompositeRootContext } from '../../internals/composite/root/CompositeRootContext';
@@ -126,6 +127,8 @@ const ariaAfterHydration = useAriaAfterHydration();
 
 const tabId = useVaseUiId(() => props.id);
 const active = computed(() => props.value === activeTabValue.value);
+const fieldsetDisabled = useFieldsetDisabled(() => element.value);
+const isDisabled = computed(() => props.disabled || (props.nativeButton && fieldsetDisabled.value));
 
 const registrationSource = Symbol();
 useRegisteredId(
@@ -133,6 +136,7 @@ useRegisteredId(
   (getId) => registerTab(registrationSource, getId && { value: () => props.value, id: getId }),
 );
 
+// A fieldset blocks interaction but keeps the selected panel. Only the prop selects a fallback.
 const tabMetadata = computed<TabsTabMetadata>(() => ({
   disabled: props.disabled,
   id: tabId.value,
@@ -144,11 +148,11 @@ const { compositeProps, compositeRef, index } = useCompositeItem<TabsTabMetadata
   active,
   // With no selection, no fallback runs. The first tab then keeps the tab stop after the mount, also
   // when it is disabled. The server HTML gives it the same tab stop.
-  disabled: () => props.disabled && activeTabValue.value !== null,
+  disabled: () => isDisabled.value && activeTabValue.value !== null,
 });
 
 const { getButtonProps, buttonRef } = useButton({
-  disabled: () => props.disabled,
+  disabled: isDisabled,
   native: () => props.nativeButton,
   focusableWhenDisabled: true,
 });
@@ -185,14 +189,15 @@ function syncHighlight() {
     }
   }
 
-  // A disabled tab can get focus but must not take the tab stop by a change of the value outside.
-  if (!props.disabled) {
+  // A tab disabled by its prop can get focus. No disabled tab takes the tab stop from an external
+  // value change.
+  if (!isDisabled.value) {
     onHighlightedIndexChange(index.value);
   }
 }
 
 onMounted(syncHighlight);
-watch([active, index, highlightedIndex, () => props.disabled, tabsListElement], syncHighlight, {
+watch([active, index, highlightedIndex, isDisabled, tabsListElement], syncHighlight, {
   flush: 'post',
 });
 
@@ -210,7 +215,7 @@ function activate(event: Event) {
 }
 
 function onClick(event: MouseEvent) {
-  if (active.value || props.disabled) {
+  if (active.value || isDisabled.value) {
     return;
   }
 
@@ -218,7 +223,7 @@ function onClick(event: MouseEvent) {
 }
 
 function onFocusin(event: FocusEvent) {
-  if (active.value || props.disabled) {
+  if (active.value || isDisabled.value) {
     return;
   }
 
@@ -232,7 +237,7 @@ function onFocusin(event: FocusEvent) {
 }
 
 function onPointerdown(event: PointerEvent) {
-  if (active.value || props.disabled) {
+  if (active.value || isDisabled.value) {
     return;
   }
 
@@ -257,7 +262,7 @@ function onPointerdown(event: PointerEvent) {
 }
 
 const state = computed<TabsTabState>(() => ({
-  disabled: props.disabled,
+  disabled: isDisabled.value,
   active: active.value,
   orientation: orientation.value,
   tabActivationDirection: tabActivationDirection.value,

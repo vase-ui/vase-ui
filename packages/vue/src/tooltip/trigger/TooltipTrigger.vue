@@ -20,6 +20,10 @@ function getTargetElement(event: Event): Element | null {
 
 export interface TooltipTriggerState {
   /**
+   * Whether a fieldset disables the native button.
+   */
+  disabled: boolean;
+  /**
    * Whether the tooltip is currently open and was opened by this trigger.
    */
   open: boolean;
@@ -71,6 +75,7 @@ export interface TooltipTriggerProps<Payload = unknown>
 import { computed, onDeactivated, onMounted, shallowRef, watch } from 'vue';
 import { closest, contains } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
+import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import { useVaseUiId } from '../../internals/useBaseUiId';
@@ -144,7 +149,13 @@ function writeIsInstantPhase() {
 onMounted(writeIsInstantPhase);
 watch([store, delayGroup.isInstantPhase], writeIsInstantPhase);
 
-const isDisabled = computed(() => props.disabled || store.value.select('disabled'));
+const fieldsetDisabled = useFieldsetDisabled(() => element.value);
+const isButtonDisabled = computed(
+  () => triggerElement.value?.tagName === 'BUTTON' && fieldsetDisabled.value,
+);
+const isDisabled = computed(
+  () => props.disabled || store.value.select('disabled') || isButtonDisabled.value,
+);
 const trackCursorAxis = computed(() => store.value.select('trackCursorAxis'));
 const disableHoverablePopup = computed(() => store.value.select('disableHoverablePopup'));
 
@@ -295,7 +306,10 @@ function handlePointerdown(event: PointerEvent) {
   cancelPendingOpen(event);
 }
 
-const state = computed<TooltipTriggerState>(() => ({ open: isOpenedByThisTrigger.value }));
+const state = computed<TooltipTriggerState>(() => ({
+  open: isOpenedByThisTrigger.value,
+  disabled: isButtonDisabled.value,
+}));
 
 const { element, elementProps } = useRenderElement('button', props, {
   state,
