@@ -376,7 +376,8 @@ type PopupUnmountKey =
  * each later change of the attribute.
  *
  * A store copies the `id` of an element of its state to a key of its state with this function. A
- * `computed` does not follow a read of the DOM.
+ * root with no store copies it to a ref of its context. A `computed` does not follow a read of the
+ * DOM.
  */
 export function createElementIdObserver(
   onChange: () => void,

@@ -109,7 +109,8 @@ function getPositionerFixedSize(positionerElement: HTMLElement) {
 </script>
 
 <script setup lang="ts" generic="Value = any">
-import { computed, onMounted, provide, shallowRef, watch } from 'vue';
+import { computed, onMounted, onScopeDispose, provide, shallowRef, watch } from 'vue';
+import type { ShallowRef } from 'vue';
 import { isHTMLElement } from '@floating-ui/utils/dom';
 import { ownerDocument } from '../../common/owner';
 import { activeElement, contains } from '../../common/shadowDom';
@@ -120,6 +121,7 @@ import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useUnmountAfterClose } from '../../internals/useUnmountAfterClose';
 import type { FloatingRootStore } from '../../utils/popups/floating-root/FloatingRootStore';
+import { createElementIdObserver } from '../../utils/popups/store';
 import {
   provideFloatingNode,
   provideFloatingTree,
@@ -193,6 +195,29 @@ const viewportTargetElement = shallowRef<HTMLElement | null>(null);
 const activationDirection = shallowRef<NavigationMenuActivationDirection>(null);
 const floatingRootStore = shallowRef<FloatingRootStore | undefined>(undefined);
 const viewportInert = shallowRef(false);
+
+// A render can give the popup or the viewport a new `id` and write no ref. A `computed` does not
+// follow a read of the DOM, so the root copies the attribute to a ref that a trigger reads.
+function copyElementId(element: ShallowRef<HTMLElement | null>) {
+  const id = shallowRef<string | undefined>(undefined);
+  const observeId = createElementIdObserver(() => {
+    id.value = element.value?.id;
+  });
+  watch(
+    element,
+    (value) => {
+      id.value = observeId(value);
+    },
+    { flush: 'sync' },
+  );
+  // Vue stops this scope before it unmounts the popup and the viewport, so the watch does not see
+  // their last write of `null`.
+  onScopeDispose(() => observeId(null));
+  return id;
+}
+
+const popupElementId = copyElementId(popupElement);
+const viewportElementId = copyElementId(viewportElement);
 
 const prevTriggerElementRef = shallowRef<Element | null | undefined>(null);
 const currentContentRef = shallowRef<HTMLElement | null>(null);
@@ -353,8 +378,10 @@ provide(NavigationMenuRootContext, {
   transitionStatus,
   positionerElement,
   popupElement,
+  popupElementId,
   backdropElement,
   viewportElement,
+  viewportElementId,
   viewportTargetElement,
   activationDirection: computed(() => (open.value ? activationDirection.value : null)),
   setActivationDirection(direction) {

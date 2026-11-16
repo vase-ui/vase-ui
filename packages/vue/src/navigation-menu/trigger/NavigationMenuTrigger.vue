@@ -148,7 +148,9 @@ const {
   setActivationDirection,
   setFloatingRootStore,
   popupElement,
+  popupElementId,
   viewportElement,
+  viewportElementId,
   rootRef,
   beforeOutsideRef,
   afterOutsideRef,
@@ -494,7 +496,7 @@ const { element, elementProps } = useRenderElement('button', props, {
       onPointerenter: handleSetPointerType,
       onPointerdown: handleTriggerPointerDown,
       'aria-expanded': isActiveItem.value,
-      'aria-controls': (isActiveItem.value && popupElement.value?.id) || undefined,
+      'aria-controls': (isActiveItem.value && popupElementId.value) || undefined,
       [NAVIGATION_MENU_TRIGGER_IDENTIFIER]: '',
       onFocusin() {
         if (isActiveItem.value) {
@@ -587,7 +589,7 @@ function releaseOutsideGuards() {
 }
 
 watch(
-  [outsideSiblings, () => viewportElement.value?.id],
+  [outsideSiblings, viewportElementId],
   ([siblings, viewportId]) => {
     if (!outsideNodes) {
       return;

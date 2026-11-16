@@ -116,8 +116,9 @@ const ariaControls = computed(() => {
   if (!isOpen.value) {
     return undefined;
   }
-  const list = store.select('listElement');
-  return list ? list.id || undefined : store.select('popupId');
+  return store.select('listElement')
+    ? store.select('listElementId') || undefined
+    : store.select('popupId');
 });
 
 useLabelableId({ id: () => props.id, element: () => element.value });

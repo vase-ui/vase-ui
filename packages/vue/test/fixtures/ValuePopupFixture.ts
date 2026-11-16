@@ -48,6 +48,7 @@ function createInitialState(
     selectedIndex: null,
     triggerElement: null,
     listElement: null,
+    listElementId: undefined,
     popupSide: null,
     disabled: false,
     readOnly: false,
