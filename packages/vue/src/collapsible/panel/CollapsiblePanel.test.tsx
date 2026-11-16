@@ -18,6 +18,7 @@ import {
   seekBeforeEnd,
   takeReportedMessages,
   waitFor,
+  waitSingleFrame,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
 import CollapsiblePanelHydration from './CollapsiblePanelHydration.test.vue';
@@ -1178,6 +1179,135 @@ describe('<Collapsible.Panel />', () => {
       });
 
       expect(panel.getAnimations().length).toBe(0);
+    });
+
+    it('skips the initial open animation after a held mount and closes from its height', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Collapsible.Root defaultOpen>
+          <Collapsible.Trigger>Trigger</Collapsible.Trigger>
+          <Collapsible.Panel class="animation-test-panel" data-testid="panel" keepMounted>
+            {PANEL_CONTENT}
+          </Collapsible.Panel>
+        </Collapsible.Root>
+      ));
+      const { user } = await render(
+        <>
+          <style>{`
+            @keyframes panel-slide-down {
+              from {
+                height: 0;
+              }
+
+              to {
+                height: var(--collapsible-panel-height);
+              }
+            }
+
+            @keyframes panel-slide-up {
+              from {
+                height: var(--collapsible-panel-height);
+              }
+
+              to {
+                height: 0;
+              }
+            }
+
+            .animation-test-panel[data-open] {
+              overflow: hidden;
+              animation: panel-slide-down 100s linear;
+            }
+
+            .animation-test-panel[data-closed] {
+              overflow: hidden;
+              animation: panel-slide-up 100s linear;
+            }
+          `}</style>
+          <HeldBranch />
+        </>,
+      );
+
+      await mountWhileHeld();
+      await show();
+      const panel = screen.getByTestId('panel');
+
+      await waitFor(() => {
+        expect(panel).toHaveAttribute('data-open');
+      });
+      expect(panel.getAnimations()).toHaveLength(0);
+
+      const openHeight = `${panel.scrollHeight}px`;
+      // The state exists only while the animation runs, so the listener reads it.
+      const closing = nextEvent(panel, 'animationstart').then((event) => ({
+        animationName: (event as AnimationEvent).animationName,
+        height: panel.style.getPropertyValue('--collapsible-panel-height'),
+      }));
+      const [closingState] = await Promise.all([
+        closing,
+        user.click(screen.getByRole('button', { name: 'Trigger' })),
+      ]);
+      expect(closingState).toEqual({ animationName: 'panel-slide-up', height: openHeight });
+
+      await waitSingleFrame();
+      for (const animation of panel.getAnimations()) {
+        animation.finish();
+      }
+      await waitFor(() => {
+        expect(panel).toHaveAttribute('hidden');
+      });
+    });
+
+    it('gives a closed held mount the shown attributes at its first activation', async () => {
+      async function readAfterMount(heldMount: boolean) {
+        const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
+          () => (
+            <Collapsible.Root>
+              <Collapsible.Trigger>Trigger</Collapsible.Trigger>
+              <Collapsible.Panel class="animation-test-panel" data-testid="panel" hiddenUntilFound>
+                {PANEL_CONTENT}
+              </Collapsible.Panel>
+            </Collapsible.Root>
+          ),
+          { mounted: !heldMount },
+        );
+        const { unmount } = await render(
+          <>
+            <style>{`
+              @keyframes panel-slide-up {
+                from {
+                  height: var(--collapsible-panel-height);
+                }
+
+                to {
+                  height: 0;
+                }
+              }
+
+              .animation-test-panel[data-closed] {
+                overflow: hidden;
+                animation: panel-slide-up 100ms linear;
+              }
+            `}</style>
+            <HeldBranch />
+          </>,
+        );
+        if (heldMount) {
+          await mountWhileHeld();
+          await show();
+        }
+        const panel = screen.getByTestId('panel');
+        const attributes = Object.fromEntries(
+          Array.from(panel.attributes, ({ name, value }) => [name, value]),
+        );
+        unmount();
+        return attributes;
+      }
+
+      const shownMount = await readAfterMount(false);
+      const heldMount = await readAfterMount(true);
+
+      expect(shownMount).not.toHaveProperty('data-starting-style');
+      expect(heldMount).toEqual(shownMount);
     });
 
     it('does not replay open keyframe animations when revealing a panel opened by the user', async () => {

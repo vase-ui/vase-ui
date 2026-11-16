@@ -12,8 +12,9 @@ export interface InternalBackdropProps extends /* @vue-ignore */ HTMLAttributes 
 
 <script setup lang="ts">
 import { autoUpdate } from '@floating-ui/vue';
-import { computed, onActivated, onDeactivated, shallowRef, watch } from 'vue';
+import { computed, shallowRef, watch } from 'vue';
 import type { CSSProperties } from 'vue';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 
 // As in Base UI, an attribute of a consumer wins over the role and the marker. The style of the
 // part replaces a `style` of the consumer.
@@ -47,22 +48,14 @@ const style = computed<CSSProperties>(() => ({
   ...(clipPath.value === undefined ? {} : { 'clip-path': clipPath.value }),
 }));
 
-// `KeepAlive` takes the element of a deactivated backdrop out of the document, and the observers
-// of `autoUpdate` then have nothing to follow.
-const isDeactivated = shallowRef(false);
-
-onDeactivated(() => {
-  isDeactivated.value = true;
-});
-
-onActivated(() => {
-  isDeactivated.value = false;
-});
+// `KeepAlive` takes the element of a held backdrop out of the document, and the observers of
+// `autoUpdate` then have nothing to follow.
+const { isHeld } = useKeepAliveState();
 
 watch(
-  [() => props.cutout, element, isDeactivated],
-  ([cutout, backdrop, deactivated], _previous, onCleanup) => {
-    if (!cutout || !backdrop || deactivated) {
+  [() => props.cutout, element, isHeld],
+  ([cutout, backdrop, held], _previous, onCleanup) => {
+    if (!cutout || !backdrop || held) {
       return;
     }
 

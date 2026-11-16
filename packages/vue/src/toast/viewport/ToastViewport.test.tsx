@@ -11,6 +11,7 @@ import {
   Teleport,
 } from 'vue';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -2331,6 +2332,31 @@ describe('<Toast.Viewport />', () => {
     expect(viewport).toHaveAttribute('data-expanded');
     expect(await fireEvent.keyDown(document.body, { key: 'F6' })).toBe(false);
     expect(viewport).toHaveFocus();
+  });
+
+  it('handles F6 from the first activation after a held mount', async () => {
+    const manager = Toast.createToastManager();
+    // `KeepAlive` holds only the viewport, so the provider stays active and has the toast.
+    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+      <Toast.Viewport data-testid="viewport">
+        <ToastTextList />
+      </Toast.Viewport>
+    ));
+    await render(
+      <Toast.Provider toastManager={manager}>
+        <HeldBranch />
+      </Toast.Provider>,
+    );
+    manager.add({ title: 'toast', timeout: 0 });
+    await flushMicrotasks();
+    await mountWhileHeld();
+
+    expect(await fireEvent.keyDown(document.body, { key: 'F6' })).toBe(true);
+
+    await show();
+
+    expect(await fireEvent.keyDown(document.body, { key: 'F6' })).toBe(false);
+    expect(screen.getByTestId('viewport')).toHaveFocus();
   });
 
   describe('hydration', () => {

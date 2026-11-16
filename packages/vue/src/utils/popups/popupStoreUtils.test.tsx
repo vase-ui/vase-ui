@@ -9,7 +9,7 @@ import {
   shallowRef,
 } from 'vue';
 import type { PropType } from 'vue';
-import { createRenderer, screen } from '#test-utils';
+import { createHeldBranch, createRenderer, screen } from '#test-utils';
 import { NOOP } from '../../common/empty';
 import type { InteractionType } from '../../common/useEnhancedClickHandler';
 import type { HTMLProps } from '../../internals/types';
@@ -486,6 +486,23 @@ describe('useTriggerRegistration', () => {
       expect(store.state.triggerCount).toBe(4);
     });
 
+    it('VUE-22: hides a trigger entry from a held mount until the first activation', async () => {
+      const store = createTestPopupStore();
+      store.set('open', true);
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <RegisteredTrigger id="held" store={store} />
+      ));
+      await render(<HeldBranch />);
+
+      await mountWhileHeld();
+      expect(registeredIds(store)).toEqual([]);
+      expect(store.state.triggerCount).toBe(0);
+
+      await show();
+      expect(registeredIds(store)).toEqual(['held']);
+      expect(store.state.triggerCount).toBe(1);
+    });
+
     it('removes the entry of a deactivated trigger when KeepAlive removes the trigger', async () => {
       const store = createTestPopupStore();
       const Branch = createBranch(store);
@@ -709,6 +726,37 @@ describe('useTriggerDataForwarding', () => {
 
     expect(store.state.payload).toBe('two');
     expect(store.state.activeTriggerElement).toBe(second);
+  });
+
+  it('VUE-22: lets a shown trigger claim the popup before a held trigger activates', async () => {
+    const store = createTestPopupStore();
+    const heldElement = document.createElement('button');
+    const shownElement = document.createElement('button');
+    store.update({ open: true, mounted: true });
+    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+      <TestForwardedTrigger id="held" store={store} element={heldElement} payload="held" />
+    ));
+    const hasShownTrigger = shallowRef(false);
+    await render(() => (
+      <>
+        <HeldBranch />
+        {hasShownTrigger.value ? (
+          <TestForwardedTrigger id="shown" store={store} element={shownElement} payload="shown" />
+        ) : null}
+      </>
+    ));
+
+    await mountWhileHeld();
+    expect(store.state.activeTriggerId).toBe(null);
+
+    hasShownTrigger.value = true;
+    await nextTick();
+    expect(store.state.activeTriggerId).toBe('shown');
+    expect(store.state.payload).toBe('shown');
+
+    await show();
+    expect(store.state.activeTriggerId).toBe('shown');
+    expect(store.state.activeTriggerElement).toBe(shownElement);
   });
 
   describe('for a detached trigger of a handle', () => {

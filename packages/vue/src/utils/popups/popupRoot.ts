@@ -1,8 +1,6 @@
 import {
   computed,
   inject,
-  onActivated,
-  onDeactivated,
   onMounted,
   onScopeDispose,
   provide,
@@ -453,7 +451,7 @@ function usePopupRootTransitions(
 
 /**
  * Keeps the trigger registration and the state of an open popup in step. Call it in `setup` of the
- * root. It does nothing from a deactivation of the root by `KeepAlive` to the next activation.
+ * root. It does nothing while `KeepAlive` holds the root, also at a mount in a held branch.
  *
  * - A popup with no active trigger takes the only registered trigger, unless the open request
  *   named no trigger.
@@ -483,7 +481,7 @@ export function useImplicitActiveTrigger<State extends PopupStoreState<unknown>>
   // The trigger count of the last run while the popup was open, and `null` while it is closed. The
   // open of a popup that has many triggers is thus not a join.
   let previousTriggerCount: number | null = null;
-  const deactivated = shallowRef(false);
+  const { isHeld } = useKeepAliveState();
 
   function run() {
     const state = toRaw(target.state);
@@ -580,19 +578,20 @@ export function useImplicitActiveTrigger<State extends PopupStoreState<unknown>>
     }
   }
 
-  // `KeepAlive` hides the triggers of a deactivated root from each reader of the map, and a run
-  // then would take that for an unmount. The triggers of a deactivated root join again when it
-  // activates.
-  onDeactivated(() => {
-    deactivated.value = true;
-    previousTriggerCount = 0;
-  });
-  onActivated(() => {
-    deactivated.value = false;
-  });
+  // `KeepAlive` hides the triggers of a held root from each reader of the map, and a run then
+  // would take that for an unmount. The triggers of a held root join again when it activates.
+  watch(
+    isHeld,
+    (held) => {
+      if (held) {
+        previousTriggerCount = 0;
+      }
+    },
+    { flush: 'sync' },
+  );
 
   function runWhileActive() {
-    if (!deactivated.value) {
+    if (!isHeld.value) {
       run();
     }
   }
@@ -605,7 +604,7 @@ export function useImplicitActiveTrigger<State extends PopupStoreState<unknown>>
       () => target.select('triggerCount'),
       () => target.select('activeTriggerId'),
       () => target.select('activeTriggerElement'),
-      deactivated,
+      isHeld,
     ],
     runWhileActive,
     { flush: 'post' },

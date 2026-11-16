@@ -16,7 +16,7 @@ export interface ToastViewportProps
 </script>
 
 <script setup lang="ts">
-import { computed, onActivated, onDeactivated, provide, shallowRef, watch } from 'vue';
+import { computed, provide, watch } from 'vue';
 import type { Component } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { mergeCleanups } from '../../common/mergeCleanups';
@@ -25,6 +25,7 @@ import { activeElement, contains, getTarget } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
 import { visuallyHidden } from '../../common/visuallyHidden';
 import type { HTMLProps } from '../../internals/types';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { createFocusGuardElement } from '../../utils/popups/focus/createFocusGuardElement';
 import { useElementSiblings } from '../../utils/popups/focus/useElementSiblings';
@@ -67,15 +68,7 @@ const hasFocusGuards = computed(() => !isEmpty.value && prevFocusElement.value !
 const hasAlerts = computed(() => !focused.value && highPriorityToasts.value.length > 0);
 
 // `KeepAlive` takes the element out of the document, so the listeners wait until it comes back.
-const deactivated = shallowRef(false);
-
-onDeactivated(() => {
-  deactivated.value = true;
-});
-
-onActivated(() => {
-  deactivated.value = false;
-});
+const { isHeld } = useKeepAliveState();
 
 function handleFocusGuard(event: FocusEvent) {
   const { viewport, toasts: currentToasts } = store.state;
@@ -303,9 +296,9 @@ let listenToFocusedFrame = () => {};
 // Window focus is tracked even while empty, so toasts added in the background start paused.
 // `isEmpty` only toggles the F6 and touch listeners.
 watch(
-  [element, isEmpty, deactivated],
-  ([viewport, empty, isDeactivated], _previous, onCleanup) => {
-    if (!viewport || isDeactivated) {
+  [element, isEmpty, isHeld],
+  ([viewport, empty, held], _previous, onCleanup) => {
+    if (!viewport || held) {
       return;
     }
 
@@ -447,9 +440,9 @@ watch(
 // so `mouseleave` never comes. The next `mouseover` outside the viewport is the only sign that the
 // pointer has left.
 watch(
-  [element, expanded, deactivated],
-  ([viewport, isExpanded, isDeactivated], _previous, onCleanup) => {
-    if (!viewport || !isExpanded || isDeactivated) {
+  [element, expanded, isHeld],
+  ([viewport, isExpanded, held], _previous, onCleanup) => {
+    if (!viewport || !isExpanded || held) {
       return;
     }
 

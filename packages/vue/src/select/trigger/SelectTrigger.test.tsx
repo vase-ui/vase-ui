@@ -633,6 +633,49 @@ describe('<Select.Trigger />', () => {
 
       expect(screen.getByTestId('trigger')).toHaveAttribute('aria-expanded', 'true');
     });
+
+    it.each([
+      { name: 'mounted open', initialOpen: true },
+      { name: 'opened while held', initialOpen: false },
+    ])('VUE-5: starts the mouseup guard at activation: $name', async ({ initialOpen }) => {
+      vi.useFakeTimers();
+      try {
+        const open = shallowRef(initialOpen);
+        const onValueChange = vi.fn();
+        const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+          <Select.Root open={open.value} onValueChange={onValueChange}>
+            <Select.Trigger data-testid="trigger" />
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  <Select.Item value="one">One</Select.Item>
+                  <Select.Item value="two" data-testid="two">
+                    Two
+                  </Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        ));
+        await render(<HeldBranch />);
+        await mountWhileHeld();
+        open.value = true;
+        await flushMicrotasks();
+        await vi.advanceTimersByTimeAsync(450);
+        expect(onValueChange).not.toHaveBeenCalled();
+
+        await show();
+        await fireEvent.mouseUp(screen.getByTestId('two'), { button: 0 });
+        expect(onValueChange).not.toHaveBeenCalled();
+
+        await vi.advanceTimersByTimeAsync(450);
+        await fireEvent.mouseUp(screen.getByTestId('two'), { button: 0 });
+        expect(onValueChange).toHaveBeenCalledTimes(1);
+        expect(onValueChange.mock.lastCall?.[0]).toBe('two');
+      } finally {
+        vi.useRealTimers();
+      }
+    });
   });
 
   // The compiled template of the fixture mounts the new trigger before it unmounts the old

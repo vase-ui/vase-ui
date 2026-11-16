@@ -556,6 +556,32 @@ describe('useImplicitActiveTrigger', () => {
     expect(store.state.activeTriggerElement).toBe(inside);
   });
 
+  it('VUE-22: claims the only trigger at the first activation after a held mount', async () => {
+    const store = createTestPopupStore();
+    const element = document.createElement('button');
+    store.set('open', true);
+    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+      <ImplicitActiveTriggerTest store={store} />
+    ));
+    await render(
+      <>
+        <TestTrigger id="trigger" store={store} element={element} />
+        <HeldBranch />
+      </>,
+    );
+
+    await mountWhileHeld();
+    await flushMicrotasks();
+    expect(store.state.activeTriggerId).toBe(null);
+    expect(store.state.activeTriggerElement).toBe(null);
+
+    await show();
+    await flushMicrotasks();
+    expect(store.state.triggerCount).toBe(1);
+    expect(store.state.activeTriggerId).toBe('trigger');
+    expect(store.state.activeTriggerElement).toBe(element);
+  });
+
   it('resets triggerCount when the popup closes', async () => {
     const store = createTestPopupStore();
     const element = document.createElement('button');

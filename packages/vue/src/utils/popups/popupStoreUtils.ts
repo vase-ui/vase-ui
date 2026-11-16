@@ -1,18 +1,9 @@
-import {
-  computed,
-  onActivated,
-  onDeactivated,
-  onMounted,
-  onScopeDispose,
-  shallowRef,
-  toRaw,
-  toValue,
-  watch,
-} from 'vue';
+import { computed, onMounted, onScopeDispose, shallowRef, toRaw, toValue, watch } from 'vue';
 import type { HTMLAttributes, MaybeRefOrGetter, Ref, ShallowRef } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import type { InteractionType } from '../../common/useEnhancedClickHandler';
 import type { HTMLProps } from '../../internals/types';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { FOCUSABLE_ATTRIBUTE } from './constants';
 import { popupStoreSelectors } from './store';
 import type { PopupStoreState, PopupTriggerDataStore } from './store';
@@ -49,17 +40,18 @@ function syncTriggerCount(store: PopupTriggerDataStore<PopupStoreState<unknown>>
  * the DOM update. It removes the element from the map where it added it when the element, the id
  * or the store changes, and when the part unmounts. A server render registers no trigger.
  *
- * `KeepAlive` leaves the entry in its place and hides it from each reader while the part is
- * deactivated. The two hooks only set a flag, because `KeepAlive` runs the `onActivated` hooks of
- * a branch from the last part to the first part. A new entry in that hook would reverse the order.
+ * `KeepAlive` leaves the entry in its place and hides it from each reader while it holds the part.
+ * A trigger that mounts in a held branch adds a hidden entry. The activation only shows the entry,
+ * because `KeepAlive` runs the `onActivated` hooks of a branch from the last part to the first part.
+ * A new entry in that hook would reverse the order.
  *
  * The count of triggers in the state of the store changes only while the popup is open.
  *
  * @param id The id of the trigger. With no id, the trigger does not register.
  * @param store The store of the popup. It can change, for example when a root attaches to a handle.
- * @param onRegister Called after each registration and after `KeepAlive` activates the part. Use it
- * to give the data of the trigger to the store. `activated` is `true` when `KeepAlive` activated the
- * part.
+ * @param onRegister Called after each registration while `KeepAlive` does not hold the part, and
+ * after `KeepAlive` activates the part. Use it to give the data of the trigger to the store.
+ * `activated` is `true` when `KeepAlive` activated the part.
  */
 export function useTriggerRegistration<State extends PopupStoreState<unknown>>(
   id: MaybeRefOrGetter<string | undefined>,
@@ -72,13 +64,7 @@ export function useTriggerRegistration<State extends PopupStoreState<unknown>>(
   ) => void,
 ) {
   const element = shallowRef<Element | null>(null);
-  const deactivated = shallowRef(false);
-  onDeactivated(() => {
-    deactivated.value = true;
-  });
-  onActivated(() => {
-    deactivated.value = false;
-  });
+  const { isHeld } = useKeepAliveState();
 
   let registration:
     { store: PopupTriggerDataStore<State>; id: string; element: Element } | undefined;
@@ -100,9 +86,9 @@ export function useTriggerRegistration<State extends PopupStoreState<unknown>>(
         syncTriggerCount(currentStore);
       });
 
-      triggerElements.setActive(currentId, !deactivated.value);
+      triggerElements.setActive(currentId, !isHeld.value);
       syncTriggerCount(currentStore);
-      if (!deactivated.value) {
+      if (!isHeld.value) {
         onRegister?.(currentElement, currentStore, currentId, false);
       }
     },
@@ -110,15 +96,15 @@ export function useTriggerRegistration<State extends PopupStoreState<unknown>>(
   );
 
   watch(
-    deactivated,
-    (isDeactivated) => {
+    isHeld,
+    (held) => {
       if (registration === undefined) {
         return;
       }
 
-      registration.store.context.triggerElements.setActive(registration.id, !isDeactivated);
+      registration.store.context.triggerElements.setActive(registration.id, !held);
       syncTriggerCount(registration.store);
-      if (!isDeactivated) {
+      if (!held) {
         onRegister?.(registration.element, registration.store, registration.id, true);
       }
     },

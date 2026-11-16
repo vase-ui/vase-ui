@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, defineComponent, shallowRef } from 'vue';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -798,6 +799,33 @@ describe('<ContextMenu.Trigger />', () => {
       });
 
       expect(prevented).toEqual([true, true, true, false]);
+    });
+
+    it('listens for backdrop context menus from the first activation after a held mount', async () => {
+      const probe = createProbe();
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <ContextMenu.Root>
+          <probe.Probe />
+          <ContextMenu.Trigger>Right click me</ContextMenu.Trigger>
+        </ContextMenu.Root>
+      ));
+      const { getByTestId } = await render(
+        <div>
+          <div data-testid="backdrop" />
+          <HeldBranch />
+        </div>,
+      );
+      const listen = vi.spyOn(document, 'addEventListener');
+      onTestFinished(() => listen.mockRestore());
+      await mountWhileHeld();
+      expect(listen.mock.calls.some(([type]) => type === 'contextmenu')).toBe(false);
+      await show();
+      probe.context.backdropRef.value = getByTestId('backdrop') as HTMLDivElement;
+
+      const event = createContextMenuEvent();
+      getByTestId('backdrop').dispatchEvent(event);
+
+      expect(event.defaultPrevented).toBe(true);
     });
   });
 

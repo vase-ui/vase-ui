@@ -1,18 +1,11 @@
-import {
-  computed,
-  onActivated,
-  onDeactivated,
-  onMounted,
-  onScopeDispose,
-  shallowRef,
-  watch,
-} from 'vue';
+import { computed, onMounted, onScopeDispose, shallowRef, watch } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 import { getComputedStyle } from '@floating-ui/utils/dom';
 import { clamp } from '../../common/clamp';
 import { ownerDocument } from '../../common/owner';
 import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
 import { NOOP } from '../../internals/noop';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useDrawerRootContext } from './DrawerRootContext';
 import type { DrawerRootContext, DrawerSnapPoint } from './DrawerRootContext';
 
@@ -124,15 +117,15 @@ export function useDrawerSnapPoints(): UseDrawerSnapPointsReturnValue {
   }
 
   // `KeepAlive` can take the viewport out of the document with the part, and the viewport then has
-  // no layout. The observer thus stops while the part is deactivated, and the part measures again at
-  // the activation.
-  let deactivated = false;
+  // no layout. The observer thus stops while the part is held, and the part measures again at the
+  // activation.
+  const { isHeld } = useKeepAliveState();
   let disconnect = NOOP;
 
   function observeViewport() {
     disconnect();
     disconnect = NOOP;
-    if (deactivated) {
+    if (isHeld.value) {
       return;
     }
 
@@ -151,19 +144,7 @@ export function useDrawerSnapPoints(): UseDrawerSnapPointsReturnValue {
   onMounted(observeViewport);
   watch(viewportElement, observeViewport, { flush: 'post' });
 
-  onDeactivated(() => {
-    deactivated = true;
-    disconnect();
-    disconnect = NOOP;
-  });
-
-  onActivated(() => {
-    if (!deactivated) {
-      return;
-    }
-    deactivated = false;
-    observeViewport();
-  });
+  watch(isHeld, observeViewport, { flush: 'sync' });
 
   onScopeDispose(() => disconnect());
 
