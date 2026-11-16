@@ -25,6 +25,7 @@ export * from './animation';
 export { describeConformance } from './describeConformance';
 export { detachedTriggersConformanceTests } from './detachedTriggersConformanceTests';
 export { dialogRootSharedTests } from './dialogRootSharedTests';
+export { fieldsetDisabledTests } from './fieldsetDisabledTests';
 export { heldMountFormResetTests } from './heldMountFormResetTests';
 export { heldMountListTests } from './heldMountListTests';
 export { hiddenInputSizeTests } from './hiddenInputSizeTests';

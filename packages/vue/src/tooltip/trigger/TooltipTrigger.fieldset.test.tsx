@@ -1,18 +1,18 @@
 import { expect, it } from 'vitest';
 import { shallowRef } from 'vue';
 import { Tooltip } from '@vase-ui/vue/tooltip';
-import { createRenderer, flushMicrotasks, screen } from '#test-utils';
+import { createRenderer, fieldsetDisabledTests, flushMicrotasks, screen } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
-import { fieldsetDisabledTests } from '../../../test/fieldsetDisabledTests';
+
+const { render } = createRenderer();
 
 fieldsetDisabledTests({
+  render,
   part: (props, slots) => <Tooltip.Trigger delay={100} {...props} v-slots={slots} />,
   root: (children) => <Tooltip.Root>{children}</Tooltip.Root>,
   hover: true,
   tooltip: true,
 });
-
-const { render } = createRenderer();
 
 it('VUE-112: reads the element of the render slot instead of the default tag', async () => {
   const native = shallowRef(true);

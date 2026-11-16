@@ -72,7 +72,7 @@ export interface TooltipTriggerProps<Payload = unknown>
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
-import { computed, onDeactivated, onMounted, shallowRef, watch } from 'vue';
+import { computed, onDeactivated, onMounted, shallowRef, useSlots, watch } from 'vue';
 import { closest, contains } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
@@ -150,9 +150,15 @@ onMounted(writeIsInstantPhase);
 watch([store, delayGroup.isInstantPhase], writeIsInstantPhase);
 
 const fieldsetDisabled = useFieldsetDisabled(() => element.value);
-const isButtonDisabled = computed(
-  () => triggerElement.value?.tagName === 'BUTTON' && fieldsetDisabled.value,
+const slots = useSlots();
+// The part has no element in a server render and in the first client render. The default tag
+// then gives the answer, so the server HTML follows `Fieldset.Root`.
+const isNativeButton = computed(() =>
+  triggerElement.value
+    ? triggerElement.value.tagName === 'BUTTON'
+    : props.as === 'button' && !slots.render,
 );
+const isButtonDisabled = computed(() => isNativeButton.value && fieldsetDisabled.value);
 const isDisabled = computed(
   () => props.disabled || store.value.select('disabled') || isButtonDisabled.value,
 );

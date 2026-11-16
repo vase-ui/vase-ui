@@ -5,16 +5,19 @@ import { Button } from '@vase-ui/vue/button';
 import { Collapsible } from '@vase-ui/vue/collapsible';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Drawer } from '@vase-ui/vue/drawer';
+import { Fieldset } from '@vase-ui/vue/fieldset';
 import { Menu } from '@vase-ui/vue/menu';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { Popover } from '@vase-ui/vue/popover';
 import { Tabs } from '@vase-ui/vue/tabs';
 import { Toggle } from '@vase-ui/vue/toggle';
 import { Tooltip } from '@vase-ui/vue/tooltip';
+
+defineProps<{ fieldsetRoot?: boolean }>();
 </script>
 
 <template>
-  <fieldset disabled>
+  <component :is="fieldsetRoot ? Fieldset.Root : 'fieldset'" disabled>
     <Button v-slot="{ state }">{{ state.disabled }}</Button>
     <Toggle v-slot="{ state }">{{ state.disabled }}</Toggle>
     <Accordion.Root>
@@ -57,5 +60,5 @@ import { Tooltip } from '@vase-ui/vue/tooltip';
     <Tooltip.Root>
       <Tooltip.Trigger v-slot="{ state }">{{ state.disabled }}</Tooltip.Trigger>
     </Tooltip.Root>
-  </fieldset>
+  </component>
 </template>

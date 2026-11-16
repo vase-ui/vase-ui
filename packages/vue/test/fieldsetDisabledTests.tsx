@@ -2,7 +2,7 @@ import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import type { VNode, VNodeChild } from 'vue';
-import { createRenderer } from './createRenderer';
+import type { createRenderer } from './createRenderer';
 import { flushMicrotasks } from './flushMicrotasks';
 import { screen } from './queries';
 
@@ -15,6 +15,8 @@ export interface FieldsetButtonTestProps {
 }
 
 export interface FieldsetDisabledTestsConfig {
+  /** Render function returned from `createRenderer`. */
+  render: ReturnType<typeof createRenderer>['render'];
   /** Returns the part with these props and slots. */
   part: (
     props: FieldsetButtonTestProps,
@@ -29,8 +31,8 @@ export interface FieldsetDisabledTestsConfig {
 }
 
 /** Tests the fieldset state at the element of a native button part. */
-export function fieldsetDisabledTests({ part, root, tooltip, hover }: FieldsetDisabledTestsConfig) {
-  const { render } = createRenderer();
+export function fieldsetDisabledTests(config: FieldsetDisabledTestsConfig) {
+  const { render, part, root, tooltip, hover } = config;
 
   function target(props: Partial<FieldsetButtonTestProps> = {}) {
     return part(

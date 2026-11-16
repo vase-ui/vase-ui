@@ -9,6 +9,7 @@ export const disabled = 'data-disabled';
  */
 export const popupOpen = CommonTriggerDataAttributes.popupOpen;
 /**
- * Present when the tooltip is disabled by a prop, its root, or a fieldset around its native button.
+ * Present when the `disabled` prop, a parent `<Tooltip.Root>`, or a fieldset around the native
+ * button disables the tooltip.
  */
 export const triggerDisabled = 'data-trigger-disabled';

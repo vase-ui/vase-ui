@@ -1,7 +1,10 @@
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
-import { fieldsetDisabledTests } from '../../../test/fieldsetDisabledTests';
+import { createRenderer, fieldsetDisabledTests } from '#test-utils';
+
+const { render } = createRenderer();
 
 fieldsetDisabledTests({
+  render,
   part: (props, slots) => (
     <NavigationMenu.Item value={props['data-testid']}>
       <NavigationMenu.Trigger {...props} v-slots={slots} />

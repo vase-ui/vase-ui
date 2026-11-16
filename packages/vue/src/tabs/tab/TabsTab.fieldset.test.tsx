@@ -1,10 +1,12 @@
 import { expect, it, vi } from 'vitest';
 import { shallowRef } from 'vue';
 import { Tabs } from '@vase-ui/vue/tabs';
-import { createRenderer, flushMicrotasks, screen } from '#test-utils';
-import { fieldsetDisabledTests } from '../../../test/fieldsetDisabledTests';
+import { createRenderer, fieldsetDisabledTests, flushMicrotasks, screen } from '#test-utils';
+
+const { render } = createRenderer();
 
 fieldsetDisabledTests({
+  render,
   part: (props, slots) => <Tabs.Tab value={props['data-testid']} {...props} v-slots={slots} />,
   root: (children) => (
     <Tabs.Root defaultValue="other">
@@ -15,8 +17,6 @@ fieldsetDisabledTests({
     </Tabs.Root>
   ),
 });
-
-const { render } = createRenderer();
 
 it('VUE-112: keeps the selected panel when the fieldset becomes disabled', async () => {
   const fieldsetDisabled = shallowRef(false);

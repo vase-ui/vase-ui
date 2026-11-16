@@ -1,7 +1,10 @@
 import { Accordion } from '@vase-ui/vue/accordion';
-import { fieldsetDisabledTests } from '../../../test/fieldsetDisabledTests';
+import { createRenderer, fieldsetDisabledTests } from '#test-utils';
+
+const { render } = createRenderer();
 
 fieldsetDisabledTests({
+  render,
   part: (props, slots) => (
     <Accordion.Item value={props['data-testid']}>
       <Accordion.Header>
