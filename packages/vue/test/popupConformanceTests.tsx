@@ -9,7 +9,7 @@ import { ownerDocument } from '../src/common/owner';
 import { activeElement } from '../src/common/shadowDom';
 import { isJSDOM } from '../src/common/testUtils';
 import { REASONS } from '../src/internals/reasons';
-import { nextAnimationsRead, seekBeforeEnd } from './animation';
+import { nextAnimationsRead, nextEndingStyle, seekBeforeEnd } from './animation';
 import type { createRenderer } from './createRenderer';
 import { fireEvent } from './fireEvent';
 import { flushMicrotasks } from './flushMicrotasks';
@@ -725,14 +725,13 @@ export function popupConformanceTests(config: PopupTestConfig) {
               })}
             </div>,
           );
-          expect(getPopup()).toBeVisible();
+          const popup = getPopup()!;
+          expect(popup).toBeVisible();
 
-          await user.keyboard('[Escape]');
-          await waitFor(() => {
-            expect(getPopup()).toHaveAttribute('data-ending-style');
-          });
+          await nextEndingStyle(popup, { action: () => user.keyboard('[Escape]') });
+          expect(popup).toHaveAttribute('data-ending-style');
           // The part can stop its wait before it reads the animations, so the case reads them.
-          const animations = getPopup()!.getAnimations();
+          const animations = popup.getAnimations();
           const finished = Promise.all(animations.map((animation) => animation.finished));
           seekBeforeEnd(animations, 50);
           await finished;

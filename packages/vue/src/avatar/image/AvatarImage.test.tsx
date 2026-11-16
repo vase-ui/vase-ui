@@ -9,6 +9,7 @@ import {
   flushMicrotasks,
   hydrate,
   isJSDOM,
+  nextEndingStyle,
   renderOnServer,
   screen,
   takeReportedMessages,
@@ -1080,17 +1081,17 @@ describe('<Avatar.Image />', () => {
       });
 
       const { user } = await render(<Test />);
+      const image = screen.getByTestId('image');
 
-      await user.click(screen.getByText('Hide image'));
-
-      await waitFor(() => {
-        expect(screen.getByTestId('image')).toHaveAttribute('data-ending-style');
-      });
+      // The part removes the image when its 200 ms animation ends, so a later query finds no image.
+      // The case holds the image and reads it in the update that gives the ending style.
+      await nextEndingStyle(image, { action: () => user.click(screen.getByText('Hide image')) });
+      expect(image).toHaveAttribute('data-ending-style');
 
       // The status attributes belong to `keepMounted`. In the default mode the element only
       // exists once the image loaded, so it must not pick them up while it animates out.
-      expect(screen.getByTestId('image')).not.toHaveAttribute('data-error');
-      expect(screen.getByTestId('image')).not.toHaveAttribute('data-loading');
+      expect(image).not.toHaveAttribute('data-error');
+      expect(image).not.toHaveAttribute('data-loading');
     });
 
     it('does not apply data-ending-style with keepMounted', async () => {

@@ -15,6 +15,7 @@ import {
   nextEvent,
   renderOnServer,
   screen,
+  seekBeforeEnd,
   takeReportedMessages,
   waitFor,
 } from '#test-utils';
@@ -853,7 +854,7 @@ describe('<Collapsible.Panel />', () => {
 
             .closing-animation-panel[data-closed] {
               overflow: hidden;
-              animation: panel-slide-up 100ms linear;
+              animation: panel-slide-up 100s linear;
             }
           `}</style>
 
@@ -873,32 +874,29 @@ describe('<Collapsible.Panel />', () => {
         expect(panel.style.getPropertyValue('--collapsible-panel-height')).toBe('auto');
       });
 
-      // The size must be in pixels when the animation starts, when the ending style comes and when
-      // the animation ends. A listener records the size at each moment, so the test does not
-      // depend on the time at which the click resolves.
-      const heights: Record<string, string> = {};
-      const recordHeight = (moment: string) => {
-        heights[moment] = panel.style.getPropertyValue('--collapsible-panel-height');
-      };
-      panel.addEventListener('animationstart', () => recordHeight('animationstart'));
-      panel.addEventListener('animationend', () => recordHeight('animationend'));
-      new MutationObserver(() => {
-        if (panel.hasAttribute('data-ending-style')) {
-          recordHeight('data-ending-style');
-        }
-      }).observe(panel, { attributes: true, attributeFilter: ['data-ending-style'] });
+      // Base UI's exit lasts 100 ms. This exit lasts 100 s, so no late frame ends it before the
+      // case reads it.
+      await nextEndingStyle(panel, { action: () => user.click(trigger) });
+      const exitAnimations = panel.getAnimations();
 
-      await user.click(trigger);
+      expect({
+        endingStyle: panel.hasAttribute('data-ending-style'),
+        height: panel.style.getPropertyValue('--collapsible-panel-height'),
+        animations: exitAnimations.length,
+      }).toEqual({ endingStyle: true, height: expect.stringMatching(/px$/), animations: 1 });
+
+      // The size must stay in pixels until the animation ends. A callback of `finished` runs
+      // before the part completes the close.
+      const heightAtEnd = Promise.all(exitAnimations.map((animation) => animation.finished)).then(
+        () => panel.style.getPropertyValue('--collapsible-panel-height'),
+      );
+      seekBeforeEnd(exitAnimations, 50);
+      expect(await heightAtEnd).toMatch(/px$/);
 
       await waitFor(() => {
-        expect(Object.keys(heights)).toHaveLength(3);
+        expect(panel).not.toBeInTheDocument();
       });
-
-      expect(heights).toEqual({
-        animationstart: expect.stringMatching(/px$/),
-        'data-ending-style': expect.stringMatching(/px$/),
-        animationend: expect.stringMatching(/px$/),
-      });
+      expect(screen.queryByTestId('panel')).toBe(null);
     });
 
     it('still animates on reopen after being initially open when only open keyframes are defined', async () => {
