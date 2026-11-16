@@ -1,0 +1,100 @@
+import { computed, onMounted, shallowRef, toValue, watch } from 'vue';
+import type { ComputedRef, MaybeRefOrGetter } from 'vue';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
+import { useFieldsetRootContext } from './FieldsetRootContext';
+
+interface FieldsetObserver {
+  observer: MutationObserver;
+  callbacks: Set<() => void>;
+}
+
+// The map is in the module, so each copy of the library has its own observers.
+const fieldsetObservers = new WeakMap<Node, FieldsetObserver>();
+
+// HTML has no event for a change of the disabled state of a fieldset. All callbacks of one root
+// node share one observer. A new first `<legend>` and a move of the element also change the state.
+function observeFieldsets(root: Node, callback: () => void): () => void {
+  let fieldsetObserver = fieldsetObservers.get(root);
+
+  if (!fieldsetObserver) {
+    const callbacks = new Set<() => void>();
+    const observer = new MutationObserver(() => {
+      callbacks.forEach((run) => run());
+    });
+    observer.observe(root, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['disabled'],
+    });
+    fieldsetObserver = { observer, callbacks };
+    fieldsetObservers.set(root, fieldsetObserver);
+  }
+
+  const { observer, callbacks } = fieldsetObserver;
+  callbacks.add(callback);
+
+  return () => {
+    callbacks.delete(callback);
+    if (callbacks.size === 0) {
+      observer.disconnect();
+      fieldsetObservers.delete(root);
+    }
+  };
+}
+
+/**
+ * Whether HTML disables a form control at the place of `element`. A `<fieldset disabled>` disables
+ * each control in it, except a control in its first `<legend>` child.
+ * https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#concept-fe-disabled
+ */
+export function isInDisabledFieldset(element: Element): boolean {
+  for (
+    let fieldset = element.parentElement?.closest('fieldset');
+    fieldset;
+    fieldset = fieldset.parentElement?.closest('fieldset')
+  ) {
+    if (fieldset.disabled && !fieldset.querySelector(':scope > legend')?.contains(element)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Whether a fieldset disables the part of `element`: `Fieldset.Root` with `disabled`, or a native
+ * `<fieldset disabled>` as HTML says. Call it in `setup`. The part knows a native fieldset only
+ * after its mount, so the server HTML follows `Fieldset.Root` only.
+ */
+export function useFieldsetDisabled(
+  element: MaybeRefOrGetter<Element | null | undefined>,
+): ComputedRef<boolean> {
+  const fieldset = useFieldsetRootContext(true);
+  const isInDisabled = shallowRef(false);
+  // `KeepAlive` moves a held part into a detached element, which is its root node until the next
+  // activation.
+  const { isHeld, shown } = useKeepAliveState();
+
+  // A part declares its element after it calls this composable, and a `watch` reads its sources at
+  // once. The `watch` thus starts at the mount.
+  onMounted(() => {
+    watch(
+      [() => toValue(element), isHeld, shown],
+      ([partElement, held], _previous, onCleanup) => {
+        if (!partElement || held) {
+          return;
+        }
+
+        const update = () => {
+          isInDisabled.value = isInDisabledFieldset(partElement);
+        };
+
+        update();
+        onCleanup(observeFieldsets(partElement.getRootNode(), update));
+      },
+      { flush: 'post', immediate: true },
+    );
+  });
+
+  return computed(() => (fieldset?.disabled.value ?? false) || isInDisabled.value);
+}
