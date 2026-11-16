@@ -105,6 +105,11 @@ export namespace ScrubArea {
  *
  * This component uses the [Pointer Lock API](https://developer.mozilla.org/en-US/docs/Web/API/Pointer_Lock_API), which may prompt the browser to display a related notification. It is disabled
  * in Safari to avoid a layout shift that this notification causes there.
+ *
+ * The part renders its element in a `Teleport`. The element is in the shadow root that holds the
+ * scrub area, or else in `<body>`. Vue gives the scope id of `<style scoped>`, `v-show` and a custom
+ * directive only to a root element, so they do not reach this element. Put them on your element in
+ * the `#render` slot, or use a CSS module or a `style` binding.
  */
 export const ScrubAreaCursor: typeof NumberFieldScrubAreaCursor = NumberFieldScrubAreaCursor;
 export namespace ScrubAreaCursor {

@@ -82,6 +82,7 @@ let didMove = false;
 let pointerDownTarget: EventTarget | null = null;
 let nativeClickReceived = false;
 let virtualCursorCoords = { x: 0, y: 0 };
+let containingBlock = { left: 0, top: 0, scaleX: 1, scaleY: 1 };
 
 const scrubAreaCursorRef = shallowRef<HTMLSpanElement | null>(null);
 
@@ -92,11 +93,31 @@ const isTouchInput = shallowRef(false);
 const isPointerLockDenied = shallowRef(false);
 const isScrubbing = shallowRef(false);
 
+// A fixed element has the viewport as its containing block, unless an ancestor has a transform, a
+// filter, containment or a similar property. The host of a shadow root can be below such an
+// ancestor. A fixed box at `0, 0` shows the place and the scale of that block in the viewport.
+// `all: initial` keeps the styles of the page off the box.
+function readContainingBlock(virtualCursor: HTMLSpanElement) {
+  const probe = ownerDocument(virtualCursor).createElement('div');
+  probe.style.cssText = 'all:initial;position:fixed;top:0;left:0;width:100px;height:100px';
+  virtualCursor.before(probe);
+  const rect = probe.getBoundingClientRect();
+  probe.remove();
+  return { left: rect.left, top: rect.top, scaleX: rect.width / 100, scaleY: rect.height / 100 };
+}
+
 function updateCursorTransform(virtualCursor: HTMLSpanElement, x: number, y: number) {
   // Invert the visual viewport scale so the cursor matches the OS cursor, which doesn't
   // scale with the content on pinch-zoom.
   const scale = ownerWindow(virtualCursor).visualViewport?.scale ?? 1;
-  virtualCursor.style.transform = `translate3d(${x}px,${y}px,0) scale(${1 / scale})`;
+  // `x` and `y` are in the viewport. A block with a scale changes the size of the cursor, so the
+  // center of the cursor converts to the block, not its corner.
+  const { left, top, scaleX, scaleY } = containingBlock;
+  const halfWidth = virtualCursor.offsetWidth / 2;
+  const halfHeight = virtualCursor.offsetHeight / 2;
+  const blockX = (x + halfWidth - left) / scaleX - halfWidth;
+  const blockY = (y + halfHeight - top) / scaleY - halfHeight;
+  virtualCursor.style.transform = `translate3d(${blockX}px,${blockY}px,0) scale(${1 / scale})`;
 }
 
 function onScrub({ movementX, movementY }: PointerEvent) {
@@ -152,6 +173,8 @@ async function onScrubbingChange(scrubbingValue: boolean, { clientX, clientY }: 
   if (!virtualCursor) {
     return;
   }
+
+  containingBlock = readContainingBlock(virtualCursor);
 
   const initialCoords = {
     x: clientX - virtualCursor.offsetWidth / 2,
@@ -365,6 +388,7 @@ provide(NumberFieldScrubAreaContext, {
   isTouchInput,
   isPointerLockDenied,
   scrubAreaCursorRef,
+  scrubAreaElement: element,
 });
 
 defineExpose({ element });
