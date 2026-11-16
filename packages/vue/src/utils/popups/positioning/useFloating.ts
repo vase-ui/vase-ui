@@ -129,8 +129,8 @@ export function useVaseUIFloating(options: UseFloatingOptions): PopupPositioning
     }
   }
 
-  // A server does not call `onBeforeMount`, so a server render writes nothing. A shown popup
-  // publishes before child setup. A popup that mounts held publishes at the activation.
+  // A server does not call `onBeforeMount`, so a server render writes nothing. The hook runs before
+  // the `setup` of the parts below. A popup that mounts in a held branch writes at the activation.
   onBeforeMount(publish);
   watch([rootStore, () => tree.value?.nodesRef.value, () => toValue(options.nodeId)], publish);
   onScopeDispose(() => {
