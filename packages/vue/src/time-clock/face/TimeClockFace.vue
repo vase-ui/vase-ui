@@ -41,6 +41,7 @@ import { computed, nextTick, onScopeDispose, provide, shallowRef } from 'vue';
 import type { Component } from 'vue';
 import { formatNumber } from '../../common/formatNumber';
 import { visuallyHiddenInput } from '../../common/visuallyHidden';
+import { givenIdReference } from '../../internals/blankIdReference';
 import { givenName } from '../../internals/blankName';
 import {
   ARROW_DOWN,
@@ -142,7 +143,7 @@ function inputProps() {
       'aria-label':
         givenName(props.ariaLabel) ?? (ariaLabelledby == null ? label.value : undefined),
       'aria-labelledby': ariaLabelledby,
-      'aria-describedby': props.ariaDescribedby,
+      'aria-describedby': givenIdReference(props.ariaDescribedby),
       'aria-readonly': root.readOnly.value ? 'true' : undefined,
       'aria-valuenow': root.selectedNumber.value.value,
       'aria-valuetext':
