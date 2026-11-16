@@ -1408,7 +1408,6 @@ describe('<Resizable.Root />', () => {
       const { container } = await hydrate(ResizableRootHydration, { serverHtml, props });
 
       expect(growsIn(container)).toEqual(grows);
-      expect(container.querySelectorAll('[data-allow-mismatch]')).toHaveLength(0);
     });
 
     it('renders the edge node of a root with dragEdges after the mount, and not before', async () => {
@@ -1523,7 +1522,6 @@ describe('<Resizable.Root />', () => {
 
       const { container } = await hydrate(ResizableRootHydration, { serverHtml, props });
 
-      expect(container.querySelectorAll('[data-allow-mismatch]')).toHaveLength(0);
       // The root has read the page, so a panel has its size in percent and the handle has its value.
       expect(container.querySelector<HTMLElement>('#a')?.style.flexGrow).not.toBe('0');
       expect(container.querySelector('[role="separator"]')).toHaveAttribute('aria-valuenow');

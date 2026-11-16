@@ -95,7 +95,7 @@ import {
   watch,
 } from 'vue';
 import type { Component, CSSProperties } from 'vue';
-import { useAriaAfterHydration, useIsHydrating } from '../../common/hydration';
+import { useAriaAfterHydration, useIsHydrating, useServerElement } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
 import { formatNumber } from '../../common/formatNumber';
 import { activeElement } from '../../common/shadowDom';
@@ -164,10 +164,10 @@ const pivot = computed(() => {
 const isFocusable = computed(() => !isDisabled.value && pivot.value >= 0);
 // While the page hydrates, the handle can render before the panel after it registers. Vue compares
 // `tabindex` and `style`, so the server HTML and that render give each handle that is not disabled
-// its tab stop and a hit area that takes presses. That render also gives no end attribute. In a
-// client-only mount, the root reads the layout in `onMounted`, before the next render, so the
-// browser computes the style of that render. With both end attributes in it, a CSS transition for
-// the state of a handle that cannot move would start on each handle.
+// its tab stop and a hit area that takes presses. The first render of a client-only mount gives no
+// end attribute. The root reads the layout in `onMounted`, before the next render, so the browser
+// computes the style of that render. With both end attributes in it, a CSS transition for the
+// state of a handle that cannot move would start on each handle.
 const hasTabStop = computed(() => isFocusable.value || (hydrating.value && !isDisabled.value));
 const primary = computed(() =>
   pivot.value < 0
@@ -227,7 +227,17 @@ const valueAttributes = computed(() => {
   };
 });
 
+// While Vue hydrates the handle, the layout does not know the panel after it. The ends then come
+// from the server HTML, which has the layout of all the panels.
+const serverElement = useServerElement();
 const ends = computed(() => {
+  const server = serverElement();
+  if (server) {
+    return {
+      atMin: server.hasAttribute(ResizableHandleDataAttributes.atMin),
+      atMax: server.hasAttribute(ResizableHandleDataAttributes.atMax),
+    };
+  }
   if (isDisabled.value) {
     return { atMin: false, atMax: false };
   }
