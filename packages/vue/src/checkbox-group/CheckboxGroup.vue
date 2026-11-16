@@ -64,13 +64,14 @@ import { createChangeEventDetails } from '../internals/createBaseUIEventDetails'
 import { useRegisterFieldControl } from '../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../internals/field-root-context';
 import { useFormContext } from '../internals/form-context';
+import { given } from '../internals/givenAttributes';
 import {
   useControlLabelId,
   useLabelableContext,
   useLabelableId,
 } from '../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../internals/types';
-import { givenId, useVaseUiId } from '../internals/useBaseUiId';
+import { useVaseUiId } from '../internals/useBaseUiId';
 import { useRenderElement } from '../internals/useRenderElement';
 import { useValueChanged } from '../internals/useValueChanged';
 import { CheckboxGroupContext } from './CheckboxGroupContext';
@@ -259,7 +260,11 @@ const { element, elementProps } = useRenderElement('div', props, {
   state,
   stateAttributesMapping: fieldValidityMapping,
   props: (attrs) => [
-    { id: givenId(props.id), role: 'group', 'aria-labelledby': ariaAfterHydration(labelId.value) },
+    {
+      id: given('id', props.id),
+      role: 'group',
+      'aria-labelledby': ariaAfterHydration(labelId.value),
+    },
     attrs,
     getDescriptionProps,
     (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),

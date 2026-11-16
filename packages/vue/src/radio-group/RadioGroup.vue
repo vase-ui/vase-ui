@@ -83,9 +83,10 @@ import { fieldValidityMapping } from '../internals/field-constants/constants';
 import { useRegisterFieldControl } from '../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../internals/field-root-context';
 import { useFormContext } from '../internals/form-context';
+import { given } from '../internals/givenAttributes';
 import { useDeferredServerRender, useLabelableContext } from '../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../internals/types';
-import { givenId, useVaseUiId } from '../internals/useBaseUiId';
+import { useVaseUiId } from '../internals/useBaseUiId';
 import { useFormRestore } from '../internals/useFormRestore';
 import { useRenderElement } from '../internals/useRenderElement';
 import { useValueChanged } from '../internals/useValueChanged';
@@ -361,7 +362,7 @@ const { element, elementProps } = useRenderElement('div', props, {
   props: (attrs) => [
     composite.props,
     {
-      id: givenId(props.id),
+      id: given('id', props.id),
       role: 'radiogroup',
       'aria-required': props.required || undefined,
       'aria-disabled': isDisabled.value || undefined,

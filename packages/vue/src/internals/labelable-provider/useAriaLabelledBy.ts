@@ -1,7 +1,7 @@
 import { computed, shallowRef, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { ownerWindow } from '../../common/owner';
-import { givenName } from '../blankName';
+import { given } from '../givenAttributes';
 import { useVaseUiId } from '../useBaseUiId';
 import { useKeepAliveState } from '../useKeepAliveState';
 
@@ -37,9 +37,9 @@ export function useAriaLabelledBy(
   });
 
   // A non-blank `aria-label` wins over any associated label, as it does on native inputs.
-  const hasAriaLabel = () => Boolean(toValue(ariaLabel)?.trim());
+  const hasAriaLabel = () => given('aria-label', toValue(ariaLabel)) != null;
 
-  const explicitId = () => givenName(toValue(explicitAriaLabelledBy));
+  const explicitId = () => given('aria-labelledby', toValue(explicitAriaLabelledBy));
 
   const ariaLabelledBy = computed(() => {
     const implicitLabelId = hasAriaLabel() ? undefined : toValue(labelId);
