@@ -905,6 +905,8 @@ export interface DetachedTriggersTestConfig {
   Close?: AnyComponent;
   /**
    * Props applied to every trigger, e.g. `{ href: '#', delay: 0 }`.
+   * Do not give `pointer-events: none`: the suite dispatches the hover events, and `test/setup.ts`
+   * moves the real pointer off the page after a test that put it there.
    */
   triggerProps?: Record<string, unknown>;
   /**
