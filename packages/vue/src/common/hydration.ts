@@ -35,18 +35,23 @@ export function useIsHydrating(): ComputedRef<boolean> {
 }
 
 /**
- * Gives the function that a part calls for each `aria-*` value that a later part gives, such as the
- * id of a label after the part. The function gives `null` while Vue hydrates the part from server
- * HTML. On a server, in a client-only mount and after the mount, it gives the value.
+ * Gives the function that a part calls for each `aria-*` value whose first client render can differ
+ * from the server HTML, such as the id of a label after the part, or a date that `Intl` formats.
+ * The function gives `null` while Vue hydrates the part from server HTML. On a server, in a
+ * client-only mount and after the mount, it gives the value.
  *
  * Vue does not patch an `aria-*` attribute while it hydrates, so the element keeps the value of the
  * server HTML. The first client render does not know a later part yet. When the page removes or
  * changes that part at the mount, the render after the mount can give the value of the first
- * client render. Vue then writes nothing, and the element keeps the value of the server HTML. With
- * `null` in the first client render, the render after the mount always writes its value.
+ * client render. Vue then writes nothing, and the element keeps the value of the server HTML. A
+ * date that `Intl` formats can keep the text of the server in the same way. The server and the
+ * browser can have other `Intl` data. With `null` in the first client render, the render after the
+ * mount always writes its value.
  *
- * Give the function only `aria-*` values. Vue compares other attributes, such as `id` and
- * `tabindex`, while it hydrates, and it warns when they differ.
+ * Give the function only `aria-*` values, or the value of an attribute that the element allows to
+ * differ with `data-allow-mismatch` and the category `attribute`, such as the `abbr` of
+ * `Calendar.Weekday`. Vue compares other attributes, such as `id` and `tabindex`, while it
+ * hydrates, and it warns when they differ.
  */
 export function useAriaAfterHydration(): <Value>(value: Value) => Value | null {
   if (getCurrentInstance()?.vnode.el == null) {

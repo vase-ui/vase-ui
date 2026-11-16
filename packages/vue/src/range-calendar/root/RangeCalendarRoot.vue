@@ -61,6 +61,7 @@ export type RangeCalendarRootChangeEventDetails = RangeChangeEventDetails;
 
 <script setup lang="ts" generic="Value extends DateValue = Temporal.PlainDate">
 import { computed, provide } from 'vue';
+import { useAriaAfterHydration } from '../../common/hydration';
 import { useCalendarRoot } from '../../internals/date-time/calendar/useCalendarRoot';
 import { useRangeSelection } from '../../internals/date-time/calendar/rangeSelection';
 import { assertTemporal } from '../../internals/date-time/temporal';
@@ -149,6 +150,8 @@ const rootState = computed<RangeCalendarRootState>(() => ({
 provide(CalendarRootContext, { ...controller, state });
 provide(RangeCalendarRootContext, selection);
 
+const ariaAfterHydration = useAriaAfterHydration();
+
 const { element, elementProps } = useRenderElement('div', props, {
   state: rootState,
   stateAttributesMapping: calendarRootStateAttributesMapping,
@@ -157,7 +160,9 @@ const { element, elementProps } = useRenderElement('div', props, {
       role: 'group',
       // The label that the consumer gives replaces the name of the month. An `aria-labelledby` of
       // `null` gives no label, so the root keeps the name of the month.
-      'aria-label': attrs['aria-labelledby'] == null ? controller.label.value : undefined,
+      'aria-label': ariaAfterHydration(
+        attrs['aria-labelledby'] == null ? controller.label.value : undefined,
+      ),
       ...hydrationAttributes(),
     },
     attrs,

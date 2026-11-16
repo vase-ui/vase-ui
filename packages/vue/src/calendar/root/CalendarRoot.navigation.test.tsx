@@ -6,6 +6,7 @@ import {
   mockBrowserToday,
   renderOnServer,
   screen,
+  setAttributeInHtml,
   takeReportedMessages,
   waitFor,
 } from '#test-utils';
@@ -571,25 +572,8 @@ describe('<Calendar.Root /> pages', () => {
   describe('the server render', () => {
     const file = 'src/calendar/root/CalendarNavigationHydration.test.vue';
     const base = { today: '2026-11-14' };
-
-    // The text of a range depends on the data of `Intl`, and Node and each browser have other data.
-    // Vue does not patch a label, so a case with a range gives the server HTML the range of the
-    // browser. The case then tests the page, and not the data of Node.
-    function withBrowserRange(
-      serverHtml: string,
-      range: { from: string; to: string },
-      options: Intl.DateTimeFormatOptions,
-    ) {
-      const serverRange = new DOMParser()
-        .parseFromString(serverHtml, 'text/html')
-        .querySelector('[role="group"]')!
-        .getAttribute('aria-label')!;
-      const browserRange = new Intl.DateTimeFormat('en-US', {
-        timeZone: 'UTC',
-        ...options,
-      }).formatRange(Date.parse(range.from), Date.parse(range.to));
-      return serverHtml.replaceAll(serverRange, browserRange);
-    }
+    const fieldName = (field: 'month' | 'year') =>
+      new Intl.DisplayNames('en-US', { type: 'dateTimeField' }).of(field)!;
 
     it.each([
       { name: 'fixed weeks and week numbers', props: { fixedWeeks: true, weekNumbers: true } },
@@ -602,6 +586,8 @@ describe('<Calendar.Root /> pages', () => {
         name: 'a footer and a button at its limit',
         props: { footer: 'A day', maxDate: '2026-11-30' },
       },
+      { name: 'two months with outside days', props: { numberOfMonths: 2, showOutsideDays: true } },
+      { name: 'a page of two weeks', props: { duration: 'weeks:2' } },
     ])('hydrates with $name with no warning and no difference', async ({ props }) => {
       const serverHtml = await renderOnServer(file, { ...base, ...props });
 
@@ -610,24 +596,37 @@ describe('<Calendar.Root /> pages', () => {
 
     it.each([
       {
-        name: 'two months with outside days',
-        props: { numberOfMonths: 2, showOutsideDays: true },
-        range: { from: '2026-11-01', to: '2026-12-01' },
-        options: { month: 'long', year: 'numeric' } as Intl.DateTimeFormatOptions,
+        name: 'the month select',
+        selector: '[data-testid="month-select"]',
+        label: fieldName('month'),
       },
       {
-        name: 'a page of two weeks',
-        props: { duration: 'weeks:2' },
-        range: { from: '2026-11-08', to: '2026-11-21' },
-        options: { month: 'long', day: 'numeric', year: 'numeric' } as Intl.DateTimeFormatOptions,
+        name: 'the year select',
+        selector: '[data-testid="year-select"]',
+        label: fieldName('year'),
+      },
+      {
+        name: 'a week number',
+        selector: 'th[scope="row"]',
+        label: `Week ${new Intl.NumberFormat('en-US').format(45)}`,
       },
     ])(
-      'hydrates with $name with no warning and no difference',
-      async ({ props, range, options }) => {
-        const all = { ...base, ...props };
-        const serverHtml = withBrowserRange(await renderOnServer(file, all), range, options);
+      'gives $name the aria-label of the browser when the server wrote another text',
+      async ({ selector, label }) => {
+        const all = { ...base, selects: true, weekNumbers: true };
+        const serverHtml = setAttributeInHtml(
+          await renderOnServer(file, all),
+          selector,
+          'aria-label',
+          'other',
+        );
 
-        await hydrate(CalendarNavigationHydration, { serverHtml, props: all });
+        const { container } = await hydrate(CalendarNavigationHydration, {
+          serverHtml,
+          props: all,
+        });
+
+        expect(container.querySelector(selector)).toHaveAttribute('aria-label', label);
       },
     );
 

@@ -8,6 +8,7 @@ import {
   mockBrowserToday,
   renderOnServer,
   screen,
+  setAttributeInHtml,
   waitFor,
 } from '#test-utils';
 import CalendarAnatomy from './CalendarAnatomy.test.vue';
@@ -474,6 +475,54 @@ describe('<Calendar.Root /> state', () => {
 
       await hydrate(CalendarRootHydration, { serverHtml, props });
     });
+
+    // A server whose `Intl` data differs writes other names. The part then writes the name of the
+    // browser after the mount.
+    it.each([
+      {
+        name: 'the root',
+        selector: '[role="group"]',
+        attribute: 'aria-label',
+        iso: '2026-11-01',
+        options: { month: 'long', year: 'numeric' },
+      },
+      {
+        name: 'the grid',
+        selector: '[role="grid"]',
+        attribute: 'aria-label',
+        iso: '2026-11-01',
+        options: { month: 'long', year: 'numeric' },
+      },
+      {
+        name: 'a weekday',
+        selector: 'th[scope="col"]',
+        attribute: 'abbr',
+        iso: '2026-11-01',
+        options: { weekday: 'long' },
+      },
+      {
+        name: 'a day button',
+        selector: '[data-date="2026-11-14"] button',
+        attribute: 'aria-label',
+        iso: '2026-11-14',
+        options: { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' },
+      },
+    ] as const)(
+      'gives $name the $attribute of the browser when the server wrote another text',
+      async ({ selector, attribute, iso, options }) => {
+        const props = { today: '2026-11-14' };
+        const serverHtml = setAttributeInHtml(
+          await renderOnServer(file, props),
+          selector,
+          attribute,
+          'other',
+        );
+
+        const { container } = await hydrate(CalendarRootHydration, { serverHtml, props });
+
+        expect(container.querySelector(selector)).toHaveAttribute(attribute, format(options, iso));
+      },
+    );
 
     it('hydrates a tab stop that the server put on another day', async () => {
       const serverHtml = await renderOnServer(file, { today: '2026-11-14' });

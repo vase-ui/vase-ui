@@ -114,6 +114,7 @@ export type CalendarRootView = CalendarView;
   "
 >
 import { computed, provide } from 'vue';
+import { useAriaAfterHydration } from '../../common/hydration';
 import { useDaySelection } from '../../internals/date-time/calendar/daySelection';
 import { useCalendarRoot } from '../../internals/date-time/calendar/useCalendarRoot';
 import { assertTemporal, isKind } from '../../internals/date-time/temporal';
@@ -218,6 +219,8 @@ const rootState = computed<CalendarRootState>(() => ({
 
 provide(CalendarRootContext, { ...controller, state });
 
+const ariaAfterHydration = useAriaAfterHydration();
+
 const { element, elementProps } = useRenderElement('div', props, {
   state: rootState,
   stateAttributesMapping: calendarRootStateAttributesMapping,
@@ -226,7 +229,9 @@ const { element, elementProps } = useRenderElement('div', props, {
       role: 'group',
       // The label that the consumer gives replaces the name of the month. An `aria-labelledby` of
       // `null` gives no label, so the root keeps the name of the month (VUE-103).
-      'aria-label': attrs['aria-labelledby'] == null ? controller.label.value : undefined,
+      'aria-label': ariaAfterHydration(
+        attrs['aria-labelledby'] == null ? controller.label.value : undefined,
+      ),
       ...hydrationAttributes(),
     },
     attrs,
