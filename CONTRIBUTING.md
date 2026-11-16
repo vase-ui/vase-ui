@@ -664,8 +664,8 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - Before the mount, the registered id is the id that the part binds. A server has no element, so the server HTML names that id. From the mount on, the registered id is the `id` that the element has now, and it follows each change (`VUE-118`, `VUE-119`, `VUE-121`). Base UI registers the id that the part binds, so a `render` element with another `id` leaves a reference that names no element.
 - A part has no registered id while `getId` gives `undefined`, and while `KeepAlive` holds the part. From the mount on, it also has none while it has no element, and while its element has an empty `id`. No part names it then.
 - `useReferencedId(getId, element)` gives the same id with no registration. `useRegisteredLabelId` reads it, because a root takes one id and not a getter.
-- A part that names another part with no registry reads the id with `useReferencedId`. `NumberField.Root` gives the steppers the id of the input in this way, and `Resizable.Panel` gives `Resizable.Handle` its id.
-- A reference that the server HTML does not have reads the `id` of the element with `useElementId`. The parent checkbox of a group and the owner element of a portal do this (`VUE-124`).
+- A part that names another part with no id registry reads the id with `useReferencedId`. `NumberField.Root` gives the steppers the id of the input in this way, and `Resizable.Panel` gives `Resizable.Handle` its id.
+- A reference that the server HTML does not have reads the `id` of the element with `useElementId`. The parent checkbox of a group and the owner element of a portal do this (`VUE-124`). A store copies the `id` of an element that it holds, as [Popup store](#popup-store) says.
 - No reference reads an `id` in `onMounted` or `onUpdated`. A component in a `#render` slot can change the `id` in a render of its own, and the hooks of the part do not run then.
 
 ## TypeScript
