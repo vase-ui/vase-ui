@@ -176,6 +176,33 @@ describe('<TimePicker.Root />', () => {
       });
     });
 
+    // A key moves the tab stop of the column, and the tab stop stays there while the popup is hidden.
+    it('goes to the selected hour of a column each time that a popup that stays mounted opens', async () => {
+      const { user } = await renderPicker({
+        columns: true,
+        defaultValue: time('15:30'),
+        keepMounted: true,
+      });
+
+      await open(user);
+      await waitFor(() => {
+        expect(columnItem('hour-column', '3')).toHaveFocus();
+      });
+      await user.keyboard('{ArrowDown}');
+      await waitFor(() => {
+        expect(columnItem('hour-column', '4')).toHaveFocus();
+      });
+      await user.keyboard('{Escape}');
+      await waitFor(() => {
+        expect(screen.getByTestId('trigger')).toHaveFocus();
+      });
+      await open(user);
+
+      await waitFor(() => {
+        expect(columnItem('hour-column', '3')).toHaveFocus();
+      });
+    });
+
     it('goes to the selected hour of the first column, and not to the day period column after it', async () => {
       const { user } = await renderPicker({ columns: true, defaultValue: time('15:30') });
 
