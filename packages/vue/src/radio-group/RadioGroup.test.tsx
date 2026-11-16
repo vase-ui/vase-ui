@@ -4240,15 +4240,20 @@ describe('<RadioGroup />', () => {
   });
 
   describe('VUE-113: the tab stop of a radio that becomes disabled', () => {
-    function renderGroup(disabled: () => string[]) {
+    function renderGroup(
+      disabled: () => string[],
+      options: { defaultValue?: string; nativeButton?: boolean } = {},
+    ) {
       return defineComponent(() => () => (
         <div>
           <button type="button" data-testid="before" />
-          <RadioGroup>
+          <RadioGroup defaultValue={options.defaultValue}>
             {['a', 'b', 'c'].map((value) => (
               <Radio.Root
                 key={value}
                 value={value}
+                nativeButton={options.nativeButton}
+                as={options.nativeButton ? 'button' : undefined}
                 data-testid={value}
                 disabled={disabled().includes(value)}
               />
@@ -4288,5 +4293,25 @@ describe('<RadioGroup />', () => {
 
       expect(screen.getByTestId('b')).toHaveFocus();
     });
+
+    // A disabled native button cannot get focus, so the checked radio does not keep the tab stop.
+    it.each([
+      { name: 'is disabled at the mount', disabledAtMount: true },
+      { name: 'becomes disabled', disabledAtMount: false },
+    ])(
+      'moves the tab stop off a checked native button radio that $name',
+      async ({ disabledAtMount }) => {
+        const disabled = shallowRef<string[]>(disabledAtMount ? ['b'] : []);
+        const Group = renderGroup(() => disabled.value, { defaultValue: 'b', nativeButton: true });
+        await render(<Group />);
+
+        disabled.value = ['b'];
+        await flushMicrotasks();
+        screen.getByTestId('before').focus();
+        await userEvent.keyboard('{Tab}');
+
+        expect(screen.getByTestId('a')).toHaveFocus();
+      },
+    );
   });
 });

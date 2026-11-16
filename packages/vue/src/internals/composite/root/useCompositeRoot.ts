@@ -151,6 +151,10 @@ export function useCompositeRoot<Metadata>(
     }
 
     lastActiveItem = readActiveItem(elementsRef.value).item;
+    // The first map also starts the search. Base UI keeps the tab stop on an active item that
+    // cannot get focus, such as a checked radio that is a disabled native button. The Tab key then
+    // skips the composite.
+    moveTabStopToActiveItem();
 
     scrollIntoViewIfNeeded(rootElement, activeItem, direction.value, getOrientation());
   }
@@ -198,7 +202,7 @@ export function useCompositeRoot<Metadata>(
 
     const activeItem = readActiveItem(elements);
     // Only another active item is a change. An active item that becomes disabled keeps the tab
-    // stop, as a disabled active item does at the first map.
+    // stop while it can get focus, as at the first map.
     const hasChanged = activeItem.item !== lastActiveItem;
     // An active item that leaves the list is a removal, and `onMapChange` has already moved the
     // tab stop for it, as in Base UI.
@@ -223,9 +227,9 @@ export function useCompositeRoot<Metadata>(
     moveTabStopOffSkippedItem(elements, activeItem.index);
   }
 
-  // An item that the keys skip must not be the entry point, as at the first map. The active item
-  // is the exception while it can get focus: the Tab key then enters on a checked radio that is
-  // disabled, as at the first map and as in Base UI.
+  // An item that the keys skip must not be the entry point. The active item is the exception while
+  // it can get focus. The Tab key then enters a Radio Group on its checked radio also when that
+  // radio is disabled, as in Base UI.
   function moveTabStopOffSkippedItem(
     elements: readonly (HTMLElement | null)[],
     activeIndex: number,
