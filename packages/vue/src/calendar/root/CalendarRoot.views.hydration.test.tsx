@@ -106,12 +106,7 @@ describe('<Calendar.Root /> views hydration', () => {
       name: 'month',
       view: 'month' as const,
       // A month cell has the month and its year as its name.
-      expected: (day: Temporal.PlainDate) =>
-        new Intl.DateTimeFormat('en-US', {
-          timeZone: 'UTC',
-          month: 'long',
-          year: 'numeric',
-        }).format(Date.parse(day.toString())),
+      expected: (day: Temporal.PlainDate) => monthName(day.toString()),
       read: (cell: HTMLElement) => cell.getAttribute('aria-label'),
     },
     {

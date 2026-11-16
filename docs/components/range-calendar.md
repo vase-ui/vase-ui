@@ -155,7 +155,7 @@ While a range is in progress, the three attributes show the range that a press o
 
 The calendar renders with `renderToString`. The server HTML has the grid, the range, one tab stop and the touch style of each day. The preview and the drag are for the browser.
 
-A server cannot know the day of the visitor. With no `today` prop, the server HTML has the day of the clock of the server. After the mount, the calendar shows the day of the browser: `data-today`, `aria-current` and the tab stop follow it. When no value, focused day or month gives the page, the calendar shows the page of that day, with no event and no animation. Give `today` and `timeZone` when the server knows the day of the visitor, and the server HTML is then correct. With no `locale` prop, the calendar uses `en-US` until it mounts, and then the locale of the browser.
+A server cannot know the day of the visitor. With no `today` prop, the server HTML has the day of the clock of the server. After the mount, the calendar shows the day of the browser: `data-today`, `aria-current` and the tab stop follow it. When no value, focused day or month gives the page, the calendar shows the page of that day, with no event and no animation. Give `timeZone` when the server knows the time zone of the visitor, or `today` when it knows the day. The server HTML is then correct. With no `locale` prop, the calendar uses `en-US` until it mounts, and then the locale of the browser.
 
 On a Node.js version before 26, load a `Temporal` polyfill before the server starts. See the [guide](/handbook/dates-and-times#servers).
 
