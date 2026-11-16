@@ -73,6 +73,8 @@ Each `Portal` part renders its element in a `Teleport`, in another place of the 
 
 <<< ../examples/styling/ScopedPortal.vue
 
+`NumberField.ScrubAreaCursor` also renders its element in a `Teleport`, so bind `props` on your element in its `#render` slot.
+
 ## Tailwind CSS
 
 Apply Tailwind CSS classes to each part with the `class` attribute. The variants that start with `data-` use the data attributes of the part.
