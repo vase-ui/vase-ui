@@ -8,6 +8,7 @@ import {
   flushMicrotasks,
   screen,
 } from '#test-utils';
+import type { HTMLProps } from '../../internals/types';
 import DialogTitleReplacement from './DialogTitleReplacement.test.vue';
 
 describe('<Dialog.Title />', () => {
@@ -182,6 +183,39 @@ describe('<Dialog.Title />', () => {
 
       await show();
       expect(popup).toHaveAttribute('aria-labelledby', 'held-title');
+    });
+
+    it('VUE-119: follows the id that the #render slot gives the title', async () => {
+      const id = shallowRef('slot-title');
+      await render(() => (
+        <Dialog.Root open modal={false}>
+          <Dialog.Portal>
+            <Dialog.Popup>
+              <Dialog.Title
+                v-slots={{
+                  render: ({ props }: { props: HTMLProps }) => (
+                    <h2 {...props} id={id.value}>
+                      Text
+                    </h2>
+                  ),
+                }}
+              />
+            </Dialog.Popup>
+          </Dialog.Portal>
+        </Dialog.Root>
+      ));
+      await flushMicrotasks();
+      const popup = screen.getByRole('dialog');
+      expect(popup).toHaveAttribute('aria-labelledby', 'slot-title');
+
+      id.value = 'other-title';
+      await flushMicrotasks();
+      expect(popup).toHaveAttribute('aria-labelledby', 'other-title');
+
+      id.value = '';
+      await flushMicrotasks();
+      expect(screen.getByText('Text').id).toBe('');
+      expect(popup).not.toHaveAttribute('aria-labelledby');
     });
   });
 });
