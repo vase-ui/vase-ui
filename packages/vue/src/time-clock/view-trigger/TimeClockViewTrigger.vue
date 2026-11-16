@@ -31,7 +31,7 @@ export interface TimeClockViewTriggerProps
 <script setup lang="ts">
 import { computed, useSlots } from 'vue';
 import { formatNumber } from '../../common/formatNumber';
-import { useIsHydrating } from '../../common/hydration';
+import { useAriaAfterHydration, useIsHydrating } from '../../common/hydration';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -57,6 +57,7 @@ const slots = useSlots();
 const root = useTimeClockRootContext();
 const formatLocale = useFormatLocale(root.locale);
 const isHydrating = useIsHydrating();
+const ariaAfterHydration = useAriaAfterHydration();
 
 const state = computed<TimeClockViewTriggerState>(() => ({
   ...root.state.value,
@@ -64,6 +65,8 @@ const state = computed<TimeClockViewTriggerState>(() => ({
 }));
 
 // A clock that has no value shows a placeholder, as an empty field does.
+// With no default slot and no `as`, the text is the only child of a static element. Vue allows a
+// text mismatch only for such an element, so the template has a branch of its own for it.
 const text = computed(() =>
   root.empty.value
     ? '--'
@@ -97,7 +100,7 @@ const { element, elementProps } = useRenderElement('button', props, {
     const { form, type, ...elementAttrs } = attrs;
     return [
       {
-        'aria-label': slots.default ? undefined : label.value,
+        'aria-label': ariaAfterHydration(slots.default ? undefined : label.value),
         'aria-pressed': state.value.active,
         // A server and a browser can have another version of the `Intl` data.
         'data-allow-mismatch': isHydrating.value ? 'text' : undefined,
@@ -114,7 +117,8 @@ defineExpose({ element });
 
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"
+  <component :is="as" v-else-if="$slots.default || as !== 'button'" v-bind="elementProps()"
     ><slot :state="state">{{ text }}</slot></component
   >
+  <button v-else v-bind="elementProps()">{{ text }}</button>
 </template>
