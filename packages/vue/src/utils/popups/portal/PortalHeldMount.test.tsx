@@ -496,12 +496,14 @@ describe('VUE-5: a popup whose root mounts while KeepAlive holds its branch', ()
     );
 
     await mountWhileHeld();
+    const outer = screen.getByTestId('outer');
     screen.getByTestId('inside').focus();
     await user.keyboard('{Escape}');
 
     await waitFor(() => {
-      expect(screen.queryByTestId('outer')).toBe(null);
+      expect(outer).not.toBeInTheDocument();
     });
+    expect(screen.queryByTestId('outer')).toBe(null);
   });
 
   it('a drawer does not activate Drawer.Indent', async () => {
