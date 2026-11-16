@@ -22,13 +22,12 @@ import { readRepositoryFile, REPOSITORY_ROOT } from '../parity/repository.ts';
 import type { FamilyFiles, OwnComponentFile } from '../parity/repository.ts';
 import { array, nonEmptyString, object, problemsOf } from '../parity/validate.ts';
 import { countComponents, isComponentFamily } from './components.ts';
-import { renderStatusLine } from './status.ts';
 
 export type CommitState = 'mirrored' | 'queued' | 'not-applicable';
 
 export interface ParityReport {
   upstream: { commit: string; describe: string; release: string; date: string };
-  status: { done: number; total: number; notStarted: string[]; line: string };
+  status: { done: number; total: number; notStarted: string[] };
   families: FamilyEntry[];
   /** The components that Base UI does not have. */
   ownComponents: OwnComponentEntry[];
@@ -286,7 +285,6 @@ export function buildParityReport(input: ReportInput): ParityReport {
       : [];
   });
   const changes = changesOf(upstream, families, scope);
-  const counts = countComponents(input.families, upstream.components);
   return {
     upstream: {
       commit: upstream.commit,
@@ -294,7 +292,7 @@ export function buildParityReport(input: ReportInput): ParityReport {
       release: upstream.release,
       date: utcDay(upstream.commits[upstream.commits.length - 1].date),
     },
-    status: { ...counts, line: renderStatusLine(counts) },
+    status: countComponents(input.families, upstream.components),
     families: families.map((family) => familyEntryOf(family, upstream, changes)),
     ownComponents: input.ownComponents.map(({ name, record }) => ({
       name,
