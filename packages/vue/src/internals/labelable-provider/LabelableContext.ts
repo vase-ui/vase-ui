@@ -17,13 +17,20 @@ export type RegisterId<Id = string> = (
 
 export interface LabelableContext {
   /**
-   * The `id` of the labelable element.
+   * The `id` that the control binds.
    * When `null`, the label omits `for`, either because the association is implicit or
    * because the control takes its name from `aria-labelledby`.
    */
   controlId: ComputedRef<string | null | undefined>;
   registerControlId: RegisterId<string | null>;
   resetControlId: () => void;
+  /**
+   * The `id` that a label names: the `id` of the control element. A `#render` slot can give that
+   * element another `id` than `controlId`. It is `controlId` on a server, while `controlId` is
+   * `null`, and while a control element has that `id` or no control element has an `id`.
+   */
+  controlElementId: ComputedRef<string | null | undefined>;
+  registerControlElementId: RegisterId;
   /**
    * The `id` of the last label that has one.
    * It is `undefined` when no label has an `id`.
@@ -49,6 +56,8 @@ const DEFAULT_LABELABLE_CONTEXT: LabelableContext = {
   controlId: computed(() => undefined),
   registerControlId: NOOP,
   resetControlId: NOOP,
+  controlElementId: computed(() => undefined),
+  registerControlElementId: NOOP,
   labelId: computed(() => undefined),
   registerLabelId: NOOP,
   messageIds: computed(() => EMPTY_ARRAY),

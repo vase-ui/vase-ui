@@ -16,7 +16,7 @@ export interface MenuListProps
 </script>
 
 <script setup lang="ts">
-import { toRaw, watch } from 'vue';
+import { toRaw } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { resolvePopupLabel } from '../../internals/resolvePopupLabel';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -46,23 +46,13 @@ const listId = useVaseUiId(() => props.id);
 
 let listElement: HTMLElement | null = null;
 
-// `aria-controls` of the trigger reads the id from the store, so a change of the id goes there too.
-watch(listId, (id) => {
-  if (listElement !== null && toRaw(store.state).listElement === listElement) {
-    store.set('listElementId', id);
-  }
-});
-
 const state: MenuListState = EMPTY_OBJECT;
 
 function setListElement(list: HTMLElement | null) {
   // A compiled template can mount a new list before it unmounts the old one. The old list
   // then must not clear the element of the new one.
   if (list !== null || toRaw(store.state).listElement === listElement) {
-    store.update({
-      listElement: list,
-      listElementId: list === null ? undefined : listId.value,
-    });
+    store.set('listElement', list);
   }
   listElement = list;
 }
@@ -84,7 +74,7 @@ function getListProps(attrs: Record<string, any>) {
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: filterList ? undefined : useKeepAliveElementRef(setListElement),
+  ref: filterList ? filterList.ref : useKeepAliveElementRef(setListElement),
   props: (attrs) => (filterList ? filterList.props(attrs) : getListProps(attrs)),
 });
 

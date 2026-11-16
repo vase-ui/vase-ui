@@ -1,6 +1,7 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { renderToString } from 'vue/server-renderer';
 import { takeReportedMessages } from '../../../test/reportedMessages';
+import RangeCalendarAnatomy from './RangeCalendarAnatomy.test.vue';
 import RangeCalendarRootHydration from './RangeCalendarRootHydration.test.vue';
 
 // 2026-11-14 is a Saturday. With `en-US`, the weeks start on Sunday and 2026-11-01 is a Sunday.
@@ -112,6 +113,30 @@ describe('<RangeCalendar.Root /> on a server', () => {
 
     expect(daysWith(html, 'data-range-start')).toEqual(['2026-11-10']);
     expect(daysWith(html, 'data-range-end')).toEqual(['2026-11-12']);
+  });
+
+  it('writes the day of its clock to its element, and nothing with a today prop', async () => {
+    const clock = vi
+      .spyOn(Temporal.Now, 'plainDateISO')
+      .mockReturnValue(Temporal.PlainDate.from('2026-11-14'));
+    onTestFinished(() => {
+      clock.mockRestore();
+    });
+
+    const html = await renderToString(
+      <RangeCalendarAnatomy {...{ locale: 'en-US', timeZone: 'Asia/Tokyo' }} />,
+    );
+    const withToday = await renderToString(
+      <RangeCalendarAnatomy
+        {...{ locale: 'en-US', today: Temporal.PlainDate.from('2026-11-14') }}
+      />,
+    );
+
+    expect(clock).toHaveBeenCalledWith('Asia/Tokyo');
+    expect(/^<div[^>]* role="group"[^>]*>/.exec(html)![0]).toContain(
+      ' data-vase-ui-today="2026-11-14"',
+    );
+    expect(withToday).not.toContain('data-vase-ui-today');
   });
 });
 

@@ -190,13 +190,14 @@ const positionerElement = shallowRef<HTMLElement | null>(null);
 const popupElement = shallowRef<HTMLElement | null>(null);
 const backdropElement = shallowRef<HTMLElement | null>(null);
 const viewportElement = shallowRef<HTMLElement | null>(null);
+const shownViewportElement = shallowRef<HTMLElement | null>(null);
 const viewportTargetElement = shallowRef<HTMLElement | null>(null);
 const activationDirection = shallowRef<NavigationMenuActivationDirection>(null);
 const floatingRootStore = shallowRef<FloatingRootStore | undefined>(undefined);
 const viewportInert = shallowRef(false);
 
 const popupElementId = useElementId(popupElement);
-const viewportElementId = useElementId(viewportElement);
+const viewportElementId = useElementId(shownViewportElement);
 
 const prevTriggerElementRef = shallowRef<Element | null | undefined>(null);
 const currentContentRef = shallowRef<HTMLElement | null>(null);
@@ -360,6 +361,7 @@ provide(NavigationMenuRootContext, {
   popupElementId,
   backdropElement,
   viewportElement,
+  shownViewportElement,
   viewportElementId,
   viewportTargetElement,
   activationDirection: computed(() => (open.value ? activationDirection.value : null)),

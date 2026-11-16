@@ -83,7 +83,7 @@ The calendar shows more than one month with `numberOfMonths`, and `pagedNavigati
 
 A page that the user leaves stays until its animations end. It has `data-ending-style` and `inert`, and the new page has `data-starting-style`. `data-navigation-direction` of the root and of `Calendar.Months` says the side of the move: `previous`, `next` or `none`.
 
-`today` gives the day that is today, and `timeZone` gives the time zone of the clock. `locale` gives the names, the digits, the first day of the week and the weekend, and `firstDayOfWeek` changes the first day. `calendar` shows the dates in another calendar, such as `persian`, and the value keeps its own calendar. A server cannot know the day of the browser, so give `today` when a server renders the calendar.
+`today` gives the day that is today, and `timeZone` gives the time zone of the clock. `locale` gives the names, the digits, the first day of the week and the weekend, and `firstDayOfWeek` changes the first day. `calendar` shows the dates in another calendar, such as `persian`, and the value keeps its own calendar.
 
 ## Months and years
 
@@ -177,7 +177,7 @@ The root emits `valueChange` and `update:value` for a selection, and `monthChang
 
 The calendar renders with `renderToString`. The server HTML has the grid of the view, its labels, and one tab stop. A server does not know the locale of the visitor. With no `locale` prop, the calendar uses `en-US` until it mounts, and then the locale of the browser.
 
-A server and a browser can have another day for today. The hydration then keeps `data-today`, `data-current` and `aria-current` of the server, because Vue does not patch an attribute while it hydrates. Give `today`, so that the server and the browser agree. The data of `Intl` in a server and in a browser can also give other names of the months and other digits of the years. While the calendar hydrates, each cell and each trigger allows that text, and it then shows the text of the browser.
+A server cannot know the day of the visitor. With no `today` prop, the server HTML has the day of the clock of the server. After the mount, the calendar shows the day of the browser: `data-today`, `aria-current`, `data-current`, the tab stop and the years of `Calendar.YearSelect` follow it. When no value, focused day or month gives the page, the calendar shows the page of that day, with no event and no animation. Give `timeZone` when the server knows the time zone of the visitor, or `today` when it knows the day. The server HTML is then correct. The data of `Intl` in a server and in a browser can also give other names of the months and other digits of the years. While the calendar hydrates, each cell and each trigger allows that text, and it then shows the text of the browser.
 
 On a Node.js version before 26, load a `Temporal` polyfill before the server starts. See the [guide](/handbook/dates-and-times#servers).
 

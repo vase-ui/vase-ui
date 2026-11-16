@@ -1,6 +1,9 @@
 const NAME_ATTRIBUTES = ['aria-label', 'aria-labelledby'] as const;
 
-function isBlank(value: unknown): boolean {
+/**
+ * Returns `true` for a blank string: an empty string, or a string of white space only.
+ */
+export function isBlank(value: unknown): boolean {
   return typeof value === 'string' && value.trim() === '';
 }
 

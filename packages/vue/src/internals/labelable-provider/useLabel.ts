@@ -7,30 +7,32 @@ import { givenId, useVaseUiId } from '../useBaseUiId';
 import { useLabelableContext } from './LabelableContext';
 import type { RegisterId } from './LabelableContext';
 import { useRegisteredId } from './useRegisteredId';
+import { useRenderedElementId } from './useRenderedElementId';
 
 /**
  * A label calls it in `setup`. The part reads `.value` in the function that it gives to
  * `useRenderElement` as `props`: `props: (attrs) => [labelProps.value, attrs]`.
  */
 export function useLabel(params: UseLabelParameters = {}): ComputedRef<UseLabelReturnValue> {
-  const { controlId: contextControlId, registerLabelId: registerContextLabelId } =
-    useLabelableContext();
+  const { controlElementId, registerLabelId: registerContextLabelId } = useLabelableContext();
 
   const ownId = useVaseUiId();
 
   const id = computed(() => givenId(toValue(params.id)) ?? ownId.value);
 
+  const elementId = params.element === undefined ? undefined : useRenderedElementId(params.element);
+
   const source = Symbol();
 
   useRegisteredId(
-    () => id.value,
+    () => elementId?.value ?? id.value,
     (getId) => {
       registerContextLabelId(source, getId);
       params.registerLabelId?.(source, getId);
     },
   );
 
-  const resolveControlId = () => contextControlId.value ?? toValue(params.fallbackControlId);
+  const resolveControlId = () => controlElementId.value ?? toValue(params.fallbackControlId);
 
   function focusControl(event: MouseEvent) {
     const resolvedControlId = resolveControlId();
@@ -40,11 +42,11 @@ export function useLabel(params: UseLabelParameters = {}): ComputedRef<UseLabelR
       return;
     }
 
-    if (!resolvedControlId) {
-      return;
-    }
-
-    const controlElement = getControlById(event.currentTarget as Element, resolvedControlId);
+    const controlElement =
+      toValue(params.controlElement) ??
+      (resolvedControlId
+        ? getControlById(event.currentTarget as Element, resolvedControlId)
+        : null);
     if (isHTMLElement(controlElement)) {
       focusElementWithVisible(controlElement);
     }
@@ -94,9 +96,20 @@ export interface UseLabelParameters {
    */
   id?: MaybeRefOrGetter<string | undefined> | undefined;
   /**
+   * The element of the label. A `#render` slot can give it another `id`, and the control then
+   * names that `id`.
+   */
+  element?: MaybeRefOrGetter<Element | null | undefined> | undefined;
+  /**
    * The id of the control when the provider has none.
    */
   fallbackControlId?: MaybeRefOrGetter<string | undefined> | undefined;
+  /**
+   * The control element, for a part that holds it. A click on a label that is not native focuses
+   * this element, and the id of the element does not matter. With no element, the click focuses
+   * the element that has the id of the control.
+   */
+  controlElement?: MaybeRefOrGetter<HTMLElement | null | undefined> | undefined;
   /**
    * Whether the rendered element is a native `<label>`.
    * @default false
@@ -111,7 +124,8 @@ export interface UseLabelParameters {
   registerLabelId?: RegisterId | undefined;
   /**
    * A focus handler for a label that is not native.
-   * If it is omitted, the click focuses the control that has the resolved id.
+   * If it is omitted, the click focuses `controlElement`. With no `controlElement`, it focuses the
+   * control that has the resolved id.
    */
   focusControl?: ((event: MouseEvent, controlId: string | undefined) => void) | undefined;
 }

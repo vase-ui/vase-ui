@@ -13,7 +13,9 @@ import {
   hydrate,
   isJSDOM,
   nextAnimationsRead,
+  nextEndingStyle,
   nextEvent,
+  POPUP_EXIT_CSS,
   renderOnServer,
   screen,
   takeReportedMessages,
@@ -58,6 +60,34 @@ describe('<Field.Error />', () => {
 
     expect(screen.getByText('Message')).toHaveAttribute('id', 'own-error');
     expect(screen.getByRole('textbox')).toHaveAttribute('aria-describedby', 'own-error');
+  });
+
+  it('VUE-118: gives the control the id that the #render slot gives the error while it shows', async () => {
+    const shown = shallowRef(true);
+
+    await render(() => (
+      <Field.Root>
+        <Field.Control />
+        <Field.Error
+          match={shown.value}
+          v-slots={{
+            render: ({ props, children }: { props: HTMLProps; children: Component }) => (
+              <div {...props} id="own-error">
+                {h(children)}
+              </div>
+            ),
+          }}
+        />
+      </Field.Root>
+    ));
+
+    const control = screen.getByRole('textbox');
+    expect(control).toHaveAttribute('aria-describedby', 'own-error');
+
+    shown.value = false;
+    await flushMicrotasks();
+
+    expect(control).not.toHaveAttribute('aria-describedby');
   });
 
   it.each([
@@ -393,6 +423,42 @@ describe('<Field.Error />', () => {
   describe.skipIf(isJSDOM)('animations', () => {
     afterEach(() => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = true;
+    });
+
+    it('VUE-118: removes the id of the #render slot from the control when the exit starts', async () => {
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+      const shown = shallowRef(true);
+
+      await render(() => (
+        <div>
+          <style>{POPUP_EXIT_CSS}</style>
+          <Field.Root>
+            <Field.Control />
+            <Field.Error
+              class="popup"
+              match={shown.value}
+              v-slots={{
+                render: ({ props, children }: { props: HTMLProps; children: Component }) => (
+                  <div {...props} id="own-error">
+                    {h(children)}
+                  </div>
+                ),
+              }}
+            />
+          </Field.Root>
+        </div>
+      ));
+
+      const control = screen.getByRole('textbox');
+      expect(control).toHaveAttribute('aria-describedby', 'own-error');
+
+      await nextEndingStyle(document.getElementById('own-error')!, {
+        action: () => {
+          shown.value = false;
+        },
+      });
+
+      expect(control).not.toHaveAttribute('aria-describedby');
     });
 
     it('triggers enter animation via data-starting-style when mounting', async () => {

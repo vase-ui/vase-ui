@@ -3483,4 +3483,19 @@ describe('<CheckboxGroup />', () => {
       );
     });
   });
+
+  describe('VUE-112: a disabled fieldset', () => {
+    it('shows the disabled state of a group in a disabled fieldset with no Field.Root', async () => {
+      await render(() => (
+        <fieldset disabled>
+          <CheckboxGroup data-testid="group" defaultValue={[]}>
+            <Checkbox.Root value="a" data-testid="checkbox" />
+          </CheckboxGroup>
+        </fieldset>
+      ));
+
+      expect(screen.getByTestId('group')).toHaveAttribute('data-disabled');
+      expect(screen.getByTestId('checkbox')).toHaveAttribute('data-disabled');
+    });
+  });
 });

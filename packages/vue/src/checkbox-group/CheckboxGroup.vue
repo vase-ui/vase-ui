@@ -58,6 +58,7 @@ import { EMPTY_ARRAY } from '../common/empty';
 import { useAriaAfterHydration } from '../common/hydration';
 import { useControlled } from '../common/useControlled';
 import { isEligibleInput } from '../field/root/useFieldValidation';
+import { useFieldsetDisabled } from '../fieldset/root/useFieldsetDisabled';
 import { fieldValidityMapping } from '../internals/field-constants/constants';
 import { createChangeEventDetails } from '../internals/createBaseUIEventDetails';
 import { useRegisterFieldControl } from '../internals/field-register-control';
@@ -118,7 +119,8 @@ const labelId = useControlLabelId();
 const { clearErrors, elementRef: formElement } = useFormContext();
 const clearFieldError = useClearFieldError(fieldName);
 
-const isDisabled = computed(() => fieldDisabled.value || props.disabled);
+const fieldsetDisabled = useFieldsetDisabled(() => element.value);
+const isDisabled = computed(() => fieldDisabled.value || fieldsetDisabled.value || props.disabled);
 
 const [groupValue, setGroupValueState] = useControlled<string[]>({
   // A consumer can change a reactive array in place. The copy reads each item, so such a change

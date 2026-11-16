@@ -1,6 +1,20 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, KeepAlive, shallowRef } from 'vue';
+import { Autocomplete } from '@vase-ui/vue/autocomplete';
+import { Checkbox } from '@vase-ui/vue/checkbox';
+import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
+import { Combobox } from '@vase-ui/vue/combobox';
+import { DateField } from '@vase-ui/vue/date-field';
 import { Field } from '@vase-ui/vue/field';
+import { Input } from '@vase-ui/vue/input';
+import { NumberField } from '@vase-ui/vue/number-field';
+import { OTPField } from '@vase-ui/vue/otp-field';
+import { Radio } from '@vase-ui/vue/radio';
+import { RadioGroup } from '@vase-ui/vue/radio-group';
+import { Select } from '@vase-ui/vue/select';
+import { Switch } from '@vase-ui/vue/switch';
+import { TimeField } from '@vase-ui/vue/time-field';
+import type { HTMLProps } from '@vase-ui/vue/types';
 import {
   createHeldBranch,
   createRenderer,
@@ -244,6 +258,309 @@ describe('<Field.Label />', () => {
       expect(second.id).not.toBe('');
       expect(first.id).not.toBe(second.id);
       expect(screen.getByTestId('control')).toHaveAttribute('aria-labelledby', second.id);
+    });
+  });
+
+  describe('VUE-118: the id that a #render slot gives an element', () => {
+    function renderOwnInput({ props }: { props: HTMLProps }) {
+      return <input {...props} id="own" />;
+    }
+
+    function renderOwnButton({ props }: { props: HTMLProps }) {
+      return <button {...props} id="own" />;
+    }
+
+    function renderOwnSpan({ props }: { props: HTMLProps }) {
+      return <span {...props} id="own" />;
+    }
+
+    const MONTH = { type: 'month', index: 0, editable: true } as const;
+    const HOUR = { type: 'hour', index: 0, editable: true } as const;
+
+    it.each([
+      {
+        name: 'Field.Control',
+        renderControl: () => <Field.Control v-slots={{ render: renderOwnInput }} />,
+      },
+      {
+        name: 'Field.Control with an id prop',
+        renderControl: () => <Field.Control id="prop" v-slots={{ render: renderOwnInput }} />,
+      },
+      { name: 'Input', renderControl: () => <Input v-slots={{ render: renderOwnInput }} /> },
+      {
+        name: 'Select.Trigger',
+        renderControl: () => (
+          <Select.Root>
+            <Select.Trigger v-slots={{ render: renderOwnButton }} />
+          </Select.Root>
+        ),
+      },
+      {
+        name: 'Combobox.Trigger',
+        renderControl: () => (
+          <Combobox.Root>
+            <Combobox.Trigger v-slots={{ render: renderOwnButton }} />
+            <Combobox.Portal>
+              <Combobox.Positioner>
+                <Combobox.Popup>
+                  <Combobox.Input />
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>
+        ),
+      },
+      {
+        name: 'Combobox.Input',
+        renderControl: () => (
+          <Combobox.Root>
+            <Combobox.Input v-slots={{ render: renderOwnInput }} />
+          </Combobox.Root>
+        ),
+      },
+      {
+        name: 'Autocomplete.Input',
+        renderControl: () => (
+          <Autocomplete.Root>
+            <Autocomplete.Input v-slots={{ render: renderOwnInput }} />
+          </Autocomplete.Root>
+        ),
+      },
+      {
+        name: 'Checkbox.Root nativeButton',
+        renderControl: () => <Checkbox.Root nativeButton v-slots={{ render: renderOwnButton }} />,
+      },
+      {
+        name: 'Switch.Root nativeButton',
+        renderControl: () => <Switch.Root nativeButton v-slots={{ render: renderOwnButton }} />,
+      },
+      {
+        name: 'Radio.Root nativeButton',
+        renderControl: () => (
+          <RadioGroup>
+            <Radio.Root value="a" nativeButton v-slots={{ render: renderOwnButton }} />
+          </RadioGroup>
+        ),
+      },
+      {
+        name: 'NumberField.Input',
+        renderControl: () => (
+          <NumberField.Root>
+            <NumberField.Input v-slots={{ render: renderOwnInput }} />
+          </NumberField.Root>
+        ),
+      },
+      {
+        name: 'OTPField.Input',
+        renderControl: () => (
+          <OTPField.Root length={2}>
+            <OTPField.Input v-slots={{ render: renderOwnInput }} />
+            <OTPField.Input />
+          </OTPField.Root>
+        ),
+      },
+      {
+        name: 'DateField.Segment',
+        renderControl: () => (
+          <DateField.Root locale="en-US">
+            <DateField.Segment segment={MONTH} v-slots={{ render: renderOwnInput }} />
+          </DateField.Root>
+        ),
+      },
+      {
+        name: 'TimeField.Segment',
+        renderControl: () => (
+          <TimeField.Root locale="en-US">
+            <TimeField.Segment segment={HOUR} v-slots={{ render: renderOwnInput }} />
+          </TimeField.Root>
+        ),
+      },
+    ])('names the element of the control: $name', async ({ renderControl }) => {
+      await render(
+        <Field.Root>
+          <Field.Label data-testid="label">Label</Field.Label>
+          {renderControl()}
+        </Field.Root>,
+      );
+
+      const label = screen.getByTestId<HTMLLabelElement>('label');
+      expect(label).toHaveAttribute('for', 'own');
+      expect(label.control).toBe(document.getElementById('own'));
+    });
+
+    it.each([
+      {
+        name: 'Checkbox.Root',
+        renderControl: () => <Checkbox.Root v-slots={{ render: renderOwnSpan }} />,
+      },
+      {
+        name: 'Switch.Root',
+        renderControl: () => <Switch.Root v-slots={{ render: renderOwnSpan }} />,
+      },
+      {
+        name: 'Radio.Root',
+        renderControl: () => (
+          <RadioGroup>
+            <Radio.Root value="a" v-slots={{ render: renderOwnSpan }} />
+          </RadioGroup>
+        ),
+      },
+    ])(
+      'names the hidden input, and not the element of the slot: $name',
+      async ({ renderControl }) => {
+        await render(
+          <Field.Root>
+            <Field.Label data-testid="label">Label</Field.Label>
+            {renderControl()}
+          </Field.Root>,
+        );
+
+        const label = screen.getByTestId<HTMLLabelElement>('label');
+        expect(label.control).toBeInstanceOf(HTMLInputElement);
+        expect(label.control).not.toBe(document.getElementById('own'));
+      },
+    );
+
+    it('focuses the element of the control on a click, also when the label is not native', async () => {
+      const { user } = await render(
+        <Field.Root>
+          <Field.Label nativeLabel={false} as="div" data-testid="label">
+            Label
+          </Field.Label>
+          <Field.Control v-slots={{ render: renderOwnInput }} />
+        </Field.Root>,
+      );
+
+      await user.click(screen.getByTestId('label'));
+
+      expect(document.getElementById('own')).toHaveFocus();
+    });
+
+    it('checks a native button checkbox on a click on the label', async () => {
+      const { user } = await render(
+        <Field.Root>
+          <Field.Label data-testid="label">Label</Field.Label>
+          <Checkbox.Root nativeButton v-slots={{ render: renderOwnButton }} />
+        </Field.Root>,
+      );
+
+      await user.click(screen.getByTestId('label'));
+
+      expect(screen.getByRole('checkbox')).toHaveAttribute('aria-checked', 'true');
+    });
+
+    it('follows a change of the id, and gives the control the id of the field again', async () => {
+      const slotId = shallowRef<string | undefined>('first');
+
+      await render(() => (
+        <Field.Root>
+          <Field.Label data-testid="label">Label</Field.Label>
+          <Field.Control
+            id="prop"
+            v-slots={{
+              render: ({ props }: { props: HTMLProps }) =>
+                slotId.value === undefined ? (
+                  <input {...props} />
+                ) : (
+                  <input {...props} id={slotId.value} />
+                ),
+            }}
+          />
+        </Field.Root>
+      ));
+
+      const label = screen.getByTestId('label');
+      const control = screen.getByRole('textbox');
+      expect(control).toHaveAttribute('id', 'first');
+      expect(label).toHaveAttribute('for', 'first');
+
+      slotId.value = 'second';
+      await flushMicrotasks();
+
+      expect(control).toHaveAttribute('id', 'second');
+      expect(label).toHaveAttribute('for', 'second');
+
+      slotId.value = undefined;
+      await flushMicrotasks();
+
+      expect(control).toHaveAttribute('id', 'prop');
+      expect(label).toHaveAttribute('for', 'prop');
+    });
+
+    it('gives the control the id of the label element', async () => {
+      await render(
+        <Field.Root>
+          <Field.Label
+            v-slots={{
+              render: ({ props }: { props: HTMLProps }) => <label {...props} id="own-label" />,
+            }}
+          />
+          <Field.Control data-testid="control" />
+        </Field.Root>,
+      );
+
+      expect(screen.getByTestId('control')).toHaveAttribute('aria-labelledby', 'own-label');
+    });
+
+    it('names the element of the control that KeepAlive shows', async () => {
+      const shown = shallowRef<'a' | 'b'>('a');
+      const renderInputWithId =
+        (id: string) =>
+        ({ props }: { props: HTMLProps }) => <input {...props} id={id} />;
+
+      await render(() => (
+        <Field.Root>
+          <Field.Label data-testid="label">Label</Field.Label>
+          <KeepAlive>
+            {shown.value === 'a' ? (
+              <Field.Control key="a" v-slots={{ render: renderInputWithId('a') }} />
+            ) : (
+              <Field.Control key="b" v-slots={{ render: renderInputWithId('b') }} />
+            )}
+          </KeepAlive>
+        </Field.Root>
+      ));
+
+      const label = screen.getByTestId('label');
+      expect(label).toHaveAttribute('for', 'a');
+
+      shown.value = 'b';
+      await flushMicrotasks();
+
+      expect(label).toHaveAttribute('for', 'b');
+
+      shown.value = 'a';
+      await flushMicrotasks();
+
+      expect(label).toHaveAttribute('for', 'a');
+    });
+
+    it('gives no for to the label of a group of native button checkboxes', async () => {
+      await render(
+        <Field.Root>
+          <Field.Label data-testid="label">Label</Field.Label>
+          <CheckboxGroup>
+            <Checkbox.Root value="a" nativeButton as="button" />
+            <Checkbox.Root value="b" nativeButton as="button" />
+          </CheckboxGroup>
+        </Field.Root>,
+      );
+
+      expect(screen.getByTestId('label')).not.toHaveAttribute('for');
+    });
+
+    it('keeps the id of the field when the #render slot gives an empty id', async () => {
+      await render(
+        <Field.Root>
+          <Field.Label data-testid="label">Label</Field.Label>
+          <Field.Control
+            id="prop"
+            v-slots={{ render: ({ props }: { props: HTMLProps }) => <input {...props} id="" /> }}
+          />
+        </Field.Root>,
+      );
+
+      expect(screen.getByTestId('label')).toHaveAttribute('for', 'prop');
     });
   });
 

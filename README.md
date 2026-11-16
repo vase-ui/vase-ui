@@ -33,35 +33,6 @@ Status: 38 of 38 components. The guarantee starts with the first full release.
 
 React gets the good component libraries first. Vue gets to wait. We think the Vue ecosystem deserves the same love as React's, so we stopped waiting.
 
-## What this costs
-
-AI agents build and maintain Vase UI. The tables show every token that they have used so far. The count includes the research, the plan, the experiments, the failed rounds and the discarded work. It does not count a person's time or CI minutes.
-
-<!-- cost:start -->
-
-Measured on 2026-11-12 (UTC). Prices read on 2026-11-12.
-
-| Model             |     Output | Cache writes |   Cache reads |    All tokens | API price |
-| ----------------- | ---------: | -----------: | ------------: | ------------: | --------: |
-| Claude Sonnet 5.5 |  9,510,330 |   35,152,704 | 1,236,697,352 | 1,281,371,490 |   $306.68 |
-| Claude Fable 5.2  |  5,781,360 |   38,318,178 |   646,803,073 |   690,908,899 |   $815.76 |
-| Claude Opus 5.5   |    266,660 |    1,706,016 |    28,403,048 |    30,376,258 |    $19.55 |
-| Total             | 15,558,350 |   75,176,898 | 1,911,903,473 | 2,002,656,647 | $1,141.99 |
-
-| Work              |    All tokens | API price |
-| ----------------- | ------------: | --------: |
-| Pull requests     | 1,455,994,335 |   $769.72 |
-| Experiments       |   315,968,417 |    $98.19 |
-| Coordination      |   135,200,221 |   $230.11 |
-| Research and plan |    72,410,136 |    $37.08 |
-| Other             |    23,083,538 |     $6.88 |
-
-<!-- cost:end -->
-
-"All tokens" also counts the uncached input, which has no column. "API price" is what these tokens cost in US dollars at the API's [list prices](https://platform.claude.com/docs/en/about-claude/pricing) on the date that the prices were read. Cache writes are priced by their lifetime, 5 minutes or 1 hour. For a few messages the API reports more cache writes than the sum of the two lifetimes, and we price that rest as 5-minute writes. Each price is rounded to the cent, so the prices in a table do not always add up to the total.
-
-Every measurement is in [cost/history.json](https://github.com/vase-ui/vase-ui/blob/main/cost/history.json). We update the count at each release and at the end of each stage of the port.
-
 <!-- #endregion home -->
 
 ## Thanks

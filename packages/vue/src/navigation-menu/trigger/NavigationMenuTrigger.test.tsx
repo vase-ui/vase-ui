@@ -957,21 +957,21 @@ describe('<NavigationMenu.Trigger />', () => {
     });
   });
 
-  describe('VUE-73: aria-controls names only an element in the document', () => {
-    function renderMenu(popupParts: () => unknown) {
-      return render(() => (
-        <NavigationMenu.Root defaultValue="one">
-          <NavigationMenu.List>
-            <NavigationMenu.Item value="one">
-              <NavigationMenu.Trigger data-testid="trigger">One</NavigationMenu.Trigger>
-              <NavigationMenu.Content>Content</NavigationMenu.Content>
-            </NavigationMenu.Item>
-          </NavigationMenu.List>
-          {popupParts()}
-        </NavigationMenu.Root>
-      ));
-    }
+  function renderMenu(popupParts: () => unknown) {
+    return render(() => (
+      <NavigationMenu.Root defaultValue="one">
+        <NavigationMenu.List>
+          <NavigationMenu.Item value="one">
+            <NavigationMenu.Trigger data-testid="trigger">One</NavigationMenu.Trigger>
+            <NavigationMenu.Content data-testid="content">Content</NavigationMenu.Content>
+          </NavigationMenu.Item>
+        </NavigationMenu.List>
+        {popupParts()}
+      </NavigationMenu.Root>
+    ));
+  }
 
+  describe('VUE-73: aria-controls names only an element in the document', () => {
     function popupParts(
       popupSlots: Record<string, unknown> = { default: () => <NavigationMenu.Viewport /> },
     ) {
@@ -1059,6 +1059,83 @@ describe('<NavigationMenu.Trigger />', () => {
       const popup = screen.getByTestId('popup');
       expect(popup.id).not.toBe('');
       expect(trigger).toHaveAttribute('aria-controls', popup.id);
+    });
+  });
+
+  describe('VUE-73: aria-owns names only a viewport in the document', () => {
+    // The owner element comes after the trigger and the guard before it.
+    function getOwner() {
+      return screen.getByTestId('trigger').parentElement!.children[2];
+    }
+
+    it('has no aria-owns while KeepAlive holds the viewport, and keeps the content in the viewport', async () => {
+      // `KeepAlive` caches only a stateful component.
+      const Popup = defineComponent({
+        setup: () => () => (
+          <NavigationMenu.Portal>
+            <NavigationMenu.Positioner>
+              <NavigationMenu.Popup>
+                <NavigationMenu.Viewport data-testid="viewport" />
+              </NavigationMenu.Popup>
+            </NavigationMenu.Positioner>
+          </NavigationMenu.Portal>
+        ),
+      });
+      const Other = defineComponent({ setup: () => () => <span /> });
+      const visible = shallowRef(true);
+      await renderMenu(() => (
+        <KeepAlive>{visible.value ? <Popup key="popup" /> : <Other key="other" />}</KeepAlive>
+      ));
+      await flushMicrotasks();
+      const owner = getOwner();
+      const viewport = screen.getByTestId('viewport');
+      const content = screen.getByTestId('content');
+      expect(viewport.id).not.toBe('');
+      expect(owner).toHaveAttribute('aria-owns', viewport.id);
+
+      visible.value = false;
+      await flushMicrotasks();
+
+      expect(viewport.isConnected).toBe(false);
+      expect(screen.getByTestId('trigger')).toHaveAttribute('aria-expanded', 'true');
+      expect(owner).not.toHaveAttribute('aria-owns');
+      expect(viewport.contains(content)).toBe(true);
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(owner).toHaveAttribute('aria-owns', viewport.id);
+      expect(screen.getByTestId('content')).toBe(content);
+      expect(viewport.contains(content)).toBe(true);
+    });
+
+    it('has no aria-owns while the viewport mounts in a branch that KeepAlive holds', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
+        () => <NavigationMenu.Viewport data-testid="viewport" />,
+        { renderBranch: (part) => part },
+      );
+      await renderMenu(() => (
+        <NavigationMenu.Portal>
+          <NavigationMenu.Positioner>
+            <NavigationMenu.Popup>
+              <HeldBranch />
+            </NavigationMenu.Popup>
+          </NavigationMenu.Positioner>
+        </NavigationMenu.Portal>
+      ));
+
+      await mountWhileHeld();
+
+      const owner = getOwner();
+      expect(screen.getByTestId('trigger')).toHaveAttribute('aria-expanded', 'true');
+      expect(owner).not.toHaveAttribute('aria-owns');
+      expect(owner).not.toHaveAttribute('data-vase-ui-focus-guard');
+
+      await show();
+
+      const viewport = screen.getByTestId('viewport');
+      expect(viewport.id).not.toBe('');
+      expect(owner).toHaveAttribute('aria-owns', viewport.id);
     });
   });
 

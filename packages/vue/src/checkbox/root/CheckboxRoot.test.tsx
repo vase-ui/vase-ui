@@ -17,6 +17,7 @@ import {
   hydrate,
   hydrateAfter,
   isJSDOM,
+  mockPageBeforeLoad,
   removedPartHydrationTests,
   renderOnServer,
   screen,
@@ -3312,6 +3313,26 @@ describe('<Checkbox.Root />', () => {
       expect(fixture.getByTestId('changes').textContent).toBe('');
       expect(fixture.getByTestId('checkbox')).toHaveAttribute('aria-checked', 'false');
     });
+
+    it('takes the input at the activation after a page show while KeepAlive held the checkbox', async () => {
+      const showPage = mockPageBeforeLoad();
+      const { HeldBranch, hide, show } = createHeldBranch(() => <CheckboxRootBeforeHydration />, {
+        mounted: true,
+      });
+      const { container } = await render(<HeldBranch />);
+      const fixture = within(container);
+      const input = getInput();
+      input.checked = true;
+
+      await hide();
+      showPage();
+      await show();
+      await flushMicrotasks();
+
+      expect(fixture.getByTestId('changes').textContent).toBe('true (vase-ui)');
+      expect(fixture.getByTestId('checkbox')).toHaveAttribute('aria-checked', 'true');
+      expect(input.checked).toBe(true);
+    });
   });
 
   describe('server-side rendering', () => {
@@ -3382,6 +3403,59 @@ describe('<Checkbox.Root />', () => {
       expect(
         container.querySelector<HTMLInputElement>('input[type="checkbox"]')!.indeterminate,
       ).toBe(indeterminate);
+    });
+  });
+
+  describe('VUE-112: a disabled fieldset', () => {
+    // A checkbox has no size of its own, and Playwright clicks only an element that has a size.
+    const checkboxStyle = 'display:inline-block;width:20px;height:20px';
+
+    it('shows the disabled state and leaves the tab order in a disabled fieldset', async () => {
+      await render(() => (
+        <>
+          <button type="button" data-testid="before">
+            before
+          </button>
+          <fieldset disabled>
+            <Checkbox.Root data-testid="checkbox" style={checkboxStyle} />
+          </fieldset>
+          <button type="button" data-testid="after">
+            after
+          </button>
+        </>
+      ));
+      const checkbox = screen.getByTestId('checkbox');
+
+      expect(checkbox).toHaveAttribute('data-disabled');
+      expect(checkbox).toHaveAttribute('aria-disabled', 'true');
+
+      screen.getByTestId('before').focus();
+      await userEvent.keyboard('{Tab}');
+
+      expect(screen.getByTestId('after')).toHaveFocus();
+    });
+
+    it('keeps the state when the user presses it or presses Space in a disabled fieldset', async () => {
+      const handleCheckedChange = vi.fn();
+      await render(() => (
+        <fieldset disabled>
+          <Checkbox.Root
+            data-testid="checkbox"
+            style={checkboxStyle}
+            onCheckedChange={handleCheckedChange}
+          />
+        </fieldset>
+      ));
+      const checkbox = screen.getByTestId('checkbox');
+
+      await userEvent.click(checkbox, { force: true });
+      checkbox.focus();
+      expect(checkbox).toHaveFocus();
+      await userEvent.keyboard(' ');
+      await flushMicrotasks();
+
+      expect(handleCheckedChange).not.toHaveBeenCalled();
+      expect(checkbox).toHaveAttribute('aria-checked', 'false');
     });
   });
 });

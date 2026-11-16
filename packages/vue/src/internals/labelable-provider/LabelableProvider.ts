@@ -18,6 +18,7 @@ export function provideLabelableContext(): LabelableContext {
 
   const controlIdState = shallowRef<string | null>(defaultControlId.value);
   const { ids: controlIds, registerId: registerControlId } = createIdRegistry<string | null>();
+  const { ids: controlElementIds, registerId: registerControlElementId } = createIdRegistry();
   const { labelId, registerLabelId } = createLabelIdRegistry();
   const { ids: messageIds, registerId: registerMessageId } = createIdRegistry();
 
@@ -44,6 +45,15 @@ export function provideLabelableContext(): LabelableContext {
     }
   }
 
+  // The control binds `controlId`, so its element has that `id` unless a `#render` slot gives
+  // another one. The label then names the `id` of the element. A control that binds the `id` of its
+  // own element would keep an `id` that the slot no longer gives.
+  const controlElementId = computed(() => {
+    const id = controlIdState.value;
+    const elementIds = controlElementIds.value;
+    return id === null || elementIds.includes(id) ? id : (elementIds[0] ?? id);
+  });
+
   function getDescriptionProps(externalProps: Record<string, any>) {
     // `null` of the consumer removes the ids of the descriptions (VUE-103).
     if (externalProps['aria-describedby'] === null) {
@@ -64,6 +74,8 @@ export function provideLabelableContext(): LabelableContext {
     controlId: computed(() => controlIdState.value),
     registerControlId,
     resetControlId,
+    controlElementId,
+    registerControlElementId,
     labelId,
     registerLabelId,
     messageIds,
