@@ -8,7 +8,7 @@ import type { PopoverHandleStore, PopoverStore } from './PopoverStore';
  * of each trigger outside the root.
  *
  * The methods work only while a root that uses this handle is mounted. A call before a root
- * attaches, or after it unmounts, does nothing.
+ * mounts, or after it unmounts, does nothing.
  */
 export class PopoverHandle<Payload> extends BasePopupHandle<
   PopoverHandleStore<Payload>,
