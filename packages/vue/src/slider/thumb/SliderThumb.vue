@@ -102,7 +102,6 @@ import { useDeferredServerRender, useLabelableId } from '../../internals/labelab
 import type { HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useFormReset } from '../../internals/useFormReset';
-import { useFormRestoreAsInput } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { mergeProps } from '../../merge-props';
 import { matchesFocusVisible } from '../../utils/popups/element';
@@ -396,8 +395,6 @@ function syncHandledInputValue() {
 
 watch([inputElement, thumbValue, min, max, step], syncHandledInputValue, { flush: 'post' });
 
-useFormRestoreAsInput(inputElement, () => handledInputValue, false);
-
 // The thumb follows the reset with its own input. The composite list of the root has no thumb
 // while `KeepAlive` holds the slider.
 useFormReset(inputElement, reset);
@@ -643,6 +640,8 @@ function inputProps() {
 
 provide(SliderThumbContext, {
   inputProps,
+  inputElement,
+  getHandledInputValue: () => handledInputValue,
   // Rendered with the last thumb to ensure all preceding thumbs are already in the DOM.
   hasPrehydrationScript: computed(() => inset.value && last.value && renderBeforeHydration.value),
 });

@@ -64,6 +64,9 @@ describe('VUE-81: a page that mounts before Chromium restores its form state', (
       await page.getByTestId(label).click();
     }
     await page.getByTestId('note').fill('typed');
+    // Chromium saves a date input also when its value equals its `value` attribute.
+    await page.getByTestId('when').locator('input[data-type="month"]').click();
+    await page.keyboard.type('12252026');
     // Chromium saves the value of an input only when it differs from its `value` attribute, and
     // Vue writes that attribute with each value of the slider. A program writes the inputs with no
     // event, so Chromium saves them. Both values are above the old value of the second thumb, at
@@ -96,14 +99,16 @@ describe('VUE-81: a page that mounts before Chromium restores its form state', (
         'note=typed',
         'range=85',
         'range=95',
+        'when=2026-12-25',
       ],
-      models: { letters: ['a', 'b'], size: 'l', range: [85, 95] },
+      models: { letters: ['a', 'b'], size: 'l', range: [85, 95], when: '2026-12-25' },
       changes: {
         news: ['true (pageshow)'],
         letters: ['a (pageshow)', 'a,b (pageshow)'],
         size: ['l (pageshow)'],
         note: ['typed (input)'],
         range: ['85,95 (input)'],
+        when: ['2026-12-25 (input)'],
       },
       dirty: { news: true, note: true },
     });

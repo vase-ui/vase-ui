@@ -149,22 +149,34 @@ export async function hydrateAfter(
   return { container };
 }
 
-/**
- * Gives `type` as the type of the navigation of the page until the test ends. A part can read it
- * before its first render, and a runner can load the test page in any way.
- */
-export function mockNavigationType(type: NavigationTimingType): void {
+function mockNavigation(navigation: Partial<PerformanceNavigationTiming>) {
   const getEntriesByType = performance.getEntriesByType.bind(performance);
   const spy = vi
     .spyOn(performance, 'getEntriesByType')
     .mockImplementation((entryType) =>
       entryType === 'navigation'
-        ? [{ type } as PerformanceNavigationTiming]
+        ? [navigation as PerformanceNavigationTiming]
         : getEntriesByType(entryType),
     );
   onTestFinished(() => {
     spy.mockRestore();
   });
+}
+
+/**
+ * Gives `type` as the type of the navigation of the page until the test ends. A part can read it
+ * before its first render, and a runner can load the test page in any way.
+ */
+export function mockNavigationType(type: NavigationTimingType): void {
+  mockNavigation({ type });
+}
+
+/**
+ * Gives a navigation whose `load` event has not ended until the test ends. A part that mounts then
+ * waits for the `pageshow` event of the page.
+ */
+export function mockPageBeforeLoad(): void {
+  mockNavigation({ type: 'back_forward', loadEventEnd: 0 });
 }
 
 /**
