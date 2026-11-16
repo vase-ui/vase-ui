@@ -19,6 +19,7 @@ import {
   renderOnServer,
   screen,
   takeReportedMessages,
+  wait,
   waitFor,
   within,
 } from '#test-utils';
@@ -521,7 +522,7 @@ describe('<Field.Control />', () => {
     const control = screen.getByRole<HTMLInputElement>('textbox');
 
     await userEvent.type(control, '[Enter]');
-    await flushMicrotasks();
+    await wait(0);
 
     expect(validate).toHaveBeenCalledTimes(1);
     expect(handleSubmit).toHaveBeenCalledTimes(1);
@@ -544,9 +545,10 @@ describe('<Field.Control />', () => {
     const control = screen.getByDisplayValue<HTMLInputElement>('a');
 
     await userEvent.type(control, '[Enter]');
-    await flushMicrotasks();
 
-    expect(validate).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(validate).toHaveBeenCalledTimes(1);
+    });
     expect(handleSubmit).not.toHaveBeenCalled();
   });
 
@@ -571,9 +573,10 @@ describe('<Field.Control />', () => {
       const control = screen.getByRole<HTMLInputElement>('textbox');
 
       await userEvent.type(control, '[Enter]');
-      await flushMicrotasks();
 
-      expect(validate).toHaveBeenCalledTimes(1);
+      await waitFor(() => {
+        expect(validate).toHaveBeenCalledTimes(1);
+      });
       expect(handleSubmit).not.toHaveBeenCalled();
     },
   );

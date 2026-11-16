@@ -187,8 +187,11 @@ describe('<PreviewCard.Root />', () => {
         trigger1.focus();
         await flushMicrotasks();
         await expectOpenedBy(trigger1);
+        const popup = screen.getByTestId('popup');
         trigger1.blur();
-        await flushMicrotasks();
+        await waitFor(() => {
+          expect(popup).not.toBeInTheDocument();
+        });
         expectClosed(trigger1);
       }
 

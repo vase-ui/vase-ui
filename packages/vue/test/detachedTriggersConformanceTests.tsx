@@ -217,6 +217,19 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
     expect(screen.queryByTestId('popup')).toBe(null);
   }
 
+  /**
+   * Runs `close` and waits until the popup that was open leaves the document. After `blur()`, a
+   * popup closes in a 0 ms timer, so `closeWith` can resolve before the close.
+   */
+  async function expectPopupClosedAfter(close: () => Promise<void>) {
+    const popup = screen.getByTestId('popup');
+    await close();
+    await waitFor(() => {
+      expect(popup).not.toBeInTheDocument();
+    });
+    expectPopupClosed();
+  }
+
   async function waitForContent(text: string) {
     await waitFor(() => {
       expect(screen.getByTestId('content').textContent).toBe(text);
@@ -283,8 +296,7 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
                 await waitForPopupOpen();
                 expectActiveTrigger(number, 3);
 
-                await closeWith(interaction, user, trigger);
-                expectPopupClosed();
+                await expectPopupClosedAfter(() => closeWith(interaction, user, trigger));
                 expectActiveTrigger(null, 3);
               }
             },
@@ -800,8 +812,7 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
           await openWith(primaryInteraction, user, getTrigger(1));
           await waitForPopupOpen();
           expectActiveTrigger(1, 1);
-          await closeWith(primaryInteraction, user, getTrigger(1));
-          expectPopupClosed();
+          await expectPopupClosedAfter(() => closeWith(primaryInteraction, user, getTrigger(1)));
         }
 
         it.each([
