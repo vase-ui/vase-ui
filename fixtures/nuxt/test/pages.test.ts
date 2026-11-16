@@ -903,6 +903,88 @@ async function expectCalendarPage(page: Page) {
   expect(await page.getByTestId('month-value').textContent()).toBe('2026-03');
 }
 
+function dateLayoutText() {
+  const locale = 'is-IS';
+  const format = (options: Intl.DateTimeFormatOptions) =>
+    new Intl.DateTimeFormat(locale, { timeZone: 'UTC', calendar: 'gregory', ...options });
+  const units = new Intl.DisplayNames(locale, { type: 'dateTimeField' });
+  const hour12 = format({ hour: 'numeric' }).resolvedOptions().hour12;
+  const day = Date.UTC(2026, 10, 10);
+  return {
+    hour12,
+    hourText: new Intl.NumberFormat(locale, { minimumIntegerDigits: 2 }).format(hour12 ? 1 : 13),
+    minuteText: new Intl.NumberFormat(locale, { minimumIntegerDigits: 2 }).format(45),
+    hour: units.of('hour'),
+    minute: units.of('minute'),
+    month: format({ month: 'long', year: 'numeric' }).format(day),
+    day: format({ weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(day),
+    weekdays: Array.from({ length: 7 }, (_, index) => ({
+      text: format({ weekday: 'short' }).format(Date.UTC(2026, 10, index + 1)),
+      abbr: format({ weekday: 'long' }).format(Date.UTC(2026, 10, index + 1)),
+    })),
+  };
+}
+
+async function expectDateLayoutPage(page: Page, hydrated: boolean) {
+  const text = hydrated ? await page.evaluate(dateLayoutText) : dateLayoutText();
+  // This case needs the natural difference of the two runtimes, without a locale override.
+  expect(text.hour12).toBe(hydrated);
+
+  const clock = page.getByTestId('clock');
+  expect(await readAttributes(clock.getByRole('slider'), ['min', 'max', 'aria-label'])).toEqual({
+    min: hydrated ? '1' : '0',
+    max: hydrated ? '12' : '23',
+    'aria-label': text.hour,
+  });
+  expect(await clock.getByRole('slider').inputValue()).toBe(hydrated ? '1' : '13');
+  expect(await clock.getByTestId('number').count()).toBe(hydrated ? 12 : 24);
+  expect(await clock.locator('[data-testid="number"][data-inner]').count()).toBe(hydrated ? 0 : 12);
+  expect(await clock.getByTestId('period').count()).toBe(hydrated ? 2 : 0);
+  expect(await page.getByTestId('hour').textContent()).toBe(text.hourText);
+  expect(await page.getByTestId('hour').getAttribute('aria-label')).toBe(
+    `${text.hour} ${text.hourText}`,
+  );
+  expect(await page.getByTestId('minute').textContent()).toBe(text.minuteText);
+  expect(await page.getByTestId('minute').getAttribute('aria-label')).toBe(
+    `${text.minute} ${text.minuteText}`,
+  );
+  expect(await page.getByTestId('time-value').textContent()).toBe('13:45:00');
+
+  const calendar = page.getByTestId('calendar');
+  const captionId = await page.getByTestId('caption').getAttribute('id');
+  expect(captionId).toBeTruthy();
+  expect(await calendar.getAttribute('aria-label')).toBe(text.month);
+  expect(await page.getByTestId('caption').textContent()).toBe(text.month);
+  expect(await calendar.getByRole('grid').getAttribute('aria-labelledby')).toBe(captionId);
+  expect(
+    await calendar
+      .getByRole('columnheader')
+      .evaluateAll((headers) =>
+        headers.map((header) => ({ text: header.textContent, abbr: header.getAttribute('abbr') })),
+      ),
+  ).toEqual(text.weekdays);
+  const dates = Array.from({ length: 35 }, (_, index) =>
+    Temporal.PlainDate.from('2026-11-01').add({ days: index }).toString(),
+  );
+  expect(
+    await calendar
+      .locator('td[data-date]')
+      .evaluateAll((cells) => cells.map((cell) => cell.getAttribute('data-date'))),
+  ).toEqual(dates);
+  expect(
+    await calendar
+      .locator('td[data-weekend]')
+      .evaluateAll((cells) => cells.map((cell) => cell.getAttribute('data-date'))),
+  ).toEqual(dates.filter((date) => Temporal.PlainDate.from(date).dayOfWeek >= 6));
+  expect(await calendar.locator('[data-date="2026-11-10"] button').getAttribute('aria-label')).toBe(
+    text.day,
+  );
+  expect(await calendar.locator('button[tabindex="0"]').evaluateAll(readDates)).toEqual([
+    '2026-11-10',
+  ]);
+  expect(await page.getByTestId('date-value').textContent()).toBe('2026-11-10');
+}
+
 function readDates(buttons: Element[]) {
   return buttons.map((button) => button.closest('[data-date]')!.getAttribute('data-date'));
 }
@@ -2003,6 +2085,11 @@ const PAGES: PageCase[] = [
   },
   { path: '/calendar', expectPage: expectCalendarPage },
   {
+    path: '/date-layout',
+    expectPage: (page) => expectDateLayoutPage(page, false),
+    expectHydratedPage: (page) => expectDateLayoutPage(page, true),
+  },
+  {
     path: '/date-field',
     expectPage: expectDateFieldPageOnServer,
     expectHydratedPage: expectHydratedDateFieldPage,
@@ -2372,6 +2459,20 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     await months.getByRole('gridcell', { name: 'November 2026' }).click();
     expect(await page.getByTestId('month-value').textContent()).toBe('2026-11');
     expect(await readSelected(months)).toEqual(['November 2026']);
+    expect(messages).toEqual([]);
+  });
+
+  it('changes the time and date of /date-layout after hydration', async () => {
+    const page = await createPage();
+    const messages = collectMessages(page);
+    await page.goto(url('/date-layout'), { waitUntil: 'hydration' });
+    await waitForTwoFrames(page);
+    await expectDateLayoutPage(page, true);
+
+    await page.getByTestId('clock').getByRole('slider').press('ArrowRight');
+    expect(await page.getByTestId('time-value').textContent()).toBe('14:45:00');
+    await page.getByTestId('calendar').locator('[data-date="2026-11-15"] button').click();
+    expect(await page.getByTestId('date-value').textContent()).toBe('2026-11-15');
     expect(messages).toEqual([]);
   });
 
