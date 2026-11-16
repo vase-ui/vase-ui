@@ -64,7 +64,7 @@ if (typeof document !== 'undefined') {
   // run in the next test. The `onTestFinished` hooks of the test run before that hook, so a release
   // in such a hook does not reject.
   const runningCommands = new Set<Promise<void>>();
-  let endedTests = 0;
+  let endedTestCount = 0;
   for (const name of [
     'click',
     'dblClick',
@@ -88,7 +88,7 @@ if (typeof document !== 'undefined') {
     const command: (...args: never[]) => Promise<void> = userEvent[name].bind(userEvent);
     Object.defineProperty(userEvent, name, {
       async value(...args: never[]) {
-        const endedTestsAtCall = endedTests;
+        const endedTestCountAtCall = endedTestCount;
         const running = command(...args);
         runningCommands.add(running);
         try {
@@ -96,7 +96,7 @@ if (typeof document !== 'undefined') {
         } finally {
           runningCommands.delete(running);
         }
-        if (endedTests !== endedTestsAtCall) {
+        if (endedTestCount !== endedTestCountAtCall) {
           throw new Error(`The test ended before the command userEvent.${name} ended.`);
         }
       },
@@ -112,7 +112,7 @@ if (typeof document !== 'undefined') {
   // in the page, so the move comes after the wait for the commands.
   beforeEach(() => {
     onTestFinished(async () => {
-      endedTests += 1;
+      endedTestCount += 1;
       await Promise.allSettled(runningCommands);
       if (isPointerInPage) {
         isPointerInPage = false;
