@@ -358,10 +358,15 @@ describe('labelable provider', () => {
       expect(screen.getByTestId('control')).toHaveAttribute('aria-describedby', 'message-b');
     });
 
-    it('registers nothing for a message with an empty id', async () => {
+    it('VUE-93: registers the generated id of a message with an empty id', async () => {
       await render(<DescribedControl messageIds={['', 'message-a']} />);
 
-      expect(screen.getByTestId('control')).toHaveAttribute('aria-describedby', 'message-a');
+      const generatedId = document.querySelector('p')?.id;
+      expect(generatedId).toMatch(/^vase-ui-/);
+      expect(screen.getByTestId('control')).toHaveAttribute(
+        'aria-describedby',
+        `${generatedId} message-a`,
+      );
     });
 
     // The compiled template of the fixture mounts a message that comes before the control, and then

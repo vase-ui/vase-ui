@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
-import { defineComponent, KeepAlive, nextTick, onMounted, shallowRef } from 'vue';
+import { defineComponent, h, KeepAlive, nextTick, onMounted, shallowRef } from 'vue';
 import type { PropType } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import {
@@ -18,6 +18,7 @@ import {
 } from '#test-utils';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { REASONS } from '../../internals/reasons';
+import type { HTMLProps } from '../../internals/types';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import { allowTopLevelViewportWarning } from '../utils/test-utils';
 import NavigationMenuTriggerHydration from './NavigationMenuTriggerHydration.test.vue';
@@ -206,6 +207,10 @@ function getPopupWidthCalls(calls: [property: string, value: string, priority?: 
 function getPositionerWidthCalls(calls: [property: string, value: string, priority?: string][]) {
   return calls.filter((call) => call[0] === '--positioner-width').map((call) => call[1]);
 }
+
+type ViewportRenderSlotProps = Parameters<
+  NonNullable<InstanceType<typeof NavigationMenu.Viewport>['$slots']['render']>
+>[0];
 
 describe('<NavigationMenu.Trigger />', () => {
   beforeEach(allowTopLevelViewportWarning);
@@ -967,20 +972,30 @@ describe('<NavigationMenu.Trigger />', () => {
       ));
     }
 
-    function popupParts(popupProps: { id?: string } = {}) {
+    function popupParts(
+      popupSlots: Record<string, unknown> = { default: () => <NavigationMenu.Viewport /> },
+    ) {
       return (
         <NavigationMenu.Portal>
           <NavigationMenu.Positioner>
-            <NavigationMenu.Popup {...popupProps} data-testid="popup">
-              <NavigationMenu.Viewport />
-            </NavigationMenu.Popup>
+            <NavigationMenu.Popup data-testid="popup" v-slots={popupSlots} />
           </NavigationMenu.Positioner>
         </NavigationMenu.Portal>
       );
     }
 
     it('has no aria-controls while the popup has an empty id', async () => {
-      await renderMenu(() => popupParts({ id: '' }));
+      // An empty `id` of the part counts as no `id` (VUE-93). Only the `#render` slot can give the
+      // element an empty `id`.
+      await renderMenu(() =>
+        popupParts({
+          render: ({ props }: { props: HTMLProps }) => (
+            <nav {...props} id="">
+              <NavigationMenu.Viewport />
+            </nav>
+          ),
+        }),
+      );
       await flushMicrotasks();
 
       const trigger = screen.getByTestId('trigger');
@@ -1048,7 +1063,10 @@ describe('<NavigationMenu.Trigger />', () => {
   });
 
   describe('VUE-86: the active trigger follows the ids of the popup and the viewport', () => {
+    // An empty `id` of a part counts as no `id` (VUE-93). Only the `#render` slot can give the
+    // element an empty `id`, so the slots write the ids.
     function menuWithIds(ids: { popup?: string; viewport?: string }) {
+      const idOf = (id: string | undefined) => (id === undefined ? {} : { id });
       return (
         <NavigationMenu.Root defaultValue="one">
           <NavigationMenu.List>
@@ -1059,9 +1077,25 @@ describe('<NavigationMenu.Trigger />', () => {
           </NavigationMenu.List>
           <NavigationMenu.Portal>
             <NavigationMenu.Positioner>
-              <NavigationMenu.Popup id={ids.popup} data-testid="popup">
-                <NavigationMenu.Viewport id={ids.viewport} data-testid="viewport" />
-              </NavigationMenu.Popup>
+              <NavigationMenu.Popup
+                data-testid="popup"
+                v-slots={{
+                  render: ({ props }: { props: HTMLProps }) => (
+                    <nav {...props} {...idOf(ids.popup)}>
+                      <NavigationMenu.Viewport
+                        data-testid="viewport"
+                        v-slots={{
+                          render: ({ props: viewportProps, children }: ViewportRenderSlotProps) => (
+                            <div {...viewportProps} {...idOf(ids.viewport)}>
+                              {h(children)}
+                            </div>
+                          ),
+                        }}
+                      />
+                    </nav>
+                  ),
+                }}
+              />
             </NavigationMenu.Positioner>
           </NavigationMenu.Portal>
         </NavigationMenu.Root>

@@ -85,7 +85,7 @@ import { useClearFieldError, useFieldRootContext } from '../internals/field-root
 import { useFormContext } from '../internals/form-context';
 import { useDeferredServerRender, useLabelableContext } from '../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../internals/types';
-import { useVaseUiId } from '../internals/useBaseUiId';
+import { givenId, useVaseUiId } from '../internals/useBaseUiId';
 import { useFormRestore } from '../internals/useFormRestore';
 import { useRenderElement } from '../internals/useRenderElement';
 import { useValueChanged } from '../internals/useValueChanged';
@@ -361,7 +361,7 @@ const { element, elementProps } = useRenderElement('div', props, {
   props: (attrs) => [
     composite.props,
     {
-      id: props.id,
+      id: givenId(props.id),
       role: 'radiogroup',
       'aria-required': props.required || undefined,
       'aria-disabled': isDisabled.value || undefined,

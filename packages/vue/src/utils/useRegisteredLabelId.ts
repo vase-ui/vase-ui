@@ -1,7 +1,7 @@
 import { computed, onMounted, onScopeDispose, shallowRef, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { useIsHydrating } from '../common/hydration';
-import { useVaseUiId } from '../internals/useBaseUiId';
+import { givenId, useVaseUiId } from '../internals/useBaseUiId';
 import { useKeepAliveState } from '../internals/useKeepAliveState';
 
 export type LabelIdSetter = (
@@ -129,7 +129,7 @@ export function useRegisteredLabelId(
   element: MaybeRefOrGetter<Element | null | undefined>,
 ): ComputedRef<string> {
   const { setLabelId } = root;
-  const id = computed(() => toValue(idProp) ?? root.defaultLabelId.value);
+  const id = computed(() => givenId(toValue(idProp)) ?? root.defaultLabelId.value);
   const { isHeld, shown } = useKeepAliveState();
 
   // The server HTML and the hydration need the id from the first render of the root.

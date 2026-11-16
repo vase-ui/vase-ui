@@ -508,6 +508,7 @@ Rules:
 
 - Each part that renders an element calls the internal composable `useRenderElement` in setup. It returns `element`, which the part exposes, and the function `elementProps`.
 - `useRenderElement` leaves out each attribute of the consumer with the value `undefined`. The `props` function thus gets no such key.
+- It also leaves out an `id` attribute that is the empty string. The part then keeps its own id (`VUE-93`).
 - A part that reads an attribute of the consumer in `props` reads `null` as a removal of that attribute. `Menu.RadioGroup` then gives no `aria-labelledby`, and `Field.Control` gives no `aria-describedby`. `Calendar.Grid` then has no label, so it keeps the name of the month in `aria-label`.
 - `useRenderElement` takes its `ref` callbacks one time, in `setup`. It calls a callback only when the element changes. A change of a prop that keeps the element calls none.
 - A part that chooses a holder from a prop reads the prop in the callback. A `watch` of the prop moves the element to the other holder. `ScrollAreaScrollbar.vue` is the model.
@@ -640,6 +641,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - Do not call a getter of the consumer that can read the DOM before the component is mounted. A server render must never call it. Keep a flag that `onMounted` sets, and read the getter only while the flag is set.
 - Upstream calls some functions of the consumer only while a popup is mounted, such as the `anchor` function. Read such a getter only while the popup is mounted too. A getter that reads an element that exists only while the popup is open then does not run for a closed popup. A getter that has no such upstream rule, such as the one of `collisionBoundary`, also runs while the popup is closed, after the mount.
 - Where upstream calls `useBaseUiId`, call `useVaseUiId(() => props.id)` in setup. It gives the `id` prop, or a generated id with the prefix `vase-ui-`. The ids of the parts derive from the id of the root. The label of a root does not call it, because the root makes the id of the label. See [Server render](#server-render).
+- An empty `id` counts as no `id` (`VUE-93`). HTML requires at least one character in an id, and an ID reference cannot name an empty id. `useVaseUiId` thus gives the generated id for an empty `id` prop. `useLabel`, `useLabelableId` and `useRegisteredLabelId` also treat an empty `id` as no `id`. A part that reads its `id` prop in another way gives the prop to `givenId` of `src/internals/useBaseUiId.ts` before its own default, as `Select.Trigger` does.
 
 ## TypeScript
 

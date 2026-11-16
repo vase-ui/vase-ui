@@ -66,6 +66,7 @@ import type { StateAttributesMapping } from '../../internals/getStateAttributesP
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
 import { REASONS } from '../../internals/reasons';
+import { givenId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { isMouseWithinBounds } from '../../utils/getPseudoElementBounds';
 import { isReleaseAtPressPoint } from '../../utils/popups/isReleaseAtPressPoint';
@@ -110,7 +111,7 @@ const hasSelectedValue = computed(() => store.select('hasSelectedValue'));
 const popupSide = computed(() =>
   store.select('mounted') && store.select('positionerElement') ? store.select('popupSide') : null,
 );
-const triggerId = computed(() => props.id ?? store.select('id'));
+const triggerId = computed(() => givenId(props.id) ?? store.select('id'));
 // The trigger names the list, or the popup while the popup holds no list. An element with no id has
 // an empty `id`, and the trigger then has no `aria-controls`.
 const ariaControls = computed(() => {
