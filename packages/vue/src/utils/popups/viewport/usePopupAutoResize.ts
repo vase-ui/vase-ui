@@ -35,6 +35,9 @@ export function usePopupAutoResize(parameters: UsePopupAutoResizeParameters) {
 
   let committedDimensions: Dimensions | null = null;
 
+  // The rendered style of the popup element and the positioner element has none of the size
+  // variables, so Vue keeps the values that the resize writes. A `style` of the consumer on the
+  // popup replaces an anchoring declaration that has the same property at the next render.
   const anchoringStyles = computed(() =>
     getPopupAnchoringStyles(toValue(parameters.side), toValue(parameters.direction)),
   );
