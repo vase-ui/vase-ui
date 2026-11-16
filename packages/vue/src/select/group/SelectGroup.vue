@@ -30,6 +30,8 @@ defineSlots<{
 // The registry keeps the id of each label by its source. A template can mount a new label before it
 // unmounts the label that it replaces, so a removal by `id` would remove the id of the new label.
 const { ids, registerId } = createIdRegistry();
+// The label is inside the group, so it registers its id after a server wrote the attributes of the
+// group. The server HTML thus has no `aria-labelledby`, as in Base UI.
 const labelId = computed(() => ids.value.at(-1));
 
 provide(SelectGroupContext, {
