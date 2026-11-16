@@ -988,11 +988,18 @@ describe('<Combobox.Root />', () => {
 
     const input = await screen.findByRole('combobox', { name: 'combobox-input' });
     await waitFor(() => expect(input).toHaveFocus());
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+
+    const onInputFocus = vi.fn();
+    input.addEventListener('focus', onInputFocus);
 
     await user.click(trigger);
+    // The `mousedown` of the press gives the trigger the focus one frame before the popup closes.
     await waitFor(() => {
-      expect(trigger).toHaveFocus();
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
     });
+    expect(trigger).toHaveFocus();
+    expect(onInputFocus).not.toHaveBeenCalled();
   });
 
   describe('input inside popup composition', () => {
