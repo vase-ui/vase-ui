@@ -357,11 +357,12 @@ function setIndicatorPosition(edge: 0 | 1, position: number | undefined) {
 
 const thumbMap = shallowRef<ReadonlyMap<Element, CompositeMetadata<ThumbMetadata>>>(new Map());
 
-useCompositeList<ThumbMetadata>({
+const thumbList = useCompositeList<ThumbMetadata>({
   elementsRef: thumbRefs,
   onMapChange(map) {
     thumbMap.value = map;
   },
+  provide: false,
 });
 
 const range = computed(() => Array.isArray(valueUnwrapped.value));
@@ -626,6 +627,7 @@ provide(SliderRootContext, {
   registerLabelId,
   reset,
   thumbMap,
+  thumbList,
   largeStep: computed(() => props.largeStep),
   lastUsedThumbIndex,
   lastChangeReasonRef,

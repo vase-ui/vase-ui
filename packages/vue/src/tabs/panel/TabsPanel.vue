@@ -80,6 +80,7 @@ const {
   value: selectedValue,
   getTabIdByPanelValue,
   orientation,
+  panelList,
   registerPanel,
   tabActivationDirection,
 } = useTabsRootContext();
@@ -91,7 +92,7 @@ const ariaAfterHydration = useAriaAfterHydration();
 
 const panelId = useVaseUiId(() => props.id);
 
-const { ref: listItemRef, index } = useCompositeListItem();
+const { ref: listItemRef, index } = useCompositeListItem({ list: panelList });
 
 const open = computed(() => props.value === selectedValue.value);
 // The getter for `element` runs after `setup`, so the later declaration of `element` is in scope.

@@ -1,5 +1,6 @@
 import { inject } from 'vue';
 import type { ComputedRef, InjectionKey, Ref } from 'vue';
+import type { CompositeListContextValue } from '../../internals/composite/list/CompositeListContext';
 import type { CompositeMetadata } from '../../internals/composite/list/useCompositeList';
 import type { TabsTabActivationDirection, TabsTabMetadata, TabsTabValue } from '../tab/TabsTab.vue';
 import type { TabsRootChangeEventDetails, TabsRootOrientation } from './TabsRoot.vue';
@@ -63,6 +64,11 @@ export interface TabsRootContext {
    * it to the composite root as `hasActiveItem`.
    */
   hasChosenTab: ComputedRef<boolean>;
+  /**
+   * The list of the panels. The panels register with it through this context. The root does not
+   * provide the list, so an item of a composite around the root joins that composite.
+   */
+  panelList: CompositeListContextValue<unknown>;
 }
 
 export const TabsRootContext: InjectionKey<TabsRootContext> = Symbol();

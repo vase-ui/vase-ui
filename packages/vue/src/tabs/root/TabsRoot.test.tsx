@@ -5,6 +5,7 @@ import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import type { TextDirection } from '@vase-ui/vue/direction-provider';
 import { Popover } from '@vase-ui/vue/popover';
 import { Tabs } from '@vase-ui/vue/tabs';
+import { Toolbar } from '@vase-ui/vue/toolbar';
 import {
   createRenderer,
   describeConformance,
@@ -3035,6 +3036,37 @@ describe('<Tabs.Root />', () => {
           clientValue: null,
         },
       ],
+    });
+  });
+
+  describe('elements that are not panels', () => {
+    it('VUE-87: join the composite around the root, in a panel and as a child of the root', async () => {
+      await render(
+        <Toolbar.Root>
+          <Tabs.Root defaultValue="a">
+            <Tabs.List>
+              <Tabs.Tab value="a">A</Tabs.Tab>
+              <Tabs.Tab value="b">B</Tabs.Tab>
+            </Tabs.List>
+            <Tabs.Panel value="a" data-testid="panel-a">
+              <Toolbar.Button data-testid="in-panel">In a panel</Toolbar.Button>
+            </Tabs.Panel>
+            <Toolbar.Button data-testid="in-root">In the root</Toolbar.Button>
+            <Tabs.Panel value="b" keepMounted data-testid="panel-b" />
+          </Tabs.Root>
+          <Toolbar.Button data-testid="after-root">After the root</Toolbar.Button>
+        </Toolbar.Root>,
+      );
+      const inPanel = screen.getByTestId('in-panel');
+      inPanel.focus();
+
+      await fireEvent.keyDown(inPanel, { key: 'ArrowRight' });
+      expect(screen.getByTestId('in-root')).toHaveFocus();
+
+      await fireEvent.keyDown(screen.getByTestId('in-root'), { key: 'ArrowRight' });
+      expect(screen.getByTestId('after-root')).toHaveFocus();
+      expect(screen.getByTestId('panel-a')).toHaveAttribute('data-index', '0');
+      expect(screen.getByTestId('panel-b')).toHaveAttribute('data-index', '1');
     });
   });
 

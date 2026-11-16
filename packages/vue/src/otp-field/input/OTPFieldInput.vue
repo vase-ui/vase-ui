@@ -73,6 +73,7 @@ const {
   getInputId,
   handleInputBlur,
   handleInputFocus,
+  inputList,
   inputMode,
   inputAriaLabelledBy,
   invalid,
@@ -90,7 +91,7 @@ const {
   value,
 } = useOTPFieldRootContext();
 
-const { ref: listItemRef, index } = useCompositeListItem();
+const { ref: listItemRef, index } = useCompositeListItem({ list: inputList });
 const setFocused = useSetFieldFocused(disabled, () => element.value, setRootFocused);
 const direction = useDirection();
 
