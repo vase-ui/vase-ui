@@ -933,6 +933,25 @@ describe('<OTPField.Input />', () => {
     }
   });
 
+  it.each([
+    { name: 'an empty aria-label', ariaLabel: '' },
+    { name: 'an aria-label of white space', ariaLabel: '\n\t ' },
+  ])('VUE-106: does not warn for $name on the first slot', async ({ ariaLabel }) => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    try {
+      await render(
+        <OTPField.Root length={1}>
+          <OTPField.Input aria-label={ariaLabel} />
+        </OTPField.Root>,
+      );
+
+      expect(warnSpy).not.toHaveBeenCalled();
+    } finally {
+      warnSpy.mockRestore();
+    }
+  });
+
   it('does not warn for a first-slot aria-label when a native label is associated', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 

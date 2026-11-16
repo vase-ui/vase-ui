@@ -35,9 +35,11 @@ With `as`, a part has one set of attributes. The part takes the props that it de
 
 An attribute with the value `undefined` counts as not set, as a prop does in Vue. The part keeps its own value, so a wrapper component can pass an optional prop on: `:aria-labelledby="labelledby"`. To remove an attribute of the part, give `null`: `<Menu.GroupLabel :aria-hidden="null">`. A prop that the part declares keeps the rules of Vue: `undefined` gives its default, and its type says if it takes `null`. For example, `Checkbox.Root` declares `aria-label` as the prop `ariaLabel`, which takes no `null`.
 
-This rule is for the attributes that you give to a part. Two other places keep the rule of Vue, in which `undefined` replaces a value: an attribute that you write beside `v-bind="props"` in the `#render` slot, and a later set of `mergeProps`.
+A blank `aria-label` or `aria-labelledby` also counts as not set: an empty string, or a string of white space only. Such a value names nothing, so the part keeps its own name. A wrapper component can thus give its label prop the default `''`. This is also true for a part that declares one of them as a prop, such as `Checkbox.Root`.
 
 An empty `id` that you give to a part also counts as not set, as an attribute or as a prop, because HTML does not allow an empty id. The part keeps its own id, so a title still names its dialog and a label still names its control.
+
+These rules are for the attributes that you give to a part. Two other places keep the rule of Vue, in which `undefined`, a blank name or an empty `id` replaces a value: an attribute that you write beside `v-bind="props"` in the `#render` slot, and a later set of `mergeProps`.
 
 With `#render`, the slot gets `props`. It holds the attributes, the listeners, the state data attributes, the class, the style and the `ref` setter. Bind it on your element with `v-bind="props"`. In [Vapor mode](#vapor-mode), also bind the `ref` setter by name.
 

@@ -154,6 +154,26 @@ describe('<Slider.Thumb />', () => {
       expect(screen.getByRole('slider')).toHaveAttribute('aria-valuetext', '50 percent');
     });
 
+    it.each([
+      { name: 'an empty value', label: '' },
+      { name: 'white space', label: '\n\t ' },
+    ])('VUE-106: keeps the name of the label for a getAriaLabel of $name', async ({ label }) => {
+      await render(
+        <Slider.Root defaultValue={50}>
+          <Slider.Label>Volume</Slider.Label>
+          <Slider.Control>
+            <Slider.Thumb getAriaLabel={() => label} />
+          </Slider.Control>
+        </Slider.Root>,
+      );
+
+      const slider = screen.getByRole('slider');
+      expect(slider).not.toHaveAttribute('aria-label');
+      await waitFor(() => {
+        expect(slider).toHaveAccessibleName('Volume');
+      });
+    });
+
     it('formats aria-valuetext with en-US until hydrated, then with the runtime locale', async () => {
       // Options no other test here formats with; see `mockRuntimeLocale`.
       const format = { maximumFractionDigits: 1 };

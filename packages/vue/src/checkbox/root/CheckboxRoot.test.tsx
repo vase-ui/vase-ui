@@ -1885,6 +1885,22 @@ describe('<Checkbox.Root />', () => {
     expect(siblingLabelled).toHaveAccessibleName('Sibling label');
   });
 
+  it.each([
+    { name: 'an empty aria-label', ariaLabel: '' },
+    { name: 'an aria-label of white space', ariaLabel: '\n\t ' },
+  ])('VUE-106: writes no aria-label for $name', async ({ ariaLabel }) => {
+    await render(
+      <label>
+        <Checkbox.Root aria-label={ariaLabel} />
+        Terms
+      </label>,
+    );
+
+    const checkbox = screen.getByRole('checkbox');
+    expect(checkbox).not.toHaveAttribute('aria-label');
+    expect(checkbox).toHaveAccessibleName('Terms');
+  });
+
   describe.each(['native', 'Field.Label'])('dynamic %s label', (labelType) => {
     function TestCase({
       ariaLabel,
