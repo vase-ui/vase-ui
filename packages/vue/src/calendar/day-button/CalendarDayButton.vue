@@ -123,8 +123,9 @@ defineExpose({ element });
 <template>
   <template v-if="!state.hidden">
     <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :text="text" />
-    <component :is="as" v-else v-bind="elementProps()"
+    <component :is="as" v-else-if="$slots.default || as !== 'button'" v-bind="elementProps()"
       ><slot :state="state" :text="text">{{ text }}</slot></component
     >
+    <button v-else v-bind="elementProps()">{{ text }}</button>
   </template>
 </template>

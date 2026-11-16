@@ -1,0 +1,36 @@
+{
+  "standard": [
+    "https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/examples/datepicker-dialog/",
+    "https://www.w3.org/WAI/ARIA/apg/patterns/grid/"
+  ],
+  "reason": "Base UI has no calendar. A person selects a day, or a month, in a grid and moves in it with the keys of the date picker dialog pattern, and the calendar gives Temporal values to a form.",
+  "parts": [
+    "Root",
+    "PreviousButton",
+    "NextButton",
+    "ViewTrigger",
+    "Months",
+    "Month",
+    "Caption",
+    "MonthSelect",
+    "YearSelect",
+    "Grid",
+    "GridHeader",
+    "GridHeaderRow",
+    "Weekday",
+    "WeekNumberHeader",
+    "GridBody",
+    "Week",
+    "WeekNumber",
+    "Day",
+    "DayButton",
+    "MonthGrid",
+    "MonthGridRow",
+    "MonthCell",
+    "YearGrid",
+    "YearGridRow",
+    "YearCell",
+    "Footer"
+  ],
+  "types": ["Calendar.Root.ChangeEventReason", "Calendar.Root.View"]
+}

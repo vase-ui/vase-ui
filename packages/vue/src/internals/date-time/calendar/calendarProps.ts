@@ -6,11 +6,52 @@ import type { VisibleDuration } from './weeks';
 
 export type CalendarChangeEventReason =
   | typeof REASONS.dayPress
+  | typeof REASONS.monthPress
+  | typeof REASONS.yearPress
+  | typeof REASONS.triggerPress
   | typeof REASONS.keyboard
   | typeof REASONS.monthChange
   | typeof REASONS.none;
 
 export type CalendarChangeEventDetails = VaseUIChangeEventDetails<CalendarChangeEventReason>;
+
+/** What a calendar can select: a day, or a year and month. */
+export type CalendarValue = DateValue | Temporal.PlainYearMonth;
+
+/** What the grid shows: the days of a month, the months of a year, or a page of years. */
+export type CalendarView = 'day' | 'month' | 'year';
+
+/** The props of a calendar that has the views of months and years. */
+export interface CalendarViewProps {
+  /**
+   * What the grid shows: `day` the days of the months, `month` the months of a year, and `year` a
+   * page of years. A value that is a year and month has no days, so its first view is `month`.
+   * A calendar with `visibleDuration` shows days only. Use it when controlled.
+   */
+  view?: CalendarView | undefined;
+  /**
+   * What the grid shows when it first renders. The default is `day`, and `month` for a value that is
+   * a year and month.
+   */
+  defaultView?: CalendarView | undefined;
+  /**
+   * The number of years on a page of years. A page starts with a year that is a multiple of this
+   * number, so the page that holds 2026 starts with 2016 when the number is 12.
+   * @default 12
+   */
+  visibleYears?: number | undefined;
+  /**
+   * Whether a month cannot take focus and cannot be selected. The function gets each month of the
+   * grid, in the calendar of the grid. A month before `minDate` or after `maxDate` is disabled too.
+   */
+  disabledMonths?: ((month: Temporal.PlainYearMonth) => boolean) | undefined;
+  /**
+   * Whether a year cannot take focus and cannot be selected. The function gets the first month of
+   * each year of the grid, in the calendar of the grid. A year before `minDate` or after `maxDate`
+   * is disabled too.
+   */
+  disabledYears?: ((year: Temporal.PlainYearMonth) => boolean) | undefined;
+}
 
 /** The props that each calendar root has, whatever its selection. */
 export interface CalendarBaseProps {
@@ -20,7 +61,8 @@ export interface CalendarBaseProps {
    * first day, and a move of the page gives the month of its first day. A month or year select can
    * start the page earlier, so that the page ends with the week or the day of `maxDate`. When the
    * grid has another calendar than this month, the grid shows the month that holds the first day of
-   * this month. Use it when controlled.
+   * this month. The grid of months shows the year of this month, and the grid of years shows the
+   * page of years that holds that year. Use it when controlled.
    */
   month?: Temporal.PlainYearMonth | undefined;
   /**

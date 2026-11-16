@@ -15,6 +15,11 @@ export const invalid = 'data-invalid';
  */
 export const empty = 'data-empty';
 /**
+ * Indicates what the grid shows: the days of the months, the months of a year, or a page of years.
+ * @type {'day' | 'month' | 'year'}
+ */
+export const view = 'data-view';
+/**
  * Present when the grid shows more than one month.
  */
 export const multipleMonths = 'data-multiple-months';

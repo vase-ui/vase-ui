@@ -32,6 +32,7 @@ import type {
   CalendarRootChangeEventReason,
   CalendarRootProps,
   CalendarRootState,
+  CalendarRootView,
 } from './root/CalendarRoot.vue';
 import CalendarWeek from './week/CalendarWeek.vue';
 import type { CalendarWeekProps, CalendarWeekState } from './week/CalendarWeek.vue';
@@ -71,26 +72,62 @@ import type {
 } from './week-number/CalendarWeekNumber.vue';
 import CalendarFooter from './footer/CalendarFooter.vue';
 import type { CalendarFooterProps, CalendarFooterState } from './footer/CalendarFooter.vue';
-import type { DateValue } from '../internals/date-time/temporal';
+import CalendarViewTrigger from './view-trigger/CalendarViewTrigger.vue';
+import type {
+  CalendarViewTriggerProps,
+  CalendarViewTriggerState,
+} from './view-trigger/CalendarViewTrigger.vue';
+import CalendarMonthGrid from './month-grid/CalendarMonthGrid.vue';
+import type {
+  CalendarMonthGridProps,
+  CalendarMonthGridState,
+} from './month-grid/CalendarMonthGrid.vue';
+import CalendarMonthGridRow from './month-grid-row/CalendarMonthGridRow.vue';
+import type {
+  CalendarMonthGridRowProps,
+  CalendarMonthGridRowState,
+} from './month-grid-row/CalendarMonthGridRow.vue';
+import CalendarMonthCell from './month-cell/CalendarMonthCell.vue';
+import type {
+  CalendarMonthCellProps,
+  CalendarMonthCellState,
+} from './month-cell/CalendarMonthCell.vue';
+import CalendarYearGrid from './year-grid/CalendarYearGrid.vue';
+import type {
+  CalendarYearGridProps,
+  CalendarYearGridState,
+} from './year-grid/CalendarYearGrid.vue';
+import CalendarYearGridRow from './year-grid-row/CalendarYearGridRow.vue';
+import type {
+  CalendarYearGridRowProps,
+  CalendarYearGridRowState,
+} from './year-grid-row/CalendarYearGridRow.vue';
+import CalendarYearCell from './year-cell/CalendarYearCell.vue';
+import type {
+  CalendarYearCellProps,
+  CalendarYearCellState,
+} from './year-cell/CalendarYearCell.vue';
+import type { CalendarValue } from '../internals/date-time/calendar/calendarProps';
 
 /**
- * Groups all parts of the calendar and holds the selected day, the month that the grid shows and
- * the day that has the tab stop.
+ * Groups all parts of the calendar and holds the selected day or month, the month that the grid
+ * shows, the view and the day that has the tab stop.
  * Renders a `<div>` element.
  */
 export const Root: typeof CalendarRoot = CalendarRoot;
 export namespace Root {
   export type Props<
-    Value extends DateValue = Temporal.PlainDate,
+    Value extends CalendarValue = Temporal.PlainDate,
     Multiple extends boolean | undefined = false,
   > = CalendarRootProps<Value, Multiple>;
   export type State = CalendarRootState;
   export type ChangeEventReason = CalendarRootChangeEventReason;
   export type ChangeEventDetails = CalendarRootChangeEventDetails;
+  export type View = CalendarRootView;
 }
 
 /**
- * Renders a month for each page of the calendar.
+ * Renders a month for each page of the calendar. It shows only in the view `day`.
  * Renders a `<div>` element.
  */
 export const Months: typeof CalendarMonths = CalendarMonths;
@@ -267,4 +304,75 @@ export const Footer: typeof CalendarFooter = CalendarFooter;
 export namespace Footer {
   export type Props = CalendarFooterProps;
   export type State = CalendarFooterState;
+}
+
+/**
+ * The button that shows the grid of months or the grid of years, and shows the first view again
+ * when a press comes while that grid shows. Its text is the name of what the grid shows.
+ * Renders a `<button>` element.
+ */
+export const ViewTrigger: typeof CalendarViewTrigger = CalendarViewTrigger;
+export namespace ViewTrigger {
+  export type Props = CalendarViewTriggerProps;
+  export type State = CalendarViewTriggerState;
+}
+
+/**
+ * The grid of the months of a year. It shows only in the view `month`.
+ * Renders a `<div>` element.
+ */
+export const MonthGrid: typeof CalendarMonthGrid = CalendarMonthGrid;
+export namespace MonthGrid {
+  export type Props = CalendarMonthGridProps;
+  export type State = CalendarMonthGridState;
+}
+
+/**
+ * The row of the months of a grid.
+ * Renders a `<div>` element.
+ */
+export const MonthGridRow: typeof CalendarMonthGridRow = CalendarMonthGridRow;
+export namespace MonthGridRow {
+  export type Props = CalendarMonthGridRowProps;
+  export type State = CalendarMonthGridRowState;
+}
+
+/**
+ * The button of a month. A press selects the month of a year and month, and else shows its days.
+ * Renders a `<button>` element.
+ */
+export const MonthCell: typeof CalendarMonthCell = CalendarMonthCell;
+export namespace MonthCell {
+  export type Props = CalendarMonthCellProps;
+  export type State = CalendarMonthCellState;
+}
+
+/**
+ * The grid of a page of years. It shows only in the view `year`.
+ * Renders a `<div>` element.
+ */
+export const YearGrid: typeof CalendarYearGrid = CalendarYearGrid;
+export namespace YearGrid {
+  export type Props = CalendarYearGridProps;
+  export type State = CalendarYearGridState;
+}
+
+/**
+ * The row of the years of a grid.
+ * Renders a `<div>` element.
+ */
+export const YearGridRow: typeof CalendarYearGridRow = CalendarYearGridRow;
+export namespace YearGridRow {
+  export type Props = CalendarYearGridRowProps;
+  export type State = CalendarYearGridRowState;
+}
+
+/**
+ * The button of a year. A press shows the months of that year.
+ * Renders a `<button>` element.
+ */
+export const YearCell: typeof CalendarYearCell = CalendarYearCell;
+export namespace YearCell {
+  export type Props = CalendarYearCellProps;
+  export type State = CalendarYearCellState;
 }
