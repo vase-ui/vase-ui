@@ -167,7 +167,7 @@ const inputSyncRequest = shallowRef(0);
 // The group asks all its radios in one flush. With one take for each radio, a take of another
 // part between two radios waits for a flush, and the write of the earlier radio unchecks the input
 // that the browser checked in a group with a name.
-const inputTakeRequest = shallowRef<{ event?: Event }>();
+const inputTakeRequest = shallowRef<{ event?: Event | undefined }>();
 let isInputTakeQueued = false;
 
 function takeInputsAfterMount() {

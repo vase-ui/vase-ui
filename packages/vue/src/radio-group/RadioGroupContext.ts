@@ -33,7 +33,7 @@ export interface RadioGroupContext<Value> {
    * it at a form restore and in the take that `takeInputsAfterMount` queues. Base UI does not have
    * this member.
    */
-  inputTakeRequest: Readonly<Ref<{ event?: Event } | undefined>>;
+  inputTakeRequest: Readonly<Ref<{ event?: Event | undefined } | undefined>>;
   /**
    * Queues one take of the inputs of the group after the mount. A radio whose input changed before
    * the hydration calls it. Base UI does not have this member.
