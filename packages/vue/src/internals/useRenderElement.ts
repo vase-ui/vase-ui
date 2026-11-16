@@ -102,9 +102,10 @@ function hasStyleValue(style: Record<string, unknown>): boolean {
   return false;
 }
 
-// Vue neither compares nor writes these attributes while it hydrates an element, because its list
-// of known HTML attributes does not have them. `aria-hidden` is not here: the lock of a modal popup
-// writes it to the elements outside the popup, and a part can hydrate after that.
+// While Vue hydrates an element, it writes no attribute that a `v-bind` object gives. It compares
+// only the attributes of its lists of known attributes, and these names are not in those lists.
+// `aria-hidden` is not here: the lock of a modal popup writes it to the elements outside the popup,
+// and a part can hydrate after that.
 function isUncomparedAttribute(name: string): boolean {
   return (
     name === 'role' ||
@@ -195,7 +196,7 @@ export function useRenderElement<
 
   const instance = getCurrentInstance();
   // The element of the server HTML while Vue hydrates the part. It is `null` on a server, in a
-  // client-only mount and after the mount.
+  // client-only mount, after the mount and with `serverAttributes: false`.
   let serverElement = params.serverAttributes === false ? null : getServerElement();
   const mounted = shallowRef(false);
   const focusListeners = new Map<FocusKey, FocusListeners>();
@@ -485,8 +486,9 @@ export interface UseRenderElementReturnValue<RenderedElementType extends Element
   /**
    * Makes the props for the element: the state data attributes, the attributes and listeners,
    * `class`, `style` and `ref`. The template calls it on each render.
-   * In a render before the mount of a part that Vue hydrates, an `aria-*`, `role`, `abbr` or
-   * `data-*` key that differs from the server HTML has the value of the server HTML, as a string.
+   * In a render before the mount of a part that Vue hydrates, a `role`, `abbr`, `data-*` or
+   * `aria-*` key (except `aria-hidden`) whose value differs from the server HTML has the server
+   * value: a string, or `undefined` when the server element has no such attribute.
    */
   elementProps: () => HTMLProps;
 }

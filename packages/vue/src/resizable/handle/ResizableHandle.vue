@@ -204,24 +204,30 @@ function getValueText(panel: PanelConstraints, value: number) {
 // the keys that the props have.
 const valueAttributes = computed(() => {
   const panel = primary.value;
-  const hasValue = panel !== undefined && !isDisabled.value && !hasPendingLengths.value;
-  const range = hasValue
-    ? getHandleRange(
-        root.constraints.value,
-        root.shown.value,
-        pivot.value,
-        panel,
-        root.pushPanels.value,
-      )
-    : undefined;
+  if (panel === undefined || isDisabled.value || hasPendingLengths.value) {
+    return {
+      'aria-controls': panel?.id,
+      'aria-valuenow': undefined,
+      'aria-valuemin': undefined,
+      'aria-valuemax': undefined,
+      'aria-valuetext': undefined,
+    };
+  }
+  const range = getHandleRange(
+    root.constraints.value,
+    root.shown.value,
+    pivot.value,
+    panel,
+    root.pushPanels.value,
+  );
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The panel is in the constraints, so the layout has an entry for its id.
-  const value = hasValue ? root.shown.value[panel.id]! : undefined;
+  const value = root.shown.value[panel.id]!;
   return {
-    'aria-controls': panel?.id,
-    'aria-valuenow': value === undefined ? undefined : Math.round(value),
-    'aria-valuemin': range && Math.round(range.min),
-    'aria-valuemax': range && Math.round(range.max),
-    'aria-valuetext': hasValue && value !== undefined ? getValueText(panel, value) : undefined,
+    'aria-controls': panel.id,
+    'aria-valuenow': Math.round(value),
+    'aria-valuemin': Math.round(range.min),
+    'aria-valuemax': Math.round(range.max),
+    'aria-valuetext': getValueText(panel, value),
   };
 });
 

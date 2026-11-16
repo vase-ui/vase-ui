@@ -1,25 +1,13 @@
 import { describe, expect, it, onTestFinished } from 'vitest';
 import { createSSRApp, h, nextTick } from 'vue';
 import type { Component } from 'vue';
-import { hydrate, renderOnServer, takeReportedMessages } from '#test-utils';
+import { hydrate, renderOnServer, setAttributeInHtml, takeReportedMessages } from '#test-utils';
 import ServerAttributesPart from './ServerAttributesPart.test.vue';
 import UseRenderElementHydration from './UseRenderElementHydration.test.vue';
 
 const FIXTURE = 'src/internals/UseRenderElementHydration.test.vue';
 const PART_FILE = 'src/internals/ServerAttributesPart.test.vue';
 const PART = '[data-testid="part"]';
-
-// Gives the server HTML after `change` changed the element of the part in it.
-function changeServerHtml(html: string, change: (part: Element) => void): string {
-  const template = document.createElement('template');
-  template.innerHTML = html;
-  const part = template.content.querySelector(PART);
-  if (!part) {
-    throw new Error('The server HTML has no element of the part.');
-  }
-  change(part);
-  return template.innerHTML;
-}
 
 // `hydrate` fails when the hydrated DOM differs from a client-only render. A case that keeps an
 // attribute of the server HTML has such a difference, so it hydrates by hand.
@@ -56,9 +44,12 @@ describe('useRenderElement: the attributes that Vue does not write while it hydr
         { name: 'the abbr', attribute: 'abbr', client: 'Mon' },
         { name: 'a state attribute', attribute: 'data-active', client: '' },
       ])('writes the client value of $name', async ({ attribute, client }) => {
-        const serverHtml = changeServerHtml(await renderOnServer(FIXTURE, props), (part) => {
-          part.setAttribute(attribute, 'server');
-        });
+        const serverHtml = setAttributeInHtml(
+          await renderOnServer(FIXTURE, props),
+          PART,
+          attribute,
+          'server',
+        );
 
         const { container } = await hydrate(UseRenderElementHydration, { serverHtml, props });
 
@@ -102,11 +93,13 @@ describe('useRenderElement: the attributes that Vue does not write while it hydr
         { name: 'an aria attribute with no key', attribute: 'aria-busy' },
         { name: 'a data attribute with no state', attribute: 'data-extension' },
       ])('keeps $name', async ({ attribute }) => {
-        const serverHtml = changeServerHtml(await renderOnServer(FIXTURE, props), (part) => {
-          part.setAttribute(attribute, 'true');
+        const serverHtml = setAttributeInHtml(
           // A difference that makes the part render again after the mount.
-          part.setAttribute('aria-controls', 'server');
-        });
+          setAttributeInHtml(await renderOnServer(FIXTURE, props), PART, 'aria-controls', 'server'),
+          PART,
+          attribute,
+          'true',
+        );
 
         const container = await hydrateByHand(UseRenderElementHydration, serverHtml, props);
 
@@ -118,10 +111,12 @@ describe('useRenderElement: the attributes that Vue does not write while it hydr
       it('keeps an aria-hidden that a script wrote before the hydration', async () => {
         // The lock of a modal popup writes `aria-hidden` to the elements outside the popup, and a
         // part can hydrate after that.
-        const serverHtml = changeServerHtml(await renderOnServer(FIXTURE, props), (part) => {
-          part.setAttribute('aria-hidden', 'true');
-          part.setAttribute('aria-controls', 'server');
-        });
+        const serverHtml = setAttributeInHtml(
+          setAttributeInHtml(await renderOnServer(FIXTURE, props), PART, 'aria-controls', 'server'),
+          PART,
+          'aria-hidden',
+          'true',
+        );
 
         const container = await hydrateByHand(UseRenderElementHydration, serverHtml, props);
 
@@ -133,9 +128,21 @@ describe('useRenderElement: the attributes that Vue does not write while it hydr
   );
 
   describe('renders of the part', () => {
-    async function countRenders(change: (part: Element) => void) {
-      const props = { 'data-testid': 'part', controls: 'panel' };
-      const serverHtml = changeServerHtml(await renderOnServer(PART_FILE, props), change);
+    // The props have a string, a number, a Boolean and a state, which the server writes as text.
+    async function countRenders(serverControls: string) {
+      const props = {
+        'data-testid': 'part',
+        controls: 'panel',
+        'aria-level': 2,
+        'aria-expanded': false,
+        active: true,
+      };
+      const serverHtml = setAttributeInHtml(
+        await renderOnServer(PART_FILE, props),
+        PART,
+        'aria-controls',
+        serverControls,
+      );
       let renders = 0;
       // The part calls `stateClass` one time in each render.
       const stateClass = () => {
@@ -149,15 +156,11 @@ describe('useRenderElement: the attributes that Vue does not write while it hydr
     }
 
     it('renders one time when each value is equal to the server HTML', async () => {
-      expect(await countRenders(() => {})).toBe(1);
+      expect(await countRenders('panel')).toBe(1);
     });
 
     it('renders one more time when a value differs from the server HTML', async () => {
-      expect(
-        await countRenders((part) => {
-          part.setAttribute('aria-controls', 'server');
-        }),
-      ).toBe(2);
+      expect(await countRenders('server')).toBe(2);
     });
   });
 });
