@@ -21,6 +21,7 @@ import {
 } from '../temporal';
 import type { DateValue, DayOfWeek } from '../temporal';
 import type {
+  CalendarBaseChangeEventDetails,
   CalendarBaseProps,
   CalendarChangeEventDetails,
   CalendarView,
@@ -41,10 +42,10 @@ import type { CalendarCellState } from './viewPages';
 import { alignPageStart, getBroadcastPage, getDurationPage, getWeekNumber } from './weeks';
 import type { VisibleDuration } from './weeks';
 
-export interface CalendarRootEmit {
-  (event: 'monthChange', month: Temporal.PlainYearMonth, details: CalendarChangeEventDetails): void;
+export interface CalendarRootEmit<Details> {
+  (event: 'monthChange', month: Temporal.PlainYearMonth, details: Details): void;
   (event: 'update:month', month: Temporal.PlainYearMonth): void;
-  (event: 'focusedDateChange', date: Temporal.PlainDate, details: CalendarChangeEventDetails): void;
+  (event: 'focusedDateChange', date: Temporal.PlainDate, details: Details): void;
   (event: 'update:focusedDate', date: Temporal.PlainDate): void;
 }
 
@@ -67,15 +68,26 @@ interface DurationStart {
   month: Temporal.PlainYearMonth;
 }
 
-export interface UseCalendarRootOptions {
+interface CalendarRootOptions<Details> {
   /** The name of the root part in the messages. */
   part: string;
   props: CalendarBaseProps;
-  emit: CalendarRootEmit;
-  selection: CalendarSelection;
-  /** The views of months and years. A root with no views shows days only. */
-  views?: CalendarViewsOptions;
+  emit: CalendarRootEmit<Details>;
+  selection: CalendarSelection<Details>;
 }
+
+/** A root with no views shows days only, so no event of the root has a reason of the views. */
+interface UseCalendarRootOptionsWithoutViews extends CalendarRootOptions<CalendarBaseChangeEventDetails> {
+  views?: undefined;
+}
+
+/** A root with the views of months and years. Its events also have the reasons of the views. */
+interface UseCalendarRootOptionsWithViews extends CalendarRootOptions<CalendarChangeEventDetails> {
+  views: CalendarViewsOptions;
+}
+
+export type UseCalendarRootOptions =
+  UseCalendarRootOptionsWithoutViews | UseCalendarRootOptionsWithViews;
 
 /** What the root gives to its parts and to its own element. */
 export interface CalendarRootController {
@@ -176,13 +188,14 @@ export interface CalendarRootController {
  * The root owns the focused day and the month of the page. The pages, the tab stop and the keys
  * derive from them and from the selection.
  */
-export function useCalendarRoot({
-  part,
-  props,
-  emit,
-  selection,
-  views,
-}: UseCalendarRootOptions): CalendarRootController {
+export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootController {
+  const { part, props, views } = options;
+  const emit: CalendarRootEmit<CalendarBaseChangeEventDetails> = options.emit;
+  const selection: CalendarSelection = options.selection;
+  // Only a root with views has listeners and a selection that take the reasons of the views.
+  // A root with no views gets no press on its view trigger, a month or a year. Its trigger is
+  // disabled, and its grids of months and of years do not render.
+  const optionsWithViews = options.views ? options : undefined;
   const formatLocale = useFormatLocale(() => props.locale);
   const direction = useDirection();
   const name = part.replace(/\.Root$/, '');
@@ -523,8 +536,7 @@ export function useCalendarRoot({
     return formatPages(pages.value, locale);
   });
 
-  function setMonth(month: Temporal.PlainYearMonth, details: CalendarChangeEventDetails) {
-    emit('monthChange', month, details);
+  function applyMonth(month: Temporal.PlainYearMonth, details: CalendarChangeEventDetails) {
     if (details.isCanceled) {
       return false;
     }
@@ -533,10 +545,24 @@ export function useCalendarRoot({
     return true;
   }
 
+  function setMonth(month: Temporal.PlainYearMonth, details: CalendarBaseChangeEventDetails) {
+    emit('monthChange', month, details);
+    return applyMonth(month, details);
+  }
+
+  function setMonthOfView(
+    rootOptions: UseCalendarRootOptionsWithViews,
+    month: Temporal.PlainYearMonth,
+    details: CalendarChangeEventDetails,
+  ) {
+    rootOptions.emit('monthChange', month, details);
+    return applyMonth(month, details);
+  }
+
   // A page of a duration moves to the month of its first day: that month is the month of the root.
   function setPageStart(
     day: Temporal.PlainDate,
-    details: CalendarChangeEventDetails,
+    details: CalendarBaseChangeEventDetails,
     month = day.toPlainYearMonth(),
   ) {
     const start = { day, month };
@@ -557,7 +583,7 @@ export function useCalendarRoot({
     return true;
   }
 
-  function setFocusedDate(date: Temporal.PlainDate, details: CalendarChangeEventDetails) {
+  function setFocusedDate(date: Temporal.PlainDate, details: CalendarBaseChangeEventDetails) {
     emit('focusedDateChange', date, details);
     if (details.isCanceled) {
       return false;
@@ -580,7 +606,7 @@ export function useCalendarRoot({
 
   // Shows the page that holds `date`. A date after the page starts the new page, and a date before
   // the page ends it, so the page moves the way that the date does.
-  function showDate(date: Temporal.PlainDate, createDetails: () => CalendarChangeEventDetails) {
+  function showDate(date: Temporal.PlainDate, createDetails: () => CalendarBaseChangeEventDetails) {
     const visible = duration.value;
     if (visible && pageStart.value) {
       const edge = compareDates(date, pageStart.value) < 0 ? 'end' : 'start';
@@ -631,7 +657,10 @@ export function useCalendarRoot({
   }
 
   // `createDetails` makes a new object for each event, because `cancel()` belongs to one event.
-  function moveFocus(date: Temporal.PlainDate, createDetails: () => CalendarChangeEventDetails) {
+  function moveFocus(
+    date: Temporal.PlainDate,
+    createDetails: () => CalendarBaseChangeEventDetails,
+  ) {
     if (!isShown(date) && !showDate(date, createDetails)) {
       return false;
     }
@@ -804,12 +833,19 @@ export function useCalendarRoot({
   }
 
   function toggleView(target: 'month' | 'year', event: MouseEvent) {
+    if (!optionsWithViews) {
+      return;
+    }
     const next = view.value === target ? (isMonthValue.value ? 'month' : 'day') : target;
     const createDetails = () => createChangeEventDetails(REASONS.triggerPress, event);
     // A grid of months or of years can show the month of `maxDate`. The pages of days that follow
     // it then keep to the limits.
     const month = clampMonth(visibleMonth.value);
-    if (next === 'day' && !month.equals(visibleMonth.value) && !setMonth(month, createDetails())) {
+    if (
+      next === 'day' &&
+      !month.equals(visibleMonth.value) &&
+      !setMonthOfView(optionsWithViews, month, createDetails())
+    ) {
       return;
     }
     setView(next, createDetails());
@@ -840,7 +876,7 @@ export function useCalendarRoot({
   // takes in the cell.
   function moveCellFocus(
     cell: Temporal.PlainYearMonth,
-    createDetails: () => CalendarChangeEventDetails,
+    createDetails: () => CalendarBaseChangeEventDetails,
     date = dateOfCell(cell),
   ) {
     const target = clampDate(date);
@@ -888,19 +924,22 @@ export function useCalendarRoot({
 
   // A press on a month of a year and month selects it. Else it shows the days of the month.
   function pressMonth(month: Temporal.PlainYearMonth, event: MouseEvent) {
-    if (isMonthDisabled(month)) {
+    if (!optionsWithViews || isMonthDisabled(month)) {
       return;
     }
     if (isMonthValue.value) {
       if (canChange()) {
-        selection.press(cellDate(month), createChangeEventDetails(REASONS.monthPress, event));
+        optionsWithViews.selection.press(
+          cellDate(month),
+          createChangeEventDetails(REASONS.monthPress, event),
+        );
       }
       return;
     }
     const target = clampMonth(month);
     if (
       target.equals(visibleMonth.value) ||
-      setMonth(target, createChangeEventDetails(REASONS.monthPress, event))
+      setMonthOfView(optionsWithViews, target, createChangeEventDetails(REASONS.monthPress, event))
     ) {
       setView('day', createChangeEventDetails(REASONS.monthPress, event));
     }
@@ -908,7 +947,7 @@ export function useCalendarRoot({
 
   // A press on a year shows its months, in the same month of the year as the root has now.
   function pressYear(year: Temporal.PlainYearMonth, event: MouseEvent) {
-    if (isYearDisabled(year)) {
+    if (!optionsWithViews || isYearDisabled(year)) {
       return;
     }
     const target = clampMonth(
@@ -917,7 +956,7 @@ export function useCalendarRoot({
     );
     if (
       target.equals(visibleMonth.value) ||
-      setMonth(target, createChangeEventDetails(REASONS.yearPress, event))
+      setMonthOfView(optionsWithViews, target, createChangeEventDetails(REASONS.yearPress, event))
     ) {
       setView('month', createChangeEventDetails(REASONS.yearPress, event));
     }
