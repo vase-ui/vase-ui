@@ -1,5 +1,6 @@
 import * as Checkbox from '../src/checkbox/index.parts';
 import * as DateField from '../src/date-field/index.parts';
+import * as DatePicker from '../src/date-picker/index.parts';
 import * as OTPField from '../src/otp-field/index.parts';
 import * as Radio from '../src/radio/index.parts';
 import * as Resizable from '../src/resizable/index.parts';
@@ -19,6 +20,16 @@ import * as TimeField from '../src/time-field/index.parts';
 <DateField.Root ariaLabelledby="id" />;
 // @ts-expect-error `aria-labelledby` is a string
 <DateField.Root aria-labelledby={5} />;
+
+<DatePicker.Field aria-labelledby="id" />;
+<DatePicker.Field ariaLabelledby="id" />;
+// @ts-expect-error `aria-labelledby` is a string
+<DatePicker.Field aria-labelledby={5} />;
+
+<DatePicker.TimeField aria-labelledby="id" />;
+<DatePicker.TimeField ariaLabelledby="id" />;
+// @ts-expect-error `aria-labelledby` is a string
+<DatePicker.TimeField aria-labelledby={5} />;
 
 <OTPField.Root length={6} aria-labelledby="id" />;
 <OTPField.Root length={6} ariaLabelledby="id" />;
