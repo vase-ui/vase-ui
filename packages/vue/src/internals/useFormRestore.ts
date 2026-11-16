@@ -1,9 +1,9 @@
-import { onActivated, onBeforeUpdate, onDeactivated, onUpdated, shallowRef, watch } from 'vue';
+import { onBeforeUpdate, onUpdated, watch } from 'vue';
 import type { Ref } from 'vue';
 import { addEventListener } from '../common/addEventListener';
 import { dispatchTakeEvents, isTextControl } from '../common/hydration';
 import { ownerWindow } from '../common/owner';
-import { isInHeldBranch } from './useKeepAliveState';
+import { useKeepAliveState } from './useKeepAliveState';
 
 // `pageshow` comes in the task of `load`, after its listeners. `loadEventEnd` is 0 until then.
 function isBeforePageshow(win: Window) {
@@ -33,22 +33,16 @@ export function useFormRestore(
   input: Readonly<Ref<Element | null>>,
   onRestore: (event?: PageTransitionEvent) => void,
 ): () => boolean {
-  // The flag is a source of the `watch`, so its cleanup removes the listener while `KeepAlive`
+  // `isHeld` is a source of the `watch`, so its cleanup removes the listener while `KeepAlive`
   // holds the part.
-  const isDeactivated = shallowRef(isInHeldBranch());
-  onDeactivated(() => {
-    isDeactivated.value = true;
-  });
-  onActivated(() => {
-    isDeactivated.value = false;
-  });
+  const { isHeld } = useKeepAliveState();
 
   let waitsForPageshow = false;
 
   watch(
-    [input, isDeactivated] as const,
-    ([element, deactivated], _previous, onCleanup) => {
-      if (!element || deactivated) {
+    [input, isHeld] as const,
+    ([element, held], _previous, onCleanup) => {
+      if (!element || held) {
         return;
       }
 

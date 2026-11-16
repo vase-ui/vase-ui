@@ -81,7 +81,7 @@ export function useEdges(options: EdgesOptions): Readonly<ShallowRef<readonly Ed
             registration: panel,
           })),
           options.handles.value
-            .filter((handle) => !handle.deactivated.value)
+            .filter((handle) => !handle.isHeld.value)
             .map((handle) => handle.index.value),
           options.disabled(),
         )

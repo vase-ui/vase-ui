@@ -117,13 +117,13 @@ function applyOverscrollThumb(
 </script>
 
 <script setup lang="ts">
-import { onActivated, onDeactivated, onMounted, onUpdated, provide, shallowRef, watch } from 'vue';
+import { onMounted, onUpdated, provide, watch } from 'vue';
 import { NOOP } from '../../common/empty';
 import { useTimeout } from '../../common/useTimeout';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { isInHeldBranch } from '../../internals/useKeepAliveState';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { getFiniteAnimations } from '../../utils/getFiniteAnimations';
 import { normalizeScrollOffset } from '../../utils/scrollEdges';
 import { styleDisableScrollbar } from '../../utils/styles';
@@ -424,33 +424,30 @@ onMounted(setHoveringIfHovered);
 
 // `KeepAlive` takes the element of a deactivated viewport out of the document. The element then has
 // no layout, so the observer and the timers stop until the viewport is active again.
-const isDeactivated = shallowRef(isInHeldBranch());
-
-onDeactivated(() => {
-  isDeactivated.value = true;
-  scrollEndTimeout.clear();
-  // The timer that was cleared would have set the flag.
-  programmaticScroll = true;
-});
-
-onActivated(() => {
-  // `onActivated` also runs at the first mount inside `KeepAlive`.
-  if (!isDeactivated.value) {
-    return;
-  }
-
-  isDeactivated.value = false;
-  // The browser resets the scroll position of an element that left the document. It sends no
-  // scroll event, so the viewport measures again.
-  measureAfterUpdate();
-  // The root cleared the hover state on deactivation.
-  setHoveringIfHovered();
-});
+const { isHeld } = useKeepAliveState();
 
 watch(
-  [element, isDeactivated],
-  ([viewport, deactivated], _previous, onCleanup) => {
-    if (typeof ResizeObserver === 'undefined' || !viewport || deactivated) {
+  isHeld,
+  (held) => {
+    if (held) {
+      scrollEndTimeout.clear();
+      // The timer that was cleared would have set the flag.
+      programmaticScroll = true;
+    } else {
+      // The browser resets the scroll position of an element that left the document. It sends no
+      // scroll event, so the viewport measures again.
+      measureAfterUpdate();
+      // The root cleared the hover state on deactivation.
+      setHoveringIfHovered();
+    }
+  },
+  { flush: 'sync' },
+);
+
+watch(
+  [element, isHeld],
+  ([viewport, held], _previous, onCleanup) => {
+    if (typeof ResizeObserver === 'undefined' || !viewport || held) {
       return;
     }
 

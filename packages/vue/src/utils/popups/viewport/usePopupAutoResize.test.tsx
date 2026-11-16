@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { nextTick, shallowRef } from 'vue';
+import { KeepAlive, defineComponent, nextTick, onDeactivated, shallowRef } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import {
   createHeldBranch,
@@ -422,6 +422,34 @@ describe('usePopupAutoResize', () => {
   });
 
   describe('KeepAlive', () => {
+    it('takes its anchoring styles off the popup before the deactivation hook of a component above it', async () => {
+      let popup: HTMLElement | null = null;
+      let positionAtDeactivation: string | undefined;
+      const Scene = defineComponent({
+        setup() {
+          onDeactivated(() => {
+            positionAtDeactivation = popup?.style.position;
+          });
+          return () =>
+            scene({
+              root: openRoot,
+              triggers: [{ id: 'trigger' }],
+              positioner: { side: 'top', collisionAvoidance: { side: 'none' } },
+              content: () => 'Content',
+            });
+        },
+      });
+      const visible = shallowRef(true);
+      await render(() => <KeepAlive>{visible.value ? <Scene /> : null}</KeepAlive>);
+      popup = screen.getByTestId('popup');
+      expect(popup.style.position).toBe('absolute');
+
+      visible.value = false;
+      await nextTick();
+
+      expect(positionAtDeactivation).toBe('');
+    });
+
     it('measures the popup when it comes back after a change of the payload', async () => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
       const payload = shallowRef('narrow');

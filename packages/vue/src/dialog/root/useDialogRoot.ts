@@ -1,18 +1,9 @@
-import {
-  computed,
-  onActivated,
-  onDeactivated,
-  onMounted,
-  onScopeDispose,
-  shallowRef,
-  toRaw,
-  watch,
-} from 'vue';
+import { computed, onMounted, onScopeDispose, shallowRef, toRaw, watch } from 'vue';
 import { isElement } from '@floating-ui/utils/dom';
 import { contains, getTarget } from '../../common/shadowDom';
 import { useScrollLock } from '../../common/useScrollLock';
 import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
-import { isInHeldBranch } from '../../internals/useKeepAliveState';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
 import { usePopupInteractionProps } from '../../utils/popups/popupStoreUtils';
 import { popupStoreSelectors } from '../../utils/popups/store';
@@ -125,7 +116,7 @@ export function useDialogInteractions({
 
   // `KeepAlive` takes the popup of a deactivated dialog out of the document, so the dialog above
   // must not count it.
-  const deactivated = shallowRef(isInHeldBranch());
+  const { isHeld } = useKeepAliveState();
   let hasReported = false;
 
   // Notify parent of our open/close state using parent callbacks, if any
@@ -134,7 +125,7 @@ export function useDialogInteractions({
     if (!onNestedDialogOpen) {
       return;
     }
-    if (open.value && !deactivated.value) {
+    if (open.value && !isHeld.value) {
       hasReported = true;
       onNestedDialogOpen(
         ownNestedOpenDialogs.value + 1,
@@ -147,13 +138,7 @@ export function useDialogInteractions({
   }
 
   onMounted(reportToParent);
-  watch([open, ownNestedOpenDialogs, ownNestedOpenDrawers, deactivated], reportToParent);
-  onDeactivated(() => {
-    deactivated.value = true;
-  });
-  onActivated(() => {
-    deactivated.value = false;
-  });
+  watch([open, ownNestedOpenDialogs, ownNestedOpenDrawers, isHeld], reportToParent);
   onScopeDispose(() => {
     if (hasReported) {
       parentContext?.onNestedDialogOpen?.(0, 0);

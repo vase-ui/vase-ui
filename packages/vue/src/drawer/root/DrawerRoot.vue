@@ -146,23 +146,14 @@ function createNestedSwipeProgressStore(): NestedSwipeProgressStore {
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
-import {
-  computed,
-  onActivated,
-  onDeactivated,
-  onMounted,
-  onScopeDispose,
-  provide,
-  shallowRef,
-  watch,
-} from 'vue';
+import { computed, onMounted, onScopeDispose, provide, shallowRef, watch } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { NOOP } from '../../common/empty';
 import { ownerWindow } from '../../common/owner';
 import { platform } from '../../common/platform';
 import { useControlled } from '../../common/useControlled';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
-import { isInHeldBranch } from '../../internals/useKeepAliveState';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderDialogRoot } from '../../dialog/root/useRenderDialogRoot';
 import { useDrawerProviderContext } from '../provider/DrawerProviderContext';
 import { DrawerRootContext, useDrawerRootContext } from './DrawerRootContext';
@@ -378,19 +369,19 @@ const isOpen = computed(() => store.select('open'));
 
 // `KeepAlive` takes the popup of a deactivated drawer out of the document. The provider must then
 // not count the drawer, and the drawer must not handle the back gesture.
-const deactivated = shallowRef(isInHeldBranch());
+const { isHeld } = useKeepAliveState();
 
 let hasReported = false;
 
 function reportToProvider() {
   if (providerContext) {
     hasReported = true;
-    providerContext.setDrawerOpen(store, isOpen.value && !deactivated.value);
+    providerContext.setDrawerOpen(store, isOpen.value && !isHeld.value);
   }
 }
 
 onMounted(reportToProvider);
-watch([isOpen, deactivated], reportToProvider);
+watch([isOpen, isHeld], reportToProvider);
 onScopeDispose(() => {
   if (hasReported) {
     providerContext?.removeDrawer(store);
@@ -408,7 +399,7 @@ function updateCloseWatcher() {
   if (
     !isOpen.value ||
     store.select('nestedOpenDialogCount') !== 0 ||
-    deactivated.value ||
+    isHeld.value ||
     !platform.os.android
   ) {
     return;
@@ -462,18 +453,12 @@ watch(
     isOpen,
     () => store.select('nestedOpenDialogCount') === 0,
     () => store.select('popupElement'),
-    deactivated,
+    isHeld,
   ],
   updateCloseWatcher,
   { flush: 'post' },
 );
 onMounted(updateCloseWatcher);
-onDeactivated(() => {
-  deactivated.value = true;
-});
-onActivated(() => {
-  deactivated.value = false;
-});
 onScopeDispose(() => {
   stopCloseWatcher?.();
 });

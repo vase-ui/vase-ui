@@ -34,7 +34,7 @@ defineSlots<{
 
 const state: FloatingPortalLiteState = EMPTY_OBJECT;
 
-const { element, elementProps, containerElement, deactivated } = useFloatingPortalNode({
+const { element, elementProps, containerElement, isHeld } = useFloatingPortalNode({
   container: () => props.container,
   componentProps: props,
   children: true,
@@ -44,7 +44,7 @@ defineExpose({ element });
 </script>
 
 <template>
-  <Teleport v-if="containerElement" :to="containerElement" :disabled="deactivated">
+  <Teleport v-if="containerElement" :to="containerElement" :disabled="isHeld">
     <slot
       v-if="$slots.render"
       name="render"

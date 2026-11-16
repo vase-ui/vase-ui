@@ -1,9 +1,7 @@
 import {
   computed,
   inject,
-  onActivated,
   onBeforeMount,
-  onDeactivated,
   onScopeDispose,
   provide,
   toValue,
@@ -13,7 +11,7 @@ import {
 import type { ComputedRef, InjectionKey, MaybeRefOrGetter } from 'vue';
 import type { FloatingNodeType, FloatingTreeType, PopupPositioningContext } from '../types';
 import { FloatingTreeStore } from './FloatingTreeStore';
-import { isInHeldBranch } from '../../../internals/useKeepAliveState';
+import { useKeepAliveState } from '../../../internals/useKeepAliveState';
 
 const FloatingNodeContext: InjectionKey<ComputedRef<string | undefined>> = Symbol();
 const FloatingTreeContext: InjectionKey<ComputedRef<FloatingTreeType>> = Symbol();
@@ -65,7 +63,7 @@ export function useFloatingNodeId(
   const parentId = useFloatingParentNodeId();
 
   const slot: Pick<FloatingNodeType, 'context'> = {};
-  let deactivated = isInHeldBranch();
+  const { isHeld } = useKeepAliveState();
   const node: FloatingNodeType = {
     id,
     get parentId() {
@@ -75,7 +73,7 @@ export function useFloatingNodeId(
     // again thus changes the place of the node. The node stays, and a reader ignores a node with
     // no context.
     get context() {
-      return deactivated ? undefined : slot.context;
+      return isHeld.value ? undefined : slot.context;
     },
     set context(value) {
       slot.context = value;
@@ -99,12 +97,6 @@ export function useFloatingNodeId(
   onBeforeMount(() => register(tree.value));
   watch(tree, register);
   onScopeDispose(() => register(null));
-  onDeactivated(() => {
-    deactivated = true;
-  });
-  onActivated(() => {
-    deactivated = false;
-  });
 
   return id;
 }

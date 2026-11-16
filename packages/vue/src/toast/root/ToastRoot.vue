@@ -59,16 +59,7 @@ export const toastRootStateAttributesMapping: StateAttributesMapping<ToastRootSt
 </script>
 
 <script setup lang="ts">
-import {
-  computed,
-  onActivated,
-  onDeactivated,
-  onMounted,
-  onScopeDispose,
-  provide,
-  shallowRef,
-  watch,
-} from 'vue';
+import { computed, onMounted, onScopeDispose, provide, shallowRef, watch } from 'vue';
 import { ownerDocument } from '../../common/owner';
 import { activeElement, closest, contains, getTarget } from '../../common/shadowDom';
 import {
@@ -78,7 +69,7 @@ import {
 import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
-import { isInHeldBranch } from '../../internals/useKeepAliveState';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { getElementTransform } from '../../utils/getElementTransform';
 import {
@@ -216,23 +207,23 @@ useOpenChangeComplete({
 
 // A toast that `KeepAlive` holds has no layout. The root measures it at the activation, and the
 // `starting` status stays until then, so the enter transition plays when the toast shows.
-const held = shallowRef(isInHeldBranch());
-onDeactivated(() => {
-  held.value = true;
-  // The user cannot see a held toast, so a swipe in progress ends with no dismissal.
-  if (activePointerId !== null) {
-    endSwipe(false);
-  }
-});
-onActivated(() => {
-  held.value = false;
-});
+const { isHeld } = useKeepAliveState();
+// The user cannot see a held toast, so a swipe in progress ends with no dismissal.
+watch(
+  isHeld,
+  (held) => {
+    if (held && activePointerId !== null) {
+      endSwipe(false);
+    }
+  },
+  { flush: 'sync' },
+);
 
 // Recalculates the natural height of the toast and updates it in the toast manager.
 // The store ignores this write while the toast is transitioning out.
 function recalculateHeight() {
   const rootElement = element.value;
-  if (!rootElement || held.value) {
+  if (!rootElement || isHeld.value) {
     return;
   }
 
@@ -289,9 +280,9 @@ function initialize() {
 onMounted(initialize);
 watch([() => props.toast.id, () => props.toast.transitionStatus], initialize, { flush: 'post' });
 watch(
-  held,
-  (isHeld) => {
-    if (!isHeld) {
+  isHeld,
+  (held) => {
+    if (!held) {
       initialize();
     }
   },

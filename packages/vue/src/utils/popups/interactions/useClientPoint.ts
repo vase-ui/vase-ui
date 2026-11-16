@@ -1,19 +1,10 @@
-import {
-  computed,
-  onActivated,
-  onDeactivated,
-  onMounted,
-  onScopeDispose,
-  shallowRef,
-  toValue,
-  watch,
-} from 'vue';
+import { computed, onMounted, onScopeDispose, shallowRef, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 import { addEventListener } from '../../../common/addEventListener';
 import { ownerWindow } from '../../../common/owner';
 import { contains, getTarget } from '../../../common/shadowDom';
 import type { HTMLProps } from '../../../internals/types';
-import { isInHeldBranch } from '../../../internals/useKeepAliveState';
+import { useKeepAliveState } from '../../../internals/useKeepAliveState';
 import type { PopupInteractionContext, PopupInteractionStore } from '../types';
 import { isMouseLikePointerType } from '../event';
 
@@ -127,7 +118,7 @@ export function useClientPoint(
 
   let disabledWhileOpen = false;
   let stopListening: (() => void) | null = null;
-  let deactivated = isInHeldBranch();
+  const { isHeld } = useKeepAliveState();
   // Vue runs the cleanup of a part in the render of its parent. The cleanup thus reads no reactive
   // state, and it clears the store of the last run.
   let anchoredStore: PopupInteractionStore | undefined;
@@ -205,7 +196,7 @@ export function useClientPoint(
       anchoredStore = current;
     }
 
-    if (deactivated) {
+    if (isHeld.value) {
       return;
     }
 
@@ -248,17 +239,7 @@ export function useClientPoint(
       flush: 'post',
     },
   );
-  onDeactivated(() => {
-    deactivated = true;
-    syncWindowListener();
-  });
-  // `onActivated` also runs at the first mount in a `KeepAlive`.
-  onActivated(() => {
-    if (deactivated) {
-      deactivated = false;
-      syncWindowListener();
-    }
-  });
+  watch(isHeld, syncWindowListener, { flush: 'sync' });
 
   // The unmount clears the cursor anchor. `syncWindowListener` handles a change of `enabled` and a
   // change of the store.
