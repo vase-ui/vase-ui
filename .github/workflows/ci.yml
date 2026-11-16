@@ -2,11 +2,10 @@ name: CI
 
 on:
   pull_request:
-  # The merge queue runs these jobs on the pull request on top of `main`.
+  # The merge queue runs these jobs on the pull request on top of `main`. `main` then moves to the
+  # commit that the jobs tested, so a push to `main` starts no run of this workflow.
   merge_group:
     types: [checks_requested]
-  push:
-    branches: [main]
 
 permissions: {}
 
