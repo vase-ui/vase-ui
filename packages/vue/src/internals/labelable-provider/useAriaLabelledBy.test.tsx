@@ -43,7 +43,7 @@ describe('useAriaLabelledBy', () => {
       labelId: string | null;
     }>([
       {
-        name: 'gives a label with no `id` the id of the control plus `-label`',
+        name: 'gives a label with no `id` `<id>-label`',
         labelledBy: 'a-label',
         labelId: 'a-label',
       },
@@ -54,49 +54,49 @@ describe('useAriaLabelledBy', () => {
         labelId: 'own',
       },
       {
-        name: 'prefers the `aria-labelledby` of the consumer',
+        name: 'prefers the given `aria-labelledby`',
         controlProps: { ariaLabelledby: 'explicit' },
         labelledBy: 'explicit',
         labelId: null,
       },
       {
-        name: 'keeps the label when the `aria-labelledby` is empty',
+        name: 'ignores an empty `aria-labelledby`',
         controlProps: { ariaLabelledby: '' },
         labelledBy: 'a-label',
         labelId: 'a-label',
       },
       {
-        name: 'keeps the label when the `aria-labelledby` has tabs, line breaks and spaces',
+        name: 'ignores a white space `aria-labelledby`',
         controlProps: { ariaLabelledby: '\n\t ' },
         labelledBy: 'a-label',
         labelId: 'a-label',
       },
       {
-        name: 'gives no `aria-labelledby` when the control has an `aria-label`',
+        name: 'prefers an `aria-label` to the label',
         controlProps: { ariaLabel: 'Name' },
         labelledBy: null,
         labelId: null,
       },
       {
-        name: 'keeps the label when the `aria-label` is empty',
+        name: 'ignores an empty `aria-label`',
         controlProps: { ariaLabel: '' },
         labelledBy: 'a-label',
         labelId: 'a-label',
       },
       {
-        name: 'keeps the label when the `aria-label` is a space',
+        name: 'ignores an `aria-label` of one space',
         controlProps: { ariaLabel: ' ' },
         labelledBy: 'a-label',
         labelId: 'a-label',
       },
       {
-        name: 'keeps the label when the `aria-label` has tabs, line breaks and spaces',
+        name: 'ignores a white space `aria-label`',
         controlProps: { ariaLabel: '\n\t ' },
         labelledBy: 'a-label',
         labelId: 'a-label',
       },
       {
-        name: 'gives no `aria-labelledby` when `enableFallback` is `false`',
+        name: 'gives none for `enableFallback: false`',
         controlProps: { enableFallback: false },
         labelledBy: null,
         labelId: null,
