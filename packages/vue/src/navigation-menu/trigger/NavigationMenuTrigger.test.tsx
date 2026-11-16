@@ -957,21 +957,21 @@ describe('<NavigationMenu.Trigger />', () => {
     });
   });
 
-  describe('VUE-73: aria-controls names only an element in the document', () => {
-    function renderMenu(popupParts: () => unknown) {
-      return render(() => (
-        <NavigationMenu.Root defaultValue="one">
-          <NavigationMenu.List>
-            <NavigationMenu.Item value="one">
-              <NavigationMenu.Trigger data-testid="trigger">One</NavigationMenu.Trigger>
-              <NavigationMenu.Content>Content</NavigationMenu.Content>
-            </NavigationMenu.Item>
-          </NavigationMenu.List>
-          {popupParts()}
-        </NavigationMenu.Root>
-      ));
-    }
+  function renderMenu(popupParts: () => unknown) {
+    return render(() => (
+      <NavigationMenu.Root defaultValue="one">
+        <NavigationMenu.List>
+          <NavigationMenu.Item value="one">
+            <NavigationMenu.Trigger data-testid="trigger">One</NavigationMenu.Trigger>
+            <NavigationMenu.Content data-testid="content">Content</NavigationMenu.Content>
+          </NavigationMenu.Item>
+        </NavigationMenu.List>
+        {popupParts()}
+      </NavigationMenu.Root>
+    ));
+  }
 
+  describe('VUE-73: aria-controls names only an element in the document', () => {
     function popupParts(
       popupSlots: Record<string, unknown> = { default: () => <NavigationMenu.Viewport /> },
     ) {
@@ -1063,20 +1063,6 @@ describe('<NavigationMenu.Trigger />', () => {
   });
 
   describe('VUE-73: aria-owns names only a viewport in the document', () => {
-    function renderMenu(popupParts: () => unknown) {
-      return render(() => (
-        <NavigationMenu.Root defaultValue="one">
-          <NavigationMenu.List>
-            <NavigationMenu.Item value="one">
-              <NavigationMenu.Trigger data-testid="trigger">One</NavigationMenu.Trigger>
-              <NavigationMenu.Content data-testid="content">Content</NavigationMenu.Content>
-            </NavigationMenu.Item>
-          </NavigationMenu.List>
-          {popupParts()}
-        </NavigationMenu.Root>
-      ));
-    }
-
     // The owner element comes after the trigger and the guard before it.
     function getOwner() {
       return screen.getByTestId('trigger').parentElement!.children[2];

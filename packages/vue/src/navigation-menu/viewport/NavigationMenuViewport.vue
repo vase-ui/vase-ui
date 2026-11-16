@@ -109,8 +109,8 @@ const { element, elementProps } = useRenderElement<NavigationMenuViewportState, 
   props,
   {
     // In a positioner, `NavigationMenu.Content` teleports into `viewportElement`. The content must
-    // stay there while `KeepAlive` holds the viewport, so only the element that the owner element
-    // names follows `KeepAlive`.
+    // stay there while `KeepAlive` holds the viewport, so only `shownViewportElement`, whose id the
+    // owner element names, follows `KeepAlive`.
     ref: [
       createElementSetter(viewportElement),
       useKeepAliveElementRef(createElementSetter(shownViewportElement)),
