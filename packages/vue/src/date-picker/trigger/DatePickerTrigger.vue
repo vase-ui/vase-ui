@@ -46,7 +46,7 @@ const picker = useDatePickerRootContext();
 const locale = useFormatLocale(() => picker.props.locale);
 
 // A picker that the user cannot change has nothing to choose.
-const disabled = computed(() => props.disabled || picker.disabled.value || picker.props.readOnly);
+const isDisabled = computed(() => props.disabled || picker.disabled.value || picker.props.readOnly);
 
 function describe(value: DatePickerRootValue): string {
   if (isKind(value, 'yearMonth')) {
@@ -83,7 +83,7 @@ const setTriggerElement = createElementSetter(picker.triggerElement);
 watch(element, setTriggerElement, { immediate: true, flush: 'post' });
 
 function triggerProps() {
-  return { ...attrs, ...props, disabled: disabled.value, 'aria-label': label.value };
+  return { ...attrs, ...props, disabled: isDisabled.value, 'aria-label': label.value };
 }
 
 defineExpose({ element });

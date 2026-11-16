@@ -56,8 +56,8 @@ export interface UseDateTimePickerRootParameters<Value, Details extends { isCanc
 }
 
 /**
- * The state that each picker root shares: its value, the rule that closes the popup and the field
- * that the popup is positioned against. The root of a family calls it in `setup`, after
+ * The state that each picker root shares: its value, the rule that closes the popup and the
+ * elements of the field and the trigger. The root of a family calls it in `setup`, after
  * `assertTemporal`, and gives the result to its parts. The open state is not here: the root renders
  * a popover root, and its parts read the store of that root. It also provides the count of the
  * resets, `PickerResetCountContext`, to the field roots below the root.

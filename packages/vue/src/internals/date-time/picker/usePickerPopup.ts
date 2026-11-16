@@ -62,12 +62,13 @@ export function getCalendarTabStop(calendar: Element | null | undefined): HTMLEl
 }
 
 // A part that mounts later still has its place in the document, so the registration order of the
-// parts does not decide.
+// parts does not decide. `KeepAlive` keeps a part that it holds registered, and moves its element
+// out of the document. Such an element cannot take the focus, so it does not count.
 function getFirstInDocument(elements: (Element | null | undefined)[]) {
   let first: Element | undefined;
   for (const element of elements) {
     if (
-      element &&
+      element?.isConnected &&
       (!first ||
         first.compareDocumentPosition(element) &
           ownerWindow(first).Node.DOCUMENT_POSITION_PRECEDING)
@@ -86,7 +87,7 @@ function getFirstInDocument(elements: (Element | null | undefined)[]) {
  * focus manager would take the first tabbable element, which is a navigation button. A popup with
  * no element from a target keeps the default of `Popover.Popup`.
  * @param initialFocus The `initialFocus` prop of the part. A value of the consumer replaces the
- * default, also `false`. `true`, `null` and no value ask for the default.
+ * default, also `false`. `true`, `null`, an empty ref and no value ask for the default.
  */
 export function usePickerInitialFocus(
   initialFocus: () => FocusOption | undefined,
@@ -116,10 +117,10 @@ export function usePickerInitialFocus(
 
 /**
  * A part of the popup that shows the choices of a picker, such as the calendar, calls it in
- * `setup`. `target` gives the element that the pattern names: the selected day, or else the first
- * day that the user can pick. It gives `null` while the part has no such element. A popup can have
- * more than one such part, such as the list, the columns and the clock of a time picker. The focus
- * goes to the first element in the document that a target gives.
+ * `setup`. `target` gives the element that the pattern names, such as the day that has the tab
+ * stop. It gives `null` while the part has no such element. A popup can have more than one such
+ * part, such as the list, the columns and the clock of a time picker. The focus goes to the first
+ * element in the document that a target gives.
  */
 export function usePickerFocusTarget(target: PickerFocusTarget): void {
   const targets = inject(PickerFocusTargetContext, null);

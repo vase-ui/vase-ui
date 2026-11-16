@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
+import { shallowRef } from 'vue';
+import { DateField } from '@vase-ui/vue/date-field';
 import { DatePicker } from '@vase-ui/vue/date-picker';
 import { Field } from '@vase-ui/vue/field';
 import {
@@ -149,10 +151,14 @@ describe('<DatePicker.Root />', () => {
         expect(screen.getByTestId('trigger')).toHaveFocus();
       });
 
-      it('moves the focus to the default element for `true`', async () => {
+      it.each([
+        { name: '`true`', createOption: () => true },
+        { name: '`null`', createOption: () => null },
+        { name: 'an empty ref', createOption: () => shallowRef(null) },
+      ])('moves the focus to the default element for $name', async ({ createOption }) => {
         const { user } = await renderPicker({
           defaultValue: day('2026-11-18'),
-          popupProps: { initialFocus: true },
+          popupProps: { initialFocus: createOption() },
         });
 
         await open(user);
@@ -653,6 +659,29 @@ describe('<DatePicker.Root />', () => {
         await user.click(dayButton('2026-11-20'));
 
         expect(onValueChange).not.toHaveBeenCalled();
+      });
+
+      it('reads the fieldset at the trigger after the field unmounts', async () => {
+        const hasField = shallowRef(true);
+        await render(() => (
+          <DatePicker.Root locale="en-US">
+            {hasField.value ? (
+              <DatePicker.Field>
+                <DateField.Input />
+              </DatePicker.Field>
+            ) : null}
+            <fieldset disabled>
+              <DatePicker.Trigger data-testid="trigger">Open</DatePicker.Trigger>
+            </fieldset>
+          </DatePicker.Root>
+        ));
+        expect(screen.getByTestId('trigger')).not.toHaveAttribute('data-disabled');
+
+        hasField.value = false;
+
+        await waitFor(() => {
+          expect(screen.getByTestId('trigger')).toHaveAttribute('data-disabled');
+        });
       });
     });
   });
