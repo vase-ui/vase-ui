@@ -4,11 +4,11 @@
 
 Vase UI is a port, so the people on this page did the hard part before we started. They spent years on focus management, screen readers and browser bugs. We carried their work across, and we thank each of them.
 
-Each list is GitHub's contributor list of the project, read on `2026-11-12` (UTC). A list starts with the person who has the most commits. People with the same number of commits are in the sequence of their account names. A list does not have automation. GitHub links the commits of some people to no account. A list shows each of these people by the name in their commits, with no link. The sequence uses that name for a person who has no account name. A list does not have such a name when the page cannot show it as plain text.
+Each list is GitHub's contributor list of the project, read on `2026-11-16` (UTC). A list starts with the person who has the most commits. People with the same number of commits are in the sequence of their account names. A list does not have automation. GitHub links the commits of some people to no account. A list shows each of these people by the name in their commits, with no link. The sequence uses that name for a person who has no account name. A list does not have such a name when the page cannot show it as plain text.
 
 ## Base UI
 
-The contributors of [mui/base-ui](https://github.com/mui/base-ui) at commit `fb9fbbf35e72bd4a5494b678c85d2ea0457fed60`. Vase UI is a port of Base UI.
+The contributors of [mui/base-ui](https://github.com/mui/base-ui) at commit `6dd2a6987b3a01d000da6745a45f4690941e7a13`. Vase UI is a port of Base UI.
 
 - [atomiks](https://github.com/atomiks)
 - [Michał Dudak](https://github.com/michaldudak)
@@ -201,6 +201,7 @@ The contributors of [mui/base-ui](https://github.com/mui/base-ui) at commit `fb9
 - [Ivan Ng](https://github.com/ivan-ngchakming)
 - [Seiya IZUMI](https://github.com/IzumiSy)
 - [Jacob Weber](https://github.com/jacobweberbowery)
+- [jasleenkaur-qed42](https://github.com/jasleenkaur-qed42)
 - [Jaswanth-Sriram-Veturi](https://github.com/Jaswanth-Sriram-Veturi)
 - [JeanPetrov](https://github.com/JeanPetrov)
 - [John Leonard](https://github.com/jellyedwards)
