@@ -12,7 +12,7 @@ import {
   waitSingleFrame,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
-import * as Resizable from '../index.parts';
+import { Resizable } from '@vase-ui/vue/resizable';
 
 describe('<Resizable.Panel />', () => {
   const { render } = createRenderer();

@@ -1,9 +1,21 @@
 import { h } from 'vue';
-import type { Component } from 'vue';
+import type { Component, Ref } from 'vue';
+import {
+  ResizableHandleCssVariables,
+  ResizableHandleDataAttributes,
+  ResizablePanelCssVariables,
+  ResizablePanelDataAttributes,
+  ResizableRootDataAttributes,
+} from '@vase-ui/vue/resizable';
+import type {
+  ResizableLayoutStorageOptions,
+  ResizableParentPanel,
+  ResizableRootResizeMode,
+} from '@vase-ui/vue/resizable';
 import { expectType } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
-import * as Resizable from '../index.parts';
+import { Resizable } from '@vase-ui/vue/resizable';
 
 const layout: Resizable.Root.Layout = { a: 30, b: 70 };
 const snapshot: Resizable.Root.LayoutSnapshot = { a: '240px', b: 70, c: '30%' };
@@ -22,6 +34,12 @@ const snapshot: Resizable.Root.LayoutSnapshot = { a: '240px', b: 70, c: '30%' };
 <Resizable.Root hitAreaSize="10px" />;
 // @ts-expect-error The mode is `live` or `on-release`.
 <Resizable.Root resizeMode="release" />;
+const mode: Resizable.Root.ResizeMode = 'on-release';
+<Resizable.Root resizeMode={mode} />;
+expectType<ResizableRootResizeMode, Resizable.Root.ResizeMode>(mode);
+// @ts-expect-error The mode is `live` or `on-release`.
+const otherMode: Resizable.Root.ResizeMode = 'other';
+void otherMode;
 // @ts-expect-error `dragEdges` is a Boolean.
 <Resizable.Root dragEdges="yes" />;
 // @ts-expect-error `pushPanels` is a Boolean.
@@ -131,6 +149,16 @@ function assertCommit(details: CommitDetails) {
 <Resizable.Handle primaryPanel="next" disabled />;
 // @ts-expect-error The primary panel is the previous panel or the next panel.
 <Resizable.Handle primaryPanel="both" />;
+<Resizable.Handle
+  getAriaValueText={(
+    text: string,
+    value: number,
+    details: { collapsed: boolean; pixelSize: number | undefined },
+  ) => `${text} ${value} ${String(details.collapsed)}`}
+/>;
+<Resizable.Handle getAriaValueText={null} />;
+// @ts-expect-error The function gives a string.
+<Resizable.Handle getAriaValueText={() => 5} />;
 
 declare const panel: InstanceType<typeof Resizable.Panel>;
 declare const handle: InstanceType<typeof Resizable.Handle>;
@@ -179,6 +207,40 @@ if (parentPanel) {
 } else {
   expectType<null, typeof parentPanel>(parentPanel);
 }
+
+// A `.spec.tsx` file is checked and not run, and the composable must run in `setup`.
+export function useStorageTypes(details: Resizable.Root.CommitEventDetails) {
+  const storage = Resizable.useLayoutStorage({
+    key: () => 'a',
+    storage: () => sessionStorage,
+    userChangesOnly: true,
+  });
+  expectType<Ref<Resizable.Root.LayoutSnapshot>, typeof storage.layout>(storage.layout);
+  storage.save({ a: 50 }, details);
+  storage.save({ a: 50 });
+  const options: ResizableLayoutStorageOptions = { key: 'a' };
+  void options;
+}
+
+const flatParentPanel: ResizableParentPanel | null = Resizable.useParentPanel();
+void flatParentPanel;
+
+expectType<'data-orientation', typeof ResizableRootDataAttributes.orientation>(
+  ResizableRootDataAttributes.orientation,
+);
+expectType<'data-collapsed', typeof ResizablePanelDataAttributes.collapsed>(
+  ResizablePanelDataAttributes.collapsed,
+);
+expectType<'--resizable-panel-size', typeof ResizablePanelCssVariables.resizablePanelSize>(
+  ResizablePanelCssVariables.resizablePanelSize,
+);
+expectType<'data-at-min', typeof ResizableHandleDataAttributes.atMin>(
+  ResizableHandleDataAttributes.atMin,
+);
+expectType<
+  '--resizable-handle-preview-offset',
+  typeof ResizableHandleCssVariables.resizableHandlePreviewOffset
+>(ResizableHandleCssVariables.resizableHandlePreviewOffset);
 
 const parentRoot = Resizable.useParentRoot();
 if (parentRoot) {

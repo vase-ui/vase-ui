@@ -56,7 +56,7 @@ export interface SliderRootProps<
 >
   extends
     VaseUIComponentProps<SliderRootState>,
-    /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes>, 'id'> {
+    /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes, 'aria-labelledby'>, 'id'> {
   /**
    * The uncontrolled value of the slider when it's initially rendered.
    *
@@ -204,7 +204,6 @@ import { useFormContext } from '../../internals/form-context';
 import { createLabelIdRegistry, useControlLabelId } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
-import { useFormReset } from '../../internals/useFormReset';
 import { isInTreeOf } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
@@ -560,14 +559,6 @@ watch(
   { flush: 'post' },
 );
 
-function getThumbInputs() {
-  const inputs: (HTMLInputElement | null)[] = [];
-  thumbRefs.value.forEach((thumb, index) => {
-    inputs[index] = thumb?.querySelector<HTMLInputElement>('input[type="range"]') ?? null;
-  });
-  return inputs;
-}
-
 function resetToDefaultValue(event: Event) {
   const defaultValue = (props.defaultValue ?? props.min) as number | readonly number[];
   if (props.value !== undefined || areValuesEqual(defaultValue, valueUnwrapped.value)) {
@@ -588,10 +579,14 @@ function resetToDefaultValue(event: Event) {
   return applied;
 }
 
-// Each thumb input has the same form. The reset thus follows only the first one.
-const firstThumbInput = computed(() => getThumbInputs().find((input) => input != null) ?? null);
+let handledReset: Event | undefined;
 
-useFormReset(firstThumbInput, (event) => {
+function reset(event: Event) {
+  if (event === handledReset) {
+    return;
+  }
+  handledReset = event;
+
   const previousValue = fieldValue.value;
 
   // `useValueChanged` sees no change when the slider clamps the default value to the current
@@ -601,7 +596,7 @@ useFormReset(firstThumbInput, (event) => {
   } else {
     clearFieldError(fieldValue.value);
   }
-});
+}
 
 const state = computed<SliderRootState>(() => ({
   ...fieldState.value,
@@ -633,6 +628,7 @@ provide(SliderRootContext, {
   rootLabelId,
   registerLabelId,
   reaches: (target) => isInTreeOf(element.value, target),
+  reset,
   thumbMap,
   largeStep: computed(() => props.largeStep),
   lastUsedThumbIndex,

@@ -60,6 +60,14 @@ describe('<Calendar.Root />', () => {
       expect(group).toHaveAccessibleName('Birthday');
     });
 
+    it('VUE-103: keeps the name of the month for an aria-labelledby of null', async () => {
+      await renderCalendar({ 'aria-labelledby': null });
+
+      const group = screen.getByRole('group');
+      expect(group).not.toHaveAttribute('aria-labelledby');
+      expect(group).toHaveAccessibleName(monthName('2026-11-14'));
+    });
+
     it('names the grid by the month, and the headers by the days of the week', async () => {
       await renderCalendar();
 

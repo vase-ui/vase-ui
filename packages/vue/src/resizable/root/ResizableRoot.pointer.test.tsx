@@ -2,7 +2,7 @@ import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { createRenderer, screen, touchDrag, waitFor } from '#test-utils';
 import { platform } from '../../common/platform';
-import * as Resizable from '../index.parts';
+import { Resizable } from '@vase-ui/vue/resizable';
 
 // The pointer of the browser stays where a case leaves it, for each later test. A call with no
 // coordinates would move the pointer to the element of the last press, which is gone by then.

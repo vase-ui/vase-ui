@@ -105,6 +105,13 @@ export function parsePixels(
 }
 
 /**
+ * Whether the value is a size that `parseSize` accepts. This function does not throw.
+ */
+export function isSize(value: unknown): value is number | string {
+  return (typeof value === 'number' || typeof value === 'string') && splitSize(value) !== undefined;
+}
+
+/**
  * Whether the size is a length: `px`, `em`, `rem`, `vh` or `vw`. A size that is not valid is not a
  * length, and this function does not throw: `parseSize` reports it where the root uses the size.
  */

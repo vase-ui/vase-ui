@@ -54,6 +54,20 @@ describe('<Calendar.Grid />', () => {
     expect(grid).toHaveAccessibleName('Departure');
   });
 
+  it('VUE-103: keeps the name of the month for an aria-labelledby of null', async () => {
+    await render(
+      <CalendarAncestors level="month">
+        <Calendar.Grid aria-labelledby={null} />
+      </CalendarAncestors>,
+    );
+
+    await flushMicrotasks();
+
+    const grid = screen.getByRole('grid');
+    expect(grid).not.toHaveAttribute('aria-labelledby');
+    expect(grid).toHaveAccessibleName(monthName);
+  });
+
   // This case is the last of the file. In Vue 3.5.12, a `setup` that throws leaves the current
   // instance set, and each later case then gets a warning about a slot.
   it('throws a descriptive error when rendered outside <Calendar.Month>', async () => {

@@ -8,7 +8,13 @@ export interface SliderThumbState extends SliderRootState {}
 export interface SliderThumbProps
   extends
     VaseUIComponentProps<SliderThumbState>,
-    /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes>, 'tabindex'> {
+    /* @vue-ignore */ Omit<
+      WithVaseUIEvent<
+        HTMLAttributes,
+        'aria-describedby' | 'aria-label' | 'aria-labelledby' | 'aria-valuetext'
+      >,
+      'tabindex'
+    > {
   /**
    * Whether the thumb should ignore user interaction.
    * @default false
@@ -95,6 +101,7 @@ import { useSetFieldFocused } from '../../internals/field-root-context/useSetFie
 import { useDeferredServerRender, useLabelableId } from '../../internals/labelable-provider';
 import type { HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestoreAsInput } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { mergeProps } from '../../merge-props';
@@ -199,6 +206,7 @@ const {
   pressedThumbCenterOffsetRef,
   pressedThumbIndexRef,
   renderBeforeHydration,
+  reset,
   setActive,
   setIndicatorPosition,
   state: rootState,
@@ -389,6 +397,10 @@ function syncHandledInputValue() {
 watch([inputElement, thumbValue, min, max, step], syncHandledInputValue, { flush: 'post' });
 
 useFormRestoreAsInput(inputElement, () => handledInputValue, false);
+
+// The thumb follows the reset with its own input. The composite list of the root has no thumb
+// while `KeepAlive` holds the slider.
+useFormReset(inputElement, reset);
 
 function onNativeChange(event: Event) {
   const input = event.currentTarget as HTMLInputElement;
