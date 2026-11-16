@@ -79,7 +79,7 @@ const inputClassName =
             aria-label="Choose trip dates"
             class="box-border flex origin-[var(--transform-origin)] flex-col gap-3 border border-neutral-950 bg-white p-3 text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-none transition-[scale,opacity] duration-100 ease-out data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-starting-style:scale-[0.98] data-starting-style:opacity-0 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
           >
-            <DateRangePicker.Calendar :today="today" class="relative box-border w-68 text-sm">
+            <DateRangePicker.Calendar :today="today" class="relative box-border text-sm">
               <div class="absolute top-0 right-0 flex gap-1">
                 <RangeCalendar.PreviousButton :class="buttonClassName">
                   &lsaquo;

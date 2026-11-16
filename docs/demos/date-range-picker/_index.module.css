@@ -210,7 +210,6 @@
 .Calendar {
   position: relative;
   box-sizing: border-box;
-  width: 17rem;
   font-size: 0.875rem;
   line-height: 1.25rem;
 }

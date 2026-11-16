@@ -32,6 +32,12 @@ const demos = [
     }),
   ),
 ].toSorted();
+// The source of a demo says which parts it has, so a case for one part finds its demos by itself.
+const sources = import.meta.glob<string>('../../../docs/demos/*/*/css-modules/index.vue', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+});
 
 type Variant = 'css-modules' | 'tailwind';
 const VARIANTS: Variant[] = ['css-modules', 'tailwind'];
@@ -315,6 +321,39 @@ describe.each(demos)('%s', (demo) => {
     }
   }
 
+  function hasPart(part: string) {
+    return sources[`../../../docs/demos/${demo}/css-modules/index.vue`]!.includes(`<${part}`);
+  }
+
+  /** Opens the popup of a demo that has one. */
+  async function openPopupOf(frame: Element) {
+    const trigger = frame.querySelector<HTMLElement>('[aria-haspopup]');
+    if (trigger) {
+      await fireEvent.click(trigger);
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+      });
+    }
+  }
+
+  /** Runs `check` on each variant of the demo, in a page that is `width` pixels wide. */
+  async function inEachVariantAt(
+    width: number,
+    check: (frame: HTMLElement, variant: Variant) => Promise<void> | void,
+  ) {
+    const viewport = { width: window.innerWidth, height: window.innerHeight };
+    await page.viewport(width, 900);
+    try {
+      for (const variant of VARIANTS) {
+        const { frame, unmount } = await mount(variant, false);
+        await check(frame, variant);
+        unmount();
+      }
+    } finally {
+      await page.viewport(viewport.width, viewport.height);
+    }
+  }
+
   // The site shows the fallback font until its own font loads, and each has its own widths.
   // The third row has the letter spacing of WCAG 1.4.12, which a reader can set.
   it.each([
@@ -400,100 +439,80 @@ describe.each(demos)('%s', (demo) => {
     });
   }
 
+  if (hasPart('RangeCalendar.DayButton')) {
+    // A grid that is narrower than its month leaves a blank at one side of the days.
+    it.each(VARIANTS)('each grid is as wide as its month: %s', async (variant) => {
+      const { frame } = await mount(variant, false);
+      await openPopupOf(frame);
+      const grids = [...document.querySelectorAll('table')];
+      expect(grids).not.toHaveLength(0);
+      for (const grid of grids) {
+        expect(grid.getBoundingClientRect().width).toBeCloseTo(
+          grid.parentElement!.getBoundingClientRect().width,
+          1,
+        );
+      }
+    });
+  }
+
   describe.each(['light', 'dark'] as const)('%s', (theme) => {
     if (demo === 'date-picker/date-time') {
       it.each([390, 1280])('the date is left of the time at %i px', async (width) => {
-        const viewport = { width: window.innerWidth, height: window.innerHeight };
-        await page.viewport(width, 900);
         document.documentElement.classList.toggle('dark', theme === 'dark');
-        try {
-          for (const variant of VARIANTS) {
-            const { frame, unmount } = await mount(variant, false);
-            const date = within(frame).getByRole('group', { name: 'Date' }).getBoundingClientRect();
-            const time = within(frame).getByRole('group', { name: 'Time' }).getBoundingClientRect();
-            expect(date.top, variant).toBe(time.top);
-            expect(date.right, variant).toBeLessThan(time.left);
-            unmount();
-          }
-        } finally {
-          await page.viewport(viewport.width, viewport.height);
-        }
+        await inEachVariantAt(width, (frame, variant) => {
+          const date = within(frame).getByRole('group', { name: 'Date' }).getBoundingClientRect();
+          const time = within(frame).getByRole('group', { name: 'Time' }).getBoundingClientRect();
+          expect(date.top, variant).toBe(time.top);
+          expect(date.right, variant).toBeLessThan(time.left);
+        });
       });
     }
 
-    if (demo === 'time-picker/clock' || demo === 'time-clock/hero' || demo === 'time-clock/step') {
+    if (hasPart('TimeClock.DayPeriod')) {
       it.each([390, 1280])('each day period has a whole border at %i px', async (width) => {
-        const viewport = { width: window.innerWidth, height: window.innerHeight };
-        await page.viewport(width, 900);
         document.documentElement.classList.toggle('dark', theme === 'dark');
-        try {
-          for (const variant of VARIANTS) {
-            const { frame, unmount } = await mount(variant, false);
-            if (demo === 'time-picker/clock') {
-              await fireEvent.click(frame.querySelector<HTMLElement>('[aria-haspopup]')!);
-              await waitFor(() => {
-                expect(screen.getByRole('dialog')).toBeInTheDocument();
-              });
-            }
-            const buttons = ['AM', 'PM'].map((name) => screen.getByRole('button', { name }));
-            for (const selected of buttons) {
-              await fireEvent.click(selected);
-              expect(selected).toHaveAttribute('aria-pressed', 'true');
-              for (const button of buttons) {
-                const style = getComputedStyle(button);
-                for (const side of ['top', 'right', 'bottom', 'left']) {
-                  expect(
-                    parseFloat(style.getPropertyValue(`border-${side}-width`)),
-                    `${variant}: ${button.textContent} ${side} border`,
-                  ).toBeGreaterThan(0);
-                }
+        await inEachVariantAt(width, async (frame, variant) => {
+          await openPopupOf(frame);
+          const buttons = ['AM', 'PM'].map((name) => screen.getByRole('button', { name }));
+          for (const selected of buttons) {
+            await fireEvent.click(selected);
+            expect(selected).toHaveAttribute('aria-pressed', 'true');
+            for (const button of buttons) {
+              const style = getComputedStyle(button);
+              for (const side of ['top', 'right', 'bottom', 'left']) {
+                expect(
+                  parseFloat(style.getPropertyValue(`border-${side}-width`)),
+                  `${variant}: ${button.textContent} ${side} border`,
+                ).toBeGreaterThan(0);
               }
             }
-            unmount();
           }
-        } finally {
-          await page.viewport(viewport.width, viewport.height);
-        }
+        });
       });
     }
 
-    if (demo.startsWith('range-calendar/') || demo === 'date-range-picker/hero') {
+    if (hasPart('RangeCalendar.DayButton')) {
       it.each([390, 1280])('the selected range has no gaps at %i px', async (width) => {
-        const viewport = { width: window.innerWidth, height: window.innerHeight };
-        await page.viewport(width, 900);
         document.documentElement.classList.toggle('dark', theme === 'dark');
-        try {
-          for (const variant of VARIANTS) {
-            const { frame, unmount } = await mount(variant, false);
-            if (demo === 'date-range-picker/hero') {
-              await fireEvent.click(frame.querySelector<HTMLElement>('[aria-haspopup]')!);
-              await waitFor(() => {
-                expect(screen.getByRole('dialog')).toBeInTheDocument();
-              });
-            }
-            let pairs = 0;
-            for (const row of document.querySelectorAll('tr')) {
-              const middle = [...row.querySelectorAll('button[data-range-middle]')];
-              for (const [index, button] of middle.entries()) {
-                const next = middle[index + 1];
-                if (!next) {
-                  continue;
-                }
-                pairs += 1;
-                expect(
-                  Math.abs(
-                    button.getBoundingClientRect().right - next.getBoundingClientRect().left,
-                  ),
-                  `${variant}: ${button.textContent} to ${next.textContent}`,
-                ).toBeLessThanOrEqual(0.1);
+        await inEachVariantAt(width, async (frame, variant) => {
+          await openPopupOf(frame);
+          let pairs = 0;
+          for (const row of document.querySelectorAll('tr')) {
+            const middle = [...row.querySelectorAll('button[data-range-middle]')];
+            for (const [index, button] of middle.entries()) {
+              const next = middle[index + 1];
+              if (!next) {
+                continue;
               }
+              pairs += 1;
+              expect(
+                Math.abs(button.getBoundingClientRect().right - next.getBoundingClientRect().left),
+                `${variant}: ${button.textContent} to ${next.textContent}`,
+              ).toBeLessThanOrEqual(0.1);
             }
-            expect(pairs).toBeGreaterThan(0);
-            unmount();
           }
-        } finally {
-          await page.viewport(viewport.width, viewport.height);
-        }
+          expect(pairs).toBeGreaterThan(0);
+        });
       });
     }
 
