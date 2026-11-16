@@ -1,5 +1,6 @@
 import { expect, describe, it, vi } from 'vitest';
 import { computed, defineComponent, provide, shallowRef } from 'vue';
+import type { Ref } from 'vue';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import { NumberField } from '@vase-ui/vue/number-field';
@@ -10,6 +11,7 @@ import {
   hydrate,
   hydrateAfter,
   isJSDOM,
+  mockPageBeforeLoad,
   recordInputEvents,
   renderOnServer,
   screen,
@@ -469,6 +471,75 @@ describe('<Toolbar.Input />', () => {
       await flushMicrotasks();
 
       expect(events).toEqual([]);
+    });
+
+    function renderToolbarInput(props: Ref<{ value?: string; defaultValue?: string }>) {
+      const texts: string[] = [];
+      return {
+        texts,
+        result: render(() => (
+          <Toolbar.Root>
+            <Toolbar.Input
+              {...props.value}
+              data-testid="input"
+              onInput={(event: Event) => {
+                texts.push((event.currentTarget as HTMLInputElement).value);
+              }}
+            />
+          </Toolbar.Root>
+        )),
+      };
+    }
+
+    it('takes the value that the browser restored into Toolbar.Input after a new default value', async () => {
+      mockPageBeforeLoad();
+      const props = shallowRef({ defaultValue: 'a' });
+      const { texts, result } = renderToolbarInput(props);
+      const { container } = await result;
+      const recorded = recordInputEvents(container);
+      const input = screen.getByTestId<HTMLInputElement>('input');
+      input.value = 'restored';
+
+      props.value = { defaultValue: 'b' };
+      await flushMicrotasks();
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(input).toHaveValue('restored');
+      expect(texts).toEqual(['restored']);
+      expect(recorded).toEqual(['input', 'change', 'blur', 'focusout']);
+    });
+
+    it('sends no event at the page show after a new default value of Toolbar.Input', async () => {
+      const props = shallowRef({ defaultValue: 'a' });
+      const { result } = renderToolbarInput(props);
+      const { container } = await result;
+      const recorded = recordInputEvents(container);
+
+      props.value = { defaultValue: 'b' };
+      await flushMicrotasks();
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('input')).toHaveValue('b');
+      expect(recorded).toEqual([]);
+    });
+
+    it('sends no event at the page show after a new value of Toolbar.Input', async () => {
+      mockPageBeforeLoad();
+      const props = shallowRef({ value: 'a' });
+      const { result } = renderToolbarInput(props);
+      const { container } = await result;
+      const recorded = recordInputEvents(container);
+      screen.getByTestId<HTMLInputElement>('input').value = 'restored';
+
+      props.value = { value: 'b' };
+      await flushMicrotasks();
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('input')).toHaveValue('b');
+      expect(recorded).toEqual([]);
     });
   });
 });

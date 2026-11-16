@@ -1,7 +1,8 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, defineComponent, h, shallowRef } from 'vue';
-import type { Ref } from 'vue';
-import { Toolbar } from '@vase-ui/vue/toolbar';
+import type { Ref, VNode } from 'vue';
+import { Field } from '@vase-ui/vue/field';
+import { Input } from '@vase-ui/vue/input';
 import {
   createRenderer,
   flushMicrotasks,
@@ -165,8 +166,26 @@ describe('VUE-81: a render before the page show', () => {
       events: LEAVES,
     },
     {
+      name: 'Field.Control with a new default value',
+      family: 'field-default',
+      inputName: 'name',
+      written: ['restored'],
+      model: 'restored',
+      changes: 'restored (none)',
+      events: LEAVES,
+    },
+    {
       name: 'Input with v-model',
       family: 'input',
+      inputName: 'text',
+      written: ['restored'],
+      model: 'restored',
+      changes: 'restored (none)',
+      events: LEAVES,
+    },
+    {
+      name: 'Input with a new default value',
+      family: 'input-default',
       inputName: 'text',
       written: ['restored'],
       model: 'restored',
@@ -285,89 +304,24 @@ describe('VUE-81: a render before the page show', () => {
     },
   );
 
-  it('keeps the value of a thumb through a render of its input only', async () => {
+  it.each<{ name: string; renderControl: (value: string) => VNode }>([
+    {
+      name: 'Field.Control',
+      renderControl: (value) => (
+        <Field.Root>
+          <Field.Control value={value} data-testid="input" />
+        </Field.Root>
+      ),
+    },
+    { name: 'Input', renderControl: (value) => <Input value={value} data-testid="input" /> },
+  ])('sends no event at the page show after a new value of $name', async ({ renderControl }) => {
     mockPageBeforeLoad();
-    const locale = shallowRef('en-US');
-    const { container } = await render(() => (
-      <FormRestoreRender family="slider" revision={0} locale={locale.value} />
-    ));
-    await flushMicrotasks();
-    const recorded = recordInputEvents(container);
-    const [input] = getInputs(container, 'volume');
-    input!.value = '70';
-
-    locale.value = 'de-DE';
-    await flushMicrotasks();
-    expect(input).toHaveValue('70');
-
-    window.dispatchEvent(new PageTransitionEvent('pageshow'));
-    await flushMicrotasks();
-
-    expect(within(container).getByTestId('changes').textContent).toBe('70 (input-change)');
-    expect(recorded).toEqual(['input']);
-  });
-
-  function renderToolbarInput(props: Ref<{ value?: string; defaultValue?: string }>) {
-    const texts: string[] = [];
-    return {
-      texts,
-      result: render(() => (
-        <Toolbar.Root>
-          <Toolbar.Input
-            {...props.value}
-            data-testid="input"
-            onInput={(event: Event) => {
-              texts.push((event.currentTarget as HTMLInputElement).value);
-            }}
-          />
-        </Toolbar.Root>
-      )),
-    };
-  }
-
-  it('takes the value that the browser restored into Toolbar.Input after a new default value', async () => {
-    mockPageBeforeLoad();
-    const props = shallowRef({ defaultValue: 'a' });
-    const { texts, result } = renderToolbarInput(props);
-    const { container } = await result;
-    const recorded = recordInputEvents(container);
-    const input = screen.getByTestId<HTMLInputElement>('input');
-    input.value = 'restored';
-
-    props.value = { defaultValue: 'b' };
-    await flushMicrotasks();
-    window.dispatchEvent(new PageTransitionEvent('pageshow'));
-    await flushMicrotasks();
-
-    expect(input).toHaveValue('restored');
-    expect(texts).toEqual(['restored']);
-    expect(recorded).toEqual(LEAVES);
-  });
-
-  it('sends no event at the page show after a new default value of Toolbar.Input', async () => {
-    const props = shallowRef({ defaultValue: 'a' });
-    const { result } = renderToolbarInput(props);
-    const { container } = await result;
-    const recorded = recordInputEvents(container);
-
-    props.value = { defaultValue: 'b' };
-    await flushMicrotasks();
-    window.dispatchEvent(new PageTransitionEvent('pageshow'));
-    await flushMicrotasks();
-
-    expect(screen.getByTestId('input')).toHaveValue('b');
-    expect(recorded).toEqual([]);
-  });
-
-  it('sends no event at the page show after a new value of Toolbar.Input', async () => {
-    mockPageBeforeLoad();
-    const props = shallowRef({ value: 'a' });
-    const { result } = renderToolbarInput(props);
-    const { container } = await result;
+    const value = shallowRef('a');
+    const { container } = await render(() => renderControl(value.value));
     const recorded = recordInputEvents(container);
     screen.getByTestId<HTMLInputElement>('input').value = 'restored';
 
-    props.value = { value: 'b' };
+    value.value = 'b';
     await flushMicrotasks();
     window.dispatchEvent(new PageTransitionEvent('pageshow'));
     await flushMicrotasks();

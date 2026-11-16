@@ -53,7 +53,7 @@ export interface FieldControlProps
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, watch } from 'vue';
+import { computed, nextTick, onBeforeUpdate, onMounted, watch } from 'vue';
 import { useValueBeforeHydration } from '../../common/hydration';
 import { useTimeout } from '../../common/useTimeout';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -171,8 +171,25 @@ function syncAfterWrite() {
   syncFilled();
 }
 
+// Vue writes the value at a render only when the input has the key `value`. Else a new default
+// value moves only an input that no user, browser restore or program changed. The part then reads
+// the input only when it held the handled value, so a restored value stays for the take. Vue queues
+// the watch at the change of the props, before the `onUpdated` hooks of the render. The part thus
+// reads the value of the render before `useFormRestoreAsInput` writes a restored value back.
+let holdsHandledValue = false;
+onBeforeUpdate(() => {
+  holdsHandledValue = (element.value as HTMLInputElement | null)?.value === handledValue;
+});
 onMounted(syncAfterWrite);
-watch([serializedValue, serializedDefaultValue], syncAfterWrite, { flush: 'post' });
+watch(
+  [serializedValue, serializedDefaultValue],
+  () => {
+    if (holdsHandledValue || (writesValue.value && props.value !== undefined)) {
+      syncAfterWrite();
+    }
+  },
+  { flush: 'post' },
+);
 
 useValueChanged(serializedValue, () => {
   if (serializedValue.value === undefined) {

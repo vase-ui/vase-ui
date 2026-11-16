@@ -1,10 +1,12 @@
 <script lang="ts">
 // A part of each family whose input Chromium restores and that takes the value of that input at
 // the `pageshow` event. A new `revision` renders the part again with the same value, as a render
-// before that event does.
+// before that event does. In `field-default` and `input-default`, it gives a new default value.
 export type FormRestoreFamily =
   | 'field'
+  | 'field-default'
   | 'input'
+  | 'input-default'
   | 'toolbar'
   | 'toolbar-default'
   | 'select'
@@ -38,6 +40,7 @@ const FONTS = { sans: 'Sans-serif', serif: 'Serif', mono: 'Monospace' };
 const FRUITS = ['Apple', 'Banana', 'Cherry'];
 
 const text = shallowRef('server');
+const defaultText = computed(() => (props.revision === 0 ? 'server' : 'loaded'));
 const font = shallowRef<string | null>('serif');
 const fruit = shallowRef<string | null>(null);
 const quantity = shallowRef<number | null>(1);
@@ -48,7 +51,9 @@ const alarm = shallowRef<Temporal.PlainTime | null>(null);
 
 const MODELS = {
   field: text,
+  'field-default': text,
   input: text,
+  'input-default': text,
   toolbar: text,
   'toolbar-default': text,
   select: font,
@@ -78,12 +83,26 @@ function handleToolbarInput(event: Event) {
     <Field.Root v-if="family === 'field'" name="name">
       <Field.Control v-model:value="text" :data-revision="revision" @value-change="record" />
     </Field.Root>
+    <Field.Root v-else-if="family === 'field-default'" name="name">
+      <Field.Control
+        :default-value="defaultText"
+        @value-change="record"
+        @update:value="text = $event"
+      />
+    </Field.Root>
     <Input
       v-else-if="family === 'input'"
       v-model:value="text"
       name="text"
       :data-revision="revision"
       @value-change="record"
+    />
+    <Input
+      v-else-if="family === 'input-default'"
+      :default-value="defaultText"
+      name="text"
+      @value-change="record"
+      @update:value="text = $event"
     />
     <Toolbar.Root v-else-if="family === 'toolbar'">
       <Toolbar.Input

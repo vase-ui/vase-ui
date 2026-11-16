@@ -24,6 +24,7 @@ import {
   hydrate,
   hydrateAfter,
   isJSDOM,
+  mockPageBeforeLoad,
   mockRuntimeLocale,
   recordInputEvents,
   renderOnServer,
@@ -33,6 +34,7 @@ import {
 } from '#test-utils';
 import { platform } from '../../common/platform';
 import { createTouches, getHorizontalSliderRect } from '../utils/test-utils';
+import FormRestoreRender from '../../../test/FormRestoreRender.test.vue';
 import SliderThumbHydration from './SliderThumbHydration.test.vue';
 
 const isWebKit = platform.engine.webkit;
@@ -2442,6 +2444,28 @@ describe('<Slider.Thumb />', () => {
       expect(fixture.getByTestId('changes').textContent).toBe('70 (input-change)');
       expect(input.value).toBe('70');
       expect(events).toEqual(['input']);
+    });
+
+    it('keeps the value of a thumb through a render of its input only', async () => {
+      mockPageBeforeLoad();
+      const locale = shallowRef('en-US');
+      const { container } = await render(() => (
+        <FormRestoreRender family="slider" revision={0} locale={locale.value} />
+      ));
+      await flushMicrotasks();
+      const recorded = recordInputEvents(container);
+      const [input] = container.querySelectorAll<HTMLInputElement>('input[name="volume"]');
+      input!.value = '70';
+
+      locale.value = 'de-DE';
+      await flushMicrotasks();
+      expect(input).toHaveValue('70');
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(within(container).getByTestId('changes').textContent).toBe('70 (input-change)');
+      expect(recorded).toEqual(['input']);
     });
   });
 
