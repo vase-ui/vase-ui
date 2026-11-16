@@ -20,6 +20,7 @@ import {
   describeConformance,
   flushMicrotasks,
   isJSDOM,
+  nextEndingStyle,
   positionerConformanceTests,
   screen,
   takeReportedMessages,
@@ -287,14 +288,15 @@ describe('<Popover.Positioner />', () => {
       await waitForPositioned(positioner);
       const initialRect = positioner.getBoundingClientRect();
 
-      await user.click(screen.getByRole('button', { name: 'Close' }));
+      const popup = screen.getByTestId('popup');
+      await nextEndingStyle(popup, {
+        action: () => user.click(screen.getByRole('button', { name: 'Close' })),
+      });
       await waitSingleFrame();
       await waitSingleFrame();
       await flushMicrotasks();
 
-      await waitFor(() => {
-        expect(screen.getByTestId('popup')).toHaveAttribute('data-ending-style');
-      });
+      expect(popup).toHaveAttribute('data-ending-style');
 
       const closingRect = positioner.getBoundingClientRect();
       expect(Math.abs(closingRect.x - initialRect.x)).toBeLessThanOrEqual(1);

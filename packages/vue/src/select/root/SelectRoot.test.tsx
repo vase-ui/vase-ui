@@ -17,6 +17,7 @@ import {
   hydrateAfter,
   isJSDOM,
   nextAnimationsRead,
+  nextEndingStyle,
   nextEvent,
   popupAnatomyTests,
   popupConformanceTests,
@@ -8209,11 +8210,9 @@ describe('<Select.Root />', () => {
           expect(optionB).toHaveFocus();
         });
 
-        await user.keyboard('{Escape}');
-
-        await waitFor(() => {
-          expect(screen.getByTestId('popup')).toHaveAttribute('data-ending-style');
-        });
+        const popup = screen.getByTestId('popup');
+        await nextEndingStyle(popup, { action: () => user.keyboard('{Escape}') });
+        expect(popup).toHaveAttribute('data-ending-style');
         expect(optionB).toHaveAttribute('data-highlighted');
 
         // Items moving under the pointer while the popup fades out don't take the highlight.

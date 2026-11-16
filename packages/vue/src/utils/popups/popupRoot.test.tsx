@@ -18,6 +18,7 @@ import {
   hydrate,
   nextAnimationsRead,
   nextCall,
+  nextEndingStyle,
   randomStringValue,
   renderOnServer,
   takeReportedMessages,
@@ -1135,14 +1136,16 @@ describe('usePopupRoot', () => {
         expect(completions).toEqual([true]);
       });
       const exit = createAnimation();
-      getByRole('dialog').getAnimations = () => [exit.animation];
+      const dialog = getByRole('dialog');
+      dialog.getAnimations = () => [exit.animation];
 
-      await fireEvent.click(getByText('trigger'));
-      await waitFor(() => {
-        expect(getByRole('dialog')).toHaveAttribute('data-ending-style');
-      });
+      await nextEndingStyle(dialog, { action: () => fireEvent.click(getByText('trigger')) });
+      // The root reads the animations of the popup in the frame after the close. Wait for that
+      // frame, so that a root that completes the close at that read has removed the popup.
+      await waitSingleFrame();
       await flushMicrotasks();
-      expect(queryByRole('dialog')).not.toBe(null);
+      expect(queryByRole('dialog')).toBe(dialog);
+      expect(dialog).toHaveAttribute('data-ending-style');
       expect(completions).toEqual([true]);
 
       exit.finish();
