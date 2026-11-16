@@ -167,19 +167,6 @@ describe('<Field.Item />', () => {
     );
   });
 
-  // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
-  // instance set, and a later case of the file can then get a warning about a slot.
-  it('throws a descriptive error when rendered outside <Field.Root>', async () => {
-    await expect(render(<Field.Item />)).rejects.toThrow(
-      'Vase UI: A part of Field must be inside <Field.Root>. Without a root the part has no field state to read. Put the part inside <Field.Root>.',
-    );
-
-    // Vue also warns about the error of `setup`.
-    expect(takeReportedMessages()).toEqual([
-      expect.stringContaining('Unhandled error during execution of setup function'),
-    ]);
-  });
-
   describe('VUE-112: a disabled fieldset', () => {
     it('shows the disabled state on an item in a disabled fieldset', async () => {
       await render(() => (
@@ -198,5 +185,18 @@ describe('<Field.Item />', () => {
       }
       expect(screen.getByTestId('root')).not.toHaveAttribute('data-disabled');
     });
+  });
+
+  // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
+  // instance set, and a later case of the file can then get a warning about a slot.
+  it('throws a descriptive error when rendered outside <Field.Root>', async () => {
+    await expect(render(<Field.Item />)).rejects.toThrow(
+      'Vase UI: A part of Field must be inside <Field.Root>. Without a root the part has no field state to read. Put the part inside <Field.Root>.',
+    );
+
+    // Vue also warns about the error of `setup`.
+    expect(takeReportedMessages()).toEqual([
+      expect.stringContaining('Unhandled error during execution of setup function'),
+    ]);
   });
 });
