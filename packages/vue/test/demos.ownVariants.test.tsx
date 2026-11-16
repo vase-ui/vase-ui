@@ -63,7 +63,7 @@ function subsets(items: string[]): string[][] {
   );
 }
 
-function colorOf(color: string) {
+function bytesOf(color: string) {
   return rgbaOf(color).join(',');
 }
 
@@ -80,16 +80,16 @@ function lookOf(element: Element): Record<string, string> {
   if (style.appearance === 'auto' && element.matches('input[type=checkbox]')) {
     return look;
   }
-  look.color = colorOf(style.color);
-  look['background-color'] = colorOf(style.backgroundColor);
+  look.color = bytesOf(style.color);
+  look['background-color'] = bytesOf(style.backgroundColor);
   for (const side of ['top', 'right', 'bottom', 'left']) {
     // A border side with no width has a color, and it paints nothing.
     if (parseFloat(style.getPropertyValue(`border-${side}-width`)) > 0) {
-      look[`border-${side}-color`] = colorOf(style.getPropertyValue(`border-${side}-color`));
+      look[`border-${side}-color`] = bytesOf(style.getPropertyValue(`border-${side}-color`));
     }
   }
   if (element.matches(':placeholder-shown')) {
-    look['placeholder color'] = colorOf(getComputedStyle(element, '::placeholder').color);
+    look['placeholder color'] = bytesOf(getComputedStyle(element, '::placeholder').color);
   }
   return look;
 }
@@ -97,7 +97,7 @@ function lookOf(element: Element): Record<string, string> {
 /** The look of each element of the frame, in the sequence of the document. */
 function lookOfFrame(frame: Element) {
   return [...frame.querySelectorAll('*')].map((element) => ({
-    element: element.tagName.toLowerCase(),
+    tag: element.tagName.toLowerCase(),
     text: element.textContent.trim().slice(0, 20),
     look: lookOf(element),
   }));
@@ -106,14 +106,14 @@ function lookOfFrame(frame: Element) {
 type FrameLook = ReturnType<typeof lookOfFrame>;
 
 function differences(cssModules: FrameLook, tailwind: FrameLook): string[] {
-  expect(tailwind.map(({ element }) => element)).toEqual(cssModules.map(({ element }) => element));
-  return cssModules.flatMap(({ element, text, look }, index) => {
+  expect(tailwind.map(({ tag }) => tag)).toEqual(cssModules.map(({ tag }) => tag));
+  return cssModules.flatMap(({ tag, text, look }, index) => {
     const other = tailwind[index].look;
     return [...new Set([...Object.keys(look), ...Object.keys(other)])]
       .filter((name) => look[name] !== other[name])
       .map(
         (name) =>
-          `<${element}> "${text}" ${name}: ${look[name]} in the CSS-module demo, ${other[name]} in the Tailwind demo`,
+          `<${tag}> "${text}" ${name}: ${look[name]} in the CSS-module demo, ${other[name]} in the Tailwind demo`,
       );
   });
 }
@@ -207,8 +207,8 @@ describe.each(demos)('%s', (demo) => {
         counts.push(countDisabled(frame));
       });
 
-      // The field of the case has `data-disabled` too.
       const hasDisabledState = !DEMOS_WITHOUT_DISABLED_STATE.has(demo);
+      // The field of the case has `data-disabled` too.
       expect(counts.map((count) => count - 1 > countAtRest)).toEqual([
         hasDisabledState,
         hasDisabledState,
