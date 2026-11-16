@@ -55,12 +55,21 @@ async function waitPastStampsSince(mark: ClockMark) {
     const frames = Math.max(1, Math.ceil((stamp + 1 - Date.now()) / FAKE_FRAME_DURATION));
     vi.setSystemTime(mockedTime + frames * FAKE_FRAME_DURATION);
   }
-  // Fake timers can leave `Date` real. The loop compares with `<=`, so a step back of the wall
-  // clock during the loop does not end it. It waits in microtasks, because a case can assert the
-  // state before the next task.
-  while (Date.now() <= stamp) {
+  // Fake timers can leave `Date` real. The loop ends only at a later time, so a step back of the
+  // wall clock during the loop does not end it. It waits in microtasks, because a case can assert
+  // the state before the next task.
+  while (!isWallClockLaterThan(stamp)) {
     await Promise.resolve();
   }
+}
+
+/**
+ * Tells if the wall clock is later than `stamp` in two reads, one directly after the other. On
+ * macOS, one read of `Date.now()` can give a time that is some milliseconds later than the read
+ * before it and the read after it.
+ */
+function isWallClockLaterThan(stamp: number) {
+  return Date.now() > stamp && Date.now() > stamp;
 }
 
 /**

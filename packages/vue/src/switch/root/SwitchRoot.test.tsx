@@ -15,6 +15,7 @@ import {
   hydrate,
   hydrateAfter,
   isJSDOM,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   takeReportedMessages,
@@ -271,6 +272,22 @@ describe('<Switch.Root />', () => {
       expect(nativeLabelled).toHaveAccessibleName('Wi-Fi');
       expect(fieldLabelled).not.toHaveAttribute('aria-labelledby');
       expect(fieldLabelled).toHaveAccessibleName('Bluetooth');
+    });
+
+    it.each([
+      { name: 'an empty aria-label', ariaLabel: '' },
+      { name: 'an aria-label of white space', ariaLabel: '\n\t ' },
+    ])('VUE-106: writes no aria-label for $name', async ({ ariaLabel }) => {
+      await render(
+        <label>
+          <Switch.Root aria-label={ariaLabel} />
+          Wi-Fi
+        </label>,
+      );
+
+      const switchEl = screen.getByRole('switch');
+      expect(switchEl).not.toHaveAttribute('aria-label');
+      expect(switchEl).toHaveAccessibleName('Wi-Fi');
     });
   });
 
@@ -2139,6 +2156,37 @@ describe('<Switch.Root />', () => {
   });
 
   describe('server-side rendering', () => {
+    removedPartHydrationTests({
+      file: 'src/switch/root/SwitchRootHydration.test.vue',
+      component: SwitchRootHydration,
+      cases: [
+        {
+          name: 'a removed label',
+          props: { label: 'field-after', laterRemovedAtMount: true },
+          selector: '[data-testid="switch"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description',
+          props: { label: 'field-after', laterRemovedAtMount: true },
+          selector: '[data-testid="switch"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+        {
+          name: 'the input, a removed description',
+          props: { label: 'field-after', laterRemovedAtMount: true },
+          selector: 'input',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+      ],
+    });
+
     it.each([
       { name: 'a switch that is off', props: {} },
       { name: 'a switch that is on', props: { defaultChecked: true, name: 'notifications' } },

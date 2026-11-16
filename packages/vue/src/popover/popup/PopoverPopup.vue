@@ -59,7 +59,7 @@ export interface PopoverPopupProps
 
 <script setup lang="ts">
 import { isHTMLElement } from '@floating-ui/utils/dom';
-import { computed, toRaw, watch } from 'vue';
+import { computed, watch } from 'vue';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import { REASONS } from '../../internals/reasons';
@@ -154,7 +154,7 @@ function setPopupElement(popup: HTMLElement | null) {
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: useKeepAliveElementRef(setPopupElement, () => toRaw(store.state).activeTriggerElement),
+  ref: useKeepAliveElementRef(setPopupElement),
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
     store.select('popupProps'),

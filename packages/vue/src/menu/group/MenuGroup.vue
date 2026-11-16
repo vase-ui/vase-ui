@@ -13,7 +13,6 @@ import { provide } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { isInTreeOf } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useMenuFilterImpl } from '../filter-root/MenuFilterContext';
 import { MenuGroupContext } from './MenuGroupContext';
@@ -31,7 +30,6 @@ defineSlots<{
 const labelIds = createIdRegistry();
 provide(MenuGroupContext, {
   registerLabelId: labelIds.registerId,
-  reaches: (target) => isInTreeOf(element.value, target),
 });
 
 // A filterable menu hides the group, label included, once the query filters out all of its items.

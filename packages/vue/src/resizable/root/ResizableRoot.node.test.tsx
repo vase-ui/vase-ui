@@ -177,6 +177,18 @@ describe('<Resizable.Root /> on a server', () => {
       ]);
     });
 
+    it('renders the length of a panel for a null layout', async () => {
+      const html = await renderToString(
+        <Resizable.Root layout={null}>
+          <Resizable.Panel id="a" defaultSize="240px" />
+          <Resizable.Panel id="b" />
+        </Resizable.Root>,
+      );
+
+      expect(html).toContain('flex:0 1 240px');
+      expect(growsIn(html)).toEqual([100]);
+    });
+
     it('renders no value and no end of the travel for the handle', async () => {
       const html = await renderToString(
         createSSRApp(ResizableRootHydration, { composition: 'length' }),

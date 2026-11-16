@@ -7,14 +7,15 @@ import {
   fireEvent,
   firePointer,
   flushMicrotasks,
+  getFocusableUnderAriaHidden,
   nestedPopupCloseTests,
   nextEvent,
   nextAnimationsRead,
+  POPUP_EXIT_CSS,
   screen,
   takeReportedMessages,
   waitFor,
   waitForLaterMillisecond,
-  waitSingleFrame,
 } from '#test-utils';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import * as Dialog from '../../dialog/index.parts';
@@ -597,6 +598,7 @@ describe('<Drawer.Popup />', () => {
 
   it('clears parent nested drawer state when a nested drawer starts closing before unmount', async () => {
     globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    const onOpenChangeComplete = vi.fn();
 
     const style = `
       @keyframes test-drawer-exit {
@@ -617,7 +619,7 @@ describe('<Drawer.Popup />', () => {
           <Drawer.Portal>
             <Drawer.Viewport>
               <Drawer.Popup data-testid="parent-popup">
-                <Drawer.Root defaultOpen modal={false}>
+                <Drawer.Root defaultOpen modal={false} onOpenChangeComplete={onOpenChangeComplete}>
                   <Drawer.Portal>
                     <Drawer.Viewport>
                       <Drawer.Popup class="animation-test-child-popup" data-testid="child-popup">
@@ -640,9 +642,11 @@ describe('<Drawer.Popup />', () => {
     });
     expect(parentPopup).toHaveAttribute('data-nested-drawer-open', '');
 
-    // The nested drawer is open at the mount and reads its animations in the frame after the mount.
-    // The next read of its popup is then the read of its exit.
-    await waitSingleFrame();
+    // The root of the nested drawer reads the animations of its popup in a frame after the mount,
+    // to report the end of the open. The wait for the read of the close must start after that read.
+    await waitFor(() => {
+      expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+    });
     const childPopup = screen.getByTestId('child-popup');
     // The exit lasts 100 s, so its state stays until the case ends the exit.
     const animations = await nextAnimationsRead(childPopup, {
@@ -664,6 +668,7 @@ describe('<Drawer.Popup />', () => {
 
   it('keeps a fixed height applied while a nested drawer closes', async () => {
     globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    const onOpenChangeComplete = vi.fn();
 
     const style = `
       @keyframes test-drawer-exit {
@@ -705,7 +710,7 @@ describe('<Drawer.Popup />', () => {
             <Drawer.Viewport>
               <Drawer.Popup class="animation-test-parent-popup" data-testid="parent-popup">
                 <div class="animation-test-parent-content" />
-                <Drawer.Root modal={false}>
+                <Drawer.Root modal={false} onOpenChangeComplete={onOpenChangeComplete}>
                   <Drawer.Trigger>Open nested drawer</Drawer.Trigger>
                   <Drawer.Portal>
                     <Drawer.Viewport>
@@ -751,6 +756,11 @@ describe('<Drawer.Popup />', () => {
     });
 
     const childPopup = screen.getByTestId('child-popup');
+    // The root of the nested drawer reads the animations of its popup in a frame after the open,
+    // to report the end of the open. The wait for the read of the close must start after that read.
+    await waitFor(() => {
+      expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+    });
     // The exit lasts 100 s, so its state stays until the case ends the exit.
     const animations = await nextAnimationsRead(childPopup, {
       action: () => screen.getByRole('button', { name: 'Close nested drawer' }).click(),
@@ -1034,25 +1044,13 @@ describe('<Drawer.Popup />', () => {
   });
 
   describe('BUG-5519: an exit animation', () => {
-    const EXIT_CSS = `
-      .popup[data-ending-style] { animation: popup-exit 100s; }
-      @keyframes popup-exit { to { opacity: 0; } }
-    `;
-
-    // An element that the Tab key can reach, under `aria-hidden` on itself or on an ancestor.
-    function getFocusableUnderAriaHidden() {
-      return [...document.querySelectorAll<HTMLElement>('[aria-hidden="true"]')]
-        .flatMap((element) => [element, ...element.querySelectorAll<HTMLElement>('*')])
-        .filter((element) => element.tabIndex >= 0);
-    }
-
     // Opens the drawer with its trigger and closes it with the Escape key. The callback records the
     // document when the exit animation starts. The function resolves after the popup unmounts.
     async function recordExit(record: () => void) {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
       const { user } = await render(
         <div>
-          <style>{EXIT_CSS}</style>
+          <style>{POPUP_EXIT_CSS}</style>
           <Drawer.Root>
             <Drawer.Trigger>Open</Drawer.Trigger>
             <Drawer.Portal>

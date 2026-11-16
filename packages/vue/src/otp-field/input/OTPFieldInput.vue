@@ -33,11 +33,12 @@ export interface OTPFieldInputProps
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUpdated, shallowRef, useAttrs, watch } from 'vue';
-import { useValueBeforeHydration } from '../../common/hydration';
+import { useAriaAfterHydration, useValueBeforeHydration } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
 import { platform } from '../../common/platform';
 import { activeElement } from '../../common/shadowDom';
 import { warn } from '../../common/warn';
+import { givenName } from '../../internals/blankName';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
 import {
   createChangeEventDetails,
@@ -73,6 +74,7 @@ const {
   getInputId,
   handleInputBlur,
   handleInputFocus,
+  inputList,
   inputMode,
   inputAriaLabelledBy,
   invalid,
@@ -90,7 +92,7 @@ const {
   value,
 } = useOTPFieldRootContext();
 
-const { ref: listItemRef, index } = useCompositeListItem();
+const { ref: listItemRef, index } = useCompositeListItem({ list: inputList });
 const setFocused = useSetFieldFocused(disabled, () => element.value, setRootFocused);
 const direction = useDirection();
 
@@ -131,7 +133,7 @@ if (process.env.NODE_ENV !== 'production') {
   let checkedLabel: unknown;
 
   const checkFirstSlotLabel = () => {
-    const slotAriaLabel = attrs['aria-label'];
+    const slotAriaLabel = givenName(attrs['aria-label']);
     if (checkedIndex === index.value && checkedLabel === slotAriaLabel) {
       return;
     }
@@ -340,6 +342,7 @@ function handlePaste(event: ClipboardEvent) {
   commitValue(rawValue, REASONS.inputPaste, event);
 }
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('input', props, {
   state: inputState,
   ref: [listItemRef],
@@ -382,7 +385,7 @@ const { element, elementProps } = useRenderElement('input', props, {
         pattern: pattern.value,
         readonly: readOnly.value || undefined,
         required: required.value || undefined,
-        'aria-labelledby': ariaLabel == null ? inheritedLabel : undefined,
+        'aria-labelledby': ariaAfterHydration(ariaLabel == null ? inheritedLabel : undefined),
         'aria-invalid': !disabled.value && invalid.value ? true : undefined,
         'aria-label': ariaLabel,
         onMousedown(event: MouseEvent) {

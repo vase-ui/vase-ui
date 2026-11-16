@@ -13,6 +13,7 @@ import {
   heldMountFormResetTests,
   hydrateAfter,
   recordInputEvents,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   waitFor,
@@ -722,6 +723,60 @@ describe('<DateField.Root />', () => {
       await show();
 
       expect(label).toHaveAttribute('for', 'held-date');
+    });
+  });
+
+  describe('hydration', () => {
+    removedPartHydrationTests({
+      file: HYDRATION_FILE,
+      component: DateFieldRootHydration,
+      cases: [
+        {
+          name: 'a removed label',
+          props: {
+            locale: 'en-US',
+            label: 'after',
+            description: true,
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: '[data-testid="root"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description',
+          props: {
+            locale: 'en-US',
+            label: 'after',
+            description: true,
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: '[data-testid="root"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+        {
+          name: 'the hidden input, a removed description',
+          props: {
+            locale: 'en-US',
+            label: 'after',
+            description: true,
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: 'input[aria-hidden]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+      ],
     });
   });
 

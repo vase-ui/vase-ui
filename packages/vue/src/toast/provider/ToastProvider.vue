@@ -26,6 +26,7 @@ export interface ToastProviderProps {
 
 <script setup lang="ts">
 import { onActivated, onDeactivated, onMounted, onScopeDispose, provide, watch } from 'vue';
+import { isInHeldBranch } from '../../internals/useKeepAliveState';
 import type { ToastManagerEvent } from '../createToastManager';
 import { ToastStore } from '../store';
 import { ToastContext } from './ToastProviderContext';
@@ -49,14 +50,16 @@ const store = new ToastStore({
 
 provide(ToastContext, store);
 
-// Suspend the timers of the store. `hold` starts them when the provider is mounted. A server never
-// mounts the provider, so a toast that a `setup` adds on a server gets no timer.
+// Suspend the timers of the store. `hold` starts them after the mount. A server never mounts the
+// provider, so a toast that a `setup` adds on a server gets no timer.
 store.disposeEffect()();
 
 let releaseTimers: (() => void) | undefined;
 let unsubscribe: (() => void) | undefined;
-// `KeepAlive` also calls `onActivated` at the first mount, and then there is nothing to take back.
-let deactivated = false;
+// `KeepAlive` also calls `onActivated` at the first mount. A provider that mounts with its branch
+// holds its timers from the mount. A provider that mounts in a held branch holds them from the
+// activation.
+let deactivated = isInHeldBranch();
 
 function handleManagerEvent({ action, options }: ToastManagerEvent) {
   const id = options.id;
@@ -84,7 +87,12 @@ function subscribe() {
   }
 }
 
+// A component can mount the provider from its own state in the flush that shows its branch. The
+// provider then gets `onActivated` before `onMounted`, and both call `hold`.
 function hold() {
+  if (releaseTimers) {
+    return;
+  }
   releaseTimers = store.disposeEffect();
   subscribe();
 }
@@ -96,7 +104,11 @@ function release() {
   unsubscribe = undefined;
 }
 
-onMounted(hold);
+onMounted(() => {
+  if (!deactivated) {
+    hold();
+  }
+});
 
 onDeactivated(() => {
   deactivated = true;

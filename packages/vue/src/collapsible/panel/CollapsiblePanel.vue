@@ -43,6 +43,7 @@ import { computed, onMounted, watch } from 'vue';
 import { warn } from '../../common/warn';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { givenId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useCollapsibleRootContext } from '../root/CollapsibleRootContext';
 import { collapsibleStateAttributesMapping } from '../root/stateAttributesMapping';
@@ -82,7 +83,6 @@ const {
   mounted,
   onOpenChange,
   open,
-  reaches,
   registerPanelId,
   setMounted,
   setOpen,
@@ -90,15 +90,13 @@ const {
   transitionStatus,
 } = useCollapsibleRootContext();
 
-const panelId = computed(() => props.id || defaultPanelId.value);
+const panelId = computed(() => givenId(props.id) ?? defaultPanelId.value);
 
 const source = Symbol();
 
 useRegisteredId(
   () => panelId.value,
   (getId) => registerPanelId(source, getId),
-  () => element.value,
-  reaches,
 );
 
 const {

@@ -47,7 +47,7 @@ function setListElement(list: HTMLElement | null) {
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: useKeepAliveElementRef(setListElement, () => toRaw(store.state).triggerElement),
+  ref: useKeepAliveElementRef(setListElement),
   props: (attrs) => [
     {
       id: `${store.select('id')}-list`,

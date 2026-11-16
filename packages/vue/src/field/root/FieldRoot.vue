@@ -83,7 +83,6 @@ import { FieldRootContext } from '../../internals/field-root-context/FieldRootCo
 import { useFormContext } from '../../internals/form-context/FormContext';
 import { provideLabelableContext } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { isInTreeOf } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFieldValidation } from './useFieldValidation';
 
@@ -105,7 +104,7 @@ defineSlots<{
 
 const { errors, validationMode: formValidationMode, submitCountRef } = useFormContext();
 const fieldsetContext = useFieldsetRootContext(true);
-const labelable = provideLabelableContext(() => element.value);
+const labelable = provideLabelableContext();
 
 const isDisabled = computed(() => (fieldsetContext?.disabled.value ?? false) || props.disabled);
 const resolvedValidationMode = computed(() => props.validationMode ?? formValidationMode.value);
@@ -242,7 +241,6 @@ provide(FieldRootContext, {
   state,
   registerFieldControl,
   validation,
-  reaches: (target) => isInTreeOf(element.value, target),
 });
 
 const { element, elementProps } = useRenderElement('div', props, {

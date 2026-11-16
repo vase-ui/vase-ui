@@ -11,16 +11,24 @@ import { displayCalendar } from '../displayCalendar';
 import { weekInfo } from '../format';
 import { compareDates, isKind, isSameDay, toInputText, toPlainDate, today } from '../temporal';
 import type { DateValue, DayOfWeek } from '../temporal';
-import type { CalendarBaseProps, CalendarChangeEventDetails } from './calendarProps';
+import type {
+  CalendarBaseProps,
+  CalendarChangeEventDetails,
+  CalendarView,
+  CalendarViewProps,
+} from './calendarProps';
 import { assertModifierNames, canFocus, canSelect, getDayState, ownsDay } from './dayState';
 import type { DayRules } from './dayState';
 import type { CalendarSelection } from './daySelection';
 import { findKeyTarget, getKeyAction, getTabStop } from './focusTarget';
-import { formatPages } from './formatText';
+import { formatPages, formatRangeText, formatText } from './formatText';
+import { findGridTarget, getGridMove } from './gridKeys';
 import { getMonthPage, startOfWeek } from './monthGrid';
 import type { CalendarPage, CalendarPageWeek } from './monthGrid';
 import { usePageTransition } from './usePageTransition';
 import type { NavigationDirection } from './usePageTransition';
+import { getMonthCells, getSpanOfYears, getYearCells } from './viewPages';
+import type { CalendarCellState } from './viewPages';
 import { alignPageStart, getBroadcastPage, getDurationPage, getWeekNumber } from './weeks';
 import type { VisibleDuration } from './weeks';
 
@@ -29,6 +37,19 @@ export interface CalendarRootEmit {
   (event: 'update:month', month: Temporal.PlainYearMonth): void;
   (event: 'focusedDateChange', date: Temporal.PlainDate, details: CalendarChangeEventDetails): void;
   (event: 'update:focusedDate', date: Temporal.PlainDate): void;
+}
+
+export interface CalendarViewEmit {
+  (event: 'viewChange', view: CalendarView, details: CalendarChangeEventDetails): void;
+  (event: 'update:view', view: CalendarView): void;
+}
+
+/** What a calendar that has the views of months and years gives to its root. */
+export interface CalendarViewsOptions {
+  props: CalendarViewProps;
+  emit: CalendarViewEmit;
+  /** Whether the value is a year and month. The first view is then the grid of months. */
+  isMonthValue: ComputedRef<boolean>;
 }
 
 /** The first day of the page of a duration, and the month of the root for that page. */
@@ -43,6 +64,8 @@ export interface UseCalendarRootOptions {
   props: CalendarBaseProps;
   emit: CalendarRootEmit;
   selection: CalendarSelection;
+  /** The views of months and years. A root with no views shows days only. */
+  views?: CalendarViewsOptions;
 }
 
 /** What the root gives to its parts and to its own element. */
@@ -65,12 +88,15 @@ export interface CalendarRootController {
   tabStop: ComputedRef<Temporal.PlainDate | null>;
   /** The rules that give the state of a day with `getDayState`. */
   rules: ComputedRef<DayRules>;
-  /** The name of the visible pages, for the `aria-label` of the root. */
+  /**
+   * The name of what the grid shows: the visible pages of days, the year of the months, or the
+   * years of the page. The root names itself with it, and `Calendar.ViewTrigger` shows it.
+   */
   label: ComputedRef<string>;
   /** The side of the last change of the page. */
   navigationDirection: Readonly<Ref<NavigationDirection>>;
-  /** What one press of a navigation button moves: months, weeks or days. */
-  navigationStep: ComputedRef<{ unit: 'months' | 'weeks' | 'days'; count: number }>;
+  /** What one press of a navigation button moves: years, months, weeks or days. */
+  navigationStep: ComputedRef<{ unit: 'years' | 'months' | 'weeks' | 'days'; count: number }>;
   /** Whether `minDate` allows a page before the first one. */
   canPrevious: ComputedRef<boolean>;
   /** Whether `maxDate` allows a page after the last one. */
@@ -97,10 +123,38 @@ export interface CalendarRootController {
   pressDay: (date: Temporal.PlainDate, event: MouseEvent) => void;
   onDayFocus: (date: Temporal.PlainDate, event: FocusEvent) => void;
   onDayKeydown: (date: Temporal.PlainDate, event: KeyboardEvent) => void;
-  /** Gives the element of a day to the root, so that the root can focus it. It returns the undo. */
+  /**
+   * Gives the element of a day to the root, so that the root can focus it. It returns the undo. A
+   * cell of a month or of a year registers under the first day of its month.
+   */
   registerDay: (date: Temporal.PlainDate, element: HTMLElement) => () => void;
-  /** Focuses `date`, and shows its month. With no date, it focuses the day that has the tab stop. */
+  /**
+   * Focuses `date`, and shows its page. In the grid of months or of years it focuses the cell of
+   * that date. With no date, it focuses the cell that has the tab stop.
+   */
   focus: (date?: DateValue) => void;
+  /** What the grid shows. A root with no views shows `day`. */
+  view: ComputedRef<CalendarView>;
+  /**
+   * Whether the grid can show months and years. A root with no views and a calendar with
+   * `visibleDuration` show days only.
+   */
+  hasViews: ComputedRef<boolean>;
+  /** Whether a press on a month selects it, because the value is a year and month. */
+  selectsMonths: ComputedRef<boolean>;
+  /** The months of the year that the grid of months shows. */
+  monthCells: ComputedRef<Temporal.PlainYearMonth[]>;
+  /** The first month of each year of the page that the grid of years shows. */
+  yearCells: ComputedRef<Temporal.PlainYearMonth[]>;
+  /** Shows `target`, or shows the first view when the grid already shows `target`. */
+  toggleView: (target: 'month' | 'year', event: MouseEvent) => void;
+  getMonthState: (month: Temporal.PlainYearMonth) => CalendarCellState;
+  getYearState: (year: Temporal.PlainYearMonth) => CalendarCellState;
+  pressMonth: (month: Temporal.PlainYearMonth, event: MouseEvent) => void;
+  pressYear: (year: Temporal.PlainYearMonth, event: MouseEvent) => void;
+  /** `cell` is the month, or the first month of the year, of the cell that got the focus. */
+  onCellFocus: (cell: Temporal.PlainYearMonth, event: FocusEvent) => void;
+  onCellKeydown: (cell: Temporal.PlainYearMonth, columns: number, event: KeyboardEvent) => void;
 }
 
 /**
@@ -113,14 +167,16 @@ export function useCalendarRoot({
   props,
   emit,
   selection,
+  views,
 }: UseCalendarRootOptions): CalendarRootController {
   const formatLocale = useFormatLocale(() => props.locale);
   const direction = useDirection();
+  const name = part.replace(/\.Root$/, '');
 
   // The dates of an ISO grid and of a Gregorian grid are the same, so the dates of the grid and
   // the months that the root emits are ISO and not Gregorian. The text still follows the locale.
   const calendar = computed(() => {
-    const id = displayCalendar(props.calendar, selection.values.value[0], formatLocale.value);
+    const id = displayCalendar(props.calendar, selection.template.value, formatLocale.value);
     return id === 'gregory' ? 'iso8601' : id;
   });
 
@@ -160,10 +216,29 @@ export function useCalendarRoot({
       : { days: Math.max(1, Math.floor(visible.days)) };
   });
 
+  const isMonthValue = computed(() => views?.isMonthValue.value === true);
+  const [viewState, setViewState] = useControlled<CalendarView | undefined>({
+    controlled: () => views?.props.view,
+    default: () => views?.props.defaultView,
+    name: 'Calendar',
+    state: 'view',
+  });
+  // A calendar of weeks or days shows days only, and a year and month has no days.
+  const hasViews = computed(() => views !== undefined && duration.value === undefined);
+  const view = computed<CalendarView>(() => {
+    if (!hasViews.value) {
+      return 'day';
+    }
+    const requested = viewState.value ?? 'day';
+    return isMonthValue.value && requested === 'day' ? 'month' : requested;
+  });
+  const yearCount = computed(() => Math.max(1, Math.floor(views?.props.visibleYears ?? 12)));
+
   const timeZone = computed(() => {
-    const first = selection.values.value[0];
+    const template = selection.template.value;
     return (
-      props.timeZone ?? (first && isKind(first, 'zonedDateTime') ? first.timeZoneId : undefined)
+      props.timeZone ??
+      (template && isKind(template, 'zonedDateTime') ? template.timeZoneId : undefined)
     );
   });
   // The clock is read in `setup`, and again when the first page or the time zone changes. A page
@@ -192,7 +267,7 @@ export function useCalendarRoot({
   const [monthState, setMonthState] = useControlled<Temporal.PlainYearMonth | undefined>({
     controlled: () => props.month,
     default: () => props.defaultMonth,
-    name: 'Calendar',
+    name,
     state: 'month',
   });
   // The limits apply only to a first page that the root picks. The root shows a month of the
@@ -200,13 +275,16 @@ export function useCalendarRoot({
   const visibleMonth = computed(() =>
     monthState.value
       ? toGridDate(monthState.value).toPlainYearMonth()
-      : clampMonth(toGridDate(initialDate).toPlainYearMonth()),
+      : clampMonth(
+          toGridDate(initialDate).toPlainYearMonth(),
+          view.value === 'day' ? undefined : 1,
+        ),
   );
 
   const [focusedDateState, setFocusedDateState] = useControlled<Temporal.PlainDate | null>({
     controlled: () => props.focusedDate,
     default: () => props.defaultFocusedDate ?? null,
-    name: 'Calendar',
+    name,
     state: 'focusedDate',
   });
 
@@ -260,6 +338,7 @@ export function useCalendarRoot({
   const { navigationDirection, renderedPages, isLeaving, finishLeaving } = usePageTransition(
     pages,
     computed(() => `${calendar.value}|${firstDay.value}`),
+    computed(() => view.value === 'day'),
   );
 
   assertModifierNames(part, props.modifiers);
@@ -292,7 +371,7 @@ export function useCalendarRoot({
     return getDayState(date, null, rules.value);
   }
 
-  const tabStop = computed(() =>
+  const dayTabStop = computed(() =>
     getTabStop({
       days: pages.value.flatMap((page) =>
         page.weeks.flatMap((week) =>
@@ -305,7 +384,93 @@ export function useCalendarRoot({
     }),
   );
 
-  const label = computed(() => formatPages(pages.value, formatLocale.value));
+  // The grid of months shows the months of one year, and the grid of years shows a page of years.
+  // A cell is a month, or the first month of a year, and its day is the first day of that month.
+  // The root focuses and registers a cell by that day.
+  const monthCells = computed(() => getMonthCells(visibleMonth.value));
+  const yearCells = computed(() => getYearCells(visibleMonth.value, yearCount.value));
+  const todayMonth = computed(() => toGridDate(todayDate.value).toPlainYearMonth());
+  const selectedMonths = computed(() =>
+    selection.values.value.map((value) => toGridDate(value).toPlainYearMonth()),
+  );
+
+  function isMonthDisabled(month: Temporal.PlainYearMonth) {
+    const { min, max } = monthLimits.value;
+    return (
+      props.disabled === true ||
+      (min !== undefined && Temporal.PlainYearMonth.compare(month, min) < 0) ||
+      (max !== undefined && Temporal.PlainYearMonth.compare(month, max) > 0) ||
+      views?.props.disabledMonths?.(month) === true
+    );
+  }
+
+  function isYearDisabled(year: Temporal.PlainYearMonth) {
+    const { min, max } = monthLimits.value;
+    return (
+      props.disabled === true ||
+      (min !== undefined && year.year < min.year) ||
+      (max !== undefined && year.year > max.year) ||
+      views?.props.disabledYears?.(year) === true
+    );
+  }
+
+  function getMonthState(month: Temporal.PlainYearMonth): CalendarCellState {
+    return {
+      selected: selectedMonths.value.some((selected) => selected.equals(month)),
+      disabled: isMonthDisabled(month),
+      current: todayMonth.value.equals(month),
+    };
+  }
+
+  function getYearState(year: Temporal.PlainYearMonth): CalendarCellState {
+    return {
+      selected: selectedMonths.value.some((selected) => selected.year === year.year),
+      disabled: isYearDisabled(year),
+      current: todayMonth.value.year === year.year,
+    };
+  }
+
+  const getCellState = (cell: Temporal.PlainYearMonth) =>
+    view.value === 'year' ? getYearState(cell) : getMonthState(cell);
+
+  const cellDate = (cell: Temporal.PlainYearMonth) => cell.toPlainDate({ day: 1 });
+
+  // The cell that holds `date`: its month, or the first month of its year.
+  function cellOf(date: Temporal.PlainDate) {
+    const month = date.toPlainYearMonth();
+    return view.value === 'year' ? month.with({ month: 1 }) : month;
+  }
+
+  function isSameCell(a: Temporal.PlainYearMonth, b: Temporal.PlainYearMonth) {
+    return view.value === 'year' ? a.year === b.year : a.equals(b);
+  }
+
+  const cellTabStop = computed(() => {
+    const focused = focusedDateState.value;
+    return getTabStop({
+      days: (view.value === 'year' ? yearCells.value : monthCells.value)
+        .filter((cell) => !getCellState(cell).disabled)
+        .map(cellDate),
+      focusedDate: focused ? cellDate(cellOf(toGridDate(focused))) : null,
+      isSelected: (day) => getCellState(cellOf(day)).selected,
+      today: cellDate(cellOf(toGridDate(todayDate.value))),
+    });
+  });
+
+  const tabStop = computed(() => (view.value === 'day' ? dayTabStop.value : cellTabStop.value));
+
+  const label = computed(() => {
+    const locale = formatLocale.value;
+    if (view.value === 'month') {
+      return formatText(visibleMonth.value, { year: 'numeric' }, locale);
+    }
+    const first = yearCells.value[0];
+    const last = yearCells.value.at(-1);
+    if (view.value === 'year' && first && last) {
+      return formatRangeText(first, last, { year: 'numeric' }, locale);
+    }
+    return formatPages(pages.value, locale);
+  });
 
   function setMonth(month: Temporal.PlainYearMonth, details: CalendarChangeEventDetails) {
     emit('monthChange', month, details);
@@ -473,7 +638,14 @@ export function useCalendarRoot({
     () => {
       if (props.focusedDate) {
         const date = clampDate(toGridDate(props.focusedDate));
-        if (!isShown(date) && !isOwned(date)) {
+        if (view.value !== 'day') {
+          if (!isOnCellPage(cellOf(date))) {
+            setMonth(
+              clampMonth(date.toPlainYearMonth(), 1),
+              createChangeEventDetails(REASONS.none),
+            );
+          }
+        } else if (!isShown(date) && !isOwned(date)) {
           showDate(date, () => createChangeEventDetails(REASONS.none));
         }
       }
@@ -481,6 +653,17 @@ export function useCalendarRoot({
     },
   );
   watch(() => props.month?.toString(), keepFocusInGrid);
+  watch(view, (next) => {
+    // A grid of months or of years can show the month of `maxDate`. When the consumer shows the
+    // days again, the pages of days then keep to the limits, as after a press on the trigger.
+    const month = next === 'day' ? clampMonth(visibleMonth.value) : visibleMonth.value;
+    if (!month.equals(visibleMonth.value)) {
+      setMonth(month, createChangeEventDetails(REASONS.none));
+    }
+    // The grid that the focus was in is gone. The cell that has the tab stop in the new grid takes
+    // it.
+    keepFocusInGrid();
+  });
 
   const canChange = () => props.readOnly !== true;
 
@@ -526,7 +709,140 @@ export function useCalendarRoot({
     }
     const hasMoved = moveFocus(target, () => createChangeEventDetails(REASONS.keyboard, event));
     if (hasMoved && action.extend && canChange() && canSelect(getStateOfDate(target))) {
-      selection.extend(target, createChangeEventDetails(REASONS.keyboard, event));
+      selection.extend(target, createChangeEventDetails(REASONS.keyboard, event), date);
+    }
+  }
+
+  function setView(next: CalendarView, details: CalendarChangeEventDetails) {
+    if (!views || !hasViews.value || next === view.value) {
+      return false;
+    }
+    views.emit('viewChange', next, details);
+    if (details.isCanceled) {
+      return false;
+    }
+    views.emit('update:view', next);
+    setViewState(next);
+    return true;
+  }
+
+  function toggleView(target: 'month' | 'year', event: MouseEvent) {
+    const next = view.value === target ? (isMonthValue.value ? 'month' : 'day') : target;
+    const createDetails = () => createChangeEventDetails(REASONS.triggerPress, event);
+    // A grid of months or of years can show the month of `maxDate`. The pages of days that follow
+    // it then keep to the limits.
+    const month = clampMonth(visibleMonth.value);
+    if (next === 'day' && !month.equals(visibleMonth.value) && !setMonth(month, createDetails())) {
+      return;
+    }
+    setView(next, createDetails());
+  }
+
+  // The day that a new focus in a grid of months or of years keeps: the focused day, else the first
+  // selected day, else today.
+  const focusBase = computed(() =>
+    toGridDate(focusedDateState.value ?? selection.values.value[0] ?? todayDate.value),
+  );
+
+  // The day of a cell that the focus takes: the day of the month of the focused day, or the month of
+  // the focused day in another year. A month with fewer days gives its last day.
+  function dateOfCell(cell: Temporal.PlainYearMonth) {
+    const base = focusBase.value;
+    return view.value === 'year'
+      ? base.add({ years: cell.year - base.year })
+      : cell.toPlainDate({ day: Math.min(base.day, cell.daysInMonth) });
+  }
+
+  function isOnCellPage(cell: Temporal.PlainYearMonth) {
+    return view.value === 'year'
+      ? yearCells.value.some((year) => year.year === cell.year)
+      : cell.year === visibleMonth.value.year;
+  }
+
+  // A cell of another page makes that page the page of the root. `date` is the day that the focus
+  // takes in the cell.
+  function moveCellFocus(
+    cell: Temporal.PlainYearMonth,
+    createDetails: () => CalendarChangeEventDetails,
+    date = dateOfCell(cell),
+  ) {
+    const target = clampDate(date);
+    if (
+      !isOnCellPage(cell) &&
+      !setMonth(clampMonth(target.toPlainYearMonth(), 1), createDetails())
+    ) {
+      return false;
+    }
+    if (!setFocusedDate(target, createDetails())) {
+      return false;
+    }
+    focusDayElement(cellDate(cell));
+    return true;
+  }
+
+  function onCellFocus(cell: Temporal.PlainYearMonth, event: FocusEvent) {
+    const focused = focusedDateState.value;
+    if (!focused || !isSameCell(cellOf(toGridDate(focused)), cell)) {
+      setFocusedDate(clampDate(dateOfCell(cell)), createChangeEventDetails(REASONS.none, event));
+    }
+  }
+
+  function onCellKeydown(cell: Temporal.PlainYearMonth, columns: number, event: KeyboardEvent) {
+    if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) {
+      return;
+    }
+    const move = getGridMove(event.key, { isRtl: direction.value === 'rtl', columns });
+    if (!move) {
+      return;
+    }
+    event.preventDefault();
+    const target = findGridTarget(cell, move, {
+      unit: view.value === 'year' ? 'year' : 'month',
+      columns,
+      visibleYears: yearCount.value,
+      canFocus: (candidate) => !getCellState(candidate).disabled,
+      min: monthLimits.value.min,
+      max: monthLimits.value.max,
+    });
+    if (target) {
+      moveCellFocus(target, () => createChangeEventDetails(REASONS.keyboard, event));
+    }
+  }
+
+  // A press on a month of a year and month selects it. Else it shows the days of the month.
+  function pressMonth(month: Temporal.PlainYearMonth, event: MouseEvent) {
+    if (isMonthDisabled(month)) {
+      return;
+    }
+    if (isMonthValue.value) {
+      if (canChange()) {
+        selection.press(cellDate(month), createChangeEventDetails(REASONS.monthPress, event));
+      }
+      return;
+    }
+    const target = clampMonth(month);
+    if (
+      target.equals(visibleMonth.value) ||
+      setMonth(target, createChangeEventDetails(REASONS.monthPress, event))
+    ) {
+      setView('day', createChangeEventDetails(REASONS.monthPress, event));
+    }
+  }
+
+  // A press on a year shows its months, in the same month of the year as the root has now.
+  function pressYear(year: Temporal.PlainYearMonth, event: MouseEvent) {
+    if (isYearDisabled(year)) {
+      return;
+    }
+    const target = clampMonth(
+      visibleMonth.value.add({ years: year.year - visibleMonth.value.year }),
+      1,
+    );
+    if (
+      target.equals(visibleMonth.value) ||
+      setMonth(target, createChangeEventDetails(REASONS.yearPress, event))
+    ) {
+      setView('month', createChangeEventDetails(REASONS.yearPress, event));
     }
   }
 
@@ -538,12 +854,22 @@ export function useCalendarRoot({
       return;
     }
     const target = toGridDate(date);
+    if (view.value !== 'day') {
+      const cell = cellOf(target);
+      if (!getCellState(cell).disabled) {
+        moveCellFocus(cell, () => createChangeEventDetails(REASONS.none), target);
+      }
+      return;
+    }
     if (canFocus(getStateOfDate(target))) {
       moveFocus(target, () => createChangeEventDetails(REASONS.none));
     }
   }
 
   const navigationStep = computed(() => {
+    if (view.value !== 'day') {
+      return { unit: 'years' as const, count: view.value === 'year' ? yearCount.value : 1 };
+    }
     const visible = duration.value;
     if (visible) {
       return 'weeks' in visible
@@ -556,26 +882,35 @@ export function useCalendarRoot({
     };
   });
 
+  // The days that the grid of months or of years covers: the years of its page.
+  const yearSpan = computed(() => {
+    const years = view.value === 'year' ? yearCells.value : [visibleMonth.value];
+    const first = years[0] ?? visibleMonth.value;
+    return getSpanOfYears(first, years.at(-1) ?? first);
+  });
+
   const canPrevious = computed(() => {
-    const first = pages.value[0];
+    const first = view.value === 'day' ? pages.value[0]?.first : yearSpan.value.first;
     return (
-      first !== undefined &&
-      (props.minDate === undefined || compareDates(first.first, props.minDate) > 0)
+      first !== undefined && (props.minDate === undefined || compareDates(first, props.minDate) > 0)
     );
   });
   const canNext = computed(() => {
-    const last = pages.value.at(-1);
+    const last = view.value === 'day' ? pages.value.at(-1)?.last : yearSpan.value.last;
     return (
-      last !== undefined &&
-      (props.maxDate === undefined || compareDates(last.last, props.maxDate) < 0)
+      last !== undefined && (props.maxDate === undefined || compareDates(last, props.maxDate) < 0)
     );
   });
 
   // When fewer months than the pages are between the limits, `maxDate` wins, as in React Aria's
-  // calendar. The first pages then start before `minDate`.
-  function clampMonth(month: Temporal.PlainYearMonth) {
+  // calendar. The first pages then start before `minDate`. A grid of months or of years shows the
+  // year of one month, so it passes `1` as the count of months.
+  function clampMonth(
+    month: Temporal.PlainYearMonth,
+    pageMonths = duration.value ? 1 : monthCount.value,
+  ) {
     const { min, max } = monthLimits.value;
-    const last = max?.subtract({ months: duration.value ? 0 : monthCount.value - 1 });
+    const last = max?.subtract({ months: pageMonths - 1 });
     const first = min && Temporal.PlainYearMonth.compare(month, min) < 0 ? min : month;
     return last && Temporal.PlainYearMonth.compare(first, last) > 0 ? last : first;
   }
@@ -595,6 +930,15 @@ export function useCalendarRoot({
     const visible = duration.value;
     const start = pageStart.value;
     const canContinue = () => (step === 1 ? canNext : canPrevious).value;
+    if (view.value !== 'day') {
+      const target = clampMonth(
+        visibleMonth.value.add({ years: step * navigationStep.value.count }),
+        1,
+      );
+      return (
+        !target.equals(visibleMonth.value) && setMonth(target, createDetails()) && canContinue()
+      );
+    }
     if (visible && start) {
       const next = clampPageStart(
         step === 1 ? start.add(visible) : start.subtract(visible),
@@ -661,5 +1005,17 @@ export function useCalendarRoot({
     onDayKeydown,
     registerDay,
     focus,
+    view,
+    hasViews,
+    selectsMonths: isMonthValue,
+    monthCells,
+    yearCells,
+    toggleView,
+    getMonthState,
+    getYearState,
+    pressMonth,
+    pressYear,
+    onCellFocus,
+    onCellKeydown,
   };
 }

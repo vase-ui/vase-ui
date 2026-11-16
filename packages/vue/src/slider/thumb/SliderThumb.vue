@@ -78,10 +78,15 @@ import {
 import type { Component } from 'vue';
 import { clamp } from '../../common/clamp';
 import { formatNumber } from '../../common/formatNumber';
-import { useHiddenValueBeforeHydration, useIsHydrating } from '../../common/hydration';
+import {
+  useAriaAfterHydration,
+  useHiddenValueBeforeHydration,
+  useIsHydrating,
+} from '../../common/hydration';
 import { ownerWindow } from '../../common/owner';
 import { contains } from '../../common/shadowDom';
 import { visuallyHidden } from '../../common/visuallyHidden';
+import { givenName } from '../../internals/blankName';
 import {
   ARROW_DOWN,
   ARROW_LEFT,
@@ -102,7 +107,6 @@ import { useDeferredServerRender, useLabelableId } from '../../internals/labelab
 import type { HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useFormReset } from '../../internals/useFormReset';
-import { useFormRestoreAsInput } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { mergeProps } from '../../merge-props';
 import { matchesFocusVisible } from '../../utils/popups/element';
@@ -211,6 +215,7 @@ const {
   setIndicatorPosition,
   state: rootState,
   step,
+  thumbList,
   thumbRefs,
   values: sliderValues,
 } = useSliderRootContext();
@@ -236,12 +241,13 @@ let restoringFocusVisible = false;
 
 const thumbId = useVaseUiId();
 const defaultInputId = useVaseUiId();
-const labelableId = useLabelableId({ element: () => element.value });
+const labelableId = useLabelableId();
 const inputId = computed(() => (range.value ? defaultInputId.value : labelableId.value));
 
 const thumbMetadata = computed<ThumbMetadata>(() => ({ inputId: inputId.value }));
 
 const { ref: listItemRef, index: compositeIndex } = useCompositeListItem<ThumbMetadata>({
+  list: thumbList,
   metadata: thumbMetadata,
 });
 
@@ -253,6 +259,7 @@ const thumbValuePercent = computed(() => valueToPercent(thumbValue.value, min.va
 
 const positionPercent = shallowRef<number | undefined>();
 const isHydrating = useIsHydrating();
+const ariaAfterHydration = useAriaAfterHydration();
 
 const safeLastUsedThumbIndex = computed(() =>
   lastUsedThumbIndex.value >= 0 && lastUsedThumbIndex.value < sliderValues.value.length
@@ -396,8 +403,6 @@ function syncHandledInputValue() {
 
 watch([inputElement, thumbValue, min, max, step], syncHandledInputValue, { flush: 'post' });
 
-useFormRestoreAsInput(inputElement, () => handledInputValue, false);
-
 // The thumb follows the reset with its own input. The composite list of the root has no thumb
 // while `KeepAlive` holds the slider.
 useFormReset(inputElement, reset);
@@ -446,20 +451,22 @@ onScopeDispose(
 
 function inputProps() {
   const value = thumbValue.value;
-  const ariaLabel =
+  const ariaLabel = givenName(
     typeof props.getAriaLabel === 'function'
       ? props.getAriaLabel(thumbIndex.value)
-      : props.ariaLabel;
+      : props.ariaLabel,
+  );
 
   let cssWritingMode: 'vertical-rl' | 'vertical-lr' | undefined;
   if (vertical.value) {
     cssWritingMode = rtl.value ? 'vertical-rl' : 'vertical-lr';
   }
 
-  return mergeProps<'input'>(
+  const merged = mergeProps<'input'>(
     {
       'aria-label': ariaLabel,
-      'aria-labelledby': props.ariaLabelledby ?? (ariaLabel == null ? labelId.value : undefined),
+      'aria-labelledby':
+        givenName(props.ariaLabelledby) ?? (ariaLabel == null ? labelId.value : undefined),
       'aria-describedby': props.ariaDescribedby,
       'aria-orientation': orientation.value,
       'aria-valuenow': value,
@@ -639,10 +646,17 @@ function inputProps() {
       ref: setInputElement,
     },
   );
+  return {
+    ...merged,
+    'aria-labelledby': ariaAfterHydration(merged['aria-labelledby']),
+    'aria-describedby': ariaAfterHydration(merged['aria-describedby']),
+  };
 }
 
 provide(SliderThumbContext, {
   inputProps,
+  inputElement,
+  getHandledInputValue: () => handledInputValue,
   // Rendered with the last thumb to ensure all preceding thumbs are already in the DOM.
   hasPrehydrationScript: computed(() => inset.value && last.value && renderBeforeHydration.value),
 });

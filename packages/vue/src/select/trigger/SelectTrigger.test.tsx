@@ -2,12 +2,14 @@ import { describe, expect, it, vi } from 'vitest';
 import { KeepAlive, defineComponent, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Select } from '@vase-ui/vue/select';
+import type { HTMLProps } from '../../internals/types';
 import {
   createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  removedPartHydrationTests,
   screen,
   takeReportedMessages,
   isJSDOM,
@@ -16,6 +18,7 @@ import {
   waitForLaterMillisecond,
 } from '#test-utils';
 import type { SelectStore } from '../store';
+import SelectRootHydration from '../root/SelectRootHydration.test.vue';
 import SelectTriggerReplacement from './SelectTriggerReplacement.test.vue';
 
 describe('<Select.Trigger />', () => {
@@ -766,22 +769,26 @@ describe('<Select.Trigger />', () => {
   });
 
   describe('VUE-73: aria-controls names only an element in the document', () => {
+    // An empty `id` of the part counts as no `id` (VUE-93). Only the `#render` slot can give the
+    // element an empty `id`.
+    const emptyIdSlot = {
+      render: ({ props }: { props: HTMLProps }) => (
+        <div {...props} id="">
+          <Select.Item value="a">A</Select.Item>
+        </div>
+      ),
+    };
+
     it.each([
       {
         name: 'popup',
-        parts: () => (
-          <Select.Popup id="" data-testid="named">
-            <Select.Item value="a">A</Select.Item>
-          </Select.Popup>
-        ),
+        parts: () => <Select.Popup data-testid="named" v-slots={emptyIdSlot} />,
       },
       {
         name: 'list',
         parts: () => (
           <Select.Popup>
-            <Select.List id="" data-testid="named">
-              <Select.Item value="a">A</Select.Item>
-            </Select.List>
+            <Select.List data-testid="named" v-slots={emptyIdSlot} />
           </Select.Popup>
         ),
       },
@@ -953,10 +960,99 @@ describe('<Select.Trigger />', () => {
     });
   });
 
+  describe('VUE-86: aria-controls follows the id of the list', () => {
+    it('follows the id of the list while the popup is open', async () => {
+      const id = shallowRef('first');
+      // The popup has an id too, so a trigger that names the popup in place of a list with an empty
+      // `id` fails the case.
+      await render(() => (
+        <Select.Root defaultOpen>
+          <Select.Trigger data-testid="trigger" />
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup id="popup">
+                <Select.List
+                  data-testid="list"
+                  v-slots={{
+                    // An empty `id` of the part counts as no `id` (VUE-93). Only the `#render`
+                    // slot can give the element an empty `id`.
+                    render: ({ props }: { props: HTMLProps }) => (
+                      <div {...props} id={id.value}>
+                        <Select.Item value="a">A</Select.Item>
+                      </div>
+                    ),
+                  }}
+                />
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+      ));
+      await flushMicrotasks();
+
+      const trigger = screen.getByTestId('trigger');
+      expect(trigger).toHaveAttribute('aria-controls', 'first');
+
+      id.value = 'second';
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('list').id).toBe('second');
+      expect(trigger).toHaveAttribute('aria-controls', 'second');
+
+      id.value = '';
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('list').id).toBe('');
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+    });
+  });
+
   it('throws a descriptive error when rendered outside <Select.Root>', async () => {
     await expect(render(<Select.Trigger />)).rejects.toThrow(
       'Vase UI: A part of Select must be inside <Select.Root>.',
     );
     expect(takeReportedMessages()).toHaveLength(1);
+  });
+
+  describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/select/root/SelectRootHydration.test.vue',
+      component: SelectRootHydration,
+      cases: [
+        {
+          name: 'a removed label part',
+          props: { id: 'font', label: 'after', laterRemovedAtMount: true },
+          selector: '[role="combobox"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'font-label',
+          clientValue: null,
+        },
+        {
+          name: 'a removed field label',
+          props: { field: true, laterRemovedAtMount: true },
+          selector: '[role="combobox"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description',
+          props: { field: true, laterRemovedAtMount: true },
+          selector: '[role="combobox"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+        {
+          name: 'a label part and a removed field label',
+          props: { label: 'before', field: true, laterRemovedAtMount: true },
+          selector: '[role="combobox"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: { idOf: '[data-testid="label"]' },
+        },
+      ],
+    });
   });
 });

@@ -53,8 +53,8 @@ export interface FieldControlProps
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, watch } from 'vue';
-import { useValueBeforeHydration } from '../../common/hydration';
+import { computed, nextTick, onBeforeUpdate, onMounted, watch } from 'vue';
+import { useAriaAfterHydration, useValueBeforeHydration } from '../../common/hydration';
 import { useTimeout } from '../../common/useTimeout';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { fieldValidityMapping } from '../../internals/field-constants';
@@ -124,7 +124,7 @@ const state = computed<FieldControlState>(() => ({
   disabled: isDisabled.value,
 }));
 
-const controlId = useLabelableId({ id: () => props.id, element: () => element.value });
+const controlId = useLabelableId({ id: () => props.id });
 
 // The DOM value is always a string, so the comparisons for `dirty` use the string.
 const serializedValue = computed(() => (props.value == null ? undefined : String(props.value)));
@@ -171,8 +171,25 @@ function syncAfterWrite() {
   syncFilled();
 }
 
+// Vue writes the value at a render only when the input has the key `value`. Else a new default
+// value moves only an input that no user, browser restore or program changed. The part then reads
+// the input only when it held the handled value, so a restored value stays for the take. Vue queues
+// the watch at the change of the props, before the `onUpdated` hooks of the render. The part thus
+// reads the value of the render before `useFormRestoreAsInput` writes a restored value back.
+let holdsHandledValue = false;
+onBeforeUpdate(() => {
+  holdsHandledValue = (element.value as HTMLInputElement | null)?.value === handledValue;
+});
 onMounted(syncAfterWrite);
-watch([serializedValue, serializedDefaultValue], syncAfterWrite, { flush: 'post' });
+watch(
+  [serializedValue, serializedDefaultValue],
+  () => {
+    if (holdsHandledValue || (writesValue.value && props.value !== undefined)) {
+      syncAfterWrite();
+    }
+  },
+  { flush: 'post' },
+);
 
 useValueChanged(serializedValue, () => {
   if (serializedValue.value === undefined) {
@@ -300,6 +317,7 @@ function handleKeydown(event: KeyboardEvent) {
 
 const giveFieldInput = useFieldInput();
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('input', props, {
   state,
   ref: giveFieldInput,
@@ -308,7 +326,7 @@ const { element, elementProps } = useRenderElement('input', props, {
       id: controlId.value,
       disabled: isDisabled.value ? '' : undefined,
       name: controlName.value,
-      'aria-labelledby': labelId.value,
+      'aria-labelledby': ariaAfterHydration(labelId.value),
       onInput: handleInput,
       onChange: handleChange,
       onFocusin() {
@@ -320,6 +338,7 @@ const { element, elementProps } = useRenderElement('input', props, {
     valueProps(),
     attrs,
     (merged) => validation.getValidationProps(isDisabled.value, merged),
+    (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),
   ],
   stateAttributesMapping: fieldValidityMapping,
 });

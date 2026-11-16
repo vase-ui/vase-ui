@@ -13,6 +13,7 @@ import {
   hydrate,
   hydrateAfter,
   isJSDOM,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   waitFor,
@@ -24,7 +25,7 @@ import ComboboxListPart from '../../../test/fixtures/ComboboxListPart.vue';
 import ComboboxPartsReplacement from '../../../test/fixtures/ComboboxPartsReplacement.vue';
 import PopupRootNodeScoped from '../../utils/popups/focus/PopupRootNodeScoped.test.vue';
 import { REASONS } from '../../internals/reasons';
-import type { VaseUIEvent } from '../../internals/types';
+import type { HTMLProps, VaseUIEvent } from '../../internals/types';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
 import type { ComboboxStore } from '../store';
 import ComboboxInputBeforeHydration from './ComboboxInputBeforeHydration.test.vue';
@@ -2133,7 +2134,14 @@ describe('<Combobox.Input />', () => {
           <Combobox.Portal>
             <Combobox.Positioner>
               <Combobox.Popup>
-                <Combobox.List id="" data-testid="list" />
+                <Combobox.List
+                  data-testid="list"
+                  v-slots={{
+                    // An empty `id` of the part counts as no `id` (VUE-93). Only the `#render`
+                    // slot can give the element an empty `id`.
+                    render: ({ props }: { props: HTMLProps }) => <div {...props} id="" />,
+                  }}
+                />
               </Combobox.Popup>
             </Combobox.Positioner>
           </Combobox.Portal>
@@ -2175,8 +2183,9 @@ describe('<Combobox.Input />', () => {
       id.value = '';
       await flushMicrotasks();
 
-      expect(screen.getByTestId('list').id).toBe('');
-      expect(input).not.toHaveAttribute('aria-controls');
+      const generatedId = screen.getByTestId('list').id;
+      expect(generatedId).toMatch(/^vase-ui-/);
+      expect(input).toHaveAttribute('aria-controls', generatedId);
     });
   });
 
@@ -2303,6 +2312,41 @@ describe('<Combobox.Input />', () => {
       expect(changes.textContent).toBe('Mal (input-change)');
       expect(input).toHaveAttribute('aria-expanded', 'false');
       expect(fixture.queryAllByRole('option')).toHaveLength(0);
+    });
+  });
+
+  describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/combobox/input/ComboboxInputHydration.test.vue',
+      component: ComboboxInputHydration,
+      cases: [
+        {
+          name: 'a removed label',
+          props: {
+            parts: ['input', 'label', 'description'],
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: '[data-testid="input"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description',
+          props: {
+            parts: ['input', 'label', 'description'],
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: '[data-testid="input"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+      ],
     });
   });
 });

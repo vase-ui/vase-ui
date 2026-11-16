@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineComponent, h } from 'vue';
+import { defineComponent, h, onMounted, shallowRef } from 'vue';
 import { Resizable } from '@vase-ui/vue/resizable';
 
 defineProps<{
@@ -18,7 +18,13 @@ defineProps<{
     | 'nested'
     | 'style'
     | 'vertical';
+  laterRemovedAtMount?: boolean | undefined;
 }>();
+
+const isMounted = shallowRef(false);
+onMounted(() => {
+  isMounted.value = true;
+});
 
 // The root finds this panel through its context, and not through its place in the template.
 const WrappedPanel = defineComponent({
@@ -43,8 +49,8 @@ const WrappedPanel = defineComponent({
     :default-layout="{ a: 20, b: 80 }"
   >
     <Resizable.Panel id="a" data-testid="a" />
-    <Resizable.Handle data-testid="handle-a" aria-label="First" />
-    <Resizable.Panel id="b" data-testid="b" />
+    <Resizable.Handle data-testid="handle-a" aria-label="First" aria-valuetext="Quarter" />
+    <Resizable.Panel v-if="!(laterRemovedAtMount && isMounted)" id="b" data-testid="b" />
   </Resizable.Root>
   <Resizable.Root v-else-if="composition === 'edges'" data-testid="root" drag-edges>
     <Resizable.Panel id="a" data-testid="a" />

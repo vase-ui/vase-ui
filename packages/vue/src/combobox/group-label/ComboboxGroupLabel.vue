@@ -32,7 +32,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, ComboboxGroupLabelState>;
 }>();
 
-const { registerLabelId, reaches } = useComboboxGroupContext();
+const { registerLabelId } = useComboboxGroupContext();
 
 const labelId = useVaseUiId(() => props.id);
 
@@ -41,8 +41,6 @@ const source = Symbol();
 useRegisteredId(
   () => labelId.value,
   (getId) => registerLabelId(source, getId),
-  () => element.value,
-  reaches,
 );
 
 const state: ComboboxGroupLabelState = EMPTY_OBJECT;

@@ -5,6 +5,7 @@ import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import type { TextDirection } from '@vase-ui/vue/direction-provider';
 import { Popover } from '@vase-ui/vue/popover';
 import { Tabs } from '@vase-ui/vue/tabs';
+import { Toolbar } from '@vase-ui/vue/toolbar';
 import {
   createRenderer,
   describeConformance,
@@ -13,6 +14,7 @@ import {
   heldMountListTests,
   hydrate,
   isJSDOM,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   takeReportedMessages,
@@ -3013,34 +3015,59 @@ describe('<Tabs.Root />', () => {
       },
     );
 
-    it.each([
-      {
-        name: 'the panel after the list',
-        props: { defaultValue: 'a', panel: 'after', removedAtMount: 'panel' },
-        selector: '[data-testid="a"]',
-        attribute: 'aria-controls',
-        serverId: 'panel-a',
-      },
-      {
-        name: 'the list after the panel',
-        props: { defaultValue: 'a', panel: 'before', removedAtMount: 'list' },
-        selector: '[data-testid="panel-a"]',
-        attribute: 'aria-labelledby',
-        serverId: 'tab-a',
-      },
-    ] as const)(
-      'VUE-80: removes an id of the server HTML when the page removes the part at the mount, $name',
-      async ({ props, selector, attribute, serverId }) => {
-        const serverHtml = await renderOnServer(HYDRATION_FIXTURE, props);
-        const template = document.createElement('template');
-        template.innerHTML = serverHtml;
-        expect(template.content.querySelector(selector)?.getAttribute(attribute)).toBe(serverId);
+    removedPartHydrationTests({
+      file: HYDRATION_FIXTURE,
+      component: TabsRootHydration,
+      cases: [
+        {
+          name: 'the panel after the list',
+          props: { defaultValue: 'a', panel: 'after', removedAtMount: 'panel' },
+          selector: '[data-testid="a"]',
+          attribute: 'aria-controls',
+          serverValue: 'panel-a',
+          clientValue: null,
+        },
+        {
+          name: 'the list after the panel',
+          props: { defaultValue: 'a', panel: 'before', removedAtMount: 'list' },
+          selector: '[data-testid="panel-a"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'tab-a',
+          clientValue: null,
+        },
+      ],
+    });
+  });
 
-        const { container } = await hydrate(TabsRootHydration, { serverHtml, props });
+  describe('elements that are not panels', () => {
+    it('VUE-87: join the composite around the root, in a panel and as a child of the root', async () => {
+      await render(
+        <Toolbar.Root>
+          <Tabs.Root defaultValue="a">
+            <Tabs.List>
+              <Tabs.Tab value="a">A</Tabs.Tab>
+              <Tabs.Tab value="b">B</Tabs.Tab>
+            </Tabs.List>
+            <Tabs.Panel value="a" data-testid="panel-a">
+              <Toolbar.Button data-testid="in-panel">In a panel</Toolbar.Button>
+            </Tabs.Panel>
+            <Toolbar.Button data-testid="in-root">In the root</Toolbar.Button>
+            <Tabs.Panel value="b" keepMounted data-testid="panel-b" />
+          </Tabs.Root>
+          <Toolbar.Button data-testid="after-root">After the root</Toolbar.Button>
+        </Toolbar.Root>,
+      );
+      const inPanel = screen.getByTestId('in-panel');
+      inPanel.focus();
 
-        expect(container.querySelector(selector)).not.toHaveAttribute(attribute);
-      },
-    );
+      await fireEvent.keyDown(inPanel, { key: 'ArrowRight' });
+      expect(screen.getByTestId('in-root')).toHaveFocus();
+
+      await fireEvent.keyDown(screen.getByTestId('in-root'), { key: 'ArrowRight' });
+      expect(screen.getByTestId('after-root')).toHaveFocus();
+      expect(screen.getByTestId('panel-a')).toHaveAttribute('data-index', '0');
+      expect(screen.getByTestId('panel-b')).toHaveAttribute('data-index', '1');
+    });
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current

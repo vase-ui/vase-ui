@@ -15,4 +15,33 @@ describe('expectNoAxeViolations', () => {
 
     await expect(expectNoAxeViolations(screen.getByRole('button'))).rejects.toThrow(/button-name/);
   });
+
+  it('ignores the report of a rule for an element that `accept` accepts', async () => {
+    const { container } = await render(
+      <div>
+        <button type="button" data-testid="accepted" />
+      </div>,
+    );
+
+    await expectNoAxeViolations(container, {
+      accept: (rule, element) => rule === 'button-name' && element.matches('[data-testid]'),
+    });
+  });
+
+  it('fails for another element of a rule that `accept` accepts for one element', async () => {
+    const { container } = await render(
+      <div>
+        <button type="button" data-testid="accepted" />
+        <button type="button" class="other" />
+      </div>,
+    );
+
+    await expect(
+      expectNoAxeViolations(container, {
+        accept: (rule, element) => rule === 'button-name' && element.matches('[data-testid]'),
+      }),
+    ).rejects.toThrow(
+      /^axe found 1 violation\(s\):\n\nbutton-name: [^\n]+\n<button type="button" class="other"><\/button>$/,
+    );
+  });
 });

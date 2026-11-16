@@ -2329,6 +2329,39 @@ describe('<Menubar />', () => {
       expect(editTrigger).toHaveFocus();
     });
 
+    it('VUE-113: keeps the menubar in the tab order when the trigger with the tab stop becomes disabled', async () => {
+      const disabled = shallowRef(false);
+      const App = defineComponent(() => () => (
+        <div>
+          <Menubar style={{ display: 'flex' }}>
+            <Menu.Root>
+              <Menu.Trigger data-testid="file-trigger">File</Menu.Trigger>
+            </Menu.Root>
+            <Menu.Root>
+              <Menu.Trigger disabled={disabled.value} data-testid="edit-trigger">
+                Edit
+              </Menu.Trigger>
+            </Menu.Root>
+          </Menubar>
+          <button type="button" data-testid="after" />
+        </div>
+      ));
+      await render(<App />);
+      screen.getByTestId('file-trigger').focus();
+      await userEvent.keyboard('{ArrowRight}');
+      await waitFor(() => {
+        expect(screen.getByTestId('edit-trigger')).toHaveFocus();
+      });
+      await userEvent.keyboard('{Tab}');
+      expect(screen.getByTestId('after')).toHaveFocus();
+
+      disabled.value = true;
+      await flushMicrotasks();
+      await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+
+      expect(screen.getByTestId('file-trigger')).toHaveFocus();
+    });
+
     it('disables menu items while the menubar is disabled', async () => {
       const handleClick = vi.fn();
       const { user } = await render(

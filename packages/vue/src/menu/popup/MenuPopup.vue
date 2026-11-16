@@ -62,6 +62,7 @@ import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMou
 import { REASONS } from '../../internals/reasons';
 import { resolvePopupLabel } from '../../internals/resolvePopupLabel';
 import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/types';
+import { givenId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
 import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
@@ -83,7 +84,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, MenuPopupState>;
 }>();
 
-const { store, generatedPopupId, setRenderedPopupId, orientation, virtualFocus } =
+const { store, generatedPopupId, setRenderedPopupId, popupLabelId, orientation, virtualFocus } =
   useMenuRootContext();
 const inheritedSubmenuRootContext = useMenuSubmenuRootContext();
 const { side, align } = useMenuPositionerContext();
@@ -105,7 +106,7 @@ const activeTriggerElement = computed(
   () => store.select('activeTriggerElement') as HTMLElement | null,
 );
 
-const popupId = computed(() => props.id ?? generatedPopupId);
+const popupId = computed(() => givenId(props.id) ?? generatedPopupId);
 
 // The root names the popup with the id that the popup renders. A generated id is not a request, so
 // removing an explicit id gives the generated id back.
@@ -175,7 +176,7 @@ function setPopupElement(popup: HTMLElement | null) {
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: useKeepAliveElementRef(setPopupElement, () => toRaw(store.state).activeTriggerElement),
+  ref: useKeepAliveElementRef(setPopupElement),
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
     // This listener runs after each other listener of the popup.
@@ -190,11 +191,7 @@ const { element, elementProps } = useRenderElement('div', props, {
             role: 'menu',
             // `menu` is implicitly vertical, so only the non-default value needs to be rendered.
             'aria-orientation': orientation.value === 'horizontal' ? 'horizontal' : undefined,
-            'aria-labelledby': resolvePopupLabel(
-              attrs,
-              store.select('activeTriggerElement'),
-              store.select('activeTriggerId'),
-            ),
+            'aria-labelledby': resolvePopupLabel(attrs, popupLabelId.value),
           }),
       onKeydown(event: VaseUIEvent<KeyboardEvent>) {
         // The handlers to the left also handle the keys of the items and of `Menu.Input`. A call of

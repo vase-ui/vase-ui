@@ -36,11 +36,7 @@ defineSlots<{
   render(props: { props: HTMLProps; state: ToastTitleState; children: Component }): unknown;
 }>();
 
-const { labelId, rendered, state } = useToastLabelPart(
-  () => props.id,
-  'title',
-  () => element.value,
-);
+const { labelId, rendered, state } = useToastLabelPart(() => props.id, 'title');
 
 const { element, elementProps } = useRenderElement('h2', props, {
   state,

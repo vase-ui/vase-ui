@@ -1,0 +1,14 @@
+{
+  "id": "VUE-112",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/radio-group/RadioGroup.tsx#L70",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/radio/root/RadioRoot.tsx#L81",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/radio/root/RadioRoot.tsx#L147-L160",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/field/root/FieldRoot.tsx#L44-L48",
+    "https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#concept-fe-disabled",
+    "https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#enabling-and-disabling-form-controls:-the-disabled-attribute",
+    "https://www.w3.org/TR/wai-aria-1.2/#aria-disabled"
+  ],
+  "behavior": "A disabled `<fieldset>` disables `RadioGroup` and `Radio.Root` as their `disabled` prop does: a native `<fieldset disabled>` as HTML disables a form control, except in its first `<legend>`, and `Fieldset.Root` with `disabled` also with no `Field.Root`. The parts then have `data-disabled` and `aria-disabled`, a press and Space change no value, the arrow keys skip such a radio, and a group in such a fieldset has no tab stop and no value in the form. A native fieldset takes effect after the mount, and the parts follow each later change of it. Base UI follows only `Fieldset.Root` through `Field.Root`. In a native disabled fieldset, its radios show no disabled state, Tab and the arrow keys focus them, and a press or Space checks a radio: the root dispatches a click to the disabled input, and the browser runs the listeners of a click that a script dispatches.",
+  "dueWith": "packages/react/src/radio-group/RadioGroup.tsx"
+}

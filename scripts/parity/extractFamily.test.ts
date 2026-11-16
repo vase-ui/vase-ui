@@ -68,6 +68,57 @@ test('buildExtract sorts the files of a family into sources, type tests, cases, 
   ]);
 });
 
+const PAGE = 'docs/src/app/(docs)/react/components/menu/page.mdx';
+
+function referenceOf(page: string) {
+  const [{ file: _file, ...reference }] = buildExtract(makeFamily(PAGE), [PAGE], () => page).pages;
+  return reference;
+}
+
+test('buildExtract records the badge of the heading above a tag, also with text or a code sample between them', () => {
+  assert.deepEqual(
+    referenceOf(
+      [
+        '# Menu [New]',
+        '<TypesMenu.Title />',
+        '### FilterProvider [Preview]',
+        'Text.',
+        '```bash',
+        '# a comment of a shell',
+        '```',
+        '<TypesMenu.FilterProvider />',
+        '### Root',
+        '<TypesMenu.Root />',
+        '## useFilter [New]',
+        '<TypesMenu.useFilter hideDescription />',
+        '<TypesMenuAdditional />',
+      ].join('\n'),
+    ),
+    {
+      referenceTags: [
+        'TypesMenu.Title',
+        'TypesMenu.FilterProvider',
+        'TypesMenu.Root',
+        'TypesMenu.useFilter',
+        'TypesMenuAdditional',
+      ],
+      referenceBadges: {
+        'TypesMenu.FilterProvider': 'Preview',
+        'TypesMenu.useFilter': 'New',
+        TypesMenuAdditional: 'New',
+      },
+    },
+  );
+});
+
+for (const heading of ['# Menu [New]', '### [Preview]', '### Use [value]', '### A [Preview] b']) {
+  test(`buildExtract records no badge for the heading "${heading}"`, () => {
+    assert.deepEqual(referenceOf(`${heading}\n\n<TypesMenu.Root />\n`), {
+      referenceTags: ['TypesMenu.Root'],
+    });
+  });
+}
+
 test('buildExtract leaves out a file that no glob names and a matching file outside the mapped roots', () => {
   const extract = buildExtract(makeFamily('packages/utils/src/clamp.*', 'README.md'), files, read);
   assert.deepEqual(extract.sources, ['packages/utils/src/clamp.ts']);

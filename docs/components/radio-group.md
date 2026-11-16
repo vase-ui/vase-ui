@@ -54,7 +54,7 @@ Import the components and assemble their parts:
 
 <<< ./radio-group/Anatomy.vue
 
-`Radio.Root` renders its element and a hidden `<input type="radio">` after it. The group gives its name and its `form` to each input, so a form submits the value of the checked radio under that name. A group with a name and `required` blocks the submit of the form while it has no value. A group with `disabled` submits nothing.
+`Radio.Root` renders its element and a hidden `<input type="radio">` after it. The group gives its name and its `form` to each input, so a form submits the value of the checked radio under that name. A group with a name and `required` blocks the submit of the form while it has no value. A group with `disabled` submits nothing. A disabled `<fieldset>` around the group, or `Fieldset.Root` with `disabled`, disables the group as its `disabled` prop does. A native `<fieldset>` takes effect after the mount, so the server HTML shows the group enabled.
 
 A reset of the form puts an uncontrolled group back to `defaultValue`, or to no value when it has none. A controlled group does not change. In a `Field`, a reset clears the error of the field. The reset starts no validation.
 
@@ -68,7 +68,7 @@ The group exposes `element` and `inputElement` through a template ref. `inputEle
 
 The group has one tab stop. A group with `disabled` has none. In the server HTML, the tab stop is on the checked radio. With no value, it is on the first radio that is not disabled.
 
-When the value changes while the focus is outside the group, the tab stop moves to the checked radio. If no radio is checked then, or the checked radio is disabled, the tab stop moves to the first radio that is not disabled. When the focus leaves the group, the tab stop moves to the checked radio, unless that radio is disabled.
+When the value changes while the focus is outside the group, the tab stop moves to the checked radio. If no radio is checked then, or the checked radio is disabled, the tab stop moves to the first radio that is not disabled. When the focus leaves the group, the tab stop moves to the checked radio, unless that radio is disabled. A checked radio that becomes disabled keeps the tab stop, unless it renders a native button. Another radio that becomes disabled loses it to the first radio that is not disabled.
 
 In the server HTML, the group already has the id of its `Field.Label` in `aria-labelledby`. A radio in a `Field.Item` has the id of its `Field.Label` there too. The group and its radios already have the id of a `Field.Description` in `aria-describedby`, and the id of a `Field.Error` while it shows. A label or a message can follow the part that it names.
 

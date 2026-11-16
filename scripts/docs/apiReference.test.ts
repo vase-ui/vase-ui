@@ -5,6 +5,7 @@ import { test } from 'node:test';
 import { readTypesMd } from '../parity/typesMd.ts';
 import { REPOSITORY_ROOT } from '../parity/repository.ts';
 import { createVaseProject } from '../parity/vaseSurface.ts';
+import type { HeadingBadge } from '../parity/headingBadge.ts';
 import type { OwnComponent } from '../parity/parityFiles.ts';
 import {
   buildApiClasses,
@@ -13,6 +14,7 @@ import {
   buildApiTypes,
   buildOwnApiReference,
   createApiReferenceReader,
+  readPartBadges,
 } from './apiReference.ts';
 import { listFamilyPages } from './familyPages.ts';
 
@@ -377,6 +379,45 @@ test('the reference of an own component takes a name of its parts for a componen
   assert.deepEqual(reference.types, []);
 });
 
+const PAGE = 'docs/src/app/(docs)/react/components/sample/page.mdx';
+
+function makePage(referenceBadges: Record<string, HeadingBadge>) {
+  return { file: PAGE, referenceTags: Object.keys(referenceBadges), referenceBadges };
+}
+
+test('a part has the badge that the Base UI page shows on the heading above its tag, and each other part has none', () => {
+  const badges = readPartBadges(types, [makePage({ 'TypesSample.Popup': 'Preview' })]);
+  assert.deepEqual(
+    buildApiParts(project, ENTRY, types, badges).map(({ name, badge }) => [name, badge]),
+    [
+      ['Sample.Root', null],
+      ['Sample.Popup', 'Preview'],
+    ],
+  );
+});
+
+test('a types.md has no badge from a page with no badge, or from the page of another folder', () => {
+  assert.deepEqual(
+    readPartBadges(types, [{ file: PAGE, referenceTags: ['TypesSample.Popup'] }]),
+    new Map(),
+  );
+  const otherPage = {
+    ...makePage({ 'TypesSample.Popup': 'New' }),
+    file: 'docs/src/app/(docs)/react/components/other/page.mdx',
+  };
+  assert.deepEqual(readPartBadges(types, [otherPage]), new Map());
+});
+
+for (const tag of ['TypesSample.createHandle', 'TypesSample']) {
+  test(`the reference refuses a badge on the heading of <${tag}>, which is not the heading of a part`, () => {
+    assert.throws(() => readPartBadges(types, [makePage({ [tag]: 'New' })]), {
+      message: new RegExp(
+        `^The Base UI page docs/src/app/\\(docs\\)/react/components/sample/page\\.mdx has the badge New on the heading above <${tag}>, but docs/src/app/\\(docs\\)/react/components/sample/types\\.md has no part for that tag\\. `,
+      ),
+    });
+  });
+}
+
 const read = createApiReferenceReader(REPOSITORY_ROOT);
 
 test('each family page has an API reference with one part, function or type or more', () => {
@@ -498,4 +539,11 @@ test('the reader throws and says what to do for a family whose extract has no ty
     message:
       'parity/families/internals.upstream.json has no types.md, so the API reference of internals has no source. Add the glob "docs/src/app/(docs)/react/components/internals/**" or "docs/src/app/(docs)/react/utils/internals/**" to "upstreamPaths" in parity/families/internals.json. Then run `pnpm parity:extract --upstream <path> internals`.',
   });
+});
+
+test('the reference of menu has the badge Preview on Menu.FilterProvider, as the Base UI page has, and on no other part', () => {
+  assert.deepEqual(
+    read('menu').parts.flatMap(({ name, badge }) => (badge === null ? [] : [[name, badge]])),
+    [['Menu.FilterProvider', 'Preview']],
+  );
 });

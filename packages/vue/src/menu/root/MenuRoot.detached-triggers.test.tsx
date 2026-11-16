@@ -99,6 +99,7 @@ describe('<MenuRoot />', () => {
 
       const testMenu = Menu.createHandle<number>();
       const instantsWhileEnding: (string | undefined)[] = [];
+      const onOpenChangeComplete = vi.fn();
 
       const utils = await render(
         <div style={{ position: 'relative', width: '400px', height: '200px' }}>
@@ -125,7 +126,7 @@ describe('<MenuRoot />', () => {
             Trigger 2
           </Menu.Trigger>
 
-          <Menu.Root handle={testMenu}>
+          <Menu.Root handle={testMenu} onOpenChangeComplete={onOpenChangeComplete}>
             {{
               default: ({ payload }: NumberPayload) => (
                 <Menu.Portal>
@@ -168,6 +169,11 @@ describe('<MenuRoot />', () => {
         expect(screen.getByTestId('content').textContent).toBe('1');
       });
       await waitForSettledPosition(screen.getByTestId('positioner'));
+      // The root reads the animations of the popup in a frame after the open, to report the end of
+      // the open. The wait of a case for the read of a close must start after that read.
+      await waitFor(() => {
+        expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+      });
 
       // The animations that the positioner starts for the move are the ones that the part waits
       // for, so the case reads them in the same call.
@@ -184,9 +190,10 @@ describe('<MenuRoot />', () => {
         });
       }
 
-      // The switch to trigger 2 closes the popup and opens it again in one task. The popup thus
-      // starts an exit and reverses it in the next frame, and the events of that exit can come
-      // after the setup. Only the close that follows matters.
+      // `user.hover` gives the leave event no `relatedTarget`, so the switch to trigger 2 closes
+      // the popup and opens it again in one task. The popup thus starts an exit and reverses it in
+      // the next frame, and the events of that exit can come after the setup. Only the close that
+      // follows matters.
       instantsWhileEnding.length = 0;
 
       return {

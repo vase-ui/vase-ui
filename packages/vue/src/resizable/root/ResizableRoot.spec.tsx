@@ -23,6 +23,8 @@ const snapshot: Resizable.Root.LayoutSnapshot = { a: '240px', b: 70, c: '30%' };
 <Resizable.Root layout={layout} defaultLayout={layout} step={2} largeStep={20} />;
 // The layout of the app can have sizes with a unit, and the events give percent.
 <Resizable.Root layout={snapshot} defaultLayout={snapshot} />;
+// `null` is a layout with no entries.
+<Resizable.Root layout={null} defaultLayout={null} />;
 <Resizable.Root step="16px" largeStep="2rem" dragStep="5%" />;
 <Resizable.Root dragStep={5} />;
 <Resizable.Root orientation="vertical" disabled pushPanels={false} />;
@@ -190,9 +192,10 @@ expectType<Resizable.Root.Actions['getLayout'], typeof root.getLayout>(root.getL
 expectType<Resizable.Root.Actions['setLayout'], typeof root.setLayout>(root.setLayout);
 expectType<Resizable.Root.Actions['reset'], typeof root.reset>(root.reset);
 expectType<() => Resizable.Root.Layout, Resizable.Root.Actions['getLayout']>(root.getLayout);
-expectType<(layout: Resizable.Root.LayoutSnapshot) => void, Resizable.Root.Actions['setLayout']>(
-  root.setLayout,
-);
+expectType<
+  (layout: Resizable.Root.LayoutSnapshot | null) => void,
+  Resizable.Root.Actions['setLayout']
+>(root.setLayout);
 expectType<() => void, Resizable.Root.Actions['reset']>(root.reset);
 
 const parentPanel = Resizable.useParentPanel();

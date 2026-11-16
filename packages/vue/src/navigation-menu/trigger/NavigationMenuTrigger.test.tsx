@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
-import { defineComponent, KeepAlive, nextTick, onMounted, shallowRef } from 'vue';
+import { defineComponent, h, KeepAlive, nextTick, onMounted, shallowRef } from 'vue';
 import type { PropType } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import {
@@ -18,6 +18,7 @@ import {
 } from '#test-utils';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { REASONS } from '../../internals/reasons';
+import type { HTMLProps } from '../../internals/types';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import { allowTopLevelViewportWarning } from '../utils/test-utils';
 import NavigationMenuTriggerHydration from './NavigationMenuTriggerHydration.test.vue';
@@ -206,6 +207,10 @@ function getPopupWidthCalls(calls: [property: string, value: string, priority?: 
 function getPositionerWidthCalls(calls: [property: string, value: string, priority?: string][]) {
   return calls.filter((call) => call[0] === '--positioner-width').map((call) => call[1]);
 }
+
+type ViewportRenderSlotProps = Parameters<
+  NonNullable<InstanceType<typeof NavigationMenu.Viewport>['$slots']['render']>
+>[0];
 
 describe('<NavigationMenu.Trigger />', () => {
   beforeEach(allowTopLevelViewportWarning);
@@ -923,6 +928,33 @@ describe('<NavigationMenu.Trigger />', () => {
 
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
     });
+
+    it('opens the item at the first activation of a trigger that mounted in a held branch when the pointer is over it', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => <Menu popup />);
+      await render(<HeldBranch />);
+      await mountWhileHeld();
+
+      // A pointer that is over a trigger at its first show sends no enter event.
+      const originalMatches = Element.prototype.matches;
+      const matchesSpy = vi.spyOn(Element.prototype, 'matches').mockImplementation(function matches(
+        this: Element,
+        selector: string,
+      ) {
+        if (selector === ':hover' && (this as HTMLElement).dataset.testid === 'trigger-one') {
+          return true;
+        }
+        return originalMatches.call(this, selector);
+      });
+      onTestFinished(() => {
+        matchesSpy.mockRestore();
+      });
+
+      await show();
+      vi.advanceTimersByTime(50);
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('trigger-one')).toHaveAttribute('aria-expanded', 'true');
+    });
   });
 
   describe('VUE-73: aria-controls names only an element in the document', () => {
@@ -940,20 +972,30 @@ describe('<NavigationMenu.Trigger />', () => {
       ));
     }
 
-    function popupParts(popupProps: { id?: string } = {}) {
+    function popupParts(
+      popupSlots: Record<string, unknown> = { default: () => <NavigationMenu.Viewport /> },
+    ) {
       return (
         <NavigationMenu.Portal>
           <NavigationMenu.Positioner>
-            <NavigationMenu.Popup {...popupProps} data-testid="popup">
-              <NavigationMenu.Viewport />
-            </NavigationMenu.Popup>
+            <NavigationMenu.Popup data-testid="popup" v-slots={popupSlots} />
           </NavigationMenu.Positioner>
         </NavigationMenu.Portal>
       );
     }
 
     it('has no aria-controls while the popup has an empty id', async () => {
-      await renderMenu(() => popupParts({ id: '' }));
+      // An empty `id` of the part counts as no `id` (VUE-93). Only the `#render` slot can give the
+      // element an empty `id`.
+      await renderMenu(() =>
+        popupParts({
+          render: ({ props }: { props: HTMLProps }) => (
+            <nav {...props} id="">
+              <NavigationMenu.Viewport />
+            </nav>
+          ),
+        }),
+      );
       await flushMicrotasks();
 
       const trigger = screen.getByTestId('trigger');
@@ -1017,6 +1059,90 @@ describe('<NavigationMenu.Trigger />', () => {
       const popup = screen.getByTestId('popup');
       expect(popup.id).not.toBe('');
       expect(trigger).toHaveAttribute('aria-controls', popup.id);
+    });
+  });
+
+  describe('VUE-86: the active trigger follows the ids of the popup and the viewport', () => {
+    // An empty `id` of a part counts as no `id` (VUE-93). Only the `#render` slot can give the
+    // element an empty `id`, so the slots write the ids.
+    function menuWithIds(ids: { popup?: string; viewport?: string }) {
+      const idOf = (id: string | undefined) => (id === undefined ? {} : { id });
+      return (
+        <NavigationMenu.Root defaultValue="one">
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="one">
+              <NavigationMenu.Trigger data-testid="trigger">One</NavigationMenu.Trigger>
+              <NavigationMenu.Content>Content</NavigationMenu.Content>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          <NavigationMenu.Portal>
+            <NavigationMenu.Positioner>
+              <NavigationMenu.Popup
+                data-testid="popup"
+                v-slots={{
+                  render: ({ props }: { props: HTMLProps }) => (
+                    <nav {...props} {...idOf(ids.popup)}>
+                      <NavigationMenu.Viewport
+                        data-testid="viewport"
+                        v-slots={{
+                          render: ({ props: viewportProps, children }: ViewportRenderSlotProps) => (
+                            <div {...viewportProps} {...idOf(ids.viewport)}>
+                              {h(children)}
+                            </div>
+                          ),
+                        }}
+                      />
+                    </nav>
+                  ),
+                }}
+              />
+            </NavigationMenu.Positioner>
+          </NavigationMenu.Portal>
+        </NavigationMenu.Root>
+      );
+    }
+
+    it('follows the id of the popup in aria-controls', async () => {
+      const id = shallowRef('first');
+      await render(() => menuWithIds({ popup: id.value }));
+      await flushMicrotasks();
+
+      const trigger = screen.getByTestId('trigger');
+      expect(trigger).toHaveAttribute('aria-controls', 'first');
+
+      id.value = 'second';
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('popup').id).toBe('second');
+      expect(trigger).toHaveAttribute('aria-controls', 'second');
+
+      id.value = '';
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('popup').id).toBe('');
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+    });
+
+    it('follows the id of the viewport in aria-owns', async () => {
+      const id = shallowRef('first');
+      await render(() => menuWithIds({ viewport: id.value }));
+      await flushMicrotasks();
+
+      const owner = screen.getByTestId('trigger').parentElement!.querySelector('[aria-owns]');
+      expect(owner).toHaveAttribute('aria-owns', 'first');
+
+      id.value = 'second';
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('viewport').id).toBe('second');
+      expect(owner).toHaveAttribute('aria-owns', 'second');
+
+      id.value = '';
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('viewport').id).toBe('');
+      expect(owner).not.toHaveAttribute('aria-owns');
     });
   });
 

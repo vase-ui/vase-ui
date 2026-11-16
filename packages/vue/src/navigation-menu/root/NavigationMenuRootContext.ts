@@ -25,9 +25,17 @@ export interface NavigationMenuRootContext<Value = any> {
   transitionStatus: Readonly<Ref<TransitionStatus>>;
   mounted: Readonly<Ref<boolean>>;
   popupElement: ShallowRef<HTMLElement | null>;
+  /**
+   * The `id` of `popupElement`. The root follows each change of the attribute.
+   */
+  popupElementId: Readonly<Ref<string | undefined>>;
   positionerElement: ShallowRef<HTMLElement | null>;
   backdropElement: ShallowRef<HTMLElement | null>;
   viewportElement: ShallowRef<HTMLElement | null>;
+  /**
+   * The `id` of `viewportElement`. The root follows each change of the attribute.
+   */
+  viewportElementId: Readonly<Ref<string | undefined>>;
   viewportTargetElement: ShallowRef<HTMLElement | null>;
   /**
    * The direction of the last switch between two items while the menu is open, or `null`.

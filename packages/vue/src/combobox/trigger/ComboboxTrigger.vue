@@ -55,6 +55,7 @@ export interface ComboboxTriggerProps
 
 <script setup lang="ts">
 import { computed, onDeactivated, onScopeDispose, toRaw } from 'vue';
+import { useAriaAfterHydration } from '../../common/hydration';
 import { isElementDisabled } from '../../common/isElementDisabled';
 import { ownerDocument } from '../../common/owner';
 import { contains, getTarget } from '../../common/shadowDom';
@@ -70,6 +71,7 @@ import {
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
+import { givenId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { isMouseWithinBounds } from '../../utils/getPseudoElementBounds';
 import { stopEvent } from '../../utils/popups/event';
@@ -124,10 +126,9 @@ const setFocused = useSetFieldFocused(isDisabled, () => element.value);
 
 useLabelableId({
   id: () => (inputInsidePopup.value ? props.id : undefined),
-  element: () => element.value,
 });
 const triggerId = computed(() =>
-  inputInsidePopup.value ? (props.id ?? store.select('id')) : props.id,
+  inputInsidePopup.value ? (givenId(props.id) ?? store.select('id')) : givenId(props.id),
 );
 
 // An element with no id has an empty `id`, and the trigger then has no `aria-controls`.
@@ -251,6 +252,7 @@ const state = computed<ComboboxTriggerState>(() => ({
   placeholder: selectionMode.value === 'none' ? false : !hasSelectedValue.value,
 }));
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('button', props, {
   state,
   ref: [buttonRef, setTriggerElement],
@@ -270,7 +272,9 @@ const { element, elementProps } = useRenderElement('button', props, {
       // Only valid alongside the `combobox` role; without it the trigger is a plain button, and
       // the `Combobox.Input` outside the popup already carries `aria-readonly`.
       'aria-readonly': inputInsidePopup.value ? isReadOnly.value || undefined : undefined,
-      'aria-labelledby': resolveAriaLabelledBy(fieldLabelId.value, store.context.labelId.value),
+      'aria-labelledby': ariaAfterHydration(
+        resolveAriaLabelledBy(fieldLabelId.value, store.context.labelId.value),
+      ),
       onPointerdown: trackPointerType,
       onPointerenter: trackPointerType,
       onFocusin() {
@@ -344,6 +348,7 @@ const { element, elementProps } = useRenderElement('button', props, {
     attrs,
     (merged) => validation.getValidationProps(isDisabled.value, merged),
     getButtonProps,
+    (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),
   ],
 });
 

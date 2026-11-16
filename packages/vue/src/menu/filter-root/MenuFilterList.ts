@@ -124,7 +124,7 @@ export function useFilterList(params: MenuFilterListParameters): MenuFilterList 
         mergeProps<'div'>(
           {
             role: 'menu',
-            'aria-labelledby': resolvePopupLabel(attrs, null, triggerId.value ?? null),
+            'aria-labelledby': resolvePopupLabel(attrs, triggerId.value),
             'aria-orientation': orientation.value === 'horizontal' ? 'horizontal' : undefined,
             onKeydown: (event: KeyboardEvent) => handleKeydown(event),
           },

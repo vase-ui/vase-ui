@@ -4,6 +4,7 @@ import type { CDPSession } from '@vitest/browser-playwright';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import { ScrollArea } from '@vase-ui/vue/scroll-area';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -854,6 +855,38 @@ describe('<ScrollArea.Viewport />', () => {
       await nextTick();
 
       expect(scrollbar).toHaveAttribute('data-hovering');
+    });
+
+    it('reads the hover state at the first activation of a viewport that mounted in a held branch', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <ScrollArea.Root style={{ width: '200px', height: '200px' }}>
+          <ScrollArea.Viewport data-testid="viewport" style={{ width: '100%', height: '100%' }}>
+            <div style={{ width: '1000px', height: '1000px' }} />
+          </ScrollArea.Viewport>
+          <ScrollArea.Scrollbar data-testid="scrollbar" keepMounted />
+        </ScrollArea.Root>
+      ));
+      await renderWithFakeTimers(<HeldBranch />);
+      await mountWhileHeld();
+
+      // A pointer that is over a viewport at its first show sends no enter event.
+      const originalMatches = Element.prototype.matches;
+      const matchesSpy = vi.spyOn(Element.prototype, 'matches').mockImplementation(function matches(
+        this: Element,
+        selector: string,
+      ) {
+        if (selector === ':hover' && (this as HTMLElement).dataset.testid === 'viewport') {
+          return true;
+        }
+        return originalMatches.call(this, selector);
+      });
+      onTestFinished(() => {
+        matchesSpy.mockRestore();
+      });
+
+      await show();
+
+      expect(screen.getByTestId('scrollbar')).toHaveAttribute('data-hovering');
     });
   });
 

@@ -7,6 +7,7 @@ import {
   isVaporApp,
   nextEvent,
   screen,
+  waitFor,
   waitForLaterMillisecond,
   waitSingleFrame,
 } from '#test-utils';
@@ -469,6 +470,40 @@ describe('VUE-5: a popup whose root mounts while KeepAlive holds its branch', ()
     await show();
 
     expect(parent).toHaveAttribute('data-nested-dialog-open');
+  });
+
+  it('a popover above a nested popover that mounts held closes on Escape', async () => {
+    const { HeldBranch, mountWhileHeld } = createHeldBranch(() => (
+      <Popover.Root defaultOpen>
+        <Popover.Portal>
+          <Popover.Positioner>
+            <Popover.Popup>Inner</Popover.Popup>
+          </Popover.Positioner>
+        </Popover.Portal>
+      </Popover.Root>
+    ));
+    const { user } = await render(
+      <Popover.Root defaultOpen>
+        <Popover.Portal>
+          <Popover.Positioner>
+            <Popover.Popup data-testid="outer">
+              <button data-testid="inside">Inside</button>
+              <HeldBranch />
+            </Popover.Popup>
+          </Popover.Positioner>
+        </Popover.Portal>
+      </Popover.Root>,
+    );
+
+    await mountWhileHeld();
+    const outer = screen.getByTestId('outer');
+    screen.getByTestId('inside').focus();
+    await user.keyboard('{Escape}');
+
+    await waitFor(() => {
+      expect(outer).not.toBeInTheDocument();
+    });
+    expect(screen.queryByTestId('outer')).toBe(null);
   });
 
   it('a drawer does not activate Drawer.Indent', async () => {

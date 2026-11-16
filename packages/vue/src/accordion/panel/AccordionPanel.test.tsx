@@ -6,9 +6,11 @@ import {
   createRenderer,
   describeConformance,
   isJSDOM,
+  removedPartHydrationTests,
   screen,
   waitFor,
 } from '#test-utils';
+import AccordionRootPanelFirst from '../root/AccordionRootPanelFirst.test.vue';
 
 const PANEL_CONTENT = 'This is panel content';
 
@@ -297,6 +299,23 @@ describe('<Accordion.Panel />', () => {
         'aria-controls',
         panel.id,
       );
+    });
+  });
+
+  describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/accordion/root/AccordionRootPanelFirst.test.vue',
+      component: AccordionRootPanelFirst,
+      cases: [
+        {
+          name: 'a removed trigger after the panel',
+          props: { triggerId: 'trigger-a', laterRemovedAtMount: true },
+          selector: '[data-testid="panel"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'trigger-a',
+          clientValue: null,
+        },
+      ],
     });
   });
 });

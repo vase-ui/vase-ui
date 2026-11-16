@@ -6,7 +6,7 @@ const { toasts } = Toast.useToastManager();
 
 <template>
   <Toast.Portal>
-    <Toast.Viewport class="outline-0">
+    <Toast.Viewport class="outline-0" aria-label="Anchored notifications">
       <Toast.Positioner
         v-for="toast in toasts"
         :key="toast.id"

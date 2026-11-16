@@ -13,6 +13,7 @@ import {
   hiddenInputSizeTests,
   hydrateAfter,
   recordInputEvents,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   within,
@@ -607,6 +608,60 @@ describe('<TimeField.Root />', () => {
       );
 
       expect(container.querySelector('input[data-type]')).toHaveAttribute('id', 'alarm-time');
+    });
+  });
+
+  describe('hydration', () => {
+    removedPartHydrationTests({
+      file: HYDRATION_FILE,
+      component: TimeFieldRootHydration,
+      cases: [
+        {
+          name: 'a removed label',
+          props: {
+            locale: 'en-US',
+            label: 'after',
+            description: true,
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: '[data-testid="root"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description',
+          props: {
+            locale: 'en-US',
+            label: 'after',
+            description: true,
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: '[data-testid="root"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+        {
+          name: 'the hidden input, a removed description',
+          props: {
+            locale: 'en-US',
+            label: 'after',
+            description: true,
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: 'input[aria-hidden]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+      ],
     });
   });
 });

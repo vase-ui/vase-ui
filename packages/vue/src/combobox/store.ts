@@ -4,7 +4,7 @@ import { compareItemEquality } from '../internals/itemEquality';
 import type { RegisterId } from '../internals/labelable-provider/LabelableContext';
 import { hasNullItemLabel } from '../internals/resolveValueLabel';
 import type { AdaptiveOriginMiddleware } from '../utils/popups/positioning/adaptiveOriginConstants';
-import { createElementIdObserver, popupStoreSelectors } from '../utils/popups/store';
+import { popupStoreSelectors } from '../utils/popups/store';
 import type { PopupInteractionReader, PositioningInteractionStore } from '../utils/popups/types';
 import { ValuePopupStore, valuePopupSelectors } from '../utils/popups/value-popup/ValuePopupStore';
 import type {
@@ -31,10 +31,6 @@ export type State = ValuePopupState & {
     isItemEqualToValue: (itemValue: any, selectedValue: any) => boolean;
   };
 
-  /**
-   * The `id` of the list element. The store follows each change of the attribute.
-   */
-  listElementId: string | undefined;
   inputElement: HTMLInputElement | null;
   inputGroupElement: HTMLDivElement | null;
 
@@ -151,7 +147,6 @@ export const selectors = {
   inputProps: (state: State) => state.inputProps,
   itemRoot: (state: State) => state.itemRoot,
 
-  listElementId: (state: State) => state.listElementId,
   inputElement: (state: State) => state.inputElement,
   inputGroupElement: (state: State) => state.inputGroupElement,
   // See `interactions`.
@@ -185,20 +180,6 @@ export class ComboboxStore extends ValuePopupStore<
    * key of the store itself.
    */
   readonly interactions: PositioningInteractionStore = createInteractionView(this);
-
-  // A render can give the list element a new `id` and write nothing to the store. The id comes from
-  // `defaultPopupId`, an attribute or the `#render` slot.
-  readonly #observeListId = createElementIdObserver(() => {
-    this.set('listElementId', toRaw(this.state).listElement?.id);
-  });
-
-  override setState(newState: Readonly<State>): void {
-    super.setState(
-      newState.listElement === toRaw(this.state).listElement
-        ? newState
-        : { ...newState, listElementId: this.#observeListId(newState.listElement) },
-    );
-  }
 
   // The input, or the trigger when the input is inside the popup.
   protected getAnchorElement(state: Readonly<State>) {

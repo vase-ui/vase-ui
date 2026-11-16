@@ -1,0 +1,15 @@
+{
+  "id": "VUE-93",
+  "evidence": [
+    "https://html.spec.whatwg.org/multipage/dom.html#the-id-attribute",
+    "https://www.w3.org/TR/wai-aria-1.2/#valuetype_idref_list",
+    "https://www.w3.org/TR/accname-1.2/#computation-steps",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/utils/src/useId.ts#L42-L47",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/dialog/title/DialogTitle.tsx#L22-L29",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/field/description/FieldDescription.tsx#L25-L45",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/collapsible/panel/CollapsiblePanel.tsx#L61-L62",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/checkbox/root/CheckboxRoot.tsx#L106"
+  ],
+  "behavior": "An empty `id` counts as no `id`, as a prop or as an attribute of a part. The part then has the id that it has with no `id`, and each part that names it names that id. Base UI keeps an empty `id` in most parts. The element then has `id=\"\"`, which HTML does not allow, and no ID reference can name it. A dialog, a popover, a menu, a group, a fieldset, a meter, a progress bar, a tab panel or a toast then has no name. A field, a dialog, a popover or a toast loses its description, and a label names no control. Two sliders, selects, comboboxes or date fields with `id=\"\"` give the same derived ids, and the second slider takes the name of the first. Base UI's `Collapsible.Panel`, `Accordion.Trigger` and `Checkbox.Root` already treat an empty `id` as no `id`.",
+  "dueWith": "packages/react/src/internals/useBaseUiId.ts"
+}

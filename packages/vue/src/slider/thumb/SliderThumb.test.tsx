@@ -24,8 +24,10 @@ import {
   hydrate,
   hydrateAfter,
   isJSDOM,
+  mockPageBeforeLoad,
   mockRuntimeLocale,
   recordInputEvents,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   waitFor,
@@ -33,6 +35,8 @@ import {
 } from '#test-utils';
 import { platform } from '../../common/platform';
 import { createTouches, getHorizontalSliderRect } from '../utils/test-utils';
+import FormRestoreRender from '../../../test/FormRestoreRender.test.vue';
+import SliderRootHydration from '../root/SliderRootHydration.test.vue';
 import SliderThumbHydration from './SliderThumbHydration.test.vue';
 
 const isWebKit = platform.engine.webkit;
@@ -148,6 +152,26 @@ describe('<Slider.Thumb />', () => {
         </Slider.Root>,
       );
       expect(screen.getByRole('slider')).toHaveAttribute('aria-valuetext', '50 percent');
+    });
+
+    it.each([
+      { name: 'an empty value', label: '' },
+      { name: 'white space', label: '\n\t ' },
+    ])('VUE-106: keeps the name of the label for a getAriaLabel of $name', async ({ label }) => {
+      await render(
+        <Slider.Root defaultValue={50}>
+          <Slider.Label>Volume</Slider.Label>
+          <Slider.Control>
+            <Slider.Thumb getAriaLabel={() => label} />
+          </Slider.Control>
+        </Slider.Root>,
+      );
+
+      const slider = screen.getByRole('slider');
+      expect(slider).not.toHaveAttribute('aria-label');
+      await waitFor(() => {
+        expect(slider).toHaveAccessibleName('Volume');
+      });
     });
 
     it('formats aria-valuetext with en-US until hydrated, then with the runtime locale', async () => {
@@ -1988,6 +2012,42 @@ describe('<Slider.Thumb />', () => {
   });
 
   describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/slider/root/SliderRootHydration.test.vue',
+      component: SliderRootHydration,
+      cases: [
+        {
+          name: 'a removed field label',
+          props: { id: 'volume', defaultValue: 30, field: true, laterRemovedAtMount: true },
+          selector: 'input[type="range"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description',
+          props: { id: 'volume', defaultValue: 30, field: true, laterRemovedAtMount: true },
+          selector: 'input[type="range"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed slider label',
+          props: {
+            id: 'volume',
+            defaultValue: 30,
+            sliderLabel: 'after',
+            laterRemovedAtMount: true,
+          },
+          selector: 'input[type="range"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'volume-label',
+          clientValue: null,
+        },
+      ],
+    });
+
     it.each([
       { name: 'a single thumb', props: { defaultValue: 30 } },
       { name: 'a range with no index', props: { defaultValue: [25, 75] } },
@@ -2443,6 +2503,28 @@ describe('<Slider.Thumb />', () => {
       expect(fixture.getByTestId('changes').textContent).toBe('70 (input-change)');
       expect(input.value).toBe('70');
       expect(events).toEqual(['input']);
+    });
+
+    it('keeps the value of a thumb through a render of its input only', async () => {
+      mockPageBeforeLoad();
+      const locale = shallowRef('en-US');
+      const { container } = await render(() => (
+        <FormRestoreRender family="slider" revision={0} locale={locale.value} />
+      ));
+      await flushMicrotasks();
+      const recorded = recordInputEvents(container);
+      const input = container.querySelector<HTMLInputElement>('input[name="volume"]')!;
+      input.value = '70';
+
+      locale.value = 'de-DE';
+      await flushMicrotasks();
+      expect(input).toHaveValue('70');
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(within(container).getByTestId('changes').textContent).toBe('70 (input-change)');
+      expect(recorded).toEqual(['input']);
     });
   });
 

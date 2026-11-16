@@ -2,6 +2,7 @@ import { expect, vi, describe, it } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import type { Component } from 'vue';
 import { Accordion } from '@vase-ui/vue/accordion';
+import { Toolbar } from '@vase-ui/vue/toolbar';
 import {
   createRenderer,
   describeConformance,
@@ -1282,6 +1283,42 @@ describe('<Accordion.Root />', () => {
       await waitFor(() => {
         expect(readTriggers(container)).toEqual(['c:0', 'a:1', 'b:2']);
       });
+    });
+  });
+
+  describe('elements that are not items', () => {
+    it('VUE-87: join the composite around the root, in a panel and as a child of the root', async () => {
+      await render(
+        <Toolbar.Root>
+          <Accordion.Root defaultValue={['a']}>
+            <Accordion.Item value="a" data-testid="item-a">
+              <Accordion.Header>
+                <Accordion.Trigger>A</Accordion.Trigger>
+              </Accordion.Header>
+              <Accordion.Panel>
+                <Toolbar.Button data-testid="in-panel">In a panel</Toolbar.Button>
+              </Accordion.Panel>
+            </Accordion.Item>
+            <Toolbar.Button data-testid="in-root">In the root</Toolbar.Button>
+            <Accordion.Item value="b" data-testid="item-b">
+              <Accordion.Header>
+                <Accordion.Trigger>B</Accordion.Trigger>
+              </Accordion.Header>
+            </Accordion.Item>
+          </Accordion.Root>
+          <Toolbar.Button data-testid="after-root">After the root</Toolbar.Button>
+        </Toolbar.Root>,
+      );
+      const inPanel = screen.getByTestId('in-panel');
+      inPanel.focus();
+
+      await fireEvent.keyDown(inPanel, { key: 'ArrowRight' });
+      expect(screen.getByTestId('in-root')).toHaveFocus();
+
+      await fireEvent.keyDown(screen.getByTestId('in-root'), { key: 'ArrowRight' });
+      expect(screen.getByTestId('after-root')).toHaveFocus();
+      expect(screen.getByTestId('item-a')).toHaveAttribute('data-index', '0');
+      expect(screen.getByTestId('item-b')).toHaveAttribute('data-index', '1');
     });
   });
 

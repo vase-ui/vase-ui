@@ -47,7 +47,7 @@ describe('<Field.Description />', () => {
     );
   });
 
-  it('does not register an empty description id', async () => {
+  it('VUE-93: registers the generated id of a description with an empty id', async () => {
     await render(
       <Field.Root>
         <Field.Control aria-describedby="external-description" />
@@ -55,7 +55,12 @@ describe('<Field.Description />', () => {
       </Field.Root>,
     );
 
-    expect(screen.getByRole('textbox')).toHaveAttribute('aria-describedby', 'external-description');
+    const descriptionId = screen.getByText('Message').id;
+    expect(descriptionId).toMatch(/^vase-ui-/);
+    expect(screen.getByRole('textbox')).toHaveAttribute(
+      'aria-describedby',
+      `external-description ${descriptionId}`,
+    );
   });
 
   it('reflects the disabled state from Field.Item', async () => {

@@ -45,7 +45,7 @@ export interface SelectPopupProps
 import { platform as floatingPlatform } from '@floating-ui/vue';
 import { rectToClientRect } from '@floating-ui/utils';
 import type { ClientRectObject } from '@floating-ui/utils';
-import { computed, onScopeDispose, toRaw } from 'vue';
+import { computed, onScopeDispose } from 'vue';
 import type { CSSProperties } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { clamp } from '../../common/clamp';
@@ -488,7 +488,7 @@ function setPopupElement(popup: HTMLElement | null) {
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: useKeepAliveElementRef(setPopupElement, () => toRaw(store.state).triggerElement),
+  ref: useKeepAliveElementRef(setPopupElement),
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => {
     const hasList = store.select('listElement') !== null;
