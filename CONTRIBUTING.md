@@ -32,8 +32,6 @@ pnpm --filter @vase-ui/vue exec playwright install chromium firefox webkit
 
 | Command                                          | Function                                                                                                                                                                                                                                                                                    |
 | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm status:render`                             | Writes the status line of `README.md` from the family files in `parity/families` and from `parity/upstream.json`.                                                                                                                                                                           |
-| `pnpm status:check`                              | Fails when the status line of `README.md` differs from the line that `pnpm status:render` writes.                                                                                                                                                                                           |
 | `pnpm thanks:render`                             | Writes `THANKS.md` from GitHub's contributor lists of Base UI, Floating UI and aria-hidden. It uses your `gh` login.                                                                                                                                                                        |
 | `pnpm parity:check`                              | Checks each family against its extract of Base UI. It also checks the rows of `parity/better` and each record in `parity/own`. It reads only the repository.                                                                                                                                |
 | `pnpm parity:extract --upstream <path> [family]` | Writes `parity/families/<family>.upstream.json` from a local clone of Base UI. With no family name, it writes each extract. With `--check`, it writes nothing and fails when an extract is absent or differs. With `--counts` alone, it prints the counts of Base UI at the tracked commit. |
@@ -2039,6 +2037,7 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - `docs/index.md` includes the regions `home` and `donation` of `README.md`. Change that text in `README.md`. Keep the `#region` and `#endregion` comments.
 - Link a page of the site from `README.md` by its full address, such as `https://vase-ui.com/parity`. GitHub and npm show that file. A path of the site does not work there. `markdownSiteLinks` in `docs/.vitepress/config.ts` changes each address that starts with the `homepage` of `packages/vue/package.json` to the path of the page. The link then opens in the same tab.
 - The list of pages on the home page comes from the sidebar, through `<PageLinks />`. Do not type a link to a page in `docs/index.md`.
+- The section Install of `README.md` and the section Install the package of `docs/quick-start.md` show the same install commands. Change them together.
 - Text from `parity/` and from Base UI commits is data. Show it with text interpolation. Do not use an API that renders a string as HTML.
 - ESLint refuses an API that renders a string as HTML in each file of `docs` that it reads. These are script files, SFCs and pages.
 - When a page includes a file that `PAGE_FILES` in `eslint.config.js` lacks, add the file to the list. `pnpm test:lint-rules` fails for such a file.
@@ -2047,7 +2046,6 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - ESLint does not see `write` on a document that a variable holds, when the name of the variable does not end in `document`.
 - ESLint does not see HTML in a URL, such as the `:src` of an iframe with a `data:` or `blob:` URL. The rules do not apply to a script file outside `docs` that a `docs` file imports.
 - Because of these limits, a page shows text from `parity/` and from Base UI commits only through a component in `docs/.vitepress/components`.
-- Do not edit the status line of `README.md`, between `<!-- status:start -->` and `<!-- status:end -->`. `pnpm status:render` writes it, and the parity page shows the same line.
 - The site extends the default theme of VitePress with the look of the Base UI docs. The folder `docs/.vitepress/theme` holds that extension and nothing else. Do not add a layout or a component there. A page imports its components from `docs/.vitepress/components`.
 - Take each color, size and space from the style sheets of the Base UI docs, in `docs/src/css`, `docs/src/components` and `docs/src/app/(docs)/layout.css`. Where a Base UI value gives text less than the AA contrast of WCAG, use the nearest Base UI value that passes.
 - Base UI uses a commercial font. The site uses Hanken Grotesk for text and Geist Mono for code, from their npm packages. Do not load a font from another server.
@@ -2158,7 +2156,7 @@ The workflow `.github/workflows/release.yml` stages each release of `@vase-ui/vu
 
 - A version is `YYYY.M.MICRO`, such as `2026.12.0`. The month has no leading zero, and `MICRO` starts at 0.
 - The tag of a release is `v` plus the version: `v2026.12.0`. A ruleset lets only an organization admin create, change or delete a `v*` tag.
-- Each release has the dist-tag `latest`. A breaking change ships only in a `YYYY.1.0` release.
+- Each release has the dist-tag `latest`. A release can hold a breaking change. Its section of `CHANGELOG.md` lists each breaking change first.
 - The trusted publisher of the package on npmjs.com names the file `release.yml` and the environment `npm`. npm refuses the release after a change of either name.
 - The trusted publisher allows `npm stage publish` only. Do not give it `--allow-publish`. Each step of the job `stage` can get an OIDC token. With `--allow-publish`, each of these steps can make a version public with no approval.
 - The workflow writes no release notes and makes no GitHub Release. `CHANGELOG.md` holds the notes of each release, one section for each version. The GitHub Release of a tag has the same text as its section.
