@@ -41,7 +41,7 @@ describe('<Accordion.Panel />', () => {
         </Accordion.Root>,
       );
 
-      expect(warnSpy).toHaveBeenCalledWith(
+      expect(warnSpy).toHaveBeenCalledExactlyOnceWith(
         'Vase UI: The `keepMounted` prop of `Accordion.Panel` is `false` and `hiddenUntilFound` is enabled on the panel or on the root. The panel must stay mounted while it is closed, so `keepMounted` has no effect. Remove `keepMounted`, or remove `hiddenUntilFound`.',
       );
       expect(screen.getByText(PANEL_CONTENT).getAttribute('hidden')).toBe('until-found');

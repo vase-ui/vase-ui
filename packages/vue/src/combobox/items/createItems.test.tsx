@@ -1660,12 +1660,10 @@ describe('Combobox.createItems', () => {
       await setProps({ value: 1 });
 
       expect(screen.getByTestId<HTMLInputElement>('input').value).toBe('First');
-      expect(consoleErrorSpy.mock.calls).toEqual(
-        expect.arrayContaining([
-          [expect.stringContaining('Two items passed to createItems() derived the value 1')],
-          [expect.stringContaining('Two items passed to createItems() derived the value 2')],
-        ]),
-      );
+      expect(consoleErrorSpy.mock.calls).toEqual([
+        [expect.stringContaining('Two items passed to createItems() derived the value 1')],
+        [expect.stringContaining('Two items passed to createItems() derived the value 2')],
+      ]);
     });
 
     it('selects the derived value with the keyboard', async () => {

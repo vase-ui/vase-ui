@@ -1,0 +1,31 @@
+name: Vitest
+description: Runs the test files of one Vitest project of `packages/vue`.
+
+inputs:
+  command:
+    description: >-
+      The output `vitest-command` of the job `select`. `run` runs each test file. `related --run`
+      with a list of files runs the test files that load one of these files. With no value, the
+      action uses `run`.
+    required: false
+    default: ''
+  project:
+    description: The name of the Vitest project.
+    required: true
+  shard:
+    description: A shard, such as `1/3`. With no value, the step runs each selected test file.
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        VITEST_COMMAND: ${{ inputs.command }}
+        VITEST_PROJECT: ${{ inputs.project }}
+        VITEST_SHARD: ${{ inputs.shard }}
+      # `read` makes one argument from each word and expands no pattern.
+      run: |
+        read -r -a command <<< "${VITEST_COMMAND:-run}"
+        pnpm --filter @vase-ui/vue exec vitest "${command[@]}" --project "$VITEST_PROJECT" ${VITEST_SHARD:+"--shard=$VITEST_SHARD"}

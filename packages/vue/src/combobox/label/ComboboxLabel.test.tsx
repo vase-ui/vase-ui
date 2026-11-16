@@ -45,7 +45,7 @@ describe('<Combobox.Label />', () => {
       </Combobox.Root>,
     );
 
-    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining(message));
+    expect(errorSpy).toHaveBeenCalledExactlyOnceWith(expect.stringContaining(message));
   });
 
   it('warns when an input outside the popup mounts after the label', async () => {
@@ -63,7 +63,7 @@ describe('<Combobox.Label />', () => {
     showInput.value = true;
     await flushMicrotasks();
 
-    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining(message));
+    expect(errorSpy).toHaveBeenCalledExactlyOnceWith(expect.stringContaining(message));
   });
 
   it('derives its id from the root, and ignores an id of the consumer', async () => {

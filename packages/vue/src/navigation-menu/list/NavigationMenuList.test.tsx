@@ -462,15 +462,9 @@ describe('<NavigationMenu.List />', () => {
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
   // instance set, and a later case of the file can then get a warning about a slot.
   it('throws a descriptive error when rendered outside <NavigationMenu.Root>', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    try {
-      await expect(render(<NavigationMenu.List />)).rejects.toThrow(
-        'Vase UI: <NavigationMenu.Root> is missing. A Navigation Menu part reads the open item from its root. Put the part inside <NavigationMenu.Root>.',
-      );
-    } finally {
-      errorSpy.mockRestore();
-    }
+    await expect(render(<NavigationMenu.List />)).rejects.toThrow(
+      'Vase UI: <NavigationMenu.Root> is missing. A Navigation Menu part reads the open item from its root. Put the part inside <NavigationMenu.Root>.',
+    );
 
     // Vue also warns about the error of `setup`.
     expect(takeReportedMessages()).toEqual([

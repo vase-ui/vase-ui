@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { defineComponent } from 'vue';
 import { createRenderer, takeReportedMessages } from '#test-utils';
 import { useComboboxGroupContext } from './ComboboxGroupContext';
@@ -13,15 +13,9 @@ describe('ComboboxGroupContext', () => {
       return () => null;
     });
 
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    try {
-      await expect(render(<Consumer />)).rejects.toThrow(
-        'Vase UI: <Combobox.GroupLabel> must be inside <Combobox.Group>. Without a group the label has no group to name. Put the part inside <Combobox.Group>.',
-      );
-    } finally {
-      errorSpy.mockRestore();
-    }
+    await expect(render(<Consumer />)).rejects.toThrow(
+      'Vase UI: <Combobox.GroupLabel> must be inside <Combobox.Group>. Without a group the label has no group to name. Put the part inside <Combobox.Group>.',
+    );
 
     // Vue also warns about the error of `setup`.
     expect(takeReportedMessages()).toEqual([

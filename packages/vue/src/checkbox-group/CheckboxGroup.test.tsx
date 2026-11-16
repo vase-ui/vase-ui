@@ -170,6 +170,11 @@ describe('<CheckboxGroup />', () => {
         await fireEvent.click(screen.getByText('Clear'));
 
         expect(screen.getByTestId('red')).toHaveAttribute('aria-checked', 'false');
+        expect(consoleError).toHaveBeenCalledExactlyOnceWith(
+          expect.stringMatching(
+            /^Vase UI: A component is changing the controlled value state of CheckboxGroup to be uncontrolled\./,
+          ),
+        );
       } finally {
         consoleError.mockRestore();
       }

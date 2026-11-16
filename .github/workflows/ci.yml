@@ -23,6 +23,32 @@ concurrency:
 
 # CONTRIBUTING.md, "Where a test runs", gives the rule for each `timeout-minutes`.
 jobs:
+  # A pull request runs only the tests that its changed files can affect. The merge queue skips
+  # this job, so each test job there runs each test file. CONTRIBUTING.md, "Where a test runs",
+  # gives the rules.
+  select:
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      tests: ${{ steps.select.outputs.tests }}
+      fixtures: ${{ steps.select.outputs.fixtures }}
+      vitest-command: ${{ steps.select.outputs.vitest-command }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The checkout is the merge commit of the pull request. Its first parent is the base.
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - id: select
+        run: node scripts/ci/selectTests.ts
+
   check:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -47,6 +73,10 @@ jobs:
       - run: pnpm docs:build
 
   test-node:
+    needs: select
+    # `select` has the result `skipped` in the merge queue. Without `!cancelled()`, a job that
+    # needs a skipped job does not run.
+    if: ${{ !cancelled() && needs.select.result != 'failure' && needs.select.outputs.tests != 'none' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -61,9 +91,14 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm test:node
+      - uses: ./.github/actions/vitest
+        with:
+          command: ${{ needs.select.outputs.vitest-command }}
+          project: node
 
   test-browser:
+    needs: select
+    if: ${{ !cancelled() && needs.select.result != 'failure' && needs.select.outputs.tests != 'none' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -101,9 +136,15 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps ${{ matrix.engine }}
-      - run: pnpm test:${{ matrix.engine }} ${{ matrix.shard && format('--shard={0}', matrix.shard) }}
+      - uses: ./.github/actions/vitest
+        with:
+          command: ${{ needs.select.outputs.vitest-command }}
+          project: ${{ matrix.engine }}
+          shard: ${{ matrix.shard }}
 
   test-vue-floor:
+    needs: select
+    if: ${{ !cancelled() && needs.select.result != 'failure' && needs.select.outputs.tests != 'none' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -120,10 +161,18 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @vase-ui/vue add --save-dev --save-exact vue@3.5.12
       - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps chromium
-      - run: pnpm test:node
-      - run: pnpm test:chromium
+      - uses: ./.github/actions/vitest
+        with:
+          command: ${{ needs.select.outputs.vitest-command }}
+          project: node
+      - uses: ./.github/actions/vitest
+        with:
+          command: ${{ needs.select.outputs.vitest-command }}
+          project: chromium
 
   test-nuxt:
+    needs: select
+    if: ${{ !cancelled() && needs.select.result != 'failure' && needs.select.outputs.fixtures != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -169,6 +218,8 @@ jobs:
   # A prerelease of a dependency must not block a merge, so `required` does not need this job.
   # The version is the dist-tag `rc` of `vue` on npm.
   test-vue-rc:
+    needs: select
+    if: ${{ !cancelled() && needs.select.result != 'failure' && needs.select.outputs.tests != 'none' }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     continue-on-error: true
@@ -186,21 +237,42 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @vase-ui/vue add --save-dev --save-exact vue@3.6.0-rc.15
       - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps chromium
-      - run: pnpm test:node
-      - run: pnpm test:chromium
+      - uses: ./.github/actions/vitest
+        with:
+          command: ${{ needs.select.outputs.vitest-command }}
+          project: node
+      - uses: ./.github/actions/vitest
+        with:
+          command: ${{ needs.select.outputs.vitest-command }}
+          project: chromium
       # The project `vapor` mounts each test in a Vapor app. It also runs when a step above
       # fails, so that the job shows its result too.
       - if: ${{ !cancelled() }}
-        run: pnpm test:vapor
+        uses: ./.github/actions/vitest
+        with:
+          command: ${{ needs.select.outputs.vitest-command }}
+          project: vapor
 
   required:
     # Do not use `always()`. It starts this job in a cancelled run. The job waits for a runner
     # and holds the concurrency group, so the run of the new commit starts no job.
     if: ${{ !cancelled() }}
-    needs: [check, docs-axe, test-node, test-browser, test-vue-floor, test-nuxt]
+    needs: [select, check, docs-axe, test-node, test-browser, test-vue-floor, test-nuxt]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions: {}
     steps:
-      - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped')
+      # A job is skipped for one reason only. `select` skips itself in the merge queue. On a pull
+      # request, `select` skips a test job that has nothing to run. Each of the last five conditions
+      # fails when a job is skipped without that reason, and when the reason holds and the job ran.
+      - if: >-
+          contains(needs.*.result, 'failure')
+          || contains(needs.*.result, 'cancelled')
+          || needs.check.result == 'skipped'
+          || needs.docs-axe.result == 'skipped'
+          || (needs.select.result == 'skipped') != (github.event_name != 'pull_request')
+          || (needs.test-node.result == 'skipped') != (needs.select.outputs.tests == 'none')
+          || (needs.test-browser.result == 'skipped') != (needs.select.outputs.tests == 'none')
+          || (needs.test-vue-floor.result == 'skipped') != (needs.select.outputs.tests == 'none')
+          || (needs.test-nuxt.result == 'skipped') != (needs.select.outputs.fixtures == 'false')
         run: exit 1
