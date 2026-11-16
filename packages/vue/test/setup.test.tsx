@@ -100,8 +100,8 @@ describe('task boundary between tests', () => {
 });
 
 describe('real pointer between tests', () => {
-  // Vitest runs the tests of a file in order. The first test puts the real pointer on an element.
-  // The element of the second test is at the same place.
+  // Vitest runs the tests of a file in order. In each pair, the first test puts the real pointer on
+  // a point. The element of the second test is at that point.
   const { render } = createRenderer();
   const SPOT: CSSProperties = {
     position: 'fixed',
@@ -130,8 +130,7 @@ describe('real pointer between tests', () => {
     expect(onPointerover).not.toHaveBeenCalled();
   });
 
-  // The first test ends by a time-out while the browser still does its 50 moves to a point in the
-  // element of the second test.
+  // The first test ends by a time-out while the browser still does its 50 moves.
   it('times out in a pointer move', { fails: true, timeout: 1 }, async () => {
     await userEvent.pointer(Array.from({ length: 50 }, () => ({ coords: { x: 50, y: 50 } })));
   });
@@ -147,15 +146,12 @@ describe('real pointer between tests', () => {
 });
 
 describe('real keyboard between tests', () => {
-  // Vitest runs the tests of a file in order. The first test ends by a time-out while the browser
-  // still does its key command. The command holds Shift when it ends.
+  // Vitest runs the tests of a file in order. In each pair, the first test ends by a time-out while
+  // the browser still does its key command.
   const { render } = createRenderer();
 
-  it('times out in a key command', { fails: true, timeout: 1 }, async () => {
-    await userEvent.keyboard(`{Shift>}${'{End}'.repeat(200)}`);
-  });
-
-  it('gets no key of the last test and no Shift that it held', async () => {
+  // The record starts with the test, so it also gets the keys of an earlier command.
+  async function typeKeyInNewInput() {
     const keydowns: { key: string; shiftKey: boolean }[] = [];
     function recordKeydown({ key, shiftKey }: KeyboardEvent) {
       keydowns.push({ key, shiftKey });
@@ -167,8 +163,26 @@ describe('real keyboard between tests', () => {
     await render(<input data-testid="input" />);
     screen.getByTestId('input').focus();
     await userEvent.keyboard('a');
+    return keydowns;
+  }
 
-    expect(keydowns).toEqual([{ key: 'a', shiftKey: false }]);
+  // The command holds Shift when it ends.
+  it('times out in a key command', { fails: true, timeout: 1 }, async () => {
+    await userEvent.keyboard(`{Shift>}${'{End}'.repeat(200)}`);
+  });
+
+  it('gets no key of the last test and no Shift that it held', async () => {
+    expect(await typeKeyInNewInput()).toEqual([{ key: 'a', shiftKey: false }]);
+  });
+
+  // The test function goes on after the time-out. Its second command starts when the first ends.
+  it('times out in the first of two key commands', { fails: true, timeout: 1 }, async () => {
+    await userEvent.keyboard('{End}'.repeat(50));
+    await userEvent.keyboard('{End}'.repeat(200));
+  });
+
+  it('gets no key of a step of the last test after its time-out', async () => {
+    expect(await typeKeyInNewInput()).toEqual([{ key: 'a', shiftKey: false }]);
   });
 });
 

@@ -54,11 +54,17 @@ if (typeof document !== 'undefined') {
     Promise.reject(new DOMException('The test setup refuses a pointer lock.', 'NotSupportedError'));
 
   // A test that times out in a command of `userEvent` ends while the browser still does the
-  // command. The keys and the pointer moves of the command then reach the next test. A key that the
-  // command holds also stays down there, because Vitest releases before each test only the keys of
-  // the commands that returned. The wrapper below starts each command at the call, so Vitest does
-  // not fail a test that does not await a call. ESLint refuses such a call.
+  // command. Without a wait for the command, its keys and pointer moves reach the next test. A key
+  // that it holds also stays down there, because Vitest releases before each test only the keys of
+  // the commands that returned. The wrapper below awaits each command, so Vitest does not fail a
+  // test that does not await a call. ESLint refuses such a call.
+  //
+  // After a time-out, the function of the test continues when its command ends. When the command
+  // ends after the hook below starts, the wrapper rejects, so the next steps of the function do not
+  // run in the next test. The `onTestFinished` hooks of the test run before that hook, so a release
+  // in such a hook does not reject.
   const runningCommands = new Set<Promise<void>>();
+  let endedTests = 0;
   for (const name of [
     'click',
     'dblClick',
@@ -82,12 +88,16 @@ if (typeof document !== 'undefined') {
     const command: (...args: never[]) => Promise<void> = userEvent[name].bind(userEvent);
     Object.defineProperty(userEvent, name, {
       async value(...args: never[]) {
+        const endedTestsAtCall = endedTests;
         const running = command(...args);
         runningCommands.add(running);
         try {
           await running;
         } finally {
           runningCommands.delete(running);
+        }
+        if (endedTests !== endedTestsAtCall) {
+          throw new Error(`The test ended before the command userEvent.${name} ended.`);
         }
       },
     });
@@ -102,6 +112,7 @@ if (typeof document !== 'undefined') {
   // in the page, so the move comes after the wait for the commands.
   beforeEach(() => {
     onTestFinished(async () => {
+      endedTests += 1;
       await Promise.allSettled(runningCommands);
       if (isPointerInPage) {
         isPointerInPage = false;
