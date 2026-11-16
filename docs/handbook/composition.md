@@ -37,7 +37,7 @@ An attribute with the value `undefined` counts as not set, as a prop does in Vue
 
 A blank `aria-label` or `aria-labelledby` also counts as not set: an empty string, or a string of white space only. Such a value names nothing, so the part keeps its own name. A wrapper component can thus give its label prop the default `''`. This is also true for a part that declares one of them as a prop, such as `Checkbox.Root`.
 
-A blank ID reference attribute also counts as not set: `aria-describedby`, `aria-controls`, `aria-activedescendant`, `aria-owns`, `aria-details`, `aria-errormessage`, `aria-flowto` or `for`. Such a value refers to no element, so the part keeps its own value. A dialog thus keeps its description, and a trigger still names its popup in `aria-controls`. A click on `Field.Label` still moves the focus to the control.
+A blank ID reference attribute also counts as not set: `aria-describedby`, `aria-controls`, `aria-activedescendant`, `aria-owns`, `aria-details`, `aria-errormessage`, `aria-flowto` or `for`. Such a value refers to no element, so the part keeps its own value. A dialog thus keeps its description, and a trigger still names its popup in `aria-controls`. A click on `Field.Label` still moves the focus to the control. A part that declares `aria-describedby` as a prop, such as `Slider.Thumb`, follows the same rule.
 
 An empty `id` that you give to a part also counts as not set, as an attribute or as a prop, because HTML does not allow an empty id. The part keeps its own id, so a title still names its dialog and a label still names its control.
 
