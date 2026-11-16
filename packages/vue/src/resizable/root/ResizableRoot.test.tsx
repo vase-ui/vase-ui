@@ -3119,10 +3119,11 @@ describe('<Resizable.Root />', () => {
       await findEdges();
     });
 
+    // A vnode is for one mount, so each row makes its vnodes when its case runs.
     it.each([
       {
         name: 'a disabled handle between the panels',
-        content: [
+        content: () => [
           <Resizable.Panel key="a" id="a" />,
           <Resizable.Handle key="h" disabled />,
           <Resizable.Panel key="b" id="b" />,
@@ -3134,14 +3135,20 @@ describe('<Resizable.Root />', () => {
       },
       {
         name: 'each panel before the boundary disabled',
-        content: [<Resizable.Panel key="a" id="a" disabled />, <Resizable.Panel key="b" id="b" />],
+        content: () => [
+          <Resizable.Panel key="a" id="a" disabled />,
+          <Resizable.Panel key="b" id="b" />,
+        ],
       },
       {
         name: 'each panel after the boundary disabled',
-        content: [<Resizable.Panel key="a" id="a" />, <Resizable.Panel key="b" id="b" disabled />],
+        content: () => [
+          <Resizable.Panel key="a" id="a" />,
+          <Resizable.Panel key="b" id="b" disabled />,
+        ],
       },
     ])('renders no node for $name', async ({ root, content }) => {
-      await renderEdges(root, content);
+      await renderEdges(root, content?.());
 
       await expectNoEdge();
     });
