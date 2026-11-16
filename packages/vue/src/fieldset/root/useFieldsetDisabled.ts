@@ -1,6 +1,5 @@
 import { computed, onMounted, shallowRef, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
-import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useFieldsetRootContext } from './FieldsetRootContext';
 
 interface FieldsetObserver {
@@ -71,25 +70,23 @@ export function useFieldsetDisabled(
 ): ComputedRef<boolean> {
   const fieldset = useFieldsetRootContext(true);
   const isNativeFieldsetDisabled = shallowRef(false);
-  // `KeepAlive` moves a held part into a detached element, which is its root node until the next
-  // activation.
-  const { isHeld, shown } = useKeepAliveState();
 
   // A part declares its element after it calls this composable, and a `watch` reads its sources at
   // once. The `watch` thus starts at the mount.
   onMounted(() => {
     watch(
-      [() => toValue(element), isHeld, shown],
-      ([partElement, held], _previous, onCleanup) => {
-        if (!partElement || held) {
+      () => toValue(element),
+      (partElement, _previous, onCleanup) => {
+        if (!partElement) {
           return;
         }
 
         let observedRoot: Node | undefined;
         let stopObserver: (() => void) | undefined;
 
-        // A `Teleport` can move the element into another document or shadow root. The observer of
-        // the old root node sees the move, and the new root node then gets the observer.
+        // `Teleport` and `KeepAlive` can move the element into another document, shadow root or
+        // detached element. The observer of the old root node sees the move, and the new root node
+        // then gets the observer. The observer thus needs no `shown` of `useKeepAliveState`.
         const update = () => {
           isNativeFieldsetDisabled.value = isInDisabledFieldset(partElement);
           const root = partElement.getRootNode();
