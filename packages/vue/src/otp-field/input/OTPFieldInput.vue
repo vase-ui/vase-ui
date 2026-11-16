@@ -132,7 +132,7 @@ if (process.env.NODE_ENV !== 'production') {
   let checkedLabel: unknown;
 
   const checkFirstSlotLabel = () => {
-    const slotAriaLabel = givenName(attrs['aria-label'] as string | null | undefined);
+    const slotAriaLabel = givenName(attrs['aria-label']);
     if (checkedIndex === index.value && checkedLabel === slotAriaLabel) {
       return;
     }

@@ -11,7 +11,7 @@ function isBlank(value: unknown): boolean {
  * Use it for a declared prop and for an attribute that a part reads with `useAttrs()`. The `props`
  * function of `useRenderElement` gets no blank name, so a call there is not needed.
  */
-export function givenName<Name extends string | null | undefined>(name: Name): Name | undefined {
+export function givenName<Name>(name: Name): Name | undefined {
   return isBlank(name) ? undefined : name;
 }
 
