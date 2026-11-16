@@ -1,8 +1,8 @@
 diff --git a/dist/index.js b/dist/index.js
-index 08671d52813ae3435b09a60ac5bdac3c6867d117..ac1cda0d488b2fb6681f0693c911f40d84a59bd7 100644
+index 08671d52813ae3435b09a60ac5bdac3c6867d117..9199b85d5c6451eb528793d6f2bed45e1bb41087 100644
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -1434,21 +1434,31 @@ class PlaywrightBrowserProvider {
+@@ -1434,21 +1434,35 @@ class PlaywrightBrowserProvider {
  		return {
  			page,
  			context: this.contexts.get(sessionId),
@@ -11,8 +11,12 @@ index 08671d52813ae3435b09a60ac5bdac3c6867d117..ac1cda0d488b2fb6681f0693c911f40d
 -					const frame = page.frame("vitest-iframe");
 -					if (frame) {
 -						return resolve(frame);
-+			// The client frame list can lag behind the page. Check its only child in the live DOM.
++			// The frame list of the Playwright client can hold the removed frame of the previous test
++			// file, or the new frame with no name. The only child frame thus compares itself with the
++			// test iframe element of the page, in one protocol message. A removed frame rejects that
++			// evaluation. The frame then comes from the element, which uses 16 messages in Chromium.
 +			// https://github.com/vitest-dev/vitest/issues/11876
++			// https://github.com/vitest-dev/vitest/issues/11928
 +			async frame() {
 +				const frames = page.mainFrame().childFrames();
 +				if (frames.length === 1) {
