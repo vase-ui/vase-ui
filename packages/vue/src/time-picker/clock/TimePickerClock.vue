@@ -105,8 +105,8 @@ const popup = usePickerPopup();
 const clock = useTemplateRef<{ element: HTMLElement | null }>('clock');
 const element = computed(() => clock.value?.element ?? null);
 
-// The focus manager of the popup puts the focus on the first tabbable element, which can be a view
-// or a day period. The face of the clock is the element that a person sets the time with.
+// The first tabbable element of the clock can be a view trigger or a day period. The face is the
+// element that a person sets the time with, so it takes the focus at the open.
 usePickerFocusTarget(() => element.value?.querySelector<HTMLInputElement>('input[type="range"]'));
 
 // The clock commits a view and shows the next view, so the picker follows the view to know the
