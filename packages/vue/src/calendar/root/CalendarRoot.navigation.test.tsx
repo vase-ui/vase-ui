@@ -604,7 +604,7 @@ describe('<Calendar.Root /> pages', () => {
     // gives the caption of the new page a new id.
     it.each([
       {
-        name: 'week numbers of a server week from Monday',
+        name: 'week numbers, a server week from Monday',
         server: 'en-US-u-fw-mon',
         props: { weekNumbers: true, selects: true },
         first: '2026-11-01',
