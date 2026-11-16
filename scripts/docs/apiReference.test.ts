@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { cpSync, mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
+import type { TestContext } from 'node:test';
 import { readTypesMd } from '../parity/typesMd.ts';
 import { REPOSITORY_ROOT } from '../parity/repository.ts';
 import { createVaseProject } from '../parity/vaseSurface.ts';
@@ -31,6 +32,15 @@ const types = readTypesMd(
   'docs/src/app/(docs)/react/components/sample/types.md',
   readFileSync(join(FIXTURES, 'sample.types.md'), 'utf8'),
 );
+
+// The copy is in `node_modules` of the repository. The fixtures thus find `vue` as the fixture
+// folder does, and no tool reads the copy.
+function copyFixtures(context: TestContext): string {
+  const root = mkdtempSync(join(REPOSITORY_ROOT, 'node_modules', '.api-reference-'));
+  context.after(() => rmSync(root, { recursive: true, force: true }));
+  cpSync(FIXTURES, root, { recursive: true });
+  return root;
+}
 
 /** Gives the project another text for each file for the time of `run`. The texts are put back after it. */
 function withTexts<T>(edits: [path: string, from: string, to: string][], run: () => T): T {
@@ -580,6 +590,135 @@ test('the reader without `cache` makes the reference of a family again for each 
   const second = readAgain('sample');
   assert.notEqual(first, second);
   assert.deepEqual(first, second);
+});
+
+test('the reader without `cache` reads edited JSDoc and defaults from disk', (context) => {
+  const root = copyFixtures(context);
+  const popup = join(root, 'packages/vue/src/sample/popup/SamplePopup.vue');
+  const source = readFileSync(popup, 'utf8');
+  const readAgain = createApiReferenceReader(root);
+  const readSide = () =>
+    readAgain('sample')
+      .parts.find(({ name }) => name === 'Sample.Popup')
+      ?.props.find(({ name }) => name === 'side');
+  const before = readSide();
+  assert.equal(before?.description, 'Which side of the trigger the popup uses.');
+  assert.equal(before.default, null);
+  writeFileSync(
+    popup,
+    source.replace(
+      '/** Which side of the trigger the popup uses. */',
+      "/**\n   * The preferred side of the trigger.\n   * @default 'top'\n   */",
+    ),
+  );
+  assert.deepEqual(readSide(), {
+    ...before,
+    description: 'The preferred side of the trigger.',
+    default: "'top'",
+  });
+  writeFileSync(popup, source);
+  assert.deepEqual(readSide(), before);
+});
+
+test('the reader without `cache` reads added and removed props from disk', (context) => {
+  const root = copyFixtures(context);
+  const popup = join(root, 'packages/vue/src/sample/popup/SamplePopup.vue');
+  const source = readFileSync(popup, 'utf8');
+  const readAgain = createApiReferenceReader(root);
+  const readProps = () =>
+    readAgain('sample').parts.find(({ name }) => name === 'Sample.Popup')?.props;
+  const before = readProps();
+  assert.equal(
+    before?.some(({ name }) => name === 'label'),
+    false,
+  );
+  writeFileSync(
+    popup,
+    source.replace(
+      '  name: string;',
+      '  name: string;\n  /** The popup label. */\n  label?: string | undefined;',
+    ),
+  );
+  assert.deepEqual(
+    readProps()?.find(({ name }) => name === 'label'),
+    {
+      name: 'label',
+      type: 'string | undefined',
+      default: null,
+      required: false,
+      description: 'The popup label.',
+    },
+  );
+  writeFileSync(popup, source);
+  assert.deepEqual(readProps(), before);
+});
+
+test('the reader without `cache` reads edited imported TypeScript files from disk', (context) => {
+  const root = copyFixtures(context);
+  const parts = join(root, 'packages/vue/src/sample/index.parts.ts');
+  const source = readFileSync(parts, 'utf8');
+  const readAgain = createApiReferenceReader(root);
+  const readHandle = () => readAgain('sample').types.find(({ name }) => name === 'Sample.Handle');
+  const before = readHandle();
+  assert.equal(before?.properties.find(({ name }) => name === 'close')?.type, '() => void');
+  writeFileSync(
+    parts,
+    source
+      .replace('  close: () => void;', '  /** Closes the popup. */\n  close: () => boolean;')
+      .replace('close() {}', 'close() { return true; }'),
+  );
+  assert.deepEqual(
+    readHandle()?.properties.find(({ name }) => name === 'close'),
+    {
+      name: 'close',
+      type: '() => boolean',
+      optional: false,
+      default: null,
+      description: 'Closes the popup.',
+    },
+  );
+  writeFileSync(parts, source);
+  assert.deepEqual(readHandle(), before);
+});
+
+test('the reader without `cache` reads a new file that an earlier edit imports', (context) => {
+  const root = copyFixtures(context);
+  const parts = join(root, 'packages/vue/src/sample/index.parts.ts');
+  const readAgain = createApiReferenceReader(root);
+  const readHandleProperties = () =>
+    readAgain('sample')
+      .types.find(({ name }) => name === 'Sample.Handle')
+      ?.properties.map(({ name }) => name);
+  writeFileSync(
+    parts,
+    `import type { Toggle } from './toggle';\n${readFileSync(parts, 'utf8').replace(
+      'export interface Handle {',
+      'export interface Handle extends Toggle {',
+    )}`,
+  );
+  assert.deepEqual(readHandleProperties(), ['close', 'open']);
+  writeFileSync(
+    join(root, 'packages/vue/src/sample/toggle.ts'),
+    'export interface Toggle {\n  toggle: () => void;\n}\n',
+  );
+  assert.deepEqual(readHandleProperties(), ['close', 'open', 'toggle']);
+});
+
+test('the reader without `cache` keeps its project while each file keeps its modification time and its size', (context) => {
+  const root = copyFixtures(context);
+  const popup = join(root, 'packages/vue/src/sample/popup/SamplePopup.vue');
+  const source = readFileSync(popup, 'utf8');
+  const time = new Date(0);
+  utimesSync(popup, time, time);
+  const readAgain = createApiReferenceReader(root);
+  const readName = () =>
+    readAgain('sample')
+      .parts.find(({ name }) => name === 'Sample.Popup')
+      ?.props.find(({ name }) => name === 'name')?.description;
+  assert.equal(readName(), 'The name of the popup.');
+  writeFileSync(popup, source.replace('The name of the popup.', 'The text of the popup.'));
+  utimesSync(popup, time, time);
+  assert.equal(readName(), 'The name of the popup.');
 });
 
 test('the reader throws and says what to do for a family whose extract has no types.md', () => {
