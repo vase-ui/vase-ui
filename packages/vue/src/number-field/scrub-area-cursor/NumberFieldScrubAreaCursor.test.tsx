@@ -435,6 +435,52 @@ describe.skipIf(isWebKit)('<NumberField.ScrubAreaCursor />', () => {
         pointerLock.mockRestore();
       }
     });
+
+    it('renders the cursor in the root node of the scrub area after the field moves to another root', async () => {
+      const pointerLock = vi
+        .spyOn(document.body, 'requestPointerLock')
+        .mockImplementation(() => Promise.resolve());
+      onTestFinished(() => pointerLock.mockRestore());
+      const host = document.body.appendChild(document.createElement('div'));
+      const documentTarget = document.body.appendChild(document.createElement('div'));
+      onTestFinished(() => {
+        host.remove();
+        documentTarget.remove();
+      });
+      const shadowRoot = host.attachShadow({ mode: 'open' });
+      const target = shallowRef(shadowRoot.appendChild(document.createElement('div')));
+      await render(() => (
+        <Teleport to={target.value}>
+          <NumberField.Root>
+            <NumberField.Input />
+            <NumberField.ScrubArea data-testid="scrub-area">
+              <NumberField.ScrubAreaCursor data-testid="cursor" />
+            </NumberField.ScrubArea>
+          </NumberField.Root>
+        </Teleport>
+      ));
+      const scrubArea = shadowRoot.querySelector('[data-testid="scrub-area"]')!;
+      scrubArea.dispatchEvent(
+        new PointerEvent('pointerdown', { bubbles: true, clientX: 10, clientY: 10 }),
+      );
+      await flushMicrotasks();
+      const portal = shadowRoot.querySelector('[data-testid="cursor"]')!.parentElement!;
+      expect(portal.parentNode).toBe(shadowRoot);
+      window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+      await waitFor(() => {
+        expect(portal).not.toBeInTheDocument();
+      });
+
+      target.value = documentTarget;
+      await flushMicrotasks();
+      expect(documentTarget.contains(scrubArea)).toBe(true);
+      scrubArea.dispatchEvent(
+        new PointerEvent('pointerdown', { bubbles: true, clientX: 10, clientY: 10 }),
+      );
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('cursor').parentElement!.parentElement).toBe(document.body);
+    });
   });
 
   // After a `setup` that throws, Vue 3.5.12 keeps the current instance set, so this case is last.
