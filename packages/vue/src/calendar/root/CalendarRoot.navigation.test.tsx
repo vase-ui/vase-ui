@@ -1,5 +1,4 @@
-import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import { createSSRApp, nextTick } from 'vue';
+import { describe, expect, it, vi } from 'vitest';
 import {
   createRenderer,
   hydrate,
@@ -7,7 +6,6 @@ import {
   renderOnServer,
   screen,
   setAttributeInHtml,
-  takeReportedMessages,
   waitFor,
 } from '#test-utils';
 import CalendarNavigationAnatomy from './CalendarNavigationAnatomy.test.vue';
@@ -594,6 +592,48 @@ describe('<Calendar.Root /> pages', () => {
       await hydrate(CalendarNavigationHydration, { serverHtml, props: { ...base, ...props } });
     });
 
+    // A `-u-` keyword gives the server other `Intl` data than the browser. A page whose first day
+    // changes, such as a Hebrew month or a page of weeks from Monday, then mounts again after the
+    // mount. Vue gives the caption of the new page a new id. A month keeps its first day when its
+    // weeks start on Monday, so it does not mount again.
+    it.each([
+      {
+        name: 'week numbers, a server week from Monday',
+        server: 'en-US-u-fw-mon',
+        props: { weekNumbers: true, selects: true },
+        renumberIds: false,
+        first: '2026-11-01',
+      },
+      {
+        name: 'the selects of a Hebrew server',
+        server: 'en-US-u-ca-hebrew',
+        props: { selects: true },
+        renumberIds: true,
+        first: '2026-11-01',
+      },
+      {
+        name: 'two weeks of a server week from Monday',
+        server: 'en-US-u-fw-mon',
+        props: { duration: 'weeks:2' },
+        renumberIds: true,
+        first: '2026-11-08',
+      },
+    ])(
+      'hydrates $name, then shows the grid of the browser',
+      async ({ server, props, renumberIds, first }) => {
+        const all = { ...base, ...props, locale: 'en-US' };
+        const serverHtml = await renderOnServer(file, { ...all, locale: server });
+
+        const { container } = await hydrate(CalendarNavigationHydration, {
+          serverHtml,
+          props: all,
+          renumberIds,
+        });
+
+        expect(container.querySelector('td[data-date]')).toHaveAttribute('data-date', first);
+      },
+    );
+
     it.each([
       {
         name: 'the month select',
@@ -650,34 +690,17 @@ describe('<Calendar.Root /> pages', () => {
       },
     );
 
-    // The page that the clock of the browser gives mounts a new `Calendar.Caption`, whose id then
-    // differs from a client-only render. `hydrate` thus cannot compare, and the case hydrates by
-    // hand.
-    async function hydrateByHand(serverHtml: string, props: Record<string, unknown>) {
-      const container = document.createElement('div');
-      document.body.append(container);
-      container.innerHTML = serverHtml;
-      const root = container.querySelector('[role="group"]');
-      const app = createSSRApp(CalendarNavigationHydration, props);
-      onTestFinished(() => {
-        app.unmount();
-        container.remove();
-      });
-      app.mount(container);
-      expect(takeReportedMessages()).toEqual([]);
-      await nextTick();
-      await nextTick();
-      expect(container.querySelector('[role="group"]')).toBe(root);
-      expect(takeReportedMessages()).toEqual([]);
-      return container;
-    }
-
     it("runs the years of the year select around the browser's today", async () => {
       const props = { locale: 'en-US', selects: true };
       const serverHtml = await renderOnServer(file, props);
       const browserDay = mockBrowserToday('year');
 
-      const container = await hydrateByHand(serverHtml, props);
+      // The page of the browser's today mounts a new `Calendar.Caption` with a new id.
+      const { container } = await hydrate(CalendarNavigationHydration, {
+        serverHtml,
+        props,
+        renumberIds: true,
+      });
 
       const options = [
         ...container.querySelectorAll<HTMLOptionElement>('[data-testid="year-select"] option'),
