@@ -80,11 +80,11 @@ describe('<Menu.Root /> without a trigger', () => {
         expect(root).toHaveAttribute('data-open');
 
         await user.keyboard('{Escape}');
-        await waitFor(() => expect(screen.queryByRole('menuitem', { name: 'Leaf' })).toBeNull());
+        expect(screen.queryByRole('menuitem', { name: 'Leaf' })).toBeNull();
         expect(more).toHaveFocus();
         expect(changed).not.toHaveBeenCalled();
         await user.keyboard('{Escape}');
-        await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
+        expect(screen.queryByRole('menu')).toBeNull();
         expect(changed).toHaveBeenCalledExactlyOnceWith(
           false,
           expect.objectContaining({ reason: 'escape-key' }),
@@ -180,7 +180,7 @@ describe('<Menu.Root /> without a trigger', () => {
         expect(changed).not.toHaveBeenCalled();
         await user.click(nested);
         await advanceFrame();
-        await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
+        expect(screen.queryByRole('menu')).toBeNull();
         expect(changed).toHaveBeenCalledExactlyOnceWith(false, 'item-press');
         await waitFor(() => expect(anchor).toHaveFocus());
         changed.mockClear();
@@ -212,9 +212,7 @@ describe('<Menu.Root /> without a trigger', () => {
       firstChanged.mockClear();
       await user[method](screen.getByRole('menuitem', { name: 'Second' }));
       await screen.findByRole('menuitem', { name: 'Second item' });
-      await waitFor(() =>
-        expect(screen.queryByRole('menuitem', { name: 'First item' })).toBeNull(),
-      );
+      expect(screen.queryByRole('menuitem', { name: 'First item' })).toBeNull();
       expect(firstChanged).toHaveBeenCalledExactlyOnceWith(
         false,
         expect.objectContaining({
@@ -326,9 +324,9 @@ describe('<Menu.Root /> without a trigger', () => {
       await waitFor(() => expect(screen.getByRole('menuitem', { name: 'Nested' })).toHaveFocus());
       expect(changed).not.toHaveBeenCalled();
       await user.keyboard('{Escape}');
-      await waitFor(() => expect(screen.queryByRole('menuitem', { name: 'Nested' })).toBeNull());
+      expect(screen.queryByRole('menuitem', { name: 'Nested' })).toBeNull();
       await user.keyboard('{Escape}');
-      await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
+      expect(screen.queryByRole('menu')).toBeNull();
       await waitFor(() => expect(trigger).toHaveFocus());
     },
   );

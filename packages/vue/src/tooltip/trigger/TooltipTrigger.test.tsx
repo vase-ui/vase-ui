@@ -350,9 +350,7 @@ describe('<Tooltip.Trigger />', () => {
       await screen.findByTestId('popup');
 
       await user.keyboard('[Escape]');
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
-      });
+      expect(screen.queryByTestId('popup')).toBe(null);
 
       // Leaving the window blurs the trigger, then the window, while the trigger stays the
       // active element; coming back focuses the window, then the trigger.
@@ -404,12 +402,13 @@ describe('<Tooltip.Trigger />', () => {
 
       trigger.focus();
       await flushMicrotasks();
-      await screen.findByTestId('popup');
+      const popup = await screen.findByTestId('popup');
       trigger.blur();
       await flushMicrotasks();
       await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
+        expect(popup).not.toBeInTheDocument();
       });
+      expect(screen.queryByTestId('popup')).toBe(null);
 
       await user.click(screen.getByRole('button', { name: 'Open externally' }));
       await screen.findByTestId('popup');

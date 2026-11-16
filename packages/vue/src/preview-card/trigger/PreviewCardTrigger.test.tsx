@@ -282,13 +282,11 @@ describe('<PreviewCard.Trigger />', () => {
     await user.keyboard('[Tab]');
     expect(trigger).toHaveFocus();
     await waitFor(() => {
-      expect(screen.queryByTestId('popup')).not.toBe(null);
+      expect(screen.getByTestId('popup')).not.toBe(null);
     });
 
     await user.keyboard('[Escape]');
-    await waitFor(() => {
-      expect(screen.queryByTestId('popup')).toBe(null);
-    });
+    expect(screen.queryByTestId('popup')).toBe(null);
 
     // Leaving the window blurs the trigger, then the window, while the trigger stays the active
     // element; coming back focuses the window, then the trigger.

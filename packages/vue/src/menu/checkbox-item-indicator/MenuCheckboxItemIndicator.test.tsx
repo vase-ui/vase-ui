@@ -11,7 +11,6 @@ import {
   nextEvent,
   screen,
   takeReportedMessages,
-  waitFor,
 } from '#test-utils';
 
 describe('<Menu.CheckboxItemIndicator />', () => {
@@ -73,9 +72,7 @@ describe('<Menu.CheckboxItemIndicator />', () => {
 
       await fireEvent.click(screen.getByText('Close'));
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('indicator')).toBe(null);
-      });
+      expect(screen.queryByTestId('indicator')).toBe(null);
     },
   );
 

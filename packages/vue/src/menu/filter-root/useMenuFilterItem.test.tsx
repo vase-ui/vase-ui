@@ -89,9 +89,7 @@ describe('filtered Menu items', () => {
 
       await user.type(screen.getByRole('searchbox', { name: 'Filter actions' }), 'rename');
 
-      await waitFor(() => {
-        expect(screen.queryByRole('menuitem', { name: 'Delete' })).toBe(null);
-      });
+      expect(screen.queryByRole('menuitem', { name: 'Delete' })).toBe(null);
       expect(screen.getByRole('menuitem', { name: 'Rename' })).toBeVisible();
     });
 
@@ -123,9 +121,7 @@ describe('filtered Menu items', () => {
       await flushMicrotasks();
       await user.type(screen.getByRole('searchbox', { name: 'Filter actions' }), 'rename');
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('async-item')).toBe(null);
-      });
+      expect(screen.queryByTestId('async-item')).toBe(null);
     });
 
     it('matches an item whose children are an array while it is filtered out', async () => {
@@ -155,9 +151,7 @@ describe('filtered Menu items', () => {
 
       // Hide it, so its DOM node goes away and only the children remain as a text source.
       await user.type(input, 'del');
-      await waitFor(() => {
-        expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
-      });
+      expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
 
       await fireEvent.input(input, { target: { value: 'rena' } });
 

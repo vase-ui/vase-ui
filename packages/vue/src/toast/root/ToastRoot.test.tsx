@@ -320,9 +320,7 @@ describe('<Toast.Root />', () => {
       await user.click(screen.getByRole('button', { name: 'add' }));
       expect(screen.getByTestId('toast-root')).toBe(toastRoot);
 
-      await waitFor(() => {
-        expect(toastRoot).not.toHaveAttribute('data-starting-style');
-      });
+      expect(toastRoot).not.toHaveAttribute('data-starting-style');
       await waitFor(() => {
         expect(toastRoot.style.getPropertyValue('--toast-height')).toBe(initialHeight);
       });
@@ -474,9 +472,7 @@ describe('<Toast.Root />', () => {
 
       await user.click(screen.getByRole('button', { name: 'add-1' }));
 
-      await waitFor(() => {
-        expect(toast1).not.toHaveAttribute('data-starting-style');
-      });
+      expect(toast1).not.toHaveAttribute('data-starting-style');
       await waitFor(() => {
         expect(toast1.style.getPropertyValue('--toast-height')).not.toBe('');
       });
@@ -563,12 +559,8 @@ describe('<Toast.Root />', () => {
       await user.click(screen.getByRole('button', { name: 'add' }));
       expect(screen.getByTestId('toast-root')).toBe(toastRoot);
 
-      await waitFor(() => {
-        expect(toastRoot).not.toHaveAttribute('data-starting-style');
-      });
-      await waitFor(() => {
-        expect(toastRoot).not.toHaveAttribute('data-swipe-direction');
-      });
+      expect(toastRoot).not.toHaveAttribute('data-starting-style');
+      expect(toastRoot).not.toHaveAttribute('data-swipe-direction');
       expect(toastRoot.style.getPropertyValue('--toast-swipe-movement-x')).toBe('0px');
       expect(toastRoot.style.getPropertyValue('--toast-swipe-movement-y')).toBe('0px');
     } finally {
@@ -648,9 +640,7 @@ describe('<Toast.Root />', () => {
       await user.click(addButton);
       expect(screen.getByTestId('root-1')).toBe(swipedRoot);
 
-      await waitFor(() => {
-        expect(swipedRoot).not.toHaveAttribute('data-swipe-direction');
-      });
+      expect(swipedRoot).not.toHaveAttribute('data-swipe-direction');
       expect(swipedRoot).not.toHaveAttribute('data-ending-style');
       expect(swipedRoot.style.getPropertyValue('--toast-swipe-movement-x')).toBe('0px');
       expect(swipedRoot.style.getPropertyValue('--toast-swipe-movement-y')).toBe('0px');
@@ -816,12 +806,14 @@ describe('<Toast.Root />', () => {
     const { manager } = await renderToasts();
     manager.add({ id: 'toast', title: 'Toast', timeout: 0 });
     await flushMicrotasks();
+    const toast = screen.getByTestId('toast');
 
     manager.close('toast');
 
     await waitFor(() => {
-      expect(screen.queryByTestId('toast')).toBe(null);
+      expect(toast).not.toBeInTheDocument();
     });
+    expect(screen.queryByTestId('toast')).toBe(null);
   });
 
   it('gives a high priority toast the role alertdialog, and hides it until the viewport has focus', async () => {
@@ -1133,7 +1125,7 @@ describe('<Toast.Root />', () => {
         { keys: '[/TouchA]' },
       ]);
 
-      await waitFor(() => expect(screen.queryByTestId('toast-root')).toBe(null));
+      expect(screen.queryByTestId('toast-root')).toBe(null);
     });
 
     it('closes toast when swiping in the specified direction beyond threshold', async () => {
@@ -1153,9 +1145,7 @@ describe('<Toast.Root />', () => {
       // Swipe up (starting at y=100, ending at y=55, which is > 40px threshold)
       await simulateSwipe(toastElement, 100, 100, 100, 55);
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('toast-root')).toBe(null);
-      });
+      expect(screen.queryByTestId('toast-root')).toBe(null);
     });
 
     it('locks to a single axis on the first move of a two-axis swipe', async () => {
@@ -1269,18 +1259,14 @@ describe('<Toast.Root />', () => {
         // Swipe right
         await simulateSwipe(screen.getByTestId('toast-root'), 100, 100, 150, 100);
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('toast-root')).toBe(null);
-        });
+        expect(screen.queryByTestId('toast-root')).toBe(null);
 
         await fireEvent.click(addToast);
 
         // Swipe up
         await simulateSwipe(screen.getByTestId('toast-root'), 100, 100, 100, 50);
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('toast-root')).toBe(null);
-        });
+        expect(screen.queryByTestId('toast-root')).toBe(null);
       });
 
       it('right + left', async () => {
@@ -1300,18 +1286,14 @@ describe('<Toast.Root />', () => {
         // Swipe right
         await simulateSwipe(screen.getByTestId('toast-root'), 100, 100, 150, 100);
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('toast-root')).toBe(null);
-        });
+        expect(screen.queryByTestId('toast-root')).toBe(null);
 
         await fireEvent.click(addToast);
 
         // Swipe left
         await simulateSwipe(screen.getByTestId('toast-root'), 100, 100, 50, 100);
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('toast-root')).toBe(null);
-        });
+        expect(screen.queryByTestId('toast-root')).toBe(null);
       });
 
       it('up + down', async () => {
@@ -1331,18 +1313,14 @@ describe('<Toast.Root />', () => {
         // Swipe up
         await simulateSwipe(screen.getByTestId('toast-root'), 100, 100, 100, 50);
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('toast-root')).toBe(null);
-        });
+        expect(screen.queryByTestId('toast-root')).toBe(null);
 
         await fireEvent.click(addToast);
 
         // Swipe down
         await simulateSwipe(screen.getByTestId('toast-root'), 100, 100, 100, 150);
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('toast-root')).toBe(null);
-        });
+        expect(screen.queryByTestId('toast-root')).toBe(null);
       });
     });
 
@@ -1487,9 +1465,7 @@ describe('<Toast.Root />', () => {
       await fireEvent.pointerMove(toastElement, { clientX: 160, clientY: 220, pointerId: 1 });
       await fireEvent.pointerUp(toastElement, { clientX: 160, clientY: 220, pointerId: 1 });
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('toast-root')).toBe(null);
-      });
+      expect(screen.queryByTestId('toast-root')).toBe(null);
     });
 
     it('locks the gesture to the vertical axis when it starts upright', async () => {
@@ -1531,9 +1507,7 @@ describe('<Toast.Root />', () => {
       await fireEvent.pointerMove(toastElement, { clientX: 220, clientY: 160, pointerId: 1 });
       await fireEvent.pointerUp(toastElement, { clientX: 220, clientY: 160, pointerId: 1 });
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('toast-root')).toBe(null);
-      });
+      expect(screen.queryByTestId('toast-root')).toBe(null);
     });
 
     it('does not start a swipe from a non-primary pointer button', async () => {
@@ -1853,9 +1827,7 @@ describe('<Toast.Root />', () => {
 
       await simulateSwipe(root, 100, 100, 100, 200);
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('toast')).toBe(null);
-      });
+      expect(screen.queryByTestId('toast')).toBe(null);
     });
   });
 
@@ -1919,9 +1891,7 @@ describe('<Toast.Root />', () => {
 
       await simulateSwipe(toastElement, 100, 100, 150, 100);
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('toast-root')).toBe(null);
-      });
+      expect(screen.queryByTestId('toast-root')).toBe(null);
     });
 
     it('resets drag state after a document pointercancel', async () => {
@@ -2051,9 +2021,7 @@ describe('<Toast.Root />', () => {
       // Verify the close button works (which also relies on ID-based lookup)
       await fireEvent.click(screen.getByTestId('toast-close'));
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('toast-root')).toBe(null);
-      });
+      expect(screen.queryByTestId('toast-root')).toBe(null);
     });
 
     it('correctly calculates indices for multiple toasts with recreated objects', async () => {

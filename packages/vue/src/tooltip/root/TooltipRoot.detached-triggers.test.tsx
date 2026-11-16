@@ -164,10 +164,8 @@ describe('<Tooltip.Root />', () => {
       });
     }
 
-    async function expectClosed(trigger: HTMLElement) {
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
-      });
+    function expectClosed(trigger: HTMLElement) {
+      expect(screen.queryByTestId('popup')).toBe(null);
       expect(trigger).not.toHaveAttribute('data-popup-open');
     }
 
@@ -180,7 +178,7 @@ describe('<Tooltip.Root />', () => {
         await expectOpenedBy(trigger1);
         handle.close();
         await flushMicrotasks();
-        await expectClosed(trigger1);
+        expectClosed(trigger1);
       }
 
       await openAndClose();
@@ -200,7 +198,7 @@ describe('<Tooltip.Root />', () => {
       expect(trigger1).not.toHaveAttribute('data-popup-open');
       handle.close();
       await flushMicrotasks();
-      await expectClosed(trigger2);
+      expectClosed(trigger2);
 
       expect(bystander.renders).toBe(0);
     });
@@ -214,7 +212,7 @@ describe('<Tooltip.Root />', () => {
         await expectOpenedBy(trigger1);
         trigger1.blur();
         await flushMicrotasks();
-        await expectClosed(trigger1);
+        expectClosed(trigger1);
       }
 
       await openAndClose();
@@ -233,7 +231,7 @@ describe('<Tooltip.Root />', () => {
       await fireEvent.mouseMove(trigger2);
       await expectOpenedBy(trigger2);
       await fireEvent.mouseLeave(trigger2);
-      await expectClosed(trigger2);
+      expectClosed(trigger2);
 
       expect(bystander.renders).toBe(0);
     });
@@ -268,9 +266,7 @@ describe('<Tooltip.Root />', () => {
     await fireEvent.pointerDown(trigger2, { pointerType: 'touch' });
     await fireEvent.click(trigger2);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('popup')).toBe(null);
-    });
+    expect(screen.queryByTestId('popup')).toBe(null);
   });
 
   describe.skipIf(isJSDOM)('handle-backed root ownership', () => {
@@ -412,9 +408,7 @@ describe('<Tooltip.Root />', () => {
 
       const trigger2 = screen.getByRole('button', { name: 'Trigger 2' });
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('content')).toBe(null);
-      });
+      expect(screen.queryByTestId('content')).toBe(null);
       expect(screen.queryByRole('button', { name: 'Trigger 1' })).toBe(null);
       expect(trigger2).not.toHaveAttribute('data-popup-open');
     });
@@ -484,14 +478,16 @@ describe('<Tooltip.Root />', () => {
       trigger1.focus();
       await flushMicrotasks();
       await flushMicrotasks();
-      expect(screen.getByTestId('content').textContent).toBe('1');
+      const content = screen.getByTestId('content');
+      expect(content.textContent).toBe('1');
 
       trigger2.focus();
       await flushMicrotasks();
       await flushMicrotasks();
       await waitFor(() => {
-        expect(screen.queryByTestId('content')).toBe(null);
+        expect(content).not.toBeInTheDocument();
       });
+      expect(screen.queryByTestId('content')).toBe(null);
       expect(trigger2).not.toHaveAttribute('data-popup-open');
     });
 
@@ -537,9 +533,7 @@ describe('<Tooltip.Root />', () => {
 
       const trigger2 = screen.getByRole('button', { name: 'Trigger 2' });
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('content')).toBe(null);
-      });
+      expect(screen.queryByTestId('content')).toBe(null);
       expect(screen.queryByRole('button', { name: 'Trigger 1' })).toBe(null);
       expect(trigger2).not.toHaveAttribute('data-popup-open');
     });
@@ -571,9 +565,7 @@ describe('<Tooltip.Root />', () => {
       await fireEvent.mouseLeave(trigger1);
       await fireEvent.mouseEnter(trigger2);
       await fireEvent.mouseMove(trigger2);
-      await waitFor(() => {
-        expect(screen.queryByTestId('content')).toBe(null);
-      });
+      expect(screen.queryByTestId('content')).toBe(null);
       expect(trigger2).not.toHaveAttribute('data-popup-open');
     });
 

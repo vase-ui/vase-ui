@@ -1404,7 +1404,7 @@ describe('<NavigationMenu.Root />', () => {
       await user.hover(trigger2);
 
       await waitFor(() => {
-        expect(screen.queryByTestId('popup-2')).not.toBe(null);
+        expect(screen.getByTestId('popup-2')).not.toBe(null);
       });
     });
 
@@ -1445,7 +1445,7 @@ describe('<NavigationMenu.Root />', () => {
         await user.hover(trigger);
 
         await waitFor(() => {
-          expect(screen.queryByTestId('popup-1')).not.toBe(null);
+          expect(screen.getByTestId('popup-1')).not.toBe(null);
         });
       },
     );
@@ -1458,7 +1458,7 @@ describe('<NavigationMenu.Root />', () => {
       await user.hover(trigger1);
 
       await waitFor(() => {
-        expect(screen.queryByTestId('popup-1')).not.toBe(null);
+        expect(screen.getByTestId('popup-1')).not.toBe(null);
       });
 
       await user.click(trigger1);
@@ -1467,19 +1467,21 @@ describe('<NavigationMenu.Root />', () => {
       await user.hover(trigger2);
 
       await waitFor(() => {
-        expect(screen.queryByTestId('popup-2')).not.toBe(null);
+        expect(screen.getByTestId('popup-2')).not.toBe(null);
       });
+      const popup2 = screen.getByTestId('popup-2');
 
       await user.unhover(trigger2);
 
       await waitFor(() => {
-        expect(screen.queryByTestId('popup-2')).toBe(null);
+        expect(popup2).not.toBeInTheDocument();
       });
+      expect(screen.queryByTestId('popup-2')).toBe(null);
 
       await user.hover(trigger1);
 
       await waitFor(() => {
-        expect(screen.queryByTestId('popup-1')).not.toBe(null);
+        expect(screen.getByTestId('popup-1')).not.toBe(null);
       });
     });
 
@@ -1490,7 +1492,7 @@ describe('<NavigationMenu.Root />', () => {
       await user.hover(trigger1);
 
       await waitFor(() => {
-        expect(screen.queryByTestId('popup-1')).not.toBe(null);
+        expect(screen.getByTestId('popup-1')).not.toBe(null);
       });
 
       const popup1 = screen.getByTestId('popup-1');
@@ -1501,8 +1503,9 @@ describe('<NavigationMenu.Root />', () => {
       await user.unhover(link1);
 
       await waitFor(() => {
-        expect(screen.queryByTestId('popup-1')).toBe(null);
+        expect(popup1).not.toBeInTheDocument();
       });
+      expect(screen.queryByTestId('popup-1')).toBe(null);
     });
 
     it('does not close menu when clicking a different trigger with mouse', async () => {
@@ -1572,9 +1575,7 @@ describe('<NavigationMenu.Root />', () => {
 
       await user.keyboard('{Escape}');
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup-1')).toBe(null);
-      });
+      expect(screen.queryByTestId('popup-1')).toBe(null);
       expect(trigger).toHaveFocus();
     });
 
@@ -1706,8 +1707,9 @@ describe('<NavigationMenu.Root />', () => {
       vi.advanceTimersByTime(50);
 
       await waitFor(() => {
-        expect(screen.queryByTestId('popup-1')).toBe(null);
+        expect(popup).not.toBeInTheDocument();
       });
+      expect(screen.queryByTestId('popup-1')).toBe(null);
       expect(trigger).toHaveAttribute('aria-expanded', 'false');
       expect(trigger).not.toHaveFocus();
     });
@@ -1733,9 +1735,7 @@ describe('<NavigationMenu.Root />', () => {
       await user.tab();
       await user.tab();
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup-1')).toBe(null);
-      });
+      expect(screen.queryByTestId('popup-1')).toBe(null);
       expect(last).toHaveFocus();
       expect(trigger).not.toHaveFocus();
     });
@@ -2213,9 +2213,7 @@ describe('<NavigationMenu.Root />', () => {
       expect(screen.queryByTestId('popup-root')).not.toBe(null);
 
       await rerender(<ControlledNavigationMenu value={null} />);
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup-root')).toBe(null);
-      });
+      expect(screen.queryByTestId('popup-root')).toBe(null);
       expect(onOpenChangeComplete.mock.calls.filter(([open]) => !open)).toHaveLength(1);
 
       // Calling the action after the automatic unmount must not repeat the completion.
@@ -2414,9 +2412,7 @@ describe('<NavigationMenu.Root />', () => {
       expect(screen.queryByTestId('popup-root')).not.toBe(null);
 
       await rerender(<ControlledNavigationMenu value={null} />);
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup-root')).toBe(null);
-      });
+      expect(screen.queryByTestId('popup-root')).toBe(null);
       expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
     });
 
@@ -2872,7 +2868,7 @@ describe('<NavigationMenu.Root />', () => {
       await user.click(trigger1);
 
       await waitFor(() => {
-        expect(screen.queryByTestId('popup-1')).not.toBe(null);
+        expect(screen.getByTestId('popup-1')).not.toBe(null);
       });
 
       const popup1 = screen.getByTestId('popup-1');
@@ -2888,9 +2884,7 @@ describe('<NavigationMenu.Root />', () => {
       const nestedLink = screen.getByTestId('nested-link-1');
       await user.click(nestedLink);
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('nested-popup-1')).toBe(null);
-      });
+      expect(screen.queryByTestId('nested-popup-1')).toBe(null);
       expect(screen.queryByTestId('popup-1')).toBe(null);
       expect(trigger1).toHaveAttribute('aria-expanded', 'false');
     });
@@ -2905,7 +2899,7 @@ describe('<NavigationMenu.Root />', () => {
       await user.click(trigger1);
 
       await waitFor(() => {
-        expect(screen.queryByTestId('popup-1')).not.toBe(null);
+        expect(screen.getByTestId('popup-1')).not.toBe(null);
       });
 
       const popup1 = screen.getByTestId('popup-1');
@@ -2931,7 +2925,7 @@ describe('<NavigationMenu.Root />', () => {
       await user.click(trigger1);
 
       await waitFor(() => {
-        expect(screen.queryByTestId('content-1')).not.toBe(null);
+        expect(screen.getByTestId('content-1')).not.toBe(null);
       });
 
       expect(screen.queryByTestId('level2-content-1')).not.toBe(null);
@@ -2940,9 +2934,7 @@ describe('<NavigationMenu.Root />', () => {
       const level3Link = screen.getByTestId('level3-link-1');
       await user.click(level3Link);
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('level3-content-1')).toBe(null);
-      });
+      expect(screen.queryByTestId('level3-content-1')).toBe(null);
       expect(screen.queryByTestId('level2-content-1')).toBe(null);
       expect(screen.queryByTestId('content-1')).toBe(null);
       expect(trigger1).toHaveAttribute('aria-expanded', 'false');
@@ -4521,7 +4513,7 @@ describe('<NavigationMenu.Root />', () => {
       await user.click(trigger);
 
       await waitFor(() => {
-        expect(screen.queryByTestId('popup-1')).not.toBe(null);
+        expect(screen.getByTestId('popup-1')).not.toBe(null);
       });
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
 
@@ -4533,7 +4525,7 @@ describe('<NavigationMenu.Root />', () => {
       await user.click(screen.getByTestId('dialog-button'));
 
       await waitFor(() => {
-        expect(screen.queryByTestId('popup-1')).not.toBe(null);
+        expect(screen.getByTestId('popup-1')).not.toBe(null);
       });
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
     });
@@ -4545,7 +4537,7 @@ describe('<NavigationMenu.Root />', () => {
       await user.click(trigger);
 
       await waitFor(() => {
-        expect(screen.queryByTestId('popup-1')).not.toBe(null);
+        expect(screen.getByTestId('popup-1')).not.toBe(null);
       });
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
 
@@ -4557,7 +4549,7 @@ describe('<NavigationMenu.Root />', () => {
       await user.click(screen.getByTestId('popover-button'));
 
       await waitFor(() => {
-        expect(screen.queryByTestId('popup-1')).not.toBe(null);
+        expect(screen.getByTestId('popup-1')).not.toBe(null);
       });
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
     });

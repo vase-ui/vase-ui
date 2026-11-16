@@ -159,14 +159,16 @@ describe('useTriggerFocusGuards', () => {
 
           expect(direction === 'backward' ? trigger : screen.getByTestId('inside')).toHaveFocus();
           expect(trigger).toHaveAttribute('aria-expanded', 'true');
+          const popup = screen.getByTestId('popup');
 
           await userEvent.tab({ shift: direction === 'backward' });
 
           const destination = screen.getByTestId(direction === 'backward' ? 'before' : 'after');
           expect(destination).toHaveFocus();
           await waitFor(() => {
-            expect(screen.queryByTestId('popup')).toBe(null);
+            expect(popup).not.toBeInTheDocument();
           });
+          expect(screen.queryByTestId('popup')).toBe(null);
           expect(destination).toHaveFocus();
           expect(trigger).toHaveAttribute('tabindex', String(tabindex));
         },
@@ -220,12 +222,14 @@ describe('useTriggerFocusGuards', () => {
 
           await render(<Fixture />);
           await focusTabOrigin(await openPopup());
+          const popup = screen.getByTestId('popup');
           await userEvent.tab({ shift: direction === 'backward' });
 
           expect(screen.getByTestId('target')).toHaveFocus();
           await waitFor(() => {
-            expect(screen.queryByTestId('popup')).toBe(null);
+            expect(popup).not.toBeInTheDocument();
           });
+          expect(screen.queryByTestId('popup')).toBe(null);
           expect(screen.getByTestId('target')).toHaveFocus();
         },
       );
@@ -252,11 +256,13 @@ describe('useTriggerFocusGuards', () => {
         });
 
         await focusTabOrigin(await openPopup());
+        const popup = screen.getByTestId('popup');
         await userEvent.tab({ shift: direction === 'backward' });
 
         await waitFor(() => {
-          expect(screen.queryByTestId('popup')).toBe(null);
+          expect(popup).not.toBeInTheDocument();
         });
+        expect(screen.queryByTestId('popup')).toBe(null);
         await waitFor(() => {
           expect(destination).toHaveFocus();
         });
@@ -269,13 +275,15 @@ describe('useTriggerFocusGuards', () => {
 
           const trigger = await openPopup();
           await focusTabOrigin(trigger);
+          const popup = screen.getByTestId('popup');
 
           await userEvent.tab({ shift: direction === 'backward' });
 
           expect(trigger).toHaveFocus();
           await waitFor(() => {
-            expect(screen.queryByTestId('popup')).toBe(null);
+            expect(popup).not.toBeInTheDocument();
           });
+          expect(screen.queryByTestId('popup')).toBe(null);
           expect(trigger).toHaveFocus();
           expect(trigger).toHaveAttribute('tabindex', String(tabindex));
         },
@@ -329,10 +337,8 @@ describe('useTriggerFocusGuards', () => {
       return { ...result, reasons, trigger: screen.getByRole('button', { name: 'Toggle' }) };
     }
 
-    async function waitForClose() {
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
-      });
+    function expectClosed() {
+      expect(screen.queryByTestId('popup')).toBe(null);
     }
 
     it('puts a guard before and after the trigger only while the trigger owns the open menu', async () => {
@@ -383,7 +389,7 @@ describe('useTriggerFocusGuards', () => {
 
       expect(screen.getByTestId('before')).toHaveFocus();
       expect(reasons).toEqual([REASONS.focusOut]);
-      await waitForClose();
+      expectClosed();
       expect(screen.getByTestId('before')).toHaveFocus();
     });
 
@@ -396,7 +402,7 @@ describe('useTriggerFocusGuards', () => {
 
       expect(screen.getByTestId('after')).toHaveFocus();
       expect(reasons).toEqual([REASONS.focusOut]);
-      await waitForClose();
+      expectClosed();
       expect(screen.getByTestId('after')).toHaveFocus();
     });
 
@@ -409,7 +415,7 @@ describe('useTriggerFocusGuards', () => {
       await userEvent.tab();
 
       expect(screen.getByTestId('next')).toHaveFocus();
-      await waitForClose();
+      expectClosed();
       expect(screen.getByTestId('next')).toHaveFocus();
     });
 
