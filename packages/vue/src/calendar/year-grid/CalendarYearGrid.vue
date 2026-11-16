@@ -19,6 +19,7 @@ export interface CalendarYearGridProps
 
 <script setup lang="ts">
 import { computed, provide } from 'vue';
+import { useAriaAfterHydration } from '../../common/hydration';
 import { formatFieldName } from '../../internals/date-time/calendar/formatText';
 import { getRows } from '../../internals/date-time/calendar/viewPages';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -45,13 +46,14 @@ provide(CalendarViewGridContext, { columns });
 
 const rows = computed(() => getRows(yearCells.value, columns.value));
 const label = computed(() => formatFieldName('year', locale.value));
+const ariaAfterHydration = useAriaAfterHydration();
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
   props: (attrs) => [
     {
       role: 'grid',
-      'aria-label': label.value,
+      'aria-label': ariaAfterHydration(label.value),
     },
     attrs,
   ],
