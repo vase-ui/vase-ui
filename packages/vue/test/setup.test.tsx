@@ -175,7 +175,7 @@ describe('real keyboard between tests', () => {
     expect(await typeKeyInNewInput()).toEqual([{ key: 'a', shiftKey: false }]);
   });
 
-  // The test function goes on after the time-out. Its second command starts when the first ends.
+  // The second command is a step of the function after its time-out.
   it('times out in the first of two key commands', { fails: true, timeout: 1 }, async () => {
     await userEvent.keyboard('{End}'.repeat(50));
     await userEvent.keyboard('{End}'.repeat(200));
