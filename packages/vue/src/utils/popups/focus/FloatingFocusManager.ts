@@ -623,8 +623,8 @@ export function useFloatingFocusManager(
       const doc = ownerDocument(floatingFocusEl);
       const previouslyFocusedElement = activeElement(doc);
 
-      // Wait for the other effects of this update to set `tabindex`. A template ref of
-      // `initialFocus` also gives its element by then.
+      // Wait for the other effects of this update to set `tabindex`.
+      // A template ref of `initialFocus` also gives its element by then.
       queueMicrotask(() => {
         const resolvedInitialFocus = resolveFocusOption(
           resolved.value.initialFocus,

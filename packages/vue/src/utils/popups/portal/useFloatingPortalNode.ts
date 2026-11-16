@@ -73,6 +73,11 @@ function resolveContainer(
 /**
  * Makes the portal element of a portal and finds its container. The part renders one `Teleport`
  * to `containerElement`, and the portal element is inside that `Teleport`.
+ *
+ * With the `#render` slot, the child of the `Teleport` is the fragment of the slot. Vue then warns
+ * that it cannot animate the part with the `<Transition>` of a consumer. When the slot renders one
+ * root node, Vue 3.5.44 and later still give the `<Transition>` to that node, with the same
+ * warning. In Vue 3.6, they do this from 3.6.0-rc.12.
  */
 export function useFloatingPortalNode(
   params: UseFloatingPortalNodeProps,
@@ -85,6 +90,9 @@ export function useFloatingPortalNode(
   // The getter reads nothing before the mount, because a server has no DOM and a getter of the
   // consumer can read the DOM. An ancestor or a later sibling can fill a ref container in the flush
   // of the mount. The ref has its element when this `watch` runs.
+  // Updates in the flush of the mount can replace the container. The `onMounted` hooks of the
+  // children then run in the first container, which is out of the document. Base UI mounts the
+  // children one time, in the new container.
   watch(
     () => (mounted.value ? resolveContainer(params.container, parentPortalNode) : null),
     (container) => {
