@@ -13,8 +13,8 @@ import {
   wait,
   waitFor,
 } from '#test-utils';
+import { createPartRef } from '../../date-picker/root/test-utils';
 import TimePickerAnatomy from '../root/TimePickerAnatomy.test.vue';
-import { createPartRef } from '../root/test-utils';
 
 const time = Temporal.PlainTime.from('14:30');
 

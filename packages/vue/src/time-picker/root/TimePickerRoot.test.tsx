@@ -13,10 +13,10 @@ import {
   within,
 } from '#test-utils';
 import type { VaseUIRenderResult } from '#test-utils';
+import { createPartRef } from '../../date-picker/root/test-utils';
 import { formatText } from '../../internals/date-time/calendar/formatText';
 import { pointOnFace } from '../../time-clock/utils/test-utils';
 import TimePickerAnatomy from './TimePickerAnatomy.test.vue';
-import { createPartRef } from './test-utils';
 
 const time = (text: string) => Temporal.PlainTime.from(text);
 const timeText = (text: string, locale = 'en-US') =>
