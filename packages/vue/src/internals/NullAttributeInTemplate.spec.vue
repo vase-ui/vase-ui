@@ -14,6 +14,7 @@ import * as Slider from '../slider/index.parts';
 import * as Switch from '../switch/index.parts';
 import * as TimeClock from '../time-clock/index.parts';
 import * as TimeField from '../time-field/index.parts';
+import * as TimePicker from '../time-picker/index.parts';
 import * as Toolbar from '../toolbar/index.parts';
 import type { EditableDateTimeFieldSegment } from './date-time/field/useDateTimeFieldSegment';
 
@@ -80,4 +81,6 @@ declare const segment: EditableDateTimeFieldSegment;
   <TimeClock.Face :aria-describedby="null" />
   <!-- @vue-expect-error the prop `ariaLabelledby` takes no `null` -->
   <TimeField.Root :aria-labelledby="null" />
+  <!-- @vue-expect-error the prop `ariaLabelledby` takes no `null` -->
+  <TimePicker.Field :aria-labelledby="null" />
 </template>
