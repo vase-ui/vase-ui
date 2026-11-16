@@ -154,7 +154,7 @@ describe('<TimePicker.Clock />', () => {
       );
     });
 
-    it('follows the read-only state and the disabled state of the picker', async () => {
+    it('follows the read-only state of the picker', async () => {
       await renderClock({ readOnly: true });
       expect(screen.getByTestId('clock')).toHaveAttribute('data-readonly');
     });

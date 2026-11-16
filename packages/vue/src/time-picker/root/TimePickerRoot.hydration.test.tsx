@@ -17,7 +17,7 @@ describe('<TimePicker.Root /> hydration', () => {
     { name: 'a 24-hour cycle', props: { value: '15:04', hourCycle: 24 } },
     { name: 'limits', props: { value: '15:04', minTime: '09:00' } },
     {
-      name: 'a layout that Node and Chromium format in another way',
+      name: 'a server layout that differs',
       props: { locale: 'is-IS', list: false, columns: false, clock: false },
     },
     { name: 'a disabled picker', props: { value: '15:04', disabled: true } },
@@ -37,7 +37,7 @@ describe('<TimePicker.Root /> hydration', () => {
 
   // Node and Chromium have another `Intl` data for `is-IS`, so the texts of the items differ. The
   // part allows the text mismatch, and the hydration writes the text of the client.
-  it('hydrates the texts of a list that Node and Chromium format in another way', async () => {
+  it('hydrates the texts of a list that the server formats in another way', async () => {
     const props = { locale: 'is-IS', columns: false, clock: false };
     const serverHtml = await renderOnServer(HYDRATION_FILE, props);
 

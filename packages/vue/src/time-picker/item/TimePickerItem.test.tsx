@@ -82,7 +82,7 @@ describe('<TimePicker.Item />', () => {
       expect(optionOf('11:00')).toHaveAttribute('aria-selected', 'true');
     });
 
-    it('is disabled with the prop and with a disabled picker', async () => {
+    it('is disabled with the prop', async () => {
       await render(
         <TimePicker.Root locale="en-US">
           <TimePicker.List
