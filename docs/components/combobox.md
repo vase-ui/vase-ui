@@ -245,7 +245,9 @@ In this pattern, use `<Combobox.Label>` to give the trigger a visible label:
 
 <<< ./combobox/Label.vue{7}
 
-`<Combobox.Label>` renders a `<div>`. A click on it moves the focus to the trigger and does not open the popup.
+`<Combobox.Label>` renders a `<div>`. With the input inside the popup, a click on the label focuses the trigger and does not open the popup.
+
+With the input outside the popup, use a native `<label>` or `<Field.Label>` for the input. In a `<Field.Root>`, a click on `<Combobox.Label>` then focuses the input, and not the trigger.
 
 ### Grouped
 
