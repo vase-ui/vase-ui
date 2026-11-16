@@ -94,6 +94,7 @@ import { mergeCleanups } from '../../common/mergeCleanups';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { useFieldItemContext } from '../../field/item/FieldItemContext';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
+import { givenName } from '../../internals/blankName';
 import { ACTIVE_COMPOSITE_ITEM } from '../../internals/composite/constants';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -390,7 +391,7 @@ const { element, elementProps } = useRenderElement('span', props, {
       id: props.nativeButton ? controlId.value : rootId.value,
       role: 'radio',
       'aria-checked': checked.value,
-      'aria-label': props.ariaLabel,
+      'aria-label': givenName(props.ariaLabel),
       'aria-labelledby': ariaAfterHydration(ariaLabelledBy.value),
       [ACTIVE_COMPOSITE_ITEM]: checked.value ? '' : undefined,
       // Only a fully disabled group leaves the tab order. A single disabled radio keeps the

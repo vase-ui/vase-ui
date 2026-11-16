@@ -27,6 +27,7 @@ import { EMPTY_OBJECT } from '../common/empty';
 import { mergeObjects } from '../common/mergeObjects';
 import { warn } from '../common/warn';
 import { mergeClassNames, mergeProps, mergePropsN } from '../merge-props';
+import { removeBlankNames } from './blankName';
 import { getStateAttributesProps } from './getStateAttributesProps';
 import { omitUndefinedAttributes } from './omitUndefinedAttributes';
 import type { StateAttributesMapping } from './getStateAttributesProps';
@@ -207,6 +208,7 @@ export function useRenderElement<
     if (consumerAttrs.id === '') {
       delete consumerAttrs.id;
     }
+    removeBlankNames(consumerAttrs);
 
     const stateProps = getStateAttributesProps(state, params.stateAttributesMapping);
 
@@ -356,7 +358,8 @@ export type UseRenderElementParameters<State, RenderedElementType extends Elemen
   state?: MaybeRefOrGetter<State> | undefined;
   /**
    * A function that gets the attributes and listeners of the consumer, without `class`, `style`,
-   * each attribute whose value is `undefined`, and an empty `id`.
+   * each attribute whose value is `undefined`, an empty `id`, and a blank `aria-label` or
+   * `aria-labelledby`.
    * It returns the props of the part, or an array of props, in merge order. The rightmost wins.
    * A set can be `undefined`, or a function that gets the props merged so far.
    * The default is the attributes of the consumer.

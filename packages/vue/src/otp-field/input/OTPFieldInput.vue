@@ -38,6 +38,7 @@ import { ownerDocument } from '../../common/owner';
 import { platform } from '../../common/platform';
 import { activeElement } from '../../common/shadowDom';
 import { warn } from '../../common/warn';
+import { givenName } from '../../internals/blankName';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
 import {
   createChangeEventDetails,
@@ -132,7 +133,7 @@ if (process.env.NODE_ENV !== 'production') {
   let checkedLabel: unknown;
 
   const checkFirstSlotLabel = () => {
-    const slotAriaLabel = attrs['aria-label'];
+    const slotAriaLabel = givenName(attrs['aria-label']);
     if (checkedIndex === index.value && checkedLabel === slotAriaLabel) {
       return;
     }

@@ -198,6 +198,24 @@ describe('<Radio.Root />', () => {
     expect(radio).toHaveAccessibleName('Apple');
   });
 
+  it.each([
+    { name: 'an empty aria-label', ariaLabel: '' },
+    { name: 'an aria-label of white space', ariaLabel: '\n\t ' },
+  ])('VUE-106: writes no aria-label for $name', async ({ ariaLabel }) => {
+    await render(
+      <RadioGroup>
+        <label>
+          <Radio.Root value="a" aria-label={ariaLabel} />
+          Apple
+        </label>
+      </RadioGroup>,
+    );
+
+    const radio = screen.getByRole('radio');
+    expect(radio).not.toHaveAttribute('aria-label');
+    expect(radio).toHaveAccessibleName('Apple');
+  });
+
   describe('prop: onClick', () => {
     it.each([false, true])(
       'propagates a single click event to ancestors per user click (nativeButton=%s)',

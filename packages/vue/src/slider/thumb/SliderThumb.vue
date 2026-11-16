@@ -86,6 +86,7 @@ import {
 import { ownerWindow } from '../../common/owner';
 import { contains } from '../../common/shadowDom';
 import { visuallyHidden } from '../../common/visuallyHidden';
+import { givenName } from '../../internals/blankName';
 import {
   ARROW_DOWN,
   ARROW_LEFT,
@@ -450,10 +451,11 @@ onScopeDispose(
 
 function inputProps() {
   const value = thumbValue.value;
-  const ariaLabel =
+  const ariaLabel = givenName(
     typeof props.getAriaLabel === 'function'
       ? props.getAriaLabel(thumbIndex.value)
-      : props.ariaLabel;
+      : props.ariaLabel,
+  );
 
   let cssWritingMode: 'vertical-rl' | 'vertical-lr' | undefined;
   if (vertical.value) {
@@ -463,7 +465,8 @@ function inputProps() {
   const merged = mergeProps<'input'>(
     {
       'aria-label': ariaLabel,
-      'aria-labelledby': props.ariaLabelledby ?? (ariaLabel == null ? labelId.value : undefined),
+      'aria-labelledby':
+        givenName(props.ariaLabelledby) ?? (ariaLabel == null ? labelId.value : undefined),
       'aria-describedby': props.ariaDescribedby,
       'aria-orientation': orientation.value,
       'aria-valuenow': value,
