@@ -86,9 +86,7 @@ describe.skipIf(isJSDOM)('<Menu.SubmenuTrigger /> with a screen reader press', (
 
     await pressWithScreenReader(submenuTrigger);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('submenu')).toBe(null);
-    });
+    expect(screen.queryByTestId('submenu')).toBe(null);
     expect(screen.getByTestId('parent-menu')).not.toBe(null);
     await waitForFrames();
 

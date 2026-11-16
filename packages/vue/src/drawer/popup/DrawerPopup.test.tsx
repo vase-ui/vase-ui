@@ -844,15 +844,15 @@ describe('<Drawer.Popup />', () => {
       expect(parentPopup).toHaveAttribute('data-nested-drawer-open', '');
     });
 
+    const childPopup = screen.getByTestId('child-popup');
     screen.getByRole('button', { name: 'Close nested drawer' }).click();
     await flushMicrotasks();
 
+    expect(parentPopup).not.toHaveAttribute('data-nested-drawer-open');
     await waitFor(() => {
-      expect(parentPopup).not.toHaveAttribute('data-nested-drawer-open');
+      expect(childPopup).not.toBeInTheDocument();
     });
-    await waitFor(() => {
-      expect(screen.queryByTestId('child-popup')).toBe(null);
-    });
+    expect(screen.queryByTestId('child-popup')).toBe(null);
 
     const mutations: { hasNested: boolean; drawerHeight: string }[] = [];
     const observer = new MutationObserver(() => {
@@ -1092,8 +1092,9 @@ describe('<Drawer.Popup />', () => {
       // animations has no time limit.
       await Promise.all(finished);
       await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
+        expect(popup).not.toBeInTheDocument();
       });
+      expect(screen.queryByTestId('popup')).toBe(null);
     }
 
     it('BUG-5519: keeps no focusable content under aria-hidden during the exit animation', async () => {

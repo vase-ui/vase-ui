@@ -575,24 +575,20 @@ describe('<Popover.Root />', () => {
         await waitForLaterMillisecond(async () => {
           await user.click(trigger);
           await waitFor(() => {
-            expect(screen.queryByRole('dialog')).not.toBe(null);
+            expect(screen.getByRole('dialog')).not.toBe(null);
           });
         });
 
         await user.keyboard('{Escape}');
-        await waitFor(() => {
-          expect(screen.queryByRole('dialog')).toBe(null);
-        });
+        expect(screen.queryByRole('dialog')).toBe(null);
 
         await user.click(trigger);
         await waitFor(() => {
-          expect(screen.queryByRole('dialog')).not.toBe(null);
+          expect(screen.getByRole('dialog')).not.toBe(null);
         });
 
         await fireEvent.click(document.body);
-        await waitFor(() => {
-          expect(screen.queryByRole('dialog')).toBe(null);
-        });
+        expect(screen.queryByRole('dialog')).toBe(null);
       });
     });
 
@@ -680,13 +676,11 @@ describe('<Popover.Root />', () => {
           expect(trigger).toHaveAttribute('data-popup-open');
         });
         await waitFor(() => {
-          expect(screen.queryByRole('dialog')).not.toBe(null);
+          expect(screen.getByRole('dialog')).not.toBe(null);
         });
 
         await user.click(trigger);
-        await waitFor(() => {
-          expect(trigger).not.toHaveAttribute('data-popup-open');
-        });
+        expect(trigger).not.toHaveAttribute('data-popup-open');
         expect(screen.queryByText('Content')).not.toBe(null);
 
         await user.click(screen.getByRole('button', { name: 'Open externally' }));
@@ -695,9 +689,7 @@ describe('<Popover.Root />', () => {
         });
 
         await user.click(trigger);
-        await waitFor(() => {
-          expect(screen.queryByText('Content')).toBe(null);
-        });
+        expect(screen.queryByText('Content')).toBe(null);
       });
 
       it('does not close after hovering out of a popup opened externally', async () => {
@@ -734,7 +726,7 @@ describe('<Popover.Root />', () => {
         await user.click(screen.getByRole('button', { name: 'Show' }));
 
         await waitFor(() => {
-          expect(screen.queryByRole('dialog')).not.toBe(null);
+          expect(screen.getByRole('dialog')).not.toBe(null);
         });
 
         const positioner = screen.getByTestId('positioner');
@@ -962,9 +954,7 @@ describe('<Popover.Root />', () => {
 
         await user.click(screen.getByTestId('trigger'));
 
-        await waitFor(() => {
-          expect(screen.queryByText('Content')).toBe(null);
-        });
+        expect(screen.queryByText('Content')).toBe(null);
       });
 
       it('does not close after hovering out of a popup opened without trigger hover', async () => {
@@ -1167,13 +1157,11 @@ describe('<Popover.Root />', () => {
           expect(trigger).toHaveAttribute('data-popup-open');
         });
         await waitFor(() => {
-          expect(screen.queryByRole('dialog')).not.toBe(null);
+          expect(screen.getByRole('dialog')).not.toBe(null);
         });
 
         await user.click(trigger);
-        await waitFor(() => {
-          expect(trigger).not.toHaveAttribute('data-popup-open');
-        });
+        expect(trigger).not.toHaveAttribute('data-popup-open');
         expect(screen.queryByText('Content')).not.toBe(null);
 
         await user.click(trigger);
@@ -1182,9 +1170,7 @@ describe('<Popover.Root />', () => {
         });
 
         await user.click(trigger);
-        await waitFor(() => {
-          expect(screen.queryByText('Content')).toBe(null);
-        });
+        expect(screen.queryByText('Content')).toBe(null);
       });
     });
 
@@ -1239,9 +1225,7 @@ describe('<Popover.Root />', () => {
         await user.tab();
 
         expect(screen.getByTestId('after')).toHaveFocus();
-        await waitFor(() => {
-          expect(screen.getByTestId('popover-popup')).not.toHaveAttribute('data-open');
-        });
+        expect(screen.getByTestId('popover-popup')).not.toHaveAttribute('data-open');
 
         await user.click(trigger);
 
@@ -1312,9 +1296,7 @@ describe('<Popover.Root />', () => {
         await user.hover(firstInput);
         await flushMicrotasks();
 
-        await waitFor(() => {
-          expect(screen.queryByRole('dialog')).toBe(null);
-        });
+        expect(screen.queryByRole('dialog')).toBe(null);
 
         expect(lastInput).toHaveFocus();
       });
@@ -1341,9 +1323,7 @@ describe('<Popover.Root />', () => {
 
           expect(screen.getByTestId('focus-target')).toHaveFocus();
 
-          await waitFor(() => {
-            expect(screen.queryByTestId('popover-popup')).toBe(null);
-          });
+          expect(screen.queryByTestId('popover-popup')).toBe(null);
         });
 
         it('closes a nested combobox popup when tabbing out of the popover', async () => {
@@ -1392,9 +1372,7 @@ describe('<Popover.Root />', () => {
             expect(screen.getByTestId('popover-popup')).toHaveAttribute('data-closed');
           });
 
-          await waitFor(() => {
-            expect(screen.queryByRole('listbox')).toBe(null);
-          });
+          expect(screen.queryByRole('listbox')).toBe(null);
         });
 
         it('closes a nested combobox popup when tabbing backward to the trigger', async () => {
@@ -1441,9 +1419,7 @@ describe('<Popover.Root />', () => {
 
           expect(trigger).toHaveFocus();
 
-          await waitFor(() => {
-            expect(screen.queryByRole('listbox')).toBe(null);
-          });
+          expect(screen.queryByRole('listbox')).toBe(null);
         });
 
         it.skipIf(isJSDOM)(
@@ -1472,7 +1448,7 @@ describe('<Popover.Root />', () => {
             });
 
             await waitFor(() => {
-              expect(screen.queryByTestId('popover-popup')).toBeVisible();
+              expect(screen.getByTestId('popover-popup')).toBeVisible();
             });
 
             await wait(50);
@@ -1512,9 +1488,7 @@ describe('<Popover.Root />', () => {
             expect(screen.getByTestId('before')).toHaveFocus();
           });
 
-          await waitFor(() => {
-            expect(screen.queryByTestId('popover-popup')).toBe(null);
-          });
+          expect(screen.queryByTestId('popover-popup')).toBe(null);
         });
 
         it('moves focus to the element following the trigger when tabbing forward from the open popup', async () => {
@@ -1540,9 +1514,7 @@ describe('<Popover.Root />', () => {
             expect(screen.getByTestId('focus-target')).toHaveFocus();
           });
 
-          await waitFor(() => {
-            expect(screen.queryByTestId('popover-popup')).toBe(null);
-          });
+          expect(screen.queryByTestId('popover-popup')).toBe(null);
         });
 
         it.skipIf(isJSDOM)(
@@ -1571,7 +1543,7 @@ describe('<Popover.Root />', () => {
             });
 
             await waitFor(() => {
-              expect(screen.queryByTestId('popover-popup')).toBeVisible();
+              expect(screen.getByTestId('popover-popup')).toBeVisible();
             });
 
             await wait(50);
@@ -1611,14 +1583,16 @@ describe('<Popover.Root />', () => {
               expect(screen.getByRole('button', { name: 'Toggle' })).toHaveFocus();
             });
 
+            const popup = screen.getByTestId('popover-popup');
             await userEvent.tab({ shift: true });
 
             await waitFor(() => {
               expect(screen.getByTestId('focus-target')).toHaveFocus();
             });
             await waitFor(() => {
-              expect(screen.queryByTestId('popover-popup')).toBe(null);
+              expect(popup).not.toBeInTheDocument();
             });
+            expect(screen.queryByTestId('popover-popup')).toBe(null);
           },
         );
       });
@@ -1646,9 +1620,7 @@ describe('<Popover.Root />', () => {
 
           expect(screen.getByTestId('focus-target')).toHaveFocus();
 
-          await waitFor(() => {
-            expect(screen.queryByTestId('popover-popup')).toBe(null);
-          });
+          expect(screen.queryByTestId('popover-popup')).toBe(null);
         });
 
         it.skipIf(isJSDOM)(
@@ -1678,7 +1650,7 @@ describe('<Popover.Root />', () => {
             });
 
             await waitFor(() => {
-              expect(screen.queryByTestId('popover-popup')).toBeVisible();
+              expect(screen.getByTestId('popover-popup')).toBeVisible();
             });
 
             await wait(50);
@@ -1710,9 +1682,7 @@ describe('<Popover.Root />', () => {
         expect(handleOpenChange.mock.calls.length).toBe(0);
 
         await fireEvent.click(backdrop);
-        await waitFor(() => {
-          expect(screen.queryByRole('dialog')).toBe(null);
-        });
+        expect(screen.queryByRole('dialog')).toBe(null);
         expect(handleOpenChange.mock.calls.length).toBe(1);
       });
 
@@ -1732,9 +1702,7 @@ describe('<Popover.Root />', () => {
         expect(handleOpenChange.mock.calls.length).toBe(0);
 
         await fireEvent.click(internalBackdrop);
-        await waitFor(() => {
-          expect(screen.queryByRole('dialog')).toBe(null);
-        });
+        expect(screen.queryByRole('dialog')).toBe(null);
         expect(handleOpenChange.mock.calls.length).toBe(1);
       });
 
@@ -1765,9 +1733,7 @@ describe('<Popover.Root />', () => {
 
         await fireEvent.click(outsideButton);
 
-        await waitFor(() => {
-          expect(shadowRoot.querySelector('[role="dialog"]')).toBe(null);
-        });
+        expect(shadowRoot.querySelector('[role="dialog"]')).toBe(null);
 
         expect(handleOpenChange.mock.calls.length).toBe(1);
         expect(handleOpenChange.mock.calls[0]![1].reason).toBe(REASONS.outsidePress);
@@ -1798,9 +1764,7 @@ describe('<Popover.Root />', () => {
 
         await fireEvent.click(document.body);
 
-        await waitFor(() => {
-          expect(shadowRoot.querySelector('[role="dialog"]')).toBe(null);
-        });
+        expect(shadowRoot.querySelector('[role="dialog"]')).toBe(null);
 
         expect(handleOpenChange.mock.calls.length).toBe(1);
         expect(handleOpenChange.mock.calls[0]![1].reason).toBe(REASONS.outsidePress);
@@ -1936,8 +1900,9 @@ describe('<Popover.Root />', () => {
           expect(screen.getByTestId('focus-target')).toHaveFocus();
           animations.forEach((animation) => animation.finish());
           await waitFor(() => {
-            expect(screen.queryByTestId('popover-popup')).toBe(null);
+            expect(popup).not.toBeInTheDocument();
           });
+          expect(screen.queryByTestId('popover-popup')).toBe(null);
           expect(screen.getByTestId('focus-target')).toHaveFocus();
         });
       });
@@ -1985,8 +1950,9 @@ describe('<Popover.Root />', () => {
           }
 
           await waitFor(() => {
-            expect(screen.queryByRole('dialog')).toBe(null);
+            expect(popup).not.toBeInTheDocument();
           });
+          expect(screen.queryByRole('dialog')).toBe(null);
           expect(new Set(focusedGuards).size).toBe(focusedGuards.length);
           expect(screen.getByTestId('trigger')).toHaveFocus();
         });
@@ -2011,8 +1977,9 @@ describe('<Popover.Root />', () => {
           }
 
           await waitFor(() => {
-            expect(screen.queryByRole('dialog')).toBe(null);
+            expect(popup).not.toBeInTheDocument();
           });
+          expect(screen.queryByRole('dialog')).toBe(null);
           expect(new Set(focusedGuards).size).toBe(focusedGuards.length);
           expect(screen.getByTestId('trigger')).toHaveFocus();
         });
@@ -2061,9 +2028,7 @@ describe('<Popover.Root />', () => {
 
         await user.click(document.body);
 
-        await waitFor(() => {
-          expect(screen.queryByRole('dialog')).toBe(null);
-        });
+        expect(screen.queryByRole('dialog')).toBe(null);
       });
     });
 
@@ -2086,21 +2051,19 @@ describe('<Popover.Root />', () => {
         await user.click(trigger);
 
         await waitFor(() => {
-          expect(screen.queryByRole('dialog')).not.toBe(null);
+          expect(screen.getByRole('dialog')).not.toBe(null);
         });
 
         await user.click(trigger);
 
         await waitFor(() => {
-          expect(screen.queryByRole('dialog')).not.toBe(null);
+          expect(screen.getByRole('dialog')).not.toBe(null);
         });
 
         root.current.unmount();
         await flushMicrotasks();
 
-        await waitFor(() => {
-          expect(screen.queryByRole('dialog')).toBe(null);
-        });
+        expect(screen.queryByRole('dialog')).toBe(null);
       });
 
       it('does not repeat closing completion when `unmount` is called after the automatic unmount', async () => {
@@ -2114,13 +2077,11 @@ describe('<Popover.Root />', () => {
         const trigger = screen.getByRole('button', { name: 'Toggle' });
         await user.click(trigger);
         await waitFor(() => {
-          expect(screen.queryByRole('dialog')).not.toBe(null);
+          expect(screen.getByRole('dialog')).not.toBe(null);
         });
 
         await user.click(trigger);
-        await waitFor(() => {
-          expect(screen.queryByRole('dialog')).toBe(null);
-        });
+        expect(screen.queryByRole('dialog')).toBe(null);
         expect(onOpenChangeComplete.mock.calls.filter(([open]) => !open)).toHaveLength(1);
 
         root.current.unmount();
@@ -2259,9 +2220,7 @@ describe('<Popover.Root />', () => {
         expect(screen.queryByRole('dialog')).not.toBe(null);
 
         await user.click(screen.getByRole('button', { name: 'Toggle' }));
-        await waitFor(() => {
-          expect(screen.queryByRole('dialog')).toBe(null);
-        });
+        expect(screen.queryByRole('dialog')).toBe(null);
         expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
       });
 
@@ -2310,9 +2269,7 @@ describe('<Popover.Root />', () => {
 
         optOut = false;
         await user.click(screen.getByRole('button', { name: 'Toggle' }));
-        await waitFor(() => {
-          expect(screen.queryByRole('dialog')).toBe(null);
-        });
+        expect(screen.queryByRole('dialog')).toBe(null);
         expect(onOpenChangeComplete.mock.calls.filter(([open]) => !open)).toHaveLength(2);
       });
 
@@ -2351,9 +2308,7 @@ describe('<Popover.Root />', () => {
         root.current.close();
         await flushMicrotasks();
 
-        await waitFor(() => {
-          expect(screen.queryByText('Content')).toBe(null);
-        });
+        expect(screen.queryByText('Content')).toBe(null);
       });
 
       it('clears the active trigger when `unmount` is called right after a controlled close', async () => {
@@ -2400,14 +2355,12 @@ describe('<Popover.Root />', () => {
 
         open.value = false;
         await flushMicrotasks();
-        await waitFor(() => {
-          expect(screen.queryByTestId('popup')).toBe(null);
-        });
+        expect(screen.queryByTestId('popup')).toBe(null);
 
         open.value = true;
         await flushMicrotasks();
         await waitFor(() => {
-          expect(screen.queryByTestId('popup')).not.toBe(null);
+          expect(screen.getByTestId('popup')).not.toBe(null);
         });
 
         expect(trigger1).toHaveAttribute('aria-expanded', 'false');
@@ -2490,14 +2443,12 @@ describe('<Popover.Root />', () => {
 
         open.value = false;
         await flushMicrotasks();
-        await waitFor(() => {
-          expect(screen.queryByTestId('popup')).toBe(null);
-        });
+        expect(screen.queryByTestId('popup')).toBe(null);
 
         open.value = true;
         await flushMicrotasks();
         await waitFor(() => {
-          expect(screen.queryByTestId('popup')).not.toBe(null);
+          expect(screen.getByTestId('popup')).not.toBe(null);
         });
 
         expect(trigger1).toHaveAttribute('aria-expanded', 'false');
@@ -2518,7 +2469,7 @@ describe('<Popover.Root />', () => {
         await user.click(trigger);
 
         await waitFor(() => {
-          expect(screen.queryByRole('dialog')).not.toBe(null);
+          expect(screen.getByRole('dialog')).not.toBe(null);
         });
 
         const positioner = screen.getByTestId('positioner');
@@ -2541,7 +2492,7 @@ describe('<Popover.Root />', () => {
         await user.click(trigger);
 
         await waitFor(() => {
-          expect(screen.queryByRole('dialog')).not.toBe(null);
+          expect(screen.getByRole('dialog')).not.toBe(null);
         });
 
         expect(
@@ -2577,9 +2528,7 @@ describe('<Popover.Root />', () => {
 
         expect(screen.getByTestId('focus-target')).toHaveFocus();
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('popover-popup')).toBe(null);
-        });
+        expect(screen.queryByTestId('popover-popup')).toBe(null);
       });
 
       it('should not render an internal backdrop when `false`', async () => {
@@ -2595,7 +2544,7 @@ describe('<Popover.Root />', () => {
         await user.click(trigger);
 
         await waitFor(() => {
-          expect(screen.queryByRole('dialog')).not.toBe(null);
+          expect(screen.getByRole('dialog')).not.toBe(null);
         });
 
         const positioner = screen.getByTestId('positioner');
@@ -2802,7 +2751,7 @@ describe('<Popover.Root />', () => {
         await waitForLaterMillisecond(async () => {
           await user.click(parentTrigger);
           await waitFor(() => {
-            expect(screen.queryByTestId('parent-popup')).not.toBe(null);
+            expect(screen.getByTestId('parent-popup')).not.toBe(null);
           });
         });
 
@@ -2812,23 +2761,19 @@ describe('<Popover.Root />', () => {
         await waitForLaterMillisecond(async () => {
           await user.click(childOpener);
           await waitFor(() => {
-            expect(screen.queryByTestId('child-popup')).not.toBe(null);
+            expect(screen.getByTestId('child-popup')).not.toBe(null);
           });
         });
 
         await user.click(screen.getByRole('button', { name: 'Close child' }));
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('child-popup')).toBe(null);
-        });
+        expect(screen.queryByTestId('child-popup')).toBe(null);
         expect(childOpener).toHaveFocus();
         expect(screen.queryByTestId('parent-popup')).not.toBe(null);
 
         await user.click(screen.getByRole('button', { name: 'Close parent' }));
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('parent-popup')).toBe(null);
-        });
+        expect(screen.queryByTestId('parent-popup')).toBe(null);
         expect(parentTrigger).toHaveFocus();
       });
 
@@ -2879,7 +2824,7 @@ describe('<Popover.Root />', () => {
         await fireEvent.click(outside);
 
         await waitFor(() => {
-          expect(screen.queryByTestId('parent-popup')).not.toBe(null);
+          expect(screen.getByTestId('parent-popup')).not.toBe(null);
         });
         expect(screen.queryByTestId('child-popup')).not.toBe(null);
       });
@@ -3027,9 +2972,7 @@ describe('<Popover.Root />', () => {
 
     await user.keyboard('[Escape]');
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('dialog')).toBe(null);
-    });
+    expect(screen.queryByTestId('dialog')).toBe(null);
     expect(screen.queryByTestId('popover')).not.toBe(null);
     expect(onPopoverOpenChange).not.toHaveBeenCalled();
   });
@@ -3088,7 +3031,7 @@ describe('<Popover.Root />', () => {
         await waitForLaterMillisecond(async () => {
           await user.click(screen.getByRole('button', { name: 'Open dialog' }));
           await waitFor(() => {
-            expect(screen.queryByTestId('dialog')).not.toBe(null);
+            expect(screen.getByTestId('dialog')).not.toBe(null);
           });
         });
         expect(screen.queryByTestId('popover')).not.toBe(null);
@@ -3134,15 +3077,13 @@ describe('<Popover.Root />', () => {
 
       await user.click(screen.getByRole('button', { name: 'Open popover' }));
       await waitFor(() => {
-        expect(screen.queryByTestId('popover')).not.toBe(null);
+        expect(screen.getByTestId('popover')).not.toBe(null);
       });
       onPopoverOpenChange.mockClear();
 
       await user.click(screen.getByRole('button', { name: 'Inside dialog' }));
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('popover')).toBe(null);
-      });
+      expect(screen.queryByTestId('popover')).toBe(null);
       expect(onPopoverOpenChange.mock.calls[0][1].reason).toBe(REASONS.outsidePress);
       expect(screen.queryByTestId('dialog')).not.toBe(null);
     });
@@ -3189,14 +3130,12 @@ describe('<Popover.Root />', () => {
       );
 
       await waitFor(() => {
-        expect(screen.queryByTestId('popup')).not.toBe(null);
+        expect(screen.getByTestId('popup')).not.toBe(null);
       });
 
       await user.click(screen.getByRole('button', { name: 'Close popover' }));
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
-      });
+      expect(screen.queryByTestId('popup')).toBe(null);
     });
 
     it('unmounts on a normal close after a prevented close and initially open remount', async () => {
@@ -3259,13 +3198,11 @@ describe('<Popover.Root />', () => {
 
       await user.click(trigger);
       await waitFor(() => {
-        expect(screen.queryByTestId('popup')).not.toBe(null);
+        expect(screen.getByTestId('popup')).not.toBe(null);
       });
 
       await user.click(trigger);
-      await waitFor(() => {
-        expect(trigger).not.toHaveAttribute('data-popup-open');
-      });
+      expect(trigger).not.toHaveAttribute('data-popup-open');
       expect(screen.queryByTestId('popup')).not.toBe(null);
 
       await user.click(screen.getByRole('button', { name: 'Unmount root' }));
@@ -3278,9 +3215,7 @@ describe('<Popover.Root />', () => {
       expect(screen.queryByTestId('popup')).not.toBe(null);
 
       await user.click(screen.getByRole('button', { name: 'Toggle' }));
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
-      });
+      expect(screen.queryByTestId('popup')).toBe(null);
     });
   });
 
@@ -3306,9 +3241,7 @@ describe('<Popover.Root />', () => {
       await user.click(triggerB);
       expect(screen.queryByText('Content')).not.toBe(null);
       await fireEvent.click(screen.getByRole('button', { name: 'Outside' }));
-      await waitFor(() => {
-        expect(screen.queryByText('Content')).toBe(null);
-      });
+      expect(screen.queryByText('Content')).toBe(null);
 
       expect(onOpenChange).toHaveBeenCalledTimes(2);
       expect(onOpenChange.mock.calls[1]![1].reason).toBe(REASONS.outsidePress);
@@ -3371,9 +3304,7 @@ describe('<Popover.Root />', () => {
         expect(screen.getByTestId('popup')).toHaveAttribute('data-open');
       });
       await user.keyboard('[Escape]');
-      await waitFor(() => {
-        expect(screen.getByTestId('popup')).not.toHaveAttribute('data-open');
-      });
+      expect(screen.getByTestId('popup')).not.toHaveAttribute('data-open');
       expect(screen.getByTestId('popup')).toHaveAttribute('data-instant', 'dismiss');
       await user.unhover(trigger);
       renders.length = 0;
@@ -3461,22 +3392,18 @@ describe('<Popover.Root />', () => {
 
       await user.click(triggerA);
       await waitFor(() => {
-        expect(screen.queryByTestId('popup')).not.toBe(null);
+        expect(screen.getByTestId('popup')).not.toBe(null);
       });
       await user.click(triggerA);
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
-      });
+      expect(screen.queryByTestId('popup')).toBe(null);
 
       await fireEvent.click(screen.getByRole('button', { name: 'Open externally' }));
       await waitFor(() => {
-        expect(screen.queryByTestId('popup')).not.toBe(null);
+        expect(screen.getByTestId('popup')).not.toBe(null);
       });
 
       await user.click(triggerA);
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
-      });
+      expect(screen.queryByTestId('popup')).toBe(null);
     });
 
     it('returns focus to that trigger when a later open started from the body', async () => {
@@ -3486,22 +3413,18 @@ describe('<Popover.Root />', () => {
 
       await user.click(triggerA);
       await waitFor(() => {
-        expect(screen.queryByTestId('popup')).not.toBe(null);
+        expect(screen.getByTestId('popup')).not.toBe(null);
       });
       await user.click(triggerA);
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
-      });
+      expect(screen.queryByTestId('popup')).toBe(null);
 
       // Another popover is the last one opened from a focused element.
       await user.click(otherTrigger);
       await waitFor(() => {
-        expect(screen.queryByTestId('other-popup')).not.toBe(null);
+        expect(screen.getByTestId('other-popup')).not.toBe(null);
       });
       await user.click(otherTrigger);
-      await waitFor(() => {
-        expect(screen.queryByTestId('other-popup')).toBe(null);
-      });
+      expect(screen.queryByTestId('other-popup')).toBe(null);
 
       otherTrigger.blur();
       await flushMicrotasks();
@@ -3509,16 +3432,14 @@ describe('<Popover.Root />', () => {
 
       await fireEvent.click(screen.getByRole('button', { name: 'Open externally' }));
       await waitFor(() => {
-        expect(screen.queryByTestId('popup')).not.toBe(null);
+        expect(screen.getByTestId('popup')).not.toBe(null);
       });
       await waitFor(() => {
         expect(screen.getByTestId('popup')).toHaveFocus();
       });
 
       await user.keyboard('[Escape]');
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
-      });
+      expect(screen.queryByTestId('popup')).toBe(null);
       await waitFor(() => {
         expect(triggerA).toHaveFocus();
       });

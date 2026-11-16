@@ -107,9 +107,7 @@ describe('<Tooltip.Popup />', () => {
     expect(screen.queryByTestId('old')).toBe(null);
 
     await user.keyboard('[Escape]');
-    await waitFor(() => {
-      expect(screen.queryByTestId('new')).toBe(null);
-    });
+    expect(screen.queryByTestId('new')).toBe(null);
   });
 
   it('stays open while the pointer is on it, and closes when the pointer leaves it', async () => {
@@ -152,9 +150,7 @@ describe('<Tooltip.Popup />', () => {
       clientX: rect.left + rect.width / 2,
       clientY: rect.bottom + 100,
     });
-    await waitFor(() => {
-      expect(screen.queryByTestId('popup')).toBe(null);
-    });
+    expect(screen.queryByTestId('popup')).toBe(null);
   });
 
   it('throws a descriptive error when rendered outside <Tooltip.Positioner>', async () => {

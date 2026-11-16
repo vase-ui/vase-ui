@@ -317,7 +317,7 @@ describe('<MenuRoot />', () => {
 
       await user.hover(trigger1);
       await waitFor(() => {
-        expect(screen.queryByTestId('popup')).not.toBe(null);
+        expect(screen.getByTestId('popup')).not.toBe(null);
       });
 
       // Let the first open settle so moving to trigger 2 is a real switch.
@@ -463,15 +463,11 @@ describe('<MenuRoot />', () => {
           });
 
           await user.keyboard('[ArrowLeft]');
-          await waitFor(() => {
-            expect(screen.queryByTestId('submenu')).toBe(null);
-          });
+          expect(screen.queryByTestId('submenu')).toBe(null);
           expect(submenuTrigger).toHaveFocus();
 
           await user.keyboard('[Escape]');
-          await waitFor(() => {
-            expect(screen.queryByTestId('menu')).toBe(null);
-          });
+          expect(screen.queryByTestId('menu')).toBe(null);
 
           await user.click(trigger2);
           await screen.findByTestId('menu');
@@ -519,9 +515,7 @@ describe('<MenuRoot />', () => {
           expect(submenuItem.textContent).toBe('Nested');
 
           await user.click(submenuItem);
-          await waitFor(() => {
-            expect(screen.queryByTestId('menu')).toBe(null);
-          });
+          expect(screen.queryByTestId('menu')).toBe(null);
 
           await user.click(trigger2);
           await screen.findByTestId('menu');
@@ -606,9 +600,7 @@ describe('<MenuRoot />', () => {
           });
 
           await user.click(screen.getByTestId('outside'));
-          await waitFor(() => {
-            expect(screen.queryByTestId('level-1')).toBe(null);
-          });
+          expect(screen.queryByTestId('level-1')).toBe(null);
           expect(screen.queryByTestId('level-2')).toBe(null);
           expect(screen.queryByTestId('level-3')).toBe(null);
         });
@@ -656,9 +648,7 @@ describe('<MenuRoot />', () => {
           const submenuItem = await screen.findByTestId('submenu-item');
           await fireEvent.mouseUp(submenuItem);
 
-          await waitFor(() => {
-            expect(screen.queryByTestId('menu')).toBe(null);
-          });
+          expect(screen.queryByTestId('menu')).toBe(null);
           expect(clickSpy.mock.calls.length).toBe(1);
 
           const trigger2 = screen.getByRole('button', { name: 'Trigger 2' });
@@ -728,17 +718,20 @@ describe('<MenuRoot />', () => {
 
     async function expectOpenWith(item: string) {
       await waitFor(() => {
-        expect(screen.queryByTestId('popup')).not.toBe(null);
+        expect(screen.getByTestId('popup')).not.toBe(null);
       });
       await waitFor(() => {
         expect(screen.getByRole('menuitem')).toHaveTextContent(item);
       });
     }
 
-    async function expectClosed() {
+    async function expectClosedAfter(close: () => Promise<void>) {
+      const popup = screen.getByTestId('popup');
+      await close();
       await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
+        expect(popup).not.toBeInTheDocument();
       });
+      expect(screen.queryByTestId('popup')).toBe(null);
     }
 
     it('opens from each trigger, an item, and both external buttons', async () => {
@@ -752,8 +745,7 @@ describe('<MenuRoot />', () => {
         });
         expect(trigger).toHaveAttribute('aria-expanded', 'true');
 
-        await user.click(screen.getByRole('menuitem'));
-        await expectClosed();
+        await expectClosedAfter(() => user.click(screen.getByRole('menuitem')));
       }
 
       await waitForLaterMillisecond(async () => {
@@ -764,22 +756,19 @@ describe('<MenuRoot />', () => {
         await user.click(screen.getByRole('button', { name: 'Sharing' }));
         await expectOpenWith('Sharing');
       });
-      await user.click(screen.getByRole('button', { name: 'Sharing' }));
-      await expectClosed();
+      await expectClosedAfter(() => user.click(screen.getByRole('button', { name: 'Sharing' })));
 
       await waitForLaterMillisecond(async () => {
         await user.click(screen.getByRole('button', { name: 'Open externally' }));
         await expectOpenWith('Playback');
       });
-      await user.keyboard('[Escape]');
-      await expectClosed();
+      await expectClosedAfter(() => user.keyboard('[Escape]'));
 
       await waitForLaterMillisecond(async () => {
         await user.click(screen.getByRole('button', { name: 'Open via handle' }));
         await expectOpenWith('Playback');
       });
-      await user.click(screen.getByRole('menuitem'));
-      await expectClosed();
+      await expectClosedAfter(() => user.click(screen.getByRole('menuitem')));
     });
   });
 });

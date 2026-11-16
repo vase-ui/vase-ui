@@ -141,10 +141,8 @@ describe('<PreviewCard.Root />', () => {
       });
     }
 
-    async function expectClosed(trigger: HTMLElement) {
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
-      });
+    function expectClosed(trigger: HTMLElement) {
+      expect(screen.queryByTestId('popup')).toBe(null);
       expect(trigger).not.toHaveAttribute('data-popup-open');
     }
 
@@ -157,7 +155,7 @@ describe('<PreviewCard.Root />', () => {
         await expectOpenedBy(trigger1);
         handle.close();
         await flushMicrotasks();
-        await expectClosed(trigger1);
+        expectClosed(trigger1);
       }
 
       await openAndClose();
@@ -177,7 +175,7 @@ describe('<PreviewCard.Root />', () => {
       expect(trigger1).not.toHaveAttribute('data-popup-open');
       handle.close();
       await flushMicrotasks();
-      await expectClosed(trigger2);
+      expectClosed(trigger2);
 
       expect(bystander.renders).toBe(0);
     });
@@ -191,7 +189,7 @@ describe('<PreviewCard.Root />', () => {
         await expectOpenedBy(trigger1);
         trigger1.blur();
         await flushMicrotasks();
-        await expectClosed(trigger1);
+        expectClosed(trigger1);
       }
 
       await openAndClose();
@@ -210,7 +208,7 @@ describe('<PreviewCard.Root />', () => {
       await fireEvent.mouseMove(trigger2);
       await expectOpenedBy(trigger2);
       await fireEvent.mouseLeave(trigger2);
-      await expectClosed(trigger2);
+      expectClosed(trigger2);
 
       expect(bystander.renders).toBe(0);
     });
@@ -288,7 +286,7 @@ describe('<PreviewCard.Root />', () => {
 
       await user.hover(trigger1);
       await waitFor(() => {
-        expect(screen.queryByTestId(popupId)).toBeVisible();
+        expect(screen.getByTestId(popupId)).toBeVisible();
       });
       expect(screen.getByTestId(popupId).textContent).toBe('Content: 1');
 
@@ -326,18 +324,16 @@ describe('<PreviewCard.Root />', () => {
       trigger1.focus();
       await flushMicrotasks();
       await waitFor(() => {
-        expect(screen.queryByTestId(popupId)).toBeVisible();
+        expect(screen.getByTestId(popupId)).toBeVisible();
       });
 
       await user.keyboard('{Escape}');
-      await waitFor(() => {
-        expect(screen.queryByTestId(popupId)).toBe(null);
-      });
+      expect(screen.queryByTestId(popupId)).toBe(null);
 
       trigger2.focus();
       await flushMicrotasks();
       await waitFor(() => {
-        expect(screen.queryByTestId(popupId)).toBeVisible();
+        expect(screen.getByTestId(popupId)).toBeVisible();
       });
     });
 
@@ -435,9 +431,7 @@ describe('<PreviewCard.Root />', () => {
 
       const trigger2 = screen.getByRole('link', { name: 'Trigger 2' });
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('content')).toBe(null);
-      });
+      expect(screen.queryByTestId('content')).toBe(null);
       expect(screen.queryByRole('link', { name: 'Trigger 1' })).toBe(null);
       expect(trigger2).not.toHaveAttribute('data-popup-open');
     });
@@ -584,9 +578,7 @@ describe('<PreviewCard.Root />', () => {
 
       const trigger2 = screen.getByRole('link', { name: 'Trigger 2' });
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('content')).toBe(null);
-      });
+      expect(screen.queryByTestId('content')).toBe(null);
       expect(screen.queryByRole('link', { name: 'Trigger 1' })).toBe(null);
       expect(trigger2).not.toHaveAttribute('data-popup-open');
     });

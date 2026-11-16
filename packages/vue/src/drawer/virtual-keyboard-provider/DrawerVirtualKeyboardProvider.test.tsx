@@ -912,9 +912,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
     expect(input.style.transform).toBe('scale(1)');
     expect(input.style.transition).toBe('opacity 1s');
 
-    await waitFor(() => {
-      expect(backdrop).not.toHaveAttribute('data-swiping');
-    });
+    expect(backdrop).not.toHaveAttribute('data-swiping');
   });
 
   it('preserves native taps on picker inputs', async () => {

@@ -176,7 +176,7 @@ const SERVER_TYPES = [
 <template>
   <form
     ref="formElement"
-    aria-label="Launch new cloud server"
+    aria-label="Launch new cloud server with TanStack Form"
     novalidate
     class="flex w-full max-w-3xs flex-col gap-5 sm:max-w-[20rem]"
     @submit.prevent="form.handleSubmit()"

@@ -351,6 +351,25 @@ describe('the form library demos of the Forms page', () => {
   );
 });
 
+describe('the demos of the Forms page', () => {
+  const { render } = createRenderer();
+
+  it('have no axe violation when the page shows them together', async () => {
+    const pageDemos = demos.filter(({ name }) => name.startsWith('handbook-forms/'));
+    expect(pageDemos).not.toHaveLength(0);
+    await render(
+      h(
+        'div',
+        pageDemos.map(({ variant, Demo }) => h('div', { 'data-demo': variant }, h(Demo))),
+      ),
+    );
+
+    // axe compares the landmarks of the demos only when it reads them together. The viewport of
+    // a toast provider is a landmark in a portal, outside the element of the render.
+    await expectNoAxeViolations(document.body);
+  });
+});
+
 describe('demos', () => {
   it('have no name of Base UI or React in their text or their links', () => {
     expect(sourcesThatMatch(/Base UI|BaseUI|base-ui|\bReact\b|\/react\//)).toEqual([]);

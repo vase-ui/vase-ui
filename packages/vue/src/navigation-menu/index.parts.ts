@@ -166,7 +166,8 @@ export namespace Positioner {
 
 /**
  * A container for the navigation menu contents.
- * Renders a `<nav>` element.
+ * Renders a `<nav>` element. It takes its accessible name from its trigger, unless it has an
+ * `aria-label` or an `aria-labelledby`.
  */
 export const Popup: typeof NavigationMenuPopup = NavigationMenuPopup;
 export namespace Popup {

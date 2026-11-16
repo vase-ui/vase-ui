@@ -197,7 +197,7 @@ describe('<Toast.Viewport />', () => {
       );
 
       await user.click(close);
-      await waitFor(() => expect(iframeDocument.querySelector('[data-testid="root"]')).toBe(null));
+      expect(iframeDocument.querySelector('[data-testid="root"]')).toBe(null);
       expect(removeWindowListener.mock.calls.filter(([type]) => type === 'keydown')).toHaveLength(
         1,
       );
@@ -2560,9 +2560,7 @@ describe('<Toast.Viewport />', () => {
 
       await userEvent.keyboard('{Escape}');
       await flushMicrotasks();
-      await waitFor(() => {
-        expect(middle).not.toBeInTheDocument();
-      });
+      expect(middle).not.toBeInTheDocument();
 
       expect(screen.getByTestId('newest')).toHaveFocus();
     });
@@ -2599,12 +2597,8 @@ describe('<Toast.Viewport />', () => {
 
       await userEvent.keyboard('{Escape}');
       await flushMicrotasks();
-      await waitFor(() => {
-        expect(middle).not.toBeInTheDocument();
-      });
-      await waitFor(() => {
-        expect(oldest).not.toBeInTheDocument();
-      });
+      expect(middle).not.toBeInTheDocument();
+      expect(oldest).not.toBeInTheDocument();
 
       expect(screen.getByTestId('newest')).toHaveFocus();
     });
@@ -2640,9 +2634,7 @@ describe('<Toast.Viewport />', () => {
 
       await userEvent.keyboard('{Escape}');
       await flushMicrotasks();
-      await waitFor(() => {
-        expect(middle).not.toBeInTheDocument();
-      });
+      expect(middle).not.toBeInTheDocument();
 
       expect(screen.getByTestId('added')).toBeInTheDocument();
       expect(screen.getByTestId('oldest')).toHaveFocus();
