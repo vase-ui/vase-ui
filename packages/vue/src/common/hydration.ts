@@ -83,6 +83,54 @@ export function useServerElement(): () => HTMLElement | null {
   return () => (hydrated.value || !isHTMLElement(element) ? null : element);
 }
 
+// The first element that Vue hydrates for the component. A component whose template starts with a
+// fragment, such as a part with a `#render` slot, starts with the comment `[`, and the fragment ends
+// with the comment `]`.
+function serverElementOf(first: Node | null): Element | null {
+  let depth = 0;
+  for (let node = first; node !== null; node = node.nextSibling) {
+    if (node.nodeType === 1) {
+      return node as Element;
+    }
+    const text = node.nodeType === 8 ? (node as Comment).data : undefined;
+    depth += text === '[' ? 1 : text === ']' ? -1 : 0;
+    if (depth <= 0) {
+      return null;
+    }
+  }
+  return null;
+}
+
+/**
+ * Gives a value that changes which elements the part renders and that a server can give in another
+ * way than the browser, such as the hour cycle of a locale in the `Intl` data of the server. The
+ * server HTML keeps the value in `attribute` of the element of the part. While Vue hydrates the
+ * part from server HTML, the value is the one of that attribute, so the hydration renders the
+ * elements of the server. On a server, in a client-only mount and after the mount, the value is
+ * `read()`. Bind `attributes()` to the element of the part.
+ * @param parse Gives the value of the text of the attribute, or `undefined` for a text that is not
+ * valid. The value is then `read()`.
+ */
+export function useServerValue<Value>(
+  attribute: `data-vase-ui-${string}`,
+  read: () => Value,
+  parse: (text: string) => Value | undefined,
+  write: (value: Value) => string = String,
+): { value: ComputedRef<Value>; attributes: () => Record<string, string> | undefined } {
+  // The DOM renderer of Vue keeps a DOM node in `vnode.el`.
+  const first = (getCurrentInstance()?.vnode.el ?? null) as Node | null;
+  const text = serverElementOf(first)?.getAttribute(attribute);
+  const serverValue = text == null ? undefined : parse(text);
+  const isHydrating = useIsHydrating();
+  const value = computed(() =>
+    isHydrating.value && serverValue !== undefined ? serverValue : read(),
+  );
+  return {
+    value,
+    attributes: () => (isHydrating.value ? { [attribute]: write(value.value) } : undefined),
+  };
+}
+
 type TextControl = HTMLInputElement | HTMLTextAreaElement;
 
 // Each control that got the `input` event of the take. A part in the `#render` slot of another

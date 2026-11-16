@@ -3,7 +3,7 @@ import CalendarNavigationAnatomy from './CalendarNavigationAnatomy.test.vue';
 
 // A server render takes its props as JSON, so each date is a text that this fixture reads.
 const props = defineProps<{
-  today: string;
+  today?: string | undefined;
   value?: string | undefined;
   minDate?: string | undefined;
   maxDate?: string | undefined;

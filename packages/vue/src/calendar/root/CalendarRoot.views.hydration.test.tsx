@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hydrate, renderOnServer, setAttributeInHtml } from '#test-utils';
+import { hydrate, mockBrowserToday, renderOnServer, setAttributeInHtml } from '#test-utils';
 import CalendarViewsHydration from './CalendarViewsHydration.test.vue';
 
 const file = 'src/calendar/root/CalendarViewsHydration.test.vue';
@@ -98,6 +98,39 @@ describe('<Calendar.Root /> views hydration', () => {
 
       expect(container).toHaveTextContent(text);
       expect(container).not.toHaveTextContent('other');
+    },
+  );
+
+  it.each([
+    {
+      name: 'month',
+      view: 'month' as const,
+      // In another year, the month of the browser has the same cell as the month of the server.
+      distance: 'month' as const,
+      // A month cell has the month and its year as its name.
+      expected: (day: Temporal.PlainDate) => monthName(day.toString()),
+      read: (cell: HTMLElement) => cell.getAttribute('aria-label'),
+    },
+    {
+      name: 'year',
+      view: 'year' as const,
+      distance: 'year' as const,
+      expected: (day: Temporal.PlainDate) => String(day.year),
+      read: (cell: HTMLElement) => cell.textContent,
+    },
+  ])(
+    "marks the current $name of the browser's today",
+    async ({ view, distance, expected, read }) => {
+      const props = { locale: 'en-US', view };
+      const serverHtml = await renderOnServer(file, props);
+      const browserDay = mockBrowserToday(distance);
+
+      const { container } = await hydrate(CalendarViewsHydration, { serverHtml, props });
+
+      const current = [...container.querySelectorAll<HTMLElement>('[data-current]')];
+      expect(current).toHaveLength(1);
+      expect(current[0]).toHaveAttribute('aria-current', 'date');
+      expect(read(current[0]!)).toBe(expected(browserDay));
     },
   );
 });
