@@ -812,7 +812,8 @@ describe('<Menu.Popup />', () => {
       await screen.findByTestId('popup');
 
       await leaveAndWait(screen.getByTestId('positioner'));
-      // The focus out of the trigger starts a 0 ms timer that must not close the menu.
+      // The focus out of the trigger into the popup starts a 0 ms timer that must not close
+      // the menu.
       await wait(0);
 
       expect(screen.queryByTestId('popup')).not.toBe(null);
