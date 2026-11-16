@@ -500,8 +500,8 @@ describe('useUnmountAfterClose', () => {
     it('completes a close that is in progress when KeepAlive deactivates the host', async () => {
       const { host, open, showHost, popup } = await renderHostInKeepAlive();
 
-      // The composable waits for the exit animation from this read on. The deactivation then
-      // cancels the animation.
+      // After this read, the composable waits for the exit animation. The deactivation then
+      // cancels that animation.
       const animations = await nextAnimationsRead(popup, {
         action: () => {
           open.value = false;
