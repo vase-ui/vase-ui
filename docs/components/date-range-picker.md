@@ -71,7 +71,7 @@ The root owns the props that its parts share: `granularity`, `referenceDate`, `h
 
 With no value, a new end has the kind that `granularity` and `referenceDate` give, as for [Date Field](/components/date-field#value). With a `granularity` that has a time, or a range with a time, the fields show the time segments. A press on a day keeps the time of the end that it replaces. A picker that the user empties keeps the kind of its last range.
 
-`closeOnSelect` says if the second press in the calendar closes the popup. It is `true` for a range with no time. It is `false` for a range with a time, because the user then sets the times. The first press only starts the range. A drag closes the popup too, because it makes the whole range. A key that extends the range does not, because the user can extend it more. Escape and a press outside the popup close it.
+`closeOnSelect` says if the second press in the calendar closes the popup. It is `true`, also for a range with a time, because the popup has no part for a time: the user sets a time in a field. The first press only starts the range. A drag closes the popup too, because it makes the whole range. A key that extends the range does not, because the user can extend it more. Escape and a press outside the popup close it.
 
 ## In a form
 

@@ -366,43 +366,26 @@ describe('<DateRangePicker.Root />', () => {
         expect(hiddenInputsOf(container)).toEqual(['2026-11-16', '2026-11-20']);
       });
 
-      it('is `false` by default for a range with a time', async () => {
+      // The popup has no part for a time, so the user sets a time in a field.
+      it('is `true` by default, also for a range with a time', async () => {
         const { user, container } = await renderPicker({
           defaultValue: [
             Temporal.PlainDateTime.from('2026-11-10T09:00'),
             Temporal.PlainDateTime.from('2026-11-12T17:30'),
           ],
         });
-        await open(user);
+        const popup = await open(user);
 
         await user.click(dayButton('2026-11-16'));
         await user.click(dayButton('2026-11-20'));
-        await flushMicrotasks();
 
-        expect(screen.getByRole('dialog')).not.toBe(null);
+        await expectClosed(popup);
         // Each end keeps the time of the end that it replaces.
         expect(hiddenInputsOf(container)).toEqual(['2026-11-16T09:00', '2026-11-20T17:30']);
       });
 
-      it('is `false` by default for a granularity with a time, with no value', async () => {
+      it('is `true` by default for a granularity with a time, with no value', async () => {
         const { user } = await renderPicker({ granularity: 'minute' });
-        await open(user);
-
-        await user.click(dayButton('2026-11-16'));
-        await user.click(dayButton('2026-11-20'));
-        await flushMicrotasks();
-
-        expect(screen.getByRole('dialog')).not.toBe(null);
-      });
-
-      it('closes the popup for `true`, also for a range with a time', async () => {
-        const { user } = await renderPicker({
-          defaultValue: [
-            Temporal.PlainDateTime.from('2026-11-10T09:00'),
-            Temporal.PlainDateTime.from('2026-11-12T17:30'),
-          ],
-          closeOnSelect: true,
-        });
         const popup = await open(user);
 
         await user.click(dayButton('2026-11-16'));

@@ -51,9 +51,10 @@ export interface DateRangePickerRootProps<Value extends DateValue = DateValue> e
    */
   defaultValue?: readonly [Value | null, Value | null] | null | undefined;
   /**
-   * Whether the second press or a drag in the calendar closes the popup. The default is `true`
-   * for a range with no time. It is `false` for a range with a time, because the user then sets
-   * the times.
+   * Whether the second press or a drag in the calendar closes the popup. The popup has no part for
+   * a time, because the user sets a time in a field. The default is thus `true`, also for a range
+   * with a time.
+   * @default true
    */
   closeOnSelect?: boolean | undefined;
   /**
@@ -149,7 +150,6 @@ export interface DateRangePickerRootProps<Value extends DateValue = DateValue> e
 
 <script setup lang="ts" generic="Value extends DateValue = DateValue">
 import { computed, provide, shallowRef, useTemplateRef } from 'vue';
-import { hasTime } from '../../date-picker/root/pickerTemplate';
 import { useDateTimePickerRoot } from '../../internals/date-time/picker/useDateTimePickerRoot';
 import { assertTemporal } from '../../internals/date-time/temporal';
 import { useFieldRootContext } from '../../internals/field-root-context';
@@ -232,7 +232,8 @@ const picker = useDateTimePickerRoot<DateRangePickerRange, DateRangePickerRootCh
   defaultValue: () => props.defaultValue ?? EMPTY_RANGE,
   fallback: () => [fallbackEnd.value, fallbackEnd.value],
   closeOnSelect: () => props.closeOnSelect,
-  hasTime: (range) => range.some((end) => end !== null && hasTime(end)),
+  // The popup has no part for a time, so no range keeps the popup open by default.
+  hasTime: () => false,
   isEmpty: (range) => range[0] === null && range[1] === null,
   valueChange: (range, details) =>
     emit('valueChange', range as DateRangePickerRootValue<Value>, details),
