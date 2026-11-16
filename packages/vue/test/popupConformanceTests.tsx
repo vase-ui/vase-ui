@@ -730,7 +730,7 @@ export function popupConformanceTests(config: PopupTestConfig) {
 
           await nextEndingStyle(popup, { action: () => user.keyboard('[Escape]') });
           expect(popup).toHaveAttribute('data-ending-style');
-          // The part can stop its wait before it reads the animations, so the case reads them.
+          // The root can stop its wait before it reads the animations, so the case reads them.
           const animations = popup.getAnimations();
           const finished = Promise.all(animations.map((animation) => animation.finished));
           seekBeforeEnd(animations, 50);
@@ -754,7 +754,7 @@ export function popupConformanceTests(config: PopupTestConfig) {
           );
 
           await setProps({ open: true });
-          // The popup mounts at the open. The part reads its animations in a later frame.
+          // The popup mounts at the open. The root reads its animations in a later frame.
           const popup = await screen.findByTestId('popup');
           const animations = await nextAnimationsRead(popup);
           expect(animations.map((animation) => animation.playState)).toContain('running');

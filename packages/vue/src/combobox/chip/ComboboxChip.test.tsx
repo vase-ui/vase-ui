@@ -622,21 +622,15 @@ describe('<Combobox.Chip />', () => {
 
   // A case that throws in `setup` is the last case of its file.
   it('throws a descriptive error when rendered outside <Combobox.Chips>', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    try {
-      await expect(
-        render(
-          <Combobox.Root multiple>
-            <Combobox.Chip />
-          </Combobox.Root>,
-        ),
-      ).rejects.toThrow(
-        'Vase UI: <Combobox.Chip> must be inside <Combobox.Chips>. Without the chips part the chip cannot find the other chips for the arrow keys. Put the chip inside <Combobox.Chips>.',
-      );
-    } finally {
-      errorSpy.mockRestore();
-    }
+    await expect(
+      render(
+        <Combobox.Root multiple>
+          <Combobox.Chip />
+        </Combobox.Root>,
+      ),
+    ).rejects.toThrow(
+      'Vase UI: <Combobox.Chip> must be inside <Combobox.Chips>. Without the chips part the chip cannot find the other chips for the arrow keys. Put the chip inside <Combobox.Chips>.',
+    );
 
     // Vue also warns about the error of `setup`.
     expect(takeReportedMessages()).toEqual([

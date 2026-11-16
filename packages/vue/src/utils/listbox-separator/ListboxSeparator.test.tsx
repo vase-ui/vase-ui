@@ -36,12 +36,12 @@ describe('<ListboxSeparator />', () => {
   });
 
   describe.each([
-    ['Autocomplete.Separator', <Autocomplete.Separator data-testid="separator" />],
-    ['Combobox.Separator', <Combobox.Separator data-testid="separator" />],
-    ['Select.Separator', <Select.Separator data-testid="separator" />],
+    ['Autocomplete.Separator', () => <Autocomplete.Separator data-testid="separator" />],
+    ['Combobox.Separator', () => <Combobox.Separator data-testid="separator" />],
+    ['Select.Separator', () => <Select.Separator data-testid="separator" />],
   ])('%s', (_, separator) => {
     it('exposes the listbox separator behavior', async () => {
-      await render(separator);
+      await render(separator());
 
       const element = screen.getByTestId('separator');
       expect(element).toHaveAttribute('role', 'presentation');

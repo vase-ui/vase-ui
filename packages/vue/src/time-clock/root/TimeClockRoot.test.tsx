@@ -355,7 +355,7 @@ describe('<TimeClock.Root />', () => {
       await user.tab();
       await user.keyboard('{ArrowRight}');
 
-      expect(warnSpy).toHaveBeenCalledWith(
+      expect(warnSpy).toHaveBeenCalledExactlyOnceWith(
         `Vase UI: TimeClock \`${prop}\` must be a whole number above 0. The clock uses a step of 1 instead. Set \`${prop}\` to a whole number above 0.`,
       );
       expect(screen.getByRole('slider')).toHaveValue('31');

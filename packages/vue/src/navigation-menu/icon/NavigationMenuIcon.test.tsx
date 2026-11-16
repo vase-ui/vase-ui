@@ -1,4 +1,4 @@
-import { vi, describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { h } from 'vue';
 import type { Component } from 'vue';
 import type { HTMLProps } from '@vase-ui/vue/types';
@@ -69,21 +69,15 @@ describe('<NavigationMenu.Icon />', () => {
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
   // instance set, and a later case of the file can then get a warning about a slot.
   it('throws a descriptive error when rendered outside <NavigationMenu.Item>', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    try {
-      await expect(
-        render(
-          <NavigationMenu.Root>
-            <NavigationMenu.Icon />
-          </NavigationMenu.Root>,
-        ),
-      ).rejects.toThrow(
-        'Vase UI: <NavigationMenu.Item> is missing. A trigger, a content and an icon read the value of their item. Put the part inside <NavigationMenu.Item>.',
-      );
-    } finally {
-      errorSpy.mockRestore();
-    }
+    await expect(
+      render(
+        <NavigationMenu.Root>
+          <NavigationMenu.Icon />
+        </NavigationMenu.Root>,
+      ),
+    ).rejects.toThrow(
+      'Vase UI: <NavigationMenu.Item> is missing. A trigger, a content and an icon read the value of their item. Put the part inside <NavigationMenu.Item>.',
+    );
 
     // Vue also warns about the error of `setup`.
     expect(takeReportedMessages()).toEqual([

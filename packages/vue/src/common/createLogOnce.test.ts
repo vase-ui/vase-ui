@@ -23,14 +23,14 @@ describe('createLogOnce', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const logOnce = createLogOnce('error');
     logOnce('message');
-    expect(spy).toHaveBeenCalledWith('message');
+    expect(spy).toHaveBeenCalledExactlyOnceWith('message');
   });
 
   it('joins multiple messages with a space', () => {
     const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const logOnce = createLogOnce('warn');
     logOnce('first', 'second');
-    expect(spy).toHaveBeenCalledWith('first second');
+    expect(spy).toHaveBeenCalledExactlyOnceWith('first second');
   });
 
   it('deduplicates each severity independently', () => {

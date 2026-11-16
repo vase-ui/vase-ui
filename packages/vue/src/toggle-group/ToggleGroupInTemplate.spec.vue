@@ -1,9 +1,13 @@
 <!-- @strictTemplates true -->
 <script setup lang="ts">
 import { expectType } from '#test-utils';
+import { ref } from 'vue';
 import { ToggleGroup } from '@vase-ui/vue/toggle-group';
 
 type Alignment = 'left' | 'center' | 'right';
+
+// A ref that a store or a cookie empties with `null`.
+const alignments = ref<Alignment[] | null>(null);
 
 function onAlignments(value: Alignment[], eventDetails: ToggleGroup.ChangeEventDetails) {
   return value.length + eventDetails.reason.length;
@@ -16,6 +20,7 @@ function onWrongEventDetails(value: Alignment[], eventDetails: string) {
 
 <template>
   <ToggleGroup @value-change="onAlignments" />
+  <ToggleGroup v-model:value="alignments" />
   <ToggleGroup @value-change.once="onAlignments" />
   <ToggleGroup @update:value="(value: Alignment[]) => value" />
   <ToggleGroup @value-change="(value: string[]) => value" />

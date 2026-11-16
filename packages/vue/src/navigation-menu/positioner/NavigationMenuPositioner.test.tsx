@@ -224,21 +224,15 @@ describe('<NavigationMenu.Positioner />', () => {
   });
 
   it('throws a descriptive error when rendered outside <NavigationMenu.Portal>', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    try {
-      await expect(
-        render(
-          <NavigationMenu.Root value="test">
-            <NavigationMenu.Positioner />
-          </NavigationMenu.Root>,
-        ),
-      ).rejects.toThrow(
-        'Vase UI: <NavigationMenu.Portal> is missing. The positioner reads from the portal whether the popup stays in the DOM while it is closed. Put <NavigationMenu.Positioner> inside <NavigationMenu.Portal>.',
-      );
-    } finally {
-      errorSpy.mockRestore();
-    }
+    await expect(
+      render(
+        <NavigationMenu.Root value="test">
+          <NavigationMenu.Positioner />
+        </NavigationMenu.Root>,
+      ),
+    ).rejects.toThrow(
+      'Vase UI: <NavigationMenu.Portal> is missing. The positioner reads from the portal whether the popup stays in the DOM while it is closed. Put <NavigationMenu.Positioner> inside <NavigationMenu.Portal>.',
+    );
 
     // Vue also warns about the error of `setup`.
     expect(takeReportedMessages()).toEqual([
