@@ -29,6 +29,8 @@ export interface MenuFilterPopup {
 }
 
 export interface MenuFilterList {
+  /** The function ref of the list element. */
+  ref: (element: HTMLElement | null) => void;
   /** The props of the list element. The attributes of the consumer come last. */
   props: NonNullable<UseRenderElementParameters<object>['props']>;
 }

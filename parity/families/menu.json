@@ -10,13 +10,6 @@
     {
       "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
       "describe": ["<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>", "filtering"],
-      "title": "uses the id from a custom trigger render element for popup labelling",
-      "kind": "not-applicable",
-      "reason": "The case gives a React element with an `id` as `render`. In Vue `#render` is a slot, which is a function, so the part does not see the `id` of the element of the slot. The `id` prop gives the same result."
-    },
-    {
-      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
-      "describe": ["<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>", "filtering"],
       "title": "uses an explicit label from the popup render element",
       "kind": "not-applicable",
       "reason": "The case gives a React element with an `aria-label` as `render`. In Vue `#render` is a slot, which is a function, so the part does not see the `aria-label` of the element of the slot. The `aria-label` attribute of the part gives the same result."
@@ -27,13 +20,6 @@
       "title": "keeps a list label supplied through a render element",
       "kind": "not-applicable",
       "reason": "The case gives a React element with an attribute of the list as `render`. In Vue `#render` is a slot, which is a function, so the part does not see an attribute of the element of the slot. The attribute of the part gives the same result."
-    },
-    {
-      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
-      "describe": ["<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>", "accessible names"],
-      "title": "omits aria-controls when the list renders with an explicitly empty id",
-      "kind": "not-applicable",
-      "reason": "The case gives a React element with an `id` as `render`. In Vue `#render` is a slot, which is a function, so the part does not see the `id` of the element of the slot. An empty `id` prop counts as no `id` (`VUE-93`), so the list keeps its generated id, and `Menu.Input` names it in `aria-controls`."
     },
     {
       "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
@@ -166,7 +152,7 @@
     {
       "entry": "List",
       "prop": "id",
-      "reason": "The part replaces an absent `id` with a generated id and gives it to the store, which the trigger names in `aria-controls`. It is thus a declared prop. Base UI reads it from the native attributes of the list, and `types.md` has no row for a native attribute."
+      "reason": "The part replaces an absent `id` with a generated id, which the trigger or `Menu.Input` names in `aria-controls`. It is thus a declared prop. Base UI reads it from the native attributes of the list, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Popup",
