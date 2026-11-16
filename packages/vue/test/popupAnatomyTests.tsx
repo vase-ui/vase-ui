@@ -48,12 +48,14 @@ export interface PopupAnatomyTestConfig {
   createPopup?: (() => VNode) | undefined;
   /**
    * Returns the root with a backdrop part and no positioner. The backdrop has
-   * `data-testid="shown"` and the class `shown`.
+   * `data-testid="shown"` and the class `shown`. The suite then runs its first two cases on that
+   * root too.
    */
   createBackdropComponent?: ((props: PopupAnatomyTestProps) => VNode) | undefined;
   /**
    * Returns the root with a backdrop part and a positioner with no popup part. The positioner has
-   * `data-testid="shown"` and the class `shown`. The backdrop has neither.
+   * `data-testid="shown"` and the class `shown`. The backdrop has neither. The suite then asserts
+   * that the close waits for the exit animation of the positioner.
    */
   createBackdropAndPositionerComponent?: ((props: PopupAnatomyTestProps) => VNode) | undefined;
   /**
@@ -71,7 +73,7 @@ export interface PopupAnatomyTestConfig {
 
 /**
  * Resolves at the next call of `mock`. The promise has no time limit, so a call that does not come
- * fails the test at the time limit of the test.
+ * fails the test at the time limit of the test. Call it before the action.
  */
 export function nextCall(mock: Mock) {
   return new Promise<void>((resolve) => {

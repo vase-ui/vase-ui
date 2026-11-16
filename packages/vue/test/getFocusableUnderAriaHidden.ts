@@ -3,6 +3,7 @@
  * `aria-hidden="true"` on itself or on an ancestor. A screen reader does not announce such an
  * element, but the Tab key can put the focus on it. The function does not read `disabled` or the
  * layout, so the list can also have a disabled element or an element that is not rendered.
+ * In WebKit on an Apple system, a focus guard has no `aria-hidden`, so the list has no guard there.
  */
 export function getFocusableUnderAriaHidden() {
   return [...document.querySelectorAll<HTMLElement>('[aria-hidden="true"]')]

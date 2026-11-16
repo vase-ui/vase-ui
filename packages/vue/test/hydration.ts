@@ -18,7 +18,8 @@ export interface HydrateOptions {
   props?: Record<string, unknown> | undefined;
   /**
    * Compares the two DOMs with each generated id replaced by the order of its first use. Give it
-   * when a part mounts again after the mount, because Vue gives the new part a new id.
+   * when a part mounts again after the mount, because Vue gives the new part a new id. An ID
+   * reference that names another element still fails the comparison.
    */
   renumberIds?: boolean | undefined;
 }
@@ -31,7 +32,8 @@ export interface HydrateResult {
 export interface HydrateAfterOptions extends Omit<HydrateOptions, 'renumberIds'> {
   /**
    * Gets the container with the server HTML, before the app mounts. It does what a user or a
-   * browser does before the scripts of a page run, such as a focus or a key press.
+   * browser does before the scripts of a page run, such as a focus, a key press or a write of
+   * `input.value`.
    */
   before: (container: HTMLElement) => void | Promise<void>;
 }
@@ -97,7 +99,7 @@ async function mountAndSettle(app: App, container: HTMLElement) {
 /**
  * Hydrates the server HTML of a component, and throws when the hydration is not clean. A hydration
  * is not clean when Vue warns, when a console call occurs, or when the hydrated DOM differs from a
- * client-only render of the same component.
+ * client-only render of the same component. The check comes after the mount and two ticks.
  *
  * The client-only render comes first, and the helper removes it before it hydrates. The document
  * thus holds one app at a time, as a page does. The two apps generate the same ids. In one
@@ -134,8 +136,8 @@ export async function hydrate(
 
 /**
  * Inserts the server HTML of a component, calls `before`, and then hydrates the HTML. It throws
- * when Vue warns or a console call occurs. It does not compare the DOM with a client-only render,
- * because `before` changes the DOM.
+ * when Vue warns or a console call occurs. The check comes after the mount and two ticks. It does
+ * not compare the DOM with a client-only render, because `before` changes the DOM.
  */
 export async function hydrateAfter(
   component: Component,

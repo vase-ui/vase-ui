@@ -57,7 +57,9 @@ export interface HeldMountFormResetTestsConfig {
    */
   change: () => Promise<unknown>;
   /**
-   * Reads the state of the part that the user sees, such as `aria-checked`.
+   * Reads the state of the part that the user sees, such as `aria-checked`. The browser resets a
+   * native input itself, so the value of that input can be the default value also when the part
+   * did not follow the reset.
    */
   readState: () => unknown;
   /**
