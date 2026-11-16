@@ -962,10 +962,10 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     return [
       {
         role: 'group',
-        'aria-describedby': ariaAfterHydration(
-          getDescriptionProps({ 'aria-describedby': ariaDescribedBy })['aria-describedby'],
-        ),
-        'aria-labelledby': ariaAfterHydration(ariaLabelledBy.value),
+        'aria-describedby': getDescriptionProps({ 'aria-describedby': ariaDescribedBy })[
+          'aria-describedby'
+        ],
+        'aria-labelledby': ariaLabelledBy.value,
         onFocusout: handleFocusout,
       },
       elementAttrs,
