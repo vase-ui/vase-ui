@@ -22,6 +22,7 @@ const buttonClassName =
 const dayButtonClassName =
   'box-border size-9 cursor-pointer rounded-md border border-transparent outline-0 hover:not-data-disabled:not-data-selected:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 data-outside-month:not-data-selected:text-neutral-500 data-selected:bg-neutral-950 data-selected:text-white data-today:border-neutral-400 disabled:cursor-default disabled:opacity-40 dark:hover:not-data-disabled:not-data-selected:bg-neutral-800 dark:focus-visible:outline-white dark:data-selected:bg-white dark:data-selected:text-neutral-950';
 </script>
+
 <template>
   <div role="group" :aria-labelledby="labelId" class="flex flex-col items-start gap-1">
     <div :id="labelId" class="text-sm font-bold text-neutral-950 dark:text-white">Meeting time</div>
