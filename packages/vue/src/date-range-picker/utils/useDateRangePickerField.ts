@@ -92,7 +92,8 @@ export function useDateRangePickerField(
   // removes it.
   function ariaLabel() {
     const ariaLabelValue = attrs['aria-label'];
-    return ariaLabelValue === null || (typeof ariaLabelValue === 'string' && given('aria-label', ariaLabelValue) !== undefined)
+    return ariaLabelValue === null ||
+      (typeof ariaLabelValue === 'string' && given('aria-label', ariaLabelValue) !== undefined)
       ? ariaLabelValue
       : defaultLabel;
   }

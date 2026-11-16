@@ -65,7 +65,10 @@ function describe(start: DateValue, end: DateValue): string {
 // hydration.
 function label() {
   const ariaLabelValue = attrs['aria-label'];
-  if (ariaLabelValue === null || (typeof ariaLabelValue === 'string' && given('aria-label', ariaLabelValue) !== undefined)) {
+  if (
+    ariaLabelValue === null ||
+    (typeof ariaLabelValue === 'string' && given('aria-label', ariaLabelValue) !== undefined)
+  ) {
     return ariaLabelValue;
   }
   const [start, end] = picker.range.value;

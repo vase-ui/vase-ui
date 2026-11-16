@@ -37,7 +37,7 @@ export interface TimeClockDayPeriodProps
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useIsHydrating } from '../../common/hydration';
-import { formatter } from '../../internals/date-time/format';
+import { dayPeriodText } from '../../internals/date-time/format';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -70,18 +70,9 @@ const state = computed<TimeClockDayPeriodState>(() => ({
   selected: !root.empty.value && root.dayPeriod.value === props.value,
 }));
 
-// The text is the day period of 9:00 or 21:00 in a 12-hour format of the locale.
 // With no default slot and no `as`, the text is the only child of a static element. Vue allows a
 // text mismatch only for such an element, so the template has a branch of its own for it.
-const text = computed(() => {
-  const [format, epochMilliseconds] = formatter(
-    new Temporal.PlainTime(props.value === 'pm' ? 21 : 9),
-    { hour: 'numeric', hour12: true },
-    formatLocale.value,
-  );
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- A 12-hour format of each locale has a day period.
-  return format.formatToParts(epochMilliseconds).find((part) => part.type === 'dayPeriod')!.value;
-});
+const text = computed(() => dayPeriodText(props.value, formatLocale.value));
 
 const { getButtonProps, buttonRef } = useButton({
   disabled: () => state.value.disabled,

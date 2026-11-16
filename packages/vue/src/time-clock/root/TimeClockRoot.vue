@@ -129,10 +129,14 @@ export type TimeClockRootChangeEventReason =
   | typeof REASONS.drag
   | typeof REASONS.keyboard
   | typeof REASONS.inputChange
-  | typeof REASONS.itemPress
-  | typeof REASONS.triggerPress;
+  | typeof REASONS.itemPress;
 export type TimeClockRootChangeEventDetails =
   VaseUIChangeEventDetails<TimeClockRootChangeEventReason>;
+
+export type TimeClockRootViewChangeEventReason =
+  typeof REASONS.triggerPress | typeof REASONS.drag | typeof REASONS.keyboard;
+export type TimeClockRootViewChangeEventDetails =
+  VaseUIChangeEventDetails<TimeClockRootViewChangeEventReason>;
 
 export type TimeClockRootCommitEventReason = typeof REASONS.drag | typeof REASONS.keyboard;
 export type TimeClockRootCommitEventDetails =
@@ -145,6 +149,7 @@ import { useServerValue } from '../../common/hydration';
 import { useControlled } from '../../common/useControlled';
 import { warn } from '../../common/warn';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { hourCycleOf } from '../../internals/date-time/format';
 import { assertTemporal, toPlainTime, withTime } from '../../internals/date-time/temporal';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -157,7 +162,6 @@ import {
   faceNumberOf,
   faceNumbers,
   gridOf,
-  hourCycleOf,
   isTimeAllowed,
   isValidStep,
   nextView,
@@ -227,7 +231,7 @@ const emit = defineEmits<{
    *
    * To stop the change, call `eventDetails.cancel()` before the listener returns.
    */
-  viewChange: [view: TimeClockView, eventDetails: TimeClockRootChangeEventDetails];
+  viewChange: [view: TimeClockView, eventDetails: TimeClockRootViewChangeEventDetails];
   /**
    * Event handler called after `viewChange` with the new view, unless a listener cancels the
    * change. `v-model:view` uses it.
@@ -392,7 +396,7 @@ function selectDayPeriod(
   }
 }
 
-function setView(newView: TimeClockView, details: TimeClockRootChangeEventDetails) {
+function setView(newView: TimeClockView, details: TimeClockRootViewChangeEventDetails) {
   if (newView === view.value) {
     return;
   }

@@ -131,3 +131,23 @@ export function digits(locale: Intl.LocalesArgument): string[] {
   const format = new Intl.NumberFormat(locale, { useGrouping: false });
   return Array.from({ length: 10 }, (_, digit) => format.format(digit));
 }
+
+/** The hour cycle that a locale uses. */
+export function hourCycleOf(locale: Intl.LocalesArgument): 12 | 24 {
+  return new Intl.DateTimeFormat(locale, { hour: 'numeric' }).resolvedOptions().hour12 ? 12 : 24;
+}
+
+/**
+ * The text of a day period in a locale, such as `AM` and `PM`. The 12-hour format of each locale
+ * has a day period, also for a locale that uses the 24-hour cycle.
+ */
+export function dayPeriodText(period: 'am' | 'pm', locale: Intl.LocalesArgument): string {
+  const [format, epochMilliseconds] = formatter(
+    new Temporal.PlainTime(period === 'pm' ? 21 : 9),
+    { hour: 'numeric', hour12: true },
+    locale,
+  );
+  return (
+    format.formatToParts(epochMilliseconds).find((part) => part.type === 'dayPeriod')?.value ?? ''
+  );
+}

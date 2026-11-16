@@ -12,6 +12,7 @@ import * as Slider from '../src/slider/index.parts';
 import * as Switch from '../src/switch/index.parts';
 import * as TimeClock from '../src/time-clock/index.parts';
 import * as TimeField from '../src/time-field/index.parts';
+import * as TimePicker from '../src/time-picker/index.parts';
 
 const id = 'id';
 </script>
@@ -135,6 +136,13 @@ const id = 'id';
   <TimeField.Root :ariaLabelledby="id" />
   <!-- @vue-expect-error `aria-labelledby` is a string -->
   <TimeField.Root :aria-labelledby="5" />
+
+  <TimePicker.Field aria-labelledby="id" />
+  <TimePicker.Field :aria-labelledby="id" />
+  <TimePicker.Field ariaLabelledby="id" />
+  <TimePicker.Field :ariaLabelledby="id" />
+  <!-- @vue-expect-error `aria-labelledby` is a string -->
+  <TimePicker.Field :aria-labelledby="5" />
 
   <Combobox.Chip aria-description="x" />
   <Combobox.Chip :aria-description="id" />
