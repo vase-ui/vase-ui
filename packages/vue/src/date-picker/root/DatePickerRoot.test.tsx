@@ -605,6 +605,32 @@ describe('<DatePicker.Root />', () => {
       expect(screen.queryByRole('dialog')).toBe(null);
     });
 
+    describe('VUE-112: a disabled fieldset', () => {
+      it('disables the trigger and, in its portal, the calendar', async () => {
+        const onValueChange = vi.fn();
+        const { user } = await render(() => (
+          <fieldset disabled>
+            <DatePickerAnatomy
+              {...{
+                locale: 'en-US',
+                defaultValue: day('2026-11-18'),
+                open: true,
+                calendarProps: { today: today() },
+                onValueChange,
+              }}
+            />
+          </fieldset>
+        ));
+
+        // The popup is in a portal and out of the fieldset, so the picker gives the state to it.
+        expect(await screen.findByTestId('calendar')).toHaveAttribute('data-disabled');
+        expect(screen.getByTestId('trigger')).toHaveAttribute('data-disabled');
+
+        await user.click(dayButton('2026-11-20'));
+
+        expect(onValueChange).not.toHaveBeenCalled();
+      });
+    });
   });
 
   describe('exposed actions', () => {
