@@ -671,7 +671,7 @@ describe('<DateRangePicker.Root />', () => {
     });
 
     it('shows the error in a Field, with the message of the end field', async () => {
-      const { user } = await render(
+      const { user, container } = await render(
         <Field.Root validationMode="onChange" data-testid="field">
           <DateRangePickerAnatomy
             {...{
@@ -691,7 +691,27 @@ describe('<DateRangePicker.Root />', () => {
       await waitFor(() => {
         expect(screen.getByTestId('error')).toBeInTheDocument();
       });
+      const end = container.querySelectorAll<HTMLInputElement>('input[aria-hidden]')[1]!;
+      expect(end.validationMessage).not.toBe('');
+      expect(screen.getByTestId('error').textContent).toBe(end.validationMessage);
       expect(screen.getByTestId('field')).toHaveAttribute('data-invalid');
+    });
+
+    // A zoned value has a text input, so the field reports its limit with a custom error.
+    it('makes the end field of a zoned range invalid when its day is before the start', async () => {
+      const zoned = (text: string) => Temporal.ZonedDateTime.from(`${text}T09:30[Asia/Tokyo]`);
+      const { user, container } = await renderPicker({
+        defaultValue: [zoned('2026-11-18'), zoned('2026-11-20')],
+        hourCycle: 24,
+      });
+      const end = container.querySelectorAll<HTMLInputElement>('input[aria-hidden]')[1]!;
+      expect(end.validity.valid).toBe(true);
+
+      segmentOf('end', 'day').focus();
+      await user.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}');
+
+      expect(end.value).toBe('2026-11-17T09:30+09:00[Asia/Tokyo]');
+      expect(end.validity.customError).toBe(true);
     });
   });
 

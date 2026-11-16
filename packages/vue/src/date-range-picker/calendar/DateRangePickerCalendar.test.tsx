@@ -117,7 +117,17 @@ describe('<DateRangePicker.Calendar />', () => {
     expect(dayButton('2026-11-26')).toHaveAttribute('data-disabled');
   });
 
-  it('is disabled and read-only with the picker', async () => {
+  it('is disabled with the picker', async () => {
+    await renderPicker({ defaultValue: range('2026-11-18', '2026-11-20'), disabled: true });
+    await waitFor(() => {
+      expect(dayButton('2026-11-24')).not.toBe(null);
+    });
+
+    expect(screen.getByTestId('calendar')).toHaveAttribute('data-disabled');
+    expect(dayButton('2026-11-24')).toBeDisabled();
+  });
+
+  it('is read-only with the picker', async () => {
     const { user } = await renderPicker({
       defaultValue: range('2026-11-18', '2026-11-20'),
       readOnly: true,

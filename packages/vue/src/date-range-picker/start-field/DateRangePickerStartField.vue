@@ -40,6 +40,7 @@ import { useTemplateRef } from 'vue';
 import DateFieldRoot from '../../date-field/root/DateFieldRoot.vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useDateRangePickerField } from '../utils/useDateRangePickerField';
+import type { DateFieldActions } from '../utils/useDateRangePickerField';
 
 defineOptions({ inheritAttrs: false });
 
@@ -53,11 +54,7 @@ defineSlots<{
 // This part renders `DateField.Root` and makes no element of its own. The template has one form for
 // `#render` and one for the content. A `v-if` on a slot template makes the slots of
 // `DateField.Root` dynamic. Vue then renders `DateField.Root` again each time this part renders.
-const field = useTemplateRef<{
-  element: HTMLElement | null;
-  inputElement: HTMLInputElement | null;
-  clear: () => void;
-}>('field');
+const field = useTemplateRef<DateFieldActions>('field');
 const { element, inputElement, handleValueChange, fieldProps } = useDateRangePickerField(
   'start',
   field,

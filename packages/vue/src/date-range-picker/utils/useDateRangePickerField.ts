@@ -13,7 +13,8 @@ import { mergeProps } from '../../merge-props';
 import { createElementSetter } from '../../utils/popups/createElementSetter';
 import { useDateRangePickerRootContext } from '../root/DateRangePickerRootContext';
 
-interface DateFieldActions {
+/** The members that `DateField.Root` exposes. */
+export interface DateFieldActions {
   element: HTMLElement | null;
   inputElement: HTMLInputElement | null;
   clear: () => void;
@@ -69,6 +70,8 @@ export function useDateRangePickerField(
     }
   }
 
+  const fieldHandlers = { onKeydown: handleKeydown };
+
   function handleValueChange(value: DateValue | null, details: DateTimeFieldChangeEventDetails) {
     const [start, last] = picker.range.value;
     picker.commit(end === 'start' ? [value, last] : [start, value], details);
@@ -87,7 +90,7 @@ export function useDateRangePickerField(
     const root = picker.props;
     const [start] = picker.range.value;
     return {
-      ...mergeProps({ onKeydown: handleKeydown }, omitUndefinedAttributes(attrs)),
+      ...mergeProps(fieldHandlers, omitUndefinedAttributes(attrs)),
       ...props,
       'aria-label': ariaLabel(),
       value: picker.range.value[index],

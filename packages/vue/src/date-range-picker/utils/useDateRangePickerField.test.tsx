@@ -43,6 +43,20 @@ describe.each(FIELDS)('the $end field of a date range picker', ({ part: Part, na
       expect(screen.getByTestId('none')).not.toHaveAttribute('aria-label');
     });
 
+    // The part has no prop for the names. The attribute reaches `DateField.Root`, which reads it.
+    it('takes its name from the elements of `aria-labelledby`', async () => {
+      await render(
+        <DateRangePicker.Root defaultValue={range('2026-11-18', '2026-11-20')}>
+          <span id="other">Check-in</span>
+          <Part aria-labelledby="other" data-testid="field">
+            <DateField.Input />
+          </Part>
+        </DateRangePicker.Root>,
+      );
+
+      expect(screen.getByRole('group', { name: 'Check-in' })).toBe(screen.getByTestId('field'));
+    });
+
     // A blank name gives nothing to a screen reader, so the part keeps its own name.
     it('keeps its own name for a blank name of the consumer', async () => {
       await render(
@@ -190,6 +204,7 @@ describe.each(FIELDS)('the $end field of a date range picker', ({ part: Part, na
       expect(segmentOf(container, 'day')).toHaveAttribute(attribute);
     });
 
+    // `de-DE` puts the day first and has a 24-hour clock, so the hour cycle gives the day period.
     it('gives the locale, the granularity and the hour cycle to its segments', async () => {
       const { container } = await render(
         <DateRangePicker.Root
@@ -199,6 +214,7 @@ describe.each(FIELDS)('the $end field of a date range picker', ({ part: Part, na
           ]}
           locale="de-DE"
           granularity="minute"
+          hourCycle={12}
         >
           <Part>
             <DateField.Input />
@@ -206,9 +222,10 @@ describe.each(FIELDS)('the $end field of a date range picker', ({ part: Part, na
         </DateRangePicker.Root>,
       );
 
-      expect(segmentOf(container, 'hour')).toBeInTheDocument();
+      expect(container.querySelector('input[data-type]')).toHaveAttribute('data-type', 'day');
       expect(segmentOf(container, 'minute')).toBeInTheDocument();
-      expect(segmentOf(container, 'dayPeriod')).toBe(null);
+      expect(segmentOf(container, 'second')).toBe(null);
+      expect(segmentOf(container, 'dayPeriod')).toBeInTheDocument();
     });
   });
 });

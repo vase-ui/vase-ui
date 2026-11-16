@@ -48,7 +48,7 @@ Base UI has no date range picker. This one follows the [Date Picker Dialog patte
 
 ## Usage guidelines
 
-- **Each field must have an accessible name**: A field has the default name `Start date` or `End date`. A `Field.Label`, or a `<label>` element whose `for` is the `id` of `DateRangePicker.StartField`, names the start field. The end field keeps its default name. See the [forms guide](/handbook/forms).
+- **Each field must have an accessible name**: A field has the default name `Start date` or `End date`. A `Field.Label` names the start field, and the end field keeps its default name. A `<label>` element whose `for` is the `id` of a field names that field. See the [forms guide](/handbook/forms).
 - **The popup must have a name**: Give `DateRangePicker.Popup` an `aria-label`, or put a `DateRangePicker.Title` in it.
 
 ## Anatomy
@@ -75,9 +75,9 @@ With no value, a new end has the kind that `granularity` and `referenceDate` giv
 
 ## In a form
 
-Each field gives its end to a form through its hidden input. Name them with `startName` and `endName`. The hidden inputs have the type of the ends, so `minDate` and `maxDate` give `rangeUnderflow` and `rangeOverflow`, and `required` gives `valueMissing` for each empty end. Each field sets a `customError` for a date that `unavailableDates` matches, and for a segment that has no number.
+Each field gives its end to a form through its hidden input. Name them with `startName` and `endName`. The hidden inputs have the type of the ends, so `minDate` and `maxDate` give `rangeUnderflow` and `rangeOverflow`, and `required` gives `valueMissing` for each empty end. Each field sets a `customError` for a date that `unavailableDates` matches, for a field with some segments empty, and for the limits that the input type cannot check.
 
-The end field is invalid when its day is before the first day of the range, or before `minDate`. Its hidden input has the later of the two days as its `min`, so it gives `rangeUnderflow`. A change of the first day to a later day than the last day also makes the end field invalid. The check compares days, and not the times of one day.
+The end field is invalid when its day is before the first day of the range, or before `minDate`. Its `minDate` is the later of the two days, so its hidden input gives `rangeUnderflow`, or a `customError` for a zoned value. A change of the first day to a later day than the last day also makes the end field invalid. The check compares days, and not the times of one day.
 
 Put the picker in a `Field` to show the errors of its validation. Do not give a `name` to that `Field`: it replaces `startName` and `endName` for both fields. A reset of the form puts an uncontrolled picker back to its default range.
 
@@ -96,14 +96,14 @@ The root emits `valueChange` and `update:value` for each change of the range. It
 | `clear-press`           | A press on a clear button.                                  |
 | `none`                  | A reset of the form, or a call of `clear()` of a field.     |
 
-| Reason of `openChange` | When                                                       |
-| ---------------------- | ---------------------------------------------------------- |
-| `trigger-press`        | A press on the trigger, and Alt+Down in a field.           |
-| `imperative-action`    | The second press closes the popup, or a call of `close()`. |
-| `escape-key`           | Escape closes the popup.                                   |
-| `outside-press`        | A press outside the popup closes it.                       |
-| `close-press`          | A press on `DateRangePicker.Close`.                        |
-| `focus-out`            | The focus leaves a popup that is not modal.                |
+| Reason of `openChange` | When                                                                 |
+| ---------------------- | -------------------------------------------------------------------- |
+| `trigger-press`        | A press on the trigger, and Alt+Down in a field.                     |
+| `imperative-action`    | The second press or a drag closes the popup, or a call of `close()`. |
+| `escape-key`           | Escape closes the popup.                                             |
+| `outside-press`        | A press outside the popup closes it.                                 |
+| `close-press`          | A press on `DateRangePicker.Close`.                                  |
+| `focus-out`            | The focus leaves a popup that is not modal.                          |
 
 ## Server render
 
@@ -127,7 +127,7 @@ The segments, the trigger and the calendar keep their own keys: see [Date Field]
 ## Accessibility
 
 - `DateRangePicker.Trigger` has `aria-haspopup="dialog"`. Its default name is `Choose dates`. With a range that has two ends, its name is `Change dates,` and the range in full. Give it an `aria-label` to change it.
-- `DateRangePicker.StartField` and `DateRangePicker.EndField` have `role="group"`. Their default names are `Start date` and `End date`. A label of the start field, or an `aria-labelledby` of a field, replaces its name.
+- `DateRangePicker.StartField` and `DateRangePicker.EndField` have `role="group"`. Their default names are `Start date` and `End date`. A label of a field, or its `aria-labelledby`, replaces its name. The label of a `Field` names the start field only.
 - `DateRangePicker.Popup` has `role="dialog"`. Give it a name with `aria-label` or `DateRangePicker.Title`.
 - When the popup opens, the focus goes to the day that has the tab stop: the first day of the range, else today. When it closes, the focus goes back to the trigger.
 - A picker that is `disabled` or `readOnly` has a disabled trigger, and Alt and Down does nothing.

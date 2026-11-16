@@ -195,7 +195,7 @@ const emit = defineEmits<{
    * Event handler called when the popup is opened or closed.
    *
    * The `eventDetails.reason` is `'trigger-press'` for the trigger, and for Alt+Down in a field.
-   * It is `'imperative-action'` for a close after the second press in the calendar.
+   * It is `'imperative-action'` for a close after the second press or a drag in the calendar.
    */
   openChange: [open: boolean, eventDetails: DateRangePickerRootOpenChangeEventDetails];
   /**
