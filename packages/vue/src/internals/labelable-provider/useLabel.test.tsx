@@ -1,5 +1,5 @@
 import { expect, describe, it, onTestFinished, vi } from 'vitest';
-import { Teleport, defineComponent } from 'vue';
+import { Teleport, defineComponent, shallowRef } from 'vue';
 import type { ComponentPublicInstance } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import {
@@ -439,6 +439,29 @@ describe('useLabel', () => {
         expect(event.type).toBe('click');
         expect(controlId).toBe(row.controlId);
         expect(screen.getByTestId('control')).not.toHaveFocus();
+      });
+    });
+
+    describe('param: controlElement', () => {
+      it('focuses the control element, and not the element that has the id of the control', async () => {
+        const Test = defineComponent(() => {
+          const controlElement = shallowRef<HTMLElement | null>(null);
+          const labelProps = useLabel({ fallbackControlId: 'named', controlElement });
+          return () => (
+            <>
+              <div data-testid="label" {...labelProps.value}>
+                Label
+              </div>
+              <input id="named" />
+              <input ref={controlElement} data-testid="control" />
+            </>
+          );
+        });
+        const { user } = await render(<Test />);
+
+        await user.click(screen.getByTestId('label'));
+
+        expect(screen.getByTestId('control')).toHaveFocus();
       });
     });
 

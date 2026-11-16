@@ -82,6 +82,47 @@ describe('<Combobox.Label />', () => {
     expect(screen.getByTestId('trigger')).toHaveAttribute('aria-labelledby', 'fruit-label');
   });
 
+  it('VUE-116: focuses a trigger whose #render slot gives an id that the field does not have', async () => {
+    await render(
+      <Field.Root>
+        <Combobox.Root>
+          <Combobox.Label data-testid="label">Fruit</Combobox.Label>
+          <Combobox.Trigger
+            v-slots={{
+              render: ({ props }: { props: Record<string, unknown> }) => (
+                <button type="button" {...props} id="own" data-testid="trigger" />
+              ),
+            }}
+          />
+        </Combobox.Root>
+      </Field.Root>,
+    );
+
+    screen.getByTestId('label').click();
+    await flushMicrotasks();
+
+    expect(screen.getByTestId('trigger')).toHaveFocus();
+  });
+
+  it('focuses the input of a field, and not the trigger, while the input is outside the popup', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await render(
+      <Field.Root>
+        <Combobox.Root>
+          <Combobox.Label data-testid="label">Fruit</Combobox.Label>
+          <Combobox.Input data-testid="input" />
+          <Combobox.Trigger>Open</Combobox.Trigger>
+        </Combobox.Root>
+      </Field.Root>,
+    );
+
+    screen.getByTestId('label').click();
+    await flushMicrotasks();
+
+    expect(screen.getByTestId('input')).toHaveFocus();
+    expect(errorSpy).toHaveBeenCalledExactlyOnceWith(expect.stringContaining(message));
+  });
+
   it('does not name the trigger while KeepAlive holds a label that mounted in a held branch', async () => {
     const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
       <Combobox.Label key="label" data-testid="label">
