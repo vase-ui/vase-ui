@@ -5,6 +5,7 @@ import type { ApiReference, ApiClass } from '../../../scripts/docs/apiReference.
 import ScrollBox from './ScrollBox.vue';
 import TextWithCode from './TextWithCode.vue';
 import { apiPartId } from './apiPartId.ts';
+import { HEADING_BADGE_CLASS } from './headingBadgeClass.ts';
 
 const props = defineProps<{
   /**
@@ -223,6 +224,7 @@ function signatureOf({ name, parameters }: ApiClass['methods'][number]): string 
   <section v-for="part in parts" :key="part.name">
     <h3 :id="apiPartId(part.name)" tabindex="-1">
       {{ part.name }}
+      <span v-if="part.badge" :class="HEADING_BADGE_CLASS">{{ part.badge }}</span>
       <a
         class="header-anchor"
         :href="`#${apiPartId(part.name)}`"

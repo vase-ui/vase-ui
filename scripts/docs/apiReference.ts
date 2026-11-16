@@ -1,6 +1,7 @@
 import { dirname, join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { docsFolderOf } from '../parity/checkSurface.ts';
+import type { HeadingBadge } from '../parity/headingBadge.ts';
 import type { FamilyExtract, OwnComponent } from '../parity/parityFiles.ts';
 import { VASE_SOURCE_ROOT } from '../parity/paths.ts';
 import {
@@ -56,6 +57,8 @@ export interface ApiConstant {
 export interface ApiPart {
   /** `Button`, or `Dialog.Root` for a part of a namespace. */
   name: string;
+  /** The badge that the Base UI page shows on the heading of the part, or `null`. */
+  badge: HeadingBadge | null;
   description: string;
   /** Whether the `#render` slot of the part gets the `children` slot prop, which the slot must mount in its element. */
   hasChildren: boolean;
@@ -141,6 +144,7 @@ export function buildApiParts(
   project: VaseProject,
   entryFile: string,
   file: { parts: readonly Named[] },
+  badges: ReadonlyMap<string, HeadingBadge> = new Map(),
 ): ApiPart[] {
   return file.parts.flatMap(({ name: title }) => {
     const [match] = project.findExports(entryFile, title);
@@ -152,6 +156,7 @@ export function buildApiParts(
     return [
       {
         name: match.path,
+        badge: badges.get(title) ?? null,
         description: component.description,
         hasChildren:
           component.slots.get('render')?.props.some(({ name }) => name === 'children') === true,
@@ -252,14 +257,50 @@ export function buildApiTypes(
   });
 }
 
+type Page = FamilyExtract['pages'][number];
+
+/** The Base UI page in the folder of a `types.md`. */
+function pageOf(file: SurfaceFile, pages: readonly Page[]): Page | undefined {
+  return pages.find((row) => dirname(row.file) === dirname(file.file));
+}
+
+/**
+ * The badge of each part of a `types.md`, by the title of the part. The Base UI page in the same
+ * folder shows the badge on the heading above the tag of the part: `### FilterProvider [Preview]`
+ * above `<TypesMenu.FilterProvider />`. The site writes the heading of a part, so it can show the
+ * badge there. A page of the site writes each other heading of its reference by hand. The function
+ * throws for a badge on one of those, because the site would lose it.
+ */
+export function readPartBadges(
+  file: SurfaceFile,
+  pages: readonly Page[],
+): Map<string, HeadingBadge> {
+  const page = pageOf(file, pages);
+  if (!page?.referenceBadges) {
+    return new Map();
+  }
+  return new Map(
+    Object.entries(page.referenceBadges).map(([tag, badge]) => {
+      const title = tag.split('.').at(1);
+      if (title === undefined || !file.parts.some(({ name }) => name === title)) {
+        throw new Error(
+          `The Base UI page ${page.file} has the badge ${badge} on the heading above <${tag}>, but ${file.file} has no part for that tag. The reference shows a badge only on the heading of a part, so the site would not show this badge. Write [${badge}] at the end of the heading that the page of the site has for <${tag}>. Then change \`readPartBadges\` in scripts/docs/apiReference.ts so that it accepts <${tag}> when the page of the site has the badge on that heading.`,
+        );
+      }
+      return [title, badge];
+    }),
+  );
+}
+
 /**
  * Puts the parts of a `types.md` in the sequence of the `<Types…>` tags of the Base UI page in the
  * same folder. The tag `TypesProgress.Root` names the part `Root`. A part that no tag names comes
  * last, in the sequence of the `types.md`.
  */
 function sortPartsByPage(file: SurfaceFile, pages: FamilyExtract['pages']): SurfaceFile {
-  const page = pages.find((row) => dirname(row.file) === dirname(file.file));
-  const titles = (page?.referenceTags ?? []).flatMap((tag) => tag.split('.').slice(1));
+  const titles = (pageOf(file, pages)?.referenceTags ?? []).flatMap((tag) =>
+    tag.split('.').slice(1),
+  );
   const place = ({ name }: SurfacePart): number => {
     const index = titles.indexOf(name);
     return index === -1 ? titles.length : index;
@@ -339,15 +380,17 @@ export function createApiReferenceReader(root = REPOSITORY_ROOT): (family: strin
     );
     return {
       // A part is read from the entry file that exports it. The parts keep the sequence of the file.
-      parts: typesFiles.flatMap((file) =>
-        file.parts.flatMap((part) =>
+      parts: typesFiles.flatMap((file) => {
+        const badges = readPartBadges(file, pages);
+        return file.parts.flatMap((part) =>
           buildApiParts(
             vaseProject,
             findEntryFileOfPart(vaseProject, entryFileOf(file), part, allTypesFiles),
             { ...file, parts: [part] },
+            badges,
           ),
-        ),
-      ),
+        );
+      }),
       functions: build(buildApiFunctions),
       classes: build(buildApiClasses),
       types: build(buildApiTypes),

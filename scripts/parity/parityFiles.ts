@@ -1,5 +1,7 @@
 import { basename } from 'node:path';
 import type { TestRow } from './cases.ts';
+import { HEADING_BADGES } from './headingBadge.ts';
+import type { HeadingBadge } from './headingBadge.ts';
 import { isTestFile, isTypeTestFile, UPSTREAM_ROOTS } from './paths.ts';
 import type { SurfaceFile } from './typesMd.ts';
 import {
@@ -102,8 +104,16 @@ export interface FamilyExtract {
   typeTests: string[];
   cases: { file: string; rows: TestRow[] }[];
   surface: SurfaceFile[];
-  /** The `<Types…>` tags of each `page.mdx`, as upstream writes them, in the sequence of the page. */
-  pages: { file: string; referenceTags: string[] }[];
+  /**
+   * The `<Types…>` tags of each `page.mdx`, as upstream writes them, in the sequence of the page.
+   * `referenceBadges` has the badge of the heading above a tag, by the tag. A page with no badge
+   * has no such key.
+   */
+  pages: {
+    file: string;
+    referenceTags: string[];
+    referenceBadges?: Record<string, HeadingBadge>;
+  }[];
 }
 
 export interface BetterRow {
@@ -470,7 +480,16 @@ const extract = object({
   typeTests: strings,
   cases: array(object({ file: nonEmptyString, rows: array(testRow) })),
   surface: array(surfaceFile),
-  pages: array(object({ file: nonEmptyString, referenceTags: strings })),
+  pages: array(
+    object(
+      {
+        file: nonEmptyString,
+        referenceTags: strings,
+        referenceBadges: record(oneOf(...HEADING_BADGES)),
+      },
+      ['referenceBadges'],
+    ),
+  ),
 });
 
 const betterRow = object({
