@@ -2854,7 +2854,10 @@ describe('<Popover.Root />', () => {
         // The inside marker expires in a timer task before the release.
         await wait(0);
         await userEvent.pointer({ coords: destination });
-        await userEvent.pointer({ coords: destination, keys: '[/MouseLeft]' });
+        // The release gives a click to the common ancestor of the two targets.
+        await nextEvent(document, 'click', {
+          action: () => userEvent.pointer({ coords: destination, keys: '[/MouseLeft]' }),
+        });
         held = false;
         await flushMicrotasks();
 
