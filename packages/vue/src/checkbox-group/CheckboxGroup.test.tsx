@@ -166,6 +166,7 @@ describe('<CheckboxGroup />', () => {
         </CheckboxGroup>,
       );
       expect(screen.getByTestId('red')).toHaveAttribute('aria-checked', 'true');
+      expect(screen.getByTestId('green')).toHaveAttribute('aria-checked', 'false');
 
       await setProps({ value: null });
 
@@ -2751,6 +2752,9 @@ describe('<CheckboxGroup />', () => {
       const [apple, banana] = screen.getAllByRole('checkbox');
       await fireEvent.click(banana);
       expect(handleChange).toHaveBeenCalledTimes(1);
+      expect(apple).toHaveAttribute('aria-checked', 'false');
+      expect(banana).toHaveAttribute('aria-checked', 'false');
+      expect(getFormData()).toEqual([]);
 
       screen.getByTestId<HTMLFormElement>('form').reset();
       await settleReset();

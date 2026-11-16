@@ -234,6 +234,7 @@ describe('<ToggleGroup />', () => {
       );
       const [button1, button2] = screen.getAllByRole('button');
       expect(button1).toHaveAttribute('aria-pressed', 'true');
+      expect(button2).toHaveAttribute('aria-pressed', 'false');
 
       await setProps({ value: null });
 

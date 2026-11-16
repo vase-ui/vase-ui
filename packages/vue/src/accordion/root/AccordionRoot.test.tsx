@@ -490,6 +490,7 @@ describe('<Accordion.Root />', () => {
         );
         const [trigger1, trigger2] = screen.getAllByRole('button');
         expect(trigger1).toHaveAttribute('aria-expanded', 'true');
+        expect(trigger2).toHaveAttribute('aria-expanded', 'false');
 
         await setProps({ value: null });
 
