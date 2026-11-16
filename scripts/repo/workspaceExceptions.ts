@@ -20,7 +20,7 @@ export function workspaceExceptions(workspace: string): WorkspaceException[] {
     const key = /^([^\s#][^:]*):(.*)$/.exec(line);
     if (key !== null) {
       setting = SETTINGS.find((name) => name === key[1]);
-      if (setting !== undefined && key[2].trim() !== '') {
+      if (setting !== undefined && key[2].replace(/\s#.*$/, '').trim() !== '') {
         throw new Error(`Write each entry of "${setting}" on a line of its own.`);
       }
       commentBefore = false;

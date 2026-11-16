@@ -13,7 +13,7 @@ const WORKSPACE = `allowBuilds:
 
   fourth: false
 # A comment of the next setting.
-minimumReleaseAgeExclude:
+minimumReleaseAgeExclude: # A comment after the key.
   - first@1.0.0
   # The reason of the second release.
   - second@2.0.0
