@@ -235,7 +235,7 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps chromium
+      - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps chromium firefox
       - run: pnpm build
       - run: pnpm docs:build
       - run: pnpm docs:axe
