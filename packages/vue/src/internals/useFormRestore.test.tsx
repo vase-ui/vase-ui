@@ -380,7 +380,7 @@ describe('VUE-81: a render before the page show', () => {
 describe('useFormRestoreAsInput before the page show', () => {
   const { render } = createRenderer();
 
-  function createInput(value: Ref<string>, revision: Ref<number>) {
+  function createStatefulInput(value: Ref<string>, revision: Ref<number>) {
     return defineComponent(() => {
       const input = shallowRef<HTMLInputElement | null>(null);
       let handledValue: string | undefined;
@@ -401,11 +401,11 @@ describe('useFormRestoreAsInput before the page show', () => {
     });
   }
 
-  async function renderInput() {
+  async function renderStatefulInput() {
     const value = shallowRef('handled');
     const revision = shallowRef(0);
-    const RestorableInput = createInput(value, revision);
-    const { container } = await render(<RestorableInput />);
+    const StatefulInput = createStatefulInput(value, revision);
+    const { container } = await render(<StatefulInput />);
     const events = recordInputEvents(container);
     const input = screen.getByTestId<HTMLInputElement>('input');
     return { value, revision, input, events };
@@ -413,7 +413,7 @@ describe('useFormRestoreAsInput before the page show', () => {
 
   it('gives the input a new value of a render over the restored value', async () => {
     mockPageBeforeLoad();
-    const { value, input, events } = await renderInput();
+    const { value, input, events } = await renderStatefulInput();
     input.value = 'restored';
 
     value.value = 'loaded';
@@ -427,7 +427,7 @@ describe('useFormRestoreAsInput before the page show', () => {
 
   it('writes the state over a value of a program after the page show', async () => {
     mockPageBeforeLoad();
-    const { revision, input, events } = await renderInput();
+    const { revision, input, events } = await renderStatefulInput();
     window.dispatchEvent(new PageTransitionEvent('pageshow'));
     input.value = 'written';
 
@@ -439,9 +439,27 @@ describe('useFormRestoreAsInput before the page show', () => {
   });
 
   it('writes the state over a value of a program when the page loaded before the mount', async () => {
-    const { revision, input } = await renderInput();
+    const { revision, input } = await renderStatefulInput();
     input.value = 'written';
 
+    revision.value += 1;
+    await flushMicrotasks();
+
+    expect(input).toHaveValue('handled');
+  });
+
+  it('writes the state over a value of a program while KeepAlive holds the part', async () => {
+    mockPageBeforeLoad();
+    const value = shallowRef('handled');
+    const revision = shallowRef(0);
+    const shown = shallowRef(true);
+    const StatefulInput = createStatefulInput(value, revision);
+    await render(() => <KeepAlive>{shown.value ? <StatefulInput key="input" /> : null}</KeepAlive>);
+    const input = screen.getByTestId<HTMLInputElement>('input');
+    input.value = 'written';
+
+    shown.value = false;
+    await flushMicrotasks();
     revision.value += 1;
     await flushMicrotasks();
 

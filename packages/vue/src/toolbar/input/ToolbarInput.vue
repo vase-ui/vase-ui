@@ -125,7 +125,9 @@ function syncHandledValue() {
 const attrs = useAttrs();
 onMounted(syncHandledValue);
 // Vue writes the value at a render only when the input has the key `value`. Else the part reads
-// the input only when it held the handled value, so a restored value stays for the take.
+// the input only when it held the handled value, so a restored value stays for the take. These
+// hooks come before the call of `useFormRestoreAsInput`, so the part reads the value of the render
+// before the composable writes a restored value back.
 let holdsHandledValue = false;
 onBeforeUpdate(() => {
   holdsHandledValue = (element.value as HTMLInputElement | null)?.value === handledValue;

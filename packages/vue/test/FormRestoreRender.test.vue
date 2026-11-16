@@ -1,6 +1,7 @@
 <script lang="ts">
-// A part of each family whose input gets the key `value`. A new `revision` renders the part again
-// with the same value, as a render before the `pageshow` event of the page does.
+// A part of each family whose input Chromium restores and that takes the value of that input at
+// the `pageshow` event. A new `revision` renders the part again with the same value, as a render
+// before that event does.
 export type FormRestoreFamily =
   | 'field'
   | 'input'

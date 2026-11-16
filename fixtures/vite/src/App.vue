@@ -11,6 +11,8 @@ import { Slider } from '@vase-ui/vue/slider';
 const SIZES = ['s', 'm', 'l'];
 
 const letters = ref<string[]>([]);
+// The thumbs and the date field follow the size. The take of the radio group thus renders them
+// before their own `pageshow` listeners run.
 const size = ref('s');
 const range = ref([20, 80]);
 const when = shallowRef<Temporal.PlainDate | null>(null);
@@ -63,8 +65,6 @@ function record(name: string, value: unknown, details: { event: Event }) {
       @value-change="(value, details) => record('range', value, details)"
     >
       <Slider.Control style="position: relative; width: 200px; height: 10px">
-        <!-- The thumbs and the date field follow the size. The take of the radio group thus renders
-        them before their own `pageshow` listeners run. -->
         <Slider.Thumb
           aria-label="Minimum"
           :class="`size-${size}`"

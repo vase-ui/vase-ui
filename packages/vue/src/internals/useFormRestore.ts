@@ -20,15 +20,15 @@ function isBeforePageshow(win: Window) {
  * has nothing to take.
  * @param input An element of the part, such as its input. A ref that a `ref` setter writes.
  * @param onRestore Gets the `pageshow` event.
- * @returns Gives `true` from a mount before the `pageshow` event of the page until the part gets
- * that event.
+ * @returns Gives `true` from a mount or an activation before the `pageshow` event of the page until
+ * the part gets that event. Gives `false` while `KeepAlive` holds the part.
  */
 export function useFormRestore(
   input: Readonly<Ref<Element | null>>,
   onRestore: (event: PageTransitionEvent) => void,
 ): () => boolean {
   // `KeepAlive` takes the input out of the document. The flag is a source of the `watch`, so its
-  // cleanup removes the listener of the window.
+  // cleanup removes the listener of the window and ends the wait for `pageshow`.
   const isDeactivated = shallowRef(false);
   onDeactivated(() => {
     isDeactivated.value = true;
@@ -48,14 +48,16 @@ export function useFormRestore(
 
       const win = ownerWindow(element);
       waitsForPageshow = isBeforePageshow(win);
-      onCleanup(
-        addEventListener(win, 'pageshow', (event) => {
-          waitsForPageshow = false;
-          if (!event.persisted) {
-            onRestore(event);
-          }
-        }),
-      );
+      const removeListener = addEventListener(win, 'pageshow', (event) => {
+        waitsForPageshow = false;
+        if (!event.persisted) {
+          onRestore(event);
+        }
+      });
+      onCleanup(() => {
+        waitsForPageshow = false;
+        removeListener();
+      });
     },
     { flush: 'post' },
   );
@@ -111,7 +113,7 @@ export function useFormRestoreAsInput(
   });
   onUpdated(() => {
     // A render that gave the input a new value keeps it.
-    if (unhandled?.element === input.value && unhandled.element.value === unhandled.handledValue) {
+    if (unhandled && unhandled.element.value === unhandled.handledValue) {
       unhandled.element.value = unhandled.value;
     }
     unhandled = undefined;

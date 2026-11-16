@@ -172,8 +172,8 @@ export function mockNavigationType(type: NavigationTimingType): void {
 }
 
 /**
- * Gives a navigation whose `load` event has not ended until the test ends. A part that mounts then
- * waits for the `pageshow` event of the page.
+ * Gives a `back_forward` navigation whose `load` event has not ended, until the test ends. A part
+ * that mounts then waits for the `pageshow` event of the page.
  */
 export function mockPageBeforeLoad(): void {
   mockNavigation({ type: 'back_forward', loadEventEnd: 0 });
