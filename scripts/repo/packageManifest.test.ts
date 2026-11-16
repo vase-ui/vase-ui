@@ -48,10 +48,10 @@ test('docs/quick-start.md names the lowest version of the peer range', () => {
   );
 });
 
-test('CONTRIBUTING.md names the lowest Vue version of the peer range', () => {
-  const page = readRepositoryFile(REPOSITORY_ROOT, 'CONTRIBUTING.md');
+test('CONTRIBUTING.md names the lowest version of the peer range', () => {
+  const guide = readRepositoryFile(REPOSITORY_ROOT, 'CONTRIBUTING.md');
   const version = /The lowest version of Vue that the package supports is (\d+\.\d+\.\d+)\./.exec(
-    page,
+    guide,
   )?.[1];
   assert.equal(version, floor);
 });
