@@ -1438,9 +1438,7 @@ describe('<Combobox.Input />', () => {
       await fireEvent.compositionStart(input);
       await fireEvent.input(input, { target: { value: '' } });
 
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
     });
 
     it('clears the highlight on an empty composition update while staying open', async () => {
@@ -1703,12 +1701,12 @@ describe('<Combobox.Input />', () => {
 
       await user.click(input);
 
-      await waitFor(() => expect(screen.queryByRole('listbox')).not.toBe(null));
+      await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
       expect(input).toHaveAttribute('data-popup-side', 'right');
 
       await user.click(document.body);
 
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(input).not.toHaveAttribute('data-popup-side');
     });
 

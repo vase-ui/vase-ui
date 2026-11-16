@@ -3222,9 +3222,7 @@ describe('FloatingFocusManager', () => {
 
         await user.click(screen.getByTestId('close'));
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('close')).toBeNull();
-        });
+        expect(screen.queryByTestId('close')).toBeNull();
 
         expect(reference.nextElementSibling).toBeNull();
       });

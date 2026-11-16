@@ -717,13 +717,13 @@ describe('<PreviewCard.Root />', () => {
         await user.hover(trigger);
 
         await waitFor(() => {
-          expect(screen.queryByTestId('positioner')).not.toBe(null);
+          expect(screen.getByTestId('positioner')).not.toBe(null);
         });
 
         await user.unhover(trigger);
 
         await waitFor(() => {
-          expect(screen.queryByTestId('positioner')).not.toBe(null);
+          expect(screen.getByTestId('positioner')).not.toBe(null);
         });
 
         actions!.unmount();
@@ -754,7 +754,7 @@ describe('<PreviewCard.Root />', () => {
         await user.hover(trigger);
 
         await waitFor(() => {
-          expect(screen.queryByTestId('popup')).not.toBe(null);
+          expect(screen.getByTestId('popup')).not.toBe(null);
         });
 
         actions!.close();

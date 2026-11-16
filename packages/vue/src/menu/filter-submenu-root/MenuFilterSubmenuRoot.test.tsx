@@ -213,16 +213,12 @@ describe('<Menu.FilterProvider><Menu.SubmenuRoot/></Menu.FilterProvider>', () =>
 
       const input = await screen.findByRole('searchbox', { name: 'Filter folders' });
       await user.type(input, 'p');
-      await waitFor(() => {
-        expect(screen.queryByRole('menuitem', { name: 'Archive' })).toBe(null);
-      });
+      expect(screen.queryByRole('menuitem', { name: 'Archive' })).toBe(null);
       expect(onValueChange.mock.calls).toEqual([['p', 'input-change']]);
 
       await user.click(screen.getByRole('menuitem', { name: 'Projects' }));
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('parent-popup')).toBe(null);
-      });
+      expect(screen.queryByTestId('parent-popup')).toBe(null);
       expect(onValueChange.mock.calls).toEqual([
         ['p', 'input-change'],
         ['', 'popup-close'],
@@ -361,9 +357,7 @@ describe('<Menu.FilterProvider><Menu.SubmenuRoot/></Menu.FilterProvider>', () =>
 
       await user.keyboard('{Escape}');
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('submenu-list')).toBe(null);
-      });
+      expect(screen.queryByTestId('submenu-list')).toBe(null);
       await waitFor(() => {
         expect(trigger).toHaveFocus();
       });
@@ -401,9 +395,7 @@ describe('<Menu.FilterProvider><Menu.SubmenuRoot/></Menu.FilterProvider>', () =>
 
       await user.keyboard('{ArrowLeft}');
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('submenu-list')).toBe(null);
-      });
+      expect(screen.queryByTestId('submenu-list')).toBe(null);
       await waitFor(() => {
         expect(trigger).toHaveFocus();
       });
@@ -519,9 +511,7 @@ describe('<Menu.FilterProvider><Menu.SubmenuRoot/></Menu.FilterProvider>', () =>
       await flushMicrotasks();
       await user.keyboard('{ArrowLeft}');
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('submenu-list')).toBe(null);
-      });
+      expect(screen.queryByTestId('submenu-list')).toBe(null);
     });
 
     it('keeps focus in the submenu input when the pointer crosses the trigger again', async () => {
@@ -758,9 +748,7 @@ describe('closing a filtered submenu from the keyboard', () => {
       });
       await user.keyboard('[ArrowLeft]');
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('submenu')).toBe(null);
-      });
+      expect(screen.queryByTestId('submenu')).toBe(null);
       expect(screen.getByRole('menuitem', { name: 'First' })).toHaveAttribute('data-highlighted');
       expect(trigger).not.toHaveAttribute('data-highlighted');
     },
@@ -809,9 +797,7 @@ describe('closing a filtered submenu from the keyboard', () => {
       });
       await user.keyboard('[ArrowLeft]');
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('submenu')).toBe(null);
-      });
+      expect(screen.queryByTestId('submenu')).toBe(null);
       expect(input).toHaveFocus();
       expect(input).toHaveAttribute('aria-activedescendant', trigger.id);
       expect(screen.getByRole('menuitem', { name: 'Last' })).not.toHaveAttribute(
@@ -869,9 +855,7 @@ describe('closing a filtered submenu from the keyboard', () => {
       });
       await user.keyboard('[ArrowLeft]');
 
-      await waitFor(() => {
-        expect(shadowRoot.querySelector('[data-testid="submenu"]')).toBe(null);
-      });
+      expect(shadowRoot.querySelector('[data-testid="submenu"]')).toBe(null);
       expect(screen.getByRole('menuitem', { name: 'First' })).toHaveAttribute('data-highlighted');
     } finally {
       host.remove();

@@ -419,9 +419,7 @@ describe('<Toolbar.Button />', () => {
         });
 
         await user.keyboard('[Escape]');
-        await waitFor(() => {
-          expect(screen.queryByRole('menu')).toBe(null);
-        });
+        expect(screen.queryByRole('menu')).toBe(null);
 
         expect(handleOpenChange).toHaveBeenCalledTimes(2);
 
@@ -543,9 +541,7 @@ describe('<Toolbar.Button />', () => {
         });
 
         await user.keyboard('[Enter]');
-        await waitFor(() => {
-          expect(screen.queryByRole('listbox')).toBe(null);
-        });
+        expect(screen.queryByRole('listbox')).toBe(null);
 
         await waitFor(() => {
           expect(trigger).toHaveFocus();
@@ -725,7 +721,7 @@ describe('<Toolbar.Button />', () => {
         await user.click(trigger);
 
         await waitFor(() => {
-          expect(screen.queryByRole('dialog')).toHaveFocus();
+          expect(screen.getByRole('dialog')).toHaveFocus();
         });
 
         await user.keyboard('{ArrowRight}');
@@ -801,7 +797,7 @@ describe('<Toolbar.Button />', () => {
         await user.click(trigger);
 
         await waitFor(() => {
-          expect(screen.queryByRole('alertdialog')).toHaveFocus();
+          expect(screen.getByRole('alertdialog')).toHaveFocus();
         });
 
         await user.keyboard('{ArrowRight}');

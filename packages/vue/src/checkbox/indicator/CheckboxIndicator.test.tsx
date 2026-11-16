@@ -13,7 +13,6 @@ import {
   renderOnServer,
   screen,
   takeReportedMessages,
-  waitFor,
 } from '#test-utils';
 import { CheckboxRootContext } from '../root/CheckboxRootContext';
 import CheckboxIndicatorHydration from './CheckboxIndicatorHydration.test.vue';
@@ -131,9 +130,7 @@ describe('<Checkbox.Indicator />', () => {
 
     await user.click(closeButton);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('indicator')).toBe(null);
-    });
+    expect(screen.queryByTestId('indicator')).toBe(null);
   });
 
   it('should remove the indicator when the animation finishes', async () => {
