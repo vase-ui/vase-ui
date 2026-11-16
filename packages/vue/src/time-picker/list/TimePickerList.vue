@@ -1,0 +1,134 @@
+<script lang="ts">
+import type { HTMLAttributes } from 'vue';
+import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
+
+export interface TimePickerListState {
+  /**
+   * Whether the picker ignores user interaction.
+   */
+  disabled: boolean;
+  /**
+   * Whether the user can see the time but not change it.
+   */
+  readOnly: boolean;
+}
+
+export interface TimePickerListProps
+  extends
+    VaseUIComponentProps<TimePickerListState>,
+    /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
+  /**
+   * The distance between two times of the list, in minutes. It must be a whole number above 0.
+   * The list starts at `minTime` of the picker, or at midnight, and ends at `maxTime`, or at the
+   * last time of the day.
+   * @default 30
+   */
+  step?: number | undefined;
+}
+</script>
+
+<script setup lang="ts">
+import { computed, watch } from 'vue';
+import { warn } from '../../common/warn';
+import { useCompositeRoot } from '../../internals/composite/root/useCompositeRoot';
+import { usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
+import { toPlainTime } from '../../internals/date-time/temporal';
+import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useRenderElement } from '../../internals/useRenderElement';
+import TimePickerItem from '../item/TimePickerItem.vue';
+import { useTimePickerRootContext } from '../root/TimePickerRootContext';
+import { useFocusItemOnOpen } from '../utils/useFocusItemOnOpen';
+import { DEFAULT_LIST_STEP, isValidListStep, listTimes } from '../utils/timeList';
+
+defineOptions({ inheritAttrs: false });
+
+const props = withDefaults(defineProps<TimePickerListProps>(), {
+  as: 'div',
+  step: DEFAULT_LIST_STEP,
+});
+
+defineSlots<{
+  /**
+   * Renders one time of the list. With no slot, the list renders a `TimePicker.Item` for each time.
+   */
+  item(props: { time: Temporal.PlainTime; index: number }): unknown;
+  render: ComponentRenderFn<HTMLProps, TimePickerListState>;
+}>();
+
+const picker = useTimePickerRootContext();
+const popup = usePickerPopup();
+
+if (process.env.NODE_ENV !== 'production') {
+  watch(
+    () => props.step,
+    (step) => {
+      if (!isValidListStep(step)) {
+        warn(
+          'TimePicker.List `step` must be a whole number of minutes above 0.',
+          `The list uses a step of ${DEFAULT_LIST_STEP} minutes instead.`,
+          'Set `step` to a whole number above 0.',
+        );
+      }
+    },
+    { immediate: true },
+  );
+}
+
+const times = computed(() =>
+  listTimes(
+    isValidListStep(props.step) ? props.step : DEFAULT_LIST_STEP,
+    picker.props.minTime,
+    picker.props.maxTime,
+  ),
+);
+
+// With a selected time, the tab stop is the item of that time, so the focus enters the list there.
+const hasSelectedItem = computed(() => {
+  const { value } = picker.value;
+  const selected = value === null ? null : toPlainTime(value);
+  return (
+    selected !== null &&
+    times.value.some((time) => Temporal.PlainTime.compare(time, selected) === 0)
+  );
+});
+
+const { props: compositeProps, rootRef } = useCompositeRoot({
+  orientation: 'vertical',
+  enableHomeAndEndKeys: true,
+  hasActiveItem: hasSelectedItem,
+});
+
+const state = computed<TimePickerListState>(() => ({
+  disabled: picker.disabled.value,
+  readOnly: picker.readOnly.value,
+}));
+
+const { element, elementProps } = useRenderElement('div', props, {
+  state,
+  ref: [rootRef],
+  props: (attrs) => [
+    compositeProps,
+    {
+      role: 'listbox',
+      'aria-label': 'Time',
+      'aria-disabled': state.value.disabled || undefined,
+      'aria-readonly': state.value.readOnly || undefined,
+    },
+    attrs,
+  ],
+});
+
+useFocusItemOnOpen(popup, element);
+
+defineExpose({ element });
+</script>
+
+<template>
+  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+  <component :is="as" v-else v-bind="elementProps()">
+    <template v-for="(time, index) in times" :key="time.toString()">
+      <slot v-if="$slots.item" name="item" :time="time" :index="index" />
+      <TimePickerItem v-else :time="time" />
+    </template>
+  </component>
+</template>

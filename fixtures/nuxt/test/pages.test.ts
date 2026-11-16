@@ -933,6 +933,29 @@ async function expectDatePickerPage(page: Page) {
   expect(await page.getByTestId('when-popup').count()).toBe(0);
 }
 
+// The text that a time picker gives to the name of its trigger, as `Intl` makes it in Node.js.
+function formatTime(hour: number) {
+  return new Intl.DateTimeFormat('en-US', {
+    timeStyle: 'short',
+    hourCycle: 'h12',
+    timeZone: 'UTC',
+  }).format(Date.UTC(1970, 0, 1, hour));
+}
+
+// The server HTML has the field with the value, the hidden input and the trigger with its name. It
+// has no popup, because the portal renders after the mount.
+async function expectTimePickerPage(page: Page) {
+  expect(await page.getByTestId('start').getAttribute('role')).toBe('group');
+  expect(await readDateFieldValues(page, 'start')).toEqual(['3', '00', 'PM']);
+  expect(await page.getByTestId('start-value').textContent()).toBe('15:00:00');
+  expect(await readFormData(page)).toEqual(['start=15:00']);
+  const trigger = page.getByTestId('start-trigger');
+  expect(await trigger.getAttribute('aria-haspopup')).toBe('dialog');
+  expect(await trigger.getAttribute('aria-expanded')).toBe('false');
+  expect(await trigger.getAttribute('aria-label')).toBe(`Change time, ${formatTime(15)}`);
+  expect(await page.getByTestId('start-popup').count()).toBe(0);
+}
+
 async function expectDateFieldPageOnServer(page: Page) {
   await expectDateFieldPage(page);
   // A server has no DOM, so it cannot find a native label.
@@ -2022,6 +2045,7 @@ const PAGES: PageCase[] = [
     expectHydratedPage: expectHydratedDateFieldPage,
   },
   { path: '/date-picker', expectPage: expectDatePickerPage },
+  { path: '/time-picker', expectPage: expectTimePickerPage },
   { path: '/number-field', expectPage: expectNumberFieldPage },
   { path: '/providers', expectPage: expectProvidersPage },
   { path: '/use-render', expectPage: expectUseRenderPage },
@@ -2445,6 +2469,33 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(await readFormData(page)).toEqual(['when=2026-11-12']);
     expect(await page.getByTestId('when-trigger').getAttribute('aria-label')).toBe(
       'Change date, Thursday, November 12, 2026',
+    );
+    expect(messages).toEqual([]);
+  });
+
+  it('opens the popup of /time-picker, focuses the selected time, and selects a time, after hydration', async () => {
+    const page = await createPage('/time-picker');
+    const messages = collectMessages(page);
+    const options = page.getByTestId('start-list').getByRole('option');
+
+    await page.getByTestId('start-trigger').click();
+    await page.getByTestId('start-popup').waitFor();
+
+    expect(await page.getByTestId('start-trigger').getAttribute('aria-expanded')).toBe('true');
+    expect(await options.count()).toBe(24);
+    await page.waitForFunction(
+      () => document.activeElement?.getAttribute('aria-selected') === 'true',
+    );
+    expect(await page.evaluate(() => document.activeElement?.textContent)).toBe(formatTime(15));
+
+    await options.nth(16).click();
+
+    await page.getByTestId('start-popup').waitFor({ state: 'detached' });
+    expect(await page.getByTestId('start-value').textContent()).toBe('16:00:00');
+    expect(await readDateFieldValues(page, 'start')).toEqual(['4', '00', 'PM']);
+    expect(await readFormData(page)).toEqual(['start=16:00']);
+    expect(await page.getByTestId('start-trigger').getAttribute('aria-label')).toBe(
+      `Change time, ${formatTime(16)}`,
     );
     expect(messages).toEqual([]);
   });
