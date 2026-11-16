@@ -291,10 +291,12 @@ describe('<TimePicker.Root />', () => {
         onOpenChange,
       });
       const popup = await open(user);
+      expect(screen.getByTestId('trigger')).toHaveAttribute('aria-label', triggerName('14:30'));
 
       await user.click(listItem('16:00'));
 
       await expectClosed(popup);
+      expect(screen.getByTestId('trigger')).toHaveAttribute('aria-label', triggerName('16:00'));
       expect(onValueChange.mock.lastCall?.[0].toString()).toBe('16:00:00');
       expect(onValueChange.mock.lastCall?.[1].reason).toBe('item-press');
       expect(onOpenChange.mock.lastCall?.[0]).toBe(false);
