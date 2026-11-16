@@ -81,6 +81,7 @@ describe('<Menu.Trigger />', () => {
       trigger.focus();
       await flushMicrotasks();
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      const menu = screen.getByRole('menu');
 
       await userEvent.tab({ shift: true });
 
@@ -88,8 +89,9 @@ describe('<Menu.Trigger />', () => {
         expect(screen.getByRole('button', { name: 'Before' })).toHaveFocus();
       });
       await waitFor(() => {
-        expect(screen.queryByRole('menu')).toBe(null);
+        expect(menu).not.toBeInTheDocument();
       });
+      expect(screen.queryByRole('menu')).toBe(null);
     });
   });
 
@@ -606,9 +608,7 @@ describe('<Menu.Trigger />', () => {
       // After 200 ms of a held press, a release over an item activates the item.
       await wait(250);
       await fireEvent.keyDown(document.body, { key: 'Escape' });
-      await waitFor(() => {
-        expect(screen.queryByRole('menu')).toBe(null);
-      });
+      expect(screen.queryByRole('menu')).toBe(null);
 
       const item = await waitForLaterMillisecond(() => {
         handle.open('trigger');

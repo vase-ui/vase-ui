@@ -1753,9 +1753,7 @@ describe('<Select.Popup />', () => {
       // The aligned geometry is measured once, so a resize invalidates it entirely.
       await fireEvent(window, new UIEvent('resize'));
 
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
     });
   });
 

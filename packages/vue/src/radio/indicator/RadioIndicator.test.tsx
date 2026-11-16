@@ -15,7 +15,6 @@ import {
   renderOnServer,
   screen,
   takeReportedMessages,
-  waitFor,
 } from '#test-utils';
 import RadioIndicatorHydration from './RadioIndicatorHydration.test.vue';
 
@@ -75,9 +74,7 @@ describe('<Radio.Indicator />', () => {
 
     await user.click(closeButton);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('indicator-a')).toBe(null);
-    });
+    expect(screen.queryByTestId('indicator-a')).toBe(null);
   });
 
   it('should remove the indicator when the animation finishes', async () => {

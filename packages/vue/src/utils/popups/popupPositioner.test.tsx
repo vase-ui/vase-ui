@@ -170,8 +170,9 @@ describe('usePopupPositioner', () => {
     open.value = false;
 
     await waitFor(() => {
-      expect(screen.queryByTestId('popup')).toBe(null);
+      expect(popup).not.toBeInTheDocument();
     });
+    expect(screen.queryByTestId('popup')).toBe(null);
     expect(store.state.positionerElement).toBe(null);
   });
 

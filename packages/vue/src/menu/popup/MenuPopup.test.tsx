@@ -300,9 +300,7 @@ describe('<Menu.Popup />', () => {
       });
       await user.click(blank);
 
-      await waitFor(() => {
-        expect(screen.queryByRole('menuitem', { name: 'Blank' })).toBe(null);
-      });
+      expect(screen.queryByRole('menuitem', { name: 'Blank' })).toBe(null);
       await flushMicrotasks();
       expect(screen.getByRole('dialog')).toBeInTheDocument();
       expect(dialogTrigger).not.toHaveFocus();
@@ -365,9 +363,7 @@ describe('<Menu.Popup />', () => {
       await screen.findByRole('menuitem', { name: 'Item' });
     });
     await user.keyboard('[Escape]');
-    await waitFor(() => {
-      expect(screen.queryByRole('menuitem', { name: 'Item' })).toBe(null);
-    });
+    expect(screen.queryByRole('menuitem', { name: 'Item' })).toBe(null);
 
     const rename = await waitForLaterMillisecond(async () => {
       await user.click(screen.getByRole('button', { name: 'Actions' }));
@@ -376,9 +372,7 @@ describe('<Menu.Popup />', () => {
     await user.click(rename);
 
     const input = await screen.findByRole('textbox', { name: 'Name' });
-    await waitFor(() => {
-      expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
-    });
+    expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
     await flushMicrotasks();
     expect(input).toHaveFocus();
   });
@@ -469,9 +463,7 @@ describe('<Menu.Popup />', () => {
       await wait(200);
       await fireEvent.mouseUp(item);
 
-      await waitFor(() => {
-        expect(screen.queryByText('Close')).toBe(null);
-      });
+      expect(screen.queryByText('Close')).toBe(null);
       expect(finalFocus).toHaveBeenLastCalledWith('mouse');
     });
   });
@@ -861,9 +853,7 @@ describe('<Menu.Popup />', () => {
       await waitFor(() => {
         expect(finalFocus).toHaveBeenCalledWith('keyboard');
       });
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
-      });
+      expect(screen.queryByTestId('popup')).toBe(null);
       expect(document.body).toHaveFocus();
     });
 
@@ -880,9 +870,7 @@ describe('<Menu.Popup />', () => {
       await userEvent.tab({ shift: true });
 
       expect(trigger).toHaveFocus();
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
-      });
+      expect(screen.queryByTestId('popup')).toBe(null);
     });
 
     it('focuses the trigger when the focus goes to the focus guard before the popup', async () => {
@@ -1042,9 +1030,7 @@ describe('<Menu.Popup />', () => {
 
         await fireEvent.pointerDown(screen.getByTestId('outside'), { pointerType: 'mouse' });
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('popup')).toBe(null);
-        });
+        expect(screen.queryByTestId('popup')).toBe(null);
         await flushMicrotasks();
         expect(before).not.toHaveFocus();
       });

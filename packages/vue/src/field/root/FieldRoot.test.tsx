@@ -1554,7 +1554,7 @@ describe('<Field.Root />', () => {
         await flushMicrotasks();
 
         await waitFor(() => {
-          expect(screen.queryByText('error')).not.toBe(null);
+          expect(screen.getByText('error')).not.toBe(null);
         });
       });
 

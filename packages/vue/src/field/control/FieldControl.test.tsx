@@ -1615,13 +1615,13 @@ describe('<Field.Control />', () => {
     });
 
     it('touches and validates a field that the user left', async () => {
-      const { root, queryError } = await hydrateTyped(
+      const { root } = await hydrateTyped(
         { value: '', type: 'email', validationMode: 'onBlur' },
         { typed: 'abc', focus: 'outside' },
       );
 
       await waitFor(() => expect(root).toHaveAttribute('data-touched', ''));
-      await waitFor(() => expect(queryError()).not.toBeNull());
+      await waitFor(() => expect(within(root).getByTestId('error')).not.toBeNull());
       expect(root).toHaveAttribute('data-invalid', '');
     });
 
