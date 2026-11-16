@@ -28,7 +28,7 @@ import { provideFloatingNode, useFloatingTree } from '../../utils/popups/tree/Fl
 import type { FloatingTreeType } from '../../utils/popups/types';
 import MenuTriggerScoped from './MenuTriggerScoped.test.vue';
 
-const popup = (
+const popup = () => (
   <Menu.Portal>
     <Menu.Positioner>
       <Menu.Popup data-testid="popup" />
@@ -659,7 +659,7 @@ describe('<Menu.Trigger />', () => {
       await render(
         <Menu.Root>
           <Menu.Trigger id="trigger">Open</Menu.Trigger>
-          {popup}
+          {popup()}
         </Menu.Root>,
       );
 
@@ -679,7 +679,7 @@ describe('<Menu.Trigger />', () => {
         <Menu.Root defaultOpen defaultTriggerId="first">
           <Menu.Trigger id="first">First</Menu.Trigger>
           <Menu.Trigger id="second">Second</Menu.Trigger>
-          {popup}
+          {popup()}
         </Menu.Root>,
       );
 
@@ -703,7 +703,7 @@ describe('<Menu.Trigger />', () => {
             <Menu.Trigger as={Toolbar.Button} data-testid="button">
               Toggle
             </Menu.Trigger>
-            {popup}
+            {popup()}
           </Menu.Root>
         </Toolbar.Root>,
       );
@@ -731,7 +731,7 @@ describe('<Menu.Trigger />', () => {
       await render(() => (
         <Menu.Root open={open.value}>
           <Menu.Trigger>Open</Menu.Trigger>
-          {popup}
+          {popup()}
         </Menu.Root>
       ));
       const trigger = screen.getByRole('button');

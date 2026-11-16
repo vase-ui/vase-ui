@@ -140,6 +140,41 @@ describe('<CheckboxGroup />', () => {
       expect(empty).toHaveAttribute('aria-checked', 'false');
     });
 
+    it('VUE-114: reads a null value as an empty value, and stays controlled', async () => {
+      const handleValueChange = vi.fn();
+      await render(
+        <CheckboxGroup value={null} defaultValue={['green']} onValueChange={handleValueChange}>
+          <Checkbox.Root value="red" data-testid="red" />
+          <Checkbox.Root value="green" data-testid="green" />
+        </CheckboxGroup>,
+      );
+      const red = screen.getByTestId('red');
+      expect(red).toHaveAttribute('aria-checked', 'false');
+      expect(screen.getByTestId('green')).toHaveAttribute('aria-checked', 'false');
+
+      await fireEvent.click(red);
+
+      expect(handleValueChange).toHaveBeenCalledTimes(1);
+      expect(handleValueChange.mock.calls[0][0]).toEqual(['red']);
+      expect(red).toHaveAttribute('aria-checked', 'false');
+    });
+
+    it('VUE-114: reads a value that changes to null as an empty value, not as the default value', async () => {
+      const { setProps } = await render(
+        <CheckboxGroup value={['red']} defaultValue={['green']}>
+          <Checkbox.Root value="red" data-testid="red" />
+          <Checkbox.Root value="green" data-testid="green" />
+        </CheckboxGroup>,
+      );
+      expect(screen.getByTestId('red')).toHaveAttribute('aria-checked', 'true');
+      expect(screen.getByTestId('green')).toHaveAttribute('aria-checked', 'false');
+
+      await setProps({ value: null });
+
+      expect(screen.getByTestId('red')).toHaveAttribute('aria-checked', 'false');
+      expect(screen.getByTestId('green')).toHaveAttribute('aria-checked', 'false');
+    });
+
     it('treats a controlled value that becomes undefined as an empty array', async () => {
       const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -279,7 +314,6 @@ describe('<CheckboxGroup />', () => {
 
   describe('prop: defaultValue', () => {
     it('treats null as an empty array', async () => {
-      // @ts-expect-error Simulates a JavaScript consumer passing an unsupported value.
       const group = <CheckboxGroup defaultValue={null} />;
 
       await render(group);
@@ -2706,6 +2740,34 @@ describe('<CheckboxGroup />', () => {
       await settleReset();
 
       expect(checkbox).toHaveAttribute('aria-checked', 'false');
+      expect(getFormData()).toEqual([]);
+    });
+
+    it('VUE-114: does not change a null value, and emits nothing', async () => {
+      const handleChange = vi.fn();
+      await render(
+        <form data-testid="form">
+          <Field.Root name="fruits">
+            <CheckboxGroup value={null} defaultValue={['apple']} onValueChange={handleChange}>
+              <Checkbox.Root value="apple" />
+              <Checkbox.Root value="banana" />
+            </CheckboxGroup>
+          </Field.Root>
+        </form>,
+      );
+      const [apple, banana] = screen.getAllByRole('checkbox');
+      await fireEvent.click(banana);
+      expect(handleChange).toHaveBeenCalledTimes(1);
+      expect(apple).toHaveAttribute('aria-checked', 'false');
+      expect(banana).toHaveAttribute('aria-checked', 'false');
+      expect(getFormData()).toEqual([]);
+
+      screen.getByTestId<HTMLFormElement>('form').reset();
+      await settleReset();
+
+      expect(handleChange).toHaveBeenCalledTimes(1);
+      expect(apple).toHaveAttribute('aria-checked', 'false');
+      expect(banana).toHaveAttribute('aria-checked', 'false');
       expect(getFormData()).toEqual([]);
     });
   });
