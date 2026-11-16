@@ -781,6 +781,141 @@ describe('<NavigationMenu.Trigger />', () => {
     });
   });
 
+  // `KeepAlive` takes a held viewport out of the document, with its inside guards.
+  describe('VUE-120: the guards skip a viewport that KeepAlive holds', () => {
+    type Popup = 'held' | 'mounted while held' | 'inline, held';
+
+    function renderPositionedViewport() {
+      return (
+        <NavigationMenu.Portal>
+          <NavigationMenu.Positioner>
+            <NavigationMenu.Popup>
+              <NavigationMenu.Viewport />
+            </NavigationMenu.Popup>
+          </NavigationMenu.Positioner>
+        </NavigationMenu.Portal>
+      );
+    }
+
+    function renderItems() {
+      return (
+        <NavigationMenu.List>
+          <NavigationMenu.Item value="one">
+            <NavigationMenu.Trigger data-testid="trigger">One</NavigationMenu.Trigger>
+            <NavigationMenu.Content>
+              <a href="#one">Link of one</a>
+            </NavigationMenu.Content>
+          </NavigationMenu.Item>
+          <NavigationMenu.Item value="two">
+            <NavigationMenu.Trigger data-testid="trigger-two">Two</NavigationMenu.Trigger>
+            <NavigationMenu.Content>
+              <a href="#two">Link of two</a>
+            </NavigationMenu.Content>
+          </NavigationMenu.Item>
+        </NavigationMenu.List>
+      );
+    }
+
+    async function renderHeldViewport(popup: Popup, defaultValue = 'one') {
+      const reasons: string[] = [];
+      const handleValueChange = (
+        _value: unknown,
+        details: NavigationMenu.Root.ChangeEventDetails,
+      ) => {
+        reasons.push(details.reason);
+      };
+      const isInline = popup === 'inline, held';
+      const { HeldBranch, hide, mountWhileHeld } = createHeldBranch(
+        isInline ? () => <NavigationMenu.Viewport /> : renderPositionedViewport,
+        { mounted: popup !== 'mounted while held', renderBranch: (part) => part },
+      );
+      const renderMenu = () => (
+        <NavigationMenu.Root defaultValue={defaultValue} onValueChange={handleValueChange}>
+          {renderItems()}
+          <HeldBranch />
+        </NavigationMenu.Root>
+      );
+      const result = await render(() => (
+        <div>
+          {isInline ? (
+            <NavigationMenu.Root defaultValue="outer">
+              <NavigationMenu.List>
+                <NavigationMenu.Item value="outer">
+                  <NavigationMenu.Trigger>Outer</NavigationMenu.Trigger>
+                  <NavigationMenu.Content>{renderMenu()}</NavigationMenu.Content>
+                </NavigationMenu.Item>
+              </NavigationMenu.List>
+              {renderPositionedViewport()}
+            </NavigationMenu.Root>
+          ) : (
+            renderMenu()
+          )}
+          <button data-testid="after">After</button>
+        </div>
+      ));
+      await flushMicrotasks();
+      if (popup === 'mounted while held') {
+        await mountWhileHeld();
+      } else {
+        await hide();
+      }
+      return { ...result, reasons };
+    }
+
+    it.each([
+      { name: 'positioner, held', popup: 'held' as const },
+      { name: 'positioner, mounted while held', popup: 'mounted while held' as const },
+      { name: 'inline viewport, held', popup: 'inline, held' as const },
+    ])('goes from the active trigger to the next trigger for Tab ($name)', async ({ popup }) => {
+      const { user, reasons } = await renderHeldViewport(popup);
+      const trigger = screen.getByTestId('trigger');
+      trigger.focus();
+      await flushMicrotasks();
+
+      await user.tab();
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('trigger-two')).toHaveFocus();
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(reasons).toEqual([]);
+    });
+
+    it.each([
+      { name: 'positioner, held', popup: 'held' as const },
+      { name: 'positioner, mounted while held', popup: 'mounted while held' as const },
+      { name: 'inline viewport, held', popup: 'inline, held' as const },
+    ])(
+      'goes from the next trigger to the active trigger for Shift+Tab ($name)',
+      async ({ popup }) => {
+        const { user, reasons } = await renderHeldViewport(popup);
+        const trigger = screen.getByTestId('trigger');
+        screen.getByTestId('trigger-two').focus();
+        await flushMicrotasks();
+
+        await user.tab({ shift: true });
+        await flushMicrotasks();
+
+        expect(trigger).toHaveFocus();
+        expect(trigger).toHaveAttribute('aria-expanded', 'true');
+        expect(reasons).toEqual([]);
+      },
+    );
+
+    it('closes the item for Tab from the active trigger to an element after the root', async () => {
+      const { user, reasons } = await renderHeldViewport('held', 'two');
+      const trigger = screen.getByTestId('trigger-two');
+      trigger.focus();
+      await flushMicrotasks();
+
+      await user.tab();
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('after')).toHaveFocus();
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
+      expect(reasons).toEqual([REASONS.focusOut]);
+    });
+  });
+
   describe('VUE-60: the trigger has one root node', () => {
     it.each([
       { name: 'a closed item', defaultValue: null },
