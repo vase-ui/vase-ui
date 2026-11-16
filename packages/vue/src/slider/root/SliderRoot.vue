@@ -187,13 +187,12 @@ export type SliderRootCommitEventDetails = VaseUIGenericEventDetails<SliderRootC
 import { computed, nextTick, provide, shallowRef, watch } from 'vue';
 import { areArraysEqual } from '../../common/areArraysEqual';
 import { clamp } from '../../common/clamp';
-import { useAriaAfterHydration, useIsHydrating } from '../../common/hydration';
+import { useIsHydrating } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
 import { activeElement, contains } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
 import { warn } from '../../common/warn';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
-import { givenName } from '../../internals/blankName';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import type { CompositeMetadata } from '../../internals/composite/list/useCompositeList';
 import {
@@ -203,6 +202,7 @@ import {
 import { useRegisterFieldControl } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { useFormContext } from '../../internals/form-context';
+import { given } from '../../internals/givenAttributes';
 import { createLabelIdRegistry, useControlLabelId } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
@@ -309,7 +309,7 @@ const { labelId: localLabelId, registerLabelId } = createLabelIdRegistry();
 const isHydrating = useIsHydrating();
 
 const labelId = computed(
-  () => givenName(props.ariaLabelledby) ?? fieldLabelId.value ?? localLabelId.value,
+  () => given('aria-labelledby', props.ariaLabelledby) ?? fieldLabelId.value ?? localLabelId.value,
 );
 
 const fieldsetDisabled = useFieldsetDisabled(() => element.value);
@@ -665,23 +665,20 @@ function hasAriaLabel(attrs: Record<string, unknown>) {
   return typeof attrs['aria-label'] === 'string';
 }
 
-const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('div', props, {
   state,
   props: (attrs) => [
     {
       // A server writes the attributes of the root before the `setup` of `Slider.Label`, so the
       // root assumes that label until it is mounted.
-      'aria-labelledby': ariaAfterHydration(
+      'aria-labelledby':
         labelId.value ??
-          (isHydrating.value && !hasAriaLabel(attrs) ? rootLabelId.value : undefined),
-      ),
+        (isHydrating.value && !hasAriaLabel(attrs) ? rootLabelId.value : undefined),
       id: rootId.value,
       role: 'group',
     },
     attrs,
     (merged) => validation.getValidationProps(isDisabled.value, merged),
-    (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),
   ],
   stateAttributesMapping: sliderStateAttributesMapping,
 });

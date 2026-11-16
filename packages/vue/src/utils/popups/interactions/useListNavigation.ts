@@ -217,9 +217,10 @@ export interface UseListNavigationProps {
    */
   triggerOrientation?: MaybeRefOrGetter<Orientation | undefined>;
   /**
-   * The id of the root component.
+   * The `id` of the element of the highlighted item. `aria-activedescendant` names it while the
+   * focus is virtual.
    */
-  id?: MaybeRefOrGetter<string | undefined>;
+  activeItemId?: MaybeRefOrGetter<string | undefined>;
   /**
    * Whether to clear the active index when the pointer leaves an item.
    * @default true
@@ -280,6 +281,14 @@ interface SyncState {
  * focus or virtual focus.
  *
  * Call it in the `setup` of the root of the popup.
+ * A component calls it one time. A second call in the same component replaces the function that
+ * the first call provides.
+ *
+ * The result is a `ComputedRef` of one object with `reference`, `floating`, `item` and `trigger`.
+ * `reference` and `floating` can hold `aria-activedescendant`, which changes. `item` and `trigger`
+ * hold only listeners, and each is one object for the life of the composable. An item part that
+ * gets `item` as a prop thus renders again only when its own state changes. Base UI gives an empty
+ * object while `enabled` is `false`. Here each handler does nothing in that state.
  * @see https://floating-ui.com/docs/useListNavigation
  */
 export function useListNavigation(
@@ -450,6 +459,9 @@ export function useListNavigation(
   // Each block is one effect of Base UI. It runs when one of its dependencies changed since its
   // last run. `state` holds the values of one DOM update, as a render of React does: a block that
   // calls `onNavigate` does not change what the blocks after it read.
+  // `sync` runs the blocks in the sequence of Base UI, in `onMounted` and in one `watch` with
+  // `flush: 'post'`. Separate post watchers run in the sequence of the writes, so they would lose
+  // that sequence.
   function sync(state: SyncState) {
     const {
       enabled,
@@ -909,7 +921,7 @@ export function useListNavigation(
   const ariaActiveDescendant = computed(() => {
     const activeIndex = getActiveIndex();
     return isEnabled() && isVirtual() && store.select('open') && activeIndex != null
-      ? `${toValue(props.id)}-${activeIndex}`
+      ? toValue(props.activeItemId)
       : undefined;
   });
 

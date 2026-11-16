@@ -463,6 +463,7 @@ export function createGridCellMap(sizes: Dimensions[], cols: number, dense: bool
     const itemWidth = getGridSpan(size.width);
     const height = getGridSpan(size.height);
     // An item that is wider than the grid fits in no row. The search for a free place would never end.
+    // Base UI throws here in a development build, and its loop does not end in a production build.
     const width = Math.min(itemWidth, columns);
     if (process.env.NODE_ENV !== 'production' && itemWidth > columns) {
       const gridWidth = columns === 1 ? '1 column' : `${columns} columns`;

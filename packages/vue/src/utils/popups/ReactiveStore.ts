@@ -59,6 +59,9 @@ export class ReactiveStore<
    * Writes each key of `newState` that is different from the state, as `Object.is` compares them.
    * `update` and `set` call this method with a full state, so a subclass that overrides it sees each
    * write.
+   *
+   * A family store that must do work when one key changes overrides this method, because the store
+   * makes no watcher.
    */
   setState(newState: State): void {
     const current = toRaw(this.state);

@@ -41,12 +41,11 @@ export interface AccordionPanelProps
 import { computed, onMounted, watch } from 'vue';
 import { useCollapsiblePanel } from '../../collapsible/panel/useCollapsiblePanel';
 import { useCollapsibleRootContext } from '../../collapsible/root/CollapsibleRootContext';
-import { useAriaAfterHydration } from '../../common/hydration';
 import { warn } from '../../common/warn';
+import { given } from '../../internals/givenAttributes';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { givenId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useAccordionItemContext } from '../item/AccordionItemContext';
 import { accordionStateAttributesMapping } from '../item/stateAttributesMapping';
@@ -99,13 +98,12 @@ const {
   transitionStatus,
 } = useCollapsibleRootContext();
 
-const panelId = computed(() => givenId(props.id) ?? defaultPanelId.value);
-
-const source = Symbol();
+const panelId = computed(() => given('id', props.id) ?? defaultPanelId.value);
 
 useRegisteredId(
   () => panelId.value,
-  (getId) => registerPanelId(source, getId),
+  registerPanelId,
+  () => element.value,
 );
 
 const {
@@ -139,14 +137,13 @@ const panelState = computed<AccordionPanelState>(() => ({
   transitionStatus: panelTransitionStatus.value,
 }));
 
-const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('div', props, {
   state: panelState,
   ref: panelRef,
   props: (attrs) => [
     panelProps.value,
     {
-      'aria-labelledby': ariaAfterHydration(triggerId.value),
+      'aria-labelledby': triggerId.value,
       role: 'region',
       style: {
         [AccordionPanelCssVars.accordionPanelHeight]:

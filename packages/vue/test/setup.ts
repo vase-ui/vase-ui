@@ -61,8 +61,10 @@ if (typeof document !== 'undefined') {
   //
   // After a time-out, the function of the test continues when its command ends. When the command
   // ends after the hook below starts, the wrapper rejects, so the next steps of the function do not
-  // run in the next test. The `onTestFinished` hooks of the test run before that hook, so a release
-  // in such a hook does not reject.
+  // run in the next test. Only the `catch` and `finally` blocks of the function run. A command that
+  // the function starts after a wait of another kind, such as a frame, can still run in the next
+  // test. The `onTestFinished` hooks of the test run before that hook, so a release in such a hook
+  // does not reject.
   const runningCommands = new Set<Promise<void>>();
   let endedTestCount = 0;
   for (const name of [
@@ -105,11 +107,14 @@ if (typeof document !== 'undefined') {
 
   // A test in a browser ends with one wait, so that the next test starts in a new task. Without the
   // wait, a test that ends in a `ResizeObserver` callback gives the next test the loop error of the
-  // browser. Vitest runs the `onTestFinished` hooks after the `afterEach` hooks and in reverse
-  // order. This hook is the second that a test registers, after the hook of
-  // `failOnReportedMessages`. The wait for the commands, the pointer move and the wait for a timer
-  // then run after each unmount and before the check of the messages. A command can put the pointer
-  // in the page, so the move comes after the wait for the commands.
+  // browser. A 0 ms timer that the test set in its last task runs before the new task. The browser
+  // delays a timer by 4 ms or more when timers nest more than five deep, so a delayed timer that
+  // the test set in an earlier task can run in the next test. Vitest runs the `onTestFinished`
+  // hooks after the `afterEach` hooks and in reverse order. This hook is the second that a test
+  // registers, after the hook of `failOnReportedMessages`. The wait for the commands, the pointer
+  // move and the wait for a timer then run after each unmount and before the check of the
+  // messages. A command can put the pointer in the page, so the move comes after the wait for the
+  // commands.
   beforeEach(() => {
     onTestFinished(async () => {
       endedTestCount += 1;
