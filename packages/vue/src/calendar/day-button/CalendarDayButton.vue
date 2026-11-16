@@ -23,26 +23,14 @@ export interface CalendarDayButtonProps
 </script>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue';
-import { useIsHydrating } from '../../common/hydration';
-import { formatText } from '../../internals/date-time/calendar/formatText';
-import { isSameDay } from '../../internals/date-time/temporal';
+import { useDayButton } from '../../internals/date-time/calendar/useDayButton';
 import type { HTMLProps } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
-import { useRenderElement } from '../../internals/useRenderElement';
 import { useCalendarDayContext } from '../day/CalendarDayContext';
-import { useCalendarMonthContext } from '../month/CalendarMonthContext';
 import { dayStateAttributesMapping } from '../day/stateAttributesMapping';
+import { useCalendarMonthContext } from '../month/CalendarMonthContext';
 import { useCalendarRootContext } from '../root/CalendarRootContext';
 
 defineOptions({ inheritAttrs: false });
-
-const FULL_DATE: Intl.DateTimeFormatOptions = {
-  weekday: 'long',
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric',
-};
 
 const props = withDefaults(defineProps<CalendarDayButtonProps>(), {
   as: 'button',
@@ -57,65 +45,14 @@ defineSlots<{
 const root = useCalendarRootContext();
 const { day, state } = useCalendarDayContext();
 const { isLeaving } = useCalendarMonthContext();
-const isHydrating = useIsHydrating();
 
-// The button of a month that leaves has no tab stop, and the root does not focus it.
-const isTabStop = computed(
-  () => !isLeaving.value && root.tabStop.value !== null && isSameDay(root.tabStop.value, day.value),
-);
-const text = computed(() => formatText(day.value, { day: 'numeric' }, root.locale.value));
-const label = computed(() => formatText(day.value, props.format ?? FULL_DATE, root.locale.value));
-
-const { getButtonProps, buttonRef } = useButton({
-  disabled: () => state.value.disabled,
-  native: () => props.nativeButton,
-});
-
-const { element, elementProps } = useRenderElement('button', props, {
+const { element, elementProps, text } = useDayButton(props, {
+  root,
+  day,
   state,
-  ref: buttonRef,
-  props: (attrs) => {
-    const tabindex = isTabStop.value ? 0 : -1;
-    return [
-      {
-        'aria-label': label.value,
-        'aria-current': state.value.today ? 'date' : undefined,
-        // The button of a disabled day gets `disabled` or `aria-disabled` from `useButton`. A key
-        // with the value `undefined` here would replace that attribute.
-        ...(state.value.unavailable && { 'aria-disabled': true }),
-        // The tab stop of a server can be another day than the tab stop of the browser, because the
-        // clock of a server can differ. The day text also comes from the data of `Intl` in the
-        // engine. Hydration does not patch an attribute, so the string differs from the number that
-        // the button gives after the mount, and Vue then writes the attribute again.
-        tabindex: isHydrating.value ? String(tabindex) : tabindex,
-        'data-allow-mismatch': isHydrating.value ? 'attribute,text' : undefined,
-        onClick: (event: MouseEvent) => {
-          root.pressDay(day.value, event);
-        },
-        onFocusin: (event: FocusEvent) => {
-          root.onDayFocus(day.value, event);
-        },
-        onKeydown: (event: KeyboardEvent) => {
-          root.onDayKeydown(day.value, event);
-        },
-      },
-      attrs,
-      getButtonProps,
-    ];
-  },
+  isLeaving,
   stateAttributesMapping: dayStateAttributesMapping,
 });
-
-// The root focuses a day after a key moves the focus, and it finds the button of the day here.
-watch(
-  [element, day, isLeaving],
-  ([button, date, leaving], _previous, onCleanup) => {
-    if (button && !leaving) {
-      onCleanup(root.registerDay(date, button));
-    }
-  },
-  { flush: 'post' },
-);
 
 defineExpose({ element });
 </script>

@@ -23,13 +23,8 @@ export interface RangeCalendarDayButtonProps
 </script>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue';
-import { useIsHydrating } from '../../common/hydration';
-import { formatText } from '../../internals/date-time/calendar/formatText';
-import { isSameDay } from '../../internals/date-time/temporal';
+import { useDayButton } from '../../internals/date-time/calendar/useDayButton';
 import type { HTMLProps } from '../../internals/types';
-import { useButton } from '../../internals/use-button';
-import { useRenderElement } from '../../internals/useRenderElement';
 import { useCalendarMonthContext } from '../../calendar/month/CalendarMonthContext';
 import { useCalendarRootContext } from '../../calendar/root/CalendarRootContext';
 import { useRangeCalendarDayContext } from '../day/RangeCalendarDayContext';
@@ -37,13 +32,6 @@ import { rangeDayStateAttributesMapping } from '../day/stateAttributesMapping';
 import { useRangeCalendarRootContext } from '../root/RangeCalendarRootContext';
 
 defineOptions({ inheritAttrs: false });
-
-const FULL_DATE: Intl.DateTimeFormatOptions = {
-  weekday: 'long',
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric',
-};
 
 const props = withDefaults(defineProps<RangeCalendarDayButtonProps>(), {
   as: 'button',
@@ -59,19 +47,6 @@ const root = useCalendarRootContext();
 const range = useRangeCalendarRootContext();
 const { day, state } = useRangeCalendarDayContext();
 const { isLeaving } = useCalendarMonthContext();
-const isHydrating = useIsHydrating();
-
-// The button of a month that leaves has no tab stop, and the root does not focus it.
-const isTabStop = computed(
-  () => !isLeaving.value && root.tabStop.value !== null && isSameDay(root.tabStop.value, day.value),
-);
-const text = computed(() => formatText(day.value, { day: 'numeric' }, root.locale.value));
-const label = computed(() => formatText(day.value, props.format ?? FULL_DATE, root.locale.value));
-
-const { getButtonProps, buttonRef } = useButton({
-  disabled: () => state.value.disabled,
-  native: () => props.nativeButton,
-});
 
 function onClick(event: MouseEvent) {
   // The click after a drag is not a press: the pointer went down and up on different days.
@@ -147,54 +122,27 @@ function onPointercancel(event: PointerEvent) {
   }
 }
 
-const { element, elementProps } = useRenderElement('button', props, {
+const { element, elementProps, text } = useDayButton(props, {
+  root,
+  day,
   state,
-  ref: buttonRef,
-  props: (attrs) => {
-    const tabindex = isTabStop.value ? 0 : -1;
-    return [
-      {
-        'aria-label': label.value,
-        'aria-current': state.value.today ? 'date' : undefined,
-        // The button of a disabled day gets `disabled` or `aria-disabled` from `useButton`. A key
-        // with the value `undefined` here would replace that attribute.
-        ...(state.value.unavailable && { 'aria-disabled': true }),
-        // The tab stop of a server can be another day than the tab stop of the browser, because the
-        // clock of a server can differ. The day text also comes from the data of `Intl` in the
-        // engine. Hydration does not patch an attribute, so the string differs from the number that
-        // the button gives after the mount, and Vue then writes the attribute again.
-        tabindex: isHydrating.value ? String(tabindex) : tabindex,
-        'data-allow-mismatch': isHydrating.value ? 'attribute,text' : undefined,
-        // A finger that drags over the days must not scroll the page.
-        style: { touchAction: 'none' },
-        onClick,
-        onFocusin,
-        onKeydown,
-        onPointercancel,
-        onPointerdown,
-        onPointerenter,
-        onPointermove,
-        onPointerup,
-      },
-      attrs,
-      getButtonProps,
-    ];
-  },
+  isLeaving,
   stateAttributesMapping: rangeDayStateAttributesMapping,
-});
-
-// The root focuses a day after a key moves the focus, and it finds the button of the day here. A
-// drag finds the day under the pointer here too.
-watch(
-  [element, day, isLeaving],
-  ([button, date, leaving], _previous, onCleanup) => {
-    if (button && !leaving) {
-      onCleanup(root.registerDay(date, button));
-      onCleanup(range.registerButton(button, () => date));
-    }
+  extraProps: {
+    // A finger that drags over the days must not scroll the page.
+    style: { touchAction: 'none' },
+    onClick,
+    onFocusin,
+    onKeydown,
+    onPointercancel,
+    onPointerdown,
+    onPointerenter,
+    onPointermove,
+    onPointerup,
   },
-  { flush: 'post' },
-);
+  // A drag finds the day under the pointer here.
+  register: (button, date) => range.registerButton(button, () => date),
+});
 
 defineExpose({ element });
 </script>
