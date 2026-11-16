@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { createVaseProject } from './vaseSurface.ts';
+import { createVaseProject, readHiddenProps } from './vaseSurface.ts';
 import type { ExportMatch } from './vaseSurface.ts';
 
 const FIXTURES = join(import.meta.dirname, 'fixtures');
@@ -491,4 +491,62 @@ test('a prop that the SFC compiler reads and vue-component-meta lists under anot
       ),
     /the SFC compiler reads the prop "onVnodeMounted", but vue-component-meta does not list it/,
   );
+});
+
+const sfc = (setup: string, script = ''): string =>
+  `${script}<script setup lang="ts">\n${setup}\n</script>\n\n<template>\n  <slot />\n</template>\n`;
+// The compiler writes the key `data-state` as a string literal, and the reader must read it too.
+const OPEN_PROPS =
+  "defineProps<{ open?: boolean | undefined; side?: string | undefined; label?: string | undefined; 'data-state'?: string | undefined }>()";
+const HIDDEN_FILE = join(SAMPLE, 'Hidden.vue');
+
+test('a prop is hidden when a script block declares or imports its name, and no other prop is', () => {
+  assert.deepEqual(readHiddenProps(sfc(`const props = ${OPEN_PROPS};`), HIDDEN_FILE), []);
+  assert.deepEqual(
+    readHiddenProps(
+      sfc(
+        `import { computed, ref as side } from 'vue';\nconst props = ${OPEN_PROPS};\nconst open = computed(() => props.open === true);`,
+        '<script lang="ts">\nexport const label = \'Open\';\n</script>\n\n',
+      ),
+      HIDDEN_FILE,
+    ),
+    ['open', 'side', 'label'],
+  );
+});
+
+test('a prop of an SFC whose defaults are not a literal is hidden in the same way', () => {
+  const script = '<script lang="ts">\nconst DEFAULTS = { open: false };\n</script>\n\n';
+  const props = `const props = withDefaults(${OPEN_PROPS}, DEFAULTS);`;
+  assert.deepEqual(readHiddenProps(sfc(props, script), HIDDEN_FILE), []);
+  assert.deepEqual(
+    readHiddenProps(sfc(`${props}\nconst side = props.side ?? 'top';`, script), HIDDEN_FILE),
+    ['side'],
+  );
+});
+
+test('an SFC with no `<script setup>` has no hidden prop', () => {
+  assert.deepEqual(
+    readHiddenProps(
+      '<script lang="ts">\nconst open = true;\nexport default { props: { open: Boolean }, data: () => ({ open }) };\n</script>\n',
+      HIDDEN_FILE,
+    ),
+    [],
+  );
+});
+
+test('a `props` option that the check cannot read is an error that names the file', () => {
+  const script = '<script lang="ts">\nconst DECLARED = { open: Boolean };\n</script>\n\n';
+  for (const declaration of [
+    'defineProps(DECLARED)',
+    'defineProps({ ...DECLARED })',
+    'defineProps({ [Object.keys(DECLARED)[0]]: Boolean })',
+    'defineProps(Object.assign({ open: Boolean }, DECLARED))',
+    "defineProps(['open'])",
+  ]) {
+    assert.throws(
+      () => readHiddenProps(sfc(`${declaration};`, script), HIDDEN_FILE),
+      /Hidden\.vue: the script that the SFC compiler writes has no `props` option that is a list of props/,
+      declaration,
+    );
+  }
 });

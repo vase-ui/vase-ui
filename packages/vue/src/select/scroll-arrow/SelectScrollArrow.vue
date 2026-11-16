@@ -73,10 +73,10 @@ defineSlots<{
 const store = useSelectRootContext();
 const { side } = useSelectPositionerContext();
 
-const direction = computed(() => props.direction);
-const isUp = computed(() => direction.value === 'up');
+const arrowDirection = computed(() => props.direction);
+const isUp = computed(() => arrowDirection.value === 'up');
 
-provide(SelectScrollArrowContext, direction);
+provide(SelectScrollArrowContext, arrowDirection);
 
 // Scroll arrows are disabled for touch modality as they are a hover-only element.
 const visible = computed(
@@ -106,7 +106,7 @@ onScopeDispose(() => {
 });
 
 const state = computed<SelectScrollArrowState>(() => ({
-  direction: direction.value,
+  direction: arrowDirection.value,
   visible: visible.value,
   side: side.value,
   transitionStatus: transitionStatus.value,
@@ -139,7 +139,7 @@ function scrollNextItem() {
     const scrollArrowHeight = element.value?.offsetHeight || 0;
     scroller.scrollTop = getTargetScrollTop(
       items,
-      direction.value,
+      arrowDirection.value,
       scrollTop,
       scroller.clientHeight,
       scrollArrowHeight,

@@ -194,23 +194,77 @@ export function readEmits(source: string, file: string): Map<string, MemberSurfa
   return emits;
 }
 
-/** The prop names are the keys that the SFC compiler reports as props. They do not include the native attributes. */
-function readPropNames(source: string, file: string): string[] {
+function compileSetup(source: string, file: string): ReturnType<typeof compileScript> {
   const { descriptor } = parse(source, { filename: file });
   try {
-    const { bindings } = compileScript(descriptor, { id: file });
-    return (
-      Object.entries(bindings ?? {})
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison -- `vue/compiler-sfc` does not export the enum `BindingTypes`, so the code compares its value.
-        .filter(([, type]) => type === 'props')
-        .map(([name]) => name)
-    );
+    return compileScript(descriptor, { id: file });
   } catch (error) {
     throw new Error(
       `${file}: the SFC compiler cannot read the props: ${error instanceof Error ? error.message : String(error)}`,
       { cause: error },
     );
   }
+}
+
+/** The prop names are the keys that the SFC compiler reports as props. They do not include the native attributes. */
+function readPropNames(source: string, file: string): string[] {
+  return (
+    Object.entries(compileSetup(source, file).bindings ?? {})
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison -- `vue/compiler-sfc` does not export the enum `BindingTypes`, so the code compares its value.
+      .filter(([, type]) => type === 'props')
+      .map(([name]) => name)
+  );
+}
+
+/** The keys of the `props` option of the component that the SFC compiler writes for `<script setup>`. */
+function readPropsOption(content: string, file: string): string[] {
+  const script = ts.createSourceFile('setup.ts', content, ts.ScriptTarget.Latest);
+  const component = script.statements.find(ts.isExportAssignment)?.expression;
+  const [options] = component && ts.isCallExpression(component) ? component.arguments : [];
+  if (options && ts.isObjectLiteralExpression(options)) {
+    const option = options.properties.find(
+      (property): property is ts.PropertyAssignment =>
+        ts.isPropertyAssignment(property) &&
+        ts.isIdentifier(property.name) &&
+        property.name.text === 'props',
+    );
+    if (!option) {
+      return [];
+    }
+    // With defaults that are not a literal, the compiler gives the props to `mergeDefaults`.
+    let props: ts.Expression | undefined = option.initializer;
+    if (
+      ts.isCallExpression(props) &&
+      ts.isIdentifier(props.expression) &&
+      props.expression.text === '_mergeDefaults'
+    ) {
+      props = props.arguments[0];
+    }
+    if (props && ts.isObjectLiteralExpression(props)) {
+      const names = props.properties.map(({ name }) =>
+        name && (ts.isIdentifier(name) || ts.isStringLiteral(name)) ? name.text : undefined,
+      );
+      if (names.every((name) => name !== undefined)) {
+        return names;
+      }
+    }
+  }
+  throw new Error(
+    `${file}: the script that the SFC compiler writes has no \`props\` option that is a list of props. The check for a hidden prop cannot read it. Declare the props with a type: \`defineProps<Props>()\`.`,
+  );
+}
+
+/**
+ * The props that `readPropNames` does not give. A top-level declaration or an import of `<script>`
+ * or `<script setup>` takes the binding of a prop of the same name.
+ */
+export function readHiddenProps(source: string, file: string): string[] {
+  if (!parse(source, { filename: file }).descriptor.scriptSetup) {
+    return [];
+  }
+  const { bindings, content } = compileSetup(source, file);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison -- `vue/compiler-sfc` does not export the enum `BindingTypes`, so the code compares its value.
+  return readPropsOption(content, file).filter((name) => bindings?.[name] !== 'props');
 }
 
 export function createVaseProject(tsconfig: string): VaseProject {

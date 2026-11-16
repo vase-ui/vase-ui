@@ -219,19 +219,19 @@ const root = useResizableRootContext();
 useDeferredServerRender();
 
 const hydrating = useIsHydrating();
-const id = useVaseUiId(() => props.id);
+const panelId = useVaseUiId(() => props.id);
 // The size at the start: a later change of the prop has no effect.
-const defaultSize = props.defaultSize;
+const initialSize = props.defaultSize;
 // The list publishes its map again when the id changes, so the root sees a panel with a new id.
 const { ref: listItemRef, index } = useCompositeListItem({
   list: root.list,
-  metadata: computed(() => ({ id: id.value })),
+  metadata: computed(() => ({ id: panelId.value })),
 });
 
 // A panel whose first size is a length has that length until the first measurement. The panel
 // cannot have a size in percent before: the room of the panels is not known. It can shrink, so it
 // does not overflow a root that is narrower than the length.
-const length = computed(() => root.lengthPanels.value.get(id.value));
+const length = computed(() => root.lengthPanels.value.get(panelId.value));
 
 // A panel that `KeepAlive` holds is not in the layout. It keeps its last size and its last
 // `collapsed` state until it shows again.
@@ -243,10 +243,10 @@ const size = computed<number>((previous) => {
   const serverSize = serverElement()?.style.getPropertyValue(
     ResizablePanelCssVariables.resizablePanelSize,
   );
-  return serverSize ? Number(serverSize) : (root.shown.value[id.value] ?? previous ?? 0);
+  return serverSize ? Number(serverSize) : (root.shown.value[panelId.value] ?? previous ?? 0);
 });
 const collapsed = computed<boolean>((previous) => {
-  const constraints = root.constraints.value.find((panel) => panel.id === id.value);
+  const constraints = root.constraints.value.find((panel) => panel.id === panelId.value);
   // A panel that waits for its first measurement has no size, and it is not collapsed.
   if (length.value !== undefined) {
     return false;
@@ -278,7 +278,7 @@ const { element, elementProps } = useRenderElement('div', props, {
   ref: [listItemRef],
   props: (attrs) => [
     {
-      id: id.value,
+      id: panelId.value,
       style: {
         flex: length.value === undefined ? `${size.value} 1 0px` : `0 1 ${length.value}`,
         [root.orientation.value === 'horizontal' ? 'minWidth' : 'minHeight']: 0,
@@ -297,12 +297,12 @@ const { element, elementProps } = useRenderElement('div', props, {
 const { isHeld } = useKeepAliveState();
 
 root.registerPanel({
-  id,
-  referencedId: useReferencedId(() => id.value, element),
+  id: panelId,
+  referencedId: useReferencedId(() => panelId.value, element),
   index,
   minSize: () => props.minSize,
   maxSize: () => props.maxSize,
-  defaultSize,
+  defaultSize: initialSize,
   collapsible: () => props.collapsible,
   collapsedSize: () => props.collapsedSize,
   collapseThreshold: () => props.collapseThreshold,
@@ -341,13 +341,13 @@ watch(
 
 const actions: ResizablePanelActions = {
   collapse: () => {
-    root.collapsePanel(id.value);
+    root.collapsePanel(panelId.value);
   },
   expand: () => {
-    root.expandPanel(id.value);
+    root.expandPanel(panelId.value);
   },
   resize: (wanted) => {
-    root.resizePanel(id.value, wanted);
+    root.resizePanel(panelId.value, wanted);
   },
   isCollapsed: () => collapsed.value,
   getSize: () => {
@@ -356,7 +356,7 @@ const actions: ResizablePanelActions = {
   },
 };
 
-provide(ResizablePanelContext, { id, state, ...actions });
+provide(ResizablePanelContext, { id: panelId, state, ...actions });
 
 defineExpose({ element, ...actions });
 </script>
