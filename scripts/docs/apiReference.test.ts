@@ -420,6 +420,16 @@ for (const tag of ['TypesSample.createHandle', 'TypesSample']) {
 
 const read = createApiReferenceReader(REPOSITORY_ROOT);
 
+for (const family of ['select', 'combobox', 'autocomplete']) {
+  test(`the exposed members of ${family} follow defineExpose`, () => {
+    const root = read(family).parts.find(({ name }) => name.endsWith('.Root'));
+    assert.deepEqual(
+      root?.exposed.map(({ name }) => name),
+      ['unmount', 'close', 'inputElement'],
+    );
+  });
+}
+
 test('each family page has an API reference with one part, function or type or more', () => {
   const pages = listFamilyPages(join(REPOSITORY_ROOT, 'docs'));
   assert.notEqual(pages.length, 0);

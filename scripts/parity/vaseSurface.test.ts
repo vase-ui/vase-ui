@@ -49,6 +49,51 @@ const withParts = <T>(from: string, to: string, run: () => T): T =>
 
 const readCreateHandle = () => project.readFunction(exportOf('createHandle'));
 
+for (const { kind, file, part, exposed } of [
+  { kind: 'generic', file: ROOT, part: 'Root', exposed: '{ close, unmount }' },
+  { kind: 'ordinary', file: POPUP, part: 'Popup', exposed: '{ element }' },
+]) {
+  for (const { form, declaration } of [
+    { form: 'literal', declaration: 'defineExpose({ active: true, ...actions, inputElement });' },
+    {
+      form: 'alias',
+      declaration:
+        'const exposed = { active: true, ...actions, inputElement };\ndefineExpose(exposed);',
+    },
+  ]) {
+    test(`exposed members of the ${kind} SFC follow the ${form} and its spread declaration`, () => {
+      const members = withText(
+        file,
+        [
+          [
+            `defineExpose(${exposed});`,
+            `
+interface Actions {
+  /** Removes the popup. */
+  unmount: () => void;
+  /** Closes the popup. */
+  close: () => void;
+}
+function useActions(): Actions {
+  return { unmount() {}, close() {} };
+}
+const actions = useActions();
+const inputElement = ref<HTMLInputElement | null>(null);
+${declaration}`,
+          ],
+        ],
+        () => project.readComponent(exportOf(part))?.exposed,
+      );
+      assert.deepEqual(members && [...members], [
+        ['active', { type: 'boolean', description: '' }],
+        ['unmount', { type: '() => void', description: 'Removes the popup.' }],
+        ['close', { type: '() => void', description: 'Closes the popup.' }],
+        ['inputElement', { type: 'HTMLInputElement | null', description: '' }],
+      ]);
+    });
+  }
+}
+
 test('a function has the JSDoc of its export, its parameters and its return value', () => {
   assert.deepEqual(readCreateHandle(), {
     description: '',

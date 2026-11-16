@@ -455,6 +455,42 @@ export function createVaseProject(tsconfig: string): VaseProject {
       run.sort((a, b) => (declarationOf(a)?.pos ?? 0) - (declarationOf(b)?.pos ?? 0)),
     );
   };
+  const expressionPropertyNames = (expression: ts.Expression): string[] => {
+    if (ts.isIdentifier(expression)) {
+      const declaration = typeChecker().getSymbolAtLocation(expression)?.valueDeclaration;
+      // The generated SFC stores the argument of `defineExpose` in a variable.
+      if (declaration && ts.isVariableDeclaration(declaration) && declaration.initializer) {
+        return expressionPropertyNames(declaration.initializer);
+      }
+    }
+    if (ts.isObjectLiteralExpression(expression)) {
+      return expression.properties.flatMap((property) => {
+        if (ts.isSpreadAssignment(property)) {
+          return expressionPropertyNames(property.expression);
+        }
+        const symbol = typeChecker().getSymbolAtLocation(property.name);
+        return symbol ? [propertyName(symbol)] : [];
+      });
+    }
+    return inDeclarationOrder(
+      typeChecker().getPropertiesOfType(typeChecker().getTypeAtLocation(expression)),
+    ).map(propertyName);
+  };
+  const exposedNames = (file: string): string[] => {
+    const sourceFile = checker.getProgram()?.getSourceFile(file);
+    const visit = (node: ts.Node): ts.Expression | undefined => {
+      if (
+        ts.isCallExpression(node) &&
+        ts.isIdentifier(node.expression) &&
+        node.expression.text === 'defineExpose'
+      ) {
+        return node.arguments[0];
+      }
+      return ts.forEachChild(node, visit);
+    };
+    const expression = sourceFile && visit(sourceFile);
+    return expression ? expressionPropertyNames(expression) : [];
+  };
   // `getJsDocTags` gives a property that an interface declares again with no tag the tags of the
   // declaration in the base interface. The declarations of a property of an `Omit` or a `Pick` are
   // those of the property that it copies, so such a property keeps its tags.
@@ -656,6 +692,9 @@ export function createVaseProject(tsconfig: string): VaseProject {
       }
       const declaredEmits = readEmits(source, file);
       const listed = new Set(meta.events.map(({ name }) => name));
+      const exposed = new Map(
+        meta.exposed.map(({ name, type, description }) => [name, { type, description }]),
+      );
       return {
         description: documentationOf(resolve(symbol)),
         props,
@@ -682,9 +721,13 @@ export function createVaseProject(tsconfig: string): VaseProject {
             },
           ]),
         ),
-        exposed: new Map(
-          meta.exposed.map(({ name, type, description }) => [name, { type, description }]),
-        ),
+        exposed: new Map([
+          ...exposedNames(file).flatMap((name): [string, MemberSurface][] => {
+            const member = exposed.get(name);
+            return member ? [[name, member]] : [];
+          }),
+          ...exposed,
+        ]),
       };
     },
 
