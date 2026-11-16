@@ -61,6 +61,7 @@ export type RangeCalendarRootChangeEventDetails = RangeChangeEventDetails;
 
 <script setup lang="ts" generic="Value extends DateValue = Temporal.PlainDate">
 import { computed, provide } from 'vue';
+import { useRangeCalendarHost } from '../../internals/date-time/calendar/rangeCalendarHost';
 import { useCalendarRoot } from '../../internals/date-time/calendar/useCalendarRoot';
 import { useRangeSelection } from '../../internals/date-time/calendar/rangeSelection';
 import { assertTemporal } from '../../internals/date-time/temporal';
@@ -122,7 +123,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, RangeCalendarRootState>;
 }>();
 
-const selection = useRangeSelection(props, emit);
+const selection = useRangeSelection(props, emit, useRangeCalendarHost());
 const { focus, ...controller } = useCalendarRoot({
   part: 'RangeCalendar.Root',
   props,

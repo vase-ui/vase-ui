@@ -11,6 +11,7 @@ import type { DateValue } from '../temporal';
 import type { CalendarChangeEventDetails, CalendarChangeEventReason } from './calendarProps';
 import type { CalendarSelection } from './daySelection';
 import { isDisabledDay } from './dayState';
+import type { RangeCalendarHost } from './rangeCalendarHost';
 
 /**
  * The value of a range calendar: the first and the last day. A range in progress has its first
@@ -96,7 +97,8 @@ export interface RangeSelection extends CalendarSelection {
   /**
    * Moves the end of the drag toward `date` as `dragTo` does, and ends the drag. A drag that left
    * its first day makes the range. A drag that did not is a click. With a `null` date, the end
-   * stays where it is.
+   * stays where it is. A drag that makes the range that the value already has emits no change, and
+   * it calls `onSameRange` of the host.
    */
   endDrag: (date: Temporal.PlainDate | null, event: PointerEvent) => void;
   cancelDrag: () => void;
@@ -165,6 +167,7 @@ interface Drag {
 export function useRangeSelection(
   props: RangeSelectionProps,
   emit: RangeSelectionEmit,
+  host?: RangeCalendarHost | undefined,
 ): RangeSelection {
   const [value, setValue] = useControlled<RangeInput>({
     controlled: () => props.value,
@@ -319,9 +322,11 @@ export function useRangeSelection(
   }
 
   function commitRange({ start, end }: DayRange, details: RangeChangeEventDetails) {
-    if (commit(createEnds(start, end), details)) {
+    const isChanged = commit(createEnds(start, end), details);
+    if (isChanged) {
       pending = null;
     }
+    return isChanged;
   }
 
   function start(date: Temporal.PlainDate, details: RangeChangeEventDetails) {
@@ -420,7 +425,11 @@ export function useRangeSelection(
     suppressClick = true;
     const range = rangeBetween(dragged.anchor, dragged.current);
     if (range) {
-      commitRange(range, createChangeEventDetails(REASONS.drag, event));
+      const details = createChangeEventDetails(REASONS.drag, event);
+      // The drag picks the range that the value already has, so the host learns of it.
+      if (!commitRange(range, details) && !details.isCanceled) {
+        host?.onSameRange(event);
+      }
     }
   }
 

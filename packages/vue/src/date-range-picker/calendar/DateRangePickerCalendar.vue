@@ -29,7 +29,8 @@ export interface DateRangePickerCalendarProps extends Omit<
 </script>
 
 <script setup lang="ts">
-import { computed, useAttrs, useTemplateRef } from 'vue';
+import { computed, provide, useAttrs, useTemplateRef } from 'vue';
+import { RangeCalendarHostContext } from '../../internals/date-time/calendar/rangeCalendarHost';
 import type { DateValue } from '../../internals/date-time/temporal';
 import { useFocusOnOpen, usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
 import { omitUndefinedAttributes } from '../../internals/omitUndefinedAttributes';
@@ -112,6 +113,16 @@ function handleValueChange(
     popup.closeAfterSelection(details.event);
   }
 }
+
+// A drag that makes the range that the picker already has gives no change, so the calendar tells
+// the picker, and the picker closes as it does after a change.
+provide(RangeCalendarHostContext, {
+  onSameRange(event) {
+    if (picker.closeOnSelect.value) {
+      popup.closeAfterSelection(event);
+    }
+  },
+});
 
 const calendarHandlers = {
   onMonthChange: (month: Temporal.PlainYearMonth, details: RangeCalendarRootChangeEventDetails) => {

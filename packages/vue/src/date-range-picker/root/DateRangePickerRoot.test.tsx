@@ -32,6 +32,22 @@ const centerOf = (element: Element) => {
   const rect = element.getBoundingClientRect();
   return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
 };
+// A real drag holds the pointer on the button where it started, so the events go to that button,
+// with the point where the pointer is.
+const pointer = (target: Element, buttons = 1) => ({
+  button: 0,
+  buttons,
+  pointerId: 7,
+  pointerType: 'mouse',
+  clientX: centerOf(target).x,
+  clientY: centerOf(target).y,
+});
+async function drag(from: string, to: string) {
+  const first = dayButton(from);
+  await fireEvent.pointerDown(first, pointer(first));
+  await fireEvent.pointerMove(first, pointer(dayButton(to)));
+  await fireEvent.pointerUp(first, pointer(dayButton(to), 0));
+}
 // The text of the two ends of a call of `valueChange`.
 const endsOf = (call: readonly unknown[] | undefined) =>
   (call?.[0] as (Temporal.PlainDate | null)[]).map((end) => end?.toString() ?? null);
@@ -276,16 +292,6 @@ describe('<DateRangePicker.Root />', () => {
       const { user, container } = await renderPicker({ onValueChange });
       const popup = await open(user);
       const first = dayButton('2026-11-16');
-      // A real drag holds the pointer on the button where it started, so the events go to that
-      // button, with the point where the pointer is.
-      const pointer = (target: Element, buttons = 1) => ({
-        button: 0,
-        buttons,
-        pointerId: 7,
-        pointerType: 'mouse',
-        clientX: centerOf(target).x,
-        clientY: centerOf(target).y,
-      });
 
       await fireEvent.pointerDown(first, pointer(first));
       await fireEvent.pointerMove(first, pointer(dayButton('2026-11-18')));
@@ -296,6 +302,29 @@ describe('<DateRangePicker.Root />', () => {
       expect(onValueChange).toHaveBeenCalledTimes(1);
       expect(endsOf(onValueChange.mock.lastCall)).toEqual(['2026-11-16', '2026-11-18']);
       expect(onValueChange.mock.lastCall?.[1].reason).toBe('drag');
+      expect(hiddenInputsOf(container)).toEqual(['2026-11-16', '2026-11-18']);
+    });
+
+    // The calendar emits no change for such a drag, so no `valueChange` tells the picker.
+    it('closes the popup after a drag that makes the range that the picker already has', async () => {
+      const onValueChange = vi.fn();
+      const onOpenChange = vi.fn();
+      const { user, container } = await renderPicker({
+        defaultValue: range('2026-11-16', '2026-11-18'),
+        onValueChange,
+        onOpenChange,
+      });
+      const popup = await open(user);
+      onOpenChange.mockClear();
+
+      await drag('2026-11-16', '2026-11-18');
+
+      await expectClosed(popup);
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(onOpenChange).toHaveBeenCalledTimes(1);
+      expect(onOpenChange.mock.lastCall?.[0]).toBe(false);
+      expect(onOpenChange.mock.lastCall?.[1].reason).toBe('imperative-action');
+      expect(onOpenChange.mock.lastCall?.[1].event.type).toBe('pointerup');
       expect(hiddenInputsOf(container)).toEqual(['2026-11-16', '2026-11-18']);
     });
 
@@ -364,6 +393,19 @@ describe('<DateRangePicker.Root />', () => {
 
         expect(screen.getByRole('dialog')).not.toBe(null);
         expect(hiddenInputsOf(container)).toEqual(['2026-11-16', '2026-11-20']);
+      });
+
+      it('keeps the popup open for `false` after a drag that makes the range that the picker has', async () => {
+        const { user } = await renderPicker({
+          defaultValue: range('2026-11-16', '2026-11-18'),
+          closeOnSelect: false,
+        });
+        await open(user);
+
+        await drag('2026-11-16', '2026-11-18');
+        await flushMicrotasks();
+
+        expect(screen.getByRole('dialog')).not.toBe(null);
       });
 
       // The popup has no part for a time, so the user sets a time in a field.
