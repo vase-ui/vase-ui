@@ -3119,7 +3119,7 @@ describe('<Resizable.Root />', () => {
       await findEdges();
     });
 
-    // A vnode is for one mount, so each row makes its vnodes when its case runs.
+    // Vitest makes this table one time for all runs of its cases, and a vnode is for one mount.
     it.each([
       {
         name: 'a disabled handle between the panels',
