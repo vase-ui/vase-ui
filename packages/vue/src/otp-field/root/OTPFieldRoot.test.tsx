@@ -17,6 +17,7 @@ import {
   hydrate,
   hydrateAfter,
   mockNavigationType,
+  mockPageBeforeLoad,
   pasteText,
   removedPartHydrationTests,
   renderOnServer,
@@ -2119,6 +2120,27 @@ describe('<OTPField.Root />', () => {
         hiddenInput.value = '97';
 
         window.dispatchEvent(new Event('pageshow'));
+
+        expect(hiddenInput.value).toBe('12');
+      });
+
+      it('writes the value to the hidden input again at the activation after a page show while KeepAlive held the field', async () => {
+        const showPage = mockPageBeforeLoad();
+        const { HeldBranch, hide, show } = createHeldBranch(
+          () => <OTPFieldBase.Root length={OTP_LENGTH} name="otp" defaultValue="12" />,
+          { mounted: true },
+        );
+        const { container } = await render(<HeldBranch />);
+        const hiddenInput = getHiddenInput(container);
+        // A browser restores the form state of a page with no event on the input.
+        hiddenInput.value = '97';
+
+        await hide();
+        showPage();
+
+        expect(hiddenInput.value).toBe('97');
+
+        await show();
 
         expect(hiddenInput.value).toBe('12');
       });

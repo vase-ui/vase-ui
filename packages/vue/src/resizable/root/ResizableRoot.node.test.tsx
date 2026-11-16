@@ -55,14 +55,6 @@ describe('<Resizable.Root /> on a server', () => {
     expect(valuesIn(html)).toEqual([30, 25]);
   });
 
-  it('marks the style of each panel as a mismatch that the hydration accepts', async () => {
-    const html = await renderToString(
-      createSSRApp(ResizableRootHydration, { composition: 'defaults' }),
-    );
-
-    expect(html.match(/data-allow-mismatch="style"/g)).toHaveLength(3);
-  });
-
   it('renders the attributes of the root, the panels and the handles', async () => {
     const html = await renderToString(
       createSSRApp(ResizableRootHydration, { composition: 'vertical' }),

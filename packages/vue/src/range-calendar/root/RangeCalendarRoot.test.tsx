@@ -8,6 +8,7 @@ import {
   hydrate,
   renderOnServer,
   screen,
+  setAttributeInHtml,
 } from '#test-utils';
 import * as RangeCalendar from '../index.parts';
 import RangeCalendarAnatomy from './RangeCalendarAnatomy.test.vue';
@@ -499,20 +500,62 @@ describe('<RangeCalendar.Root />', () => {
 
   describe('the server render', () => {
     const file = 'src/range-calendar/root/RangeCalendarRootHydration.test.vue';
+    const props = { today: '2026-11-14', start: '2026-11-10', end: '2026-11-12' };
+    const format = (options: Intl.DateTimeFormatOptions, iso: string) =>
+      new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', ...options }).format(Date.parse(iso));
 
+    // A server whose `Intl` data differs writes other names. The part then writes the name of the
+    // browser after the mount.
+    it.each([
+      {
+        name: 'the root',
+        selector: '[role="group"]',
+        label: format({ month: 'long', year: 'numeric' }, '2026-11-01'),
+      },
+      {
+        name: 'a day button',
+        selector: '[data-date="2026-11-14"] button',
+        label: format(
+          { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' },
+          '2026-11-14',
+        ),
+      },
+    ])(
+      'gives $name the aria-label of the browser when the server wrote another text',
+      async ({ selector, label }) => {
+        const serverHtml = setAttributeInHtml(
+          await renderOnServer(file, props),
+          selector,
+          'aria-label',
+          'other',
+        );
+
+        const { container } = await hydrate(RangeCalendarRootHydration, { serverHtml, props });
+
+        expect(container.querySelector(selector)).toHaveAttribute('aria-label', label);
+      },
+    );
+
+    it('writes the text of a day again with no warning when the server wrote another text', async () => {
+      const text = format({ day: 'numeric' }, '2026-11-14');
+      const serverHtml = (await renderOnServer(file, props)).replace(`>${text}<`, '>other<');
+      expect(serverHtml).toContain('>other<');
+
+      const { container } = await hydrate(RangeCalendarRootHydration, { serverHtml, props });
+
+      expect(container.querySelector('[data-date="2026-11-14"] button')).toHaveTextContent(text);
+      expect(container).not.toHaveTextContent('other');
+    });
+
+    // A `-u-` keyword gives the server other `Intl` data than the browser.
     it.each([
       { name: 'a Persian server', server: 'en-US-u-ca-persian' },
       { name: 'a server week from Monday', server: 'en-US-u-fw-mon' },
     ])('hydrates the grid of $name, then shows the grid of the browser', async ({ server }) => {
-      const props = {
-        today: '2026-11-14',
-        start: '2026-11-10',
-        end: '2026-11-12',
-        locale: 'en-US',
-      };
-      const serverHtml = await renderOnServer(file, { ...props, locale: server });
+      const browser = { ...props, locale: 'en-US' };
+      const serverHtml = await renderOnServer(file, { ...browser, locale: server });
 
-      await hydrate(RangeCalendarRootHydration, { serverHtml, props });
+      await hydrate(RangeCalendarRootHydration, { serverHtml, props: browser });
 
       expect(shown()).toEqual({
         start: ['2026-11-10'],

@@ -11,11 +11,13 @@ import {
   fireEvent,
   flushMicrotasks,
   heldMountFormResetTests,
+  hydrate,
   hydrateAfter,
   recordInputEvents,
   removedPartHydrationTests,
   renderOnServer,
   screen,
+  setAttributeInHtml,
   waitFor,
   within,
 } from '#test-utils';
@@ -727,6 +729,36 @@ describe('<DateField.Root />', () => {
   });
 
   describe('hydration', () => {
+    // A server whose `Intl` data differs writes other names. The root compares the attributes of
+    // each segment after the mount, and it makes the segments again.
+    it.each([
+      {
+        attribute: 'aria-label',
+        text: new Intl.DisplayNames('en-US', { type: 'dateTimeField' }).of('month')!,
+      },
+      {
+        attribute: 'aria-valuetext',
+        text: new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'long' }).format(
+          Date.parse('2026-11-14'),
+        ),
+      },
+    ])(
+      'gives a segment the $attribute of the browser when the server wrote another text',
+      async ({ attribute, text }) => {
+        const props = { locale: 'en-US', defaultValue: '2026-11-14' };
+        const serverHtml = setAttributeInHtml(
+          await renderOnServer(HYDRATION_FILE, props),
+          'input[data-type="month"]',
+          attribute,
+          'other',
+        );
+
+        const { container } = await hydrate(DateFieldRootHydration, { serverHtml, props });
+
+        expect(segmentOf(container, 'month')).toHaveAttribute(attribute, text);
+      },
+    );
+
     removedPartHydrationTests({
       file: HYDRATION_FILE,
       component: DateFieldRootHydration,

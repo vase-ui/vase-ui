@@ -2,6 +2,7 @@ import { computed, nextTick, onMounted, shallowRef, useSlots, watch } from 'vue'
 // eslint-disable-next-line no-restricted-imports -- Vue sets `vnode.el` before `setup` only when it hydrates the component from server HTML. Vue has no public API for this fact, and Nuxt reads the same field. In Vapor mode the instance is `null`, and each composable then acts as in a client-only mount.
 import { getCurrentInstance } from 'vue';
 import type { ComputedRef, Ref, RendererNode } from 'vue';
+import { isHTMLElement, isNode } from '@floating-ui/utils/dom';
 import { ownerDocument, ownerWindow } from './owner';
 import { activeElement } from './shadowDom';
 
@@ -35,18 +36,24 @@ export function useIsHydrating(): ComputedRef<boolean> {
 }
 
 /**
- * Gives the function that a part calls for each `aria-*` value that a later part gives, such as the
- * id of a label after the part. The function gives `null` while Vue hydrates the part from server
- * HTML. On a server, in a client-only mount and after the mount, it gives the value.
+ * Gives the function that a part calls for each `aria-*` value whose first client render can differ
+ * from the server HTML, such as the id of a label after the part, or a date that `Intl` formats.
+ * The function gives `null` while Vue hydrates the part from server HTML. On a server, in a
+ * client-only mount and after the mount, it gives the value.
  *
  * Vue does not patch an `aria-*` attribute while it hydrates, so the element keeps the value of the
  * server HTML. The first client render does not know a later part yet. When the page removes or
  * changes that part at the mount, the render after the mount can give the value of the first
- * client render. Vue then writes nothing, and the element keeps the value of the server HTML. With
- * `null` in the first client render, the render after the mount always writes its value.
+ * client render. Vue then writes nothing, and the element keeps the value of the server HTML. A
+ * date that `Intl` formats can keep the text of the server in the same way. The server and the
+ * browser can have other `Intl` data. With `null` in the first client render, the render after the
+ * mount always writes its value.
  *
- * Give the function only `aria-*` values. Vue compares other attributes, such as `id` and
- * `tabindex`, while it hydrates, and it warns when they differ.
+ * Give the function only the value of an attribute that Vue does not compare while it hydrates, or
+ * of an attribute that the element allows to differ with `data-allow-mismatch` and the category
+ * `attribute`. Vue does not compare `aria-*` attributes or other attributes outside its list of
+ * known HTML attributes, such as the `abbr` of `Calendar.Weekday`. Vue compares the attributes of
+ * that list, such as `id` and `tabindex`, and it warns when they differ.
  */
 export function useAriaAfterHydration(): <Value>(value: Value) => Value | null {
   if (getCurrentInstance()?.vnode.el == null) {
@@ -60,9 +67,12 @@ export function useAriaAfterHydration(): <Value>(value: Value) => Value | null {
 // part whose template starts with a fragment, such as a part with a `#render` slot, starts with the
 // comment `[`, and the comment `]` ends the fragment. The element is then the first element in the
 // fragment.
-function serverElementOf(first: Node | null): Element | null {
+function serverElementOf(first: unknown): Element | null {
+  if (!isNode(first)) {
+    return null;
+  }
   let depth = 0;
-  for (let node = first; node !== null; node = node.nextSibling) {
+  for (let node: Node | null = first; node !== null; node = node.nextSibling) {
     if (node.nodeType === 1) {
       return node as Element;
     }
@@ -73,6 +83,24 @@ function serverElementOf(first: Node | null): Element | null {
     }
   }
   return null;
+}
+
+/**
+ * Gives the element of the server HTML that Vue hydrates for the component that calls it, until
+ * the component is mounted. It gives `null` on a server, in a client-only mount and after the
+ * mount.
+ *
+ * A part whose first client render cannot know a value of the server HTML reads that value from
+ * the element. The first client render then gives the value of the server HTML, and Vue writes
+ * each value that the render after the mount changes.
+ */
+export function useServerElement(): () => HTMLElement | null {
+  const element = serverElementOf(getCurrentInstance()?.vnode.el);
+  if (!isHTMLElement(element)) {
+    return () => null;
+  }
+  const hydrated = useIsHydrated();
+  return () => (hydrated.value ? null : element);
 }
 
 /**
@@ -94,9 +122,7 @@ export function useServerValue<Value>(
   parse: (text: string) => Value | undefined,
   write: (value: Value) => string = String,
 ): { value: ComputedRef<Value>; attributes: () => Record<string, string> | undefined } {
-  // The DOM renderer of Vue keeps a DOM node in `vnode.el`.
-  const first = (getCurrentInstance()?.vnode.el ?? null) as Node | null;
-  const text = serverElementOf(first)?.getAttribute(attribute);
+  const text = serverElementOf(getCurrentInstance()?.vnode.el)?.getAttribute(attribute);
   const serverValue = text == null ? undefined : parse(text);
   const isHydrating = useIsHydrating();
   const value = computed(() =>

@@ -53,6 +53,7 @@ export {
   mockNavigationType,
   mockPageBeforeLoad,
   recordInputEvents,
+  setAttributeInHtml,
 } from './hydration';
 export { takeReportedMessages } from './reportedMessages';
 export { expectNoAxeViolations } from './axe';

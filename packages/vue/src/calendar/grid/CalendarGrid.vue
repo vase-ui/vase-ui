@@ -12,6 +12,7 @@ export interface CalendarGridProps
 </script>
 
 <script setup lang="ts">
+import { useAriaAfterHydration } from '../../common/hydration';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useCalendarMonthContext } from '../month/CalendarMonthContext';
@@ -28,6 +29,7 @@ defineSlots<{
 
 const { state, multiselectable } = useCalendarRootContext();
 const { text, getAriaLabelledBy } = useCalendarMonthContext();
+const ariaAfterHydration = useAriaAfterHydration();
 
 const { element, elementProps } = useRenderElement('table', props, {
   state,
@@ -39,7 +41,7 @@ const { element, elementProps } = useRenderElement('table', props, {
       // of the month. An `aria-labelledby` of `null` removes only the caption, so the grid keeps a
       // name (VUE-103).
       'aria-labelledby': getAriaLabelledBy(attrs),
-      'aria-label': attrs['aria-labelledby'] == null ? text.value : undefined,
+      'aria-label': ariaAfterHydration(attrs['aria-labelledby'] == null ? text.value : undefined),
       'aria-multiselectable': multiselectable.value ? true : undefined,
       'aria-readonly': state.value.readOnly ? true : undefined,
       'aria-disabled': state.value.disabled ? true : undefined,

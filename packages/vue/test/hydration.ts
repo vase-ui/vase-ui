@@ -156,6 +156,27 @@ export async function hydrateAfter(
   return { container };
 }
 
+/**
+ * Gives `html` with `value` in the attribute `name` of the first element that matches `selector`.
+ * A case of a server whose `Intl` data differs from the data of the browser changes the server
+ * HTML with it.
+ */
+export function setAttributeInHtml(
+  html: string,
+  selector: string,
+  name: string,
+  value: string,
+): string {
+  const template = document.createElement('template');
+  template.innerHTML = html;
+  const element = template.content.querySelector(selector);
+  if (!element) {
+    throw new Error(`No element of the HTML matches \`${selector}\`.`);
+  }
+  element.setAttribute(name, value);
+  return template.innerHTML;
+}
+
 function mockNavigation(navigation: Partial<PerformanceNavigationTiming>) {
   const getEntriesByType = performance.getEntriesByType.bind(performance);
   const spy = vi
@@ -179,11 +200,18 @@ export function mockNavigationType(type: NavigationTimingType): void {
 }
 
 /**
- * Gives a `back_forward` navigation whose `load` event has not ended, until the test ends. A part
- * that mounts then waits for the `pageshow` event of the page.
+ * Gives a `back_forward` navigation until the test ends. Its `load` event ends only when the case
+ * calls the returned function. A part that mounts before then waits for the `pageshow` event of the
+ * page.
+ * @returns Ends `load` and sends `pageshow`, in the order of the browser.
  */
-export function mockPageBeforeLoad(): void {
-  mockNavigation({ type: 'back_forward', loadEventEnd: 0 });
+export function mockPageBeforeLoad(): () => void {
+  const navigation = { type: 'back_forward' as const, loadEventEnd: 0 };
+  mockNavigation(navigation);
+  return () => {
+    navigation.loadEventEnd = performance.now();
+    window.dispatchEvent(new PageTransitionEvent('pageshow'));
+  };
 }
 
 /**

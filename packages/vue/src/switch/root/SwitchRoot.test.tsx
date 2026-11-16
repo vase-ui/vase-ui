@@ -15,6 +15,7 @@ import {
   hydrate,
   hydrateAfter,
   isJSDOM,
+  mockPageBeforeLoad,
   removedPartHydrationTests,
   renderOnServer,
   screen,
@@ -1652,6 +1653,26 @@ describe('<Switch.Root />', () => {
 
       expect(fixture.getByTestId('changes').textContent).toBe('');
       expect(fixture.getByTestId('switch')).toHaveAttribute('aria-checked', 'false');
+    });
+
+    it('takes the input at the activation after a page show while KeepAlive held the switch', async () => {
+      const showPage = mockPageBeforeLoad();
+      const { HeldBranch, hide, show } = createHeldBranch(() => <SwitchRootBeforeHydration />, {
+        mounted: true,
+      });
+      const { container } = await render(<HeldBranch />);
+      const fixture = within(container);
+      const input = getInput();
+      input.checked = true;
+
+      await hide();
+      showPage();
+      await show();
+      await flushMicrotasks();
+
+      expect(fixture.getByTestId('changes').textContent).toBe('true (vase-ui)');
+      expect(fixture.getByTestId('switch')).toHaveAttribute('aria-checked', 'true');
+      expect(input.checked).toBe(true);
     });
   });
 

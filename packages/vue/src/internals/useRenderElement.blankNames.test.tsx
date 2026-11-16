@@ -345,10 +345,10 @@ describe('VUE-106: a blank aria-label or aria-labelledby of the consumer', () =>
   });
 
   it('keeps another attribute that is blank', async () => {
-    await render(<Part title="" aria-describedby="" data-testid="part" />);
+    await render(<Part title="" aria-description="" data-testid="part" />);
 
     const part = screen.getByTestId('part');
     expect(part).toHaveAttribute('title', '');
-    expect(part).toHaveAttribute('aria-describedby', '');
+    expect(part).toHaveAttribute('aria-description', '');
   });
 });
