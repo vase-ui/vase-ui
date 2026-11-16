@@ -221,9 +221,9 @@ describe('hydrate', () => {
     const props = { staleLabel: true };
     const serverHtml = await renderOnServer(REMOUNTED_REGION, props);
 
-    await expect(hydrate(RemountedRegion, { serverHtml, props, renumberIds: true })).rejects.toThrow(
-      /The hydrated DOM differs from a client-only render/,
-    );
+    await expect(
+      hydrate(RemountedRegion, { serverHtml, props, renumberIds: true }),
+    ).rejects.toThrow(/The hydrated DOM differs from a client-only render/);
   });
 
   it('runs the inline script of the server HTML', async () => {

@@ -44,16 +44,18 @@ describe('<Calendar.Root /> views hydration', () => {
     await hydrate(CalendarViewsHydration, { serverHtml, props: all });
   });
 
+  // A `-u-ca-` keyword gives the server another calendar than the browser. The Hebrew year 5787
+  // has 13 months.
   it.each([
-    { name: 'the months of a Hebrew server', server: 'en-US-u-ca-hebrew', view: 'month' as const, cells: 12 },
-    { name: 'the years of a Persian server', server: 'en-US-u-ca-persian', view: 'year' as const, cells: 12 },
-  ])('hydrates $name, then shows the calendar of the browser', async ({ server, view, cells }) => {
+    { name: 'the months of a Hebrew server', server: 'en-US-u-ca-hebrew', view: 'month' as const },
+    { name: 'the years of a Persian server', server: 'en-US-u-ca-persian', view: 'year' as const },
+  ])('hydrates $name, then shows the calendar of the browser', async ({ server, view }) => {
     const props = { ...base, view, locale: 'en-US' };
     const serverHtml = await renderOnServer(file, { ...props, locale: server });
 
     const { container } = await hydrate(CalendarViewsHydration, { serverHtml, props });
 
-    expect(container.querySelectorAll('[role="gridcell"]')).toHaveLength(cells);
+    expect(container.querySelectorAll('[role="gridcell"]')).toHaveLength(12);
     expect(container).toHaveTextContent('2026');
   });
 
