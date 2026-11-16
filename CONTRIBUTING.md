@@ -1850,7 +1850,7 @@ Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>. Without a root the trigg
   - Each `tsconfig` file and `packages/vue/vitest.config.ts`.
   - `packages/vue/test/server` and each shell script in `packages/vue/test`.
   - A file that the script does not name.
-- A pull request with only the files below runs no test job and no `test-nuxt`. No test reads them:
+- A pull request with only the files below and no file of the list above runs no test job and no `test-nuxt`. No test reads them:
   - The Markdown files of the root and of `docs`, `LICENSE` and `docs/public`.
   - `parity`, `cost` and `scripts`, except `scripts/ci`.
   - `eslint.config.js`, `eslint.config.test.js` and `prettier.config.js`.
