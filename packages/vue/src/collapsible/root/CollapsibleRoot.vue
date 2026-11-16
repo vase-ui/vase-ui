@@ -49,7 +49,6 @@ export type CollapsibleRootChangeEventDetails =
 <script setup lang="ts">
 import { computed, provide } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { isInTreeOf } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { CollapsibleRootContext } from './CollapsibleRootContext';
 import { collapsibleStateAttributesMapping } from './stateAttributesMapping';
@@ -109,7 +108,6 @@ provide(CollapsibleRootContext, {
   ...collapsible,
   onOpenChange,
   state,
-  reaches: (target) => isInTreeOf(element.value, target),
 });
 
 const { element, elementProps } = useRenderElement('div', props, {

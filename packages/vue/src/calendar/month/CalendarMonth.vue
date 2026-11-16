@@ -61,7 +61,7 @@ const {
   isLeaving: isPageLeaving,
   finishLeaving,
 } = useCalendarRootContext();
-const { labelRoot, getAriaLabelledBy } = useLabelId(() => element.value);
+const { labelRoot, getAriaLabelledBy } = useLabelId();
 
 const month = computed(() => props.month);
 const isLeaving = computed(() => isPageLeaving(props.month));

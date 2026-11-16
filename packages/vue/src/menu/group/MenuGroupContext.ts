@@ -5,8 +5,6 @@ import type { RegisterId } from '../../internals/labelable-provider/LabelableCon
 export interface MenuGroupContext {
   /** Registers the id of a `Menu.GroupLabel` with the group above it. */
   registerLabelId: RegisterId;
-  /** Whether an id reference of the group reaches `element`. */
-  reaches: (element: Element) => boolean;
 }
 
 export const MenuGroupContext: InjectionKey<MenuGroupContext> = Symbol();

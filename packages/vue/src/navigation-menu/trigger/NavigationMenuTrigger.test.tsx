@@ -923,6 +923,33 @@ describe('<NavigationMenu.Trigger />', () => {
 
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
     });
+
+    it('opens the item at the first activation of a trigger that mounted in a held branch when the pointer is over it', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => <Menu popup />);
+      await render(<HeldBranch />);
+      await mountWhileHeld();
+
+      // A pointer that is over a trigger at its first show sends no enter event.
+      const originalMatches = Element.prototype.matches;
+      const matchesSpy = vi.spyOn(Element.prototype, 'matches').mockImplementation(function matches(
+        this: Element,
+        selector: string,
+      ) {
+        if (selector === ':hover' && (this as HTMLElement).dataset.testid === 'trigger-one') {
+          return true;
+        }
+        return originalMatches.call(this, selector);
+      });
+      onTestFinished(() => {
+        matchesSpy.mockRestore();
+      });
+
+      await show();
+      vi.advanceTimersByTime(50);
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('trigger-one')).toHaveAttribute('aria-expanded', 'true');
+    });
   });
 
   describe('VUE-73: aria-controls names only an element in the document', () => {

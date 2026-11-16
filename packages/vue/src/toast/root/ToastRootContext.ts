@@ -19,8 +19,6 @@ export interface ToastRootContext {
   visibleIndex: ComputedRef<number>;
   expanded: ComputedRef<boolean>;
   recalculateHeight: () => void;
-  /** Whether an id reference of the root reaches `element`. */
-  reaches: (element: Element) => boolean;
 }
 
 export const ToastRootContext: InjectionKey<ToastRootContext> = Symbol();

@@ -55,7 +55,6 @@ const state = computed<FieldLabelState>(() => ({
 const labelProps = useLabel({
   id: () => props.id,
   native: () => props.nativeLabel,
-  element: () => element.value,
 });
 
 const { element, elementProps } = useRenderElement('label', props, {

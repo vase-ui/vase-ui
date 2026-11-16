@@ -13,6 +13,7 @@ import {
 import type { ComputedRef, InjectionKey, MaybeRefOrGetter } from 'vue';
 import type { FloatingNodeType, FloatingTreeType, PopupPositioningContext } from '../types';
 import { FloatingTreeStore } from './FloatingTreeStore';
+import { isInHeldBranch } from '../../../internals/useKeepAliveState';
 
 const FloatingNodeContext: InjectionKey<ComputedRef<string | undefined>> = Symbol();
 const FloatingTreeContext: InjectionKey<ComputedRef<FloatingTreeType>> = Symbol();
@@ -64,7 +65,7 @@ export function useFloatingNodeId(
   const parentId = useFloatingParentNodeId();
 
   const slot: Pick<FloatingNodeType, 'context'> = {};
-  let deactivated = false;
+  let deactivated = isInHeldBranch();
   const node: FloatingNodeType = {
     id,
     get parentId() {

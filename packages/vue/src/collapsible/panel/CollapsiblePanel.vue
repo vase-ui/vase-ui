@@ -82,7 +82,6 @@ const {
   mounted,
   onOpenChange,
   open,
-  reaches,
   registerPanelId,
   setMounted,
   setOpen,
@@ -97,8 +96,6 @@ const source = Symbol();
 useRegisteredId(
   () => panelId.value,
   (getId) => registerPanelId(source, getId),
-  () => element.value,
-  reaches,
 );
 
 const {

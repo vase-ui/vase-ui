@@ -1,5 +1,4 @@
 import { onScopeDispose } from 'vue';
-import type { MaybeRefOrGetter } from 'vue';
 import { useKeepAliveState } from '../useKeepAliveState';
 
 /**
@@ -15,17 +14,12 @@ import { useKeepAliveState } from '../useKeepAliveState';
  *
  * Do not replace the call with a `watch` that has `immediate` and `onCleanup`. A server render
  * stops that watcher after its first run, and the stop runs the cleanup.
- * @param element The element of the part.
- * @param reaches Whether an id reference of the owner of the registry reaches an element. With
- * `element`, the getter gives no id for a part that mounts in a held branch.
  */
 export function useRegisteredId(
   getId: () => string | undefined,
   register: (getId: (() => string | undefined) | undefined) => void,
-  element?: MaybeRefOrGetter<Element | null | undefined>,
-  reaches?: (element: Element) => boolean,
 ): void {
-  const { isHeld } = useKeepAliveState(element, reaches);
+  const { isHeld } = useKeepAliveState();
 
   register(() => (isHeld.value ? undefined : getId()));
 
