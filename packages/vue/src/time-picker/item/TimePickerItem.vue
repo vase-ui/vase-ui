@@ -33,19 +33,14 @@ export interface TimePickerItemProps
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useIsHydrating } from '../../common/hydration';
-import { ACTIVE_COMPOSITE_ITEM } from '../../internals/composite/constants';
-import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { formatText } from '../../internals/date-time/calendar/formatText';
-import { usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
-import { toPlainTime, withTime } from '../../internals/date-time/temporal';
-import { REASONS } from '../../internals/reasons';
+import { toPlainTime } from '../../internals/date-time/temporal';
 import type { HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFormatLocale } from '../../utils/useFormatLocale';
 import { useTimePickerRootContext } from '../root/TimePickerRootContext';
 import { hourCycleOption } from '../utils/useTimePickerFormat';
+import { useTimePickerOption } from '../utils/useTimePickerOption';
 
 defineOptions({ inheritAttrs: false });
 
@@ -57,9 +52,7 @@ defineSlots<{
 }>();
 
 const picker = useTimePickerRootContext();
-const popup = usePickerPopup();
 const locale = useFormatLocale(() => picker.props.locale);
-const isHydrating = useIsHydrating();
 
 const selected = computed(
   () =>
@@ -81,49 +74,18 @@ const text = computed(() =>
   ),
 );
 
-const { compositeProps, compositeRef } = useCompositeItem({ active: selected, disabled });
-
-// A press on the selected item changes no value, and it still closes the popup.
-function select(event: MouseEvent | KeyboardEvent) {
-  if (disabled.value || picker.readOnly.value) {
-    return;
-  }
-  if (!selected.value) {
-    const details = createChangeEventDetails(REASONS.itemPress, event);
-    picker.commit(withTime(picker.template.value, props.time), details);
-    if (details.isCanceled) {
-      return;
-    }
-  }
-  if (picker.closeOnSelect.value) {
-    popup.closeAfterSelection(event);
-  }
-}
-
-function onKeydown(event: KeyboardEvent) {
-  if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
-    event.preventDefault();
-    select(event);
-  }
-}
+const { compositeRef, optionProps } = useTimePickerOption({
+  picker,
+  selected,
+  disabled,
+  closeOnSelect: picker.closeOnSelect,
+  time: () => props.time,
+});
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
   ref: [compositeRef],
-  props: (attrs) => [
-    compositeProps.value,
-    {
-      role: 'option',
-      'aria-selected': selected.value,
-      'aria-disabled': disabled.value || undefined,
-      [ACTIVE_COMPOSITE_ITEM]: selected.value ? '' : undefined,
-      // The text comes from the data of `Intl` in the engine, and a server and a browser can differ.
-      'data-allow-mismatch': isHydrating.value ? 'attribute,text' : undefined,
-      onClick: select,
-      onKeydown,
-    },
-    attrs,
-  ],
+  props: (attrs) => [...optionProps(), attrs],
 });
 
 defineExpose({ element });

@@ -30,7 +30,7 @@ const SERVER_CASES: Record<string, () => VNode> = {
     </TimePicker.Root>
   ),
   'a list, a column and a clock with a value': () => (
-    <TimePicker.Root defaultValue={Temporal.PlainTime.from('09:30')} locale="en-US" hourCycle={12}>
+    <TimePicker.Root defaultValue={Temporal.PlainTime.from('09:00')} locale="en-US" hourCycle={12}>
       <TimePicker.List step={60} />
       <TimePicker.Column unit="minute" step={30} />
       <TimePicker.Column unit="dayPeriod" />

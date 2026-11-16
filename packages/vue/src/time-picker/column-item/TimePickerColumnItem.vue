@@ -35,13 +35,6 @@ export interface TimePickerColumnItemProps
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useIsHydrating } from '../../common/hydration';
-import { ACTIVE_COMPOSITE_ITEM } from '../../internals/composite/constants';
-import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
-import { usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
-import { withTime } from '../../internals/date-time/temporal';
-import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { clampTime } from '../../time-clock/utils/clockViews';
@@ -49,6 +42,7 @@ import { useTimePickerColumnContext } from '../column/TimePickerColumnContext';
 import { useTimePickerRootContext } from '../root/TimePickerRootContext';
 import { columnText, isColumnValueAllowed, timeOfColumnValue } from '../utils/columns';
 import { useTimePickerFormat } from '../utils/useTimePickerFormat';
+import { useTimePickerOption } from '../utils/useTimePickerOption';
 
 defineOptions({ inheritAttrs: false });
 
@@ -64,9 +58,7 @@ defineSlots<{
 
 const picker = useTimePickerRootContext();
 const column = useTimePickerColumnContext();
-const popup = usePickerPopup();
 const { locale, hourCycle } = useTimePickerFormat(picker);
-const isHydrating = useIsHydrating();
 
 const limits = computed(() => ({
   minTime: picker.props.minTime,
@@ -97,53 +89,23 @@ const text = computed(() =>
   columnText(column.unit.value, hourCycle.value, props.value, locale.value),
 );
 
-const { compositeProps, compositeRef } = useCompositeItem({ active: selected, disabled });
-
-// A press on the selected item changes no value. It closes the popup only when the column does.
-function select(event: MouseEvent | KeyboardEvent) {
-  if (disabled.value || picker.readOnly.value) {
-    return;
-  }
-  if (!selected.value) {
-    const time = clampTime(
+const { compositeRef, optionProps } = useTimePickerOption({
+  picker,
+  selected,
+  disabled,
+  closeOnSelect: column.closeOnSelect,
+  // An hour or a minute that has times out of the limits moves the time into them.
+  time: () =>
+    clampTime(
       timeOfColumnValue(column.unit.value, hourCycle.value, picker.time.value, props.value),
       limits.value,
-    );
-    const details = createChangeEventDetails(REASONS.itemPress, event);
-    picker.commit(withTime(picker.template.value, time), details);
-    if (details.isCanceled) {
-      return;
-    }
-  }
-  if (column.closeOnSelect.value) {
-    popup.closeAfterSelection(event);
-  }
-}
-
-function onKeydown(event: KeyboardEvent) {
-  if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
-    event.preventDefault();
-    select(event);
-  }
-}
+    ),
+});
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
   ref: [compositeRef],
-  props: (attrs) => [
-    compositeProps.value,
-    {
-      role: 'option',
-      'aria-selected': selected.value,
-      'aria-disabled': disabled.value || undefined,
-      [ACTIVE_COMPOSITE_ITEM]: selected.value ? '' : undefined,
-      // The text comes from the data of `Intl` in the engine, and a server and a browser can differ.
-      'data-allow-mismatch': isHydrating.value ? 'attribute,text' : undefined,
-      onClick: select,
-      onKeydown,
-    },
-    attrs,
-  ],
+  props: (attrs) => [...optionProps(), attrs],
 });
 
 defineExpose({ element });

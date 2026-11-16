@@ -80,7 +80,7 @@ describe('<TimePicker.Root /> on a server', () => {
   it('renders a list, a column and a clock that are not in a popup, with the value', async () => {
     const html = await renderToString(
       <TimePicker.Root
-        defaultValue={Temporal.PlainTime.from('09:30')}
+        defaultValue={Temporal.PlainTime.from('09:00')}
         locale="en-US"
         hourCycle={12}
       >

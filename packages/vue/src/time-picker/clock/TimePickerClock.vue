@@ -9,7 +9,7 @@ export interface TimePickerClockState extends TimeClockRootState {}
 /**
  * The props of `TimeClock.Root` that the picker does not own. The root of the picker owns the
  * value, the granularity, the hour cycle, the limits, the locale and the states `disabled` and
- * `readOnly`. The clock takes the focus when the popup opens, so the focus goes to its face.
+ * `readOnly`.
  */
 export interface TimePickerClockProps extends Omit<
   TimeClockRootProps,

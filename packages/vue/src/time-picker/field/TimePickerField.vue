@@ -8,8 +8,8 @@ export interface TimePickerFieldState extends TimeFieldRootState {}
 
 /**
  * The props of `TimeField.Root` that the picker does not own. The root of the picker owns the
- * value, the limits, the locale and the props of the form. The part has the attribute
- * `aria-labelledby` in the place of the prop `ariaLabelledby`.
+ * value, the granularity, the hour cycle, the limits, the locale and the props of the form. The
+ * part has the attribute `aria-labelledby` in the place of the prop `ariaLabelledby`.
  */
 export interface TimePickerFieldProps extends Omit<
   TimeFieldRootProps,

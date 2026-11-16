@@ -8,17 +8,18 @@ export function isValidListStep(step: number): boolean {
 
 /**
  * The times of a list: `minTime`, then each time `step` minutes after the time before it, up to
- * `maxTime`. With no `minTime`, the list starts at midnight. With no `maxTime`, it ends at the last
- * time of the day.
+ * `maxTime`. The limits are the texts of times. With no `minTime`, the list starts at midnight.
+ * With no `maxTime`, it ends at the last time of the day.
  */
 export function listTimes(
   step: number,
-  minTime: Temporal.PlainTime | undefined,
-  maxTime: Temporal.PlainTime | undefined,
+  minTime: string | undefined,
+  maxTime: string | undefined,
 ): Temporal.PlainTime[] {
   const times: Temporal.PlainTime[] = [];
-  let time = minTime ?? new Temporal.PlainTime();
-  while (!maxTime || Temporal.PlainTime.compare(time, maxTime) <= 0) {
+  const last = maxTime === undefined ? undefined : Temporal.PlainTime.from(maxTime);
+  let time = minTime === undefined ? new Temporal.PlainTime() : Temporal.PlainTime.from(minTime);
+  while (!last || Temporal.PlainTime.compare(time, last) <= 0) {
     times.push(time);
     const next = time.add({ minutes: step });
     // `add` goes round at midnight, so a time that is not later than the time before it ends the day.

@@ -81,7 +81,7 @@ The root owns the props that its parts share: `granularity`, `referenceDate`, `h
 
 With no value, a pick starts at the time of `referenceDate`, or at midnight, and it has the kind that `referenceDate` gives. A pick in a column then sets one unit of that time. A picker that the user empties keeps the kind of its last value.
 
-`minTime` and `maxTime` limit the time. The list starts at `minTime` and ends at `maxTime`. The columns and the clock disable a value that has no time in the limits, and a pick moves the time into them. The hidden input of the field gives `rangeUnderflow` and `rangeOverflow` to a time that the user typed.
+`minTime` and `maxTime` limit the time. The list starts at `minTime` and ends at `maxTime`. The columns and the clock disable a value that has no time in the limits, and a pick moves the time into them. The hidden input of the field gives `rangeUnderflow` and `rangeOverflow` to a time that the user typed. The `step` of `TimePicker.List` is in minutes. `TimePicker.Field` has its own `step`, the step of its hidden input in seconds, as in [Time Field](/components/time-field).
 
 ### Close at a selection
 

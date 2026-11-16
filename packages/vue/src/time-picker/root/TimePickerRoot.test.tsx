@@ -182,6 +182,23 @@ describe('<TimePicker.Root />', () => {
       });
     });
 
+    it('goes to the first list or column, and not to a column that comes after it', async () => {
+      const { user } = await renderPicker({
+        list: true,
+        columns: true,
+        defaultValue: time('15:30'),
+      });
+
+      await open(user);
+
+      await waitFor(() => {
+        expect(listItem('15:30')).toHaveFocus();
+      });
+      await waitSingleFrame();
+      await waitSingleFrame();
+      expect(listItem('15:30')).toHaveFocus();
+    });
+
     it('goes to the face of the clock when the popup opens', async () => {
       const { user } = await renderPicker({ clock: true, defaultValue: time('15:30') });
 
@@ -199,16 +216,14 @@ describe('<TimePicker.Root />', () => {
         defaultValue: time('14:30'),
         onValueChange,
       });
-      await open(user);
+      const popup = await open(user);
       await waitFor(() => {
         expect(listItem('14:30')).toHaveFocus();
       });
 
       await user.keyboard('{ArrowDown}{Escape}');
 
-      await waitFor(() => {
-        expect(screen.queryByRole('dialog')).toBe(null);
-      });
+      await expectClosed(popup);
       await waitFor(() => {
         expect(screen.getByTestId('trigger')).toHaveFocus();
       });

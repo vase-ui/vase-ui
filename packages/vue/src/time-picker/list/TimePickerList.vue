@@ -74,11 +74,15 @@ if (process.env.NODE_ENV !== 'production') {
   );
 }
 
+// A consumer can make a new `Temporal` object for the same time in each render, so the list reads
+// the text of each limit. The times of the list then stay the same objects until a limit changes.
+const minTime = computed(() => picker.props.minTime?.toString());
+const maxTime = computed(() => picker.props.maxTime?.toString());
 const times = computed(() =>
   listTimes(
     isValidListStep(props.step) ? props.step : DEFAULT_LIST_STEP,
-    picker.props.minTime,
-    picker.props.maxTime,
+    minTime.value,
+    maxTime.value,
   ),
 );
 
