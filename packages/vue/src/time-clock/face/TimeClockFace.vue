@@ -40,6 +40,7 @@ export interface TimeClockFaceProps
 import { computed, nextTick, onScopeDispose, provide, shallowRef } from 'vue';
 import type { Component } from 'vue';
 import { formatNumber } from '../../common/formatNumber';
+import { useAriaAfterHydration } from '../../common/hydration';
 import { visuallyHiddenInput } from '../../common/visuallyHidden';
 import { givenName } from '../../internals/blankName';
 import {
@@ -94,6 +95,7 @@ const HIDDEN_INPUT_STYLE = {
 const root = useTimeClockRootContext();
 const { state } = root;
 const formatLocale = useFormatLocale(root.locale);
+const ariaAfterHydration = useAriaAfterHydration();
 
 const inputElement = shallowRef<HTMLInputElement | null>(null);
 const numberElements = new Map<HTMLElement, () => TimeClockFaceNumber>();
@@ -140,15 +142,19 @@ function inputProps() {
   return mergeProps<'input'>(
     {
       'aria-label':
-        givenName(props.ariaLabel) ?? (ariaLabelledby == null ? label.value : undefined),
+        ariaAfterHydration(
+          givenName(props.ariaLabel) ?? (ariaLabelledby == null ? label.value : undefined),
+        ) ?? undefined,
       'aria-labelledby': ariaLabelledby,
       'aria-describedby': props.ariaDescribedby,
       'aria-readonly': root.readOnly.value ? 'true' : undefined,
       'aria-valuenow': root.selectedNumber.value.value,
       'aria-valuetext':
-        typeof props.getAriaValueText === 'function'
-          ? props.getAriaValueText(root.selectedNumber.value.value, root.view.value)
-          : valueText.value,
+        ariaAfterHydration(
+          typeof props.getAriaValueText === 'function'
+            ? props.getAriaValueText(root.selectedNumber.value.value, root.view.value)
+            : valueText.value,
+        ) ?? undefined,
       // A browser restores the value of an input that has no `autocomplete="off"` after a reload.
       autocomplete: 'off',
       disabled: root.disabled.value,

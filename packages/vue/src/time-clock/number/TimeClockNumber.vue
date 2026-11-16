@@ -74,6 +74,8 @@ const state = computed<TimeClockNumberState>(() => {
 });
 
 // A minute, a second and the hour 0 have two digits, as the time shows them.
+// With no default slot and no `as`, the text is the only child of a static element. Vue allows a
+// text mismatch only for such an element, so the template has a branch of its own for it.
 const text = computed(() =>
   formatNumber(props.number.value, formatLocale.value, {
     minimumIntegerDigits: root.view.value !== 'hour' || props.number.value === 0 ? 2 : 1,
@@ -110,7 +112,8 @@ defineExpose({ element });
 
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"
+  <component :is="as" v-else-if="$slots.default || as !== 'span'" v-bind="elementProps()"
     ><slot :state="state">{{ text }}</slot></component
   >
+  <span v-else v-bind="elementProps()">{{ text }}</span>
 </template>
