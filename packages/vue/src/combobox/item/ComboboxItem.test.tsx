@@ -1014,6 +1014,12 @@ describe('<Combobox.Item />', () => {
         'aria-activedescendant',
         screen.getByRole('option', { name: 'three' }).id,
       );
+
+      await fireEvent.keyDown(input, { key: 'ArrowUp' });
+      await flushMicrotasks();
+
+      expect(onItemHighlighted.mock.lastCall?.[0]).toBe('two');
+      expect(input).not.toHaveAttribute('aria-activedescendant');
     });
   });
 });

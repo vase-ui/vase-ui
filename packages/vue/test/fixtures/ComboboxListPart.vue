@@ -49,7 +49,8 @@ function setItemElement(index: number, value: unknown, element: unknown) {
 }
 
 // `Combobox.Item` gives the element of the highlighted item to the store, and the input names its
-// `id` in `aria-activedescendant`. The options do the same after each render of the list.
+// `id` in `aria-activedescendant`. This part gives the option at the active index after the DOM
+// update that follows a change of the index, of the mount or of the filtered values.
 watch(
   [() => store.select('activeIndex'), mounted, flatFilteredValues],
   ([index]) => {

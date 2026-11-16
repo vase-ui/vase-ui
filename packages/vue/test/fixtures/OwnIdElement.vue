@@ -2,8 +2,9 @@
 import type { Ref } from 'vue';
 
 // A component of the consumer that gives its element an `id` of its own. A change of `ownId`
-// renders only this component, not the part whose `#render` slot returns it. The fallthrough `id`
-// of the part thus does not replace `ownId`.
+// renders only this component, not the part whose `#render` slot returns it. Vue adds fallthrough
+// attributes after the attributes of the template. `inheritAttrs: false` stops this, so the `id`
+// of the part does not replace `ownId`.
 defineOptions({ inheritAttrs: false });
 
 defineProps<{
