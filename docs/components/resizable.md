@@ -524,9 +524,9 @@ The parts write no style sheet and no cursor, so a page with a Content Security 
 - A panel has `data-orientation`, `data-collapsed` and `data-disabled`, and the variable `--resizable-panel-size`.
 - A handle has `data-orientation`, `data-disabled`, `data-dragging`, `data-crossing`, `data-at-min` and `data-at-max`, and the variable `--resizable-handle-preview-offset`.
 
-`data-at-min` means that the handle cannot move to the left, or up in a vertical root. `data-at-max` means that it cannot move to the right, or down. The sides are sides of the screen, also in a right-to-left root. A cursor of `e-resize` for `data-at-min` and `w-resize` for `data-at-max` thus shows the one way that the handle can move.
+`data-at-min` means that the handle cannot move to the left, or up in a vertical root. `data-at-max` means that it cannot move to the right, or down. The sides are sides of the screen, also in a right-to-left root. A cursor of `e-resize` for `data-at-min` and `w-resize` for `data-at-max` thus shows the one way that the handle can move. A handle with both attributes cannot move, and the demos give it the cursor `default` except at a crossing, where a press moves the other handle.
 
-The handle has `position: relative`, because it is the containing block of its hit area. Do not give it `position: static`: the hit area then has another place. A root with `dragEdges` has `position: relative` too, and its edge nodes are `[data-vase-ui-resizable-edge]` elements in it. Use `:hover` and `:focus-visible` on a handle for the states of the pointer and the keyboard. To show a grip, put it in the default slot of the handle.
+The handle has `position: relative`, because it is the containing block of its hit area. Do not give it `position: static`: the hit area then has another place. A root with `dragEdges` has `position: relative` too, and its edge nodes are `[data-vase-ui-resizable-edge]` elements in it. An edge node has `data-orientation`, `data-dragging`, `data-crossing`, `data-at-min` and `data-at-max`. Use `:hover` and `:focus-visible` on a handle for the states of the pointer and the keyboard. To show a grip, put it in the default slot of the handle.
 
 ## RTL
 

@@ -5,7 +5,7 @@ import { Resizable } from '@vase-ui/vue/resizable';
 <template>
   <Resizable.Root
     drag-edges
-    class="box-border h-48 w-full overflow-hidden rounded-md border border-neutral-200 dark:border-neutral-800 [&>[data-vase-ui-resizable-edge]]:cursor-col-resize [&>[data-vase-ui-resizable-edge]:hover]:bg-neutral-200 dark:[&>[data-vase-ui-resizable-edge]:hover]:bg-neutral-800"
+    class="box-border h-48 w-full overflow-hidden rounded-md border border-neutral-200 dark:border-neutral-800 [&>[data-vase-ui-resizable-edge]]:cursor-col-resize [&>[data-vase-ui-resizable-edge][data-at-max]]:cursor-w-resize [&>[data-vase-ui-resizable-edge][data-at-min]]:cursor-e-resize [&>[data-vase-ui-resizable-edge][data-at-min][data-at-max]]:cursor-default [&>[data-vase-ui-resizable-edge]:hover]:bg-neutral-200 dark:[&>[data-vase-ui-resizable-edge]:hover]:bg-neutral-800"
   >
     <Resizable.Panel id="navigation" default-size="25" class="box-border overflow-hidden p-4">
       <p class="text-sm font-medium text-neutral-950 dark:text-white">Navigation</p>
