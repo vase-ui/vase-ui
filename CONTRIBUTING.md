@@ -272,20 +272,9 @@ A part that Base UI takes from another family is exported again and not copied: 
 | `nativeButton` prop, where upstream has it                       | The same as upstream.                                                                                                                                                                                            | `nativeButton`                 |
 | Exposed `element`                                                | Gives the DOM element through a template ref.                                                                                                                                                                    | `ref`                          |
 
-- `props` of the `#render` slot holds the attributes, the listeners, the state data attributes, the class, the style and the `ref` setter.
-- Under `#render`, the part does not render its default slot. Put the content in your element.
-- Your element takes one `ref`. Vue keeps the last `ref` key of an element. It gives no warning.
-- If your element needs a ref of your own, call `props.ref` in a function ref: `:ref="(el) => { props.ref(el); own = el }"`.
-- The setter must make no change when it gets the same element again. Vue calls a function ref again on each patch.
-- In a Vapor component (`<script setup vapor>`), bind the setter by name: `<a v-bind="props" :ref="props.ref">`. Vapor drops the `ref` key of a bound object, and Vue gives no warning. The part then gets no element, and its warning in the next bullet names this binding.
-- A development build shows a warning when the `#render` slot of a part gives no element and no component to the `ref` setter.
-- A component in the slot can set its exposed `element` later. A component whose exposed `element` is empty at the check thus gets no warning.
-- The part makes the check after each render in which the slot appears. A part with no element at mount thus gets the check when it renders its element.
-- If a consumer gives `as` and `#render`, `#render` wins. A development build shows a warning.
-- The part makes this check after each render. A consumer can give `as` or `#render` after the mount, and the check then shows the warning too.
+- `docs/handbook/composition.md` gives the rules of the `#render` slot for a consumer. A development build shows a warning for a slot that gives the part no element, and for `as` together with `#render`. `useRenderElement` makes these checks.
 - Vue removes a function that is given as `class`. This is the reason for `stateClass` and `stateStyle`.
-- A part can have declarations that must win over `style` and `stateStyle`. The part gives them to `useRenderElement` as `overridingStyle`, a function that returns a style object or `undefined`. The composable merges the result last. `undefined` or an empty object adds no `style` key.
-- `Collapsible.Panel` gives `animation-name: none` and its temporary declarations in this way. See [What differs from the React source](#what-differs-from-the-react-source).
+- A part whose declarations must win over `style` and `stateStyle` gives them to `useRenderElement` as `overridingStyle`. `Collapsible.Panel` does this. See [What differs from the React source](#what-differs-from-the-react-source).
 - Each part that renders an element sets `defineOptions({ inheritAttrs: false })`. Each attribute and listener goes to the element through `mergeProps`.
 - An attribute with the value `undefined` is not given. The part keeps its own value, as Vue keeps the default of a declared prop. `null` removes the value of the part (`VUE-103`).
 - An `aria-label` or an `aria-labelledby` that is blank is not given: an empty string, or a string of white space only. Such a value names nothing, so the part keeps its own value (`VUE-106`). In Base UI, the blank value replaces the value of the part.
@@ -365,12 +354,9 @@ Some upstream parts put nodes of their own in the element. Examples are the rang
 - A part that shows its default slot only in some states also has a `<Part>Children.vue`, such as `ComboboxEmptyChildren.vue`. That SFC renders the default slot only in those states. The `#render` slot then shows the content in the same states.
 - The `#render` slot of the part gets a third slot prop, `children`, which is that component.
 - A consumer writes `<a v-bind="props"><component :is="children">…</component></a>`.
-- A development build shows a warning when the `#render` slot does not mount `children`. The part makes this check together with the check for the element of the slot.
-- The part passes `children: true` to `useRenderElement`. `<Part>Children.vue` calls `markChildrenMounted()` in setup. The warning needs the two calls.
-- `Resizable.Handle` has `ResizableHandleChildren.vue` for its hit area, and `Resizable.Root` has `ResizableRootChildren.vue` for its edge nodes. A node that a consumer styles has a `data-vase-ui-*` attribute as its name, such as `data-vase-ui-resizable-edge`.
-- The mark of `markChildrenMounted()` ends when `<Part>Children.vue` unmounts. Each later appearance of the slot thus gets the check too.
+- The part passes `children: true` to `useRenderElement`, and `<Part>Children.vue` calls `markChildrenMounted()` in setup. A development build then shows a warning when the `#render` slot does not mount `children`.
+- A node of `<Part>Children.vue` that a consumer styles has a `data-vase-ui-*` attribute as its name, such as `data-vase-ui-resizable-edge` of `Resizable.Root`.
 - The Viewport part of a popup family that calls `usePopupViewport` has no `<Part>Children.vue`. Its `children` is `utils/popups/viewport/PopupViewportChildren.vue`. `test/fixtures/PopupViewportPart.vue` is the model. `NavigationMenu.Viewport` does not call `usePopupViewport`. With no positioner, `NavigationMenuViewportChildren.vue` renders the two focus guards and the target element of the content. In a positioner, it renders only its default slot. The part then keeps the two focus guards before and after its element with `useElementSiblings`, so the part has one root node. See [Focus helpers](#focus-helpers).
-- `Select.Positioner` has the style element of `Select.Popup` in its element, and no `<Part>Children.vue`. The style element renders only while the part hydrates. Its `#render` slot thus gets no `children`, and the style element comes before the slot.
 
 <!-- prettier-ignore -->
 ```vue
@@ -467,50 +453,25 @@ Some upstream parts render a hidden `<input>` beside their element. `Switch.Root
 
 ### Element targets
 
-One helper, `resolveElement(value)`, changes a value into an element:
-
-- An element stays the same. A ref on a functional component is its root element, so it also stays the same.
-- A component that exposes an element as `element` gives that element. Each Vase UI part does this. A wrapper component of a consumer can do it too.
-- A component that exposes an empty `element` (`null` or `undefined`) gives `null`, with no warning. Its root element can be the wrong element.
-- If the exposed `element` has a value that is not an element and not empty, the next rule applies.
-- A prop with the name `element` is not an exposed element. The next rule applies.
-- Another component gives `$el` when that is an element. If not, the result is `null` and a development build shows a warning.
-- A ref on a Vapor component gives only the values that the component exposes, and no `$el`. A Vapor component thus gives an element only when it exposes an element as `element`. If not, the result is `null` and a development build shows a warning.
+One helper, `resolveElement(value)` of `src/internals`, changes the value of a template ref into an element. Its JSDoc and its comments give the result for each value.
 
 Rules:
 
 - The `ref` setter of a part calls `resolveElement`. Thus `as="RouterLink"` and `<RouterLink v-bind="props">` work.
 - A part calls `resolveElement` again after each of its renders, in `onMounted` and in `onUpdated`. A component can set its exposed `element` after its render, also in its own `onMounted`. Vue runs the `onMounted` hook of a child before the `onMounted` or `onUpdated` hook of its parent, so the element exists then.
 - A component that sets its exposed `element` later than its own `onMounted`, such as after an `await`, exposes the element as a ref. The `ref` setter of the part reads that ref in the render that patches the component. Vue runs that render again when the ref changes, so the part gets the element.
-- The ref of a component with no `expose` also gives access to its props. `resolveElement` compares `element` with the prop of that name in `$props`. When the two are the same value, it reads `$el`.
-- The SFC compiler adds an empty `expose()` call to a `<script setup>` component with no `defineExpose`. It adds no call when it compiles the template inline, as a production build does. The rule above gives the two builds the same element.
 - A prop that takes an element accepts `MaybeRefOrGetter<Element | ComponentPublicInstance | null>` and upstream's other forms. Examples are `anchor`, `container`, `initialFocus`, `finalFocus` and `collisionBoundary`.
 - Find an element by its `nodeType`. Do not use `instanceof`.
 
 ### `mergeProps`
 
-`mergeProps(...sets)` is public. It follows upstream's rules with Vue names:
+`mergeProps(...sets)` is public. Its JSDoc and `docs/utils/merge-props.md` give its rules. These rules are for the source of the package:
 
-- The rightmost set wins.
 - For an attribute, an `undefined` value in a later set also wins, as in Base UI. A part clears a value of its own sets in this way.
-- `class` values are joined, rightmost first.
-- `style` values are merged, and the rightmost wins.
-- `on[A-Z]…` handlers run from right to left. An array of handlers is made flat.
-- A merged handler skips the handlers to its left only when a handler to its right calls `event.preventVaseUIHandler()` during the call of the merged handler. A count of the calls for each event decides. A call in a listener of another element, in the other phase of the event or before the merged handler thus does not skip them (`VUE-82`).
-- The DOM gives one event object to each listener of a dispatch. `event.vaseUIHandlerPrevented` is thus `true` from the first call to the end of the dispatch, in each element and in each phase. Do not use the flag in a handler of a props function to decide on the earlier handlers.
-- `Combobox.Chips` and `Combobox.InputGroup` read the flag, and they do not handle a press that a listener of a child part stopped. `Menu.Popup` and `Select.Popup` read it for a key: their own `keydown` handler is to the right of the list navigation, and it calls `event.preventVaseUIHandler()` when the flag is `true`.
-- A composite root does not read the flag, so a call in a listener of an item does not stop its navigation.
-- A falsy handler value in a later set keeps the handler of an earlier set. Vue's own `mergeProps` does the same for `on` keys.
+- The DOM gives one event object to each listener of a dispatch. `event.vaseUIHandlerPrevented` is thus `true` from the first call of `event.preventVaseUIHandler()` to the end of the dispatch, in each element and in each phase (`VUE-82`). Do not use the flag in a handler of a props function to decide on the earlier handlers.
 - Code that calls a handler from a props set must accept a function, an array and a falsy value. A consumer can give each of them. The call `false?.()` throws.
-- A set can be a function `(merged) => props`. The result replaces the props that are merged up to that point, so the function calls the earlier handlers itself. `mergeProps` does not stop an earlier handler that the function calls.
-- `mergeProps` treats the result of such a function as a set. It copies the result, and each handler in the copy gets a `VaseUIEvent`. Base UI wraps no handler of the result. Base UI does not copy the result of a function that is not the first set (`VUE-70`).
 - A function in the first set gets a new empty object, and `mergePropsN([])` returns a new object. Do not use one constant for them, because a function or a caller can write to it.
-- `ref` is not merged.
 - An event is an object that has `preventDefault`. Do not use `instanceof`.
-- The type argument is the tag of the element: `mergeProps<'button'>`. The sets and the result then have the attributes of that element. With no type argument, a set accepts the attributes of each element, and the type of the result is `NativeElements['div']`: the attributes that each HTML element has.
-- A handler in a set gets a `VaseUIEvent`. A listener of the result gets the DOM event. With a type argument, the type of the result is `NativeElements[T]`.
-- A set has the attribute types of Vue, which have no `null`. `mergeProps` copies `null` to its result, and the type of the result is the type of Vue. Vue declares no `data-*` attribute, and the type of a set accepts `null` for one.
-- Vue types a listener of an element as a function of the DOM event. A template thus refuses a bound object whose listeners need a `VaseUIEvent`.
 
 ### `useRenderElement` and `useRender`
 
@@ -525,13 +486,10 @@ Rules:
 - A part that takes its orientation from a context clears, in its `ref` callback, each holder that holds its element. Its `watch` does not run when the change removes it with its parent. `ScrollAreaThumb.vue` is the model.
 - Upstream's `useRenderElement` has a parameter `enabled`. The Vue composable has none, because the template decides if the part renders an element.
 - A part that renders no element in some state uses `v-if` in its template. The template then does not call `elementProps()`.
-- Vue skips a Vue listener that it attached in the millisecond of an event when an earlier Vue listener got the event. A part or the consumer can move the focus to a new element in that millisecond.
-- Thus `useRenderElement` adds a second listener with `addEventListener` for each `focusin` and `focusout` handler of the props, in the same phase. The second listener runs the handler only for an event that the Vue listener did not run. It gives an error of the handler to the error handler of the app, as the Vue listener does.
-- The props keep the handlers, so the `#render` slot, `as` and `mergeProps` get them.
+- Vue skips a Vue listener that it attached in the millisecond of an event when an earlier Vue listener got the event. `useRenderElement` thus adds a second listener for each `focusin` and `focusout` handler of the props. That listener runs the handler for an event that Vue skipped.
 - A focus that a function ref gives before it calls `props.ref` comes before the second listener. A part that needs that focus reads `activeElement` in its `ref` callback, as `Menu.Input` does.
 - A Vue listener of the consumer on a plain element above a part can still miss such a focus. The Vue listener of the part gets the event first.
-- `useRender` is public. It gives the API of a part to a component of a consumer.
-- `UseRenderElementProps` keeps the attribute types of Vue, with no `null`. An object of that type is then a set of `mergeProps`, as in the TypeScript sample of the `useRender` page.
+- `useRender` is the public form of `useRenderElement`. Its JSDoc and `docs/utils/use-render.md` give its API.
 
 ### Props
 
@@ -557,9 +515,6 @@ Rules:
 - vue-tsc types a generic SFC as a function of its props and its context. `Component` refuses that function when the SFC has a required slot. `as` also accepts `GenericComponent` of `src/internals/types.ts`, so `<Toolbar.Button :as="Select.Trigger">` passes the type check.
 - `GenericComponent` has `/* @vue-ignore */`, so the SFC compiler writes no run-time type for `as`. Without it, the type is `[String, Function]`. The build of the package keeps the type but not `skipCheck`, so Vue warns for a component object in the development build of a consumer. `pnpm check:package` gives `Select.Trigger` to `as` of `Toolbar.Button` in a development build, and fails on a warning.
 - `Toggle` is not a generic SFC, because no other prop, event or slot of `Toggle` follows `Value`. It keeps the type parameter on its exported props interface: `ToggleProps<Value extends string = string>`, with `defineProps<ToggleProps>()`. `ToggleGroup` is a generic SFC, because the type of its `valueChange` event follows `Value`.
-- A popup trigger is a generic SFC, because its `payload` must have the type of its `handle`.
-- `Select.Trigger` has no handle and no payload. It is a generic SFC for the type of the value in its state.
-- `Menu.SubmenuTrigger` has no handle, no payload and no value. It is not a generic SFC.
 - Base UI takes a `React.ReactNode` as the label of an item. A label comes from an `items` record, from an `items` list, or from an object value that has a `label`. Vase UI takes an `ItemLabel`, which `src/internals/resolveValueLabel.ts` exports.
 - An `ItemLabel` is a string, a number, `null`, `undefined`, or a function that returns the content of the label. It is not a vnode. A vnode must be unique in the tree, and a label shows in the value part and in its item at the same time. See [Vnodes Must Be Unique](https://vuejs.org/guide/extras/render-function.html#vnodes-must-be-unique).
 - On a page that Vue hydrated, a component in a vnode that mounts a second time renders nothing.
@@ -577,20 +532,14 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - The part emits `xChange(value, details)` and then `update:x(value)`, synchronously.
 - The part does not emit `update:x` when `details.isCanceled` is true.
 - `Select.Root`, `Combobox.Root`, `Autocomplete.Root` and `Menu.RadioGroup` emit no `valueChange` and no `update:value` when the user picks the value that the part has (`VUE-91`). HTML fires `change` when the user commits a change of the value.
-- Without `multiple`, a press of the selected item of `Select` or `Combobox` still closes the popup.
-- `Select.Root` and `Combobox.Root` compare a value with `isItemEqualToValue`. `Combobox.Root` emits no `inputValueChange` and no `update:inputValue` for the text that the input has.
-- `Autocomplete.Root` compares the text with its value, which is the typed text. An inline completion that the input shows is not the value.
-- A press of `Combobox.Clear`, or Escape in the input of a closed combobox, emits no `valueChange` and no `update:value` when the combobox has no value. Each still clears the text of the input.
 - To stop a change, call `details.cancel()` before the listener returns. The part reads `isCanceled` at that time, so a call after an `await` has no effect.
 - An item whose change also changes its group, such as `Toggle` in `ToggleGroup`, emits in this order: `pressedChange` of the item, `valueChange` and `update:value` of the group, and `update:pressed` of the item. Both change events get the same `details` object. A `details.cancel()` in `pressedChange` stops each later event. A `details.cancel()` in `valueChange` stops `update:value` and `update:pressed`.
 - Do not throw to stop a change. A listener that throws stops `update:x` only where Vue throws the error again. Vue throws the error again only in a development build, or in a production build where `app.config.throwUnhandledErrorInProduction` is `true`. Vue does not throw it again when `app.config.errorHandler` or an ancestor `errorCaptured` hook that returns `false` handles the error. Where Vue does not throw the error again, the part emits `update:x`.
-- A consumer writes `v-model:open`, `v-model:value`, `v-model:checked`, `v-model:pressed`, `v-model:snapPoint`, `v-model:layout`, `v-model:month`, `v-model:view` or `v-model:focusedDate`. There is no `modelValue` alias.
+- A consumer writes `v-model:x`, such as `v-model:open`. There is no `modelValue` alias.
 - One composable does this: `useControlled({ controlled: () => props.x, default: () => props.defaultX, name })`.
 - `default` is a getter. A development build then shows a warning when the default of an uncontrolled part changes.
 - Do not use `defineModel`. It writes the value before a parent can cancel the change.
-- A prop can take more forms than its event gives. `layout` of `Resizable.Root` takes a size for each panel, such as `'240px'`, and `layoutChange` and `update:layout` give percent. The type of the prop is `Resizable.Root.LayoutSnapshot`, and the type of the event is `Resizable.Root.Layout`. After a change, a `v-model:layout` holds percent.
-- `Resizable.Root` ignores an entry of `layout`, `defaultLayout` or `setLayout()` that is not a size, and a development build shows a warning. An app reads a layout from a cookie, a storage or a server, and a visitor can change it. A size prop whose value is not a size throws, because the template of the app gives that value.
-- `Resizable.Root` reads `null` in `layout`, `defaultLayout` or `setLayout()` as a layout with no entries, the same as `{}`. A `null` `layout` keeps the root controlled, because only `undefined` makes a part uncontrolled. The ref of `useCookie` of Nuxt is `null` after the removal of the cookie, and a `v-model:layout` can hold that ref.
+- A prop can take more forms than its event gives, as `layout` of `Resizable.Root` does. The JSDoc of such a prop gives each form, and the form that the event gives.
 - `Accordion.Root`, `ToggleGroup` and `CheckboxGroup` take `null` in `value` and `defaultValue`, and read it as an empty array (`VUE-114`). A `null` `value` keeps the part controlled.
 - A part whose input holds the uncontrolled value does not call `useControlled`. `Field.Control` is an example: it declares `value` and emits `valueChange` and `update:value`.
 
@@ -619,15 +568,13 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 
 - `actionsRef` becomes methods that the part exposes. A consumer reads them through a template ref.
 - Popup roots expose `close()` and `unmount()`. `Field.Root` exposes `validate()`. Its prop `validate` is the validator function. `Form` exposes `validate(name?)`. The types are `DialogRootActions` and so on.
-- A part that Base UI does not have exposes its methods in the same way. `Resizable.Panel` exposes `collapse()`, `expand()`, `resize()`, `isCollapsed()` and `getSize()`, and `Resizable.Root` exposes `getLayout()`, `setLayout()` and `reset()`. Their types are `Resizable.Panel.Actions` and `Resizable.Root.Actions`.
+- A part that Base UI does not have exposes its methods in the same way, with the type `<Part>.Actions`. `Resizable.Panel` is the model.
 - A ref prop of upstream (`inputRef`) becomes an exposed element (`inputElement`) beside `element`.
 - Handles are upstream's objects, with no change: `Dialog.createHandle<Payload>()`, `handle`, `payload`, `triggerId`, `open()`, `openWithPayload()`, `close()`, `isOpen`.
 - Function children become a default scoped slot with named props: `{ payload }` on a root, `{ validity }` on `Field.Validity`, `{ item, index }` on `Combobox.Collection`, `{ value }` on `Select.Value`.
-- A part that renders a list has a slot that has the name of its item, as `Combobox.List` has the slot `item`: `#month` of `Calendar.Months`, `#weekday` of `Calendar.GridHeaderRow`, `#week` of `Calendar.GridBody`, `#day` of `Calendar.Week`, and `#row` of `Calendar.MonthGrid` and `Calendar.YearGrid`. Its props are the item and its `index`, such as `{ day, index }`. The item of `#row` is the list of the months or years of a row, as `months` or `years`.
-- A list part of a component that Base UI does not have can have a default slot. The default slot holds the nodes before the items. `Calendar.WeekNumber` is in the default slot of `Calendar.Week`, and `Calendar.WeekNumberHeader` is in that of `Calendar.GridHeaderRow`. The `#render` slot does not render the default slot.
+- A part that renders a list has a slot that has the name of its item, as `Combobox.List` has the slot `item` and `Calendar.Week` has the slot `day`. Its props are the item and its `index`, such as `{ day, index }`.
+- A list part of a component that Base UI does not have can have a default slot. The default slot holds the nodes before the items. `Calendar.WeekNumber` is in the default slot of `Calendar.Week`. The `#render` slot does not render the default slot.
 - A part can take nodes or a function that renders each item as its children, such as `Combobox.List`. Its default slot holds the nodes, and the slot `item` with `{ item, index }` is the function. A slot does not show at run time if it takes slot props, so one slot cannot be both.
-- `DateField.Input` and `TimeField.Input` have the slot `segment` with `{ segment, index }`, for each part of the layout. With no slot, the part renders its own `Segment` for a segment that the user edits, and its own `Literal` for each other part. The `children` component of the `#render` slot takes the same slot.
-- `Combobox.Collection` uses each item as the `key` of its nodes. An item then keeps its element when the filter changes the list, as in React with `key={item}`. An item that the consumer replaces with a new object gets a new element. The items of one collection must be unique, because equal items give the same key.
 - Type the slots with `defineSlots`. Write each slot except `#render` as a method, as the Vue documentation does: `default(props: { state: ButtonState }): unknown`. A slot with no slot props is `default(): unknown`. A root with a value type uses `generic="Value"`.
 - Give the type parameter the default that Base UI gives it: `generic="Value = any"` on `Accordion.Root`. With no default, the handler of a root that has no `value` and no `defaultValue` gets `unknown[]`. Base UI gives `any[]`, and its type test has a line for it.
 - vue-tsc does not use a listener of a template to resolve a type parameter of a generic SFC. It resolves the type parameters from the other props, and then it checks each listener against the result.
@@ -641,7 +588,6 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - A part whose default tag has attributes of its own gives them to the slot type. The `a` of `PreviewCard.Trigger` is an example: `render: ComponentRenderFn<HTMLProps & AnchorHTMLAttributes, PreviewCardTriggerState>`. `HTMLProps` has no `href`.
 - Hooks keep their names as composables: `useDirection`, `useRender`, `Toast.useToastManager`, `Combobox.useFilter`.
 - A public composable that gives the methods of the nearest part above the caller returns `null` when the caller is not inside that part. It calls `inject(key, null)`, so Vue shows no warning, and it throws no error. `Resizable.useParentPanel()` and `Resizable.useParentRoot()` do this. A composable that a part needs for its own work throws, as [Context of a root](#context-of-a-root) says.
-- `Resizable.useLayoutStorage()` gives `layout` for `v-model:layout` and `save` for `@layout-committed`. It ignores a stored item that is not a record of sizes, and a storage that throws.
 - Where an upstream hook returns a value that can change, the composable returns a ref of that value. `setup` runs one time, so a plain value does not follow a change. Read `.value` where the code uses the value. Do not make a copy of it in `setup`.
 - The ref is a `ComputedRef` when the composable computes the value: `useDirection()` returns `ComputedRef<TextDirection>`. It is a `Readonly<Ref<T>>` when the composable writes the value: `useTransitionStatus()` returns `mounted` and `transitionStatus` in this form.
 - Where an upstream hook returns a props object with a value that can change, the composable returns a `ComputedRef` of that object. Examples are `useLabel()` and `compositeProps` of `useCompositeItem()`. The part reads `.value` in the function that it gives to `useRenderElement` as `props`. `useCompositeRoot` returns a plain object, because its props are only listeners.
@@ -659,15 +605,13 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 
 ## TypeScript
 
-- Run `pnpm lint:fix` to apply each fix of ESLint and to format the files.
-- Run `pnpm typecheck` and `pnpm lint` after it. They show the reports that need hand work.
+- Run `pnpm lint:fix`, and then `pnpm typecheck` and `pnpm lint`. The last two show the reports that need hand work.
 - A branch that merges `main` runs these three commands.
 
 ### Compiler flags
 
 - The root project, `docs` and `packages/vue` extend `@tsconfig/strictest`. A flag of the preset is off only for a reason that this section gives.
-- `packages/vue` has two projects. `tsconfig.build.json` has the source. The build, `pnpm parity:check` and the API reference read it.
-- `tsconfig.test.json` has each file of the package. `tsconfig.json` only names the two projects.
+- `packages/vue` has two projects: `tsconfig.build.json` for the source, and `tsconfig.test.json` for each file of the package. The build, `pnpm parity:check` and the API reference read the first.
 - The test project has `noUncheckedIndexedAccess`, `noImplicitOverride`, `noUnusedLocals` and `noUnusedParameters` off. A ported test can then keep the text of the Base UI test.
 - `exactOptionalPropertyTypes` is off in the package. With the flag, the built declarations give a listener no `| undefined`. A consumer that sets the flag then cannot pass `undefined` to a listener.
 - The consumer project of `pnpm check:package` sets `exactOptionalPropertyTypes`. It passes `undefined` to an optional prop and to a listener.
@@ -685,8 +629,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 
 ### ESLint
 
-- ESLint uses `strictTypeChecked` and `stylisticTypeChecked` of typescript-eslint. `eslint.config.js` gives the reason for each rule that is off or has an option.
-- The rules that need types run on `.ts` and `.tsx` files. vue-tsc checks the types of an SFC.
+- `eslint.config.js` gives the reason for each rule of typescript-eslint that is off or has an option.
 
 ### Index reads and `!`
 
@@ -708,9 +651,8 @@ A disable comment has the form `// eslint-disable-next-line <rule> -- <reason>`.
 - An optional parameter has no `| undefined`. An optional prop has it, as [Props](#props) says.
 - Write a class member that only its class uses as an ECMAScript private member, such as `#attachedStores`. Do not write the `private` keyword, also where Base UI has it. The keyword is only a check of the compiler, and the member stays a public property at run time. ESLint refuses the keyword in the source of the package.
 - Keep `protected` for a member that a subclass uses, because ECMAScript has no such form. Do not write `public`. It is the default, and ESLint refuses it in the source of the package.
-- A member that is only a type keeps `private`: a field that has `declare`, and a member of a `declare class`. Such a member has no code at run time. TypeScript refuses `declare` on a `#` member, and a constructor cannot have a `#` name. The brand of `AlertDialogHandle` and the members of `ComboboxItemCollection` are examples.
+- A member that is only a type keeps `private`: a field that has `declare`, and a member of a `declare class`. The comment of the rule for the `private` keyword in `eslint.config.js` gives the reason. The brand of `AlertDialogHandle` is an example.
 - A class with a `#` member whose objects a consumer can hold calls `markRaw(this)` in its constructor, as `BasePopupHandle` does. [Popup store](#popup-store) says what a reactive proxy does to such an object.
-- A test file can keep the `!` and the casts of the Base UI test.
 
 ## Rules for the source
 
