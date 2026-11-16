@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, onDeactivated, onScopeDispose, shallowRef, watch } from 'vue';
+import { computed, onScopeDispose, shallowRef, watch } from 'vue';
 import type { CSSProperties } from 'vue';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import * as ResizableHandleCssVariables from '../handle/ResizableHandleCssVariables';
 import * as ResizableHandleDataAttributes from '../handle/ResizableHandleDataAttributes';
 import { createHandleDrag } from '../utils/handleDrag';
@@ -75,7 +76,16 @@ function endDrags() {
   drag.end(undefined, false);
 }
 
-onDeactivated(endDrags);
+const { isHeld } = useKeepAliveState();
+watch(
+  isHeld,
+  (held) => {
+    if (held) {
+      endDrags();
+    }
+  },
+  { flush: 'sync' },
+);
 onScopeDispose(endDrags);
 
 const attributes = computed(() => {

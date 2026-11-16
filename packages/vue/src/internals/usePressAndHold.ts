@@ -1,10 +1,11 @@
-import { onDeactivated, onScopeDispose, toValue, watch } from 'vue';
+import { onScopeDispose, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter, Ref } from 'vue';
 import { addEventListener } from '../common/addEventListener';
 import { NOOP } from '../common/empty';
 import { ownerWindow } from '../common/owner';
 import { useInterval } from '../common/useInterval';
 import { useTimeout } from '../common/useTimeout';
+import { useKeepAliveState } from './useKeepAliveState';
 
 const DEFAULT_TICK_DELAY = 60;
 const DEFAULT_START_DELAY = 400;
@@ -157,7 +158,16 @@ export function usePressAndHold(parameters: UsePressAndHoldParameters): UsePress
 
   onScopeDispose(release);
   // `KeepAlive` takes the button out of the document and sends no `pointerup`.
-  onDeactivated(release);
+  const { isHeld } = useKeepAliveState();
+  watch(
+    isHeld,
+    (held) => {
+      if (held) {
+        release();
+      }
+    },
+    { flush: 'sync' },
+  );
 
   watch(isDisabled, (disabled) => {
     if (disabled) {

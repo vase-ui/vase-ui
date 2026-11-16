@@ -1,8 +1,9 @@
-import { computed, onDeactivated, shallowRef, toValue } from 'vue';
+import { computed, shallowRef, toValue, watch } from 'vue';
 import type { CSSProperties, MaybeRefOrGetter, Ref } from 'vue';
 import { clamp } from '../common/clamp';
 import { ownerDocument } from '../common/owner';
 import { closest, contains, getTarget } from '../common/shadowDom';
+import { useKeepAliveState } from '../internals/useKeepAliveState';
 import { findScrollableAncestor, findScrollableTouchTarget } from './scrollable';
 import type { ScrollAxis } from './scrollable';
 import { getElementAtPoint } from './getElementAtPoint';
@@ -923,11 +924,16 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
 
   // `KeepAlive` removes the element from the document, and the browser then releases the pointer
   // capture. No `pointerup` comes to the element after that.
-  onDeactivated(() => {
-    if (swiping.value) {
-      reset();
-    }
-  });
+  const { isHeld } = useKeepAliveState();
+  watch(
+    isHeld,
+    (held) => {
+      if (held && swiping.value) {
+        reset();
+      }
+    },
+    { flush: 'sync' },
+  );
 
   return {
     swiping,

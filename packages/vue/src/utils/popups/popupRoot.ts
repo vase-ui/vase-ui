@@ -249,10 +249,11 @@ export function usePopupRootWithPopupId<Store extends PopupRootStore>(
   // after those hooks, and it detaches the store directly. A `watch` job that a post flush queues
   // runs in a later pass of the flush, after the watchers of a detached trigger that follow the
   // handle. The trigger would then register in the store of the held root.
-  // When `KeepAlive` shows the branch in the flush of the mount, `onActivated` can come after that
-  // detach. The `watch` then gets the same handle as in its last run and does not call
-  // `setAttachedHandle`, so `onActivated` calls it. A root in a pending `<Suspense>` branch below a
-  // `KeepAlive` can get `onActivated` before its mount, so only the `watch` attaches it.
+  // When `KeepAlive` shows the branch in the flush of the mount, the activation can come after that
+  // detach. The `watch` of the handle then gets the same handle as in its last run and does not
+  // call `setAttachedHandle`, so the `watch` of `isHeld` calls it. An activation can also come
+  // before the mount, as in a pending `<Suspense>` branch below a `KeepAlive`. Only the `watch` of
+  // the handle attaches such a root.
   const { isHeld } = useKeepAliveState();
   let isMounted = false;
   onMounted(() => {
@@ -261,9 +262,6 @@ export function usePopupRootWithPopupId<Store extends PopupRootStore>(
       isActive.value = false;
       setAttachedHandle(undefined);
     }
-  });
-  onDeactivated(() => {
-    isActive.value = false;
   });
 
   // Vue runs the hooks of a part that mounts below the root while `KeepAlive` holds the root and
@@ -285,15 +283,22 @@ export function usePopupRootWithPopupId<Store extends PopupRootStore>(
     return true;
   });
 
-  onActivated(() => {
-    isActive.value = true;
-    if (isMounted) {
-      setAttachedHandle(toValue(options.handle));
-    }
-    for (const call of heldCalls.splice(0)) {
-      queueMicrotask(call);
-    }
-  });
+  watch(
+    isHeld,
+    (held) => {
+      isActive.value = !held;
+      if (held) {
+        return;
+      }
+      if (isMounted) {
+        setAttachedHandle(toValue(options.handle));
+      }
+      for (const call of heldCalls.splice(0)) {
+        queueMicrotask(call);
+      }
+    },
+    { flush: 'sync' },
+  );
 
   return { store, open, mounted, payload, transitionStatus, actions };
 }

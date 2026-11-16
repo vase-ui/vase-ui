@@ -1,7 +1,6 @@
 import {
   computed,
   nextTick,
-  onDeactivated,
   onMounted,
   onScopeDispose,
   provide,
@@ -58,6 +57,7 @@ import type { VaseUIEvent } from '../../internals/types';
 import { sanitizeValue, useFormEntryValue } from '../../internals/useFormEntryValue';
 import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestoreAsInput } from '../../internals/useFormRestore';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { mergeProps } from '../../merge-props';
 import { getHighlightReason } from '../../utils/getHighlightReason';
@@ -1093,7 +1093,16 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   }
 
   onScopeDispose(clearOpenPress);
-  onDeactivated(clearOpenPress);
+  const { isHeld } = useKeepAliveState();
+  watch(
+    isHeld,
+    (held) => {
+      if (held) {
+        clearOpenPress();
+      }
+    },
+    { flush: 'sync' },
+  );
 
   // Calls `onOpenChange` for every open change that isn't ignored, with the combobox's own handling
   // around it, before the store commits the change.

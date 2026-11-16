@@ -63,15 +63,7 @@ export interface MenuTriggerProps<Payload = unknown>
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
-import {
-  computed,
-  onActivated,
-  onDeactivated,
-  onMounted,
-  onScopeDispose,
-  shallowRef,
-  watch,
-} from 'vue';
+import { computed, onMounted, onScopeDispose, shallowRef, watch } from 'vue';
 import { ownerDocument } from '../../common/owner';
 import { contains, getTarget } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
@@ -83,6 +75,7 @@ import { useMenubarContext } from '../../internals/menubar-context/MenubarContex
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { isMouseWithinBounds } from '../../utils/getPseudoElementBounds';
 import { safePolygon } from '../../utils/popups/interactions/safePolygon';
@@ -278,8 +271,8 @@ onMounted(followHoverOpen);
 // The default flush runs before the `post` watcher of `useDismiss` in the root, as the effect of
 // Base UI runs before the effect of its parent.
 watch([store, isOpenedByThisTrigger], followHoverOpen);
-onActivated(followHoverOpen);
-onDeactivated(stopListening);
+const { isHeld } = useKeepAliveState();
+watch(isHeld, (held) => (held ? stopListening() : followHoverOpen()), { flush: 'sync' });
 onScopeDispose(stopListening);
 
 const parentMenubarHasSubmenuOpen = computed(() => menubarContext?.hasSubmenuOpen.value ?? false);

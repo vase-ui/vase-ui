@@ -13,7 +13,7 @@ export interface SliderControlProps
 
 <script setup lang="ts">
 import { isElement } from '@floating-ui/utils/dom';
-import { onDeactivated, onScopeDispose, watch } from 'vue';
+import { onScopeDispose, watch } from 'vue';
 import { clamp } from '../../common/clamp';
 import { ownerDocument, ownerWindow } from '../../common/owner';
 import { activeElement, contains, getTarget } from '../../common/shadowDom';
@@ -25,6 +25,7 @@ import {
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { isTouchLikePointerType } from '../../internals/usePressAndHold';
 import { useRenderElement } from '../../internals/useRenderElement';
 import type {
@@ -575,12 +576,19 @@ watch(disabled, (isDisabled) => {
 });
 
 // `KeepAlive` takes the control out of the document and sends no pointer event.
-onDeactivated(() => {
-  focusFrame.cancel();
-  stopListening();
-  setDragging(false);
-  resetPressedThumb();
-});
+const { isHeld } = useKeepAliveState();
+watch(
+  isHeld,
+  (held) => {
+    if (held) {
+      focusFrame.cancel();
+      stopListening();
+      setDragging(false);
+      resetPressedThumb();
+    }
+  },
+  { flush: 'sync' },
+);
 
 onScopeDispose(stopListening);
 

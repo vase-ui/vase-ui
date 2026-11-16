@@ -209,6 +209,47 @@ describe('<Menu.Trigger />', () => {
     }
   });
 
+  it('closes a hover-opened menu on a mouseup outside after KeepAlive shows the trigger again', async () => {
+    const reasons: string[] = [];
+    const visible = shallowRef(true);
+    const Other = defineComponent({ setup: () => () => <span /> });
+    await render(() => (
+      <Menu.Root
+        onOpenChange={(open: boolean, details: Menu.Root.ChangeEventDetails) => {
+          reasons.push(details.reason);
+          // The hold of the trigger closes a menu that hover opened. This menu stays open.
+          if (!open && details.reason === 'trigger-hover') {
+            details.cancel();
+          }
+        }}
+      >
+        <KeepAlive>
+          {visible.value ? (
+            <Menu.Trigger key="trigger" openOnHover delay={0}>
+              Open
+            </Menu.Trigger>
+          ) : (
+            <Other key="other" />
+          )}
+        </KeepAlive>
+        {popup()}
+      </Menu.Root>
+    ));
+    const trigger = screen.getByRole('button', { name: 'Open' });
+    await fireEvent.mouseEnter(trigger);
+    await fireEvent.mouseMove(trigger);
+    await screen.findByTestId('popup');
+
+    visible.value = false;
+    await flushMicrotasks();
+    visible.value = true;
+    await flushMicrotasks();
+    await fireEvent.mouseUp(document.body, { clientX: 500, clientY: 500 });
+
+    expect(reasons).toEqual(['trigger-hover', 'trigger-hover', 'cancel-open']);
+    expect(trigger).not.toHaveAttribute('data-popup-open');
+  });
+
   it.each([
     { name: 'stays open when the mouseup lands inside the popup', insidePopup: true },
     { name: 'closes when the mouseup lands outside the popup', insidePopup: false },
