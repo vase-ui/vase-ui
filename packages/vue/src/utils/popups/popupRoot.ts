@@ -266,12 +266,12 @@ export function usePopupRootWithPopupId<Store extends PopupRootStore>(
     isActive.value = false;
   });
 
-  // Vue runs the hooks of a part that mounts below the root while `KeepAlive` holds the root and the
-  // store is detached. The root keeps each call of its handle from such a part and runs it after its
-  // activation, as Base UI runs the effects of a part in a hidden `Activity` tree when the tree
-  // shows. The triggers of the root return to the trigger map in a later pass of the activation
-  // flush, so each call waits for a microtask of its own. A call that throws then does not stop the
-  // calls after it.
+  // Vue runs the hooks of a part that mounts below the root while `KeepAlive` holds the root and
+  // the store is detached. The root keeps each call of its handle from such a part and runs it
+  // after its activation, as Base UI runs the effects of a part in a hidden `Activity` tree when
+  // the tree shows. The trigger map skips each trigger of the root until a later pass of the
+  // activation flush, so each call waits for a microtask of its own. A call that throws then does
+  // not stop the calls after it.
   const heldCalls: (() => void)[] = [];
   const deferToRootAbove = inject(HeldRootCallContext, null);
   provide(HeldRootCallContext, (handle, call) => {

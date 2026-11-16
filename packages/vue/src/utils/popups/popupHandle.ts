@@ -215,8 +215,8 @@ export class BasePopupHandle<
   /**
    * Opens the attached root and links it to the trigger with the given id. It does nothing, and
    * warns in a development build, while no root is attached. A call from a part below a root of
-   * this handle that `KeepAlive` holds goes to that root (`deferToHeldRoot`). The `open()` method of
-   * each concrete handle calls it and only narrows the type of the parameter.
+   * this handle that `KeepAlive` holds goes to that root (`deferToHeldRoot`). The `open()` method
+   * of each concrete handle calls it and only narrows the type of the parameter.
    *
    * When no registered trigger has the id, an anchored popup throws (see `throwOnMissingTrigger`).
    * Dialog opens with no trigger and warns in a development build.
