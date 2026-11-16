@@ -667,8 +667,8 @@ export interface UseCompositeRootParameters<Metadata> {
   stopEventPropagation?: MaybeRefOrGetter<boolean | undefined> | undefined;
   /**
    * The indexes of the items that the composite treats as disabled.
-   * Use it for items that can get focus when they are disabled. The keys then reach a disabled
-   * item that is not in it, and such an item can keep the tab stop.
+   * Use it for items that can get focus when they are disabled. The keys then reach an
+   * `aria-disabled` item that is not in it, and such an item can keep the tab stop.
    */
   disabledIndices?: MaybeRefOrGetter<number[] | undefined> | undefined;
   /**
