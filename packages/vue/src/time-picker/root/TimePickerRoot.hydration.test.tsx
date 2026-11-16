@@ -55,21 +55,30 @@ describe('<TimePicker.Root /> hydration', () => {
     expect(template.content.querySelector('[role="dialog"]')).toBe(null);
   });
 
-  it('has the selected time and one tab stop in the list, from the server HTML', async () => {
+  it('has the selected item and one tab stop in the list and in a column, from the server HTML', async () => {
     const serverHtml = await renderOnServer(HYDRATION_FILE, {
       value: '15:00',
       locale: 'en-US',
     });
     const template = document.createElement('template');
     template.innerHTML = serverHtml;
+    const optionsOf = (testId: string) => [
+      ...template.content.querySelectorAll(`[data-testid="${testId}"] [role="option"]`),
+    ];
 
-    const options = [...template.content.querySelectorAll('[data-testid="list"] [role="option"]')];
-    expect(options).toHaveLength(24);
-    expect(
-      options.filter((option) => option.getAttribute('aria-selected') === 'true'),
-    ).toHaveLength(1);
-    expect(options.filter((option) => option.getAttribute('tabindex') === '0')).toHaveLength(1);
-    expect(options[15]?.getAttribute('aria-selected')).toBe('true');
-    expect(options[15]?.getAttribute('tabindex')).toBe('0');
+    const times = optionsOf('list');
+    expect(times).toHaveLength(24);
+    expect(times.filter((option) => option.getAttribute('aria-selected') === 'true')).toEqual([
+      times[15],
+    ]);
+    expect(times.filter((option) => option.getAttribute('tabindex') === '0')).toEqual([times[15]]);
+
+    // The hours of a 12-hour cycle go from 12, so the hour 3 is the fourth item.
+    const hours = optionsOf('hour-column');
+    expect(hours).toHaveLength(12);
+    expect(hours.filter((option) => option.getAttribute('aria-selected') === 'true')).toEqual([
+      hours[3],
+    ]);
+    expect(hours.filter((option) => option.getAttribute('tabindex') === '0')).toEqual([hours[3]]);
   });
 });
