@@ -34,8 +34,8 @@ export interface KeepAliveState {
    */
   isHeld: Readonly<Ref<boolean>>;
   /**
-   * Counts the activations by `KeepAlive`. The activation in the flush of the mount does not count
-   * when the part mounts with its branch. It counts when the part mounts in the flush in which
+   * Counts the activations by `KeepAlive`. The `onActivated` call of the mount does not count when
+   * the part mounts with its branch. It counts when the part mounts in the flush in which
    * `KeepAlive` shows the branch.
    */
   shown: Readonly<Ref<number>>;
@@ -65,6 +65,9 @@ export function useKeepAliveState(): KeepAliveState {
   });
 
   onDeactivated(() => {
+    // A hold and a show can both come in the flush of the mount. That show is not the call of the
+    // mount.
+    isMountFlush = false;
     isHeld.value = true;
   });
 
