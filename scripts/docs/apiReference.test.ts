@@ -534,6 +534,19 @@ test('the reader gives the reference of an own component from its record, with n
   );
 });
 
+test('the reader with `cache` gives the reference of the first read for each later read of a family', () => {
+  const readOnce = createApiReferenceReader(FIXTURES, { cache: true });
+  assert.equal(readOnce('sample'), readOnce('sample'));
+});
+
+test('the reader without `cache` makes the reference of a family again for each read', () => {
+  const readAgain = createApiReferenceReader(FIXTURES);
+  const first = readAgain('sample');
+  const second = readAgain('sample');
+  assert.notEqual(first, second);
+  assert.deepEqual(first, second);
+});
+
 test('the reader throws and says what to do for a family whose extract has no types.md', () => {
   assert.throws(() => read('internals'), {
     message:
