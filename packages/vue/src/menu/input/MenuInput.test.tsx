@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { shallowRef } from 'vue';
 import type { VNode } from 'vue';
+import type { HTMLProps } from '../../internals/types';
 import * as Menu from '../index.parts';
 import {
   createRenderer,
@@ -43,7 +44,15 @@ describe('<Menu.Input />', () => {
     it('follows a change of the id of the highlighted item', async () => {
       const id = shallowRef('first');
       const input = await renderOpenMenu(() => [
-        <Menu.Item id={id.value}>Rename</Menu.Item>,
+        <Menu.Item
+          v-slots={{
+            render: ({ props }: { props: HTMLProps }) => (
+              <div {...props} id={id.value}>
+                Rename
+              </div>
+            ),
+          }}
+        />,
         <Menu.Item>Delete</Menu.Item>,
       ]);
       const rename = screen.getByRole('menuitem', { name: 'Rename' });
