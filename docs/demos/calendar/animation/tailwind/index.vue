@@ -28,7 +28,7 @@ const today = Temporal.PlainDate.from('2026-11-14');
       <template #month="{ month }">
         <Calendar.Month
           :month="month"
-          class="transition-[opacity,translate] duration-200 ease-out motion-reduce:transition-none data-starting-style:translate-x-[calc(0.5rem*var(--page-direction))] data-starting-style:opacity-0 data-ending-style:absolute data-ending-style:inset-x-0 data-ending-style:top-0 data-ending-style:translate-x-[calc(-0.5rem*var(--page-direction))] data-ending-style:opacity-0"
+          class="transition-[opacity,translate] duration-200 ease-[ease-out] motion-reduce:transition-none data-starting-style:translate-x-[calc(0.5rem*var(--page-direction))] data-starting-style:opacity-0 data-ending-style:absolute data-ending-style:inset-x-0 data-ending-style:top-0 data-ending-style:translate-x-[calc(-0.5rem*var(--page-direction))] data-ending-style:opacity-0"
         >
           <Calendar.Caption class="mb-2 flex h-8 items-center font-semibold" />
           <Calendar.Grid class="w-full table-fixed border-collapse">

@@ -482,7 +482,7 @@ This calendar is for a date of birth. `Calendar.MonthSelect` and `Calendar.YearS
 
 ### Time zone
 
-The value of this calendar is a call at 09:00 in Tokyo, a `Temporal.ZonedDateTime`. A press moves the call to another day. `timeZone` gives the time zone of the clock that says which day is today. With no `timeZone`, the calendar uses the zone of the value, and then the zone of the runtime. This calendar gives `today`, so it does not read the clock.
+The value of this calendar is a call at 09:00 in Tokyo, a `Temporal.ZonedDateTime`. A press moves the call to another day. `timeZone` gives the time zone of the clock that says which day is today. With no `timeZone`, the calendar uses the zone of the value, and then the zone of the runtime. This calendar gives `today`, so it does not use the day of the clock.
 
 <DemoFrame>
   <DemoCalendarTimeZone />
