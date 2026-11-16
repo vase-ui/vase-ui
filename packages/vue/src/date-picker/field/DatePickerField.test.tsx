@@ -89,6 +89,24 @@ describe('<DatePicker.Field />', () => {
     expect(segmentOf(container, 'day').value).toBe('');
   });
 
+  // The part has no prop for the names. The attribute reaches `DateField.Root`, which reads it.
+  it('names the group with the elements of `aria-labelledby`, and not with the label of the field', async () => {
+    await render(
+      <Field.Root name="when">
+        <Field.Label>Departure</Field.Label>
+        <span id="other">Trip</span>
+        <DatePicker.Root defaultValue={day} locale="en-US">
+          <DatePicker.Field aria-labelledby="other" data-testid="field">
+            <DateField.Input />
+          </DatePicker.Field>
+        </DatePicker.Root>
+      </Field.Root>,
+    );
+
+    expect(screen.getByTestId('field')).toHaveAttribute('aria-labelledby', 'other');
+    expect(screen.getByRole('group', { name: 'Trip' })).toBe(screen.getByTestId('field'));
+  });
+
   describe('value changes', () => {
     it('gives each change of a segment to the picker, with the details of the field', async () => {
       const onValueChange = vi.fn();

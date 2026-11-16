@@ -99,6 +99,19 @@ describe('<DatePicker.TimeField />', () => {
     expect(value.toPlainTime().toString()).toBe('09:30:00');
   });
 
+  it('names the group with the elements of `aria-labelledby`', async () => {
+    await render(
+      <DatePicker.Root defaultValue={dateTime}>
+        <span id="time-name">Start time</span>
+        <DatePicker.TimeField aria-labelledby="time-name" data-testid="time">
+          <TimeField.Input />
+        </DatePicker.TimeField>
+      </DatePicker.Root>,
+    );
+
+    expect(screen.getByRole('group', { name: 'Start time' })).toBe(screen.getByTestId('time'));
+  });
+
   it('is disabled and read-only with the picker', async () => {
     const { container } = await render(
       <DatePicker.Root defaultValue={dateTime} disabled>
