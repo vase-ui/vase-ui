@@ -568,6 +568,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - `default` is a getter. A development build then shows a warning when the default of an uncontrolled part changes.
 - Do not use `defineModel`. It writes the value before a parent can cancel the change.
 - A prop can take more forms than its event gives. `layout` of `Resizable.Root` takes a size for each panel, such as `'240px'`, and `layoutChange` and `update:layout` give percent. The type of the prop is `Resizable.Root.LayoutSnapshot`, and the type of the event is `Resizable.Root.Layout`. After a change, a `v-model:layout` holds percent.
+- `Resizable.Root` ignores an entry of `layout`, `defaultLayout` or `setLayout()` that is not a size, and a development build shows a warning. An app reads a layout from a cookie, a storage or a server, and a visitor can change it. A size prop that is not a size throws, because the template of the app gives it.
 - A part whose input holds the uncontrolled value does not call `useControlled`. `Field.Control` is an example: it declares `value` and emits `valueChange` and `update:value`.
 
 `details` is upstream's object:

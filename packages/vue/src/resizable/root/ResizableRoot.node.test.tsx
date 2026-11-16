@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createSSRApp } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { Resizable } from '@vase-ui/vue/resizable';
+import { takeReportedMessages } from '../../../test/reportedMessages';
 import ResizableRootHydration from './ResizableRootHydration.test.vue';
 import ResizableRootLatePanel from './ResizableRootLatePanel.test.vue';
 
@@ -159,6 +160,21 @@ describe('<Resizable.Root /> on a server', () => {
       // The other panel takes the rest, and only that panel has the size as a variable.
       expect(growsIn(html)).toEqual([100]);
       expect(variablesIn(html)).toEqual([100]);
+    });
+
+    it('renders the length of a panel whose entry in the layout is not a size', async () => {
+      const html = await renderToString(
+        <Resizable.Root defaultLayout={{ a: 'wide' }}>
+          <Resizable.Panel id="a" defaultSize="240px" />
+          <Resizable.Panel id="b" />
+        </Resizable.Root>,
+      );
+
+      expect(html).toContain('flex:0 1 240px');
+      expect(growsIn(html)).toEqual([100]);
+      expect(takeReportedMessages()).toEqual([
+        'console.warn: Vase UI: The layout gives the panel "a" the size "wide", which is not valid. The root ignores this size, so the panel takes its `defaultSize`, or an equal share of the space that is left. Use a number of 0 or more, or a string of such a number with an optional unit: "%", "px", "em", "rem", "vh" or "vw".',
+      ]);
     });
 
     it('renders no value and no end of the travel for the handle', async () => {

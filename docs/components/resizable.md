@@ -78,7 +78,7 @@ A panel needs an `id` only when a layout names it. A panel with no `id` gets a g
 
 A size is a number, or a string of a number with a unit. A number, a string with no unit, such as `'30'`, and a string with `%`, such as `'30%'`, are percent of the panel space. The panel space is the room that the panels share: the room of the root, less the handles, the elements that are not panels, and the padding and the border of each panel.
 
-A length is `px`, `em`, `rem`, `vh` or `vw`. `em` is the font size of the panel, and `rem` is the font size of the root element of the document. `vh` is 1% of `innerHeight`, which differs from the CSS `vh` on a phone while its toolbar shows. A size in another form throws an error that starts with `Vase UI:`.
+A length is `px`, `em`, `rem`, `vh` or `vw`. `em` is the font size of the panel, and `rem` is the font size of the root element of the document. `vh` is 1% of `innerHeight`, which differs from the CSS `vh` on a phone while its toolbar shows. A size in another form throws an error that starts with `Vase UI:`. A layout is the exception, because an app can read it from a cookie or a storage. The root ignores an entry of a layout in another form, and the panel of the entry takes its `defaultSize`, or an equal share. A development build shows a warning.
 
 <<< ./resizable/Sizes.vue
 
@@ -435,7 +435,7 @@ The composable ignores an item that is not a layout, and a storage that throws, 
 
 </DemoSource>
 
-The composable reads the storage after the mount, because a server has no storage. The server HTML thus has the default layout, and the panels move to the stored layout at the mount. For an exact server HTML, keep the layout in a cookie and give it to `defaultLayout`, as this Nuxt component does:
+The composable reads the storage after the mount, because a server has no storage. The server HTML thus has the default layout, and the panels move to the stored layout at the mount. For an exact server HTML, keep the layout in a cookie and give it to `defaultLayout`, as this Nuxt component does. The component does not check the cookie, because the root ignores an entry that is not a size:
 
 <<< ../../fixtures/nuxt/app/components/ResizableCookieLayout.vue
 

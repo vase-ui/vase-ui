@@ -40,11 +40,18 @@ function splitSize(value: number | string): { amount: number; unit: '%' | Length
     : { amount: Number(text), unit: isLengthUnit(unit) ? unit : '%' };
 }
 
+export const SIZE_FORMS =
+  'Use a number of 0 or more, or a string of such a number with an optional unit: "%", "px", "em", "rem", "vh" or "vw".';
+
+export function formatSize(value: unknown): string {
+  return typeof value === 'string' ? `"${value}"` : String(value);
+}
+
 function readSize(value: number | string): { amount: number; unit: '%' | Length } {
   const size = splitSize(value);
   if (size === undefined) {
     throw new Error(
-      `Vase UI: The size ${typeof value === 'string' ? `"${value}"` : value} is not valid. Resizable cannot use it as a size. Use a number of 0 or more, or a string of such a number with an optional unit: "%", "px", "em", "rem", "vh" or "vw". Examples are 30, "30%" and "200px".`,
+      `Vase UI: The size ${formatSize(value)} is not valid. Resizable cannot use it as a size. ${SIZE_FORMS} Examples are 30, "30%" and "200px".`,
     );
   }
   return size;
@@ -113,7 +120,7 @@ export function isSize(value: unknown): value is number | string {
 
 /**
  * Whether the size is a length: `px`, `em`, `rem`, `vh` or `vw`. A size that is not valid is not a
- * length, and this function does not throw: `parseSize` reports it where the root uses the size.
+ * length. This function does not throw.
  */
 export function isLength(value: number | string | undefined): boolean {
   const unit = value === undefined ? undefined : splitSize(value)?.unit;
@@ -130,8 +137,9 @@ export function isViewportLength(value: number | string | undefined): boolean {
 
 /**
  * The layout in percent that a layout of sizes gives, and the pixels that it gives to the panels
- * that keep their size in pixels. An entry that is a length has no percent while there is no
- * measurement, so it is left out.
+ * that keep their size in pixels. An app can read a layout from a cookie, a storage or a server, so
+ * an entry that is not a size is left out. An entry that is a length has no percent while there is
+ * no measurement, so it is left out too.
  */
 export function normalizeLayout(
   snapshot: LayoutSnapshot,
@@ -139,6 +147,9 @@ export function normalizeLayout(
   getMeasurement: (id: string) => Measurement | undefined,
 ): { layout: Layout; pins: Record<string, number> } {
   const entries = Object.entries(snapshot).flatMap(([id, value]) => {
+    if (!isSize(value)) {
+      return [];
+    }
     const measurement = getMeasurement(id);
     const percent = parseSize(value, measurement);
     return percent === undefined ? [] : [{ id, value, percent, measurement }];

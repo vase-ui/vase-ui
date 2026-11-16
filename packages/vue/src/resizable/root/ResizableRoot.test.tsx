@@ -163,6 +163,15 @@ describe('<Resizable.Root />', () => {
 
       expect(grows('a', 'b', 'c')).toEqual(['33.334', '33.333', '33.333']);
     });
+
+    it('gives a panel whose entry is not a size the size that is left, and warns', async () => {
+      await render(<Three root={{ defaultLayout: { a: '1fr', b: 30 } }} />);
+
+      expect(grows('a', 'b', 'c')).toEqual(['35', '30', '35']);
+      expect(takeReportedMessages()).toEqual([
+        'console.warn: Vase UI: The layout gives the panel "a" the size "1fr", which is not valid. The root ignores this size, so the panel takes its `defaultSize`, or an equal share of the space that is left. Use a number of 0 or more, or a string of such a number with an optional unit: "%", "px", "em", "rem", "vh" or "vw".',
+      ]);
+    });
   });
 
   describe('prop: layout', () => {

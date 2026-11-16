@@ -2786,6 +2786,37 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(messages).toEqual([]);
   });
 
+  it('renders the layout of /resizable on a server for a cookie with a size that is not valid', async () => {
+    const cookie = {
+      name: 'resizable-layout',
+      value: encodeURIComponent(JSON.stringify({ 'c-a': '1fr', 'c-b': 70 })),
+      url: url('/'),
+    };
+    const serverPage = await createPage(undefined, { javaScriptEnabled: false });
+    await serverPage.context().addCookies([cookie]);
+
+    await serverPage.goto(url('/resizable'));
+
+    expect((await readResizablePanel(serverPage, 'c-a')).flexGrow).toBe('30');
+    expect((await readResizablePanel(serverPage, 'c-b')).flexGrow).toBe('70');
+
+    const page = await createPage();
+    await page.context().addCookies([cookie]);
+    const messages = collectMessages(page);
+
+    await page.goto(url('/resizable'), { waitUntil: 'hydration' });
+    await waitForTwoFrames(page);
+
+    expect((await readResizablePanel(page, 'c-a')).flexGrow).toBe('30');
+    expect(messages).toEqual(
+      dev
+        ? [
+            'console warning: Vase UI: The layout gives the panel "c-a" the size "1fr", which is not valid. The root ignores this size, so the panel takes its `defaultSize`, or an equal share of the space that is left. Use a number of 0 or more, or a string of such a number with an optional unit: "%", "px", "em", "rem", "vh" or "vw".',
+          ]
+        : [],
+    );
+  });
+
   it('keeps each panel rectangle of /resizable when the scripts run', async () => {
     const serverPage = await createPage(undefined, { javaScriptEnabled: false });
     await serverPage.goto(url('/resizable'));
