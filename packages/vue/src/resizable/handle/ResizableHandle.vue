@@ -25,14 +25,14 @@ export interface ResizableHandleState {
   crossing: boolean;
   /**
    * Whether the handle cannot move to the left, or up in a vertical root: it is at the end of its
-   * travel, or it has no panel on one side. The side is a side of the screen, also in a
-   * right-to-left root.
+   * travel, or it has no panel on one side. It is `false` while the handle is disabled. The side is
+   * a side of the screen, also in a right-to-left root.
    */
   atMin: boolean;
   /**
    * Whether the handle cannot move to the right, or down in a vertical root: it is at the end of
-   * its travel, or it has no panel on one side. The side is a side of the screen, also in a
-   * right-to-left root.
+   * its travel, or it has no panel on one side. It is `false` while the handle is disabled. The
+   * side is a side of the screen, also in a right-to-left root.
    */
   atMax: boolean;
 }
@@ -164,8 +164,9 @@ const isFocusable = computed(() => !isDisabled.value && pivot.value >= 0);
 // While the page hydrates, the handle can render before the panel after it registers. Vue compares
 // `tabindex` and `style`, so the server HTML and that render give each handle that is not disabled
 // its tab stop and a hit area that takes presses. That render also gives no end attribute. In a
-// client-only mount, the root reads the layout in `onMounted`, before the next render, and a style
-// sheet would see each handle as a handle that cannot move.
+// client-only mount, the root reads the layout in `onMounted`, before the next render, so the
+// browser computes the style of that render. With both end attributes in it, a CSS transition would
+// start on each handle.
 const hasTabStop = computed(() => isFocusable.value || (hydrating.value && !isDisabled.value));
 const primary = computed(() =>
   pivot.value < 0
@@ -259,7 +260,7 @@ const hitAreaStyle = computed<CSSProperties>(() => {
       ? { top: 0, bottom: 0, left: '50%', width: size, translate: '-50% 0' }
       : { left: 0, right: 0, top: '50%', height: size, translate: '0 -50%' }),
     zIndex: 1,
-    // A press beside a handle that cannot move goes to the content under the hit area.
+    // A press beside a handle with no tab stop goes to the content under the hit area.
     ...(hasTabStop.value ? undefined : { pointerEvents: 'none' }),
   };
 });
