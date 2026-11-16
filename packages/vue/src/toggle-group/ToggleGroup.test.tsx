@@ -205,6 +205,41 @@ describe('<ToggleGroup />', () => {
       expect(button1).toHaveAttribute('data-pressed');
       expect(button2).toHaveAttribute('aria-pressed', 'false');
     });
+
+    it('VUE-114: reads a null value as an empty value, and stays controlled', async () => {
+      const handleValueChange = vi.fn();
+      const { user } = await render(
+        <ToggleGroup value={null} defaultValue={['two']} multiple onValueChange={handleValueChange}>
+          <Toggle value="one" />
+          <Toggle value="two" />
+        </ToggleGroup>,
+      );
+      const [button1, button2] = screen.getAllByRole('button');
+      expect(button1).toHaveAttribute('aria-pressed', 'false');
+      expect(button2).toHaveAttribute('aria-pressed', 'false');
+
+      await user.click(button1);
+
+      expect(handleValueChange).toHaveBeenCalledTimes(1);
+      expect(handleValueChange.mock.calls[0][0]).toEqual(['one']);
+      expect(button1).toHaveAttribute('aria-pressed', 'false');
+    });
+
+    it('VUE-114: reads a value that changes to null as an empty value, not as the default value', async () => {
+      const { setProps } = await render(
+        <ToggleGroup value={['one']} defaultValue={['two']}>
+          <Toggle value="one" />
+          <Toggle value="two" />
+        </ToggleGroup>,
+      );
+      const [button1, button2] = screen.getAllByRole('button');
+      expect(button1).toHaveAttribute('aria-pressed', 'true');
+
+      await setProps({ value: null });
+
+      expect(button1).toHaveAttribute('aria-pressed', 'false');
+      expect(button2).toHaveAttribute('aria-pressed', 'false');
+    });
   });
 
   describe('prop: disabled', () => {

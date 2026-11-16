@@ -22,16 +22,18 @@ export interface CheckboxGroupProps
   id?: string | undefined;
   /**
    * Names of the checkboxes in the group that should be ticked.
+   * `null` is an empty value, and the group stays controlled.
    *
    * To render an uncontrolled checkbox group, use the `defaultValue` prop instead.
    */
-  value?: string[] | undefined;
+  value?: string[] | null | undefined;
   /**
    * Names of the checkboxes in the group that should be initially ticked.
+   * `null` is an empty value.
    *
    * To render a controlled checkbox group, use the `value` prop instead.
    */
-  defaultValue?: string[] | undefined;
+  defaultValue?: string[] | null | undefined;
   /**
    * Names of all checkboxes in the group. Use this when creating a parent checkbox.
    */
@@ -121,7 +123,8 @@ const isDisabled = computed(() => fieldDisabled.value || props.disabled);
 const [groupValue, setGroupValueState] = useControlled<string[]>({
   // A consumer can change a reactive array in place. The copy reads each item, so such a change
   // gives the group a new value, and the checkboxes, the field state and the validation follow it.
-  controlled: () => props.value?.slice(),
+  // `undefined` makes the part uncontrolled, so only `null` becomes an empty value.
+  controlled: () => (props.value === null ? EMPTY_ARRAY : props.value?.slice()),
   default: () => props.defaultValue ?? EMPTY_ARRAY,
   name: 'CheckboxGroup',
   state: 'value',
