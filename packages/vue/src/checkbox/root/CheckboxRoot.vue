@@ -123,16 +123,7 @@ export type CheckboxRootChangeEventDetails =
 </script>
 
 <script setup lang="ts">
-import {
-  computed,
-  nextTick,
-  onDeactivated,
-  onMounted,
-  onUpdated,
-  provide,
-  shallowRef,
-  watch,
-} from 'vue';
+import { computed, nextTick, onMounted, onUpdated, provide, shallowRef, watch } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { getDefaultFormSubmitter } from '../../common/getDefaultFormSubmitter';
 import { queueInputTake, useAriaAfterHydration, useIsHydrated } from '../../common/hydration';
@@ -143,7 +134,10 @@ import { useFieldItemContext } from '../../field/item/FieldItemContext';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { givenName } from '../../internals/blankName';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
-import { useRegisterFieldControl } from '../../internals/field-register-control';
+import {
+  useInputRegistration,
+  useRegisterFieldControl,
+} from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
 import { useFormContext } from '../../internals/form-context';
@@ -159,7 +153,6 @@ import { useButton } from '../../internals/use-button';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestore } from '../../internals/useFormRestore';
-import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { dispatchClickWithModifiers } from '../../utils/dispatchClickWithModifiers';
@@ -255,72 +248,26 @@ const isIndeterminate = computed(
 );
 
 const inputElement = shallowRef<HTMLInputElement | null>(null);
-// Vue calls a ref setter during a render, so the setter reads no reactive state.
-let heldInput: HTMLInputElement | null = null;
-// The parent checkbox is not an input of its field, because it has no value to give to the form.
-let isParentInput = props.parent;
-let unregisterInput: (() => void) | void;
-// `KeepAlive` takes the input out of the document, and the field must not use an input that is not
-// in the document. A held required checkbox that is off would block the submit of the form, and its
-// value would stay in the values of the form.
-const { isHeld, shown } = useKeepAliveState();
-
-function updateInputRegistration() {
-  unregisterInput?.();
-  // A field can have more than one input, so the input goes to the registry of the field and not
-  // to `validation.inputRef`. The group reads the value when the form needs it, so a change of the
-  // value needs no new registration.
-  unregisterInput =
-    heldInput && !isParentInput
-      ? validation.registerInput(heldInput, {
-          controlRef: () => element.value,
-          get value() {
-            return group ? itemValue.value : undefined;
-          },
-        })
-      : undefined;
-}
+// A field can have more than one input, so the input goes to the registry of the field and not to
+// `validation.inputRef`. The group reads the value when the form needs it, so a change of the value
+// needs no new registration. The parent checkbox is not an input of its field, because it has no
+// value to give to the form.
+const { isHeld, updateInputRegistration } = useInputRegistration(inputElement, (input) =>
+  props.parent
+    ? undefined
+    : validation.registerInput(input, {
+        controlRef: () => element.value,
+        get value() {
+          return group ? itemValue.value : undefined;
+        },
+      }),
+);
 
 function setInputElement(value: unknown) {
-  const input = value as HTMLInputElement | null;
-  // Vue calls a function ref again on each patch, with the same element.
-  if (input === heldInput) {
-    return;
-  }
-
-  heldInput = input;
-  inputElement.value = input;
-  updateInputRegistration();
+  inputElement.value = value as HTMLInputElement | null;
 }
 
-function releaseInput() {
-  unregisterInput?.();
-  unregisterInput = undefined;
-}
-
-onDeactivated(releaseInput);
-
-// The `ref` setter of a checkbox that mounts in a held branch registers the input. `isHeld` is
-// already `true` then, so the input is a source of the `watch`.
-watch([isHeld, inputElement], ([held]) => {
-  if (held) {
-    releaseInput();
-  }
-});
-
-// `KeepAlive` calls no `ref` setter at an activation.
-watch(shown, updateInputRegistration);
-
-watch(
-  () => props.parent,
-  (parent) => {
-    isParentInput = parent;
-
-    if (!isHeld.value) {
-      updateInputRegistration();
-    }
-  },
-);
+watch(() => props.parent, updateInputRegistration);
 
 const setFocused = useSetFieldFocused(isDisabled, () => element.value);
 
