@@ -6,12 +6,19 @@ description: An unstyled Vue date field with a segment for each part of a date, 
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoDateFieldClear from '../demos/date-field/clear/css-modules/index.vue';
+import DemoDateFieldClearTailwind from '../demos/date-field/clear/tailwind/index.vue';
 import DemoDateFieldDateTime from '../demos/date-field/date-time/css-modules/index.vue';
+import DemoDateFieldDateTimeTailwind from '../demos/date-field/date-time/tailwind/index.vue';
 import DemoDateFieldHero from '../demos/date-field/hero/css-modules/index.vue';
+import DemoDateFieldHeroTailwind from '../demos/date-field/hero/tailwind/index.vue';
 import DemoDateFieldMonthYear from '../demos/date-field/month-year/css-modules/index.vue';
+import DemoDateFieldMonthYearTailwind from '../demos/date-field/month-year/tailwind/index.vue';
 import DemoDateFieldTimeZone from '../demos/date-field/time-zone/css-modules/index.vue';
+import DemoDateFieldTimeZoneTailwind from '../demos/date-field/time-zone/tailwind/index.vue';
 import DemoDateFieldValidation from '../demos/date-field/validation/css-modules/index.vue';
+import DemoDateFieldValidationTailwind from '../demos/date-field/validation/tailwind/index.vue';
 </script>
 
 # Date Field
@@ -22,7 +29,12 @@ Base UI has no date field. This one follows the [spinbutton pattern](https://www
 
 <DemoFrame>
   <DemoDateFieldHero />
+  <template #tailwind>
+    <DemoDateFieldHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -31,6 +43,18 @@ Base UI has no date field. This one follows the [spinbutton pattern](https://www
 <<< ../demos/date-field/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/date-field/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Usage guidelines
 
@@ -71,7 +95,12 @@ A `Temporal.PlainDateTime` value adds the hour and the minute. A locale with a 1
 
 <DemoFrame>
   <DemoDateFieldDateTime />
+  <template #tailwind>
+    <DemoDateFieldDateTimeTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -81,13 +110,30 @@ A `Temporal.PlainDateTime` value adds the hour and the minute. A locale with a 1
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/date-field/date-time/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Time zones
 
 A `Temporal.ZonedDateTime` value shows the name of its time zone. Set `hideTimeZone` to hide the name. The field keeps the time zone in each value that it gives.
 
 <DemoFrame>
   <DemoDateFieldTimeZone />
+  <template #tailwind>
+    <DemoDateFieldTimeZoneTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -97,13 +143,30 @@ A `Temporal.ZonedDateTime` value shows the name of its time zone. Set `hideTimeZ
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/date-field/time-zone/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Month and year
 
 A `Temporal.PlainYearMonth` value has no day. A `Temporal.PlainDate` with the `granularity` `month` shows the same two segments, and keeps its day.
 
 <DemoFrame>
   <DemoDateFieldMonthYear />
+  <template #tailwind>
+    <DemoDateFieldMonthYearTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -113,13 +176,30 @@ A `Temporal.PlainYearMonth` value has no day. A `Temporal.PlainDate` with the `g
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/date-field/month-year/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Validation in a Field
 
 Put the field in a `Field` to show the errors of its validation. The hidden input has the type of the value, so `minDate` and `maxDate` give `rangeUnderflow` and `rangeOverflow`, and `required` gives `valueMissing`. The field sets a `customError` for a date that `unavailableDates` matches, for a field with some segments empty, and for the limits that the input type cannot check.
 
 <DemoFrame>
   <DemoDateFieldValidation />
+  <template #tailwind>
+    <DemoDateFieldValidationTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -129,13 +209,30 @@ Put the field in a `Field` to show the errors of its validation. The hidden inpu
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/date-field/validation/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Clear button
 
 `DateField.Clear` empties the field and gives the focus to the first segment. It is disabled while the field is empty, disabled or read-only. With no content and no `#render` slot, it shows `x` and has the `aria-label` `Clear`. With content or a `#render` slot, give the button an `aria-label` of your own.
 
 <DemoFrame>
   <DemoDateFieldClear />
+  <template #tailwind>
+    <DemoDateFieldClearTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -144,6 +241,18 @@ Put the field in a `Field` to show the errors of its validation. The hidden inpu
 <<< ../demos/date-field/clear/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/date-field/clear/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Server render
 

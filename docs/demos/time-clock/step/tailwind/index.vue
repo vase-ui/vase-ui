@@ -1,0 +1,48 @@
+<script setup lang="ts">
+import { TimeClock } from '@vase-ui/vue/time-clock';
+
+const time = Temporal.PlainTime.from('09:15');
+const minTime = Temporal.PlainTime.from('09:00');
+const maxTime = Temporal.PlainTime.from('17:00');
+
+const buttonClass =
+  'flex h-10 min-w-10 items-center justify-center border border-neutral-950 bg-white px-2 leading-6 text-neutral-950 tabular-nums select-none focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 data-disabled:border-neutral-500 data-disabled:text-neutral-500 dark:border-white dark:bg-neutral-950 dark:text-white dark:focus-visible:outline-white dark:data-disabled:border-neutral-400 dark:data-disabled:text-neutral-400';
+const triggerClass =
+  'text-xl hover:not-data-disabled:not-data-active:bg-neutral-100 data-active:bg-neutral-950 data-active:text-white dark:hover:not-data-disabled:not-data-active:bg-neutral-800 dark:data-active:bg-white dark:data-active:text-neutral-950';
+const dayPeriodClass =
+  'text-sm hover:not-data-disabled:not-data-selected:bg-neutral-100 data-selected:bg-neutral-950 data-selected:text-white dark:hover:not-data-disabled:not-data-selected:bg-neutral-800 dark:data-selected:bg-white dark:data-selected:text-neutral-950';
+</script>
+
+<template>
+  <TimeClock.Root
+    class="flex flex-col items-center gap-3 text-neutral-950 dark:text-white"
+    aria-label="Appointment time"
+    locale="en-US"
+    default-view="minute"
+    :minute-step="15"
+    :min-time="minTime"
+    :max-time="maxTime"
+    :default-value="time"
+  >
+    <div class="flex items-center gap-1">
+      <TimeClock.ViewTrigger view="hour" :class="[buttonClass, triggerClass]" />
+      <span aria-hidden="true" class="text-xl font-bold">:</span>
+      <TimeClock.ViewTrigger view="minute" :class="[buttonClass, triggerClass]" />
+      <TimeClock.DayPeriod value="am" :class="[buttonClass, dayPeriodClass]" />
+      <TimeClock.DayPeriod value="pm" :class="[buttonClass, dayPeriodClass, 'border-l-0']" />
+    </div>
+    <TimeClock.Face
+      class="relative size-56 cursor-pointer rounded-full border border-neutral-950 bg-neutral-100 select-none [--radius:5.5rem] has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-neutral-950 data-disabled:cursor-default data-readonly:cursor-default dark:border-white dark:bg-neutral-800 dark:has-focus-visible:outline-white"
+    >
+      <TimeClock.Hand
+        class="pointer-events-none absolute bottom-1/2 left-1/2 h-[calc(var(--time-clock-hand-length)*var(--radius))] w-0.5 origin-bottom -translate-x-1/2 rotate-(--time-clock-hand-angle) bg-neutral-950 data-between-numbers:after:absolute data-between-numbers:after:-top-1 data-between-numbers:after:left-1/2 data-between-numbers:after:size-2 data-between-numbers:after:-translate-x-1/2 data-between-numbers:after:rounded-full data-between-numbers:after:bg-neutral-950 data-between-numbers:after:content-[''] dark:bg-white dark:data-between-numbers:after:bg-white"
+      />
+      <template #number="{ number }">
+        <TimeClock.Number
+          :number="number"
+          class="pointer-events-none absolute top-1/2 left-1/2 -mt-4 -ml-4 flex size-8 items-center justify-center rounded-full text-sm tabular-nums transform-[rotate(var(--time-clock-number-angle))_translateY(calc(var(--time-clock-number-radius)*var(--radius)*-1))_rotate(calc(var(--time-clock-number-angle)*-1))] data-disabled:text-neutral-600 data-inner:-mt-3.5 data-inner:-ml-3.5 data-inner:size-7 data-inner:text-xs data-selected:bg-neutral-950 data-selected:text-white dark:data-disabled:text-neutral-400 dark:data-selected:bg-white dark:data-selected:text-neutral-950"
+        />
+      </template>
+    </TimeClock.Face>
+  </TimeClock.Root>
+</template>

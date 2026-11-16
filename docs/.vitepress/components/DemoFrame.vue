@@ -128,8 +128,9 @@ onMounted(restoreDemoVariant);
    Time Field select the text of a segment when it gets the focus, and the sheets give a focused
    segment inverted colors. The highlight then hides the text: the contrast is 1.19:1 in the light
    theme and 1.46:1 in the dark theme. This rule takes the highlight from the focused segment, so
-   the inverted colors show. */
-.demo-frame :deep([class*='_Segment_']:focus)::selection {
+   the inverted colors show. The second selector names the class that gives the inverted background
+   in the Tailwind variant. */
+.demo-frame :deep(:is([class*='_Segment_'], [class~='focus:bg-neutral-950']):focus)::selection {
   background-color: transparent;
 }
 

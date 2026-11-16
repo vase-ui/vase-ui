@@ -23,6 +23,7 @@ const modules = import.meta.glob<{ default: Component }>(
     '../../../docs/demos/navigation-menu/nested-inline/{css-modules,tailwind}/index.vue',
     '../../../docs/demos/select/hero/{css-modules,tailwind}/index.vue',
     '../../../docs/demos/select/object-values/{css-modules,tailwind}/index.vue',
+    '../../../docs/demos/time-clock/hero/{css-modules,tailwind}/index.vue',
   ],
   { eager: true },
 );
@@ -206,6 +207,16 @@ const rows: Row[] = [
     name: 'placeholder of Select on hover',
     demo: 'select/hero',
     reach: () => hover(screen.getByRole('combobox')),
+  },
+  {
+    name: 'active view trigger on hover',
+    demo: 'time-clock/hero',
+    reach: () => hover(screen.getByRole('button', { pressed: true, name: /hour/i })),
+  },
+  {
+    name: 'selected day period on hover',
+    demo: 'time-clock/hero',
+    reach: () => hover(screen.getByRole('button', { pressed: true, name: 'AM' })),
   },
   {
     name: 'placeholder of Combobox on hover',

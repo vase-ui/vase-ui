@@ -6,10 +6,15 @@ description: An unstyled Vue clock face that picks a time with a press, a drag o
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoTimeClockHero from '../demos/time-clock/hero/css-modules/index.vue';
+import DemoTimeClockHeroTailwind from '../demos/time-clock/hero/tailwind/index.vue';
 import DemoTimeClockSeconds from '../demos/time-clock/seconds/css-modules/index.vue';
+import DemoTimeClockSecondsTailwind from '../demos/time-clock/seconds/tailwind/index.vue';
 import DemoTimeClockStep from '../demos/time-clock/step/css-modules/index.vue';
+import DemoTimeClockStepTailwind from '../demos/time-clock/step/tailwind/index.vue';
 import DemoTimeClockTwentyFourHours from '../demos/time-clock/twenty-four-hours/css-modules/index.vue';
+import DemoTimeClockTwentyFourHoursTailwind from '../demos/time-clock/twenty-four-hours/tailwind/index.vue';
 </script>
 
 # Time Clock
@@ -20,7 +25,12 @@ Base UI has no such component. The face follows the [slider pattern](https://www
 
 <DemoFrame>
   <DemoTimeClockHero />
+  <template #tailwind>
+    <DemoTimeClockHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -29,6 +39,18 @@ Base UI has no such component. The face follows the [slider pattern](https://www
 <<< ../demos/time-clock/_index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/time-clock/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Anatomy
 
@@ -64,7 +86,7 @@ The `minTime` and `maxTime` props limit the time. The `disabledTimes` function d
 
 ## Style the face
 
-The parts set no position. They write the angle of the hand and of each number as a CSS variable, and the style sheet of the page places them:
+The parts set no position. They write the angle of the hand and of each number as a CSS variable, and the styles of the demo place them:
 
 | Variable                     | Part               | Value                                            |
 | ---------------------------- | ------------------ | ------------------------------------------------ |
@@ -73,7 +95,7 @@ The parts set no position. They write the angle of the hand and of each number a
 | `--time-clock-number-angle`  | `TimeClock.Number` | The angle in degrees from 12 o'clock, clockwise. |
 | `--time-clock-number-radius` | `TimeClock.Number` | 1, and 0.64 for an hour of the inner ring.       |
 
-Give the face `position: relative`. The hand, the numbers and the range input are placed in the face. The style sheet of the first demo places each of them.
+Give the face `position: relative`. The hand, the numbers and the range input are placed in the face. The first demo places each of them, in its style sheet or in its classes.
 
 A press measures the outer ring from the boxes of the numbers, so the rings of a 24-hour face can have any size. With no numbers, the outer ring is at the edge of the face.
 
@@ -87,7 +109,12 @@ Set `:hour-cycle="24"` for a face with an inner ring.
 
 <DemoFrame>
   <DemoTimeClockTwentyFourHours />
+  <template #tailwind>
+    <DemoTimeClockTwentyFourHoursTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -97,13 +124,30 @@ Set `:hour-cycle="24"` for a face with an inner ring.
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/time-clock/twenty-four-hours/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Seconds
 
 Set `granularity="second"` to go on to the seconds after the minutes.
 
 <DemoFrame>
   <DemoTimeClockSeconds />
+  <template #tailwind>
+    <DemoTimeClockSecondsTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -113,13 +157,30 @@ Set `granularity="second"` to go on to the seconds after the minutes.
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/time-clock/seconds/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Step and limits
 
 Set `minuteStep` for a step of the minutes, and `minTime` and `maxTime` for the limits.
 
 <DemoFrame>
   <DemoTimeClockStep />
+  <template #tailwind>
+    <DemoTimeClockStepTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -128,6 +189,18 @@ Set `minuteStep` for a step of the minutes, and `minTime` and `maxTime` for the 
 <<< ../demos/time-clock/_index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/time-clock/step/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Server render
 
