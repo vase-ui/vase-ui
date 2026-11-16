@@ -1,5 +1,5 @@
 diff --git a/dist/client/theme-default/components/VPLocalSearchBox.vue b/dist/client/theme-default/components/VPLocalSearchBox.vue
-index 265317ece617d0d3e0a1122373daffce97f17ccc..99e5935fcd735ae62ed6479976f591461a6c094f 100644
+index 265317ece617d0d3e0a1122373daffce97f17ccc..f80643b6cdfbefeab816a3292a473f0ea488bb64 100644
 --- a/dist/client/theme-default/components/VPLocalSearchBox.vue
 +++ b/dist/client/theme-default/components/VPLocalSearchBox.vue
 @@ -27,11 +27,12 @@ if (import.meta.hot) {
@@ -17,7 +17,7 @@ index 265317ece617d0d3e0a1122373daffce97f17ccc..99e5935fcd735ae62ed6479976f59146
  });
  const { localeIndex, theme } = vitePressData;
  const isSearchIndexLoading = ref(false);
-@@ -186,9 +187,6 @@ function focusSearchInput(select = true) {
+@@ -186,15 +187,21 @@ function focusSearchInput(select = true) {
  	searchInput.value?.focus();
  	select && searchInput.value?.select();
  }
@@ -27,7 +27,22 @@ index 265317ece617d0d3e0a1122373daffce97f17ccc..99e5935fcd735ae62ed6479976f59146
  function onSearchBarClick(event) {
  	if (event.pointerType === "mouse") {
  		focusSearchInput();
-@@ -251,12 +249,16 @@ onKeyStroke("Enter", (e) => {
+ 	}
+ }
+ /* Search keyboard selection */
++function onTab(event) {
++	if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.isComposing) return;
++	const controls = [...el.value.querySelectorAll(".search-bar button, .search-input, .results > li > .result")].filter((control) => !control.disabled && control.getClientRects().length);
++	const index = controls.indexOf(document.activeElement);
++	const next = event.shiftKey ? controls[index - 1] ?? controls.at(-1) : controls[index + 1] ?? controls[0];
++	event.preventDefault();
++	next?.focus();
++	if (next === searchInput.value) next.select();
++}
+ const selectedIndex = ref(-1);
+ const disableMouseOver = ref(true);
+ watch(results, (r) => {
+@@ -251,12 +258,16 @@ onKeyStroke("Enter", (e) => {
  	}
  	if (selectedPackage) {
  		router.go(withBase(selectedPackage.id));
@@ -45,36 +60,15 @@ index 265317ece617d0d3e0a1122373daffce97f17ccc..99e5935fcd735ae62ed6479976f59146
  /* Translations */
  const defaultTranslations = {
  	button: { buttonText: "Search" },
-@@ -344,6 +346,7 @@ function onMouseMove(e) {
-           <div class="search-actions before">
-             <button
-               class="back-button"
-+              tabindex="0"
-               :title="translate('modal.backButtonTitle')"
-               @click="$emit('close')"
-             >
-@@ -380,6 +383,7 @@ function onMouseMove(e) {
-             <button
-               v-if="!disableDetailedView"
-               class="toggle-layout-button"
-+              tabindex="0"
-               type="button"
-               :class="{ 'detailed-list': showDetailedList }"
-               :title="translate('modal.displayDetails')"
-@@ -390,6 +394,7 @@ function onMouseMove(e) {
+@@ -325,6 +336,7 @@ function onMouseMove(e) {
+       aria-haspopup="listbox"
+       aria-labelledby="localsearch-label"
+       class="VPLocalSearchBox"
++      @keydown.tab="onTab"
+     >
+       <div class="backdrop" @click="$emit('close')" />
  
-             <button
-               class="clear-button"
-+              tabindex="0"
-               type="reset"
-               :disabled="disableReset"
-               :title="translate('modal.resetButtonTitle')"
-@@ -419,11 +424,12 @@ function onMouseMove(e) {
-             <a
-               :href="withBase(p.id)"
-               class="result"
-+              tabindex="0"
-               :class="{ selected: selectedIndex === index }"
+@@ -423,7 +435,7 @@ function onMouseMove(e) {
                :aria-label="[...p.titles, p.title].join(' > ')"
                @mouseenter="!disableMouseOver && (selectedIndex = index)"
                @focusin="selectedIndex = index"
