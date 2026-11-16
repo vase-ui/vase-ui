@@ -12,11 +12,11 @@ const today = Temporal.PlainDate.from('2026-11-14');
   >
     <div class="absolute top-3 right-3 flex gap-1">
       <Calendar.PreviousButton
-        class="h-8 w-8 cursor-pointer rounded-md outline-0 hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 aria-disabled:cursor-default aria-disabled:opacity-40 aria-disabled:hover:bg-transparent dark:hover:bg-neutral-800 dark:focus-visible:outline-white dark:aria-disabled:hover:bg-transparent"
+        class="h-8 w-8 cursor-pointer rounded-md outline-0 hover:not-data-disabled:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 data-disabled:cursor-default data-disabled:opacity-40 dark:hover:not-data-disabled:bg-neutral-800 dark:focus-visible:outline-white"
         >&lsaquo;</Calendar.PreviousButton
       >
       <Calendar.NextButton
-        class="h-8 w-8 cursor-pointer rounded-md outline-0 hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 aria-disabled:cursor-default aria-disabled:opacity-40 aria-disabled:hover:bg-transparent dark:hover:bg-neutral-800 dark:focus-visible:outline-white dark:aria-disabled:hover:bg-transparent"
+        class="h-8 w-8 cursor-pointer rounded-md outline-0 hover:not-data-disabled:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 data-disabled:cursor-default data-disabled:opacity-40 dark:hover:not-data-disabled:bg-neutral-800 dark:focus-visible:outline-white"
         >&rsaquo;</Calendar.NextButton
       >
     </div>

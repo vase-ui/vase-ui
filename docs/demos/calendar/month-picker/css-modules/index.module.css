@@ -52,7 +52,7 @@
   background-color: transparent;
   cursor: pointer;
 
-  &:hover:not([aria-disabled='true']) {
+  &:hover:not([data-disabled]) {
     background-color: oklch(97% 0 0deg);
 
     @media (prefers-color-scheme: dark) {
@@ -60,7 +60,7 @@
     }
   }
 
-  &[aria-disabled='true'] {
+  &[data-disabled] {
     opacity: 0.4;
     cursor: default;
   }
