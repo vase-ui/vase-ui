@@ -13,7 +13,10 @@ export interface TimePickerRootContext extends DateTimePickerContext<
 > {
   /** The props of the root. Its parts read the props that they share. */
   props: Readonly<TimePickerRootProps<TimePickerRootValue>>;
-  /** Whether the picker ignores user interaction: its `disabled` prop, or a disabled field around it. */
+  /**
+   * Whether the picker ignores user interaction: its `disabled` prop, or a disabled field or
+   * fieldset around it.
+   */
   disabled: ComputedRef<boolean>;
   /** Whether the user can see the time but not change it. */
   readOnly: ComputedRef<boolean>;

@@ -133,6 +133,7 @@ export interface TimePickerRootProps<
 
 <script setup lang="ts" generic="Value extends TimePickerRootValue = Temporal.PlainTime">
 import { computed, provide, useTemplateRef } from 'vue';
+import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { useDateTimePickerRoot } from '../../internals/date-time/picker/useDateTimePickerRoot';
 import { assertTemporal, toPlainTime } from '../../internals/date-time/temporal';
 import { useFieldRootContext } from '../../internals/field-root-context';
@@ -218,7 +219,11 @@ const picker = useDateTimePickerRoot<TimePickerRootValue, TimePickerRootChangeEv
 });
 
 const fieldContext = useFieldRootContext();
-const disabled = computed(() => props.disabled || (fieldContext.disabled.value ?? false));
+// The root has no element. Its field is at the place of the picker.
+const fieldsetDisabled = useFieldsetDisabled(() => picker.fieldElement.value);
+const disabled = computed(
+  () => props.disabled || (fieldContext.disabled.value ?? false) || fieldsetDisabled.value,
+);
 const readOnly = computed(() => props.readOnly);
 // A part of the popup changes the time of the value. While the picker has no value, it starts at
 // the time of the reference date.

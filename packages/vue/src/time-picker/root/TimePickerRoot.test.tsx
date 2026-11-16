@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { Field } from '@vase-ui/vue/field';
+import { TimeField } from '@vase-ui/vue/time-field';
 import { TimePicker } from '@vase-ui/vue/time-picker';
 import {
   createRenderer,
@@ -733,6 +735,37 @@ describe('<TimePicker.Root />', () => {
       await user.click(screen.getByTestId('trigger'));
 
       expect(screen.queryByRole('dialog')).toBe(null);
+    });
+  });
+
+  describe('VUE-112: a disabled fieldset', () => {
+    it('disables the trigger, the list and its items in a disabled fieldset', async () => {
+      const onValueChange = vi.fn();
+      await render(() => (
+        <fieldset disabled>
+          <TimePicker.Root
+            locale="en-US"
+            hourCycle={12}
+            defaultValue={time('14:30')}
+            onValueChange={onValueChange}
+          >
+            <TimePicker.Field>
+              <TimeField.Input />
+            </TimePicker.Field>
+            <TimePicker.Trigger data-testid="trigger">Open</TimePicker.Trigger>
+            <TimePicker.List step={60} data-testid="list" />
+          </TimePicker.Root>
+        </fieldset>
+      ));
+
+      expect(screen.getByTestId('trigger')).toHaveAttribute('data-disabled');
+      expect(screen.getByTestId('list')).toHaveAttribute('aria-disabled', 'true');
+      expect(listItem('15:00')).toHaveAttribute('aria-disabled', 'true');
+
+      // A person can press an item that has `aria-disabled`, so the press is real and not refused.
+      await userEvent.click(listItem('15:00'), { force: true });
+
+      expect(onValueChange).not.toHaveBeenCalled();
     });
   });
 
