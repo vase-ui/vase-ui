@@ -31,7 +31,7 @@ export interface DateRangePickerRootContext {
    * fields call it for one event, and the root handles the first call.
    */
   reset: (details: DateRangePickerRootChangeEventDetails) => void;
-  /** Whether the second press in the calendar closes the popup. */
+  /** Whether the second press or a drag in the calendar closes the popup. */
   closeOnSelect: ComputedRef<boolean>;
   /** The element of the start field. */
   startFieldElement: ShallowRef<HTMLElement | null>;

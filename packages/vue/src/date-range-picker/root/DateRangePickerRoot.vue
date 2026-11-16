@@ -51,8 +51,9 @@ export interface DateRangePickerRootProps<Value extends DateValue = DateValue> e
    */
   defaultValue?: readonly [Value | null, Value | null] | null | undefined;
   /**
-   * Whether the second press in the calendar closes the popup. The default is `true` for a range
-   * with no time. It is `false` for a range with a time, because the user then sets the times.
+   * Whether the second press or a drag in the calendar closes the popup. The default is `true`
+   * for a range with no time. It is `false` for a range with a time, because the user then sets
+   * the times.
    */
   closeOnSelect?: boolean | undefined;
   /**
