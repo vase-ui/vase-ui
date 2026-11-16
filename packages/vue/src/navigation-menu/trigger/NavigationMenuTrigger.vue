@@ -108,6 +108,7 @@ import {
   getTabbableNearElement,
   isOutsideEvent,
 } from '../../utils/popups/focus/tabbable';
+import type { FocusableElement } from '../../utils/popups/focus/tabbable';
 import { useElementSiblings } from '../../utils/popups/focus/useElementSiblings';
 import type { ElementSiblings } from '../../utils/popups/focus/useElementSiblings';
 import { getHoverIntent } from '../../utils/popups/interactions/hoverIntent';
@@ -612,11 +613,23 @@ watch(
 
 onScopeDispose(releaseOutsideGuards);
 
+function isOutsideGuard(element: Element) {
+  return element === outsideNodes?.before || element === outsideNodes?.after;
+}
+
+// `KeepAlive` takes the inside guards out of the document with the viewport, and a browser does not
+// focus such an element. The Tab key then skips the popup, as it skips a popup with no tabbable
+// element.
 function handleBeforeOutsideFocusin(event: FocusEvent) {
   const referenceElement = hoverPopupElement.value;
+  const beforeInside = beforeInsideRef.value;
 
   if (referenceElement && isOutsideEvent(event, referenceElement)) {
-    beforeInsideRef.value?.focus();
+    if (beforeInside?.isConnected) {
+      beforeInside.focus();
+    } else {
+      exitForward(event, getTabbableNearElement(triggerElement.value, 1, isOutsideGuard));
+    }
   } else {
     getPreviousTabbable(triggerElement.value)?.focus();
   }
@@ -630,11 +643,17 @@ async function handleAfterOutsideFocusin(event: FocusEvent) {
     // that is inert.
     setViewportInert(false);
     await nextTick();
-    (afterInsideRef.value || triggerElement.value)?.focus();
+    const afterInside = afterInsideRef.value;
+    (afterInside?.isConnected ? afterInside : triggerElement.value)?.focus();
     return;
   }
 
-  let nextTabbable = getNextTabbable(triggerElement.value);
+  exitForward(event, getNextTabbable(triggerElement.value));
+}
+
+function exitForward(event: FocusEvent, next: FocusableElement | null) {
+  const referenceElement = hoverPopupElement.value;
+  let nextTabbable = next;
 
   if (
     nested &&

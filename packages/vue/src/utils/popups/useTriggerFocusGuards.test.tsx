@@ -6,6 +6,7 @@ import * as Dialog from '../../dialog/index.parts';
 import * as Menu from '../../menu/index.parts';
 import * as Popover from '../../popover/index.parts';
 import {
+  createHeldBranch,
   createRenderer,
   flushMicrotasks,
   screen,
@@ -992,6 +993,108 @@ describe('useTriggerFocusGuards', () => {
       );
     },
   );
+
+  function renderPopupPart(family: 'Popover' | 'Menu') {
+    return family === 'Popover' ? (
+      <Popover.Portal>
+        <Popover.Positioner>
+          <Popover.Popup initialFocus={false}>{renderStop('inside', 'Inside')}</Popover.Popup>
+        </Popover.Positioner>
+      </Popover.Portal>
+    ) : (
+      <Menu.Portal>
+        <Menu.Positioner>
+          <Menu.Popup>
+            <Menu.Item>Item</Menu.Item>
+          </Menu.Popup>
+        </Menu.Positioner>
+      </Menu.Portal>
+    );
+  }
+
+  // `KeepAlive` takes a held popup out of the document, with its inside guards.
+  async function renderHeldPopup(family: 'Popover' | 'Menu', popup: 'held' | 'mounted while held') {
+    const reasons: string[] = [];
+    const { HeldBranch, hide, mountWhileHeld } = createHeldBranch(() => renderPopupPart(family), {
+      mounted: popup === 'held',
+      renderBranch: (part) => part,
+    });
+    await render(() => (
+      <div>
+        {family === 'Popover' ? (
+          <Popover.Root {...createRootProps({}, reasons)}>
+            <Popover.Trigger id="trigger" data-testid="trigger">
+              Toggle
+            </Popover.Trigger>
+            <HeldBranch />
+          </Popover.Root>
+        ) : (
+          <Menu.Root modal={false} {...createRootProps({}, reasons)}>
+            <Menu.Trigger id="trigger" data-testid="trigger">
+              Toggle
+            </Menu.Trigger>
+            <HeldBranch />
+          </Menu.Root>
+        )}
+        {renderStop('after', 'After')}
+      </div>
+    ));
+    await flushMicrotasks();
+    if (popup === 'held') {
+      if (family === 'Menu') {
+        // The menu moves the focus into its popup when it opens. The hold comes after that move.
+        await waitFor(() => {
+          expect(screen.getByRole('menu')).toContainElement(document.activeElement as HTMLElement);
+        });
+      }
+      await hide();
+    } else {
+      await mountWhileHeld();
+    }
+    return { reasons, trigger: screen.getByTestId('trigger') };
+  }
+
+  describe.each([
+    { name: 'Popover', family: 'Popover' as const },
+    { name: 'Menu', family: 'Menu' as const },
+  ])('VUE-120: $name whose popup KeepAlive holds', ({ family }) => {
+    it.each([
+      { name: 'held', popup: 'held' as const },
+      { name: 'mounted while held', popup: 'mounted while held' as const },
+    ])(
+      'goes from the trigger to the element after it for Tab, and asks for the close ($name)',
+      async ({ popup }) => {
+        const { trigger, reasons } = await renderHeldPopup(family, popup);
+        await startAt('trigger', reasons);
+        const focus = trackFocus();
+
+        await pressTab();
+
+        expect(screen.getByTestId('after')).toHaveFocus();
+        expect(trigger).toHaveAttribute('aria-expanded', 'true');
+        expect(reasons).toEqual([REASONS.focusOut]);
+        expectNoReentry(focus);
+      },
+    );
+
+    it.each([
+      { name: 'held', popup: 'held' as const },
+      { name: 'mounted while held', popup: 'mounted while held' as const },
+    ])(
+      'goes from the element after the trigger to the trigger for Shift+Tab ($name)',
+      async ({ popup }) => {
+        const { trigger, reasons } = await renderHeldPopup(family, popup);
+        await startAt('after', reasons);
+        const focus = trackFocus();
+
+        await pressTab(true);
+
+        expect(trigger).toHaveFocus();
+        expect(reasons).toEqual([]);
+        expectNoReentry(focus);
+      },
+    );
+  });
 
   // The inner popup has guards beside its trigger and none at the place of its portal. The search
   // from the inner trigger then meets the inside guards of the outer popup, and they take the focus
