@@ -678,9 +678,9 @@ describe('<Popover.Root />', () => {
         await settleTriggerChange();
       }
 
-      // The switch to trigger 2 closes the popup and opens it again in one task. The popup thus
-      // has the ending status until the next frame, and it renders with that status. Only the
-      // close that follows matters.
+      // `user.hover` gives the leave event no `relatedTarget`, so the switch to trigger 2 closes
+      // the popup and opens it again in one task. The popup thus has the ending status until the
+      // next frame, and it renders with that status. Only the close that follows matters.
       instantsWhileEnding.length = 0;
 
       return {

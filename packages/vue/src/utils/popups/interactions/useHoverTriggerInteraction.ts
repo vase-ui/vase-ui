@@ -1,10 +1,12 @@
 import { computed, onDeactivated, onMounted, onScopeDispose, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter, Ref } from 'vue';
+import { isElement } from '@floating-ui/utils/dom';
 import { contains } from '../../../common/shadowDom';
 import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import type { FloatingUIOpenChangeDetails, HTMLProps } from '../../../internals/types';
 import { useFloatingTree } from '../tree/FloatingTree';
+import { useDomEffect } from '../useDomEffect';
 import type { FloatingTreeStore } from '../tree/FloatingTreeStore';
 import type { Delay, PopupInteractionStore } from '../types';
 import { getHoverIntent } from './hoverIntent';
@@ -36,7 +38,8 @@ export interface UseHoverTriggerInteractionProps {
   isActiveTrigger?: MaybeRefOrGetter<boolean | undefined>;
   /**
    * The element of the trigger. The safe polygon and `KeepAlive` close the popup only when this
-   * element is the anchor of the store.
+   * element is the anchor of the store. While the composable is enabled, the element is a hover
+   * trigger of the popup (`HoverIntent.addHoverTrigger`).
    */
   triggerElement?: MaybeRefOrGetter<Element | null | undefined>;
   getHandleCloseContext?: (() => HandleCloseContextBase | null) | undefined;
@@ -139,6 +142,19 @@ export function useHoverTriggerInteraction(
     ) {
       current.setOpen(false, createChangeEventDetails(REASONS.triggerHover));
     }
+  });
+
+  // While the popup blocks pointer events, a trigger that opens it on hover keeps them, so the
+  // pointer can move to it from the active trigger.
+  useDomEffect([intent, enabled, () => toValue(props.triggerElement)], () => {
+    const element = toValue(props.triggerElement);
+    if (!enabled() || !isElement(element)) {
+      return undefined;
+    }
+    const current = intent.value;
+    const trigger = element as HTMLElement | SVGSVGElement;
+    current.addHoverTrigger(trigger);
+    return () => current.removeHoverTrigger(trigger);
   });
 
   // A close with any reason cancels an open that waits.
