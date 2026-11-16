@@ -60,6 +60,20 @@ describe('<Calendar.Root />', () => {
       expect(group).toHaveAccessibleName('Birthday');
     });
 
+    it.each([
+      { name: 'an empty aria-label', props: { 'aria-label': '' } },
+      { name: 'an aria-label of white space', props: { 'aria-label': ' ' } },
+      { name: 'an empty aria-labelledby', props: { 'aria-labelledby': '' } },
+      { name: 'an aria-labelledby of white space', props: { 'aria-labelledby': ' ' } },
+    ])('keeps the name of the month for $name of the consumer', async ({ props }) => {
+      await renderCalendar(props);
+
+      const group = screen.getByRole('group');
+      expect(group).toHaveAttribute('aria-label', monthName('2026-11-14'));
+      expect(group).not.toHaveAttribute('aria-labelledby');
+      expect(group).toHaveAccessibleName(monthName('2026-11-14'));
+    });
+
     it('VUE-103: keeps the name of the month for an aria-labelledby of null', async () => {
       await renderCalendar({ 'aria-labelledby': null });
 

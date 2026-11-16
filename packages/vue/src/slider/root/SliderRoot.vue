@@ -192,6 +192,7 @@ import { ownerDocument } from '../../common/owner';
 import { activeElement, contains } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
 import { warn } from '../../common/warn';
+import { givenName } from '../../internals/blankName';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import type { CompositeMetadata } from '../../internals/composite/list/useCompositeList';
 import {
@@ -307,7 +308,9 @@ const fieldLabelId = useControlLabelId();
 const { labelId: localLabelId, registerLabelId } = createLabelIdRegistry();
 const isHydrating = useIsHydrating();
 
-const labelId = computed(() => props.ariaLabelledby ?? fieldLabelId.value ?? localLabelId.value);
+const labelId = computed(
+  () => givenName(props.ariaLabelledby) ?? fieldLabelId.value ?? localLabelId.value,
+);
 
 const isDisabled = computed(() => fieldDisabled.value || props.disabled);
 const inputName = computed(() => fieldName.value ?? props.name);
@@ -657,9 +660,9 @@ provide(SliderRootContext, {
   values,
 });
 
+// The attributes of the consumer have no blank `aria-label` (VUE-106).
 function hasAriaLabel(attrs: Record<string, unknown>) {
-  const ariaLabel = attrs['aria-label'];
-  return typeof ariaLabel === 'string' && ariaLabel.trim() !== '';
+  return typeof attrs['aria-label'] === 'string';
 }
 
 const { element, elementProps } = useRenderElement('div', props, {

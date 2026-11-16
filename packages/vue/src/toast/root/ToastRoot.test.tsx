@@ -940,22 +940,57 @@ describe('<Toast.Root />', () => {
       expect(root).toHaveAccessibleDescription('Copied');
     });
 
-    it('names the toast with its description when the aria-label of the consumer is blank', async () => {
-      await render(
-        <Toast.Provider>
-          <Toast.Viewport>
-            <Toast.Root
-              toast={{ id: 'test', description: 'Copied' }}
-              data-testid="root"
-              aria-label=" "
-            >
-              <Toast.Description data-testid="description" />
-            </Toast.Root>
-          </Toast.Viewport>
-        </Toast.Provider>,
-      );
+    describe.each([
+      { name: 'an empty aria-label', attrs: { 'aria-label': '' } },
+      { name: 'an aria-label of white space', attrs: { 'aria-label': ' ' } },
+      { name: 'an empty aria-labelledby', attrs: { 'aria-labelledby': '' } },
+      { name: 'an aria-labelledby of white space', attrs: { 'aria-labelledby': '\n\t ' } },
+    ])('$name of the consumer', ({ attrs }) => {
+      it('names the toast with its description', async () => {
+        await render(
+          <Toast.Provider>
+            <Toast.Viewport>
+              <Toast.Root
+                toast={{ id: 'test', description: 'Copied' }}
+                data-testid="root"
+                {...attrs}
+              >
+                <Toast.Description data-testid="description" />
+              </Toast.Root>
+            </Toast.Viewport>
+          </Toast.Provider>,
+        );
+        const root = screen.getByTestId('root');
 
-      expect(screen.getByTestId('root')).toHaveAccessibleName('Copied');
+        expect(root).toHaveAttribute('aria-labelledby', screen.getByTestId('description').id);
+        expect(root).not.toHaveAttribute('aria-describedby');
+        expect(root).toHaveAccessibleName('Copied');
+        expect(root).toHaveAccessibleDescription('');
+        await expectNoAxeViolations(root);
+      });
+
+      it('keeps the title as the name of a toast that has a title', async () => {
+        await render(
+          <Toast.Provider>
+            <Toast.Viewport>
+              <Toast.Root
+                toast={{ id: 'test', title: 'Saved', description: 'Copied' }}
+                data-testid="root"
+                {...attrs}
+              >
+                <Toast.Title data-testid="title" />
+                <Toast.Description data-testid="description" />
+              </Toast.Root>
+            </Toast.Viewport>
+          </Toast.Provider>,
+        );
+        const root = screen.getByTestId('root');
+
+        expect(root).toHaveAttribute('aria-labelledby', screen.getByTestId('title').id);
+        expect(root).toHaveAttribute('aria-describedby', screen.getByTestId('description').id);
+        expect(root).toHaveAccessibleName('Saved');
+        expect(root).toHaveAccessibleDescription('Copied');
+      });
     });
 
     it('VUE-103: names the toast with its description for an aria-labelledby of undefined', async () => {

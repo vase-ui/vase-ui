@@ -957,6 +957,27 @@ describe('<OTPField.Root />', () => {
       expect(screen.getByRole('group')).toHaveAttribute('aria-labelledby', 'custom');
     });
 
+    it.each([
+      { name: 'an empty aria-labelledby', ariaLabelledby: '' },
+      { name: 'an aria-labelledby of white space', ariaLabelledby: '\n\t ' },
+    ])(
+      'VUE-106: gives the group and each input the label of the field for $name',
+      async ({ ariaLabelledby }) => {
+        await render(
+          <Field.Root>
+            <Field.Label data-testid="label">Verification code</Field.Label>
+            <OTPField aria-labelledby={ariaLabelledby} />
+          </Field.Root>,
+        );
+
+        const labelId = screen.getByTestId('label').id;
+        expect(screen.getByRole('group')).toHaveAttribute('aria-labelledby', labelId);
+        for (const input of screen.getAllByRole('textbox')) {
+          expect(input).toHaveAttribute('aria-labelledby', labelId);
+        }
+      },
+    );
+
     it('validates the value of the root when the form submits', async () => {
       const validate = vi.fn((value: unknown) => (value === '123456' ? null : 'Wrong code'));
       await render(

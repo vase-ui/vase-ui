@@ -108,6 +108,7 @@ import { computed, nextTick, provide, shallowRef, watch } from 'vue';
 import { queueInputTake } from '../../common/hydration';
 import { useControlled } from '../../common/useControlled';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
+import { givenName } from '../../internals/blankName';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { useFieldInput, useRegisterFieldControl } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
@@ -360,7 +361,7 @@ const { element, elementProps } = useRenderElement('span', props, {
       'aria-checked': isChecked.value,
       'aria-readonly': props.readOnly || undefined,
       'aria-required': props.required || undefined,
-      'aria-label': props.ariaLabel,
+      'aria-label': givenName(props.ariaLabel),
       'aria-labelledby': ariaLabelledBy.value,
       onFocusin() {
         setFocused(true);

@@ -272,6 +272,22 @@ describe('<Switch.Root />', () => {
       expect(fieldLabelled).not.toHaveAttribute('aria-labelledby');
       expect(fieldLabelled).toHaveAccessibleName('Bluetooth');
     });
+
+    it.each([
+      { name: 'an empty aria-label', ariaLabel: '' },
+      { name: 'an aria-label of white space', ariaLabel: '\n\t ' },
+    ])('VUE-106: writes no aria-label for $name', async ({ ariaLabel }) => {
+      await render(
+        <label>
+          <Switch.Root aria-label={ariaLabel} />
+          Wi-Fi
+        </label>,
+      );
+
+      const switchEl = screen.getByRole('switch');
+      expect(switchEl).not.toHaveAttribute('aria-label');
+      expect(switchEl).toHaveAccessibleName('Wi-Fi');
+    });
   });
 
   describe('prop: onCheckedChange', () => {

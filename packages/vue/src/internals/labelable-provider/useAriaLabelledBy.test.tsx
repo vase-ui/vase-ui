@@ -60,9 +60,15 @@ describe('useAriaLabelledBy', () => {
         labelId: null,
       },
       {
-        name: 'keeps a blank `aria-labelledby` of the consumer',
+        name: 'keeps the label when the `aria-labelledby` is empty',
         controlProps: { ariaLabelledby: '' },
-        labelledBy: '',
+        labelledBy: 'a-label',
+        labelId: 'a-label',
+      },
+      {
+        name: 'keeps the label when the `aria-labelledby` has tabs, line breaks and spaces',
+        controlProps: { ariaLabelledby: '\n\t ' },
+        labelledBy: 'a-label',
         labelId: 'a-label',
       },
       {

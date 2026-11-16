@@ -164,6 +164,7 @@ import { activeElement, contains } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { warn } from '../../common/warn';
+import { givenName } from '../../internals/blankName';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import {
   createChangeEventDetails,
@@ -300,7 +301,7 @@ const ariaLabelledBy = useAriaLabelledBy(
   controlId,
 );
 const inputAriaLabelledBy = computed(() =>
-  props.ariaLabelledby == null ? ariaLabelledBy.value : undefined,
+  givenName(props.ariaLabelledby) == null ? ariaLabelledBy.value : undefined,
 );
 
 const validationConfig = computed(() => getOTPValidationConfig(props.validationType));

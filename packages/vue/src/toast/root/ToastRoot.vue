@@ -198,14 +198,10 @@ const { element, elementProps } = useRenderElement('div', props, {
 });
 
 function hasConsumerName(attrs: Record<string, unknown>) {
-  const ariaLabel = attrs['aria-label'];
-  // `attrs` has no key for an attribute whose value is `undefined` (VUE-103), so such an
-  // `aria-labelledby` is not a name. An `aria-labelledby` of `null` removes the value of the
-  // root. The consumer chose to remove the name, so the description does not take its place.
-  return (
-    Object.hasOwn(attrs, 'aria-labelledby') ||
-    (typeof ariaLabel === 'string' && ariaLabel.trim() !== '')
-  );
+  // `attrs` has no key for an attribute whose value is `undefined` (VUE-103), and none for a blank
+  // `aria-label` or `aria-labelledby` (VUE-106). An `aria-labelledby` of `null` removes the value
+  // of the root. The consumer chose to remove the name, so the description does not take its place.
+  return Object.hasOwn(attrs, 'aria-labelledby') || typeof attrs['aria-label'] === 'string';
 }
 
 useOpenChangeComplete({
