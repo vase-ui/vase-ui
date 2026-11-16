@@ -41,10 +41,10 @@ defineSlots<{
 
 const { state, view, yearCells, locale } = useCalendarRootContext();
 
-const columns = computed(() => Math.max(1, Math.floor(props.columns)));
-provide(CalendarViewGridContext, { columns });
+const columnCount = computed(() => Math.max(1, Math.floor(props.columns)));
+provide(CalendarViewGridContext, { columns: columnCount });
 
-const rows = computed(() => getRows(yearCells.value, columns.value));
+const rows = computed(() => getRows(yearCells.value, columnCount.value));
 const label = computed(() => formatFieldName('year', locale.value));
 const ariaAfterHydration = useAriaAfterHydration();
 

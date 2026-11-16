@@ -263,12 +263,12 @@ if (process.env.NODE_ENV !== 'production') {
 
 const formatLocale = useFormatLocale(() => props.locale);
 
-const [value, setValue] = useControlled<Value | null>({
+const [currentValue, setValue] = useControlled<Value | null>({
   controlled: () => props.value,
   default: () => props.defaultValue ?? null,
   name: 'TimeClock',
 });
-const [view, setViewState] = useControlled<TimeClockView>({
+const [currentView, setViewState] = useControlled<TimeClockView>({
   controlled: () => props.view,
   default: () => props.defaultView ?? 'hour',
   name: 'TimeClock',
@@ -279,36 +279,39 @@ const dragging = shallowRef(false);
 
 // A server and a browser can have other `Intl` data for the locale, and the hour cycle changes the
 // numbers of the face and the day periods.
-const { value: hourCycle, attributes: hourCycleAttributes } = useServerValue(
+const { value: shownHourCycle, attributes: hourCycleAttributes } = useServerValue(
   'data-vase-ui-hour-cycle',
   () => props.hourCycle ?? hourCycleOf(formatLocale.value),
   parseHourCycle,
 );
-const step = computed(() => stepOf(view.value, props.minuteStep, props.secondStep));
-const grid = computed(() => gridOf(view.value, hourCycle.value, step.value));
+const step = computed(() => stepOf(currentView.value, props.minuteStep, props.secondStep));
+const grid = computed(() => gridOf(currentView.value, shownHourCycle.value, step.value));
 const limits = computed<TimeLimits>(() => ({
   minTime: props.minTime,
   maxTime: props.maxTime,
   disabledTimes: props.disabledTimes,
 }));
 
-const empty = computed(() => value.value === null);
+const empty = computed(() => currentValue.value === null);
 // With no value, the face shows the reference time.
 const time = computed(() => {
-  const like = value.value ?? props.referenceDate;
+  const like = currentValue.value ?? props.referenceDate;
   return like === undefined ? new Temporal.PlainTime() : toPlainTime(like);
 });
-const numbers = computed(() => faceNumbers(view.value, hourCycle.value));
-const selectedNumber = computed(() => faceNumberOf(view.value, hourCycle.value, time.value));
+const numbers = computed(() => faceNumbers(currentView.value, shownHourCycle.value));
+const selectedNumber = computed(() =>
+  faceNumberOf(currentView.value, shownHourCycle.value, time.value),
+);
 const dayPeriod = computed(() => dayPeriodOf(time.value));
 const isDisabled = computed(() => props.disabled);
 const isReadOnly = computed(() => props.readOnly);
 
 function isNumberDisabled(number: TimeClockFaceNumber): boolean {
   const { first, step: gridStep } = grid.value;
-  const candidate = timeOfFaceNumber(view.value, hourCycle.value, time.value, number);
+  const candidate = timeOfFaceNumber(currentView.value, shownHourCycle.value, time.value, number);
   return (
-    (number.value - first) % gridStep !== 0 || !isTimeAllowed(candidate, view.value, limits.value)
+    (number.value - first) % gridStep !== 0 ||
+    !isTimeAllowed(candidate, currentView.value, limits.value)
   );
 }
 
@@ -323,7 +326,7 @@ function isDayPeriodDisabled(period: TimeClockDayPeriodValue): boolean {
 
 // The first value has the kind of the reference. With no reference, it is a plain time.
 function valueOfTime(newTime: Temporal.PlainTime): Value {
-  const like = value.value ?? props.referenceDate;
+  const like = currentValue.value ?? props.referenceDate;
   return like === undefined ? (newTime as Value) : withTime(like, newTime);
 }
 
@@ -349,10 +352,10 @@ function selectNumber(
   if (isDisabled.value || isReadOnly.value || isNumberDisabled(number)) {
     return null;
   }
-  const candidate = timeOfFaceNumber(view.value, hourCycle.value, time.value, number);
+  const candidate = timeOfFaceNumber(currentView.value, shownHourCycle.value, time.value, number);
   // A value that is out of the range stays when the user selects its own number again.
-  if (value.value !== null && candidate.equals(time.value)) {
-    return value.value;
+  if (currentValue.value !== null && candidate.equals(time.value)) {
+    return currentValue.value;
   }
   return changeTime(candidate, details);
 }
@@ -362,10 +365,11 @@ function stepNumber(places: number, details: TimeClockRootChangeEventDetails) {
     grid.value,
     selectedNumber.value.value,
     places,
-    (candidate) => !isNumberDisabled(faceNumber(view.value, hourCycle.value, candidate)),
+    (candidate) =>
+      !isNumberDisabled(faceNumber(currentView.value, shownHourCycle.value, candidate)),
   );
   if (next !== null) {
-    selectNumber(faceNumber(view.value, hourCycle.value, next), details);
+    selectNumber(faceNumber(currentView.value, shownHourCycle.value, next), details);
   }
 }
 
@@ -373,10 +377,11 @@ function selectEdge(edge: 'first' | 'last', details: TimeClockRootChangeEventDet
   const next = edgeValue(
     grid.value,
     edge,
-    (candidate) => !isNumberDisabled(faceNumber(view.value, hourCycle.value, candidate)),
+    (candidate) =>
+      !isNumberDisabled(faceNumber(currentView.value, shownHourCycle.value, candidate)),
   );
   if (next !== null) {
-    selectNumber(faceNumber(view.value, hourCycle.value, next), details);
+    selectNumber(faceNumber(currentView.value, shownHourCycle.value, next), details);
   }
 }
 
@@ -387,13 +392,13 @@ function selectDayPeriod(
   if (isDisabled.value || isReadOnly.value || isDayPeriodDisabled(period)) {
     return;
   }
-  if (value.value === null || period !== dayPeriod.value) {
+  if (currentValue.value === null || period !== dayPeriod.value) {
     changeTime(timeOfDayPeriod(time.value, period), details);
   }
 }
 
 function setView(newView: TimeClockView, details: TimeClockRootChangeEventDetails) {
-  if (newView === view.value) {
+  if (newView === currentView.value) {
     return;
   }
   emit('viewChange', newView, details);
@@ -411,7 +416,7 @@ function commit(details: TimeClockRootCommitEventDetails) {
   // A key commits the time that the face shows, also when the clock has no value. A press that
   // selected no time has nothing to commit.
   const committed =
-    value.value ??
+    currentValue.value ??
     (details.reason === REASONS.keyboard
       ? selectNumber(
           selectedNumber.value,
@@ -422,14 +427,14 @@ function commit(details: TimeClockRootCommitEventDetails) {
     return;
   }
   emit('valueCommitted', committed, details);
-  const next = nextView(view.value, props.granularity);
+  const next = nextView(currentView.value, props.granularity);
   if (next !== undefined) {
     setView(next, createChangeEventDetails(details.reason, details.event));
   }
 }
 
 const state = computed<TimeClockRootState>(() => ({
-  view: view.value,
+  view: currentView.value,
   disabled: isDisabled.value,
   readOnly: isReadOnly.value,
   dragging: dragging.value,
@@ -438,8 +443,8 @@ const state = computed<TimeClockRootState>(() => ({
 
 provide(TimeClockRootContext, {
   state,
-  view,
-  hourCycle,
+  view: currentView,
+  hourCycle: shownHourCycle,
   locale: computed(() => props.locale),
   step,
   disabled: isDisabled,

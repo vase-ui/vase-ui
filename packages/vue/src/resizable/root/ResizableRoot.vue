@@ -940,13 +940,13 @@ function reset() {
   setLayout(firstSnapshot);
 }
 
-const orientation = computed(() => props.orientation);
+const rootOrientation = computed(() => props.orientation);
 
 // The first client render must equal the server HTML, so the composable gives `false` until the
 // mount, and the server HTML has the `fine` size. The call comes also for a number, so a change of
 // the prop to an object needs no new call in `setup`.
 const isCoarse = useMediaQuery('(pointer: coarse)', {});
-const hitAreaSize = computed(() => {
+const pointerHitAreaSize = computed(() => {
   const size = props.hitAreaSize;
   return typeof size === 'number' ? size : isCoarse.value ? size.coarse : size.fine;
 });
@@ -1004,7 +1004,7 @@ function onKeydown(event: KeyboardEvent) {
 }
 
 provide(ResizableRootContext, {
-  orientation,
+  orientation: rootOrientation,
   direction,
   list,
   disabled: computed(() => props.disabled),
@@ -1014,7 +1014,7 @@ provide(ResizableRootContext, {
     props.dragStep === undefined ? undefined : parseSize(props.dragStep, measurementFor()),
   ),
   pushPanels: computed(() => props.pushPanels),
-  hitAreaSize,
+  hitAreaSize: pointerHitAreaSize,
   resizeMode: computed(() => props.resizeMode),
   pendingLayout,
   panels,
@@ -1034,7 +1034,7 @@ provide(ResizableRootContext, {
   expandPanel,
   resizePanel,
   resetPanel,
-  actions: { orientation, getLayout, setLayout, reset },
+  actions: { orientation: rootOrientation, getLayout, setLayout, reset },
 });
 
 const { element, elementProps } = useRenderElement('div', props, {
@@ -1058,8 +1058,8 @@ const { element, elementProps } = useRenderElement('div', props, {
 const edges = useEdges({
   enabled: () => props.dragEdges,
   disabled: () => props.disabled,
-  orientation,
-  hitAreaSize,
+  orientation: rootOrientation,
+  hitAreaSize: pointerHitAreaSize,
   panels,
   handles: registeredHandles,
   measurement,

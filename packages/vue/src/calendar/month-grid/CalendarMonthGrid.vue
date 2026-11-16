@@ -42,10 +42,10 @@ defineSlots<{
 const { state, view, monthCells, locale, multiselectable, selectsMonths } =
   useCalendarRootContext();
 
-const columns = computed(() => Math.max(1, Math.floor(props.columns)));
-provide(CalendarViewGridContext, { columns });
+const columnCount = computed(() => Math.max(1, Math.floor(props.columns)));
+provide(CalendarViewGridContext, { columns: columnCount });
 
-const rows = computed(() => getRows(monthCells.value, columns.value));
+const rows = computed(() => getRows(monthCells.value, columnCount.value));
 const label = computed(() => formatFieldName('month', locale.value));
 const ariaAfterHydration = useAriaAfterHydration();
 
