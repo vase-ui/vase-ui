@@ -94,10 +94,6 @@
   font-size: 0.875rem;
 }
 
-.DayPeriod + .DayPeriod {
-  border-left: 0;
-}
-
 /*
  * The face is the containing block of the hand, the numbers and the range input of the part. The
  * parts write the angle and the radius as variables and set no position, so each rule below places

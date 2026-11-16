@@ -59,6 +59,7 @@
 }
 
 .Segment {
+  field-sizing: content;
   margin: 0;
   padding: 0 0.125rem;
   border: 0;

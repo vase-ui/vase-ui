@@ -2116,6 +2116,9 @@ A family that Base UI documents in `docs/src/app/(docs)/react/utils/`, such as `
 - A state that only a pointer or a layout gives needs a row in `ATTRIBUTE_STATES` in the test.
 - A demo that hides a part at rest needs a step in `SHOW_EACH_PART` in the test. The step shows the part.
 - The test skips the duration and curve of a transition whose `transition-property` is `none`.
+- Give each date or time segment `field-sizing: content`. Use `field-sizing-content` in the Tailwind variant. An `<input>` cuts text that is wider than its box. The width that the `size` attribute gives is too narrow for `AM`, `PM` and `mm` in some engines and fonts.
+- The day period tests check all four borders with AM and PM selected. The range tests check that adjacent middle buttons touch. Both tests cover each variant and theme at 390 and 1280 pixels.
+- The segment case of the test fails when the text of a segment is wider than its box. It measures each demo as mounted, with one-digit and two-digit hours, with each day period, and empty. It has a row for the font of the site, a row for the fallback font and a row for the letter spacing of WCAG 1.4.12. It loads the font of the site from `docs/node_modules`.
 - On the page, a demo is inside `<DemoFrame>`. The frame has the class `vp-raw`, so the styles of the site do not reach the demo. Show the Vue file and the style sheet directly below it in one `code-group`. The frame and the code group then make one card.
 - A demo that Base UI has in two variants gives its Tailwind component to the slot `#tailwind` of the frame. The import name is the name of the CSS-module import and `Tailwind`, as `DemoButtonHeroTailwind`. The page shows the source of each variant in its own `<DemoSource variant="css-modules">` or `<DemoSource variant="tailwind">`, with one `code-group` in it. `<DemoSource>` shows only the source of the chosen variant. `docs/components/button.md` is the model.
 - The frame shows a select with the label "Styling method" only when it has both variants. The choice is for the whole site, and it stays in `localStorage`. The default is CSS Modules.
@@ -2139,6 +2142,7 @@ A family that Base UI documents in `docs/src/app/(docs)/react/utils/`, such as `
 - The popup case finds a trigger by `aria-haspopup`, or by the attribute of a Tooltip trigger or of a Navigation Menu trigger. `unmarkedTriggers` in that file has a rule for each other trigger. Add a rule for a new trigger that has no such attribute. Do not add an attribute to the demo.
 - The popup case turns off the axe rule `aria-hidden-focus`. The case thus does not see a demo that writes `aria-hidden` on a control inside a popup.
 - The popup case accepts three other reports of axe, each for one kind of element and not for the whole rule. `ACCEPTED` in that file has them. A row is for a state that a part sets on purpose. Do not add a row for a fault of a demo. Correct the demo.
+- For demos with no `upstream.json`, the popup case compares each option's `scrollWidth` and `clientWidth`. It also checks that the option text fits inside the option and the visible width of the list. Demos with an `upstream.json` keep the upstream sheets, so this check excludes their lists.
 - The popup case does not open a popup whose trigger has no attribute that the case knows and no rule in `unmarkedTriggers`, and it does not fail for such a popup. It runs in the light theme, as the mount case does.
 
 ### Thanks page

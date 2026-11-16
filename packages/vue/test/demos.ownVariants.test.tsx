@@ -1,8 +1,12 @@
 /// <reference types="vite/client" />
 import { afterEach, describe, expect, it } from 'vitest';
+import { page } from 'vitest/browser';
 import { h } from 'vue';
 import type { Component, CSSProperties } from 'vue';
-import { createRenderer, fireEvent, screen, waitFor } from '#test-utils';
+import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor, within } from '#test-utils';
+// The package has no dependency on the font of the site, so the path names the copy in
+// `docs/node_modules`.
+import '../../../docs/node_modules/@fontsource-variable/hanken-grotesk/index.css';
 import DemoFrame from '../../../docs/.vitepress/components/DemoFrame.vue';
 import '../../../docs/.vitepress/theme/tokens.css';
 import '../../../docs/.vitepress/theme/look.css';
@@ -141,6 +145,58 @@ function differences(cssModules: FrameLook, tailwind: FrameLook): string[] {
   });
 }
 
+const SEGMENT = 'input[role="spinbutton"]';
+const SITE_FONT = "'Hanken Grotesk Variable'";
+
+// Input scrollWidth excludes placeholders and adds two pixels in WebKit. Measure the text
+// against the content box.
+function segmentsWithCutText(frame: Element, state: string): string[] {
+  const ruler = document.createElement('span');
+  ruler.style.cssText = 'position: absolute; visibility: hidden; white-space: pre;';
+  frame.append(ruler);
+  const found = [...frame.querySelectorAll<HTMLInputElement>(SEGMENT)].flatMap((segment) => {
+    const style = getComputedStyle(segment);
+    // The `font` of a computed style is empty in Firefox when a part of it has no place in the
+    // shorthand, such as `tabular-nums`.
+    for (const name of [
+      'fontFamily',
+      'fontSize',
+      'fontStretch',
+      'fontStyle',
+      'fontVariantNumeric',
+      'fontWeight',
+      'letterSpacing',
+    ] as const) {
+      ruler.style[name] = style[name];
+    }
+    const text = segment.value || segment.placeholder;
+    ruler.textContent = text;
+    const textWidth = ruler.getBoundingClientRect().width;
+    const room =
+      segment.getBoundingClientRect().width -
+      parseFloat(style.paddingLeft) -
+      parseFloat(style.paddingRight) -
+      parseFloat(style.borderLeftWidth) -
+      parseFloat(style.borderRightWidth);
+    return textWidth > room + 0.5
+      ? [
+          `${state}: "${text}" of the segment ${segment.dataset.type} is ${textWidth.toFixed(2)} px wide in ${room.toFixed(2)} px`,
+        ]
+      : [];
+  });
+  ruler.remove();
+  return found;
+}
+
+async function pressInEachSegment(frame: Element, key: string, type?: string) {
+  for (const segment of frame.querySelectorAll<HTMLInputElement>(SEGMENT)) {
+    if (type === undefined || segment.dataset.type === type) {
+      await fireEvent.keyDown(segment, { key });
+    }
+  }
+  await flushMicrotasks();
+}
+
 function countDisabled(frame: Element) {
   return frame.querySelectorAll('[data-disabled]').length;
 }
@@ -221,7 +277,7 @@ describe.each(demos)('%s', (demo) => {
           )
       : () => h(Demo);
     // As on a page, the frame is in `.Layout`.
-    const { container, unmount } = await render(
+    const { container, unmount, user } = await render(
       h(
         'div',
         { class: 'Layout' },
@@ -229,7 +285,7 @@ describe.each(demos)('%s', (demo) => {
       ),
     );
     await SHOW_EACH_PART[demo]?.();
-    return { frame: container.querySelector('.demo-frame')!, unmount };
+    return { frame: container.querySelector<HTMLElement>('.demo-frame')!, unmount, user };
   }
 
   /** The differences between the looks of the two variants. `prepare` changes each frame first. */
@@ -259,7 +315,188 @@ describe.each(demos)('%s', (demo) => {
     }
   }
 
+  // The site shows the fallback font until its own font loads, and each has its own widths.
+  // The third row has the letter spacing of WCAG 1.4.12, which a reader can set.
+  it.each([
+    { name: 'the font of the site', family: SITE_FONT, letterSpacing: 'normal' },
+    { name: 'the fallback font', family: 'system-ui', letterSpacing: 'normal' },
+    { name: 'wide letter spacing', family: SITE_FONT, letterSpacing: '0.12em' },
+  ])('each segment has room for its text: $name', async ({ family, letterSpacing }) => {
+    await document.fonts.load(`14px ${family}`);
+    expect(document.fonts.check(`14px ${family}`)).toBe(true);
+    const found: string[] = [];
+    for (const variant of VARIANTS) {
+      const { frame, unmount } = await mount(variant, false);
+      Object.assign(frame.style, { fontFamily: family, letterSpacing });
+      found.push(...segmentsWithCutText(frame, `${variant}, as mounted`));
+      for (const hour of ['Home', 'End']) {
+        await pressInEachSegment(frame, hour, 'hour');
+        for (const step of ['first', 'second']) {
+          await pressInEachSegment(frame, 'ArrowUp', 'dayPeriod');
+          found.push(...segmentsWithCutText(frame, `${variant}, ${hour}, ${step} day period`));
+        }
+      }
+      // A number has at most four digits, and each press removes one.
+      for (let press = 0; press < 4; press += 1) {
+        await pressInEachSegment(frame, 'Delete');
+      }
+      found.push(...segmentsWithCutText(frame, `${variant}, empty`));
+      unmount();
+    }
+
+    expect(found).toEqual([]);
+  });
+
+  if (demo === 'date-picker/date-time') {
+    it.each(VARIANTS)('keeps the other part of the date and time: %s', async (variant) => {
+      const { frame, user } = await mount(variant, false);
+      const group = within(frame).getByRole('group', { name: 'Meeting time' });
+      const date = within(group).getByRole('group', { name: 'Date' });
+      const time = within(group).getByRole('group', { name: 'Time' });
+      const day = within(date).getByRole('spinbutton', { name: 'day' });
+      const minute = within(time).getByRole('spinbutton', { name: 'minute' });
+      const period = within(time).getByRole('spinbutton', { name: 'AM/PM' });
+      const values = (root: Element) =>
+        [...root.querySelectorAll<HTMLInputElement>(SEGMENT)].map((segment) => segment.value);
+
+      expect(group).toHaveTextContent('Value: 2026-11-18T09:30:00');
+      await fireEvent.keyDown(day, { key: 'ArrowUp' });
+      expect(group).toHaveTextContent('Value: 2026-11-19T09:30:00');
+      await fireEvent.keyDown(period, { key: 'ArrowUp' });
+      expect(group).toHaveTextContent('Value: 2026-11-19T21:30:00');
+
+      for (let press = 0; press < 2; press += 1) {
+        await fireEvent.keyDown(day, { key: 'Delete' });
+      }
+      expect(group).toHaveTextContent('Value: none');
+      expect(values(time)).toEqual(['9', '30', 'PM']);
+      day.focus();
+      await user.keyboard('21');
+      expect(group).toHaveTextContent('Value: 2026-11-21T21:30:00');
+
+      for (let press = 0; press < 2; press += 1) {
+        await fireEvent.keyDown(minute, { key: 'Delete' });
+      }
+      expect(group).toHaveTextContent('Value: none');
+      expect(values(date)).toEqual(['11', '21', '2026']);
+      minute.focus();
+      await user.keyboard('45');
+      expect(group).toHaveTextContent('Value: 2026-11-21T21:45:00');
+
+      const triggers = [...group.querySelectorAll<HTMLElement>('[aria-haspopup]')];
+      expect(triggers).toHaveLength(2);
+      await fireEvent.click(triggers[1]!);
+      await waitFor(() => {
+        expect(screen.getByRole('option', { name: '2:00 PM' })).toBeInTheDocument();
+      });
+      await fireEvent.click(screen.getByRole('option', { name: '2:00 PM' }));
+      expect(group).toHaveTextContent('Value: 2026-11-21T14:00:00');
+      await fireEvent.click(triggers[0]!);
+      await waitFor(() => {
+        expect(screen.getByRole('dialog', { name: 'Choose a meeting date' })).toBeInTheDocument();
+      });
+      await fireEvent.click(screen.getByRole('button', { name: /November 25, 2026/ }));
+      expect(group).toHaveTextContent('Value: 2026-11-25T14:00:00');
+    });
+  }
+
   describe.each(['light', 'dark'] as const)('%s', (theme) => {
+    if (demo === 'date-picker/date-time') {
+      it.each([390, 1280])('the date is left of the time at %i px', async (width) => {
+        const viewport = { width: window.innerWidth, height: window.innerHeight };
+        await page.viewport(width, 900);
+        document.documentElement.classList.toggle('dark', theme === 'dark');
+        try {
+          for (const variant of VARIANTS) {
+            const { frame, unmount } = await mount(variant, false);
+            const date = within(frame).getByRole('group', { name: 'Date' }).getBoundingClientRect();
+            const time = within(frame).getByRole('group', { name: 'Time' }).getBoundingClientRect();
+            expect(date.top, variant).toBe(time.top);
+            expect(date.right, variant).toBeLessThan(time.left);
+            unmount();
+          }
+        } finally {
+          await page.viewport(viewport.width, viewport.height);
+        }
+      });
+    }
+
+    if (demo === 'time-picker/clock' || demo === 'time-clock/hero' || demo === 'time-clock/step') {
+      it.each([390, 1280])('each day period has a whole border at %i px', async (width) => {
+        const viewport = { width: window.innerWidth, height: window.innerHeight };
+        await page.viewport(width, 900);
+        document.documentElement.classList.toggle('dark', theme === 'dark');
+        try {
+          for (const variant of VARIANTS) {
+            const { frame, unmount } = await mount(variant, false);
+            if (demo === 'time-picker/clock') {
+              await fireEvent.click(frame.querySelector<HTMLElement>('[aria-haspopup]')!);
+              await waitFor(() => {
+                expect(screen.getByRole('dialog')).toBeInTheDocument();
+              });
+            }
+            const buttons = ['AM', 'PM'].map((name) => screen.getByRole('button', { name }));
+            for (const selected of buttons) {
+              await fireEvent.click(selected);
+              expect(selected).toHaveAttribute('aria-pressed', 'true');
+              for (const button of buttons) {
+                const style = getComputedStyle(button);
+                for (const side of ['top', 'right', 'bottom', 'left']) {
+                  expect(
+                    parseFloat(style.getPropertyValue(`border-${side}-width`)),
+                    `${variant}: ${button.textContent} ${side} border`,
+                  ).toBeGreaterThan(0);
+                }
+              }
+            }
+            unmount();
+          }
+        } finally {
+          await page.viewport(viewport.width, viewport.height);
+        }
+      });
+    }
+
+    if (demo.startsWith('range-calendar/') || demo === 'date-range-picker/hero') {
+      it.each([390, 1280])('the selected range has no gaps at %i px', async (width) => {
+        const viewport = { width: window.innerWidth, height: window.innerHeight };
+        await page.viewport(width, 900);
+        document.documentElement.classList.toggle('dark', theme === 'dark');
+        try {
+          for (const variant of VARIANTS) {
+            const { frame, unmount } = await mount(variant, false);
+            if (demo === 'date-range-picker/hero') {
+              await fireEvent.click(frame.querySelector<HTMLElement>('[aria-haspopup]')!);
+              await waitFor(() => {
+                expect(screen.getByRole('dialog')).toBeInTheDocument();
+              });
+            }
+            let pairs = 0;
+            for (const row of document.querySelectorAll('tr')) {
+              const middle = [...row.querySelectorAll('button[data-range-middle]')];
+              for (const [index, button] of middle.entries()) {
+                const next = middle[index + 1];
+                if (!next) {
+                  continue;
+                }
+                pairs += 1;
+                expect(
+                  Math.abs(
+                    button.getBoundingClientRect().right - next.getBoundingClientRect().left,
+                  ),
+                  `${variant}: ${button.textContent} to ${next.textContent}`,
+                ).toBeLessThanOrEqual(0.1);
+              }
+            }
+            expect(pairs).toBeGreaterThan(0);
+            unmount();
+          }
+        } finally {
+          await page.viewport(viewport.width, viewport.height);
+        }
+      });
+    }
+
     it.each(
       subsets(states?.attributes ?? []).map((present) => ({
         present,

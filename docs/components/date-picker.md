@@ -83,7 +83,7 @@ With no value, a new value has the kind that `granularity` and `referenceDate` g
 
 ### Date and time
 
-With a `granularity` that has a time, or a value with a time, the field shows the time segments and a press on a day keeps the time. `DatePicker.TimeField` is a time field for the same value, in the popup. The popup stays open after a selection, so use `DatePicker.Close` to close it. `DatePicker.TimeField` needs a picker whose value has a time.
+Place a date picker beside a [Time Picker](/components/time-picker). Each picker updates one part of the combined `Temporal.PlainDateTime`. Keep separate refs for incomplete fields, so an empty segment leaves the other picker intact.
 
 <DemoFrame>
   <DemoDatePickerDateTime />
@@ -113,6 +113,8 @@ With a `granularity` that has a time, or a value with a time, the field shows th
 :::
 
 </DemoSource>
+
+With time granularity or a value with a time, the field shows time segments, and a calendar selection keeps the time. `DatePicker.TimeField` edits that time in the popup, which stays open after selection until you use `DatePicker.Close`.
 
 ### Month picker
 

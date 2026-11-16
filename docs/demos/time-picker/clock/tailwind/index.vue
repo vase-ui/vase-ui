@@ -32,7 +32,7 @@ const dayPeriodClass =
               <TimeField.Segment
                 v-if="segment.editable"
                 :segment="segment"
-                class="px-0.5 text-center caret-transparent outline-0 placeholder:text-neutral-500 focus:bg-neutral-950 focus:text-white focus:placeholder:text-neutral-400 dark:placeholder:text-neutral-400 dark:focus:bg-white dark:focus:text-neutral-950 dark:focus:placeholder:text-neutral-600"
+                class="field-sizing-content px-0.5 text-center caret-transparent outline-0 placeholder:text-neutral-500 focus:bg-neutral-950 focus:text-white focus:placeholder:text-neutral-400 dark:placeholder:text-neutral-400 dark:focus:bg-white dark:focus:text-neutral-950 dark:focus:placeholder:text-neutral-600"
               />
               <TimeField.Literal
                 v-else
@@ -73,10 +73,7 @@ const dayPeriodClass =
                 <span aria-hidden="true" class="text-xl font-bold">:</span>
                 <TimeClock.ViewTrigger view="minute" :class="[buttonClass, triggerClass]" />
                 <TimeClock.DayPeriod value="am" :class="[buttonClass, dayPeriodClass]" />
-                <TimeClock.DayPeriod
-                  value="pm"
-                  :class="[buttonClass, dayPeriodClass, 'border-l-0']"
-                />
+                <TimeClock.DayPeriod value="pm" :class="[buttonClass, dayPeriodClass]" />
               </div>
               <TimeClock.Face
                 class="relative size-56 cursor-pointer rounded-full border border-neutral-950 bg-neutral-100 select-none [--radius:5.5rem] has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-neutral-950 data-disabled:cursor-default data-readonly:cursor-default dark:border-white dark:bg-neutral-800 dark:has-focus-visible:outline-white"

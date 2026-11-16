@@ -41,6 +41,14 @@ const sources = import.meta.glob<string>(
   { query: '?raw', import: 'default', eager: true },
 );
 
+// A family with a record of its Base UI demos keeps the style sheets of Base UI. The other demos
+// have style sheets that Vase UI writes.
+const familiesWithBaseUiSheets = new Set(
+  Object.keys(import.meta.glob('../../../docs/demos/*/upstream.json')).map(
+    (path) => /([^/]+)\/upstream\.json$/.exec(path)![1],
+  ),
+);
+
 // A demo has a popup when a file of its folder names a `Portal` part.
 const demos = Object.entries(modules)
   .map(([path, { default: Demo }]) => ({
@@ -249,6 +257,32 @@ function expectNoViolationsInOpenState(element: Element) {
   });
 }
 
+/**
+ * The options of the lists of `root` whose text is outside the box of the option, or outside the
+ * part of the list that shows. The case does not compare `scrollWidth` of a list with its
+ * `clientWidth`, because a scrollbar that takes room changes both.
+ */
+function optionsWithCutText(root: Element): string[] {
+  return [...root.querySelectorAll('[role="listbox"] [role="option"]')].flatMap((option) => {
+    const list = option.closest('[role="listbox"]')!;
+    const range = document.createRange();
+    range.selectNodeContents(option);
+    const text = range.getBoundingClientRect();
+    const optionBox = option.getBoundingClientRect();
+    const shownLeft = list.getBoundingClientRect().left + list.clientLeft;
+    const left = Math.max(optionBox.left, shownLeft);
+    const right = Math.min(optionBox.right, shownLeft + list.clientWidth);
+    // Less than half a pixel shows no cut.
+    return option.scrollWidth > option.clientWidth ||
+      text.left < left - 0.5 ||
+      text.right > right + 0.5
+      ? [
+          `"${option.textContent.trim()}" is ${text.width.toFixed(2)} px wide in ${(right - left).toFixed(2)} px`,
+        ]
+      : [];
+  });
+}
+
 function mount(render: Render, variant: string, Demo: Component) {
   // Do not write JSX here. The dependency scan of Vite cannot parse JSX in a file that has
   // `import.meta.glob`.
@@ -264,7 +298,7 @@ describe.each(demos.map((demo) => [`${demo.name} (${demo.variant})`, demo] as co
   (_title, { name, variant, Demo }) => {
     const { render } = createRenderer();
 
-    it('opens each popup with no Vue warning and no axe violation', async () => {
+    it('opens each popup with no Vue warning, no axe violation and no cut option', async () => {
       // A path is the index of the trigger at each depth. The case opens each path in a new mount,
       // and it adds the triggers of the popup at the end of a path as new paths.
       const paths: number[][] = [];
@@ -278,6 +312,8 @@ describe.each(demos.map((demo) => [`${demo.name} (${demo.variant})`, demo] as co
         0,
       );
 
+      const hasOwnSheet = !familiesWithBaseUiSheets.has(name.slice(0, name.indexOf('/')));
+      const cut: string[] = [];
       for (const path of paths) {
         const view = await mount(render, variant, Demo);
         const frame = view.container.querySelector<HTMLElement>('.demo-frame')!;
@@ -307,6 +343,9 @@ describe.each(demos.map((demo) => [`${demo.name} (${demo.variant})`, demo] as co
         await expectNoViolationsInOpenState(frame);
         for (const portal of portals().filter((element) => !frame.contains(element))) {
           await expectNoViolationsInOpenState(portal);
+          if (hasOwnSheet) {
+            cut.push(...optionsWithCutText(portal));
+          }
         }
 
         if (path.length < 3) {
@@ -318,6 +357,7 @@ describe.each(demos.map((demo) => [`${demo.name} (${demo.variant})`, demo] as co
         // Without a flush before the next mount, the file takes about a quarter more time.
         await flushMicrotasks();
       }
+      expect(cut).toEqual([]);
     });
   },
 );

@@ -63,6 +63,7 @@
 }
 
 .Segment {
+  field-sizing: content;
   margin: 0;
   padding: 0 0.125rem;
   border: 0;
@@ -266,9 +267,7 @@
 }
 
 .Grid {
-  width: 100%;
   border-collapse: collapse;
-  table-layout: fixed;
 }
 
 .Weekday {
