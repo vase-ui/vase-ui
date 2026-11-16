@@ -135,7 +135,10 @@ export interface CalendarRootController {
   focus: (date?: DateValue) => void;
   /** What the grid shows. A root with no views shows `day`. */
   view: ComputedRef<CalendarView>;
-  /** Whether the grid can show months and years. A calendar with `visibleDuration` cannot. */
+  /**
+   * Whether the grid can show months and years. A root with no views and a calendar with
+   * `visibleDuration` show days only.
+   */
   hasViews: ComputedRef<boolean>;
   /** Whether a press on a month selects it, because the value is a year and month. */
   selectsMonths: ComputedRef<boolean>;
