@@ -785,7 +785,11 @@ describe('<TimePicker.Root />', () => {
   });
 
   describe('VUE-112: a disabled fieldset', () => {
-    it('disables the trigger, the list and its items in a disabled fieldset', async () => {
+    // A picker that has no field reads the fieldset from its trigger.
+    it.each([
+      { name: 'a picker with a field', hasField: true },
+      { name: 'a picker that has no field', hasField: false },
+    ])('disables the trigger, the list and its items of $name', async ({ hasField }) => {
       const onValueChange = vi.fn();
       await render(() => (
         <fieldset disabled>
@@ -795,30 +799,13 @@ describe('<TimePicker.Root />', () => {
             defaultValue={time('14:30')}
             onValueChange={onValueChange}
           >
-            <TimePicker.Field>
-              <TimeField.Input />
-            </TimePicker.Field>
+            {hasField ? (
+              <TimePicker.Field>
+                <TimeField.Input />
+              </TimePicker.Field>
+            ) : null}
             <TimePicker.Trigger data-testid="trigger">Open</TimePicker.Trigger>
             <TimePicker.List step={60} data-testid="list" />
-          </TimePicker.Root>
-        </fieldset>
-      ));
-
-      expect(screen.getByTestId('trigger')).toHaveAttribute('data-disabled');
-      expect(screen.getByTestId('list')).toHaveAttribute('aria-disabled', 'true');
-      expect(listItem('15:00')).toHaveAttribute('aria-disabled', 'true');
-
-      // A person can press an item that has `aria-disabled`, so the press is real and not refused.
-      await userEvent.click(listItem('15:00'), { force: true });
-
-      expect(onValueChange).not.toHaveBeenCalled();
-    });
-
-    it('disables the trigger of a picker that has no field', async () => {
-      await render(() => (
-        <fieldset disabled>
-          <TimePicker.Root locale="en-US" defaultValue={time('14:30')}>
-            <TimePicker.Trigger data-testid="trigger">Open</TimePicker.Trigger>
           </TimePicker.Root>
         </fieldset>
       ));
@@ -826,6 +813,13 @@ describe('<TimePicker.Root />', () => {
       await waitFor(() => {
         expect(screen.getByTestId('trigger')).toHaveAttribute('data-disabled');
       });
+      expect(screen.getByTestId('list')).toHaveAttribute('aria-disabled', 'true');
+      expect(listItem('15:00')).toHaveAttribute('aria-disabled', 'true');
+
+      // A person can press an item that has `aria-disabled`, so the press is real and not refused.
+      await userEvent.click(listItem('15:00'), { force: true });
+
+      expect(onValueChange).not.toHaveBeenCalled();
     });
   });
 
