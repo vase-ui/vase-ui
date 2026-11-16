@@ -26,7 +26,7 @@ const shownInputsOfField = new WeakMap<
  * the control that the new control replaces, and the new input then stays last.
  */
 export function useFieldInput(): (input: HTMLElement | null) => void {
-  const { validation, reaches, setValidityData } = useFieldRootContext();
+  const { validation, setValidityData } = useFieldRootContext();
   // With no field, `validation.inputRef` drops each write, so there is nothing to keep.
   if (setValidityData === NOOP) {
     return NOOP;
@@ -40,7 +40,7 @@ export function useFieldInput(): (input: HTMLElement | null) => void {
   // render depend on the ref, so the setter reads this variable and reads no ref.
   let ownInput: HTMLInputElement | null = null;
   const element = shallowRef<HTMLInputElement | null>(null);
-  const { isHeld, shown } = useKeepAliveState(element, reaches);
+  const { isHeld, shown } = useKeepAliveState();
 
   function release() {
     const index = ownInput ? inputs.indexOf(ownInput) : -1;

@@ -24,12 +24,11 @@ describe('useRegisteredLabelId', () => {
 
   const Test = defineComponent(
     (props: { labels: 'old' | 'both' | 'new' }) => {
-      const target = shallowRef<HTMLElement | null>(null);
-      const { labelId, labelRoot } = useLabelId(target);
+      const { labelId, labelRoot } = useLabelId();
 
       return () => (
         <>
-          <div ref={target} data-testid="target" aria-labelledby={labelId.value} />
+          <div data-testid="target" aria-labelledby={labelId.value} />
           {props.labels !== 'new' && (
             <Label key="old" id="old-label" root={labelRoot}>
               Old
@@ -80,12 +79,11 @@ describe('useRegisteredLabelId', () => {
     it('names the last label of a branch again when KeepAlive shows the branch', async () => {
       const visible = shallowRef(true);
       const App = defineComponent(() => {
-        const target = shallowRef<HTMLElement | null>(null);
-        const { labelId, labelRoot } = useLabelId(target);
+        const { labelId, labelRoot } = useLabelId();
 
         return () => (
           <>
-            <div ref={target} data-testid="target" aria-labelledby={labelId.value} />
+            <div data-testid="target" aria-labelledby={labelId.value} />
             <KeepAlive>{visible.value ? <Labels root={labelRoot} /> : null}</KeepAlive>
           </>
         );
@@ -106,12 +104,11 @@ describe('useRegisteredLabelId', () => {
     it('names the label that KeepAlive shows when two kept labels replace each other', async () => {
       const shown = shallowRef<'a' | 'b'>('a');
       const App = defineComponent(() => {
-        const target = shallowRef<HTMLElement | null>(null);
-        const { labelId, labelRoot } = useLabelId(target);
+        const { labelId, labelRoot } = useLabelId();
 
         return () => (
           <>
-            <div ref={target} data-testid="target" aria-labelledby={labelId.value} />
+            <div data-testid="target" aria-labelledby={labelId.value} />
             <KeepAlive>
               <Label key={shown.value} id={`label-${shown.value}`} root={labelRoot}>
                 Label
@@ -150,12 +147,11 @@ describe('useRegisteredLabelId', () => {
         { props: ['root'] },
       );
       const App = defineComponent(() => {
-        const target = shallowRef<HTMLElement | null>(null);
-        const { labelId: rootLabelId, labelRoot } = useLabelId(target);
+        const { labelId: rootLabelId, labelRoot } = useLabelId();
 
         return () => (
           <>
-            <div ref={target} data-testid="target" aria-labelledby={rootLabelId.value} />
+            <div data-testid="target" aria-labelledby={rootLabelId.value} />
             <KeepAlive>{visible.value ? <Branch root={labelRoot} /> : null}</KeepAlive>
           </>
         );
@@ -197,12 +193,11 @@ describe('useRegisteredLabelId', () => {
         { props: ['root'] },
       );
       const App = defineComponent(() => {
-        const target = shallowRef<HTMLElement | null>(null);
-        const { labelId: rootLabelId, labelRoot } = useLabelId(target);
+        const { labelId: rootLabelId, labelRoot } = useLabelId();
 
         return () => (
           <>
-            <div ref={target} data-testid="target" aria-labelledby={rootLabelId.value} />
+            <div data-testid="target" aria-labelledby={rootLabelId.value} />
             <KeepAlive>{visible.value ? <Branch root={labelRoot} /> : null}</KeepAlive>
           </>
         );
@@ -224,12 +219,11 @@ describe('useRegisteredLabelId', () => {
       const visibleA = shallowRef(true);
       const visibleB = shallowRef(true);
       const App = defineComponent(() => {
-        const target = shallowRef<HTMLElement | null>(null);
-        const { labelId, labelRoot } = useLabelId(target);
+        const { labelId, labelRoot } = useLabelId();
 
         return () => (
           <>
-            <div ref={target} data-testid="target" aria-labelledby={labelId.value} />
+            <div data-testid="target" aria-labelledby={labelId.value} />
             <KeepAlive>
               {visibleA.value ? (
                 <Label key="a" id="label-a" root={labelRoot}>
@@ -269,12 +263,11 @@ describe('useRegisteredLabelId', () => {
 
   describe('a label that mounts while KeepAlive holds its branch', () => {
     const Root = defineComponent((_props, { slots }) => {
-      const target = shallowRef<HTMLElement | null>(null);
-      const { labelId, labelRoot } = useLabelId(target);
+      const { labelId, labelRoot } = useLabelId();
 
       return () => (
         <div>
-          <div ref={target} data-testid="target" aria-labelledby={labelId.value} />
+          <div data-testid="target" aria-labelledby={labelId.value} />
           {slots.default?.(labelRoot)}
         </div>
       );

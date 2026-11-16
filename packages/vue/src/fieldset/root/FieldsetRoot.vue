@@ -41,7 +41,7 @@ const parentDisabled = useFieldsetRootContext(true)?.disabled;
 const isDisabled = computed(() => (parentDisabled?.value ?? false) || props.disabled);
 const state = computed<FieldsetRootState>(() => ({ disabled: isDisabled.value }));
 
-const { labelId, labelRoot, getAriaLabelledBy } = useLabelId(() => element.value);
+const { labelId, labelRoot, getAriaLabelledBy } = useLabelId();
 
 provide(FieldsetRootContext, {
   legendId: labelId,

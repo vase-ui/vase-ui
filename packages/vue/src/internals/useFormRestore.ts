@@ -3,6 +3,7 @@ import type { Ref } from 'vue';
 import { addEventListener } from '../common/addEventListener';
 import { dispatchTakeEvents, isTextControl } from '../common/hydration';
 import { ownerWindow } from '../common/owner';
+import { isInHeldBranch } from './useKeepAliveState';
 
 /**
  * Calls `onRestore` at each `pageshow` event of the window of `input` that does not come from the
@@ -20,7 +21,7 @@ export function useFormRestore(
 ): void {
   // `KeepAlive` takes the input out of the document. The flag is a source of the `watch`, so its
   // cleanup removes the listener of the window.
-  const isDeactivated = shallowRef(false);
+  const isDeactivated = shallowRef(isInHeldBranch());
   onDeactivated(() => {
     isDeactivated.value = true;
   });

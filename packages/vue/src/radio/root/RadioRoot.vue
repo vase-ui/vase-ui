@@ -199,7 +199,7 @@ if (!group && checked.value) {
 }
 
 const rootId = useVaseUiId();
-const controlId = useLabelableId({ id: () => props.id, element: () => element.value });
+const controlId = useLabelableId({ id: () => props.id });
 const hiddenInputId = computed(() => (props.nativeButton ? undefined : controlId.value));
 
 const ariaLabelledBy = useAriaLabelledBy(
@@ -278,7 +278,7 @@ if (group) {
 
   // `KeepAlive` takes the input out of the document and calls no `ref` setter. The input must not
   // stay in the group and in the field: the field would validate an input that the user cannot reach.
-  const { isHeld, shown } = useKeepAliveState(() => element.value, group.reaches);
+  const { isHeld, shown } = useKeepAliveState();
 
   function releaseRegisteredInput() {
     releaseInput?.();
@@ -287,8 +287,9 @@ if (group) {
 
   onDeactivated(releaseRegisteredInput);
 
-  // The `ref` setter of a radio that mounts in a held branch registers the input.
-  watch(isHeld, (held) => {
+  // The `ref` setter of a radio that mounts in a held branch registers the input. `isHeld` is
+  // already `true` then, so the input is a source of the `watch`.
+  watch([isHeld, inputElement], ([held]) => {
     if (held) {
       releaseRegisteredInput();
     }

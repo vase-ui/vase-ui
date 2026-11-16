@@ -125,7 +125,6 @@ const setFocused = useSetFieldFocused(isDisabled, () => element.value);
 
 useLabelableId({
   id: () => (inputInsidePopup.value ? props.id : undefined),
-  element: () => element.value,
 });
 const triggerId = computed(() =>
   inputInsidePopup.value ? (props.id ?? store.select('id')) : props.id,

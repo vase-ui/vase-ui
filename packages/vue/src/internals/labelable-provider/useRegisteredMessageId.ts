@@ -7,19 +7,13 @@ import { useRegisteredId } from './useRegisteredId';
  * A part that describes the control calls it in `setup`, such as a description or an error.
  * The control then has the `id` in its `aria-describedby`.
  * An empty or absent `id` registers nothing.
- * @param element The element of the part.
  */
-export function useRegisteredMessageId(
-  id: MaybeRefOrGetter<string | undefined>,
-  element?: MaybeRefOrGetter<Element | null | undefined>,
-): void {
-  const { registerMessageId, reaches } = useLabelableContext();
+export function useRegisteredMessageId(id: MaybeRefOrGetter<string | undefined>): void {
+  const { registerMessageId } = useLabelableContext();
   const source = Symbol();
 
   useRegisteredId(
     () => toValue(id) || undefined,
     (getId) => registerMessageId(source, getId),
-    element,
-    reaches,
   );
 }

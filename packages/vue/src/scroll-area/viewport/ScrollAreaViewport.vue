@@ -123,6 +123,7 @@ import { useTimeout } from '../../common/useTimeout';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { isInHeldBranch } from '../../internals/useKeepAliveState';
 import { getFiniteAnimations } from '../../utils/getFiniteAnimations';
 import { normalizeScrollOffset } from '../../utils/scrollEdges';
 import { styleDisableScrollbar } from '../../utils/styles';
@@ -423,7 +424,7 @@ onMounted(setHoveringIfHovered);
 
 // `KeepAlive` takes the element of a deactivated viewport out of the document. The element then has
 // no layout, so the observer and the timers stop until the viewport is active again.
-const isDeactivated = shallowRef(false);
+const isDeactivated = shallowRef(isInHeldBranch());
 
 onDeactivated(() => {
   isDeactivated.value = true;

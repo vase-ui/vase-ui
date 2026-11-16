@@ -97,6 +97,7 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { isInHeldBranch } from '../../internals/useKeepAliveState';
 import { getCssDimensions } from '../../utils/getCssDimensions';
 import { stopEvent } from '../../utils/popups/event';
 import { useFloatingRootStore } from '../../utils/popups/floating-root/useFloatingRootStore';
@@ -527,7 +528,7 @@ function openHoveredTrigger() {
   hoverProps.onMousemove?.(createHoverEvent('mousemove', trigger));
 }
 
-let isDeactivated = false;
+let isDeactivated = isInHeldBranch();
 
 onMounted(openHoveredTrigger);
 

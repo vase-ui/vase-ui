@@ -63,8 +63,6 @@ export interface TabsRootContext {
    * it to the composite root as `hasActiveItem`.
    */
   hasChosenTab: ComputedRef<boolean>;
-  /** Whether an id reference of the root reaches `element`. */
-  reaches(element: Element): boolean;
 }
 
 export const TabsRootContext: InjectionKey<TabsRootContext> = Symbol();

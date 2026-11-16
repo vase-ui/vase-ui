@@ -45,7 +45,7 @@ const state = computed<FieldDescriptionState>(() => ({
   disabled: (fieldRootContext.disabled.value ?? false) || fieldItemContext.disabled.value,
 }));
 
-useRegisteredMessageId(descriptionId, () => element.value);
+useRegisteredMessageId(descriptionId);
 
 const { element, elementProps } = useRenderElement('p', props, {
   state,

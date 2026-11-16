@@ -8,19 +8,15 @@ import { useKeepAliveElementRef } from './useKeepAliveElementRef';
 describe('useKeepAliveElementRef', () => {
   const { render } = createRenderer();
 
-  // A trigger and a part in a held branch. The part renders a `div` or a `span`, and gives its
-  // element to `element`. `mounted` is whether the part mounts with the branch.
-  function createTriggerAndPart({ mounted = true } = {}) {
+  // A part in a held branch. The part renders a `div` or a `span`, and gives its element to
+  // `element`. `mounted` is whether the part mounts with the branch.
+  function createPartInBranch({ mounted = true } = {}) {
     const isSpan = shallowRef(false);
-    const trigger = shallowRef<HTMLElement | null>(null);
     const element: ShallowRef<HTMLElement | null> = shallowRef(null);
     const Part = defineComponent(() => {
-      const setElement = useKeepAliveElementRef(
-        (value) => {
-          element.value = value;
-        },
-        () => trigger.value,
-      );
+      const setElement = useKeepAliveElementRef((value) => {
+        element.value = value;
+      });
       const ref = (value: unknown) => setElement(value as HTMLElement | null);
       return () =>
         isSpan.value ? (
@@ -33,20 +29,12 @@ describe('useKeepAliveElementRef', () => {
       renderBranch: (part) => part,
       mounted,
     });
-    const TriggerAndPart = defineComponent({
-      setup: () => () => (
-        <div>
-          <button ref={trigger}>trigger</button>
-          <HeldBranch />
-        </div>
-      ),
-    });
-    return { TriggerAndPart, isSpan, hide, mountWhileHeld, show, element };
+    return { HeldBranch, isSpan, hide, mountWhileHeld, show, element };
   }
 
   it('gives null while KeepAlive holds the part, and the element again at the activation', async () => {
-    const { TriggerAndPart, hide, show, element } = createTriggerAndPart();
-    await render(<TriggerAndPart />);
+    const { HeldBranch, hide, show, element } = createPartInBranch();
+    await render(<HeldBranch />);
     const part = screen.getByTestId('part');
     expect(element.value).toBe(part);
 
@@ -62,8 +50,8 @@ describe('useKeepAliveElementRef', () => {
   });
 
   it('gives a new element that a render makes while KeepAlive holds the part only at the activation', async () => {
-    const { TriggerAndPart, isSpan, hide, show, element } = createTriggerAndPart();
-    await render(<TriggerAndPart />);
+    const { HeldBranch, isSpan, hide, show, element } = createPartInBranch();
+    await render(<HeldBranch />);
 
     await hide();
     isSpan.value = true;
@@ -79,10 +67,10 @@ describe('useKeepAliveElementRef', () => {
   });
 
   it('gives no element of a part that mounts while KeepAlive holds its branch until the activation', async () => {
-    const { TriggerAndPart, mountWhileHeld, show, element } = createTriggerAndPart({
+    const { HeldBranch, mountWhileHeld, show, element } = createPartInBranch({
       mounted: false,
     });
-    await render(<TriggerAndPart />);
+    await render(<HeldBranch />);
 
     await mountWhileHeld();
 
@@ -95,9 +83,9 @@ describe('useKeepAliveElementRef', () => {
   });
 
   it('gives the element of a part of an app that mounts in a detached element', async () => {
-    const { TriggerAndPart, element } = createTriggerAndPart();
+    const { HeldBranch, element } = createPartInBranch();
     const container = document.createElement('div');
-    const app = createApp({ render: () => <TriggerAndPart /> });
+    const app = createApp({ render: () => <HeldBranch /> });
     recordVueWarnings(app);
     app.mount(container);
     onTestFinished(() => app.unmount());

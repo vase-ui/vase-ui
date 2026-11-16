@@ -63,7 +63,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, NavigationMenuPopupState>;
 }>();
 
-const { open, transitionStatus, popupElement, rootRef, prevTriggerElementRef } =
+const { open, transitionStatus, popupElement, prevTriggerElementRef } =
   useNavigationMenuRootContext();
 const positioning = useNavigationMenuPositionerContext();
 const direction = useDirection();
@@ -100,7 +100,7 @@ const originSideStyle = computed<CSSProperties | undefined>(() => {
 const { element, elementProps } = useRenderElement('nav', props, {
   state,
   stateAttributesMapping: popupTransitionStateMapping,
-  ref: useKeepAliveElementRef(createElementSetter(popupElement), () => rootRef.value),
+  ref: useKeepAliveElementRef(createElementSetter(popupElement)),
   props: (attrs) => [
     {
       id: popupId.value,

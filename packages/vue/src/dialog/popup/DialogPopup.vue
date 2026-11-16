@@ -53,7 +53,7 @@ export interface DialogPopupProps
 </script>
 
 <script setup lang="ts">
-import { computed, toRaw } from 'vue';
+import { computed } from 'vue';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -135,7 +135,7 @@ function handleKeydown(event: KeyboardEvent) {
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: useKeepAliveElementRef(setPopupElement, () => toRaw(store.state).activeTriggerElement),
+  ref: useKeepAliveElementRef(setPopupElement),
   stateAttributesMapping: dialogStateAttributesMapping,
   props: (attrs) => [
     store.select('popupProps'),

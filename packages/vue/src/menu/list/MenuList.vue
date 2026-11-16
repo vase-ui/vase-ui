@@ -84,9 +84,7 @@ function getListProps(attrs: Record<string, any>) {
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: filterList
-    ? undefined
-    : useKeepAliveElementRef(setListElement, () => toRaw(store.state).activeTriggerElement),
+  ref: filterList ? undefined : useKeepAliveElementRef(setListElement),
   props: (attrs) => (filterList ? filterList.props(attrs) : getListProps(attrs)),
 });
 

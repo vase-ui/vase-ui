@@ -68,7 +68,6 @@ import {
 } from '../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../internals/types';
 import { useVaseUiId } from '../internals/useBaseUiId';
-import { isInTreeOf } from '../internals/useKeepAliveState';
 import { useRenderElement } from '../internals/useRenderElement';
 import { useValueChanged } from '../internals/useValueChanged';
 import { CheckboxGroupContext } from './CheckboxGroupContext';
@@ -147,7 +146,7 @@ const parent = useCheckboxGroupParent({
 
 // The group is the control of the field and takes its name from `aria-labelledby`, so `Field.Label`
 // must not point `for` at one checkbox of the group.
-useLabelableId({ id: null, element: () => element.value });
+useLabelableId({ id: null });
 
 const fieldControlId = useVaseUiId(() => props.id);
 
@@ -248,7 +247,6 @@ provide(CheckboxGroupContext, {
   validation,
   registerControlId,
   reset,
-  reaches: (target) => isInTreeOf(element.value, target),
 });
 
 const ariaAfterHydration = useAriaAfterHydration();
