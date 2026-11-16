@@ -80,7 +80,7 @@ The site imports the built package. Run `pnpm build` before `pnpm docs:typecheck
 - When a release of `vue-component-meta` has the same correction, run `pnpm patch-remove vue-component-meta@3.3.14`. Then install that release. The test of `pnpm test:parity` for the exposed members of a generic SFC fails when the release lacks the correction.
 - `@vue/language-core` has a pnpm patch in `patches`. Without the patch, the package changes `//` in an attribute value of a component into a comment in the generated code. The type check of that template then fails.
 - The patch is the correction of [vuejs/language-tools#6241](https://github.com/vuejs/language-tools/pull/6241). When a release of `@vue/language-core` has the correction, run `pnpm patch-remove @vue/language-core@3.3.14`. Then install the `vue-tsc` and `vue-component-meta` of that release. The sample `docs/examples/type-check/AbsoluteUrlAttribute.vue` fails `pnpm docs:typecheck` when the release lacks the correction.
-- `@vitest/browser-playwright` has a pnpm patch in `patches`. Without the patch, a real click, key press or drag that is the first browser command of a test file can fail. The provider finds the frame of the test by its name in the frame list of Playwright. That list can still hold the removed frame of the previous test file, and the command then fails with `Frame was detached` ([vitest-dev/vitest#11876](https://github.com/vitest-dev/vitest/issues/11876)). The list can also hold the new frame before Playwright knows its name, and the command then fails with `Cannot find "vitest-iframe" on the page` ([vitest-dev/vitest#11928](https://github.com/vitest-dev/vitest/issues/11928)). The patch finds the frame from the iframe element of the page.
+- `@vitest/browser-playwright` has a pnpm patch in `patches`. Without the patch, a real click, key press or drag that is the first browser command of a test file can fail ([vitest-dev/vitest#11876](https://github.com/vitest-dev/vitest/issues/11876), [vitest-dev/vitest#11928](https://github.com/vitest-dev/vitest/issues/11928)). The patch finds the frame from the iframe element of the page.
 - When a release of `@vitest/browser-playwright` corrects the two issues, run `pnpm patch-remove @vitest/browser-playwright@5.1.0`. Then install that release. For a release without the corrections, make the patch again. pnpm refuses an install when a patch names a version that the dependencies do not have.
 - `rolldown-plugin-dts` has a pnpm patch in `patches`. `tsdown` uses it to bundle the declarations. Without the patch, it does not keep a `/// <reference lib="…" />` line at the start of a bundled declaration file. A date or time entry point then loses the line that gives a consumer the `Temporal` types.
 - The patch adds `lib` to the expression `REFERENCE_RE` of `rolldown-plugin-dts`, which keeps only `path` and `types`. When a release of `tsdown` uses a `rolldown-plugin-dts` that keeps the `lib` line, run `pnpm patch-remove rolldown-plugin-dts@0.30.1`. Then install that release of `tsdown`. The step "Check the declarations that name Temporal" of `pnpm check:package` fails when the release lacks the correction.
@@ -152,17 +152,12 @@ Each family has a file `parity/families/<family>.json`. It has six keys. `pnpm p
 - A row can name one change reason instead: `{ "entry": "Root", "changeEventReason": "none", "reason": "…" }`. It accepts a reason that the `ChangeEventReason` type of the part has and Base UI lacks. `pnpm parity:check` reports the row as stale when Base UI has that reason, or when the type does not have it.
 - A `types.md` has no row for a native attribute that the React part reads, such as `disabled` of Button. The prop of the Vase UI part then needs a `surfaceAdditions` row.
 - A `types.md` can also have a prop row for a native attribute that the React part does not read. An example is `aria-valuetext` of `Progress.Root`. Do not declare that prop: the attribute goes to the element through `$attrs`, with its type from `HTMLAttributes`. Give the row a `not-applicable` exception row. The part can give such an attribute a default, as `NumberField.Input` does for `aria-roledescription`. The part sets the default before the attributes of the consumer, so the attribute of the consumer wins.
-- A `returnTypeDifferences` row names one function: `{ "entry": "useDirection", "returns": "ComputedRef<TextDirection>", "reason": "…" }`.
-- `entry` is the title of the function in the `types.md`. `returns` is the return type of the Vase UI function, as `pnpm parity:check` prints it.
-- `pnpm parity:check` fails on a difference when no row gives the Vase UI type and no exception row names the entry. It also fails on a stale row.
-- A row is stale when Vase UI returns the type that Base UI documents. It is also stale when the extract has no return value for the entry. It is also stale when an exception row names the entry and `returns` is not the type that Vase UI returns.
 - The extract reads the rows of the surface only from the `types.md` of the docs folder. Without that folder, `pnpm parity:check` does not compare the props, emits, slots, exposed members and return types of the family.
 - A family also names the folder of its context, where upstream has that folder under `internals`: `packages/react/src/internals/direction-context/**`. `pnpm parity:check` then checks the files of the context as part of the family that provides it.
 
 Each family also has an extract, `parity/families/<family>.upstream.json`. It holds the facts of Base UI at `matchedCommit`: the source files, the type tests, the test cases and the rows of each `types.md`. It also holds the `<Types…>` tags of each `page.mdx`, in their sequence. The nearest heading above a tag can be a heading of level 2 to 6 that ends with white space and `[New]` or `[Preview]`. The row of the page then has that word in `referenceBadges`, by the name of the tag. A page with no such heading has no `referenceBadges` key.
 
 - `pnpm parity:extract` writes the extract. Do not edit it.
-- Run the command after each change of `upstreamPaths` or `matchedCommit`. Commit the extract in the same pull request as the family file.
 - CI has no copy of Base UI, so `pnpm parity:check` reads the committed extract.
 
 A Base UI commit that changes a path of a family is queued for the family while `matchedCommit` is older than the commit. The parity page shows this state. To mirror a queued commit in a family:
@@ -186,12 +181,6 @@ Vase UI can add a component that Base UI does not have. This is a component of V
 
 - The component is not a port, so no file of Base UI is its source. The sources are the standards in `standard`, the code and documentation of Vue, and the libraries that Vase UI depends on.
 - The API follows the [API convention](#api-convention), as in each other component. The entry point exports the four things of [Entry points](#entry-points).
-- Each list has at least one item, and no item twice.
-- `<name>` is the name of the folder of the component, `packages/vue/src/<name>`.
-- A record and a family file cannot have the same name. A record cannot have the name of a component in `components` of `parity/upstream.json`, because that component is a port.
-- `pnpm parity:check` reads `packages/vue/src/<name>/index.ts`. It fails when the file does not exist.
-- It also fails when a name in the record has no export of its kind, and on a type that has no property and is not a union of strings. The API reference leaves out such a name.
-- It also fails when a title matches more than one export. The API reference then takes the first match.
 - Add the record in the pull request that adds the `index.ts` of the component.
 
 ## Layout and names
@@ -229,7 +218,6 @@ The package is `@vase-ui/vue`. It is ESM only.
 - `internals`, `utils` and `common` are not entry points.
 - A folder with a name that starts with `unstable-` is an entry point, but the barrel does not include it.
 - A folder whose `index.ts` starts with the Temporal reference line, `/// <reference lib="esnext.temporal" preserve="true" />`, is an entry point, but the barrel does not include it. Its declarations name `Temporal` types, so a consumer needs TypeScript 6.0, or `skipLibCheck`.
-- A project that imports only the barrel then needs no `Temporal` types. `pnpm check:package` fails when a declaration that the barrel reaches names `Temporal`. It also fails when an entry point reaches a declaration that names `Temporal` and no declaration that it reaches starts with the reference line.
 
 The entry point of a family exports:
 
@@ -487,7 +475,6 @@ Rules:
 - The ref of a component with no `expose` also gives access to its props. `resolveElement` compares `element` with the prop of that name in `$props`. When the two are the same value, it reads `$el`.
 - The SFC compiler adds an empty `expose()` call to a `<script setup>` component with no `defineExpose`. It adds no call when it compiles the template inline, as a production build does. The rule above gives the two builds the same element.
 - A prop that takes an element accepts `MaybeRefOrGetter<Element | ComponentPublicInstance | null>` and upstream's other forms. Examples are `anchor`, `container`, `initialFocus`, `finalFocus` and `collisionBoundary`.
-- Find an element by its `nodeType`. Do not use `instanceof`.
 
 ### `mergeProps`
 
@@ -558,7 +545,6 @@ Rules:
 - Declare a required prop that can be `null` as `x: T | null`, such as `value` of `Progress.Root`. The SFC compiler then writes `required: true`, and Vue accepts `null` with no warning.
 - The props interface of a part can extend an `Omit` of the props interface of another part. The other interface can be in another `.vue` file and can have a type parameter. The SFC compiler reads the kept props, and each keeps its JSDoc. `AlertDialogRoot.vue` is the example.
 - Do not give a constant of `setup` the name of a prop. The SFC compiler then reports that name as a constant, and `pnpm parity:check` does not find the prop. `ProgressLabel.vue` declares the prop `id`, so its constant is `labelId`.
-- Write the default of a prop that a `types.md` row documents as a literal in `withDefaults`: `delay: 600`. `pnpm parity:check` compares the text of the default, so a constant such as `OPEN_DELAY` fails the check.
 - A native attribute that a part must watch is a declared prop. The Vue documentation says that `$attrs` is not reactive. `Avatar.Image` declares `src`, `srcset`, `sizes`, `crossorigin` and `referrerpolicy` for this reason.
 - Declare the prop of an `aria-*` attribute in camel case: `ariaLabel` for `aria-label`. Vue gives the attribute `aria-label` to that prop.
 - Do not omit the `aria-*` key from the attributes type that the interface extends. vue-tsc keeps an `aria-*` name of a template as it is, because its `htmlAttributes` option names `aria-*`. Without the key, `<Switch.Root aria-label="Wi-Fi">` fails the type check of a consumer that sets `strictTemplates`.
@@ -702,7 +688,6 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - ESLint refuses `toSorted`, `toReversed` and `toSpliced` in the source of the package. It does not refuse `with`, because the source calls the method `with` of `Temporal`.
 - Do not use `using` or `Symbol.dispose`.
 - The scripts and the tests are not in the built package. A file that runs in Node.js, such as a script or a `.node.test` file, can use each built-in of the Node.js version in `.node-version`. A test file that runs in the browsers can use only a built-in that each of the three engines of Playwright has. In both cases, the `lib` of the project must have the types of the built-in.
-- `erasableSyntaxOnly` is on. Do not write an `enum`, a parameter property or a namespace that has a value. A namespace of types is correct.
 
 ### ESLint
 
@@ -740,7 +725,6 @@ A disable comment has the form `// eslint-disable-next-line <rule> -- <reason>`.
 - Each part is an SFC with `<script setup lang="ts">`.
 - The exported types of a part are in a `<script lang="ts">` block of the same file.
 - Logic is in `.ts` composables.
-- `packages/vue/src` has no TSX. Tests use TSX.
 - `vue` is a peer dependency. The package can have only two run-time dependencies: `@floating-ui/vue` and `@floating-ui/utils`.
 - `motion-v` is a development dependency of the package and of the docs. The source does not import it. `pnpm check:package` fails when a public entry imports it.
 - `temporal-polyfill` is a development dependency of the package and of the docs. The tests and the site load it, and the source does not import it. `pnpm check:package` fails when a public entry imports it.
@@ -761,21 +745,7 @@ A disable comment has the form `// eslint-disable-next-line <rule> -- <reason>`.
 
 ### Vapor mode
 
-The source obeys rules that keep it compatible with the Vapor mode of Vue. ESLint blocks these items in `packages/vue/src`:
-
-| Blocked                               | Use                                                 |
-| ------------------------------------- | --------------------------------------------------- |
-| `getCurrentInstance`                  | `provide` and `inject`, props, or an exposed value  |
-| `cloneVNode`                          | `as` or the `#render` slot                          |
-| A call of a slot in script            | The slot in the template                            |
-| `$el`                                 | `resolveElement` or the exposed `element`           |
-| `$parent`                             | `provide` and `inject`                              |
-| Custom directives                     | A composable                                        |
-| `v-memo`                              | No replacement                                      |
-| The Options API and `defineComponent` | `<script setup lang="ts">`                          |
-| `document`, `window`, `navigator`     | `ownerDocument(element)` and `ownerWindow(element)` |
-| `instanceof` with a DOM class         | `nodeType`, or the class of `ownerWindow(element)`  |
-| A `.tsx` source file                  | An SFC or a `.ts` composable                        |
+The source obeys rules that keep it compatible with the Vapor mode of Vue. ESLint blocks the forms that break them in `packages/vue/src`, and each report gives the form to use.
 
 If a line must break a rule, put a disable comment on that line and give the reason.
 
@@ -808,7 +778,6 @@ A function component that calls `h` is not an SFC, so Vapor mode does not compil
 - The client render has the script element in the place of the server element, and Vue does not compare `innerHTML`. The script element thus needs no `data-allow-mismatch`.
 - The text of a script is the export `script` of the file `prehydrationScript.min.ts` in the folder of the part. The part imports it by a relative path: `import { script } from './prehydrationScript.min'`.
 - The build changes that import into a subpath import with the folder of the part, such as `#prehydration/tabs/indicator`. The pattern `#prehydration/*` in `imports` of `packages/vue/package.json` resolves it.
-- The `browser` condition of the pattern gives `internals/prehydrationScript.stub`, whose text is empty. A client bundle of a consumer then does not hold the text. `pnpm check:package` fails when a client bundle holds the text, or when the server HTML in Node lacks it.
 - Do not write the subpath import in the source. A test job has no `dist`, and Vite cannot resolve the import.
 - `imports` also has `#test-utils`. When a package has `imports`, Vite resolves each `#` specifier from that field, and it does not use the `paths` of `tsconfig.build.json` for that specifier.
 - Add `data-allow-mismatch` to each element that the script changes, with the category of each change, such as `style`. Vue accepts a class, style or attribute mismatch only on the element that has the attribute with that category.
@@ -902,7 +871,7 @@ The label of a root:
 - No element has that id then. An `aria-labelledby` with no valid IDREF gives no name ([step 2B of the name computation](https://www.w3.org/TR/accname-1.2/#computation-steps)). Each of those roots thus has the name that it has with no `aria-labelledby`, as in Base UI.
 - axe reports such an `aria-labelledby` as `aria-valid-attr-value` in its `incomplete` list, and not as a violation. `expectNoAxeViolations` reads only the violations.
 - A user agent ignores an ID reference that matches no element ([WAI-ARIA 1.2, 8.6.1](https://www.w3.org/TR/wai-aria-1.2/#mapping_additional_relations_error_processing)).
-- The other rule is no `aria-labelledby` until the label registers, as in Base UI. The assumption is better. With the other rule, the server HTML of a `progressbar` or a `meter` that has a label has no name. These roles require a name (WAI-ARIA 1.2: [`progressbar`](https://www.w3.org/TR/wai-aria-1.2/#progressbar), [`meter`](https://www.w3.org/TR/wai-aria-1.2/#meter)). axe reports such a root with no name as a serious violation, `aria-progressbar-name` or `aria-meter-name`. A page with no client code never mounts the root, so that root never gets its name.
+- The assumption gives the server HTML of a `progressbar` or a `meter` that has a label its name (`VUE-89`). A page with no client code gets that name too. These roles require a name (WAI-ARIA 1.2: [`progressbar`](https://www.w3.org/TR/wai-aria-1.2/#progressbar), [`meter`](https://www.w3.org/TR/wai-aria-1.2/#meter)). Without a name, axe reports a serious violation, `aria-progressbar-name` or `aria-meter-name`.
 - `Fieldset.Root` and `Slider.Root` have the role `group`, which does not require a name. The assumption gives the server HTML of each group the name of its label, when the label has no `id` prop.
 - An `aria-labelledby` of the consumer on the root wins when it is not blank, because the attributes of the consumer merge last.
 - Two labels with no `id` in one root get the same id.
@@ -1468,7 +1437,7 @@ The delay group is in `src/utils/popups/delay-group`. The popups of a group shar
 - A press in a frame in the positioner element of a popup records the number of that popup. The frame element takes the place of the target (`BUG-5410`).
 - The path of an event at the document has no node of a closed shadow root. Thus the capture listeners of the popup element record the number too (`VUE-79`).
 - `open` of the context of a tree node is the open state of the last DOM update. The popup above reads it in the event in which the child closes, and it must still see the child as open. Thus the writer of the context sets `open` in a `watch` with `flush: 'post'`. With a getter that reads the state at the moment of the read, the listener of the child runs first and closes the child. The popup above then finds no child that blocks it, and it closes in the same press.
-- Base UI ignores Escape for a short time after `compositionend`: 5 ms in WebKit, and a 0 ms timer in the other engines. Only WebKit sends `compositionend` before the `keydown` that ends a composition. The other engines send that `keydown` first, with `isComposing`, and the handler checks it. A window there drops an Escape press that comes before its timer (`BUG-6158`). Thus the window exists only in WebKit.
+- Base UI ignores Escape for a short time after `compositionend` in each engine. Vase UI has that window only in WebKit, the one engine that sends `compositionend` before the `keydown` that ends a composition (`BUG-6158`).
 
 ### Scroll lock
 
@@ -1502,7 +1471,7 @@ The scroll lock stops the scroll of the page under a modal popup. The code is in
 - These triggers keep the popup open when the release comes within 8 px of the point of the press on each axis (`VUE-68`). The popup opens in the frame after the press, and a layout change in that frame can move the trigger. The rule also applies to a trigger that did not move, when the release is more than 5 px off it. `isReleaseAtPressPoint` of `src/utils/popups/isReleaseAtPressPoint.ts` compares the two events. The listener that `Menu.Trigger` adds after a hover open has no press, so it does not make this check.
 - An item of `Menu`, `Select`, `Combobox` or `Autocomplete` does not activate for a release within 8 px of the point of the press that opened the popup, on each axis (`VUE-84`). The open can put an item under a pointer that does not move. A layout change can move the trigger, and `alignItemWithTrigger` puts the selected item of `Select`, or its first item, under the pointer. A `Combobox` item commits a release with no delay, so this is also true for a short click.
 - An item of a context menu does not activate for a release within 8 px of the point where the menu opened, on each axis (`VUE-84`). By default, the popup starts 2 px right of that point and 5 px above it. Its first item can thus start a few pixels from the pointer. The item gives the point in `initialCursorPointRef` of `ContextMenuRootContext` to `isReleaseAtPressPoint`. Base UI ignores only a release within 1 px of that point.
-- `PRESS_POINT_TOLERANCE` of `isReleaseAtPressPoint.ts` is the only value of that distance. A move of 8 px or less on each axis is not a drag. `Select.Item` of Base UI takes 8 px of vertical travel as the start of a drag across its items. The value is less than half of the 24 px target of WCAG 2.2. A pointer that moves 8 px or less from the center of an item of that size stays on that item. A release reports no pointer type, so one value applies to a mouse and to a pen. Do not use the 5 px of `isMouseWithinBounds` for it. That value is the margin of Base UI around the trigger.
+- `PRESS_POINT_TOLERANCE` of `isReleaseAtPressPoint.ts` is the only value of that distance: 8 px on each axis. Its comment gives the reason for the value. A release reports no pointer type, so one value applies to a mouse and to a pen. Do not use the 5 px of `isMouseWithinBounds` for it. That value is the margin of Base UI around the trigger.
 - A submenu reads `triggerPressRef` of its parent menu. `Select.Trigger` clears the event at the release, because a `Select` item also takes a later drag while the popup stays open. `useAriaCombobox` clears `openPressRef` at the next `mousedown` in the window. The trigger opens its popup in the frame after the press, so that press can end before the write. `useAriaCombobox` removes its `mousedown` listener and clears `openPressRef` when its scope ends and when `KeepAlive` deactivates the root.
 
 ### Popup list navigation
@@ -1987,8 +1956,8 @@ Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>. Without a root the trigg
 - Full keyboard access does not put a link in the order of the Tab key. A case that moves the focus to a link with the Tab key thus fails in WebKit on macOS.
 - On Linux, Chromium keeps a block of shared memory for each module that a new test frame loads again, until a garbage collection frees it. A page that holds about 16,000 blocks loses its connections. Vitest then reports `Browser connection was closed`, and the job fails with no failed case.
 - On Linux, Vitest collects the garbage of Chromium after a test file only when the temporary folder has less free space than `VITEST_CHROMIUM_GC_DISK_THRESHOLD_GB` gives, in GB. The default is 4, and a CI runner has about 85 GB free. CI sets the variable to `1000000`, so Vitest collects the garbage after each test file. Firefox and WebKit ignore the variable.
-- In Firefox, `test/setup.ts` runs the browser command `collectGarbage` before the first test of each file. The command calls `page.requestGC()` of Playwright, which runs a full garbage collection and a cycle collection in Firefox. Without it, Firefox collects the garbage of the earlier test files of the page late. One cycle collection then visits millions of objects and stops the page for some seconds. A test that runs at that time takes those seconds.
-- On CI, each test file of a WebKit job adds about 23 MB to the used memory of the runner until the job ends. A WebKit job of 520 test files thus uses about 14 GB of the 16 GB of its runner. `collectGarbage` does not free this memory: while Playwright is attached, the inspector of WebKit keeps the global object of the removed frame of each file.
+- In Firefox, `test/setup.ts` runs the browser command `collectGarbage` before the first test of each file. Without it, a late cycle collection of Firefox stops the page for some seconds, in the test that runs at that time.
+- On CI, each test file of a WebKit job adds about 23 MB to the used memory of the runner until the job ends. The runner has 16 GB. `collectGarbage` does not free this memory.
 - Vitest keeps the modules that it transforms for Node in `node_modules/.vitest-cache` at the root of the repository, and the next run uses them again. These are the modules of the Node tests and the modules that `renderOnServer` imports. A CI job starts with no such folder, so it transforms each module. To measure the time of a test as CI does, add `--no-fsModuleCache`: `pnpm test:webkit --no-fsModuleCache`.
 - The project `vapor` runs the browser tests in Chromium in a Vapor app. `createTestApp` of `test/testApp.ts` makes the app with `createVaporApp` and `vaporInteropPlugin`. The root of the app is the Vapor component `test/VaporRoot.vue`.
 - The project needs Vue 3.6, and the package develops on Vue 3.5. `pnpm test` thus leaves the project out. The job `test-vue-rc` installs the release candidate and runs the project `vapor`.
@@ -2155,10 +2124,6 @@ Where a case has no better form, it differs from the Base UI case only by these 
 | `fireEvent.touchStart`, `touchMove` or `touchEnd` with a plain object in `touches`. A browser refuses it.  | `fireTouch.start`, `move` or `end` of `#test-utils` with the same lists. See [Test helpers](#test-helpers).                                                                                                                                               |
 | A `setPointerCapture` call that must capture the pointer                                                   | A real pointer: `userEvent` of `vitest/browser`. `ScrollAreaScrollbar.test.tsx`, "track click by axis" is the model.                                                                                                                                      |
 | `waitFor` on a state that a timer of the part ends, directly after an event                                | A direct assertion after the awaited event. `fireEvent` resolves after the Vue flush, in the same task, so the timer cannot end the state first.                                                                                                          |
-| `waitFor(callback, { timeout })` or `waitFor(callback, { interval })`                                      | `waitFor(callback)`. The limit is 180 frames of the page.                                                                                                                                                                                                 |
-| `waitFor` with a `queryBy` query that must give `null`                                                     | A direct assertion where the absence is true when the awaited action resolves. Otherwise a wait on an element that the case got before the action, and then the direct assertion. See [Test rules](#test-rules).                                          |
-| `waitFor` with a `queryBy` query that must give an element                                                 | The same wait with the `getBy` query of that name. The `getBy` query throws while the element is absent.                                                                                                                                                  |
-| A `findBy` query with options for its wait, or `vi.waitFor(callback)`                                      | The `findBy` query with no such options, or `waitFor(callback)` of `#test-utils`.                                                                                                                                                                         |
 | An engine condition (`isWebKit`, `platform.engine.gecko`, a Blink check)                                   | No change                                                                                                                                                                                                                                                 |
 | A case with no engine condition that fails in one engine, because the source has a branch for that engine  | No condition. In that engine, the case asserts what the branch does, in place of the Base UI assertion. It reads the same flag of `platform` as the source. The CI of Base UI runs its browser tests only in Chromium.                                    |
 | A `beforeEach` hook that skips each case by the user agent of Safari                                       | Remove the hook when each case passes in WebKit. State the removal in the body of the pull request.                                                                                                                                                       |
@@ -2172,7 +2137,6 @@ Where a case has no better form, it differs from the Base UI case only by these 
 | `fireEvent.mouseMove` with no movement that must move the highlight of a list                              | The same call with `movementX: 1`. In WebKit, a list ignores a `mousemove` with no movement.                                                                                                                                                              |
 | A spy in a `render` element that counts the renders of a part                                              | A `.test.vue` fixture that calls the spy in the `#render` slot. In TSX, each render of a parent gives the part new slots, and Vue renders the part again.                                                                                                 |
 | `reactMajor < 19` in a condition                                                                           | Always `false`                                                                                                                                                                                                                                            |
-| An `eslint-disable` comment that ESLint reports                                                            | Remove it                                                                                                                                                                                                                                                 |
 
 - TypeScript cannot infer the type of the parameter of a `v-slots` function.
 - A render function of Base UI can return nothing, because the case only records the state. The slot of a Vue part must return an element: `<div {...props} />`. Without an element, the part gives a warning.
@@ -2195,7 +2159,6 @@ Where a case has no better form, it differs from the Base UI case only by these 
 - A case that upstream skips with a `skip()` call in its body runs when it passes in each engine. Remove the call, and state the removal in the body of the pull request.
 - A ported case can pass while the behavior in its title is broken. Add assertions that fail when that behavior breaks. State them in the body of the pull request. When the source has a branch for one engine, an added assertion for that branch reads the same flag of `platform`.
 - A case that fires its own `load` and `error` events on a real `<img>` holds the events of the browser. A capture listener on `document` stops each event that has `isTrusted`. See `holdBrowserImageEvents` in `avatar/image/AvatarImage.test.tsx`.
-- ESLint reports an `eslint-disable` comment that names a rule of a plugin that this repository does not have. It also reports a comment that disables nothing.
 - `#test-utils` is `packages/vue/test/index.ts`. It replaces the `#test-utils` and `@mui/internal-test-utils` of upstream.
 - The counterpart of an upstream file of test components, such as `toast/utils/test-utils.tsx`, is a `.ts` file with the same name. It exports each component of the upstream file from an SFC with a `.test.vue` name. The lint refuses a `.tsx` file in `src` that is not a test. See [Test helpers](#test-helpers).
 - `toErrorDev` and `toWarnDev` are custom matchers of upstream. For `.not.toErrorDev()`, assert that the spy got no call.
@@ -2259,7 +2222,6 @@ This section is the contract of the test helpers. Each helper must obey it. The 
 - The error of a failed `findBy` query has the stack of the call, so Vitest shows the line of the test. The query runs in a frame callback, and the stack of that callback has no line of the test. `vi.defineHelper` gives the error the stack of the call.
 - `waitFor` counts the frames of the browser, also under fake timers. Fake timers replace `requestAnimationFrame`, and a fake frame comes only when the test moves the clock.
 - A helper file that `test/index.ts` loads imports `waitFor` from `waitFor.ts`, and `screen` and `within` from `queries.ts`, by a relative path, because `#test-utils` is that index. A test file imports them from `#test-utils`.
-- Only `queries.ts` imports `screen`, `within` and `queries` of `@testing-library/dom`.
 - After each test in a browser, `test/setup.ts` waits for one 0 ms timer of the browser. The wait comes after each unmount and before the check of the messages. The next test then starts in a new task. A 0 ms timer that the last test set in the task in which the test ended ran before the new task. The browser delays a timer by 4 ms or more when timers nest more than five deep. A delayed timer that the last test set in an earlier task can run in the next test. Without the wait, a test that ends in a `ResizeObserver` callback gives the next test the loop error of the browser. Fake timers do not replace this timer.
 - After each test in which the page got a trusted `pointerover` event, `test/setup.ts` moves the real pointer of the browser to a point outside the page. The move comes before the wait for the timer. A press in a frame of the page also gives the page that event, on the frame element. Without the move, the pointer stays where the test left it. An element that a later test renders under the pointer then gets hover events from the browser. Chromium and Firefox send them in two frames or fewer, and WebKit sends them later.
 - After each test in a browser, `test/setup.ts` waits for the end of each command of `userEvent` of `vitest/browser` that the test started. This wait comes before the pointer move, because a command can put the pointer in the page. A test that times out in a command ends while the browser still does the command. Without the wait, the keys and the pointer moves of the command reach the next test. A key that the command holds, such as `{Shift>}`, also stays down in the next test. Before each test, Vitest releases only the keys of the commands that ended.
@@ -2381,9 +2343,7 @@ A case that acts between the server render and the hydration calls `hydrateAfter
 - Give a DOM matcher an element, not a Vitest locator.
 - Put one assertion in each `waitFor`.
 - In a test of `packages/vue`, do not give a wait a limit in seconds. A busy machine can stall the page for longer than the limit, and a correct part then fails the case. The tests of `fixtures/nuxt` run Playwright from Node, and their waits keep a limit of time.
-- In a test of `packages/vue`, use `waitFor`, `screen` and `within` of `#test-utils`. Do not use the waits of `@testing-library/dom`, `vi.waitFor`, `vi.waitUntil`, `expect.poll` or `expect.element`. `pnpm lint` refuses them.
-- Do not call a `queryBy` or `queryAllBy` query in the callback of `waitFor`. The absence is also true before the element appears, so the wait can end before the change. `pnpm lint` refuses the call.
-- Where the absence is true when the awaited action resolves, assert it directly. Advance the timers or flush first. Assert a state that a timer ends directly after the timer advances. Where a case waits for a first measurement, wait for a value that the measurement writes. Then assert the absence.
+- Where the absence of an element is true when the awaited action resolves, assert it directly. Advance the timers or flush first. Assert a state that a timer ends directly after the timer advances. Where a case waits for a first measurement, wait for a value that the measurement writes. Then assert the absence.
 - To wait until an element goes, get the element before the action. After the action, call `await waitFor(() => { expect(element).not.toBeInTheDocument(); })`. Then assert the absence with the query.
 - A part can remove an element in a timer or in a frame. `flushMicrotasks()` does not wait for a timer or a frame, so wait for the removal with the held element. An example is a popup that closes after `blur()`: the part closes it in a 0 ms timer.
 - The action can be in a helper. `closeWith` of `test/detachedTriggersConformanceTests.tsx` calls `blur()` for the focus interaction. Read each awaited helper before you assert an absence directly after it.
@@ -2408,7 +2368,7 @@ A case that acts between the server render and the hydration calls `hydrateAfter
 - A case that counts the work that a module cache saves uses a key that no earlier run used. `combobox/root/utils/useFilter.test.tsx`, "makes no new collator when the collator options stay the same", is the model.
 - Vue mounts a vnode one time. Vitest makes the table of `it.each`, `it.for` or `describe.each` one time, when it collects the file. It makes a constant of the module, or of a `describe` callback, in the same way. Each run of a case, and each case that renders such a constant, thus gets the same vnode.
 - On a page that Vue hydrated, a second mount of a vnode hydrates each component of the vnode against the elements of the first mount. Vue then warns of a hydration mismatch in a case that hydrates nothing.
-- Do not put a vnode in a row of a table or in such a constant. Write a function that returns the vnode. Call the function in the case. `ListboxSeparator.test.tsx` is the model. `pnpm lint` refuses a JSX element, a fragment or a call of `h` in an array that a call of `each` or `for` contains, outside a function. It also refuses one as the value of such a constant. It does not read the test file of a single-file component, because Vue runs its `<script setup>` at each mount.
+- Do not put a vnode in a row of a table or in such a constant. Write a function that returns the vnode. Call the function in the case. `ListboxSeparator.test.tsx` is the model.
 - A type test can keep a vnode in a row or in a constant, because no test runner runs it.
 - A test file that needs a Vue custom element defines the element one time, at the top of the file. `customElements.define` throws for a name that is already defined, and `--repeats` runs each case again in the same page. `number-field/scrub-area-cursor/NumberFieldScrubAreaCursor.test.tsx` is the model.
 - A test fails when Vue warns in it, or when a call to `console.warn` or `console.error` reaches the console. `test/setup.ts` makes this check when the test ends.
@@ -2416,7 +2376,7 @@ A case that acts between the server render and the hydration calls `hydrateAfter
 - Do not assert the error `Hydration completed but contains mismatches.` Vue writes it one time for each page. A case that expects a hydration mismatch removes that error from the result of `takeReportedMessages()`. It asserts each other message.
 - A case that asserts that code handles a rejection adds a listener for `unhandledrejection` to `window` before the action. After the rejection, the case rejects a promise of its own with no handler. Then it waits for the report of that promise. The browser reports such rejections in their sequence, so each earlier report has come by then. While a case has such a listener, Vitest writes each report to the console. Assert the result of `takeReportedMessages()`. The case `toast/promise` of `test/demos.test.tsx` is the model.
 - A part that throws in `setup` makes `render` reject with the error. Vue then warns `Unhandled error during execution of setup function`, and the test expects that warning. A prerelease of Vue 3.6 also writes `Active effect was not restored correctly` to the console, and `test/reportedMessages.ts` drops that one message.
-- Put such a case last in its file. In Vue 3.5.12, a `setup` that throws leaves the current instance set. A later case of the file can then get a Vue warning about a slot. In a Vapor app, the root then takes that instance as its parent. A part of a later case can thus find the context of the earlier case.
+- Put such a case last in its file. In Vue 3.5.12, a `setup` that throws leaves the current instance set. A later case of the file can then get a Vue warning about a slot. In a Vapor app, a part of a later case can also find the context of the earlier case.
 - A case that fails only in the project `vapor` gets the option `{ fails: isVaporApp }` and a comment that gives the cause. `#test-utils` exports `isVaporApp`. Vitest fails such a case when it passes, so the fix also removes the option. Do not use the modifier `it.fails`, because `pnpm parity:check` refuses it.
 - After a `Maximum recursive updates exceeded` error, Vue runs no post-flush job in a later case of the file. Put a case that can give that error last in its file.
 - A mock of a composable keeps the contract of the composable. The mock of `useImageLoadingStatus` in `avatar/fallback/AvatarFallback.test.tsx` gives `'idle'` until the mount, as the composable does.
@@ -2505,8 +2465,6 @@ A case that acts between the server render and the hydration calls `hydrateAfter
 - A popup that is open at hydration gets its position after the two ticks of `hydrate`. Hydrate it by hand and wait for the position, as in [Test helpers](#test-helpers).
 - A test of a popup that stays mounted also changes each option that restarts work, such as `disableAnchorTracking`, while the popup is closed. It asserts that `autoUpdate` has no new call.
 - A test of a position pass that ends after the popup closed asserts that the closed popup has `opacity: 0` and no transform. After the next open and one `nextTick()`, it asserts the same, and then it waits for the place of that open.
-- `pnpm parity:check` reads the test files in `packages/vue` with the TypeScript parser. On `it`, `test` and `describe` it accepts only these modifiers: `skipIf`, `runIf`, `each`, `for`, `skip` and `todo`.
-- It refuses `.only`. It also refuses each other modifier, such as `it.concurrent` or `test.extend(…)`, and a table in a tagged template. It cannot read these forms. Write a table as an array.
 
 ### Exception rows
 
@@ -2533,15 +2491,6 @@ The rows of a family are in the `exceptions` list of its family file. A row name
 | `test`, `engine`, `link`, `waitsOn` | See the table of the kinds.                                                                      | The kind needs it.                        |
 | `reason`                            | The reason.                                                                                      | Always.                                   |
 
-The thing that a row names decides which kinds the row can have:
-
-| The row names                              | Kinds                                    |
-| ------------------------------------------ | ---------------------------------------- |
-| A source file                              | `not-applicable`, `waits-on`             |
-| A type test, or a suite call               | `replaced`, `not-applicable`, `waits-on` |
-| A test file, a `describe` block, or a case | Each of the four kinds                   |
-| An entry of a `types.md`, or a prop row    | `not-applicable`, `waits-on`             |
-
 | Kind             | Meaning                                                                                                                  | The row gives                                                                                                                                                                              |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `replaced`       | Another Vase UI test covers the thing.                                                                                   | `test`: the path of that test.                                                                                                                                                             |
@@ -2559,7 +2508,6 @@ The thing that a row names decides which kinds the row can have:
 - A `types.md` can repeat an entry of another family. Give that entry a `not-applicable` row. The reason names the family that ports the entry. An example is the `types.md` of Radio Group, which repeats the entries of Radio.
 - A `waits-on` row is valid only while its target is absent. The pull request that adds the target also adds the tests and removes the rows.
 - A row for a test file that imports the entry point of its family can name that entry point in `waitsOn`. A pull request that ports some cases of the file keeps the row. The row goes when each case of the file has a counterpart.
-- `pnpm parity:check` fails on a row that covers nothing. Remove a row when its thing gets a counterpart.
 - A component of Vase UI's own has no exception row, because Base UI has nothing for it to match.
 
 ### Rows of `parity/better`
@@ -2574,7 +2522,6 @@ Each behavior where Vase UI does more than Base UI has a file `parity/better/<ID
 | `dueWith`  | One upstream path. `pnpm parity:check` refuses a path with `/` at its end. The row is due when the path has a counterpart.                                                                                                                                                                                               |
 
 - A due row needs a test. The title of that test or of its `describe` block must hold the id as a whole word: `VUE-1: the controlled Boolean prop`.
-- `pnpm parity:check` fails on a due row that has no such title.
 - An upstream case can assert the behavior that a row corrects. Give that case a `replaced` exception row. Its `test` is the file of the case that tests the corrected behavior, and its reason names the id of the row.
 - In a case of `describe.each` or `it.each`, one entry of the table can assert the behavior that a row corrects while the other entries do not. A `replaced` row would remove the case for each entry. Keep the ported case and its title. Give that entry a fixture in which the corrected behavior does not apply. Give the reason in a comment. A case with the id of the row tests the corrected behavior.
 
@@ -2589,7 +2536,6 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - The sidebar shows the group Overview, then Handbook, Components and Utils, then each other group in the sequence of its folder name.
 - Each page in the navigation has `order: <whole number>` in its front matter. A group shows its pages in the sequence of `order`, then of title.
 - The title of a page in the navigation is its first-level heading.
-- The build fails when a page in the navigation has no `order` or no first-level heading.
 - A code sample is a Vue file. A page shows its source with `<<<`. `pnpm docs:typecheck` checks the file against the built package.
 - Compose two parts in a sample or a demo as the Base UI code does. Where Base UI gives `render` an element with no props, give its tag or its component to `as`. Where that element has props of its own, use the `#render` slot and bind `props`.
 - A page that is not a component page has its samples in `docs/examples/<page>`. `docs/quick-start.md` imports each sample and renders it.
@@ -2615,13 +2561,7 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - Link a page of the site from `README.md` by its full address, such as `https://vase-ui.com/parity`. GitHub and npm show that file. A path of the site does not work there. `markdownSiteLinks` in `docs/.vitepress/config.ts` changes each address that starts with the `homepage` of `packages/vue/package.json` to the path of the page. The link then opens in the same tab.
 - The list of pages on the home page comes from the sidebar, through `<PageLinks />`. Do not type a link to a page in `docs/index.md`.
 - Text from `parity/` and from Base UI commits is data. Show it with text interpolation. Do not use an API that renders a string as HTML.
-- ESLint refuses an API that renders a string as HTML in each file of `docs` that it reads. These are script files, SFCs and pages. The list of these APIs has the HTML injection sinks of the Trusted Types API and the methods of the HTML Sanitizer API. It also has `v-html`, `createStaticVNode` and `Static`.
-- ESLint refuses `innerHTML`, `outerHTML` and `srcdoc` as a bound attribute, as an object key and as a member. A name in a key or a member can be an identifier, a string or a template literal that has no expression. ESLint ignores the case of the letters. A read through destructuring is correct: `const { innerHTML } = element`.
-- ESLint refuses a member with one of these names: `insertAdjacentHTML`, `setHTML`, `setHTMLUnsafe`, `parseHTML`, `parseHTMLUnsafe`, `createContextualFragment`, `parseFromString`, `execCommand` and `writeln`.
-- ESLint refuses `write` on a name that ends in `document`: `document.write`, `element.ownerDocument.write` and `ownerDocument(element).write`. A `write` on a stream or on the clipboard is correct.
-- ESLint refuses `setAttribute` and `setAttributeNS` when the name of the attribute is `srcdoc`.
-- ESLint refuses a dynamic argument of `v-bind`, because the argument can be `innerHTML`. Write the name of the attribute. A dynamic argument of an event or of a slot is correct.
-- ESLint refuses an import of `createStaticVNode` or `Static` from `vue`, because both render a string as HTML.
+- ESLint refuses an API that renders a string as HTML in each file of `docs` that it reads. These are script files, SFCs and pages.
 - ESLint reads a page as the SFC that VitePress makes from it, so a page gets each rule that an SFC in `docs` gets. `eslint.config.js` makes the SFC with the renderer of VitePress.
 - A report on a page shows the first place in the page of the reported text. That place can be earlier than the form. A report shows line 1 when the page lacks the text.
 - ESLint writes no fix into a page. `pnpm lint:fix` leaves each report on a page for hand work.
@@ -2665,7 +2605,6 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - `docs/demos/tailwind.css` is not in the theme folder, because `postcssIsolateStyles` would add a selector to each utility there. The site has one style sheet, so the file loads on every page. The reset of Tailwind applies only in the frame of a Tailwind demo. The utilities apply in that frame and in an element with `data-vase-ui-portal`, which holds a popup or the cursor of a scrub area. The site gets neither. A popup gets no reset of Tailwind, because the base styles of VitePress reset it already, and a second reset would change `strong` in the popups of the CSS-module demos. In that file, the variant `dark:` follows the class `dark`.
 - The theme of the site is the class `dark` of the root element. VitePress sets it from the theme switch.
 - `docs/.vitepress/postcssFollowSiteTheme.ts` changes each `@media (prefers-color-scheme: dark)` rule of a style sheet into a rule for that class. A demo then follows the theme of the site, and the copied style sheet does not change. The tests of `packages/vue` run the same plugin, so a demo in a test follows the class `dark`.
-- The build fails on another query that names `prefers-color-scheme`, and on such a query that is not inside a style rule. Add that form to the plugin, with a case.
 - A style that the site writes uses the class `dark`, as `DemoFrame.vue` does.
 - A copied style sheet can give text less than the AA contrast of WCAG, in one state of a part or in each state. Do not edit the sheet. For a popup, add a rule to `look.css` with the nearest value of the sheets that passes. A popup is in an element with `data-vase-ui-portal`, outside the frame of a demo, so the rule reaches it. For text in the frame, add the rule to `DemoFrame.vue` with `:deep()`. Vite adds a prefix and a suffix to each class of a CSS module, so the selector names only the middle part, as `[class*='_LinkDescription_']` does. Name the part and its state, not the demo. For the Tailwind variant, name the utility that gives the color, as `[class~='data-placeholder:text-neutral-500']` does. Where no value of the sheets passes, use the next step of the same color of the Tailwind palette. Give each selector of a rule a row in `packages/vue/test/demos.contrast.test.tsx`. A row measures the text in one state, in both themes and in each variant of the demo. Where a rule applies in each state, add a row for each state that changes the background behind the text.
 - A plugin of the site is a file in `docs/.vitepress`, and its test is beside it, as `<name>.test.ts`.
@@ -2686,7 +2625,6 @@ A family that Base UI documents in `docs/src/app/(docs)/react/utils/`, such as `
 - The front matter has `order: 1`. The group then shows its pages in the sequence of their titles.
 - A demo has one Vue file for each variant that Base UI has: `docs/demos/<family>/<demo>/css-modules/index.vue` and `docs/demos/<family>/<demo>/tailwind/index.vue`. Each file keeps the elements and the attributes of the Base UI file `demos/<demo>/<variant>/index.tsx`. A heading of a demo follows the outline of its page. The hero demo of Accordion is directly below the title, so its `Accordion.Header` has `as="h2"`. Base UI's demo has the default `h3`.
 - A demo can have two attributes that the Base UI file lacks, because axe reports their absence in the open state. A popup that has the role `dialog` and no title part has `aria-label`. A scroll container that holds no control has `tabindex="0"`, because WebKit gives a scroll container no keyboard focus. Both variants of a demo get the attribute.
-- A Tailwind demo has the class strings of the Base UI file. Do not add, remove, sort or correct a class name.
 - In a Tailwind demo, write `class` in the place of `className`. A constant that holds class names keeps its name and its text in `<script setup>`, and the template binds it with `:class="name"`. Write an array in `:class` in the place of `clsx` or a template literal. Keep each part of a string that Base UI makes with `+`. Do not write the object form of `:class`.
 - The name of a constant that holds class names ends with `Class`, `ClassName` or `Classes`.
 - A Tailwind demo has no import of a style sheet and no `<style>` block.
@@ -2741,7 +2679,6 @@ A family that Base UI documents in `docs/src/app/(docs)/react/utils/`, such as `
 - The table Events lists the events in the sequence of `defineEmits`, not in the order of `vue-component-meta`.
 - The column Slot props of the table Slots lists the props of a slot in the sequence of their declaration. The properties that an `Omit` or a `Pick` copies also keep that sequence when one interface or type literal declares all of them.
 - The description of an event is its JSDoc in `defineEmits`. Write a JSDoc for each event, `update:x` included.
-- `pnpm test:docs` fails when a prop on a family page has no type. It also fails when an event on a family page has no type or no description.
 - `vue-component-meta` leaves out a prop with the `on` name of an emit, such as `onFormSubmit` of `Form`. The reference reads the type and the JSDoc of such a prop from its declaration. [Other callbacks](#other-callbacks) gives that pattern.
 - The reference leaves out a prop with the tag `@ignore`, as the Base UI page does. `pnpm parity:check` still reads that prop.
 - A component of Vase UI's own has no extract and no Base UI page. Its reference lists the parts, functions and types of its record, each list in the sequence of the record.
