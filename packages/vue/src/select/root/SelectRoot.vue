@@ -179,6 +179,7 @@ import {
 import { createLabelIdRegistry, useLabelableId } from '../../internals/labelable-provider';
 import { NOOP } from '../../internals/noop';
 import { stringifyAsLabel, stringifyAsValue } from '../../internals/resolveValueLabel';
+import { sanitizeValue, useFormEntryValue } from '../../internals/useFormEntryValue';
 import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestoreAsInput } from '../../internals/useFormRestore';
 import { useValueChanged } from '../../internals/useValueChanged';
@@ -697,7 +698,11 @@ watch(
 );
 
 // A browser autofills the hidden input with the value or the text of an item.
-function selectAutofilledItem(autofilledValue: string, eventDetails: SelectRootChangeEventDetails) {
+function selectAutofilledItem(
+  input: HTMLInputElement,
+  autofilledValue: string,
+  eventDetails: SelectRootChangeEventDetails,
+) {
   // Browser autofill only writes a single scalar value.
   if (isMultiple.value) {
     return;
@@ -713,6 +718,15 @@ function selectAutofilledItem(autofilledValue: string, eventDetails: SelectRootC
       stringifyAsValue(candidate, props.itemToStringValue).toLowerCase() === autofilledValueLower ||
       stringifyAsLabel(candidate, props.itemToStringLabel).toLowerCase() === autofilledValueLower,
   );
+
+  // A browser restores only the text of the input, without the line breaks of the value.
+  if (matchingIndex === -1) {
+    matchingIndex = valuesRef.value.findIndex(
+      (candidate) =>
+        sanitizeValue(input, stringifyAsValue(candidate, props.itemToStringValue)).toLowerCase() ===
+        autofilledValueLower,
+    );
+  }
 
   if (matchingIndex === -1) {
     matchingIndex = valuesRef.value.findIndex((_, index) => {
@@ -730,7 +744,8 @@ function selectAutofilledItem(autofilledValue: string, eventDetails: SelectRootC
 }
 
 function handleHiddenInputChange(event: Event) {
-  const autofilledValue = (event.currentTarget as HTMLInputElement).value;
+  const input = event.currentTarget as HTMLInputElement;
+  const autofilledValue = input.value;
   const isNewValue = autofilledValue !== handledValue;
   handledValue = autofilledValue;
 
@@ -743,7 +758,7 @@ function handleHiddenInputChange(event: Event) {
   // The items of a closed select mount in the next flush, and they then give their values.
   store.set('forceMounted', true);
   void nextTick(() => {
-    selectAutofilledItem(autofilledValue, eventDetails);
+    selectAutofilledItem(input, autofilledValue, eventDetails);
     void nextTick(writeValueToInput);
   });
 }
@@ -765,6 +780,7 @@ useFormReset(inputElement, (event) => {
 });
 
 useFormRestoreAsInput(inputElement, () => handledValue, false);
+useFormEntryValue(inputElement, () => serializedValue.value);
 
 const hiddenInputName = computed(() => (isMultiple.value ? undefined : inputName.value));
 

@@ -19,7 +19,18 @@ interface PartProps extends VaseUIComponentProps<object>, WithVaseUIEvent<HTMLAt
 declare const partProps: PartProps;
 expectType<string | Component | GenericComponent | undefined, typeof partProps.as>(partProps.as);
 
-expectType<string | undefined, WithVaseUIEvent<HTMLAttributes>['aria-description']>(undefined);
+expectType<string | null | undefined, WithVaseUIEvent<HTMLAttributes>['aria-description']>(
+  undefined,
+);
+expectType<string | null | undefined, WithVaseUIEvent<HTMLAttributes>['aria-labelledby']>(
+  undefined,
+);
+expectType<false, null extends WithVaseUIEvent<HTMLAttributes>['onClick'] ? true : false>(false);
+// An attribute that reaches a declared prop takes no `null`.
+expectType<
+  string | undefined,
+  WithVaseUIEvent<HTMLAttributes, 'aria-labelledby'>['aria-labelledby']
+>(undefined);
 
 // A props object gets the check that vue-tsc makes for a template under `strictTemplates`.
 export const describedChip: ComboboxChipProps = {

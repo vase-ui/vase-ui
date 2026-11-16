@@ -19,6 +19,7 @@ import DemoSource from '../../../docs/.vitepress/components/DemoSource.vue';
 import { demoVariant } from '../../../docs/.vitepress/components/demoVariant.ts';
 import { DEMO_VARIANT_STORAGE_KEY } from '../../../docs/.vitepress/components/demoVariantStorageKey.ts';
 import '../../../docs/demos/tailwind.css';
+import { platform } from '../src/common/platform';
 
 const modules = import.meta.glob<{ default: Component }>(
   [
@@ -108,6 +109,43 @@ describe('the style sheet of the Tailwind demos', () => {
       Object.fromEntries(Object.keys(expected).map((name) => [name, style.getPropertyValue(name)])),
     ).toEqual(expected);
   });
+
+  // The part renders no cursor in WebKit.
+  it.skipIf(platform.engine.webkit)(
+    'the scrub area cursor gets the utilities of its classes',
+    async () => {
+      const pointerLock = vi
+        .spyOn(document.body, 'requestPointerLock')
+        .mockImplementation(() => Promise.resolve());
+      onTestFinished(() => {
+        pointerLock.mockRestore();
+      });
+      const TailwindNumberField =
+        modules['../../../docs/demos/number-field/hero/tailwind/index.vue'].default;
+      const { container } = await render(
+        h('div', { 'data-demo': 'tailwind' }, h(TailwindNumberField)),
+      );
+
+      container
+        .querySelector('[role="presentation"]')!
+        .dispatchEvent(
+          new PointerEvent('pointerdown', { bubbles: true, clientX: 10, clientY: 10 }),
+        );
+      await flushMicrotasks();
+
+      const cursor = [...document.querySelectorAll('[role="presentation"][data-scrubbing]')].find(
+        (element) => !container.contains(element),
+      )!;
+      const frame = container.appendChild(document.createElement('div'));
+      frame.dataset.demo = 'tailwind';
+      const reference = frame.appendChild(document.createElement('span'));
+      reference.className = cursor.className;
+      const { filter } = getComputedStyle(reference);
+
+      expect(filter).not.toBe('none');
+      expect(getComputedStyle(cursor).filter).toBe(filter);
+    },
+  );
 });
 
 describe('the frame of a demo', () => {
@@ -311,6 +349,25 @@ describe('the form library demos of the Forms page', () => {
       await waitFor(() => expect(demo.getByRole('combobox', { name: 'Region' })).toHaveFocus());
     },
   );
+});
+
+describe('the demos of the Forms page', () => {
+  const { render } = createRenderer();
+
+  it('have no axe violation when the page shows them together', async () => {
+    const pageDemos = demos.filter(({ name }) => name.startsWith('handbook-forms/'));
+    expect(pageDemos).not.toHaveLength(0);
+    await render(
+      h(
+        'div',
+        pageDemos.map(({ variant, Demo }) => h('div', { 'data-demo': variant }, h(Demo))),
+      ),
+    );
+
+    // axe compares the landmarks of the demos only when it reads them together. The viewport of
+    // a toast provider is a landmark in a portal, outside the element of the render.
+    await expectNoAxeViolations(document.body);
+  });
 });
 
 describe('demos', () => {

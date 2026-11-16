@@ -95,6 +95,7 @@ import { useDirection } from '../../internals/direction-context/DirectionContext
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
+import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { isInHeldBranch } from '../../internals/useKeepAliveState';
 import { getCssDimensions } from '../../utils/getCssDimensions';
@@ -169,6 +170,7 @@ const direction = useDirection();
 
 const stickIfOpenTimeout = useTimeout();
 
+const triggerId = useVaseUiId();
 const triggerElement = shallowRef<HTMLElement | null>(null);
 const stickIfOpen = shallowRef(true);
 const pointerType = shallowRef('');
@@ -484,6 +486,8 @@ const { element, elementProps } = useRenderElement('button', props, {
     hoverProps,
     dismissProps?.value?.reference,
     {
+      // The popup reads this id from the element for its name.
+      id: triggerId.value,
       // The key wins over the roving `tabindex` of the composite, so each trigger is a tab stop.
       tabindex: 0,
       onMouseenter: handleOpenEvent,

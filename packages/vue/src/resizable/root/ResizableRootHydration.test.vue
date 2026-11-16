@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { defineComponent, h } from 'vue';
-import * as Resizable from '../index.parts';
+import { Resizable } from '@vase-ui/vue/resizable';
 
 defineProps<{
   composition:
     | 'collapsed'
     | 'defaults'
+    | 'edges'
     | 'fixed'
+    | 'handleFirst'
+    | 'hitAreaNumber'
+    | 'hitAreaObject'
     | 'layout'
     | 'layoutLength'
     | 'length'
@@ -37,6 +41,34 @@ const WrappedPanel = defineComponent({
     v-else-if="composition === 'layout'"
     data-testid="root"
     :default-layout="{ a: 20, b: 80 }"
+  >
+    <Resizable.Panel id="a" data-testid="a" />
+    <Resizable.Handle data-testid="handle-a" aria-label="First" />
+    <Resizable.Panel id="b" data-testid="b" />
+  </Resizable.Root>
+  <Resizable.Root v-else-if="composition === 'edges'" data-testid="root" drag-edges>
+    <Resizable.Panel id="a" data-testid="a" />
+    <Resizable.Panel id="b" data-testid="b" />
+  </Resizable.Root>
+  <Resizable.Root v-else-if="composition === 'handleFirst'" data-testid="root">
+    <Resizable.Handle data-testid="handle-first" aria-label="First" />
+    <Resizable.Panel id="a" data-testid="a" />
+    <Resizable.Handle data-testid="handle-a" aria-label="Second" />
+    <Resizable.Panel id="b" data-testid="b" />
+  </Resizable.Root>
+  <Resizable.Root
+    v-else-if="composition === 'hitAreaNumber'"
+    data-testid="root"
+    :hit-area-size="16"
+  >
+    <Resizable.Panel id="a" data-testid="a" />
+    <Resizable.Handle data-testid="handle-a" aria-label="First" />
+    <Resizable.Panel id="b" data-testid="b" />
+  </Resizable.Root>
+  <Resizable.Root
+    v-else-if="composition === 'hitAreaObject'"
+    data-testid="root"
+    :hit-area-size="{ fine: 12, coarse: 30 }"
   >
     <Resizable.Panel id="a" data-testid="a" />
     <Resizable.Handle data-testid="handle-a" aria-label="First" />

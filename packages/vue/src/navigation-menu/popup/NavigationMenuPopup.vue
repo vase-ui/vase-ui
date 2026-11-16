@@ -43,6 +43,7 @@ import { computed } from 'vue';
 import type { CSSProperties } from 'vue';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
+import { resolvePopupLabel } from '../../internals/resolvePopupLabel';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -61,7 +62,8 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, NavigationMenuPopupState>;
 }>();
 
-const { open, transitionStatus, popupElement } = useNavigationMenuRootContext();
+const { open, transitionStatus, popupElement, prevTriggerElementRef } =
+  useNavigationMenuRootContext();
 const positioning = useNavigationMenuPositionerContext();
 const direction = useDirection();
 
@@ -98,7 +100,15 @@ const { element, elementProps } = useRenderElement('nav', props, {
   stateAttributesMapping: popupTransitionStateMapping,
   ref: useKeepAliveElementRef(createElementSetter(popupElement)),
   props: (attrs) => [
-    { id: popupId.value, tabindex: -1, style: originSideStyle.value },
+    {
+      id: popupId.value,
+      tabindex: -1,
+      style: originSideStyle.value,
+      // Each navigation landmark of a page needs a name of its own, and a nested menu opens two
+      // popups. The root clears `floatingRootStore` at the close, but `prevTriggerElementRef`
+      // keeps the trigger until the popup unmounts.
+      'aria-labelledby': resolvePopupLabel(attrs, prevTriggerElementRef.value ?? null, null),
+    },
     getDisabledMountTransitionStyles(transitionStatus.value),
     attrs,
   ],

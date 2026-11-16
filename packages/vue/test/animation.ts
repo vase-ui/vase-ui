@@ -113,9 +113,11 @@ export function nextEvent(
  * It fails when no call comes in 600 frames of the page. With `action`, the function runs after
  * this function replaced `getAnimations` of the element, and the count of frames starts when it
  * ends, as in `nextEvent`.
- * Call it before the action, or give it the action. With three or more elements in one frame, a
- * part can get the animations of an element from the root of the tree. This function does not see
- * that read.
+ * Call it before the action, or give it the action. A part can read the animations of an open in a
+ * frame after the open. For the exit of a popup, call this function after `openChangeComplete`
+ * with `true`. An earlier call can get the read of the open.
+ * With three or more elements in one frame, a part can get the animations of an element from the
+ * root of the tree. This function does not see that read.
  */
 export function nextAnimationsRead(
   element: Element,
@@ -133,6 +135,33 @@ export function nextAnimationsRead(
     return () => {
       Reflect.deleteProperty(element, 'getAnimations');
     };
+  });
+}
+
+/**
+ * Resolves in the update that gives the element `data-ending-style`. An attribute that the element
+ * has at the call does not resolve it. It rejects when no such update comes in 180 frames of the
+ * page. With `action`, the function runs after the observer is attached, and the count of frames
+ * starts when it ends, as in `nextEvent`.
+ * A part gives the attribute only when an exit starts. An event of a transition and a read of the
+ * animations can come from an earlier step.
+ * Read a state of the start of the exit directly after the wait. No task and no frame runs between
+ * the update and the code after the wait.
+ */
+export function nextEndingStyle(
+  element: Element,
+  { action }: { action?: () => unknown } = {},
+): Promise<void> {
+  const message = `The element got no data-ending-style in ${EVENT_FRAMES} frames of the page.`;
+
+  return waitWithFrameLimit<void>({ frames: EVENT_FRAMES, message, action }, (resolve) => {
+    const observer = new MutationObserver(() => {
+      if (element.hasAttribute('data-ending-style')) {
+        resolve();
+      }
+    });
+    observer.observe(element, { attributes: true, attributeFilter: ['data-ending-style'] });
+    return () => observer.disconnect();
   });
 }
 
@@ -266,22 +295,7 @@ export async function probeFrameAfterExitBeforeRead(
   isGone: () => boolean,
   close: () => unknown,
 ): Promise<EarlyExitProbeResult> {
-  await waitWithFrameLimit<void>(
-    {
-      frames: EVENT_FRAMES,
-      message: `The panel got no data-ending-style in ${EVENT_FRAMES} frames of the page.`,
-      action: close,
-    },
-    (resolve) => {
-      const observer = new MutationObserver(() => {
-        if (panel.hasAttribute('data-ending-style')) {
-          resolve();
-        }
-      });
-      observer.observe(panel, { attributes: true, attributeFilter: ['data-ending-style'] });
-      return () => observer.disconnect();
-    },
-  );
+  await nextEndingStyle(panel, { action: close });
 
   const animations = panel.getAnimations();
   seekBeforeEnd(animations, EARLY_END_MARGIN);

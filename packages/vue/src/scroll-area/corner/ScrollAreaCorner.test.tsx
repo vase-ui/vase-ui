@@ -96,7 +96,10 @@ describe('<ScrollArea.Corner />', () => {
     expect(screen.getByTestId('corner')).toHaveAttribute('aria-hidden', 'true');
   });
 
-  it('allows overriding aria-hidden', async () => {
+  it.each([
+    { name: 'undefined', value: undefined, expected: 'true' },
+    { name: 'null', value: null, expected: null },
+  ])('VUE-103: aria-hidden of the consumer is $name', async ({ value, expected }) => {
     await render(() => (
       <ScrollArea.Root>
         <ScrollArea.Viewport
@@ -107,12 +110,12 @@ describe('<ScrollArea.Corner />', () => {
         </ScrollArea.Viewport>
         <ScrollArea.Scrollbar orientation="vertical" keepMounted style={{ width: '10px' }} />
         <ScrollArea.Scrollbar orientation="horizontal" keepMounted style={{ height: '10px' }} />
-        <ScrollArea.Corner data-testid="corner" aria-hidden={undefined} />
+        <ScrollArea.Corner data-testid="corner" aria-hidden={value} />
       </ScrollArea.Root>
     ));
     await flushMicrotasks();
 
-    expect(screen.getByTestId('corner')).not.toHaveAttribute('aria-hidden');
+    expect(screen.getByTestId('corner').getAttribute('aria-hidden')).toBe(expected);
   });
 
   describe.skipIf(isJSDOM)('interactions', () => {

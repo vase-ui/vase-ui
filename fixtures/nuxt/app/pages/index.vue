@@ -44,6 +44,7 @@
       <li><NuxtLink to="/combobox">Combobox</NuxtLink></li>
       <li><NuxtLink to="/text-before-hydration">Text before hydration</NuxtLink></li>
       <li><NuxtLink to="/form-state">Form state</NuxtLink></li>
+      <li><NuxtLink to="/resizable">Resizable</NuxtLink></li>
     </ul>
   </main>
 </template>

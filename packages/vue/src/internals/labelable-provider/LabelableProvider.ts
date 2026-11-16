@@ -45,6 +45,10 @@ export function provideLabelableContext(): LabelableContext {
   }
 
   function getDescriptionProps(externalProps: Record<string, any>) {
+    // `null` of the consumer removes the ids of the descriptions (VUE-103).
+    if (externalProps['aria-describedby'] === null) {
+      return externalProps;
+    }
     const ids: string[] = externalProps['aria-describedby']
       ? externalProps['aria-describedby'].split(' ')
       : [];

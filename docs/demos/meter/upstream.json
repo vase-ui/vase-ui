@@ -7,12 +7,12 @@
     "hero/tailwind/index.tsx": "3f6a8faeef7b63873b23595daacde7023be3ae711d5a1a9c45d25835ee9a37db"
   },
   "classes": {
-    "hero/tailwind": [
-      "bg-neutral-950 transition-[width] duration-500 dark:bg-white",
-      "col-span-2 h-3 overflow-hidden bg-neutral-200 dark:bg-neutral-800",
-      "grid max-w-full w-60 grid-cols-2 gap-y-2",
-      "text-right text-sm text-neutral-950 dark:text-white",
-      "text-sm font-normal text-neutral-950 dark:text-white"
-    ]
+    "hero/tailwind": {
+      "Meter.Indicator": ["bg-neutral-950 transition-[width] duration-500 dark:bg-white"],
+      "Meter.Label": ["text-sm font-normal text-neutral-950 dark:text-white"],
+      "Meter.Root": ["grid max-w-full w-60 grid-cols-2 gap-y-2"],
+      "Meter.Track": ["col-span-2 h-3 overflow-hidden bg-neutral-200 dark:bg-neutral-800"],
+      "Meter.Value": ["text-right text-sm text-neutral-950 dark:text-white"]
+    }
   }
 }

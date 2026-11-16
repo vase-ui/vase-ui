@@ -1597,9 +1597,13 @@ describe('<Switch.Root />', () => {
       // Vue does not correct the attributes of a mismatch, so the case reads the input.
       expect(getInput().checked).toBe(true);
       expect(within(container).getByTestId('changes').textContent).toBe('');
-      expect(takeReportedMessages()).toEqual([
+      // Vue writes `Hydration completed but contains mismatches.` one time for each page, so only the
+      // first mismatch of a test file has it.
+      const messages = takeReportedMessages().filter(
+        (message) => message !== 'console.error: Hydration completed but contains mismatches.',
+      );
+      expect(messages).toEqual([
         expect.stringMatching(/^console\.warn: .*Hydration attribute mismatch[\s\S]*checked/),
-        'console.error: Hydration completed but contains mismatches.',
       ]);
     });
   });

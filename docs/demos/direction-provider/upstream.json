@@ -10,11 +10,14 @@
     "hero": ["slider"]
   },
   "classes": {
-    "hero/tailwind": [
-      "bg-neutral-950 select-none dark:bg-white",
-      "flex w-56 touch-none items-center py-3 select-none",
-      "h-1 w-full bg-neutral-200 select-none dark:bg-neutral-800",
-      "size-4 border border-neutral-950 bg-white select-none has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-neutral-950 dark:has-[:focus-visible]:outline-white dark:border-white dark:bg-neutral-950"
-    ]
-  }
+    "hero/tailwind": {
+      "Slider.Control": ["flex w-56 touch-none items-center py-3 select-none"],
+      "Slider.Indicator": ["bg-neutral-950 select-none dark:bg-white"],
+      "Slider.Thumb": [
+        "size-4 border border-neutral-950 bg-white select-none has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-neutral-950 dark:has-[:focus-visible]:outline-white dark:border-white dark:bg-neutral-950"
+      ],
+      "Slider.Track": ["h-1 w-full bg-neutral-200 select-none dark:bg-neutral-800"]
+    }
+  },
+  "differentVariants": ["hero"]
 }

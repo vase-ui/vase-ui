@@ -54,6 +54,7 @@ import {
 } from '../../internals/resolveValueLabel';
 import type { Group } from '../../internals/resolveValueLabel';
 import type { VaseUIEvent } from '../../internals/types';
+import { sanitizeValue, useFormEntryValue } from '../../internals/useFormEntryValue';
 import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestoreAsInput } from '../../internals/useFormRestore';
 import { useValueChanged } from '../../internals/useValueChanged';
@@ -1957,12 +1958,24 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     const nextValueLower = nextValue.toLowerCase();
     const details = createChangeEventDetails(REASONS.none, event);
 
-    const findSerializedMatchIndex = () =>
-      valuesRef.value.findIndex(
+    const findSerializedMatchIndex = () => {
+      const index = valuesRef.value.findIndex(
         (candidate) =>
           stringifyAsValue(candidate, props.itemToStringValue).toLowerCase() === nextValueLower ||
           stringifyValueLabel(candidate).toLowerCase() === nextValueLower,
       );
+      if (index !== -1) {
+        return index;
+      }
+      // A browser restores only the text of the input, without the line breaks of the value.
+      return valuesRef.value.findIndex(
+        (candidate) =>
+          sanitizeValue(
+            input,
+            stringifyAsValue(candidate, props.itemToStringValue),
+          ).toLowerCase() === nextValueLower,
+      );
+    };
 
     function handleChange() {
       // Browser autofill only writes a single scalar value.
@@ -2054,6 +2067,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   });
 
   useFormRestoreAsInput(hiddenInputElement, () => handledValue, false);
+  useFormEntryValue(hiddenInputElement, () => serializedValue.value);
 
   // The style is the constant itself, in an object that no `mergeProps` call makes.
   // `handleHiddenInputInvalid` then keeps the size that it writes.

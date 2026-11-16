@@ -311,7 +311,10 @@ describe('<Select.Root />', () => {
       );
       const positioner = screen.getByTestId('positioner');
 
-      await openWithClick(user, listeners.opened);
+      await user.click(screen.getByTestId('trigger'));
+      // The root reads the animations of the positioner in a frame after the open. The wait for the
+      // read of the close must start after that read.
+      await listeners.openCompleted;
       expect(positioner).toHaveAttribute('data-open');
 
       const animations = await nextAnimationsRead(positioner, {
@@ -321,6 +324,9 @@ describe('<Select.Root />', () => {
       await flushMicrotasks();
 
       expect(animations).toHaveLength(1);
+      // The animations run for one frame before the case ends them. A close in a frame before the
+      // end thus shows.
+      await waitSingleFrame();
       expect(positioner).not.toHaveAttribute('hidden');
 
       animations.forEach((animation) => {
@@ -353,17 +359,20 @@ describe('<Select.Root />', () => {
       const popup = screen.getByTestId('popup');
 
       await user.click(screen.getByTestId('trigger'));
-      // The popup reads its animations after the open. That read must not be the read of the close.
+      // The root reads the animations of the popup in a frame after the open. The wait for the read
+      // of the close must start after that read.
       await listeners.openCompleted;
 
       const animations = await nextAnimationsRead(popup, {
         action: () => user.keyboard('{Escape}'),
       });
-      // `Select.Popup` reads these animations in the same microtask as the close wait of the root.
-      // A close that does not wait for the popup thus ends before the next task.
+      // A close that does not wait for these animations ends in the microtasks after the read.
       await flushMicrotasks();
 
       expect(animations).toHaveLength(1);
+      // The animations run for one frame before the case ends them. A close in a frame before the
+      // end thus shows.
+      await waitSingleFrame();
       expect(positioner).not.toHaveAttribute('hidden');
 
       animations.forEach((animation) => {
@@ -3526,6 +3535,8 @@ describe('<Select.Root />', () => {
       expect(document.activeElement).not.toBe(trigger);
 
       await user.click(trigger);
+      await waitSingleFrame();
+      await flushMicrotasks();
       expect(handleOpenChange.mock.calls.length).toBe(0);
     });
 
@@ -3570,6 +3581,8 @@ describe('<Select.Root />', () => {
       expect(document.activeElement).not.toBe(trigger);
 
       await user.click(trigger);
+      await waitSingleFrame();
+      await flushMicrotasks();
       expect(handleOpenChange.mock.calls.length).toBe(0);
 
       await user.click(screen.getByRole('button', { name: 'toggle' }));
@@ -8432,7 +8445,8 @@ describe('<Select.Root />', () => {
 
       await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
       await fireEvent.mouseDown(trigger, { button: 0 });
-      await wait(20);
+      await waitSingleFrame();
+      await flushMicrotasks();
 
       expect(trigger).toHaveAttribute('aria-expanded', 'false');
       expect(handleOpenChange).toHaveBeenCalledTimes(0);
@@ -8636,6 +8650,104 @@ describe('<Select.Root />', () => {
       expect(screen.getByTestId('trigger').textContent).toBe('Office');
       expect(getHiddenInput().value).toBe('Box 1');
       expect(events).toEqual(['input']);
+    });
+  });
+
+  describe('VUE-102: a value with a line break', () => {
+    it.each([
+      { name: 'a line feed', value: 'Main Street 1\nFlat 2' },
+      { name: 'a carriage return', value: 'Main Street 1\rFlat 2' },
+      { name: 'a carriage return and a line feed', value: 'Main Street 1\r\nFlat 2' },
+    ])('submits the value with $name', async ({ value }) => {
+      await render(
+        <form data-testid="form">
+          <Select.Root name="address" items={{ [value]: 'Home' }} defaultValue={value}>
+            <Select.Trigger>
+              <Select.Value />
+            </Select.Trigger>
+          </Select.Root>
+        </form>,
+      );
+
+      expect(getHiddenInput().value).toBe('Main Street 1Flat 2');
+      expect(getFormData('address')).toEqual([value]);
+    });
+
+    it('selects the item whose value gives the text that the browser restores', async () => {
+      const handleValueChange = vi.fn();
+      const { container } = await render(
+        <form data-testid="form">
+          <Select.Root
+            name="address"
+            items={ADDRESSES}
+            defaultValue="Box 1"
+            onValueChange={handleValueChange}
+          >
+            <Select.Trigger data-testid="trigger">
+              <Select.Value />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  {Object.entries(ADDRESSES).map(([value, label]) => (
+                    <Select.Item key={value} value={value}>
+                      <Select.ItemText>{label}</Select.ItemText>
+                    </Select.Item>
+                  ))}
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        </form>,
+      );
+      const events = recordInputEvents(container);
+      getHiddenInput().value = 'Main Street 1Flat 2';
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(handleValueChange.mock.calls.map((call) => [call[0], call[1].reason])).toEqual([
+        ['Main Street 1\nFlat 2', 'none'],
+      ]);
+      expect(screen.getByTestId('trigger').textContent).toBe('Home');
+      expect(getFormData('address')).toEqual(['Main Street 1\nFlat 2']);
+      expect(events).toEqual(['input']);
+    });
+
+    it('selects the item whose value gives the restored text before an item with that label', async () => {
+      const handleValueChange = vi.fn();
+      await render(
+        <form data-testid="form">
+          <Select.Root name="address" defaultValue="Box 1" onValueChange={handleValueChange}>
+            <Select.Trigger>
+              <Select.Value />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  <Select.Item value="Box 1">
+                    <Select.ItemText>Office</Select.ItemText>
+                  </Select.Item>
+                  <Select.Item value="Box 2">
+                    <Select.ItemText>Main Street 1Flat 2</Select.ItemText>
+                  </Select.Item>
+                  <Select.Item value={'Main Street 1\nFlat 2'}>
+                    <Select.ItemText>Home</Select.ItemText>
+                  </Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        </form>,
+      );
+      getHiddenInput().value = 'Main Street 1Flat 2';
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(handleValueChange.mock.calls.map((call) => call[0])).toEqual([
+        'Main Street 1\nFlat 2',
+      ]);
     });
   });
 

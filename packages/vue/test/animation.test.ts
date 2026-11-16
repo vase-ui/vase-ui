@@ -2,8 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 
 import {
   flushMicrotasks,
   nextAnimationsRead,
+  nextEndingStyle,
   nextEvent,
   probeFrameAfterExitBeforeRead,
+  waitSingleFrame,
 } from '#test-utils';
 
 interface LimitRow {
@@ -47,9 +49,15 @@ describe('the limits of the motion helpers', () => {
       wait: (action) => nextAnimationsRead(document.createElement('div'), { action }),
     },
     {
+      name: 'nextEndingStyle',
+      frames: 180,
+      message: 'The element got no data-ending-style in 180 frames of the page.',
+      wait: (action) => nextEndingStyle(document.createElement('div'), { action }),
+    },
+    {
       name: 'probeFrameAfterExitBeforeRead',
       frames: 180,
-      message: 'The panel got no data-ending-style in 180 frames of the page.',
+      message: 'The element got no data-ending-style in 180 frames of the page.',
       wait: (action) =>
         probeFrameAfterExitBeforeRead(document.createElement('div'), () => false, action),
     },
@@ -78,6 +86,29 @@ describe('the limits of the motion helpers', () => {
       expect(rejection).toBe(message);
     },
   );
+});
+
+describe('nextEndingStyle', () => {
+  // A wait that an old ending style resolves cannot show that an exit started.
+  it('resolves only when the element gets the ending style after the call', async () => {
+    const element = document.createElement('div');
+    element.setAttribute('data-ending-style', '');
+    let isResolved = false;
+    const wait = nextEndingStyle(element).then(() => {
+      isResolved = true;
+    });
+
+    element.setAttribute('data-closed', '');
+    await waitSingleFrame();
+    expect(isResolved).toBe(false);
+
+    element.removeAttribute('data-ending-style');
+    await waitSingleFrame();
+    expect(isResolved).toBe(false);
+
+    element.setAttribute('data-ending-style', '');
+    await wait;
+  });
 });
 
 describe('probeFrameAfterExitBeforeRead', () => {

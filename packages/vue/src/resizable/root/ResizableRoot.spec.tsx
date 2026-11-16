@@ -1,6 +1,21 @@
+import { h } from 'vue';
+import type { Component, Ref } from 'vue';
+import {
+  ResizableHandleCssVariables,
+  ResizableHandleDataAttributes,
+  ResizablePanelCssVariables,
+  ResizablePanelDataAttributes,
+  ResizableRootDataAttributes,
+} from '@vase-ui/vue/resizable';
+import type {
+  ResizableLayoutStorageOptions,
+  ResizableParentPanel,
+  ResizableRootResizeMode,
+} from '@vase-ui/vue/resizable';
 import { expectType } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
-import * as Resizable from '../index.parts';
+import type { HTMLProps } from '../../internals/types';
+import { Resizable } from '@vase-ui/vue/resizable';
 
 const layout: Resizable.Root.Layout = { a: 30, b: 70 };
 const snapshot: Resizable.Root.LayoutSnapshot = { a: '240px', b: 70, c: '30%' };
@@ -11,6 +26,22 @@ const snapshot: Resizable.Root.LayoutSnapshot = { a: '240px', b: 70, c: '30%' };
 <Resizable.Root step="16px" largeStep="2rem" dragStep="5%" />;
 <Resizable.Root dragStep={5} />;
 <Resizable.Root orientation="vertical" disabled pushPanels={false} />;
+<Resizable.Root hitAreaSize={12} />;
+<Resizable.Root hitAreaSize={{ fine: 10, coarse: 24 }} resizeMode="on-release" dragEdges />;
+// @ts-expect-error An object gives a size for each pointer.
+<Resizable.Root hitAreaSize={{ fine: 10 }} />;
+// @ts-expect-error A size is a number.
+<Resizable.Root hitAreaSize="10px" />;
+// @ts-expect-error The mode is `live` or `on-release`.
+<Resizable.Root resizeMode="release" />;
+const mode: Resizable.Root.ResizeMode = 'on-release';
+<Resizable.Root resizeMode={mode} />;
+expectType<ResizableRootResizeMode, Resizable.Root.ResizeMode>(mode);
+// @ts-expect-error The mode is `live` or `on-release`.
+const otherMode: Resizable.Root.ResizeMode = 'other';
+void otherMode;
+// @ts-expect-error `dragEdges` is a Boolean.
+<Resizable.Root dragEdges="yes" />;
 // @ts-expect-error `pushPanels` is a Boolean.
 <Resizable.Root pushPanels="no" />;
 // @ts-expect-error The orientation is horizontal or vertical.
@@ -118,6 +149,16 @@ function assertCommit(details: CommitDetails) {
 <Resizable.Handle primaryPanel="next" disabled />;
 // @ts-expect-error The primary panel is the previous panel or the next panel.
 <Resizable.Handle primaryPanel="both" />;
+<Resizable.Handle
+  getAriaValueText={(
+    text: string,
+    value: number,
+    details: { collapsed: boolean; pixelSize: number | undefined },
+  ) => `${text} ${value} ${String(details.collapsed)}`}
+/>;
+<Resizable.Handle getAriaValueText={null} />;
+// @ts-expect-error The function gives a string.
+<Resizable.Handle getAriaValueText={() => 5} />;
 
 declare const panel: InstanceType<typeof Resizable.Panel>;
 declare const handle: InstanceType<typeof Resizable.Handle>;
@@ -141,6 +182,7 @@ expectType<Resizable.Panel.Actions['getSize'], typeof panel.getSize>(panel.getSi
 expectType<() => Resizable.Panel.Size, Resizable.Panel.Actions['getSize']>(panel.getSize);
 expectType<boolean, Resizable.Panel.State['collapsed']>(true);
 expectType<boolean, Resizable.Panel.State['disabled']>(true);
+expectType<boolean, Resizable.Handle.State['crossing']>(true);
 expectType<boolean, Resizable.Handle.State['atMin']>(true);
 expectType<boolean, Resizable.Handle.State['atMax']>(true);
 
@@ -166,6 +208,40 @@ if (parentPanel) {
   expectType<null, typeof parentPanel>(parentPanel);
 }
 
+// A `.spec.tsx` file is checked and not run, and the composable must run in `setup`.
+export function useStorageTypes(details: Resizable.Root.CommitEventDetails) {
+  const storage = Resizable.useLayoutStorage({
+    key: () => 'a',
+    storage: () => sessionStorage,
+    userChangesOnly: true,
+  });
+  expectType<Ref<Resizable.Root.LayoutSnapshot>, typeof storage.layout>(storage.layout);
+  storage.save({ a: 50 }, details);
+  storage.save({ a: 50 });
+  const options: ResizableLayoutStorageOptions = { key: 'a' };
+  void options;
+}
+
+const flatParentPanel: ResizableParentPanel | null = Resizable.useParentPanel();
+void flatParentPanel;
+
+expectType<'data-orientation', typeof ResizableRootDataAttributes.orientation>(
+  ResizableRootDataAttributes.orientation,
+);
+expectType<'data-collapsed', typeof ResizablePanelDataAttributes.collapsed>(
+  ResizablePanelDataAttributes.collapsed,
+);
+expectType<'--resizable-panel-size', typeof ResizablePanelCssVariables.resizablePanelSize>(
+  ResizablePanelCssVariables.resizablePanelSize,
+);
+expectType<'data-at-min', typeof ResizableHandleDataAttributes.atMin>(
+  ResizableHandleDataAttributes.atMin,
+);
+expectType<
+  '--resizable-handle-preview-offset',
+  typeof ResizableHandleCssVariables.resizableHandlePreviewOffset
+>(ResizableHandleCssVariables.resizableHandlePreviewOffset);
+
 const parentRoot = Resizable.useParentRoot();
 if (parentRoot) {
   expectType<'horizontal' | 'vertical', typeof parentRoot.orientation.value>(
@@ -181,3 +257,37 @@ if (parentRoot) {
 } else {
   expectType<null, typeof parentRoot>(parentRoot);
 }
+
+// The `#render` slot of the root and of the handle gets the `children` component.
+export const rootRenderSlot = (
+  <Resizable.Root
+    v-slots={{
+      render: ({ props, children }: { props: HTMLProps; children: Component }) => (
+        <div {...props}>{h(children)}</div>
+      ),
+    }}
+  />
+);
+export const handleRenderSlot = (
+  <Resizable.Handle
+    v-slots={{
+      render: ({ props, children }: { props: HTMLProps; children: Component }) => (
+        <div {...props}>{h(children)}</div>
+      ),
+    }}
+  />
+);
+
+type RootSlots = InstanceType<typeof Resizable.Root>['$slots'];
+type HandleSlots = InstanceType<typeof Resizable.Handle>['$slots'];
+const rootSlotProps = null as unknown as Parameters<NonNullable<RootSlots['render']>>[0];
+const handleSlotProps = null as unknown as Parameters<NonNullable<HandleSlots['render']>>[0];
+
+expectType<
+  { props: HTMLProps; state: Resizable.Root.State; children: Component },
+  typeof rootSlotProps
+>(rootSlotProps);
+expectType<
+  { props: HTMLProps; state: Resizable.Handle.State; children: Component },
+  typeof handleSlotProps
+>(handleSlotProps);

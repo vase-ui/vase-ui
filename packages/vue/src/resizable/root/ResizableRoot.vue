@@ -21,6 +21,12 @@ export type ResizableRootLayout = Layout;
  */
 export type ResizableRootLayoutSnapshot = LayoutSnapshot;
 
+/**
+ * When a drag changes the layout. `'live'`: at each move of the pointer. `'on-release'`: one time,
+ * at the release.
+ */
+export type ResizableRootResizeMode = 'live' | 'on-release';
+
 export interface ResizableRootState {
   /**
    * The orientation of the panels.
@@ -99,6 +105,32 @@ export interface ResizableRootProps
    * @default true
    */
   pushPanels?: boolean | undefined;
+  /**
+   * The least size of the area that takes a press on a handle, in pixels, on the axis of the move.
+   * A number is the size for each pointer. With an object, the root uses `coarse` while the main
+   * pointer of the device is coarse, such as a finger, and `fine` for another pointer.
+   * The size is also the size of an edge and the reach of a crossing.
+   * The root reads the pointer after the mount, so the server HTML has the `fine` size.
+   * @default { fine: 10, coarse: 24 }
+   */
+  hitAreaSize?: number | { fine: number; coarse: number } | undefined;
+  /**
+   * When a drag changes the layout. With `'live'`, each move of the pointer changes the layout.
+   * With `'on-release'`, the layout stays as it is during the drag, and the release changes it one
+   * time. Each handle and edge that the drag moves then has the CSS variable
+   * `--resizable-handle-preview-offset`: the distance to the place that the release gives it.
+   * A key, a double click and a method change the layout at once in both modes.
+   * @default 'live'
+   */
+  resizeMode?: ResizableRootResizeMode | undefined;
+  /**
+   * Whether the user can drag the boundary of two panels that have no handle between them. The
+   * root then renders edge nodes that take the press at each such boundary, and it gets
+   * `position: relative`. An edge has no key and no ARIA role, so give a boundary a
+   * `Resizable.Handle` where you can.
+   * @default false
+   */
+  dragEdges?: boolean | undefined;
 }
 
 export type ResizableRootChangeEventReason =
@@ -151,6 +183,7 @@ export interface ResizableRootActions {
 <script setup lang="ts">
 import {
   computed,
+  inject,
   onActivated,
   onDeactivated,
   onMounted,
@@ -159,10 +192,12 @@ import {
   shallowRef,
   watch,
 } from 'vue';
+import type { Component } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { useIsHydrated } from '../../common/hydration';
 import { ownerWindow } from '../../common/owner';
+import { contains, getTarget } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
 import { warn } from '../../common/warn';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
@@ -171,8 +206,11 @@ import {
   createGenericEventDetails,
 } from '../../internals/createBaseUIEventDetails';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
-import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import type { HTMLProps } from '../../internals/types';
+import { isInHeldBranch } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { useMediaQuery } from '../../unstable-use-media-query';
+import { tabbable } from '../../utils/popups/focus/tabbable';
 import {
   adjustLayoutToSize,
   applyFixedSizes,
@@ -187,8 +225,15 @@ import type { PanelConstraints } from '../utils/layout';
 import { getMeasurement, isSameMeasurement, readMeasurement } from '../utils/measure';
 import type { RootMeasurement } from '../utils/measure';
 import { isLength, isViewportLength, normalizeLayout, parseSize } from '../utils/parseSize';
+import { useEdges } from '../utils/useEdges';
+import ResizableRootChildren from './ResizableRootChildren.vue';
 import { ResizableRootContext } from './ResizableRootContext';
-import type { ResizableHandleMove, ResizablePanelRegistration } from './ResizableRootContext';
+import type {
+  ResizableHandleMove,
+  ResizableHandleRegistration,
+  ResizablePanelRegistration,
+} from './ResizableRootContext';
+import { ResizableRootEdgesContext } from './ResizableRootEdgesContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -202,6 +247,9 @@ const props = withDefaults(defineProps<ResizableRootProps>(), {
   largeStep: 10,
   dragStep: undefined,
   pushPanels: true,
+  hitAreaSize: () => ({ fine: 10, coarse: 24 }),
+  resizeMode: 'live',
+  dragEdges: false,
 });
 
 const emit = defineEmits<{
@@ -219,6 +267,10 @@ const emit = defineEmits<{
    * - `'none'` when a panel mounts that the layout does not name
    */
   layoutChange: [layout: ResizableRootLayout, eventDetails: ResizableRootChangeEventDetails];
+  /**
+   * Event handler called with the new layout after each change that no listener canceled.
+   * `v-model:layout` uses it.
+   */
   'update:layout': [layout: ResizableRootLayout];
   /**
    * Event handler called when the user ends a change of the layout: at the end of a drag that
@@ -244,7 +296,7 @@ const emit = defineEmits<{
 
 defineSlots<{
   default(props: { state: ResizableRootState }): unknown;
-  render: ComponentRenderFn<HTMLProps, ResizableRootState>;
+  render(props: { props: HTMLProps; state: ResizableRootState; children: Component }): unknown;
 }>();
 
 const direction = useDirection();
@@ -496,8 +548,9 @@ if (process.env.NODE_ENV !== 'production') {
 // that the consumer asked for, so it has no change event.
 let mounted = false;
 // `KeepAlive` takes the panels of a deactivated root out of the list, and gives them back at the
-// activation. The panels are then the same, so the root keeps the ids that it knows.
-let deactivated = false;
+// activation. The panels are then the same, so the root keeps the ids that it knows. A root that
+// mounts while `KeepAlive` holds it gets no `onDeactivated` call, and its panels are held too.
+let deactivated = isInHeldBranch();
 let knownIds = new Set<string>();
 // The panels and the handles, in the order of the document.
 const listItems = shallowRef<readonly Element[]>([]);
@@ -530,6 +583,9 @@ const list = useCompositeList<{ id?: string }>({
 });
 
 onMounted(() => {
+  if (deactivated) {
+    return;
+  }
   mounted = true;
   measure();
 });
@@ -538,14 +594,33 @@ onDeactivated(() => {
   deactivated = true;
 });
 
+// The first activation of a root that mounted while held is its mount. `KeepAlive` runs the
+// `onActivated` hooks from the last part to the first, so the panels are active at this call.
 onActivated(() => {
+  if (!deactivated) {
+    return;
+  }
   deactivated = false;
+  if (!mounted) {
+    knownIds = new Set(constraints.value.map((panel) => panel.id));
+    mounted = true;
+    measure();
+  }
 });
 
 function registerPanel(panel: ResizablePanelRegistration) {
   registered.value = [...registered.value, panel];
   onScopeDispose(() => {
     registered.value = registered.value.filter((entry) => entry !== panel);
+  });
+}
+
+const registeredHandles = shallowRef<readonly ResizableHandleRegistration[]>([]);
+
+function registerHandle(handle: ResizableHandleRegistration) {
+  registeredHandles.value = [...registeredHandles.value, handle];
+  onScopeDispose(() => {
+    registeredHandles.value = registeredHandles.value.filter((entry) => entry !== handle);
   });
 }
 
@@ -637,6 +712,9 @@ function commitLayout(
   );
 }
 
+// The layout that the release of the drag gives, while a drag in the mode `'on-release'` runs.
+const pendingLayout = shallowRef<ResizableRootLayout | undefined>();
+
 function startDragging() {
   if (dragging.value) {
     return false;
@@ -650,9 +728,14 @@ function startDragging() {
 function stopDragging() {
   if (dragging.value) {
     layoutBeforeDrag = undefined;
+    pendingLayout.value = undefined;
     dragging.value = false;
     emit('draggingChange', false);
   }
+}
+
+function setPendingLayout(layout: ResizableRootLayout) {
+  pendingLayout.value = layout;
 }
 
 // A root with no room for its panels, such as a root with `display: none`, keeps its last
@@ -830,6 +913,67 @@ function reset() {
 
 const orientation = computed(() => props.orientation);
 
+// The first client render must equal the server HTML, so the composable gives `false` until the
+// mount, and the server HTML has the `fine` size. The call comes also for a number, so a change of
+// the prop to an object needs no new call in `setup`.
+const isCoarse = useMediaQuery('(pointer: coarse)', {});
+const hitAreaSize = computed(() => {
+  const size = props.hitAreaSize;
+  return typeof size === 'number' ? size : isCoarse.value ? size.coarse : size.fine;
+});
+
+// The nearest root around this root. `provide` below does not change what `inject` gives.
+const outerRoot = inject(ResizableRootContext, null);
+
+// The first control of the first panel in `items` that shows and has a control.
+function findPanelControl(items: readonly Element[]) {
+  for (const item of items) {
+    const panel = panels.value.find((entry) => entry.element.value === item);
+    const size = panel === undefined ? undefined : shown.value[panel.id.value];
+    const control = size !== undefined && size > 0 ? tabbable(item)[0] : undefined;
+    if (control !== undefined) {
+      return control;
+    }
+  }
+  return undefined;
+}
+
+// F6 moves the focus to the next panel, and Shift+F6 to the previous one, as the window splitter
+// pattern describes. A root in a panel of another root gives the key to that root at its last
+// panel. A root that is not in a panel of another root goes on from its other end: the root around
+// it does not move the focus for a key from outside its panels, such as from a root that a
+// `Teleport` moves out.
+function onKeydown(event: KeyboardEvent) {
+  if (
+    event.key !== 'F6' ||
+    event.defaultPrevented ||
+    event.ctrlKey ||
+    event.altKey ||
+    event.metaKey
+  ) {
+    return;
+  }
+  const items = listItems.value;
+  const target = getTarget(event) as Element | null;
+  const from = items.findIndex((item) => contains(item, target));
+  if (from < 0) {
+    return;
+  }
+  const forward = !event.shiftKey;
+  const next = findPanelControl(forward ? items.slice(from + 1) : items.slice(0, from).reverse());
+  const isNested =
+    outerRoot?.panels.value.some((panel) => contains(panel.element.value, element.value)) ?? false;
+  const control =
+    next ??
+    (isNested
+      ? undefined
+      : findPanelControl(forward ? items.slice(0, from + 1) : items.slice(from).reverse()));
+  if (control !== undefined) {
+    control.focus();
+    event.preventDefault();
+  }
+}
+
 provide(ResizableRootContext, {
   orientation,
   direction,
@@ -841,15 +985,20 @@ provide(ResizableRootContext, {
     props.dragStep === undefined ? undefined : parseSize(props.dragStep, measurementFor()),
   ),
   pushPanels: computed(() => props.pushPanels),
+  hitAreaSize,
+  resizeMode: computed(() => props.resizeMode),
+  pendingLayout,
   panels,
   constraints,
   shown,
   lengthPanels,
   measurement,
   registerPanel,
+  registerHandle,
   measure,
   startDragging,
   stopDragging,
+  setPendingLayout,
   changeLayout,
   commitLayout,
   collapsePanel,
@@ -861,16 +1010,34 @@ provide(ResizableRootContext, {
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
+  children: true,
+  // The listener of the consumer runs first, so `event.preventVaseUIHandler()` stops F6.
   props: (attrs) => [
     {
       style: {
         display: 'flex',
         flexDirection: props.orientation === 'horizontal' ? 'row' : 'column',
+        // The root is the containing block of the edge nodes, and the offset parent of the panels.
+        ...(props.dragEdges ? { position: 'relative' } : undefined),
       },
+      onKeydown,
     },
     attrs,
   ],
 });
+
+const edges = useEdges({
+  enabled: () => props.dragEdges,
+  disabled: () => props.disabled,
+  orientation,
+  hitAreaSize,
+  panels,
+  handles: registeredHandles,
+  measurement,
+  shown,
+});
+
+provide(ResizableRootEdgesContext, { edges });
 
 // The root and each handle change the room of the panels when they change size. The panels do not:
 // a transition of `flex-grow` moves a panel and leaves the sum of the panels as it is.
@@ -916,7 +1083,8 @@ watch(
 defineExpose({ element, getLayout, setLayout, reset });
 </script>
 
+<!-- prettier-ignore -->
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="ResizableRootChildren" />
+  <component :is="as" v-else v-bind="elementProps()"><ResizableRootChildren><slot :state="state" /></ResizableRootChildren></component>
 </template>

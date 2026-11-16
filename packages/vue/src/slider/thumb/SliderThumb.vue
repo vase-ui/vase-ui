@@ -8,7 +8,13 @@ export interface SliderThumbState extends SliderRootState {}
 export interface SliderThumbProps
   extends
     VaseUIComponentProps<SliderThumbState>,
-    /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes>, 'tabindex'> {
+    /* @vue-ignore */ Omit<
+      WithVaseUIEvent<
+        HTMLAttributes,
+        'aria-describedby' | 'aria-label' | 'aria-labelledby' | 'aria-valuetext'
+      >,
+      'tabindex'
+    > {
   /**
    * Whether the thumb should ignore user interaction.
    * @default false
@@ -63,6 +69,7 @@ import {
   onActivated,
   onDeactivated,
   onMounted,
+  onScopeDispose,
   provide,
   shallowRef,
   useAttrs,
@@ -94,6 +101,7 @@ import { useSetFieldFocused } from '../../internals/field-root-context/useSetFie
 import { useDeferredServerRender, useLabelableId } from '../../internals/labelable-provider';
 import type { HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useFormReset } from '../../internals/useFormReset';
 import { useFormRestoreAsInput } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { mergeProps } from '../../merge-props';
@@ -183,6 +191,7 @@ const {
   validation,
   format,
   handleInputChange,
+  registerThumbInput,
   inset,
   isArrayValue,
   labelId,
@@ -197,6 +206,7 @@ const {
   pressedThumbCenterOffsetRef,
   pressedThumbIndexRef,
   renderBeforeHydration,
+  reset,
   setActive,
   setIndicatorPosition,
   state: rootState,
@@ -388,6 +398,10 @@ watch([inputElement, thumbValue, min, max, step], syncHandledInputValue, { flush
 
 useFormRestoreAsInput(inputElement, () => handledInputValue, false);
 
+// The thumb follows the reset with its own input. The composite list of the root has no thumb
+// while `KeepAlive` holds the slider.
+useFormReset(inputElement, reset);
+
 function onNativeChange(event: Event) {
   const input = event.currentTarget as HTMLInputElement;
   // A range input sends `input` and then `change` for one user action. A `change` is new only when
@@ -400,14 +414,35 @@ function onNativeChange(event: Event) {
   handleInputChange(input.valueAsNumber, thumbIndex.value, event);
 
   // A listener can cancel the change, and a parent that controls the slider can keep its value.
-  // Vue writes the value only when the thumb renders again.
-  void nextTick(() => {
-    if (thumbValue.value !== undefined && input.valueAsNumber !== thumbValue.value) {
-      input.value = String(thumbValue.value);
-    }
-    handledInputValue = input.value;
-  });
+  void nextTick(writeValueToInput);
 }
+
+// Vue writes the value only when the thumb renders again.
+function writeValueToInput() {
+  const input = inputElement.value;
+  if (!input) {
+    return;
+  }
+  if (thumbValue.value !== undefined && input.valueAsNumber !== thumbValue.value) {
+    input.value = String(thumbValue.value);
+  }
+  handledInputValue = input.value;
+}
+
+onScopeDispose(
+  registerThumbInput({
+    take() {
+      const input = inputElement.value;
+      // Until its take of the hydration, the input holds a value that it got before the hydration.
+      if (!input || (writesValue.value && input.value === handledInputValue)) {
+        return undefined;
+      }
+      handledInputValue = input.value;
+      return { index: thumbIndex.value, value: input.valueAsNumber };
+    },
+    writeValue: writeValueToInput,
+  }),
+);
 
 function inputProps() {
   const value = thumbValue.value;

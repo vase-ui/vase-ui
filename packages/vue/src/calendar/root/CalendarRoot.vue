@@ -183,8 +183,9 @@ const { element, elementProps } = useRenderElement('div', props, {
   props: (attrs) => [
     {
       role: 'group',
-      // The label that the consumer gives replaces the name of the month.
-      'aria-label': attrs['aria-labelledby'] === undefined ? label.value : undefined,
+      // The label that the consumer gives replaces the name of the month. An `aria-labelledby` of
+      // `null` gives no label, so the root keeps the name of the month (VUE-103).
+      'aria-label': attrs['aria-labelledby'] == null ? label.value : undefined,
     },
     attrs,
   ],

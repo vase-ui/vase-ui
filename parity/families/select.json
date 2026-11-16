@@ -42,6 +42,14 @@
       "prop": "multiple",
       "kind": "not-applicable",
       "reason": "The row gives the default `false`. The prop has no declared default, because `withDefaults` refuses a default for a prop of the generic type `Multiple & boolean` (TS2322). Vue gives an absent Boolean prop the value `false`, and the JSDoc has `@default false` for the API reference."
+    },
+    {
+      "upstream": "packages/react/src/select/group-label/SelectGroupLabel.test.tsx",
+      "describe": ["<Select.GroupLabel />"],
+      "title": "allows overriding aria-hidden",
+      "kind": "replaced",
+      "test": "packages/vue/src/select/group-label/SelectGroupLabel.test.tsx",
+      "reason": "The case gives `aria-hidden` the value `undefined` and asserts that the part removes the attribute. Vase UI keeps the value of the part for `undefined` and removes it for `null` (VUE-103). The case \"VUE-103: aria-hidden of the consumer is $name\" tests both values."
     }
   ],
   "surfaceAdditions": [

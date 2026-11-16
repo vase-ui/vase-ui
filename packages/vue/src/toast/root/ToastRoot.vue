@@ -165,14 +165,17 @@ const { element, elementProps } = useRenderElement('div', props, {
   stateAttributesMapping: toastRootStateAttributesMapping,
   props: (attrs) => {
     const swiping = swipeEnabled.value;
+    // WAI-ARIA requires a name for a `dialog` and an `alertdialog`. A toast with no title and no
+    // name from the consumer thus takes its name from its description (VUE-99).
+    const namedByDescription = titleId.value === undefined && !hasConsumerName(attrs);
 
     return [
       {
         role: isHighPriority.value ? 'alertdialog' : 'dialog',
         tabindex: 0,
         'aria-modal': false,
-        'aria-labelledby': titleId.value,
-        'aria-describedby': descriptionId.value,
+        'aria-labelledby': namedByDescription ? descriptionId.value : titleId.value,
+        'aria-describedby': namedByDescription ? undefined : descriptionId.value,
         'aria-hidden': isHighPriority.value && !focused.value ? true : undefined,
         onPointerdown: swiping ? handlePointerdown : undefined,
         onPointermove: swiping ? handlePointermove : undefined,
@@ -193,6 +196,17 @@ const { element, elementProps } = useRenderElement('div', props, {
     ];
   },
 });
+
+function hasConsumerName(attrs: Record<string, unknown>) {
+  const ariaLabel = attrs['aria-label'];
+  // `attrs` has no key for an attribute whose value is `undefined` (VUE-103), so such an
+  // `aria-labelledby` is not a name. An `aria-labelledby` of `null` removes the value of the
+  // root. The consumer chose to remove the name, so the description does not take its place.
+  return (
+    Object.hasOwn(attrs, 'aria-labelledby') ||
+    (typeof ariaLabel === 'string' && ariaLabel.trim() !== '')
+  );
+}
 
 useOpenChangeComplete({
   open: () => props.toast.transitionStatus !== 'ending',

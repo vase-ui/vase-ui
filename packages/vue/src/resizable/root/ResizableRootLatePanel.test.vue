@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { defineComponent, h } from 'vue';
-import * as Resizable from '../index.parts';
+import { Resizable } from '@vase-ui/vue/resizable';
 
 // A panel below a component with an async `setup` registers after the panels beside it.
 const LatePanel = defineComponent({

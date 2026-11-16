@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createSSRApp } from 'vue';
 import { renderToString } from 'vue/server-renderer';
-import * as Resizable from '../index.parts';
+import { Resizable } from '@vase-ui/vue/resizable';
 import ResizableRootHydration from './ResizableRootHydration.test.vue';
 import ResizableRootLatePanel from './ResizableRootLatePanel.test.vue';
 
@@ -126,6 +126,28 @@ describe('<Resizable.Root /> on a server', () => {
     expect(html).not.toContain('aria-valuenow');
   });
 
+  it('renders the value text of getAriaValueText with en-US and no pixelSize', async () => {
+    const getAriaValueText = vi.fn(
+      (text: string, _value: number, details: { pixelSize: number | undefined }) =>
+        `${text} ${String(details.pixelSize)}`,
+    );
+    const html = await renderToString(
+      <Resizable.Root>
+        <Resizable.Panel id="a" defaultSize={30} />
+        <Resizable.Handle getAriaValueText={getAriaValueText} />
+        <Resizable.Panel id="b" />
+        <Resizable.Handle />
+        <Resizable.Panel id="c" />
+      </Resizable.Root>,
+    );
+
+    expect(html).toContain('aria-valuetext="30% undefined"');
+    expect(getAriaValueText).toHaveBeenCalledWith('30%', 30, {
+      collapsed: false,
+      pixelSize: undefined,
+    });
+  });
+
   describe('a first size that is a length', () => {
     it.each([
       { name: 'the size of a panel', composition: 'length', length: 'flex:0 1 240px' },
@@ -202,6 +224,84 @@ describe('<Resizable.Root /> on a server', () => {
       );
 
       expect(onResize).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('the hit area, and the edges', () => {
+    const hitAreasIn = (html: string) =>
+      [...html.matchAll(/<span data-vase-ui-resizable-hit-area style="([^"]*)"/g)].map(
+        (match) => match[1],
+      );
+
+    it('renders a handle with position: relative and a hit area node with the fine size', async () => {
+      const html = await renderToString(
+        createSSRApp(ResizableRootHydration, { composition: 'defaults' }),
+      );
+
+      expect(html.match(/role="separator"[^>]*style="[^"]*position:relative/g)).toHaveLength(2);
+      expect(hitAreasIn(html)).toEqual([
+        'position:absolute;top:0;bottom:0;left:50%;width:max(100%, 10px);translate:-50% 0;z-index:1;',
+        'position:absolute;top:0;bottom:0;left:50%;width:max(100%, 10px);translate:-50% 0;z-index:1;',
+      ]);
+    });
+
+    it('renders the hit area of a vertical root on the vertical axis', async () => {
+      const html = await renderToString(
+        createSSRApp(ResizableRootHydration, { composition: 'vertical' }),
+      );
+
+      expect(hitAreasIn(html)).toEqual([
+        'position:absolute;left:0;right:0;top:50%;height:max(100%, 10px);translate:0 -50%;z-index:1;',
+      ]);
+    });
+
+    it.each([
+      { name: 'a number', composition: 'hitAreaNumber', size: '16px' },
+      { name: 'the fine size of an object', composition: 'hitAreaObject', size: '12px' },
+    ])('renders the hit area with $name', async ({ composition, size }) => {
+      const html = await renderToString(createSSRApp(ResizableRootHydration, { composition }));
+
+      expect(hitAreasIn(html)[0]).toContain(`width:max(100%, ${size})`);
+    });
+
+    it('renders the hit area of a handle that is disabled with no pointer events', async () => {
+      const html = await renderToString(
+        <Resizable.Root>
+          <Resizable.Panel />
+          <Resizable.Handle disabled />
+          <Resizable.Panel />
+        </Resizable.Root>,
+      );
+
+      expect(hitAreasIn(html)[0]).toContain('pointer-events:none');
+    });
+
+    it('renders the hit area of a handle before the first panel as the hit area of a handle that can move', async () => {
+      const html = await renderToString(
+        createSSRApp(ResizableRootHydration, { composition: 'handleFirst' }),
+      );
+
+      expect(hitAreasIn(html)).toHaveLength(2);
+      for (const style of hitAreasIn(html)) {
+        expect(style).not.toContain('pointer-events');
+      }
+    });
+
+    it('renders position: relative on a root with dragEdges, and no edge node', async () => {
+      const html = await renderToString(
+        createSSRApp(ResizableRootHydration, { composition: 'edges' }),
+      );
+
+      expect(html).toContain('style="display:flex;flex-direction:row;position:relative;"');
+      expect(html).not.toContain('data-vase-ui-resizable-edge');
+    });
+
+    it('renders no position on a root with no dragEdges', async () => {
+      const html = await renderToString(
+        createSSRApp(ResizableRootHydration, { composition: 'defaults' }),
+      );
+
+      expect(html).toContain('style="display:flex;flex-direction:row;"');
     });
   });
 

@@ -116,7 +116,9 @@ const { element, elementProps } = useRenderElement('div', props, {
     return [
       {
         role: 'group',
-        'aria-labelledby': ariaLabelledBy ?? labelIds.ids.value.at(-1),
+        // `null` of the consumer removes the label of the group (VUE-103).
+        'aria-labelledby':
+          ariaLabelledBy === undefined ? labelIds.ids.value.at(-1) : ariaLabelledBy,
         'aria-disabled': props.disabled || undefined,
       },
       elementAttrs,

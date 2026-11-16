@@ -866,9 +866,9 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   });
 
   // `KeepAlive` calls no `ref` setter at an activation, so the root registers the input again. The
-  // release before the registration keeps one cleanup for each registration. A watcher runs in the
-  // order of the parts. An `onActivated` hook would run from the last part to the first part and
-  // reverse the inputs.
+  // release before the registration keeps one cleanup for each registration. The field finds its
+  // input by its position in the document, so the order of the watchers decides only between
+  // inputs in two trees.
   watch(shown, updateInputRegistration);
 
   watch(

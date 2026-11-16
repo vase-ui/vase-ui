@@ -10,6 +10,7 @@ import {
   waitFor,
 } from '#test-utils';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
+import { allowTopLevelViewportWarning } from '../utils/test-utils';
 
 const useAnchorPositioningSpy = vi.hoisted(() => vi.fn());
 
@@ -106,6 +107,9 @@ describe('<NavigationMenu.Positioner />', () => {
     { name: 'a root', nested: false, fallbackAxisSide: 'none' },
     { name: 'a nested root', nested: true, fallbackAxisSide: 'end' },
   ])('gives the collision avoidance of $name', async ({ nested, fallbackAxisSide }) => {
+    if (nested) {
+      allowTopLevelViewportWarning();
+    }
     const portal = (
       <NavigationMenu.Portal>
         <NavigationMenu.Positioner />
