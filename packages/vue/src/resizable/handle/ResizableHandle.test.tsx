@@ -1191,6 +1191,63 @@ describe('<Resizable.Handle />', () => {
       expect(ends(screen.getByTestId('handle-1'))).toEqual(['data-at-min', 'data-at-max']);
     });
 
+    it('has both attributes when it has no panel on one side', async () => {
+      await render(
+        <Resizable.Root>
+          <Resizable.Handle data-testid="first" />
+          <Resizable.Panel id="a" />
+          <Resizable.Handle data-testid="between" />
+          <Resizable.Panel id="b" />
+          <Resizable.Handle data-testid="last" />
+        </Resizable.Root>,
+      );
+
+      expect(ends(screen.getByTestId('first'))).toEqual(['data-at-min', 'data-at-max']);
+      expect(ends(screen.getByTestId('between'))).toEqual([]);
+      expect(ends(screen.getByTestId('last'))).toEqual(['data-at-min', 'data-at-max']);
+    });
+
+    it('has both attributes while the panel after it is unmounted', async () => {
+      const showB = shallowRef(true);
+      await render(() => (
+        <Resizable.Root>
+          <Resizable.Panel id="a" />
+          <Resizable.Handle data-testid="handle" />
+          {showB.value ? <Resizable.Panel id="b" /> : null}
+        </Resizable.Root>
+      ));
+      const handle = screen.getByTestId('handle');
+      expect(ends(handle)).toEqual([]);
+
+      showB.value = false;
+      await nextTick();
+      expect(ends(handle)).toEqual(['data-at-min', 'data-at-max']);
+
+      showB.value = true;
+      await nextTick();
+      expect(ends(handle)).toEqual([]);
+    });
+
+    it('gives no end attribute at the mount to a handle with a panel on each side', async () => {
+      const changes: string[] = [];
+      const observer = new MutationObserver((records) => {
+        changes.push(...records.map((record) => record.attributeName ?? ''));
+      });
+      observer.observe(document.body, {
+        subtree: true,
+        attributeFilter: ['data-at-min', 'data-at-max'],
+      });
+      onTestFinished(() => {
+        observer.disconnect();
+      });
+
+      await renderPanels();
+      expect(screen.getByTestId('handle-1')).toHaveAttribute('aria-valuenow', '50');
+
+      changes.push(...observer.takeRecords().map((record) => record.attributeName ?? ''));
+      expect(changes).toEqual([]);
+    });
+
     it('follows a drag and gives the state to stateClass', async () => {
       await renderPanels({
         panels: bounded,

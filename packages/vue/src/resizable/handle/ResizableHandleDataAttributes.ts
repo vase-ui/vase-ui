@@ -18,12 +18,12 @@ export const dragging = 'data-dragging';
  */
 export const crossing = 'data-crossing';
 /**
- * Present when the handle cannot move to the left, or up in a vertical root. The side is a side of
- * the screen.
+ * Present when the handle cannot move to the left, or up in a vertical root. A disabled handle does
+ * not have it. The side is a side of the screen.
  */
 export const atMin = 'data-at-min';
 /**
- * Present when the handle cannot move to the right, or down in a vertical root. The side is a side
- * of the screen.
+ * Present when the handle cannot move to the right, or down in a vertical root. A disabled handle
+ * does not have it. The side is a side of the screen.
  */
 export const atMax = 'data-at-max';
