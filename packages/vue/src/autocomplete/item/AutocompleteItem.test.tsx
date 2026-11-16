@@ -101,8 +101,6 @@ describe('<Autocomplete.Item />', () => {
     await user.click(screen.getByRole('option', { name: 'banana' }));
     await user.click(input);
 
-    await waitFor(() =>
-      expect(screen.getByRole('option', { name: 'banana' })).not.toHaveAttribute('data-selected'),
-    );
+    expect(screen.getByRole('option', { name: 'banana' })).not.toHaveAttribute('data-selected');
   });
 });

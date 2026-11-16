@@ -54,6 +54,9 @@ const SRC = 'packages/vue/src/dialog';
 const SCRIPT_ONLY_TEMPLATE = '\n<template>\n  <div />\n</template>\n';
 
 const WAIT_HINT = '#test-utils';
+const ABSENCE_HINT = 'before the element appears';
+const WAIT_IMPORT =
+  "import { expect } from 'vitest';\nimport { screen, waitFor, within } from '#test-utils';\n\n";
 const WAIT_FILES = [
   ['a test file', `${SRC}/DialogRoot.test.tsx`],
   ['a shared suite', 'packages/vue/test/popupConformanceTests.tsx'],
@@ -569,6 +572,32 @@ const reported = [
       hint: WAIT_HINT,
     })),
   ]),
+  ...WAIT_FILES.flatMap(([place, file]) =>
+    [
+      [
+        'a queryBy query of screen for an absence',
+        "await waitFor(() => {\n  expect(screen.queryByRole('dialog')).toBe(null);\n});\n",
+      ],
+      [
+        'a queryBy query of screen for a presence',
+        "await waitFor(() => {\n  expect(screen.queryByRole('dialog')).not.toBe(null);\n});\n",
+      ],
+      [
+        'a queryAllBy query of within',
+        "await waitFor(() => expect(within(document.body).queryAllByRole('option')).toHaveLength(0));\n",
+      ],
+      [
+        'a queryBy query of the result of render',
+        "declare const queryByText: (text: string) => HTMLElement | null;\nawait waitFor(() => {\n  expect(queryByText('Open')).toBe(null);\n});\n",
+      ],
+    ].map(([name, code]) => ({
+      name: `${name} in waitFor in ${place}`,
+      file,
+      code: `${WAIT_IMPORT}${code}`,
+      ruleId: 'no-restricted-syntax',
+      hint: ABSENCE_HINT,
+    })),
+  ),
   {
     name: 'a style block in a Tailwind demo',
     file: 'docs/demos/sample/hero/tailwind/index.vue',
@@ -738,6 +767,16 @@ const passed = [
     name: 'an import of waitFor, screen and within from #test-utils in a test file',
     file: `${SRC}/DialogRoot.test.tsx`,
     code: "import { screen, waitFor, within } from '#test-utils';\n\nexport const used = [screen, waitFor, within];\n",
+  },
+  {
+    name: 'a queryBy query for an absence after a wait on an element that the test holds',
+    file: `${SRC}/DialogRoot.test.tsx`,
+    code: `${WAIT_IMPORT}const dialog = screen.getByRole('dialog');\nawait waitFor(() => {\n  expect(dialog).not.toBeInTheDocument();\n});\nexpect(screen.queryByRole('dialog')).toBe(null);\nexpect(within(document.body).queryAllByRole('option')).toHaveLength(0);\n`,
+  },
+  {
+    name: 'a getBy query in waitFor in a shared suite',
+    file: 'packages/vue/test/popupConformanceTests.tsx',
+    code: `${WAIT_IMPORT}await waitFor(() => {\n  expect(screen.getByRole('dialog')).toHaveFocus();\n});\nawait waitFor(() => expect(within(document.body).getAllByRole('option')).toHaveLength(2));\n`,
   },
   {
     name: 'an import of fireEvent, createEvent and isInaccessible from Testing Library in a shared suite',

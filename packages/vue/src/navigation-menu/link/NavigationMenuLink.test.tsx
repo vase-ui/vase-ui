@@ -63,7 +63,7 @@ describe('<NavigationMenu.Link />', () => {
       await waitForLaterMillisecond(async () => {
         await user.click(trigger);
         await waitFor(() => {
-          expect(screen.queryByTestId('popup-1')).not.toBe(null);
+          expect(screen.getByTestId('popup-1')).not.toBe(null);
         });
       });
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
@@ -71,7 +71,7 @@ describe('<NavigationMenu.Link />', () => {
       const link = screen.getByRole('link', { name: 'Link 1' });
       await user.click(link);
 
-      await waitFor(() => expect(screen.queryByTestId('popup-1')).toBe(null));
+      expect(screen.queryByTestId('popup-1')).toBe(null);
       expect(trigger).toHaveAttribute('aria-expanded', 'false');
     });
 
@@ -104,7 +104,7 @@ describe('<NavigationMenu.Link />', () => {
       await waitForLaterMillisecond(async () => {
         await user.click(trigger);
         await waitFor(() => {
-          expect(screen.queryByTestId('popup-1')).not.toBe(null);
+          expect(screen.getByTestId('popup-1')).not.toBe(null);
         });
       });
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
@@ -112,7 +112,7 @@ describe('<NavigationMenu.Link />', () => {
       const link = screen.getByRole('link', { name: 'Link 1' });
       await user.click(link);
 
-      await waitFor(() => expect(screen.queryByTestId('popup-1')).not.toBe(null));
+      await waitFor(() => expect(screen.getByTestId('popup-1')).not.toBe(null));
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
     });
   });

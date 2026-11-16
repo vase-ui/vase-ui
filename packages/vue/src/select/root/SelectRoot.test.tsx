@@ -450,7 +450,7 @@ describe('<Select.Root />', () => {
       await user.click(screen.getByRole('combobox'));
       await screen.findByRole('listbox');
       await user.keyboard('{Escape}');
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(closeCount(onOpenChangeComplete)).toBe(1);
 
       // Calling the action after the automatic unmount must not repeat the completion.
@@ -487,7 +487,7 @@ describe('<Select.Root />', () => {
       await setProps({ open: true });
       await screen.findByRole('listbox');
       await setProps({ open: false });
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(closeCount(onOpenChangeComplete)).toBe(2);
     });
 
@@ -511,7 +511,7 @@ describe('<Select.Root />', () => {
       expect(onOpenChangeComplete).not.toHaveBeenCalledWith(false);
       await setProps({ open: true });
       await setProps({ open: false });
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(closeCount(onOpenChangeComplete)).toBe(1);
     });
 
@@ -535,7 +535,7 @@ describe('<Select.Root />', () => {
       expect(screen.queryByRole('listbox')).not.toBe(null);
       cancel = false;
       await user.click(screen.getByRole('option'));
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
     });
 
     it('keeps the opt-out when a controlled close is applied in a transition', async () => {
@@ -668,7 +668,7 @@ describe('<Select.Root />', () => {
       expect(screen.queryByRole('listbox')).not.toBe(null);
 
       await user.keyboard('{Escape}');
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
     });
 
@@ -714,7 +714,7 @@ describe('<Select.Root />', () => {
 
       optOut = false;
       await user.click(screen.getByRole('option'));
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(closeCount(onOpenChangeComplete)).toBe(2);
     });
 
@@ -1155,9 +1155,7 @@ describe('<Select.Root />', () => {
       expect(onValueChange.mock.calls[0][0]).toBe('b');
       expect(trigger).toHaveTextContent('a');
 
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
 
       await user.click(trigger);
 
@@ -1611,9 +1609,7 @@ describe('<Select.Root />', () => {
       expect(handleValueChange.mock.calls.length).toBe(1);
       expect(handleValueChange.mock.calls[0][0]).toBe('b');
 
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
     });
   });
 
@@ -2071,9 +2067,7 @@ describe('<Select.Root />', () => {
 
     await user.click(optionB);
 
-    await waitFor(() => {
-      expect(trigger).not.toHaveAttribute('data-dirty');
-    });
+    expect(trigger).not.toHaveAttribute('data-dirty');
   });
 
   it('compares object values with isItemEqualToValue when clearing [data-dirty] in multiple mode', async () => {
@@ -2122,9 +2116,7 @@ describe('<Select.Root />', () => {
 
     await user.click(optionA);
 
-    await waitFor(() => {
-      expect(trigger).not.toHaveAttribute('data-dirty');
-    });
+    expect(trigger).not.toHaveAttribute('data-dirty');
   });
 
   it('does not invoke isItemEqualToValue with the value array in multiple mode when empty', async () => {
@@ -2321,7 +2313,7 @@ describe('<Select.Root />', () => {
       await user.click(trigger);
 
       await waitFor(() => {
-        expect(screen.queryByRole('listbox')).not.toBe(null);
+        expect(screen.getByRole('listbox')).not.toBe(null);
       });
 
       const positioner = screen.getByTestId('positioner');
@@ -2351,7 +2343,7 @@ describe('<Select.Root />', () => {
       await user.click(trigger);
 
       await waitFor(() => {
-        expect(screen.queryByRole('listbox')).not.toBe(null);
+        expect(screen.getByRole('listbox')).not.toBe(null);
       });
 
       const positioner = screen.getByTestId('positioner');
@@ -2439,7 +2431,7 @@ describe('<Select.Root />', () => {
         await flushMicrotasks();
 
         await waitFor(() => {
-          expect(screen.queryByRole('listbox')).not.toBe(null);
+          expect(screen.getByRole('listbox')).not.toBe(null);
         });
 
         await pressWithTouch(trigger);
@@ -2458,7 +2450,7 @@ describe('<Select.Root />', () => {
         await flushMicrotasks();
 
         await waitFor(() => {
-          expect(screen.queryByRole('listbox')).not.toBe(null);
+          expect(screen.getByRole('listbox')).not.toBe(null);
         });
 
         await wait(30);
@@ -2684,7 +2676,7 @@ describe('<Select.Root />', () => {
         await pressWithTouch(trigger);
 
         await waitFor(() => {
-          expect(screen.queryByRole('listbox')).not.toBe(null);
+          expect(screen.getByRole('listbox')).not.toBe(null);
         });
 
         const initialPositioner = screen.getByTestId('positioner');
@@ -2808,13 +2800,13 @@ describe('<Select.Root />', () => {
       await user.click(trigger);
 
       await waitFor(() => {
-        expect(screen.queryByRole('listbox')).not.toBe(null);
+        expect(screen.getByRole('listbox')).not.toBe(null);
       });
 
       await user.click(trigger);
 
       await waitFor(() => {
-        expect(screen.queryByRole('listbox')).not.toBe(null);
+        expect(screen.getByRole('listbox')).not.toBe(null);
       });
 
       await new Promise((resolve) => {
@@ -2823,9 +2815,7 @@ describe('<Select.Root />', () => {
       actions.unmount();
       await flushMicrotasks();
 
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
     });
 
     it('clears scroll arrow visibility when manually unmounted (strict: %s)', async () => {
@@ -3100,8 +3090,9 @@ describe('<Select.Root />', () => {
 
         expect(hasEndingStyle).toBe(true);
         await waitFor(() => {
-          expect(screen.queryByTestId('scroll-arrow')).toBe(null);
+          expect(arrow).not.toBeInTheDocument();
         });
+        expect(screen.queryByTestId('scroll-arrow')).toBe(null);
       },
     );
   });
@@ -3169,17 +3160,13 @@ describe('<Select.Root />', () => {
       await user.pointer({ keys: '[/MouseLeft]', target: gala });
       await user.click(await screen.findByRole('option', { name: 'Fuji' }));
 
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
 
       expect(screen.queryByTestId('popover-popup')).not.toBe(null);
 
       await fireHeldPress(document.body);
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('popover-popup')).toBe(null);
-      });
+      expect(screen.queryByTestId('popover-popup')).toBe(null);
     });
 
     it('dismisses the popover after reopening a selected aligned select', async () => {
@@ -3225,9 +3212,7 @@ describe('<Select.Root />', () => {
       });
       await user.click(gala);
 
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
 
       await user.pointer({ keys: '[MouseLeft>]', target: screen.getByTestId('select-trigger') });
       const selectedOption = await screen.findByRole('option', { name: 'Gala' });
@@ -3235,15 +3220,11 @@ describe('<Select.Root />', () => {
 
       await user.click(await screen.findByRole('option', { name: 'Fuji' }));
 
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
 
       await fireHeldPress(document.body);
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('popover-popup')).toBe(null);
-      });
+      expect(screen.queryByTestId('popover-popup')).toBe(null);
     });
 
     it('keeps a modal popover open when choosing a non-modal aligned select item', async () => {
@@ -3279,9 +3260,7 @@ describe('<Select.Root />', () => {
 
       await user.click(screen.getByRole('option', { name: 'Two' }));
 
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(screen.queryByTestId('popover-popup')).not.toBe(null);
     });
 
@@ -3316,9 +3295,7 @@ describe('<Select.Root />', () => {
 
       await user.keyboard('{Escape}');
 
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(screen.queryByTestId('popover-popup')).not.toBe(null);
     });
 
@@ -3373,15 +3350,13 @@ describe('<Select.Root />', () => {
       await waitForLaterMillisecond(async () => {
         await user.click(selectOpener);
         await waitFor(() => {
-          expect(screen.queryByRole('listbox')).not.toBe(null);
+          expect(screen.getByRole('listbox')).not.toBe(null);
         });
       });
 
       await user.click(screen.getByRole('option', { name: 'Two' }));
 
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(selectOpener).toHaveFocus();
       expect(screen.queryByTestId('popover-popup')).not.toBe(null);
     });
@@ -3465,9 +3440,7 @@ describe('<Select.Root />', () => {
         clientY: endY,
       });
 
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(screen.queryByTestId('popover-popup')).not.toBe(null);
 
       await fireEvent.pointerDown(document.body, {
@@ -3502,9 +3475,7 @@ describe('<Select.Root />', () => {
         clientY: endY,
       });
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('popover-popup')).toBe(null);
-      });
+      expect(screen.queryByTestId('popover-popup')).toBe(null);
     });
   });
 
@@ -5070,9 +5041,7 @@ describe('<Select.Root />', () => {
         </Select.Root>,
       );
 
-      await waitFor(() => {
-        expect(screen.getByTestId('trigger')).not.toHaveAttribute('aria-labelledby');
-      });
+      expect(screen.getByTestId('trigger')).not.toHaveAttribute('aria-labelledby');
     });
 
     it('updates Select.Label linkage when root id changes', async () => {
@@ -5393,7 +5362,7 @@ describe('<Select.Root />', () => {
       await user.keyboard('{ArrowDown}');
 
       await waitFor(() => {
-        expect(screen.queryByRole('listbox')).not.toBe(null);
+        expect(screen.getByRole('listbox')).not.toBe(null);
       });
 
       await user.keyboard('{ArrowDown}');
@@ -6967,9 +6936,7 @@ describe('<Select.Root />', () => {
       await user.click(trigger);
       await screen.findByRole('option', { name: 'a' });
       await user.keyboard('{Escape}');
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
 
       await setProps({ replaceA: true });
 
@@ -7006,9 +6973,7 @@ describe('<Select.Root />', () => {
       await user.click(screen.getByTestId('trigger'));
       await screen.findByRole('option', { name: 'a' });
       await user.keyboard('{Escape}');
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
 
       await setProps({ trimmed: true });
 
@@ -7061,9 +7026,7 @@ describe('<Select.Root />', () => {
         });
       });
       await user.keyboard('{Escape}');
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
 
       await setProps({ value: [{ id: 0 }, { id: 1 }] });
 
@@ -7529,9 +7492,7 @@ describe('<Select.Root />', () => {
       await user.click(optionA);
       await flushMicrotasks();
 
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
     });
 
     it('should update selected items when value prop changes', async () => {
@@ -8297,7 +8258,7 @@ describe('<Select.Root />', () => {
       await waitForLaterMillisecond(async () => {
         await user.click(screen.getByRole('combobox'));
         await waitFor(() => {
-          expect(screen.queryByRole('listbox')).not.toBe(null);
+          expect(screen.getByRole('listbox')).not.toBe(null);
         });
       });
       await flushMicrotasks();

@@ -296,9 +296,7 @@ describe('<Menu.List />', () => {
       await focusList(list);
       await fireEvent.keyDown(list, { key: 'Escape' });
 
-      await waitFor(() => {
-        expect(screen.queryByRole('dialog')).toBe(null);
-      });
+      expect(screen.queryByRole('dialog')).toBe(null);
     });
 
     it('hands typing keys back to the input', async () => {
@@ -400,7 +398,7 @@ describe('filterable menu list semantics', () => {
       await waitFor(() => expect(input).toHaveFocus());
 
       await user.type(input, 'p');
-      await waitFor(() => expect(screen.queryByText('Beta')).toBe(null));
+      expect(screen.queryByText('Beta')).toBe(null);
 
       // Left and Right keep moving the caret while nothing is highlighted.
       await user.keyboard('[ArrowLeft]');
