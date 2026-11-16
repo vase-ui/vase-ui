@@ -770,6 +770,8 @@ const reported = [
   })),
   ...[
     ['Object.groupBy', 'Object.groupBy(items, (item) => item % 2)', 'Group the items'],
+    ['Symbol.dispose', 'items[Symbol.dispose]', 'finally'],
+    ['Symbol.asyncDispose', 'items[Symbol.asyncDispose]', 'finally'],
     ['toLocaleString', 'items.length.toLocaleString()', 'formatter()'],
   ].map(([name, expression, hint]) => ({
     name: `a read of ${name} in a template`,
@@ -844,6 +846,7 @@ const reported = [
       '-webkit-user-select',
     ],
     ['an attribute name of Base UI', '<div data-base-ui-inert="" />', 'share a marker'],
+    ['a bound attribute name of Base UI', `<div :data-base-ui-inert="''" />`, 'share a marker'],
     ['a class of Base UI', '<div class="base-ui-disable-scrollbar" />', 'share a marker'],
     [
       'an attribute name of Base UI in an expression',
@@ -1118,9 +1121,9 @@ const passed = [
     code: 'export const groups = (collection: { groupBy(): unknown }) => collection.groupBy();\n',
   },
   {
-    name: 'a groupBy method of another object in a template',
+    name: 'a groupBy method and a dispose method of another object in a template',
     file: `${SRC}/DialogRoot.vue`,
-    code: '<script setup lang="ts">\nconst collection = { groupBy: () => 1 };\n</script>\n\n<template>\n  <div>{{ collection.groupBy() }}</div>\n</template>\n',
+    code: '<script setup lang="ts">\nconst collection = { groupBy: () => 1, dispose: () => 2 };\n</script>\n\n<template>\n  <div>{{ collection.groupBy() }} {{ collection.dispose() }}</div>\n</template>\n',
   },
   {
     name: 'a dispose method of another object',

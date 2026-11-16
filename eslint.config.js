@@ -52,7 +52,7 @@ const MESSAGES = {
   prehydrationImport:
     'The build writes this subpath import. A test job has no `dist`, and Vite cannot resolve the import. Write `./prehydrationScript.min`.',
   useFloating:
-    '`useAnchorPositioning` is the only caller of `useFloating`. Call `usePopupPositioner` in a positioner part.',
+    '`useAnchorPositioning` gives `useFloating` the middleware of Base UI, and it corrects `isPositioned` for a popup that closes during a position pass. Call `usePopupPositioner` in a positioner part.',
   watchPostEffect:
     "`watchPostEffect` runs again for each value that the effect reads. Use `watch` with the dependencies of the Base UI effect and `flush: 'post'`.",
   transition:
@@ -321,12 +321,17 @@ const RESTRICTED_TEMPLATE_SYNTAX = [
     message: MESSAGES.groupBy,
   },
   {
+    selector:
+      "MemberExpression[computed=false][object.name='Symbol'][property.name=/^(?:dispose|asyncDispose)$/]",
+    message: MESSAGES.resourceManagement,
+  },
+  {
     selector: "MemberExpression[computed=false][property.name='toLocaleString']",
     message: MESSAGES.toLocaleString,
   },
   { selector: 'VElement[name=/^transition(?:-?group)?$/]', message: MESSAGES.transition },
   {
-    selector: `VAttribute[directive=false] > VIdentifier[name=${BASE_UI_NAME}], VLiteral[value=${BASE_UI_NAME}]`,
+    selector: `VIdentifier[name=${BASE_UI_NAME}], VLiteral[value=${BASE_UI_NAME}]`,
     message: MESSAGES.baseUiName,
   },
   ...RESTRICTED_EXPRESSION_SYNTAX,
