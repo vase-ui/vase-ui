@@ -3,6 +3,7 @@ import { userEvent } from 'vitest/browser';
 import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import { Tabs } from '@vase-ui/vue/tabs';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -447,6 +448,36 @@ describe('<Tabs.List />', () => {
       expect(readRunning().map((observer) => [...observer.observed])).toEqual([[list, tab]]);
 
       tab.style.width = '60px';
+
+      await waitFor(() =>
+        expect(indicator.style.getPropertyValue('--active-tab-width')).toBe('60px'),
+      );
+    });
+
+    it('makes the indicator follow a resize of a tab after the activation of a list that mounts while KeepAlive holds it', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Tabs.Root value={0}>
+          <Tabs.List style={{ width: '200px' }}>
+            <Tabs.Tab value={0} style={{ width: '50px' }} />
+            <Tabs.Indicator data-testid="indicator" />
+          </Tabs.List>
+        </Tabs.Root>
+      ));
+      await render(<HeldBranch />);
+
+      await mountWhileHeld();
+      await show();
+
+      const indicator = screen.getByTestId('indicator');
+      await waitFor(() =>
+        expect(indicator.style.getPropertyValue('--active-tab-width')).toBe('50px'),
+      );
+      // The first notification of the observer comes in the frame after its start. A resize before
+      // it would reach the indicator through that notification.
+      await waitSingleFrame();
+      await waitSingleFrame();
+
+      screen.getByRole('tab').style.width = '60px';
 
       await waitFor(() =>
         expect(indicator.style.getPropertyValue('--active-tab-width')).toBe('60px'),

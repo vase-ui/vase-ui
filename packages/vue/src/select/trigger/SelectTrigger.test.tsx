@@ -633,6 +633,35 @@ describe('<Select.Trigger />', () => {
 
       expect(screen.getByTestId('trigger')).toHaveAttribute('aria-expanded', 'true');
     });
+
+    it('VUE-5: selects an item on a release at once after the activation of a select that mounts open while KeepAlive holds it', async () => {
+      const onValueChange = vi.fn();
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Select.Root defaultOpen onValueChange={onValueChange}>
+          <Select.Trigger data-testid="trigger" />
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="one">One</Select.Item>
+                <Select.Item value="two" data-testid="two">
+                  Two
+                </Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+      ));
+      await render(<HeldBranch />);
+      await mountWhileHeld();
+      // The guard of the opening press lasts 400 ms.
+      await wait(450);
+
+      await show();
+      await fireEvent.mouseUp(screen.getByTestId('two'), { button: 0 });
+
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+      expect(onValueChange.mock.lastCall?.[0]).toBe('two');
+    });
   });
 
   // The compiled template of the fixture mounts the new trigger before it unmounts the old

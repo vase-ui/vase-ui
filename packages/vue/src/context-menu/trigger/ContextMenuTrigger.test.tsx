@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, defineComponent, shallowRef } from 'vue';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -798,6 +799,30 @@ describe('<ContextMenu.Trigger />', () => {
       });
 
       expect(prevented).toEqual([true, true, true, false]);
+    });
+
+    it('stays closed on the backdrop after the activation of a trigger that mounts while KeepAlive holds it', async () => {
+      const probe = createProbe();
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <ContextMenu.Root>
+          <probe.Probe />
+          <ContextMenu.Trigger>Right click me</ContextMenu.Trigger>
+        </ContextMenu.Root>
+      ));
+      const { getByTestId } = await render(
+        <div>
+          <div data-testid="backdrop" />
+          <HeldBranch />
+        </div>,
+      );
+      await mountWhileHeld();
+      await show();
+      probe.context.backdropRef.value = getByTestId('backdrop') as HTMLDivElement;
+
+      const event = createContextMenuEvent();
+      getByTestId('backdrop').dispatchEvent(event);
+
+      expect(event.defaultPrevented).toBe(true);
     });
   });
 

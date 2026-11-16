@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -213,6 +214,45 @@ describe('<NavigationMenu.Positioner />', () => {
       await flushMicrotasks();
       visible.value = true;
       await flushMicrotasks();
+      expect(positioner).not.toHaveAttribute('data-instant');
+
+      window.dispatchEvent(new Event('resize'));
+      await flushMicrotasks();
+      expect(positioner).toHaveAttribute('data-instant');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('has no data-instant at the activation of a menu that mounts open while KeepAlive holds it, and follows a resize after it', async () => {
+    vi.useFakeTimers();
+    try {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <NavigationMenu.Root defaultValue="one">
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="one">
+              <NavigationMenu.Trigger>One</NavigationMenu.Trigger>
+              <NavigationMenu.Content>
+                <NavigationMenu.Link href="#one">Link of one</NavigationMenu.Link>
+              </NavigationMenu.Content>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          <NavigationMenu.Portal>
+            <NavigationMenu.Positioner data-testid="positioner">
+              <NavigationMenu.Popup>
+                <NavigationMenu.Viewport />
+              </NavigationMenu.Popup>
+            </NavigationMenu.Positioner>
+          </NavigationMenu.Portal>
+        </NavigationMenu.Root>
+      ));
+      await render(<HeldBranch />);
+      await mountWhileHeld();
+      await vi.advanceTimersByTimeAsync(0);
+      await flushMicrotasks();
+
+      await show();
+      const positioner = screen.getByTestId('positioner');
       expect(positioner).not.toHaveAttribute('data-instant');
 
       window.dispatchEvent(new Event('resize'));

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, Teleport, computed, defineComponent, shallowRef } from 'vue';
 import type { PropType } from 'vue';
-import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
+import { createHeldBranch, createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
 import { platform } from '../../../common/platform';
 import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
 import type { VaseUIChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
@@ -70,6 +70,44 @@ describe('useFocus', () => {
     });
 
     await render(<App />);
+    const button = screen.getByRole('button');
+
+    button.focus();
+    await flushMicrotasks();
+
+    window.dispatchEvent(new Event('blur'));
+    await fireEvent.focusIn(button);
+
+    vi.advanceTimersByTime(200);
+    await flushMicrotasks();
+
+    expect(screen.queryByRole('tooltip')).toBe(null);
+  });
+
+  it('does not reopen when focus is restored after leaving the tab, after the activation of a trigger that mounts while KeepAlive holds it', async () => {
+    const App = defineComponent({
+      setup() {
+        const open = shallowRef(false);
+        const { refs, context } = useFloating({
+          open,
+          onOpenChange(nextOpen) {
+            open.value = nextOpen;
+          },
+        });
+        const focusProps = useFocus(context.rootStore, { delay: 100 });
+
+        return () => (
+          <>
+            <button {...focusProps} ref={refs.setReference} />
+            {open.value && <div role="tooltip" ref={refs.setFloating} />}
+          </>
+        );
+      },
+    });
+    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => <App />);
+    await render(<HeldBranch />);
+    await mountWhileHeld();
+    await show();
     const button = screen.getByRole('button');
 
     button.focus();

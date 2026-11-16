@@ -31,6 +31,7 @@ import {
   renderOnServer,
   screen,
   waitFor,
+  waitSingleFrame,
   within,
 } from '#test-utils';
 import { platform } from '../../common/platform';
@@ -1961,6 +1962,38 @@ describe('<Slider.Thumb />', () => {
 
       await waitFor(() => {
         expect(thumb.style.getPropertyValue('--position')).toBe('59%');
+      });
+    });
+
+    it('measures an inset thumb that mounts while KeepAlive holds it at the activation, and follows a resize after it', async () => {
+      const value = shallowRef(30);
+      const width = shallowRef(200);
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Slider.Root value={value.value} thumbAlignment="edge" style={{ width: `${width.value}px` }}>
+          <Slider.Control style={{ position: 'relative', width: '100%', height: '10px' }}>
+            <Slider.Thumb data-testid="thumb" style={{ width: '20px', height: '10px' }} />
+          </Slider.Control>
+        </Slider.Root>
+      ));
+      await render(<HeldBranch />);
+
+      await mountWhileHeld();
+      value.value = 60;
+      await flushMicrotasks();
+      await show();
+
+      const thumb = screen.getByTestId('thumb');
+      await waitFor(() => {
+        expect(thumb.style.getPropertyValue('--position')).toBe('59%');
+      });
+      // A style write in the microtask checkpoint of an observer callback gives the loop error of
+      // the browser, so the resize leaves that task.
+      await waitSingleFrame();
+
+      width.value = 400;
+
+      await waitFor(() => {
+        expect(thumb.style.getPropertyValue('--position')).toBe('59.5%');
       });
     });
 

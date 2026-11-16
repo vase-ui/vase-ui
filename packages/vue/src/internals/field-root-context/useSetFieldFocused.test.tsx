@@ -1,6 +1,7 @@
 import { expect, describe, it, onTestFinished } from 'vitest';
 import { createSSRApp, defineComponent, KeepAlive, onActivated, shallowRef } from 'vue';
 import {
+  createHeldBranch,
   createRenderer,
   flushMicrotasks,
   renderOnServer,
@@ -218,6 +219,37 @@ describe('useSetFieldFocused', () => {
 
       expect(control).toHaveFocus();
       expect(screen.getByTestId('root')).toHaveAttribute('data-focused');
+    });
+
+    it('does not set the focused state at the first activation of a control that mounts while KeepAlive holds it and has focus with no focus event', async () => {
+      // The hook of this part runs before the hook of the control, as in the case above.
+      const FocusOnActivation = defineComponent(() => {
+        onActivated(() => {
+          screen.getByTestId('control').focus();
+        });
+        return () => null;
+      });
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <>
+          <FieldControlPart data-testid="control" />
+          <FocusOnActivation />
+        </>
+      ));
+      await render(
+        <FieldScope data-testid="root">
+          <HeldBranch />
+        </FieldScope>,
+      );
+      await mountWhileHeld();
+      document.addEventListener('focusin', (event) => event.stopImmediatePropagation(), {
+        capture: true,
+        once: true,
+      });
+
+      await show();
+
+      expect(screen.getByTestId('control')).toHaveFocus();
+      expect(screen.getByTestId('root')).not.toHaveAttribute('data-focused');
     });
 
     it('sets the focused state of a control that has focus before the hydration', async () => {

@@ -3,6 +3,7 @@ import { createSSRApp, defineComponent, KeepAlive, nextTick, shallowRef, watch }
 import type { PropType, ShallowRef } from 'vue';
 import type { MiddlewareReturn, VirtualElement } from '@floating-ui/vue';
 import {
+  createHeldBranch,
   createRenderer,
   flushMicrotasks,
   hydrate,
@@ -1231,6 +1232,25 @@ describe('useAnchorPositioning', () => {
 
       await waitForPlace(popup, { left: 60 + ANCHOR.width / 2 - POPUP.width / 2, top: BELOW.top });
       expect(autoUpdateSpy).toHaveBeenCalledTimes(2);
+    });
+
+    it('places a popup that mounts while KeepAlive holds it at the activation, and follows its anchor after it', async () => {
+      const trigger = createAnchor();
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <PositionerPart trigger={trigger} {...popupProps} />
+      ));
+      await render(<HeldBranch />);
+
+      await mountWhileHeld();
+      trigger.style.left = '60px';
+      await show();
+
+      const popup = screen.getByTestId('popup');
+      await waitForPlace(popup, { left: 60 + ANCHOR.width / 2 - POPUP.width / 2, top: BELOW.top });
+
+      trigger.style.left = `${ANCHOR.left}px`;
+
+      await waitForPlace(popup, BELOW);
     });
   });
 

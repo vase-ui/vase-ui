@@ -2,7 +2,7 @@ import { describe, expect, it, onTestFinished, test, vi } from 'vitest';
 import { KeepAlive, computed, defineComponent, nextTick, onMounted, shallowRef, watch } from 'vue';
 import type { PropType, ShallowRef } from 'vue';
 import type { Placement, VirtualElement } from '@floating-ui/vue';
-import { createRenderer, fireEvent, flushMicrotasks } from '#test-utils';
+import { createHeldBranch, createRenderer, fireEvent, flushMicrotasks } from '#test-utils';
 import type { VaseUIChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
 import { FloatingRootStore } from '../floating-root/FloatingRootStore';
 import { useDismiss } from '../interactions/useDismiss';
@@ -651,6 +651,43 @@ describe('useVaseUIFloating', () => {
       visible.value = true;
       await nextTick();
       expect(contexts()).toEqual([undefined, context]);
+    });
+
+    it('VUE-43: gives the node the context of a positioner that mounts while KeepAlive holds it', async () => {
+      const tree = new FloatingTreeStore();
+      const { store } = createStore();
+      const { positioning } = createPositioning();
+      const ids: Record<string, string> = {};
+      const NodeOwner = createNodeOwner(tree, (id) => {
+        ids.node = id;
+      });
+      let context!: PopupPositioningContext;
+      const Positioner = createPositioner(
+        {
+          rootStore: store,
+          mounted: true,
+          positioning,
+          nodeId: () => ids.node,
+          externalTree: () => tree,
+        },
+        (value) => {
+          context = value;
+        },
+      );
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => <Positioner />);
+      await render(
+        <>
+          <NodeOwner />
+          <HeldBranch />
+        </>,
+      );
+      const nodeContext = () => tree.nodesRef.value[0].context;
+
+      await mountWhileHeld();
+      expect(nodeContext()).toBe(context);
+
+      await show();
+      expect(nodeContext()).toBe(context);
     });
 
     it('leaves the node of a part that KeepAlive holds when the popup moves to another node', async () => {

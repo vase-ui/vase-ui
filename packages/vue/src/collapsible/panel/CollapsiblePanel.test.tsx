@@ -1180,6 +1180,78 @@ describe('<Collapsible.Panel />', () => {
       expect(panel.getAnimations().length).toBe(0);
     });
 
+    it('plays no open animation at the activation of an initially open panel that mounts while KeepAlive holds it, and closes from its height', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Collapsible.Root defaultOpen>
+          <Collapsible.Trigger>Trigger</Collapsible.Trigger>
+          <Collapsible.Panel class="animation-test-panel" data-testid="panel" keepMounted>
+            {PANEL_CONTENT}
+          </Collapsible.Panel>
+        </Collapsible.Root>
+      ));
+      const { user } = await render(
+        <>
+          <style>{`
+            @keyframes panel-slide-down {
+              from {
+                height: 0;
+              }
+
+              to {
+                height: var(--collapsible-panel-height);
+              }
+            }
+
+            @keyframes panel-slide-up {
+              from {
+                height: var(--collapsible-panel-height);
+              }
+
+              to {
+                height: 0;
+              }
+            }
+
+            .animation-test-panel[data-open] {
+              overflow: hidden;
+              animation: panel-slide-down 100ms linear;
+            }
+
+            .animation-test-panel[data-closed] {
+              overflow: hidden;
+              animation: panel-slide-up 100ms linear;
+            }
+          `}</style>
+          <HeldBranch />
+        </>,
+      );
+
+      await mountWhileHeld();
+      await show();
+      const panel = screen.getByTestId('panel');
+
+      await waitFor(() => {
+        expect(panel).toHaveAttribute('data-open');
+      });
+      expect(panel.getAnimations()).toHaveLength(0);
+
+      const openHeight = `${panel.scrollHeight}px`;
+      // The state exists only while the animation runs, so the listener reads it.
+      const closing = nextEvent(panel, 'animationstart').then((event) => ({
+        animationName: (event as AnimationEvent).animationName,
+        height: panel.style.getPropertyValue('--collapsible-panel-height'),
+      }));
+      const [closingState] = await Promise.all([
+        closing,
+        user.click(screen.getByRole('button', { name: 'Trigger' })),
+      ]);
+      expect(closingState).toEqual({ animationName: 'panel-slide-up', height: openHeight });
+
+      await waitFor(() => {
+        expect(panel).toHaveAttribute('hidden');
+      });
+    });
+
     it('does not replay open keyframe animations when revealing a panel opened by the user', async () => {
       const App = defineComponent(() => {
         const visible = shallowRef(true);

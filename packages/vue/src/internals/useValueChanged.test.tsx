@@ -1,6 +1,6 @@
 import { expect, vi, describe, it } from 'vitest';
 import { KeepAlive, defineComponent, shallowRef } from 'vue';
-import { createRenderer, flushMicrotasks } from '#test-utils';
+import { createHeldBranch, createRenderer, flushMicrotasks } from '#test-utils';
 import { useValueChanged } from './useValueChanged';
 
 describe('useValueChanged', () => {
@@ -80,6 +80,28 @@ describe('useValueChanged', () => {
 
       expect(onChange).toHaveBeenCalledTimes(1);
       expect(onChange).toHaveBeenCalledWith(1);
+    });
+
+    it('calls onChange for a change while a part that mounts in a held branch is held', async () => {
+      const onChange = vi.fn();
+      const value = shallowRef(1);
+      const Child = defineComponent(() => {
+        useValueChanged(value, onChange);
+        return () => null;
+      });
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => <Child />);
+      await render(<HeldBranch />);
+      await mountWhileHeld();
+
+      value.value = 2;
+      await flushMicrotasks();
+
+      expect(onChange).toHaveBeenCalledTimes(1);
+      expect(onChange).toHaveBeenCalledWith(1);
+
+      await show();
+
+      expect(onChange).toHaveBeenCalledTimes(1);
     });
   });
 });

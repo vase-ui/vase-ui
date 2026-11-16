@@ -1,12 +1,14 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { defineComponent, h, KeepAlive, nextTick, shallowRef } from 'vue';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
   flushMicrotasks,
   screen,
   waitFor,
+  waitSingleFrame,
 } from '#test-utils';
 import { Toast } from '@vase-ui/vue/toast';
 import ToastLabelContent from '../utils/ToastLabelContent.vue';
@@ -173,5 +175,53 @@ describe('<Toast.Content />', () => {
 
     expect(observe).toHaveBeenCalledTimes(observeAfterMount + 1);
     expect(disconnect).toHaveBeenCalledTimes(disconnectAfterMount + 1);
+  });
+
+  it('measures its toast at the activation of a content that mounts while KeepAlive holds it, and follows a change of its size', async () => {
+    const height = shallowRef(10);
+    // `KeepAlive` holds only the content, so the provider, the viewport and the root stay active.
+    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+      <Toast.Content>
+        <div style={{ height: `${height.value}px` }} />
+      </Toast.Content>
+    ));
+    const HeldContentList = defineComponent(() => {
+      const { toasts } = Toast.useToastManager();
+      return () =>
+        toasts.value.map((toastItem) => (
+          <Toast.Root key={toastItem.id} toast={toastItem} data-testid={toastItem.id}>
+            <HeldBranch />
+          </Toast.Root>
+        ));
+    });
+    const manager = Toast.createToastManager();
+    await render(
+      <Toast.Provider toastManager={manager}>
+        <Toast.Viewport>
+          <HeldContentList />
+        </Toast.Viewport>
+      </Toast.Provider>,
+    );
+    manager.add({ id: 'toast', title: 'Toast title', timeout: 0 });
+    await flushMicrotasks();
+    const root = screen.getByTestId('toast');
+
+    await mountWhileHeld();
+    height.value = 20;
+    await flushMicrotasks();
+    await show();
+
+    await waitFor(() => {
+      expect(root.style.getPropertyValue('--toast-height')).toBe('20px');
+    });
+    // A style write in the microtask checkpoint of an observer callback gives the loop error of the
+    // browser, so the change leaves that task.
+    await waitSingleFrame();
+
+    height.value = 40;
+
+    await waitFor(() => {
+      expect(root.style.getPropertyValue('--toast-height')).toBe('40px');
+    });
   });
 });

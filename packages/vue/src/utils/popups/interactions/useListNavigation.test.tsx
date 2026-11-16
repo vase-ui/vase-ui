@@ -13,6 +13,7 @@ import {
 } from 'vue';
 import type { InjectionKey, PropType, StyleValue } from 'vue';
 import {
+  createHeldBranch,
   createRenderer,
   fireEvent,
   flushMicrotasks,
@@ -2824,6 +2825,33 @@ describe('useListNavigation', () => {
       expect(list.proposals).toEqual([0, 1]);
       await keyDown(menu(), 'ArrowDown');
       expect(focused()).toBe('item-2');
+    });
+
+    it('highlights the selected item of a list that mounts open while KeepAlive holds it, and keeps the focus where it is at the activation', async () => {
+      let list!: ListExposed;
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <List
+          defaultOpen
+          options={{ selectedIndex: 1 }}
+          ref={(instance) => {
+            if (instance) {
+              list = instance as unknown as ListExposed;
+            }
+          }}
+        />
+      ));
+      await render(<HeldBranch />);
+      await mountWhileHeld();
+      await waitSingleFrame();
+      await waitSingleFrame();
+
+      await show();
+      await waitSingleFrame();
+      await waitSingleFrame();
+
+      expect(list.proposals).toEqual([1]);
+      expect(list.activeIndex).toBe(1);
+      expect(document.body).toHaveFocus();
     });
   });
 

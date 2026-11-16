@@ -9,7 +9,7 @@ import {
   shallowRef,
 } from 'vue';
 import type { PropType } from 'vue';
-import { createRenderer, screen } from '#test-utils';
+import { createHeldBranch, createRenderer, screen } from '#test-utils';
 import { NOOP } from '../../common/empty';
 import type { InteractionType } from '../../common/useEnhancedClickHandler';
 import type { HTMLProps } from '../../internals/types';
@@ -484,6 +484,23 @@ describe('useTriggerRegistration', () => {
       showBranch.value = true;
       await nextTick();
       expect(store.state.triggerCount).toBe(4);
+    });
+
+    it('counts a trigger that mounts while KeepAlive holds it in the map of an open popup', async () => {
+      const store = createTestPopupStore();
+      store.set('open', true);
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <RegisteredTrigger id="held" store={store} />
+      ));
+      await render(<HeldBranch />);
+
+      await mountWhileHeld();
+      expect(registeredIds(store)).toEqual(['held']);
+      expect(store.state.triggerCount).toBe(1);
+
+      await show();
+      expect(registeredIds(store)).toEqual(['held']);
+      expect(store.state.triggerCount).toBe(1);
     });
 
     it('removes the entry of a deactivated trigger when KeepAlive removes the trigger', async () => {

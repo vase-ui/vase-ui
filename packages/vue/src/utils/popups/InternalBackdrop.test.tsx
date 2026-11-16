@@ -1,10 +1,12 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { createApp, KeepAlive, nextTick, shallowRef } from 'vue';
 import {
+  createHeldBranch,
   createRenderer,
   flushMicrotasks,
   hydrate,
   renderOnServer,
+  screen,
   waitFor,
   waitSingleFrame,
 } from '#test-utils';
@@ -299,6 +301,28 @@ describe('InternalBackdrop', () => {
       await nextTick();
       expect(startSpy).toHaveBeenCalledTimes(2);
       expect(stopSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('moves the hole of a backdrop that mounts while KeepAlive holds it after the activation', async () => {
+      const cutout = addCutout();
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <InternalBackdrop data-testid="backdrop" cutout={cutout} />
+      ));
+      await render(<HeldBranch />);
+
+      await mountWhileHeld();
+      cutout.style.top = '60px';
+      await show();
+      await waitForFirstNotifications();
+
+      const backdrop = screen.getByTestId('backdrop');
+      expect(backdrop.style.clipPath).toBe(getClipPath(cutout));
+
+      cutout.style.left = '120px';
+
+      await waitFor(() => {
+        expect(backdrop.style.clipPath).toBe(getClipPath(cutout));
+      });
     });
   });
 

@@ -566,6 +566,30 @@ describe('useImplicitActiveTrigger', () => {
     expect(store.state.activeTriggerElement).toBe(inside);
   });
 
+  it('claims the only trigger of an open popup whose root mounts while KeepAlive holds it', async () => {
+    const store = createTestPopupStore();
+    const element = document.createElement('button');
+    store.set('open', true);
+    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+      <>
+        <ImplicitActiveTriggerTest store={store} />
+        <TestTrigger id="trigger" store={store} element={element} />
+      </>
+    ));
+    await render(<HeldBranch />);
+
+    await mountWhileHeld();
+    await flushMicrotasks();
+    expect(store.state.activeTriggerId).toBe('trigger');
+    expect(store.state.activeTriggerElement).toBe(element);
+
+    await show();
+    await flushMicrotasks();
+    expect(store.state.triggerCount).toBe(1);
+    expect(store.state.activeTriggerId).toBe('trigger');
+    expect(store.state.activeTriggerElement).toBe(element);
+  });
+
   it('resets triggerCount when the popup closes', async () => {
     const store = createTestPopupStore();
     const element = document.createElement('button');
