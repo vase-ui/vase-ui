@@ -6,8 +6,10 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  getFocusableUnderAriaHidden,
   isInaccessible,
   nextEvent,
+  POPUP_EXIT_CSS,
   screen,
   waitFor,
   waitForLaterMillisecond,
@@ -550,18 +552,6 @@ describe('<Combobox.Popup />', () => {
   });
 
   describe('BUG-5519: an exit animation', () => {
-    const EXIT_CSS = `
-      .popup[data-ending-style] { animation: popup-exit 100s; }
-      @keyframes popup-exit { to { opacity: 0; } }
-    `;
-
-    // An element that the Tab key can reach, under `aria-hidden` on itself or on an ancestor.
-    function getFocusableUnderAriaHidden() {
-      return [...document.querySelectorAll<HTMLElement>('[aria-hidden="true"]')]
-        .flatMap((element) => [element, ...element.querySelectorAll<HTMLElement>('*')])
-        .filter((element) => element.tabIndex >= 0);
-    }
-
     function getFocusGuards() {
       return [...document.querySelectorAll<HTMLElement>('[data-vase-ui-focus-guard]')];
     }
@@ -574,7 +564,7 @@ describe('<Combobox.Popup />', () => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
       const { user } = await render(
         <div>
-          <style>{EXIT_CSS}</style>
+          <style>{POPUP_EXIT_CSS}</style>
           <Combobox.Root>
             <Combobox.Trigger data-testid="trigger">Open</Combobox.Trigger>
             <Combobox.Portal>
@@ -600,9 +590,9 @@ describe('<Combobox.Popup />', () => {
 
       await nextEvent(popup, 'animationstart', { action: () => user.keyboard('{Escape}') });
       record();
-      // The first read of the animations of the popup after the close gives an empty list, and
-      // `nextAnimationsRead` would resolve with it. The animation of 100 s still runs after
-      // `animationstart`, so the case reads the list itself.
+      // The read of the open can come after the wait for the focus, and `nextAnimationsRead` would
+      // resolve with it. The animation of 100 s still runs after `animationstart`, so the case reads
+      // the list itself.
       const animations = popup.getAnimations();
       for (const animation of animations) {
         animation.finish();
