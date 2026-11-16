@@ -315,6 +315,8 @@ describe.each(demos.map((demo) => [`${demo.name} (${demo.variant})`, demo] as co
           );
         }
         view.unmount();
+        // Without a flush before the next mount, the file takes about a quarter more time.
+        await flushMicrotasks();
       }
     });
   },
