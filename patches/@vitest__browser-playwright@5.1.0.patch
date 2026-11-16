@@ -1,8 +1,8 @@
 diff --git a/dist/index.js b/dist/index.js
-index 08671d52813ae3435b09a60ac5bdac3c6867d117..823c82a27f06c1e1e168af91429ec88a405c1287 100644
+index 08671d52813ae3435b09a60ac5bdac3c6867d117..9199b85d5c6451eb528793d6f2bed45e1bb41087 100644
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -1434,21 +1434,20 @@ class PlaywrightBrowserProvider {
+@@ -1434,21 +1434,35 @@ class PlaywrightBrowserProvider {
  		return {
  			page,
  			context: this.contexts.get(sessionId),
@@ -11,10 +11,25 @@ index 08671d52813ae3435b09a60ac5bdac3c6867d117..823c82a27f06c1e1e168af91429ec88a
 -					const frame = page.frame("vitest-iframe");
 -					if (frame) {
 -						return resolve(frame);
-+			// The client of Playwright can still list the frame of the previous test file under the
-+			// same name, so the frame comes from the iframe element of the page.
++			// The frame list of the Playwright client can hold the removed frame of the previous test
++			// file, or the new frame with no name. The only child frame thus compares itself with the
++			// test iframe element of the page, in one protocol message. A removed frame rejects that
++			// evaluation. The frame then comes from the element, which uses 16 messages in Chromium.
 +			// https://github.com/vitest-dev/vitest/issues/11876
++			// https://github.com/vitest-dev/vitest/issues/11928
 +			async frame() {
++				const frames = page.mainFrame().childFrames();
++				if (frames.length === 1) {
++					const frame = frames[0];
++					try {
++						if (await frame.evaluate(() => {
++							const elements = parent.document.querySelectorAll("[data-vitest=\"true\"]");
++							return elements.length === 1 && elements[0] === window.frameElement;
++						})) {
++							return frame;
++						}
++					} catch {}
++				}
 +				const element = await page.locator("[data-vitest=\"true\"]").elementHandle();
 +				try {
 +					const frame = await element.contentFrame();

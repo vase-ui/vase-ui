@@ -6,6 +6,7 @@ import { webkit } from 'playwright';
 import { configDefaults, defineConfig } from 'vitest/config';
 import { postcssFollowSiteTheme } from '../../docs/.vitepress/postcssFollowSiteTheme.ts';
 import { collectGarbage } from './test/server/collectGarbage.ts';
+import { inspectBrowserFrame } from './test/server/inspectBrowserFrame.ts';
 import { renderOnServer } from './test/server/renderOnServer.ts';
 
 const contextOptions = { timezoneId: 'UTC' };
@@ -61,7 +62,7 @@ export default defineConfig({
             provider: playwright({ contextOptions }),
             headless: true,
             screenshotFailures: false,
-            commands: { collectGarbage, renderOnServer },
+            commands: { collectGarbage, inspectBrowserFrame, renderOnServer },
             instances: [
               { browser: 'chromium', name: 'chromium' },
               {
