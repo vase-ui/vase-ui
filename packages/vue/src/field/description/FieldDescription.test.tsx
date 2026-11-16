@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
+import type { HTMLProps } from '@vase-ui/vue/types';
 import {
   createHeldBranch,
   createRenderer,
@@ -45,6 +46,21 @@ describe('<Field.Description />', () => {
     expect(screen.getByRole('textbox').getAttribute('aria-describedby')).toBe(
       `external-description ${screen.getByText('Message').id}`,
     );
+  });
+
+  it('VUE-118: gives the control the id that the #render slot gives the description', async () => {
+    await render(
+      <Field.Root>
+        <Field.Control />
+        <Field.Description
+          v-slots={{
+            render: ({ props }: { props: HTMLProps }) => <p {...props} id="own-description" />,
+          }}
+        />
+      </Field.Root>,
+    );
+
+    expect(screen.getByRole('textbox')).toHaveAttribute('aria-describedby', 'own-description');
   });
 
   it('VUE-93: registers the generated id of a description with an empty id', async () => {

@@ -296,7 +296,7 @@ const firstInput = () => (inputElements.value[0] as HTMLInputElement | undefined
 // value and removes slots. An element that left the document is then still in the list.
 const getConnectedInputs = () => inputElements.value.filter((input) => input?.isConnected);
 
-const controlId = useLabelableId({ id: () => props.id });
+const controlId = useLabelableId({ id: () => props.id, element: firstInput });
 const ariaLabelledBy = useAriaLabelledBy(
   () => props.ariaLabelledby,
   useControlLabelId(),

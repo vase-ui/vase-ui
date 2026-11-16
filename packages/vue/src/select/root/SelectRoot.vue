@@ -260,6 +260,7 @@ const {
 
 const controlId = useLabelableId({
   id: () => props.id,
+  element: () => store.select('triggerElement'),
 });
 
 // The root has no element. Its hidden input is at the place of the root.

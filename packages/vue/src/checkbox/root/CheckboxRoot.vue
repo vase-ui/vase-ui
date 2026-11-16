@@ -333,6 +333,7 @@ const ownsControlId = group?.registerControlId !== registerControlId;
 const controlId = useLabelableId({
   id: () => props.id,
   enabled: ownsControlId,
+  element: () => (props.nativeButton ? element.value : null),
 });
 const hiddenInputId = computed(() => (props.nativeButton ? undefined : controlId.value));
 
