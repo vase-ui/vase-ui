@@ -594,7 +594,9 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   }
 
   const [selectedValue, setSelectedValueUnwrapped] = useControlled<any>({
-    controlled: () => props.selectedValue,
+    // `undefined` makes the part uncontrolled, so only `null` becomes an empty value.
+    controlled: () =>
+      multiple.value && props.selectedValue === null ? EMPTY_ARRAY : props.selectedValue,
     default: getDefaultSelectedValue,
     name: 'Combobox',
     state: 'selectedValue',

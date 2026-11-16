@@ -10454,6 +10454,57 @@ describe('<Combobox.Root />', () => {
       expect(onInput.mock.lastCall?.[0]).toBe('');
       expect(onInput.mock.lastCall?.[1].reason).toBe(REASONS.inputClear);
     });
+
+    it('VUE-115: gives an empty array to the field for a null value', async () => {
+      const validate = vi.fn<(value: unknown) => null>(() => null);
+      const value = shallowRef<string[] | null>(null);
+      const App = defineComponent(() => () => (
+        <Field.Root validationMode="onBlur" validate={validate}>
+          <Combobox.Root
+            multiple
+            value={value.value}
+            {...{
+              'onUpdate:value': (next: string[]) => {
+                value.value = next;
+              },
+            }}
+          >
+            <Combobox.Input data-testid="input" />
+            <Combobox.Portal>
+              <Combobox.Positioner>
+                <Combobox.Popup>
+                  <Combobox.List>
+                    <Combobox.Item value="a">a</Combobox.Item>
+                  </Combobox.List>
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>
+        </Field.Root>
+      ));
+
+      const { user } = await render(<App />);
+      const input = screen.getByTestId('input');
+
+      input.focus();
+      input.blur();
+
+      expect(validate.mock.calls[0]?.[0]).toEqual([]);
+
+      const option = await waitForLaterMillisecond(async () => {
+        await user.click(input);
+        return screen.findByRole('option', { name: 'a' });
+      });
+      await user.click(option);
+
+      expect(value.value).toEqual(['a']);
+      expect(input).toHaveAttribute('data-dirty', '');
+
+      await user.click(option);
+
+      expect(value.value).toEqual([]);
+      expect(input).not.toHaveAttribute('data-dirty');
+    });
   });
 
   describe('prop: filter', () => {

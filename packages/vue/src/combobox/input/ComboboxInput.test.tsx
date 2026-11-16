@@ -1081,6 +1081,22 @@ describe('<Combobox.Input />', () => {
       expect(input).toHaveFocus();
     });
 
+    it('VUE-115: keeps the focus in the input for ArrowLeft with a null value', async () => {
+      const { user } = await render(
+        <Combobox.Root multiple value={null}>
+          <Combobox.Chips>
+            <Combobox.Input />
+          </Combobox.Chips>
+        </Combobox.Root>,
+      );
+
+      const input = screen.getByRole<HTMLInputElement>('combobox');
+      input.focus();
+      await user.keyboard('{ArrowLeft}');
+
+      expect(input).toHaveFocus();
+    });
+
     it('treats a null selectionStart as the beginning of a custom input', async () => {
       const { user } = await render(
         <Combobox.Root multiple defaultValue={['apple']}>
