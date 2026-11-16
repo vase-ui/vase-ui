@@ -13,8 +13,7 @@ import type {
  * How a calendar selects days. `useCalendarRoot` takes one. A selection owns the value of the
  * calendar: its model, its events and the rules of a press.
  *
- * `Details` is the type of the details that `press` and `extend` take. The selection of a root with
- * views also takes the reason `month-press`, from a press on a month.
+ * The selection of a root with views also takes the reason `month-press`, from a press on a month.
  */
 export interface CalendarSelection<Details = CalendarBaseChangeEventDetails> {
   /** The values of the selection: none, one, or each value of a list. */
