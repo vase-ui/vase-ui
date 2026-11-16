@@ -1892,6 +1892,7 @@ describe('<Popover.Root />', () => {
         });
 
         it('moves focus to the element following the trigger when tabbing forward from the trigger', async () => {
+          const onOpenChangeComplete = vi.fn();
           // The transition lasts 100 s, so the case ends it with `finish()`.
           const style = `
             .popup {
@@ -1907,6 +1908,7 @@ describe('<Popover.Root />', () => {
             <div>
               <style>{style}</style>
               <TestPopover
+                rootProps={{ onOpenChangeComplete }}
                 afterTrigger={() => <input data-testid="focus-target" />}
                 popupProps={{
                   class: 'popup',
@@ -1921,8 +1923,9 @@ describe('<Popover.Root />', () => {
           const popup = await screen.findByTestId('popover-popup');
           // The root reads the animations of the popup in a frame after the open. The wait for
           // the read of the close must start after that read.
-          await waitSingleFrame();
-          await waitSingleFrame();
+          await waitFor(() => {
+            expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+          });
           const animations = await nextAnimationsRead(popup, { action: () => user.click(trigger) });
 
           expect(popup).toHaveAttribute('data-ending-style');

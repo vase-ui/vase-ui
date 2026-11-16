@@ -832,6 +832,7 @@ export function popupConformanceTests(config: PopupTestConfig) {
         'hides the kept-mounted popup once the exit animation finishes',
         async () => {
           const animationName = `anim-${randomStringValue()}`;
+          const onOpenChangeComplete = vi.fn();
 
           function Test(props: { open: boolean }) {
             const style = `
@@ -854,7 +855,7 @@ export function popupConformanceTests(config: PopupTestConfig) {
               <div>
                 <style>{style}</style>
                 {prepareComponent({
-                  root: { open: props.open },
+                  root: { open: props.open, onOpenChangeComplete },
                   // Popups that stay mounted after opening don't accept `keepMounted`.
                   portal: alwaysMounted ? {} : { keepMounted: true },
                   popup: {
@@ -866,6 +867,11 @@ export function popupConformanceTests(config: PopupTestConfig) {
           }
 
           const { setProps } = await renderPopup(<Test open />);
+          // The root reads the animations of the popup in a frame after the mount, to report the
+          // end of the open. The wait for the read of the close must start after that read.
+          await waitFor(() => {
+            expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+          });
           const popup = getPopup()!;
 
           // The popup stays visible while the exit animation runs...

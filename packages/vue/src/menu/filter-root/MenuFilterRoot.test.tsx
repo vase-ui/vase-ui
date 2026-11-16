@@ -1023,6 +1023,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       'does not highlight the first item while closing from the trigger with a pointer',
       async () => {
         globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+        const onOpenChangeComplete = vi.fn();
 
         const { user } = await render(
           <>
@@ -1035,7 +1036,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
               }
             `}</style>
             <Menu.FilterProvider>
-              <Menu.Root>
+              <Menu.Root onOpenChangeComplete={onOpenChangeComplete}>
                 <Menu.Trigger>Actions</Menu.Trigger>
                 <Menu.Portal>
                   <Menu.Positioner>
@@ -1068,8 +1069,9 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         const popup = screen.getByTestId('popup');
         // The root reads the animations of the popup in a frame after the open. The wait for the
         // read of the close must start after that read.
-        await waitSingleFrame();
-        await waitSingleFrame();
+        await waitFor(() => {
+          expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+        });
         await nextAnimationsRead(popup, { action: () => user.click(trigger) });
 
         expect(popup).toHaveAttribute('data-ending-style');
@@ -1643,6 +1645,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     it('closes a pointer-opened filterable submenu and moves focus forward when tabbing', async () => {
       // Exit transitions keep the closing popups mounted while focus relocates.
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+      const onOpenChangeComplete = vi.fn();
 
       const { user } = await render(
         <div>
@@ -1652,7 +1655,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
           `}</style>
           <input />
           <Menu.FilterProvider>
-            <Menu.Root modal={false}>
+            <Menu.Root modal={false} onOpenChangeComplete={onOpenChangeComplete}>
               <Menu.Trigger>Actions</Menu.Trigger>
               <Menu.Portal>
                 <Menu.Positioner>
@@ -1700,6 +1703,11 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       const parentPopup = screen
         .getByRole('searchbox', { name: 'Filter actions' })
         .closest<HTMLElement>('.filter-popup')!;
+      // The root reads the animations of the popup in a frame after the open. The wait for the
+      // read of the close must start after that read.
+      await waitFor(() => {
+        expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+      });
       const animations = await nextAnimationsRead(parentPopup, { action: () => user.tab() });
       const finished = animations.map((animation) => animation.finished);
 
@@ -4778,6 +4786,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
         const fruits = ['Apple', 'Apricot', 'Banana'];
         const onValueChange = vi.fn();
+        const onOpenChangeComplete = vi.fn();
 
         const ExternalFilterMenu = defineComponent(() => {
           const { contains } = Menu.useFilter();
@@ -4804,7 +4813,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
                     query.value = value;
                   }}
                 >
-                  <Menu.Root>
+                  <Menu.Root onOpenChangeComplete={onOpenChangeComplete}>
                     <Menu.Trigger>Fruit</Menu.Trigger>
                     <Menu.Portal>
                       <Menu.Positioner>
@@ -4843,8 +4852,9 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         const popup = screen.getByTestId('popup');
         // The root reads the animations of the popup in a frame after the open. The wait for the
         // read of the close must start after that read.
-        await waitSingleFrame();
-        await waitSingleFrame();
+        await waitFor(() => {
+          expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+        });
         const animations = await nextAnimationsRead(popup, { action: () => close(user) });
 
         expect(popup).toHaveAttribute('data-ending-style');
@@ -4932,12 +4942,16 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       return input;
     }
 
-    // The root reads the animations of the popup in a frame after the open. The wait for the read
-    // of the close must start after that read.
-    async function pressEscapeAndReadAnimations(user: ReturnType<typeof userEvent.setup>) {
+    async function pressEscapeAndReadAnimations(
+      user: ReturnType<typeof userEvent.setup>,
+      onOpenChangeComplete: ReturnType<typeof vi.fn>,
+    ) {
       const popup = screen.getByTestId('popup');
-      await waitSingleFrame();
-      await waitSingleFrame();
+      // The root reads the animations of the popup in a frame after the open. The wait for the read
+      // of the close must start after that read.
+      await waitFor(() => {
+        expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+      });
       return nextAnimationsRead(popup, { action: () => user.keyboard('[Escape]') });
     }
 
@@ -4945,11 +4959,14 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       'keeps an item rendered from the controlled query while the popup animates out',
       async () => {
         globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+        const onOpenChangeComplete = vi.fn();
 
-        const { user } = await render(<ControlledQueryMenu onValueChange={vi.fn()} />);
+        const { user } = await render(
+          <ControlledQueryMenu onValueChange={vi.fn()} rootProps={{ onOpenChangeComplete }} />,
+        );
         await openAndType(user, 'ap');
 
-        await pressEscapeAndReadAnimations(user);
+        await pressEscapeAndReadAnimations(user, onOpenChangeComplete);
 
         expect(screen.getByTestId('popup')).toHaveAttribute('data-ending-style');
         expect(getItemNames()).toEqual(['Apple', 'Apricot', 'Create "ap"']);
@@ -4961,12 +4978,18 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       async () => {
         globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
         const onValueChange = vi.fn();
+        const onOpenChangeComplete = vi.fn();
 
-        const { user } = await render(<ControlledQueryMenu onValueChange={onValueChange} />);
+        const { user } = await render(
+          <ControlledQueryMenu
+            onValueChange={onValueChange}
+            rootProps={{ onOpenChangeComplete }}
+          />,
+        );
         const input = await openAndType(user, 'ap');
         onValueChange.mockClear();
 
-        await pressEscapeAndReadAnimations(user);
+        await pressEscapeAndReadAnimations(user, onOpenChangeComplete);
 
         expect(screen.getByTestId('popup')).toHaveAttribute('data-ending-style');
         expect(input).toHaveValue('ap');
@@ -5028,6 +5051,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       async () => {
         globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
         const onValueChange = vi.fn();
+        const onOpenChangeComplete = vi.fn();
 
         const RemovedOnCloseMenu = defineComponent(() => {
           const rendered = shallowRef(true);
@@ -5038,6 +5062,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
                 onValueChange={onValueChange}
                 rootProps={{
                   onOpenChangeComplete(open: boolean) {
+                    onOpenChangeComplete(open);
                     if (!open) {
                       rendered.value = false;
                     }
@@ -5050,7 +5075,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         const { user } = await render(<RemovedOnCloseMenu />);
         await openAndType(user, 'ap');
 
-        const animations = await pressEscapeAndReadAnimations(user);
+        const animations = await pressEscapeAndReadAnimations(user, onOpenChangeComplete);
 
         expect(screen.getByTestId('popup')).toHaveAttribute('data-ending-style');
         expect(onValueChange).not.toHaveBeenCalledWith('', 'popup-close');
