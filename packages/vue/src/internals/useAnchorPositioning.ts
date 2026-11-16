@@ -592,6 +592,8 @@ export function useAnchorPositioning(
 
   const open = () => (toValue(params.keepMounted) ? mounted.value : undefined);
 
+  // `useFloating` writes a position in microtasks, so a popup has its position before the first
+  // paint after it opens.
   const {
     x,
     y,

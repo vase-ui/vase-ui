@@ -7,6 +7,8 @@ import { styleDisableScrollbar } from './styles';
 // page hydrates. After the mount, the shared element of `useStyleDisableScrollbar` does this work.
 // `.attr` writes the nonce as an attribute, as the server HTML does. Without it, a client render
 // sets the DOM property, and the element has no `nonce` attribute.
+// The template has `<component :is="'style'">`, because the Vue compiler removes a `<style>` tag
+// from a template.
 // The text of the element must equal `styleDisableScrollbar.css`, with no white space around it.
 // So the node stays on one line.
 const csp = useCSPContext();

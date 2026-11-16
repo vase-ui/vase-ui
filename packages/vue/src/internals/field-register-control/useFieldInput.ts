@@ -7,6 +7,8 @@ import { useKeepAliveState } from '../useKeepAliveState';
 
 // The inputs of the controls of one field, in the order in which each control gave its input last.
 // The inputs that one show gives are in document order.
+// React attaches the refs of a branch that `Activity` shows in tree order, so the last input of
+// that branch wins there too.
 // The key is `validation.inputRef` of the field, so the list goes away with the field.
 const inputsOfField = new WeakMap<ShallowRef<HTMLInputElement | null>, HTMLInputElement[]>();
 // The inputs that the controls of one field gave again in the flush of a show.

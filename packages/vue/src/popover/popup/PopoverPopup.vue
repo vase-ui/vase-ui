@@ -115,7 +115,8 @@ const resolvedInitialFocus = computed(() =>
 );
 
 const focusManagerModal = computed(() => store.select('modal') !== false && hasClosePart.value);
-// `immediate` also writes `false` for a popup that replaces a popup with a close part.
+// `immediate` also writes `false` for a popup that replaces a popup with a close part. A portal
+// renders the popup after the mount, so a server does not run the watcher.
 watch(focusManagerModal, (modal) => store.set('focusManagerModal', modal), { immediate: true });
 
 // The trigger writes its guards to the store after the popup opens, so the focus manager reads the
