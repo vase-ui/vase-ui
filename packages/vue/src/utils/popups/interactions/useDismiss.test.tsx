@@ -2613,6 +2613,61 @@ describe('useDismiss', () => {
   });
 
   describe('popups below the popup in the component tree', () => {
+    it.each([
+      { name: 'pointerdown', press: fireEvent.pointerDown, release: fireEvent.pointerUp },
+      { name: 'mousedown', press: fireEvent.mouseDown, release: fireEvent.mouseUp },
+    ])(
+      'VUE-4: a $name drag from a descendant keeps each ancestor open',
+      async ({ press, release }) => {
+        const dismiss = { outsidePressEvent: 'intentional' } as const;
+        await render(
+          <Tree>
+            <Popup name="parent" node dismiss={dismiss}>
+              <Popup name="child" node teleport dismiss={dismiss}>
+                <Popup name="grandchild" node teleport dismiss={dismiss}>
+                  <button
+                    type="button"
+                    data-testid="scrubber"
+                    onPointerdown={(event: PointerEvent) => event.preventDefault()}
+                  >
+                    Scrub
+                  </button>
+                </Popup>
+              </Popup>
+            </Popup>
+          </Tree>,
+        );
+
+        await press(screen.getByTestId('grandchild'), { pointerType: 'mouse', button: 0 });
+        await wait(0);
+        await release(document.body, { pointerType: 'mouse', button: 0 });
+        await fireEvent.click(document.body);
+        expect(['parent', 'child', 'grandchild'].map(isOpen)).toEqual([true, true, true]);
+
+        await fireEvent.pointerDown(screen.getByTestId('scrubber'), {
+          pointerType: 'mouse',
+          button: 0,
+        });
+        await wait(0);
+        await fireEvent.pointerUp(document.body, { pointerType: 'mouse', button: 0 });
+        // A prevented press can produce no click. Its suppression must expire in each ancestor.
+        await wait(0);
+        await fireEvent.click(document.body);
+        expect(['parent', 'child', 'grandchild'].map(isOpen)).toEqual([false, false, false]);
+
+        await render(
+          <Popup name="other-parent" dismiss={dismiss}>
+            <Popup name="other-child" teleport dismiss={dismiss} />
+          </Popup>,
+        );
+        await pressAndClick(screen.getByTestId('other-child'));
+        expect(['other-parent', 'other-child'].map(isOpen)).toEqual([true, true]);
+        await wait(0);
+        await fireEvent.click(document.body);
+        expect(['other-parent', 'other-child'].map(isOpen)).toEqual([false, false]);
+      },
+    );
+
     it('VUE-4: a press in a child popup that Teleport moved does not close the parent popup', async () => {
       const outside = addOutsideElement();
       await render(

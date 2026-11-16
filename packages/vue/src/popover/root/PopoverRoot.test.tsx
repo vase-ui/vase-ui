@@ -3,6 +3,7 @@ import { userEvent } from 'vitest/browser';
 import { Teleport, KeepAlive, defineComponent, nextTick, onMounted, shallowRef, watch } from 'vue';
 import type { PropType, VNodeChild } from 'vue';
 import {
+  clientCenter,
   createRenderer,
   enterWithMouse,
   fireEvent,
@@ -20,6 +21,7 @@ import {
   wait,
   waitFor,
   waitForLaterMillisecond,
+  waitForPositioned,
   waitSingleFrame,
 } from '#test-utils';
 import * as Combobox from '../../combobox/index.parts';
@@ -2780,24 +2782,32 @@ describe('<Popover.Root />', () => {
       });
 
       it('keeps the parent popover open when press starts in nested popover and ends outside', async () => {
+        const parentChanges: Change[] = [];
+        const childPress = vi.fn();
         const Test = defineComponent({
           setup() {
             return () => (
               <div>
-                <button type="button" data-testid="outside">
+                <button
+                  type="button"
+                  data-testid="outside"
+                  style={{ position: 'fixed', right: '10px', bottom: '10px' }}
+                >
                   Outside
                 </button>
 
-                <Popover.Root defaultOpen>
+                <Popover.Root defaultOpen onOpenChange={recordChange(parentChanges)}>
                   <Popover.Trigger>Parent</Popover.Trigger>
                   <Popover.Portal>
-                    <Popover.Positioner>
+                    <Popover.Positioner data-testid="parent-positioner">
                       <Popover.Popup data-testid="parent-popup">
                         <Popover.Root>
                           <Popover.Trigger>Child</Popover.Trigger>
                           <Popover.Portal>
-                            <Popover.Positioner>
-                              <Popover.Popup data-testid="child-popup">Child content</Popover.Popup>
+                            <Popover.Positioner side="right" data-testid="child-positioner">
+                              <Popover.Popup data-testid="child-popup" onPointerdown={childPress}>
+                                Child content
+                              </Popover.Popup>
                             </Popover.Positioner>
                           </Popover.Portal>
                         </Popover.Root>
@@ -2815,20 +2825,50 @@ describe('<Popover.Root />', () => {
         expect(screen.queryByTestId('parent-popup')).not.toBe(null);
 
         const childTrigger = screen.getByRole('button', { name: 'Child' });
+        await waitForPositioned(screen.getByTestId('parent-positioner'));
+        await waitFor(() => {
+          expect(childTrigger).toHaveFocus();
+        });
 
         const childPopup = await waitForLaterMillisecond(async () => {
-          await fireEvent.click(childTrigger);
+          await userEvent.click(childTrigger);
           return screen.findByTestId('child-popup');
         });
+        await waitForPositioned(screen.getByTestId('child-positioner'));
         const outside = screen.getByTestId('outside');
-
-        await fireEvent.pointerDown(childPopup, { pointerType: 'mouse', button: 0 });
-        await fireEvent.click(outside);
-
-        await waitFor(() => {
-          expect(screen.getByTestId('parent-popup')).not.toBe(null);
+        const from = clientCenter(childPopup);
+        const to = clientCenter(outside);
+        const destination = { x: to.clientX, y: to.clientY };
+        let held = true;
+        onTestFinished(async () => {
+          if (held) {
+            await userEvent.pointer({ coords: destination, keys: '[/MouseLeft]' });
+          }
         });
+
+        await userEvent.pointer({
+          coords: { x: from.clientX, y: from.clientY },
+          keys: '[MouseLeft>]',
+        });
+        expect(childPress).toHaveBeenCalledOnce();
+        // The inside marker expires in a timer task before the release.
+        await wait(0);
+        await userEvent.pointer({ coords: destination });
+        await userEvent.pointer({ coords: destination, keys: '[/MouseLeft]' });
+        held = false;
+        await flushMicrotasks();
+
+        expect(parentChanges).toEqual([]);
+        const parentPopup = screen.getByTestId('parent-popup');
+        expect(parentPopup).toBeInTheDocument();
         expect(screen.queryByTestId('child-popup')).not.toBe(null);
+
+        await userEvent.click(outside);
+        expect(parentChanges).toEqual([[false, 'outside-press']]);
+        await waitFor(() => {
+          expect(parentPopup).not.toBeInTheDocument();
+        });
+        expect(screen.queryByTestId('child-popup')).toBe(null);
       });
 
       it.skipIf(isJSDOM)(
