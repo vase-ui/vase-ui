@@ -503,13 +503,13 @@ test('the description of an event is the text of its JSDoc', () => {
   );
 });
 
-test('the type of a prop is the type text of vue-component-meta, and the arguments of an event are the text of defineEmits', () => {
+test('the type of a prop writes a union in the sequence of its declaration, and the arguments of an event are the text of defineEmits', () => {
   const entry = join(SAMPLE, 'index.ts');
   const [popup] = project.findExports(entry, 'Popup');
   const [root] = project.findExports(entry, 'Root');
   const props = project.readComponent(popup)?.props;
   assert.equal(props?.get('name')?.type, 'string');
-  assert.equal(props?.get('side')?.type, '"bottom" | "top" | undefined');
+  assert.equal(props?.get('side')?.type, '"top" | "bottom" | undefined');
   const emits = project.readComponent(root)?.emits;
   assert.equal(
     emits?.get('openChange')?.type,
@@ -535,6 +535,49 @@ test('the arguments of an event keep the name of an alias that the checker resol
     emits?.get('openChange')?.type,
     '[open: boolean, details: SampleRootChangeEventDetails]',
   );
+});
+
+test('the events keep the sequence of defineEmits, and not the sequence of the checker', () => {
+  const emits = withEdits(
+    ROOT,
+    [
+      [
+        'export interface SampleRootState {}',
+        "export interface SampleRootState {}\n\nexport type SampleRootEventSeed = 'openChangeComplete' | 'update:open' | 'openChange';",
+      ],
+    ],
+    () => {
+      // The checker makes the names of the events in the reverse sequence when it reads the seed first.
+      project.readUnionValues(join(SAMPLE, 'index.ts'), 'SampleRootEventSeed');
+      return project.readComponent(project.findExports(join(SAMPLE, 'index.ts'), 'Root')[0])?.emits;
+    },
+  );
+  assert.deepEqual([...(emits?.keys() ?? [])], ['openChange', 'update:open', 'openChangeComplete']);
+});
+
+test('the slot props keep the sequence of their declarations, also the properties that an Omit copies', () => {
+  const props = withEdits(
+    POPUP,
+    [
+      [
+        'export interface SamplePopupState {',
+        "export type SlotSeed = 'second' | 'first';\n\ninterface SlotBase {\n  first: string;\n  second: string;\n  skipped: string;\n}\n\nexport interface SlotProps extends Omit<SlotBase, 'skipped'> {\n  own: string;\n}\n\nexport interface SamplePopupState {",
+      ],
+      [
+        '  default(props: { state: SamplePopupState }): unknown;',
+        '  default(props: SlotProps): unknown;',
+      ],
+    ],
+    () => {
+      // The checker makes the keys in the reverse sequence when it reads the seed first.
+      project.readUnionValues(join(SAMPLE, 'index.ts'), 'SlotSeed');
+      return project
+        .readComponent(project.findExports(join(SAMPLE, 'index.ts'), 'Popup')[0])
+        ?.slots.get('default')
+        ?.props.map(({ name }) => name);
+    },
+  );
+  assert.deepEqual(props, ['own', 'first', 'second']);
 });
 
 test('the slot props of a slot are the properties of its first parameter', () => {
