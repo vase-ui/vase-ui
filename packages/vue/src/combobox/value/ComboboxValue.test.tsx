@@ -1,4 +1,4 @@
-import { expect, describe, it } from 'vitest';
+import { expect, describe, it, vi } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { createRenderer, screen } from '#test-utils';
@@ -630,6 +630,26 @@ describe('<Combobox.Value />', () => {
       );
 
       expect(screen.getByTestId('value')).toHaveTextContent('serif, mono');
+    });
+
+    it('VUE-115: gives an empty array to the slot for a null value', async () => {
+      const renderValue = vi.fn();
+
+      const { setProps } = await render(
+        <Combobox.Root multiple value={null} defaultValue={['serif']}>
+          <Combobox.Value
+            v-slots={{ default: ({ value }: ValueSlotProps) => renderValue(value) }}
+          />
+        </Combobox.Root>,
+      );
+
+      expect(renderValue.mock.lastCall?.[0]).toEqual([]);
+
+      await setProps({ value: ['mono'] });
+      expect(renderValue.mock.lastCall?.[0]).toEqual(['mono']);
+
+      await setProps({ value: null });
+      expect(renderValue.mock.lastCall?.[0]).toEqual([]);
     });
   });
 

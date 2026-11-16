@@ -1,9 +1,11 @@
 import {
   computed,
+  inject,
   onActivated,
   onDeactivated,
   onMounted,
   onScopeDispose,
+  provide,
   shallowRef,
   toRaw,
   toValue,
@@ -19,6 +21,7 @@ import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useUnmountAfterClose } from '../../internals/useUnmountAfterClose';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
+import { HeldRootCallContext } from './popupHandle';
 import type { ReactiveStore } from './ReactiveStore';
 import { popupStoreSelectors } from './store';
 import type {
@@ -96,6 +99,8 @@ export interface UsePopupRootOptions<Store extends PopupRootStore> {
    * pending `<Suspense>` branch attaches when Vue resolves the branch. The root detaches when it
    * unmounts and while `KeepAlive` holds it. A root that mounts in a branch that `KeepAlive` holds
    * detaches in its own `onMounted` hook, after the `onMounted` hooks of the parts below it.
+   * While `KeepAlive` holds the root and the store is detached, the root keeps each call of the
+   * handle in a lifecycle hook of a part below it, and runs the calls after its activation.
    */
   handle?: MaybeRefOrGetter<PopupRootStoreHandle<Store> | undefined>;
   /**
@@ -260,10 +265,33 @@ export function usePopupRootWithPopupId<Store extends PopupRootStore>(
   onDeactivated(() => {
     isActive.value = false;
   });
+
+  // Vue runs the hooks of a part that mounts below the root while `KeepAlive` holds the root and
+  // the store is detached. The root keeps each call of its handle in those hooks and runs it
+  // after its activation, as Base UI runs the effects of a part in a hidden `Activity` tree when
+  // the tree shows. The trigger map skips each trigger of the root until a later pass of the
+  // activation flush, so each call waits for a microtask of its own. A call that throws then does
+  // not stop the calls after it.
+  const heldCalls: (() => void)[] = [];
+  const deferToRootAbove = inject(HeldRootCallContext, null);
+  provide(HeldRootCallContext, (handle, call) => {
+    if (handle !== toValue(options.handle)) {
+      return deferToRootAbove?.(handle, call) ?? false;
+    }
+    if (isActive.value) {
+      return false;
+    }
+    heldCalls.push(call);
+    return true;
+  });
+
   onActivated(() => {
     isActive.value = true;
     if (isMounted) {
       setAttachedHandle(toValue(options.handle));
+    }
+    for (const call of heldCalls.splice(0)) {
+      queueMicrotask(call);
     }
   });
 

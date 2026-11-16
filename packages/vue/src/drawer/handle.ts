@@ -6,7 +6,7 @@ import { DialogHandle } from '../dialog/store/DialogHandle';
  * root and of any triggers rendered outside of it.
  *
  * The imperative methods take effect only while a root using this handle is mounted; calls made
- * before a root attaches (or after it unmounts) are ignored.
+ * before a root mounts (or after it unmounts) are ignored.
  */
 export class DrawerHandle<Payload> extends DialogHandle<Payload> {
   // Nominal brand: makes this handle type distinct from `DialogHandle` and sibling handles so they

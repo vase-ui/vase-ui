@@ -208,6 +208,8 @@ The server HTML has the angle variables of the hand and of each number, and the 
 
 A server does not know the locale of the visitor. With no `locale`, the texts and the hour cycle are those of `en-US` until the app mounts. Then the locale of the browser applies. Give `locale` to make the server HTML equal to the final page.
 
+A server and a browser can still have other `Intl` data for one locale, such as another hour cycle. The clock then hydrates with the face of the server, and it shows the hour cycle of the browser after the mount. Give `hourCycle` too, and the face of the server HTML is the final face.
+
 ## Keyboard
 
 The Tab key moves the focus to the range input of the face. Then each key does this:

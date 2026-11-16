@@ -572,5 +572,22 @@ describe('<RangeCalendar.Root />', () => {
       );
       expect(pageMonths).toEqual(new Set([browserDay.slice(0, 7)]));
     });
+
+    // A `-u-` keyword gives the server other `Intl` data than the browser.
+    it.each([
+      { name: 'a Persian server', server: 'en-US-u-ca-persian' },
+      { name: 'a server week from Monday', server: 'en-US-u-fw-mon' },
+    ])('hydrates the grid of $name, then shows the grid of the browser', async ({ server }) => {
+      const browser = { ...props, locale: 'en-US' };
+      const serverHtml = await renderOnServer(file, { ...browser, locale: server });
+
+      await hydrate(RangeCalendarRootHydration, { serverHtml, props: browser });
+
+      expect(shown()).toEqual({
+        start: ['2026-11-10'],
+        middle: ['2026-11-11'],
+        end: ['2026-11-12'],
+      });
+    });
   });
 });
