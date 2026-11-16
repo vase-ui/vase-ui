@@ -941,13 +941,13 @@ describe('<NavigationMenu.Trigger />', () => {
       ));
     }
 
-    function popupParts(popupSlots: Record<string, unknown> = {}) {
+    function popupParts(
+      popupSlots: Record<string, unknown> = { default: () => <NavigationMenu.Viewport /> },
+    ) {
       return (
         <NavigationMenu.Portal>
           <NavigationMenu.Positioner>
-            <NavigationMenu.Popup data-testid="popup" v-slots={popupSlots}>
-              <NavigationMenu.Viewport />
-            </NavigationMenu.Popup>
+            <NavigationMenu.Popup data-testid="popup" v-slots={popupSlots} />
           </NavigationMenu.Positioner>
         </NavigationMenu.Portal>
       );
@@ -958,7 +958,11 @@ describe('<NavigationMenu.Trigger />', () => {
       // element an empty `id`.
       await renderMenu(() =>
         popupParts({
-          render: ({ props }: { props: HTMLProps }) => <nav {...props} id="" />,
+          render: ({ props }: { props: HTMLProps }) => (
+            <nav {...props} id="">
+              <NavigationMenu.Viewport />
+            </nav>
+          ),
         }),
       );
       await flushMicrotasks();

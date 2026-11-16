@@ -770,25 +770,23 @@ describe('<Select.Trigger />', () => {
     // An empty `id` of the part counts as no `id` (VUE-93). Only the `#render` slot can give the
     // element an empty `id`.
     const emptyIdSlot = {
-      render: ({ props }: { props: HTMLProps }) => <div {...props} id="" />,
+      render: ({ props }: { props: HTMLProps }) => (
+        <div {...props} id="">
+          <Select.Item value="a">A</Select.Item>
+        </div>
+      ),
     };
 
     it.each([
       {
         name: 'popup',
-        parts: () => (
-          <Select.Popup data-testid="named" v-slots={emptyIdSlot}>
-            <Select.Item value="a">A</Select.Item>
-          </Select.Popup>
-        ),
+        parts: () => <Select.Popup data-testid="named" v-slots={emptyIdSlot} />,
       },
       {
         name: 'list',
         parts: () => (
           <Select.Popup>
-            <Select.List data-testid="named" v-slots={emptyIdSlot}>
-              <Select.Item value="a">A</Select.Item>
-            </Select.List>
+            <Select.List data-testid="named" v-slots={emptyIdSlot} />
           </Select.Popup>
         ),
       },
