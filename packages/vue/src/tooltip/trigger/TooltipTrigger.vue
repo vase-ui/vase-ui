@@ -68,12 +68,13 @@ export interface TooltipTriggerProps<Payload = unknown>
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
-import { computed, onDeactivated, onMounted, shallowRef, watch } from 'vue';
+import { computed, onMounted, shallowRef, watch } from 'vue';
 import { closest, contains } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useDelayGroup } from '../../utils/popups/delay-group/FloatingDelayGroup';
 import { isMouseLikePointerType } from '../../utils/popups/event';
@@ -275,7 +276,16 @@ function resetNestedTriggerHover() {
 
 // `KeepAlive` sends no leave event. A reopen that waits would then open the tooltip of a trigger
 // that is not in the document.
-onDeactivated(resetNestedTriggerHover);
+const { isHeld } = useKeepAliveState();
+watch(
+  isHeld,
+  (held) => {
+    if (held) {
+      resetNestedTriggerHover();
+    }
+  },
+  { flush: 'sync' },
+);
 
 function setPointerType(event: PointerEvent) {
   pointerType = event.pointerType;

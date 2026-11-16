@@ -94,7 +94,7 @@ function resolveTouchAction(direction: DrawerSwipeDirection) {
 </script>
 
 <script setup lang="ts">
-import { computed, onDeactivated, onScopeDispose, shallowRef, watch } from 'vue';
+import { computed, onScopeDispose, shallowRef, watch } from 'vue';
 import { clamp } from '../../common/clamp';
 import { ownerDocument } from '../../common/owner';
 import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
@@ -103,6 +103,7 @@ import { NOOP } from '../../internals/noop';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { getElementTransform } from '../../utils/getElementTransform';
 import { isVirtualClick } from '../../utils/popups/event';
@@ -450,14 +451,21 @@ function restoreDismiss() {
 // `useSwipeDismiss` ends its own swipe when `KeepAlive` deactivates the element, and it calls no
 // `onCancel` then. The swipe area thus ends its gesture here, and it removes the listeners that
 // wait for the release click from the document.
-onDeactivated(() => {
-  if (swipeActive.value) {
-    resetSwipeInteractionState();
-    resetDragDelta();
-    clearSwipeStyles();
-  }
-  restoreDismiss();
-});
+const { isHeld } = useKeepAliveState();
+watch(
+  isHeld,
+  (held) => {
+    if (held) {
+      if (swipeActive.value) {
+        resetSwipeInteractionState();
+        resetDragDelta();
+        clearSwipeStyles();
+      }
+      restoreDismiss();
+    }
+  },
+  { flush: 'sync' },
+);
 
 // No release comes to a swipe area that unmounts during a gesture. The popup would then keep the
 // movement of the gesture, and the drawer would stay open only in part.

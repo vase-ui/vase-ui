@@ -1,10 +1,11 @@
-import { onDeactivated, toValue, watch } from 'vue';
+import { toValue, watch } from 'vue';
 import type { MaybeRefOrGetter, Ref } from 'vue';
 import { EMPTY_ARRAY } from '../../../common/empty';
 import { contains } from '../../../common/shadowDom';
 import { useTimeout } from '../../../common/useTimeout';
 import { isElementVisible, isListIndexDisabled } from '../../../internals/composite/listIndex';
 import type { DisabledIndices } from '../../../internals/composite/listIndex';
+import { useKeepAliveState } from '../../../internals/useKeepAliveState';
 import { stopEvent } from '../event';
 import type { InteractionProps, PopupInteractionStore, TypeaheadElementProps } from '../types';
 
@@ -244,11 +245,16 @@ export function useTypeahead(
 
   // `KeepAlive` takes the list out of the document, and the focus can leave it with no
   // `focusout`. The session ends as it ends when the focus leaves the list.
-  onDeactivated(() => {
-    if (typed !== '') {
-      endSession();
-    }
-  });
+  const { isHeld } = useKeepAliveState();
+  watch(
+    isHeld,
+    (held) => {
+      if (held && typed !== '') {
+        endSession();
+      }
+    },
+    { flush: 'sync' },
+  );
 
   const sharedProps: InteractionProps = { onKeydown, onFocusout };
 
