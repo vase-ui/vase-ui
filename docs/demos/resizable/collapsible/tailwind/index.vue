@@ -13,7 +13,7 @@ import CollapseButton from './CollapseButton.vue';
       min-size="160px"
       collapsible
       collapsed-size="48px"
-      class="box-border overflow-hidden whitespace-nowrap transition-[flex-grow] duration-200 motion-reduce:transition-none"
+      class="box-border overflow-hidden whitespace-nowrap transition-[flex-grow] duration-200 ease-[ease] motion-reduce:transition-none"
     >
       <div class="flex items-center gap-2 p-2">
         <CollapseButton />
