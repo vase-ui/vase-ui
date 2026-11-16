@@ -67,7 +67,6 @@ function bytesOf(color: string) {
   return rgbaOf(color).join(',');
 }
 
-/** The cursor and the colors that an element shows. */
 function lookOf(element: Element): Record<string, string> {
   const style = getComputedStyle(element);
   // The clip of a hidden input of a part leaves nothing to paint. The reset of Tailwind changes the
@@ -75,7 +74,12 @@ function lookOf(element: Element): Record<string, string> {
   if (style.clipPath === 'inset(50%)') {
     return {};
   }
-  const look: Record<string, string> = { cursor: style.cursor };
+  const look: Record<string, string> = {
+    cursor: style.cursor,
+    'transition-timing-function': style.transitionTimingFunction,
+    'transition-duration': style.transitionDuration,
+    'text-decoration-line': style.textDecorationLine,
+  };
   // The engine paints a native checkbox, and it paints none of these colors.
   if (style.appearance === 'auto' && element.matches('input[type=checkbox]')) {
     return look;
@@ -124,6 +128,23 @@ function countDisabled(frame: Element) {
 
 it("finds the demos of the components of Vase UI's own", () => {
   expect(demos).not.toHaveLength(0);
+});
+
+describe('look comparison', () => {
+  const { render } = createRenderer();
+
+  it.each([
+    { name: 'transition-timing-function', first: 'ease', second: 'linear' },
+    { name: 'transition-duration', first: '0.2s', second: '0.4s' },
+    { name: 'text-decoration-line', first: 'none', second: 'underline' },
+  ])('reports a difference in $name', async ({ name, first, second }) => {
+    const cssModules = await render(<span style={{ [name]: first }}>Demo</span>);
+    const tailwind = await render(<span style={{ [name]: second }}>Demo</span>);
+
+    expect(differences(lookOfFrame(cssModules.container), lookOfFrame(tailwind.container))).toEqual(
+      [`<span> "Demo" ${name}: ${first} in the CSS-module demo, ${second} in the Tailwind demo`],
+    );
+  });
 });
 
 describe.each(demos)('%s', (demo) => {
