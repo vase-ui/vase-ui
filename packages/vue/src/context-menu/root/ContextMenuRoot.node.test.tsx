@@ -6,7 +6,7 @@ describe('<ContextMenu.Root /> on a server', () => {
   it.each([
     {
       name: 'a closed root',
-      node: (
+      node: () => (
         <ContextMenu.Root>
           <ContextMenu.Trigger>area</ContextMenu.Trigger>
         </ContextMenu.Root>
@@ -15,7 +15,7 @@ describe('<ContextMenu.Root /> on a server', () => {
     },
     {
       name: 'an open root, with a class and a style',
-      node: (
+      node: () => (
         <ContextMenu.Root defaultOpen>
           <ContextMenu.Trigger class="a" style={{ color: 'red' }}>
             area
@@ -26,7 +26,7 @@ describe('<ContextMenu.Root /> on a server', () => {
     },
     {
       name: 'a disabled root, with a button',
-      node: (
+      node: () => (
         <ContextMenu.Root disabled>
           <ContextMenu.Trigger as="button">area</ContextMenu.Trigger>
         </ContextMenu.Root>
@@ -34,7 +34,7 @@ describe('<ContextMenu.Root /> on a server', () => {
       html: '<!--[--><!--[--><button style="-webkit-touch-callout:none;"><!--[-->area<!--]--></button><!--]--><!--]-->',
     },
   ])('renders the trigger of $name', async ({ node, html }) => {
-    expect(await renderToString(node)).toBe(html);
+    expect(await renderToString(node())).toBe(html);
   });
 
   it('renders the trigger of an open root, and no popup', async () => {
