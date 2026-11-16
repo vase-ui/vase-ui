@@ -349,7 +349,7 @@ A panel that mounts with no entry in the layout gets its `defaultSize`, or an eq
 
 ## Controlled layout
 
-`v-model:layout` makes the layout controlled. Start with an empty layout, `ref({})`, and each panel takes its `defaultSize`, or an equal share. After the first change, the ref holds percent. Write `{}` to give each panel its `defaultSize`, or an equal share, again.
+`v-model:layout` makes the layout controlled. Start with an empty layout, `ref({})`, and each panel takes its `defaultSize`, or an equal share. After the first change, the ref holds percent. Write `{}` to give each panel its `defaultSize`, or an equal share, again. `null` has the same effect as `{}`, and the layout stays controlled.
 
 <<< ./resizable/ControlledLayout.vue
 

@@ -214,6 +214,32 @@ describe('<Resizable.Root />', () => {
       expect(grows('a', 'b', 'c')).toEqual(['33.334', '33.333', '33.333']);
     });
 
+    it('reads a null layout as a layout with no entries, and stays controlled', async () => {
+      const onLayoutChange = vi.fn();
+      await render(<Three root={{ layout: null, onLayoutChange }} />);
+      expect(grows('a', 'b', 'c')).toEqual(['33.334', '33.333', '33.333']);
+
+      await drag('handle-a', 100);
+
+      expect(onLayoutChange).toHaveBeenCalledWith(
+        { a: 43.334, b: 23.333, c: 33.333 },
+        expect.anything(),
+      );
+      expect(grows('a', 'b', 'c')).toEqual(['33.334', '33.333', '33.333']);
+    });
+
+    it('reads a layout that changes to null as a layout with no entries, not as the default layout', async () => {
+      const layout = shallowRef<Record<string, number> | null>({ a: 20, b: 30, c: 50 });
+      const defaultLayout = { a: 50, b: 25, c: 25 };
+      await render(() => <Three root={{ layout: layout.value, defaultLayout }} />);
+      expect(grows('a', 'b', 'c')).toEqual(['20', '30', '50']);
+
+      layout.value = null;
+      await nextTick();
+
+      expect(grows('a', 'b', 'c')).toEqual(['33.334', '33.333', '33.333']);
+    });
+
     it('warns when it changes from controlled to uncontrolled', async () => {
       const error = vi.spyOn(console, 'error').mockImplementation(() => {});
       onTestFinished(() => {
@@ -1756,6 +1782,16 @@ describe('<Resizable.Root />', () => {
 
       expect(onLayoutChange.mock.calls[0]?.[0]).toEqual({ a: 30, b: 30, c: 20, gone: 20 });
       expect(grows('a', 'b', 'c')).toEqual(['37.5', '37.5', '25']);
+    });
+
+    it('reads setLayout(null) as a layout with no entries', async () => {
+      const getRoot = await renderRoot({ defaultLayout: { a: 20, b: 30, c: 50 } });
+      expect(grows('a', 'b', 'c')).toEqual(['20', '30', '50']);
+
+      getRoot().setLayout(null);
+      await nextTick();
+
+      expect(grows('a', 'b', 'c')).toEqual(['33.334', '33.333', '33.333']);
     });
 
     it('sets the layout of a disabled root', async () => {
