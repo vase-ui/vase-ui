@@ -10,6 +10,7 @@ import {
   nextEvent,
   randomStringValue,
   screen,
+  wait,
   waitFor,
   waitSingleFrame,
 } from '#test-utils';
@@ -334,7 +335,7 @@ describe('<PreviewCard.Root />', () => {
       expect(screen.queryByTestId(popupId)).toBe(null);
 
       trigger2.focus();
-      await flushMicrotasks();
+      await wait(0);
       await waitFor(() => {
         expect(screen.getByTestId(popupId)).toBeVisible();
       });
@@ -378,7 +379,7 @@ describe('<PreviewCard.Root />', () => {
       });
 
       trigger2.focus();
-      await flushMicrotasks();
+      await wait(0);
       expect(screen.getByTestId('content').textContent).toBe('2');
     });
 

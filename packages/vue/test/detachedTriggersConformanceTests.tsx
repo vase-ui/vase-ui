@@ -10,6 +10,7 @@ import { waitForLaterMillisecond } from './createRenderer';
 import type { createRenderer } from './createRenderer';
 import { fireEvent } from './fireEvent';
 import { flushMicrotasks } from './flushMicrotasks';
+import { wait } from './wait';
 
 /**
  * Behavior shared by every popup that supports multiple triggers and detached triggers
@@ -202,6 +203,10 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
       await fireEvent.mouseLeave(from);
       await fireEvent.mouseEnter(to);
       await fireEvent.mouseMove(to);
+    } else if (interaction === 'focus') {
+      to.focus();
+      // The focus out of `from` starts a 0 ms timer that must not close the popup.
+      await wait(0);
     } else {
       await openWith(interaction, user, to);
     }
@@ -217,10 +222,7 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
     expect(screen.queryByTestId('popup')).toBe(null);
   }
 
-  /**
-   * Runs `close` and waits until the popup that was open leaves the document. After `blur()`, a
-   * popup closes in a 0 ms timer, so `closeWith` can resolve before the close.
-   */
+  // After `blur()`, a popup closes in a 0 ms timer, so `closeWith` can resolve before the close.
   async function expectPopupClosedAfter(close: () => Promise<void>) {
     const popup = screen.getByTestId('popup');
     await close();

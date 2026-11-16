@@ -10,6 +10,7 @@ import {
   renderOnServer,
   screen,
   takeReportedMessages,
+  wait,
   waitFor,
   within,
 } from '#test-utils';
@@ -355,8 +356,7 @@ describe('<Tooltip.Root />', () => {
       expect(screen.getByTestId('content').textContent).toBe('1');
 
       trigger2.focus();
-      await flushMicrotasks();
-      await flushMicrotasks();
+      await wait(0);
       expect(trigger2).toHaveAttribute('data-popup-open');
       expect(screen.getByTestId('content').textContent).toBe('2');
     });
