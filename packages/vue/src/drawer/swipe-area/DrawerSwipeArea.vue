@@ -130,6 +130,7 @@ defineSlots<{
 
 const store = useDialogRootContext();
 const {
+  setOpen,
   swipeDirection: rootSwipeDirection,
   frontmostHeight,
   swipeAreaActiveRef,
@@ -329,12 +330,12 @@ function clearSwipeStyles() {
 function openDrawer(event?: PointerEvent | TouchEvent) {
   openedBySwipe = true;
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- A swipe on the swipe area calls this function, so the element is set.
-  store.setOpen(true, createChangeEventDetails(REASONS.swipe, event, swipeAreaElement.value!));
+  setOpen(true, createChangeEventDetails(REASONS.swipe, event, swipeAreaElement.value!));
 }
 
 function closeDrawer(event?: PointerEvent | TouchEvent) {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- A swipe on the swipe area calls this function, so the element is set.
-  store.setOpen(false, createChangeEventDetails(REASONS.swipe, event, swipeAreaElement.value!));
+  setOpen(false, createChangeEventDetails(REASONS.swipe, event, swipeAreaElement.value!));
 }
 
 function resetSwipeInteractionState() {

@@ -316,6 +316,7 @@ const popupRef = store.context.popupRef;
 const backdropRef = store.context.backdropRef;
 
 const {
+  setOpen,
   swipeDirection,
   notifyParentSwipingChange,
   notifyParentSwipeProgressChange,
@@ -871,11 +872,11 @@ const swipe = useSwipeDismiss({
       backdropElement.style.removeProperty(DrawerPopupCssVars.height);
     }
 
-    const dismissEventDetails: Parameters<typeof store.setOpen>[1] = createChangeEventDetails(
+    const dismissEventDetails: Parameters<typeof setOpen>[1] = createChangeEventDetails(
       REASONS.swipe,
       event,
     );
-    store.setOpen(false, dismissEventDetails);
+    setOpen(false, dismissEventDetails);
 
     if (dismissEventDetails.isCanceled) {
       const pendingSnapPoint = pendingSwipeCloseSnapPoint;

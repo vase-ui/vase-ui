@@ -348,7 +348,12 @@ function emitRootEvent(...[event, nextOpen, eventDetails]: RootEventArguments) {
   }
 }
 
+const { store, payload, actions } = useRenderDialogRoot<Payload>('drawer', props, emitRootEvent);
+// Drawer shares the dialog store but adds swipe and close watcher reasons.
+const setOpen = store.setOpen as DrawerRootContext['setOpen'];
+
 provide(DrawerRootContext, {
+  setOpen,
   swipeDirection: computed(() => props.swipeDirection),
   swipeAreaActiveRef,
   snapToSequentialPoints: computed(() => props.snapToSequentialPoints),
@@ -370,8 +375,6 @@ provide(DrawerRootContext, {
   notifyParentSwipeProgressChange,
   notifyParentHasNestedDrawer,
 });
-
-const { store, payload, actions } = useRenderDialogRoot<Payload>('drawer', props, emitRootEvent);
 
 const providerContext = useDrawerProviderContext();
 const isOpen = computed(() => store.select('open'));
@@ -427,7 +430,7 @@ function updateCloseWatcher() {
       return;
     }
 
-    const eventDetails: Parameters<typeof store.setOpen>[1] = createChangeEventDetails(
+    const eventDetails: Parameters<typeof setOpen>[1] = createChangeEventDetails(
       REASONS.closeWatcher,
       event,
     );
@@ -438,7 +441,7 @@ function updateCloseWatcher() {
       eventDetails.cancel = NOOP;
     }
 
-    store.setOpen(false, eventDetails);
+    setOpen(false, eventDetails);
 
     if (eventDetails.isCanceled) {
       // Keeps this watcher active for the next close request.

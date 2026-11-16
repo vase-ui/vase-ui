@@ -603,6 +603,8 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - `trigger`.
 - `preventUnmountOnClose()`, on popup roots.
 
+`createChangeEventDetails` and `createGenericEventDetails` infer custom properties only from their arguments (`VUE-123`). An expected type cannot supply absent properties or hide a wrong reason.
+
 ### Other callbacks
 
 - A callback that only tells the consumer about a change becomes an emit. The name loses `on`: `openChangeComplete`, `valueCommitted`, `itemHighlighted`, `loadingStatusChange`.
@@ -1096,6 +1098,7 @@ The state of a popup is in a store. The code is in `src/utils/popups`. `tooltip/
 - Make `inactiveTriggerProps` one time in `setup` when it reads no state. A new object in each run of the getter renders each inactive trigger again. `Menu.Root` does this.
 - A root part calls `usePopupRoot(props, createStore, options)` in `setup`. The call returns `store`, `open`, `mounted`, `payload`, `transitionStatus` and `actions`. The part provides `store` with `provide`, exposes `actions`, and renders `<slot :payload="payload" />`.
 - The roots of Dialog, Alert Dialog and Drawer share one composable, `useRenderDialogRoot(mode, props, emit)`. It calls `usePopupRoot`, provides the store and calls `useDialogInteractions`. The root parts of Dialog and Alert Dialog only declare their props, their emits, their slot and their exposed actions.
+- Drawer shares `DialogStore`. Its parts call `setOpen` of `DrawerRootContext` for `swipe` and `close-watcher`. Callers omit `preventUnmountOnClose`, because the store adds that method before the emit.
 - `Drawer.Root` also provides `DrawerRootContext`, reports to `Drawer.Provider` and holds the close watcher. It gives the composable a function in place of its `emit`. For `update:open` and `openChangeComplete`, the function only emits the event. For `openChange`, it emits the event and returns when `details.isCanceled` is `true`. For a close of a root that has snap points, it then calls `setActiveSnapPoint` with the default snap point and the reason of the close. The composable then calls the function for `update:open`, so `update:open` comes after `snapPointChange` and `update:snapPoint`.
 - `createStore` runs one time, and the props give only the first state. The composable then follows `open` and `triggerId` with watchers that have the default flush. A controlled `open` of `false` also resets the last request in `state.open`.
 - A prop of the root that the store also holds, such as `disabled`, goes into the first state in `createStore`. One `watch` writes each later change. The server HTML then has the first state.
