@@ -1,5 +1,5 @@
 import { inject } from 'vue';
-import type { ComputedRef, InjectionKey } from 'vue';
+import type { ComputedRef, InjectionKey, ShallowRef } from 'vue';
 import type { DateTimePickerContext } from '../../internals/date-time/picker/useDateTimePickerRoot';
 import type {
   TimePickerRootChangeEventDetails,
@@ -20,6 +20,8 @@ export interface TimePickerRootContext extends DateTimePickerContext<
   disabled: ComputedRef<boolean>;
   /** Whether the user can see the time but not change it. */
   readOnly: ComputedRef<boolean>;
+  /** The element of the trigger. A picker with no field reads the native fieldset at its place. */
+  triggerElement: ShallowRef<HTMLElement | null>;
   /** The time of the reference date, or midnight when the picker has none. */
   referenceTime: ComputedRef<Temporal.PlainTime>;
   /**

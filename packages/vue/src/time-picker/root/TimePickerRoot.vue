@@ -132,7 +132,7 @@ export interface TimePickerRootProps<
 </script>
 
 <script setup lang="ts" generic="Value extends TimePickerRootValue = Temporal.PlainTime">
-import { computed, provide, useTemplateRef } from 'vue';
+import { computed, provide, shallowRef, useTemplateRef } from 'vue';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { useDateTimePickerRoot } from '../../internals/date-time/picker/useDateTimePickerRoot';
 import { assertTemporal, toPlainTime } from '../../internals/date-time/temporal';
@@ -219,8 +219,12 @@ const picker = useDateTimePickerRoot<TimePickerRootValue, TimePickerRootChangeEv
 });
 
 const fieldContext = useFieldRootContext();
-// The root has no element. Its field is at the place of the picker.
-const fieldsetDisabled = useFieldsetDisabled(() => picker.fieldElement.value);
+// The root has no element. Its field is at the place of the picker, and its trigger is when the
+// picker has no field.
+const triggerElement = shallowRef<HTMLElement | null>(null);
+const fieldsetDisabled = useFieldsetDisabled(
+  () => picker.fieldElement.value ?? triggerElement.value,
+);
 const disabled = computed(
   () => props.disabled || (fieldContext.disabled.value ?? false) || fieldsetDisabled.value,
 );
@@ -231,7 +235,15 @@ const time = computed(() =>
   picker.value.value === null ? referenceTime.value : toPlainTime(picker.value.value),
 );
 
-provide(TimePickerRootContext, { ...picker, props, disabled, readOnly, time, referenceTime });
+provide(TimePickerRootContext, {
+  ...picker,
+  props,
+  disabled,
+  readOnly,
+  time,
+  referenceTime,
+  triggerElement,
+});
 
 const popover = useTemplateRef<TimePickerRootActions>('popover');
 

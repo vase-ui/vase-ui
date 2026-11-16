@@ -17,13 +17,14 @@ export interface TimePickerTriggerProps extends Omit<
 </script>
 
 <script setup lang="ts">
-import { computed, useAttrs, useTemplateRef } from 'vue';
+import { computed, useAttrs, useTemplateRef, watch } from 'vue';
 import { useAriaAfterHydration } from '../../common/hydration';
 import { givenName } from '../../internals/blankName';
 import { formatText } from '../../internals/date-time/calendar/formatText';
 import { isKind } from '../../internals/date-time/temporal';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import PopoverTrigger from '../../popover/trigger/PopoverTrigger.vue';
+import { createElementSetter } from '../../utils/popups/createElementSetter';
 import { useFormatLocale } from '../../utils/useFormatLocale';
 import { useTimePickerRootContext } from '../root/TimePickerRootContext';
 import type { TimePickerRootValue } from '../root/TimePickerRoot.vue';
@@ -83,6 +84,10 @@ const label = computed(() => {
 // `Popover.Trigger` dynamic. Vue then renders `Popover.Trigger` again each time this part renders.
 const trigger = useTemplateRef<{ element: HTMLElement | null }>('trigger');
 const element = computed(() => trigger.value?.element ?? null);
+
+// The root reads the native fieldset at the place of the trigger when the picker has no field.
+const setTriggerElement = createElementSetter(picker.triggerElement);
+watch(element, setTriggerElement, { immediate: true, flush: 'post' });
 
 function triggerProps() {
   return { ...attrs, ...props, disabled: disabled.value, 'aria-label': label.value };

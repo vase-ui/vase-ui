@@ -813,6 +813,20 @@ describe('<TimePicker.Root />', () => {
 
       expect(onValueChange).not.toHaveBeenCalled();
     });
+
+    it('disables the trigger of a picker that has no field', async () => {
+      await render(() => (
+        <fieldset disabled>
+          <TimePicker.Root locale="en-US" defaultValue={time('14:30')}>
+            <TimePicker.Trigger data-testid="trigger">Open</TimePicker.Trigger>
+          </TimePicker.Root>
+        </fieldset>
+      ));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('trigger')).toHaveAttribute('data-disabled');
+      });
+    });
   });
 
   describe('exposed actions', () => {
