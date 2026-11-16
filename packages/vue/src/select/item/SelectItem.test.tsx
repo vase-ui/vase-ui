@@ -439,7 +439,7 @@ describe('<Select.Item />', () => {
       await flushMicrotasks();
 
       await waitFor(() => {
-        expect(screen.queryByRole('listbox')).not.toBe(null);
+        expect(screen.getByRole('listbox')).not.toBe(null);
       });
     });
 
@@ -667,7 +667,7 @@ describe('<Select.Item />', () => {
       // Vue skips a listener of an item for an event that comes in the millisecond of its mount.
       await waitForLaterMillisecond(async () => {
         await fireEvent.mouseDown(trigger, clientCenter(trigger));
-        await waitFor(() => expect(screen.queryByRole('listbox')).not.toBe(null));
+        await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
       });
     }
 

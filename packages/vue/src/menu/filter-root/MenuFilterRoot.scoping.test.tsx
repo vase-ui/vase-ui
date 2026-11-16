@@ -70,18 +70,14 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     await flushMicrotasks();
     await user.type(input, 'del');
 
-    await waitFor(() => {
-      expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
-    });
+    expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
     expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeVisible();
     expect(screen.queryByRole('status')).toBe(null);
 
     await user.clear(input);
     await user.type(input, 'zzz');
 
-    await waitFor(() => {
-      expect(screen.queryAllByRole('menuitem')).toHaveLength(0);
-    });
+    expect(screen.queryAllByRole('menuitem')).toHaveLength(0);
     expect(screen.getByRole('status')).toHaveTextContent('No results');
   });
 
@@ -197,9 +193,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     input.focus();
     await flushMicrotasks();
     await user.type(input, 'ren');
-    await waitFor(() => {
-      expect(screen.queryByRole('menuitem', { name: 'Move to' })).toBe(null);
-    });
+    expect(screen.queryByRole('menuitem', { name: 'Move to' })).toBe(null);
   });
 
   it('filters a submenu that uses FilterSubmenuRoot', async () => {
@@ -243,9 +237,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       expect(submenuInput).toHaveFocus();
     });
     await user.type(submenuInput, 'arch');
-    await waitFor(() => {
-      expect(screen.queryByRole('menuitem', { name: 'Projects' })).toBe(null);
-    });
+    expect(screen.queryByRole('menuitem', { name: 'Projects' })).toBe(null);
     expect(screen.getByRole('menuitem', { name: 'Archive' })).toBeVisible();
     // The parent list is untouched by the submenu query.
     expect(screen.getByRole('menuitem', { name: 'Rename' })).toBeVisible();
@@ -382,9 +374,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
     // Leaving returns focus to the input and highlights the trigger again.
     await user.keyboard('[ArrowLeft]');
-    await waitFor(() => {
-      expect(screen.queryByTestId('submenu')).toBe(null);
-    });
+    expect(screen.queryByTestId('submenu')).toBe(null);
     expect(input).toHaveFocus();
     expect(input).toHaveAttribute('aria-activedescendant', trigger.id);
   });
@@ -941,9 +931,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         expect(screen.getByRole('searchbox', { name: 'Filter actions' })).toHaveFocus();
       });
       await user.keyboard('sav[Escape]');
-      await waitFor(() => {
-        expect(screen.queryByRole('searchbox', { name: 'Filter actions' })).toBe(null);
-      });
+      expect(screen.queryByRole('searchbox', { name: 'Filter actions' })).toBe(null);
       await waitFor(() => {
         expect(trigger).toHaveFocus();
       });
@@ -1001,9 +989,7 @@ describe('independent menu focus inside a filterable menu', () => {
     screen.getByRole('menuitem', { name: 'Independent action' }).focus();
     await flushMicrotasks();
     await user.keyboard('{Shift>}[Tab]{/Shift}');
-    await waitFor(() =>
-      expect(screen.queryByRole('menuitem', { name: 'Independent action' })).toBe(null),
-    );
+    expect(screen.queryByRole('menuitem', { name: 'Independent action' })).toBe(null);
     await waitFor(() => expect(screen.getByRole('button', { name: 'Independent' })).toHaveFocus());
   });
 
@@ -1117,9 +1103,7 @@ describe('independent menu focus inside a filterable menu', () => {
       await waitFor(() => {
         expect(screen.getByTestId('after')).toHaveFocus();
       });
-      await waitFor(() => {
-        expect(screen.queryByRole('menu')).toBe(null);
-      });
+      expect(screen.queryByRole('menu')).toBe(null);
     });
 
     it('skips Clear when tabbing out of the popup', async () => {
@@ -1155,9 +1139,7 @@ describe('independent menu focus inside a filterable menu', () => {
       await waitFor(() => {
         expect(screen.getByTestId('after')).toHaveFocus();
       });
-      await waitFor(() => {
-        expect(screen.queryByRole('menu')).toBe(null);
-      });
+      expect(screen.queryByRole('menu')).toBe(null);
     });
 
     it('closes the popup with Escape and returns focus to the trigger', async () => {
@@ -1168,9 +1150,7 @@ describe('independent menu focus inside a filterable menu', () => {
 
       await user.keyboard('[Escape]');
 
-      await waitFor(() => {
-        expect(screen.queryByRole('menu')).toBe(null);
-      });
+      expect(screen.queryByRole('menu')).toBe(null);
       await waitFor(() => {
         expect(screen.getByRole('button', { name: 'Actions' })).toHaveFocus();
       });

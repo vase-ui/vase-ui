@@ -298,7 +298,7 @@ describe('<Autocomplete.Root />', () => {
       await user.click(screen.getByRole('combobox'));
       await screen.findByRole('listbox');
       await user.keyboard('{Escape}');
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(getCloseCompletions(onOpenChangeComplete)).toHaveLength(1);
 
       // Calling the action after the automatic unmount must not repeat the completion.
@@ -334,7 +334,7 @@ describe('<Autocomplete.Root />', () => {
       await setProps({ open: true });
       await screen.findByRole('listbox');
       await setProps({ open: false });
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(getCloseCompletions(onOpenChangeComplete)).toHaveLength(2);
     });
 
@@ -357,7 +357,7 @@ describe('<Autocomplete.Root />', () => {
       expect(onOpenChangeComplete).not.toHaveBeenCalledWith(false);
       await setProps({ open: true });
       await setProps({ open: false });
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(getCloseCompletions(onOpenChangeComplete)).toHaveLength(1);
     });
 
@@ -380,7 +380,7 @@ describe('<Autocomplete.Root />', () => {
       expect(screen.queryByRole('listbox')).not.toBe(null);
       cancel = false;
       await user.click(screen.getByRole('option'));
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
     });
 
     it('keeps the opt-out when a controlled close is applied in a transition', async () => {
@@ -501,7 +501,7 @@ describe('<Autocomplete.Root />', () => {
       expect(screen.queryByRole('listbox')).not.toBe(null);
 
       await user.keyboard('{Escape}');
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
     });
 
@@ -546,7 +546,7 @@ describe('<Autocomplete.Root />', () => {
 
       optOut = false;
       await user.click(screen.getByRole('option'));
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(getCloseCompletions(onOpenChangeComplete)).toHaveLength(2);
     });
 
@@ -616,22 +616,18 @@ describe('<Autocomplete.Root />', () => {
       await user.keyboard('{Enter}');
       expect(input.value).toBe('alpha');
 
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
 
       await user.clear(input);
       await user.type(input, 'a');
 
       await waitFor(() => {
-        expect(screen.queryByRole('listbox')).not.toBe(null);
+        expect(screen.getByRole('listbox')).not.toBe(null);
       });
 
       await user.tab();
 
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
     });
 
     it('fills the input with the highlighted item on Space while the input is empty', async () => {
@@ -701,7 +697,7 @@ describe('<Autocomplete.Root />', () => {
       await waitFor(() => expect(alpha).toHaveAttribute('data-highlighted'));
       await user.keyboard('{Enter}');
 
-      await waitFor(() => expect(screen.queryByRole('dialog')).toBe(null));
+      expect(screen.queryByRole('dialog')).toBe(null);
       expect(trigger).toHaveFocus();
       expect(trigger).toHaveTextContent('alpha');
 
@@ -712,7 +708,7 @@ describe('<Autocomplete.Root />', () => {
       expect(await screen.findByRole('option', { name: 'alpha' })).not.toBe(null);
 
       await user.keyboard('{Escape}');
-      await waitFor(() => expect(screen.queryByRole('dialog')).toBe(null));
+      expect(screen.queryByRole('dialog')).toBe(null);
     });
 
     it('preserves the typed value when the popup is dismissed with Escape', async () => {
@@ -742,7 +738,7 @@ describe('<Autocomplete.Root />', () => {
       await user.type(input, 'al');
       await user.keyboard('{Escape}');
 
-      await waitFor(() => expect(screen.queryByRole('dialog')).toBe(null));
+      expect(screen.queryByRole('dialog')).toBe(null);
       expect(trigger).toHaveFocus();
       expect(trigger).toHaveTextContent('al');
       expect(onValueChange.mock.lastCall?.[0]).toBe('al');
@@ -753,10 +749,10 @@ describe('<Autocomplete.Root />', () => {
       });
       expect(await screen.findByRole('option', { name: 'alpha' })).not.toBe(null);
       expect(await screen.findByRole('option', { name: 'alpine' })).not.toBe(null);
-      await waitFor(() => expect(screen.queryByRole('option', { name: 'beta' })).toBe(null));
+      expect(screen.queryByRole('option', { name: 'beta' })).toBe(null);
 
       await user.keyboard('{Escape}');
-      await waitFor(() => expect(screen.queryByRole('dialog')).toBe(null));
+      expect(screen.queryByRole('dialog')).toBe(null);
     });
   });
 
