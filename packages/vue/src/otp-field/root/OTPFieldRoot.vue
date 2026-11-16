@@ -609,15 +609,14 @@ const { element, elementProps } = useRenderElement('div', props, {
       {
         role: 'group',
         // `null` of the consumer removes the ids of the descriptions (VUE-103).
-        'aria-describedby': ariaAfterHydration(
+        'aria-describedby':
           ariaDescribedBy === null
             ? null
             : mergeAriaIds(
                 ariaDescribedBy as string | undefined,
                 getDescriptionProps({})['aria-describedby'] as string | undefined,
               ),
-        ),
-        'aria-labelledby': ariaAfterHydration(ariaLabelledBy.value),
+        'aria-labelledby': ariaLabelledBy.value,
       },
       elementAttrs,
     ];

@@ -69,7 +69,7 @@ export type RadioGroupChangeEventDetails = VaseUIChangeEventDetails<RadioGroupCh
 
 <script setup lang="ts" generic="Value = any">
 import { computed, provide, shallowRef, triggerRef } from 'vue';
-import { queueInputTake, useAriaAfterHydration } from '../common/hydration';
+import { queueInputTake } from '../common/hydration';
 import { contains } from '../common/shadowDom';
 import { useControlled } from '../common/useControlled';
 import { isEligibleInput } from '../field/root/useFieldValidation';
@@ -354,7 +354,6 @@ const composite = useCompositeRoot({
   hasActiveItem: () => checkedValue.value != null,
 });
 
-const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('div', props, {
   state,
   ref: [composite.rootRef],
@@ -367,7 +366,7 @@ const { element, elementProps } = useRenderElement('div', props, {
       'aria-required': props.required || undefined,
       'aria-disabled': isDisabled.value || undefined,
       'aria-readonly': props.readOnly || undefined,
-      'aria-labelledby': ariaAfterHydration(labelId.value ?? fieldset?.legendId.value),
+      'aria-labelledby': labelId.value ?? fieldset?.legendId.value,
       onFocusout(event: FocusEvent) {
         if (
           !contains(event.currentTarget as Element | null, event.relatedTarget as Element | null)
@@ -390,7 +389,6 @@ const { element, elementProps } = useRenderElement('div', props, {
     },
     attrs,
     (merged) => validation.getValidationProps(isDisabled.value, merged),
-    (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),
   ],
 });
 

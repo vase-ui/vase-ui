@@ -54,7 +54,7 @@ export interface FieldControlProps
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUpdate, onMounted, watch } from 'vue';
-import { useAriaAfterHydration, useValueBeforeHydration } from '../../common/hydration';
+import { useValueBeforeHydration } from '../../common/hydration';
 import { useTimeout } from '../../common/useTimeout';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -321,7 +321,6 @@ function handleKeydown(event: KeyboardEvent) {
 
 const giveFieldInput = useFieldInput();
 
-const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('input', props, {
   state,
   ref: giveFieldInput,
@@ -330,7 +329,7 @@ const { element, elementProps } = useRenderElement('input', props, {
       id: controlId.value,
       disabled: isDisabled.value ? '' : undefined,
       name: controlName.value,
-      'aria-labelledby': ariaAfterHydration(labelId.value),
+      'aria-labelledby': labelId.value,
       onInput: handleInput,
       onChange: handleChange,
       onFocusin() {
@@ -342,7 +341,6 @@ const { element, elementProps } = useRenderElement('input', props, {
     valueProps(),
     attrs,
     (merged) => validation.getValidationProps(isDisabled.value, merged),
-    (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),
   ],
   stateAttributesMapping: fieldValidityMapping,
 });

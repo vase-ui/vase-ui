@@ -24,7 +24,7 @@ export interface CalendarWeekNumberProps
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useAriaAfterHydration, useIsHydrating } from '../../common/hydration';
+import { useIsHydrating } from '../../common/hydration';
 import { formatNumber } from '../../internals/date-time/calendar/formatText';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import type { HTMLProps } from '../../internals/types';
@@ -43,7 +43,6 @@ defineSlots<{
 
 const { state: rootState, locale, getWeekNumber } = useCalendarRootContext();
 const isHydrating = useIsHydrating();
-const ariaAfterHydration = useAriaAfterHydration();
 
 const state = computed<CalendarWeekNumberState>(() => ({
   ...rootState.value,
@@ -64,7 +63,7 @@ const { element, elementProps } = useRenderElement('th', props, {
   props: (attrs) => [
     {
       scope: 'row',
-      'aria-label': ariaAfterHydration(`Week ${text.value}`),
+      'aria-label': `Week ${text.value}`,
       // The digits come from the data of `Intl` in the engine, and a server and a browser can
       // differ.
       'data-allow-mismatch': isHydrating.value ? 'text' : undefined,

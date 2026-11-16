@@ -95,7 +95,7 @@ import {
   watch,
 } from 'vue';
 import type { Component, CSSProperties } from 'vue';
-import { useAriaAfterHydration, useIsHydrating, useServerElement } from '../../common/hydration';
+import { useIsHydrating, useServerElement } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
 import { formatNumber } from '../../common/formatNumber';
 import { activeElement } from '../../common/shadowDom';
@@ -150,7 +150,6 @@ const root = useResizableRootContext();
 useDeferredServerRender();
 
 const hydrating = useIsHydrating();
-const ariaAfterHydration = useAriaAfterHydration();
 const { ref: listItemRef, index } = useCompositeListItem({ list: root.list });
 const isDisabled = computed(() => root.disabled.value || props.disabled);
 
@@ -200,10 +199,19 @@ function getValueText(panel: PanelConstraints, value: number) {
   );
 }
 
+// Each key is in each render, with the value `undefined` when it has none. The first client render
+// can come before the `setup` of the panel after the handle, and `useRenderElement` compares only
+// the keys that the props have.
 const valueAttributes = computed(() => {
   const panel = primary.value;
-  if (panel === undefined) {
-    return undefined;
+  if (panel === undefined || isDisabled.value || hasPendingLengths.value) {
+    return {
+      'aria-controls': root.panels.value[primaryIndex.value]?.referencedId.value,
+      'aria-valuenow': undefined,
+      'aria-valuemin': undefined,
+      'aria-valuemax': undefined,
+      'aria-valuetext': undefined,
+    };
   }
   const range = getHandleRange(
     root.constraints.value,
@@ -216,14 +224,10 @@ const valueAttributes = computed(() => {
   const value = root.shown.value[panel.id]!;
   return {
     'aria-controls': root.panels.value[primaryIndex.value]?.referencedId.value,
-    ...(isDisabled.value || hasPendingLengths.value
-      ? undefined
-      : {
-          'aria-valuenow': Math.round(value),
-          'aria-valuemin': Math.round(range.min),
-          'aria-valuemax': Math.round(range.max),
-          'aria-valuetext': getValueText(panel, value),
-        }),
+    'aria-valuenow': Math.round(value),
+    'aria-valuemin': Math.round(range.min),
+    'aria-valuemax': Math.round(range.max),
+    'aria-valuetext': getValueText(panel, value),
   };
 });
 
@@ -465,16 +469,6 @@ const { element, elementProps } = useRenderElement('div', props, {
       },
     },
     attrs,
-    // The first client render can come before the `setup` of the panel after the handle.
-    // `valueAttributes` then has none of these keys, so this getter adds them.
-    (merged) => ({
-      ...merged,
-      'aria-controls': ariaAfterHydration(merged['aria-controls']),
-      'aria-valuenow': ariaAfterHydration(merged['aria-valuenow']),
-      'aria-valuemin': ariaAfterHydration(merged['aria-valuemin']),
-      'aria-valuemax': ariaAfterHydration(merged['aria-valuemax']),
-      'aria-valuetext': ariaAfterHydration(merged['aria-valuetext']),
-    }),
   ],
 });
 
