@@ -2454,8 +2454,8 @@ describe('<Slider.Thumb />', () => {
       ));
       await flushMicrotasks();
       const recorded = recordInputEvents(container);
-      const [input] = container.querySelectorAll<HTMLInputElement>('input[name="volume"]');
-      input!.value = '70';
+      const input = container.querySelector<HTMLInputElement>('input[name="volume"]')!;
+      input.value = '70';
 
       locale.value = 'de-DE';
       await flushMicrotasks();
