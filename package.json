@@ -33,6 +33,7 @@
     "docs:preview": "pnpm --filter @vase-ui/docs preview",
     "docs:typecheck": "pnpm --filter @vase-ui/docs typecheck",
     "docs:axe": "node scripts/docs/axeSite.ts",
+    "docs:search-focus": "node scripts/docs/searchBoxFocus.ts",
     "docs:demos": "node scripts/docs/upstreamDemos.ts",
     "parity:extract": "node scripts/parity/extract.ts",
     "parity:check": "node scripts/parity/check.ts",
