@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, expect, vi, describe, it, onTestFinished } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { KeepAlive, createSSRApp, defineComponent, h, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
@@ -2366,6 +2367,59 @@ describe('<Switch.Root />', () => {
       await show();
 
       expect(label).toHaveAttribute('for', 'held-switch');
+    });
+  });
+
+  describe('VUE-112: a disabled fieldset', () => {
+    // A switch has no size of its own, and Playwright clicks only an element that has a size.
+    const switchElementStyle = 'display:inline-block;width:20px;height:20px';
+
+    it('shows the disabled state and leaves the tab order in a disabled fieldset', async () => {
+      await render(() => (
+        <>
+          <button type="button" data-testid="before">
+            before
+          </button>
+          <fieldset disabled>
+            <Switch.Root data-testid="switch" style={switchElementStyle} />
+          </fieldset>
+          <button type="button" data-testid="after">
+            after
+          </button>
+        </>
+      ));
+      const switchElement = screen.getByTestId('switch');
+
+      expect(switchElement).toHaveAttribute('data-disabled');
+      expect(switchElement).toHaveAttribute('aria-disabled', 'true');
+
+      screen.getByTestId('before').focus();
+      await userEvent.keyboard('{Tab}');
+
+      expect(screen.getByTestId('after')).toHaveFocus();
+    });
+
+    it('keeps the state when the user presses it or presses Space in a disabled fieldset', async () => {
+      const handleCheckedChange = vi.fn();
+      await render(() => (
+        <fieldset disabled>
+          <Switch.Root
+            data-testid="switch"
+            style={switchElementStyle}
+            onCheckedChange={handleCheckedChange}
+          />
+        </fieldset>
+      ));
+      const switchElement = screen.getByTestId('switch');
+
+      await userEvent.click(switchElement, { force: true });
+      switchElement.focus();
+      expect(switchElement).toHaveFocus();
+      await userEvent.keyboard(' ');
+      await flushMicrotasks();
+
+      expect(handleCheckedChange).not.toHaveBeenCalled();
+      expect(switchElement).toHaveAttribute('aria-checked', 'false');
     });
   });
 });

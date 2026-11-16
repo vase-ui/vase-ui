@@ -2763,7 +2763,8 @@ describe('<Select.Root />', () => {
         await new Promise<void>((resolve) => {
           requestAnimationFrame(() => resolve());
         });
-        await flushMicrotasks();
+        // A lock comes in a 0 ms timer after the open.
+        await wait(0);
 
         expect(isScrollLocked(trigger.ownerDocument)).toBe(false);
       });
@@ -9124,6 +9125,22 @@ describe('<Select.Root />', () => {
       const trigger = container.querySelector('[role="combobox"]');
       expect(trigger).toHaveAttribute('data-placeholder');
       expect(trigger).toHaveTextContent('Pick a font');
+    });
+  });
+
+  describe('VUE-112: a disabled fieldset', () => {
+    it('shows the disabled state on the trigger in a disabled fieldset', async () => {
+      await render(() => (
+        <fieldset disabled>
+          <Select.Root>
+            <Select.Trigger data-testid="trigger">
+              <Select.Value />
+            </Select.Trigger>
+          </Select.Root>
+        </fieldset>
+      ));
+
+      expect(screen.getByTestId('trigger')).toHaveAttribute('data-disabled');
     });
   });
 });

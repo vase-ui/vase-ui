@@ -11,7 +11,7 @@ import { nextAnimationsRead, nextEndingStyle, nextEvent } from './animation';
 import { waitForLaterMillisecond } from './createRenderer';
 import type { createRenderer } from './createRenderer';
 import { flushMicrotasks } from './flushMicrotasks';
-import { waitSingleFrame } from './wait';
+import { wait, waitSingleFrame } from './wait';
 
 // The cases end each transition with `finish()`, so each transition lasts 100 s.
 const morphTransitionStyles = `
@@ -46,7 +46,8 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
 
     await waitSingleFrame();
     trigger.focus();
-    await flushMicrotasks();
+    // The focus out of another trigger starts a 0 ms timer that must not close the popup.
+    await wait(0);
   }
 
   describe('Viewport conformance', () => {

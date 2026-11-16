@@ -10,7 +10,15 @@ import { useDirection } from '../../direction-context/DirectionContext';
 import { REASONS } from '../../reasons';
 import { displayCalendar } from '../displayCalendar';
 import { isTemporalCalendar, parseDaysOfWeek, weekInfo } from '../format';
-import { compareDates, isKind, isSameDay, toInputText, toPlainDate, today } from '../temporal';
+import {
+  compareDates,
+  isKind,
+  isSameDay,
+  parseInputText,
+  toInputText,
+  toPlainDate,
+  today,
+} from '../temporal';
 import type { DateValue, DayOfWeek } from '../temporal';
 import type {
   CalendarBaseProps,
@@ -71,6 +79,11 @@ export interface UseCalendarRootOptions {
 
 /** What the root gives to its parts and to its own element. */
 export interface CalendarRootController {
+  /**
+   * The attributes that keep the day of the clock, the calendar, the first day of the week and the
+   * weekend of the server in the server HTML. The element of the root binds them.
+   */
+  hydrationAttributes: () => Record<string, string>;
   /** The locale for `Intl`. It is `en-US` until the root is mounted, when the consumer gives none. */
   locale: ComputedRef<Intl.LocalesArgument | undefined>;
   /** The pages of the grid. */
@@ -134,11 +147,6 @@ export interface CalendarRootController {
    * that date. With no date, it focuses the cell that has the tab stop.
    */
   focus: (date?: DateValue) => void;
-  /**
-   * The attributes that keep the calendar, the first day of the week and the weekend of the server
-   * in the server HTML. The element of the root binds them.
-   */
-  hydrationAttributes: () => Record<string, string>;
   /** What the grid shows. A root with no views shows `day`. */
   view: ComputedRef<CalendarView>;
   /**
@@ -266,10 +274,17 @@ export function useCalendarRoot({
     );
   });
   // The clock is read in `setup`, and again when the first page or the time zone changes. A page
-  // that stays open for days then gets the right day when the user moves on.
+  // that stays open for days then gets the right day when the user moves on. A server cannot know
+  // the day of the visitor, so the first client render shows the day of the server HTML, and the
+  // render after the mount shows the day of the browser.
   const clockDay = shallowRef(today(timeZone.value));
+  const { value: shownClockDay, attributes: todayAttributes } = useServerValue(
+    'data-vase-ui-today',
+    () => clockDay.value,
+    (text) => parseInputText(text, 'date') ?? undefined,
+  );
   const todayDate = computed(() =>
-    props.today === undefined ? clockDay.value : toPlainDate(props.today),
+    props.today === undefined ? shownClockDay.value : toPlainDate(props.today),
   );
 
   function toGridDate(date: DateValue | Temporal.PlainYearMonth) {
@@ -278,10 +293,10 @@ export function useCalendarRoot({
 
   // The root picks the first page from this day until the month changes. It is a day and not a
   // month, because the calendar of the grid can change after the mount: the locale of the runtime
-  // replaces `en-US`, and its calendar can have other months.
-  const initialDate = toPlainDate(
-    props.focusedDate ?? props.defaultFocusedDate ?? selection.values.value[0] ?? todayDate.value,
-  );
+  // replaces `en-US`, and its calendar can have other months. After a hydration, the day of the
+  // browser replaces the day of the server when the clock picked the page.
+  const pageDay = props.focusedDate ?? props.defaultFocusedDate ?? selection.values.value[0];
+  const initialDate = shallowRef(toPlainDate(pageDay ?? todayDate.value));
 
   const monthLimits = computed(() => ({
     min: props.minDate && monthOfDate(toGridDate(props.minDate)),
@@ -294,13 +309,25 @@ export function useCalendarRoot({
     name,
     state: 'month',
   });
+  // The hook comes before the hook of `autoFocus`, so that `autoFocus` focuses the day of the
+  // browser.
+  onMounted(() => {
+    if (
+      pageDay === undefined &&
+      monthState.value === undefined &&
+      !initialDate.value.equals(todayDate.value)
+    ) {
+      initialDate.value = todayDate.value;
+      keepFocusInGrid();
+    }
+  });
   // The limits apply only to a first page that the root picks. The root shows a month of the
   // consumer as it is: a change of a controlled `month` needs an event, and the mount emits none.
   const visibleMonth = computed(() =>
     monthState.value
       ? toGridDate(monthState.value).toPlainYearMonth()
       : clampMonth(
-          toGridDate(initialDate).toPlainYearMonth(),
+          toGridDate(initialDate.value).toPlainYearMonth(),
           view.value === 'day' ? undefined : 1,
         ),
   );
@@ -334,7 +361,7 @@ export function useCalendarRoot({
     }
     const anchor = monthState.value
       ? visibleMonth.value.toPlainDate({ day: 1 })
-      : toGridDate(initialDate);
+      : toGridDate(initialDate.value);
     const first = alignPageStart(anchor, visible, firstDay.value, 'start');
     return monthState.value ? first : clampPageStart(first, visible);
   });
@@ -361,7 +388,7 @@ export function useCalendarRoot({
 
   const { navigationDirection, renderedPages, isLeaving, finishLeaving } = usePageTransition(
     pages,
-    computed(() => `${calendar.value}|${firstDay.value}`),
+    computed(() => `${calendar.value}|${firstDay.value}|${initialDate.value.toString()}`),
     computed(() => view.value === 'day'),
   );
 
@@ -1030,6 +1057,12 @@ export function useCalendarRoot({
   });
 
   return {
+    hydrationAttributes: () => ({
+      ...(props.today === undefined && todayAttributes()),
+      ...calendarAttributes(),
+      ...firstDayAttributes(),
+      ...weekendAttributes(),
+    }),
     locale: formatLocale,
     pages,
     renderedPages,
@@ -1055,11 +1088,6 @@ export function useCalendarRoot({
     onDayKeydown,
     registerDay,
     focus,
-    hydrationAttributes: () => ({
-      ...calendarAttributes(),
-      ...firstDayAttributes(),
-      ...weekendAttributes(),
-    }),
     view,
     hasViews,
     selectsMonths: isMonthValue,

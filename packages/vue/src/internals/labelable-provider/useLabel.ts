@@ -7,30 +7,32 @@ import { givenId, useVaseUiId } from '../useBaseUiId';
 import { useLabelableContext } from './LabelableContext';
 import type { RegisterId } from './LabelableContext';
 import { useRegisteredId } from './useRegisteredId';
+import { useRenderedElementId } from './useRenderedElementId';
 
 /**
  * A label calls it in `setup`. The part reads `.value` in the function that it gives to
  * `useRenderElement` as `props`: `props: (attrs) => [labelProps.value, attrs]`.
  */
 export function useLabel(params: UseLabelParameters = {}): ComputedRef<UseLabelReturnValue> {
-  const { controlId: contextControlId, registerLabelId: registerContextLabelId } =
-    useLabelableContext();
+  const { controlElementId, registerLabelId: registerContextLabelId } = useLabelableContext();
 
   const ownId = useVaseUiId();
 
   const id = computed(() => givenId(toValue(params.id)) ?? ownId.value);
 
+  const elementId = params.element === undefined ? undefined : useRenderedElementId(params.element);
+
   const source = Symbol();
 
   useRegisteredId(
-    () => id.value,
+    () => elementId?.value ?? id.value,
     (getId) => {
       registerContextLabelId(source, getId);
       params.registerLabelId?.(source, getId);
     },
   );
 
-  const resolveControlId = () => contextControlId.value ?? toValue(params.fallbackControlId);
+  const resolveControlId = () => controlElementId.value ?? toValue(params.fallbackControlId);
 
   function focusControl(event: MouseEvent) {
     const resolvedControlId = resolveControlId();
@@ -93,6 +95,11 @@ export interface UseLabelParameters {
    * The default is a generated id.
    */
   id?: MaybeRefOrGetter<string | undefined> | undefined;
+  /**
+   * The element of the label. A `#render` slot can give it another `id`, and the control then
+   * names that `id`.
+   */
+  element?: MaybeRefOrGetter<Element | null | undefined> | undefined;
   /**
    * The id of the control when the provider has none.
    */

@@ -54,7 +54,6 @@ const READ_BY_NO_TEST_PATHS = [
   'LICENSE',
   'parity/upstream.json',
   'parity/better/BUG-1425.json',
-  'cost/history.json',
   'scripts/docs/status.ts',
   'eslint.config.js',
   'eslint.config.test.js',

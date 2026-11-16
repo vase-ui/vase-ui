@@ -63,16 +63,13 @@ export function useAriaAfterHydration(): <Value>(value: Value) => Value | null {
   return (value) => (hydrated.value ? value : null);
 }
 
-// The element of a part in the server HTML, from the first node that Vue hydrates for the part. A
-// part whose template starts with a fragment, such as a part with a `#render` slot, starts with the
-// comment `[`, and the comment `]` ends the fragment. The element is then the first element in the
-// fragment.
+// The first element that Vue hydrates for the component. A component whose template starts with a
+// fragment, such as a part with a `#render` slot, starts with the comment `[`, and the fragment ends
+// with the comment `]`. A component that renders only a comment has no element. The walk thus
+// stops before the nodes of the next component, and it does not give the element of that component.
 function serverElementOf(first: unknown): Element | null {
-  if (!isNode(first)) {
-    return null;
-  }
   let depth = 0;
-  for (let node: Node | null = first; node !== null; node = node.nextSibling) {
+  for (let node = isNode(first) ? first : null; node !== null; node = node.nextSibling) {
     if (node.nodeType === 1) {
       return node as Element;
     }
@@ -104,17 +101,14 @@ export function useServerElement(): () => HTMLElement | null {
 }
 
 /**
- * Gives a value that changes the elements of the part, when a server and a browser can compute
- * other values, such as the hour cycle of a locale in `Intl`. The server HTML keeps the value in
- * `attribute` of the element of the part. While Vue hydrates the part from server HTML, the value
- * comes from that attribute, so the hydration renders the elements of the server. On a server, in
- * a client-only mount and after the mount, the value is `read()`.
- *
- * Bind `attributes()` to the element of the part. It gives the attribute while `useIsHydrating()`
- * gives `true`, and `undefined` after the mount.
+ * Gives a value that changes which elements the part renders and that a server can give in another
+ * way than the browser, such as the hour cycle of a locale in the `Intl` data of the server. The
+ * server HTML keeps the value in `attribute` of the element of the part. While Vue hydrates the
+ * part from server HTML, the value is the one of that attribute, so the hydration renders the
+ * elements of the server. On a server, in a client-only mount and after the mount, the value is
+ * `read()`. Bind `attributes()` to the element of the part.
  * @param parse Gives the value of the text of the attribute, or `undefined` for a text that is not
  * valid. The value is then `read()`.
- * @param write Gives the text of the attribute for a value.
  */
 export function useServerValue<Value>(
   attribute: `data-vase-ui-${string}`,

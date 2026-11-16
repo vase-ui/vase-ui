@@ -4,6 +4,7 @@ export { createFormDataSpy } from './formData';
 export { createRenderer, waitForLaterMillisecond } from './createRenderer';
 export { isVaporApp } from './testApp';
 export type { Renderable, VaseUIRenderResult } from './createRenderer';
+export { mockBrowserToday } from './mockBrowserToday';
 export { mockRuntimeDateTimeLocale, mockRuntimeLocale } from './mockRuntimeLocale';
 export {
   clientCenter,

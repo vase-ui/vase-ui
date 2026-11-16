@@ -155,7 +155,7 @@ While a range is in progress, the three attributes show the range that a press o
 
 The calendar renders with `renderToString`. The server HTML has the grid, the range, one tab stop and the touch style of each day. The preview and the drag are for the browser.
 
-A server does not know the day of the visitor. Give the `today` and `timeZone` props, so that the server and the browser show the same month and the same tab stop. With no `locale` prop, the calendar uses `en-US` until it mounts, and then the locale of the browser.
+A server cannot know the day of the visitor. With no `today` prop, the server HTML has the day of the clock of the server. After the mount, the calendar shows the day of the browser: `data-today`, `aria-current` and the tab stop follow it. When no value, focused day or month gives the page, the calendar shows the page of that day, with no event and no animation. Give `timeZone` when the server knows the time zone of the visitor, or `today` when it knows the day. The server HTML is then correct. With no `locale` prop, the calendar uses `en-US` until it mounts, and then the locale of the browser.
 
 A server and a browser can also have another calendar, first day of the week or weekend for one locale. The range calendar then hydrates with the grid of the server, and it shows the grid of the browser after the mount. Give `calendar` and `firstDayOfWeek`, and the server HTML has the days and the weeks of the final grid. The weekend has no prop, so `data-weekend` follows the browser. A browser whose `Temporal` does not have the calendar of the server cannot show the grid of the server, and Vue then reports a hydration mismatch. The entry `temporal-polyfill/global` has only the ISO and Gregorian calendars, so it is such a `Temporal`.
 

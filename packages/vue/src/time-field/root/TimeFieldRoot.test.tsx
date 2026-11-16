@@ -685,4 +685,24 @@ describe('<TimeField.Root />', () => {
       ],
     });
   });
+
+  describe('VUE-112: a disabled fieldset', () => {
+    it('shows the disabled state on the root, the input and each segment in a disabled fieldset', async () => {
+      await render(() => (
+        <fieldset disabled>
+          <TimeField.Root data-testid="root" locale="en-US">
+            <TimeField.Input data-testid="input" />
+          </TimeField.Root>
+        </fieldset>
+      ));
+
+      expect(screen.getByTestId('root')).toHaveAttribute('data-disabled');
+      expect(screen.getByTestId('input')).toHaveAttribute('data-disabled');
+      const segments = screen.getAllByRole('spinbutton');
+      expect(segments).toHaveLength(3);
+      for (const segment of segments) {
+        expect(segment).toHaveAttribute('data-disabled');
+      }
+    });
+  });
 });
