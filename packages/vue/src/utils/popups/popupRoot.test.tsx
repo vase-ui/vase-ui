@@ -2013,6 +2013,72 @@ describe('usePopupRoot', () => {
         expect(getByText('trigger')).toHaveAttribute('aria-expanded', 'true');
       });
 
+      it('does not run a kept call again at a later activation', async () => {
+        const handle = createPopupFixtureHandle<string>();
+        const mountPart = shallowRef(false);
+        const { HeldBranch, hide, show } = createHeldBranch(
+          () => (
+            <PopupRootPart handle={handle}>
+              <PopupTriggerPart id="trigger">trigger</PopupTriggerPart>
+              {mountPart.value ? <OpenOnMounted handle={handle} triggerId="trigger" /> : null}
+            </PopupRootPart>
+          ),
+          { mounted: true },
+        );
+        await render(() => <HeldBranch />);
+        await hide();
+        mountPart.value = true;
+        await flushMicrotasks();
+        await show();
+        expect(handle.isOpen).toBe(true);
+
+        handle.close();
+        await flushMicrotasks();
+        await hide();
+        await show();
+        expect(handle.isOpen).toBe(false);
+      });
+
+      it('runs each kept call when a kept call before it throws', async () => {
+        const handle = createPopupFixtureHandle<string>();
+        const mountParts = shallowRef(false);
+        const errors: unknown[] = [];
+        function handleError(event: ErrorEvent) {
+          event.preventDefault();
+          errors.push(event.error);
+        }
+        window.addEventListener('error', handleError);
+        onTestFinished(() => {
+          window.removeEventListener('error', handleError);
+        });
+        const { HeldBranch, hide, show } = createHeldBranch(
+          () => (
+            <PopupRootPart handle={handle} defaultOpen>
+              {mountParts.value ? (
+                <>
+                  <OpenOnMounted handle={handle} triggerId="unknown" />
+                  <CloseOnHook hook={onMounted} handle={handle} />
+                </>
+              ) : null}
+            </PopupRootPart>
+          ),
+          { mounted: true },
+        );
+        await render(() => <HeldBranch />);
+        await hide();
+        mountParts.value = true;
+        await flushMicrotasks();
+        expect(takeReportedMessages()).toEqual([]);
+
+        await show();
+        expect(handle.isOpen).toBe(false);
+        expect(errors).toEqual([
+          expect.objectContaining({ message: expect.stringContaining('trigger id "unknown"') }),
+        ]);
+        // While the case has a listener for `error`, Vitest writes the error to the console.
+        expect(takeReportedMessages()).toEqual([expect.stringContaining('trigger id "unknown"')]);
+      });
+
       it('gives the call to the held root and not to an older root that is attached', async () => {
         // A development build warns one frame after two roots took one handle. Fake timers hold
         // that frame.

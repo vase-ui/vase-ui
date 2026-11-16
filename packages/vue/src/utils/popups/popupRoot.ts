@@ -100,7 +100,7 @@ export interface UsePopupRootOptions<Store extends PopupRootStore> {
    * unmounts and while `KeepAlive` holds it. A root that mounts in a branch that `KeepAlive` holds
    * detaches in its own `onMounted` hook, after the `onMounted` hooks of the parts below it.
    * While `KeepAlive` holds the root and the store is detached, the root keeps each call of the
-   * handle from a part below it, and runs the calls after its activation.
+   * handle in a lifecycle hook of a part below it, and runs the calls after its activation.
    */
   handle?: MaybeRefOrGetter<PopupRootStoreHandle<Store> | undefined>;
   /**
@@ -267,7 +267,7 @@ export function usePopupRootWithPopupId<Store extends PopupRootStore>(
   });
 
   // Vue runs the hooks of a part that mounts below the root while `KeepAlive` holds the root and
-  // the store is detached. The root keeps each call of its handle from such a part and runs it
+  // the store is detached. The root keeps each call of its handle in those hooks and runs it
   // after its activation, as Base UI runs the effects of a part in a hidden `Activity` tree when
   // the tree shows. The trigger map skips each trigger of the root until a later pass of the
   // activation flush, so each call waits for a microtask of its own. A call that throws then does
