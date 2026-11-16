@@ -454,7 +454,7 @@ describe('<Tabs.List />', () => {
       );
     });
 
-    it('makes the indicator follow a resize of a tab after the activation of a list that mounts while KeepAlive holds it', async () => {
+    it('observes tab sizes from the first activation after a held mount', async () => {
       const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
         <Tabs.Root value={0}>
           <Tabs.List data-testid="list" style={{ width: '200px' }}>
@@ -470,7 +470,7 @@ describe('<Tabs.List />', () => {
       await mountWhileHeld();
       expect(
         observe.mock.calls.some(([target]) => target.getAttribute('data-testid') === 'list'),
-      ).toBe(true);
+      ).toBe(false);
       await show();
 
       const indicator = screen.getByTestId('indicator');

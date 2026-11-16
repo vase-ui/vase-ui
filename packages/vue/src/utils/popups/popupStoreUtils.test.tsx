@@ -486,7 +486,7 @@ describe('useTriggerRegistration', () => {
       expect(store.state.triggerCount).toBe(4);
     });
 
-    it('counts a trigger that mounts while KeepAlive holds it in the map of an open popup', async () => {
+    it('hides a trigger entry from a held mount until the first activation', async () => {
       const store = createTestPopupStore();
       store.set('open', true);
       const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
@@ -495,8 +495,8 @@ describe('useTriggerRegistration', () => {
       await render(<HeldBranch />);
 
       await mountWhileHeld();
-      expect(registeredIds(store)).toEqual(['held']);
-      expect(store.state.triggerCount).toBe(1);
+      expect(registeredIds(store)).toEqual([]);
+      expect(store.state.triggerCount).toBe(0);
 
       await show();
       expect(registeredIds(store)).toEqual(['held']);
@@ -728,7 +728,7 @@ describe('useTriggerDataForwarding', () => {
     expect(store.state.activeTriggerElement).toBe(second);
   });
 
-  it('VUE-22: gives an open popup that has no active trigger to a trigger that mounts while KeepAlive holds it', async () => {
+  it('VUE-22: lets a shown trigger claim the popup before a held trigger activates', async () => {
     const store = createTestPopupStore();
     const heldElement = document.createElement('button');
     const shownElement = document.createElement('button');
@@ -747,16 +747,16 @@ describe('useTriggerDataForwarding', () => {
     ));
 
     await mountWhileHeld();
-    expect(store.state.activeTriggerId).toBe('held');
+    expect(store.state.activeTriggerId).toBe(null);
 
     hasShownTrigger.value = true;
     await nextTick();
-    expect(store.state.activeTriggerId).toBe('held');
-    expect(store.state.payload).toBe('held');
+    expect(store.state.activeTriggerId).toBe('shown');
+    expect(store.state.payload).toBe('shown');
 
     await show();
-    expect(store.state.activeTriggerId).toBe('held');
-    expect(store.state.activeTriggerElement).toBe(heldElement);
+    expect(store.state.activeTriggerId).toBe('shown');
+    expect(store.state.activeTriggerElement).toBe(shownElement);
   });
 
   describe('for a detached trigger of a handle', () => {

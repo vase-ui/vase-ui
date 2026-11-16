@@ -690,6 +690,16 @@ const reported = [
       "flush: 'post'",
     ],
     [
+      'onActivated',
+      "import { onActivated } from 'vue';\n\nexport const hook = onActivated;\n",
+      'useKeepAliveState',
+    ],
+    [
+      'onDeactivated',
+      "import { onDeactivated } from 'vue';\n\nexport const hook = onDeactivated;\n",
+      'useKeepAliveState',
+    ],
+    [
       'Transition',
       "import { Transition } from 'vue';\n\nexport const component = Transition;\n",
       'data-starting-style',
@@ -706,6 +716,22 @@ const reported = [
     ruleId: 'no-restricted-imports',
     hint,
   })),
+  ...['onActivated', 'onDeactivated'].flatMap((hook) => [
+    {
+      name: `an import of ${hook} in an SFC`,
+      file: `${SRC}/DialogRoot.vue`,
+      code: `<script setup lang="ts">\nimport { ${hook} } from 'vue';\n${hook}(() => {});\n</script>\n<template><div /></template>\n`,
+      ruleId: 'no-restricted-imports',
+      hint: 'useKeepAliveState',
+    },
+    {
+      name: `an import of ${hook} in useAnchorPositioning.ts`,
+      file: 'packages/vue/src/internals/useAnchorPositioning.ts',
+      code: `import { ${hook} } from 'vue';\nexport const hook = ${hook};\n`,
+      ruleId: 'no-restricted-imports',
+      hint: 'useKeepAliveState',
+    },
+  ]),
   {
     name: 'an import of getCurrentInstance in useAnchorPositioning.ts',
     file: 'packages/vue/src/internals/useAnchorPositioning.ts',
@@ -1074,6 +1100,16 @@ const passed = [
     name: 'a vnode in a constant of the script setup of a test SFC',
     file: `${SRC}/DialogRootInTemplate.test.vue`,
     code: `<script setup lang="ts">\nimport { h } from 'vue';\n\nconst element = h('span');\n</script>\n\n<template>\n  <component :is="element" />\n</template>\n`,
+  },
+  {
+    name: 'an import of onActivated and onDeactivated in useKeepAliveState.ts',
+    file: 'packages/vue/src/internals/useKeepAliveState.ts',
+    code: "import { onActivated, onDeactivated } from 'vue';\n\nexport const hooks = [onActivated, onDeactivated];\n",
+  },
+  {
+    name: 'imports of both KeepAlive hooks in a test file',
+    file: `${SRC}/DialogRoot.test.tsx`,
+    code: "import { onActivated, onDeactivated } from 'vue';\n\nexport const hooks = [onActivated, onDeactivated];\n",
   },
   {
     name: 'an import of useFloating in useAnchorPositioning.ts',

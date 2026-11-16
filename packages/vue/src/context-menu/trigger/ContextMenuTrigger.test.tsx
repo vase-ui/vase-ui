@@ -801,7 +801,7 @@ describe('<ContextMenu.Trigger />', () => {
       expect(prevented).toEqual([true, true, true, false]);
     });
 
-    it('stays closed on the backdrop after the activation of a trigger that mounts while KeepAlive holds it', async () => {
+    it('listens for backdrop context menus from the first activation after a held mount', async () => {
       const probe = createProbe();
       const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
         <ContextMenu.Root>
@@ -818,7 +818,7 @@ describe('<ContextMenu.Trigger />', () => {
       const listen = vi.spyOn(document, 'addEventListener');
       onTestFinished(() => listen.mockRestore());
       await mountWhileHeld();
-      expect(listen.mock.calls.some(([type]) => type === 'contextmenu')).toBe(true);
+      expect(listen.mock.calls.some(([type]) => type === 'contextmenu')).toBe(false);
       await show();
       probe.context.backdropRef.value = getByTestId('backdrop') as HTMLDivElement;
 

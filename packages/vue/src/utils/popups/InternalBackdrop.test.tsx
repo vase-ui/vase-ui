@@ -303,7 +303,7 @@ describe('InternalBackdrop', () => {
       expect(stopSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('moves the hole of a backdrop that mounts while KeepAlive holds it after the activation', async () => {
+    it('updates the cutout from the first activation after a held mount', async () => {
       const cutout = addCutout();
       const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
         <InternalBackdrop data-testid="backdrop" cutout={cutout} />
@@ -311,7 +311,7 @@ describe('InternalBackdrop', () => {
       await render(<HeldBranch />);
 
       await mountWhileHeld();
-      expect(startSpy).toHaveBeenCalledTimes(1);
+      expect(startSpy).not.toHaveBeenCalled();
       cutout.style.top = '60px';
       await show();
       await waitForFirstNotifications();

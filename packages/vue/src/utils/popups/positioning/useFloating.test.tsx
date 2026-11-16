@@ -653,7 +653,7 @@ describe('useVaseUIFloating', () => {
       expect(contexts()).toEqual([undefined, context]);
     });
 
-    it('VUE-43: gives the node the context of a positioner that mounts while KeepAlive holds it', async () => {
+    it('VUE-43: publishes the node and store context at the first activation after a held mount', async () => {
       const tree = new FloatingTreeStore();
       const { store } = createStore();
       const { positioning } = createPositioning();
@@ -684,10 +684,12 @@ describe('useVaseUIFloating', () => {
       const nodeContext = () => tree.nodesRef.value[0].context;
 
       await mountWhileHeld();
-      expect(nodeContext()).toBe(context);
+      expect(nodeContext()).toBeUndefined();
+      expect(store.context.positioning).toBeUndefined();
 
       await show();
       expect(nodeContext()).toBe(context);
+      expect(store.context.positioning).toBe(context);
     });
 
     it('leaves the node of a part that KeepAlive holds when the popup moves to another node', async () => {

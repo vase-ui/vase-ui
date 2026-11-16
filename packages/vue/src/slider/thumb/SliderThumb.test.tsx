@@ -1965,7 +1965,7 @@ describe('<Slider.Thumb />', () => {
       });
     });
 
-    it('measures an inset thumb that mounts while KeepAlive holds it at the activation, and follows a resize after it', async () => {
+    it('measures an inset thumb from the first activation after a held mount', async () => {
       const value = shallowRef(30);
       const width = shallowRef(200);
       const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
@@ -1986,7 +1986,7 @@ describe('<Slider.Thumb />', () => {
       await mountWhileHeld();
       expect(
         observe.mock.calls.some(([target]) => target.getAttribute('data-testid') === 'thumb'),
-      ).toBe(true);
+      ).toBe(false);
       value.value = 60;
       await flushMicrotasks();
       await show();

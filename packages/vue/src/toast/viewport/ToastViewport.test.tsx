@@ -2334,7 +2334,7 @@ describe('<Toast.Viewport />', () => {
     expect(viewport).toHaveFocus();
   });
 
-  it('handles F6 while a viewport that mounts while KeepAlive holds it is held, and after the activation', async () => {
+  it('handles F6 from the first activation after a held mount', async () => {
     const manager = Toast.createToastManager();
     // `KeepAlive` holds only the viewport, so the provider stays active and has the toast.
     const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
@@ -2351,7 +2351,7 @@ describe('<Toast.Viewport />', () => {
     await flushMicrotasks();
     await mountWhileHeld();
 
-    expect(await fireEvent.keyDown(document.body, { key: 'F6' })).toBe(false);
+    expect(await fireEvent.keyDown(document.body, { key: 'F6' })).toBe(true);
 
     await show();
 

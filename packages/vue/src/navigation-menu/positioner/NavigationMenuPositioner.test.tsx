@@ -224,7 +224,7 @@ describe('<NavigationMenu.Positioner />', () => {
     }
   });
 
-  it('has no data-instant at the activation of a menu that mounts open while KeepAlive holds it, and follows a resize after it', async () => {
+  it('resets data-instant after the first activation of a held mount', async () => {
     vi.useFakeTimers();
     try {
       const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
@@ -253,6 +253,10 @@ describe('<NavigationMenu.Positioner />', () => {
 
       await show();
       const positioner = screen.getByTestId('positioner');
+      expect(positioner).toHaveAttribute('data-instant');
+
+      await vi.advanceTimersByTimeAsync(0);
+      await flushMicrotasks();
       expect(positioner).not.toHaveAttribute('data-instant');
 
       window.dispatchEvent(new Event('resize'));

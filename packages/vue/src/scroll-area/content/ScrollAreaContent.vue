@@ -12,8 +12,9 @@ export interface ScrollAreaContentProps
 </script>
 
 <script setup lang="ts">
-import { onActivated, onDeactivated, shallowRef, watch } from 'vue';
+import { watch } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useScrollAreaRootContext } from '../root/ScrollAreaRootContext';
 import { scrollAreaStateAttributesMapping } from '../root/stateAttributes';
@@ -40,22 +41,14 @@ const { element, elementProps } = useRenderElement('div', props, {
   props: (attrs) => [{ role: 'presentation', style: { minWidth: 'fit-content' } }, attrs],
 });
 
-// `KeepAlive` takes the element of a deactivated content out of the document. The element then has
-// no layout, so the observer stops until the content is active again.
-const isDeactivated = shallowRef(false);
-
-onDeactivated(() => {
-  isDeactivated.value = true;
-});
-
-onActivated(() => {
-  isDeactivated.value = false;
-});
+// `KeepAlive` takes the element of a held content out of the document. The element then has no
+// layout, so the observer stops until the content is active again.
+const { isHeld } = useKeepAliveState();
 
 watch(
-  [element, isDeactivated],
-  ([content, deactivated], _previous, onCleanup) => {
-    if (typeof ResizeObserver === 'undefined' || !content || deactivated) {
+  [element, isHeld],
+  ([content, held], _previous, onCleanup) => {
+    if (typeof ResizeObserver === 'undefined' || !content || held) {
       return;
     }
 

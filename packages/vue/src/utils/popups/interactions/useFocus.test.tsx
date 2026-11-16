@@ -84,7 +84,7 @@ describe('useFocus', () => {
     expect(screen.queryByRole('tooltip')).toBe(null);
   });
 
-  it('does not reopen when focus is restored after leaving the tab, after the activation of a trigger that mounts while KeepAlive holds it', async () => {
+  it('starts its window blur listener at the first activation after a held mount', async () => {
     const App = defineComponent({
       setup() {
         const open = shallowRef(false);
@@ -109,7 +109,7 @@ describe('useFocus', () => {
     const listen = vi.spyOn(window, 'addEventListener');
     onTestFinished(() => listen.mockRestore());
     await mountWhileHeld();
-    expect(listen.mock.calls.some(([type]) => type === 'blur')).toBe(true);
+    expect(listen.mock.calls.some(([type]) => type === 'blur')).toBe(false);
     await show();
     const button = screen.getByRole('button');
 

@@ -221,7 +221,7 @@ describe('useSetFieldFocused', () => {
       expect(screen.getByTestId('root')).toHaveAttribute('data-focused');
     });
 
-    it('does not set the focused state at the first activation of a control that mounts while KeepAlive holds it and has focus with no focus event', async () => {
+    it('takes focus without an event at the first activation after a held mount', async () => {
       // The hook of this part runs before the hook of the control, as in the case above.
       const FocusOnActivation = defineComponent(() => {
         onActivated(() => {
@@ -250,7 +250,7 @@ describe('useSetFieldFocused', () => {
       await show();
 
       expect(screen.getByTestId('control')).toHaveFocus();
-      expect(screen.getByTestId('root')).not.toHaveAttribute('data-focused');
+      expect(screen.getByTestId('root')).toHaveAttribute('data-focused');
     });
 
     it('sets the focused state of a control that has focus before the hydration', async () => {

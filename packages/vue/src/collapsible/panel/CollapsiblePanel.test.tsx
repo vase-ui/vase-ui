@@ -18,6 +18,7 @@ import {
   seekBeforeEnd,
   takeReportedMessages,
   waitFor,
+  waitSingleFrame,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
 import CollapsiblePanelHydration from './CollapsiblePanelHydration.test.vue';
@@ -1180,7 +1181,7 @@ describe('<Collapsible.Panel />', () => {
       expect(panel.getAnimations().length).toBe(0);
     });
 
-    it('plays no open animation at the activation of an initially open panel that mounts while KeepAlive holds it, and closes from its height', async () => {
+    it('skips the initial open animation after a held mount and closes from its height', async () => {
       const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
         <Collapsible.Root defaultOpen>
           <Collapsible.Trigger>Trigger</Collapsible.Trigger>
@@ -1214,12 +1215,12 @@ describe('<Collapsible.Panel />', () => {
 
             .animation-test-panel[data-open] {
               overflow: hidden;
-              animation: panel-slide-down 100ms linear;
+              animation: panel-slide-down 100s linear;
             }
 
             .animation-test-panel[data-closed] {
               overflow: hidden;
-              animation: panel-slide-up 100ms linear;
+              animation: panel-slide-up 100s linear;
             }
           `}</style>
           <HeldBranch />
@@ -1247,12 +1248,16 @@ describe('<Collapsible.Panel />', () => {
       ]);
       expect(closingState).toEqual({ animationName: 'panel-slide-up', height: openHeight });
 
+      await waitSingleFrame();
+      for (const animation of panel.getAnimations()) {
+        animation.finish();
+      }
       await waitFor(() => {
         expect(panel).toHaveAttribute('hidden');
       });
     });
 
-    it('gives a closed keyframe panel with hiddenUntilFound that mounts while KeepAlive holds it the attributes of a shown mount at the activation', async () => {
+    it('gives a closed held mount the shown attributes at its first activation', async () => {
       async function readAfterMount(heldMount: boolean) {
         const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
           () => (
@@ -1302,7 +1307,7 @@ describe('<Collapsible.Panel />', () => {
       const heldMount = await readAfterMount(true);
 
       expect(shownMount).not.toHaveProperty('data-starting-style');
-      expect(heldMount).toEqual({ ...shownMount, 'data-starting-style': '' });
+      expect(heldMount).toEqual(shownMount);
     });
 
     it('does not replay open keyframe animations when revealing a panel opened by the user', async () => {

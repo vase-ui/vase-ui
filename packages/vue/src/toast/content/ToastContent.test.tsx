@@ -177,7 +177,7 @@ describe('<Toast.Content />', () => {
     expect(disconnect).toHaveBeenCalledTimes(disconnectAfterMount + 1);
   });
 
-  it('measures its toast at the activation of a content that mounts while KeepAlive holds it, and follows a change of its size', async () => {
+  it('observes toast content from the first activation after a held mount', async () => {
     const height = shallowRef(10);
     // `KeepAlive` holds only the content, so the provider, the viewport and the root stay active.
     const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
@@ -211,7 +211,7 @@ describe('<Toast.Content />', () => {
     await mountWhileHeld();
     expect(
       observe.mock.calls.some(([target]) => target.getAttribute('data-testid') === 'content'),
-    ).toBe(true);
+    ).toBe(false);
     height.value = 20;
     await flushMicrotasks();
     await show();

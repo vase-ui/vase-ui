@@ -149,7 +149,7 @@ describe('<ScrollArea.Content />', () => {
       expect(disconnect).toHaveBeenCalledTimes(disconnectAfterMount + 1);
     });
 
-    it('follows a change of the size of a content that mounts while KeepAlive holds it, after the activation', async () => {
+    it('observes content from the first activation after a held mount', async () => {
       const height = shallowRef(50);
       // `KeepAlive` is in the viewport and holds only the content, so the viewport stays active.
       const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
@@ -171,7 +171,7 @@ describe('<ScrollArea.Content />', () => {
       await mountWhileHeld();
       expect(
         observe.mock.calls.some(([target]) => target.getAttribute('data-testid') === 'content'),
-      ).toBe(true);
+      ).toBe(false);
       await show();
       await waitSingleFrame();
       await waitSingleFrame();

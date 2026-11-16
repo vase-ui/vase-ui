@@ -1234,7 +1234,7 @@ describe('useAnchorPositioning', () => {
       expect(autoUpdateSpy).toHaveBeenCalledTimes(2);
     });
 
-    it('places a popup that mounts while KeepAlive holds it at the activation, and follows its anchor after it', async () => {
+    it('starts anchor updates at the first activation after a held mount', async () => {
       const trigger = createAnchor();
       const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
         <PositionerPart trigger={trigger} {...popupProps} />
@@ -1242,13 +1242,14 @@ describe('useAnchorPositioning', () => {
       await render(<HeldBranch />);
 
       await mountWhileHeld();
-      expect(autoUpdateSpy).toHaveBeenCalledTimes(1);
+      expect(autoUpdateSpy).not.toHaveBeenCalled();
       trigger.style.left = '60px';
       await show();
 
       const popup = screen.getByTestId('popup');
       await waitForPlace(popup, { left: 60 + ANCHOR.width / 2 - POPUP.width / 2, top: BELOW.top });
 
+      expect(autoUpdateSpy).toHaveBeenCalledTimes(1);
       trigger.style.left = `${ANCHOR.left}px`;
 
       await waitForPlace(popup, BELOW);

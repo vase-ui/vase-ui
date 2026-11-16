@@ -23,10 +23,11 @@ export interface TabsListProps
 </script>
 
 <script setup lang="ts">
-import { computed, onActivated, onDeactivated, provide, shallowRef, watch } from 'vue';
+import { computed, provide, shallowRef, watch } from 'vue';
 import { EMPTY_ARRAY } from '../../common/empty';
 import { useCompositeRoot } from '../../internals/composite/root/useCompositeRoot';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { tabsStateAttributesMapping } from '../root/stateAttributesMapping';
 import { useTabsRootContext } from '../root/TabsRootContext';
@@ -92,20 +93,12 @@ let resizeObserver: ResizeObserver | null = null;
 
 // `KeepAlive` takes the elements out of the document. They have no layout there, so the observer
 // stops until the list is active again.
-const isDeactivated = shallowRef(false);
-
-onDeactivated(() => {
-  isDeactivated.value = true;
-});
-
-onActivated(() => {
-  isDeactivated.value = false;
-});
+const { isHeld } = useKeepAliveState();
 
 watch(
-  [element, isDeactivated],
-  ([listElement, deactivated], _previous, onCleanup) => {
-    if (listElement === null || deactivated || typeof ResizeObserver === 'undefined') {
+  [element, isHeld],
+  ([listElement, held], _previous, onCleanup) => {
+    if (listElement === null || held || typeof ResizeObserver === 'undefined') {
       return;
     }
 

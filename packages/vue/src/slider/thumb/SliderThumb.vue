@@ -66,8 +66,6 @@ export interface SliderThumbProps
 import {
   computed,
   nextTick,
-  onActivated,
-  onDeactivated,
   onMounted,
   onScopeDispose,
   provide,
@@ -108,6 +106,7 @@ import { useDeferredServerRender, useLabelableId } from '../../internals/labelab
 import type { HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useFormReset } from '../../internals/useFormReset';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { mergeProps } from '../../merge-props';
 import { matchesFocusVisible } from '../../utils/popups/element';
@@ -321,18 +320,10 @@ function getInsetPosition() {
 
 // `KeepAlive` takes the thumb out of the document. The thumb then has no layout, so the measure
 // and the observer stop until the thumb is active again.
-const isDeactivated = shallowRef(false);
-
-onDeactivated(() => {
-  isDeactivated.value = true;
-});
-
-onActivated(() => {
-  isDeactivated.value = false;
-});
+const { isHeld } = useKeepAliveState();
 
 function measureWhenInset() {
-  if (inset.value && !isDeactivated.value) {
+  if (inset.value && !isHeld.value) {
     getInsetPosition();
   }
 }
@@ -701,9 +692,9 @@ const { element, elementProps } = useRenderElement('div', props, {
 });
 
 watch(
-  [controlElement, element, inset, isDeactivated],
-  ([control, thumb, isInset, deactivated], _previous, onCleanup) => {
-    if (!isInset || !control || !thumb || deactivated) {
+  [controlElement, element, inset, isHeld],
+  ([control, thumb, isInset, held], _previous, onCleanup) => {
+    if (!isInset || !control || !thumb || held) {
       return;
     }
 

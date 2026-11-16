@@ -82,7 +82,7 @@ describe('useValueChanged', () => {
       expect(onChange).toHaveBeenCalledWith(1);
     });
 
-    it('calls onChange for a change while a part that mounts in a held branch is held', async () => {
+    it('defers a value change from a held mount until the first activation', async () => {
       const onChange = vi.fn();
       const value = shallowRef(1);
       const Child = defineComponent(() => {
@@ -96,12 +96,12 @@ describe('useValueChanged', () => {
       value.value = 2;
       await flushMicrotasks();
 
-      expect(onChange).toHaveBeenCalledTimes(1);
-      expect(onChange).toHaveBeenCalledWith(1);
+      expect(onChange).not.toHaveBeenCalled();
 
       await show();
 
       expect(onChange).toHaveBeenCalledTimes(1);
+      expect(onChange).toHaveBeenCalledWith(1);
     });
   });
 });

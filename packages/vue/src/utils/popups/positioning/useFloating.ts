@@ -1,14 +1,7 @@
-import {
-  computed,
-  onActivated,
-  onBeforeMount,
-  onDeactivated,
-  onScopeDispose,
-  toValue,
-  watch,
-} from 'vue';
+import { computed, onBeforeMount, onScopeDispose, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 import type { UseAnchorPositioningReturnValue } from '../../../internals/useAnchorPositioning';
+import { useKeepAliveState } from '../../../internals/useKeepAliveState';
 import { removeNodeContext, useFloatingTree } from '../tree/FloatingTree';
 import type { FloatingTreeStore } from '../tree/FloatingTreeStore';
 import type {
@@ -96,7 +89,7 @@ export function useVaseUIFloating(options: UseFloatingOptions): PopupPositioning
 
   let published: PositioningInteractionStore | null = null;
   let publishedNode: FloatingNodeType | undefined;
-  let deactivated = false;
+  const { isHeld } = useKeepAliveState();
 
   function unpublish() {
     if (published?.context.positioning === context) {
@@ -113,7 +106,7 @@ export function useVaseUIFloating(options: UseFloatingOptions): PopupPositioning
   }
 
   function publish() {
-    const store = deactivated ? null : rootStore.value;
+    const store = isHeld.value ? null : rootStore.value;
     if (store !== published) {
       unpublish();
       if (store) {
@@ -124,7 +117,7 @@ export function useVaseUIFloating(options: UseFloatingOptions): PopupPositioning
 
     const nodeId = toValue(options.nodeId);
     const node =
-      deactivated || nodeId === undefined
+      isHeld.value || nodeId === undefined
         ? undefined
         : tree.value?.nodesRef.value.find((candidate) => candidate.id === nodeId);
     if (node !== publishedNode) {
@@ -136,8 +129,8 @@ export function useVaseUIFloating(options: UseFloatingOptions): PopupPositioning
     }
   }
 
-  // A server does not call `onBeforeMount`, so a server render writes nothing. The hook runs before
-  // the `setup` of the parts below, so each of them finds the context.
+  // A server does not call `onBeforeMount`, so a server render writes nothing. A shown popup
+  // publishes before child setup. A popup that mounts held publishes at the activation.
   onBeforeMount(publish);
   watch([rootStore, () => tree.value?.nodesRef.value, () => toValue(options.nodeId)], publish);
   onScopeDispose(() => {
@@ -145,20 +138,10 @@ export function useVaseUIFloating(options: UseFloatingOptions): PopupPositioning
     unpublishNode();
   });
 
-  // The tree hides the context of a node only while the part of that node is deactivated. This
+  // The tree hides the context of a node only while `KeepAlive` holds the part of that node. This
   // popup can use the node of a part that stays active, so the node and the store lose the context
-  // here.
-  onDeactivated(() => {
-    deactivated = true;
-    publish();
-  });
-  // `onActivated` also runs at the first mount in a `KeepAlive`.
-  onActivated(() => {
-    if (deactivated) {
-      deactivated = false;
-      publish();
-    }
-  });
+  // while `KeepAlive` holds this popup.
+  watch(isHeld, publish, { flush: 'sync' });
 
   function clearPositioningWhileNotMounted() {
     if (!toValue(options.mounted)) {

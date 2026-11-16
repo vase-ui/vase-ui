@@ -1,13 +1,6 @@
-import {
-  onActivated,
-  onDeactivated,
-  onMounted,
-  onScopeDispose,
-  shallowRef,
-  toValue,
-  watch,
-} from 'vue';
+import { onMounted, onScopeDispose, shallowRef, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
+import { useKeepAliveState } from '../useKeepAliveState';
 import { useFieldRootContext } from './FieldRootContext';
 
 /**
@@ -64,17 +57,8 @@ export function useSetFieldFocused(
     { flush: 'post' },
   );
 
-  let wasDeactivated = false;
-  onDeactivated(() => {
-    wasDeactivated = true;
-    releaseFocus();
-  });
-  onActivated(() => {
-    if (wasDeactivated) {
-      wasDeactivated = false;
-      takeFocus();
-    }
-  });
+  const { isHeld } = useKeepAliveState();
+  watch(isHeld, (held) => (held ? releaseFocus() : takeFocus()), { flush: 'sync' });
 
   onScopeDispose(releaseFocus);
 

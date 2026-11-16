@@ -317,7 +317,7 @@ describe('Drawer snap point composition', () => {
     });
   });
 
-  it('VUE-5: measures the viewport at the activation of a part that mounts while KeepAlive holds it, and follows it after the activation', async () => {
+  it('VUE-5: measures snap points from the first activation after a held mount', async () => {
     const viewportHeight = shallowRef(400);
     let snapPoints!: UseDrawerSnapPointsReturnValue;
     const Held = defineComponent({
@@ -337,12 +337,12 @@ describe('Drawer snap point composition', () => {
     ));
 
     await mountWhileHeld();
-    expect(snapPoints.viewportHeight.value).toBe(400);
+    expect(snapPoints.viewportHeight.value).toBe(0);
     viewportHeight.value = 200;
     await flushMicrotasks();
     await nextAnimationFrame();
     await nextAnimationFrame();
-    expect(snapPoints.viewportHeight.value).toBe(200);
+    expect(snapPoints.viewportHeight.value).toBe(0);
     await show();
 
     expect(snapPoints.viewportHeight.value).toBe(200);
