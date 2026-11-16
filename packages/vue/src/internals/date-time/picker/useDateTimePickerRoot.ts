@@ -29,6 +29,11 @@ export interface DateTimePickerContext<Value, Details extends { isCanceled: bool
   closeOnSelect: ComputedRef<boolean>;
   /** The element that the popup is positioned against: the element of the field. */
   fieldElement: ShallowRef<HTMLElement | null>;
+  /**
+   * The element of the trigger. A picker that has no field reads a native fieldset from it, in the
+   * place of the field.
+   */
+  triggerElement: ShallowRef<HTMLElement | null>;
 }
 
 export interface UseDateTimePickerRootParameters<Value, Details extends { isCanceled: boolean }> {
@@ -119,5 +124,6 @@ export function useDateTimePickerRoot<Value, Details extends { isCanceled: boole
     reset,
     closeOnSelect,
     fieldElement: shallowRef<HTMLElement | null>(null),
+    triggerElement: shallowRef<HTMLElement | null>(null),
   };
 }

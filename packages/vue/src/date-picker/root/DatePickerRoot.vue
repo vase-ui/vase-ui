@@ -228,8 +228,11 @@ const picker = useDateTimePickerRoot<DatePickerRootValue, DatePickerRootChangeEv
 });
 
 const fieldContext = useFieldRootContext();
-// The root has no element. Its field is at the place of the picker.
-const fieldsetDisabled = useFieldsetDisabled(() => picker.fieldElement.value);
+// The root has no element. Its field is at the place of the picker, and its trigger is there when
+// the picker has no field.
+const fieldsetDisabled = useFieldsetDisabled(
+  () => picker.fieldElement.value ?? picker.triggerElement.value,
+);
 const disabled = computed(
   () => props.disabled || (fieldContext.disabled.value ?? false) || fieldsetDisabled.value,
 );

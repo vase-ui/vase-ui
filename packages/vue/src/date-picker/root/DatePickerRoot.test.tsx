@@ -625,7 +625,11 @@ describe('<DatePicker.Root />', () => {
     });
 
     describe('VUE-112: a disabled fieldset', () => {
-      it('disables the trigger and, in its portal, the calendar', async () => {
+      // A picker that has no field reads the fieldset from its trigger.
+      it.each([
+        { name: 'a picker with a field', hasField: true },
+        { name: 'a picker that has no field', hasField: false },
+      ])('disables the trigger and, in its portal, the calendar of $name', async ({ hasField }) => {
         const onValueChange = vi.fn();
         const { user } = await render(() => (
           <fieldset disabled>
@@ -634,6 +638,7 @@ describe('<DatePicker.Root />', () => {
                 locale: 'en-US',
                 defaultValue: day('2026-11-18'),
                 open: true,
+                hasField,
                 calendarProps: { today: today() },
                 onValueChange,
               }}
