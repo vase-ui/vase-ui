@@ -2,10 +2,10 @@
  * Returns the `aria-labelledby` of a popup part that takes its name from its active trigger: the
  * part of Menu that has the `menu` role (the popup or `Menu.List`), and `NavigationMenu.Popup`.
  * A non-blank `aria-label` or `aria-labelledby` of the part replaces the label from the trigger.
- * The part reads only its own attributes. An `aria-labelledby` on the element of a `#render` slot also
- * replaces the label, because the element sets it after the props. An `aria-label` on that element
- * does not, because the part does not see it. The part then keeps the `aria-labelledby` of the
- * trigger.
+ * The part reads only its own attributes. An `aria-labelledby` on the element of a `#render` slot
+ * also replaces the label, because the element sets it after the props. An `aria-label` on that
+ * element does not, because the part does not see it. The part then keeps the `aria-labelledby` of
+ * the trigger.
  */
 export function resolvePopupLabel(
   attrs: Record<string, unknown>,
