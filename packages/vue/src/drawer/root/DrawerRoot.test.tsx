@@ -21,6 +21,7 @@ import * as DrawerCloseDataAttributes from '../../dialog/close/DialogCloseDataAt
 import * as Dialog from '../../dialog/index.parts';
 import type { DialogStore } from '../../dialog/store/DialogStore';
 import * as DrawerTriggerDataAttributes from '../../dialog/trigger/DialogTriggerDataAttributes';
+import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
 import * as Drawer from '../index.parts';
@@ -2177,6 +2178,33 @@ describe('<Drawer.Root />', () => {
   });
 
   describe('context of the root', () => {
+    it('forwards drawer changes and lets the store prevent unmount', async () => {
+      let context!: DrawerRootContext;
+      let store!: Store;
+      const handleOpenChange = vi.fn((_open: boolean, details: Drawer.Root.ChangeEventDetails) => {
+        details.preventUnmountOnClose();
+      });
+      await render(
+        <Drawer.Root defaultOpen onOpenChange={handleOpenChange}>
+          <RootContextProbe onContext={(value) => (context = value)} />
+          <DialogStoreProbe onStore={(value) => (store = value)} />
+        </Drawer.Root>,
+      );
+
+      const details = createChangeEventDetails(REASONS.swipe, new PointerEvent('pointerup'));
+      expect('preventUnmountOnClose' in details).toBe(false);
+      expect(store.select('open')).toBe(true);
+
+      context.setOpen(false, details);
+      await flushMicrotasks();
+
+      expect(handleOpenChange).toHaveBeenCalledExactlyOnceWith(false, details);
+      expect(handleOpenChange.mock.calls[0][1]).toBe(details);
+      expect(store.select('open')).toBe(false);
+      expect(store.select('preventUnmountingOnClose')).toBe(true);
+      expect(store.select('mounted')).toBe(true);
+    });
+
     it('gives the swipe direction and the snap options, and follows their props', async () => {
       const direction = shallowRef<'left' | 'right'>('left');
       const sequential = shallowRef(false);

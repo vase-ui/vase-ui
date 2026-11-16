@@ -138,7 +138,7 @@ export function createChangeEventDetails<
   event?: ReasonToEvent<Reason>,
   trigger?: Element,
   customProperties?: CustomProperties,
-): VaseUIChangeEventDetails<Reason, CustomProperties> {
+): VaseUIChangeEventDetails<Reason, NoInfer<CustomProperties>> {
   let canceled = false;
   let allowPropagation = false;
   const custom = customProperties ?? (EMPTY_OBJECT as CustomProperties);
@@ -170,7 +170,7 @@ export function createGenericEventDetails<
   reason: Reason,
   event?: ReasonToEvent<Reason>,
   customProperties?: CustomProperties,
-): VaseUIGenericEventDetails<Reason, CustomProperties> {
+): VaseUIGenericEventDetails<Reason, NoInfer<CustomProperties>> {
   const custom = customProperties ?? (EMPTY_OBJECT as CustomProperties);
   const details: VaseUIGenericEventDetail<Reason, CustomProperties> = {
     reason,

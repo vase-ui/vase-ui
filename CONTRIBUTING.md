@@ -528,6 +528,8 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - `trigger`.
 - `preventUnmountOnClose()`, on popup roots.
 
+`createChangeEventDetails` and `createGenericEventDetails` infer custom properties only from their arguments (`VUE-123`). An expected type cannot supply absent properties or hide a wrong reason.
+
 ### Other callbacks
 
 - A callback that only tells the consumer about a change becomes an emit. The name loses `on`: `openChangeComplete`, `valueCommitted`, `itemHighlighted`, `loadingStatusChange`.
@@ -1024,6 +1026,7 @@ The state of a popup is in a store. The code is in `src/utils/popups`. `tooltip/
 - Make `inactiveTriggerProps` one time in `setup` when it reads no state. A new object in each run of the getter renders each inactive trigger again. `Menu.Root` does this.
 - A root part calls `usePopupRoot(props, createStore, options)` in `setup`. The call returns `store`, `open`, `mounted`, `payload`, `transitionStatus` and `actions`. The part provides `store` with `provide`, exposes `actions`, and renders `<slot :payload="payload" />`.
 - The roots of Dialog, Alert Dialog and Drawer share the composable `useRenderDialogRoot` of `dialog/root`. The comments of `popupRoot.ts` give the watchers of `usePopupRoot` and the sequence of its events.
+- Drawer shares `DialogStore`, and the `setOpen` of that store accepts only the reasons of Dialog. For `swipe` and `close-watcher`, a Drawer part calls `setOpen` of `DrawerRootContext`. A caller of `setOpen` omits `preventUnmountOnClose`, because the store adds that method before the emit.
 - A popup part writes its element to `store.context.popupRef` and to the key `popupElement` in one `ref` callback. The callback writes `null` only when `popupRef` holds its own element. [Context of a root](#context-of-a-root) gives the reason. `tooltip/popup/TooltipPopup.vue` is the model.
 - `KeepAlive` takes a popup out of the document and calls no `ref` callback. A popup part whose element a trigger names thus gives its `ref` callback to `useKeepAliveElementRef` of `utils/popups`. That composable calls the callback with `null` when `isHeld` of `useKeepAliveState` becomes `true`, and with the element when `isHeld` becomes `false`. It gives no new element while `isHeld` is `true`. A part that mounts in a held branch thus gives no element from its mount to its activation. `Select.List`, `Menu.List` and `Combobox.List` do the same, because a trigger or the input names their element. `useFilterDropdownList` does it for the list of a filterable menu. The trigger and the input of such a part then name no element that `KeepAlive` took out of the document (`VUE-73`).
 - `NavigationMenu.Content` teleports into `NavigationMenu.Viewport`, and the content stays there while `KeepAlive` holds the viewport. In a positioner, the content teleports into `viewportElement` of the root context. The viewport thus writes its element to `viewportElement` with `createElementSetter` alone. It also writes the element to `shownViewportElement` through `useKeepAliveElementRef`. The owner element after the active trigger then has no `aria-owns` while `KeepAlive` holds the viewport (`VUE-73`).

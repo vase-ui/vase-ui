@@ -1,6 +1,8 @@
 import { Drawer } from '@vase-ui/vue/drawer';
 import { expectType } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
+import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import type { DrawerRootContext } from './DrawerRootContext';
 
 // `openChange` is an emit, so the props type has no handler key.
 type DrawerChangeHandler = (open: boolean, eventDetails: Drawer.Root.ChangeEventDetails) => void;
@@ -37,3 +39,14 @@ const drawerOpenChangeReasonNarrowing = (
 );
 
 void drawerOpenChangeReasonNarrowing;
+
+function assertDrawerContext(context: DrawerRootContext) {
+  context.setOpen(true, createChangeEventDetails(REASONS.swipe, new PointerEvent('pointerup')));
+  context.setOpen(false, createChangeEventDetails(REASONS.swipe, new TouchEvent('touchend')));
+  context.setOpen(false, createChangeEventDetails(REASONS.closeWatcher));
+  // @ts-expect-error A drawer has no item press reason.
+  context.setOpen(false, createChangeEventDetails(REASONS.itemPress));
+}
+
+// @ts-expect-error The store adds preventUnmountOnClose before the emit.
+const incompleteDetails: Drawer.Root.ChangeEventDetails = createChangeEventDetails(REASONS.none);
