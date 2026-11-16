@@ -134,6 +134,67 @@ describe('<DatePicker.Root />', () => {
       });
     });
 
+    describe('prop: initialFocus of the popup', () => {
+      // The day has the focus by default, so each case shows that the value of the consumer wins.
+      it('moves no focus for `false`', async () => {
+        const { user } = await renderPicker({
+          defaultValue: day('2026-11-18'),
+          popupProps: { initialFocus: false },
+        });
+
+        await open(user);
+        await waitSingleFrame();
+        await waitSingleFrame();
+
+        expect(screen.getByTestId('trigger')).toHaveFocus();
+      });
+
+      it('moves the focus to the default element for `true`', async () => {
+        const { user } = await renderPicker({
+          defaultValue: day('2026-11-18'),
+          popupProps: { initialFocus: true },
+        });
+
+        await open(user);
+
+        await waitFor(() => {
+          expect(dayButton('2026-11-18')).toHaveFocus();
+        });
+      });
+
+      it.each([
+        { name: '`true`', result: true },
+        { name: '`null`', result: null },
+      ])(
+        'moves the focus to the default element when a function gives $name',
+        async ({ result }) => {
+          const { user } = await renderPicker({
+            defaultValue: day('2026-11-18'),
+            popupProps: { initialFocus: () => result },
+          });
+
+          await open(user);
+
+          await waitFor(() => {
+            expect(dayButton('2026-11-18')).toHaveFocus();
+          });
+        },
+      );
+
+      it('moves the focus to the element that a function gives', async () => {
+        const { user } = await renderPicker({
+          defaultValue: day('2026-11-18'),
+          popupProps: { initialFocus: () => screen.getByRole('button', { name: 'Close' }) },
+        });
+
+        await open(user);
+
+        await waitFor(() => {
+          expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus();
+        });
+      });
+    });
+
     it('goes back to the trigger when Escape closes the popup, and the value stays', async () => {
       const onValueChange = vi.fn();
       const { user, container } = await renderPicker({
@@ -561,6 +622,33 @@ describe('<DatePicker.Root />', () => {
       await user.click(screen.getByTestId('trigger'));
 
       expect(screen.queryByRole('dialog')).toBe(null);
+    });
+
+    describe('VUE-112: a disabled fieldset', () => {
+      it('disables the trigger and, in its portal, the calendar', async () => {
+        const onValueChange = vi.fn();
+        const { user } = await render(() => (
+          <fieldset disabled>
+            <DatePickerAnatomy
+              {...{
+                locale: 'en-US',
+                defaultValue: day('2026-11-18'),
+                open: true,
+                calendarProps: { today: today() },
+                onValueChange,
+              }}
+            />
+          </fieldset>
+        ));
+
+        // The popup is in a portal and out of the fieldset, so the picker gives the state to it.
+        expect(await screen.findByTestId('calendar')).toHaveAttribute('data-disabled');
+        expect(screen.getByTestId('trigger')).toHaveAttribute('data-disabled');
+
+        await user.click(dayButton('2026-11-20'));
+
+        expect(onValueChange).not.toHaveBeenCalled();
+      });
     });
   });
 

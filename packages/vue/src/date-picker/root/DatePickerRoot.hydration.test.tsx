@@ -16,7 +16,7 @@ describe('<DatePicker.Root /> hydration', () => {
     { name: 'a date and time in a zone', props: { value: '2026-11-14T15:04[Asia/Tokyo]' } },
     { name: 'a year and month', props: { value: '2026-11', monthGrid: true } },
     { name: 'a Persian date', props: { value: '2026-11-14', calendar: 'persian' } },
-    { name: 'a layout that Node and Chromium format in another way', props: { locale: 'is-IS' } },
+    { name: 'a layout that the browser changes', props: { locale: 'is-IS' } },
     { name: 'a disabled picker', props: { value: '2026-11-14', disabled: true } },
   ])('hydrates a picker with $name with no warning', async ({ props }) => {
     const fixtureProps = {

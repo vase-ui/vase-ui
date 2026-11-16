@@ -5,6 +5,8 @@ import type {
 } from './calendar/DatePickerCalendar.vue';
 import DatePickerField from './field/DatePickerField.vue';
 import type { DatePickerFieldProps, DatePickerFieldState } from './field/DatePickerField.vue';
+import DatePickerPopup from './popup/DatePickerPopup.vue';
+import type { DatePickerPopupProps, DatePickerPopupState } from './popup/DatePickerPopup.vue';
 import DatePickerPositioner from './positioner/DatePickerPositioner.vue';
 import type {
   DatePickerPositionerProps,
@@ -107,4 +109,14 @@ export namespace TimeField {
   export type Props = DatePickerTimeFieldProps;
 }
 
-export { Arrow, Backdrop, Close, Description, Popup, Portal, Title } from '../popover/index.parts';
+/**
+ * A container for the popup content.
+ * Renders a `<div>` element.
+ */
+export const Popup: typeof DatePickerPopup = DatePickerPopup;
+export namespace Popup {
+  export type State = DatePickerPopupState;
+  export type Props = DatePickerPopupProps;
+}
+
+export { Arrow, Backdrop, Close, Description, Portal, Title } from '../popover/index.parts';

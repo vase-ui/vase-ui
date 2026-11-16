@@ -8,7 +8,7 @@ export { default as DatePickerPositioner } from './positioner/DatePickerPosition
 export { default as DatePickerCalendar } from './calendar/DatePickerCalendar.vue';
 export { default as DatePickerTimeField } from './time-field/DatePickerTimeField.vue';
 export { default as DatePickerPortal } from '../popover/portal/PopoverPortal.vue';
-export { default as DatePickerPopup } from '../popover/popup/PopoverPopup.vue';
+export { default as DatePickerPopup } from './popup/DatePickerPopup.vue';
 export { default as DatePickerArrow } from '../popover/arrow/PopoverArrow.vue';
 export { default as DatePickerBackdrop } from '../popover/backdrop/PopoverBackdrop.vue';
 export { default as DatePickerClose } from '../popover/close/PopoverClose.vue';
@@ -18,6 +18,7 @@ export { default as DatePickerDescription } from '../popover/description/Popover
 export type * from './root/DatePickerRoot.vue';
 export type * from './field/DatePickerField.vue';
 export type * from './trigger/DatePickerTrigger.vue';
+export type * from './popup/DatePickerPopup.vue';
 export type * from './positioner/DatePickerPositioner.vue';
 export type * from './calendar/DatePickerCalendar.vue';
 export type * from './time-field/DatePickerTimeField.vue';
@@ -26,10 +27,6 @@ export type {
   PopoverPortalProps as DatePickerPortalProps,
   PopoverPortalState as DatePickerPortalState,
 } from '../popover/portal/PopoverPortal.vue';
-export type {
-  PopoverPopupProps as DatePickerPopupProps,
-  PopoverPopupState as DatePickerPopupState,
-} from '../popover/popup/PopoverPopup.vue';
 export type {
   PopoverArrowProps as DatePickerArrowProps,
   PopoverArrowState as DatePickerArrowState,

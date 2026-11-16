@@ -37,7 +37,11 @@ import { isElement } from '@floating-ui/utils/dom';
 import { computed, useAttrs, useTemplateRef } from 'vue';
 import CalendarRoot from '../../calendar/root/CalendarRoot.vue';
 import { closest, getTarget } from '../../common/shadowDom';
-import { useFocusOnOpen, usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
+import {
+  getCalendarTabStop,
+  usePickerFocusTarget,
+  usePickerPopup,
+} from '../../internals/date-time/picker/usePickerPopup';
 import { isKind } from '../../internals/date-time/temporal';
 import type { DateValue } from '../../internals/date-time/temporal';
 import { omitUndefinedAttributes } from '../../internals/omitUndefinedAttributes';
@@ -107,9 +111,10 @@ const calendar = useTemplateRef<{
 }>('calendar');
 const element = computed(() => calendar.value?.element ?? null);
 
-// The popup puts the focus on the first tabbable element, which is a navigation button. The day
-// that has the tab stop is the element that the date picker pattern names.
-useFocusOnOpen(popup, () => calendar.value?.focus());
+// The focus manager of the popup puts the focus on the first tabbable element, which is a
+// navigation button. The day that has the tab stop, or the month of a month picker, is the element
+// that the date picker pattern names. The popup part gives it as its `initialFocus`.
+usePickerFocusTarget(() => getCalendarTabStop(element.value));
 
 function handleValueChange(
   value: DatePickerRootValue | null,
