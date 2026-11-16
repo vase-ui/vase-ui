@@ -7,9 +7,11 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  getFocusableUnderAriaHidden,
   isInaccessible,
   nestedPopupCloseTests,
   nextEvent,
+  POPUP_EXIT_CSS,
   popupFocusPropsTests,
   screen,
   takeReportedMessages,
@@ -802,25 +804,13 @@ describe('<Dialog.Popup />', () => {
   });
 
   describe('BUG-5519: an exit animation', () => {
-    const EXIT_CSS = `
-      .popup[data-ending-style] { animation: popup-exit 100s; }
-      @keyframes popup-exit { to { opacity: 0; } }
-    `;
-
-    // An element that the Tab key can reach, under `aria-hidden` on itself or on an ancestor.
-    function getFocusableUnderAriaHidden() {
-      return [...document.querySelectorAll<HTMLElement>('[aria-hidden="true"]')]
-        .flatMap((element) => [element, ...element.querySelectorAll<HTMLElement>('*')])
-        .filter((element) => element.tabIndex >= 0);
-    }
-
     // Opens the dialog with its trigger and closes it with the Escape key. The callback records the
     // document when the exit animation starts. The function resolves after the popup unmounts.
     async function recordExit(record: () => void) {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
       const { user } = await render(
         <div>
-          <style>{EXIT_CSS}</style>
+          <style>{POPUP_EXIT_CSS}</style>
           <Dialog.Root>
             <Dialog.Trigger>Open</Dialog.Trigger>
             <Dialog.Portal>
