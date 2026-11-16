@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { useData } from 'vitepress';
 import type { ApiReference, ApiClass } from '../../../scripts/docs/apiReference.ts';
 import TextWithCode from './TextWithCode.vue';
+import { apiPartId } from './apiPartId.ts';
 
 const props = defineProps<{
   /**
@@ -63,11 +64,6 @@ function signatureOf({ name, parameters }: ApiClass['methods'][number]): string 
     (parameter) => `${parameter.name}${parameter.optional ? '?' : ''}: ${parameter.type}`,
   );
   return `${name}(${list.join(', ')})`;
-}
-
-// The prefix makes the id different from the slug of a Markdown heading, such as the page title.
-function idOf(name: string): string {
-  return `api-${name.toLowerCase().replaceAll('.', '-')}`;
 }
 </script>
 
@@ -203,11 +199,11 @@ function idOf(name: string): string {
     <code>{{ named.apiType.values.map((value) => `'${value}'`).join(' | ') }}</code>
   </p>
   <section v-for="part in parts" :key="part.name">
-    <h3 :id="idOf(part.name)" tabindex="-1">
+    <h3 :id="apiPartId(part.name)" tabindex="-1">
       {{ part.name }}
       <a
         class="header-anchor"
-        :href="`#${idOf(part.name)}`"
+        :href="`#${apiPartId(part.name)}`"
         :aria-label="`Permalink to “${part.name}”`"
         >&#8203;</a
       >

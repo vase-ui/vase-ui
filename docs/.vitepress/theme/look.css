@@ -45,6 +45,13 @@
   color: var(--vase-gray-t2);
 }
 
+/* Search */
+
+/* In the dark theme, the box and the page are both black, so the box has no edge. */
+.VPLocalSearchBox .shell {
+  outline: 1px solid var(--vase-color-border);
+}
+
 /* Side navigation */
 
 .VPSidebar .group + .group {
