@@ -330,6 +330,37 @@ describe('useFocus', () => {
       expect(calls).toEqual([{ open: true, reason: REASONS.triggerFocus, trigger: 'trigger' }]);
     });
 
+    it('keeps the popup open when the focus leaves the page', async () => {
+      const { App, calls } = createFocusApp();
+      await render(<App />);
+      const trigger = getTrigger();
+      await focus(trigger);
+      expect(isOpen()).toBe(true);
+
+      // A window blur leaves the active element in the document.
+      await fireEvent.focusOut(trigger, { relatedTarget: null });
+      window.dispatchEvent(new Event('blur'));
+      await tick(0);
+
+      expect(trigger).toHaveFocus();
+      expect(isOpen()).toBe(true);
+      expect(calls).toEqual([{ open: true, reason: REASONS.triggerFocus, trigger: 'trigger' }]);
+    });
+
+    it('keeps the popup open when focus returns before the focus-out timer', async () => {
+      const { App, calls } = createFocusApp();
+      await render(<App />);
+      await focus(getTrigger());
+
+      await focus(screen.getByTestId('outside'));
+      await focus(getTrigger());
+      await tick(0);
+
+      expect(getTrigger()).toHaveFocus();
+      expect(isOpen()).toBe(true);
+      expect(calls.map((call) => call.open)).toEqual([true, true]);
+    });
+
     it('reads the delay when the focus comes', async () => {
       const delay = shallowRef(100);
       const { App } = createFocusApp({ delay });

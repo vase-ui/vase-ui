@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { KeepAlive, defineComponent, shallowRef } from 'vue';
+import { KeepAlive, defineComponent, nextTick, onMounted, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Select } from '@vase-ui/vue/select';
 import type { HTMLProps } from '../../internals/types';
@@ -598,6 +598,43 @@ describe('<Select.Trigger />', () => {
   });
 
   describe('VUE-5: KeepAlive', () => {
+    it('does not mount the popup after KeepAlive deactivates a focused trigger', async () => {
+      const active = shallowRef(true);
+      const onMount = vi.fn();
+      const Content = defineComponent(() => {
+        onMounted(onMount);
+        return () => <span>Popup content</span>;
+      });
+      await render(() => (
+        <KeepAlive>
+          {active.value ? (
+            <Select.Root key="select">
+              <Select.Trigger data-testid="trigger" />
+              <Select.Portal>
+                <Content />
+              </Select.Portal>
+            </Select.Root>
+          ) : null}
+        </KeepAlive>
+      ));
+      const trigger = screen.getByTestId('trigger');
+      expect(onMount).not.toHaveBeenCalled();
+
+      trigger.focus();
+      active.value = false;
+      await nextTick();
+      expect(trigger).not.toBeInTheDocument();
+      // A shown trigger mounts the popup content in a 0 ms timer after its focus.
+      await wait(0);
+      expect(onMount).not.toHaveBeenCalled();
+
+      active.value = true;
+      await flushMicrotasks();
+      trigger.focus();
+
+      await waitFor(() => expect(onMount).toHaveBeenCalledOnce());
+    });
+
     it('VUE-5: ignores the release of the opening press while KeepAlive holds the select', async () => {
       const active = shallowRef(true);
       const onOpenChange = vi.fn();

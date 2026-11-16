@@ -1897,6 +1897,40 @@ describe('<Combobox.Trigger />', () => {
     });
   });
 
+  it('does not mount the popup after focus on a disabled custom trigger', async () => {
+    const disabled = shallowRef(true);
+    const onMount = vi.fn();
+    const Content = defineComponent(() => {
+      onMounted(onMount);
+      return () => <span>Popup content</span>;
+    });
+    await render(() => (
+      <Combobox.Root>
+        <Combobox.Trigger as="div" nativeButton={false} disabled={disabled.value}>
+          Trigger
+        </Combobox.Trigger>
+        <Combobox.Portal>
+          <Content />
+        </Combobox.Portal>
+      </Combobox.Root>
+    ));
+    const trigger = screen.getByRole('combobox');
+    expect(trigger).toHaveAttribute('aria-disabled', 'true');
+
+    trigger.focus();
+    expect(trigger).toHaveFocus();
+    // An enabled trigger mounts the popup content in a 0 ms timer after its focus.
+    await wait(0);
+    expect(onMount).not.toHaveBeenCalled();
+
+    disabled.value = false;
+    await flushMicrotasks();
+    trigger.blur();
+    trigger.focus();
+
+    await waitFor(() => expect(onMount).toHaveBeenCalledOnce());
+  });
+
   describe('KeepAlive', () => {
     it('ignores the release of the opening press while KeepAlive holds the combobox', async () => {
       const active = shallowRef(true);
