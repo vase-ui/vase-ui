@@ -32,8 +32,8 @@ export interface NavigationMenuRootContext<Value = any> {
   positionerElement: ShallowRef<HTMLElement | null>;
   backdropElement: ShallowRef<HTMLElement | null>;
   /**
-   * The viewport element, also while `KeepAlive` holds it. `NavigationMenu.Content` teleports
-   * into it.
+   * The viewport element, also while `KeepAlive` holds it. In a positioner,
+   * `NavigationMenu.Content` teleports into it.
    */
   viewportElement: ShallowRef<HTMLElement | null>;
   /**
