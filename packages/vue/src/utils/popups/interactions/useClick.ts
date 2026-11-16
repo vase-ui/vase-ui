@@ -1,10 +1,11 @@
-import { onDeactivated, toValue } from 'vue';
+import { toValue, watch } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 import { getTarget } from '../../../common/shadowDom';
 import { useAnimationFrame } from '../../../common/useAnimationFrame';
 import { useTimeout } from '../../../common/useTimeout';
 import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
+import { useKeepAliveState } from '../../../internals/useKeepAliveState';
 import { isTypeableElement } from '../element';
 import { isMouseLikePointerType, isVirtualPointerEvent } from '../event';
 import type { ClickElementProps, PopupInteractionStore } from '../types';
@@ -136,10 +137,17 @@ export function useClick(
   }
 
   // A press that waits must not open the popup after `KeepAlive` deactivates the part.
-  onDeactivated(() => {
-    frame.cancel();
-    touchOpenTimeout.clear();
-  });
+  const { isHeld } = useKeepAliveState();
+  watch(
+    isHeld,
+    (held) => {
+      if (held) {
+        frame.cancel();
+        touchOpenTimeout.clear();
+      }
+    },
+    { flush: 'sync' },
+  );
 
   const reference: ClickElementProps['reference'] = {
     onPointerdown(event) {

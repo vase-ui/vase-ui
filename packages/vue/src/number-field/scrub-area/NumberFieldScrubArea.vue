@@ -29,7 +29,7 @@ export interface NumberFieldScrubAreaProps
 </script>
 
 <script setup lang="ts">
-import { nextTick, onDeactivated, onScopeDispose, provide, shallowRef, watch } from 'vue';
+import { nextTick, onScopeDispose, provide, shallowRef, watch } from 'vue';
 import type { CSSProperties } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { mergeCleanups } from '../../common/mergeCleanups';
@@ -40,6 +40,7 @@ import { useTimeout } from '../../common/useTimeout';
 import { createGenericEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useNumberFieldRootContext } from '../root/NumberFieldRootContext';
 import { getViewportRect } from '../utils/getViewportRect';
@@ -313,10 +314,17 @@ onScopeDispose(cancelScrub);
 
 // `KeepAlive` sends no pointer release, and it leaves the teleported cursor in the document. A
 // click that waits for its timer would go to an area that is out of the document.
-onDeactivated(() => {
-  syntheticClickTimeout.clear();
-  cancelScrub();
-});
+const { isHeld } = useKeepAliveState();
+watch(
+  isHeld,
+  (held) => {
+    if (held) {
+      syntheticClickTimeout.clear();
+      cancelScrub();
+    }
+  },
+  { flush: 'sync' },
+);
 
 // Prevent scrolling using touch input when scrubbing.
 function onTouchstart(event: TouchEvent) {

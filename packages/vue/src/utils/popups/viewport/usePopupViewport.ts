@@ -1,7 +1,6 @@
 import {
   computed,
   onBeforeMount,
-  onDeactivated,
   onMounted,
   onScopeDispose,
   provide,
@@ -15,6 +14,7 @@ import { useDirection } from '../../../internals/direction-context/DirectionCont
 import type { StateAttributesMapping } from '../../../internals/getStateAttributesProps';
 import type { Side } from '../../../internals/useAnchorPositioning';
 import { useAnimationsFinished } from '../../../internals/useAnimationsFinished';
+import { useKeepAliveState } from '../../../internals/useKeepAliveState';
 import type { usePopupPositioner } from '../popupPositioner';
 import { adaptiveOrigin } from '../positioning/adaptiveOriginMiddleware';
 import type { AdaptiveOriginMiddleware } from '../positioning/adaptiveOriginConstants';
@@ -266,12 +266,19 @@ export function usePopupViewport(parameters: UsePopupViewportParameters): UsePop
 
   // `KeepAlive` takes the containers out of the document and cancels their animations. The
   // animations start again at the activation, so the morph ends at the deactivation.
-  onDeactivated(() => {
-    cleanupFrame.cancel();
-    cleanupController?.abort();
-    previousContent.value = null;
-    previousContentDimensions.value = null;
-  });
+  const { isHeld } = useKeepAliveState();
+  watch(
+    isHeld,
+    (held) => {
+      if (held) {
+        cleanupFrame.cancel();
+        cleanupController?.abort();
+        previousContent.value = null;
+        previousContentDimensions.value = null;
+      }
+    },
+    { flush: 'sync' },
+  );
 
   // The first position pass needs the middleware, and a server renders no pass. A viewport that
   // replaces another one mounts before the old one unmounts, and the old one clears the key.

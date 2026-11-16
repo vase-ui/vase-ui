@@ -1,10 +1,11 @@
-import { computed, onDeactivated, onMounted, onScopeDispose, toValue, watch } from 'vue';
+import { computed, onMounted, onScopeDispose, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter, Ref } from 'vue';
 import { isElement } from '@floating-ui/utils/dom';
 import { contains } from '../../../common/shadowDom';
 import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import type { FloatingUIOpenChangeDetails, HTMLProps } from '../../../internals/types';
+import { useKeepAliveState } from '../../../internals/useKeepAliveState';
 import { useFloatingTree } from '../tree/FloatingTree';
 import { useDomEffect } from '../useDomEffect';
 import type { FloatingTreeStore } from '../tree/FloatingTreeStore';
@@ -132,17 +133,24 @@ export function useHoverTriggerInteraction(
 
   // `KeepAlive` sends no leave event. A popup that hover opened would then stay open after the
   // activation, with no pointer on its trigger.
-  onDeactivated(() => {
-    stopInFlight?.();
-    const current = toValue(store);
-    if (
-      current.select('open') &&
-      isHoverOpenEvent(current.context.openEvent?.type) &&
-      (toValue(props.triggerElement) ?? null) === current.select('anchorElement')
-    ) {
-      current.setOpen(false, createChangeEventDetails(REASONS.triggerHover));
-    }
-  });
+  const { isHeld } = useKeepAliveState();
+  watch(
+    isHeld,
+    (held) => {
+      if (held) {
+        stopInFlight?.();
+        const current = toValue(store);
+        if (
+          current.select('open') &&
+          isHoverOpenEvent(current.context.openEvent?.type) &&
+          (toValue(props.triggerElement) ?? null) === current.select('anchorElement')
+        ) {
+          current.setOpen(false, createChangeEventDetails(REASONS.triggerHover));
+        }
+      }
+    },
+    { flush: 'sync' },
+  );
 
   // While the popup blocks pointer events, a trigger that opens it on hover keeps them, so the
   // pointer can move to it from the active trigger.
