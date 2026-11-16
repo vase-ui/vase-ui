@@ -10,8 +10,9 @@ export function jobRunCommands(workflow: string, job: string): string[] {
   }
   const commands: string[] = [];
   for (const line of lines.slice(start + 1)) {
-    // A key at two spaces or less starts the next job or ends the jobs.
-    if (/^ {0,2}[^\s#]/.test(line)) {
+    // Prettier writes the comment of a job at the indent of its key. A line at two spaces or less
+    // thus starts the next job or ends the jobs.
+    if (/^ {0,2}\S/.test(line)) {
       break;
     }
     const command = /^\s+(?:- )?run: (.*)$/.exec(line)?.[1];

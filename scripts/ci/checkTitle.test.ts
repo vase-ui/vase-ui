@@ -23,9 +23,12 @@ const refused: { name: string; title: string }[] = [
   { name: 'a type with a capital letter', title: 'Feat(separator): add Separator' },
   { name: 'no type', title: 'Add Separator' },
   { name: 'no space after the colon', title: 'feat(separator):add Separator' },
+  { name: 'two spaces after the colon', title: 'feat(separator):  add Separator' },
   { name: 'no description', title: 'feat(separator): ' },
   { name: 'an empty scope', title: 'feat(): add Separator' },
   { name: 'a scope with a capital letter', title: 'feat(Separator): add Separator' },
+  { name: 'a scope with two hyphens in a row', title: 'feat(alert--dialog): add AlertDialog' },
+  { name: 'a scope with a hyphen at its end', title: 'feat(dialog-): add Dialog' },
   { name: 'two scopes', title: 'feat(dialog,popover): add the prop' },
   { name: 'a space before the type', title: ' feat(separator): add Separator' },
   {
