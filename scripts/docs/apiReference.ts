@@ -332,9 +332,10 @@ export function buildOwnApiReference(
 
 /**
  * Returns a function from a family name to the API reference of the family. The first call makes
- * the project. With `cache`, the function keeps the reference of each family that it reads. Each
- * later call for that family gives the kept reference. Use `cache` only where the source does not
- * change while the function is in use, such as a build.
+ * the project. Without `cache`, each call reloads the source files. With `cache`, the function
+ * keeps the reference of each family that it reads. Each later call for that family gives the
+ * kept reference. Use `cache` only where the source does not change while the function is in use,
+ * such as a build.
  */
 export function createApiReferenceReader(
   root = REPOSITORY_ROOT,
@@ -342,8 +343,14 @@ export function createApiReferenceReader(
 ): (family: string) => ApiReference {
   let project: VaseProject | undefined;
   let parity: { families: FamilyFiles[]; ownComponents: OwnComponentFile[] } | undefined;
-  const readProject = (): VaseProject =>
-    (project ??= createVaseProject(join(root, 'packages/vue/tsconfig.build.json')));
+  const readProject = (): VaseProject => {
+    if (!project) {
+      project = createVaseProject(join(root, 'packages/vue/tsconfig.build.json'));
+    } else if (!cache) {
+      project.reload();
+    }
+    return project;
+  };
 
   const readFamily = (family: string): ApiReference => {
     if (!parity) {

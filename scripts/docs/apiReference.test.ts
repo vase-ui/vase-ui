@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
+import type { TestContext } from 'node:test';
 import { readTypesMd } from '../parity/typesMd.ts';
 import { REPOSITORY_ROOT } from '../parity/repository.ts';
 import { createVaseProject } from '../parity/vaseSurface.ts';
@@ -31,6 +32,13 @@ const types = readTypesMd(
   'docs/src/app/(docs)/react/components/sample/types.md',
   readFileSync(join(FIXTURES, 'sample.types.md'), 'utf8'),
 );
+
+function copyFixtures(context: TestContext): string {
+  const root = mkdtempSync(join(REPOSITORY_ROOT, 'node_modules', '.api-reference-'));
+  context.after(() => rmSync(root, { recursive: true, force: true }));
+  cpSync(FIXTURES, root, { recursive: true });
+  return root;
+}
 
 /** Gives the project another text for each file for the time of `run`. The texts are put back after it. */
 function withTexts<T>(edits: [path: string, from: string, to: string][], run: () => T): T {
@@ -418,7 +426,7 @@ for (const tag of ['TypesSample.createHandle', 'TypesSample']) {
   });
 }
 
-const read = createApiReferenceReader(REPOSITORY_ROOT);
+const read = createApiReferenceReader(REPOSITORY_ROOT, { cache: true });
 
 test('each family page has an API reference with one part, function or type or more', () => {
   const pages = listFamilyPages(join(REPOSITORY_ROOT, 'docs'));
@@ -450,7 +458,7 @@ test('each prop and each event of each family page has a type, and each event ha
 
 test('the reference of a family page does not change with the families that the reader read before', () => {
   const families = listFamilyPages(join(REPOSITORY_ROOT, 'docs')).map(({ family }) => family);
-  const readBackward = createApiReferenceReader(REPOSITORY_ROOT);
+  const readBackward = createApiReferenceReader(REPOSITORY_ROOT, { cache: true });
   const backward = new Map(families.toReversed().map((family) => [family, readBackward(family)]));
   for (const family of families) {
     assert.deepEqual(
@@ -547,9 +555,16 @@ test('the reader gives the reference of an own component from its record, with n
   );
 });
 
-test('the reader with `cache` gives the reference of the first read for each later read of a family', () => {
-  const readOnce = createApiReferenceReader(FIXTURES, { cache: true });
-  assert.equal(readOnce('sample'), readOnce('sample'));
+test('the reader with `cache` gives the reference of the first read for each later read of a family', (context) => {
+  const root = copyFixtures(context);
+  const popup = join(root, 'packages/vue/src/sample/popup/SamplePopup.vue');
+  const readOnce = createApiReferenceReader(root, { cache: true });
+  const first = readOnce('sample');
+  writeFileSync(
+    popup,
+    readFileSync(popup, 'utf8').replace('The name of the popup.', 'The edited name of the popup.'),
+  );
+  assert.equal(readOnce('sample'), first);
 });
 
 test('the reader without `cache` makes the reference of a family again for each read', () => {
@@ -558,6 +573,95 @@ test('the reader without `cache` makes the reference of a family again for each 
   const second = readAgain('sample');
   assert.notEqual(first, second);
   assert.deepEqual(first, second);
+});
+
+test('the reader without `cache` reads edited JSDoc and defaults from disk', (context) => {
+  const root = copyFixtures(context);
+  const popup = join(root, 'packages/vue/src/sample/popup/SamplePopup.vue');
+  const source = readFileSync(popup, 'utf8');
+  const readAgain = createApiReferenceReader(root);
+  const readSide = () =>
+    readAgain('sample')
+      .parts.find(({ name }) => name === 'Sample.Popup')
+      ?.props.find(({ name }) => name === 'side');
+  const before = readSide();
+  assert.equal(before?.description, 'Which side of the trigger the popup uses.');
+  assert.equal(before.default, null);
+  writeFileSync(
+    popup,
+    source.replace(
+      '/** Which side of the trigger the popup uses. */',
+      "/**\n   * The preferred side of the trigger.\n   * @default 'top'\n   */",
+    ),
+  );
+  assert.deepEqual(readSide(), {
+    ...before,
+    description: 'The preferred side of the trigger.',
+    default: "'top'",
+  });
+  writeFileSync(popup, source);
+  assert.deepEqual(readSide(), before);
+});
+
+test('the reader without `cache` reads added and removed props from disk', (context) => {
+  const root = copyFixtures(context);
+  const popup = join(root, 'packages/vue/src/sample/popup/SamplePopup.vue');
+  const source = readFileSync(popup, 'utf8');
+  const readAgain = createApiReferenceReader(root);
+  const readProps = () =>
+    readAgain('sample').parts.find(({ name }) => name === 'Sample.Popup')?.props;
+  const before = readProps();
+  assert.equal(
+    before?.some(({ name }) => name === 'label'),
+    false,
+  );
+  writeFileSync(
+    popup,
+    source.replace(
+      '  name: string;',
+      '  name: string;\n  /** The popup label. */\n  label?: string | undefined;',
+    ),
+  );
+  assert.deepEqual(
+    readProps()?.find(({ name }) => name === 'label'),
+    {
+      name: 'label',
+      type: 'string | undefined',
+      default: null,
+      required: false,
+      description: 'The popup label.',
+    },
+  );
+  writeFileSync(popup, source);
+  assert.deepEqual(readProps(), before);
+});
+
+test('the reader without `cache` reads edited imported TypeScript files from disk', (context) => {
+  const root = copyFixtures(context);
+  const parts = join(root, 'packages/vue/src/sample/index.parts.ts');
+  const source = readFileSync(parts, 'utf8');
+  const readAgain = createApiReferenceReader(root);
+  const readHandle = () => readAgain('sample').types.find(({ name }) => name === 'Sample.Handle');
+  const before = readHandle();
+  assert.equal(before?.properties.find(({ name }) => name === 'close')?.type, '() => void');
+  writeFileSync(
+    parts,
+    source
+      .replace('  close: () => void;', '  /** Closes the popup. */\n  close: () => boolean;')
+      .replace('close() {}', 'close() { return true; }'),
+  );
+  assert.deepEqual(
+    readHandle()?.properties.find(({ name }) => name === 'close'),
+    {
+      name: 'close',
+      type: '() => boolean',
+      optional: false,
+      default: null,
+      description: 'Closes the popup.',
+    },
+  );
+  writeFileSync(parts, source);
+  assert.deepEqual(readHandle(), before);
 });
 
 test('the reader throws and says what to do for a family whose extract has no types.md', () => {

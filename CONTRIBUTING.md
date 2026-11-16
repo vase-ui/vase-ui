@@ -2551,6 +2551,7 @@ Each behavior where Vase UI does more than Base UI has a file `parity/better/<ID
 
 The site is the VitePress project in `docs`, the workspace package `@vase-ui/docs`. A push to `main` publishes it to <https://vase-ui.com/>. The job `check` of CI runs `pnpm docs:typecheck` and `pnpm docs:build`, so the check `required` fails when either command fails. The job `docs-axe` builds the site again and runs `pnpm docs:axe` and `pnpm docs:search-focus`, and `required` needs it too.
 
+- The API reader of `pnpm docs:dev` reloads source files before each family read. Source edits appear in the next reference read. The site build keeps one reference per family.
 - GitHub Pages serves the site at the root of the domain `vase-ui.com`, so `base` in `docs/.vitepress/config.ts` must be `/`. The Pages settings of the repository hold the domain. Do not add a `CNAME` file, because GitHub Pages ignores that file when a workflow publishes the site.
 - A page is a Markdown file in `docs`. `scripts/docs/navigation.ts` makes the navigation from these files. Do not add a page to `docs/.vitepress/config.ts`.
 - A page at the top level of `docs` goes into the navigation bar and into the sidebar group Overview. The home page, `docs/index.md`, is not in the navigation.
