@@ -37,11 +37,6 @@ const KNOWN_FAULTS: { page: string; rule: string; reason: string }[] = [
     rule: 'landmark-unique',
     reason: 'The viewports of the eight demos have the same name.',
   },
-  {
-    page: '/handbook/forms',
-    rule: 'landmark-unique',
-    reason: 'The forms and the viewports of the three demos have the same names.',
-  },
 ];
 
 type Theme = (typeof THEMES)[number];
