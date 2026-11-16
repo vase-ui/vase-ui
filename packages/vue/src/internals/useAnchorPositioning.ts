@@ -935,8 +935,9 @@ export interface UseAnchorPositioningReturnValue {
   placement: Readonly<Ref<Placement>>;
   anchorHidden: ComputedRef<boolean>;
   /**
-   * The element or the virtual element that the popup is positioned against. It is `null` while
-   * the popup is not mounted, and from a deactivation by `KeepAlive` to the next activation.
+   * The element or the virtual element that the popup is positioned against. It is `null` before
+   * the mount, while the popup is not mounted, and while `KeepAlive` holds the part, also from a
+   * mount in a held branch to the activation.
    */
   reference: ComputedRef<Element | VirtualElement | null>;
   isPositioned: Readonly<Ref<boolean>>;
