@@ -67,7 +67,7 @@ import {
   useLabelableId,
 } from '../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../internals/types';
-import { useVaseUiId } from '../internals/useBaseUiId';
+import { givenId, useVaseUiId } from '../internals/useBaseUiId';
 import { useRenderElement } from '../internals/useRenderElement';
 import { useValueChanged } from '../internals/useValueChanged';
 import { CheckboxGroupContext } from './CheckboxGroupContext';
@@ -254,7 +254,7 @@ const { element, elementProps } = useRenderElement('div', props, {
   state,
   stateAttributesMapping: fieldValidityMapping,
   props: (attrs) => [
-    { id: props.id, role: 'group', 'aria-labelledby': ariaAfterHydration(labelId.value) },
+    { id: givenId(props.id), role: 'group', 'aria-labelledby': ariaAfterHydration(labelId.value) },
     attrs,
     getDescriptionProps,
     (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),

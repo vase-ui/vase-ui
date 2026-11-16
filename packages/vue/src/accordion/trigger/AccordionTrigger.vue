@@ -43,6 +43,7 @@ import { useAriaAfterHydration } from '../../common/hydration';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { givenId } from '../../internals/useBaseUiId';
 import { useButton } from '../../internals/use-button';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useAccordionItemContext } from '../item/AccordionItemContext';
@@ -74,7 +75,7 @@ const { getButtonProps, buttonRef } = useButton({
 
 const { defaultTriggerId, registerTriggerId, state: itemState } = useAccordionItemContext();
 
-const triggerId = computed(() => props.id || defaultTriggerId.value);
+const triggerId = computed(() => givenId(props.id) ?? defaultTriggerId.value);
 
 const source = Symbol();
 

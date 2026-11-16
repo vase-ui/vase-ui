@@ -89,7 +89,7 @@ export function useFilterDropdownRoot(
       (autoHighlight.value === 'always' || (autoHighlight.value && filterQuery.value !== '')),
   );
   const defaultListId = computed(() => `${defaultId.value}-list`);
-  const listId = computed(() => (renderedListId.value ?? defaultListId.value) || undefined);
+  const listId = computed(() => renderedListId.value ?? defaultListId.value);
   // The host owns the trigger. `null` and `''` both mean no element carries an id to point at.
   const triggerId = computed(() => toValue(params.triggerId) || undefined);
 

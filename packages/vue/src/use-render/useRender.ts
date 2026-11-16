@@ -96,8 +96,8 @@ export interface UseRenderParameters<State, RenderedElementType extends Element 
    */
   stateAttributesMapping?: StateAttributesMapping<State> | undefined;
   /**
-   * A function that gets the attributes and listeners of the consumer, without `class`, `style`
-   * and each attribute whose value is `undefined`.
+   * A function that gets the attributes and listeners of the consumer, without `class`, `style`,
+   * each attribute whose value is `undefined`, and an empty `id`.
    * It returns the props of the element, or an array of props, in merge order. The rightmost wins.
    * A set can be `undefined`, or a function that gets the props merged so far.
    * The default is the attributes of the consumer.

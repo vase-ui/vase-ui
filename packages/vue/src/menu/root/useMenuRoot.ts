@@ -140,11 +140,7 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
     return (props.disabled ?? false) || (toValue(options.disabled) ?? false);
   }
 
-  // A registered `''` means the popup rendered with an explicitly empty id, so nothing may point
-  // at the generated fallback.
-  const defaultPopupId = computed(
-    () => (renderedPopupId.value ?? generatedPopupId.value) || undefined,
-  );
+  const defaultPopupId = computed(() => renderedPopupId.value ?? generatedPopupId.value);
 
   const floatingParentNodeIdFromContext = useFloatingParentNodeId();
 
