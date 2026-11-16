@@ -134,6 +134,48 @@ describe('<DatePicker.Root />', () => {
       });
     });
 
+    describe('prop: initialFocus of the popup', () => {
+      // The day has the focus by default, so each case shows that the value of the consumer wins.
+      it('moves no focus for `false`', async () => {
+        const { user } = await renderPicker({
+          defaultValue: day('2026-11-18'),
+          popupProps: { initialFocus: false },
+        });
+
+        await open(user);
+        await waitSingleFrame();
+        await waitSingleFrame();
+
+        expect(screen.getByTestId('trigger')).toHaveFocus();
+      });
+
+      it('moves the focus to the first tabbable element for `true`', async () => {
+        const { user } = await renderPicker({
+          defaultValue: day('2026-11-18'),
+          popupProps: { initialFocus: true },
+        });
+
+        await open(user);
+
+        await waitFor(() => {
+          expect(screen.getByTestId('previous')).toHaveFocus();
+        });
+      });
+
+      it('moves the focus to the element that a function gives', async () => {
+        const { user } = await renderPicker({
+          defaultValue: day('2026-11-18'),
+          popupProps: { initialFocus: () => screen.getByRole('button', { name: 'Close' }) },
+        });
+
+        await open(user);
+
+        await waitFor(() => {
+          expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus();
+        });
+      });
+    });
+
     it('goes back to the trigger when Escape closes the popup, and the value stays', async () => {
       const onValueChange = vi.fn();
       const { user, container } = await renderPicker({
@@ -562,6 +604,7 @@ describe('<DatePicker.Root />', () => {
 
       expect(screen.queryByRole('dialog')).toBe(null);
     });
+
   });
 
   describe('exposed actions', () => {

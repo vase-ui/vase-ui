@@ -227,7 +227,7 @@ The segments, the trigger and the calendar keep their own keys: see [Date Field]
 
 - `DatePicker.Trigger` has `aria-haspopup="dialog"`. Its default name is `Choose date`. With a value, its name is `Change date,` and the full date. Give it an `aria-label` to change it.
 - `DatePicker.Popup` has `role="dialog"`. Give it a name with `aria-label` or `DatePicker.Title`.
-- When the popup opens, the focus goes to the day that has the tab stop: the selected day, else today. When it closes, the focus goes back to the trigger.
+- When the popup opens, the focus goes to the day that has the tab stop: the selected day, else today. When it closes, the focus goes back to the trigger. Give `initialFocus` to `DatePicker.Popup` to move the focus to another element, or `false` to move none.
 - A picker that is `disabled` or `readOnly` has a disabled trigger, and Alt and Down does nothing.
 - `DatePicker.TimeField` is not a control of the `Field` that holds the picker. It has no label from that field, so give it an `aria-label`.
 - The default labels are in English. The dates in them follow the locale.

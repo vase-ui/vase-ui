@@ -37,7 +37,10 @@ import { isElement } from '@floating-ui/utils/dom';
 import { computed, useAttrs, useTemplateRef } from 'vue';
 import CalendarRoot from '../../calendar/root/CalendarRoot.vue';
 import { closest, getTarget } from '../../common/shadowDom';
-import { useFocusOnOpen, usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
+import {
+  usePickerFocusTarget,
+  usePickerPopup,
+} from '../../internals/date-time/picker/usePickerPopup';
 import { isKind } from '../../internals/date-time/temporal';
 import type { DateValue } from '../../internals/date-time/temporal';
 import { omitUndefinedAttributes } from '../../internals/omitUndefinedAttributes';
@@ -51,6 +54,9 @@ import type {
 } from '../root/DatePickerRoot.vue';
 
 defineOptions({ inheritAttrs: false });
+
+// The cell of a month or a year has the tab stop itself, and the cell of a day has it in its button.
+const TAB_STOP = '[role="gridcell"][tabindex="0"], [role="gridcell"] [tabindex="0"]';
 
 // `Calendar.Root` reads an absent `showOutsideDays` as the default of its broadcast calendar. Vue
 // changes an absent Boolean prop to `false`, so the prop has the default `undefined`.
@@ -107,9 +113,10 @@ const calendar = useTemplateRef<{
 }>('calendar');
 const element = computed(() => calendar.value?.element ?? null);
 
-// The popup puts the focus on the first tabbable element, which is a navigation button. The day
-// that has the tab stop is the element that the date picker pattern names.
-useFocusOnOpen(popup, () => calendar.value?.focus());
+// The focus manager of the popup puts the focus on the first tabbable element, which is a
+// navigation button. The day that has the tab stop, or the month of a month picker, is the element
+// that the date picker pattern names. The popup part gives it as its `initialFocus`.
+usePickerFocusTarget(() => element.value?.querySelector<HTMLElement>(TAB_STOP));
 
 function handleValueChange(
   value: DatePickerRootValue | null,

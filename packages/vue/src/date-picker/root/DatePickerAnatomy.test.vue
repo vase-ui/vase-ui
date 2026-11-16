@@ -7,17 +7,18 @@ import * as DatePicker from '../index.parts';
 
 defineOptions({ inheritAttrs: false });
 
-// The attributes go to the root. `calendarProps` goes to the calendar.
+// The attributes go to the root. `calendarProps` goes to the calendar, and `popupProps` to the popup.
 withDefaults(
   defineProps<{
     calendarProps?: Record<string, unknown>;
+    popupProps?: Record<string, unknown>;
     hasField?: boolean;
     trigger?: boolean;
     timeField?: boolean;
     monthGrid?: boolean;
     keepMounted?: boolean;
   }>(),
-  { calendarProps: () => ({}), hasField: true, trigger: true },
+  { calendarProps: () => ({}), popupProps: () => ({}), hasField: true, trigger: true },
 );
 
 // The parts expose their members. A test reads them through `root`, `field` and `calendar`.
@@ -43,7 +44,7 @@ defineExpose({ root, field, calendar });
     <DatePicker.Trigger v-if="trigger" data-testid="trigger">Open</DatePicker.Trigger>
     <DatePicker.Portal :keep-mounted="keepMounted">
       <DatePicker.Positioner data-testid="positioner">
-        <DatePicker.Popup aria-label="Choose date" data-testid="popup">
+        <DatePicker.Popup aria-label="Choose date" data-testid="popup" v-bind="popupProps">
           <DatePicker.Calendar ref="calendar" v-bind="calendarProps" data-testid="calendar">
             <Calendar.PreviousButton data-testid="previous" />
             <Calendar.NextButton data-testid="next" />
