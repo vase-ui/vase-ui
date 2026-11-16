@@ -1098,6 +1098,25 @@ describe('<Combobox.Input />', () => {
       },
     );
 
+    it('VUE-122: keeps the arrow key on the input with a string value inside chips', async () => {
+      await render(
+        <Combobox.Root defaultValue="apple">
+          <Combobox.Chips>
+            <Combobox.Input />
+          </Combobox.Chips>
+        </Combobox.Root>,
+      );
+
+      const input = screen.getByRole<HTMLInputElement>('combobox');
+      expect(input).toHaveValue('apple');
+
+      // A string has a length, but it holds no chip.
+      const result = await pressKeys(input, '{ArrowLeft}', 0);
+
+      expect(result).toEqual({ selection: [0, 0], prevented: [false] });
+      expect(input).toHaveFocus();
+    });
+
     it('keeps focus on the input when navigating toward chips but none are rendered', async () => {
       const { user } = await render(
         <Combobox.Root multiple defaultValue={['apple']}>
