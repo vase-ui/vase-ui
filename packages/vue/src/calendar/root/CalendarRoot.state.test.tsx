@@ -504,7 +504,7 @@ describe('<Calendar.Root /> state', () => {
       async function pressPageDown(iso: string) {
         const target = button(iso)!;
         target.focus();
-        fireEvent.keyDown(target, { key: 'PageDown' });
+        await fireEvent.keyDown(target, { key: 'PageDown' });
         await flushMicrotasks();
       }
 

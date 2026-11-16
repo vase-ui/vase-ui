@@ -256,11 +256,10 @@ export function useCalendarRoot({
     );
   });
   // The clock is read in `setup`, and again when the first page or the time zone changes. A page
-  // that stays open for days then gets the right day when the user moves on.
+  // that stays open for days then gets the right day when the user moves on. A server cannot know
+  // the day of the visitor, so the first client render shows the day of the server HTML, and the
+  // render after the mount shows the day of the browser.
   const clockDay = shallowRef(today(timeZone.value));
-  // A server cannot know the day of the visitor. The first client render shows the day of the
-  // server HTML, so that it equals that HTML, and the render after the mount shows the day of the
-  // browser.
   const { value: shownClockDay, attributes: todayAttributes } = useServerValue(
     'data-vase-ui-today',
     () => clockDay.value,
