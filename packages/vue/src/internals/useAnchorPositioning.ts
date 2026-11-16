@@ -248,8 +248,6 @@ export function useAnchorPositioning(
 
   // `true` from the mount to the unmount, except from a deactivation by `KeepAlive` to the next
   // activation. A component that mounts in a held branch is active from its mount.
-  // Its passes measure elements out of the document. The first pass after the activation gives the
-  // position of a popup that mounts in a shown branch.
   const isActive = shallowRef(false);
   onMounted(() => {
     isActive.value = true;
