@@ -463,7 +463,7 @@ export function createVaseProject(tsconfig: string): VaseProject {
       }
     }
     return runs.flatMap((run) =>
-      run.toSorted((a, b) => (declarationOf(a)?.pos ?? 0) - (declarationOf(b)?.pos ?? 0)),
+      run.sort((a, b) => (declarationOf(a)?.pos ?? 0) - (declarationOf(b)?.pos ?? 0)),
     );
   };
   // `getJsDocTags` gives a property that an interface declares again with no tag the tags of the
