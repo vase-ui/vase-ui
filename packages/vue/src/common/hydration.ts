@@ -36,24 +36,23 @@ export function useIsHydrating(): ComputedRef<boolean> {
 }
 
 /**
- * Gives the function that a part calls for each `aria-*` value whose first client render can differ
- * from the server HTML, such as the id of a label after the part, or a date that `Intl` formats.
+ * Gives the function that a part calls for each `aria-*` value of an element that
+ * `useRenderElement` does not render, such as a hidden input. The first client render of such an
+ * element can differ from the server HTML. It does not know a later part, such as a description
+ * after the part, and the browser can format a date with other `Intl` data.
  * The function gives `null` while Vue hydrates the part from server HTML. On a server, in a
  * client-only mount and after the mount, it gives the value.
  *
  * Vue does not patch an `aria-*` attribute while it hydrates, so the element keeps the value of the
- * server HTML. The first client render does not know a later part yet. When the page removes or
- * changes that part at the mount, the render after the mount can give the value of the first
- * client render. Vue then writes nothing, and the element keeps the value of the server HTML. A
- * date that `Intl` formats can keep the text of the server in the same way. The server and the
- * browser can have other `Intl` data. With `null` in the first client render, the render after the
- * mount always writes its value.
+ * server HTML. The page can remove or change a later part at the mount. The render after the mount
+ * can then give the value of the first client render, and Vue writes nothing. With `null` in the
+ * first client render, the render after the mount always writes its value.
  *
  * Give the function only the value of an attribute that Vue does not compare while it hydrates, or
  * of an attribute that the element allows to differ with `data-allow-mismatch` and the category
- * `attribute`. Vue does not compare `aria-*` attributes or other attributes outside its list of
- * known HTML attributes, such as the `abbr` of `Calendar.Weekday`. Vue compares the attributes of
- * that list, such as `id` and `tabindex`, and it warns when they differ.
+ * `attribute`. Vue does not compare `aria-*` attributes or other attributes outside its lists of
+ * known attributes. Vue compares the attributes of those lists, such as `id` and `tabindex`, and it
+ * warns when they differ.
  */
 export function useAriaAfterHydration(): <Value>(value: Value) => Value | null {
   if (getCurrentInstance()?.vnode.el == null) {
@@ -64,9 +63,10 @@ export function useAriaAfterHydration(): <Value>(value: Value) => Value | null {
 }
 
 // The first element that Vue hydrates for the component. A component whose template starts with a
-// fragment, such as a part with a `#render` slot, starts with the comment `[`, and the fragment ends
-// with the comment `]`. A component that renders only a comment has no element. The walk thus
-// stops before the nodes of the next component, and it does not give the element of that component.
+// fragment, such as a part with a `#render` slot, starts with the comment `[`, and the fragment
+// ends with the comment `]`. Vue 3.6 writes the fallback content of a slot between the comments `(`
+// and `)`. A component that renders only a comment has no element. The walk thus stops before the
+// nodes of the next component, and it does not give the element of that component.
 function serverElementOf(first: unknown): Element | null {
   let depth = 0;
   for (let node = isNode(first) ? first : null; node !== null; node = node.nextSibling) {
@@ -74,12 +74,21 @@ function serverElementOf(first: unknown): Element | null {
       return node as Element;
     }
     const text = node.nodeType === 8 ? (node as Comment).data : undefined;
-    depth += text === '[' ? 1 : text === ']' ? -1 : 0;
+    depth += text === '[' || text === '(' ? 1 : text === ']' || text === ')' ? -1 : 0;
     if (depth <= 0) {
       return null;
     }
   }
   return null;
+}
+
+/**
+ * Gives the element of the server HTML that Vue hydrates for the component that calls it. It gives
+ * `null` on a server, in a client-only mount and in a part that Vue compiles as a Vapor component.
+ * Call it in `setup`.
+ */
+export function getServerElement(): Element | null {
+  return serverElementOf(getCurrentInstance()?.vnode.el);
 }
 
 /**
@@ -92,7 +101,7 @@ function serverElementOf(first: unknown): Element | null {
  * each value that the render after the mount changes.
  */
 export function useServerElement(): () => HTMLElement | null {
-  const element = serverElementOf(getCurrentInstance()?.vnode.el);
+  const element = getServerElement();
   if (!isHTMLElement(element)) {
     return () => null;
   }
@@ -116,7 +125,7 @@ export function useServerValue<Value>(
   parse: (text: string) => Value | undefined,
   write: (value: Value) => string = String,
 ): { value: ComputedRef<Value>; attributes: () => Record<string, string> | undefined } {
-  const text = serverElementOf(getCurrentInstance()?.vnode.el)?.getAttribute(attribute);
+  const text = getServerElement()?.getAttribute(attribute);
   const serverValue = text == null ? undefined : parse(text);
   const isHydrating = useIsHydrating();
   const value = computed(() =>

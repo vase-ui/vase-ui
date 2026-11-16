@@ -86,8 +86,6 @@ import {
 import { ownerWindow } from '../../common/owner';
 import { contains } from '../../common/shadowDom';
 import { visuallyHidden } from '../../common/visuallyHidden';
-import { givenIdReference } from '../../internals/blankIdReference';
-import { givenName } from '../../internals/blankName';
 import {
   ARROW_DOWN,
   ARROW_LEFT,
@@ -104,6 +102,7 @@ import { useDirection } from '../../internals/direction-context/DirectionContext
 import { useFieldInput } from '../../internals/field-register-control';
 import { useFieldRootContext } from '../../internals/field-root-context';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
+import { given } from '../../internals/givenAttributes';
 import { useDeferredServerRender, useLabelableId } from '../../internals/labelable-provider';
 import type { HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
@@ -452,7 +451,8 @@ onScopeDispose(
 
 function inputProps() {
   const value = thumbValue.value;
-  const ariaLabel = givenName(
+  const ariaLabel = given(
+    'aria-label',
     typeof props.getAriaLabel === 'function'
       ? props.getAriaLabel(thumbIndex.value)
       : props.ariaLabel,
@@ -467,8 +467,9 @@ function inputProps() {
     {
       'aria-label': ariaLabel,
       'aria-labelledby':
-        givenName(props.ariaLabelledby) ?? (ariaLabel == null ? labelId.value : undefined),
-      'aria-describedby': givenIdReference(props.ariaDescribedby),
+        given('aria-labelledby', props.ariaLabelledby) ??
+        (ariaLabel == null ? labelId.value : undefined),
+      'aria-describedby': given('aria-describedby', props.ariaDescribedby),
       'aria-orientation': orientation.value,
       'aria-valuenow': value,
       'aria-valuetext':

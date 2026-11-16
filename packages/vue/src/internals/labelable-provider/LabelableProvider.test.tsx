@@ -10,6 +10,7 @@ import LabelableHydration from './LabelableHydration.test.vue';
 import LabelableLabelPosition from './LabelableLabelPosition.test.vue';
 import LabelableMessagePosition from './LabelableMessagePosition.test.vue';
 import LabelableOrder from './LabelableOrder.test.vue';
+import { useLabelableId } from './useLabelableId';
 
 describe('labelable provider', () => {
   const { render } = createRenderer();
@@ -212,6 +213,28 @@ describe('labelable provider', () => {
       const labelFor = screen.getByTestId('label').getAttribute('for');
       expect(labelFor).toBeTruthy();
       expect(labelFor).not.toBe('own');
+    });
+
+    it('does not register the element of a control with `enabled` false', async () => {
+      const ElementControl = defineComponent(
+        (props: { id: string; enabled?: boolean; elementId: string }) => {
+          const element = shallowRef<HTMLElement | null>(null);
+          useLabelableId({ id: () => props.id, enabled: () => props.enabled, element });
+
+          return () => <span ref={element} id={props.elementId} />;
+        },
+        { props: ['id', 'enabled', 'elementId'] },
+      );
+      await render(
+        <LabelableScope>
+          <LabelableLabel data-testid="label">Label</LabelableLabel>
+          <ElementControl id="other" enabled={false} elementId="other" />
+          <ElementControl id="owner" elementId="slot" />
+        </LabelableScope>,
+      );
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('label')).toHaveAttribute('for', 'slot');
     });
   });
 

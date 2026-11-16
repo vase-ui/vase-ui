@@ -927,17 +927,6 @@ describe('BasePopupStore', () => {
         expected: 'other',
       },
       {
-        // The root of a menu writes the id of the popup before the element renders it.
-        name: 'the element renders a new default id',
-        id: 'custom',
-        change: (store, popup, read) => {
-          store.set('defaultPopupId', 'next');
-          read();
-          popup.id = 'next';
-        },
-        expected: 'next',
-      },
-      {
         name: 'a new element changes its id',
         id: 'custom',
         change: (store, _popup, read) => {

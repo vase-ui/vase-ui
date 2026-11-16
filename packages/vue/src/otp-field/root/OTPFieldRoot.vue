@@ -165,7 +165,6 @@ import { useControlled } from '../../common/useControlled';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { warn } from '../../common/warn';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
-import { givenName } from '../../internals/blankName';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import {
   createChangeEventDetails,
@@ -174,6 +173,7 @@ import {
 import { useFieldInput, useRegisterFieldControl } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { useFormContext } from '../../internals/form-context';
+import { given } from '../../internals/givenAttributes';
 import { handleHiddenInputInvalid } from '../../internals/handleHiddenInputInvalid';
 import {
   useAriaLabelledBy,
@@ -305,7 +305,7 @@ const ariaLabelledBy = useAriaLabelledBy(
   controlId,
 );
 const inputAriaLabelledBy = computed(() =>
-  givenName(props.ariaLabelledby) == null ? ariaLabelledBy.value : undefined,
+  given('aria-labelledby', props.ariaLabelledby) == null ? ariaLabelledBy.value : undefined,
 );
 
 const validationConfig = computed(() => getOTPValidationConfig(props.validationType));
@@ -609,15 +609,14 @@ const { element, elementProps } = useRenderElement('div', props, {
       {
         role: 'group',
         // `null` of the consumer removes the ids of the descriptions (VUE-103).
-        'aria-describedby': ariaAfterHydration(
+        'aria-describedby':
           ariaDescribedBy === null
             ? null
             : mergeAriaIds(
                 ariaDescribedBy as string | undefined,
                 getDescriptionProps({})['aria-describedby'] as string | undefined,
               ),
-        ),
-        'aria-labelledby': ariaAfterHydration(ariaLabelledBy.value),
+        'aria-labelledby': ariaLabelledBy.value,
       },
       elementAttrs,
     ];

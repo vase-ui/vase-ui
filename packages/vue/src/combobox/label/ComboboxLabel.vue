@@ -53,6 +53,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 const labelProps = useLabel({
   id: () => getDefaultLabelId(store.select('id')),
+  element: () => element.value,
   fallbackControlId: () =>
     store.select('triggerElement')?.id ?? (inputInsidePopup.value ? store.select('id') : undefined),
   // While the input is outside the popup, the input is the control of a field.

@@ -47,6 +47,8 @@ With `#render`, the slot gets `props`. It holds the attributes, the listeners, t
 
 Attributes that you write beside `v-bind="props"` follow the rules of Vue. When `v-bind="props"` comes first, Vue joins the `class` values and merges the `style` values. Vue calls both listeners, and it calls the listener of `props` first. For another attribute, such as `id` or `title`, the attribute that comes last wins.
 
+A part can name another part by its `id`: a trigger names its panel, and a dialog names its title. When an `id` that you write in the slot wins, the part names that `id` after the named part mounts, and follows each change of it. An empty `id` in the slot gives the element no `id`, so no part names it. The server HTML names the `id` that the part gives. To make the server HTML name the element, give the `id` to the part and not to the slot.
+
 For your listener to run first, merge `props` with `mergeProps`. See [how merging works](/utils/merge-props#how-merging-works). In your listener, [`event.preventVaseUIHandler()`](/handbook/customization#preventing-vase-ui-from-handling-an-event) stops the listeners of the part. For example, this toolbar button renders a menu trigger:
 
 <<< ../examples/composition/MergedProps.vue{14-18,22-26}

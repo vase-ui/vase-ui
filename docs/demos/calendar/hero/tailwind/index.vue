@@ -30,7 +30,7 @@ const today = Temporal.PlainDate.from('2026-11-14');
                 <template #weekday="{ weekday }">
                   <Calendar.Weekday
                     :weekday="weekday"
-                    class="py-1 text-center text-xs font-medium text-neutral-600 dark:text-neutral-400"
+                    class="py-1 text-center text-xs leading-5 font-medium text-neutral-600 dark:text-neutral-400"
                   />
                 </template>
               </Calendar.GridHeaderRow>
@@ -41,7 +41,7 @@ const today = Temporal.PlainDate.from('2026-11-14');
                   <template #day="{ day }">
                     <Calendar.Day :day="day" class="p-0 text-center">
                       <Calendar.DayButton
-                        class="box-border size-9 cursor-pointer rounded-md border border-transparent outline-0 hover:not-data-disabled:not-data-selected:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 data-outside-month:not-data-selected:text-neutral-500 data-selected:bg-neutral-950 data-selected:text-white data-today:border-neutral-400 disabled:cursor-default disabled:opacity-40 dark:hover:not-data-disabled:not-data-selected:bg-neutral-800 dark:focus-visible:outline-white dark:data-selected:bg-white dark:data-selected:text-neutral-950"
+                        class="box-border size-9 cursor-pointer rounded-md border border-transparent outline-0 hover:not-data-disabled:not-data-selected:not-data-unavailable:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 data-outside-month:not-data-selected:text-neutral-500 data-selected:bg-neutral-950 data-selected:text-white data-today:border-neutral-400 data-unavailable:cursor-default data-unavailable:line-through disabled:cursor-default disabled:opacity-40 dark:hover:not-data-disabled:not-data-selected:not-data-unavailable:bg-neutral-800 dark:focus-visible:outline-white dark:data-outside-month:not-data-selected:text-neutral-400 dark:data-selected:bg-white dark:data-selected:text-neutral-950"
                       />
                     </Calendar.Day>
                   </template>

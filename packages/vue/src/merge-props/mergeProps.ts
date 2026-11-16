@@ -27,6 +27,8 @@ type SetAttributes<T extends ElementType> =
   IsEachElement<T> extends true ? AttributesOfEachElement : NativeElements[T];
 // Each element accepts the attributes of `div`. An element refuses `AttributesOfEachElement`:
 // its `type` is a string, and `button` accepts only three values.
+// A listener of the result gets the DOM event, as Vue types a listener of an element. A template
+// refuses a bound object whose listeners need a `VaseUIEvent`.
 type MergedProps<T extends ElementType> =
   IsEachElement<T> extends true ? NativeElements['div'] : NativeElements[T];
 // The first member accepts an object with no index signature, such as `HTMLProps`.
