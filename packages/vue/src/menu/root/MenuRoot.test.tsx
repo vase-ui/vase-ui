@@ -1610,6 +1610,38 @@ describe('<Menu.Root />', () => {
         expect(screen.getByTestId('menu')).not.toBe(null);
       });
 
+      it('closes every menu and moves the focus to the next control when tabbing from a nested menu', async () => {
+        const { user } = await render(
+          <div>
+            <TestMenu />
+            <input data-testid="after" />
+          </div>,
+        );
+
+        const mainTrigger = screen.getByRole('button', { name: 'Toggle' });
+        await waitForLaterMillisecond(async () => {
+          await user.click(mainTrigger);
+          await screen.findByTestId('menu');
+        });
+
+        const submenuTrigger = await screen.findByTestId('submenu-trigger');
+        await waitForLaterMillisecond(async () => {
+          await user.hover(submenuTrigger);
+          await screen.findByTestId('submenu');
+        });
+
+        const submenuItem = await screen.findByTestId('item-4_1');
+        submenuItem.focus();
+        await flushMicrotasks();
+        expect(submenuItem).toHaveFocus();
+
+        await user.keyboard('{Tab}');
+
+        expect(screen.queryByTestId('menu')).toBe(null);
+        expect(screen.queryByTestId('submenu')).toBe(null);
+        expect(screen.getByTestId('after')).toHaveFocus();
+      });
+
       it('closes the entire tree when clicking outside the deepest submenu', async () => {
         const { user } = await render(
           <div>
