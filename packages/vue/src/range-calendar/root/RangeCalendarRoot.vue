@@ -123,7 +123,7 @@ defineSlots<{
 }>();
 
 const selection = useRangeSelection(props, emit);
-const { focus, ...controller } = useCalendarRoot({
+const { focus, hydrationAttributes, ...controller } = useCalendarRoot({
   part: 'RangeCalendar.Root',
   props,
   emit,
@@ -158,6 +158,7 @@ const { element, elementProps } = useRenderElement('div', props, {
       // The label that the consumer gives replaces the name of the month. An `aria-labelledby` of
       // `null` gives no label, so the root keeps the name of the month.
       'aria-label': attrs['aria-labelledby'] == null ? controller.label.value : undefined,
+      ...hydrationAttributes(),
     },
     attrs,
   ],

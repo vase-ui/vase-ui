@@ -1,8 +1,11 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import {
   createRenderer,
+  fireEvent,
   flushMicrotasks,
   hydrate,
+  hydrateAfter,
+  mockBrowserToday,
   renderOnServer,
   screen,
   waitFor,
@@ -479,6 +482,116 @@ describe('<Calendar.Root /> state', () => {
       await hydrate(CalendarRootHydration, { serverHtml, props });
 
       expect(tabStops()).toEqual(['2026-11-20']);
+    });
+
+    describe('the clock of the browser', () => {
+      // The dates of the cells and the buttons that have `data-today`.
+      function todayDates() {
+        return [...document.querySelectorAll<HTMLElement>('[data-today]')].map(
+          (element) => element.closest<HTMLElement>('[data-date]')!.dataset.date,
+        );
+      }
+
+      // The months of the days of the pages, with no outside day.
+      function pageMonths() {
+        return new Set(
+          [...document.querySelectorAll<HTMLElement>('[data-date]:not([data-outside-month])')].map(
+            (cell) => cell.dataset.date!.slice(0, 7),
+          ),
+        );
+      }
+
+      async function pressPageDown(iso: string) {
+        const target = button(iso)!;
+        target.focus();
+        fireEvent.keyDown(target, { key: 'PageDown' });
+        await flushMicrotasks();
+      }
+
+      it("shows the browser's today after the hydration when the server had another day", async () => {
+        const props = { locale: 'en-US' };
+        const serverHtml = await renderOnServer(file, props);
+        const browserDay = mockBrowserToday('day').toString();
+
+        await hydrate(CalendarRootHydration, { serverHtml, props });
+
+        expect(todayDates()).toEqual([browserDay, browserDay]);
+        expect(button(browserDay)).toHaveAttribute('aria-current', 'date');
+        expect(document.querySelectorAll('[aria-current]')).toHaveLength(1);
+        expect(tabStops()).toEqual([browserDay]);
+        expect(document.querySelector('[data-vase-ui-today]')).toBe(null);
+      });
+
+      it("shows the month of the browser's today when the clock picked the page", async () => {
+        const onMonthChange = vi.fn();
+        const props = { locale: 'en-US' };
+        const serverHtml = await renderOnServer(file, props);
+        const browserDay = mockBrowserToday('month').toString();
+
+        await hydrate(CalendarRootHydration, { serverHtml, props: { ...props, onMonthChange } });
+
+        const root = screen.getByRole('group');
+        expect(pageMonths()).toEqual(new Set([browserDay.slice(0, 7)]));
+        expect(todayDates()).toEqual([browserDay, browserDay]);
+        expect(root).toHaveAttribute('aria-label', monthName(browserDay));
+        expect(root).toHaveAttribute('data-navigation-direction', 'none');
+        expect(document.querySelector('[data-starting-style], [data-ending-style]')).toBe(null);
+        expect(onMonthChange).not.toHaveBeenCalled();
+
+        await pressPageDown(browserDay);
+
+        expect(root).toHaveAttribute('data-navigation-direction', 'next');
+        expect(onMonthChange).toHaveBeenCalledOnce();
+      });
+
+      it('keeps the page of a value when the browser has another month', async () => {
+        const props = { locale: 'en-US', value: '2030-05-10' };
+        const serverHtml = await renderOnServer(file, props);
+        mockBrowserToday('month');
+
+        await hydrate(CalendarRootHydration, { serverHtml, props });
+
+        expect(pageMonths()).toEqual(new Set(['2030-05']));
+      });
+
+      it('keeps a default month, and the next key is a move', async () => {
+        const props = { locale: 'en-US', defaultMonth: '2030-05' };
+        const serverHtml = await renderOnServer(file, props);
+        mockBrowserToday('month');
+
+        await hydrate(CalendarRootHydration, { serverHtml, props });
+
+        expect(pageMonths()).toEqual(new Set(['2030-05']));
+        await pressPageDown('2030-05-01');
+        expect(screen.getByRole('group')).toHaveAttribute('data-navigation-direction', 'next');
+      });
+
+      it("focuses the browser's today with autoFocus", async () => {
+        const props = { locale: 'en-US', autoFocus: true };
+        const serverHtml = await renderOnServer(file, props);
+        const browserDay = mockBrowserToday('month').toString();
+
+        await hydrate(CalendarRootHydration, { serverHtml, props });
+
+        expect(document.activeElement).toBe(button(browserDay));
+      });
+
+      it('keeps the focus in the grid when the page moves after a focus before the hydration', async () => {
+        const props = { locale: 'en-US' };
+        const serverHtml = await renderOnServer(file, props);
+        const browserDay = mockBrowserToday('month').toString();
+
+        await hydrateAfter(CalendarRootHydration, {
+          serverHtml,
+          props,
+          before: (container) => {
+            container.querySelector<HTMLElement>('button[tabindex="0"]')!.focus();
+          },
+        });
+        await flushMicrotasks();
+
+        expect(document.activeElement).toBe(button(browserDay));
+      });
     });
   });
 });

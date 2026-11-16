@@ -2,6 +2,7 @@ import { computed, nextTick, onMounted, shallowRef, watch } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 import { ownerDocument } from '../../../common/owner';
 import { activeElement } from '../../../common/shadowDom';
+import { useServerValue } from '../../../common/hydration';
 import { useControlled } from '../../../common/useControlled';
 import { useFormatLocale } from '../../../utils/useFormatLocale';
 import { createChangeEventDetails } from '../../createBaseUIEventDetails';
@@ -9,7 +10,15 @@ import { useDirection } from '../../direction-context/DirectionContext';
 import { REASONS } from '../../reasons';
 import { displayCalendar } from '../displayCalendar';
 import { weekInfo } from '../format';
-import { compareDates, isKind, isSameDay, toInputText, toPlainDate, today } from '../temporal';
+import {
+  compareDates,
+  isKind,
+  isSameDay,
+  parseInputText,
+  toInputText,
+  toPlainDate,
+  today,
+} from '../temporal';
 import type { DateValue, DayOfWeek } from '../temporal';
 import type {
   CalendarBaseProps,
@@ -70,6 +79,11 @@ export interface UseCalendarRootOptions {
 
 /** What the root gives to its parts and to its own element. */
 export interface CalendarRootController {
+  /**
+   * The attribute that keeps the day of the clock of the server in the server HTML. The element of
+   * the root binds it.
+   */
+  hydrationAttributes: () => Record<string, string>;
   /** The locale for `Intl`. It is `en-US` until the root is mounted, when the consumer gives none. */
   locale: ComputedRef<Intl.LocalesArgument | undefined>;
   /** The pages of the grid. */
@@ -244,8 +258,16 @@ export function useCalendarRoot({
   // The clock is read in `setup`, and again when the first page or the time zone changes. A page
   // that stays open for days then gets the right day when the user moves on.
   const clockDay = shallowRef(today(timeZone.value));
+  // A server cannot know the day of the visitor. The first client render shows the day of the
+  // server HTML, so that it equals that HTML, and the render after the mount shows the day of the
+  // browser.
+  const { value: shownClockDay, attributes: todayAttributes } = useServerValue(
+    'data-vase-ui-today',
+    () => clockDay.value,
+    (text) => parseInputText(text, 'date') ?? undefined,
+  );
   const todayDate = computed(() =>
-    props.today === undefined ? clockDay.value : toPlainDate(props.today),
+    props.today === undefined ? shownClockDay.value : toPlainDate(props.today),
   );
 
   function toGridDate(date: DateValue | Temporal.PlainYearMonth) {
@@ -254,10 +276,10 @@ export function useCalendarRoot({
 
   // The root picks the first page from this day until the month changes. It is a day and not a
   // month, because the calendar of the grid can change after the mount: the locale of the runtime
-  // replaces `en-US`, and its calendar can have other months.
-  const initialDate = toPlainDate(
-    props.focusedDate ?? props.defaultFocusedDate ?? selection.values.value[0] ?? todayDate.value,
-  );
+  // replaces `en-US`, and its calendar can have other months. After a hydration, the day of the
+  // browser replaces the day of the server when the clock picked the page.
+  const pageDay = props.focusedDate ?? props.defaultFocusedDate ?? selection.values.value[0];
+  const initialDate = shallowRef(toPlainDate(pageDay ?? todayDate.value));
 
   const monthLimits = computed(() => ({
     min: props.minDate && monthOfDate(toGridDate(props.minDate)),
@@ -270,13 +292,25 @@ export function useCalendarRoot({
     name,
     state: 'month',
   });
+  // The hook comes before the hook of `autoFocus`, so that `autoFocus` focuses the day of the
+  // browser.
+  onMounted(() => {
+    if (
+      pageDay === undefined &&
+      monthState.value === undefined &&
+      !initialDate.value.equals(todayDate.value)
+    ) {
+      initialDate.value = todayDate.value;
+      keepFocusInGrid();
+    }
+  });
   // The limits apply only to a first page that the root picks. The root shows a month of the
   // consumer as it is: a change of a controlled `month` needs an event, and the mount emits none.
   const visibleMonth = computed(() =>
     monthState.value
       ? toGridDate(monthState.value).toPlainYearMonth()
       : clampMonth(
-          toGridDate(initialDate).toPlainYearMonth(),
+          toGridDate(initialDate.value).toPlainYearMonth(),
           view.value === 'day' ? undefined : 1,
         ),
   );
@@ -310,7 +344,7 @@ export function useCalendarRoot({
     }
     const anchor = monthState.value
       ? visibleMonth.value.toPlainDate({ day: 1 })
-      : toGridDate(initialDate);
+      : toGridDate(initialDate.value);
     const first = alignPageStart(anchor, visible, firstDay.value, 'start');
     return monthState.value ? first : clampPageStart(first, visible);
   });
@@ -337,7 +371,7 @@ export function useCalendarRoot({
 
   const { navigationDirection, renderedPages, isLeaving, finishLeaving } = usePageTransition(
     pages,
-    computed(() => `${calendar.value}|${firstDay.value}`),
+    computed(() => `${calendar.value}|${firstDay.value}|${initialDate.value.toString()}`),
     computed(() => view.value === 'day'),
   );
 
@@ -980,6 +1014,7 @@ export function useCalendarRoot({
   });
 
   return {
+    hydrationAttributes: () => ({ ...(props.today === undefined && todayAttributes()) }),
     locale: formatLocale,
     pages,
     renderedPages,

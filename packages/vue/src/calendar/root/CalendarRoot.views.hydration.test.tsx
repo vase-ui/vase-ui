@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hydrate, renderOnServer } from '#test-utils';
+import { hydrate, mockBrowserToday, renderOnServer } from '#test-utils';
 import CalendarViewsHydration from './CalendarViewsHydration.test.vue';
 
 const file = 'src/calendar/root/CalendarViewsHydration.test.vue';
@@ -13,13 +13,14 @@ function withBrowserRange(serverHtml: string) {
     .parseFromString(serverHtml, 'text/html')
     .querySelector('[role="group"]')!
     .getAttribute('aria-label')!;
-  if (!/\d{4}\D+\d{4}/.test(serverRange)) {
+  const years = /(\d{4})\D+(\d{4})/.exec(serverRange);
+  if (!years) {
     return serverHtml;
   }
   const browserRange = new Intl.DateTimeFormat('en-US', {
     timeZone: 'UTC',
     year: 'numeric',
-  }).formatRange(Date.parse('2016-01-01'), Date.parse('2027-01-01'));
+  }).formatRange(Date.parse(`${years[1]}-01-01`), Date.parse(`${years[2]}-01-01`));
   return serverHtml.replaceAll(serverRange, browserRange);
 }
 
@@ -66,4 +67,36 @@ describe('<Calendar.Root /> views hydration', () => {
       expect(container).not.toHaveTextContent('other');
     },
   );
+
+  it.each([
+    {
+      name: 'month',
+      view: 'month' as const,
+      // A month cell has the month and its year as its name.
+      expected: (day: Temporal.PlainDate) =>
+        new Intl.DateTimeFormat('en-US', {
+          timeZone: 'UTC',
+          month: 'long',
+          year: 'numeric',
+        }).format(Date.parse(day.toString())),
+      read: (cell: HTMLElement) => cell.getAttribute('aria-label'),
+    },
+    {
+      name: 'year',
+      view: 'year' as const,
+      expected: (day: Temporal.PlainDate) => String(day.year),
+      read: (cell: HTMLElement) => cell.textContent,
+    },
+  ])("marks the current $name of the browser's today", async ({ view, expected, read }) => {
+    const props = { locale: 'en-US', view };
+    const serverHtml = withBrowserRange(await renderOnServer(file, props));
+    const browserDay = mockBrowserToday('year');
+
+    const { container } = await hydrate(CalendarViewsHydration, { serverHtml, props });
+
+    const current = [...container.querySelectorAll<HTMLElement>('[data-current]')];
+    expect(current).toHaveLength(1);
+    expect(current[0]).toHaveAttribute('aria-current', 'date');
+    expect(read(current[0]!)).toBe(expected(browserDay));
+  });
 });

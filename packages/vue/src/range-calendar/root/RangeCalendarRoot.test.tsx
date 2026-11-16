@@ -5,10 +5,14 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  hydrate,
+  mockBrowserToday,
+  renderOnServer,
   screen,
 } from '#test-utils';
 import * as RangeCalendar from '../index.parts';
 import RangeCalendarAnatomy from './RangeCalendarAnatomy.test.vue';
+import RangeCalendarRootHydration from './RangeCalendarRootHydration.test.vue';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
 
@@ -491,6 +495,35 @@ describe('<RangeCalendar.Root />', () => {
       const handlers = await pressKeys('{Shift>}{ArrowRight}{/Shift}', { props });
 
       expect(rangesOf(handlers)).toEqual([['2026-11-11', '2026-11-13']]);
+    });
+  });
+
+  describe('the server render', () => {
+    const file = 'src/range-calendar/root/RangeCalendarRootHydration.test.vue';
+
+    it.each([
+      { name: 'another day', distance: 'day' as const },
+      { name: 'another month', distance: 'month' as const },
+    ])("shows the browser's today after the hydration: $name", async ({ distance }) => {
+      const props = { locale: 'en-US' };
+      const serverHtml = await renderOnServer(file, props);
+      const browserDay = mockBrowserToday(distance).toString();
+
+      await hydrate(RangeCalendarRootHydration, { serverHtml, props });
+
+      const todayDates = [...document.querySelectorAll<HTMLElement>('[data-today]')].map(
+        (element) => element.closest<HTMLElement>('[data-date]')!.dataset.date,
+      );
+      expect(todayDates).toEqual([browserDay, browserDay]);
+      expect(button(browserDay)).toHaveAttribute('aria-current', 'date');
+      const tabStops = [...document.querySelectorAll<HTMLElement>('button[tabindex="0"]')];
+      expect(tabStops).toEqual([button(browserDay)]);
+      const pageMonths = new Set(
+        [...document.querySelectorAll<HTMLElement>('[data-date]:not([data-outside-month])')].map(
+          (element) => element.dataset.date!.slice(0, 7),
+        ),
+      );
+      expect(pageMonths).toEqual(new Set([browserDay.slice(0, 7)]));
     });
   });
 });
