@@ -2754,7 +2754,7 @@ describe('<OTPField.Root />', () => {
     });
 
     it('is removed when the focused slot unmounts but its field remains', async () => {
-      // Unmounting one slot leaves `length` out of sync with the rendered inputs, so the root warns.
+      // After one slot unmounts, `length` is larger than the number of inputs, so the root warns.
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       function TestCase(props: { firstMounted?: boolean }) {

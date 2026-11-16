@@ -268,8 +268,7 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
     }
   }
 
-  // The two calls of `console.warn` for `open()` and `close()` on a handle with no mounted root.
-  const detachedCalls = [
+  const detachedWarnings = [
     [expect.stringContaining('.open() was called while no root that uses this handle is mounted')],
     [expect.stringContaining('.close() was called while no root that uses this handle is mounted')],
   ];
@@ -642,7 +641,7 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
             handle.open('trigger-1');
             handle.close();
             expect(handle.isOpen).toBe(false);
-            expect(consoleWarn.mock.calls).toEqual(detachedCalls);
+            expect(consoleWarn.mock.calls).toEqual(detachedWarnings);
 
             const { setProps } = await render(
               <Fixture mode="detached" handle={handle} rootMounted />,
@@ -663,7 +662,7 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
             handle.open('trigger-1');
             handle.close();
             expect(handle.isOpen).toBe(false);
-            expect(consoleWarn.mock.calls).toEqual([...detachedCalls, ...detachedCalls]);
+            expect(consoleWarn.mock.calls).toEqual([...detachedWarnings, ...detachedWarnings]);
 
             // A remounted root starts closed, without the previous payload, and is controllable.
             await setProps({ rootMounted: true });
