@@ -1,5 +1,5 @@
 import { describe, expect, it, onTestFinished } from 'vitest';
-import { shallowRef } from 'vue';
+import { defineComponent, shallowRef } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import {
   createRenderer,
@@ -12,6 +12,7 @@ import {
   screen,
   waitFor,
   waitForLaterMillisecond,
+  waitSingleFrame,
   within,
 } from '#test-utils';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
@@ -318,6 +319,52 @@ describe('<NavigationMenu.Popup />', () => {
       expect(screen.getByRole('navigation', { name: 'Guides' })).toBeInTheDocument();
       await expectNoAxeViolations(document.body, { runOnly: ['landmark-unique'] });
     });
+  });
+
+  it('VUE-109: follows a new id of the trigger while the popup is open', async () => {
+    const id = shallowRef('first');
+    // Only this component reads the id, as in a compiled template. Vue then renders the trigger
+    // again and no other part.
+    const Trigger = defineComponent(() => () => (
+      <NavigationMenu.Trigger id={id.value} data-testid="trigger">
+        One
+      </NavigationMenu.Trigger>
+    ));
+    await render(
+      <NavigationMenu.Root>
+        <NavigationMenu.List>
+          <NavigationMenu.Item value="one">
+            <Trigger />
+            <NavigationMenu.Content>
+              <NavigationMenu.Link href="#one">Link of one</NavigationMenu.Link>
+            </NavigationMenu.Content>
+          </NavigationMenu.Item>
+        </NavigationMenu.List>
+        <NavigationMenu.Portal>
+          <NavigationMenu.Positioner>
+            <NavigationMenu.Popup data-testid="popup">
+              <NavigationMenu.Viewport />
+            </NavigationMenu.Popup>
+          </NavigationMenu.Positioner>
+        </NavigationMenu.Portal>
+      </NavigationMenu.Root>,
+    );
+    const popup = await open();
+    // Each render of the popup reads the id of the trigger, and the popup renders again in the two
+    // frames after the open. The case changes the id after these renders. Only the change of the id
+    // can then give the popup its new name.
+    await waitSingleFrame();
+    await waitSingleFrame();
+    await flushMicrotasks();
+    expect(popup).toHaveAttribute('aria-labelledby', 'first');
+
+    id.value = 'second';
+
+    await waitFor(() => {
+      expect(popup).toHaveAttribute('aria-labelledby', 'second');
+    });
+    expect(screen.getByTestId('trigger')).toHaveAttribute('id', 'second');
+    expect(screen.getByRole('navigation', { name: 'One' })).toBe(popup);
   });
 
   describe('hydration', () => {

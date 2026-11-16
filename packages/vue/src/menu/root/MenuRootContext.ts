@@ -13,6 +13,12 @@ export interface MenuRootContext<Payload = unknown> {
   generatedPopupId: string;
   /** Records the id the popup rendered with, when it differs from `generatedPopupId`. */
   setRenderedPopupId: (id: string | undefined) => void;
+  /**
+   * The `id` of the active trigger element, which names the part that has the `menu` role. It
+   * follows each change of the attribute. While no trigger element exists, it is the registered id
+   * of the active trigger.
+   */
+  popupLabelId: ComputedRef<string | null | undefined>;
   virtualFocus: boolean;
   parentVirtualFocus: boolean;
   /** Reports `itemHighlighted` again after the item registry settles. */
