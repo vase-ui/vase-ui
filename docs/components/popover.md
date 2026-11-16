@@ -241,12 +241,12 @@ Use `Popover.Viewport` only when one popup has more than one trigger, the conten
 
 Creates a handle that connects a `<Popover.Root>` with detached `<Popover.Trigger>` parts. The type argument of the function is the type of the payload.
 
-<ApiReference name="Popover.createHandle" />
+<ApiReference name="Popover.createHandle" :heading-level="3" />
 
 ### Handle
 
 `Popover.createHandle()` returns a `Popover.Handle`. Give it to the `handle` prop of the root and of each trigger outside the root.
 
-<ApiReference name="Popover.Handle" />
+<ApiReference name="Popover.Handle" :heading-level="4" />
 
 While a root is mounted, `open()` throws when the handle has no trigger with that `id`.
