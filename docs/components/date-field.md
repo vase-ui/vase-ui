@@ -190,7 +190,7 @@ A `Temporal.PlainYearMonth` value has no day. A `Temporal.PlainDate` with the `g
 
 ### Validation in a Field
 
-Put the field in a `Field` to show the errors of its validation. The hidden input has the type of the value, so `minDate` and `maxDate` give `rangeUnderflow` and `rangeOverflow`, and `required` gives `valueMissing`. The field sets a `customError` for a date that `unavailableDates` matches, for a field with some segments empty, and for the limits that the input type cannot check.
+Put the field in a `Field` to show the errors of its validation. The hidden input has the type of the value, so `minDate` and `maxDate` give `rangeUnderflow` and `rangeOverflow`, and `required` gives `valueMissing`. A `Temporal.PlainDate` limits whole days. A limit with a time, such as a `Temporal.PlainDateTime`, also limits the time of a field that shows a time. A field that shows no time compares days. A zoned limit limits a zoned value by the moment, also in another time zone. The field sets a `customError` for a date that `unavailableDates` matches, for a field with some segments empty, and for the limits that the input type cannot check.
 
 <DemoFrame>
   <DemoDateFieldValidation />

@@ -49,6 +49,11 @@ export interface UseDateTimePickerRootParameters<Value, Details extends { isCanc
    * because the user then sets the time.
    */
   hasTime: (value: Value) => boolean;
+  /**
+   * Whether a value gives no kind to a new value, such as a range that has no end. With no function,
+   * only `null` gives none.
+   */
+  isEmpty?: ((value: Value) => boolean) | undefined;
   /** Called with each new value. A call of `details.cancel()` keeps the old value. */
   valueChange: (value: Value | null, details: Details) => void;
   /** Called after `valueChange`, unless a listener canceled the change. */
@@ -72,21 +77,25 @@ export function useDateTimePickerRoot<Value, Details extends { isCanceled: boole
     state: 'value',
   });
 
-  // A value that becomes `null` keeps its kind for the next value, as a calendar does.
+  // A value that becomes empty keeps its kind for the next value, as a calendar does.
+  function filled(candidate: Value | null | undefined): Value | undefined {
+    return candidate == null || parameters.isEmpty?.(candidate) ? undefined : candidate;
+  }
   const lastValue = shallowRef<Value>();
   watch(
     value,
     (current) => {
-      if (current !== null) {
-        lastValue.value = current;
+      const next = filled(current);
+      if (next !== undefined) {
+        lastValue.value = next;
       }
     },
     { immediate: true, flush: 'sync' },
   );
   const template = computed(
     () =>
-      value.value ??
-      toValue(parameters.defaultValue) ??
+      filled(value.value) ??
+      filled(toValue(parameters.defaultValue)) ??
       lastValue.value ??
       toValue(parameters.fallback),
   );

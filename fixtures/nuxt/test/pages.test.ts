@@ -933,6 +933,32 @@ async function expectDatePickerPage(page: Page) {
   expect(await page.getByTestId('when-popup').count()).toBe(0);
 }
 
+// The name of the trigger has a range with spaces that depend on the data of `Intl`.
+function readTriggerName(page: Page) {
+  return page
+    .getByTestId('when-trigger')
+    .getAttribute('aria-label')
+    .then((name) => name?.replace(/\s+/g, ' '));
+}
+
+// The server HTML has the two fields with the range, the two hidden inputs and the trigger with its
+// name. It has no popup, because the portal renders after the mount.
+async function expectDateRangePickerPage(page: Page) {
+  expect(await page.getByTestId('from').getAttribute('role')).toBe('group');
+  expect(await page.getByTestId('to').getAttribute('role')).toBe('group');
+  expect(await readDateFieldValues(page, 'from')).toEqual(['11', '10', '2026']);
+  expect(await readDateFieldValues(page, 'to')).toEqual(['11', '12', '2026']);
+  expect(await page.getByTestId('when-value').textContent()).toBe('2026-11-10 2026-11-12');
+  expect(await readFormData(page)).toEqual(['from=2026-11-10', 'to=2026-11-12']);
+  const trigger = page.getByTestId('when-trigger');
+  expect(await trigger.getAttribute('aria-haspopup')).toBe('dialog');
+  expect(await trigger.getAttribute('aria-expanded')).toBe('false');
+  expect(await readTriggerName(page)).toBe(
+    'Change dates, Tuesday, November 10 – Thursday, November 12, 2026',
+  );
+  expect(await page.getByTestId('when-popup').count()).toBe(0);
+}
+
 async function expectDateFieldPageOnServer(page: Page) {
   await expectDateFieldPage(page);
   // A server has no DOM, so it cannot find a native label.
@@ -2022,6 +2048,7 @@ const PAGES: PageCase[] = [
     expectHydratedPage: expectHydratedDateFieldPage,
   },
   { path: '/date-picker', expectPage: expectDatePickerPage },
+  { path: '/date-range-picker', expectPage: expectDateRangePickerPage },
   { path: '/number-field', expectPage: expectNumberFieldPage },
   { path: '/providers', expectPage: expectProvidersPage },
   { path: '/use-render', expectPage: expectUseRenderPage },
@@ -2445,6 +2472,44 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(await readFormData(page)).toEqual(['when=2026-11-12']);
     expect(await page.getByTestId('when-trigger').getAttribute('aria-label')).toBe(
       'Change date, Thursday, November 12, 2026',
+    );
+    expect(messages).toEqual([]);
+  });
+
+  it('opens the popup of /date-range-picker, picks two days, and closes it, after hydration', async () => {
+    const page = await createPage('/date-range-picker');
+    const messages = collectMessages(page);
+    const readFocusedDate = () =>
+      page.evaluate(() =>
+        document.activeElement?.closest('[data-date]')?.getAttribute('data-date'),
+      );
+
+    await page.getByTestId('when-trigger').click();
+    await page.getByTestId('when-popup').waitFor();
+
+    expect(await page.getByTestId('when-trigger').getAttribute('aria-expanded')).toBe('true');
+    await page.waitForFunction(
+      () =>
+        document.activeElement?.closest('[data-date]')?.getAttribute('data-date') === '2026-11-10',
+    );
+    expect(await readFocusedDate()).toBe('2026-11-10');
+
+    await page.getByRole('button', { name: /November 14, 2026/ }).click();
+
+    // The first press starts the range, and the popup stays open for the second press.
+    expect(await page.getByTestId('when-value').textContent()).toBe('2026-11-14 ');
+    expect(await readDateFieldValues(page, 'to')).toEqual(['', '', '']);
+    expect(await page.getByTestId('when-popup').count()).toBe(1);
+
+    await page.getByRole('button', { name: /November 18, 2026/ }).click();
+
+    await page.getByTestId('when-popup').waitFor({ state: 'detached' });
+    expect(await page.getByTestId('when-value').textContent()).toBe('2026-11-14 2026-11-18');
+    expect(await readDateFieldValues(page, 'from')).toEqual(['11', '14', '2026']);
+    expect(await readDateFieldValues(page, 'to')).toEqual(['11', '18', '2026']);
+    expect(await readFormData(page)).toEqual(['from=2026-11-14', 'to=2026-11-18']);
+    expect(await readTriggerName(page)).toBe(
+      'Change dates, Saturday, November 14 – Wednesday, November 18, 2026',
     );
     expect(messages).toEqual([]);
   });

@@ -5,6 +5,7 @@ import { REASONS } from '../../reasons';
 import { getRangeDayState, useRangeSelection } from './rangeSelection';
 import type { DateValue } from '../temporal';
 import type { RangeSelectionProps } from './rangeSelection';
+import type { RangeCalendarHost } from './rangeCalendarHost';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
 
@@ -12,10 +13,10 @@ function texts(value: readonly (DateValue | null)[]) {
   return value.map((end) => end?.toString() ?? null);
 }
 
-function createSelection(props: RangeSelectionProps = {}) {
+function createSelection(props: RangeSelectionProps = {}, host?: RangeCalendarHost) {
   const reactiveProps = shallowReactive(props);
   const emit = vi.fn();
-  const selection = useRangeSelection(reactiveProps, emit);
+  const selection = useRangeSelection(reactiveProps, emit, host);
   const press = (text: string) => {
     selection.press(day(text), createChangeEventDetails(REASONS.dayPress));
   };
@@ -523,6 +524,44 @@ describe('useRangeSelection', () => {
       selection.endDrag(day('2026-11-12'), up());
 
       expect(changes()).toEqual([['2026-11-10', '2026-11-12']]);
+    });
+
+    describe('the host', () => {
+      const value: RangeSelectionProps = { defaultValue: [day('2026-11-10'), day('2026-11-12')] };
+
+      it('learns of a drag that makes the range that the value already has', () => {
+        const host = { onSameRange: vi.fn() };
+        const { selection, changes } = createSelection(value, host);
+        const event = up();
+
+        selection.beginDrag(day('2026-11-10'), 1);
+        selection.dragTo(day('2026-11-12'));
+        selection.endDrag(day('2026-11-12'), event);
+
+        expect(changes()).toEqual([]);
+        expect(host.onSameRange).toHaveBeenCalledTimes(1);
+        expect(host.onSameRange).toHaveBeenCalledWith(event);
+      });
+
+      it.each([
+        { name: 'a drag that makes another range', cancel: false, end: '2026-11-14' },
+        { name: 'a drag that a listener cancels', cancel: true, end: '2026-11-14' },
+        { name: 'a press on one day', cancel: false, end: '2026-11-10' },
+      ])('does not tell the host of $name', ({ cancel, end }) => {
+        const host = { onSameRange: vi.fn() };
+        const { selection, emit } = createSelection(value, host);
+        if (cancel) {
+          emit.mockImplementation((_name, _value, details) => {
+            details?.cancel();
+          });
+        }
+
+        selection.beginDrag(day('2026-11-10'), 1);
+        selection.dragTo(day(end));
+        selection.endDrag(day(end), up());
+
+        expect(host.onSameRange).not.toHaveBeenCalled();
+      });
     });
 
     it('swallows the click after a drag one time, and not a click of the keyboard', () => {

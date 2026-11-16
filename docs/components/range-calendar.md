@@ -163,7 +163,7 @@ On a Node.js version before 26, load a `Temporal` polyfill before the server sta
 
 ## Keyboard
 
-The focus is in the grid of days, and one day has the tab stop. Left and Right swap in a right-to-left document. A move skips each day that is disabled or hidden, and stops at `minDate` and `maxDate`. A move out of the page shows the page of the new day.
+The focus is in the grid of days, and one day has the tab stop. Left and Right swap in a right-to-left document. A move skips each day that is disabled or hidden, and stops at `minDate` and `maxDate`. A move out of the page shows the page of the new day. Escape works with the focus on each element of the calendar, such as a button that changes the month.
 
 | Key                            | Result                                                                                                                                                                           |
 | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

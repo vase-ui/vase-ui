@@ -25,6 +25,7 @@
       <li><NuxtLink to="/calendar">Calendar</NuxtLink></li>
       <li><NuxtLink to="/date-field">Date Field</NuxtLink></li>
       <li><NuxtLink to="/date-picker">Date Picker</NuxtLink></li>
+      <li><NuxtLink to="/date-range-picker">Date Range Picker</NuxtLink></li>
       <li><NuxtLink to="/number-field">Number Field</NuxtLink></li>
       <li><NuxtLink to="/providers">Providers</NuxtLink></li>
       <li><NuxtLink to="/use-render">useRender</NuxtLink></li>

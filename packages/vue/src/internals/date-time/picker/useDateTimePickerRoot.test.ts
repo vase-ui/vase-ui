@@ -182,3 +182,56 @@ describe('useDateTimePickerRoot', () => {
     });
   });
 });
+
+// A range with no end is a value, but it gives no kind to a new value.
+describe('useDateTimePickerRoot with a value that can be empty', () => {
+  type Range = readonly [string | null, string | null];
+  const isEmpty = (range: Range) => range[0] === null && range[1] === null;
+
+  function createRangePicker(options: { value?: Range; defaultValue?: Range } = {}) {
+    const value = shallowRef(options.value);
+    const picker = runInSetup(() =>
+      useDateTimePickerRoot<Range, Details>({
+        part: 'RangePicker',
+        value,
+        defaultValue: () => options.defaultValue,
+        fallback: ['fallback', 'fallback'],
+        closeOnSelect: () => undefined,
+        hasTime: () => false,
+        isEmpty,
+        valueChange: vi.fn(),
+        updateValue: vi.fn(),
+      }),
+    );
+    return { picker, value };
+  }
+
+  it('takes the default value for the template while the value is empty', () => {
+    const { picker } = createRangePicker({
+      value: [null, null],
+      defaultValue: ['default', 'default'],
+    });
+
+    expect(picker.template.value).toEqual(['default', 'default']);
+  });
+
+  it('takes the fallback for the template while the value and the default value are empty', () => {
+    const { picker } = createRangePicker({ value: [null, null], defaultValue: [null, null] });
+
+    expect(picker.template.value).toEqual(['fallback', 'fallback']);
+  });
+
+  it('is the value while it has one end', () => {
+    const { picker } = createRangePicker({ value: ['start', null] });
+
+    expect(picker.template.value).toEqual(['start', null]);
+  });
+
+  it('keeps the last value that had an end after the value becomes empty', () => {
+    const { picker, value } = createRangePicker({ value: ['start', 'end'] });
+
+    value.value = [null, null];
+
+    expect(picker.template.value).toEqual(['start', 'end']);
+  });
+});

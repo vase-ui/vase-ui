@@ -4,6 +4,9 @@ import * as RangeCalendar from '../index.parts';
 
 defineOptions({ inheritAttrs: false });
 
+// A test that needs a button outside the grid turns the button on.
+defineProps<{ nextButton?: boolean }>();
+
 // The root exposes `focus`. A test reads it through `root`.
 const root = shallowRef<{ focus: (date?: Temporal.PlainDate) => void } | null>(null);
 
@@ -12,6 +15,7 @@ defineExpose({ root });
 
 <template>
   <RangeCalendar.Root ref="root" v-bind="$attrs">
+    <RangeCalendar.NextButton v-if="nextButton" data-testid="next" />
     <RangeCalendar.Months>
       <template #month="{ month }">
         <RangeCalendar.Month :month="month">

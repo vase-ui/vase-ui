@@ -228,6 +228,42 @@ describe('<DateField.Root />', () => {
         }
       },
     );
+
+    // A limit with a time limits the time of a field that shows a time, and not only its day.
+    it.each([
+      {
+        name: 'a date and time',
+        value: Temporal.PlainDateTime.from('2026-11-14T09:30'),
+        validity: 'rangeUnderflow',
+      },
+      {
+        name: 'a date and time in a zone',
+        value: Temporal.ZonedDateTime.from('2026-11-14T09:30[Asia/Tokyo]'),
+        validity: 'customError',
+      },
+    ] as const)(
+      'makes the field invalid for $name with a time before the time of minDate',
+      async ({ value, validity }) => {
+        const { container, user } = await render(
+          <DateField.Root
+            defaultValue={value}
+            minDate={Temporal.PlainDateTime.from('2026-11-14T10:00')}
+            hourCycle={24}
+            locale="en-US"
+          >
+            <DateField.Input />
+          </DateField.Root>,
+        );
+        const input = hiddenInputOf(container);
+        expect(input.validity[validity]).toBe(true);
+
+        segmentOf(container, 'hour').focus();
+        await user.keyboard('{ArrowUp}');
+
+        expect(segmentOf(container, 'hour').value).toBe('10');
+        expect(input.validity.valid).toBe(true);
+      },
+    );
   });
 
   describe('prop: disabled, readOnly', () => {

@@ -51,6 +51,7 @@ import {
 } from '../temporal';
 import type { DateValue, TemporalKind, TemporalValue } from '../temporal';
 import { DateTimeFieldContext } from './DateTimeFieldContext';
+import { useDateTimeFieldHost } from './dateTimeFieldHost';
 import type {
   DateTimeFieldChangeEventDetails,
   DateTimeFieldRootState,
@@ -230,6 +231,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   } = useFieldRootContext();
   const { clearErrors } = useFormContext();
   const { getDescriptionProps } = useLabelableContext();
+  const host = useDateTimeFieldHost();
 
   const fieldsetDisabled = useFieldsetDisabled(() => rootElement.value);
   const isDisabled = computed(
@@ -686,13 +688,19 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     () => toValue(parameters.name),
   );
 
-  const limits = computed<ValueLimits>(() => ({
-    minDate: toValue(parameters.minDate),
-    maxDate: toValue(parameters.maxDate),
-    minTime: toValue(parameters.minTime),
-    maxTime: toValue(parameters.maxTime),
-    unavailableDates: toValue(parameters.unavailableDates),
-  }));
+  // A field that shows no time compares days, because the user cannot change the time of its
+  // value. A limit then loses its time.
+  const limits = computed<ValueLimits>(() => {
+    const limitOf = (limit: DateValue | undefined) =>
+      limit && !isTimeUnit(granularity.value) ? toPlainDate(limit) : limit;
+    return {
+      minDate: limitOf(toValue(parameters.minDate)),
+      maxDate: limitOf(toValue(parameters.maxDate)),
+      minTime: toValue(parameters.minTime),
+      maxTime: toValue(parameters.maxTime),
+      unavailableDates: toValue(parameters.unavailableDates),
+    };
+  });
   // The hidden input checks the limits that its type has. The others, and the partial entry, are
   // a custom error of the input.
   const customMessage = computed(() => {
@@ -994,6 +1002,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     return [
       {
         role: 'group',
+        id: host?.groupId,
         'aria-describedby': getDescriptionProps({ 'aria-describedby': ariaDescribedBy })[
           'aria-describedby'
         ],

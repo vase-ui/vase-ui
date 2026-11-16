@@ -61,6 +61,7 @@ export type RangeCalendarRootChangeEventDetails = RangeChangeEventDetails;
 
 <script setup lang="ts" generic="Value extends DateValue = Temporal.PlainDate">
 import { computed, provide } from 'vue';
+import { useRangeCalendarHost } from '../../internals/date-time/calendar/rangeCalendarHost';
 import { useCalendarRoot } from '../../internals/date-time/calendar/useCalendarRoot';
 import { useRangeSelection } from '../../internals/date-time/calendar/rangeSelection';
 import { assertTemporal } from '../../internals/date-time/temporal';
@@ -122,7 +123,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, RangeCalendarRootState>;
 }>();
 
-const selection = useRangeSelection(props, emit);
+const selection = useRangeSelection(props, emit, useRangeCalendarHost());
 const { focus, hydrationAttributes, ...controller } = useCalendarRoot({
   part: 'RangeCalendar.Root',
   props,
@@ -149,6 +150,14 @@ const rootState = computed<RangeCalendarRootState>(() => ({
 provide(CalendarRootContext, { ...controller, state });
 provide(RangeCalendarRootContext, selection);
 
+// Escape ends a drag, or puts back the range from before the first press of a range in progress.
+// The root handles it for each element in the calendar, such as a button that changes the month.
+function onKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape' && selection.cancel(event)) {
+    event.preventDefault();
+  }
+}
+
 const { element, elementProps } = useRenderElement('div', props, {
   state: rootState,
   stateAttributesMapping: calendarRootStateAttributesMapping,
@@ -159,6 +168,7 @@ const { element, elementProps } = useRenderElement('div', props, {
       // `null` gives no label, so the root keeps the name of the month.
       'aria-label': attrs['aria-labelledby'] == null ? controller.label.value : undefined,
       ...hydrationAttributes(),
+      onKeydown,
     },
     attrs,
   ],
