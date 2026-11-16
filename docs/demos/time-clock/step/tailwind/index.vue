@@ -8,9 +8,9 @@ const maxTime = Temporal.PlainTime.from('17:00');
 const buttonClass =
   'flex h-10 min-w-10 items-center justify-center border border-neutral-950 bg-white px-2 leading-6 text-neutral-950 tabular-nums select-none focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 data-disabled:border-neutral-500 data-disabled:text-neutral-500 dark:border-white dark:bg-neutral-950 dark:text-white dark:focus-visible:outline-white dark:data-disabled:border-neutral-400 dark:data-disabled:text-neutral-400';
 const triggerClass =
-  'text-xl hover:not-data-disabled:not-data-active:bg-neutral-100 data-active:bg-neutral-950 data-active:text-white dark:hover:not-data-disabled:not-data-active:bg-neutral-800 dark:data-active:bg-white dark:data-active:text-neutral-950';
+  'text-xl hover:not-data-disabled:not-data-active:bg-neutral-100 data-active:bg-neutral-950 data-active:not-data-disabled:text-white dark:hover:not-data-disabled:not-data-active:bg-neutral-800 dark:data-active:bg-white dark:data-active:not-data-disabled:text-neutral-950';
 const dayPeriodClass =
-  'text-sm hover:not-data-disabled:not-data-selected:bg-neutral-100 data-selected:bg-neutral-950 data-selected:text-white dark:hover:not-data-disabled:not-data-selected:bg-neutral-800 dark:data-selected:bg-white dark:data-selected:text-neutral-950';
+  'text-sm hover:not-data-disabled:not-data-selected:bg-neutral-100 data-selected:bg-neutral-950 data-selected:not-data-disabled:text-white dark:hover:not-data-disabled:not-data-selected:bg-neutral-800 dark:data-selected:bg-white dark:data-selected:not-data-disabled:text-neutral-950';
 </script>
 
 <template>
@@ -40,7 +40,7 @@ const dayPeriodClass =
       <template #number="{ number }">
         <TimeClock.Number
           :number="number"
-          class="pointer-events-none absolute top-1/2 left-1/2 -mt-4 -ml-4 flex size-8 items-center justify-center rounded-full text-sm tabular-nums transform-[rotate(var(--time-clock-number-angle))_translateY(calc(var(--time-clock-number-radius)*var(--radius)*-1))_rotate(calc(var(--time-clock-number-angle)*-1))] data-disabled:text-neutral-600 data-inner:-mt-3.5 data-inner:-ml-3.5 data-inner:size-7 data-inner:text-xs data-selected:bg-neutral-950 data-selected:text-white dark:data-disabled:text-neutral-400 dark:data-selected:bg-white dark:data-selected:text-neutral-950"
+          class="pointer-events-none absolute top-1/2 left-1/2 -mt-4 -ml-4 flex size-8 items-center justify-center rounded-full text-sm tabular-nums transform-[rotate(var(--time-clock-number-angle))_translateY(calc(var(--time-clock-number-radius)*var(--radius)*-1))_rotate(calc(var(--time-clock-number-angle)*-1))] data-disabled:text-neutral-600 data-inner:-mt-3.5 data-inner:-ml-3.5 data-inner:size-7 data-inner:text-xs data-selected:bg-neutral-950 data-selected:not-data-disabled:text-white dark:data-disabled:text-neutral-400 dark:data-selected:bg-white dark:data-selected:not-data-disabled:text-neutral-950"
         />
       </template>
     </TimeClock.Face>
