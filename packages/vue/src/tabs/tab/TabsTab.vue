@@ -127,10 +127,10 @@ const ariaAfterHydration = useAriaAfterHydration();
 const tabId = useVaseUiId(() => props.id);
 const active = computed(() => props.value === activeTabValue.value);
 
-const registrationSource = Symbol();
 useRegisteredId(
   () => tabId.value,
-  (getId) => registerTab(registrationSource, getId && { value: () => props.value, id: getId }),
+  (source, getId) => registerTab(source, getId && { value: () => props.value, id: getId }),
+  () => element.value,
 );
 
 const tabMetadata = computed<TabsTabMetadata>(() => ({

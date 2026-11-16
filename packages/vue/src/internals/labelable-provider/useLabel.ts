@@ -8,29 +8,25 @@ import { useVaseUiId } from '../useBaseUiId';
 import { useLabelableContext } from './LabelableContext';
 import type { RegisterId } from './LabelableContext';
 import { useRegisteredId } from './useRegisteredId';
-import { useRenderedElementId } from './useRenderedElementId';
 
 /**
  * A label calls it in `setup`. The part reads `.value` in the function that it gives to
  * `useRenderElement` as `props`: `props: (attrs) => [labelProps.value, attrs]`.
  */
-export function useLabel(params: UseLabelParameters = {}): ComputedRef<UseLabelReturnValue> {
+export function useLabel(params: UseLabelParameters): ComputedRef<UseLabelReturnValue> {
   const { controlElementId, registerLabelId: registerContextLabelId } = useLabelableContext();
 
   const ownId = useVaseUiId();
 
   const id = computed(() => given('id', toValue(params.id)) ?? ownId.value);
 
-  const elementId = params.element === undefined ? undefined : useRenderedElementId(params.element);
-
-  const source = Symbol();
-
   useRegisteredId(
-    () => elementId?.value ?? id.value,
-    (getId) => {
+    () => id.value,
+    (source, getId) => {
       registerContextLabelId(source, getId);
       params.registerLabelId?.(source, getId);
     },
+    params.element,
   );
 
   const resolveControlId = () => controlElementId.value ?? toValue(params.fallbackControlId);
@@ -97,10 +93,10 @@ export interface UseLabelParameters {
    */
   id?: MaybeRefOrGetter<string | undefined> | undefined;
   /**
-   * The element of the label. A `#render` slot can give it another `id`, and the control then
-   * names that `id`.
+   * The element of the label. From the mount on, each part that names the label names the `id` of
+   * this element. A `#render` slot can give it another `id` than the label gives.
    */
-  element?: MaybeRefOrGetter<Element | null | undefined> | undefined;
+  element: MaybeRefOrGetter<Element | null | undefined>;
   /**
    * The id of the control when the provider has none.
    */

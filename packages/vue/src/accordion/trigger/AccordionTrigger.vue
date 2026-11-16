@@ -77,11 +77,10 @@ const { defaultTriggerId, registerTriggerId, state: itemState } = useAccordionIt
 
 const triggerId = computed(() => given('id', props.id) ?? defaultTriggerId.value);
 
-const source = Symbol();
-
 useRegisteredId(
   () => triggerId.value,
-  (getId) => registerTriggerId(source, getId),
+  registerTriggerId,
+  () => element.value,
 );
 
 const state = computed<AccordionTriggerState>(() => ({

@@ -2,6 +2,7 @@ import { computed, onMounted, onScopeDispose, shallowRef, toValue, watch } from 
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { useIsHydrating } from '../common/hydration';
 import { given } from '../internals/givenAttributes';
+import { useReferencedId } from '../internals/labelable-provider/useRegisteredId';
 import { useVaseUiId } from '../internals/useBaseUiId';
 import { useKeepAliveState } from '../internals/useKeepAliveState';
 
@@ -10,7 +11,7 @@ export type LabelIdSetter = (
 ) => void;
 
 interface ShownLabel {
-  id: () => string;
+  id: () => string | undefined;
   element: () => Element | null | undefined;
 }
 
@@ -74,13 +75,15 @@ export function useLabelId(): UseLabelIdReturnValue {
     let lastId: string | undefined;
     for (const label of shownLabels) {
       const element = label.element();
+      const id = label.id();
       if (
         element &&
+        id !== undefined &&
         (!lastElement ||
           lastElement.compareDocumentPosition(element) & element.DOCUMENT_POSITION_FOLLOWING)
       ) {
         lastElement = element;
-        lastId = label.id();
+        lastId = id;
       }
     }
     shownLabels.clear();
@@ -118,11 +121,15 @@ function hasAriaLabel(attrs: Record<string, unknown>) {
 
 /**
  * The label calls it. It gives the id of the label to the root.
+ * A label of the first render of the root gives the id that it binds, for the server HTML and the
+ * hydration. From the mount on, the label gives the `id` that `element` has now (see
+ * `useReferencedId`), and no id while that `id` is empty.
+ * A label that changes its id replaces only its own id in the root.
  * When `KeepAlive` holds the label, the root does not have the id until the activation.
  * @param idProp The `id` of the consumer. It wins over `defaultLabelId` of the root.
  * @param root The `labelRoot` that `useLabelId` returns.
  * @param element The element of the label.
- * @returns The id of the label.
+ * @returns The id that the label binds.
  */
 export function useRegisteredLabelId(
   idProp: MaybeRefOrGetter<string | undefined>,
@@ -132,6 +139,7 @@ export function useRegisteredLabelId(
   const { setLabelId } = root;
   const id = computed(() => given('id', toValue(idProp)) ?? root.defaultLabelId.value);
   const { isHeld, shown } = useKeepAliveState();
+  const referencedId = useReferencedId(() => id.value, element);
 
   // The server HTML and the hydration need the id from the first render of the root.
   const writesInSetup = !root.isMounted();
@@ -140,8 +148,9 @@ export function useRegisteredLabelId(
   }
 
   onMounted(() => {
-    if (!writesInSetup && !isHeld.value) {
-      setLabelId(id.value);
+    const mountedId = referencedId.value;
+    if (!writesInSetup && !isHeld.value && mountedId !== undefined) {
+      setLabelId(mountedId);
     }
   });
 
@@ -150,21 +159,21 @@ export function useRegisteredLabelId(
   watch(
     shown,
     () => {
-      root.show({ id: () => id.value, element: () => toValue(element) });
+      root.show({ id: () => referencedId.value, element: () => toValue(element) });
     },
     { flush: 'sync' },
   );
 
-  watch([id, isHeld], ([nextId, held], [previousId, wasHeld]) => {
+  watch([referencedId, isHeld], ([nextId, held], [previousId, wasHeld]) => {
     if (held) {
       setLabelId((current) => (current === previousId ? undefined : current));
     } else if (!wasHeld) {
-      setLabelId(nextId);
+      setLabelId((current) => (current === previousId ? nextId : current));
     }
   });
 
   onScopeDispose(() => {
-    setLabelId((current) => (current === id.value ? undefined : current));
+    setLabelId((current) => (current === referencedId.value ? undefined : current));
   });
 
   return id;
