@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { DatePicker } from '@vase-ui/vue/date-picker';
 import { createRenderer, describeConformance, screen, waitFor } from '#test-utils';
 import DatePickerAnatomy from '../root/DatePickerAnatomy.test.vue';
+import { createPartRef } from '../root/test-utils';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
 const today = () => day('2026-11-14');
@@ -88,6 +89,35 @@ describe('<DatePicker.Calendar />', () => {
 
     expect(hiddenInputOf(container).value).toBe('2026-11-18');
     expect(dayButton('2026-11-18').closest('[data-date]')).toHaveAttribute('aria-selected', 'true');
+  });
+
+  it('exposes its element and `focus()`, which gives the focus to a day', async () => {
+    const fixture = createPartRef<{
+      calendar: { element: HTMLElement; focus: (date?: Temporal.PlainDate) => void };
+    }>();
+    await render(() => (
+      <DatePickerAnatomy
+        ref={fixture.ref}
+        {...{
+          defaultOpen: true,
+          defaultValue: day('2026-11-18'),
+          locale: 'en-US',
+          calendarProps: { today: today() },
+        }}
+      />
+    ));
+    await waitFor(() => {
+      expect(dayButton('2026-11-18')).toHaveFocus();
+    });
+    const { calendar } = fixture.current;
+
+    expect(calendar.element).toBe(screen.getByTestId('calendar'));
+
+    calendar.focus(day('2026-11-25'));
+
+    await waitFor(() => {
+      expect(dayButton('2026-11-25')).toHaveFocus();
+    });
   });
 
   describe('the picker owns the limits', () => {

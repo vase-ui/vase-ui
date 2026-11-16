@@ -14,6 +14,7 @@ defineProps<{
 
 <template>
   <DatePicker.Root open>
+    <DatePicker.Trigger>Open</DatePicker.Trigger>
     <DatePicker.Portal>
       <DatePicker.Positioner
         v-if="hasRenderSlot"

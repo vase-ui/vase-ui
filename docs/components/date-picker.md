@@ -71,11 +71,13 @@ Import the component and assemble its parts:
 
 ## Value
 
-The value is a `Temporal` object, and `v-model:value` gives back the same kind: a `Temporal.PlainDate`, a `Temporal.PlainDateTime`, a `Temporal.ZonedDateTime` or a `Temporal.PlainYearMonth`. It is `null` while the field has a segment with no number. The root owns the props that the field and the calendar share: `granularity`, `referenceDate`, `minDate`, `maxDate`, `unavailableDates`, `locale`, `calendar`, `timeZone`, `disabled`, `readOnly`, `required`, `name` and `form`. The field gives the value to a form through its hidden input. The calendar and the time field give no value to a form.
+The value is a `Temporal` object, and `v-model:value` gives back the same kind: a `Temporal.PlainDate`, a `Temporal.PlainDateTime`, a `Temporal.ZonedDateTime` or a `Temporal.PlainYearMonth`. It is `null` while the field has a segment with no number.
+
+The root owns the props that its parts share: `granularity`, `referenceDate`, `hourCycle`, `forceLeadingZeros`, `hideTimeZone`, `minDate`, `maxDate`, `unavailableDates`, `locale`, `calendar`, `timeZone`, `disabled`, `readOnly`, `required`, `name` and `form`. The field gives the value to a form through its hidden input. The calendar and the time field give no value to a form.
 
 With no value, a new value has the kind that `granularity` and `referenceDate` give, as for [Date Field](/components/date-field#value). A day that the user presses in the calendar then makes a value at the time of `referenceDate`, or at midnight. A picker that the user empties keeps the kind of its last value.
 
-`closeOnSelect` says if a selection in the calendar closes the popup. It is `true` for a value with no time. It is `false` for a value with a time, because the user then sets the time. A press on the day that is already selected closes the popup too, as `closeOnSelect` says. Escape and a press outside the popup close it and keep the value.
+`closeOnSelect` says if a selection in the calendar closes the popup. It is `true` for a value with no time. It is `false` for a value with a time, because the user then sets the time. A press on the selected day closes the popup too, although the calendar gives no change for it. Escape and a press outside the popup close it and keep the value.
 
 ## Examples
 
@@ -201,11 +203,10 @@ The root emits `valueChange` and `update:value` for each change of the value. It
 | `outside-press`        | A press outside the popup closes it.                  |
 | `close-press`          | A press on `DatePicker.Close`.                        |
 | `focus-out`            | The focus leaves a popup that is not modal.           |
-| `none`                 | The consumer changes `open`.                          |
 
 ## Server render
 
-The picker renders with `renderToString`. The server HTML has the field with its segments and its hidden input, and the trigger with its name. It has no popup, because the portal renders after the mount. The calendar gets `today` and the time zone from its props. Give `today` to `DatePicker.Calendar`, so that the server and the browser agree on the day that has the tab stop.
+The picker renders with `renderToString`. The server HTML has the field with its segments and its hidden input, and the trigger with its name. It has no popup, also for a picker that is open at the mount, because the portal renders after the mount.
 
 A server does not know the locale of the visitor. With no `locale` prop, the picker uses `en-US` until it mounts, and then the locale of the browser. See [Date Field](/components/date-field#server-render) and [Calendar](/components/calendar#server-render) for what a server and a browser can show in another way.
 

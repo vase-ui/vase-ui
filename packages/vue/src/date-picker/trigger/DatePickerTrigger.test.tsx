@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DatePicker } from '@vase-ui/vue/date-picker';
-import { createRenderer, describeConformance, screen } from '#test-utils';
+import { createRenderer, describeConformance, screen, takeReportedMessages } from '#test-utils';
 import { formatText } from '../../internals/date-time/calendar/formatText';
 
 const day = Temporal.PlainDate.from('2026-11-14');
@@ -161,5 +161,16 @@ describe('<DatePicker.Trigger />', () => {
 
       expect(screen.getByRole('button')).not.toHaveAttribute('disabled');
     });
+  });
+
+  // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
+  // instance set, and a later case of the file can then get a warning about a slot.
+  it('throws outside the root of a date picker', async () => {
+    await expect(render(<DatePicker.Trigger />)).rejects.toThrow(
+      'Vase UI: A part of Date Picker must be inside <DatePicker.Root>. Without a root the part has no value and no popup to share. Put the part inside <DatePicker.Root>.',
+    );
+    expect(takeReportedMessages()).toEqual([
+      expect.stringContaining('Unhandled error during execution of setup function'),
+    ]);
   });
 });

@@ -1,10 +1,9 @@
-import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { DateField } from '@vase-ui/vue/date-field';
 import { DatePicker } from '@vase-ui/vue/date-picker';
 import { Field } from '@vase-ui/vue/field';
 import { TimeField } from '@vase-ui/vue/time-field';
-import { createRenderer, describeConformance, screen } from '#test-utils';
-import { takeReportedMessages } from '../../../test/reportedMessages';
+import { createRenderer, describeConformance, screen, takeReportedMessages } from '#test-utils';
 
 const dateTime = Temporal.PlainDateTime.from('2026-11-14T15:04');
 
@@ -147,13 +146,9 @@ describe('<DatePicker.TimeField />', () => {
     });
   });
 
-  // A case that throws in `setup` is the last of its file.
+  // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
+  // instance set, and a later case of the file can then get a warning about a slot.
   it('throws for a picker whose value has no time', async () => {
-    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
-    onTestFinished(() => {
-      consoleError.mockRestore();
-    });
-
     await expect(
       render(
         <DatePicker.Root defaultValue={Temporal.PlainDate.from('2026-11-14')}>

@@ -18,7 +18,7 @@ describe('<DatePicker.Positioner /> slots', () => {
         onInnerRender={onInnerRender}
       />,
     );
-    waitForPositioned(await screen.findByTestId('positioner'));
+    await waitForPositioned(await screen.findByTestId('positioner'));
     await flushMicrotasks();
     onPartRender.mockClear();
     onInnerRender.mockClear();

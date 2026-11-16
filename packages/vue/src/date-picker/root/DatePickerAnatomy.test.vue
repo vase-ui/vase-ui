@@ -11,31 +11,40 @@ defineOptions({ inheritAttrs: false });
 withDefaults(
   defineProps<{
     calendarProps?: Record<string, unknown>;
-    field?: boolean;
+    hasField?: boolean;
     trigger?: boolean;
     timeField?: boolean;
     monthGrid?: boolean;
     keepMounted?: boolean;
   }>(),
-  { calendarProps: () => ({}), field: true, trigger: true },
+  { calendarProps: () => ({}), hasField: true, trigger: true },
 );
 
-// The root exposes `close` and `unmount`. A test reads them through `root`.
+// The parts expose their members. A test reads them through `root`, `field` and `calendar`.
 const root = shallowRef<{ close: () => void; unmount: () => void } | null>(null);
+const field = shallowRef<{
+  element: HTMLElement | null;
+  inputElement: HTMLInputElement | null;
+  clear: () => void;
+} | null>(null);
+const calendar = shallowRef<{
+  element: HTMLElement | null;
+  focus: (date?: Temporal.PlainDate) => void;
+} | null>(null);
 
-defineExpose({ root });
+defineExpose({ root, field, calendar });
 </script>
 
 <template>
   <DatePicker.Root ref="root" v-bind="$attrs">
-    <DatePicker.Field v-if="field" data-testid="field">
+    <DatePicker.Field v-if="hasField" ref="field" data-testid="field">
       <DateField.Input />
     </DatePicker.Field>
     <DatePicker.Trigger v-if="trigger" data-testid="trigger">Open</DatePicker.Trigger>
     <DatePicker.Portal :keep-mounted="keepMounted">
       <DatePicker.Positioner data-testid="positioner">
         <DatePicker.Popup aria-label="Choose date" data-testid="popup">
-          <DatePicker.Calendar v-bind="calendarProps" data-testid="calendar">
+          <DatePicker.Calendar ref="calendar" v-bind="calendarProps" data-testid="calendar">
             <Calendar.PreviousButton data-testid="previous" />
             <Calendar.NextButton data-testid="next" />
             <Calendar.Months>

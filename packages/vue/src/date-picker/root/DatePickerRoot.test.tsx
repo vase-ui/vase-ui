@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { DatePicker } from '@vase-ui/vue/date-picker';
+import { Field } from '@vase-ui/vue/field';
 import {
   createRenderer,
   flushMicrotasks,
@@ -11,6 +12,7 @@ import {
 } from '#test-utils';
 import type { VaseUIRenderResult } from '#test-utils';
 import DatePickerAnatomy from './DatePickerAnatomy.test.vue';
+import { createPartRef } from './test-utils';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
 const today = () => day('2026-11-14');
@@ -23,24 +25,6 @@ const hiddenInputOf = (container: Element) =>
   container.querySelector<HTMLInputElement>('input[aria-hidden]')!;
 const selectedCells = () =>
   screen.getAllByRole('gridcell').filter((cell) => cell.getAttribute('aria-selected') === 'true');
-
-interface RootInstance {
-  close(): void;
-  unmount(): void;
-}
-
-// A ref on a part gives its exposed members.
-function createRootRef() {
-  let root: RootInstance | undefined;
-  return {
-    ref(instance: unknown) {
-      root = (instance as RootInstance | null) ?? root;
-    },
-    get current() {
-      return root!;
-    },
-  };
-}
 
 describe('<DatePicker.Root />', () => {
   const { render } = createRenderer();
@@ -61,12 +45,15 @@ describe('<DatePicker.Root />', () => {
         expect(screen.getByRole('dialog')).not.toBe(null);
       });
     });
+    return screen.getByRole('dialog');
   }
 
-  async function expectClosed() {
+  // The element is the popup that the test got before the action.
+  async function expectClosed(popup: HTMLElement) {
     await waitFor(() => {
-      expect(screen.queryByRole('dialog')).toBe(null);
+      expect(popup).not.toBeInTheDocument();
     });
+    expect(screen.queryByRole('dialog')).toBe(null);
   }
 
   popupConformanceTests({
@@ -153,14 +140,14 @@ describe('<DatePicker.Root />', () => {
         defaultValue: day('2026-11-18'),
         onValueChange,
       });
-      await open(user);
+      const popup = await open(user);
       await waitFor(() => {
         expect(dayButton('2026-11-18')).toHaveFocus();
       });
 
       await user.keyboard('{ArrowRight}{Escape}');
 
-      await expectClosed();
+      await expectClosed(popup);
       await waitFor(() => {
         expect(screen.getByTestId('trigger')).toHaveFocus();
       });
@@ -189,11 +176,11 @@ describe('<DatePicker.Root />', () => {
         onValueChange,
         onOpenChange,
       });
-      await open(user);
+      const popup = await open(user);
 
       await user.click(dayButton('2026-11-20'));
 
-      await expectClosed();
+      await expectClosed(popup);
       expect(onValueChange.mock.lastCall?.[0].toString()).toBe('2026-11-20');
       expect(onValueChange.mock.lastCall?.[1].reason).toBe('day-press');
       expect(onOpenChange.mock.lastCall?.[0]).toBe(false);
@@ -203,17 +190,55 @@ describe('<DatePicker.Root />', () => {
       expect(hiddenInputOf(container).value).toBe('2026-11-20');
     });
 
+    // The close after a selection goes through the store of the popover, as each other close does.
+    it('lets a listener keep the popup mounted after a selection, until `unmount()`', async () => {
+      const fixture = createPartRef<{ root: { unmount(): void } }>();
+      const { user } = await render(() => (
+        <DatePickerAnatomy
+          ref={fixture.ref}
+          {...{
+            defaultValue: day('2026-11-18'),
+            locale: 'en-US',
+            calendarProps: { today: today() },
+            onOpenChange: (isOpen: boolean, details: { preventUnmountOnClose(): void }) => {
+              if (!isOpen) {
+                details.preventUnmountOnClose();
+              }
+            },
+          }}
+        />
+      ));
+      const popup = await open(user);
+
+      await user.click(dayButton('2026-11-20'));
+      await waitFor(() => {
+        expect(screen.getByTestId('trigger')).toHaveAttribute('aria-expanded', 'false');
+      });
+      await waitSingleFrame();
+      await waitSingleFrame();
+
+      expect(popup).toBeInTheDocument();
+
+      fixture.current.root.unmount();
+
+      await expectClosed(popup);
+    });
+
     it('closes the popup after Enter on a day', async () => {
       const { user, container } = await renderPicker({ defaultValue: day('2026-11-18') });
-      await open(user);
+      const popup = await open(user);
       await waitFor(() => {
         expect(dayButton('2026-11-18')).toHaveFocus();
       });
 
       await user.keyboard('{ArrowRight}{Enter}');
 
-      await expectClosed();
+      await expectClosed(popup);
       expect(hiddenInputOf(container).value).toBe('2026-11-19');
+      // The focus goes back to the trigger, as the date picker dialog pattern says.
+      await waitFor(() => {
+        expect(screen.getByTestId('trigger')).toHaveFocus();
+      });
     });
 
     // The calendar emits no change for the selected day, so a rule on its events would miss it.
@@ -225,11 +250,11 @@ describe('<DatePicker.Root />', () => {
         onValueChange,
         onOpenChange,
       });
-      await open(user);
+      const popup = await open(user);
 
       await user.click(dayButton('2026-11-18'));
 
-      await expectClosed();
+      await expectClosed(popup);
       expect(onValueChange).not.toHaveBeenCalled();
       expect(onOpenChange.mock.lastCall?.[0]).toBe(false);
       expect(hiddenInputOf(container).value).toBe('2026-11-18');
@@ -237,14 +262,14 @@ describe('<DatePicker.Root />', () => {
 
     it('closes the popup after Enter on the selected day', async () => {
       const { user } = await renderPicker({ defaultValue: day('2026-11-18') });
-      await open(user);
+      const popup = await open(user);
       await waitFor(() => {
         expect(dayButton('2026-11-18')).toHaveFocus();
       });
 
       await user.keyboard('{Enter}');
 
-      await expectClosed();
+      await expectClosed(popup);
     });
 
     it('keeps the popup open when a listener cancels the change of the value', async () => {
@@ -338,11 +363,11 @@ describe('<DatePicker.Root />', () => {
           defaultValue: Temporal.PlainDateTime.from('2026-11-18T09:30'),
           closeOnSelect: true,
         });
-        await open(user);
+        const popup = await open(user);
 
         await user.click(dayButton('2026-11-20'));
 
-        await expectClosed();
+        await expectClosed(popup);
       });
     });
 
@@ -390,11 +415,11 @@ describe('<DatePicker.Root />', () => {
           monthGrid: true,
           onValueChange,
         });
-        await open(user);
+        const popup = await open(user);
 
         await user.click(screen.getByRole('gridcell', { name: /March 2026/ }));
 
-        await expectClosed();
+        await expectClosed(popup);
         expect(onValueChange.mock.lastCall?.[0].toString()).toBe('2026-03');
         expect(onValueChange.mock.lastCall?.[1].reason).toBe('month-press');
         expect(hiddenInputOf(container).value).toBe('2026-03');
@@ -407,11 +432,11 @@ describe('<DatePicker.Root />', () => {
           monthGrid: true,
           onValueChange,
         });
-        await open(user);
+        const popup = await open(user);
 
         await user.click(screen.getByRole('gridcell', { name: /November 2026/ }));
 
-        await expectClosed();
+        await expectClosed(popup);
         expect(onValueChange).not.toHaveBeenCalled();
       });
 
@@ -495,6 +520,19 @@ describe('<DatePicker.Root />', () => {
       expect(segmentOf(container, 'day')).toBeDisabled();
     });
 
+    it('is disabled by a disabled Field around it', async () => {
+      const { user } = await render(
+        <Field.Root disabled>
+          <DatePickerAnatomy {...{ locale: 'en-US', defaultValue: day('2026-11-18') }} />
+        </Field.Root>,
+      );
+
+      await user.click(screen.getByTestId('trigger'));
+
+      expect(screen.getByTestId('trigger')).toBeDisabled();
+      expect(screen.queryByRole('dialog')).toBe(null);
+    });
+
     it('does not open a read-only picker', async () => {
       const { user } = await renderPicker({ defaultValue: day('2026-11-18'), readOnly: true });
 
@@ -507,7 +545,7 @@ describe('<DatePicker.Root />', () => {
   describe('exposed actions', () => {
     it('closes the popup with `close()`, with the reason `imperative-action`', async () => {
       const onOpenChange = vi.fn();
-      const root = createRootRef();
+      const root = createPartRef<{ close(): void; unmount(): void }>();
       // A ref needs a vnode that a render function makes.
       await render(() => (
         <DatePicker.Root defaultOpen onOpenChange={onOpenChange} ref={root.ref}>
@@ -519,13 +557,11 @@ describe('<DatePicker.Root />', () => {
           </DatePicker.Portal>
         </DatePicker.Root>
       ));
-      await waitFor(() => {
-        expect(screen.getByRole('dialog')).not.toBe(null);
-      });
+      const popup = await screen.findByRole('dialog');
 
       root.current.close();
 
-      await expectClosed();
+      await expectClosed(popup);
       expect(onOpenChange.mock.lastCall?.[0]).toBe(false);
       expect(onOpenChange.mock.lastCall?.[1].reason).toBe('imperative-action');
     });

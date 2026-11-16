@@ -11,6 +11,8 @@ import {
   wait,
   waitFor,
 } from '#test-utils';
+import DatePickerAnatomy from '../root/DatePickerAnatomy.test.vue';
+import { createPartRef } from '../root/test-utils';
 
 const day = Temporal.PlainDate.from('2026-11-14');
 
@@ -59,6 +61,32 @@ describe('<DatePicker.Field />', () => {
     expect(segmentOf(container, 'month').value).toBe('12');
     expect(segmentOf(container, 'day').value).toBe('24');
     expect(hiddenInputOf(container).value).toBe('2026-12-24');
+  });
+
+  it('exposes its element, the hidden input and `clear()`, which gives `null` with the reason `none`', async () => {
+    const onValueChange = vi.fn();
+    const fixture = createPartRef<{
+      field: { element: HTMLElement; inputElement: HTMLInputElement; clear: () => void };
+    }>();
+    const { container } = await render(() => (
+      <DatePickerAnatomy
+        ref={fixture.ref}
+        {...{ defaultValue: day, locale: 'en-US', onValueChange }}
+      />
+    ));
+    const { field } = fixture.current;
+
+    expect(field.element).toBe(screen.getByTestId('field'));
+    expect(field.inputElement).toBe(hiddenInputOf(container));
+
+    field.clear();
+
+    await waitFor(() => {
+      expect(hiddenInputOf(container).value).toBe('');
+    });
+    expect(onValueChange.mock.lastCall?.[0]).toBe(null);
+    expect(onValueChange.mock.lastCall?.[1].reason).toBe('none');
+    expect(segmentOf(container, 'day').value).toBe('');
   });
 
   describe('value changes', () => {
@@ -140,6 +168,33 @@ describe('<DatePicker.Field />', () => {
     });
   });
 
+  // The field of the picker keeps its kind when the user empties it, as the calendar does.
+  it('makes a value of the kind of the last value when a segment is full again', async () => {
+    const onValueChange = vi.fn();
+    const { container, user } = await render(
+      <DatePicker.Root
+        defaultValue={Temporal.ZonedDateTime.from('2026-11-18T09:30[Asia/Tokyo]')}
+        locale="en-US"
+        hourCycle={24}
+        onValueChange={onValueChange}
+      >
+        <DatePicker.Field>
+          <DateField.Input />
+        </DatePicker.Field>
+      </DatePicker.Root>,
+    );
+
+    segmentOf(container, 'month').focus();
+    await user.keyboard('{Backspace}{Backspace}');
+    expect(onValueChange.mock.lastCall?.[0]).toBe(null);
+    await user.keyboard('12');
+
+    expect(onValueChange.mock.lastCall?.[0].toString()).toBe(
+      '2026-12-18T09:30:00+09:00[Asia/Tokyo]',
+    );
+    expect(segmentOf(container, 'hour').value).toBe('09');
+  });
+
   describe('Alt+Down', () => {
     it('opens the popup from a segment', async () => {
       const onOpenChange = vi.fn();
@@ -166,6 +221,23 @@ describe('<DatePicker.Field />', () => {
       );
       // The key does not change the value of the segment.
       expect(segmentOf(container, 'day').value).toBe('14');
+    });
+
+    it('opens a popup that has no trigger, with no trigger in the details', async () => {
+      const onOpenChange = vi.fn();
+      const { container, user } = await render(
+        <DatePicker.Root defaultValue={day} onOpenChange={onOpenChange}>
+          <DatePicker.Field>
+            <DateField.Input />
+          </DatePicker.Field>
+        </DatePicker.Root>,
+      );
+
+      segmentOf(container, 'day').focus();
+      await user.keyboard('{Alt>}{ArrowDown}{/Alt}');
+
+      expect(onOpenChange.mock.lastCall?.[0]).toBe(true);
+      expect(onOpenChange.mock.lastCall?.[1].trigger).toBeUndefined();
     });
 
     it('does nothing for the arrow key alone, and for the key with Shift or Control', async () => {

@@ -6,7 +6,10 @@ import type {
 
 export interface DatePickerPositionerState extends PopoverPositionerState {}
 
-export interface DatePickerPositionerProps extends Omit<PopoverPositionerProps, 'anchor'> {
+export interface DatePickerPositionerProps extends Omit<
+  PopoverPositionerProps,
+  'anchor' | 'align'
+> {
   /**
    * An element to position the popup against.
    * By default, the popup is positioned against the field, and against the trigger when the picker
@@ -14,6 +17,12 @@ export interface DatePickerPositionerProps extends Omit<PopoverPositionerProps, 
    * It can be an element, a component, a virtual element, or a ref or a getter for one of them.
    */
   anchor?: PopoverPositionerProps['anchor'] | undefined;
+  /**
+   * How to align the popup relative to the specified side. A field is wider than a trigger, so the
+   * popup lines up with the start edge of the field.
+   * @default 'start'
+   */
+  align?: PopoverPositionerProps['align'] | undefined;
 }
 </script>
 
@@ -25,7 +34,6 @@ import { useDatePickerRootContext } from '../root/DatePickerRootContext';
 
 defineOptions({ inheritAttrs: false });
 
-// A field is wider than a trigger, so the popup lines up with its start edge.
 const props = withDefaults(defineProps<DatePickerPositionerProps>(), {
   as: 'div',
   align: 'start',
