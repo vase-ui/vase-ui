@@ -6,6 +6,7 @@ import {
   flushMicrotasks,
   nextAnimationsRead,
   nextCall,
+  nextEndingStyle,
   randomStringValue,
   screen,
   waitFor,
@@ -475,7 +476,7 @@ describe('useUnmountAfterClose', () => {
       expect(screen.queryByTestId('popup')).toBe(null);
     });
 
-    it('completes a close that is in progress when KeepAlive deactivates the host', async () => {
+    async function renderHostInKeepAlive() {
       const host = createHost();
       const popupClass = randomStringValue();
       const open = shallowRef(true);
@@ -492,14 +493,48 @@ describe('useUnmountAfterClose', () => {
           </KeepAlive>
         </div>
       ));
-      const animationStarts: Event[] = [];
-      screen.getByTestId('popup').addEventListener('animationstart', (event) => {
-        animationStarts.push(event);
+
+      return { host, open, showHost, popup: screen.getByTestId('popup') };
+    }
+
+    it('completes a close that is in progress when KeepAlive deactivates the host', async () => {
+      const { host, open, showHost, popup } = await renderHostInKeepAlive();
+
+      // The composable waits for the exit animation from this read on. The deactivation then
+      // cancels the animation.
+      const animations = await nextAnimationsRead(popup, {
+        action: () => {
+          open.value = false;
+        },
       });
-      open.value = false;
+
+      expect(animations).toHaveLength(1);
+      expect(host.onUnmount).not.toHaveBeenCalled();
+
+      showHost.value = false;
       await waitFor(() => {
-        expect(animationStarts).toHaveLength(1);
+        expect(host.onUnmount).toHaveBeenCalledTimes(1);
       });
+
+      showHost.value = true;
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('popup')).toBe(null);
+      expect(host.onUnmount).toHaveBeenCalledTimes(1);
+    });
+
+    it('completes a close when KeepAlive deactivates the host before the read of the animations', async () => {
+      const { host, open, showHost, popup } = await renderHostInKeepAlive();
+      const getAnimations = vi.spyOn(popup, 'getAnimations');
+
+      await nextEndingStyle(popup, {
+        action: () => {
+          open.value = false;
+        },
+      });
+
+      expect(getAnimations).not.toHaveBeenCalled();
+      expect(host.onUnmount).not.toHaveBeenCalled();
 
       showHost.value = false;
       await waitFor(() => {
