@@ -180,6 +180,29 @@ describe('useRegisteredLabelId', () => {
       expect(target).toHaveAttribute('aria-labelledby', 'other');
     });
 
+    it('names no label after a label whose element has another id unmounts', async () => {
+      const mounted = shallowRef(true);
+      const App = defineComponent(() => {
+        const { labelId, labelRoot } = useLabelId();
+
+        return () => (
+          <>
+            <div data-testid="target" aria-labelledby={labelId.value} />
+            {mounted.value && <SlotLabel elementId="first" root={labelRoot} />}
+          </>
+        );
+      });
+      await render(<App />);
+      const target = screen.getByTestId('target');
+      const before = target.getAttribute('aria-labelledby');
+
+      mounted.value = false;
+      await flushMicrotasks();
+
+      expect(before).toBe('first');
+      expect(target).not.toHaveAttribute('aria-labelledby');
+    });
+
     it('names the id of the element again when KeepAlive shows the label', async () => {
       const { App, kept } = setup();
       await render(<App />);

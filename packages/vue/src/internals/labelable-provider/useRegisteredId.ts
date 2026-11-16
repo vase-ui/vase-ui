@@ -8,9 +8,9 @@ import type { RegisterId } from './LabelableContext';
  * Registers the id that a reference to a part names. Call it in `setup`.
  *
  * `register` is the function of a registry, such as `registerId` of `createIdRegistry()`. It gets a
- * getter for the id, and `undefined` when the part goes away. The getter gives the result of
- * `useReferencedId`, and `undefined` while `KeepAlive` holds the part. `KeepAlive` removes the DOM
- * of that part from the document.
+ * source symbol of the part, and a getter for the id or `undefined` when the part goes away. The
+ * getter gives the result of `useReferencedId`, and `undefined` while `KeepAlive` holds the part.
+ * `KeepAlive` removes the DOM of that part from the document.
  *
  * A call in `setup` puts the id in the server HTML of each part that renders after this part. It
  * also gives the part its place in the order of the registrations. The part keeps that place while
