@@ -78,9 +78,7 @@ function createHoverEvent(type: 'mouseenter' | 'mousemove', currentTarget: HTMLE
 import {
   computed,
   nextTick,
-  onActivated,
   onBeforeUnmount,
-  onDeactivated,
   onMounted,
   onScopeDispose,
   shallowRef,
@@ -97,7 +95,7 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { isInHeldBranch } from '../../internals/useKeepAliveState';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { getCssDimensions } from '../../utils/getCssDimensions';
 import { stopEvent } from '../../utils/popups/event';
 import { useFloatingRootStore } from '../../utils/popups/floating-root/useFloatingRootStore';
@@ -531,25 +529,22 @@ function openHoveredTrigger() {
   hoverProps.onMousemove?.(createHoverEvent('mousemove', trigger));
 }
 
-let isDeactivated = isInHeldBranch();
+const { isHeld } = useKeepAliveState();
 
 onMounted(openHoveredTrigger);
 
-onDeactivated(() => {
-  isDeactivated = true;
-  stickIfOpenTimeout.clear();
-  restoreOutsidePointerEvents();
-});
-
-onActivated(() => {
-  // `onActivated` also runs at the first mount inside `KeepAlive`.
-  if (!isDeactivated) {
-    return;
-  }
-
-  isDeactivated = false;
-  openHoveredTrigger();
-});
+watch(
+  isHeld,
+  (held) => {
+    if (held) {
+      stickIfOpenTimeout.clear();
+      restoreOutsidePointerEvents();
+    } else {
+      openHoveredTrigger();
+    }
+  },
+  { flush: 'sync' },
+);
 
 // Script makes the two guards and the owner element after the trigger, so the trigger has one root
 // node.

@@ -1,20 +1,11 @@
-import {
-  computed,
-  onActivated,
-  onDeactivated,
-  onMounted,
-  onScopeDispose,
-  shallowRef,
-  toValue,
-  watch,
-} from 'vue';
+import { computed, onMounted, onScopeDispose, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 import type { Dimensions } from '@floating-ui/utils';
 import { EMPTY_OBJECT, NOOP } from '../../../common/empty';
 import { useAnimationFrame } from '../../../common/useAnimationFrame';
 import type { Side } from '../../../internals/useAnchorPositioning';
 import { useAnimationsFinished } from '../../../internals/useAnimationsFinished';
-import { isInHeldBranch } from '../../../internals/useKeepAliveState';
+import { useKeepAliveState } from '../../../internals/useKeepAliveState';
 import { getCssDimensions } from '../../getCssDimensions';
 import * as CommonPositionerCssVars from '../positioning/CommonPositionerCssVars';
 import * as CommonPopupCssVars from './CommonPopupCssVars';
@@ -126,8 +117,8 @@ export function usePopupAutoResize(parameters: UsePopupAutoResizeParameters) {
   }
 
   // `KeepAlive` takes the elements out of the document, where they have no layout. A measurement
-  // then gives a size of 0. A part that mounts in a held branch gets no `onDeactivated` call.
-  const deactivated = shallowRef(isInHeldBranch());
+  // then gives a size of 0.
+  const { isHeld } = useKeepAliveState();
   let cleanup: (() => void) | undefined;
 
   function stop() {
@@ -142,7 +133,7 @@ export function usePopupAutoResize(parameters: UsePopupAutoResizeParameters) {
       toValue(parameters.positionerElement),
       toValue(parameters.mounted),
       anchoringStyles.value,
-      deactivated.value,
+      isHeld.value,
     ];
   }
 
@@ -156,19 +147,20 @@ export function usePopupAutoResize(parameters: UsePopupAutoResizeParameters) {
   function run() {
     stop();
     lastSources = readSources();
-    if (!deactivated.value) {
+    if (!isHeld.value) {
       cleanup = measure();
     }
   }
 
-  onDeactivated(() => {
-    deactivated.value = true;
-    stop();
-  });
-
-  onActivated(() => {
-    deactivated.value = false;
-  });
+  watch(
+    isHeld,
+    (held) => {
+      if (held) {
+        stop();
+      }
+    },
+    { flush: 'sync' },
+  );
 
   onMounted(run);
   watch(

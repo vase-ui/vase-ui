@@ -160,12 +160,12 @@ export interface ResizablePanelActions {
 </script>
 
 <script setup lang="ts">
-import { computed, onActivated, onDeactivated, provide, shallowRef, watch } from 'vue';
+import { computed, provide, watch } from 'vue';
 import { useIsHydrating, useServerElement } from '../../common/hydration';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { isInHeldBranch } from '../../internals/useKeepAliveState';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
@@ -292,15 +292,8 @@ const { element, elementProps } = useRenderElement('div', props, {
 });
 
 // `KeepAlive` takes the panel out of the document. The root then gives its space to the other
-// panels, and the handles beside it do not name it. A panel that mounts while `KeepAlive` holds it
-// gets no `onDeactivated` call.
-const deactivated = shallowRef(isInHeldBranch());
-onDeactivated(() => {
-  deactivated.value = true;
-});
-onActivated(() => {
-  deactivated.value = false;
-});
+// panels, and the handles beside it do not name it.
+const { isHeld } = useKeepAliveState();
 
 root.registerPanel({
   id,
@@ -317,7 +310,7 @@ root.registerPanel({
   snapPoints: () => props.snapPoints,
   snapTolerance: () => props.snapTolerance,
   element,
-  deactivated,
+  isHeld,
 });
 
 // The watcher reads the size only after the mount. A size that is not valid then fails in the
@@ -327,10 +320,10 @@ watch(
   () =>
     hydrating.value
       ? undefined
-      : ([size.value, root.measurement.value?.space, deactivated.value] as const),
+      : ([size.value, root.measurement.value?.space, isHeld.value] as const),
   (current) => {
-    const [percent, space, isDeactivated] = current ?? [];
-    if (percent === undefined || space === undefined || isDeactivated === true) {
+    const [percent, space, held] = current ?? [];
+    if (percent === undefined || space === undefined || held === true) {
       return;
     }
     const next = getPanelSize(percent, space);

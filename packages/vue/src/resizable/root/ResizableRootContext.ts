@@ -40,7 +40,7 @@ export interface ResizablePanelRegistration {
   /**
    * Whether `KeepAlive` holds the panel. Such a panel is not in the layout.
    */
-  deactivated: Readonly<Ref<boolean>>;
+  isHeld: Readonly<Ref<boolean>>;
 }
 
 export interface ResizableHandleRegistration {
@@ -52,7 +52,7 @@ export interface ResizableHandleRegistration {
   /**
    * Whether `KeepAlive` holds the handle. Such a handle is not at its place.
    */
-  deactivated: Readonly<Ref<boolean>>;
+  isHeld: Readonly<Ref<boolean>>;
 }
 
 /**

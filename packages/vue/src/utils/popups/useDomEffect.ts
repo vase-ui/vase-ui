@@ -1,6 +1,6 @@
-import { onActivated, onDeactivated, onMounted, onScopeDispose, watch } from 'vue';
+import { onMounted, onScopeDispose, watch } from 'vue';
 import type { WatchSource } from 'vue';
-import { isInHeldBranch } from '../../internals/useKeepAliveState';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 
 /**
  * Runs `run` at mount and after each DOM update that follows a change of `sources`. The cleanup
@@ -18,25 +18,15 @@ import { isInHeldBranch } from '../../internals/useKeepAliveState';
  */
 export function useDomEffect(sources: WatchSource[], run: () => (() => void) | void): void {
   let cleanup: (() => void) | undefined;
-  let deactivated = isInHeldBranch();
+  const { isHeld } = useKeepAliveState();
 
   function update() {
     cleanup?.();
-    cleanup = deactivated ? undefined : (run() ?? undefined);
+    cleanup = isHeld.value ? undefined : (run() ?? undefined);
   }
 
   onMounted(update);
   watch(sources, update, { flush: 'post' });
-  onDeactivated(() => {
-    deactivated = true;
-    update();
-  });
-  // `onActivated` also runs at the first mount in a `KeepAlive`.
-  onActivated(() => {
-    if (deactivated) {
-      deactivated = false;
-      update();
-    }
-  });
+  watch(isHeld, update, { flush: 'sync' });
   onScopeDispose(() => cleanup?.());
 }

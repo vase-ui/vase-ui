@@ -1,9 +1,9 @@
-import { onActivated, onDeactivated, shallowRef, toValue, useId, watch } from 'vue';
+import { shallowRef, toValue, useId, watch } from 'vue';
 import type { ComponentPublicInstance, MaybeRefOrGetter, Ref } from 'vue';
 import { useIsHydrated } from '../../../common/hydration';
 import { ownerDocument } from '../../../common/owner';
 import { resolveElement } from '../../../internals/resolveElement';
-import { isInHeldBranch } from '../../../internals/useKeepAliveState';
+import { useKeepAliveState } from '../../../internals/useKeepAliveState';
 import { useRenderElement } from '../../../internals/useRenderElement';
 import type {
   UseRenderElementComponentProps,
@@ -47,7 +47,7 @@ export interface UseFloatingPortalNodeResult extends UseRenderElementReturnValue
   /**
    * Whether `KeepAlive` holds the part. The part gives it to `disabled` of its `Teleport`.
    */
-  deactivated: Readonly<Ref<boolean>>;
+  isHeld: Readonly<Ref<boolean>>;
 }
 
 function isShadowRoot(value: object): value is ShadowRoot {
@@ -95,14 +95,8 @@ export function useFloatingPortalNode(
 
   // A `Teleport` leaves its content in the target when `KeepAlive` deactivates the part. A
   // disabled `Teleport` keeps the content in its own place, and `KeepAlive` takes that place out
-  // of the document. A part that mounts in a held branch gets no `onDeactivated` call.
-  const deactivated = shallowRef(isInHeldBranch());
-  onDeactivated(() => {
-    deactivated.value = true;
-  });
-  onActivated(() => {
-    deactivated.value = false;
-  });
+  // of the document.
+  const { isHeld } = useKeepAliveState();
 
   const { element, elementProps } = useRenderElement('div', params.componentProps, {
     props: (attrs) => [{ id: uniqueId, [attr]: '' }, attrs],
@@ -111,5 +105,5 @@ export function useFloatingPortalNode(
 
   useDismissPortal(element);
 
-  return { element, elementProps, containerElement, deactivated };
+  return { element, elementProps, containerElement, isHeld };
 }

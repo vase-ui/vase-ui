@@ -185,17 +185,7 @@ export interface ResizableRootActions {
 </script>
 
 <script setup lang="ts">
-import {
-  computed,
-  inject,
-  onActivated,
-  onDeactivated,
-  onMounted,
-  onScopeDispose,
-  provide,
-  shallowRef,
-  watch,
-} from 'vue';
+import { computed, inject, onMounted, onScopeDispose, provide, shallowRef, watch } from 'vue';
 import type { Component } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { EMPTY_OBJECT } from '../../common/empty';
@@ -211,7 +201,7 @@ import {
 } from '../../internals/createBaseUIEventDetails';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import type { HTMLProps } from '../../internals/types';
-import { isInHeldBranch } from '../../internals/useKeepAliveState';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useMediaQuery } from '../../unstable-use-media-query';
 import { tabbable } from '../../utils/popups/focus/tabbable';
@@ -336,7 +326,7 @@ const firstSnapshot: ResizableRootLayoutSnapshot = props.defaultLayout ?? EMPTY_
 const registered = shallowRef<readonly ResizablePanelRegistration[]>([]);
 const panels = computed(() =>
   registered.value
-    .filter((panel) => !panel.deactivated.value)
+    .filter((panel) => !panel.isHeld.value)
     .sort((a, b) => a.index.value - b.index.value),
 );
 
@@ -577,9 +567,8 @@ if (process.env.NODE_ENV !== 'production') {
 // that the consumer asked for, so it has no change event.
 let mounted = false;
 // `KeepAlive` takes the panels of a deactivated root out of the list, and gives them back at the
-// activation. The panels are then the same, so the root keeps the ids that it knows. A root that
-// mounts while `KeepAlive` holds it gets no `onDeactivated` call, and its panels are held too.
-let deactivated = isInHeldBranch();
+// activation. The panels are then the same, so the root keeps the ids that it knows.
+const { isHeld } = useKeepAliveState();
 let knownIds = new Set<string>();
 // The panels and the handles, in the order of the document.
 const listItems = shallowRef<readonly Element[]>([]);
@@ -591,7 +580,7 @@ const listItems = shallowRef<readonly Element[]>([]);
 // its entry, so it comes back at its size.
 function syncLayoutWithPanels(map: ReadonlyMap<Element, unknown>) {
   listItems.value = [...map.keys()];
-  if (deactivated) {
+  if (isHeld.value) {
     return;
   }
   const ids = constraints.value.map((panel) => panel.id);
@@ -612,30 +601,26 @@ const list = useCompositeList<{ id?: string }>({
 });
 
 onMounted(() => {
-  if (deactivated) {
+  if (isHeld.value) {
     return;
   }
   mounted = true;
   measure();
 });
 
-onDeactivated(() => {
-  deactivated = true;
-});
-
 // The first activation of a root that mounted while held is its mount. `KeepAlive` runs the
 // `onActivated` hooks from the last part to the first, so the panels are active at this call.
-onActivated(() => {
-  if (!deactivated) {
-    return;
-  }
-  deactivated = false;
-  if (!mounted) {
-    knownIds = new Set(constraints.value.map((panel) => panel.id));
-    mounted = true;
-    measure();
-  }
-});
+watch(
+  isHeld,
+  (held) => {
+    if (!held && !mounted) {
+      knownIds = new Set(constraints.value.map((panel) => panel.id));
+      mounted = true;
+      measure();
+    }
+  },
+  { flush: 'sync' },
+);
 
 function registerPanel(panel: ResizablePanelRegistration) {
   registered.value = [...registered.value, panel];
@@ -668,7 +653,7 @@ const isHydrated = useIsHydrated();
 watch(
   () => (isHydrated.value ? shown.value : undefined),
   (after, before) => {
-    if (after === undefined || before === undefined || deactivated) {
+    if (after === undefined || before === undefined || isHeld.value) {
       return;
     }
     const start = layoutBeforeDrag ?? before;

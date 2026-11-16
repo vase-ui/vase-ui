@@ -1,14 +1,4 @@
-import {
-  inject,
-  onActivated,
-  onBeforeMount,
-  onDeactivated,
-  onMounted,
-  onScopeDispose,
-  provide,
-  toValue,
-  watch,
-} from 'vue';
+import { inject, onBeforeMount, onMounted, onScopeDispose, provide, toValue, watch } from 'vue';
 import type { InjectionKey, MaybeRefOrGetter } from 'vue';
 import {
   getComputedStyle,
@@ -28,7 +18,7 @@ import { useTimeout } from '../../../common/useTimeout';
 import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import type { FloatingUIOpenChangeDetails } from '../../../internals/types';
-import { isInHeldBranch } from '../../../internals/useKeepAliveState';
+import { useKeepAliveState } from '../../../internals/useKeepAliveState';
 import { createAttribute } from '../createAttribute';
 import { isEventTargetWithin, isRootElement } from '../element';
 import { isVirtualClick } from '../event';
@@ -492,7 +482,7 @@ export function useDismiss(
     nextStore.context.events.on('openchange', handleOpenChange);
   }
 
-  let deactivated = isInHeldBranch();
+  const { isHeld } = useKeepAliveState();
   let cleanup: (() => void) | undefined;
 
   function update() {
@@ -501,9 +491,9 @@ export function useDismiss(
     listenToStore();
 
     const open = getStore().select('open');
-    if (deactivated || !open || !isEnabled()) {
+    if (isHeld.value || !open || !isEnabled()) {
       // Reset here, not in the cleanup, which also runs when a source changes mid-gesture.
-      if (!open || deactivated) {
+      if (!open || isHeld.value) {
         resetSession();
         cancelDismissOnEndTimeout.clear();
         compositionTimeout.clear();
@@ -1078,17 +1068,7 @@ export function useDismiss(
     getPositionerElementGetters().add(getPositionerElement);
     update();
   });
-  onDeactivated(() => {
-    deactivated = true;
-    update();
-  });
-  // `onActivated` also runs at the first mount in a `KeepAlive`.
-  onActivated(() => {
-    if (deactivated) {
-      deactivated = false;
-      update();
-    }
-  });
+  watch(isHeld, update, { flush: 'sync' });
   onScopeDispose(() => {
     getPositionerElementGetters().delete(getPositionerElement);
     listenedStore?.context.events.off('openchange', handleOpenChange);

@@ -1,9 +1,7 @@
 import {
   computed,
   inject,
-  onActivated,
   onBeforeMount,
-  onDeactivated,
   onMounted,
   onScopeDispose,
   provide,
@@ -28,7 +26,7 @@ import { createChangeEventDetails } from '../../../internals/createBaseUIEventDe
 import { REASONS } from '../../../internals/reasons';
 import { resolveElement } from '../../../internals/resolveElement';
 import type { FloatingUIOpenChangeDetails } from '../../../internals/types';
-import { isInHeldBranch } from '../../../internals/useKeepAliveState';
+import { useKeepAliveState } from '../../../internals/useKeepAliveState';
 import { createAttribute } from '../createAttribute';
 import { getFloatingFocusElement, isTypeableCombobox, isTypeableElement } from '../element';
 import { isVirtualClick, isVirtualPointerEvent, stopEvent } from '../event';
@@ -427,9 +425,9 @@ export function useFloatingFocusManager(
 
   const getNodeId = () => resolved.value.store.context.positioning?.nodeId;
 
-  // Whether `KeepAlive` holds the popup. The popup keeps its open state.
-  const deactivated = shallowRef(isInHeldBranch());
-  const isDisabled = () => resolved.value.disabled || deactivated.value;
+  // A popup that `KeepAlive` holds keeps its open state.
+  const { isHeld } = useKeepAliveState();
+  const isDisabled = () => resolved.value.disabled || isHeld.value;
 
   // A nested dialog or a menu is in a portal of its own, and a dialog has no node in the popup tree.
   // A focus in such a popup thus is not in `floating`.
@@ -826,7 +824,7 @@ export function useFloatingFocusManager(
 
         // `KeepAlive` takes the popup and usually its reference out of the document. A return of
         // the focus would then go to an older element of the list.
-        if (deactivated.value) {
+        if (isHeld.value) {
           preventReturnFocus = false;
           return;
         }
@@ -904,7 +902,7 @@ export function useFloatingFocusManager(
   );
 
   // The portal renders its guards from this state. `KeepAlive` takes the guards of the portal out of
-  // the document with the popup, so this effect does not read `deactivated`. The same guards then
+  // the document with the popup, so this effect does not read `isHeld`. The same guards then
   // return at the activation. A trigger writes its guard after the popup opens. That guard is the
   // next focusable element, so whether it exists is a source of this effect too.
   effect(
@@ -1399,16 +1397,9 @@ export function useFloatingFocusManager(
   );
 
   onMounted(() => update(readSources()));
+  // `isHeld` is a source, so `update` runs after the DOM update of the `KeepAlive` hook. At the
+  // activation, the portal has put the popup back by then.
   watch(readSources, update, { flush: 'post' });
-
-  // Each hook writes only the flag. The `watch` then runs `update` after the DOM update of the hook.
-  // At the activation, the portal has put the popup back by then.
-  onDeactivated(() => {
-    deactivated.value = true;
-  });
-  onActivated(() => {
-    deactivated.value = false;
-  });
   onScopeDispose(() => {
     for (const item of effects) {
       item.cleanup?.();

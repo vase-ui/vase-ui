@@ -14,7 +14,7 @@ interface KeepAliveInstance {
  * it in `setup`. With no current component, it gives `false` and no warning. Vue reads the same
  * flags before it calls an `onActivated` or `onDeactivated` hook.
  */
-export function isInHeldBranch(): boolean {
+function isInHeldBranch(): boolean {
   for (
     let instance: KeepAliveInstance | null = getCurrentInstance();
     instance;
@@ -43,6 +43,9 @@ export interface KeepAliveState {
 
 /**
  * Follows whether `KeepAlive` holds a part and counts its activations. Call it in `setup`.
+ *
+ * React to a change of `isHeld` with a `watch`. With `flush: 'sync'`, the callback runs in the
+ * `onDeactivated` or `onActivated` hook that changes `isHeld`.
  *
  * An app that mounts in a detached element is not held, because no `KeepAlive` holds it.
  */

@@ -157,22 +157,14 @@ type DragStyles = Record<string, string | undefined>;
 </script>
 
 <script setup lang="ts">
-import {
-  computed,
-  onActivated,
-  onDeactivated,
-  onMounted,
-  onScopeDispose,
-  shallowRef,
-  watch,
-} from 'vue';
+import { computed, onMounted, onScopeDispose, shallowRef, watch } from 'vue';
 import { EMPTY_OBJECT, NOOP } from '../../common/empty';
 import { error } from '../../common/error';
 import { useDialogPortalContext } from '../../dialog/portal/DialogPortalContext';
 import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { isInHeldBranch } from '../../internals/useKeepAliveState';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
 import { FOCUSABLE_POPUP_PROPS } from '../../utils/popups/popupStoreUtils';
@@ -275,13 +267,13 @@ function measureHeight() {
 // `KeepAlive` takes the popup out of the document, and the popup then has no layout. The parts of
 // the popup that read the layout, or that report to the drawer above, stop while it is
 // deactivated.
-const deactivated = shallowRef(isInHeldBranch());
+const { isHeld } = useKeepAliveState();
 
 let clearFrontmostHeight = NOOP;
 function reportFrontmostHeight() {
   clearFrontmostHeight();
   clearFrontmostHeight = NOOP;
-  if (!notifyParentFrontmostHeight || !open.value || deactivated.value) {
+  if (!notifyParentFrontmostHeight || !open.value || isHeld.value) {
     return;
   }
 
@@ -293,7 +285,7 @@ let clearNestedPresence = NOOP;
 function reportNestedPresence() {
   clearNestedPresence();
   clearNestedPresence = NOOP;
-  if (!notifyParentHasNestedDrawer || deactivated.value) {
+  if (!notifyParentHasNestedDrawer || isHeld.value) {
     return;
   }
 
@@ -305,18 +297,11 @@ onMounted(() => {
   reportFrontmostHeight();
   reportNestedPresence();
 });
-watch([open, frontmostHeight, deactivated], reportFrontmostHeight);
-watch([open, transitionStatus, deactivated], reportNestedPresence);
+watch([open, frontmostHeight, isHeld], reportFrontmostHeight);
+watch([open, transitionStatus, isHeld], reportNestedPresence);
 onScopeDispose(() => {
   clearFrontmostHeight();
   clearNestedPresence();
-});
-
-onDeactivated(() => {
-  deactivated.value = true;
-});
-onActivated(() => {
-  deactivated.value = false;
 });
 
 const resolvedInitialFocus = computed(() =>
@@ -474,9 +459,9 @@ const { element, elementProps } = useRenderElement('div', props, {
 });
 
 watch(
-  [element, mounted, nestedDrawerOpen, deactivated],
-  ([popup, isMounted, , isDeactivated], _previous, onCleanup) => {
-    if (isDeactivated) {
+  [element, mounted, nestedDrawerOpen, isHeld],
+  ([popup, isMounted, , held], _previous, onCleanup) => {
+    if (held) {
       return;
     }
 

@@ -85,7 +85,7 @@ function handleFocus(event: FocusEvent) {
   }
 }
 
-const { element, elementProps, containerElement, deactivated } = useFloatingPortalNode({
+const { element, elementProps, containerElement, isHeld } = useFloatingPortalNode({
   container: () => props.container,
   componentProps: props,
   children: true,
@@ -264,7 +264,7 @@ defineExpose({ element });
     v-if="containerElement"
     :ref="setTeleportStart"
     :to="containerElement"
-    :disabled="deactivated"
+    :disabled="isHeld"
   >
     <slot
       v-if="$slots.render"
