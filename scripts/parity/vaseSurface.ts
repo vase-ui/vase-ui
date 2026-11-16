@@ -118,8 +118,6 @@ export interface VaseProject {
   readClass: (match: ExportMatch) => ClassSurface | undefined;
   /** Gives vue-component-meta and the SFC compiler another text for a file. */
   updateFile: (path: string, text: string) => void;
-  /** Discards file overrides and reloads the project from disk. */
-  reload: () => void;
 }
 
 const NULLABLE = ts.TypeFlags.Null | ts.TypeFlags.Undefined;
@@ -219,7 +217,7 @@ export function createVaseProject(tsconfig: string): VaseProject {
   const checker = createChecker(tsconfig, { schema: false });
   const sources = new Map<string, string>();
 
-  // A file update or a reload changes the program, so each read asks for the current one.
+  // The program changes after `updateFile`, so each read asks for the current one.
   const typeChecker = (): ts.TypeChecker => {
     const program = checker.getProgram();
     if (!program) {
@@ -834,11 +832,6 @@ export function createVaseProject(tsconfig: string): VaseProject {
     updateFile(path, text) {
       sources.set(path, text);
       checker.updateFile(path, text);
-    },
-
-    reload() {
-      sources.clear();
-      checker.reload();
     },
   };
 

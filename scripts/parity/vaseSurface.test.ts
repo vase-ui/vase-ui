@@ -49,26 +49,6 @@ const withParts = <T>(from: string, to: string, run: () => T): T =>
 
 const readCreateHandle = () => project.readFunction(exportOf('createHandle'));
 
-test('a reload discards file overrides in the checker and the SFC compiler', () => {
-  const reloaded = createVaseProject(join(FIXTURES, 'tsconfig.json'));
-  const readPopup = () => {
-    const [match] = reloaded.findExports(ENTRY, 'Popup');
-    assert.ok(match);
-    return reloaded.readComponent(match);
-  };
-  const before = readPopup();
-  reloaded.updateFile(
-    POPUP,
-    readFileSync(POPUP, 'utf8').replace(
-      '  name: string;',
-      '  name: string;\n  label?: string | undefined;',
-    ),
-  );
-  assert.equal(readPopup()?.props.has('label'), true);
-  reloaded.reload();
-  assert.deepEqual(readPopup(), before);
-});
-
 test('a function has the JSDoc of its export, its parameters and its return value', () => {
   assert.deepEqual(readCreateHandle(), {
     description: '',

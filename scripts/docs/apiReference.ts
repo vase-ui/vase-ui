@@ -1,3 +1,4 @@
+import { readdirSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { docsFolderOf } from '../parity/checkSurface.ts';
@@ -330,12 +331,24 @@ export function buildOwnApiReference(
   };
 }
 
+/** The path, the modification time and the size of each file and each folder below `folder`. */
+function readDiskState(folder: string): string {
+  return readdirSync(folder, { recursive: true, encoding: 'utf8' })
+    .map((path) => {
+      const stats = statSync(join(folder, path), { bigint: true, throwIfNoEntry: false });
+      return stats ? `${path} ${stats.mtimeNs} ${stats.size}` : path;
+    })
+    .join('\n');
+}
+
 /**
  * Returns a function from a family name to the API reference of the family. The first call makes
- * the project. Without `cache`, each call reloads the source files. With `cache`, the function
- * keeps the reference of each family that it reads. Each later call for that family gives the
- * kept reference. Use `cache` only where the source does not change while the function is in use,
- * such as a build.
+ * the project. Without `cache`, a later call makes the project again when a file or a folder below
+ * `packages/vue/src` has another modification time or another size, or when one was added or
+ * removed. The function does not look at the text of a file, and it reads the files of `parity`
+ * one time. With `cache`, the function keeps the reference of each family that it reads. Each
+ * later call for that family gives the kept reference. Use `cache` only where the source does not
+ * change while the function is in use, such as a build.
  */
 export function createApiReferenceReader(
   root = REPOSITORY_ROOT,
@@ -343,11 +356,17 @@ export function createApiReferenceReader(
 ): (family: string) => ApiReference {
   let project: VaseProject | undefined;
   let parity: { families: FamilyFiles[]; ownComponents: OwnComponentFile[] } | undefined;
+  let diskState: string | undefined;
   const readProject = (): VaseProject => {
-    if (!project) {
+    // The state is from before the project reads the files. An edit between the two reads thus
+    // gives a new project at the next call.
+    const state = cache ? undefined : readDiskState(join(root, VASE_SOURCE_ROOT));
+    // vue-component-meta keeps the text of each file that it read. After its `reload`, an import of
+    // a file that did not exist at the first read still has no file. A new project has neither
+    // fault.
+    if (!project || state !== diskState) {
       project = createVaseProject(join(root, 'packages/vue/tsconfig.build.json'));
-    } else if (!cache) {
-      project.reload();
+      diskState = state;
     }
     return project;
   };

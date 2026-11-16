@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import type { TestContext } from 'node:test';
@@ -33,6 +33,8 @@ const types = readTypesMd(
   readFileSync(join(FIXTURES, 'sample.types.md'), 'utf8'),
 );
 
+// The copy is in `node_modules` of the repository. The fixtures thus find `vue` as the fixture
+// folder does, and no tool reads the copy.
 function copyFixtures(context: TestContext): string {
   const root = mkdtempSync(join(REPOSITORY_ROOT, 'node_modules', '.api-reference-'));
   context.after(() => rmSync(root, { recursive: true, force: true }));
@@ -555,16 +557,9 @@ test('the reader gives the reference of an own component from its record, with n
   );
 });
 
-test('the reader with `cache` gives the reference of the first read for each later read of a family', (context) => {
-  const root = copyFixtures(context);
-  const popup = join(root, 'packages/vue/src/sample/popup/SamplePopup.vue');
-  const readOnce = createApiReferenceReader(root, { cache: true });
-  const first = readOnce('sample');
-  writeFileSync(
-    popup,
-    readFileSync(popup, 'utf8').replace('The name of the popup.', 'The edited name of the popup.'),
-  );
-  assert.equal(readOnce('sample'), first);
+test('the reader with `cache` gives the reference of the first read for each later read of a family', () => {
+  const readOnce = createApiReferenceReader(FIXTURES, { cache: true });
+  assert.equal(readOnce('sample'), readOnce('sample'));
 });
 
 test('the reader without `cache` makes the reference of a family again for each read', () => {
@@ -662,6 +657,46 @@ test('the reader without `cache` reads edited imported TypeScript files from dis
   );
   writeFileSync(parts, source);
   assert.deepEqual(readHandle(), before);
+});
+
+test('the reader without `cache` reads a new file that an earlier edit imports', (context) => {
+  const root = copyFixtures(context);
+  const parts = join(root, 'packages/vue/src/sample/index.parts.ts');
+  const readAgain = createApiReferenceReader(root);
+  const readHandleProperties = () =>
+    readAgain('sample')
+      .types.find(({ name }) => name === 'Sample.Handle')
+      ?.properties.map(({ name }) => name);
+  writeFileSync(
+    parts,
+    `import type { Toggle } from './toggle';\n${readFileSync(parts, 'utf8').replace(
+      'export interface Handle {',
+      'export interface Handle extends Toggle {',
+    )}`,
+  );
+  assert.deepEqual(readHandleProperties(), ['close', 'open']);
+  writeFileSync(
+    join(root, 'packages/vue/src/sample/toggle.ts'),
+    'export interface Toggle {\n  toggle: () => void;\n}\n',
+  );
+  assert.deepEqual(readHandleProperties(), ['close', 'open', 'toggle']);
+});
+
+test('the reader without `cache` keeps its project while each file keeps its modification time and its size', (context) => {
+  const root = copyFixtures(context);
+  const popup = join(root, 'packages/vue/src/sample/popup/SamplePopup.vue');
+  const source = readFileSync(popup, 'utf8');
+  const time = new Date(0);
+  utimesSync(popup, time, time);
+  const readAgain = createApiReferenceReader(root);
+  const readName = () =>
+    readAgain('sample')
+      .parts.find(({ name }) => name === 'Sample.Popup')
+      ?.props.find(({ name }) => name === 'name')?.description;
+  assert.equal(readName(), 'The name of the popup.');
+  writeFileSync(popup, source.replace('The name of the popup.', 'The text of the popup.'));
+  utimesSync(popup, time, time);
+  assert.equal(readName(), 'The name of the popup.');
 });
 
 test('the reader throws and says what to do for a family whose extract has no types.md', () => {
