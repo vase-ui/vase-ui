@@ -51,6 +51,7 @@ export {
   hydrate,
   hydrateAfter,
   mockNavigationType,
+  mockPageBeforeLoad,
   recordInputEvents,
 } from './hydration';
 export { takeReportedMessages } from './reportedMessages';
