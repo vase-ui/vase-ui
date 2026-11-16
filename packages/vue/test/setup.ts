@@ -53,14 +53,67 @@ if (typeof document !== 'undefined') {
   Element.prototype.requestPointerLock = () =>
     Promise.reject(new DOMException('The test setup refuses a pointer lock.', 'NotSupportedError'));
 
+  // A test that times out in a command of `userEvent` ends while the browser still does the
+  // command. Without a wait for the command, its keys and pointer moves reach the next test. A key
+  // that it holds also stays down there, because Vitest releases before each test only the keys of
+  // the commands that returned. The wrapper below awaits each command, so Vitest does not fail a
+  // test that does not await a call. ESLint refuses such a call when it has no `void`.
+  //
+  // After a time-out, the function of the test continues when its command ends. When the command
+  // ends after the hook below starts, the wrapper rejects, so the next steps of the function do not
+  // run in the next test. The `onTestFinished` hooks of the test run before that hook, so a release
+  // in such a hook does not reject.
+  const runningCommands = new Set<Promise<void>>();
+  let endedTestCount = 0;
+  for (const name of [
+    'click',
+    'dblClick',
+    'tripleClick',
+    'wheel',
+    'pointer',
+    'selectOptions',
+    'keyboard',
+    'type',
+    'clear',
+    'tab',
+    'hover',
+    'unhover',
+    'upload',
+    'copy',
+    'cut',
+    'paste',
+    'fill',
+    'dragAndDrop',
+  ] as const) {
+    const command: (...args: never[]) => Promise<void> = userEvent[name].bind(userEvent);
+    Object.defineProperty(userEvent, name, {
+      async value(...args: never[]) {
+        const endedTestCountAtCall = endedTestCount;
+        const running = command(...args);
+        runningCommands.add(running);
+        try {
+          await running;
+        } finally {
+          runningCommands.delete(running);
+        }
+        if (endedTestCount !== endedTestCountAtCall) {
+          throw new Error(`The test ended before the command userEvent.${name} ended.`);
+        }
+      },
+    });
+  }
+
   // A test in a browser ends with one wait, so that the next test starts in a new task. Without the
   // wait, a test that ends in a `ResizeObserver` callback gives the next test the loop error of the
   // browser. Vitest runs the `onTestFinished` hooks after the `afterEach` hooks and in reverse
   // order. This hook is the second that a test registers, after the hook of
-  // `failOnReportedMessages`. The pointer move and the wait then run after each unmount and before
-  // the check of the messages.
+  // `failOnReportedMessages`. The wait for the commands, the pointer move and the wait for a timer
+  // then run after each unmount and before the check of the messages. A command can put the pointer
+  // in the page, so the move comes after the wait for the commands.
   beforeEach(() => {
     onTestFinished(async () => {
+      endedTestCount += 1;
+      await Promise.allSettled(runningCommands);
       if (isPointerInPage) {
         isPointerInPage = false;
         // A point outside the page.
