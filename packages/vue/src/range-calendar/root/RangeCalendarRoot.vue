@@ -123,7 +123,7 @@ defineSlots<{
 }>();
 
 const selection = useRangeSelection(props, emit);
-const { label, focus, ...controller } = useCalendarRoot({
+const { focus, ...controller } = useCalendarRoot({
   part: 'RangeCalendar.Root',
   props,
   emit,
@@ -139,6 +139,7 @@ const state = computed<CalendarState>(() => ({
 }));
 const rootState = computed<RangeCalendarRootState>(() => ({
   ...state.value,
+  view: controller.view.value,
   multipleMonths: controller.pages.value.length > 1,
   navigationDirection: controller.navigationDirection.value,
   broadcastCalendar: props.broadcastCalendar === true,
@@ -156,7 +157,7 @@ const { element, elementProps } = useRenderElement('div', props, {
       role: 'group',
       // The label that the consumer gives replaces the name of the month. An `aria-labelledby` of
       // `null` gives no label, so the root keeps the name of the month.
-      'aria-label': attrs['aria-labelledby'] == null ? label.value : undefined,
+      'aria-label': attrs['aria-labelledby'] == null ? controller.label.value : undefined,
     },
     attrs,
   ],

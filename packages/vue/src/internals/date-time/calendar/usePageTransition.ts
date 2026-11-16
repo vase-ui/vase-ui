@@ -15,12 +15,16 @@ export type NavigationDirection = 'previous' | 'next' | 'none';
  * has another first day of the week, or another calendar, than the locale of a server. It is not a
  * move of the page, so it has no side and no page leaves.
  *
+ * Only the pages of days move, so `isEnabled` is `false` while the grid shows months or years. No
+ * page leaves then, because no `Calendar.Month` is there to end its animation. The side is `none`.
+ *
  * The watcher is synchronous, so a page is in `renderedPages` in the render that removes it from
  * `pages`.
  */
 export function usePageTransition(
   pages: ComputedRef<CalendarPage[]>,
   layoutKey: ComputedRef<string>,
+  isEnabled: ComputedRef<boolean>,
 ) {
   const navigationDirection = shallowRef<NavigationDirection>('none');
   const leaving = shallowRef<CalendarPage[]>([]);
@@ -31,7 +35,7 @@ export function usePageTransition(
     (next, previous) => {
       const isSameLayout = layoutKey.value === lastLayoutKey;
       lastLayoutKey = layoutKey.value;
-      if (!isSameLayout) {
+      if (!isSameLayout || !isEnabled.value) {
         leaving.value = [];
         return;
       }
@@ -46,6 +50,17 @@ export function usePageTransition(
       leaving.value = [...leaving.value, ...previous].filter(
         (page) => !shown.has(getPageKey(page)),
       );
+    },
+    { flush: 'sync' },
+  );
+
+  watch(
+    isEnabled,
+    (enabled) => {
+      if (!enabled) {
+        leaving.value = [];
+        navigationDirection.value = 'none';
+      }
     },
     { flush: 'sync' },
   );

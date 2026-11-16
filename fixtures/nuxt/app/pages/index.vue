@@ -22,6 +22,7 @@
       <li><NuxtLink to="/tabs">Tabs</NuxtLink></li>
       <li><NuxtLink to="/input">Input</NuxtLink></li>
       <li><NuxtLink to="/otp-field">OTP Field</NuxtLink></li>
+      <li><NuxtLink to="/calendar">Calendar</NuxtLink></li>
       <li><NuxtLink to="/date-field">Date Field</NuxtLink></li>
       <li><NuxtLink to="/number-field">Number Field</NuxtLink></li>
       <li><NuxtLink to="/providers">Providers</NuxtLink></li>

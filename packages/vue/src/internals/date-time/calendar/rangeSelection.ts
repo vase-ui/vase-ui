@@ -1,4 +1,4 @@
-import { computed, shallowRef } from 'vue';
+import { computed, shallowRef, watch } from 'vue';
 import type { ComputedRef } from 'vue';
 import { useControlled } from '../../../common/useControlled';
 import { createChangeEventDetails } from '../../createBaseUIEventDetails';
@@ -60,6 +60,8 @@ export interface RangeDayState {
 }
 
 export interface RangeSelection extends CalendarSelection {
+  /** The ends of the range that are set: none, the first, or both. */
+  values: ComputedRef<readonly DateValue[]>;
   /**
    * The range that the grid shows: the value, or the range that the next press or the end of a drag
    * makes while a range is in progress.
@@ -172,6 +174,20 @@ export function useRangeSelection(
   });
 
   const values = computed(() => value.value.filter((end): end is DateValue => end !== null));
+  const lastValue = shallowRef<DateValue>();
+  watch(
+    () => values.value[0],
+    (first) => {
+      if (first) {
+        lastValue.value = first;
+      }
+    },
+    { immediate: true, flush: 'sync' },
+  );
+  // The start, else the end, else an end of `defaultValue`, else the last value.
+  const template = computed(
+    () => values.value[0] ?? props.defaultValue?.[0] ?? props.defaultValue?.[1] ?? lastValue.value,
+  );
   // The range of a value with two ends, in the order of the calendar.
   const committed = computed<DayRange | null>(() => {
     const [first, second] = value.value;
@@ -425,6 +441,7 @@ export function useRangeSelection(
 
   return {
     values,
+    template,
     multiselectable: computed(() => true),
     isSelected,
     press,
