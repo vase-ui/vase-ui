@@ -1348,6 +1348,8 @@ describe('<Menubar />', () => {
         // Continue hovering to the view trigger
         const viewTrigger = screen.getByTestId('view-trigger');
         await userEvent.hover(viewTrigger);
+        // A focus out of a trigger starts a 0 ms timer that must not close the menu.
+        await wait(0);
 
         await waitFor(() => {
           expect(screen.getByTestId('view-menu')).not.toBe(null);

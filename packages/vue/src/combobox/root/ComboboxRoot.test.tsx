@@ -41,6 +41,7 @@ import {
   recordInputEvents,
   renderOnServer,
   screen,
+  wait,
   waitFor,
   waitForLaterMillisecond,
   waitSingleFrame,
@@ -7270,6 +7271,8 @@ describe('<Combobox.Root />', () => {
         await screen.findByRole('listbox');
 
         await waitSingleFrame();
+        // A lock comes in a 0 ms timer after the open.
+        await wait(0);
 
         expect(isScrollLocked(trigger.ownerDocument)).toBe(false);
       });
