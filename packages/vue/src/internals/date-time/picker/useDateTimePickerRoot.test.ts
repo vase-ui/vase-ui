@@ -190,17 +190,19 @@ describe('useDateTimePickerRoot with a value that can be empty', () => {
 
   function createRangePicker(options: { value?: Range; defaultValue?: Range } = {}) {
     const value = shallowRef(options.value);
-    const picker = useDateTimePickerRoot<Range, Details>({
-      part: 'RangePicker',
-      value,
-      defaultValue: () => options.defaultValue,
-      fallback: ['fallback', 'fallback'],
-      closeOnSelect: () => undefined,
-      hasTime: () => false,
-      isEmpty,
-      valueChange: vi.fn(),
-      updateValue: vi.fn(),
-    });
+    const picker = runInSetup(() =>
+      useDateTimePickerRoot<Range, Details>({
+        part: 'RangePicker',
+        value,
+        defaultValue: () => options.defaultValue,
+        fallback: ['fallback', 'fallback'],
+        closeOnSelect: () => undefined,
+        hasTime: () => false,
+        isEmpty,
+        valueChange: vi.fn(),
+        updateValue: vi.fn(),
+      }),
+    );
     return { picker, value };
   }
 
