@@ -40,6 +40,7 @@ export { screen, within } from './queries';
 export { waitFor } from './waitFor';
 export { fireEvent } from './fireEvent';
 export { flushMicrotasks } from './flushMicrotasks';
+export { getFocusableUnderAriaHidden } from './getFocusableUnderAriaHidden';
 export { createHeldBranch } from './heldBranch';
 export { cloneElement } from './cloneElement';
 export { createDescribe } from './createDescribe';
