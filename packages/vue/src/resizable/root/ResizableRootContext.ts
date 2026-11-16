@@ -19,8 +19,9 @@ export interface ResizablePanelRegistration {
    */
   id: ComputedRef<string>;
   /**
-   * The id that a handle names in `aria-controls`: `id` before the mount, the `id` of the panel
-   * element from the mount on.
+   * The id that a handle names in `aria-controls`: `id` before the mount, and the `id` of the panel
+   * element from the mount on. It is `undefined` after the mount while the `id` of the element is
+   * empty.
    */
   referencedId: ComputedRef<string | undefined>;
   /**

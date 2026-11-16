@@ -260,6 +260,7 @@ watch([highlighted, element], ([isHighlighted, item], _previous, onCleanup) => {
   }
   store.set('highlightedItem', item);
   onCleanup(() => {
+    // The next highlighted item can write its element first.
     if (toRaw(store.state).highlightedItem === item) {
       store.set('highlightedItem', null);
     }

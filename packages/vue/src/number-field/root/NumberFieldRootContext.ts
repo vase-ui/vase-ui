@@ -14,8 +14,9 @@ export interface NumberFieldRootContext {
   maxWithDefault: ComputedRef<number>;
   id: ComputedRef<string>;
   /**
-   * The id that a stepper names in `aria-controls`: `id` before the mount, the `id` of the input
-   * element from the mount on, and `undefined` while there is no input element.
+   * The id that a stepper names in `aria-controls`: `id` before the mount, and the `id` of the
+   * input element from the mount on. It is `undefined` after the mount while there is no input
+   * element, and while its `id` is empty.
    */
   inputId: ComputedRef<string | undefined>;
   form: ComputedRef<string | undefined>;
