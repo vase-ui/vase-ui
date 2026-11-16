@@ -545,6 +545,11 @@ describe('useHoverTriggerInteraction', () => {
             triggerElement: refs.reference,
             ...options,
           });
+          // Each trigger has its own composable, as each trigger part has.
+          const secondElement = shallowRef<Element | null>(null);
+          const secondHoverProps = secondTrigger
+            ? useHoverTriggerInteraction(store, { triggerElement: secondElement, ...options })
+            : undefined;
           const register = (id: string) => (node: unknown) => {
             if (node) {
               store.context.triggerElements.add(id, node as Element);
@@ -568,8 +573,11 @@ describe('useHoverTriggerInteraction', () => {
                   id="second"
                   data-testid="second"
                   style={{ ...BOX, left: '0px', top: '150px' }}
-                  {...hoverProps}
-                  ref={register('second')}
+                  {...secondHoverProps}
+                  ref={(node) => {
+                    register('second')(node);
+                    secondElement.value = node as Element | null;
+                  }}
                 />
               )}
               {open.value && (

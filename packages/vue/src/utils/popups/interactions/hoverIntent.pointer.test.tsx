@@ -1,0 +1,117 @@
+import { describe, expect, it, vi } from 'vitest';
+import { userEvent } from 'vitest/browser';
+import { createRenderer, isJSDOM, screen, waitFor, waitForPositioned } from '#test-utils';
+import { REASONS } from '../../../internals/reasons';
+import * as Menu from '../../../menu/index.parts';
+import * as Popover from '../../../popover/index.parts';
+
+// The cases move the real pointer. A pointer event of the test is trusted, and its `relatedTarget`
+// is the element that the browser finds under the pointer.
+
+const TRIGGER_STYLE = { position: 'absolute', top: '20px', width: '80px', height: '24px' } as const;
+
+function center(element: Element) {
+  const rect = element.getBoundingClientRect();
+  return { x: Math.round(rect.left + rect.width / 2), y: Math.round(rect.top + rect.height / 2) };
+}
+
+describe.skipIf(isJSDOM)('HoverIntent with a real pointer', () => {
+  const { render } = createRenderer();
+
+  it('VUE-94: moves a menu to the next hover trigger with no close', async () => {
+    const onOpenChange = vi.fn();
+    const handle = Menu.createHandle<number>();
+    await render(
+      <div style={{ position: 'relative', height: '200px' }}>
+        <Menu.Trigger
+          handle={handle}
+          payload={1}
+          openOnHover
+          delay={0}
+          style={{ ...TRIGGER_STYLE, left: '20px' }}
+        >
+          Trigger 1
+        </Menu.Trigger>
+        <Menu.Trigger
+          handle={handle}
+          payload={2}
+          openOnHover
+          delay={0}
+          style={{ ...TRIGGER_STYLE, left: '100px' }}
+        >
+          Trigger 2
+        </Menu.Trigger>
+        <Menu.Root handle={handle} onOpenChange={onOpenChange}>
+          {{
+            default: ({ payload }: { payload: number | undefined }) => (
+              <Menu.Portal>
+                <Menu.Positioner data-testid="positioner">
+                  <Menu.Popup data-testid="popup">
+                    <Menu.Item data-testid="content">{payload}</Menu.Item>
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            ),
+          }}
+        </Menu.Root>
+      </div>,
+    );
+    const trigger2 = screen.getByRole('button', { name: 'Trigger 2' });
+
+    await userEvent.hover(screen.getByRole('button', { name: 'Trigger 1' }));
+    await waitForPositioned(screen.getByTestId('positioner'));
+    const popup = screen.getByTestId('popup');
+    onOpenChange.mockClear();
+
+    await userEvent.pointer({ coords: center(trigger2) });
+    await waitFor(() => {
+      expect(screen.getByTestId('content').textContent).toBe('2');
+    });
+
+    expect(onOpenChange.mock.calls).toEqual([
+      [true, expect.objectContaining({ reason: REASONS.triggerHover, trigger: trigger2 })],
+    ]);
+    expect(screen.getByTestId('popup')).toBe(popup);
+  });
+
+  it('VUE-94: closes a popover when the pointer moves to a trigger that does not open on hover', async () => {
+    const onOpenChange = vi.fn();
+    const handle = Popover.createHandle();
+    await render(
+      <div style={{ position: 'relative', height: '200px' }}>
+        <Popover.Trigger
+          handle={handle}
+          openOnHover
+          delay={0}
+          style={{ ...TRIGGER_STYLE, left: '20px' }}
+        >
+          Trigger 1
+        </Popover.Trigger>
+        <Popover.Trigger handle={handle} style={{ ...TRIGGER_STYLE, left: '100px' }}>
+          Trigger 2
+        </Popover.Trigger>
+        <Popover.Root handle={handle} onOpenChange={onOpenChange}>
+          <Popover.Portal>
+            <Popover.Positioner data-testid="positioner">
+              <Popover.Popup data-testid="popup">Content</Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>
+      </div>,
+    );
+
+    await userEvent.hover(screen.getByRole('button', { name: 'Trigger 1' }));
+    await waitForPositioned(screen.getByTestId('positioner'));
+    const popup = screen.getByTestId('popup');
+
+    await userEvent.pointer({ coords: center(screen.getByRole('button', { name: 'Trigger 2' })) });
+
+    await waitFor(() => {
+      expect(popup).not.toBeInTheDocument();
+    });
+    expect(onOpenChange).toHaveBeenLastCalledWith(
+      false,
+      expect.objectContaining({ reason: REASONS.triggerHover }),
+    );
+  });
+});

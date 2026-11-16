@@ -78,5 +78,37 @@ describe('HoverIntent', () => {
       secondIntent.restoreOutsidePointerEvents();
       expect(readPointerEvents(second)).toEqual(['', '', '']);
     });
+
+    describe('VUE-94: the hover triggers of the popup', () => {
+      it('keep their pointer events while the popup blocks the scope element', () => {
+        const elements = createElements();
+        const intent = createIntent();
+        const before = document.createElement('button');
+        const after = document.createElement('button');
+        intent.addHoverTrigger(before);
+
+        intent.blockOutsidePointerEvents(elements);
+        intent.addHoverTrigger(after);
+        expect([before.style.pointerEvents, after.style.pointerEvents]).toEqual(['auto', 'auto']);
+
+        intent.removeHoverTrigger(after);
+        expect(after.style.pointerEvents).toBe('');
+
+        intent.restoreOutsidePointerEvents();
+        expect(before.style.pointerEvents).toBe('');
+      });
+
+      it('keep a pointer-events value of their own', () => {
+        const intent = createIntent();
+        const trigger = document.createElement('button');
+        trigger.style.pointerEvents = 'none';
+        intent.addHoverTrigger(trigger);
+
+        intent.blockOutsidePointerEvents(createElements());
+        intent.restoreOutsidePointerEvents();
+
+        expect(trigger.style.pointerEvents).toBe('none');
+      });
+    });
   });
 });
