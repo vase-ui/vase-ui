@@ -2653,7 +2653,7 @@ A family that Base UI documents in `docs/src/app/(docs)/react/utils/`, such as `
 - A Base UI page can also end another heading of its API reference with `[New]` or `[Preview]`, such as the heading of a function. The extract records the word. The page of the site writes that heading, so the reference cannot show the badge. The site build and `pnpm test:docs` then fail, and the message says what to do.
 - The column Arguments of the table Events shows the arguments of an event as the type literal of `defineEmits` writes them, such as `[open: boolean, eventDetails: DialogRootChangeEventDetails]`. The type text of `vue-component-meta` can lose the name of an alias, or give the name of another alias of the same type.
 - The table Events lists the events in the sequence of `defineEmits`, not in the order of `vue-component-meta`.
-- The column Slot props of the table Slots lists the props of a slot in the sequence of their declaration. The properties that an `Omit` or a `Pick` copies from one interface also keep that sequence.
+- The column Slot props of the table Slots lists the props of a slot in the sequence of their declaration. The properties that an `Omit` or a `Pick` copies from one interface or type literal also keep that sequence.
 - The description of an event is its JSDoc in `defineEmits`. Write a JSDoc for each event, `update:x` included.
 - `pnpm test:docs` fails when a prop on a family page has no type. It also fails when an event on a family page has no type or no description.
 - `vue-component-meta` leaves out a prop with the `on` name of an emit, such as `onFormSubmit` of `Form`. The reference reads the type and the JSDoc of such a prop from its declaration. [Other callbacks](#other-callbacks) gives that pattern.
