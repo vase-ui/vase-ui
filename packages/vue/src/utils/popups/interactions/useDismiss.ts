@@ -101,6 +101,8 @@ function hostsPopup(target: EventTarget) {
 interface DismissParent {
   markInsideComponentTree(): void;
   markInsidePortal(portal: Element): void;
+  markPressStartedInside(event: PointerEvent | MouseEvent): void;
+  markInsidePressStartPrevented(event: PointerEvent | MouseEvent): void;
   handleKeydown(event: KeyboardEvent): void;
 }
 
@@ -387,6 +389,8 @@ export function useDismiss(
   provide(DismissParentContext, {
     markInsideComponentTree,
     markInsidePortal,
+    markPressStartedInside,
+    markInsidePressStartPrevented,
     handleKeydown(event) {
       if (!isEventTargetWithin(event, getStore().select('positionerElement'))) {
         handleFloatingKeydown(event);
@@ -394,16 +398,27 @@ export function useDismiss(
     },
   });
 
+  // The inside marker expires in its timer before the release of a held press. The record of the
+  // press start lasts until the release, so each popup above a child popup needs it too. A drag
+  // from a nested popover to an outside element thus closes no popover above it (`VUE-4`).
   function markPressStartedInside(event: PointerEvent | MouseEvent) {
+    parent?.markPressStartedInside(event);
     if (!getStore().select('open') || !isEnabled() || event.button !== 0) {
       return;
     }
 
     const target = getTarget(event) as Element | null;
+    const nodeId = getStore().context.positioning?.nodeId;
+    const insideChild =
+      tree.value &&
+      getNodeChildren(tree.value.nodesRef.value, nodeId).some((node) =>
+        contains(node.context?.elements.floating, target),
+      );
 
-    // Only treat presses that start within the floating DOM subtree as inside.
-    // This avoids suppressing parent dismissal when interacting with nested portals.
-    if (!contains(getStore().select('positionerElement'), target)) {
+    // The release check uses this popup tree, so the start uses the same boundary. A child popup
+    // of another family has no node in this tree. A record of its press would leave a suppression
+    // after a release in that child.
+    if (!contains(getStore().select('positionerElement'), target) && !insideChild) {
       return;
     }
 
@@ -414,6 +429,9 @@ export function useDismiss(
   }
 
   function markInsidePressStartPrevented(event: PointerEvent | MouseEvent) {
+    // A prevented press can produce no click. Without this state, the suppression of a popup above
+    // stays after the release.
+    parent?.markInsidePressStartPrevented(event);
     if (!getStore().select('open') || !isEnabled()) {
       return;
     }
