@@ -81,10 +81,9 @@ The site imports the built package. Run `pnpm build` before `pnpm docs:typecheck
 - `tailwindcss` and `@tailwindcss/vite` have the same exact version. The plugin depends on that exact version of `tailwindcss`, so another version in `docs/package.json` installs a second copy. `packages/vue/package.json` has the plugin too, because `vitest.config.ts` loads it. The job `stage` installs `packages/vue`, so it also installs the plugin, in a step that can get an OIDC token. No package of the plugin tree has an install script.
 - `docs/demos/tailwind.css` nests the import of `tailwindcss/preflight.css` and `@tailwind utilities` in a style rule. The Tailwind documentation does not describe that form. The style sheet case of `packages/vue/test/demos.test.tsx` fails when a release of `tailwindcss` drops it.
 - The test `scripts/docs/demoClassRules.test.ts` calls `compile` of `tailwindcss`, and it fails when a release changes that function.
-- The workspace denies the install script of `esbuild` with the `allowBuilds` entry `esbuild: false`. The release job `stage` also installs `esbuild`, as an optional peer of `vite` in `packages/vue`. That job can get an OIDC token. Keep the entry `false`.
+- The workspace denies the install script of `esbuild` with the `allowBuilds` entry `esbuild: false`. The release job `stage` also installs `esbuild`, as an optional peer of `vite` in `packages/vue`. That job can get an OIDC token.
 - The workspace also denies the install script of `vue-demi` with the entry `vue-demi: false`. `@tanstack/vue-form` of the docs depends on `vue-demi` through `@tanstack/vue-store`. The script only selects the build for Vue 2 or for Vue 3, and the package ships the build for Vue 3.
 - The lowest version of Vue that the package supports is 3.5.12. Before that version, `useId` can give different ids on the server and in the browser below a component that has `onServerPrefetch` ([vuejs/core#12128](https://github.com/vuejs/core/pull/12128)).
-- The peer range in `packages/vue/package.json`, the job `test-vue-floor` of CI and `docs/quick-start.md` hold that version. Change them together. The job installs that version and runs the projects `node` and `chromium`.
 - When you change the version of `vitest`, search the `dist` folder of the new version for `VITEST_CHROMIUM_GC_DISK_THRESHOLD_GB`. When the new version does not read the variable, find another way to collect the garbage of Chromium after each test file. [Where a test runs](#where-a-test-runs) gives the reason.
 - When a release of `vitest` keeps the modules in the cache of the browser ([vitest-dev/vitest#11914](https://github.com/vitest-dev/vitest/pull/11914)), delete the variable from `.github/workflows/ci.yml`.
 - `segmentLayout.node.test.ts` makes the layouts of `my`, `ksh` and `sc` in a child process of the Node.js that runs Vitest. When `.node-version` names a release with the correction of [nodejs/node#67076](https://github.com/nodejs/node/issues/67076), `my` gets the order and the Japanese era names of its own format. Both cases of the file then fail. Change the cases, the section "Servers" of `docs/handbook/dates-and-times.md` and the section "Server render" of `docs/components/date-field.md`.
@@ -185,8 +184,6 @@ Vase UI can add a component that Base UI does not have. This is a component of V
 - Internal names change `base-ui` to `vase-ui`: `data-vase-ui-*`, `event.preventVaseUIHandler()`, `VASE_UI_ANIMATIONS_DISABLED`, `new Event('vase-ui')`, the class `vase-ui-disable-scrollbar`.
 - A page can then hold the two libraries, and they do not share markers.
 - Messages start with `Vase UI:`.
-- Upstream imports `packages/utils/src` as `@base-ui/utils/<file>`. Import `src/common/<file>` by a relative path, such as `../common/owner`.
-- `common` is not an entry point, so the built package has no path `@vase-ui/vue/common/<file>`.
 
 ## Entry points
 
@@ -518,7 +515,6 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - A consumer writes `v-model:x`, such as `v-model:open`. There is no `modelValue` alias.
 - One composable does this: `useControlled({ controlled: () => props.x, default: () => props.defaultX, name })`.
 - `default` is a getter. A development build then shows a warning when the default of an uncontrolled part changes.
-- Do not use `defineModel`. It writes the value before a parent can cancel the change.
 - A prop can take more forms than its event gives, as `layout` of `Resizable.Root` does. The JSDoc of such a prop gives each form, and the form that the event gives.
 - `Accordion.Root`, `ToggleGroup` and `CheckboxGroup` take `null` in `value` and `defaultValue`, and read it as an empty array (`VUE-114`). A `null` `value` keeps the part controlled.
 - With `multiple`, `Select.Root` and `Combobox.Root` read `null` in `value` and `defaultValue` as an empty array (`VUE-115`). A `null` `value` keeps the part controlled. Without `multiple`, `null` stays a value, because an item can have the value `null`.
@@ -610,9 +606,8 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - The build has the target `baseline-widely-available`. tsdown gives that name a fixed list: Chrome 111, Edge 111, Firefox 114, Safari 16.4 and iOS 16.4. The build changes only the syntax for that list. It adds no polyfill.
 - In the source of the package, use only a JavaScript built-in that each browser of that list has. The compatibility table on the MDN page of the built-in gives the versions. `Temporal` is the exception: the bullet below gives its rule.
 - `Temporal` is the one API above ES2024 that the source needs. `weekInfo` of `internals/date-time/format.ts` also reads `getWeekInfo` of `Intl.Locale`, but only where the engine has it. Only the date and time families and `internals/date-time` use it. Its types come from `lib.esnext.temporal`, which the Temporal reference line of [Entry points](#entry-points) loads. That line is the first line of `internals/date-time/temporal.ts`.
-- Each browser of the list has `Array.prototype.at`, `Array.prototype.findLast`, `Object.hasOwn` and `String.prototype.replaceAll`. Firefox 114 does not have the array methods `toSorted`, `toReversed`, `toSpliced` and `with`. No browser of the list has `Map.groupBy`, `Object.groupBy` or `Promise.withResolvers`.
+- Each browser of the list has `Array.prototype.at`, `Array.prototype.findLast`, `Object.hasOwn` and `String.prototype.replaceAll`. Firefox 114 does not have the array methods `toSorted`, `toReversed`, `toSpliced` and `with`.
 - ESLint refuses `toSorted`, `toReversed` and `toSpliced` in the source of the package. It does not refuse `with`, because the source calls the method `with` of `Temporal`.
-- Do not use `using` or `Symbol.dispose`.
 - The scripts and the tests are not in the built package. A file that runs in Node.js, such as a script or a `.node.test` file, can use each built-in of the Node.js version in `.node-version`. A test file that runs in the browsers can use only a built-in that each of the three engines of Playwright has. In both cases, the `lib` of the project must have the types of the built-in.
 
 ### ESLint
@@ -649,7 +644,6 @@ A disable comment has the form `// eslint-disable-next-line <rule> -- <reason>`.
 - Each part is an SFC with `<script setup lang="ts">`.
 - The exported types of a part are in a `<script lang="ts">` block of the same file.
 - Logic is in `.ts` composables.
-- `vue` is a peer dependency. The package can have only two run-time dependencies: `@floating-ui/vue` and `@floating-ui/utils`.
 - `motion-v` is a development dependency of the package and of the docs. The source does not import it. `pnpm check:package` fails when a public entry imports it.
 - `temporal-polyfill` is a development dependency of the package and of the docs. The tests and the site load it, and the source does not import it. `pnpm check:package` fails when a public entry imports it.
 - `packages/vue/test/motion-v.test.tsx` shows that a popup waits for the exit animation of a `motion-v` component.
@@ -658,7 +652,7 @@ A disable comment has the form `// eslint-disable-next-line <rule> -- <reason>`.
 - A middleware of `@floating-ui/react-dom` takes a list of dependencies. A middleware of `@floating-ui/vue` takes none. Make the list of middleware in a `computed`. Read in it each option that must cause a new position.
 - Keep the range of `@floating-ui/utils` at the release that Base UI resolves at the tracked commit. Choose the range of `@floating-ui/vue` so that it uses the `@floating-ui/dom` of the `@floating-ui/react-dom` that Base UI resolves. The middleware is then the same: `@floating-ui/vue` 2.0 and `@floating-ui/react-dom` 2.1 depend on `@floating-ui/dom` 1.8.
 - Do not add a `minimumReleaseAgeExclude` line or an `allowBuilds` entry to `pnpm-workspace.yaml` without a comment that gives the reason.
-- `useAnchorPositioning` of `src/internals` is the only caller of `useFloating` of `@floating-ui/vue`. A positioner part of a popup family calls `usePopupPositioner` in `setup`. `test/fixtures/PopupPositionerPart.vue` is the model. See [Popup positioning](#popup-positioning).
+- A positioner part of a popup family calls `usePopupPositioner` in `setup`. `test/fixtures/PopupPositionerPart.vue` is the model. See [Popup positioning](#popup-positioning).
 - To add or change a dependency of the package, run `pnpm --filter @vase-ui/vue add <name>@<range>`. Then commit `pnpm-lock.yaml`. Do not edit the lockfile. `THIRD_PARTY_NOTICES.md` names each run-time dependency.
 - When two families import each other, move the shared context or constant to `src/internals`.
 - `MenubarContext` and `ContextMenuRootContext` are in `src/internals`, because Menu reads them and Menubar and Context Menu render Menu.
@@ -702,7 +696,6 @@ A function component that calls `h` is not an SFC, so Vapor mode does not compil
 - The client render has the script element in the place of the server element, and Vue does not compare `innerHTML`. The script element thus needs no `data-allow-mismatch`.
 - The text of a script is the export `script` of the file `prehydrationScript.min.ts` in the folder of the part. The part imports it by a relative path: `import { script } from './prehydrationScript.min'`.
 - The build changes that import into a subpath import with the folder of the part, such as `#prehydration/tabs/indicator`. The pattern `#prehydration/*` in `imports` of `packages/vue/package.json` resolves it.
-- Do not write the subpath import in the source. A test job has no `dist`, and Vite cannot resolve the import.
 - `imports` also has `#test-utils`. When a package has `imports`, Vite resolves each `#` specifier from that field, and it does not use the `paths` of `tsconfig.build.json` for that specifier.
 - Add `data-allow-mismatch` to each element that the script changes, with the category of each change, such as `style`. Vue accepts a class, style or attribute mismatch only on the element that has the attribute with that category.
 - Vue compares the `style` of an element only when the client render gives a `style` key. An element that can have a `style` in its client render, such as the `style` of a consumer, needs the category `style`.
@@ -904,8 +897,8 @@ A root gives values to its parts with `provide` and `inject`. Use `progress/root
 
 The date and time families call `Temporal` and `Intl` directly, through the functions of `internals/date-time`. They have no adapter and no provider.
 
-- Tell the kind of a value with `kindOf` or `isKind`. Do not use `instanceof`: it is `false` for an object that another realm or another implementation of `Temporal` made.
-- Format a value only through `formatter()`. `Intl` gets a number, a zone and a calendar, and never a `Temporal` object. Do not call `toLocaleString`.
+- Tell the kind of a value with `kindOf` or `isKind`.
+- Format a value only through `formatter()`. `Intl` gets a number, a zone and a calendar, and never a `Temporal` object.
 - No module reads `Temporal` when it loads: no constant and no default of a prop. The first read is in a function that a part calls, after `assertTemporal` in `setup`.
 - Compare two values with `compareDates`, `Temporal.PlainTime.compare` or `equals`.
 - Make an emitted value with `withDate` or `withTime`. `withDate` keeps the kind, the calendar, the time and the zone of the value. `withTime` keeps the kind, the calendar, the date and the zone.
@@ -1659,7 +1652,6 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - A consumer can change an object prop in place, because a `ref` of the consumer gives a reactive proxy. `errors` of `Form` and `items` of `Select.Root` are such props. A `computed` that reads the proxy with `Object.hasOwn` does not see a new key, because Vue tracks no `Object.hasOwn` of a proxy.
 - Watch such a prop with `deep: true`, and keep a plain copy of it in a `shallowRef`. Each change then gives a new object, and a `computed` that reads the copy runs again.
 - `CheckboxGroup` gives a copy of its `value` to `useControlled`: `controlled: () => props.value?.slice()`. The copy reads each item. A change in place thus gives the watchers of the part a new array.
-- Do not use `watchPostEffect` for an effect. It runs again for each value that the effect reads, and an effect of upstream runs again only for the dependencies that it names. A dependency that the effect does not read, such as `restartKey` in `useOpenChangeComplete`, then starts no run.
 - An internal component of Base UI that only provides a context and renders its children becomes a composable that the root calls. `LabelableProvider.ts` exports `provideLabelableContext()`.
 - An internal root component of Base UI that more than one root part renders also becomes a composable. `useMenuRoot` does the work of `MenuRootInternal` for `Menu.Root` and `Menu.SubmenuRoot`. `useAriaCombobox` does the work of `AriaCombobox`. A root part gives it a view of its props, with one getter for each prop. A spread of the props reads each prop, so each `computed` that reads the view would run again for a change of any prop.
 - A value that Base UI reads from the state of another store only in the first render, with `useRefWithInit` or a `useState` initializer, is a constant of `setup` that reads `toRaw` of that state. `useMenuRoot` reads the transition status and the `instantType` of the parent menu of a submenu in this way.
@@ -1801,7 +1793,6 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - When the last input goes, the field validates the input before it that is still there (`VUE-83`). The last input goes when its control unmounts or when `KeepAlive` holds the control. Base UI then has no input until another control attaches its input.
 - The `ref` setter of a control that `KeepAlive` holds gives the input at a mount in a held branch and when the element changes. The composable removes that input in a `watch` of `isHeld` and the element. Until that `watch` runs, `validation.inputRef` can name the input of a held control. A control thus does not use `validation.inputRef` to know whether `KeepAlive` holds it. `Slider.Root` gives `validation.inputRef` to `useRegisterFieldControl` as `controlRef`, which the form focuses.
 - The registry of a composite is different: it holds elements and sorts them by their position in the document. See [Composite](#composite).
-- Do not use the Vue `<Transition>` component. CSS drives animation through `data-starting-style`, `data-ending-style` and `getAnimations()`, as upstream.
 - Give `useFloating` an element or a virtual element, never a component. It reads the element of a component through `$el`. `resolveElement` changes a component into an element.
 - The reference of `useFloating` is `null` before the mount, while the popup is not mounted, and from a deactivation by `KeepAlive` to the next activation. `useFloating` then starts no `autoUpdate` and computes no position. A popup that mounts in a held branch starts `autoUpdate` at its mount. Its passes measure elements out of the document, and the first pass after the activation gives the position of a popup that mounts in a shown branch.
 - Write the anchor to a `shallowRef` that the reference reads, in a `watch` with `flush: 'post'`. A getter of the consumer can read the DOM of the render.
@@ -2506,7 +2497,7 @@ To make a release:
 - Write commit messages, pull requests, code comments and this file in Simplified Technical English (ASD-STE100).
 - Use short sentences, the active voice and one instruction in each sentence.
 - Give a thing the name of what it is. Do not use metaphors in names.
-- Do not name a GitHub account with the at sign in a file or a pull request. GitHub sends a notification to an account that a pull request names in that form. Use a link to the profile, as `THANKS.md` does.
+- Do not name a GitHub account with the at sign in a pull request. GitHub sends a notification to an account that a pull request names in that form. Use a link to the profile, as `THANKS.md` does.
 
 ### Voice
 
