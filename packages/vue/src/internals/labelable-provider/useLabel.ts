@@ -40,11 +40,11 @@ export function useLabel(params: UseLabelParameters = {}): ComputedRef<UseLabelR
       return;
     }
 
-    if (!resolvedControlId) {
-      return;
-    }
-
-    const controlElement = getControlById(event.currentTarget as Element, resolvedControlId);
+    const controlElement =
+      toValue(params.controlElement) ??
+      (resolvedControlId
+        ? getControlById(event.currentTarget as Element, resolvedControlId)
+        : null);
     if (isHTMLElement(controlElement)) {
       focusElementWithVisible(controlElement);
     }
@@ -98,6 +98,12 @@ export interface UseLabelParameters {
    */
   fallbackControlId?: MaybeRefOrGetter<string | undefined> | undefined;
   /**
+   * The control element, for a part that holds it. A click on a label that is not native focuses
+   * this element, and the id of the element does not matter. With no element, the click focuses
+   * the element that has the id of the control.
+   */
+  controlElement?: MaybeRefOrGetter<HTMLElement | null | undefined> | undefined;
+  /**
    * Whether the rendered element is a native `<label>`.
    * @default false
    */
@@ -111,7 +117,8 @@ export interface UseLabelParameters {
   registerLabelId?: RegisterId | undefined;
   /**
    * A focus handler for a label that is not native.
-   * If it is omitted, the click focuses the control that has the resolved id.
+   * If it is omitted, the click focuses `controlElement`. With no `controlElement`, it focuses the
+   * control that has the resolved id.
    */
   focusControl?: ((event: MouseEvent, controlId: string | undefined) => void) | undefined;
 }
