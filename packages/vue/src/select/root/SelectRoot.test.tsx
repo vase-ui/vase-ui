@@ -7528,6 +7528,57 @@ describe('<Select.Root />', () => {
       expect(screen.getByRole('option', { name: 'b' })).toHaveAttribute('data-selected', '');
       expect(screen.getByRole('option', { name: 'c' })).toHaveAttribute('data-selected', '');
     });
+
+    it('VUE-115: gives an empty array to the field for a null value', async () => {
+      const validate = vi.fn<(value: unknown) => null>(() => null);
+      const value = shallowRef<string[] | null>(null);
+      const App = defineComponent(() => () => (
+        <Field.Root validationMode="onBlur" validate={validate}>
+          <Select.Root
+            multiple
+            value={value.value}
+            {...{
+              'onUpdate:value': (next: string[]) => {
+                value.value = next;
+              },
+            }}
+          >
+            <Select.Trigger data-testid="trigger">
+              <Select.Value />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  <Select.Item value="a">a</Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        </Field.Root>
+      ));
+
+      const { user } = await render(<App />);
+      const trigger = screen.getByTestId('trigger');
+
+      await fireEvent.focusIn(trigger);
+      await fireEvent.focusOut(trigger);
+
+      expect(validate.mock.calls[0]?.[0]).toEqual([]);
+
+      const option = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        return screen.findByRole('option', { name: 'a' });
+      });
+      await user.click(option);
+
+      expect(value.value).toEqual(['a']);
+      expect(trigger).toHaveAttribute('data-dirty', '');
+
+      await user.click(option);
+
+      expect(value.value).toEqual([]);
+      expect(trigger).not.toHaveAttribute('data-dirty');
+    });
   });
 
   describe('prop: isItemEqualToValue', () => {
