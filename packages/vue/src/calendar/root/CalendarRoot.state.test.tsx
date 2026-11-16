@@ -6,6 +6,7 @@ import {
   hydrate,
   hydrateAfter,
   mockBrowserToday,
+  mockRuntimeDateTimeLocale,
   renderOnServer,
   screen,
   setAttributeInHtml,
@@ -191,6 +192,21 @@ describe('<Calendar.Root /> state', () => {
 
       await waitFor(() => {
         expect(button('2026-11-14')).toHaveFocus();
+      });
+    });
+
+    // Each change gives the day a new element.
+    it.each([
+      { name: 'firstDayOfWeek', first: { firstDayOfWeek: 7 }, next: { firstDayOfWeek: 1 } },
+      { name: 'calendar', first: { calendar: 'gregory' }, next: { calendar: 'persian' } },
+    ])('keeps the focus on its day when $name changes', async ({ first, next }) => {
+      const { setProps } = await renderCalendar(first);
+      button('2026-11-10')!.focus();
+
+      await setProps(next);
+
+      await waitFor(() => {
+        expect(button('2026-11-10')).toHaveFocus();
       });
     });
   });
@@ -476,6 +492,91 @@ describe('<Calendar.Root /> state', () => {
 
       await hydrate(CalendarRootHydration, { serverHtml, props });
     });
+
+    // A `-u-` keyword gives the server other `Intl` data than the browser, as another version of
+    // the data does for one locale.
+    it.each([
+      { name: 'a Persian server', server: 'en-US-u-ca-persian' },
+      { name: 'a server week from Monday', server: 'en-US-u-fw-mon' },
+      { name: 'a server weekend on Friday', server: 'en-US-u-rg-ilzzzz' },
+    ])('hydrates the grid of $name, then shows the grid of the browser', async ({ server }) => {
+      const props = { today: '2026-11-14', value: '2026-11-10', locale: 'en-US' };
+      const serverHtml = await renderOnServer(file, { ...props, locale: server });
+
+      const { container } = await hydrate(CalendarRootHydration, { serverHtml, props });
+
+      expect(container.querySelector('th')).toHaveAttribute(
+        'abbr',
+        format({ weekday: 'long' }, '2026-11-01'),
+      );
+      expect(container.querySelector('td[data-date]')).toHaveAttribute('data-date', '2026-11-01');
+      const weekend = [...container.querySelectorAll<HTMLElement>('td[data-weekend]')].map(
+        (cell) => day(cell.dataset.date!).dayOfWeek,
+      );
+      expect(new Set(weekend)).toEqual(new Set([6, 7]));
+      expect(
+        container.querySelector(
+          '[data-vase-ui-calendar], [data-vase-ui-first-day], [data-vase-ui-weekend]',
+        ),
+      ).toBe(null);
+    });
+
+    it.each([
+      {
+        name: 'a server week from Monday',
+        server: 'en-US-u-fw-mon',
+        runtime: undefined,
+        focused: '2026-11-10',
+        expected: '2026-11-10',
+      },
+      {
+        name: 'a Persian server',
+        server: 'en-US-u-ca-persian',
+        runtime: undefined,
+        focused: '2026-11-10',
+        expected: '2026-11-10',
+      },
+      {
+        name: 'the runtime locale de-DE',
+        server: undefined,
+        runtime: 'de-DE',
+        focused: '2026-11-10',
+        expected: '2026-11-10',
+      },
+      // The Persian month of the server starts on 2026-10-23, and the grid of the browser shows
+      // November.
+      {
+        name: 'a day that the browser grid lacks',
+        server: 'en-US-u-ca-persian',
+        runtime: undefined,
+        focused: '2026-10-25',
+        expected: '2026-11-20',
+      },
+    ])(
+      'keeps the focus in the grid after the hydration: $name',
+      async ({ server, runtime, focused, expected }) => {
+        const props = { today: '2026-11-14', value: '2026-11-20', locale: server && 'en-US' };
+        const serverHtml = await renderOnServer(file, { ...props, locale: server });
+        if (runtime) {
+          mockRuntimeDateTimeLocale(runtime);
+        }
+
+        await hydrateAfter(CalendarRootHydration, {
+          serverHtml,
+          props,
+          before: (container) => {
+            container.querySelector<HTMLElement>(`[data-date="${focused}"] button`)!.focus();
+          },
+        });
+
+        await waitFor(() => {
+          expect(document.activeElement?.closest('[data-date]')).toHaveAttribute(
+            'data-date',
+            expected,
+          );
+        });
+      },
+    );
 
     // A server whose `Intl` data differs writes other names. The part then writes the name of the
     // browser after the mount.

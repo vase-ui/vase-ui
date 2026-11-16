@@ -1,7 +1,8 @@
-import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { beforeEach, describe, expect, it, onTestFinished } from 'vitest';
 import {
   createRenderer,
   describeConformance,
+  mockRuntimeDateTimeLocale,
   nextAnimationsRead,
   screen,
   takeReportedMessages,
@@ -232,16 +233,7 @@ describe('<Calendar.Months />', () => {
     it('does not move, and keeps no month, when the runtime locale has another first day of the week', async () => {
       // The first render has the weeks of `en-US`, which start on Sunday. After the mount, the weeks
       // are those of the runtime locale, which start on Monday. That is not a move of the page.
-      const DateTimeFormat = Intl.DateTimeFormat;
-      const spy = vi
-        .spyOn(Intl, 'DateTimeFormat')
-        .mockImplementation(function MockFormat(requestedLocale, options) {
-          return new DateTimeFormat(requestedLocale ?? 'fr', options);
-        });
-      Object.assign(Intl.DateTimeFormat, { supportedLocalesOf: DateTimeFormat.supportedLocalesOf });
-      onTestFinished(() => {
-        spy.mockRestore();
-      });
+      mockRuntimeDateTimeLocale('fr');
 
       await renderCalendar({ locale: undefined, visibleDuration: { weeks: 2 } });
       await nextFrame();
@@ -250,7 +242,7 @@ describe('<Calendar.Months />', () => {
         .getAllByRole('columnheader')
         .map((header) => header.getAttribute('abbr'));
       expect(headers[0]).toBe(
-        new DateTimeFormat('fr', { weekday: 'long', timeZone: 'UTC' }).format(
+        new Intl.DateTimeFormat('fr', { weekday: 'long', timeZone: 'UTC' }).format(
           Date.parse('2026-11-09'),
         ),
       );
