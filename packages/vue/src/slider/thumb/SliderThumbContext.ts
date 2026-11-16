@@ -1,11 +1,18 @@
 import { inject } from 'vue';
-import type { ComputedRef, InjectionKey } from 'vue';
+import type { ComputedRef, InjectionKey, Ref } from 'vue';
 
 export interface SliderThumbContext {
   /**
    * Makes the props of the input of the thumb. The `children` component calls it in its render.
    */
   inputProps: () => Record<string, any>;
+  /** The input of the thumb. */
+  inputElement: Readonly<Ref<HTMLInputElement | null>>;
+  /**
+   * Gives the value that the input had after the last event that the thumb handled, or after the
+   * last write.
+   */
+  getHandledInputValue: () => string | undefined;
   /**
    * Whether the `children` component renders the script that places the thumbs before the page
    * hydrates.

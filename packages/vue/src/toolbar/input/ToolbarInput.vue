@@ -40,7 +40,7 @@ export interface ToolbarInputProps
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, onUpdated } from 'vue';
+import { computed, onBeforeUpdate, onMounted, onUpdated, useAttrs } from 'vue';
 import { useValueBeforeHydration } from '../../common/hydration';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -114,16 +114,29 @@ const { compositeProps, compositeRef } = useCompositeItem({
 
 const writesValue = useValueBeforeHydration(props, () => element.value);
 
-// The value that the input has after the last event and the last render. A form state that the
-// browser restores changes the value with neither.
+// The value that the input has after the last event and the last write of Vue. A form state that
+// the browser restores changes the value with neither.
 let handledValue: string | undefined;
 
 function syncHandledValue() {
   handledValue = (element.value as HTMLInputElement | null)?.value;
 }
 
+const attrs = useAttrs();
 onMounted(syncHandledValue);
-onUpdated(syncHandledValue);
+// Vue writes the value at a render only when the input has the key `value`. Else the part reads
+// the input only when it held the handled value, so a restored value stays for the take. These
+// hooks come before the call of `useFormRestoreAsInput`, so the part reads the value of the render
+// before the composable writes a restored value back.
+let holdsHandledValue = false;
+onBeforeUpdate(() => {
+  holdsHandledValue = (element.value as HTMLInputElement | null)?.value === handledValue;
+});
+onUpdated(() => {
+  if (holdsHandledValue || (writesValue.value && attrs.value !== undefined)) {
+    syncHandledValue();
+  }
+});
 
 const { element, elementProps } = useRenderElement('input', props, {
   state,
