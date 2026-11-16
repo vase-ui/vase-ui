@@ -43,7 +43,7 @@ const today = Temporal.PlainDate.from('2026-11-14');
                   <template #day="{ day }">
                     <Calendar.Day :day="day" class="p-0 text-center">
                       <Calendar.DayButton
-                        class="box-border size-9 cursor-pointer rounded-md border border-transparent outline-0 hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 data-[outside-month]:text-neutral-500 data-[today]:border-neutral-400 data-[selected]:bg-neutral-950 data-[selected]:text-white data-[selected]:hover:bg-neutral-950 disabled:cursor-default disabled:opacity-40 dark:hover:bg-neutral-800 dark:focus-visible:outline-white dark:data-[selected]:bg-white dark:data-[selected]:text-neutral-950 dark:data-[selected]:hover:bg-white"
+                        class="box-border size-9 cursor-pointer rounded-md border border-transparent outline-0 hover:not-data-disabled:not-data-selected:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 data-outside-month:not-data-selected:text-neutral-500 data-selected:bg-neutral-950 data-selected:text-white data-today:border-neutral-400 disabled:cursor-default disabled:opacity-40 dark:hover:not-data-disabled:not-data-selected:bg-neutral-800 dark:focus-visible:outline-white dark:data-selected:bg-white dark:data-selected:text-neutral-950"
                       />
                     </Calendar.Day>
                   </template>
@@ -61,7 +61,7 @@ const today = Temporal.PlainDate.from('2026-11-14');
             v-for="month in months"
             :key="month.toString()"
             :month="month"
-            class="box-border h-10 cursor-pointer rounded-md border border-transparent outline-0 hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 data-[current]:border-neutral-400 data-[selected]:bg-neutral-950 data-[selected]:text-white data-[selected]:hover:bg-neutral-950 disabled:cursor-default disabled:opacity-40 dark:hover:bg-neutral-800 dark:focus-visible:outline-white dark:data-[selected]:bg-white dark:data-[selected]:text-neutral-950 dark:data-[selected]:hover:bg-white"
+            class="box-border h-10 cursor-pointer rounded-md border border-transparent outline-0 hover:not-data-disabled:not-data-selected:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 data-current:border-neutral-400 data-selected:bg-neutral-950 data-selected:text-white disabled:cursor-default disabled:opacity-40 dark:hover:not-data-disabled:not-data-selected:bg-neutral-800 dark:focus-visible:outline-white dark:data-selected:bg-white dark:data-selected:text-neutral-950"
           />
         </Calendar.MonthGridRow>
       </template>
@@ -73,7 +73,7 @@ const today = Temporal.PlainDate.from('2026-11-14');
             v-for="year in years"
             :key="year.toString()"
             :year="year"
-            class="box-border h-10 cursor-pointer rounded-md border border-transparent outline-0 hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 data-[current]:border-neutral-400 data-[selected]:bg-neutral-950 data-[selected]:text-white data-[selected]:hover:bg-neutral-950 disabled:cursor-default disabled:opacity-40 dark:hover:bg-neutral-800 dark:focus-visible:outline-white dark:data-[selected]:bg-white dark:data-[selected]:text-neutral-950 dark:data-[selected]:hover:bg-white"
+            class="box-border h-10 cursor-pointer rounded-md border border-transparent outline-0 hover:not-data-disabled:not-data-selected:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 data-current:border-neutral-400 data-selected:bg-neutral-950 data-selected:text-white disabled:cursor-default disabled:opacity-40 dark:hover:not-data-disabled:not-data-selected:bg-neutral-800 dark:focus-visible:outline-white dark:data-selected:bg-white dark:data-selected:text-neutral-950"
           />
         </Calendar.YearGridRow>
       </template>

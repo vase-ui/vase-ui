@@ -142,7 +142,7 @@
     }
   }
 
-  &[data-outside-month] {
+  &[data-outside-month]:not([data-selected]) {
     color: oklch(55.6% 0 0deg);
   }
 
