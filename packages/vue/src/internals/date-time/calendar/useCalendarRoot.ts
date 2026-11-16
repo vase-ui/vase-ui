@@ -532,14 +532,12 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
     return applyMonth(month, details);
   }
 
-  // A press on a month, a year or the view trigger has a reason of the views. Only the listeners
-  // of a root with views take it.
   function setMonthOfView(
-    root: UseCalendarRootOptionsWithViews,
+    rootOptions: UseCalendarRootOptionsWithViews,
     month: Temporal.PlainYearMonth,
     details: CalendarChangeEventDetails,
   ) {
-    root.emit('monthChange', month, details);
+    rootOptions.emit('monthChange', month, details);
     return applyMonth(month, details);
   }
 
