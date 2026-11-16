@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createRenderer, hydrate, renderOnServer, screen } from '#test-utils';
+import { createRenderer, hydrate, renderOnServer, screen, setAttributeInHtml } from '#test-utils';
 import { formatText } from '../../internals/date-time/calendar/formatText';
 import TimePickerRootHydration from './TimePickerRootHydration.test.vue';
 
@@ -45,6 +45,41 @@ describe('<TimePicker.Root /> hydration', () => {
 
     expect(screen.getAllByRole('option')).toHaveLength(24);
   });
+
+  // Vue writes no attribute while it hydrates, so the name of a part that `Intl` formats keeps the
+  // text of the server until the render after the mount. The server HTML here gets another text.
+  it.each([
+    {
+      name: 'the trigger',
+      selector: '[data-testid="trigger"]',
+      props: { value: '15:00' },
+      text: `Change time, ${formatText(Temporal.PlainTime.from('15:00'), { hour: 'numeric', minute: '2-digit' }, 'en-US')}`,
+    },
+    {
+      name: 'a column',
+      selector: '[data-testid="hour-column"]',
+      props: {},
+      text: new Intl.DisplayNames('en-US', { type: 'dateTimeField' }).of('hour'),
+    },
+  ])(
+    'gives $name the aria-label of the browser when the server wrote another text',
+    async ({ selector, props, text }) => {
+      const fixtureProps = { locale: 'en-US', ...props };
+      const serverHtml = setAttributeInHtml(
+        await renderOnServer(HYDRATION_FILE, fixtureProps),
+        selector,
+        'aria-label',
+        'other',
+      );
+
+      const { container } = await hydrate(TimePickerRootHydration, {
+        serverHtml,
+        props: fixtureProps,
+      });
+
+      expect(container.querySelector(selector)).toHaveAttribute('aria-label', text);
+    },
+  );
 
   it('has the value in the hidden input and the name in the trigger, from the server HTML', async () => {
     const serverHtml = await renderOnServer(HYDRATION_FILE, {

@@ -46,6 +46,38 @@ defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<TimePickerClockProps>(), { as: 'div' });
 
+// The events of `TimeClock.Root` that are not about the value. The root of the picker gives the
+// events of the value.
+const emit = defineEmits<{
+  /**
+   * Callback fired when the user commits the time: when a press or a drag that selects a number
+   * ends, and when the user presses Enter or Space on the face. A commit also shows the next view.
+   * **Warning**: This is a generic event, not a change event.
+   *
+   * The `eventDetails.reason` indicates what triggered the commit:
+   *
+   * - `'drag'` when a press or a drag ends
+   * - `'keyboard'` when the user presses Enter or Space on the face
+   */
+  valueCommitted: [value: TimePickerRootValue, eventDetails: TimeClockRootCommitEventDetails];
+  /**
+   * Callback fired when the view changes.
+   *
+   * The `eventDetails.reason` indicates what triggered the change:
+   *
+   * - `'trigger-press'` when the user presses a view trigger
+   * - `'drag'` and `'keyboard'` when a commit shows the next view
+   *
+   * To stop the change, call `eventDetails.cancel()` before the listener returns.
+   */
+  viewChange: [view: TimeClockView, eventDetails: TimeClockRootChangeEventDetails];
+  /**
+   * Event handler called after `viewChange` with the new view, unless a listener cancels the
+   * change. `v-model:view` uses it.
+   */
+  'update:view': [view: TimeClockView];
+}>();
+
 defineSlots<{
   default(props: { state: TimePickerClockState }): unknown;
   render: ComponentRenderFn<HTMLProps, TimePickerClockState>;
@@ -81,16 +113,24 @@ function handleValueChange(value: TimePickerRootValue, details: TimeClockRootCha
 
 // The last commit sets the whole time, so it closes the popup when a selection does.
 function handleValueCommitted(
-  _value: TimePickerRootValue,
+  value: TimePickerRootValue,
   details: TimeClockRootCommitEventDetails,
 ) {
+  emit('valueCommitted', value, details);
   if (isLastView.value && picker.closeOnSelect.value) {
     popup.closeAfterSelection(details.event);
   }
 }
 
-function handleViewChange(next: TimeClockView) {
+// `TimeClock.Root` reads `details.isCanceled` after this emit returns, so a listener can stop the
+// change of the view.
+function handleViewChange(next: TimeClockView, details: TimeClockRootChangeEventDetails) {
+  emit('viewChange', next, details);
+}
+
+function handleViewUpdate(next: TimeClockView) {
   shownView.value = next;
+  emit('update:view', next);
 }
 
 // `TimeClock.Root` has a type parameter for the kind of its value, and vue-tsc takes it from the
@@ -127,7 +167,8 @@ defineExpose({ element });
     v-bind="clockProps()"
     @value-change="handleValueChange"
     @value-committed="handleValueCommitted"
-    @update:view="handleViewChange"
+    @view-change="handleViewChange"
+    @update:view="handleViewUpdate"
   >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
@@ -139,7 +180,8 @@ defineExpose({ element });
     v-bind="clockProps()"
     @value-change="handleValueChange"
     @value-committed="handleValueCommitted"
-    @update:view="handleViewChange"
+    @view-change="handleViewChange"
+    @update:view="handleViewUpdate"
   >
     <template #default="slotProps">
       <slot v-bind="slotProps" />

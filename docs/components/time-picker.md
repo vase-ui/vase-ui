@@ -124,7 +124,7 @@ With no value, the clock shows the time of `referenceDate`, or midnight, and a p
 
 ### Clock
 
-`TimePicker.Clock` takes the parts of [Time Clock](/components/time-clock). The `granularity` of the picker sets the last view, and a commit of that view closes the popup. The `minuteStep`, `secondStep`, `view` and `defaultView` props are props of the clock.
+`TimePicker.Clock` takes the parts of [Time Clock](/components/time-clock). The `granularity` of the picker sets the last view, and a commit of that view closes the popup. The `minuteStep`, `secondStep`, `view` and `defaultView` props are props of the clock. It emits `valueCommitted`, `viewChange` and `update:view`, so `v-model:view` works on it. The events of the value go to the root.
 
 <DemoFrame>
   <DemoTimePickerClock />

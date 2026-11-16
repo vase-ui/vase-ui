@@ -40,6 +40,7 @@ export interface TimePickerColumnProps
 
 <script setup lang="ts">
 import { computed, provide, watch } from 'vue';
+import { useAriaAfterHydration } from '../../common/hydration';
 import { warn } from '../../common/warn';
 import { useCompositeRoot } from '../../internals/composite/root/useCompositeRoot';
 import { usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
@@ -70,6 +71,7 @@ defineSlots<{
 const picker = useTimePickerRootContext();
 const popup = usePickerPopup();
 const { locale, hourCycle } = useTimePickerFormat(picker);
+const ariaAfterHydration = useAriaAfterHydration();
 
 if (process.env.NODE_ENV !== 'production') {
   watch(
@@ -133,7 +135,9 @@ const { element, elementProps } = useRenderElement('div', props, {
     compositeProps,
     {
       role: 'listbox',
-      'aria-label': label.value,
+      // A server and a browser can have another `Intl` text, and Vue writes no attribute while it
+      // hydrates.
+      'aria-label': ariaAfterHydration(label.value),
       'aria-disabled': state.value.disabled || undefined,
       'aria-readonly': state.value.readOnly || undefined,
     },

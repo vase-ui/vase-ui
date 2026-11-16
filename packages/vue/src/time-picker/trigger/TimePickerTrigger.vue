@@ -18,6 +18,7 @@ export interface TimePickerTriggerProps extends Omit<
 
 <script setup lang="ts">
 import { computed, useAttrs, useTemplateRef } from 'vue';
+import { useAriaAfterHydration } from '../../common/hydration';
 import { givenName } from '../../internals/blankName';
 import { formatText } from '../../internals/date-time/calendar/formatText';
 import { isKind } from '../../internals/date-time/temporal';
@@ -44,6 +45,7 @@ defineSlots<{
 const attrs = useAttrs();
 const picker = useTimePickerRootContext();
 const locale = useFormatLocale(() => picker.props.locale);
+const ariaAfterHydration = useAriaAfterHydration();
 
 // A picker that the user cannot change has nothing to choose.
 const disabled = computed(() => props.disabled || picker.disabled.value || picker.readOnly.value);
@@ -73,7 +75,8 @@ const label = computed(() => {
     return given;
   }
   const value = picker.value.value;
-  return value === null ? 'Choose time' : `Change time, ${describe(value)}`;
+  // A server and a browser can have another `Intl` text, and Vue writes no attribute while it hydrates.
+  return value === null ? 'Choose time' : ariaAfterHydration(`Change time, ${describe(value)}`);
 });
 
 // This part renders `Popover.Trigger` and makes no element of its own. The template has one form

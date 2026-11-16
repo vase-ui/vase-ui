@@ -531,6 +531,19 @@ describe('<TimePicker.Root />', () => {
 
       await expectClosed(popup);
     });
+
+    it('closes the popup at the commit of the view that a consumer controls, when that view is the last', async () => {
+      const { user } = await renderPicker({
+        clock: true,
+        defaultValue: time('15:30'),
+        clockProps: { view: 'minute' },
+      });
+      const popup = await open(user);
+
+      await pressFaceAt(270);
+
+      await expectClosed(popup);
+    });
   });
 
   describe('the value', () => {

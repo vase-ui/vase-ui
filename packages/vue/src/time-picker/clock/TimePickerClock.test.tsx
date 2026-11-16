@@ -165,6 +165,53 @@ describe('<TimePicker.Clock />', () => {
     });
   });
 
+  describe('the events that are not about the value', () => {
+    it('gives the commit to the listener of the consumer, with the value and the reason', async () => {
+      const onValueCommitted = vi.fn();
+      await renderClock({ defaultValue: time('15:30') }, { onValueCommitted });
+
+      await pressAt(120);
+
+      expect(onValueCommitted).toHaveBeenCalledTimes(1);
+      expect(onValueCommitted.mock.lastCall?.[0].toString()).toBe('16:30:00');
+      expect(onValueCommitted.mock.lastCall?.[1].reason).toBe('drag');
+    });
+
+    it('gives the new view to the listeners of the consumer', async () => {
+      const onViewChange = vi.fn();
+      const onUpdateView = vi.fn();
+      await renderClock(
+        { defaultValue: time('15:30') },
+        { onViewChange, 'onUpdate:view': onUpdateView },
+      );
+
+      await pressAt(120);
+
+      expect(onViewChange.mock.lastCall?.[0]).toBe('minute');
+      expect(onViewChange.mock.lastCall?.[1].reason).toBe('drag');
+      expect(onUpdateView).toHaveBeenCalledExactlyOnceWith('minute');
+      expect(screen.getByTestId('clock')).toHaveAttribute('data-view', 'minute');
+    });
+
+    it('keeps the view when a listener cancels the change', async () => {
+      const onUpdateView = vi.fn();
+      await renderClock(
+        { defaultValue: time('15:30') },
+        {
+          onViewChange: (_view: unknown, details: { cancel: () => void }) => {
+            details.cancel();
+          },
+          'onUpdate:view': onUpdateView,
+        },
+      );
+
+      await pressAt(120);
+
+      expect(onUpdateView).not.toHaveBeenCalled();
+      expect(screen.getByTestId('clock')).toHaveAttribute('data-view', 'hour');
+    });
+  });
+
   describe('the views', () => {
     it('goes on to the next view after a commit, up to the granularity', async () => {
       await renderClock({ granularity: 'second', closeOnSelect: false });
