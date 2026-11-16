@@ -101,16 +101,18 @@ describe('<TimePicker.Root /> hydration', () => {
     expect(template.content.querySelector('[role="dialog"]')).toBe(null);
   });
 
-  it('has the selected item and one tab stop in the list and in a column, from the server HTML', async () => {
-    const serverHtml = await renderOnServer(HYDRATION_FILE, {
-      value: '15:00',
-      locale: 'en-US',
-    });
+  // The options of each list and column of the server HTML, by the test id of the part.
+  async function renderServerOptions(value: string) {
+    const serverHtml = await renderOnServer(HYDRATION_FILE, { value, locale: 'en-US' });
     const template = document.createElement('template');
     template.innerHTML = serverHtml;
-    const optionsOf = (testId: string) => [
+    return (testId: string) => [
       ...template.content.querySelectorAll(`[data-testid="${testId}"] [role="option"]`),
     ];
+  }
+
+  it('has the selected item and one tab stop in the list and in a column, from the server HTML', async () => {
+    const optionsOf = await renderServerOptions('15:00');
 
     const times = optionsOf('list');
     expect(times).toHaveLength(24);
@@ -126,5 +128,19 @@ describe('<TimePicker.Root /> hydration', () => {
       hours[3],
     ]);
     expect(hours.filter((option) => option.getAttribute('tabindex') === '0')).toEqual([hours[3]]);
+  });
+
+  it('has the tab stop on the first item of a list and of a column with no selected item, from the server HTML', async () => {
+    // The list has a time for each hour, and the column a minute for each quarter hour.
+    const optionsOf = await renderServerOptions('15:20');
+
+    for (const options of [optionsOf('list'), optionsOf('minute-column')]) {
+      expect(options.filter((option) => option.getAttribute('aria-selected') === 'true')).toEqual(
+        [],
+      );
+      expect(options.filter((option) => option.getAttribute('tabindex') === '0')).toEqual([
+        options[0],
+      ]);
+    }
   });
 });
