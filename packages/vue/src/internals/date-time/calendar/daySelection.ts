@@ -22,8 +22,15 @@ export interface CalendarSelection {
   isSelected: (date: Temporal.PlainDate) => boolean;
   /** A press on a day that the user can select. */
   press: (date: Temporal.PlainDate, details: CalendarChangeEventDetails) => void;
-  /** The move of the focus by Shift with an arrow key to a day that the user can select. */
-  extend: (date: Temporal.PlainDate, details: CalendarChangeEventDetails) => void;
+  /**
+   * The move of the focus by Shift with an arrow key to a day that the user can select. `from` is
+   * the day that had the focus before the key.
+   */
+  extend: (
+    date: Temporal.PlainDate,
+    details: CalendarChangeEventDetails,
+    from: Temporal.PlainDate,
+  ) => void;
 }
 
 type DayValueInput = DateValue | readonly DateValue[] | null | undefined;
