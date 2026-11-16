@@ -210,10 +210,13 @@ describe('<Menu.SubmenuTrigger /> on hover and on a press', () => {
   it('clears the highlight of the trigger when the focus leaves it', async () => {
     await renderSubmenu({ trigger: { openOnHover: false } });
     const trigger = screen.getByRole('menuitem', { name: 'More' });
+    await waitFor(() => expect(screen.getByTestId('parent-menu')).toHaveFocus());
     await fireEvent.mouseEnter(trigger);
+    await waitFor(() => expect(trigger).toHaveFocus());
     expect(trigger).toHaveAttribute('data-highlighted');
 
-    await fireEvent.focusOut(trigger);
+    trigger.blur();
+    await flushMicrotasks();
 
     expect(trigger).not.toHaveAttribute('data-highlighted');
   });

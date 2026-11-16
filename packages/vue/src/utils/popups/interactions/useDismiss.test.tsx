@@ -301,13 +301,27 @@ async function clickWithNoPress(target: Element) {
   await fireEvent.click(target, { detail: 0 });
 }
 
-// The press begins outside, and the browser sends the click to the common ancestor of both ends.
-async function dragOnto(target: Element) {
-  await fireEvent.pointerDown(document.body, mouse);
-  await fireEvent.mouseDown(document.body);
-  await fireEvent.pointerUp(target, mouse);
-  await fireEvent.mouseUp(target);
-  await fireEvent.click(document.body, { detail: 1 });
+// A real drag. The browser sends the click to the common ancestor of both ends of the drag.
+async function dragOnto(target: Element, outside: Element) {
+  // The real pointer needs a box at the end of the drag, and the backdrop of the fixture has none.
+  target.setAttribute(
+    'style',
+    'position: absolute; left: 350px; top: 20px; width: 60px; height: 60px',
+  );
+  let held = true;
+  onTestFinished(async () => {
+    if (held) {
+      await userEvent.pointer({ keys: '[/MouseLeft]', coords: { x: 0, y: 0 } });
+    }
+  });
+  // The press names its target, because the browser command scrolls to a target. The outside
+  // element is not in the viewport of the test page.
+  await userEvent.pointer({ target: outside, keys: '[MouseLeft>]' });
+  // A person holds the button for more than one task, so each 0 ms timer of the press runs before
+  // the release.
+  await wait(0);
+  await userEvent.pointer({ target, keys: '[/MouseLeft]' });
+  held = false;
 }
 
 const App = defineComponent({
@@ -2151,16 +2165,17 @@ describe('useDismiss', () => {
 
       await fireEvent.pointerDown(scrubber, { pointerType: 'mouse', button: 0 });
       await fireEvent.mouseDown(scrubber, { button: 0 });
-      await fireEvent.pointerUp(document.body, { pointerType: 'mouse', button: 0 });
-      await fireEvent.mouseUp(document.body, { button: 0 });
-
-      await fireEvent.click(document.body);
+      await wait(0);
+      // The release starts the 0 ms timer that ends the suppression. The immediate click comes
+      // before that timer.
+      await Promise.all([
+        fireEvent.pointerUp(document.body, { pointerType: 'mouse', button: 0 }),
+        fireEvent.mouseUp(document.body, { button: 0 }),
+        fireEvent.click(document.body),
+      ]);
       expect(screen.getByRole('tooltip')).toBeInTheDocument();
 
-      await new Promise((resolve) => {
-        setTimeout(resolve, 0);
-      });
-      await flushMicrotasks();
+      await wait(0);
 
       await fireEvent.click(document.body);
       expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
@@ -2201,15 +2216,16 @@ describe('useDismiss', () => {
 
       await fireEvent.pointerDown(scrubber, { pointerType: 'mouse', button: 0 });
       await fireEvent.mouseDown(scrubber, { button: 0 });
-      await fireEvent.pointerCancel(document.body, { pointerType: 'mouse' });
-
-      await fireEvent.click(document.body);
+      await wait(0);
+      // The cancel starts the 0 ms timer that ends the suppression. The immediate click comes
+      // before that timer.
+      await Promise.all([
+        fireEvent.pointerCancel(document.body, { pointerType: 'mouse' }),
+        fireEvent.click(document.body),
+      ]);
       expect(screen.getByRole('tooltip')).toBeInTheDocument();
 
-      await new Promise((resolve) => {
-        setTimeout(resolve, 0);
-      });
-      await flushMicrotasks();
+      await wait(0);
 
       await fireEvent.click(document.body);
       expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
@@ -2653,7 +2669,7 @@ describe('useDismiss', () => {
     it.each<{
       name: string;
       dismiss: UseDismissProps;
-      press: (target: Element) => Promise<void>;
+      press: (target: Element, outside: Element) => Promise<void>;
     }>([
       { name: 'a mouse press', dismiss: {}, press: pressAndClick },
       {
@@ -2690,7 +2706,7 @@ describe('useDismiss', () => {
           </Popup>,
         );
 
-        await press(screen.getByTestId('child-backdrop'));
+        await press(screen.getByTestId('child-backdrop'), outside);
         await flushMicrotasks();
 
         expect({ parent: isOpen('parent'), child: isOpen('child') }).toEqual({

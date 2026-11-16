@@ -2254,8 +2254,11 @@ describe('FloatingFocusManager', () => {
           screen.getByTestId(pressed).setAttribute('data-vase-ui-click-trigger', '');
         }
 
-        await fireEvent.pointerDown(screen.getByTestId(pressed));
-        await moveFocusTo('outside');
+        // The browser moves the focus in the task of the press.
+        await Promise.all([
+          fireEvent.pointerDown(screen.getByTestId(pressed)),
+          moveFocusTo('outside'),
+        ]);
 
         expect(handleOpenChange.mock.calls).toEqual(calls);
       },
