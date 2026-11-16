@@ -510,6 +510,11 @@ describe('<Calendar.Root /> state', () => {
         (cell) => day(cell.dataset.date!).dayOfWeek,
       );
       expect(new Set(weekend)).toEqual(new Set([6, 7]));
+      expect(
+        container.querySelector(
+          '[data-vase-ui-calendar], [data-vase-ui-first-day], [data-vase-ui-weekend]',
+        ),
+      ).toBe(null);
     });
 
     it.each([

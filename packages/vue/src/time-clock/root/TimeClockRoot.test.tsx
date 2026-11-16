@@ -474,6 +474,7 @@ describe('<TimeClock.Root />', () => {
 
         expect(within(container).getByRole('slider')).toHaveAttribute('max', max);
         expect(container.querySelectorAll('button[aria-pressed]')).toHaveLength(buttons);
+        expect(container.querySelector('[data-vase-ui-hour-cycle]')).toBe(null);
       },
     );
   });
