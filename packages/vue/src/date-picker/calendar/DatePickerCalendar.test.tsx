@@ -120,6 +120,44 @@ describe('<DatePicker.Calendar />', () => {
     });
   });
 
+  it('emits the events of the month again, and a listener can cancel the change', async () => {
+    const onMonthChange = vi.fn((_month: unknown, details: { cancel: () => void }) => {
+      details.cancel();
+    });
+    const onUpdateMonth = vi.fn();
+    const { user } = await renderOpen({
+      defaultValue: day('2026-11-18'),
+      calendarProps: { today: today(), onMonthChange, 'onUpdate:month': onUpdateMonth },
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('next')).not.toBe(null);
+    });
+
+    await user.click(screen.getByTestId('next'));
+
+    expect(String(onMonthChange.mock.lastCall?.[0])).toBe('2026-12');
+    expect(onMonthChange.mock.lastCall?.[1]).toMatchObject({ reason: 'month-change' });
+    expect(onUpdateMonth).not.toHaveBeenCalled();
+    expect(dayButton('2026-11-18')).not.toBe(null);
+
+    onMonthChange.mockImplementation(() => undefined);
+    await user.click(screen.getByTestId('next'));
+
+    expect(onUpdateMonth.mock.lastCall?.[0].toString()).toBe('2026-12');
+  });
+
+  // `Calendar.Root` shows the outside days of a broadcast calendar when `showOutsideDays` is absent.
+  it('gives an absent `showOutsideDays` to the calendar as absent', async () => {
+    await renderOpen({
+      defaultValue: day('2026-11-18'),
+      calendarProps: { today: today(), broadcastCalendar: true },
+    });
+
+    await waitFor(() => {
+      expect(dayButton('2026-10-28')).toHaveAttribute('data-outside-month');
+    });
+  });
+
   describe('the picker owns the limits', () => {
     it('disables the days outside `minDate` and `maxDate`, and the field gets the same limits', async () => {
       const { container } = await renderOpen({
