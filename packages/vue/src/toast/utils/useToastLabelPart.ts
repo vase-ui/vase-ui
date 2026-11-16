@@ -40,6 +40,8 @@ export function useToastLabelPart(
   const labelId = useVaseUiId(idProp);
   const hasDefaultSlot = useHasDefaultSlot();
 
+  // A part cannot read what its `#render` slot renders, so that content does not count. Base UI
+  // also counts the children of the element of `render`.
   const rendered = computed(() => hasDefaultSlot.value || isRenderableNode(toast.value[part]));
   const state = computed(() => ({ type: toast.value.type }));
 
