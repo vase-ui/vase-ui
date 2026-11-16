@@ -255,8 +255,8 @@ function readPropsOption(content: string, file: string): string[] {
 }
 
 /**
- * The props that `readPropNames` does not give. A declaration or an import of `<script setup>`
- * takes the compiler entry for a prop of the same name.
+ * The props that `readPropNames` does not give. A top-level declaration or an import of `<script>`
+ * or `<script setup>` takes the binding of a prop of the same name.
  */
 export function readHiddenProps(source: string, file: string): string[] {
   if (!parse(source, { filename: file }).descriptor.scriptSetup) {

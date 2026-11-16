@@ -124,8 +124,8 @@ export function checkBetter(
 }
 
 /**
- * Checks each SFC of the package source for a name of `<script setup>` that is also a prop. The API
- * reference does not list such a prop. The SFC of a test is not in the API reference.
+ * Checks each SFC of the package source for a top-level name of a script block that is also a prop.
+ * The API reference does not list such a prop. The SFC of a test is not in the API reference.
  */
 function checkHiddenProps(files: VaseFiles, root: string): string[] {
   return [...files.paths]
@@ -139,7 +139,7 @@ function checkHiddenProps(files: VaseFiles, root: string): string[] {
     .flatMap((path) =>
       readHiddenProps(readRepositoryFile(root, path), join(root, path)).map(
         (name) =>
-          `${path}: \`<script setup>\` declares or imports the name \`${name}\`, and \`${name}\` is also a prop. The SFC compiler then reports no prop \`${name}\`, and the API reference does not list it. Give the declaration or the import another name.`,
+          `${path}: \`<script>\` or \`<script setup>\` declares or imports the name \`${name}\` at the top level, and \`${name}\` is also a prop. The bindings of the SFC compiler then have no prop \`${name}\`, and the API reference does not list it. Give the declaration or the import another name.`,
       ),
     );
 }

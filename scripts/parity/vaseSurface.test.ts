@@ -495,19 +495,22 @@ test('a prop that the SFC compiler reads and vue-component-meta lists under anot
 
 const sfc = (setup: string, script = ''): string =>
   `${script}<script setup lang="ts">\n${setup}\n</script>\n\n<template>\n  <slot />\n</template>\n`;
-const OPEN_PROPS = 'defineProps<{ open?: boolean | undefined; side?: string | undefined }>()';
+// The compiler writes the key `data-state` as a string literal, and the reader must read it too.
+const OPEN_PROPS =
+  "defineProps<{ open?: boolean | undefined; side?: string | undefined; label?: string | undefined; 'data-state'?: string | undefined }>()";
 const HIDDEN_FILE = join(SAMPLE, 'Hidden.vue');
 
-test('a prop is hidden when `<script setup>` declares or imports its name, and no other prop is', () => {
+test('a prop is hidden when a script block declares or imports its name, and no other prop is', () => {
   assert.deepEqual(readHiddenProps(sfc(`const props = ${OPEN_PROPS};`), HIDDEN_FILE), []);
   assert.deepEqual(
     readHiddenProps(
       sfc(
         `import { computed, ref as side } from 'vue';\nconst props = ${OPEN_PROPS};\nconst open = computed(() => props.open === true);`,
+        '<script lang="ts">\nexport const label = \'Open\';\n</script>\n\n',
       ),
       HIDDEN_FILE,
     ),
-    ['open', 'side'],
+    ['open', 'side', 'label'],
   );
 });
 

@@ -338,7 +338,7 @@ test('a test file that the reader refuses is one problem, and the other families
   );
 });
 
-test('a name of `<script setup>` that is also a prop is a problem for an SFC of the package source, and not for the SFC of a test', () => {
+test('a name of `<script setup>` that is also a prop is a problem for each SFC of the package source, in the sequence of the paths, and not for the SFC of a test', () => {
   const root = mkdtempSync(join(tmpdir(), 'parity-hidden-props-'));
   after(() => {
     rmSync(root, { recursive: true, force: true });
@@ -348,6 +348,7 @@ test('a name of `<script setup>` that is also a prop is a problem for an SFC of 
   const sources = {
     'packages/vue/src/sample/root/SampleRoot.vue': sfc('open'),
     'packages/vue/src/sample/popup/SamplePopup.vue': sfc('isOpen'),
+    'packages/vue/src/sample/arrow/SampleArrow.vue': sfc('open'),
     'packages/vue/src/sample/root/SampleRootHydration.test.vue': sfc('open'),
     'packages/vue/src/sample/root/SampleRootInTemplate.spec.vue': sfc('open'),
     'packages/vue/test/fixtures/OpenPart.vue': sfc('open'),
@@ -367,7 +368,14 @@ test('a name of `<script setup>` that is also a prop is a problem for an SFC of 
       throw new Error('The check for a hidden prop must not make the project.');
     },
   });
-  assert.deepEqual(problems, [
-    'packages/vue/src/sample/root/SampleRoot.vue: `<script setup>` declares or imports the name `open`, and `open` is also a prop. The SFC compiler then reports no prop `open`, and the API reference does not list it. Give the declaration or the import another name.',
-  ]);
+  assert.deepEqual(
+    problems,
+    [
+      'packages/vue/src/sample/arrow/SampleArrow.vue',
+      'packages/vue/src/sample/root/SampleRoot.vue',
+    ].map(
+      (path) =>
+        `${path}: \`<script>\` or \`<script setup>\` declares or imports the name \`open\` at the top level, and \`open\` is also a prop. The bindings of the SFC compiler then have no prop \`open\`, and the API reference does not list it. Give the declaration or the import another name.`,
+    ),
+  );
 });
