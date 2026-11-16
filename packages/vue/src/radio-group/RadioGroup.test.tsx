@@ -4369,7 +4369,7 @@ describe('<RadioGroup />', () => {
       expect(screen.getByTestId('after')).toHaveFocus();
     });
 
-    it('gives the tab stop to an enabled radio when a disabled fieldset holds the checked radio', async () => {
+    it('keeps the tab stop on the checked radio when a disabled fieldset holds it', async () => {
       await render(() =>
         renderBetweenButtons(
           <RadioGroup defaultValue="b">
@@ -4383,7 +4383,7 @@ describe('<RadioGroup />', () => {
       screen.getByTestId('before').focus();
       await userEvent.keyboard('{Tab}');
 
-      expect(screen.getByTestId('a')).toHaveFocus();
+      expect(screen.getByTestId('b')).toHaveFocus();
     });
 
     it('skips a radio in a disabled fieldset with the arrow keys', async () => {
@@ -4556,5 +4556,101 @@ describe('<RadioGroup />', () => {
 
       expect(handleSubmit.mock.calls[0]?.[0]).toEqual({});
     });
+  });
+
+  describe('VUE-113: the tab stop of a radio that becomes disabled', () => {
+    function renderGroup(
+      disabled: () => string[],
+      options: { defaultValue?: string; nativeButton?: boolean } = {},
+    ) {
+      return defineComponent(() => () => (
+        <div>
+          <button type="button" data-testid="before" />
+          <RadioGroup defaultValue={options.defaultValue}>
+            {['a', 'b', 'c'].map((value) => (
+              <Radio.Root
+                key={value}
+                value={value}
+                nativeButton={options.nativeButton}
+                as={options.nativeButton ? 'button' : undefined}
+                data-testid={value}
+                disabled={disabled().includes(value)}
+              />
+            ))}
+          </RadioGroup>
+          <button type="button" data-testid="after" />
+        </div>
+      ));
+    }
+
+    it('moves the tab stop off a radio that becomes disabled in a group with no value', async () => {
+      const disabled = shallowRef<string[]>([]);
+      const Group = renderGroup(() => disabled.value);
+      await render(<Group />);
+
+      disabled.value = ['a'];
+      await flushMicrotasks();
+      screen.getByTestId('before').focus();
+      await userEvent.keyboard('{Tab}');
+
+      expect(screen.getByTestId('b')).toHaveFocus();
+    });
+
+    it('moves the tab stop off a radio that a disabled fieldset holds in a group with no value', async () => {
+      await render(() => (
+        <div>
+          <button type="button" data-testid="before" />
+          <RadioGroup>
+            <fieldset disabled>
+              <Radio.Root value="a" data-testid="a" />
+            </fieldset>
+            <Radio.Root value="b" data-testid="b" />
+            <Radio.Root value="c" data-testid="c" />
+          </RadioGroup>
+        </div>
+      ));
+
+      screen.getByTestId('before').focus();
+      await userEvent.keyboard('{Tab}');
+
+      expect(screen.getByTestId('b')).toHaveFocus();
+    });
+
+    it('moves the tab stop off a radio that becomes disabled while it has the focus', async () => {
+      const disabled = shallowRef<string[]>([]);
+      const Group = renderGroup(() => disabled.value);
+      await render(<Group />);
+      screen.getByTestId('before').focus();
+      await userEvent.keyboard('{Tab}');
+      expect(screen.getByTestId('a')).toHaveFocus();
+
+      disabled.value = ['a'];
+      await flushMicrotasks();
+      await userEvent.keyboard('{Tab}');
+      expect(screen.getByTestId('after')).toHaveFocus();
+      await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+
+      expect(screen.getByTestId('b')).toHaveFocus();
+    });
+
+    // A disabled native button cannot get focus, so the checked radio does not keep the tab stop.
+    it.each([
+      { name: 'is disabled at the mount', disabledAtMount: true },
+      { name: 'becomes disabled', disabledAtMount: false },
+    ])(
+      'moves the tab stop off a checked native button radio that $name',
+      async ({ disabledAtMount }) => {
+        const disabled = shallowRef<string[]>(disabledAtMount ? ['b'] : []);
+        const Group = renderGroup(() => disabled.value, { defaultValue: 'b', nativeButton: true });
+        await render(<Group />);
+
+        disabled.value = ['b'];
+        await flushMicrotasks();
+        screen.getByTestId('before').focus();
+        await userEvent.keyboard('{Tab}');
+
+        expect(screen.getByTestId('a')).toHaveFocus();
+      },
+    );
   });
 });
