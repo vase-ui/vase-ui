@@ -335,8 +335,8 @@ export async function expectedFiles(
  * Checks the records and the copied style sheets of the families against each other. It also
  * checks the class strings of each Vue folder and the two variants of each Vue demo. A component of
  * Vase UI's own has no record, so the check reads only its two variants. Each problem says what to
- * do. `entryPoints` holds the names of the entry points that Vase UI has. A demo
- * with no Vue file waits while an entry point that it imports is not among them.
+ * do. `entryPoints` holds the names of the entry points that Vase UI has. A demo with no Vue file
+ * waits while an entry point that it imports is not among them.
  */
 export function checkDemos(families: DemoFamily[], entryPoints: ReadonlySet<string>): string[] {
   const problems: string[] = [];
