@@ -1,5 +1,5 @@
 import { computed, onBeforeUpdate, shallowRef, useSlots } from 'vue';
-import type { ComputedRef, Ref } from 'vue';
+import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useToastRootContext } from '../root/ToastRootContext';
@@ -29,6 +29,7 @@ export function useHasDefaultSlot(): Readonly<Ref<boolean>> {
 export function useToastLabelPart(
   idProp: () => string | undefined,
   part: 'title' | 'description',
+  element: MaybeRefOrGetter<Element | null | undefined>,
 ): {
   labelId: ComputedRef<string>;
   rendered: ComputedRef<boolean>;
@@ -43,11 +44,7 @@ export function useToastLabelPart(
   const rendered = computed(() => hasDefaultSlot.value || isRenderableNode(toast.value[part]));
   const state = computed(() => ({ type: toast.value.type }));
 
-  const source = Symbol();
-  useRegisteredId(
-    () => (rendered.value ? labelId.value : undefined),
-    (getId) => register(source, getId),
-  );
+  useRegisteredId(() => (rendered.value ? labelId.value : undefined), register, element);
 
   return { labelId, rendered, state };
 }

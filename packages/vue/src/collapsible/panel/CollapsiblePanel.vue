@@ -92,11 +92,10 @@ const {
 
 const panelId = computed(() => given('id', props.id) ?? defaultPanelId.value);
 
-const source = Symbol();
-
 useRegisteredId(
   () => panelId.value,
-  (getId) => registerPanelId(source, getId),
+  registerPanelId,
+  () => element.value,
 );
 
 const {

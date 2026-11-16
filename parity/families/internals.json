@@ -216,7 +216,7 @@
     {
       "upstream": "packages/react/src/internals/resolveRenderedId.ts",
       "kind": "not-applicable",
-      "reason": "The file reads the id of a React element that is given as `render`. It gives the id to the owner through a ref callback. In Vue, `#render` is a slot, so a part reads the `id` of the element only after the render. `MenuPopup.vue` gives its `id` prop to its root with a `watch`. The filter root reads the `id` of the list element with `useElementId`. The title and the description of a dialog or a popover read the `id` of their own element in the same way."
+      "reason": "The file reads the id of a React element that is given as `render`. It gives the id to the owner through a ref callback. In Vue, `#render` is a slot, so a part reads the `id` of the element only after the render. `MenuPopup.vue` gives its `id` prop to its root with a `watch`. The filter root reads the `id` of the list element with `useElementId`. A part that another part names reads the `id` of its own element from the mount on, with `useRegisteredId`."
     },
     {
       "upstream": "packages/react/src/internals/resolveRenderedId.test.tsx",
