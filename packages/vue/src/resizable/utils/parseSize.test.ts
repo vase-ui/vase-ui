@@ -156,9 +156,15 @@ describe('normalizeLayout', () => {
     expect(Object.values(pins)).toEqual([200]);
   });
 
-  it('throws for a size that is not valid', () => {
-    expect(() => normalizeLayout({ a: '12ch' }, new Set(), basis)).toThrow(
-      /^Vase UI: The size "12ch" is not valid\./,
-    );
+  it('leaves out an entry that is not a size', () => {
+    const snapshot = JSON.parse('{ "a": "12ch", "b": 40, "c": null }') as Record<
+      string,
+      number | string
+    >;
+
+    expect(normalizeLayout(snapshot, new Set(['a']), basis)).toEqual({
+      layout: { b: 40 },
+      pins: {},
+    });
   });
 });

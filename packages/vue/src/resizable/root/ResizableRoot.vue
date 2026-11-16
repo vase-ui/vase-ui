@@ -64,7 +64,8 @@ export interface ResizableRootProps
    * `em` is the font size of the panel.
    * The root reads a length when it has a measurement, so the size of a length shows after the
    * mount. The change events give percent.
-   * The panels show the layout as far as their constraints allow.
+   * The panels show the layout as far as their constraints allow. The root ignores an entry that is
+   * not a size, and a development build shows a warning.
    * An entry for a panel that is not mounted stays in the layout, and the panel gets its size back
    * when it mounts.
    *
@@ -72,7 +73,8 @@ export interface ResizableRootProps
    */
   layout?: ResizableRootLayoutSnapshot | undefined;
   /**
-   * The uncontrolled layout at the start. It takes the same sizes as `layout`.
+   * The uncontrolled layout at the start. It takes the same sizes as `layout`, and the root ignores
+   * an entry that is not a size in the same way.
    * A panel with no entry takes its `defaultSize`, or an equal share of the space that is left.
    * The `reset()` method and a double click on a handle give back the sizes of this layout: the
    * method for each panel, and the double click for the primary panel of the handle.
@@ -164,7 +166,8 @@ export interface ResizableRootActions {
   /**
    * Gives each panel the size that the layout has for it, as far as the constraints of the panels
    * allow. A panel that the layout lacks takes its `defaultSize`, or an equal share of the space
-   * that is left. The layout takes the same sizes as the `layout` prop.
+   * that is left. The layout takes the same sizes as the `layout` prop, and the root ignores an
+   * entry that is not a size.
    * The change has the reason `'imperative-action'`. It does nothing when the root has this
    * layout already.
    */
@@ -224,7 +227,15 @@ import {
 import type { PanelConstraints } from '../utils/layout';
 import { getMeasurement, isSameMeasurement, readMeasurement } from '../utils/measure';
 import type { RootMeasurement } from '../utils/measure';
-import { isLength, isViewportLength, normalizeLayout, parseSize } from '../utils/parseSize';
+import {
+  formatSize,
+  isLength,
+  isSize,
+  isViewportLength,
+  normalizeLayout,
+  parseSize,
+  SIZE_FORMS,
+} from '../utils/parseSize';
 import { useEdges } from '../utils/useEdges';
 import ResizableRootChildren from './ResizableRootChildren.vue';
 import { ResizableRootContext } from './ResizableRootContext';
@@ -372,7 +383,21 @@ function buildConstraints(useFirstDefaultSizes: boolean): PanelConstraints[] {
 
 const constraints = computed(() => buildConstraints(true));
 
+// A visitor can change a layout that the app reads from a cookie or a storage, so the root ignores
+// an entry that is not a size. The template of the app gives a size prop, so a size prop that is
+// not valid throws.
 function normalize(snapshot: ResizableRootLayoutSnapshot) {
+  if (process.env.NODE_ENV !== 'production') {
+    for (const [id, size] of Object.entries(snapshot)) {
+      if (!isSize(size)) {
+        warn(
+          `The layout gives the panel "${id}" the size ${formatSize(size)}, which is not valid.`,
+          'The root ignores this size, so the panel takes its `defaultSize`, or an equal share of the space that is left.',
+          SIZE_FORMS,
+        );
+      }
+    }
+  }
   const fixedIds = new Set(
     constraints.value.filter((panel) => panel.fixed).map((panel) => panel.id),
   );
@@ -392,7 +417,8 @@ const lengthPanels = computed<ReadonlyMap<string, string>>(() => {
   return new Map(
     panels.value.flatMap((panel) => {
       const id = panel.id.value;
-      const first = Object.hasOwn(input.value, id) ? input.value[id] : panel.defaultSize;
+      const entry = Object.hasOwn(input.value, id) ? input.value[id] : undefined;
+      const first = isSize(entry) ? entry : panel.defaultSize;
       return typeof first === 'string' && isLength(first) ? [[id, first.trim()] as const] : [];
     }),
   );
