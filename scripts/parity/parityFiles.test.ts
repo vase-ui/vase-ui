@@ -47,6 +47,18 @@ test('a correct family file has no problem', () => {
   assert.deepEqual(validateFamilyFile(FILE, makeFamily()), []);
 });
 
+for (const kind of ['stateField', 'constant']) {
+  test(`a surfaceAdditions row accepts one ${kind}`, () => {
+    const family = makeFamily();
+    family.surfaceAdditions = [{ entry: 'Root', [kind]: 'disabled', reason: 'A reason.' }];
+    assert.deepEqual(validateFamilyFile(FILE, family), []);
+    family.surfaceAdditions[0].prop = 'disabled';
+    assert.deepEqual(validateFamilyFile(FILE, family), [
+      `${FILE}: surfaceAdditions[0]: names one member. Give exactly one of "prop", "emit", "slot", "exposed", "changeEventReason", "stateField" and "constant".`,
+    ]);
+  });
+}
+
 const wrongFamilies: { name: string; change: (family: Json) => void; message: RegExp }[] = [
   {
     name: 'an unknown key',
@@ -189,7 +201,7 @@ const wrongFamilies: { name: string; change: (family: Json) => void; message: Re
       family.surfaceAdditions[0].emit = 'x';
     },
     message:
-      /surfaceAdditions\[0\]: names one member\. Give exactly one of "prop", "emit", "slot", "exposed" and "changeEventReason"\./,
+      /surfaceAdditions\[0\]: names one member\. Give exactly one of "prop", "emit", "slot", "exposed", "changeEventReason", "stateField" and "constant"\./,
   },
   {
     name: 'a surfaceAdditions row with a prop and a change reason',

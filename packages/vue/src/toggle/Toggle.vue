@@ -52,6 +52,7 @@ export type ToggleChangeEventDetails = VaseUIChangeEventDetails<ToggleChangeEven
 import { computed, onMounted, watch } from 'vue';
 import { error } from '../common/error';
 import { useControlled } from '../common/useControlled';
+import { useFieldsetDisabled } from '../fieldset/root/useFieldsetDisabled';
 import { useCompositeItem } from '../internals/composite/item/useCompositeItem';
 import { createChangeEventDetails } from '../internals/createBaseUIEventDetails';
 import type { ComponentRenderFn, HTMLProps } from '../internals/types';
@@ -92,7 +93,13 @@ defineSlots<{
 const groupItemValue = useVaseUiId(() => props.value || undefined);
 const groupContext = useToggleGroupContext<string>();
 
-const toggleDisabled = computed(() => props.disabled || (groupContext?.disabled.value ?? false));
+const fieldsetDisabled = useFieldsetDisabled(() => element.value);
+const toggleDisabled = computed(
+  () =>
+    props.disabled ||
+    (groupContext?.disabled.value ?? false) ||
+    (props.nativeButton && fieldsetDisabled.value),
+);
 
 if (process.env.NODE_ENV !== 'production' && groupContext) {
   const checkValue = () => {

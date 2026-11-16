@@ -35,6 +35,7 @@ export interface ButtonProps
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useFieldsetDisabled } from '../fieldset/root/useFieldsetDisabled';
 import { useButton } from '../internals/use-button';
 import { useRenderElement } from '../internals/useRenderElement';
 
@@ -52,10 +53,12 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, ButtonState>;
 }>();
 
-const state = computed<ButtonState>(() => ({ disabled: props.disabled }));
+const fieldsetDisabled = useFieldsetDisabled(() => element.value);
+const isDisabled = computed(() => props.disabled || (props.nativeButton && fieldsetDisabled.value));
+const state = computed<ButtonState>(() => ({ disabled: isDisabled.value }));
 
 const { getButtonProps, buttonRef } = useButton({
-  disabled: () => props.disabled,
+  disabled: isDisabled,
   focusableWhenDisabled: () => props.focusableWhenDisabled,
   native: () => props.nativeButton,
 });

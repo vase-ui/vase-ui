@@ -20,6 +20,10 @@ function getTargetElement(event: Event): Element | null {
 
 export interface TooltipTriggerState {
   /**
+   * Whether a fieldset disables the native button.
+   */
+  disabled: boolean;
+  /**
    * Whether the tooltip is currently open and was opened by this trigger.
    */
   open: boolean;
@@ -68,9 +72,10 @@ export interface TooltipTriggerProps<Payload = unknown>
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
-import { computed, onMounted, shallowRef, watch } from 'vue';
+import { computed, onMounted, shallowRef, useSlots, watch } from 'vue';
 import { closest, contains } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
+import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import { useVaseUiId } from '../../internals/useBaseUiId';
@@ -145,7 +150,19 @@ function writeIsInstantPhase() {
 onMounted(writeIsInstantPhase);
 watch([store, delayGroup.isInstantPhase], writeIsInstantPhase);
 
-const isDisabled = computed(() => props.disabled || store.value.select('disabled'));
+const fieldsetDisabled = useFieldsetDisabled(() => element.value);
+const slots = useSlots();
+// The part has no element in a server render and in the first client render. The default tag
+// then gives the answer, so the server HTML follows `Fieldset.Root`.
+const isNativeButton = computed(() =>
+  triggerElement.value
+    ? triggerElement.value.tagName === 'BUTTON'
+    : props.as === 'button' && !slots.render,
+);
+const isButtonDisabled = computed(() => isNativeButton.value && fieldsetDisabled.value);
+const isDisabled = computed(
+  () => props.disabled || store.value.select('disabled') || isButtonDisabled.value,
+);
 const trackCursorAxis = computed(() => store.value.select('trackCursorAxis'));
 const disableHoverablePopup = computed(() => store.value.select('disableHoverablePopup'));
 
@@ -305,7 +322,10 @@ function handlePointerdown(event: PointerEvent) {
   cancelPendingOpen(event);
 }
 
-const state = computed<TooltipTriggerState>(() => ({ open: isOpenedByThisTrigger.value }));
+const state = computed<TooltipTriggerState>(() => ({
+  open: isOpenedByThisTrigger.value,
+  disabled: isButtonDisabled.value,
+}));
 
 const { element, elementProps } = useRenderElement('button', props, {
   state,

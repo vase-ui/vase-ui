@@ -22,8 +22,7 @@ import type { Check, Report } from './validate.ts';
 export type ExceptionKind = 'replaced' | 'not-applicable' | 'engine' | 'waits-on';
 export type Engine = 'chromium' | 'firefox' | 'webkit';
 export type ComponentMemberKind = 'prop' | 'emit' | 'slot' | 'exposed';
-/** What a `surfaceAdditions` row names: a member of a component, or a change reason of its type. */
-export type MemberKind = ComponentMemberKind | 'changeEventReason';
+export type MemberKind = ComponentMemberKind | 'changeEventReason' | 'stateField' | 'constant';
 
 export interface ExceptionRow {
   upstream: string;
@@ -48,6 +47,10 @@ export interface SurfaceAddition {
   exposed?: string;
   /** A change reason that the `ChangeEventReason` type of the part has and Base UI lacks. */
   changeEventReason?: string;
+  /** A field that the state type of the part has and Base UI lacks. */
+  stateField?: string;
+  /** A constant that the export `entry` has and Base UI lacks. */
+  constant?: string;
   reason: string;
 }
 
@@ -134,7 +137,12 @@ export type Target =
 const KINDS: ExceptionKind[] = ['replaced', 'not-applicable', 'engine', 'waits-on'];
 const ENGINES: Engine[] = ['chromium', 'firefox', 'webkit'];
 export const COMPONENT_MEMBER_KINDS: ComponentMemberKind[] = ['prop', 'emit', 'slot', 'exposed'];
-export const MEMBER_KINDS: MemberKind[] = [...COMPONENT_MEMBER_KINDS, 'changeEventReason'];
+export const MEMBER_KINDS: MemberKind[] = [
+  ...COMPONENT_MEMBER_KINDS,
+  'changeEventReason',
+  'stateField',
+  'constant',
+];
 
 export const FAMILY_NAME = /^[a-z][a-z0-9-]*$/;
 
@@ -337,6 +345,8 @@ const surfaceAddition = withRule<SurfaceAddition>(
       slot: nonEmptyString,
       exposed: nonEmptyString,
       changeEventReason: nonEmptyString,
+      stateField: nonEmptyString,
+      constant: nonEmptyString,
       reason: nonEmptyString,
     },
     MEMBER_KINDS,
@@ -345,7 +355,7 @@ const surfaceAddition = withRule<SurfaceAddition>(
     if (memberKeysOf(row).length !== 1) {
       report(
         place,
-        'names one member. Give exactly one of "prop", "emit", "slot", "exposed" and "changeEventReason".',
+        'names one member. Give exactly one of "prop", "emit", "slot", "exposed", "changeEventReason", "stateField" and "constant".',
       );
     }
   },

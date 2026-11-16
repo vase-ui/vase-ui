@@ -27,6 +27,7 @@ export interface CollapsibleTriggerProps
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { transitionStatusMapping } from '../../internals/stateAttributesMapping';
@@ -64,7 +65,10 @@ const {
 // The panel registers its id in `setup`, and it can come after the trigger.
 useDeferredServerRender();
 
-const isDisabled = computed(() => props.disabled || contextDisabled.value);
+const fieldsetDisabled = useFieldsetDisabled(() => element.value);
+const isDisabled = computed(
+  () => props.disabled || contextDisabled.value || (props.nativeButton && fieldsetDisabled.value),
+);
 
 const state = computed<CollapsibleTriggerState>(() => ({
   ...rootState.value,

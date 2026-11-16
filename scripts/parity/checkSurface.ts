@@ -7,6 +7,7 @@ import type {
   ExceptionRow,
   FamilyExtract,
   FamilyFile,
+  MemberKind,
   Target,
 } from './parityFiles.ts';
 import { hasCounterpart, VASE_SOURCE_ROOT } from './paths.ts';
@@ -207,29 +208,28 @@ function compareMembers(
   }
 }
 
-/**
- * The reasons of the Vase UI type that Base UI also has, or that no "surfaceAdditions" row accepts.
- * A row for a reason that Base UI has stays unused, and the check reports it as stale.
- */
-function withoutAddedReasons(
+function acceptAddition(context: Context, entry: string, kind: MemberKind, name: string): boolean {
+  const index = context.family.surfaceAdditions.findIndex(
+    (row) => row.entry === entry && row[kind] === name,
+  );
+  if (index === -1) {
+    return false;
+  }
+  context.usedAdditions.add(index);
+  return true;
+}
+
+// A row for a member that Base UI has stays unused, so the check reports it as stale.
+function withoutAdditions(
   context: Context,
   entry: string,
+  kind: 'changeEventReason' | 'stateField',
   expected: string[],
   found: string[],
 ): string[] {
-  return found.filter((reason) => {
-    if (expected.includes(reason)) {
-      return true;
-    }
-    const index = context.family.surfaceAdditions.findIndex(
-      (row) => row.entry === entry && row.changeEventReason === reason,
-    );
-    if (index === -1) {
-      return true;
-    }
-    context.usedAdditions.add(index);
-    return false;
-  });
+  return found.filter(
+    (name) => expected.includes(name) || !acceptAddition(context, entry, kind, name),
+  );
 }
 
 function compareSets(
@@ -248,6 +248,7 @@ function compareSets(
 }
 
 function compareConstants(
+  context: Context,
   expected: { name: string; value: string }[],
   actual: { name: string; value: string | undefined }[],
   namespace: string,
@@ -266,7 +267,9 @@ function compareConstants(
   for (const { name } of actual.filter(
     ({ name: item }) => !expected.some((entry) => entry.name === item),
   )) {
-    add(`constant ${inlineCode(name)} of ${inlineCode(namespace)} is not in Base UI. Remove it.`);
+    if (!acceptAddition(context, namespace, 'constant', name)) {
+      add(`constant ${inlineCode(name)} of ${inlineCode(namespace)} is not in Base UI. Remove it.`);
+    }
   }
 }
 
@@ -346,11 +349,12 @@ function comparePart(
           `missing export ${inlineCode(part.state.name)} (the type of ${part.name}.State) in ${entry.file}. Add it.`,
         );
       } else {
+        const expectedFields = part.state.fields.map(({ name }) => name);
         compareSets(
           'state field',
           part.state.name,
-          part.state.fields.map(({ name }) => name),
-          fields,
+          expectedFields,
+          withoutAdditions(context, part.name, 'stateField', expectedFields, fields),
           add,
         );
       }
@@ -367,7 +371,7 @@ function comparePart(
           'reason',
           name,
           values,
-          withoutAddedReasons(context, part.name, values, found),
+          withoutAdditions(context, part.name, 'changeEventReason', values, found),
           add,
         );
       }
@@ -413,7 +417,7 @@ function compareFile(context: Context, file: SurfaceFile): void {
     const add = adder(type.name);
     const actual = entry.path ? context.project?.readConstants(entry.path, type.name) : undefined;
     if (actual) {
-      compareConstants(type.constants, actual, type.name, add);
+      compareConstants(context, type.constants, actual, type.name, add);
     } else {
       add(
         `missing export ${inlineCode(type.name)} in ${entryFile}. Add it, or add an exception row.`,
@@ -578,10 +582,14 @@ export function checkSurface(options: {
     }
     const { kind, name: member } = memberOf(row);
     let reason: string;
-    if (!partTitles.has(row.entry)) {
+    if (kind === 'constant') {
+      reason = `the entry has no constant ${inlineCode(member)} that Base UI lacks`;
+    } else if (!partTitles.has(row.entry)) {
       reason = `the extract has no part ${inlineCode(row.entry)}`;
     } else if (kind === 'changeEventReason') {
       reason = `the change reasons of the part have no ${inlineCode(member)} that Base UI lacks`;
+    } else if (kind === 'stateField') {
+      reason = `the state of the part has no field ${inlineCode(member)} that Base UI lacks`;
     } else {
       const mapped = (context.members.get(row.entry) ?? []).some(({ expected }) =>
         expected[kind].has(member),
