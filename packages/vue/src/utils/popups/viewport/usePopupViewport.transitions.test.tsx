@@ -13,6 +13,7 @@ import type { Component } from 'vue';
 import {
   createRenderer,
   flushMicrotasks,
+  nextEndingStyle,
   nextEvent,
   renderOnServer,
   screen,
@@ -346,17 +347,20 @@ describe('usePopupViewport', () => {
       // The wait for the end of the animations must begin before the next change.
       await waitSingleFrame();
 
-      await user.click(screen.getByTestId('trigger3'));
-      await waitSingleFrame();
+      // The viewport keeps one container for the previous content, and that container has the
+      // ending style of the first change. A frame after the change, the containers move from
+      // starting to ending styles. The wait resolves only for an ending style of this change.
+      const previousContainer = getPreviousContainer()!;
+      await nextEndingStyle(previousContainer, {
+        action: () => user.click(screen.getByTestId('trigger3')),
+      });
 
       expect(getCurrentContainer()!.textContent).toBe('Content 3');
       expect(getCurrentContainer()!.getAnimations()).toHaveLength(1);
       expect(screen.getByTestId('viewport')).toHaveAttribute('data-transitioning', '');
-      expect(getPreviousContainer()!.textContent).toBe('Content 2');
-
-      await waitFor(() => {
-        expect(getPreviousContainer()).toHaveAttribute('data-ending-style', '');
-      });
+      expect(getPreviousContainer()).toBe(previousContainer);
+      expect(previousContainer.textContent).toBe('Content 2');
+      expect(previousContainer).toHaveAttribute('data-ending-style', '');
       expect(getCurrentContainer()).not.toHaveAttribute('data-starting-style');
     });
 

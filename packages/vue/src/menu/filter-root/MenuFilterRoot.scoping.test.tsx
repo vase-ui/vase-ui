@@ -11,6 +11,7 @@ import {
   fireEvent,
   flushMicrotasks,
   isJSDOM,
+  nextEndingStyle,
   screen,
   takeReportedMessages,
   waitFor,
@@ -544,11 +545,14 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       });
 
       const rename = screen.getByRole('menuitem', { name: 'Rename' });
-      await userEvent.hover(rename);
-      await fireEvent.mouseMove(rename, { movementX: 1 });
-      await waitFor(() => {
-        expect(screen.getByTestId('submenu')).toHaveAttribute('data-ending-style');
+      const submenu = screen.getByTestId('submenu');
+      await nextEndingStyle(submenu, {
+        action: async () => {
+          await userEvent.hover(rename);
+          await fireEvent.mouseMove(rename, { movementX: 1 });
+        },
       });
+      expect(submenu).toHaveAttribute('data-ending-style');
       expect(screen.getByRole('searchbox', { name: 'Filter actions' })).toHaveFocus();
     });
   });
