@@ -1,5 +1,6 @@
 import { inject } from 'vue';
 import type { ComputedRef, InjectionKey } from 'vue';
+import type { CompositeListContextValue } from '../../internals/composite/list/CompositeListContext';
 import type {
   AccordionRootChangeEventDetails,
   AccordionRootState,
@@ -14,6 +15,11 @@ export interface AccordionRootContext<Value = any> {
     eventDetails: AccordionRootChangeEventDetails,
   ) => void;
   hiddenUntilFound: ComputedRef<boolean>;
+  /**
+   * The list of the items. The items register with it through this context. The root does not
+   * provide the list, so an item of a composite around the root joins that composite.
+   */
+  itemList: CompositeListContextValue<unknown>;
   keepMounted: ComputedRef<boolean>;
   state: ComputedRef<AccordionRootState<Value>>;
   value: ComputedRef<AccordionValue<Value>>;

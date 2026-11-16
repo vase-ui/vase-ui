@@ -1,5 +1,6 @@
 import { inject } from 'vue';
 import type { ComputedRef, InjectionKey } from 'vue';
+import type { CompositeListContextValue } from '../../internals/composite/list/CompositeListContext';
 import type { OTPFieldInputState } from '../input/OTPFieldInput.vue';
 import type {
   OTPFieldRootChangeEventDetails,
@@ -18,6 +19,11 @@ export interface OTPFieldRootContext {
   getInputId: (index: number) => string | undefined;
   handleInputBlur: (event: FocusEvent) => void;
   handleInputFocus: (index: number, event: FocusEvent) => void;
+  /**
+   * The list of the inputs. The inputs register with it through this context. The root does not
+   * provide the list, so an item of a composite around the root joins that composite.
+   */
+  inputList: CompositeListContextValue<unknown>;
   inputMode: ComputedRef<OTPFieldInputMode | undefined>;
   inputAriaLabelledBy: ComputedRef<string | undefined>;
   invalid: ComputedRef<boolean | undefined>;

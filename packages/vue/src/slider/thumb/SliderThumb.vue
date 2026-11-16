@@ -215,6 +215,7 @@ const {
   setIndicatorPosition,
   state: rootState,
   step,
+  thumbList,
   thumbRefs,
   values: sliderValues,
 } = useSliderRootContext();
@@ -246,6 +247,7 @@ const inputId = computed(() => (range.value ? defaultInputId.value : labelableId
 const thumbMetadata = computed<ThumbMetadata>(() => ({ inputId: inputId.value }));
 
 const { ref: listItemRef, index: compositeIndex } = useCompositeListItem<ThumbMetadata>({
+  list: thumbList,
   metadata: thumbMetadata,
 });
 

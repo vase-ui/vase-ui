@@ -4,6 +4,7 @@ import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import { Input } from '@vase-ui/vue/input';
 import { OTPField as OTPFieldBase } from '@vase-ui/vue/otp-field';
+import { Toolbar } from '@vase-ui/vue/toolbar';
 import {
   createHeldBranch,
   createRenderer,
@@ -2868,6 +2869,27 @@ describe('<OTPField.Root />', () => {
     await render(<OTPField id="verification-code" />);
 
     expect(document.querySelector('#verification-code-hidden-input')).not.toBeNull();
+  });
+
+  it('VUE-87: an item of a composite around the root joins that composite, and the inputs keep their slots', async () => {
+    await render(
+      <Toolbar.Root>
+        <OTPFieldBase.Root defaultValue="12" length={3}>
+          <Toolbar.Button data-testid="in-root">In the root</Toolbar.Button>
+          <OTPFieldBase.Input />
+          <OTPFieldBase.Input />
+          <OTPFieldBase.Input />
+        </OTPFieldBase.Root>
+        <Toolbar.Button data-testid="after-root">After the root</Toolbar.Button>
+      </Toolbar.Root>,
+    );
+    const inRoot = screen.getByTestId('in-root');
+    inRoot.focus();
+
+    await fireEvent.keyDown(inRoot, { key: 'ArrowRight' });
+    expect(screen.getByTestId('after-root')).toHaveFocus();
+    const inputs = screen.getAllByRole<HTMLInputElement>('textbox');
+    expect(inputs.map((input) => input.value)).toEqual(['1', '2', '']);
   });
 
   it('warns when length does not match the rendered input count', async () => {

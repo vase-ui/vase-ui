@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { Field } from '@vase-ui/vue/field';
+import { Toolbar } from '@vase-ui/vue/toolbar';
 import {
   createRenderer,
   describeConformance,
@@ -329,5 +330,33 @@ describe('<Combobox.Chips />', () => {
 
     expect(screen.queryByTestId('first')).toBe(null);
     expect(store.context.chipsContainerRef.value).toBe(screen.getByTestId('second'));
+  });
+
+  it('VUE-87: an item of a composite around the chips joins that composite, and a chip removes its own value', async () => {
+    const onValueChange = vi.fn();
+    await render(
+      <Toolbar.Root>
+        <Combobox.Root multiple defaultValue={['apple', 'banana']} onValueChange={onValueChange}>
+          <Combobox.Chips>
+            <Toolbar.Button data-testid="in-chips">In the chips</Toolbar.Button>
+            <Combobox.Chip data-testid="chip-apple">apple</Combobox.Chip>
+            <Combobox.Chip>banana</Combobox.Chip>
+            <Combobox.Input />
+          </Combobox.Chips>
+        </Combobox.Root>
+        <Toolbar.Button data-testid="after-chips">After the chips</Toolbar.Button>
+      </Toolbar.Root>,
+    );
+    const inChips = screen.getByTestId('in-chips');
+    inChips.focus();
+
+    await fireEvent.keyDown(inChips, { key: 'ArrowRight' });
+    expect(screen.getByTestId('after-chips')).toHaveFocus();
+
+    const chipApple = screen.getByTestId('chip-apple');
+    chipApple.focus();
+    await fireEvent.keyDown(chipApple, { key: 'Backspace' });
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+    expect(onValueChange.mock.calls[0]?.[0]).toEqual(['banana']);
   });
 });
