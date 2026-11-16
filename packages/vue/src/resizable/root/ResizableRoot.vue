@@ -66,22 +66,23 @@ export interface ResizableRootProps
    * mount. The change events give percent.
    * The panels show the layout as far as their constraints allow. The root ignores an entry that is
    * not a size, and a development build shows a warning.
+   * `null` is a layout with no entries, as `{}` is, and the root stays controlled.
    * An entry for a panel that is not mounted stays in the layout, and the panel gets its size back
    * when it mounts.
    *
    * To render an uncontrolled root, use the `defaultLayout` prop instead.
    */
-  layout?: ResizableRootLayoutSnapshot | undefined;
+  layout?: ResizableRootLayoutSnapshot | null | undefined;
   /**
    * The uncontrolled layout at the start. It takes the same sizes as `layout`, and the root ignores
-   * an entry that is not a size in the same way.
+   * an entry that is not a size in the same way. `null` is a layout with no entries.
    * A panel with no entry takes its `defaultSize`, or an equal share of the space that is left.
    * The `reset()` method and a double click on a handle give back the sizes of this layout: the
    * method for each panel, and the double click for the primary panel of the handle.
    *
    * To render a controlled root, use the `layout` prop instead.
    */
-  defaultLayout?: ResizableRootLayoutSnapshot | undefined;
+  defaultLayout?: ResizableRootLayoutSnapshot | null | undefined;
   /**
    * The size of the move of an arrow key. A size is a number, or a string of a number with a unit.
    * A number is percent of the panel space, and `em` is the font size of the root.
@@ -167,11 +168,11 @@ export interface ResizableRootActions {
    * Gives each panel the size that the layout has for it, as far as the constraints of the panels
    * allow. A panel that the layout lacks takes its `defaultSize`, or an equal share of the space
    * that is left. The layout takes the same sizes as the `layout` prop, and the root ignores an
-   * entry that is not a size.
+   * entry that is not a size. `null` is a layout with no entries.
    * The change has the reason `'imperative-action'`. It does nothing when the root has this
    * layout already.
    */
-  setLayout: (layout: ResizableRootLayoutSnapshot) => void;
+  setLayout: (layout: ResizableRootLayoutSnapshot | null) => void;
   /**
    * Gives the panels the layout of the `defaultLayout` prop, also in a controlled root.
    * A panel that it does not name takes its `defaultSize`, or an equal share of the space that is
@@ -321,7 +322,9 @@ const state = computed<ResizableRootState>(() => ({
 
 // The layout that the user or the app asked for: the `layout` prop, or the layout of the last change.
 const [input, setInput] = useControlled<ResizableRootLayoutSnapshot>({
-  controlled: () => props.layout,
+  // `undefined` makes the root uncontrolled, so only `null` becomes a layout with no entries. The ref
+  // of `useCookie` of Nuxt is `null` after the removal of the cookie.
+  controlled: () => (props.layout === null ? EMPTY_OBJECT : props.layout),
   default: () => props.defaultLayout ?? EMPTY_OBJECT,
   name: 'Resizable',
   state: 'layout',
@@ -911,11 +914,11 @@ function getLayout() {
   return { ...shown.value };
 }
 
-function setLayout(snapshot: ResizableRootLayoutSnapshot) {
+function setLayout(snapshot: ResizableRootLayoutSnapshot | null) {
   if (!canChange()) {
     return;
   }
-  const { layout, pins: exact } = normalize(snapshot);
+  const { layout, pins: exact } = normalize(snapshot ?? EMPTY_OBJECT);
   const resolvedLayout = resolveLayout(buildConstraints(false), layout);
   const current = toRequestedLayout(shown.value, requested.value);
   if (areLayoutsEqual(toRequestedLayout(resolvedLayout, layout), current)) {
