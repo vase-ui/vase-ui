@@ -44,8 +44,8 @@ function formatLimit(
 
 /**
  * The text of a limit for the message about a zoned value. A zoned limit shows in the zone of the
- * value, which is the zone that the field shows. A least limit rounds up to the next minute, so
- * that the value that the message names is valid, and a greatest limit shows as its minute.
+ * value, which is the zone that the field shows. A least limit rounds up to the minute, so that
+ * the value that the message names is valid, and a greatest limit shows as its minute.
  */
 function formatLimitForZoned(
   limit: DateValue,

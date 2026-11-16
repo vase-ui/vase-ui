@@ -31,8 +31,9 @@ defineSlots<{
 }>();
 
 // A `Field` has one control that its label names, and the start field is that control. This field
-// has a labelable context of its own, so it has an id of its own. The label of the `Field` does not
-// name it. The descriptions and the errors of the `Field` still reach it.
+// has a labelable context of its own, so it has an id of its own. `useDateRangePickerField` reads
+// the label of the `Field` and joins it to the name of this field. The descriptions and the errors
+// of the `Field` still reach it.
 provideLabelableContext();
 
 // This part renders `DateField.Root` and makes no element of its own. The template has one form for
