@@ -383,6 +383,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
 
   const controlId = useLabelableId({
     id: () => toValue(parameters.id),
+    element: () => firstSegment.value,
   });
 
   // The name of a month depends on its year in a calendar with leap months. The value can have

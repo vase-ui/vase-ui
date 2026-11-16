@@ -454,6 +454,8 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
 
   const id = useLabelableId({
     id: () => props.id,
+    element: () =>
+      store.select('inputInsidePopup') ? store.select('triggerElement') : inputRef.value,
   });
   const { labelId, registerLabelId } = createLabelIdRegistry();
   const direction = useDirection();

@@ -259,6 +259,7 @@ const {
 
 const controlId = useLabelableId({
   id: () => props.id,
+  element: () => store.select('triggerElement'),
 });
 
 const isDisabled = computed(() => Boolean(fieldDisabled.value || props.disabled));

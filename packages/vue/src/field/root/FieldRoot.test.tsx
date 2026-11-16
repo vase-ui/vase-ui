@@ -25,6 +25,7 @@ import {
 } from '#test-utils';
 import { useFieldRootContext } from '../../internals/field-root-context';
 import * as Select from '../../select/index.parts';
+import FieldRenderIdHydration from './FieldRenderIdHydration.test.vue';
 import SelectInFieldHydration from './SelectInFieldHydration.test.vue';
 
 type FieldRootInstance = InstanceType<typeof Field.Root>;
@@ -334,6 +335,21 @@ describe('<Field.Root />', () => {
     expect(label).not.toHaveAttribute('for');
     expect(group).toHaveAttribute('aria-labelledby', label.id);
   });
+
+  it.skipIf(isJSDOM)(
+    'VUE-118: hydrates the ids of #render slots with no mismatch, and names them after the mount',
+    async () => {
+      const serverHtml = await renderOnServer('src/field/root/FieldRenderIdHydration.test.vue');
+
+      const { container } = await hydrate(FieldRenderIdHydration, { serverHtml });
+
+      expect(container.querySelector('[data-testid="label"]')).toHaveAttribute('for', 'own');
+      expect(container.querySelector('[data-testid="control"]')).toHaveAttribute(
+        'aria-describedby',
+        'own-description',
+      );
+    },
+  );
 
   it.skipIf(isJSDOM)(
     'keeps `aria-labelledby` valid when toggling from Checkbox.Root to Select.Root after hydration',

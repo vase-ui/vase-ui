@@ -124,7 +124,7 @@ const state = computed<FieldControlState>(() => ({
   disabled: isDisabled.value,
 }));
 
-const controlId = useLabelableId({ id: () => props.id });
+const controlId = useLabelableId({ id: () => props.id, element: () => element.value });
 
 // The DOM value is always a string, so the comparisons for `dirty` use the string.
 const serializedValue = computed(() => (props.value == null ? undefined : String(props.value)));
