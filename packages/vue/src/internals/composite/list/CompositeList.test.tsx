@@ -860,9 +860,7 @@ describe('<CompositeList />', () => {
 
       await user.click(screen.getByRole('button', { name: 'Remove badge' }));
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('badge')).toBe(null);
-      });
+      expect(screen.queryByTestId('badge')).toBe(null);
       expect(onMapChange).not.toHaveBeenCalled();
     });
 

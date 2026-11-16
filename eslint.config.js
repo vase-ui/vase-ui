@@ -37,6 +37,8 @@ const MESSAGES = {
     'A dynamic argument can be `innerHTML`, which renders a string as HTML. Write the name of the attribute.',
   waitLimit:
     'This wait has a limit in seconds, and a busy machine can stall the page for longer. Use `waitFor`, `screen` or `within` of `#test-utils`. Their limit is a count of frames.',
+  absenceWait:
+    'A query for an absence passes before the element appears, so this wait can end before the change. Assert the absence directly, or wait on an element that you got before the action. For a presence, use a `getBy` query.',
   privateKeyword:
     'The `private` keyword is only a check of the compiler. Write an ECMAScript private member: `#name`.',
   reactEventProp: (reactKey, vueKey) =>
@@ -158,6 +160,19 @@ const RESTRICTED_REACT_EVENT_PROP_SYNTAX = Object.entries(VUE_KEY_OF_REACT_EVENT
       message: MESSAGES.reactEventProp(`${reactKey}${suffix}`, `${vueKey}${suffix}`),
     })),
 );
+
+// A later block with `no-restricted-syntax` for a test file replaces the list of an earlier block.
+// Thus each selector for the test files is in this one list.
+const RESTRICTED_TEST_SYNTAX = [
+  ...RESTRICTED_REACT_EVENT_PROP_SYNTAX,
+  {
+    selector: [
+      "CallExpression[callee.name='waitFor'] CallExpression[callee.name=/^query(All)?By/]",
+      "CallExpression[callee.name='waitFor'] CallExpression[callee.property.name=/^query(All)?By/]",
+    ].join(', '),
+    message: MESSAGES.absenceWait,
+  },
+];
 
 const RESTRICTED_SYNTAX = [
   {
@@ -529,7 +544,7 @@ export default defineConfig([
   },
   {
     files: [...TEST_SCRIPT_FILES, 'packages/vue/test/**/*.{ts,tsx,vue}'],
-    rules: { 'no-restricted-syntax': ['error', ...RESTRICTED_REACT_EVENT_PROP_SYNTAX] },
+    rules: { 'no-restricted-syntax': ['error', ...RESTRICTED_TEST_SYNTAX] },
   },
   {
     // The tests of `fixtures/nuxt` run in Node and wait with Playwright and `expect.poll`. These

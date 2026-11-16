@@ -108,7 +108,7 @@ A part cannot know which element the `as` prop or the `#render` slot gives. [But
 
 <<< ./use-render/Usage.vue#usage{ts}
 
-<ApiReference name="useRender" />
+<ApiReference name="useRender" :heading-level="4" />
 
 ### useRender.ComponentProps
 

@@ -13,7 +13,6 @@ import {
   renderOnServer,
   screen,
   takeReportedMessages,
-  waitFor,
   waitForLaterMillisecond,
   within,
 } from '#test-utils';
@@ -201,9 +200,7 @@ describe('<AlertDialog.Root />', () => {
       expect(await screen.findByTestId('popup')).not.toBe(null);
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
       await user.click(screen.getByRole('button', { name: 'Close' }));
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
-      });
+      expect(screen.queryByTestId('popup')).toBe(null);
       expect(trigger).toHaveAttribute('aria-expanded', 'false');
     }
 

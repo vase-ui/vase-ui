@@ -79,10 +79,10 @@ With no type argument, a set accepts the attributes of each element, such as `hr
 
 A set also accepts `data-*` attributes, with a type argument and with none.
 
-<ApiReference name="mergeProps" />
+<ApiReference name="mergeProps" :heading-level="4" />
 
 ### mergePropsN
 
 This function accepts an array of props objects or functions that return props objects. It is slightly less efficient than `mergeProps`. Use it only to merge more than 5 sets of props.
 
-<ApiReference name="mergePropsN" />
+<ApiReference name="mergePropsN" :heading-level="4" />

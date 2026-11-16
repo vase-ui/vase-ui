@@ -107,9 +107,7 @@ describe('<PreviewCard.Popup />', () => {
     expect(screen.queryByTestId('old')).toBe(null);
 
     await user.keyboard('[Escape]');
-    await waitFor(() => {
-      expect(screen.queryByTestId('new')).toBe(null);
-    });
+    expect(screen.queryByTestId('new')).toBe(null);
   });
 
   describe('hover', () => {

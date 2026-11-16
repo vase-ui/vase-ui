@@ -289,9 +289,7 @@ describe('<Menu.RadioItem />', () => {
 
       await user.click(trigger); // close the menu
 
-      await waitFor(() => {
-        expect(screen.queryByRole('menu')).toBe(null);
-      });
+      expect(screen.queryByRole('menu')).toBe(null);
 
       await user.click(trigger); // reopen the menu
 

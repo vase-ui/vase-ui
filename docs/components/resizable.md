@@ -540,19 +540,19 @@ The root reads the direction from [`DirectionProvider`](/utils/direction-provide
 
 Gives the id, the state and the methods of the nearest panel above the caller, or `null` outside a panel. Call it in `setup`.
 
-<ApiReference name="Resizable.useParentPanel" />
+<ApiReference name="Resizable.useParentPanel" :heading-level="4" />
 
 ### Resizable.useParentRoot
 
 Gives the orientation and the methods of the nearest root above the caller, or `null` outside a root. Call it in `setup`.
 
-<ApiReference name="Resizable.useParentRoot" />
+<ApiReference name="Resizable.useParentRoot" :heading-level="4" />
 
 ### Resizable.useLayoutStorage
 
 Keeps the layout of a root in a storage. Call it in `setup`. See [Save the layout](#save-the-layout).
 
-<ApiReference name="Resizable.useLayoutStorage" />
+<ApiReference name="Resizable.useLayoutStorage" :heading-level="4" />
 
 ## Additional types
 

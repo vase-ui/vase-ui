@@ -267,11 +267,15 @@ describe('<Combobox.Chip />', () => {
       expect(screen.getByRole('listbox')).not.toBe(null);
 
       await user.click(input);
+      const listbox = screen.getByRole('listbox');
       const chipApple = screen.getByTestId('chip-apple');
       chipApple.focus();
       await flushMicrotasks();
 
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      await waitFor(() => {
+        expect(listbox).not.toBeInTheDocument();
+      });
+      expect(screen.queryByRole('listbox')).toBe(null);
     });
 
     it('should handle keyboard navigation when enabled', async () => {
@@ -404,7 +408,7 @@ describe('<Combobox.Chip />', () => {
         await user.click(screen.getByRole('combobox'));
         await user.keyboard('{ArrowLeft}');
 
-        await waitFor(() => expect(screen.queryByRole('combobox')).toBe(null));
+        expect(screen.queryByRole('combobox')).toBe(null);
         expect(chip).toHaveFocus();
 
         await user.keyboard(`{${key}}`);

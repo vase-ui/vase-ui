@@ -459,23 +459,39 @@
   color: var(--vase-gray-t1);
 }
 
-/* A table of the API reference fills the column, as in Base UI. When the column is narrower than
-   40rem, the frame scrolls the table, so that each column keeps a width that is easy to read. */
-.vp-doc .api-table {
+/* A table in a `ScrollBox` does not scroll itself. The box has the frame of the table and scrolls
+   it, so that the box can take the focus. */
+.vp-doc .scroll-box {
   margin: 1.25rem 0;
   border: 1px solid var(--vase-color-border);
   border-radius: var(--vase-radius-12);
+  width: fit-content;
+  max-width: 100%;
   overflow-x: auto;
 }
 
-.vp-doc .api-table table {
+.vp-doc .scroll-box:focus-visible {
+  outline: 2px solid var(--vase-gray-t2);
+  outline-offset: 2px;
+}
+
+.vp-doc .scroll-box > table {
   display: table;
   margin: 0;
   border: 0;
   border-radius: 0;
+  max-width: none;
+}
+
+/* A table of the API reference fills the column, as in Base UI. When the column is narrower than
+   40rem, the box scrolls the table, so that each column keeps a width that is easy to read. */
+.vp-doc .api-table {
+  width: auto;
+}
+
+.vp-doc .api-table > table {
   width: 100%;
   min-width: 40rem;
-  max-width: none;
 }
 
 .vp-doc tr,
