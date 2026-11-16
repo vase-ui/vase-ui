@@ -31,13 +31,13 @@ export interface TimePickerListProps
 import { computed, watch } from 'vue';
 import { warn } from '../../common/warn';
 import { useCompositeRoot } from '../../internals/composite/root/useCompositeRoot';
-import { usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
+import { usePickerFocusTarget } from '../../internals/date-time/picker/usePickerPopup';
 import { toPlainTime } from '../../internals/date-time/temporal';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import TimePickerItem from '../item/TimePickerItem.vue';
 import { useTimePickerRootContext } from '../root/TimePickerRootContext';
-import { findOptionToFocus, useFocusPartOnOpen } from '../utils/useFocusPartOnOpen';
+import { findOptionToFocus } from '../utils/findOptionToFocus';
 import { DEFAULT_LIST_STEP, isValidListStep, listTimes } from '../utils/timeList';
 
 defineOptions({ inheritAttrs: false });
@@ -56,7 +56,6 @@ defineSlots<{
 }>();
 
 const picker = useTimePickerRootContext();
-const popup = usePickerPopup();
 
 if (process.env.NODE_ENV !== 'production') {
   watch(
@@ -122,7 +121,7 @@ const { element, elementProps } = useRenderElement('div', props, {
   ],
 });
 
-useFocusPartOnOpen(popup, () => findOptionToFocus(element.value));
+usePickerFocusTarget(() => findOptionToFocus(element.value));
 
 defineExpose({ element });
 </script>

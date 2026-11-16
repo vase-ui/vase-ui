@@ -19,6 +19,8 @@ import TimePickerItem from './item/TimePickerItem.vue';
 import type { TimePickerItemProps, TimePickerItemState } from './item/TimePickerItem.vue';
 import TimePickerList from './list/TimePickerList.vue';
 import type { TimePickerListProps, TimePickerListState } from './list/TimePickerList.vue';
+import TimePickerPopup from './popup/TimePickerPopup.vue';
+import type { TimePickerPopupProps, TimePickerPopupState } from './popup/TimePickerPopup.vue';
 import TimePickerPositioner from './positioner/TimePickerPositioner.vue';
 import type {
   TimePickerPositionerProps,
@@ -144,4 +146,14 @@ export namespace Clock {
   export type Props = TimePickerClockProps;
 }
 
-export { Arrow, Backdrop, Close, Description, Popup, Portal, Title } from '../popover/index.parts';
+/**
+ * A container for the popup content.
+ * Renders a `<div>` element.
+ */
+export const Popup: typeof TimePickerPopup = TimePickerPopup;
+export namespace Popup {
+  export type State = TimePickerPopupState;
+  export type Props = TimePickerPopupProps;
+}
+
+export { Arrow, Backdrop, Close, Description, Portal, Title } from '../popover/index.parts';

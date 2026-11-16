@@ -10,6 +10,7 @@
     "Field",
     "Trigger",
     "Positioner",
+    "Popup",
     "List",
     "Item",
     "Column",

@@ -38,7 +38,10 @@ export interface TimePickerClockProps extends Omit<
 
 <script setup lang="ts">
 import { computed, shallowRef, useAttrs, useTemplateRef, watch } from 'vue';
-import { usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
+import {
+  usePickerFocusTarget,
+  usePickerPopup,
+} from '../../internals/date-time/picker/usePickerPopup';
 import { withTime } from '../../internals/date-time/temporal';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import TimeClockRoot from '../../time-clock/root/TimeClockRoot.vue';
@@ -49,7 +52,6 @@ import type {
 } from '../../time-clock/root/TimeClockRoot.vue';
 import { nextView } from '../../time-clock/utils/clockViews';
 import { useTimePickerRootContext } from '../root/TimePickerRootContext';
-import { useFocusPartOnOpen } from '../utils/useFocusPartOnOpen';
 import type { TimePickerRootValue } from '../root/TimePickerRoot.vue';
 
 defineOptions({ inheritAttrs: false });
@@ -103,11 +105,9 @@ const popup = usePickerPopup();
 const clock = useTemplateRef<{ element: HTMLElement | null }>('clock');
 const element = computed(() => clock.value?.element ?? null);
 
-// The popup puts the focus on the first tabbable element, which can be a view or a day period. The
-// face of the clock is the element that a person sets the time with.
-useFocusPartOnOpen(popup, () =>
-  element.value?.querySelector<HTMLInputElement>('input[type="range"]'),
-);
+// The focus manager of the popup puts the focus on the first tabbable element, which can be a view
+// or a day period. The face of the clock is the element that a person sets the time with.
+usePickerFocusTarget(() => element.value?.querySelector<HTMLInputElement>('input[type="range"]'));
 
 // The clock commits a view and shows the next view, so the picker follows the view to know the
 // last commit.

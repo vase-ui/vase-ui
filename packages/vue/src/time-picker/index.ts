@@ -11,7 +11,7 @@ export { default as TimePickerColumn } from './column/TimePickerColumn.vue';
 export { default as TimePickerColumnItem } from './column-item/TimePickerColumnItem.vue';
 export { default as TimePickerClock } from './clock/TimePickerClock.vue';
 export { default as TimePickerPortal } from '../popover/portal/PopoverPortal.vue';
-export { default as TimePickerPopup } from '../popover/popup/PopoverPopup.vue';
+export { default as TimePickerPopup } from './popup/TimePickerPopup.vue';
 export { default as TimePickerArrow } from '../popover/arrow/PopoverArrow.vue';
 export { default as TimePickerBackdrop } from '../popover/backdrop/PopoverBackdrop.vue';
 export { default as TimePickerClose } from '../popover/close/PopoverClose.vue';
@@ -27,15 +27,12 @@ export type * from './item/TimePickerItem.vue';
 export type * from './column/TimePickerColumn.vue';
 export type * from './column-item/TimePickerColumnItem.vue';
 export type * from './clock/TimePickerClock.vue';
+export type * from './popup/TimePickerPopup.vue';
 
 export type {
   PopoverPortalProps as TimePickerPortalProps,
   PopoverPortalState as TimePickerPortalState,
 } from '../popover/portal/PopoverPortal.vue';
-export type {
-  PopoverPopupProps as TimePickerPopupProps,
-  PopoverPopupState as TimePickerPopupState,
-} from '../popover/popup/PopoverPopup.vue';
 export type {
   PopoverArrowProps as TimePickerArrowProps,
   PopoverArrowState as TimePickerArrowState,

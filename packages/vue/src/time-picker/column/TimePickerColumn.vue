@@ -43,7 +43,7 @@ import { computed, provide, watch } from 'vue';
 import { useAriaAfterHydration } from '../../common/hydration';
 import { warn } from '../../common/warn';
 import { useCompositeRoot } from '../../internals/composite/root/useCompositeRoot';
-import { usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
+import { usePickerFocusTarget } from '../../internals/date-time/picker/usePickerPopup';
 import { toPlainTime } from '../../internals/date-time/temporal';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -51,7 +51,7 @@ import { isValidStep } from '../../time-clock/utils/clockViews';
 import TimePickerColumnItem from '../column-item/TimePickerColumnItem.vue';
 import { useTimePickerRootContext } from '../root/TimePickerRootContext';
 import { columnValues, selectedColumnValue } from '../utils/columns';
-import { findOptionToFocus, useFocusPartOnOpen } from '../utils/useFocusPartOnOpen';
+import { findOptionToFocus } from '../utils/findOptionToFocus';
 import { useTimePickerFormat } from '../utils/useTimePickerFormat';
 import { TimePickerColumnContext } from './TimePickerColumnContext';
 
@@ -69,7 +69,6 @@ defineSlots<{
 }>();
 
 const picker = useTimePickerRootContext();
-const popup = usePickerPopup();
 const { locale, hourCycle } = useTimePickerFormat(picker);
 const ariaAfterHydration = useAriaAfterHydration();
 
@@ -145,7 +144,7 @@ const { element, elementProps } = useRenderElement('div', props, {
   ],
 });
 
-useFocusPartOnOpen(popup, () => findOptionToFocus(element.value));
+usePickerFocusTarget(() => findOptionToFocus(element.value));
 
 defineExpose({ element });
 </script>

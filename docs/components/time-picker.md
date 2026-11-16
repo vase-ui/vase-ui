@@ -63,7 +63,7 @@ Import the component and assemble its parts:
 
 `TimePicker.Root` renders `Popover.Root` and no element of its own. It holds the value and shares it with its parts. `TimePicker.Field` renders `TimeField.Root`, and `TimePicker.Clock` renders `TimeClock.Root`. Write the parts of those components inside them, as the pages of [Time Field](/components/time-field) and [Time Clock](/components/time-clock) show.
 
-`TimePicker.Trigger` and `TimePicker.Positioner` render `Popover.Trigger` and `Popover.Positioner`. The other parts of the popup are the parts of [Popover](/components/popover): `TimePicker.Portal`, `TimePicker.Popup`, `TimePicker.Arrow`, `TimePicker.Backdrop`, `TimePicker.Close`, `TimePicker.Title` and `TimePicker.Description`. The positioner puts the popup against the field, and against the trigger when the picker has no field.
+`TimePicker.Trigger`, `TimePicker.Positioner` and `TimePicker.Popup` render `Popover.Trigger`, `Popover.Positioner` and `Popover.Popup`. The other parts of the popup are the parts of [Popover](/components/popover): `TimePicker.Portal`, `TimePicker.Arrow`, `TimePicker.Backdrop`, `TimePicker.Close`, `TimePicker.Title` and `TimePicker.Description`. The positioner puts the popup against the field, and against the trigger when the picker has no field.
 
 A popup has one of three ways to pick a time. Use the one that fits, or more than one:
 
@@ -207,7 +207,7 @@ A key goes over a disabled item.
 - `TimePicker.Trigger` has `aria-haspopup="dialog"`. Its default name is `Choose time`. With a value, its name is `Change time,` and the time. Give it an `aria-label` to change it.
 - `TimePicker.Popup` has `role="dialog"`. Give it a name with `aria-label` or `TimePicker.Title`.
 - `TimePicker.List` and `TimePicker.Column` are listboxes, and each item is an option with `aria-selected`. The default name of the list is `Time`, and the default name of a column is the name of its unit in the locale. Give them an `aria-label` or an `aria-labelledby` to change it.
-- When the popup opens, the focus goes to the first of these parts that the popup has: the selected item of the list or of a column, or the first item when no item is selected, or the clock face. When the popup closes, the focus goes back to the trigger.
+- When the popup opens, the focus goes to the first of these parts that the popup has: the selected item of the list or of a column, or the first item when no item is selected, or the clock face. When the popup closes, the focus goes back to the trigger. Give `initialFocus` to `TimePicker.Popup` to move the focus to another element, or `false` to move none.
 - A picker that is `disabled` or `readOnly` has a disabled trigger, and Alt and Down does nothing. A list and a column in a picker that the user cannot change have `aria-disabled` or `aria-readonly`, and their items do not select.
 - The default names of the trigger and of the list are in English, and the time in the name of the trigger follows the locale. The default name of a column is the name of its unit in the locale.
 

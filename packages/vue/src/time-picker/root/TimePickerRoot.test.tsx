@@ -175,7 +175,7 @@ describe('<TimePicker.Root />', () => {
       });
     });
 
-    it('goes to the selected hour of the first column when the popup opens', async () => {
+    it('goes to the selected hour of the first column, and not to the day period column after it', async () => {
       const { user } = await renderPicker({ columns: true, defaultValue: time('15:30') });
 
       await open(user);
@@ -236,6 +236,52 @@ describe('<TimePicker.Root />', () => {
 
       await waitFor(() => {
         expect(screen.getByRole('slider')).toHaveFocus();
+      });
+    });
+
+    describe('prop: initialFocus of the popup', () => {
+      // The selected time has the focus by default, so each case shows that the value of the consumer wins.
+      it('moves no focus for `false`', async () => {
+        const { user } = await renderPicker({
+          list: true,
+          defaultValue: time('14:30'),
+          popupProps: { initialFocus: false },
+        });
+
+        await open(user);
+        await waitSingleFrame();
+        await waitSingleFrame();
+
+        expect(screen.getByTestId('trigger')).toHaveFocus();
+      });
+
+      // The first tabbable element of the clock is a view trigger, and the default element is the face.
+      it('moves the focus to the default element for `true`', async () => {
+        const { user } = await renderPicker({
+          clock: true,
+          defaultValue: time('15:30'),
+          popupProps: { initialFocus: true },
+        });
+
+        await open(user);
+
+        await waitFor(() => {
+          expect(screen.getByRole('slider')).toHaveFocus();
+        });
+      });
+
+      it('moves the focus to the element that a function gives', async () => {
+        const { user } = await renderPicker({
+          list: true,
+          defaultValue: time('14:30'),
+          popupProps: { initialFocus: () => screen.getByRole('button', { name: 'Close' }) },
+        });
+
+        await open(user);
+
+        await waitFor(() => {
+          expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus();
+        });
       });
     });
 

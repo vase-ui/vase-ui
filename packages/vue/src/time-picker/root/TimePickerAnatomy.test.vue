@@ -6,12 +6,13 @@ import * as TimePicker from '../index.parts';
 
 defineOptions({ inheritAttrs: false });
 
-// The attributes go to the root. `listProps`, `columnProps` and `clockProps` go to the part of
-// their name. A part is in the popup when its prop is set.
+// The attributes go to the root. `popupProps`, `listProps` and `clockProps` go to the part of their
+// name. A part is in the popup when its prop is set.
 withDefaults(
   defineProps<{
     hasField?: boolean;
     trigger?: boolean;
+    popupProps?: Record<string, unknown>;
     list?: boolean;
     listProps?: Record<string, unknown>;
     columns?: boolean;
@@ -23,6 +24,7 @@ withDefaults(
   {
     hasField: true,
     trigger: true,
+    popupProps: () => ({}),
     listProps: () => ({}),
     minuteStep: 1,
     clockProps: () => ({}),
@@ -48,7 +50,7 @@ defineExpose({ root, field });
     <TimePicker.Trigger v-if="trigger" data-testid="trigger">Open</TimePicker.Trigger>
     <TimePicker.Portal :keep-mounted="keepMounted">
       <TimePicker.Positioner data-testid="positioner">
-        <TimePicker.Popup aria-label="Choose time" data-testid="popup">
+        <TimePicker.Popup aria-label="Choose time" data-testid="popup" v-bind="popupProps">
           <TimePicker.List v-if="list" v-bind="listProps" data-testid="list" />
           <template v-if="columns">
             <TimePicker.Column unit="hour" data-testid="hour-column" />
