@@ -6,7 +6,9 @@ description: An unstyled Vue checkbox component that is easy to customize.
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoCheckboxHero from '../demos/checkbox/hero/css-modules/index.vue';
+import DemoCheckboxHeroTailwind from '../demos/checkbox/hero/tailwind/index.vue';
 </script>
 
 # Checkbox
@@ -15,7 +17,12 @@ An easily stylable checkbox component.
 
 <DemoFrame>
   <DemoCheckboxHero />
+  <template #tailwind>
+    <DemoCheckboxHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -24,6 +31,18 @@ An easily stylable checkbox component.
 <<< ../demos/checkbox/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/checkbox/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Usage guidelines
 
@@ -38,6 +57,8 @@ Import the component and assemble its parts:
 `Checkbox.Root` renders its element and a hidden `<input>` after it. The input gives the checkbox the form behavior of a native checkbox. A reset of the form puts an uncontrolled checkbox back to `defaultChecked`. A controlled checkbox does not change. A reset does not change `indeterminate`. In a `Field`, a reset clears the error of the field. The reset starts no validation.
 
 Because of the hidden input, `Checkbox.Root` has more than one root node. A rule of `<style scoped>` does not match its element, and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
+
+`Checkbox.Root` takes the state of its input when the visitor presses a native label before the page hydrates. It also takes a state that the browser restores after a move back in the history or a reload. The checkbox then emits `checkedChange` and `update:checked` one time. A `checkedChange` listener can thus run after a move back with no action of the visitor. A read-only or disabled checkbox and the parent checkbox of a group take no state. They write their own state to the input.
 
 ## Examples
 

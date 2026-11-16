@@ -22,6 +22,7 @@ import { resolvePopupLabel } from '../../internals/resolvePopupLabel';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { useKeepAliveElementRef } from '../../utils/popups/useKeepAliveElementRef';
 import { useMenuFilterImpl } from '../filter-root/MenuFilterContext';
 import { useMenuRootContext } from '../root/MenuRootContext';
 
@@ -34,7 +35,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, MenuListState>;
 }>();
 
-const { store, orientation } = useMenuRootContext();
+const { store, orientation, popupLabelId } = useMenuRootContext();
 
 // In a filterable menu the popup is the dialog that holds the input, and the input points at the
 // list with `aria-controls`. The filter gives the list its id and its label, and the list hands the
@@ -75,11 +76,7 @@ function getListProps(attrs: Record<string, any>) {
       tabindex: -1,
       // `menu` is implicitly vertical, so only the non-default value needs to be rendered.
       'aria-orientation': orientation.value === 'horizontal' ? 'horizontal' : undefined,
-      'aria-labelledby': resolvePopupLabel(
-        attrs,
-        store.select('activeTriggerElement'),
-        store.select('activeTriggerId'),
-      ),
+      'aria-labelledby': resolvePopupLabel(attrs, popupLabelId.value),
     },
     attrs,
   ];
@@ -87,7 +84,7 @@ function getListProps(attrs: Record<string, any>) {
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: filterList ? undefined : setListElement,
+  ref: filterList ? undefined : useKeepAliveElementRef(setListElement),
   props: (attrs) => (filterList ? filterList.props(attrs) : getListProps(attrs)),
 });
 

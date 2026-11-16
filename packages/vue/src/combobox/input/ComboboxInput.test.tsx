@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { defineComponent, shallowRef } from 'vue';
+import { userEvent } from 'vitest/browser';
+import { defineComponent, h, nextTick, shallowRef, Transition, vShow, withDirectives } from 'vue';
+import type { Directive, VNode } from 'vue';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { Field } from '@vase-ui/vue/field';
@@ -9,27 +11,72 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  hydrateAfter,
   isJSDOM,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   waitFor,
+  waitForLaterMillisecond,
+  waitSingleFrame,
   within,
 } from '#test-utils';
 import ComboboxListPart from '../../../test/fixtures/ComboboxListPart.vue';
 import ComboboxPartsReplacement from '../../../test/fixtures/ComboboxPartsReplacement.vue';
+import PopupRootNodeScoped from '../../utils/popups/focus/PopupRootNodeScoped.test.vue';
 import { REASONS } from '../../internals/reasons';
-import type { VaseUIEvent } from '../../internals/types';
+import type { HTMLProps, VaseUIEvent } from '../../internals/types';
+import { useComboboxRootContext } from '../root/ComboboxRootContext';
 import type { ComboboxStore } from '../store';
+import ComboboxInputBeforeHydration from './ComboboxInputBeforeHydration.test.vue';
 import ComboboxInputHydration from './ComboboxInputHydration.test.vue';
 import ComboboxInputTriggerHydration from './ComboboxInputTriggerHydration.test.vue';
 
 const HYDRATION_FIXTURE = 'src/combobox/input/ComboboxInputHydration.test.vue';
 const TRIGGER_HYDRATION_FIXTURE = 'src/combobox/input/ComboboxInputTriggerHydration.test.vue';
+const BEFORE_HYDRATION_FIXTURE = 'src/combobox/input/ComboboxInputBeforeHydration.test.vue';
 
 type RenderSlotProps = { props: Record<string, unknown> };
 
 describe('<Combobox.Input />', () => {
   const { render } = createRenderer();
+
+  function itemList() {
+    return (
+      <Combobox.List>
+        {{
+          item: ({ item }: { item: string }) => (
+            <Combobox.Item key={item} value={item}>
+              {item}
+            </Combobox.Item>
+          ),
+        }}
+      </Combobox.List>
+    );
+  }
+
+  // A real key: a dispatched key moves no caret.
+  async function pressKeys(
+    element: HTMLInputElement | HTMLTextAreaElement,
+    keys: string,
+    caret: number,
+  ) {
+    element.focus();
+    element.setSelectionRange(caret, caret);
+    const keydowns: KeyboardEvent[] = [];
+    function recordKeydown(event: KeyboardEvent) {
+      keydowns.push(event);
+    }
+    window.addEventListener('keydown', recordKeydown, { capture: true });
+    await userEvent.keyboard(keys);
+    window.removeEventListener('keydown', recordKeydown, { capture: true });
+    await waitSingleFrame();
+    await flushMicrotasks();
+    return {
+      selection: [element.selectionStart, element.selectionEnd],
+      prevented: keydowns.map((event) => event.defaultPrevented),
+    };
+  }
 
   describeConformance(<Combobox.Input />, () => ({
     refInstanceof: window.HTMLInputElement,
@@ -209,6 +256,138 @@ describe('<Combobox.Input />', () => {
       expect(input).toHaveAttribute('aria-haspopup', 'listbox');
       expect(input).toHaveAttribute('aria-autocomplete', 'list');
     });
+
+    describe('VUE-97: the caret keys of a textarea', () => {
+      const TEXT = 'one\ntwo';
+
+      it.each([
+        { name: 'ArrowDown', caret: 0 },
+        { name: 'ArrowUp', caret: 7 },
+        { name: 'Home', caret: 5 },
+        { name: 'End', caret: 1 },
+      ])('gives $name to the browser while the popup is closed', async ({ name, caret }) => {
+        await render(
+          <div>
+            <textarea data-testid="plain" value={TEXT} />
+            <Combobox.Root items={['apple', 'banana']} defaultInputValue={TEXT}>
+              <Combobox.Input data-testid="input" as="textarea" />
+              <Combobox.Portal>
+                <Combobox.Positioner>
+                  <Combobox.Popup>{itemList()}</Combobox.Popup>
+                </Combobox.Positioner>
+              </Combobox.Portal>
+            </Combobox.Root>
+          </div>,
+        );
+
+        const plain = await pressKeys(
+          screen.getByTestId<HTMLTextAreaElement>('plain'),
+          `{${name}}`,
+          caret,
+        );
+        const result = await pressKeys(
+          screen.getByTestId<HTMLTextAreaElement>('input'),
+          `{${name}}`,
+          caret,
+        );
+
+        expect(result).toEqual({ selection: plain.selection, prevented: [false] });
+        expect(screen.queryByRole('listbox')).toBe(null);
+      });
+
+      // When the input is in the popup, the trigger is the reference of the list navigation. The
+      // list navigation then takes Home and End.
+      it.each([
+        { name: 'Home', keys: '{Home}', caret: 1 },
+        { name: 'End', keys: '{End}', caret: 0 },
+        { name: 'Shift+Home', keys: '{Shift>}{Home}{/Shift}', caret: 1 },
+      ])('gives $name to the browser in a popup that holds the input', async ({ keys, caret }) => {
+        const { user } = await render(
+          <div>
+            <textarea data-testid="plain" value="a" />
+            <Combobox.Root items={['apple', 'banana']}>
+              <Combobox.Trigger>Open</Combobox.Trigger>
+              <Combobox.Portal>
+                <Combobox.Positioner>
+                  <Combobox.Popup>
+                    <Combobox.Input data-testid="input" as="textarea" />
+                    {itemList()}
+                  </Combobox.Popup>
+                </Combobox.Positioner>
+              </Combobox.Portal>
+            </Combobox.Root>
+          </div>,
+        );
+
+        const plain = await pressKeys(
+          screen.getByTestId<HTMLTextAreaElement>('plain'),
+          keys,
+          caret,
+        );
+        await waitForLaterMillisecond(async () => {
+          await user.click(screen.getByText('Open'));
+          await screen.findByRole('listbox');
+        });
+        const textarea = screen.getByTestId<HTMLTextAreaElement>('input');
+        textarea.focus();
+        await userEvent.keyboard('a');
+        await flushMicrotasks();
+        expect(textarea.value).toBe('a');
+        expect(textarea).not.toHaveAttribute('aria-activedescendant');
+
+        const result = await pressKeys(textarea, keys, caret);
+
+        expect(result).toEqual(plain);
+        expect(textarea).not.toHaveAttribute('aria-activedescendant');
+      });
+
+      it('moves the highlight with ArrowDown while the popup is open', async () => {
+        await render(
+          <Combobox.Root items={['apple', 'banana']}>
+            <Combobox.Input data-testid="input" as="textarea" />
+            <Combobox.Portal>
+              <Combobox.Positioner>
+                <Combobox.Popup>{itemList()}</Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>,
+        );
+
+        const textarea = screen.getByTestId<HTMLTextAreaElement>('input');
+        textarea.focus();
+        await userEvent.keyboard('a');
+        await screen.findByRole('listbox');
+        expect(textarea).not.toHaveAttribute('aria-activedescendant');
+
+        const result = await pressKeys(textarea, '{ArrowDown}', 1);
+
+        expect(result).toEqual({ selection: [1, 1], prevented: [true] });
+        expect(textarea).toHaveAttribute(
+          'aria-activedescendant',
+          screen.getByRole('option', { name: 'apple' }).id,
+        );
+      });
+
+      it('moves the highlight with ArrowDown in an inline list', async () => {
+        await render(
+          <Combobox.Root inline items={['apple', 'banana']}>
+            <Combobox.Input data-testid="input" as="textarea" />
+            {itemList()}
+          </Combobox.Root>,
+        );
+
+        const textarea = screen.getByTestId<HTMLTextAreaElement>('input');
+        expect(textarea).not.toHaveAttribute('aria-activedescendant');
+
+        const result = await pressKeys(textarea, '{ArrowDown}', 0);
+
+        expect(result).toEqual({ selection: [0, 0], prevented: [true] });
+        expect(textarea).toHaveAttribute(
+          'aria-activedescendant',
+          screen.getByRole('option', { name: 'apple' }).id,
+        );
+      });
+    });
   });
 
   describe('prop: readOnly', () => {
@@ -290,8 +469,10 @@ describe('<Combobox.Input />', () => {
       );
 
       const input = screen.getByTestId('input');
-      await user.click(input);
-      await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      await waitForLaterMillisecond(async () => {
+        await user.click(input);
+        await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
+      });
 
       await waitFor(() => {
         screen.getByRole('option', { name: 'a' });
@@ -510,10 +691,11 @@ describe('<Combobox.Input />', () => {
         expect(input.value).toBe('');
       });
 
-      await user.type(input, 'a');
-
-      await waitFor(() => {
-        expect(screen.getByRole('listbox')).not.toBe(null);
+      await waitForLaterMillisecond(async () => {
+        await user.type(input, 'a');
+        await waitFor(() => {
+          expect(screen.getByRole('listbox')).not.toBe(null);
+        });
       });
       await user.click(screen.getByRole('option', { name: 'apple' }));
 
@@ -606,6 +788,143 @@ describe('<Combobox.Input />', () => {
         expect(input.selectionStart).toBe(input.value.length);
         expect(input.selectionEnd).toBe(input.value.length);
         expect(Math.abs(input.scrollLeft - expectedScroll)).toBeLessThanOrEqual(2);
+      },
+    );
+
+    describe('VUE-100: Home and End in an input that is not the reference', () => {
+      const ITEMS = ['apple', 'apricot', 'banana'];
+
+      // When the input is in the popup or the list is inline, the input is not the reference of the
+      // list navigation. The input of the first root is not in a popup, and it shows what the keys
+      // do in the text.
+      function renderInputs(inline: boolean, readOnly: boolean) {
+        return render(
+          <div>
+            <Combobox.Root readOnly={readOnly} defaultInputValue="ap">
+              <Combobox.Input data-testid="reference" />
+            </Combobox.Root>
+            {inline ? (
+              <Combobox.Root inline readOnly={readOnly} items={ITEMS} defaultInputValue="ap">
+                <Combobox.Input data-testid="input" />
+                {itemList()}
+              </Combobox.Root>
+            ) : (
+              <Combobox.Root readOnly={readOnly} items={ITEMS} defaultInputValue="ap">
+                <Combobox.Trigger>Open</Combobox.Trigger>
+                <Combobox.Portal>
+                  <Combobox.Positioner>
+                    <Combobox.Popup>
+                      <Combobox.Input data-testid="input" />
+                      {itemList()}
+                    </Combobox.Popup>
+                  </Combobox.Positioner>
+                </Combobox.Portal>
+              </Combobox.Root>
+            )}
+          </div>,
+        );
+      }
+
+      it.each([
+        { name: 'Home in the popup', keys: '{Home}', inline: false, readOnly: false },
+        { name: 'End in the popup', keys: '{End}', inline: false, readOnly: false },
+        {
+          name: 'Shift+Home in the popup',
+          keys: '{Shift>}{Home}{/Shift}',
+          inline: false,
+          readOnly: false,
+        },
+        {
+          name: 'Shift+End in the popup',
+          keys: '{Shift>}{End}{/Shift}',
+          inline: false,
+          readOnly: false,
+        },
+        { name: 'Home in an inline list', keys: '{Home}', inline: true, readOnly: false },
+        { name: 'End in an inline list', keys: '{End}', inline: true, readOnly: false },
+        {
+          name: 'Shift+Home in an inline list',
+          keys: '{Shift>}{Home}{/Shift}',
+          inline: true,
+          readOnly: false,
+        },
+        {
+          name: 'Shift+End in an inline list',
+          keys: '{Shift>}{End}{/Shift}',
+          inline: true,
+          readOnly: false,
+        },
+        { name: 'Home in a read-only popup', keys: '{Home}', inline: false, readOnly: true },
+      ])('gives $name to the text', async ({ keys, inline, readOnly }) => {
+        const { user } = await renderInputs(inline, readOnly);
+
+        const reference = await pressKeys(
+          screen.getByTestId<HTMLInputElement>('reference'),
+          keys,
+          1,
+        );
+        if (!inline) {
+          await waitForLaterMillisecond(async () => {
+            await user.click(screen.getByText('Open'));
+            await screen.findByRole('listbox');
+          });
+        }
+        const input = screen.getByTestId<HTMLInputElement>('input');
+        expect(input.value).toBe('ap');
+        expect(input).not.toHaveAttribute('aria-activedescendant');
+
+        const result = await pressKeys(input, keys, 1);
+
+        expect(result).toEqual(reference);
+        expect(input).not.toHaveAttribute('aria-activedescendant');
+      });
+    });
+
+    // The handler of the list navigation records each key as keyboard input, and the highlight
+    // then stays when the pointer leaves. The `VUE-100` call stops that handler, so the part does
+    // not make the call for an input outside the popup.
+    it.each([
+      { name: 'Home in an input', as: 'input' as const, keys: '{Home}' },
+      { name: 'End in a textarea', as: 'textarea' as const, keys: '{End}' },
+    ])(
+      'keeps the highlight after $name outside the popup when the pointer leaves',
+      async ({ as, keys }) => {
+        await render(
+          <div>
+            <p>Outside</p>
+            <Combobox.Root items={['apple', 'apricot', 'banana']}>
+              <Combobox.Input data-testid="input" as={as} />
+              <Combobox.Portal>
+                <Combobox.Positioner>
+                  <Combobox.Popup>{itemList()}</Combobox.Popup>
+                </Combobox.Positioner>
+              </Combobox.Portal>
+            </Combobox.Root>
+          </div>,
+        );
+
+        const input = screen.getByTestId('input');
+        await waitForLaterMillisecond(async () => {
+          input.focus();
+          await userEvent.keyboard('a');
+          await screen.findByRole('listbox');
+        });
+        const apricot = screen.getByRole('option', { name: 'apricot' });
+        await userEvent.hover(apricot);
+        // In WebKit, the first real pointer event of a page has no movement, and the list ignores
+        // a move with no movement.
+        await fireEvent.mouseMove(apricot, { movementX: 1 });
+        await fireEvent.pointerMove(apricot, { pointerType: 'mouse', movementX: 1 });
+        await waitFor(() => {
+          expect(input).toHaveAttribute('aria-activedescendant', apricot.id);
+        });
+
+        await userEvent.keyboard(keys);
+        await userEvent.hover(screen.getByText('Outside'));
+        await waitSingleFrame();
+        await flushMicrotasks();
+
+        expect(input).toHaveAttribute('aria-activedescendant', apricot.id);
       },
     );
 
@@ -1008,6 +1327,72 @@ describe('<Combobox.Input />', () => {
       expect(onOuterKeyDown).toHaveBeenCalled();
     });
 
+    it.each([
+      { name: 'an empty input', inputValue: '', expected: [] },
+      {
+        name: 'text in the input',
+        inputValue: 'ap',
+        expected: ['inputValueChange::escape-key', 'update:inputValue:'],
+      },
+    ])(
+      'VUE-91: emits no valueChange for Escape in a closed multiple combobox with no value, $name',
+      async ({ inputValue, expected }) => {
+        const events: string[] = [];
+        const onOuterKeyDown = vi.fn();
+        const { user } = await render(
+          <div onKeydown={onOuterKeyDown}>
+            <Combobox.Root
+              multiple
+              defaultValue={[]}
+              defaultInputValue={inputValue}
+              onValueChange={(value: string[], details: { reason: string }) =>
+                events.push(`valueChange:${value.join()}:${details.reason}`)
+              }
+              {...{
+                'onUpdate:value': (value: string[]) => events.push(`update:value:${value.join()}`),
+              }}
+              onInputValueChange={(value: string, details: { reason: string }) =>
+                events.push(`inputValueChange:${value}:${details.reason}`)
+              }
+              {...{
+                'onUpdate:inputValue': (value: string) => events.push(`update:inputValue:${value}`),
+              }}
+            >
+              <Combobox.Input />
+            </Combobox.Root>
+          </div>,
+        );
+
+        screen.getByRole('combobox').focus();
+        await user.keyboard('{Escape}');
+
+        expect(events).toEqual(expected);
+        expect(screen.getByRole<HTMLInputElement>('combobox').value).toBe('');
+        expect(onOuterKeyDown).toHaveBeenCalled();
+      },
+    );
+
+    it('VUE-91: asks one time to clear the text for Escape in a closed combobox with no value', async () => {
+      const events: string[] = [];
+      const { user } = await render(
+        <Combobox.Root
+          defaultInputValue="ap"
+          onInputValueChange={(value: string, details: { reason: string; cancel: () => void }) => {
+            events.push(`inputValueChange:${value}:${details.reason}`);
+            details.cancel();
+          }}
+        >
+          <Combobox.Input />
+        </Combobox.Root>,
+      );
+
+      screen.getByRole('combobox').focus();
+      await user.keyboard('{Escape}');
+
+      expect(events).toEqual(['inputValueChange::escape-key']);
+      expect(screen.getByRole<HTMLInputElement>('combobox').value).toBe('ap');
+    });
+
     it('lets Escape propagate from a closed inline combobox', async () => {
       const onOuterKeyDown = vi.fn();
       const { user } = await render(
@@ -1058,9 +1443,7 @@ describe('<Combobox.Input />', () => {
       await fireEvent.compositionStart(input);
       await fireEvent.input(input, { target: { value: '' } });
 
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
     });
 
     it('clears the highlight on an empty composition update while staying open', async () => {
@@ -1323,12 +1706,12 @@ describe('<Combobox.Input />', () => {
 
       await user.click(input);
 
-      await waitFor(() => expect(screen.queryByRole('listbox')).not.toBe(null));
+      await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
       expect(input).toHaveAttribute('data-popup-side', 'right');
 
       await user.click(document.body);
 
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(input).not.toHaveAttribute('data-popup-side');
     });
 
@@ -1546,6 +1929,35 @@ describe('<Combobox.Input />', () => {
       expect(store.context.startDismissRef.value).toHaveAttribute('aria-label', 'Dismiss');
     });
 
+    it('keeps the dismiss button of a newer input when an older input unmounts later', async () => {
+      let store!: ComboboxStore;
+      const StoreProbe = defineComponent(() => {
+        store = useComboboxRootContext();
+        return () => null;
+      });
+      const showsOlder = shallowRef(true);
+      const showsNewer = shallowRef(false);
+      await render(() => (
+        <Combobox.Root open>
+          <StoreProbe />
+          {showsOlder.value && <Combobox.Input data-testid="older-input" />}
+          {showsNewer.value && <Combobox.Input data-testid="newer-input" />}
+        </Combobox.Root>
+      ));
+
+      showsNewer.value = true;
+      await flushMicrotasks();
+      const input = screen.getByTestId('newer-input');
+      expect(store.context.startDismissRef.value).toBe(input.previousElementSibling);
+
+      showsOlder.value = false;
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('older-input')).toBe(null);
+      expect(store.context.startDismissRef.value).toBe(input.previousElementSibling);
+      expect(store.context.startDismissRef.value).toHaveAttribute('aria-label', 'Dismiss');
+    });
+
     it.each([
       { name: 'the label first, the description last', parts: ['label', 'input', 'description'] },
       { name: 'the input first', parts: ['input', 'label', 'description'] },
@@ -1626,6 +2038,32 @@ describe('<Combobox.Input />', () => {
     });
   });
 
+  describe('VUE-102: a value with a line break', () => {
+    it('handles no change event for the text of a value with a line feed', async () => {
+      const handleValueChange = vi.fn();
+      await render(
+        <form data-testid="form">
+          <Autocomplete.Root
+            name="address"
+            defaultValue={'Main Street 1\nFlat 2'}
+            onValueChange={handleValueChange}
+          >
+            <Autocomplete.Input />
+          </Autocomplete.Root>
+        </form>,
+      );
+      const input = screen.getByRole<HTMLInputElement>('combobox');
+      expect(input.value).toBe('Main Street 1Flat 2');
+
+      await fireEvent.change(input);
+
+      expect(handleValueChange).not.toHaveBeenCalled();
+      expect(new FormData(screen.getByTestId<HTMLFormElement>('form')).getAll('address')).toEqual([
+        'Main Street 1\nFlat 2',
+      ]);
+    });
+  });
+
   describe('the focus listeners', () => {
     it('keeps the highlight of an inline list and the state of the field when the focused input is replaced', async () => {
       const InlineList = defineComponent(
@@ -1685,6 +2123,230 @@ describe('<Combobox.Input />', () => {
 
       expect(handleFocusout).toHaveBeenCalledTimes(1);
       expect(screen.getByTestId('field')).not.toHaveAttribute('data-touched');
+    });
+  });
+
+  describe('VUE-77: aria-controls names only the list that exists', () => {
+    it('has no aria-controls while the list has an empty id', async () => {
+      await render(
+        <Combobox.Root defaultOpen>
+          <Combobox.Input data-testid="input" />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List
+                  data-testid="list"
+                  v-slots={{
+                    // An empty `id` of the part counts as no `id` (VUE-93). Only the `#render`
+                    // slot can give the element an empty `id`.
+                    render: ({ props }: { props: HTMLProps }) => <div {...props} id="" />,
+                  }}
+                />
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+      await flushMicrotasks();
+
+      const input = screen.getByTestId('input');
+      expect(screen.getByTestId('list').id).toBe('');
+      expect(input).toHaveAttribute('aria-expanded', 'true');
+      expect(input).not.toHaveAttribute('aria-controls');
+    });
+
+    it('follows the id of the list while the popup is open', async () => {
+      const id = shallowRef('first');
+      await render(() => (
+        <Combobox.Root defaultOpen>
+          <Combobox.Input data-testid="input" />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List id={id.value} data-testid="list" />
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>
+      ));
+      await flushMicrotasks();
+
+      const input = screen.getByTestId('input');
+      expect(input).toHaveAttribute('aria-controls', 'first');
+
+      id.value = 'second';
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('list').id).toBe('second');
+      expect(input).toHaveAttribute('aria-controls', 'second');
+
+      id.value = '';
+      await flushMicrotasks();
+
+      const generatedId = screen.getByTestId('list').id;
+      expect(generatedId).toMatch(/^vase-ui-/);
+      expect(input).toHaveAttribute('aria-controls', generatedId);
+    });
+  });
+
+  describe('VUE-60: Combobox.Input has one root node', () => {
+    const vMark: Directive<HTMLElement, string> = {
+      mounted(element, binding) {
+        element.setAttribute('data-mark', binding.value);
+      },
+    };
+    const attributes = { class: 'part', 'data-testid': 'part' };
+
+    it.each([
+      { name: 'scoped style' },
+      { name: 'custom directive' },
+      { name: 'v-show' },
+      { name: 'Transition' },
+    ])('applies a $name to the input of an open popup', async ({ name }) => {
+      const shown = shallowRef(true);
+
+      function renderInput(): VNode {
+        switch (name) {
+          case 'scoped style':
+            return h(PopupRootNodeScoped, { part: Combobox.Input });
+          case 'custom directive':
+            return withDirectives(h(Combobox.Input, attributes), [[vMark, 'marked']]);
+          case 'v-show':
+            return withDirectives(h(Combobox.Input, attributes), [[vShow, shown.value]]);
+          default:
+            return h(Transition, null, () => h(Combobox.Input, attributes));
+        }
+      }
+
+      await render(() => (
+        <Combobox.Root defaultOpen items={['a']}>
+          {renderInput()}
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup />
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>
+      ));
+      const input = await screen.findByTestId('part');
+
+      expect(input.previousElementSibling).toHaveAttribute('role', 'button');
+      expect(input.previousElementSibling).toHaveAttribute('aria-label', 'Dismiss');
+      if (name === 'scoped style') {
+        expect(getComputedStyle(input).outlineStyle).toBe('dashed');
+      } else if (name === 'custom directive') {
+        expect(input).toHaveAttribute('data-mark', 'marked');
+      } else if (name === 'v-show') {
+        shown.value = false;
+        await nextTick();
+        expect(getComputedStyle(input).display).toBe('none');
+      }
+    });
+  });
+
+  describe('VUE-74: text that the user typed before the hydration', () => {
+    async function hydrateTyped(
+      props: Record<string, unknown>,
+      { typed, focus }: { typed: string; focus: 'input' | 'outside' },
+    ) {
+      const serverHtml = await renderOnServer(BEFORE_HYDRATION_FIXTURE, props);
+      const { container } = await hydrateAfter(ComboboxInputBeforeHydration, {
+        serverHtml,
+        props,
+        before(serverContainer) {
+          within(serverContainer).getByTestId<HTMLInputElement>('input').value = typed;
+          within(serverContainer).getByTestId(focus).focus();
+        },
+      });
+      const fixture = within(container);
+      return {
+        fixture,
+        input: fixture.getByTestId<HTMLInputElement>('input'),
+        inputValue: fixture.getByTestId('input-value'),
+        changes: fixture.getByTestId('changes'),
+      };
+    }
+
+    it('writes the text to v-model:input-value, and the next key opens the list', async () => {
+      const { fixture, input, inputValue, changes } = await hydrateTyped(
+        {},
+        { typed: 'Mal', focus: 'input' },
+      );
+      await flushMicrotasks();
+
+      expect(input).toHaveValue('Mal');
+      expect(inputValue.textContent).toBe('Mal');
+      expect(changes.textContent).toBe('Mal (input-change)');
+      expect(input).toHaveAttribute('aria-expanded', 'false');
+      expect(fixture.queryAllByRole('option')).toHaveLength(0);
+
+      await userEvent.keyboard('t');
+
+      await waitFor(() =>
+        expect(fixture.getAllByRole('option').map((option) => option.textContent)).toEqual([
+          'Malta',
+        ]),
+      );
+    });
+
+    it('handles the text of an `Input` in `as` one time', async () => {
+      const { input, inputValue, changes } = await hydrateTyped(
+        { rendersInput: true },
+        { typed: 'Mal', focus: 'input' },
+      );
+      await flushMicrotasks();
+
+      expect(input).toHaveValue('Mal');
+      expect(inputValue.textContent).toBe('Mal');
+      expect(changes.textContent).toBe('Mal (input-change)');
+    });
+
+    it('touches the field and keeps the list closed when the focus is outside', async () => {
+      const { fixture, input, changes } = await hydrateTyped(
+        {},
+        { typed: 'Mal', focus: 'outside' },
+      );
+
+      await waitFor(() => expect(fixture.getByTestId('field')).toHaveAttribute('data-touched', ''));
+      await flushMicrotasks();
+      expect(changes.textContent).toBe('Mal (input-change)');
+      expect(input).toHaveAttribute('aria-expanded', 'false');
+      expect(fixture.queryAllByRole('option')).toHaveLength(0);
+    });
+  });
+
+  describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/combobox/input/ComboboxInputHydration.test.vue',
+      component: ComboboxInputHydration,
+      cases: [
+        {
+          name: 'a removed label',
+          props: {
+            parts: ['input', 'label', 'description'],
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: '[data-testid="input"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description',
+          props: {
+            parts: ['input', 'label', 'description'],
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: '[data-testid="input"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+      ],
     });
   });
 });

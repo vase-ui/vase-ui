@@ -68,11 +68,14 @@ export type RadioGroupChangeEventDetails = VaseUIChangeEventDetails<RadioGroupCh
 </script>
 
 <script setup lang="ts" generic="Value = any">
-import { computed, provide, shallowRef } from 'vue';
+import { computed, provide, shallowRef, triggerRef } from 'vue';
+import { queueInputTake, useAriaAfterHydration } from '../common/hydration';
 import { contains } from '../common/shadowDom';
 import { useControlled } from '../common/useControlled';
 import { isEligibleInput } from '../field/root/useFieldValidation';
 import { useFieldsetRootContext } from '../fieldset/root/FieldsetRootContext';
+import { useFieldsetDisabled } from '../fieldset/root/useFieldsetDisabled';
+import { comesBeforeInSameTree } from '../internals/comesBeforeInSameTree';
 import { SHIFT } from '../internals/composite/composite';
 import { useCompositeRoot } from '../internals/composite/root/useCompositeRoot';
 import { createChangeEventDetails } from '../internals/createBaseUIEventDetails';
@@ -82,8 +85,8 @@ import { useClearFieldError, useFieldRootContext } from '../internals/field-root
 import { useFormContext } from '../internals/form-context';
 import { useDeferredServerRender, useLabelableContext } from '../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../internals/types';
-import { useVaseUiId } from '../internals/useBaseUiId';
-import { isInTreeOf } from '../internals/useKeepAliveState';
+import { givenId, useVaseUiId } from '../internals/useBaseUiId';
+import { useFormRestore } from '../internals/useFormRestore';
 import { useRenderElement } from '../internals/useRenderElement';
 import { useValueChanged } from '../internals/useValueChanged';
 import { RadioGroupContext } from './RadioGroupContext';
@@ -136,7 +139,8 @@ const fieldset = useFieldsetRootContext(true);
 // The group binds the id of a label, a legend and a message that can come after it.
 useDeferredServerRender();
 
-const isDisabled = computed(() => fieldDisabled.value || props.disabled);
+const fieldsetDisabled = useFieldsetDisabled(() => element.value);
+const isDisabled = computed(() => fieldDisabled.value || fieldsetDisabled.value || props.disabled);
 const inputName = computed(() => fieldName.value ?? props.name);
 const controlId = useVaseUiId(() => props.id);
 const clearFieldError = useClearFieldError(inputName);
@@ -160,6 +164,24 @@ if (checkedValue.value != null) {
 const touched = shallowRef(false);
 const inputSyncRequest = shallowRef(0);
 
+// The group asks all its radios in one flush. With one take for each radio, a take of another
+// part between two radios waits for a flush, and the write of the earlier radio unchecks the input
+// that the browser checked in a group with a name.
+const inputTakeRequest = shallowRef<{ event?: Event }>();
+let isInputTakeQueued = false;
+
+function takeInputsAfterMount() {
+  if (isInputTakeQueued) {
+    return;
+  }
+  isInputTakeQueued = true;
+  queueInputTake(() => {
+    isInputTakeQueued = false;
+    inputTakeRequest.value = {};
+    return true;
+  });
+}
+
 function setTouched(value: boolean) {
   touched.value = value;
 }
@@ -176,29 +198,56 @@ function setCheckedValue(value: Value, eventDetails: RadioGroupChangeEventDetail
   inputSyncRequest.value += 1;
 }
 
-// The exposed input is the checked input, or else the first enabled input. The field validates
-// each registered input, so the group does not write `validation.inputRef`. A stale input of an
-// unmounted radio there would block the submit of the form.
-const inputElement = shallowRef<HTMLInputElement | null>(null);
-let firstEnabledInput: HTMLInputElement | null = null;
+// The exposed input is the checked input when it is enabled, or else the first enabled input in the
+// document. The field validates each registered input, so the group does not write
+// `validation.inputRef`. A stale input of an unmounted radio there would block the submit of the
+// form.
+const radioInputs = new Set<HTMLInputElement>();
+// `inputElement` is `null` after the radio of the input that it gives unmounts, as in Base UI. The
+// registration of an input whose `disabled` property is `false` and a value that becomes `null` end
+// this state.
+const isExposedInputDetached = shallowRef(false);
 
-function registerInputRef(input: HTMLInputElement) {
-  if (!input.disabled) {
-    firstEnabledInput ??= input;
-
-    const currentInput = inputElement.value;
-    if (input.checked || currentInput == null || currentInput.disabled) {
-      inputElement.value = input;
-    }
+// A keyed move runs no registration, and a radio follows a change of a native `<fieldset>` only after
+// its observer calls back. The group thus reads its inputs at each read. `:disabled` also matches an
+// input in a disabled `<fieldset>`, and the browser does not focus that input.
+function getExposedInput() {
+  if (isExposedInputDetached.value) {
+    return null;
   }
 
-  // A later call can make this input the exposed input, so the cleanup checks both.
-  return () => {
-    if (firstEnabledInput === input) {
-      firstEnabledInput = null;
+  let firstInput: HTMLInputElement | null = null;
+  for (const input of radioInputs) {
+    if (input.matches(':disabled')) {
+      continue;
     }
-    if (inputElement.value === input) {
-      inputElement.value = null;
+    if (input.checked) {
+      return input;
+    }
+    if (!firstInput || comesBeforeInSameTree(input, firstInput)) {
+      firstInput = input;
+    }
+  }
+  return firstInput;
+}
+
+function registerInputRef(input: HTMLInputElement) {
+  radioInputs.add(input);
+
+  // A radio reads a native `<fieldset>` after its mount. The first registration of a radio that
+  // mounts in a disabled fieldset thus sees no `disabled` attribute, and it ends the detach, as in
+  // Base UI.
+  if (!input.disabled) {
+    isExposedInputDetached.value = false;
+  }
+  // A `computed` that reads `inputElement` then follows each registration.
+  triggerRef(isExposedInputDetached);
+
+  return () => {
+    const givenInput = getExposedInput();
+    radioInputs.delete(input);
+    if (givenInput === input) {
+      isExposedInputDetached.value = true;
     }
   };
 }
@@ -245,9 +294,8 @@ useValueChanged(checkedValue, () => {
     validation.change(checkedValue.value);
   }
 
-  const fallbackInput = firstEnabledInput;
-  if (checkedValue.value == null && fallbackInput && !fallbackInput.disabled) {
-    inputElement.value = fallbackInput;
+  if (checkedValue.value == null) {
+    isExposedInputDetached.value = false;
   }
 });
 
@@ -293,8 +341,9 @@ provide(RadioGroupContext, {
   setTouched,
   touched,
   inputSyncRequest,
+  inputTakeRequest,
+  takeInputsAfterMount,
   reset,
-  reaches: (target) => isInTreeOf(element.value, target),
 });
 
 // With a value, the server HTML has the tab stop on the checked radio. Base UI has `-1` on each radio.
@@ -304,6 +353,7 @@ const composite = useCompositeRoot({
   hasActiveItem: () => checkedValue.value != null,
 });
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('div', props, {
   state,
   ref: [composite.rootRef],
@@ -311,12 +361,12 @@ const { element, elementProps } = useRenderElement('div', props, {
   props: (attrs) => [
     composite.props,
     {
-      id: props.id,
+      id: givenId(props.id),
       role: 'radiogroup',
       'aria-required': props.required || undefined,
       'aria-disabled': isDisabled.value || undefined,
       'aria-readonly': props.readOnly || undefined,
-      'aria-labelledby': labelId.value ?? fieldset?.legendId.value,
+      'aria-labelledby': ariaAfterHydration(labelId.value ?? fieldset?.legendId.value),
       onFocusout(event: FocusEvent) {
         if (
           !contains(event.currentTarget as Element | null, event.relatedTarget as Element | null)
@@ -339,10 +389,20 @@ const { element, elementProps } = useRenderElement('div', props, {
     },
     attrs,
     (merged) => validation.getValidationProps(isDisabled.value, merged),
+    (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),
   ],
 });
 
-defineExpose({ element, inputElement });
+useFormRestore(element, (event) => {
+  inputTakeRequest.value = { event };
+});
+
+defineExpose({
+  element,
+  get inputElement() {
+    return getExposedInput();
+  },
+});
 </script>
 
 <template>

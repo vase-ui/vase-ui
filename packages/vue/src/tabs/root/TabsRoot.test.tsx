@@ -5,13 +5,16 @@ import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import type { TextDirection } from '@vase-ui/vue/direction-provider';
 import { Popover } from '@vase-ui/vue/popover';
 import { Tabs } from '@vase-ui/vue/tabs';
+import { Toolbar } from '@vase-ui/vue/toolbar';
 import {
   createRenderer,
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountListTests,
   hydrate,
   isJSDOM,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   takeReportedMessages,
@@ -34,6 +37,20 @@ function readTabindexes(root: ParentNode) {
 
 describe('<Tabs.Root />', () => {
   const { render } = createRenderer();
+
+  heldMountListTests({
+    render,
+    renderList: (withLastItem) => (
+      <Tabs.Root defaultValue={0}>
+        <Tabs.Panel value={0} keepMounted data-testid="panel-0" />
+        {withLastItem ? <Tabs.Panel value={1} keepMounted data-testid="panel-1" /> : null}
+      </Tabs.Root>
+    ),
+    check() {
+      expect(screen.getByTestId('panel-0')).toHaveAttribute('data-index', '0');
+      expect(screen.getByTestId('panel-1')).toHaveAttribute('data-index', '1');
+    },
+  });
 
   describeConformance(<Tabs.Root value={0} />, () => ({
     render,
@@ -2015,13 +2032,14 @@ describe('<Tabs.Root />', () => {
 
       const trigger = screen.getByRole('button', { name: 'Open' });
 
-      await user.click(trigger);
+      await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
 
-      const tab1 = screen.getByRole('tab', { name: 'Overview' });
-      await waitFor(() => {
-        expect(tab1).toHaveFocus();
+        const tab1 = screen.getByRole('tab', { name: 'Overview' });
+        await waitFor(() => {
+          expect(tab1).toHaveFocus();
+        });
       });
-      await waitForLaterMillisecond();
       await user.keyboard('{ArrowRight}');
 
       const tab2 = screen.getByRole('tab', { name: 'Projects' });
@@ -2053,13 +2071,14 @@ describe('<Tabs.Root />', () => {
 
       const trigger = screen.getByRole('button', { name: 'Open' });
 
-      await user.click(trigger);
+      await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
 
-      const tab1 = screen.getByRole('tab', { name: 'Overview' });
-      await waitFor(() => {
-        expect(tab1).toHaveFocus();
+        const tab1 = screen.getByRole('tab', { name: 'Overview' });
+        await waitFor(() => {
+          expect(tab1).toHaveFocus();
+        });
       });
-      await waitForLaterMillisecond();
       await user.keyboard('{ArrowRight}');
 
       const tab2 = screen.getByRole('tab', { name: 'Projects' });
@@ -2972,21 +2991,82 @@ describe('<Tabs.Root />', () => {
       },
     );
 
-    it('gives a tab the id of a panel that comes after the list when the client has mounted', async () => {
-      const props = { defaultValue: 'a', panel: 'after' };
-      const serverHtml = await renderOnServer(HYDRATION_FIXTURE, props);
-      const template = document.createElement('template');
-      template.innerHTML = serverHtml;
-      expect(
-        template.content.querySelector('[data-testid="a"]')?.getAttribute('aria-controls'),
-      ).toBeNull();
+    it.each([
+      { name: 'a panel after the list', panel: 'after' },
+      { name: 'a panel before the list', panel: 'before' },
+    ] as const)(
+      'VUE-80: names the tab and the panel in the server HTML and after the hydration, $name',
+      async ({ panel }) => {
+        const props = { defaultValue: 'a', panel };
+        const serverHtml = await renderOnServer(HYDRATION_FIXTURE, props);
+        const template = document.createElement('template');
+        template.innerHTML = serverHtml;
+        const readIds = (root: ParentNode) => ({
+          controls: root.querySelector('[data-testid="a"]')?.getAttribute('aria-controls'),
+          labelledby: root
+            .querySelector('[data-testid="panel-a"]')
+            ?.getAttribute('aria-labelledby'),
+        });
+        expect(readIds(template.content)).toEqual({ controls: 'panel-a', labelledby: 'tab-a' });
 
-      const { container } = await hydrate(TabsRootHydration, { serverHtml, props });
+        const { container } = await hydrate(TabsRootHydration, { serverHtml, props });
 
-      expect(container.querySelector('[data-testid="a"]')).toHaveAttribute(
-        'aria-controls',
-        'panel-a',
+        expect(readIds(container)).toEqual({ controls: 'panel-a', labelledby: 'tab-a' });
+      },
+    );
+
+    removedPartHydrationTests({
+      file: HYDRATION_FIXTURE,
+      component: TabsRootHydration,
+      cases: [
+        {
+          name: 'the panel after the list',
+          props: { defaultValue: 'a', panel: 'after', removedAtMount: 'panel' },
+          selector: '[data-testid="a"]',
+          attribute: 'aria-controls',
+          serverValue: 'panel-a',
+          clientValue: null,
+        },
+        {
+          name: 'the list after the panel',
+          props: { defaultValue: 'a', panel: 'before', removedAtMount: 'list' },
+          selector: '[data-testid="panel-a"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'tab-a',
+          clientValue: null,
+        },
+      ],
+    });
+  });
+
+  describe('elements that are not panels', () => {
+    it('VUE-87: join the composite around the root, in a panel and as a child of the root', async () => {
+      await render(
+        <Toolbar.Root>
+          <Tabs.Root defaultValue="a">
+            <Tabs.List>
+              <Tabs.Tab value="a">A</Tabs.Tab>
+              <Tabs.Tab value="b">B</Tabs.Tab>
+            </Tabs.List>
+            <Tabs.Panel value="a" data-testid="panel-a">
+              <Toolbar.Button data-testid="in-panel">In a panel</Toolbar.Button>
+            </Tabs.Panel>
+            <Toolbar.Button data-testid="in-root">In the root</Toolbar.Button>
+            <Tabs.Panel value="b" keepMounted data-testid="panel-b" />
+          </Tabs.Root>
+          <Toolbar.Button data-testid="after-root">After the root</Toolbar.Button>
+        </Toolbar.Root>,
       );
+      const inPanel = screen.getByTestId('in-panel');
+      inPanel.focus();
+
+      await fireEvent.keyDown(inPanel, { key: 'ArrowRight' });
+      expect(screen.getByTestId('in-root')).toHaveFocus();
+
+      await fireEvent.keyDown(screen.getByTestId('in-root'), { key: 'ArrowRight' });
+      expect(screen.getByTestId('after-root')).toHaveFocus();
+      expect(screen.getByTestId('panel-a')).toHaveAttribute('data-index', '0');
+      expect(screen.getByTestId('panel-b')).toHaveAttribute('data-index', '1');
     });
   });
 

@@ -1,12 +1,38 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { Field } from '@vase-ui/vue/field';
-import { createRenderer, describeConformance, fireEvent, screen, waitFor } from '#test-utils';
+import { Toolbar } from '@vase-ui/vue/toolbar';
+import {
+  createRenderer,
+  describeConformance,
+  fireEvent,
+  heldMountListTests,
+  screen,
+  waitFor,
+} from '#test-utils';
 import type { ComboboxStore } from '../store';
 import ComboboxChipsReplacement from './ComboboxChipsReplacement.test.vue';
 
 describe('<Combobox.Chips />', () => {
   const { render } = createRenderer();
+
+  heldMountListTests({
+    render,
+    renderList: (withLastItem) => (
+      <Combobox.Root multiple defaultValue={['apple', 'banana']}>
+        <Combobox.Input />
+        <Combobox.Chips>
+          <Combobox.Chip data-testid="chip-apple">apple</Combobox.Chip>
+          {withLastItem ? <Combobox.Chip data-testid="chip-banana">banana</Combobox.Chip> : null}
+        </Combobox.Chips>
+      </Combobox.Root>
+    ),
+    async check(user) {
+      screen.getByTestId('chip-apple').focus();
+      await user.keyboard('[ArrowRight]');
+      expect(screen.getByTestId('chip-banana')).toHaveFocus();
+    },
+  });
 
   describeConformance(<Combobox.Chips />, () => ({
     refInstanceof: window.HTMLDivElement,
@@ -304,5 +330,33 @@ describe('<Combobox.Chips />', () => {
 
     expect(screen.queryByTestId('first')).toBe(null);
     expect(store.context.chipsContainerRef.value).toBe(screen.getByTestId('second'));
+  });
+
+  it('VUE-87: an item of a composite around the chips joins that composite, and a chip removes its own value', async () => {
+    const onValueChange = vi.fn();
+    await render(
+      <Toolbar.Root>
+        <Combobox.Root multiple defaultValue={['apple', 'banana']} onValueChange={onValueChange}>
+          <Combobox.Chips>
+            <Toolbar.Button data-testid="in-chips">In the chips</Toolbar.Button>
+            <Combobox.Chip data-testid="chip-apple">apple</Combobox.Chip>
+            <Combobox.Chip>banana</Combobox.Chip>
+            <Combobox.Input />
+          </Combobox.Chips>
+        </Combobox.Root>
+        <Toolbar.Button data-testid="after-chips">After the chips</Toolbar.Button>
+      </Toolbar.Root>,
+    );
+    const inChips = screen.getByTestId('in-chips');
+    inChips.focus();
+
+    await fireEvent.keyDown(inChips, { key: 'ArrowRight' });
+    expect(screen.getByTestId('after-chips')).toHaveFocus();
+
+    const chipApple = screen.getByTestId('chip-apple');
+    chipApple.focus();
+    await fireEvent.keyDown(chipApple, { key: 'Backspace' });
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+    expect(onValueChange.mock.calls[0]?.[0]).toEqual(['banana']);
   });
 });

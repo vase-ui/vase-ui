@@ -1,7 +1,8 @@
 import { computed, onActivated, onDeactivated, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
+import { isInHeldBranch } from '../../useKeepAliveState';
 import { useCompositeListContext } from './CompositeListContext';
-import type { CompositeListRegistration } from './CompositeListContext';
+import type { CompositeListContextValue, CompositeListRegistration } from './CompositeListContext';
 
 /**
  * Registers a list item and gives it its index (DOM position) in the list that
@@ -11,7 +12,7 @@ import type { CompositeListRegistration } from './CompositeListContext';
 export function useCompositeListItem<Metadata>(
   params: UseCompositeListItemParameters<Metadata> = {},
 ): UseCompositeListItemReturnValue {
-  const context = useCompositeListContext();
+  const context = params.list ?? useCompositeListContext();
 
   // An item with no explicit index takes its first index from a counter of the list. The counter
   // counts the `setup` calls of such items. Each sort sets it to the length of `elementsRef`.
@@ -33,7 +34,9 @@ export function useCompositeListItem<Metadata>(
   const guess = context && toValue(params.index) == null ? context.takeIndexGuess() : -1;
 
   let element: HTMLElement | null = null;
-  let wasDeactivated = false;
+  // An item that mounts in a held branch gets no `onDeactivated` call. The list skips its element,
+  // which is not in a document, so the first `onActivated` call must register the element again.
+  let deactivated = isInHeldBranch();
 
   const registration: CompositeListRegistration<Metadata> = {
     metadata: params.metadata,
@@ -87,7 +90,7 @@ export function useCompositeListItem<Metadata>(
 
     // `KeepAlive` removes the element from the document and calls no ref callback.
     onDeactivated(() => {
-      wasDeactivated = true;
+      deactivated = true;
       if (element) {
         context.unregister(element);
       }
@@ -95,11 +98,11 @@ export function useCompositeListItem<Metadata>(
 
     // `onActivated` also runs at the first mount in a `KeepAlive`, when the item is still registered.
     onActivated(() => {
-      if (!wasDeactivated) {
+      if (!deactivated) {
         return;
       }
 
-      wasDeactivated = false;
+      deactivated = false;
       if (element) {
         context.register(element, registration);
       }
@@ -110,6 +113,11 @@ export function useCompositeListItem<Metadata>(
 }
 
 export interface UseCompositeListItemParameters<Metadata> {
+  /**
+   * The list that the item registers with. The default is the nearest list that a
+   * `useCompositeList` above the item provides. The item reads it one time, in `setup`.
+   */
+  list?: CompositeListContextValue<Metadata>;
   /**
    * The explicit index of the item. An item with no explicit index gets its index from its position
    * in the document.

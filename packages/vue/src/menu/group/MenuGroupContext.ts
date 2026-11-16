@@ -2,10 +2,10 @@ import { inject } from 'vue';
 import type { InjectionKey } from 'vue';
 import type { RegisterId } from '../../internals/labelable-provider/LabelableContext';
 
-/**
- * Registers the id of a `Menu.GroupLabel` with the group above it.
- */
-export type MenuGroupContext = RegisterId;
+export interface MenuGroupContext {
+  /** Registers the id of a `Menu.GroupLabel` with the group above it. */
+  registerLabelId: RegisterId;
+}
 
 export const MenuGroupContext: InjectionKey<MenuGroupContext> = Symbol();
 

@@ -11,7 +11,7 @@ import {
   hydrate,
   renderOnServer,
   screen,
-  waitFor,
+  waitForLaterMillisecond,
 } from '#test-utils';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import type { DialogStore } from '../../dialog/store/DialogStore';
@@ -626,9 +626,7 @@ describe('<Drawer.SwipeArea />', () => {
 
       await pressOutside();
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
-      });
+      expect(screen.queryByTestId('popup')).toBe(null);
     } finally {
       providerContext!.visualStateStore.set = originalSetVisualState;
     }
@@ -690,9 +688,7 @@ describe('<Drawer.SwipeArea />', () => {
 
     await pressOutside();
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('popup')).toBe(null);
-    });
+    expect(screen.queryByTestId('popup')).toBe(null);
   });
 
   it('does not prevent a non-cancelable pointer start', async () => {
@@ -849,9 +845,7 @@ describe('<Drawer.SwipeArea />', () => {
 
     await pressOutside();
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('popup')).toBe(null);
-    });
+    expect(screen.queryByTestId('popup')).toBe(null);
 
     expect(swipeArea).toHaveAttribute('data-closed', '');
   });
@@ -881,9 +875,7 @@ describe('<Drawer.SwipeArea />', () => {
     // re-enable dismissal and close the swipe-opened drawer the same way a mouse press does.
     await pressOutsideTouch();
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('popup')).toBe(null);
-    });
+    expect(screen.queryByTestId('popup')).toBe(null);
 
     expect(swipeArea).toHaveAttribute('data-closed', '');
   });
@@ -985,9 +977,7 @@ describe('<Drawer.SwipeArea />', () => {
       // The guard is consumed and restored, so a deliberate outside press now dismisses.
       await userEvent.click(screen.getByTestId('outside-target'), { force: true });
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
-      });
+      expect(screen.queryByTestId('popup')).toBe(null);
     } finally {
       window.removeEventListener('pointerdown', stopPointerDown, true);
     }
@@ -1019,9 +1009,7 @@ describe('<Drawer.SwipeArea />', () => {
 
     await user.keyboard('{Enter}');
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('popup')).toBe(null);
-    });
+    expect(screen.queryByTestId('popup')).toBe(null);
   });
 
   it('allows a later pointerless virtual click to dismiss when the release has no click', async () => {
@@ -1053,9 +1041,7 @@ describe('<Drawer.SwipeArea />', () => {
       eventUtilsMockState.forceVirtualClick = false;
     }
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('popup')).toBe(null);
-    });
+    expect(screen.queryByTestId('popup')).toBe(null);
   });
 
   it('re-enables outside press dismissal after an interrupted swipe-open gesture', async () => {
@@ -1121,9 +1107,7 @@ describe('<Drawer.SwipeArea />', () => {
 
     await pressOutside();
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('popup')).toBe(null);
-    });
+    expect(screen.queryByTestId('popup')).toBe(null);
 
     expect(swipeArea).toHaveAttribute('data-closed', '');
   });
@@ -1196,9 +1180,7 @@ describe('<Drawer.SwipeArea />', () => {
 
     await pressOutside();
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('popup')).toBe(null);
-    });
+    expect(screen.queryByTestId('popup')).toBe(null);
   });
 
   it('uses a size-based swipe threshold by default', async () => {
@@ -1286,7 +1268,8 @@ describe('<Drawer.SwipeArea />', () => {
 
       const swipeArea = screen.getByTestId('swipe-area');
 
-      await swipeUp(swipeArea, 220, 20);
+      // The swipe mounts the close button. Vue skips its listener for a click in that millisecond.
+      await waitForLaterMillisecond(() => swipeUp(swipeArea, 220, 20));
       expect(swipeArea).toHaveAttribute('data-open', '');
 
       const popup = screen.getByTestId('popup');
@@ -1294,9 +1277,7 @@ describe('<Drawer.SwipeArea />', () => {
       // Begin closing; the exit animation keeps the popup mounted while it plays.
       screen.getByRole('button', { name: 'Close' }).click();
       await flushMicrotasks();
-      await waitFor(() => {
-        expect(popup).toHaveAttribute('data-ending-style');
-      });
+      expect(popup).toHaveAttribute('data-ending-style');
 
       // Re-grab while the popup is still mounted mid-exit. A single move that locks the direction,
       // re-opens the drawer, and writes the movement (200 - 80 = 120px of remaining travel) on the
@@ -1372,9 +1353,7 @@ describe('<Drawer.SwipeArea />', () => {
 
     await pressOutside();
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('popup')).toBe(null);
-    });
+    expect(screen.queryByTestId('popup')).toBe(null);
   });
 
   it('commits a released-move quick flick exactly once when a real pointerup trails it', async () => {
@@ -1794,9 +1773,7 @@ describe('<Drawer.SwipeArea />', () => {
     );
 
     await pressOutside();
-    await waitFor(() => {
-      expect(screen.queryByTestId('popup')).toBe(null);
-    });
+    expect(screen.queryByTestId('popup')).toBe(null);
 
     shown.value = true;
     await flushMicrotasks();
@@ -1828,8 +1805,6 @@ describe('<Drawer.SwipeArea />', () => {
     await flushMicrotasks();
 
     await pressOutside();
-    await waitFor(() => {
-      expect(screen.queryByTestId('popup')).toBe(null);
-    });
+    expect(screen.queryByTestId('popup')).toBe(null);
   });
 });

@@ -4,9 +4,63 @@
   "files": {
     "both/css-modules/index.module.css": "99ac86fb778b1194691b5dd6e6040ad2441977b28e72cf5e9090e63739e6fd4c",
     "both/css-modules/index.tsx": "aa9f5beabbba445c6f7c87b0697dc12e51c9b423d4381ece8f36eff7c09b7958",
+    "both/tailwind/index.tsx": "71bb538d85e2fbc324a84e0a84674258b5553243e1147d9265b5d9c796b495d8",
     "hero/css-modules/index.module.css": "043e6e95b37bbae6e4e3014f886da531b0ddaba7c3ba1539b4ca474670b14a3d",
     "hero/css-modules/index.tsx": "af83e43982dcca4cd17317f59535aec87cf9d8dee9447de23ae50d1f107141a0",
+    "hero/tailwind/index.tsx": "bc9fd023879e355d017ae64cf3d921fa6a862131f6f579c163648f1b5030eda9",
     "scroll-fade/css-modules/index.module.css": "18b0f57404b118b2fdff5f0ceeb5122e1237d5b8b5938ad3e8cbf8a97034f4ba",
-    "scroll-fade/css-modules/index.tsx": "abf780f99fdc833b7ae9e4aae9927a9a781a311410057013f301532dc3f28c95"
+    "scroll-fade/css-modules/index.tsx": "abf780f99fdc833b7ae9e4aae9927a9a781a311410057013f301532dc3f28c95",
+    "scroll-fade/tailwind/index.tsx": "0885c5eb2c7601b45a0cb05e1a9f3a11bd5e9afc88104baa685f104edd105bb0"
+  },
+  "classes": {
+    "both/tailwind": {
+      "ScrollArea.Content": ["pt-3 pr-6 pb-6 pl-3"],
+      "ScrollArea.Root": ["h-80 w-80 max-w-[calc(100vw-8rem)]"],
+      "ScrollArea.Scrollbar": [
+        "relative m-px flex bg-black/12 dark:bg-white/12 opacity-0 transition-opacity pointer-events-none data-[orientation=vertical]:w-4 data-[orientation=horizontal]:h-4 data-hovering:pointer-events-auto data-hovering:opacity-100 data-scrolling:pointer-events-auto data-scrolling:opacity-100 data-scrolling:duration-0",
+        "relative m-px flex bg-black/12 dark:bg-white/12 opacity-0 transition-opacity pointer-events-none data-[orientation=vertical]:w-4 data-[orientation=horizontal]:h-4 data-hovering:pointer-events-auto data-hovering:opacity-100 data-scrolling:pointer-events-auto data-scrolling:opacity-100 data-scrolling:duration-0"
+      ],
+      "ScrollArea.Thumb": [
+        "w-full bg-neutral-950 dark:bg-white",
+        "w-full bg-neutral-950 dark:bg-white"
+      ],
+      "ScrollArea.Viewport": [
+        "h-full border border-neutral-950 dark:border-white focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
+      ],
+      "li": [
+        "flex items-center justify-center bg-neutral-200 dark:bg-neutral-800 text-sm font-bold text-neutral-600 dark:text-neutral-400"
+      ],
+      "ul": [
+        "m-0 grid list-none grid-cols-[repeat(10,6.25rem)] grid-rows-[repeat(10,6.25rem)] gap-3 p-0"
+      ]
+    },
+    "hero/tailwind": {
+      "ScrollArea.Content": [
+        "flex flex-col gap-4 py-2 pr-5 pl-3 text-sm leading-[1.375rem] text-neutral-950 dark:text-white"
+      ],
+      "ScrollArea.Root": ["h-[8.5rem] w-96 max-w-[calc(100vw-8rem)] bg-white dark:bg-neutral-950"],
+      "ScrollArea.Scrollbar": [
+        "m-px flex w-4 justify-center bg-black/12 dark:bg-white/12 opacity-0 transition-opacity pointer-events-none data-hovering:opacity-100 data-hovering:pointer-events-auto data-scrolling:opacity-100 data-scrolling:duration-0 data-scrolling:pointer-events-auto"
+      ],
+      "ScrollArea.Thumb": ["w-full bg-neutral-950 dark:bg-white"],
+      "ScrollArea.Viewport": [
+        "h-full border border-neutral-950 dark:border-white focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
+      ]
+    },
+    "scroll-fade/tailwind": {
+      "ScrollArea.Content": [
+        "flex flex-col gap-4 py-2 pr-5 pl-3 text-sm leading-[1.375rem] text-neutral-950 dark:text-white"
+      ],
+      "ScrollArea.Root": [
+        "h-48 w-96 max-w-[calc(100vw-8rem)] bg-neutral-100 dark:bg-neutral-800 has-[>_:first-child:focus-visible]:outline-2 has-[>_:first-child:focus-visible]:outline-offset-0 has-[>_:first-child:focus-visible]:outline-neutral-950 dark:has-[>_:first-child:focus-visible]:outline-white"
+      ],
+      "ScrollArea.Scrollbar": [
+        "m-px flex w-4 justify-center bg-black/8 dark:bg-white/12 opacity-0 transition-opacity duration-150 pointer-events-none data-hovering:opacity-100 data-hovering:pointer-events-auto data-scrolling:opacity-100 data-scrolling:duration-0 data-scrolling:pointer-events-auto"
+      ],
+      "ScrollArea.Thumb": ["w-full bg-neutral-950 dark:bg-white"],
+      "ScrollArea.Viewport": [
+        "h-full bg-neutral-100 dark:bg-neutral-800 outline-none mask-linear-[to_bottom,transparent_0,black_min(40px,var(--scroll-area-overflow-y-start)),black_calc(100%_-_min(40px,var(--scroll-area-overflow-y-end,40px))),transparent_100%] mask-no-repeat"
+      ]
+    }
   }
 }

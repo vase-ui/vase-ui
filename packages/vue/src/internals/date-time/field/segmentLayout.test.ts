@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { formatter } from '../format';
-import { getDayPeriodTexts, getFixedSegmentTexts, getSegmentLayout } from './segmentLayout';
+import {
+  MAX_LAYOUT_LENGTH,
+  getDayPeriodTexts,
+  getFixedSegmentTexts,
+  getSegmentLayout,
+} from './segmentLayout';
 import type { SegmentLayoutOptions, SegmentType } from './segmentLayout';
 
 const DATE_TIME: SegmentLayoutOptions = {
@@ -98,6 +103,27 @@ describe('getSegmentLayout', () => {
     expect(types({ calendar: 'iso8601' })).toEqual(types({ calendar: 'gregory' }));
   });
 
+  // `resolvedOptions()` of these calendars has no `year` in Node.js. Their pattern gives
+  // `relatedYear`, so the layout keeps the pattern with no era.
+  it.each([
+    { name: 'the Chinese calendar in en-US', locale: 'en-US', calendar: 'chinese' },
+    { name: 'the Dangi calendar in ko-KR', locale: 'ko-KR', calendar: 'dangi' },
+  ])('keeps the layout of $name with no era', ({ locale, calendar }) => {
+    const [format, epoch] = formatter(
+      Temporal.PlainDate.from('2026-11-14').withCalendar(calendar),
+      { year: 'numeric', month: 'numeric', day: 'numeric' },
+      locale,
+    );
+    const parts = format
+      .formatToParts(epoch)
+      .map(({ type, value }) => (type === 'literal' ? value : type));
+    const { segments } = getSegmentLayout(locale, { ...DATE_TIME, time: undefined, calendar });
+
+    expect(segments.map(({ type, text }) => (type === 'literal' ? text : type))).toEqual(
+      parts.map((part) => (part === 'relatedYear' ? 'year' : part)),
+    );
+  });
+
   it('maps the parts that Intl gives, and joins the literals that follow each other', () => {
     // `Intl` has the parts `relatedYear` and `yearName` for a Chinese year, and TypeScript has not.
     const part = (type: string, value: string) => ({ type, value }) as Intl.DateTimeFormatPart;
@@ -116,6 +142,137 @@ describe('getSegmentLayout', () => {
       { type: 'month', text: '' },
     ]);
   });
+});
+
+describe('MAX_LAYOUT_LENGTH', () => {
+  // The list that `Input` renders has this length, so a layout with more items would not hydrate
+  // with no message. The locales cover a wide range of `Intl` patterns.
+  const LOCALES = [
+    'en-US',
+    'en-GB',
+    'en-IN',
+    'en-AU',
+    'de-DE',
+    'de-CH',
+    'fr-FR',
+    'fr-CA',
+    'fr-CH',
+    'es-ES',
+    'es-MX',
+    'es-US',
+    'it-IT',
+    'pt-BR',
+    'pt-PT',
+    'nl-NL',
+    'sv-SE',
+    'nb-NO',
+    'da-DK',
+    'fi-FI',
+    'is-IS',
+    'pl-PL',
+    'cs-CZ',
+    'sk-SK',
+    'hu-HU',
+    'ro-RO',
+    'bg-BG',
+    'el-GR',
+    'tr-TR',
+    'ru-RU',
+    'uk-UA',
+    'he-IL',
+    'ar-EG',
+    'ar-SA',
+    'fa-IR',
+    'ur-PK',
+    'hi-IN',
+    'bn-BD',
+    'ta-IN',
+    'te-IN',
+    'th-TH',
+    'vi-VN',
+    'id-ID',
+    'ms-MY',
+    'ja-JP',
+    'ko-KR',
+    'zh-CN',
+    'zh-TW',
+    'zh-HK',
+    'km-KH',
+    'lo-LA',
+    'my-MM',
+    'ne-NP',
+    'si-LK',
+    'am-ET',
+    'sw-KE',
+    'af-ZA',
+    'eu-ES',
+    'gl-ES',
+    'ca-ES',
+    'cy-GB',
+    'ga-IE',
+    'hr-HR',
+    'sl-SI',
+    'sr-RS',
+    'lt-LT',
+    'lv-LV',
+    'et-EE',
+    'ka-GE',
+    'kk-KZ',
+    'az-AZ',
+    'hy-AM',
+    'mn-MN',
+    'uz-UZ',
+    'ja-JP-u-hc-h12',
+    'en-US-u-hc-h23',
+    'ar-EG-u-nu-latn',
+  ];
+  const CALENDARS = [
+    'iso8601',
+    'gregory',
+    'buddhist',
+    'chinese',
+    'coptic',
+    'dangi',
+    'ethioaa',
+    'ethiopic',
+    'hebrew',
+    'indian',
+    'islamic-civil',
+    'islamic-tbla',
+    'islamic-umalqura',
+    'japanese',
+    'persian',
+    'roc',
+  ];
+
+  // The longest layout has each item that its family can have.
+  it.each([
+    { family: 'date', date: 'day', era: true, calendars: CALENDARS },
+    { family: 'time', date: undefined, era: false, calendars: ['iso8601'] },
+  ] as const)(
+    'has room for the longest layout of a $family field',
+    ({ family, date, era, calendars }) => {
+      let most = 0;
+      for (const locale of LOCALES) {
+        for (const calendar of calendars) {
+          for (const hourCycle of [undefined, 12, 24] as const) {
+            const { segments } = getSegmentLayout(locale, {
+              date,
+              time: 'second',
+              hourCycle,
+              calendar,
+              era,
+              timeZoneName: true,
+            });
+            most = Math.max(most, segments.length);
+          }
+        }
+      }
+
+      expect(most).toBeLessThanOrEqual(MAX_LAYOUT_LENGTH[family]);
+      expect(most).toBeGreaterThan(MAX_LAYOUT_LENGTH[family] / 2);
+    },
+  );
 });
 
 describe('getFixedSegmentTexts', () => {

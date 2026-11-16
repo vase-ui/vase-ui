@@ -2,6 +2,7 @@ import { expect, describe, it, vi } from 'vitest';
 import { defineComponent, h, shallowRef } from 'vue';
 import { Select } from '@vase-ui/vue/select';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   flushMicrotasks,
@@ -35,16 +36,19 @@ describe('<Select.GroupLabel />', () => {
     expect(screen.getByText('Fruits')).toHaveAttribute('aria-hidden', 'true');
   });
 
-  it('allows overriding aria-hidden', async () => {
+  it.each([
+    { name: 'undefined', value: undefined, expected: 'true' },
+    { name: 'null', value: null, expected: null },
+  ])('VUE-103: aria-hidden of the consumer is $name', async ({ value, expected }) => {
     await render(
       <Select.Root open>
         <Select.Group>
-          <Select.GroupLabel aria-hidden={undefined}>Fruits</Select.GroupLabel>
+          <Select.GroupLabel aria-hidden={value}>Fruits</Select.GroupLabel>
         </Select.Group>
       </Select.Root>,
     );
 
-    expect(screen.getByText('Fruits')).not.toHaveAttribute('aria-hidden');
+    expect(screen.getByText('Fruits').getAttribute('aria-hidden')).toBe(expected);
   });
 
   it('removes the group aria-labelledby attribute when unmounted', async () => {
@@ -166,6 +170,26 @@ describe('<Select.GroupLabel />', () => {
     id.value = undefined;
     await flushMicrotasks();
     expect(group).toHaveAttribute('aria-labelledby', generatedId);
+  });
+
+  it('does not name the group while KeepAlive holds a label that mounted in a held branch', async () => {
+    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+      <Select.GroupLabel key="label" id="held-label" />
+    ));
+    await render(() => (
+      <Select.Root open>
+        <Select.Group>
+          <HeldBranch />
+        </Select.Group>
+      </Select.Root>
+    ));
+    const group = screen.getByRole('group');
+
+    await mountWhileHeld();
+    expect(group).not.toHaveAttribute('aria-labelledby');
+
+    await show();
+    expect(group).toHaveAttribute('aria-labelledby', 'held-label');
   });
 
   it('throws a descriptive error when rendered outside <Select.Group>', async () => {

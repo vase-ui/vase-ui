@@ -5,12 +5,18 @@ import type { ShallowRef, VNodeChild } from 'vue';
 import * as Dialog from '../../dialog/index.parts';
 import * as Menu from '../../menu/index.parts';
 import * as Popover from '../../popover/index.parts';
-import { createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
+import {
+  createRenderer,
+  flushMicrotasks,
+  screen,
+  waitFor,
+  waitForLaterMillisecond,
+} from '#test-utils';
 import FocusManagerPart from '../../../test/fixtures/FocusManagerPart.vue';
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
 import { REASONS } from '../../internals/reasons';
 import { createAttribute } from './createAttribute';
-import type { FocusOption } from './focus/FloatingFocusManager.vue';
+import type { FocusOption } from './focus/FloatingFocusManager';
 import FloatingPortal from './portal/FloatingPortal.vue';
 
 // After an element loses the focus, the Tab key starts at that element in some browsers. In others
@@ -38,16 +44,6 @@ function listPlaceOfTrigger(host: Element) {
     child.hasAttribute(createAttribute('focus-guard')) ? 'guard' : child.textContent,
   );
 }
-
-// A menu opens in the frame after the press, and it closes for a release off its trigger. A
-// control that appears or goes before the trigger on the screen moves the trigger in that frame.
-// The case then fails when the frame comes before the release. In a backward case the controls
-// come before the trigger in the DOM. A flex row in reverse order shows them after it.
-const triggerFirstRow = {
-  display: 'flex',
-  flexDirection: 'row-reverse',
-  justifyContent: 'flex-end',
-} as const;
 
 describe('useTriggerFocusGuards', () => {
   const { render } = createRenderer();
@@ -101,7 +97,10 @@ describe('useTriggerFocusGuards', () => {
 
     async function openPopup() {
       const trigger = screen.getByRole('button', { name: 'Toggle' });
-      await userEvent.click(trigger);
+      await waitForLaterMillisecond(async () => {
+        await userEvent.click(trigger);
+        await screen.findByTestId('popup');
+      });
       // Menu moves focus to the popup itself; Popover moves it to the first tabbable inside.
       await waitFor(() => {
         expect(screen.getByTestId(name === 'Popover' ? 'inside' : 'popup')).toHaveFocus();
@@ -160,14 +159,16 @@ describe('useTriggerFocusGuards', () => {
 
           expect(direction === 'backward' ? trigger : screen.getByTestId('inside')).toHaveFocus();
           expect(trigger).toHaveAttribute('aria-expanded', 'true');
+          const popup = screen.getByTestId('popup');
 
           await userEvent.tab({ shift: direction === 'backward' });
 
           const destination = screen.getByTestId(direction === 'backward' ? 'before' : 'after');
           expect(destination).toHaveFocus();
           await waitFor(() => {
-            expect(screen.queryByTestId('popup')).toBe(null);
+            expect(popup).not.toBeInTheDocument();
           });
+          expect(screen.queryByTestId('popup')).toBe(null);
           expect(destination).toHaveFocus();
           expect(trigger).toHaveAttribute('tabindex', String(tabindex));
         },
@@ -204,7 +205,7 @@ describe('useTriggerFocusGuards', () => {
               }
 
               return (
-                <div style={direction === 'backward' ? triggerFirstRow : undefined}>
+                <div>
                   {direction === 'backward' && controls.reverse()}
                   {renderTestPopup({
                     tabindex: -1,
@@ -220,17 +221,15 @@ describe('useTriggerFocusGuards', () => {
           });
 
           await render(<Fixture />);
-          const trigger = screen.getByRole('button', { name: 'Toggle' });
-          const placeBeforeOpen = trigger.getBoundingClientRect().toJSON();
           await focusTabOrigin(await openPopup());
-          // The release of the press must land on the trigger.
-          expect(trigger.getBoundingClientRect().toJSON()).toEqual(placeBeforeOpen);
+          const popup = screen.getByTestId('popup');
           await userEvent.tab({ shift: direction === 'backward' });
 
           expect(screen.getByTestId('target')).toHaveFocus();
           await waitFor(() => {
-            expect(screen.queryByTestId('popup')).toBe(null);
+            expect(popup).not.toBeInTheDocument();
           });
+          expect(screen.queryByTestId('popup')).toBe(null);
           expect(screen.getByTestId('target')).toHaveFocus();
         },
       );
@@ -257,11 +256,13 @@ describe('useTriggerFocusGuards', () => {
         });
 
         await focusTabOrigin(await openPopup());
+        const popup = screen.getByTestId('popup');
         await userEvent.tab({ shift: direction === 'backward' });
 
         await waitFor(() => {
-          expect(screen.queryByTestId('popup')).toBe(null);
+          expect(popup).not.toBeInTheDocument();
         });
+        expect(screen.queryByTestId('popup')).toBe(null);
         await waitFor(() => {
           expect(destination).toHaveFocus();
         });
@@ -274,13 +275,15 @@ describe('useTriggerFocusGuards', () => {
 
           const trigger = await openPopup();
           await focusTabOrigin(trigger);
+          const popup = screen.getByTestId('popup');
 
           await userEvent.tab({ shift: direction === 'backward' });
 
           expect(trigger).toHaveFocus();
           await waitFor(() => {
-            expect(screen.queryByTestId('popup')).toBe(null);
+            expect(popup).not.toBeInTheDocument();
           });
+          expect(screen.queryByTestId('popup')).toBe(null);
           expect(trigger).toHaveFocus();
           expect(trigger).toHaveAttribute('tabindex', String(tabindex));
         },
@@ -334,10 +337,8 @@ describe('useTriggerFocusGuards', () => {
       return { ...result, reasons, trigger: screen.getByRole('button', { name: 'Toggle' }) };
     }
 
-    async function waitForClose() {
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
-      });
+    function expectClosed() {
+      expect(screen.queryByTestId('popup')).toBe(null);
     }
 
     it('puts a guard before and after the trigger only while the trigger owns the open menu', async () => {
@@ -388,7 +389,7 @@ describe('useTriggerFocusGuards', () => {
 
       expect(screen.getByTestId('before')).toHaveFocus();
       expect(reasons).toEqual([REASONS.focusOut]);
-      await waitForClose();
+      expectClosed();
       expect(screen.getByTestId('before')).toHaveFocus();
     });
 
@@ -401,7 +402,7 @@ describe('useTriggerFocusGuards', () => {
 
       expect(screen.getByTestId('after')).toHaveFocus();
       expect(reasons).toEqual([REASONS.focusOut]);
-      await waitForClose();
+      expectClosed();
       expect(screen.getByTestId('after')).toHaveFocus();
     });
 
@@ -414,7 +415,7 @@ describe('useTriggerFocusGuards', () => {
       await userEvent.tab();
 
       expect(screen.getByTestId('next')).toHaveFocus();
-      await waitForClose();
+      expectClosed();
       expect(screen.getByTestId('next')).toHaveFocus();
     });
 
@@ -569,13 +570,8 @@ describe('useTriggerFocusGuards', () => {
     };
   }
 
-  // WebKit on macOS skips a button for the Tab key unless the button has a `tabindex`.
   function renderStop(testId: string, text: string) {
-    return (
-      <button data-testid={testId} tabindex={0}>
-        {text}
-      </button>
-    );
+    return <button data-testid={testId}>{text}</button>;
   }
 
   function renderButtons(content: OpenOptions['content']) {

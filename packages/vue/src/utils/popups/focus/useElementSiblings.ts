@@ -1,5 +1,5 @@
-import { onUnmounted, toValue, watch } from 'vue';
-import type { MaybeRefOrGetter } from 'vue';
+import { onUnmounted, shallowRef, toValue, watch } from 'vue';
+import type { MaybeRefOrGetter, ShallowRef } from 'vue';
 import { ownerWindow } from '../../../common/owner';
 
 export interface ElementSiblings {
@@ -16,11 +16,15 @@ export interface ElementSiblings {
  * the `Transition` to the element in a root `Teleport`. In Vue 3.6, they do this from 3.6.0-rc.3.
  *
  * `siblings` gives the same object while the nodes do not change. `null` removes the nodes.
+ *
+ * The result holds the object of `siblings` whose nodes are beside `anchor`, or `null`. Vue can run
+ * a `watch` of the caller before the `watch` that puts the nodes there.
  */
 export function useElementSiblings(
   anchor: MaybeRefOrGetter<ChildNode | null>,
   siblings: MaybeRefOrGetter<ElementSiblings | null>,
-): void {
+): Readonly<ShallowRef<ElementSiblings | null>> {
+  const placedSiblings = shallowRef<ElementSiblings | null>(null);
   let placed: readonly ChildNode[] = [];
   let observer: MutationObserver | null = null;
   let observedParent: Node | null = null;
@@ -33,6 +37,7 @@ export function useElementSiblings(
       node.remove();
     }
     placed = [];
+    placedSiblings.value = null;
   }
 
   function place() {
@@ -72,6 +77,7 @@ export function useElementSiblings(
       }
       reference = node;
     }
+    placedSiblings.value = next;
 
     // Vue moves only its own nodes when a parent moves the part or `KeepAlive` holds it, and Vue
     // puts a new node of a list immediately before the anchor. The observer then puts the nodes
@@ -90,4 +96,6 @@ export function useElementSiblings(
   // inserts the new part after the `onBeforeUnmount` hooks and after the effect scope stops. The
   // nodes thus stay until the DOM update is complete.
   onUnmounted(remove);
+
+  return placedSiblings;
 }

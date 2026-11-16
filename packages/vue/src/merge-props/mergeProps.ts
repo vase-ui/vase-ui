@@ -1,6 +1,6 @@
 import { normalizeClass, normalizeStyle } from 'vue';
 import type { IntrinsicElementAttributes, NativeElements } from 'vue';
-import type { VaseUIEvent, WithVaseUIEvent } from '../internals/types';
+import type { VaseUIEvent, WithVaseUIEventHandlers } from '../internals/types';
 
 type ElementType = keyof IntrinsicElementAttributes;
 type KeyOfEach<T> = T extends unknown ? keyof T : never;
@@ -31,7 +31,8 @@ type MergedProps<T extends ElementType> =
   IsEachElement<T> extends true ? NativeElements['div'] : NativeElements[T];
 // The first member accepts an object with no index signature, such as `HTMLProps`.
 type PropsOf<T extends ElementType> =
-  WithVaseUIEvent<SetAttributes<T>> | (WithVaseUIEvent<SetAttributes<T>> & DataAttributes);
+  | WithVaseUIEventHandlers<SetAttributes<T>>
+  | (WithVaseUIEventHandlers<SetAttributes<T>> & DataAttributes);
 type InputProps<T extends ElementType> =
   PropsOf<T> | ((otherProps: MergedProps<T>) => PropsOf<T>) | undefined;
 type Handler = (...args: any[]) => unknown;
@@ -46,8 +47,10 @@ type HandlerValue = Handler | Handler[] | null | false | undefined;
  * Event handlers run from right to left. The rightmost handler runs first, and the leftmost
  * handler runs last. An array of handlers is one handler, and its members run in index order.
  * When the first argument is a DOM event, a handler can call `event.preventVaseUIHandler()`.
- * The handlers to its left then do not run. This does not call `preventDefault()` or
- * `stopPropagation()`. When the first argument is not a DOM event, all handlers run.
+ * The handlers to its left then do not run. A call in a handler of another element, such as a
+ * child element, or in the other phase of the event, does not stop them. This does not call
+ * `preventDefault()` or `stopPropagation()`. When the first argument is not a DOM event, all
+ * handlers run.
  *
  * `class` values are joined, rightmost first. A value can be a string, an array or an object.
  * `style` values are merged, and the rightmost value of each property wins. A value can be a
@@ -58,9 +61,10 @@ type HandlerValue = Handler | Handler[] | null | false | undefined;
  * `obj2`. The result of the function replaces those props, so the function must call the earlier
  * handlers itself. `mergeProps` copies the result and does not change it.
  *
- * A handler that such a function returns can also call `event.preventVaseUIHandler()`. The call
- * only sets `event.vaseUIHandlerPrevented`, so this handler must call the earlier handlers only
- * when the flag is not `true`.
+ * A handler that such a function returns can also call `event.preventVaseUIHandler()`.
+ * `mergeProps` does not stop an earlier handler that the function calls itself. Thus do not call
+ * the earlier handlers after this call. The call sets `event.vaseUIHandlerPrevented` to `true` for
+ * the rest of the dispatch, so the listeners of parent elements also read `true`.
  *
  * @important **`ref` is not merged.** Only the rightmost `ref` is kept.
  * @template T Tag of the element that gets the merged props. The sets and the result then have
@@ -261,13 +265,15 @@ function mergeEventHandlers(ourHandlers: HandlerValue, theirHandlers: HandlerVal
     const event = args[0];
 
     if (isEvent(event)) {
-      const vaseUIEvent = event as VaseUIEvent<typeof event>;
+      makeEventPreventable(event as VaseUIEvent<typeof event>);
 
-      makeEventPreventable(vaseUIEvent);
-
+      // The DOM gives the same event object to each listener of a dispatch, so the flag can come
+      // from another listener or from an earlier call. Only a call during `theirHandler` stops
+      // `ourHandler`.
+      const callsBefore = countPreventCalls(event);
       const result = theirHandler(...args);
 
-      if (!vaseUIEvent.vaseUIHandlerPrevented) {
+      if (countPreventCalls(event) === callsBefore) {
         ourHandler(...args);
       }
 
@@ -298,9 +304,16 @@ function wrapEventHandler(handlers: HandlerValue) {
   };
 }
 
+const preventCalls = new WeakMap<Event, number>();
+
+function countPreventCalls(event: Event) {
+  return preventCalls.get(event) ?? 0;
+}
+
 export function makeEventPreventable<T extends Event>(event: VaseUIEvent<T>) {
   event.preventVaseUIHandler = () => {
     (event.vaseUIHandlerPrevented as boolean) = true;
+    preventCalls.set(event, countPreventCalls(event) + 1);
   };
 
   return event;

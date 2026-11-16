@@ -1,16 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import {
+  clientCenter,
   createRenderer,
   detachedTriggersConformanceTests,
   fireEvent,
   flushMicrotasks,
   isJSDOM,
   nextAnimationsRead,
-  nextEvent,
   screen,
   wait,
   waitFor,
+  waitForLaterMillisecond,
   waitForPositioned,
 } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
@@ -98,6 +99,7 @@ describe('<MenuRoot />', () => {
 
       const testMenu = Menu.createHandle<number>();
       const instantsWhileEnding: (string | undefined)[] = [];
+      const onOpenChangeComplete = vi.fn();
 
       const utils = await render(
         <div style={{ position: 'relative', width: '400px', height: '200px' }}>
@@ -124,7 +126,7 @@ describe('<MenuRoot />', () => {
             Trigger 2
           </Menu.Trigger>
 
-          <Menu.Root handle={testMenu}>
+          <Menu.Root handle={testMenu} onOpenChangeComplete={onOpenChangeComplete}>
             {{
               default: ({ payload }: NumberPayload) => (
                 <Menu.Portal>
@@ -167,6 +169,11 @@ describe('<MenuRoot />', () => {
         expect(screen.getByTestId('content').textContent).toBe('1');
       });
       await waitForSettledPosition(screen.getByTestId('positioner'));
+      // The root reads the animations of the popup in a frame after the open, to report the end of
+      // the open. The wait of a case for the read of a close must start after that read.
+      await waitFor(() => {
+        expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+      });
 
       // The animations that the positioner starts for the move are the ones that the part waits
       // for, so the case reads them in the same call.
@@ -183,8 +190,10 @@ describe('<MenuRoot />', () => {
         });
       }
 
-      // The handoff itself legitimately renders `trigger-change` while closing
-      // the previous trigger's popup. Only the close that follows matters.
+      // `user.hover` gives the leave event no `relatedTarget`, so the switch to trigger 2 closes
+      // the popup and opens it again in one task. The popup thus starts an exit and reverses it in
+      // the next frame, and the events of that exit can come after the setup. Only the close that
+      // follows matters.
       instantsWhileEnding.length = 0;
 
       return {
@@ -200,10 +209,13 @@ describe('<MenuRoot />', () => {
     it('does not apply the trigger-change instant to a hover close after switching triggers', async () => {
       const { user, trigger2, popup, instantsWhileEnding } = await renderHoverDetachedTriggers();
 
-      // The ending style lasts only while the exit runs, so the case waits for the start of the exit.
-      await nextEvent(popup, 'transitionrun', { action: () => user.unhover(trigger2) });
-      expect(popup).toHaveAttribute('data-ending-style');
+      // Only the close makes the part read the animations of the popup.
+      const exitAnimations = await nextAnimationsRead(popup, {
+        action: () => user.unhover(trigger2),
+      });
 
+      expect(exitAnimations.length).toBeGreaterThan(0);
+      expect(popup).toHaveAttribute('data-ending-style');
       expect(instantsWhileEnding).not.toContain('trigger-change');
     });
 
@@ -306,7 +318,7 @@ describe('<MenuRoot />', () => {
 
       await user.hover(trigger1);
       await waitFor(() => {
-        expect(screen.queryByTestId('popup')).not.toBe(null);
+        expect(screen.getByTestId('popup')).not.toBe(null);
       });
 
       // Let the first open settle so moving to trigger 2 is a real switch.
@@ -342,7 +354,12 @@ describe('<MenuRoot />', () => {
       });
       expect(switchAnimations.length).toBeGreaterThan(0);
 
-      await nextEvent(popup, 'transitionrun', { action: () => user.unhover(trigger2) });
+      // Only the close makes the part read the animations of the popup.
+      const exitAnimations = await nextAnimationsRead(popup, {
+        action: () => user.unhover(trigger2),
+      });
+      expect(exitAnimations.length).toBeGreaterThan(0);
+      expect(popup).toHaveAttribute('data-ending-style');
 
       // The case takes each promise before it ends the animation. A canceled animation gets a new
       // promise that never settles.
@@ -421,8 +438,10 @@ describe('<MenuRoot />', () => {
           const trigger1 = screen.getByRole('button', { name: 'Trigger 1' });
           const trigger2 = screen.getByRole('button', { name: 'Trigger 2' });
 
-          await user.click(trigger1);
-          await screen.findByTestId('menu');
+          await waitForLaterMillisecond(async () => {
+            await user.click(trigger1);
+            await screen.findByTestId('menu');
+          });
           // The menu focuses itself a frame after opening; keys sent earlier go to the trigger.
           await waitFor(() => {
             expect(screen.getByRole('menu')).toHaveFocus();
@@ -436,23 +455,20 @@ describe('<MenuRoot />', () => {
             expect(submenuTrigger).toHaveFocus();
           });
 
-          await user.keyboard('[ArrowRight]');
-
-          const submenuItem = await screen.findByTestId('submenu-item');
+          const submenuItem = await waitForLaterMillisecond(async () => {
+            await user.keyboard('[ArrowRight]');
+            return screen.findByTestId('submenu-item');
+          });
           await waitFor(() => {
             expect(submenuItem).toHaveFocus();
           });
 
           await user.keyboard('[ArrowLeft]');
-          await waitFor(() => {
-            expect(screen.queryByTestId('submenu')).toBe(null);
-          });
+          expect(screen.queryByTestId('submenu')).toBe(null);
           expect(submenuTrigger).toHaveFocus();
 
           await user.keyboard('[Escape]');
-          await waitFor(() => {
-            expect(screen.queryByTestId('menu')).toBe(null);
-          });
+          expect(screen.queryByTestId('menu')).toBe(null);
 
           await user.click(trigger2);
           await screen.findByTestId('menu');
@@ -486,20 +502,21 @@ describe('<MenuRoot />', () => {
           const trigger1 = screen.getByRole('button', { name: 'Trigger 1' });
           const trigger2 = screen.getByRole('button', { name: 'Trigger 2' });
 
-          await user.click(trigger1);
-          await screen.findByTestId('menu');
+          await waitForLaterMillisecond(async () => {
+            await user.click(trigger1);
+            await screen.findByTestId('menu');
+          });
           expect(screen.queryByTestId('submenu')).toBe(null);
 
           const submenuTrigger = screen.getByTestId('submenu-trigger');
-          await user.click(submenuTrigger);
-
-          const submenuItem = await screen.findByTestId('submenu-item');
+          const submenuItem = await waitForLaterMillisecond(async () => {
+            await user.click(submenuTrigger);
+            return screen.findByTestId('submenu-item');
+          });
           expect(submenuItem.textContent).toBe('Nested');
 
           await user.click(submenuItem);
-          await waitFor(() => {
-            expect(screen.queryByTestId('menu')).toBe(null);
-          });
+          expect(screen.queryByTestId('menu')).toBe(null);
 
           await user.click(trigger2);
           await screen.findByTestId('menu');
@@ -547,8 +564,10 @@ describe('<MenuRoot />', () => {
           );
 
           const trigger = screen.getByRole('button', { name: 'Trigger 1' });
-          await user.click(trigger);
-          await screen.findByTestId('level-1');
+          await waitForLaterMillisecond(async () => {
+            await user.click(trigger);
+            await screen.findByTestId('level-1');
+          });
           // The menu focuses itself a frame after opening; keys sent earlier go to the trigger.
           await waitFor(() => {
             expect(screen.getByRole('menu')).toHaveFocus();
@@ -562,8 +581,10 @@ describe('<MenuRoot />', () => {
             expect(submenuTrigger1).toHaveFocus();
           });
 
-          await user.keyboard('[ArrowRight]');
-          await screen.findByTestId('level-2');
+          await waitForLaterMillisecond(async () => {
+            await user.keyboard('[ArrowRight]');
+            await screen.findByTestId('level-2');
+          });
           await waitFor(() => {
             expect(screen.getByRole('menuitem', { name: 'Item 2' })).toHaveFocus();
           });
@@ -574,13 +595,13 @@ describe('<MenuRoot />', () => {
             expect(submenuTrigger2).toHaveFocus();
           });
 
-          await user.keyboard('[ArrowRight]');
-          await screen.findByTestId('level-3');
+          await waitForLaterMillisecond(async () => {
+            await user.keyboard('[ArrowRight]');
+            await screen.findByTestId('level-3');
+          });
 
           await user.click(screen.getByTestId('outside'));
-          await waitFor(() => {
-            expect(screen.queryByTestId('level-1')).toBe(null);
-          });
+          expect(screen.queryByTestId('level-1')).toBe(null);
           expect(screen.queryByTestId('level-2')).toBe(null);
           expect(screen.queryByTestId('level-3')).toBe(null);
         });
@@ -612,13 +633,15 @@ describe('<MenuRoot />', () => {
           );
 
           const trigger1 = screen.getByRole('button', { name: 'Trigger 1' });
-          await fireEvent.mouseDown(trigger1);
-
-          await screen.findByTestId('menu');
-
-          const submenuTrigger = await screen.findByTestId('submenu-trigger');
-          await user.hover(submenuTrigger);
-          await screen.findByTestId('submenu');
+          const submenuTrigger = await waitForLaterMillisecond(async () => {
+            await fireEvent.mouseDown(trigger1, clientCenter(trigger1));
+            await screen.findByTestId('menu');
+            return screen.findByTestId('submenu-trigger');
+          });
+          await waitForLaterMillisecond(async () => {
+            await user.hover(submenuTrigger);
+            await screen.findByTestId('submenu');
+          });
 
           // Wait 200ms to enable mouseup on menu items
           await wait(200);
@@ -626,9 +649,7 @@ describe('<MenuRoot />', () => {
           const submenuItem = await screen.findByTestId('submenu-item');
           await fireEvent.mouseUp(submenuItem);
 
-          await waitFor(() => {
-            expect(screen.queryByTestId('menu')).toBe(null);
-          });
+          expect(screen.queryByTestId('menu')).toBe(null);
           expect(clickSpy.mock.calls.length).toBe(1);
 
           const trigger2 = screen.getByRole('button', { name: 'Trigger 2' });
@@ -698,17 +719,20 @@ describe('<MenuRoot />', () => {
 
     async function expectOpenWith(item: string) {
       await waitFor(() => {
-        expect(screen.queryByTestId('popup')).not.toBe(null);
+        expect(screen.getByTestId('popup')).not.toBe(null);
       });
       await waitFor(() => {
         expect(screen.getByRole('menuitem')).toHaveTextContent(item);
       });
     }
 
-    async function expectClosed() {
+    async function expectClosedAfter(close: () => Promise<void>) {
+      const popup = screen.getByTestId('popup');
+      await close();
       await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
+        expect(popup).not.toBeInTheDocument();
       });
+      expect(screen.queryByTestId('popup')).toBe(null);
     }
 
     it('opens from each trigger, an item, and both external buttons', async () => {
@@ -716,30 +740,36 @@ describe('<MenuRoot />', () => {
 
       for (const name of ['Library', 'Playback', 'Sharing']) {
         const trigger = screen.getByRole('button', { name });
-        await user.click(trigger);
-        await expectOpenWith(name);
+        await waitForLaterMillisecond(async () => {
+          await user.click(trigger);
+          await expectOpenWith(name);
+        });
         expect(trigger).toHaveAttribute('aria-expanded', 'true');
 
-        await user.click(screen.getByRole('menuitem'));
-        await expectClosed();
+        await expectClosedAfter(() => user.click(screen.getByRole('menuitem')));
       }
 
-      await user.click(screen.getByRole('button', { name: 'Library' }));
-      await expectOpenWith('Library');
-      await user.click(screen.getByRole('button', { name: 'Sharing' }));
-      await expectOpenWith('Sharing');
-      await user.click(screen.getByRole('button', { name: 'Sharing' }));
-      await expectClosed();
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Library' }));
+        await expectOpenWith('Library');
+      });
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Sharing' }));
+        await expectOpenWith('Sharing');
+      });
+      await expectClosedAfter(() => user.click(screen.getByRole('button', { name: 'Sharing' })));
 
-      await user.click(screen.getByRole('button', { name: 'Open externally' }));
-      await expectOpenWith('Playback');
-      await user.keyboard('[Escape]');
-      await expectClosed();
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Open externally' }));
+        await expectOpenWith('Playback');
+      });
+      await expectClosedAfter(() => user.keyboard('[Escape]'));
 
-      await user.click(screen.getByRole('button', { name: 'Open via handle' }));
-      await expectOpenWith('Playback');
-      await user.click(screen.getByRole('menuitem'));
-      await expectClosed();
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Open via handle' }));
+        await expectOpenWith('Playback');
+      });
+      await expectClosedAfter(() => user.click(screen.getByRole('menuitem')));
     });
   });
 });

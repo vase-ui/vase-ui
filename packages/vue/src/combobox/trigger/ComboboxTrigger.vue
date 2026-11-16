@@ -55,6 +55,7 @@ export interface ComboboxTriggerProps
 
 <script setup lang="ts">
 import { computed, onDeactivated, onScopeDispose, toRaw } from 'vue';
+import { useAriaAfterHydration } from '../../common/hydration';
 import { isElementDisabled } from '../../common/isElementDisabled';
 import { ownerDocument } from '../../common/owner';
 import { contains, getTarget } from '../../common/shadowDom';
@@ -70,11 +71,13 @@ import {
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
+import { givenId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { isMouseWithinBounds } from '../../utils/getPseudoElementBounds';
 import { stopEvent } from '../../utils/popups/event';
 import { useClick } from '../../utils/popups/interactions/useClick';
 import { useTypeahead } from '../../utils/popups/interactions/useTypeahead';
+import { isReleaseAtPressPoint } from '../../utils/popups/isReleaseAtPressPoint';
 import { resolveAriaLabelledBy } from '../../utils/resolveAriaLabelledBy';
 import { useComboboxInputValueContext, useComboboxRootContext } from '../root/ComboboxRootContext';
 import { useListEmpty, usePopupSide } from '../utils/parts';
@@ -121,9 +124,11 @@ const popupSide = usePopupSide(store);
 
 const setFocused = useSetFieldFocused(isDisabled, () => element.value);
 
-useLabelableId({ id: () => (inputInsidePopup.value ? props.id : undefined) });
+useLabelableId({
+  id: () => (inputInsidePopup.value ? props.id : undefined),
+});
 const triggerId = computed(() =>
-  inputInsidePopup.value ? (props.id ?? store.select('id')) : props.id,
+  inputInsidePopup.value ? (givenId(props.id) ?? store.select('id')) : givenId(props.id),
 );
 
 // An element with no id has an empty `id`, and the trigger then has no `aria-controls`.
@@ -131,9 +136,7 @@ const ariaControls = computed(() => {
   if (!isOpen.value) {
     return undefined;
   }
-  const id = inputInsidePopup.value
-    ? store.select('popupElementId')
-    : store.select('listElement')?.id;
+  const id = inputInsidePopup.value ? store.select('popupId') : store.select('listElementId');
   return id || undefined;
 });
 
@@ -224,6 +227,11 @@ function handleMouseUp(mouseEvent: MouseEvent) {
     return;
   }
 
+  const press = store.context.openPressRef.value;
+  if (press && isReleaseAtPressPoint(press, mouseEvent)) {
+    return;
+  }
+
   store.setOpen(false, createChangeEventDetails(REASONS.cancelOpen, mouseEvent));
 }
 
@@ -244,6 +252,7 @@ const state = computed<ComboboxTriggerState>(() => ({
   placeholder: selectionMode.value === 'none' ? false : !hasSelectedValue.value,
 }));
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('button', props, {
   state,
   ref: [buttonRef, setTriggerElement],
@@ -263,7 +272,9 @@ const { element, elementProps } = useRenderElement('button', props, {
       // Only valid alongside the `combobox` role; without it the trigger is a plain button, and
       // the `Combobox.Input` outside the popup already carries `aria-readonly`.
       'aria-readonly': inputInsidePopup.value ? isReadOnly.value || undefined : undefined,
-      'aria-labelledby': resolveAriaLabelledBy(fieldLabelId.value, store.context.labelId.value),
+      'aria-labelledby': ariaAfterHydration(
+        resolveAriaLabelledBy(fieldLabelId.value, store.context.labelId.value),
+      ),
       onPointerdown: trackPointerType,
       onPointerenter: trackPointerType,
       onFocusin() {
@@ -337,6 +348,7 @@ const { element, elementProps } = useRenderElement('button', props, {
     attrs,
     (merged) => validation.getValidationProps(isDisabled.value, merged),
     getButtonProps,
+    (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),
   ],
 });
 

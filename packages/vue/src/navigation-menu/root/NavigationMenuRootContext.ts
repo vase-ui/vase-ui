@@ -25,8 +25,17 @@ export interface NavigationMenuRootContext<Value = any> {
   transitionStatus: Readonly<Ref<TransitionStatus>>;
   mounted: Readonly<Ref<boolean>>;
   popupElement: ShallowRef<HTMLElement | null>;
+  /**
+   * The `id` of `popupElement`. The root follows each change of the attribute.
+   */
+  popupElementId: Readonly<Ref<string | undefined>>;
   positionerElement: ShallowRef<HTMLElement | null>;
+  backdropElement: ShallowRef<HTMLElement | null>;
   viewportElement: ShallowRef<HTMLElement | null>;
+  /**
+   * The `id` of `viewportElement`. The root follows each change of the attribute.
+   */
+  viewportElementId: Readonly<Ref<string | undefined>>;
   viewportTargetElement: ShallowRef<HTMLElement | null>;
   /**
    * The direction of the last switch between two items while the menu is open, or `null`.
@@ -36,10 +45,13 @@ export interface NavigationMenuRootContext<Value = any> {
   floatingRootStore: Readonly<Ref<FloatingRootStore | undefined>>;
   setFloatingRootStore: (store: FloatingRootStore | undefined) => void;
   /**
-   * Only handlers, hooks and `watch` callbacks read the next two refs. A template does not read
-   * them, so a write wakes no render.
+   * Only handlers, hooks and `watch` callbacks read this ref. A template does not read it, so a
+   * write wakes no render.
    */
   currentContentRef: ShallowRef<HTMLElement | null>;
+  /**
+   * The popup reads this ref in its render for its name. A write thus renders the popup again.
+   */
   prevTriggerElementRef: ShallowRef<Element | null | undefined>;
   nested: boolean;
   rootRef: ShallowRef<HTMLElement | null>;

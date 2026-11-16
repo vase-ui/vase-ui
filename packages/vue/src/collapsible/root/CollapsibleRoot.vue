@@ -104,7 +104,11 @@ const state = computed<CollapsibleRootState>(() => ({
   transitionStatus: collapsible.transitionStatus.value,
 }));
 
-provide(CollapsibleRootContext, { ...collapsible, onOpenChange, state });
+provide(CollapsibleRootContext, {
+  ...collapsible,
+  onOpenChange,
+  state,
+});
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,

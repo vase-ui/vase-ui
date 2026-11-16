@@ -18,12 +18,12 @@ export function useRegisterFieldControl(
   enabled: MaybeRefOrGetter<boolean> = true,
   name?: MaybeRefOrGetter<FieldControlRegistration['name']>,
 ): void {
-  const { registerFieldControl, reaches } = useFieldRootContext();
+  const { registerFieldControl } = useFieldRootContext();
   const source = Symbol();
   // The getter reads the state, and the entry keeps its place. `KeepAlive` runs the `onActivated`
   // hooks of one branch from the last part to the first part. A new entry in that hook would
   // reverse the order of the controls.
-  const { isHeld } = useKeepAliveState(controlRef, reaches);
+  const { isHeld } = useKeepAliveState();
 
   const getId = () => toValue(id);
   const getName = () => toValue(name);

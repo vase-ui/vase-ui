@@ -23,13 +23,17 @@ import {
   flushMicrotasks,
   hydrate,
   isJSDOM,
+  nextAnimationsRead,
+  nextCall,
   nextEvent,
+  popupAnatomyTests,
   popupConformanceTests,
   renderOnServer,
   screen,
   wait,
   waitFor,
   waitForLaterMillisecond,
+  waitSingleFrame,
 } from '#test-utils';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import {
@@ -229,6 +233,56 @@ const MultipleDetachedTriggersDialog = defineComponent({
 describe('<Dialog.Root />', () => {
   const { render } = createRenderer();
 
+  popupAnatomyTests({
+    createComponent: ({ open, onOpenChangeComplete, content }) => (
+      <Dialog.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Dialog.Trigger>Open</Dialog.Trigger>
+        <Dialog.Portal>
+          <Dialog.Backdrop data-testid="shown" class="shown" />
+          {content}
+        </Dialog.Portal>
+      </Dialog.Root>
+    ),
+    createPopup: () => <Dialog.Popup data-testid="popup">Popup</Dialog.Popup>,
+    render,
+  });
+
+  describe('VUE-92: a portal part that a v-if of the consumer removes', () => {
+    it.each([
+      { name: 'no keepMounted', keepMounted: false },
+      { name: 'keepMounted', keepMounted: true },
+    ])('emits openChangeComplete with false after each close: $name', async ({ keepMounted }) => {
+      const onOpenChangeComplete = vi.fn();
+      const open = shallowRef(false);
+      await render(() => (
+        <Dialog.Root open={open.value} onOpenChangeComplete={onOpenChangeComplete}>
+          <Dialog.Trigger>Open</Dialog.Trigger>
+          {open.value && (
+            <Dialog.Portal keepMounted={keepMounted}>
+              <Dialog.Popup data-testid="popup">Popup</Dialog.Popup>
+            </Dialog.Portal>
+          )}
+        </Dialog.Root>
+      ));
+
+      async function openAndClose(cycle: number) {
+        const opened = nextCall(onOpenChangeComplete);
+        open.value = true;
+        await opened;
+        open.value = false;
+        await flushMicrotasks();
+
+        expect(screen.queryByTestId('popup')).toBe(null);
+        expect(onOpenChangeComplete).toHaveBeenCalledTimes(cycle * 2);
+      }
+
+      await openAndClose(1);
+      await openAndClose(2);
+
+      expect(onOpenChangeComplete.mock.calls).toEqual([[true], [false], [true], [false]]);
+    });
+  });
+
   popupConformanceTests({
     createComponent: (props) => (
       <Dialog.Root {...props.root}>
@@ -311,7 +365,7 @@ describe('<Dialog.Root />', () => {
         await flushMicrotasks();
 
         await waitFor(() => {
-          expect(screen.queryByTestId('popup')).not.toBe(null);
+          expect(screen.getByTestId('popup')).not.toBe(null);
         });
 
         await session.send('Input.dispatchMouseEvent', {
@@ -358,9 +412,7 @@ describe('<Dialog.Root />', () => {
         });
         await flushMicrotasks();
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('popup')).toBe(null);
-        });
+        expect(screen.queryByTestId('popup')).toBe(null);
         expect(openChangeSpy).toHaveBeenCalledWith(false, REASONS.outsidePress);
       } finally {
         document.removeEventListener('click', recordClick, true);
@@ -458,13 +510,15 @@ describe('<Dialog.Root />', () => {
     const { user } = await render(<Test />);
     const trigger1 = screen.getByRole('button', { name: 'Trigger 1' });
 
-    await user.click(trigger1);
+    const trigger1Controls = await waitForLaterMillisecond(async () => {
+      await user.click(trigger1);
 
-    const popup = await screen.findByRole('dialog');
-    const trigger1Controls = trigger1.getAttribute('aria-controls');
+      const popup = await screen.findByRole('dialog');
+      const controls = trigger1.getAttribute('aria-controls');
 
-    expect(trigger1Controls).toBe(popup.getAttribute('id'));
-    await waitForLaterMillisecond();
+      expect(controls).toBe(popup.getAttribute('id'));
+      return controls;
+    });
 
     await user.click(screen.getByRole('button', { name: 'Mount trigger 2' }));
 
@@ -485,25 +539,23 @@ describe('<Dialog.Root />', () => {
 
       const trigger = screen.getByTestId('trigger');
 
-      await user.click(trigger);
-      await waitFor(() => {
-        expect(screen.queryByRole('dialog')).not.toBe(null);
+      await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        await waitFor(() => {
+          expect(screen.getByRole('dialog')).not.toBe(null);
+        });
       });
 
       await user.keyboard('[Escape]');
-      await waitFor(() => {
-        expect(screen.queryByRole('dialog')).toBe(null);
-      });
+      expect(screen.queryByRole('dialog')).toBe(null);
 
       await user.click(trigger);
       await waitFor(() => {
-        expect(screen.queryByRole('dialog')).not.toBe(null);
+        expect(screen.getByRole('dialog')).not.toBe(null);
       });
 
       await fireEvent.click(document.body);
-      await waitFor(() => {
-        expect(screen.queryByRole('dialog')).toBe(null);
-      });
+      expect(screen.queryByRole('dialog')).toBe(null);
     });
 
     it('ARIA attributes', async () => {
@@ -790,9 +842,7 @@ describe('<Dialog.Root />', () => {
         expect(handleOpenChange.mock.calls.length).toBe(0);
 
         await fireEvent.click(backdrop);
-        await waitFor(() => {
-          expect(screen.queryByRole('dialog')).toBe(null);
-        });
+        expect(screen.queryByRole('dialog')).toBe(null);
         expect(handleOpenChange.mock.calls.length).toBe(1);
       });
 
@@ -812,9 +862,7 @@ describe('<Dialog.Root />', () => {
         expect(handleOpenChange.mock.calls.length).toBe(0);
 
         await fireEvent.click(internalBackdrop);
-        await waitFor(() => {
-          expect(screen.queryByRole('dialog')).toBe(null);
-        });
+        expect(screen.queryByRole('dialog')).toBe(null);
         expect(handleOpenChange.mock.calls.length).toBe(1);
       });
 
@@ -835,9 +883,7 @@ describe('<Dialog.Root />', () => {
         const backdrop = shadowRoot.querySelector('[data-testid="backdrop"]') as HTMLElement;
 
         await fireEvent.click(backdrop);
-        await waitFor(() => {
-          expect(shadowRoot.querySelector('[role="dialog"]')).toBe(null);
-        });
+        expect(shadowRoot.querySelector('[role="dialog"]')).toBe(null);
         expect(handleOpenChange.mock.calls.length).toBe(1);
       });
 
@@ -864,9 +910,7 @@ describe('<Dialog.Root />', () => {
 
           await fireEvent.click(outsideButton);
 
-          await waitFor(() => {
-            expect(shadowRoot.querySelector('[role="dialog"]')).toBe(null);
-          });
+          expect(shadowRoot.querySelector('[role="dialog"]')).toBe(null);
 
           expect(handleOpenChange.mock.calls.length).toBe(1);
           expect(handleOpenChange.mock.calls[0][1].reason).toBe(REASONS.outsidePress);
@@ -886,9 +930,7 @@ describe('<Dialog.Root />', () => {
 
         await fireEvent.click(document);
 
-        await waitFor(() => {
-          expect(screen.queryByRole('dialog')).toBe(null);
-        });
+        expect(screen.queryByRole('dialog')).toBe(null);
         expect(handleOpenChange.mock.calls.length).toBe(1);
         expect(handleOpenChange.mock.calls[0][1].reason).toBe(REASONS.outsidePress);
       });
@@ -920,9 +962,7 @@ describe('<Dialog.Root />', () => {
         await fireEvent.mouseUp(document, { button: 0 });
         await fireEvent.click(document);
 
-        await waitFor(() => {
-          expect(screen.queryByRole('dialog')).toBe(null);
-        });
+        expect(screen.queryByRole('dialog')).toBe(null);
         expect(handleOpenChange.mock.calls[0][1].reason).toBe(REASONS.outsidePress);
       });
 
@@ -946,9 +986,7 @@ describe('<Dialog.Root />', () => {
 
           await fireEvent.click(document.body);
 
-          await waitFor(() => {
-            expect(shadowRoot.querySelector('[role="dialog"]')).toBe(null);
-          });
+          expect(shadowRoot.querySelector('[role="dialog"]')).toBe(null);
 
           expect(handleOpenChange.mock.calls.length).toBe(1);
           expect(handleOpenChange.mock.calls[0][1].reason).toBe(REASONS.outsidePress);
@@ -977,9 +1015,7 @@ describe('<Dialog.Root />', () => {
 
           await fireEvent.click(document.body);
 
-          await waitFor(() => {
-            expect(shadowRoot.querySelector('[role="dialog"]')).toBe(null);
-          });
+          expect(shadowRoot.querySelector('[role="dialog"]')).toBe(null);
 
           expect(handleOpenChange.mock.calls.length).toBe(1);
           expect(handleOpenChange.mock.calls[0][1].reason).toBe(REASONS.outsidePress);
@@ -1024,14 +1060,16 @@ describe('<Dialog.Root />', () => {
       });
 
       const { setProps } = await render(<TransitionTest open />);
-      const transitionEnded = nextEvent(screen.getByRole('dialog'), 'transitionend');
+      const dialog = screen.getByRole('dialog');
+      const transitionEnded = nextEvent(dialog, 'transitionend');
 
       await setProps({ open: false });
       expect(screen.queryByRole('dialog')).not.toBe(null);
 
       await waitFor(() => {
-        expect(screen.queryByRole('dialog')).toBe(null);
+        expect(dialog).toHaveAttribute('hidden');
       });
+      expect(screen.queryByRole('dialog')).toBe(null);
 
       // The popup hides in the microtask after its transition finishes. The browser sends
       // `transitionend` after that microtask.
@@ -1065,7 +1103,7 @@ describe('<Dialog.Root />', () => {
         await user.click(trigger);
 
         await waitFor(() => {
-          expect(screen.queryByRole('dialog')).not.toBe(null);
+          expect(screen.getByRole('dialog')).not.toBe(null);
         });
 
         const popup = screen.getByRole('dialog');
@@ -1090,7 +1128,7 @@ describe('<Dialog.Root />', () => {
         await user.click(trigger);
 
         await waitFor(() => {
-          expect(screen.queryByRole('dialog')).not.toBe(null);
+          expect(screen.getByRole('dialog')).not.toBe(null);
         });
 
         const popup = screen.getByRole('dialog');
@@ -1140,12 +1178,10 @@ describe('<Dialog.Root />', () => {
       const { user } = await render(<App />);
 
       const trigger = screen.getByRole('button', { name: 'Open base' });
-      await user.click(trigger);
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(() => user.click(trigger));
 
       const nestedButton1 = screen.getByRole('button', { name: 'Open nested 1' });
-      await user.click(nestedButton1);
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(() => user.click(nestedButton1));
 
       const nestedButton2 = screen.getByRole('button', { name: 'Open nested 2' });
       await user.click(nestedButton2);
@@ -1197,12 +1233,10 @@ describe('<Dialog.Root />', () => {
       await render(<App />);
 
       const trigger = screen.getByRole('button', { name: 'Open base' });
-      await fireEvent.click(trigger);
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(() => fireEvent.click(trigger));
 
       const nestedButton1 = screen.getByRole('button', { name: 'Open nested 1' });
-      await fireEvent.click(nestedButton1);
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(() => fireEvent.click(nestedButton1));
 
       const nestedButton2 = screen.getByRole('button', { name: 'Open nested 2' });
       await fireEvent.click(nestedButton2);
@@ -1210,26 +1244,20 @@ describe('<Dialog.Root />', () => {
       const backdrops = Array.from(document.querySelectorAll('[role="presentation"]'));
       await fireEvent.click(backdrops[backdrops.length - 1]);
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('level-3')).toBe(null);
-      });
+      expect(screen.queryByTestId('level-3')).toBe(null);
 
       expect(screen.getByTestId('level-2')).toBeInTheDocument();
       expect(screen.getByTestId('level-1')).toBeInTheDocument();
 
       await fireEvent.click(backdrops[backdrops.length - 2]);
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('level-2')).toBe(null);
-      });
+      expect(screen.queryByTestId('level-2')).toBe(null);
 
       expect(screen.getByTestId('level-1')).toBeInTheDocument();
 
       await fireEvent.click(backdrops[backdrops.length - 3]);
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('level-1')).toBe(null);
-      });
+      expect(screen.queryByTestId('level-1')).toBe(null);
     });
 
     describe.skipIf(isJSDOM)('nested popups', () => {
@@ -1254,32 +1282,32 @@ describe('<Dialog.Root />', () => {
         );
 
         const dialogTrigger = screen.getByRole('button', { name: 'Open' });
-        await user.click(dialogTrigger);
+        await waitForLaterMillisecond(async () => {
+          await user.click(dialogTrigger);
 
-        await waitFor(() => {
-          expect(screen.queryByRole('dialog')).not.toBe(null);
+          await waitFor(() => {
+            expect(screen.getByRole('dialog')).not.toBe(null);
+          });
         });
-        await waitForLaterMillisecond();
 
         const menuTrigger = screen.getByRole('button', { name: 'Open menu' });
 
-        await user.click(menuTrigger);
+        await waitForLaterMillisecond(async () => {
+          await user.click(menuTrigger);
 
-        await waitFor(() => {
-          expect(screen.queryByRole('menu')).not.toBe(null);
+          await waitFor(() => {
+            expect(screen.getByRole('menu')).not.toBe(null);
+          });
         });
-        await waitForLaterMillisecond();
 
         const menuPositioner = screen.getByTestId('menu-positioner');
         const menuInternalBackdrop = menuPositioner.previousElementSibling as HTMLElement;
 
         await user.click(menuInternalBackdrop);
 
+        expect(screen.queryByRole('menu')).toBe(null);
         await waitFor(() => {
-          expect(screen.queryByRole('menu')).toBe(null);
-        });
-        await waitFor(() => {
-          expect(screen.queryByRole('dialog')).not.toBe(null);
+          expect(screen.getByRole('dialog')).not.toBe(null);
         });
 
         const dialogPopup = screen.getByTestId('dialog-popup');
@@ -1288,9 +1316,7 @@ describe('<Dialog.Root />', () => {
 
         await user.click(dialogInternalBackdrop);
 
-        await waitFor(() => {
-          expect(screen.queryByRole('dialog')).toBe(null);
-        });
+        expect(screen.queryByRole('dialog')).toBe(null);
       });
 
       it('should not dismiss the dialog when dismissing outside a nested select popup', async () => {
@@ -1314,32 +1340,32 @@ describe('<Dialog.Root />', () => {
         );
 
         const dialogTrigger = screen.getByRole('button', { name: 'Open' });
-        await user.click(dialogTrigger);
+        await waitForLaterMillisecond(async () => {
+          await user.click(dialogTrigger);
 
-        await waitFor(() => {
-          expect(screen.queryByRole('dialog')).not.toBe(null);
+          await waitFor(() => {
+            expect(screen.getByRole('dialog')).not.toBe(null);
+          });
         });
-        await waitForLaterMillisecond();
 
         const selectTrigger = screen.getByTestId('select-trigger');
 
-        await user.click(selectTrigger);
+        await waitForLaterMillisecond(async () => {
+          await user.click(selectTrigger);
 
-        await waitFor(() => {
-          expect(screen.queryByRole('listbox')).not.toBe(null);
+          await waitFor(() => {
+            expect(screen.getByRole('listbox')).not.toBe(null);
+          });
         });
-        await waitForLaterMillisecond();
 
         const selectPositioner = screen.getByTestId('select-positioner');
         const selectInternalBackdrop = selectPositioner.previousElementSibling as HTMLElement;
 
         await user.click(selectInternalBackdrop);
 
+        expect(screen.queryByRole('listbox')).toBe(null);
         await waitFor(() => {
-          expect(screen.queryByRole('listbox')).toBe(null);
-        });
-        await waitFor(() => {
-          expect(screen.queryByRole('dialog')).not.toBe(null);
+          expect(screen.getByRole('dialog')).not.toBe(null);
         });
 
         const dialogPopup = screen.getByTestId('dialog-popup');
@@ -1348,9 +1374,7 @@ describe('<Dialog.Root />', () => {
 
         await user.click(dialogInternalBackdrop);
 
-        await waitFor(() => {
-          expect(screen.queryByRole('dialog')).toBe(null);
-        });
+        expect(screen.queryByRole('dialog')).toBe(null);
       });
 
       it('should not close the parent menu when Escape is pressed in a nested dialog', async () => {
@@ -1379,26 +1403,26 @@ describe('<Dialog.Root />', () => {
         );
 
         const menuTrigger = screen.getByRole('button', { name: 'Open menu' });
-        await user.click(menuTrigger);
-
-        await waitFor(() => {
-          expect(screen.queryByRole('menu')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.click(menuTrigger);
+          await waitFor(() => {
+            expect(screen.getByRole('menu')).not.toBe(null);
+          });
         });
 
         const dialogTrigger = screen.getByRole('menuitem', { name: 'Open dialog' });
-        await user.click(dialogTrigger);
-
-        await waitFor(() => {
-          expect(screen.queryByRole('dialog')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.click(dialogTrigger);
+          await waitFor(() => {
+            expect(screen.getByRole('dialog')).not.toBe(null);
+          });
         });
 
         await user.keyboard('[Escape]');
 
+        expect(screen.queryByRole('dialog')).toBe(null);
         await waitFor(() => {
-          expect(screen.queryByRole('dialog')).toBe(null);
-        });
-        await waitFor(() => {
-          expect(screen.queryByRole('menu')).not.toBe(null);
+          expect(screen.getByRole('menu')).not.toBe(null);
         });
       });
     });
@@ -1437,9 +1461,7 @@ describe('<Dialog.Root />', () => {
 
         await user.click(document.body);
 
-        await waitFor(() => {
-          expect(screen.queryByRole('dialog')).toBe(null);
-        });
+        expect(screen.queryByRole('dialog')).toBe(null);
       });
 
       it('dismisses on first outside click after NumberField scrub interaction (pointer lock path)', async () => {
@@ -1478,9 +1500,7 @@ describe('<Dialog.Root />', () => {
 
           await fireEvent.click(document.body);
 
-          await waitFor(() => {
-            expect(screen.queryByRole('dialog')).toBe(null);
-          });
+          expect(screen.queryByRole('dialog')).toBe(null);
           // The scrub area requests no pointer lock in WebKit.
           expect(requestPointerLockSpy.mock.calls.length).toBe(platform.engine.webkit ? 0 : 1);
         } finally {
@@ -1495,7 +1515,7 @@ describe('<Dialog.Root />', () => {
 
         const onOpenChangeComplete = vi.fn();
 
-        // The first animation lasts 100 s, so it still runs when the test swaps it.
+        // Each animation lasts 100 s, so a stall of the page cannot end one before the case ends it.
         const style = `
           @keyframes test-enter-a {
             from {
@@ -1514,7 +1534,7 @@ describe('<Dialog.Root />', () => {
           }
 
           .animation-test-indicator.animation-b[data-open] {
-            animation: test-enter-b 50ms linear;
+            animation: test-enter-b 100s linear;
           }
         `;
 
@@ -1546,18 +1566,46 @@ describe('<Dialog.Root />', () => {
         const { user } = await render(<Test />);
 
         const openButton = screen.getByText('Open externally');
-        await nextEvent(document, 'animationstart', { action: () => user.click(openButton) });
+        const start = await nextEvent(document, 'animationstart', {
+          action: () => user.click(openButton),
+        });
+        const popup = screen.getByTestId('dialog-popup');
+        expect(start.target).toBe(popup);
+        expect((start as AnimationEvent).animationName).toBe('test-enter-a');
+        // The root reads the animations of the popup in the frame after the open. WebKit sends
+        // `animationstart` before that read.
+        await waitSingleFrame();
 
         const swapButton = screen.getByText('Swap animation');
-        await user.click(swapButton);
+        // The swap cancels the first animation, and the root then reads the animations again.
+        const animations = await nextAnimationsRead(popup, {
+          action: () => user.click(swapButton),
+        });
+        expect(animations.map((animation) => (animation as CSSAnimation).animationName)).toEqual([
+          'test-enter-b',
+        ]);
+        expect(animations.map((animation) => animation.playState)).toEqual(['running']);
+        const callsAtEnd: number[] = [];
+        const finished = Promise.all(animations.map((animation) => animation.finished)).then(() => {
+          callsAtEnd.push(onOpenChangeComplete.mock.calls.length);
+        });
 
         await flushMicrotasks();
         expect(onOpenChangeComplete.mock.calls.length).toBe(0);
 
+        // The restarted animation runs for one frame before the case ends it. A completion in a
+        // frame before the end thus shows in `callsAtEnd`.
+        await waitSingleFrame();
+        for (const animation of animations) {
+          animation.finish();
+        }
+        await finished;
+
         await waitFor(() => {
           expect(onOpenChangeComplete.mock.calls.length).toBe(1);
         });
-        expect(onOpenChangeComplete.mock.calls[0][0]).toBe(true);
+        expect(callsAtEnd).toEqual([0]);
+        expect(onOpenChangeComplete.mock.calls).toEqual([[true]]);
       });
 
       it('does not get called on open when dismissed during the enter animation', async () => {
@@ -1611,12 +1659,14 @@ describe('<Dialog.Root />', () => {
 
         const openButton = screen.getByText('Open externally');
         await nextEvent(document, 'transitionrun', { action: () => user.click(openButton) });
+        const popup = screen.getByTestId('dialog-popup');
 
         await user.click(document.body);
 
         await waitFor(() => {
-          expect(screen.queryByTestId('dialog-popup')).toBe(null);
+          expect(popup).not.toBeInTheDocument();
         });
+        expect(screen.queryByTestId('dialog-popup')).toBe(null);
 
         expect(onOpenChangeComplete.mock.calls.length).toBe(1);
         expect(onOpenChangeComplete.mock.calls[0][0]).toBe(false);
@@ -1675,21 +1725,15 @@ describe('<Dialog.Root />', () => {
     );
 
     await user.keyboard('[Escape]');
-    await waitFor(() => {
-      expect(screen.queryByTestId('c')).toBe(null);
-    });
+    expect(screen.queryByTestId('c')).toBe(null);
     expect(screen.queryByTestId('b')).not.toBe(null);
 
     await user.keyboard('[Escape]');
-    await waitFor(() => {
-      expect(screen.queryByTestId('b')).toBe(null);
-    });
+    expect(screen.queryByTestId('b')).toBe(null);
     expect(screen.queryByTestId('a')).not.toBe(null);
 
     await user.keyboard('[Escape]');
-    await waitFor(() => {
-      expect(screen.queryByTestId('a')).toBe(null);
-    });
+    expect(screen.queryByTestId('a')).toBe(null);
   });
 
   it('closes the newest sibling dialog on Escape after an older one remounts its popup', async () => {
@@ -1723,9 +1767,7 @@ describe('<Dialog.Root />', () => {
 
     await user.keyboard('[Escape]');
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('b')).toBe(null);
-    });
+    expect(screen.queryByTestId('b')).toBe(null);
     expect(screen.queryByTestId('a')).not.toBe(null);
   });
 
@@ -1777,9 +1819,7 @@ describe('<Dialog.Root />', () => {
       expect(screen.getByTestId('popover')).not.toBe(null);
 
       await setProps({ nestedOpen: false, popoverOpen: true });
-      await waitFor(() => {
-        expect(screen.queryByTestId('nested')).toBe(null);
-      });
+      expect(screen.queryByTestId('nested')).toBe(null);
       // The parent popup has no tabbable element, so it takes the focus itself.
       const parent = screen.getByTestId('parent');
       await waitFor(() => {
@@ -1831,16 +1871,17 @@ describe('<Dialog.Root />', () => {
     // such checkpoint, and a key press on a focused button gives a trusted click.
     async function click(testId: string) {
       const element = await query(testId);
-      // The popup can open in the millisecond of the click before. Vue skips the second and later
-      // listeners of an event in the millisecond in which it attached them.
-      await waitForLaterMillisecond();
-      if (element instanceof HTMLButtonElement) {
-        element.focus();
-        await userEvent.keyboard('{Enter}');
-      } else {
-        element.click();
-      }
-      await flushMicrotasks();
+      // The click can open a popup. Vue skips the second and later listeners of an event in the
+      // millisecond in which it attached them.
+      await waitForLaterMillisecond(async () => {
+        if (element instanceof HTMLButtonElement) {
+          element.focus();
+          await userEvent.keyboard('{Enter}');
+        } else {
+          element.click();
+        }
+        await flushMicrotasks();
+      });
     }
 
     type PortalContainer = 'shadow root' | 'body' | undefined;
@@ -1992,9 +2033,7 @@ describe('<Dialog.Root />', () => {
 
       await tapOutside(screen.getByTestId('outside'));
 
-      await waitFor(() => {
-        expect(screen.queryByRole('dialog')).toBe(null);
-      });
+      expect(screen.queryByRole('dialog')).toBe(null);
       expect(handleOpenChange.mock.calls[0][1].reason).toBe(REASONS.outsidePress);
     }
 
@@ -2092,9 +2131,7 @@ describe('<Dialog.Root />', () => {
       await fireTouch.start(outside, { touches: [touchStart] });
       await fireTouch.move(outside, { touches: [touchMove] });
 
-      await waitFor(() => {
-        expect(screen.queryByRole('dialog')).toBe(null);
-      });
+      expect(screen.queryByRole('dialog')).toBe(null);
       expect(handleOpenChange.mock.calls.length).toBe(1);
       expect(handleOpenChange.mock.calls[0][1].reason).toBe(REASONS.outsidePress);
     });
@@ -2178,9 +2215,11 @@ describe('<Dialog.Root />', () => {
           await render(<App />);
           expect(`initial: ${isPageLocked()}`).toBe('initial: false');
 
-          await fireEvent.click(screen.getByRole('button', { name: 'Open dialog' }));
-          await waitFor(() => {
-            expect(screen.queryByRole('dialog')).not.toBe(null);
+          await waitForLaterMillisecond(async () => {
+            await fireEvent.click(screen.getByRole('button', { name: 'Open dialog' }));
+            await waitFor(() => {
+              expect(screen.getByRole('dialog')).not.toBe(null);
+            });
           });
 
           // Spans the external unlock at 200ms: there must be no gap where the page scrolls.
@@ -2190,9 +2229,7 @@ describe('<Dialog.Root />', () => {
           }
 
           await fireEvent.click(screen.getByRole('button', { name: 'Close dialog' }));
-          await waitFor(() => {
-            expect(screen.queryByRole('dialog')).toBe(null);
-          });
+          expect(screen.queryByRole('dialog')).toBe(null);
           await waitFor(() => {
             expect(`after close: ${isPageLocked()}`).toBe('after close: false');
           });
@@ -2268,9 +2305,10 @@ describe('<Dialog.Root />', () => {
       const { user } = await render(<MenuDialog />);
 
       const menuTrigger = screen.getByRole('button', { name: 'Open menu' });
-      await user.click(menuTrigger);
-
-      const menu = await screen.findByRole('menu');
+      const menu = await waitForLaterMillisecond(async () => {
+        await user.click(menuTrigger);
+        return screen.findByRole('menu');
+      });
       await waitFor(() => {
         expect(menu).toHaveFocus();
       });
@@ -2279,15 +2317,11 @@ describe('<Dialog.Root />', () => {
       await user.click(dialogTrigger);
 
       await screen.findByRole('dialog');
-      await waitFor(() => {
-        expect(screen.queryByRole('menu')).toBe(null);
-      });
+      expect(screen.queryByRole('menu')).toBe(null);
 
       await user.keyboard('[Escape]');
 
-      await waitFor(() => {
-        expect(screen.queryByRole('dialog')).toBe(null);
-      });
+      expect(screen.queryByRole('dialog')).toBe(null);
       await waitFor(() => {
         expect(menuTrigger).toHaveFocus();
       });
@@ -2393,8 +2427,10 @@ describe('<Dialog.Root />', () => {
 
       const { user } = await render(<App />);
 
-      await user.click(screen.getByTestId('trigger'));
-      await screen.findByRole('dialog');
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('trigger'));
+        await screen.findByRole('dialog');
+      });
 
       const textarea = screen.getByTestId('textarea');
       await user.click(textarea);
@@ -2403,18 +2439,17 @@ describe('<Dialog.Root />', () => {
 
       // Pressing the backdrop moves focus to the body before the close is
       // canceled and the confirmation dialog opens.
-      await user.click(screen.getByTestId('backdrop'));
-
-      const goBack = await screen.findByTestId('go-back');
+      const goBack = await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('backdrop'));
+        return screen.findByTestId('go-back');
+      });
       await waitFor(() => {
         expect(goBack).toHaveFocus();
       });
 
       await user.keyboard('[Enter]');
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('go-back')).toBe(null);
-      });
+      expect(screen.queryByTestId('go-back')).toBe(null);
       await waitFor(() => {
         expect(textarea).toHaveFocus();
       });
@@ -2475,18 +2510,17 @@ describe('<Dialog.Root />', () => {
       expect(field).toHaveFocus();
 
       // Blur the field to the body and open the confirmation while it is focused.
-      await user.click(screen.getByTestId('surface'));
-
-      const goBack = await screen.findByTestId('go-back');
+      const goBack = await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('surface'));
+        return screen.findByTestId('go-back');
+      });
       await waitFor(() => {
         expect(goBack).toHaveFocus();
       });
 
       await user.keyboard('[Enter]');
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('go-back')).toBe(null);
-      });
+      expect(screen.queryByTestId('go-back')).toBe(null);
 
       // The modal gate keeps the non-modal field out of the shared stack, so the
       // confirmation must not restore focus into the unrelated dialog.
@@ -2746,9 +2780,7 @@ describe('<Dialog.Root />', () => {
 
       await userEvent.click(target, { force: true });
 
-      await waitFor(() => {
-        expect(screen.queryByRole('dialog')).toBe(null);
-      });
+      expect(screen.queryByRole('dialog')).toBe(null);
       expect(handleOpenChange.mock.lastCall?.[1].reason).toBe(REASONS.outsidePress);
     });
 
@@ -2968,10 +3000,8 @@ describe('<Dialog.Root />', () => {
   });
 
   describe('scroll lock', () => {
-    // The lock and the unlock each wait for a timer of 0 ms. The observers of `waitFor` do not see a
-    // document in a frame, so it polls.
-    const POLL = { interval: 5, timeout: 3000 };
-
+    // The lock and the unlock each wait for a timer of 0 ms. The observer of `waitFor` does not see
+    // a change in the document of an iframe. Its check in each frame sees the change.
     function renderModalDialog(scrollDocument: ScrollDocument, rootProps: object = {}) {
       return (
         <Dialog.Root defaultOpen {...rootProps}>
@@ -2986,10 +3016,10 @@ describe('<Dialog.Root />', () => {
       const scrollDocument = await createScrollDocument();
       const handle = Dialog.createHandle();
       await render(() => renderModalDialog(scrollDocument, { handle }));
-      await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(true), POLL);
+      await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(true));
 
       handle.close();
-      await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(false), POLL);
+      await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(false));
       expect(getScrollLockRegistry()?.lockCount).toBe(0);
     });
 
@@ -3016,13 +3046,13 @@ describe('<Dialog.Root />', () => {
       await render(() => (
         <KeepAlive>{show.value ? <ModalDialog key="dialog" /> : <Other key="other" />}</KeepAlive>
       ));
-      await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(true), POLL);
+      await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(true));
 
       show.value = false;
-      await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(false), POLL);
+      await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(false));
 
       show.value = true;
-      await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(true), POLL);
+      await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(true));
     });
   });
 

@@ -2,7 +2,7 @@
 import type { HTMLAttributes } from 'vue';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
-import type { FocusOption } from '../../utils/popups/focus/FloatingFocusManager.vue';
+import type { FocusOption } from '../../utils/popups/focus/FloatingFocusManager';
 
 export interface DialogPopupState {
   /**
@@ -56,13 +56,13 @@ export interface DialogPopupProps
 import { computed } from 'vue';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
-import FloatingFocusManager from '../../utils/popups/focus/FloatingFocusManager.vue';
+import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
 import {
   FOCUSABLE_POPUP_PROPS,
   createDefaultInitialFocus,
 } from '../../utils/popups/popupStoreUtils';
+import { useKeepAliveElementRef } from '../../utils/popups/useKeepAliveElementRef';
 import { useDialogPortalContext } from '../portal/DialogPortalContext';
 import { useDialogRootContext } from '../root/DialogRootContext';
 import { dialogStateAttributesMapping } from '../utils/stateAttributesMapping';
@@ -91,16 +91,10 @@ const mounted = computed(() => store.select('mounted'));
 const nestedOpenDialogCount = computed(() => store.select('nestedOpenDialogCount'));
 const open = computed(() => store.select('open'));
 const openMethod = computed(() => store.select('openMethod'));
-
-useOpenChangeComplete({
-  open,
-  ref: store.context.popupRef,
-  onComplete() {
-    if (open.value) {
-      store.context.onOpenChangeComplete?.(true);
-    }
-  },
-});
+// Base UI stops the focus manager when the popup unmounts. During an exit animation, the focus then
+// stays in the closing popup, and its focus guards, which have `aria-hidden`, stay in the tab
+// order (BUG-5519). This part stops the focus manager when the popup closes.
+const focusManagerDisabled = computed(() => !open.value);
 
 const defaultInitialFocus = createDefaultInitialFocus(store.context.popupRef);
 const resolvedInitialFocus = computed(() =>
@@ -141,7 +135,7 @@ function handleKeydown(event: KeyboardEvent) {
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: setPopupElement,
+  ref: useKeepAliveElementRef(setPopupElement),
   stateAttributesMapping: dialogStateAttributesMapping,
   props: (attrs) => [
     store.select('popupProps'),
@@ -159,23 +153,26 @@ const { element, elementProps } = useRenderElement('div', props, {
   ],
 });
 
+useFloatingFocusManager(
+  () => ({
+    store,
+    openInteractionType: openMethod.value,
+    disabled: focusManagerDisabled.value,
+    closeOnFocusOut: !disablePointerDismissal.value,
+    initialFocus: resolvedInitialFocus.value,
+    returnFocus: props.finalFocus,
+    modal: modal.value !== false,
+    outsideElementsInert: modal.value === true,
+    restoreFocus: 'popup',
+    getInsideElements,
+  }),
+  element,
+);
+
 defineExpose({ element });
 </script>
 
 <template>
-  <FloatingFocusManager
-    :store="store"
-    :open-interaction-type="openMethod"
-    :disabled="!mounted"
-    :close-on-focus-out="!disablePointerDismissal"
-    :initial-focus="resolvedInitialFocus"
-    :return-focus="finalFocus"
-    :modal="modal !== false"
-    :outside-elements-inert="modal === true"
-    restore-focus="popup"
-    :get-inside-elements="getInsideElements"
-  >
-    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-    <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
-  </FloatingFocusManager>
+  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
 </template>

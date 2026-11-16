@@ -45,6 +45,13 @@
   color: var(--vase-gray-t2);
 }
 
+/* Search */
+
+/* In the dark theme, the box and the page are both black, so the box has no edge. */
+.VPLocalSearchBox .shell {
+  outline: 1px solid var(--vase-color-border);
+}
+
 /* Side navigation */
 
 .VPSidebar .group + .group {
@@ -267,6 +274,26 @@
   }
 }
 
+/* The badge of a heading, as `.MdHeadingBadge` of Base UI. `inline-block` keeps the badge out of the
+   underline that the heading gets on hover. The color of Base UI, poppy-t1, has 4.38:1 contrast on
+   the page in the light theme, and WCAG AA needs 4.5:1. A space before the badge takes the place of
+   its margin. */
+.vp-doc .heading-badge {
+  display: inline-block;
+  vertical-align: middle;
+  translate: 0 -0.15em;
+  padding-inline: 2px;
+  line-height: inherit;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--vase-color-red);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 .vp-doc a:not(.header-anchor) {
   font-weight: inherit;
   color: inherit;
@@ -415,7 +442,8 @@
 }
 
 /* A demo and the code group under it make one card, as on a Base UI page. */
-.vp-doc .demo-frame + .vp-code-group {
+.vp-doc .demo + .vp-code-group,
+.vp-doc .demo-source > .vp-code-group {
   margin: 0 0 1.5rem;
   border-top: 0;
   border-start-start-radius: 0;
@@ -438,23 +466,39 @@
   color: var(--vase-gray-t1);
 }
 
-/* A table of the API reference fills the column, as in Base UI. When the column is narrower than
-   40rem, the frame scrolls the table, so that each column keeps a width that is easy to read. */
-.vp-doc .api-table {
+/* A table in a `ScrollBox` does not scroll itself. The box has the frame of the table and scrolls
+   it, so that the box can take the focus. */
+.vp-doc .scroll-box {
   margin: 1.25rem 0;
   border: 1px solid var(--vase-color-border);
   border-radius: var(--vase-radius-12);
+  width: fit-content;
+  max-width: 100%;
   overflow-x: auto;
 }
 
-.vp-doc .api-table table {
+.vp-doc .scroll-box:focus-visible {
+  outline: 2px solid var(--vase-gray-t2);
+  outline-offset: 2px;
+}
+
+.vp-doc .scroll-box > table {
   display: table;
   margin: 0;
   border: 0;
   border-radius: 0;
+  max-width: none;
+}
+
+/* A table of the API reference fills the column, as in Base UI. When the column is narrower than
+   40rem, the box scrolls the table, so that each column keeps a width that is easy to read. */
+.vp-doc .api-table {
+  width: auto;
+}
+
+.vp-doc .api-table > table {
   width: 100%;
   min-width: 40rem;
-  max-width: none;
 }
 
 .vp-doc tr,
@@ -501,4 +545,54 @@
 
 .vp-doc td:first-child code {
   color: var(--vase-color-navy);
+}
+
+/* Popups of demos */
+
+/* The Navigation Menu sheets give the link description and the submenu hint `oklch(55.6% 0 0)`.
+   On the hover color of the light theme, that text has 4.35:1 contrast. This rule uses
+   `oklch(43.9% 0 0)`, the next darker gray of the sheets, which has 7.17:1. Vite adds a prefix and a
+   suffix to each class of a CSS module, so the selectors name only the middle part. */
+:root:not(.dark) [class*='_LinkDescription_'],
+:root:not(.dark) [class*='_SubmenuHint_'] {
+  color: oklch(43.9% 0 0deg);
+}
+
+/* The Tailwind variant of the Navigation Menu demos gives the link description and the submenu hint
+   the class `text-neutral-500`. The link card or the submenu trigger around that text has the
+   class `hover:bg-neutral-100`. In the light theme, this rule gives the text the color of the rule
+   above. `~=` matches a whole class name, so `data-disabled:text-neutral-500` does not match. A
+   rule outside a layer wins over a utility of Tailwind. */
+:root:not(.dark) [class~='hover:bg-neutral-100'] [class~='text-neutral-500'] {
+  color: oklch(43.9% 0 0deg);
+}
+
+/* The Autocomplete and Combobox sheets give the secondary text of an item `oklch(55.6% 0 0)`. On
+   the light highlight of an item, `oklch(97% 0 0)`, that text has 4.35:1 contrast. This rule uses
+   `oklch(43.9% 0 0)`, which has 7.17:1 there. `:where()` keeps the first two selectors at the
+   weight of two classes. A sheet that gives the part another color in a highlighted item has
+   three classes and wins. A Select sheet does this for its dark highlight. The last selector is
+   the Tailwind variant: the text has the class `text-neutral-500`, in an item with the light
+   highlight class. */
+:where(:root:not(.dark)) [data-vase-ui-portal] [class*='_ItemDescription_'],
+:where(:root:not(.dark)) [data-vase-ui-portal] [class*='_ItemSubtitle_'],
+:root:not(.dark)
+  [data-vase-ui-portal]
+  [class*='data-highlighted:before:bg-neutral-100']
+  [class~='text-neutral-500'] {
+  color: oklch(43.9% 0 0deg);
+}
+
+/* The Autocomplete sheet gives the matched letters of an item `oklch(62.3% 0.214 259.815)` in the
+   dark theme. On the highlight of an item, `oklch(26.9% 0 0)`, that text has 4.02:1 contrast. The
+   sheets have no lighter blue, so this rule uses the next lighter blue of the Tailwind palette,
+   which has 5.74:1 there. */
+.dark [data-vase-ui-portal] mark {
+  color: oklch(70.7% 0.165 254.624deg);
+}
+
+/* The red button rule of `DemoFrame.vue`, for a button in a popup. */
+.dark [data-vase-ui-portal] [class*='_Button_'][data-color='red']:active:not([data-disabled]),
+.dark [data-vase-ui-portal] [class*='_DangerButton_']:active:not([data-disabled]) {
+  color: oklch(80.8% 0.114 19.571deg);
 }

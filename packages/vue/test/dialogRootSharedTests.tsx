@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { screen, waitFor } from '@testing-library/dom';
+import { screen } from './queries';
+import { waitFor } from './waitFor';
 import type * as AlertDialog from '../src/alert-dialog/index.parts';
 import type * as Dialog from '../src/dialog/index.parts';
 import { REASONS } from '../src/internals/reasons';
@@ -38,7 +39,7 @@ export function dialogRootSharedTests(config: DialogRootSharedTestsConfig) {
         );
 
         const trigger = screen.getByRole('button', { name: 'Open' });
-        await user.click(trigger);
+        await waitForLaterMillisecond(() => user.click(trigger));
 
         expect(handleOpenChange).toHaveBeenCalledTimes(1);
         expect(handleOpenChange).toHaveBeenNthCalledWith(
@@ -47,7 +48,6 @@ export function dialogRootSharedTests(config: DialogRootSharedTestsConfig) {
           expect.objectContaining({ reason: REASONS.triggerPress, trigger }),
         );
 
-        await waitForLaterMillisecond();
         await user.click(screen.getByRole('button', { name: 'Close' }));
 
         expect(handleOpenChange).toHaveBeenCalledTimes(2);
@@ -120,9 +120,7 @@ export function dialogRootSharedTests(config: DialogRootSharedTestsConfig) {
         actions!.unmount();
         await flushMicrotasks();
 
-        await waitFor(() => {
-          expect(screen.queryByRole(popupRole, { hidden: true })).toBe(null);
-        });
+        expect(screen.queryByRole(popupRole, { hidden: true })).toBe(null);
       });
 
       it('clears manual unmount state after the `unmount` method is called', async () => {
@@ -151,10 +149,11 @@ export function dialogRootSharedTests(config: DialogRootSharedTestsConfig) {
         ));
 
         const trigger = screen.getByRole('button', { name: 'Open' });
-        await user.click(trigger);
-        expect(await screen.findByRole(popupRole)).toBeVisible();
+        await waitForLaterMillisecond(async () => {
+          await user.click(trigger);
+          expect(await screen.findByRole(popupRole)).toBeVisible();
+        });
 
-        await waitForLaterMillisecond();
         await user.click(screen.getByRole('button', { name: 'Close' }));
         await waitFor(() => {
           expect(trigger).toHaveAttribute('aria-expanded', 'false');
@@ -163,19 +162,16 @@ export function dialogRootSharedTests(config: DialogRootSharedTestsConfig) {
 
         actions!.unmount();
         await flushMicrotasks();
-        await waitFor(() => {
-          expect(screen.queryByRole(popupRole, { hidden: true })).toBe(null);
-        });
+        expect(screen.queryByRole(popupRole, { hidden: true })).toBe(null);
 
         // The next close unmounts on its own again.
-        await user.click(trigger);
-        expect(await screen.findByRole(popupRole)).toBeVisible();
-
-        await waitForLaterMillisecond();
-        await user.click(screen.getByRole('button', { name: 'Close' }));
-        await waitFor(() => {
-          expect(screen.queryByRole(popupRole, { hidden: true })).toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.click(trigger);
+          expect(await screen.findByRole(popupRole)).toBeVisible();
         });
+
+        await user.click(screen.getByRole('button', { name: 'Close' }));
+        expect(screen.queryByRole(popupRole, { hidden: true })).toBe(null);
       });
 
       it('closes the popup when the `close` method is called', async () => {
@@ -197,13 +193,15 @@ export function dialogRootSharedTests(config: DialogRootSharedTestsConfig) {
         ));
 
         expect(screen.getByRole(popupRole)).toBeVisible();
+        const popup = screen.getByRole(popupRole);
 
         actions!.close();
         await flushMicrotasks();
 
         await waitFor(() => {
-          expect(queryPopup()).toBe(null);
+          expect(popup).not.toBeInTheDocument();
         });
+        expect(queryPopup()).toBe(null);
         expect(handleOpenChange).toHaveBeenCalledTimes(1);
         expect(handleOpenChange).toHaveBeenNthCalledWith(
           1,
@@ -243,18 +241,20 @@ export function dialogRootSharedTests(config: DialogRootSharedTestsConfig) {
         handle.openWithPayload(8);
         await flushMicrotasks();
         await waitFor(() => {
-          expect(queryPopup()).not.toBe(null);
+          expect(screen.getByRole(popupRole)).not.toBe(null);
         });
 
         expect(screen.getByTestId('content')).toHaveTextContent('8');
         expect(trigger1).toHaveAttribute('aria-expanded', 'false');
         expect(trigger2).toHaveAttribute('aria-expanded', 'false');
+        const popup = screen.getByRole(popupRole);
 
         handle.close();
         await flushMicrotasks();
         await waitFor(() => {
-          expect(queryPopup()).toBe(null);
+          expect(popup).not.toBeInTheDocument();
         });
+        expect(queryPopup()).toBe(null);
       });
     });
   });

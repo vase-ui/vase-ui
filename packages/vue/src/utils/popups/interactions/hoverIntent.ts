@@ -48,6 +48,8 @@ export interface HoverIntentTriggerOptions {
 
 type PointerEventsScopeElement = HTMLElement | SVGSVGElement;
 
+type HoverTriggerElement = HTMLElement | SVGSVGElement;
+
 export interface OutsidePointerEventsElements {
   /**
    * The element whose pointer events are blocked.
@@ -82,6 +84,13 @@ export class HoverIntent {
   #blockMouseMove = true;
 
   #blockedPointerEvents: OutsidePointerEventsElements | null = null;
+
+  readonly #hoverTriggers = new Set<HoverTriggerElement>();
+
+  // The hover triggers that got `pointer-events: auto` from the block. The restore removes the
+  // value only from these triggers. Vue does not write a style binding again when its value does
+  // not change, so a removed inline value of the consumer would stay lost.
+  readonly #unblockedHoverTriggers = new Set<HoverTriggerElement>();
 
   #restTimeoutPending = false;
 
@@ -148,6 +157,7 @@ export class HoverIntent {
   /**
    * Blocks pointer events within `scopeElement`, except on the trigger and positioner elements,
    * so the pointer can travel to the popup without hovering anything else.
+   * The hover triggers of the popup also keep their pointer events.
    * Takes over the scope element from another popup that blocks it.
    */
   blockOutsidePointerEvents(elements: OutsidePointerEventsElements) {
@@ -165,6 +175,54 @@ export class HoverIntent {
     scopeElement.style.pointerEvents = 'none';
     triggerElement.style.pointerEvents = 'auto';
     positionerElement.style.pointerEvents = 'auto';
+    for (const hoverTrigger of this.#hoverTriggers) {
+      this.#unblockHoverTrigger(hoverTrigger);
+    }
+  }
+
+  #unblockHoverTrigger(element: HoverTriggerElement) {
+    if (element.style.getPropertyValue('pointer-events') === '') {
+      element.style.pointerEvents = 'auto';
+      this.#unblockedHoverTriggers.add(element);
+    }
+  }
+
+  /**
+   * Adds a trigger that opens the popup on hover. While the popup blocks pointer events, the
+   * trigger keeps them. The pointer can then move from the active trigger to it, and the popup
+   * moves to it with no close.
+   */
+  addHoverTrigger(element: HoverTriggerElement) {
+    this.#hoverTriggers.add(element);
+    // A popup that blocks the same scope element first restores the block of this popup.
+    if (this.#blockedPointerEvents) {
+      this.#unblockHoverTrigger(element);
+    }
+  }
+
+  /**
+   * Removes a trigger that `addHoverTrigger()` added. When the trigger got its pointer events from
+   * the block, it loses them at once.
+   */
+  removeHoverTrigger(element: HoverTriggerElement) {
+    this.#hoverTriggers.delete(element);
+    if (this.#unblockedHoverTriggers.delete(element)) {
+      element.style.removeProperty('pointer-events');
+    }
+  }
+
+  // A leave can name an element inside a hover trigger, such as its icon. In the wrapper
+  // (delegated) mode, the hover trigger is a wrapper that contains the triggers.
+  #isInsideHoverTrigger(target: EventTarget | null) {
+    if (!isInsideEnabledTrigger(target, this.#store.context.triggerElements)) {
+      return false;
+    }
+    for (const hoverTrigger of this.#hoverTriggers) {
+      if (contains(hoverTrigger, target as Element)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -182,6 +240,10 @@ export class HoverIntent {
       scopeElement.style.removeProperty('pointer-events');
       triggerElement.style.removeProperty('pointer-events');
       positionerElement.style.removeProperty('pointer-events');
+      for (const hoverTrigger of this.#unblockedHoverTriggers) {
+        hoverTrigger.style.removeProperty('pointer-events');
+      }
+      this.#unblockedHoverTriggers.clear();
       pointerEventsOwnerByScopeElement.delete(scopeElement);
     }
 
@@ -297,7 +359,9 @@ export class HoverIntent {
     const handleCloseContextBase =
       this.#store.context.positioning ?? options.getHandleCloseContext?.();
 
-    if (isInsideEnabledTrigger(event.relatedTarget, store.context.triggerElements)) {
+    // A hover trigger takes the popup at its `mouseenter`. Another trigger takes nothing, so a leave
+    // to it closes the popup as a leave to any element does.
+    if (this.#isInsideHoverTrigger(event.relatedTarget)) {
       return;
     }
 

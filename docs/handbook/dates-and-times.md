@@ -102,6 +102,16 @@ A zone change can skip an hour, and a time in that hour does not exist. When a p
 
 A server does not know the locale and the time zone of a visitor. With no `locale` prop, a component formats with `en-US` until it mounts. The server HTML and the first render of the browser are then equal.
 
-Give a component that has no value the props `today` and `timeZone`. The server HTML then shows the same day as the first render of the browser.
+`Calendar` reads today to mark the day and to pick its first month. Give it the prop `today`, and the server HTML and the first render of the browser use the same day. With no `today`, give it the prop `timeZone`, and both read the clock in the same zone.
+
+A date field with no value reads today. In a calendar with leap months, such as `hebrew`, the year decides how many months the month segment allows. The server HTML and the first render of the browser can then differ. Give the field the prop `referenceDate`, and both use the same year. A time field does not read the day.
 
 On a Node.js version before 26, load the polyfill before the server starts: `node --import temporal-polyfill/global server.js`. In a Nuxt app, the plugin above covers the server.
+
+Node.js 22, 24 and 26 end the process for some date formats of `Intl`, with no error that code can catch ([nodejs/node#67076](https://github.com/nodejs/node/issues/67076)). A date field takes its layout from another format in these fields:
+
+- The language `my` (Burmese), a field that shows a day, and a calendar other than `gregory`, `chinese` and `dangi`.
+- The language `ksh` (Colognian), a year and month field, and a calendar other than `chinese` and `dangi`.
+- The language `sc` (Sardinian), a year and month field, and the calendar `gregory`.
+
+In `ksh` and `sc`, the layout is the same as without the fault. In `my`, the year comes before the day. A Japanese era shows its name, such as `Reiwa`, in place of a letter, such as `R`. Firefox and Safari show these fields in the same layout as Node.js.

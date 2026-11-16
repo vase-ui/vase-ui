@@ -11,13 +11,19 @@
       "reason": "Base UI does not document them. Vase UI ports the code that a component needs as internal modules and exports none of them."
     },
     {
-      "what": "the temporal adapters",
+      "what": "the barrel of the package as a committed file",
+      "upstream": ["packages/react/src/index.ts"],
+      "reason": "The build and `pnpm typecheck` write the barrel of Vase UI from the folders that have an `index.ts`. Git ignores that file, so `pnpm parity:check` cannot require it."
+    },
+    {
+      "what": "the temporal adapters and their shared test suite",
       "upstream": [
         "packages/react/src/internals/temporal/**",
         "packages/react/src/internals/temporal-adapter-date-fns/**",
-        "packages/react/src/internals/temporal-adapter-luxon/**"
+        "packages/react/src/internals/temporal-adapter-luxon/**",
+        "packages/react/test/describeGregorianAdapter/**"
       ],
-      "reason": "No Base UI component imports them at the tracked commit."
+      "reason": "No Base UI component imports them at the tracked commit. Vase UI calls `Temporal` directly for dates and times, and it has no adapter."
     },
     {
       "what": "`createSelector` and `createSelectorMemoized`",
@@ -72,11 +78,11 @@
     {
       "paths": ["docs/**"],
       "except": [
-        "docs/src/app/(docs)/react/components/**",
-        "docs/src/app/(docs)/react/utils/**",
-        "docs/src/app/(docs)/react/handbook/**"
+        "docs/src/app/(docs)/react/components/*/**",
+        "docs/src/app/(docs)/react/utils/*/**",
+        "docs/src/app/(docs)/react/handbook/*/**"
       ],
-      "reason": "The docs site and Base UI's own overview and release pages. The component, utility and handbook pages and their demos are in scope."
+      "reason": "The docs site, Base UI's own overview and release pages, and the index page that Base UI generates for each group of pages. The folders of the component, utility and handbook pages are in scope, with their demos."
     },
     {
       "paths": ["test/**"],

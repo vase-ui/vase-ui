@@ -1,5 +1,6 @@
 import { inject } from 'vue';
 import type { ComputedRef, InjectionKey, Ref, ShallowRef } from 'vue';
+import type { CompositeListContextValue } from '../../internals/composite/list/CompositeListContext';
 import type { CompositeMetadata } from '../../internals/composite/list/useCompositeList';
 import type { UseFieldValidationReturnValue } from '../../internals/field-root-context/FieldRootContext';
 import type { RegisterId } from '../../internals/labelable-provider/LabelableContext';
@@ -14,6 +15,17 @@ import type {
 
 export interface ThumbMetadata {
   inputId: string | undefined;
+}
+
+/** The range input of a thumb, for a change that takes the inputs of several thumbs. */
+export interface ThumbInput {
+  /**
+   * Gives the index of the thumb and the value of its input when the input changed with no event
+   * that the slider handled. The thumb then counts that value as handled.
+   */
+  take: () => { index: number; value: number } | undefined;
+  /** Writes the value of the thumb to its input. */
+  writeValue: () => void;
 }
 
 export interface SliderRootContext {
@@ -34,6 +46,8 @@ export interface SliderRootContext {
    */
   format: ComputedRef<Intl.NumberFormatOptions | undefined>;
   handleInputChange: (valueInput: number, index: number, event: KeyboardEvent | Event) => void;
+  /** Adds the input of a thumb. Gives the function that removes it. */
+  registerThumbInput: (thumbInput: ThumbInput) => () => void;
   /**
    * The positions of the first thumb and of the last thumb of an inset slider, as percentages.
    */
@@ -53,7 +67,17 @@ export interface SliderRootContext {
    */
   rootLabelId: ComputedRef<string>;
   registerLabelId: RegisterId;
+  /**
+   * Follows the native reset of the form of a thumb input. A thumb calls it for each reset that it
+   * gets. The root handles the first call for each `reset` event. Base UI does not have this member.
+   */
+  reset: (event: Event) => void;
   thumbMap: Readonly<Ref<ReadonlyMap<Element, CompositeMetadata<ThumbMetadata>>>>;
+  /**
+   * The list of the thumbs. The thumbs register with it through this context. The root does not
+   * provide the list, so an item of a composite around the root joins that composite.
+   */
+  thumbList: CompositeListContextValue<ThumbMetadata>;
   largeStep: ComputedRef<number>;
   lastChangeReasonRef: Ref<SliderRootChangeEventReason>;
   locale: ComputedRef<Intl.LocalesArgument | undefined>;

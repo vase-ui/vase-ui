@@ -8,7 +8,7 @@ export interface NumberFieldInputState extends NumberFieldRootState {}
 // The type of `autocomplete` in `InputHTMLAttributes` is a union that is too large for vue-tsc.
 // With it, `defineProps` gives the error TS2590.
 interface NumberFieldInputAutocomplete {
-  autocomplete?: string | undefined;
+  autocomplete?: string | null | undefined;
 }
 
 export interface NumberFieldInputProps
@@ -21,6 +21,7 @@ export interface NumberFieldInputProps
 <script setup lang="ts">
 import { onMounted, watch } from 'vue';
 import { formatNumber } from '../../common/formatNumber';
+import { useAriaAfterHydration, useValueBeforeHydration } from '../../common/hydration';
 import { useTimeout } from '../../common/useTimeout';
 import { warn } from '../../common/warn';
 import {
@@ -145,10 +146,16 @@ function writeTextToInput() {
   }
 }
 
+const writesValue = useValueBeforeHydration(props, () => element.value);
+
 onMounted(() => {
   handledText = inputRef.value?.value;
 });
-watch(() => state.value.inputValue, writeTextToInput, { flush: 'post' });
+// At the mount the root formats its text again in the runtime locale. Until the hydration ends,
+// the input keeps the text that the user typed, and the `input` event parses it.
+watch(() => (writesValue.value ? state.value.inputValue : undefined), writeTextToInput, {
+  flush: 'post',
+});
 
 useValueChanged(
   () => state.value.value,
@@ -541,6 +548,7 @@ function setOwnInput(next: HTMLElement | null) {
   ownInput = input;
 }
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('input', props, {
   state,
   ref: setOwnInput,
@@ -559,14 +567,14 @@ const { element, elementProps } = useRenderElement('input', props, {
         disabled: state.value.disabled ? '' : undefined,
         readonly: state.value.readOnly ? '' : undefined,
         inputmode: inputMode.value,
-        value: state.value.inputValue,
+        ...(writesValue.value ? { value: state.value.inputValue } : undefined),
         type: 'text',
         autocomplete: 'off',
         autoCorrect: autocorrect === undefined ? 'off' : autocorrect,
         spellcheck: 'false',
         'aria-roledescription': 'Number field',
         'aria-invalid': !state.value.disabled && invalid.value ? true : undefined,
-        'aria-labelledby': labelId.value,
+        'aria-labelledby': ariaAfterHydration(labelId.value),
         onFocusin: handleFocusin,
         onFocusout: handleFocusout,
         onInput: handleInput,
@@ -580,6 +588,10 @@ const { element, elementProps } = useRenderElement('input', props, {
       },
       elementAttrs,
       (merged) => validation.getValidationProps(state.value.disabled, merged),
+      (merged) => ({
+        ...merged,
+        'aria-describedby': ariaAfterHydration(merged['aria-describedby']),
+      }),
     ];
   },
   stateAttributesMapping,

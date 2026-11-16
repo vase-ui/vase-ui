@@ -158,20 +158,20 @@ export type SelectRootOpenChangeEventDetails = SelectRootChangeEventDetails & {
 // With the default `never`, that check accepts a typed parameter and keeps `null` in the type.
 import { computed, nextTick, onMounted, provide, shallowRef, toRaw, watch } from 'vue';
 import type { HTMLAttributes } from 'vue';
-import { addEventListener } from '../../common/addEventListener';
 import { EMPTY_ARRAY, EMPTY_OBJECT } from '../../common/empty';
+import { useHiddenValueBeforeHydration } from '../../common/hydration';
 import { isElementDisabled } from '../../common/isElementDisabled';
-import { ownerWindow } from '../../common/owner';
 import { useControlled } from '../../common/useControlled';
 import type { InteractionType } from '../../common/useEnhancedClickHandler';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
-import { useRegisterFieldControl } from '../../internals/field-register-control';
+import { useFieldInput, useRegisterFieldControl } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { useFormContext } from '../../internals/form-context';
 import { getHiddenInputType } from '../../internals/getHiddenInputType';
 import { handleHiddenInputInvalid } from '../../internals/handleHiddenInputInvalid';
 import {
+  compareItemEquality,
   defaultItemEquality,
   findSelectionIndex,
   isSelectedValueDirty,
@@ -179,7 +179,9 @@ import {
 import { createLabelIdRegistry, useLabelableId } from '../../internals/labelable-provider';
 import { NOOP } from '../../internals/noop';
 import { stringifyAsLabel, stringifyAsValue } from '../../internals/resolveValueLabel';
+import { sanitizeValue, useFormEntryValue } from '../../internals/useFormEntryValue';
 import { useFormReset } from '../../internals/useFormReset';
+import { useFormRestoreAsInput } from '../../internals/useFormRestore';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { mergeProps } from '../../merge-props';
 import { useClick } from '../../utils/popups/interactions/useClick';
@@ -255,7 +257,9 @@ const {
   setValidityData,
 } = useFieldRootContext();
 
-const controlId = useLabelableId({ id: () => props.id });
+const controlId = useLabelableId({
+  id: () => props.id,
+});
 
 const isDisabled = computed(() => Boolean(fieldDisabled.value || props.disabled));
 const isMultiple = computed(() => Boolean(props.multiple));
@@ -297,10 +301,6 @@ watch(
   { deep: true },
 );
 
-// A select with no `Select.Popup` shows its positioner, so its close waits for the positioner.
-// The call below reads this ref before `store` exists, so a `watch` after the call writes it.
-const closeElement = shallowRef<HTMLElement | null>(null);
-
 const {
   store,
   open: isOpen,
@@ -338,6 +338,7 @@ const {
         },
         triggerElement: null,
         listElement: null,
+        listElementId: undefined,
         popupSide: null,
         scrollUpArrowVisible: false,
         scrollDownArrowVisible: false,
@@ -358,6 +359,7 @@ const {
         selectionRef: {
           value: { allowSelectedMouseUp: false, allowUnselectedMouseUp: false, dragY: 0 },
         },
+        triggerPressRef: { value: null },
         firstItemTextRef: { value: null },
         selectedItemTextRef: { value: null },
         alignItemWithTriggerActiveRef: { value: false },
@@ -370,7 +372,6 @@ const {
     ),
   {
     name: 'Select',
-    popupRef: closeElement,
     onOpenChange(nextOpen, eventDetails) {
       emit('openChange', nextOpen, eventDetails);
 
@@ -398,16 +399,6 @@ const {
       emit('openChangeComplete', nextOpen);
     },
   },
-);
-
-// The call above makes `post` jobs that read this element: the layout read of the enter and the
-// close wait. A `sync` copy gives them the element in the patch that mounts it.
-watch(
-  () => store.context.popupRef.value ?? store.select('positionerElement'),
-  (element) => {
-    closeElement.value = element;
-  },
-  { flush: 'sync', immediate: true },
 );
 
 const serializedValue = computed(() => {
@@ -493,6 +484,16 @@ useValueChanged(selectedValue, () => {
 });
 
 function setValue(nextValue: any, eventDetails: SelectRootChangeEventDetails) {
+  // HTML fires `change` when the user commits a change of the value (`VUE-91`). A press of an item
+  // of a multiple select always adds or removes that item.
+  if (!isMultiple.value && compareItemEquality(nextValue, selectedValue.value, comparer.value)) {
+    return false;
+  }
+
+  return commitValue(nextValue, eventDetails);
+}
+
+function commitValue(nextValue: any, eventDetails: SelectRootChangeEventDetails) {
   emit('valueChange', nextValue, eventDetails);
 
   if (eventDetails.isCanceled) {
@@ -656,6 +657,7 @@ usePopupInteractionProps(store, () => ({
 provide(SelectRootContext, store);
 
 const inputElement = shallowRef<HTMLInputElement | null>(null);
+const giveFieldInput = useFieldInput();
 
 function setInputElement(value: unknown) {
   const input = value as HTMLInputElement | null;
@@ -664,16 +666,18 @@ function setInputElement(value: unknown) {
     return;
   }
   inputElement.value = input;
-  validation.inputRef.value = input;
+  giveFieldInput(input);
 }
+
+const writesHiddenValue = useHiddenValueBeforeHydration(() => inputElement.value);
 
 // The value that the input has after the last event that the root handled. A write of Vue or of
 // the root sets it too.
 let handledValue: string | undefined;
 
 // Vue writes the value to the input only when the root renders. A browser can change the input
-// with no change of the state: an autofill, and the restore of the form state of a page. A form
-// would then submit a value that the select does not show.
+// with no change of the state, such as an autofill. A form would then submit a value that the
+// select does not show.
 function writeValueToInput() {
   const input = inputElement.value;
   if (input && input.value !== serializedValue.value) {
@@ -682,8 +686,9 @@ function writeValueToInput() {
   handledValue = input?.value;
 }
 
+// Until the take of the hydration, the input can hold a value that the root did not handle.
 onMounted(() => {
-  handledValue = inputElement.value?.value;
+  handledValue = writesHiddenValue.value ? inputElement.value?.value : serializedValue.value;
 });
 watch(
   serializedValue,
@@ -694,7 +699,11 @@ watch(
 );
 
 // A browser autofills the hidden input with the value or the text of an item.
-function selectAutofilledItem(autofilledValue: string, eventDetails: SelectRootChangeEventDetails) {
+function selectAutofilledItem(
+  input: HTMLInputElement,
+  autofilledValue: string,
+  eventDetails: SelectRootChangeEventDetails,
+) {
   // Browser autofill only writes a single scalar value.
   if (isMultiple.value) {
     return;
@@ -710,6 +719,15 @@ function selectAutofilledItem(autofilledValue: string, eventDetails: SelectRootC
       stringifyAsValue(candidate, props.itemToStringValue).toLowerCase() === autofilledValueLower ||
       stringifyAsLabel(candidate, props.itemToStringLabel).toLowerCase() === autofilledValueLower,
   );
+
+  // A browser restores only the text of the input, without the line breaks of the value.
+  if (matchingIndex === -1) {
+    matchingIndex = valuesRef.value.findIndex(
+      (candidate) =>
+        sanitizeValue(input, stringifyAsValue(candidate, props.itemToStringValue)).toLowerCase() ===
+        autofilledValueLower,
+    );
+  }
 
   if (matchingIndex === -1) {
     matchingIndex = valuesRef.value.findIndex((_, index) => {
@@ -727,7 +745,8 @@ function selectAutofilledItem(autofilledValue: string, eventDetails: SelectRootC
 }
 
 function handleHiddenInputChange(event: Event) {
-  const autofilledValue = (event.currentTarget as HTMLInputElement).value;
+  const input = event.currentTarget as HTMLInputElement;
+  const autofilledValue = input.value;
   const isNewValue = autofilledValue !== handledValue;
   handledValue = autofilledValue;
 
@@ -740,17 +759,19 @@ function handleHiddenInputChange(event: Event) {
   // The items of a closed select mount in the next flush, and they then give their values.
   store.set('forceMounted', true);
   void nextTick(() => {
-    selectAutofilledItem(autofilledValue, eventDetails);
+    selectAutofilledItem(input, autofilledValue, eventDetails);
     void nextTick(writeValueToInput);
   });
 }
 
 useFormReset(inputElement, (event) => {
   const defaultValue = getDefaultValue();
+  // `setValue` keeps a value that `isItemEqualToValue` matches with the default object. The dirty
+  // state compares a single value by identity, so the reset puts back that object.
   const hasChanged =
     props.value === undefined &&
     isSelectedValueDirty(selectedValue.value, defaultValue, comparer.value) &&
-    setValue(defaultValue, createChangeEventDetails(REASONS.none, event));
+    commitValue(defaultValue, createChangeEventDetails(REASONS.none, event));
 
   if (hasChanged) {
     isResetChangePending = true;
@@ -759,18 +780,8 @@ useFormReset(inputElement, (event) => {
   }
 });
 
-watch(
-  inputElement,
-  (input, _previous, onCleanup) => {
-    if (!input) {
-      return;
-    }
-
-    // Chromium restores the form state of a page after `load`, with no event on the input.
-    onCleanup(addEventListener(ownerWindow(input), 'pageshow', writeValueToInput));
-  },
-  { flush: 'post' },
-);
+useFormRestoreAsInput(inputElement, () => handledValue, false);
+useFormEntryValue(inputElement, () => serializedValue.value);
 
 const hiddenInputName = computed(() => (isMultiple.value ? undefined : inputName.value));
 
@@ -801,7 +812,7 @@ function inputProps() {
       props.required,
     ),
     autocomplete: props.autoComplete,
-    value: serializedValue.value,
+    ...(writesHiddenValue.value ? { value: serializedValue.value } : undefined),
     disabled: isDisabled.value,
     required: props.required && !(isMultiple.value && hasSelectedValue.value),
     readonly: props.readOnly,

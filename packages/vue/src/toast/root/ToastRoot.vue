@@ -59,7 +59,16 @@ export const toastRootStateAttributesMapping: StateAttributesMapping<ToastRootSt
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, onScopeDispose, provide, shallowRef, watch } from 'vue';
+import {
+  computed,
+  onActivated,
+  onDeactivated,
+  onMounted,
+  onScopeDispose,
+  provide,
+  shallowRef,
+  watch,
+} from 'vue';
 import { ownerDocument } from '../../common/owner';
 import { activeElement, closest, contains, getTarget } from '../../common/shadowDom';
 import {
@@ -69,6 +78,7 @@ import {
 import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
+import { isInHeldBranch } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { getElementTransform } from '../../utils/getElementTransform';
 import {
@@ -155,14 +165,17 @@ const { element, elementProps } = useRenderElement('div', props, {
   stateAttributesMapping: toastRootStateAttributesMapping,
   props: (attrs) => {
     const swiping = swipeEnabled.value;
+    // WAI-ARIA requires a name for a `dialog` and an `alertdialog`. A toast with no title and no
+    // name from the consumer thus takes its name from its description (VUE-99).
+    const namedByDescription = titleId.value === undefined && !hasConsumerName(attrs);
 
     return [
       {
         role: isHighPriority.value ? 'alertdialog' : 'dialog',
         tabindex: 0,
         'aria-modal': false,
-        'aria-labelledby': titleId.value,
-        'aria-describedby': descriptionId.value,
+        'aria-labelledby': namedByDescription ? descriptionId.value : titleId.value,
+        'aria-describedby': namedByDescription ? undefined : descriptionId.value,
         'aria-hidden': isHighPriority.value && !focused.value ? true : undefined,
         onPointerdown: swiping ? handlePointerdown : undefined,
         onPointermove: swiping ? handlePointermove : undefined,
@@ -184,6 +197,13 @@ const { element, elementProps } = useRenderElement('div', props, {
   },
 });
 
+function hasConsumerName(attrs: Record<string, unknown>) {
+  // `attrs` has no key for an attribute whose value is `undefined` (VUE-103), and none for a blank
+  // `aria-label` or `aria-labelledby` (VUE-106). An `aria-labelledby` of `null` removes the value
+  // of the root. The consumer chose to remove the name, so the description does not take its place.
+  return Object.hasOwn(attrs, 'aria-labelledby') || typeof attrs['aria-label'] === 'string';
+}
+
 useOpenChangeComplete({
   open: () => props.toast.transitionStatus !== 'ending',
   ref: element,
@@ -194,11 +214,25 @@ useOpenChangeComplete({
   },
 });
 
+// A toast that `KeepAlive` holds has no layout. The root measures it at the activation, and the
+// `starting` status stays until then, so the enter transition plays when the toast shows.
+const held = shallowRef(isInHeldBranch());
+onDeactivated(() => {
+  held.value = true;
+  // The user cannot see a held toast, so a swipe in progress ends with no dismissal.
+  if (activePointerId !== null) {
+    endSwipe(false);
+  }
+});
+onActivated(() => {
+  held.value = false;
+});
+
 // Recalculates the natural height of the toast and updates it in the toast manager.
 // The store ignores this write while the toast is transitioning out.
 function recalculateHeight() {
   const rootElement = element.value;
-  if (!rootElement) {
+  if (!rootElement || held.value) {
     return;
   }
 
@@ -254,6 +288,15 @@ function initialize() {
 
 onMounted(initialize);
 watch([() => props.toast.id, () => props.toast.transitionStatus], initialize, { flush: 'post' });
+watch(
+  held,
+  (isHeld) => {
+    if (!isHeld) {
+      initialize();
+    }
+  },
+  { flush: 'post' },
+);
 
 onScopeDispose(() => {
   dragAbortController?.abort();
@@ -264,6 +307,10 @@ function handleSwipeEnd(event: PointerEvent) {
     return;
   }
 
+  endSwipe(event.type !== 'pointercancel' && !cancelledSwipe);
+}
+
+function endSwipe(canDismiss: boolean) {
   activePointerId = null;
   dragAbortController?.abort();
   dragAbortController = null;
@@ -275,10 +322,9 @@ function handleSwipeEnd(event: PointerEvent) {
   const resolvedDragOffset = dragOffset.value;
   const deltaX = resolvedDragOffset.x - resolvedInitialTransform.x;
   const deltaY = resolvedDragOffset.y - resolvedInitialTransform.y;
-  const dismissDirection =
-    event.type === 'pointercancel' || cancelledSwipe
-      ? undefined
-      : getDismissDirection(swipeDirections.value, deltaX, deltaY, SWIPE_THRESHOLD);
+  const dismissDirection = canDismiss
+    ? getDismissDirection(swipeDirections.value, deltaX, deltaY, SWIPE_THRESHOLD)
+    : undefined;
 
   if (dismissDirection) {
     currentSwipeDirection.value = dismissDirection;

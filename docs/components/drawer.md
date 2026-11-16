@@ -6,14 +6,23 @@ description: An unstyled Vue drawer component with swipe-to-dismiss gestures.
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoDrawerHero from '../demos/drawer/hero/css-modules/index.vue';
+import DemoDrawerHeroTailwind from '../demos/drawer/hero/tailwind/index.vue';
 import DemoDrawerIndentProvider from '../demos/drawer/indent-provider/css-modules/index.vue';
+import DemoDrawerIndentProviderTailwind from '../demos/drawer/indent-provider/tailwind/index.vue';
 import DemoDrawerNested from '../demos/drawer/nested/css-modules/index.vue';
+import DemoDrawerNestedTailwind from '../demos/drawer/nested/tailwind/index.vue';
 import DemoDrawerNonModal from '../demos/drawer/non-modal/css-modules/index.vue';
+import DemoDrawerNonModalTailwind from '../demos/drawer/non-modal/tailwind/index.vue';
 import DemoDrawerPosition from '../demos/drawer/position/css-modules/index.vue';
+import DemoDrawerPositionTailwind from '../demos/drawer/position/tailwind/index.vue';
 import DemoDrawerSnapPoints from '../demos/drawer/snap-points/css-modules/index.vue';
+import DemoDrawerSnapPointsTailwind from '../demos/drawer/snap-points/tailwind/index.vue';
 import DemoDrawerSwipeArea from '../demos/drawer/swipe-area/css-modules/index.vue';
+import DemoDrawerSwipeAreaTailwind from '../demos/drawer/swipe-area/tailwind/index.vue';
 import DemoDrawerVirtualKeyboardAware from '../demos/drawer/virtual-keyboard-aware/css-modules/index.vue';
+import DemoDrawerVirtualKeyboardAwareTailwind from '../demos/drawer/virtual-keyboard-aware/tailwind/index.vue';
 </script>
 
 # Drawer
@@ -22,7 +31,12 @@ A panel that slides in from the edge of the screen.
 
 <DemoFrame>
   <DemoDrawerHero />
+  <template #tailwind>
+    <DemoDrawerHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -31,6 +45,18 @@ A panel that slides in from the edge of the screen.
 <<< ../demos/drawer/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/drawer/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Usage guidelines
 
@@ -68,7 +94,12 @@ Your styles position the drawer. `swipeDirection` is `"down"` by default, for a 
 
 <DemoFrame>
   <DemoDrawerPosition />
+  <template #tailwind>
+    <DemoDrawerPositionTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -78,6 +109,18 @@ Your styles position the drawer. `swipeDirection` is `"down"` by default, for a 
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/drawer/position/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Nested drawers
 
 Use the `[data-nested-drawer-open]` selector and the `--nested-drawers` CSS variable to style a drawer while a nested drawer is open.
@@ -86,7 +129,12 @@ This demo stacks nested drawers with a constant peek. The frontmost drawer stays
 
 <DemoFrame>
   <DemoDrawerNested />
+  <template #tailwind>
+    <DemoDrawerNestedTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -95,6 +143,18 @@ This demo stacks nested drawers with a constant peek. The frontmost drawer stays
 <<< ../demos/drawer/nested/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/drawer/nested/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ### Snap points
 
@@ -114,7 +174,12 @@ Apply the snap point offset in your styles for a vertical drawer:
 
 <DemoFrame>
   <DemoDrawerSnapPoints />
+  <template #tailwind>
+    <DemoDrawerSnapPointsTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -123,6 +188,18 @@ Apply the snap point offset in your styles for a vertical drawer:
 <<< ../demos/drawer/snap-points/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/drawer/snap-points/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 By default, a fast swipe can skip snap points. Set the `snapToSequentialPoints` prop to stop this. The distance of the drag then decides the snap point, and a drag can still pass more than one point.
 
@@ -138,7 +215,12 @@ Put a bottom sheet with form controls in `Drawer.VirtualKeyboardProvider`. When 
 
 <DemoFrame>
   <DemoDrawerVirtualKeyboardAware />
+  <template #tailwind>
+    <DemoDrawerVirtualKeyboardAwareTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -148,13 +230,30 @@ Put a bottom sheet with form controls in `Drawer.VirtualKeyboardProvider`. When 
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/drawer/virtual-keyboard-aware/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Indent effect
 
 To make the background smaller when a drawer opens, put your app in `Drawer.Provider`, and put `Drawer.IndentBackground` and `Drawer.Indent` at the top of your tree. Each `Drawer.Root` in the provider tells the provider when it opens and closes. While a drawer is open, the indent parts have the attribute `data-active`.
 
 <DemoFrame>
   <DemoDrawerIndentProvider />
+  <template #tailwind>
+    <DemoDrawerIndentProviderTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -164,13 +263,30 @@ To make the background smaller when a drawer opens, put your app in `Drawer.Prov
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/drawer/indent-provider/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Non-modal
 
 Set `:modal="false"` to keep the focus free, and set `disablePointerDismissal` to keep the drawer open at a press outside it.
 
 <DemoFrame>
   <DemoDrawerNonModal />
+  <template #tailwind>
+    <DemoDrawerNonModalTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -180,13 +296,30 @@ Set `:modal="false"` to keep the focus free, and set `disablePointerDismissal` t
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/drawer/non-modal/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Swipe to open
 
 Put `Drawer.SwipeArea` along the edge of the viewport. A swipe from that edge then opens the drawer.
 
 <DemoFrame>
   <DemoDrawerSwipeArea />
+  <template #tailwind>
+    <DemoDrawerSwipeAreaTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -195,6 +328,18 @@ Put `Drawer.SwipeArea` along the edge of the viewport. A swipe from that edge th
 <<< ../demos/drawer/swipe-area/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/drawer/swipe-area/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ### Detached triggers
 
@@ -309,12 +454,12 @@ Use `--drawer-swipe-progress` to fade the backdrop during a swipe, and `--drawer
 
 Creates a handle that connects a `Drawer.Root` with detached `Drawer.Trigger` parts. The type argument of the function is the type of the payload.
 
-<ApiReference name="Drawer.createHandle" />
+<ApiReference name="Drawer.createHandle" :heading-level="3" />
 
 ### Handle
 
 `Drawer.Handle` is the class of the handle.
 
-<ApiReference name="Drawer.Handle" />
+<ApiReference name="Drawer.Handle" :heading-level="4" />
 
 When no trigger has the `id` that `open()` gets, it opens the drawer with no trigger, and a development build shows a warning. A `computed` that reads `isOpen` follows the open state.

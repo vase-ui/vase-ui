@@ -11,6 +11,7 @@ import { RadioGroup } from '@vase-ui/vue/radio-group';
 import { Slider } from '@vase-ui/vue/slider';
 import { Switch } from '@vase-ui/vue/switch';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -269,32 +270,26 @@ describe('<Field.Root />', () => {
   });
 
   it('does not give the form the value of a control that mounts while KeepAlive holds it', async () => {
-    const visible = shallowRef(true);
-    const extra = shallowRef(false);
     const handleSubmit = vi.fn();
-    const Branch = defineComponent(() => () => (
-      <div>{extra.value ? <Field.Control key="held" defaultValue="held" /> : null}</div>
+    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+      <Field.Control key="held" defaultValue="held" />
     ));
     const { user } = await render(() => (
       <Form onFormSubmit={handleSubmit}>
         <Field.Root name="email">
           <Field.Control defaultValue="shown" />
-          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+          <HeldBranch />
         </Field.Root>
         <button type="submit">Submit</button>
       </Form>
     ));
 
-    visible.value = false;
-    await flushMicrotasks();
-    extra.value = true;
-    await flushMicrotasks();
+    await mountWhileHeld();
     await user.click(screen.getByRole('button', { name: 'Submit' }));
 
     expect(handleSubmit.mock.lastCall?.[0]).toEqual({ email: 'shown' });
 
-    visible.value = true;
-    await flushMicrotasks();
+    await show();
     await user.click(screen.getByRole('button', { name: 'Submit' }));
 
     expect(handleSubmit.mock.lastCall?.[0]).toEqual({ email: 'held' });
@@ -1559,7 +1554,7 @@ describe('<Field.Root />', () => {
         await flushMicrotasks();
 
         await waitFor(() => {
-          expect(screen.queryByText('error')).not.toBe(null);
+          expect(screen.getByText('error')).not.toBe(null);
         });
       });
 

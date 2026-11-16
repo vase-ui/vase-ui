@@ -6,10 +6,15 @@ description: An unstyled Vue tooltip component that appears when an element is h
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoTooltipDetachedTriggersControlled from '../demos/tooltip/detached-triggers-controlled/css-modules/index.vue';
+import DemoTooltipDetachedTriggersControlledTailwind from '../demos/tooltip/detached-triggers-controlled/tailwind/index.vue';
 import DemoTooltipDetachedTriggersFull from '../demos/tooltip/detached-triggers-full/css-modules/index.vue';
+import DemoTooltipDetachedTriggersFullTailwind from '../demos/tooltip/detached-triggers-full/tailwind/index.vue';
 import DemoTooltipDetachedTriggersSimple from '../demos/tooltip/detached-triggers-simple/css-modules/index.vue';
+import DemoTooltipDetachedTriggersSimpleTailwind from '../demos/tooltip/detached-triggers-simple/tailwind/index.vue';
 import DemoTooltipHero from '../demos/tooltip/hero/css-modules/index.vue';
+import DemoTooltipHeroTailwind from '../demos/tooltip/hero/tailwind/index.vue';
 </script>
 
 # Tooltip
@@ -18,7 +23,12 @@ A popup that appears when an element is hovered or focused, and shows a hint for
 
 <DemoFrame>
   <DemoTooltipHero />
+  <template #tailwind>
+    <DemoTooltipHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -27,6 +37,18 @@ A popup that appears when an element is hovered or focused, and shows a hint for
 <<< ../demos/tooltip/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/tooltip/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Usage guidelines
 
@@ -79,7 +101,12 @@ The methods of the handle, `open()` and `close()`, need a mounted `<Tooltip.Root
 
 <DemoFrame>
   <DemoTooltipDetachedTriggersSimple />
+  <template #tailwind>
+    <DemoTooltipDetachedTriggersSimpleTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -88,6 +115,20 @@ The methods of the handle, `open()` and `close()`, need a mounted `<Tooltip.Root
 <<< ../demos/tooltip/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/tooltip/detached-triggers-simple/tailwind/index.vue
+
+<<< ../demos/tooltip/icons-tw.ts
+
+:::
+
+</DemoSource>
 
 ### Multiple triggers
 
@@ -111,7 +152,12 @@ The root has no event for a change of the trigger. The `openChange` event gives 
 
 <DemoFrame>
   <DemoTooltipDetachedTriggersControlled />
+  <template #tailwind>
+    <DemoTooltipDetachedTriggersControlledTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -120,6 +166,20 @@ The root has no event for a change of the trigger. The `openChange` event gives 
 <<< ../demos/tooltip/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/tooltip/detached-triggers-controlled/tailwind/index.vue
+
+<<< ../demos/tooltip/icons-tw.ts
+
+:::
+
+</DemoSource>
 
 ### Animating the Tooltip
 
@@ -144,7 +204,12 @@ Use `Tooltip.Viewport` only when one popup has more than one trigger, the conten
 
 <DemoFrame>
   <DemoTooltipDetachedTriggersFull />
+  <template #tailwind>
+    <DemoTooltipDetachedTriggersFullTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -154,6 +219,20 @@ Use `Tooltip.Viewport` only when one popup has more than one trigger, the conten
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/tooltip/detached-triggers-full/tailwind/index.vue
+
+<<< ../demos/tooltip/icons-tw.ts
+
+:::
+
+</DemoSource>
+
 ## API reference
 
 <ApiReference />
@@ -162,12 +241,12 @@ Use `Tooltip.Viewport` only when one popup has more than one trigger, the conten
 
 Creates a handle that connects a `<Tooltip.Root>` with detached `<Tooltip.Trigger>` parts. The type argument of the function is the type of the payload.
 
-<ApiReference name="Tooltip.createHandle" />
+<ApiReference name="Tooltip.createHandle" :heading-level="3" />
 
 ### Handle
 
 `Tooltip.createHandle()` returns a `Tooltip.Handle`. Give it to the `handle` prop of the root and of each trigger outside the root.
 
-<ApiReference name="Tooltip.Handle" />
+<ApiReference name="Tooltip.Handle" :heading-level="4" />
 
 While a root is mounted, `open()` throws when the handle has no trigger with that `id`.

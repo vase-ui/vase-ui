@@ -3,6 +3,7 @@ import type { ComponentPublicInstance, MaybeRefOrGetter, Ref } from 'vue';
 import { useIsHydrated } from '../../../common/hydration';
 import { ownerDocument } from '../../../common/owner';
 import { resolveElement } from '../../../internals/resolveElement';
+import { isInHeldBranch } from '../../../internals/useKeepAliveState';
 import { useRenderElement } from '../../../internals/useRenderElement';
 import type {
   UseRenderElementComponentProps,
@@ -30,11 +31,6 @@ export interface UseFloatingPortalNodeProps {
    * The props of the part. The composable reads `as`, `stateClass` and `stateStyle`.
    */
   componentProps: UseRenderElementComponentProps<any>;
-  /**
-   * Props that the portal element gets, such as listeners. They come before the attributes of the
-   * consumer. The part calls the function in each render, so it can read reactive state.
-   */
-  props?: (() => Record<string, any> | undefined) | undefined;
   /**
    * Set it to `true` for a part whose `#render` slot has the `children` prop.
    * `useRenderElement` then warns when the slot does not mount `children`.
@@ -99,8 +95,8 @@ export function useFloatingPortalNode(
 
   // A `Teleport` leaves its content in the target when `KeepAlive` deactivates the part. A
   // disabled `Teleport` keeps the content in its own place, and `KeepAlive` takes that place out
-  // of the document.
-  const deactivated = shallowRef(false);
+  // of the document. A part that mounts in a held branch gets no `onDeactivated` call.
+  const deactivated = shallowRef(isInHeldBranch());
   onDeactivated(() => {
     deactivated.value = true;
   });
@@ -109,7 +105,7 @@ export function useFloatingPortalNode(
   });
 
   const { element, elementProps } = useRenderElement('div', params.componentProps, {
-    props: (attrs) => [{ id: uniqueId, [attr]: '' }, params.props?.(), attrs],
+    props: (attrs) => [{ id: uniqueId, [attr]: '' }, attrs],
     children: params.children,
   });
 

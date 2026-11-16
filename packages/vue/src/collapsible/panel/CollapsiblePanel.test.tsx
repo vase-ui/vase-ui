@@ -1,18 +1,21 @@
-import { expect, vi, describe, it } from 'vitest';
+import { expect, vi, describe, it, onTestFinished } from 'vitest';
 import { defineComponent, KeepAlive, onMounted, shallowRef, watch } from 'vue';
 import type { HTMLAttributes } from 'vue';
 import { Collapsible } from '@vase-ui/vue/collapsible';
 import type { HTMLProps } from '@vase-ui/vue/types';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
   flushMicrotasks,
   hydrate,
   isJSDOM,
+  nextEndingStyle,
   nextEvent,
   renderOnServer,
   screen,
+  seekBeforeEnd,
   takeReportedMessages,
   waitFor,
 } from '#test-utils';
@@ -31,6 +34,17 @@ function fireBeforeMatch(element: Element) {
       cancelable: false,
     }),
   );
+}
+
+// A reopen sets `data-starting-style`, and a later frame removes it. The observer records it.
+function recordStartingStyle(panel: HTMLElement) {
+  let seen = false;
+  const observer = new MutationObserver(() => {
+    seen ||= panel.hasAttribute('data-starting-style');
+  });
+  observer.observe(panel, { attributes: true, attributeFilter: ['data-starting-style'] });
+  onTestFinished(() => observer.disconnect());
+  return { seen: () => seen };
 }
 
 function waitForAnimationFrame() {
@@ -332,15 +346,14 @@ describe('<Collapsible.Panel />', () => {
         expect(panel.style.getPropertyValue('--collapsible-panel-height')).toBe('auto');
       });
 
-      await user.click(trigger);
+      // With animations off, the panel leaves the document one frame after it gets the ending
+      // style. The case reads the size in the update that gives the style.
+      await nextEndingStyle(panel, { action: () => user.click(trigger) });
 
-      // Both hold only mid-transition, so check them in one snapshot.
-      await waitFor(() => {
-        expect({
-          endingStyle: panel.hasAttribute('data-ending-style'),
-          height: panel.style.getPropertyValue('--collapsible-panel-height'),
-        }).toEqual({ endingStyle: true, height: expect.stringMatching(/px$/) });
-      });
+      expect({
+        endingStyle: panel.hasAttribute('data-ending-style'),
+        height: panel.style.getPropertyValue('--collapsible-panel-height'),
+      }).toEqual({ endingStyle: true, height: expect.stringMatching(/px$/) });
     });
 
     it('unmounts a zero-size panel without waiting for unrelated transitions', async () => {
@@ -477,7 +490,7 @@ describe('<Collapsible.Panel />', () => {
 
     it('keeps exit transitions working after a close is interrupted by reopening', async () => {
       // Keep the close running long enough for a slow run to interrupt it. Without animations,
-      // `data-ending-style` only lasts a frame and `waitFor` can miss it.
+      // the close ends one frame after `data-ending-style`.
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
       const { user } = await render(
         <>
@@ -506,26 +519,25 @@ describe('<Collapsible.Panel />', () => {
       const trigger = screen.getByRole('button', { name: 'Trigger' });
       const panel = screen.getByTestId('panel');
 
-      await user.click(trigger);
+      await nextEndingStyle(panel, { action: () => user.click(trigger) });
+      expect(panel).toHaveAttribute('data-ending-style');
 
-      await waitFor(() => {
-        expect(panel).toHaveAttribute('data-ending-style');
-      });
-
+      const startingStyle = recordStartingStyle(panel);
       await user.click(trigger);
 
       await waitFor(() => {
         expect(panel).toHaveAttribute('data-open');
       });
       await waitFor(() => {
+        expect(startingStyle.seen()).toBe(true);
+      });
+      await waitFor(() => {
         expect(panel).not.toHaveAttribute('data-starting-style');
       });
 
-      await fireEvent.click(trigger);
-
-      await waitFor(() => {
-        expect(panel).toHaveAttribute('data-ending-style');
-      });
+      // The wait resolves only for an ending style that comes after the click.
+      await nextEndingStyle(panel, { action: () => fireEvent.click(trigger) });
+      expect(panel).toHaveAttribute('data-ending-style');
       expect(screen.getByTestId('panel')).toBe(panel);
     });
 
@@ -655,9 +667,13 @@ describe('<Collapsible.Panel />', () => {
           expect(closeAnimationStarted).toBe(true);
         });
 
+        const startingStyle = recordStartingStyle(panel);
         await fireEvent.click(trigger);
         await waitFor(() => {
           expect(panel).toHaveAttribute('data-open');
+        });
+        await waitFor(() => {
+          expect(startingStyle.seen()).toBe(true);
         });
         await waitFor(() => {
           expect(panel).not.toHaveAttribute('data-starting-style');
@@ -857,7 +873,7 @@ describe('<Collapsible.Panel />', () => {
 
             .closing-animation-panel[data-closed] {
               overflow: hidden;
-              animation: panel-slide-up 100ms linear;
+              animation: panel-slide-up 100s linear;
             }
           `}</style>
 
@@ -877,32 +893,29 @@ describe('<Collapsible.Panel />', () => {
         expect(panel.style.getPropertyValue('--collapsible-panel-height')).toBe('auto');
       });
 
-      // The size must be in pixels when the animation starts, when the ending style comes and when
-      // the animation ends. A listener records the size at each moment, so the test does not
-      // depend on the time at which the click resolves.
-      const heights: Record<string, string> = {};
-      const recordHeight = (moment: string) => {
-        heights[moment] = panel.style.getPropertyValue('--collapsible-panel-height');
-      };
-      panel.addEventListener('animationstart', () => recordHeight('animationstart'));
-      panel.addEventListener('animationend', () => recordHeight('animationend'));
-      new MutationObserver(() => {
-        if (panel.hasAttribute('data-ending-style')) {
-          recordHeight('data-ending-style');
-        }
-      }).observe(panel, { attributes: true, attributeFilter: ['data-ending-style'] });
+      // Base UI's exit lasts 100 ms. This exit lasts 100 s, so no late frame ends it before the
+      // case reads it.
+      await nextEndingStyle(panel, { action: () => user.click(trigger) });
+      const exitAnimations = panel.getAnimations();
 
-      await user.click(trigger);
+      expect({
+        endingStyle: panel.hasAttribute('data-ending-style'),
+        height: panel.style.getPropertyValue('--collapsible-panel-height'),
+        animations: exitAnimations.length,
+      }).toEqual({ endingStyle: true, height: expect.stringMatching(/px$/), animations: 1 });
+
+      // The size must stay in pixels until the animation ends. A callback of `finished` runs
+      // before the part completes the close.
+      const heightAtEnd = Promise.all(exitAnimations.map((animation) => animation.finished)).then(
+        () => panel.style.getPropertyValue('--collapsible-panel-height'),
+      );
+      seekBeforeEnd(exitAnimations, 50);
+      expect(await heightAtEnd).toMatch(/px$/);
 
       await waitFor(() => {
-        expect(Object.keys(heights)).toHaveLength(3);
+        expect(panel).not.toBeInTheDocument();
       });
-
-      expect(heights).toEqual({
-        animationstart: expect.stringMatching(/px$/),
-        'data-ending-style': expect.stringMatching(/px$/),
-        animationend: expect.stringMatching(/px$/),
-      });
+      expect(screen.queryByTestId('panel')).toBe(null);
     });
 
     it('still animates on reopen after being initially open when only open keyframes are defined', async () => {
@@ -1312,6 +1325,27 @@ describe('<Collapsible.Panel />', () => {
       });
 
       expect(panel.getAnimations().length).toBe(0);
+    });
+
+    it('is not named by the trigger while KeepAlive holds a panel that mounted in a held branch', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Collapsible.Panel key="panel" id="held-panel">
+          Panel
+        </Collapsible.Panel>
+      ));
+      await render(() => (
+        <Collapsible.Root defaultOpen>
+          <Collapsible.Trigger>Trigger</Collapsible.Trigger>
+          <HeldBranch />
+        </Collapsible.Root>
+      ));
+      const trigger = screen.getByRole('button');
+
+      await mountWhileHeld();
+      expect(trigger).not.toHaveAttribute('aria-controls', 'held-panel');
+
+      await show();
+      expect(trigger).toHaveAttribute('aria-controls', 'held-panel');
     });
   });
 
@@ -2020,9 +2054,18 @@ describe('<Collapsible.Panel />', () => {
       );
     });
 
-    it('names the panel in aria-controls of the trigger after the hydration of a panel with an id', async () => {
+    it('VUE-80: names a panel with an id in aria-controls of the trigger in the server HTML and after the hydration', async () => {
       const props = { defaultOpen: true, panelId: 'custom-panel-id' };
       const serverHtml = await renderOnServer(FIXTURE, props);
+
+      // The parse in a `<template>` element has no side effect. Its elements are of another
+      // document, so the matchers of the DOM do not take them.
+      const server = document.createElement('template');
+      server.innerHTML = serverHtml;
+      expect(server.content.querySelector('button')!.getAttribute('aria-controls')).toBe(
+        'custom-panel-id',
+      );
+      expect(server.content.querySelector('[data-testid="panel"]')!.id).toBe('custom-panel-id');
 
       const { container } = await hydrate(CollapsiblePanelHydration, { serverHtml, props });
 

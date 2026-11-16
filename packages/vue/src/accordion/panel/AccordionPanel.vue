@@ -32,10 +32,6 @@ export interface AccordionPanelProps
   /**
    * The id of the panel. The trigger uses it for `aria-controls`.
    * If the id is absent or empty, the panel has the id that the item generates.
-   * A server render writes the trigger before it renders the panel.
-   * The `aria-controls` of an open trigger in the server HTML then names a generated id until the
-   * page hydrates. It does not name a panel that has an `id` of its own until then.
-   * To correct this, set `aria-controls` on `Accordion.Trigger` to the same id.
    */
   id?: string | undefined;
 }
@@ -45,9 +41,12 @@ export interface AccordionPanelProps
 import { computed, onMounted, watch } from 'vue';
 import { useCollapsiblePanel } from '../../collapsible/panel/useCollapsiblePanel';
 import { useCollapsibleRootContext } from '../../collapsible/root/CollapsibleRootContext';
+import { useAriaAfterHydration } from '../../common/hydration';
 import { warn } from '../../common/warn';
+import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { givenId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useAccordionItemContext } from '../item/AccordionItemContext';
 import { accordionStateAttributesMapping } from '../item/stateAttributesMapping';
@@ -100,7 +99,7 @@ const {
   transitionStatus,
 } = useCollapsibleRootContext();
 
-const panelId = computed(() => props.id || defaultPanelId.value);
+const panelId = computed(() => givenId(props.id) ?? defaultPanelId.value);
 
 const source = Symbol();
 
@@ -132,18 +131,22 @@ const {
 
 const { state, triggerId } = useAccordionItemContext();
 
+// The trigger registers its id in `setup`, and it can come after the panel.
+useDeferredServerRender();
+
 const panelState = computed<AccordionPanelState>(() => ({
   ...state.value,
   transitionStatus: panelTransitionStatus.value,
 }));
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('div', props, {
   state: panelState,
   ref: panelRef,
   props: (attrs) => [
     panelProps.value,
     {
-      'aria-labelledby': triggerId.value,
+      'aria-labelledby': ariaAfterHydration(triggerId.value),
       role: 'region',
       style: {
         [AccordionPanelCssVars.accordionPanelHeight]:

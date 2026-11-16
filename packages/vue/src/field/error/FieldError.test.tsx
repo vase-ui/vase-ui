@@ -1,10 +1,11 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { defineComponent, h, KeepAlive, shallowRef } from 'vue';
+import { defineComponent, h, shallowRef } from 'vue';
 import type { Component } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import type { HTMLProps } from '@vase-ui/vue/types';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -16,6 +17,7 @@ import {
   renderOnServer,
   screen,
   takeReportedMessages,
+  waitSingleFrame,
   within,
 } from '#test-utils';
 import FieldErrorHydration from './FieldErrorHydration.test.vue';
@@ -475,6 +477,9 @@ describe('<Field.Error />', () => {
       await fireEvent.input(input, { target: { value: 'bad' } });
       const error = screen.getByTestId('error');
       expect(error).toHaveTextContent('Bad value');
+      // The error mounts when the field becomes invalid, and it reads its animations in the frame
+      // after the mount. The wait for the read of the exit must start after that read.
+      await waitSingleFrame();
 
       // After a stall, one frame can start and end the exit, and the part then removes the error.
       // Chromium then sends no `animationstart` to it, so the case reads the text when the part
@@ -552,17 +557,11 @@ describe('<Field.Error />', () => {
   describe('KeepAlive', () => {
     it('does not describe the control with an error that renders while KeepAlive holds it', async () => {
       let root = null as InstanceType<typeof Field.Root> | null;
-      const visible = shallowRef(true);
-      const extra = shallowRef(false);
       // The error mounts with no element, because the field is valid then.
-      const Branch = defineComponent(() => () => (
-        <div>
-          {extra.value ? (
-            <Field.Error key="error" data-testid="error">
-              Error
-            </Field.Error>
-          ) : null}
-        </div>
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Field.Error key="error" data-testid="error">
+          Error
+        </Field.Error>
       ));
       await render(() => (
         <Field.Root
@@ -572,22 +571,18 @@ describe('<Field.Error />', () => {
           validate={() => 'Error'}
         >
           <Field.Control data-testid="control" />
-          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+          <HeldBranch />
         </Field.Root>
       ));
       const control = screen.getByTestId('control');
 
-      visible.value = false;
-      await flushMicrotasks();
-      extra.value = true;
-      await flushMicrotasks();
+      await mountWhileHeld();
       await root?.validate();
       await flushMicrotasks();
 
       expect(control).not.toHaveAttribute('aria-describedby');
 
-      visible.value = true;
-      await flushMicrotasks();
+      await show();
 
       expect(control).toHaveAttribute('aria-describedby', screen.getByTestId('error').id);
     });

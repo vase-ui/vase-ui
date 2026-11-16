@@ -40,7 +40,10 @@ export interface OTPFieldRootState extends FieldRootState {
 export interface OTPFieldRootProps
   extends
     VaseUIComponentProps<OTPFieldRootState>,
-    /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes>, 'id' | 'inputmode' | 'onChange'> {
+    /* @vue-ignore */ Omit<
+      WithVaseUIEvent<HTMLAttributes, 'aria-labelledby'>,
+      'id' | 'inputmode' | 'onChange'
+    > {
   /**
    * The id of the first input element.
    * Subsequent inputs derive their ids from it (`{id}-2`, `{id}-3`, and so on).
@@ -154,19 +157,20 @@ export type OTPFieldRootCompleteEventDetails =
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, provide, shallowRef, watch } from 'vue';
-import { addEventListener } from '../../common/addEventListener';
 import { clamp } from '../../common/clamp';
-import { ownerDocument, ownerWindow } from '../../common/owner';
+import { useAriaAfterHydration, useHiddenValueBeforeHydration } from '../../common/hydration';
+import { ownerDocument } from '../../common/owner';
 import { activeElement, contains } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { warn } from '../../common/warn';
+import { givenName } from '../../internals/blankName';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import {
   createChangeEventDetails,
   createGenericEventDetails,
 } from '../../internals/createBaseUIEventDetails';
-import { useRegisterFieldControl } from '../../internals/field-register-control';
+import { useFieldInput, useRegisterFieldControl } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { useFormContext } from '../../internals/form-context';
 import { handleHiddenInputInvalid } from '../../internals/handleHiddenInputInvalid';
@@ -178,6 +182,7 @@ import {
 } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useFormReset } from '../../internals/useFormReset';
+import { useFormRestore } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 import {
@@ -296,7 +301,7 @@ const ariaLabelledBy = useAriaLabelledBy(
   controlId,
 );
 const inputAriaLabelledBy = computed(() =>
-  props.ariaLabelledby == null ? ariaLabelledBy.value : undefined,
+  givenName(props.ariaLabelledby) == null ? ariaLabelledBy.value : undefined,
 );
 
 const validationConfig = computed(() => getOTPValidationConfig(props.validationType));
@@ -322,11 +327,12 @@ const activeIndex = computed(() =>
 setFilled(filled.value);
 watch(filled, setFilled);
 
-useCompositeList({
+const inputList = useCompositeList({
   elementsRef: inputElements,
   onMapChange(newMap) {
     inputCount.value = newMap.size;
   },
+  provide: false,
 });
 
 if (process.env.NODE_ENV !== 'production') {
@@ -564,6 +570,7 @@ provide(OTPFieldRootContext, {
   getInputId,
   handleInputBlur,
   handleInputFocus,
+  inputList,
   inputMode: resolvedInputMode,
   inputAriaLabelledBy,
   invalid,
@@ -588,6 +595,7 @@ function mergeAriaIds(...values: (string | undefined)[]) {
   return ids.length > 0 ? Array.from(new Set(ids)).join(' ') : undefined;
 }
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('div', props, {
   state,
   stateAttributesMapping: rootStateAttributesMapping,
@@ -596,15 +604,27 @@ const { element, elementProps } = useRenderElement('div', props, {
     return [
       {
         role: 'group',
-        'aria-describedby': mergeAriaIds(
-          ariaDescribedBy as string | undefined,
-          getDescriptionProps({})['aria-describedby'] as string | undefined,
+        // `null` of the consumer removes the ids of the descriptions (VUE-103).
+        'aria-describedby': ariaAfterHydration(
+          ariaDescribedBy === null
+            ? null
+            : mergeAriaIds(
+                ariaDescribedBy as string | undefined,
+                getDescriptionProps({})['aria-describedby'] as string | undefined,
+              ),
         ),
-        'aria-labelledby': ariaLabelledBy.value,
+        'aria-labelledby': ariaAfterHydration(ariaLabelledBy.value),
       },
       elementAttrs,
     ];
   },
+});
+
+// After a move in the history or a reload, the hidden input can hold a code that the browser
+// restored. The root then takes no value from before the hydration, so it does not complete or
+// submit an old code.
+const writesHiddenValue = useHiddenValueBeforeHydration(() => hiddenInputElement.value, {
+  restorable: false,
 });
 
 // The value that the root last saw in the hidden input. The root sets it after each event that it
@@ -656,7 +676,8 @@ function handleHiddenInput(event: Event) {
       createChangeEventDetails(REASONS.inputChange, event),
     );
 
-    if (committedValue != null && committedValue !== '') {
+    // The event of the take of the hydration comes with no action of the user, so the focus stays.
+    if (committedValue != null && committedValue !== '' && writesHiddenValue.value) {
       queueFocusInput(committedValue.length - 1, committedValue);
     }
   }
@@ -679,6 +700,7 @@ useFormReset(hiddenInputElement, (event) => {
 
 // A plain variable keeps the render of the hidden input part from depending on the element.
 let ownHiddenInput: HTMLInputElement | null = null;
+const giveFieldInput = useFieldInput();
 
 function setHiddenInput(input: unknown) {
   const next = input as HTMLInputElement | null;
@@ -687,29 +709,23 @@ function setHiddenInput(input: unknown) {
     return;
   }
 
-  // A template can mount the root that replaces this root before it unmounts this root. This root
-  // then clears the input of the field only when the input is its own.
-  if (next !== null || validation.inputRef.value === ownHiddenInput) {
-    validation.inputRef.value = next;
-  }
+  giveFieldInput(next);
   ownHiddenInput = next;
   hiddenInputElement.value = next;
 }
 
+// Until the take of the hydration, the hidden input can hold a value that the root did not handle.
 watch(
   hiddenInputElement,
-  (hiddenInput, _previous, onCleanup) => {
-    if (!hiddenInput) {
-      return;
+  (hiddenInput) => {
+    if (hiddenInput) {
+      handledHiddenValue = writesHiddenValue.value ? hiddenInput.value : otpValue.value;
     }
-
-    handledHiddenValue = hiddenInput.value;
-
-    // A browser restores the form state of a page with no event on the inputs.
-    onCleanup(addEventListener(ownerWindow(hiddenInput), 'pageshow', writeValueToInputs));
   },
   { flush: 'post' },
 );
+
+useFormRestore(hiddenInputElement, writeValueToInputs);
 
 // Vue writes the value to the hidden input when the value changes. A program can then send a
 // `change` event with the value that the input had before, and the root must handle it.
@@ -724,14 +740,16 @@ watch(
 // The style is the constant itself, in an object that no `mergeProps` call makes.
 // `handleHiddenInputInvalid` then keeps the size that it writes.
 function hiddenInputProps() {
+  const validationProps = validation.getValidationProps(isDisabled.value);
   return {
-    ...validation.getValidationProps(isDisabled.value),
+    ...validationProps,
+    'aria-describedby': ariaAfterHydration(validationProps['aria-describedby']),
     ref: setHiddenInput,
     type: 'text',
     id: controlId.value && inputName.value == null ? `${controlId.value}-hidden-input` : undefined,
     form: props.form,
     name: inputName.value,
-    value: otpValue.value,
+    ...(writesHiddenValue.value ? { value: otpValue.value } : undefined),
     autocomplete: props.autoComplete,
     inputmode: resolvedInputMode.value,
     minlength: props.length,

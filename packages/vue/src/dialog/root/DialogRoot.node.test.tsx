@@ -83,7 +83,8 @@ describe('<Dialog.Root /> on a server', () => {
     const twoTag = getButtonTag(html, 'two');
     expect(twoTag).toContain(`aria-expanded="${two}"`);
     expect(twoTag?.includes('data-popup-open')).toBe(two);
-    expect(twoTag?.includes('aria-controls="')).toBe(two);
+    // A portal renders the popup after the mount, so no trigger names it.
+    expect(twoTag).not.toContain('aria-controls');
   });
 
   it('writes the closed form of a trigger with a handle', async () => {

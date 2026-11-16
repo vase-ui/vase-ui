@@ -80,6 +80,11 @@ const [checkedValue, setValueUnwrapped] = useControlled({
 });
 
 function setValue(newValue: any, eventDetails: MenuRadioGroupChangeEventDetails) {
+  // As `RadioGroup` does, the group emits no change for a click of the checked item (`VUE-91`).
+  if (newValue === checkedValue.value) {
+    return;
+  }
+
   emit('valueChange', newValue, eventDetails);
 
   if (eventDetails.isCanceled) {
@@ -94,7 +99,9 @@ const isDisabled = computed(() => props.disabled);
 
 // Each label registers by source, so a label that unmounts does not clear the id of a newer one.
 const labelIds = createIdRegistry();
-provide(MenuGroupContext, labelIds.registerId);
+provide(MenuGroupContext, {
+  registerLabelId: labelIds.registerId,
+});
 provide(MenuRadioGroupContext, { value: checkedValue, setValue, disabled: isDisabled });
 
 // A filterable menu hides the group, label included, once the query filters out all of its items.
@@ -109,7 +116,9 @@ const { element, elementProps } = useRenderElement('div', props, {
     return [
       {
         role: 'group',
-        'aria-labelledby': ariaLabelledBy ?? labelIds.ids.value.at(-1),
+        // `null` of the consumer removes the label of the group (VUE-103).
+        'aria-labelledby':
+          ariaLabelledBy === undefined ? labelIds.ids.value.at(-1) : ariaLabelledBy,
         'aria-disabled': props.disabled || undefined,
       },
       elementAttrs,

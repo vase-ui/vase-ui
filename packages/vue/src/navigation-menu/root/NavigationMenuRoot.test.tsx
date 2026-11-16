@@ -11,6 +11,8 @@ import {
   flushMicrotasks,
   hydrate,
   isJSDOM,
+  nextCall,
+  popupAnatomyTests,
   renderOnServer,
   screen,
   waitFor,
@@ -328,6 +330,8 @@ function TestInlineNestedNavigationMenu(
     nestedItem1Value?: string | number | boolean;
     keepMountedContent?: boolean;
     nestedLinkCloseOnClick?: boolean;
+    nestedRootRef?: (instance: RootInstance | null) => void;
+    onNestedOpenChangeComplete?: (open: boolean) => void;
   } = {},
 ) {
   const {
@@ -335,6 +339,8 @@ function TestInlineNestedNavigationMenu(
     nestedItem1Value = 'nested-item-1',
     keepMountedContent = false,
     nestedLinkCloseOnClick = false,
+    nestedRootRef,
+    onNestedOpenChangeComplete,
   } = props;
   const nestedRootProps =
     nestedDefaultValue == null ? undefined : { defaultValue: nestedDefaultValue };
@@ -347,7 +353,11 @@ function TestInlineNestedNavigationMenu(
 
           <NavigationMenu.Content data-testid="popup-1" keepMounted={keepMountedContent}>
             <NavigationMenu.Link href="#link-1">Link 1</NavigationMenu.Link>
-            <NavigationMenu.Root {...nestedRootProps}>
+            <NavigationMenu.Root
+              ref={(instance) => nestedRootRef?.(instance as unknown as RootInstance | null)}
+              onOpenChangeComplete={onNestedOpenChangeComplete}
+              {...nestedRootProps}
+            >
               <NavigationMenu.List data-testid="inline-nested-list">
                 <NavigationMenu.Item value={nestedItem1Value}>
                   <NavigationMenu.Trigger data-testid="nested-trigger-1">
@@ -1003,6 +1013,64 @@ const PopupElement = defineComponent(() => {
 describe('<NavigationMenu.Root />', () => {
   const { render } = createRenderer();
 
+  popupAnatomyTests({
+    createComponent: ({ open, onOpenChangeComplete }) => (
+      <NavigationMenu.Root
+        value={open ? 'item-1' : null}
+        onOpenChangeComplete={onOpenChangeComplete}
+      >
+        <NavigationMenu.List>
+          <NavigationMenu.Item value="item-1">
+            <NavigationMenu.Trigger>Item 1</NavigationMenu.Trigger>
+            <NavigationMenu.Content>Content</NavigationMenu.Content>
+          </NavigationMenu.Item>
+        </NavigationMenu.List>
+        <NavigationMenu.Portal>
+          <NavigationMenu.Positioner data-testid="shown" class="shown">
+            <NavigationMenu.Viewport />
+          </NavigationMenu.Positioner>
+        </NavigationMenu.Portal>
+      </NavigationMenu.Root>
+    ),
+    createBackdropComponent: ({ open, onOpenChangeComplete }) => (
+      <NavigationMenu.Root
+        value={open ? 'item-1' : null}
+        onOpenChangeComplete={onOpenChangeComplete}
+      >
+        <NavigationMenu.List>
+          <NavigationMenu.Item value="item-1">
+            <NavigationMenu.Trigger>Item 1</NavigationMenu.Trigger>
+            <NavigationMenu.Content>Content</NavigationMenu.Content>
+          </NavigationMenu.Item>
+        </NavigationMenu.List>
+        <NavigationMenu.Portal>
+          <NavigationMenu.Backdrop data-testid="shown" class="shown" />
+        </NavigationMenu.Portal>
+      </NavigationMenu.Root>
+    ),
+    createBackdropAndPositionerComponent: ({ open, onOpenChangeComplete }) => (
+      <NavigationMenu.Root
+        value={open ? 'item-1' : null}
+        onOpenChangeComplete={onOpenChangeComplete}
+      >
+        <NavigationMenu.List>
+          <NavigationMenu.Item value="item-1">
+            <NavigationMenu.Trigger>Item 1</NavigationMenu.Trigger>
+            <NavigationMenu.Content>Content</NavigationMenu.Content>
+          </NavigationMenu.Item>
+        </NavigationMenu.List>
+        <NavigationMenu.Portal>
+          <NavigationMenu.Backdrop />
+          <NavigationMenu.Positioner data-testid="shown" class="shown">
+            <NavigationMenu.Viewport />
+          </NavigationMenu.Positioner>
+        </NavigationMenu.Portal>
+      </NavigationMenu.Root>
+    ),
+    render,
+    reportsOpen: false,
+  });
+
   beforeEach(() => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
   });
@@ -1147,10 +1215,12 @@ describe('<NavigationMenu.Root />', () => {
       const trigger = screen.getByTestId('trigger-1');
       const topLevelList = trigger.closest('ul') as HTMLElement;
 
-      await fireEvent.mouseEnter(trigger);
-      await fireEvent.mouseMove(trigger);
-      vi.advanceTimersByTime(OPEN_DELAY);
-      await flushMicrotasks();
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.mouseEnter(trigger);
+        await fireEvent.mouseMove(trigger);
+        vi.advanceTimersByTime(OPEN_DELAY);
+        await flushMicrotasks();
+      });
 
       expect(topLevelList.style.pointerEvents).toBe('none');
 
@@ -1189,10 +1259,12 @@ describe('<NavigationMenu.Root />', () => {
       );
 
       const trigger = screen.getByText('Trigger 1');
-      await fireEvent.mouseEnter(trigger);
-      await fireEvent.mouseMove(trigger);
-      vi.advanceTimersByTime(OPEN_DELAY);
-      await flushMicrotasks();
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.mouseEnter(trigger);
+        await fireEvent.mouseMove(trigger);
+        vi.advanceTimersByTime(OPEN_DELAY);
+        await flushMicrotasks();
+      });
 
       expect(document.body.style.pointerEvents).toBe('none');
       expect(screen.getByTestId('custom-list').style.pointerEvents).toBe('');
@@ -1332,7 +1404,7 @@ describe('<NavigationMenu.Root />', () => {
       await user.hover(trigger2);
 
       await waitFor(() => {
-        expect(screen.queryByTestId('popup-2')).not.toBe(null);
+        expect(screen.getByTestId('popup-2')).not.toBe(null);
       });
     });
 
@@ -1350,10 +1422,11 @@ describe('<NavigationMenu.Root />', () => {
         await fireEvent.pointerEnter(trigger, { pointerType: 'touch' });
         await fireEvent.pointerDown(trigger, { pointerType: 'touch' });
         await fireEvent.pointerUp(trigger, { pointerType: 'touch' });
-        await fireEvent.click(trigger);
-        await flushMicrotasks();
-        // The click mounted the nested trigger in this millisecond of the fake clock.
-        await waitForLaterMillisecond();
+        // The click mounts the nested trigger.
+        await waitForLaterMillisecond(async () => {
+          await fireEvent.click(trigger);
+          await flushMicrotasks();
+        });
 
         const nestedTrigger2 = screen.getByTestId('nested-trigger-2');
         await fireEvent.pointerEnter(nestedTrigger2, { pointerType: 'touch' });
@@ -1372,7 +1445,7 @@ describe('<NavigationMenu.Root />', () => {
         await user.hover(trigger);
 
         await waitFor(() => {
-          expect(screen.queryByTestId('popup-1')).not.toBe(null);
+          expect(screen.getByTestId('popup-1')).not.toBe(null);
         });
       },
     );
@@ -1385,7 +1458,7 @@ describe('<NavigationMenu.Root />', () => {
       await user.hover(trigger1);
 
       await waitFor(() => {
-        expect(screen.queryByTestId('popup-1')).not.toBe(null);
+        expect(screen.getByTestId('popup-1')).not.toBe(null);
       });
 
       await user.click(trigger1);
@@ -1394,19 +1467,21 @@ describe('<NavigationMenu.Root />', () => {
       await user.hover(trigger2);
 
       await waitFor(() => {
-        expect(screen.queryByTestId('popup-2')).not.toBe(null);
+        expect(screen.getByTestId('popup-2')).not.toBe(null);
       });
+      const popup2 = screen.getByTestId('popup-2');
 
       await user.unhover(trigger2);
 
       await waitFor(() => {
-        expect(screen.queryByTestId('popup-2')).toBe(null);
+        expect(popup2).not.toBeInTheDocument();
       });
+      expect(screen.queryByTestId('popup-2')).toBe(null);
 
       await user.hover(trigger1);
 
       await waitFor(() => {
-        expect(screen.queryByTestId('popup-1')).not.toBe(null);
+        expect(screen.getByTestId('popup-1')).not.toBe(null);
       });
     });
 
@@ -1417,7 +1492,7 @@ describe('<NavigationMenu.Root />', () => {
       await user.hover(trigger1);
 
       await waitFor(() => {
-        expect(screen.queryByTestId('popup-1')).not.toBe(null);
+        expect(screen.getByTestId('popup-1')).not.toBe(null);
       });
 
       const popup1 = screen.getByTestId('popup-1');
@@ -1428,8 +1503,9 @@ describe('<NavigationMenu.Root />', () => {
       await user.unhover(link1);
 
       await waitFor(() => {
-        expect(screen.queryByTestId('popup-1')).toBe(null);
+        expect(popup1).not.toBeInTheDocument();
       });
+      expect(screen.queryByTestId('popup-1')).toBe(null);
     });
 
     it('does not close menu when clicking a different trigger with mouse', async () => {
@@ -1457,8 +1533,10 @@ describe('<NavigationMenu.Root />', () => {
       const trigger1 = screen.getByTestId('trigger-1');
       const trigger2 = screen.getByTestId('trigger-2');
 
-      await fireEvent.click(trigger1);
-      await flushMicrotasks();
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.click(trigger1);
+        await flushMicrotasks();
+      });
 
       expect(screen.queryByTestId('popup-1')).not.toBe(null);
       expect(trigger1).toHaveAttribute('aria-expanded', 'true');
@@ -1497,9 +1575,94 @@ describe('<NavigationMenu.Root />', () => {
 
       await user.keyboard('{Escape}');
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup-1')).toBe(null);
+      expect(screen.queryByTestId('popup-1')).toBe(null);
+      expect(trigger).toHaveFocus();
+    });
+
+    it('VUE-72: returns the focus to the trigger after Escape closes a positioner with no popup part', async () => {
+      const onOpenChangeComplete = vi.fn();
+      const { user } = await render(
+        <NavigationMenu.Root onOpenChangeComplete={onOpenChangeComplete}>
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="item-1">
+              <NavigationMenu.Trigger data-testid="trigger-1">Item 1</NavigationMenu.Trigger>
+              <NavigationMenu.Content data-testid="popup-1">
+                <NavigationMenu.Link href="#link-1">Link 1</NavigationMenu.Link>
+              </NavigationMenu.Content>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          <NavigationMenu.Portal>
+            <NavigationMenu.Positioner data-testid="positioner">
+              <NavigationMenu.Viewport />
+            </NavigationMenu.Positioner>
+          </NavigationMenu.Portal>
+        </NavigationMenu.Root>,
+      );
+      const trigger = screen.getByTestId('trigger-1');
+
+      await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        await flushMicrotasks();
       });
+      const link = screen.getByRole('link', { name: 'Link 1' });
+      link.focus();
+      await flushMicrotasks();
+      expect(link).toHaveFocus();
+
+      const closed = nextCall(onOpenChangeComplete);
+      await user.keyboard('{Escape}');
+      await closed;
+
+      expect(screen.queryByTestId('positioner')).toBe(null);
+      expect(trigger).toHaveFocus();
+    });
+
+    it('VUE-92: returns the focus to the trigger after Escape when a v-if of the consumer removes the portal part', async () => {
+      const onOpenChangeComplete = vi.fn();
+      const value = shallowRef<string | null>(null);
+      const { user } = await render(() => (
+        <NavigationMenu.Root
+          value={value.value}
+          onValueChange={(nextValue: string | null) => {
+            value.value = nextValue;
+          }}
+          onOpenChangeComplete={onOpenChangeComplete}
+        >
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="item-1">
+              <NavigationMenu.Trigger data-testid="trigger-1">Item 1</NavigationMenu.Trigger>
+              <NavigationMenu.Content>
+                <NavigationMenu.Link href="#link-1">Link 1</NavigationMenu.Link>
+              </NavigationMenu.Content>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          {value.value != null && (
+            <NavigationMenu.Portal>
+              <NavigationMenu.Positioner data-testid="positioner">
+                <NavigationMenu.Popup>
+                  <NavigationMenu.Viewport />
+                </NavigationMenu.Popup>
+              </NavigationMenu.Positioner>
+            </NavigationMenu.Portal>
+          )}
+        </NavigationMenu.Root>
+      ));
+      const trigger = screen.getByTestId('trigger-1');
+
+      await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        await flushMicrotasks();
+      });
+      const link = screen.getByRole('link', { name: 'Link 1' });
+      link.focus();
+      await flushMicrotasks();
+      expect(link).toHaveFocus();
+
+      const closed = nextCall(onOpenChangeComplete);
+      await user.keyboard('{Escape}');
+      await closed;
+
+      expect(screen.queryByTestId('positioner')).toBe(null);
       expect(trigger).toHaveFocus();
     });
 
@@ -1544,8 +1707,9 @@ describe('<NavigationMenu.Root />', () => {
       vi.advanceTimersByTime(50);
 
       await waitFor(() => {
-        expect(screen.queryByTestId('popup-1')).toBe(null);
+        expect(popup).not.toBeInTheDocument();
       });
+      expect(screen.queryByTestId('popup-1')).toBe(null);
       expect(trigger).toHaveAttribute('aria-expanded', 'false');
       expect(trigger).not.toHaveFocus();
     });
@@ -1571,9 +1735,7 @@ describe('<NavigationMenu.Root />', () => {
       await user.tab();
       await user.tab();
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup-1')).toBe(null);
-      });
+      expect(screen.queryByTestId('popup-1')).toBe(null);
       expect(last).toHaveFocus();
       expect(trigger).not.toHaveFocus();
     });
@@ -2051,9 +2213,7 @@ describe('<NavigationMenu.Root />', () => {
       expect(screen.queryByTestId('popup-root')).not.toBe(null);
 
       await rerender(<ControlledNavigationMenu value={null} />);
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup-root')).toBe(null);
-      });
+      expect(screen.queryByTestId('popup-root')).toBe(null);
       expect(onOpenChangeComplete.mock.calls.filter(([open]) => !open)).toHaveLength(1);
 
       // Calling the action after the automatic unmount must not repeat the completion.
@@ -2252,9 +2412,7 @@ describe('<NavigationMenu.Root />', () => {
       expect(screen.queryByTestId('popup-root')).not.toBe(null);
 
       await rerender(<ControlledNavigationMenu value={null} />);
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup-root')).toBe(null);
-      });
+      expect(screen.queryByTestId('popup-root')).toBe(null);
       expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
     });
 
@@ -2710,7 +2868,7 @@ describe('<NavigationMenu.Root />', () => {
       await user.click(trigger1);
 
       await waitFor(() => {
-        expect(screen.queryByTestId('popup-1')).not.toBe(null);
+        expect(screen.getByTestId('popup-1')).not.toBe(null);
       });
 
       const popup1 = screen.getByTestId('popup-1');
@@ -2726,9 +2884,7 @@ describe('<NavigationMenu.Root />', () => {
       const nestedLink = screen.getByTestId('nested-link-1');
       await user.click(nestedLink);
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('nested-popup-1')).toBe(null);
-      });
+      expect(screen.queryByTestId('nested-popup-1')).toBe(null);
       expect(screen.queryByTestId('popup-1')).toBe(null);
       expect(trigger1).toHaveAttribute('aria-expanded', 'false');
     });
@@ -2743,7 +2899,7 @@ describe('<NavigationMenu.Root />', () => {
       await user.click(trigger1);
 
       await waitFor(() => {
-        expect(screen.queryByTestId('popup-1')).not.toBe(null);
+        expect(screen.getByTestId('popup-1')).not.toBe(null);
       });
 
       const popup1 = screen.getByTestId('popup-1');
@@ -2769,7 +2925,7 @@ describe('<NavigationMenu.Root />', () => {
       await user.click(trigger1);
 
       await waitFor(() => {
-        expect(screen.queryByTestId('content-1')).not.toBe(null);
+        expect(screen.getByTestId('content-1')).not.toBe(null);
       });
 
       expect(screen.queryByTestId('level2-content-1')).not.toBe(null);
@@ -2778,9 +2934,7 @@ describe('<NavigationMenu.Root />', () => {
       const level3Link = screen.getByTestId('level3-link-1');
       await user.click(level3Link);
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('level3-content-1')).toBe(null);
-      });
+      expect(screen.queryByTestId('level3-content-1')).toBe(null);
       expect(screen.queryByTestId('level2-content-1')).toBe(null);
       expect(screen.queryByTestId('content-1')).toBe(null);
       expect(trigger1).toHaveAttribute('aria-expanded', 'false');
@@ -3060,6 +3214,44 @@ describe('<NavigationMenu.Root />', () => {
         expect(trigger1).toHaveAttribute('aria-expanded', 'false');
       });
 
+      it.each([
+        { name: 'removed content', keepMountedContent: false },
+        { name: 'kept mounted content', keepMountedContent: true },
+      ])(
+        'VUE-98: returns the focus to the nested trigger when an inline viewport closes with the focus in it: $name',
+        async ({ keepMountedContent }) => {
+          const onNestedOpenChangeComplete = vi.fn();
+          const nestedRoot = shallowRef<RootInstance | null>(null);
+          const { user } = await render(() => (
+            <TestInlineNestedNavigationMenu
+              keepMountedContent={keepMountedContent}
+              nestedRootRef={(instance) => {
+                nestedRoot.value = instance;
+              }}
+              onNestedOpenChangeComplete={onNestedOpenChangeComplete}
+            />
+          ));
+
+          await waitForLaterMillisecond(async () => {
+            await user.click(screen.getByTestId('trigger-1'));
+            await flushMicrotasks();
+          });
+          const nestedTrigger = screen.getByTestId('nested-trigger-1');
+          const nestedLink = screen.getByRole('link', { name: 'Nested Link 1' });
+          nestedLink.focus();
+          await flushMicrotasks();
+          expect(nestedLink).toHaveFocus();
+
+          const closed = nextCall(onNestedOpenChangeComplete);
+          nestedRoot.value?.close();
+          await closed;
+
+          expect(nestedTrigger).toHaveFocus();
+          expect(nestedTrigger).toHaveAttribute('aria-expanded', 'false');
+          expect(screen.getByTestId('trigger-1')).toHaveAttribute('aria-expanded', 'true');
+        },
+      );
+
       it('maintains inline viewport state when hovering between triggers and content', async () => {
         await render(<TestInlineNestedNavigationMenu />);
         const trigger1 = screen.getByTestId('trigger-1');
@@ -3100,8 +3292,11 @@ describe('<NavigationMenu.Root />', () => {
         await render(<TestInlineNestedNavigationMenu />);
         const trigger1 = screen.getByTestId('trigger-1');
 
-        await fireEvent.click(trigger1);
-        await flushMicrotasks();
+        // The click mounts the nested triggers.
+        await waitForLaterMillisecond(async () => {
+          await fireEvent.click(trigger1);
+          await flushMicrotasks();
+        });
 
         const popup1 = screen.getByTestId('popup-1');
         expect(popup1).not.toBe(null);
@@ -3110,8 +3305,6 @@ describe('<NavigationMenu.Root />', () => {
         expect(nestedTrigger1).toHaveAttribute('aria-expanded', 'true');
 
         const nestedTrigger2 = within(popup1).getByTestId('nested-trigger-2');
-        // The first click mounted the nested trigger in this millisecond of the fake clock.
-        await waitForLaterMillisecond();
         await fireEvent.click(nestedTrigger2);
         await flushMicrotasks();
 
@@ -3178,8 +3371,10 @@ describe('<NavigationMenu.Root />', () => {
           );
           const trigger1 = screen.getByTestId('trigger-1');
 
-          await fireEvent.click(trigger1);
-          await flushMicrotasks();
+          await waitForLaterMillisecond(async () => {
+            await fireEvent.click(trigger1);
+            await flushMicrotasks();
+          });
 
           const popup1 = screen.getByTestId('popup-1');
           const nestedTrigger1 = within(popup1).getByTestId('nested-trigger-1');
@@ -3222,8 +3417,10 @@ describe('<NavigationMenu.Root />', () => {
         const { user } = await render(<TestInlineNestedNavigationMenu />);
         const trigger1 = screen.getByTestId('trigger-1');
 
-        await fireEvent.click(trigger1);
-        await flushMicrotasks();
+        await waitForLaterMillisecond(async () => {
+          await fireEvent.click(trigger1);
+          await flushMicrotasks();
+        });
 
         const popup1 = screen.getByTestId('popup-1');
         expect(popup1).not.toBe(null);
@@ -3257,8 +3454,10 @@ describe('<NavigationMenu.Root />', () => {
         const { user } = await render(<TestDeeplyNestedNavigationMenu />);
         const trigger1 = screen.getByTestId('trigger-1');
 
-        await fireEvent.click(trigger1);
-        await flushMicrotasks();
+        await waitForLaterMillisecond(async () => {
+          await fireEvent.click(trigger1);
+          await flushMicrotasks();
+        });
 
         const content1 = screen.getByTestId('content-1');
         expect(content1).not.toBe(null);
@@ -3447,7 +3646,7 @@ describe('<NavigationMenu.Root />', () => {
             .map(([, value]) => value)
             .filter((value) => value !== 'auto' && value !== '0px');
 
-          expect(openHeight).toBe(`${popupRoot.offsetHeight}px`);
+          expect(openHeight).toBe(getComputedStyle(popupRoot).height);
           expect(fixedPopupHeights.length).toBeGreaterThan(0);
           expect(fixedPopupHeights.every((value) => value === openHeight)).toBe(true);
         } finally {
@@ -3465,8 +3664,11 @@ describe('<NavigationMenu.Root />', () => {
           await render(<TestInlineNestedNavigationMenu keepMountedContent />);
           const trigger1 = screen.getByTestId('trigger-1');
 
-          await fireEvent.click(trigger1);
-          await flushMicrotasks();
+          // The click mounts the nested trigger.
+          await waitForLaterMillisecond(async () => {
+            await fireEvent.click(trigger1);
+            await flushMicrotasks();
+          });
 
           const popupRoot = screen.getByTestId('popup-root');
           const positioner = screen.getByTestId('positioner');
@@ -3488,8 +3690,6 @@ describe('<NavigationMenu.Root />', () => {
 
           popupHeight = 300;
           animations.start();
-          // The first click mounted the nested trigger in this millisecond of the fake clock.
-          await waitForLaterMillisecond();
           await fireEvent.click(screen.getByTestId('nested-trigger-2'));
           await flushMicrotasks();
 
@@ -4313,7 +4513,7 @@ describe('<NavigationMenu.Root />', () => {
       await user.click(trigger);
 
       await waitFor(() => {
-        expect(screen.queryByTestId('popup-1')).not.toBe(null);
+        expect(screen.getByTestId('popup-1')).not.toBe(null);
       });
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
 
@@ -4325,7 +4525,7 @@ describe('<NavigationMenu.Root />', () => {
       await user.click(screen.getByTestId('dialog-button'));
 
       await waitFor(() => {
-        expect(screen.queryByTestId('popup-1')).not.toBe(null);
+        expect(screen.getByTestId('popup-1')).not.toBe(null);
       });
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
     });
@@ -4337,7 +4537,7 @@ describe('<NavigationMenu.Root />', () => {
       await user.click(trigger);
 
       await waitFor(() => {
-        expect(screen.queryByTestId('popup-1')).not.toBe(null);
+        expect(screen.getByTestId('popup-1')).not.toBe(null);
       });
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
 
@@ -4349,7 +4549,7 @@ describe('<NavigationMenu.Root />', () => {
       await user.click(screen.getByTestId('popover-button'));
 
       await waitFor(() => {
-        expect(screen.queryByTestId('popup-1')).not.toBe(null);
+        expect(screen.getByTestId('popup-1')).not.toBe(null);
       });
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
     });

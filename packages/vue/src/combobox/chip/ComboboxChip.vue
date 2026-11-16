@@ -45,13 +45,13 @@ if (chipsContext === undefined) {
     'Vase UI: <Combobox.Chip> must be inside <Combobox.Chips>. Without the chips part the chip cannot find the other chips for the arrow keys. Put the chip inside <Combobox.Chips>.',
   );
 }
-const { chipsRef } = chipsContext;
+const { chipsRef, chipList } = chipsContext;
 const direction = useDirection();
 
 const disabled = computed(() => store.select('disabled'));
 const readOnly = computed(() => store.select('readOnly'));
 
-const listItem = useCompositeListItem();
+const listItem = useCompositeListItem({ list: chipList });
 
 async function handleKeydown(event: KeyboardEvent) {
   if (disabled.value || readOnly.value) {

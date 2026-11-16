@@ -2,11 +2,17 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { defineComponent, provide } from 'vue';
 import type { PropType } from 'vue';
 import * as Menu from '../index.parts';
-import { createRenderer, describeConformance, screen, takeReportedMessages } from '#test-utils';
+import {
+  createHeldBranch,
+  createRenderer,
+  describeConformance,
+  screen,
+  takeReportedMessages,
+} from '#test-utils';
 import { MenuGroupContext } from '../group/MenuGroupContext';
 
 const TestGroupProvider = defineComponent((_, { slots }) => {
-  provide(MenuGroupContext, () => {});
+  provide(MenuGroupContext, { registerLabelId: () => {} });
   return () => slots.default?.();
 });
 
@@ -46,14 +52,17 @@ describe('<Menu.GroupLabel />', () => {
       expect(groupLabel).toHaveAttribute('aria-hidden', 'true');
     });
 
-    it('allows overriding aria-hidden', async () => {
+    it.each([
+      { name: 'undefined', value: undefined, expected: 'true' },
+      { name: 'null', value: null, expected: null },
+    ])('VUE-103: aria-hidden of the consumer is $name', async ({ value, expected }) => {
       await render(
         <Menu.Root open>
           <Menu.Portal>
             <Menu.Positioner>
               <Menu.Popup>
                 <Menu.Group>
-                  <Menu.GroupLabel aria-hidden={undefined}>Test group</Menu.GroupLabel>
+                  <Menu.GroupLabel aria-hidden={value}>Test group</Menu.GroupLabel>
                 </Menu.Group>
               </Menu.Popup>
             </Menu.Positioner>
@@ -62,7 +71,7 @@ describe('<Menu.GroupLabel />', () => {
       );
 
       const groupLabel = screen.getByText('Test group');
-      expect(groupLabel).not.toHaveAttribute('aria-hidden');
+      expect(groupLabel.getAttribute('aria-hidden')).toBe(expected);
     });
 
     it("should reference the generated id in Group's `aria-labelledby`", async () => {
@@ -207,6 +216,39 @@ describe('<Menu.GroupLabel />', () => {
       expect(group).toHaveAttribute('aria-labelledby', 'new-label');
     });
   });
+
+  it.each([
+    { name: 'Menu.Group', Group: Menu.Group },
+    { name: 'Menu.RadioGroup', Group: Menu.RadioGroup },
+  ])(
+    'does not name $name while KeepAlive holds a label that mounted in a held branch',
+    async ({ Group }) => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Menu.GroupLabel key="label" id="held-label" />
+      ));
+      await render(() => (
+        <Menu.Root open>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Group data-testid="group">
+                  <HeldBranch />
+                  <Menu.Item>Item</Menu.Item>
+                </Group>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      ));
+      const group = screen.getByTestId('group');
+
+      await mountWhileHeld();
+      expect(group).not.toHaveAttribute('aria-labelledby');
+
+      await show();
+      expect(group).toHaveAttribute('aria-labelledby', 'held-label');
+    },
+  );
 
   it('throws when rendered outside Menu.Group or Menu.RadioGroup', async () => {
     await expect(render(<Menu.GroupLabel />)).rejects.toThrow(

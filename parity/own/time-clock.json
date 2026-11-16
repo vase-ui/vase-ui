@@ -1,0 +1,12 @@
+{
+  "standard": ["https://www.w3.org/WAI/ARIA/apg/patterns/slider/"],
+  "reason": "Base UI has no clock face. A clock face is a common touch control for a time of day.",
+  "parts": ["Root", "Face", "Hand", "Number", "DayPeriod", "ViewTrigger"],
+  "types": [
+    "TimeClock.Root.ChangeEventReason",
+    "TimeClock.Root.CommitEventReason",
+    "TimeClockDayPeriodValue",
+    "TimeClockFaceNumber",
+    "TimeClockView"
+  ]
+}

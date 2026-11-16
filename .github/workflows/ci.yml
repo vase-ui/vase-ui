@@ -2,8 +2,10 @@ name: CI
 
 on:
   pull_request:
-  push:
-    branches: [main]
+  # The merge queue runs these jobs on the pull request on top of `main`. When the jobs pass,
+  # `main` moves to the commit that they tested, so a push to `main` starts no run of this workflow.
+  merge_group:
+    types: [checks_requested]
 
 permissions: {}
 
@@ -14,11 +16,39 @@ permissions: {}
 env:
   VITEST_CHROMIUM_GC_DISK_THRESHOLD_GB: '1000000'
 
+# A merge group has its own branch, so its group is its ref. Only a pull request cancels a run.
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+# CONTRIBUTING.md, "Where a test runs", gives the rule for each `timeout-minutes`.
 jobs:
+  # A pull request runs only the tests that its changed files can affect. The merge queue skips
+  # this job, so each test job there runs each test file. CONTRIBUTING.md, "Where a test runs",
+  # gives the rules.
+  select:
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      tests: ${{ steps.select.outputs.tests }}
+      fixtures: ${{ steps.select.outputs.fixtures }}
+      vitest-command: ${{ steps.select.outputs.vitest-command }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The checkout is the merge commit of the pull request. Its first parent is the base.
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - id: select
+        run: node scripts/ci/selectTests.ts
+
   check:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -43,8 +73,12 @@ jobs:
       - run: pnpm docs:build
 
   test-node:
+    needs: select
+    # `select` has the result `skipped` in the merge queue. Without `!cancelled()`, a job that
+    # needs a skipped job does not run.
+    if: ${{ !cancelled() && needs.select.result != 'failure' && needs.select.outputs.tests != 'none' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     permissions:
       contents: read
     steps:
@@ -57,9 +91,14 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm test:node
+      - uses: ./.github/actions/vitest
+        with:
+          command: ${{ needs.select.outputs.vitest-command }}
+          project: node
 
   test-browser:
+    needs: select
+    if: ${{ !cancelled() && needs.select.result != 'failure' && needs.select.outputs.tests != 'none' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -68,8 +107,10 @@ jobs:
       fail-fast: false
       matrix:
         # Firefox runs one test file at a time, so one job for all its files takes more than half
-        # of the time limit. The number after the slash is the number of Firefox shards. When you
-        # add or remove a shard, change that number in each Firefox shard.
+        # of the time limit. A WebKit page keeps the memory of each finished test file, so one job
+        # for all its files runs out of memory. The number after the slash is the number of shards
+        # of that engine. When you add or remove a shard, change that number in each shard of the
+        # engine.
         include:
           - engine: chromium
           - engine: firefox
@@ -79,6 +120,11 @@ jobs:
           - engine: firefox
             shard: 3/3
           - engine: webkit
+            shard: 1/3
+          - engine: webkit
+            shard: 2/3
+          - engine: webkit
+            shard: 3/3
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -90,9 +136,15 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps ${{ matrix.engine }}
-      - run: pnpm test:${{ matrix.engine }} ${{ matrix.shard && format('--shard={0}', matrix.shard) }}
+      - uses: ./.github/actions/vitest
+        with:
+          command: ${{ needs.select.outputs.vitest-command }}
+          project: ${{ matrix.engine }}
+          shard: ${{ matrix.shard }}
 
   test-vue-floor:
+    needs: select
+    if: ${{ !cancelled() && needs.select.result != 'failure' && needs.select.outputs.tests != 'none' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -109,10 +161,41 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @vase-ui/vue add --save-dev --save-exact vue@3.5.12
       - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps chromium
-      - run: pnpm test:node
-      - run: pnpm test:chromium
+      - uses: ./.github/actions/vitest
+        with:
+          command: ${{ needs.select.outputs.vitest-command }}
+          project: node
+      - uses: ./.github/actions/vitest
+        with:
+          command: ${{ needs.select.outputs.vitest-command }}
+          project: chromium
 
   test-nuxt:
+    needs: select
+    if: ${{ !cancelled() && needs.select.result != 'failure' && needs.select.outputs.fixtures != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps chromium firefox webkit
+      - run: pnpm build
+      - run: pnpm --filter @vase-ui/nuxt-fixture typecheck
+      - run: pnpm test:nuxt
+      - run: pnpm test:vite
+
+  # This job builds the package and the site again, beside `check`, so that `check` does not take
+  # longer. Then it runs axe-core on each page of the built site.
+  docs-axe:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -129,14 +212,16 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps chromium
       - run: pnpm build
-      - run: pnpm --filter @vase-ui/nuxt-fixture typecheck
-      - run: pnpm test:nuxt
+      - run: pnpm docs:build
+      - run: pnpm docs:axe
 
   # A prerelease of a dependency must not block a merge, so `required` does not need this job.
   # The version is the dist-tag `rc` of `vue` on npm.
   test-vue-rc:
+    needs: select
+    if: ${{ !cancelled() && needs.select.result != 'failure' && needs.select.outputs.tests != 'none' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     continue-on-error: true
     permissions:
       contents: read
@@ -152,17 +237,42 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @vase-ui/vue add --save-dev --save-exact vue@3.6.0-rc.15
       - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps chromium
-      - run: pnpm test:node
-      - run: pnpm test:chromium
+      - uses: ./.github/actions/vitest
+        with:
+          command: ${{ needs.select.outputs.vitest-command }}
+          project: node
+      - uses: ./.github/actions/vitest
+        with:
+          command: ${{ needs.select.outputs.vitest-command }}
+          project: chromium
+      # The project `vapor` mounts each test in a Vapor app. It also runs when a step above
+      # fails, so that the job shows its result too.
+      - if: ${{ !cancelled() }}
+        uses: ./.github/actions/vitest
+        with:
+          command: ${{ needs.select.outputs.vitest-command }}
+          project: vapor
 
   required:
     # Do not use `always()`. It starts this job in a cancelled run. The job waits for a runner
     # and holds the concurrency group, so the run of the new commit starts no job.
     if: ${{ !cancelled() }}
-    needs: [check, test-node, test-browser, test-vue-floor, test-nuxt]
+    needs: [select, check, docs-axe, test-node, test-browser, test-vue-floor, test-nuxt]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions: {}
     steps:
-      - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped')
+      # A job is skipped for one reason only. `select` skips itself in the merge queue. On a pull
+      # request, `select` skips a test job that has nothing to run. Each of the last five conditions
+      # fails when a job is skipped without that reason, and when the reason holds and the job ran.
+      - if: >-
+          contains(needs.*.result, 'failure')
+          || contains(needs.*.result, 'cancelled')
+          || needs.check.result == 'skipped'
+          || needs.docs-axe.result == 'skipped'
+          || (needs.select.result == 'skipped') != (github.event_name != 'pull_request')
+          || (needs.test-node.result == 'skipped') != (needs.select.outputs.tests == 'none')
+          || (needs.test-browser.result == 'skipped') != (needs.select.outputs.tests == 'none')
+          || (needs.test-vue-floor.result == 'skipped') != (needs.select.outputs.tests == 'none')
+          || (needs.test-nuxt.result == 'skipped') != (needs.select.outputs.fixtures == 'false')
         run: exit 1

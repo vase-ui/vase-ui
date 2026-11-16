@@ -62,6 +62,7 @@ function createComboboxStore(initialState: Partial<State> = {}) {
       isItemEqualToValue: defaultItemEquality,
     },
     listElement: null,
+    listElementId: undefined,
     popupElementId: undefined,
     triggerElement: null,
     inputElement: null,
@@ -94,6 +95,7 @@ function createComboboxStore(initialState: Partial<State> = {}) {
     clearRef: shallowRef(null),
     pointerDownItemRef: shallowRef(null),
     selectionEventRef: shallowRef(null),
+    openPressRef: shallowRef(null),
     ...createLabelIdRegistry(),
   };
   return new ComboboxStore(state, context, selectors);
@@ -333,9 +335,7 @@ describe('combobox store synchronization', () => {
       });
 
       await user.keyboard('{Escape}');
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(store.select('anchorElement')).toBe(input);
 
       // Positioning clears the anchor while a closed popup stays mounted; reopening restores it.

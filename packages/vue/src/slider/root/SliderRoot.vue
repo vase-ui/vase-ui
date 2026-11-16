@@ -56,7 +56,7 @@ export interface SliderRootProps<
 >
   extends
     VaseUIComponentProps<SliderRootState>,
-    /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes>, 'id'> {
+    /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes, 'aria-labelledby'>, 'id'> {
   /**
    * The uncontrolled value of the slider when it's initially rendered.
    *
@@ -184,15 +184,15 @@ export type SliderRootCommitEventDetails = VaseUIGenericEventDetails<SliderRootC
 <script setup lang="ts" generic="Value extends number | readonly number[] = number">
 // vue-tsc resolves `Value` before it checks a listener of a template.
 // With no `value` and no `defaultValue`, the value is `min`, so the default is `number`.
-import { computed, provide, shallowRef, watch } from 'vue';
-import { addEventListener } from '../../common/addEventListener';
+import { computed, nextTick, provide, shallowRef, watch } from 'vue';
 import { areArraysEqual } from '../../common/areArraysEqual';
 import { clamp } from '../../common/clamp';
-import { useIsHydrating } from '../../common/hydration';
-import { ownerDocument, ownerWindow } from '../../common/owner';
+import { useAriaAfterHydration, useIsHydrating } from '../../common/hydration';
+import { ownerDocument } from '../../common/owner';
 import { activeElement, contains } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
 import { warn } from '../../common/warn';
+import { givenName } from '../../internals/blankName';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import type { CompositeMetadata } from '../../internals/composite/list/useCompositeList';
 import {
@@ -205,14 +205,13 @@ import { useFormContext } from '../../internals/form-context';
 import { createLabelIdRegistry, useControlLabelId } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
-import { useFormReset } from '../../internals/useFormReset';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { asc } from '../utils/asc';
 import { getSliderValue } from '../utils/getSliderValue';
 import { validateMinimumDistance } from '../utils/validateMinimumDistance';
 import { SliderRootContext } from './SliderRootContext';
-import type { ThumbMetadata } from './SliderRootContext';
+import type { ThumbInput, ThumbMetadata } from './SliderRootContext';
 import { sliderStateAttributesMapping } from './stateAttributesMapping';
 
 defineOptions({ inheritAttrs: false });
@@ -308,7 +307,9 @@ const fieldLabelId = useControlLabelId();
 const { labelId: localLabelId, registerLabelId } = createLabelIdRegistry();
 const isHydrating = useIsHydrating();
 
-const labelId = computed(() => props.ariaLabelledby ?? fieldLabelId.value ?? localLabelId.value);
+const labelId = computed(
+  () => givenName(props.ariaLabelledby) ?? fieldLabelId.value ?? localLabelId.value,
+);
 
 const isDisabled = computed(() => fieldDisabled.value || props.disabled);
 const inputName = computed(() => fieldName.value ?? props.name);
@@ -359,11 +360,12 @@ function setIndicatorPosition(edge: 0 | 1, position: number | undefined) {
 
 const thumbMap = shallowRef<ReadonlyMap<Element, CompositeMetadata<ThumbMetadata>>>(new Map());
 
-useCompositeList<ThumbMetadata>({
+const thumbList = useCompositeList<ThumbMetadata>({
   elementsRef: thumbRefs,
   onMapChange(map) {
     thumbMap.value = map;
   },
+  provide: false,
 });
 
 const range = computed(() => Array.isArray(valueUnwrapped.value));
@@ -378,6 +380,7 @@ const values = computed<readonly number[]>(() => {
 
 const fieldValue = computed(() => (range.value ? values.value : values.value[0]));
 
+// The form focuses `validation.inputRef`.
 useRegisterFieldControl(
   validation.inputRef,
   rootId,
@@ -456,15 +459,39 @@ function onValueCommitted(
   emit('valueCommitted', newValue as Value extends number ? number : Value, data);
 }
 
+const thumbInputs = new Set<ThumbInput>();
+
+function registerThumbInput(thumbInput: ThumbInput) {
+  thumbInputs.add(thumbInput);
+  return () => {
+    thumbInputs.delete(thumbInput);
+  };
+}
+
+// A form restore can change the inputs of several thumbs. The change of one thumb stops at the old
+// value of its neighbour. It also renders the other thumbs, and Vue then writes their state over
+// their restored inputs. The slider thus takes each changed input in one change.
+function takeChangedInputs(valueInput: number, index: number) {
+  const nextValues = values.value.slice();
+  nextValues[index] = clamp(valueInput, props.min, props.max);
+  const taken: ThumbInput[] = [];
+  for (const thumbInput of thumbInputs) {
+    const input = thumbInput.take();
+    // The thumb of the event also gives its input during its own take of the hydration. A change
+    // of that thumb alone still stops at its neighbours.
+    if (input !== undefined && input.index !== index) {
+      nextValues[input.index] = input.value;
+      taken.push(thumbInput);
+    }
+  }
+  return taken.length > 0 ? { values: nextValues.sort(asc), taken } : undefined;
+}
+
 function handleInputChange(valueInput: number, index: number, event: KeyboardEvent | Event) {
-  const newValue = getSliderValue(
-    valueInput,
-    index,
-    props.min,
-    props.max,
-    range.value,
-    values.value,
-  );
+  const changedInputs = takeChangedInputs(valueInput, index);
+  const newValue =
+    changedInputs?.values ??
+    getSliderValue(valueInput, index, props.min, props.max, range.value, values.value);
 
   if (validateMinimumDistance(newValue, props.step, props.minStepsBetweenValues)) {
     const reason = 'key' in event ? REASONS.keyboard : REASONS.inputChange;
@@ -482,6 +509,15 @@ function handleInputChange(valueInput: number, index: number, event: KeyboardEve
         createGenericEventDetails(reason, event as KeyboardEvent) as SliderRootCommitEventDetails,
       );
     }
+  }
+
+  if (changedInputs) {
+    // A listener can cancel the change, and a parent that controls the slider can keep its value.
+    void nextTick(() => {
+      changedInputs.taken.forEach((thumbInput) => {
+        thumbInput.writeValue();
+      });
+    });
   }
 }
 
@@ -524,26 +560,6 @@ watch(
   { flush: 'post' },
 );
 
-function getThumbInputs() {
-  const inputs: (HTMLInputElement | null)[] = [];
-  thumbRefs.value.forEach((thumb, index) => {
-    inputs[index] = thumb?.querySelector<HTMLInputElement>('input[type="range"]') ?? null;
-  });
-  return inputs;
-}
-
-// Vue writes `value` to an input only when the value changes between two renders. Chromium restores
-// the form state of a page after `load`, with no event on the input. A form would then submit a
-// value that the slider does not show.
-function writeValuesToInputs() {
-  getThumbInputs().forEach((input, index) => {
-    const value = values.value[index];
-    if (input && value !== undefined && input.valueAsNumber !== value) {
-      input.value = String(value);
-    }
-  });
-}
-
 function resetToDefaultValue(event: Event) {
   const defaultValue = (props.defaultValue ?? props.min) as number | readonly number[];
   if (props.value !== undefined || areValuesEqual(defaultValue, valueUnwrapped.value)) {
@@ -564,10 +580,14 @@ function resetToDefaultValue(event: Event) {
   return applied;
 }
 
-// Each thumb input has the same form. The reset thus follows only the first one.
-const firstThumbInput = computed(() => getThumbInputs().find((input) => input != null) ?? null);
+let handledReset: Event | undefined;
 
-useFormReset(firstThumbInput, (event) => {
+function reset(event: Event) {
+  if (event === handledReset) {
+    return;
+  }
+  handledReset = event;
+
   const previousValue = fieldValue.value;
 
   // `useValueChanged` sees no change when the slider clamps the default value to the current
@@ -577,7 +597,7 @@ useFormReset(firstThumbInput, (event) => {
   } else {
     clearFieldError(fieldValue.value);
   }
-});
+}
 
 const state = computed<SliderRootState>(() => ({
   ...fieldState.value,
@@ -600,6 +620,7 @@ provide(SliderRootContext, {
   validation,
   format: computed(() => props.format),
   handleInputChange,
+  registerThumbInput,
   indicatorPosition,
   setIndicatorPosition,
   inset: computed(() => props.thumbAlignment !== 'center'),
@@ -607,7 +628,9 @@ provide(SliderRootContext, {
   labelId,
   rootLabelId,
   registerLabelId,
+  reset,
   thumbMap,
+  thumbList,
   largeStep: computed(() => props.largeStep),
   lastUsedThumbIndex,
   lastChangeReasonRef,
@@ -635,40 +658,31 @@ provide(SliderRootContext, {
   values,
 });
 
+// The attributes of the consumer have no blank `aria-label` (VUE-106).
 function hasAriaLabel(attrs: Record<string, unknown>) {
-  const ariaLabel = attrs['aria-label'];
-  return typeof ariaLabel === 'string' && ariaLabel.trim() !== '';
+  return typeof attrs['aria-label'] === 'string';
 }
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('div', props, {
   state,
   props: (attrs) => [
     {
       // A server writes the attributes of the root before the `setup` of `Slider.Label`, so the
       // root assumes that label until it is mounted.
-      'aria-labelledby':
+      'aria-labelledby': ariaAfterHydration(
         labelId.value ??
-        (isHydrating.value && !hasAriaLabel(attrs) ? rootLabelId.value : undefined),
+          (isHydrating.value && !hasAriaLabel(attrs) ? rootLabelId.value : undefined),
+      ),
       id: rootId.value,
       role: 'group',
     },
     attrs,
     (merged) => validation.getValidationProps(isDisabled.value, merged),
+    (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),
   ],
   stateAttributesMapping: sliderStateAttributesMapping,
 });
-
-watch(
-  element,
-  (root, _previous, onCleanup) => {
-    if (!root) {
-      return;
-    }
-
-    onCleanup(addEventListener(ownerWindow(root), 'pageshow', writeValuesToInputs));
-  },
-  { flush: 'post' },
-);
 
 defineExpose({ element });
 </script>

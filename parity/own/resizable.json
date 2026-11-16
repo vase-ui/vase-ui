@@ -1,0 +1,22 @@
+{
+  "standard": [
+    "https://www.w3.org/WAI/ARIA/apg/patterns/windowsplitter/",
+    "https://www.w3.org/TR/wai-aria-1.2/#separator",
+    "https://www.w3.org/TR/WCAG22/#target-size-minimum"
+  ],
+  "reason": "Base UI has no resizable panels. A person drags a handle, or presses a key on it, to give the panels beside it new sizes, as the window splitter pattern describes.",
+  "parts": ["Root", "Panel", "Handle"],
+  "functions": ["useParentPanel", "useParentRoot", "useLayoutStorage"],
+  "types": [
+    "Resizable.Root.ResizeMode",
+    "Resizable.Root.ChangeEventReason",
+    "Resizable.Root.CommitEventReason",
+    "Resizable.Root.Actions",
+    "Resizable.Panel.Size",
+    "Resizable.Panel.Actions",
+    "ResizableParentPanel",
+    "ResizableParentRoot",
+    "ResizableLayoutStorageOptions",
+    "ResizableLayoutStorageReturnValue"
+  ]
+}

@@ -17,7 +17,7 @@ export interface ToolbarInputState extends ToolbarRootState {
 // The type of `autocomplete` in `InputHTMLAttributes` is a union that is too large for vue-tsc.
 // With it, `defineProps` gives the error TS2590.
 interface ToolbarInputAutocomplete {
-  autocomplete?: string | undefined;
+  autocomplete?: string | null | undefined;
 }
 
 export interface ToolbarInputProps
@@ -40,9 +40,11 @@ export interface ToolbarInputProps
 </script>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onBeforeUpdate, onMounted, onUpdated, useAttrs } from 'vue';
+import { useValueBeforeHydration } from '../../common/hydration';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useFormRestoreAsInput } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFocusableWhenDisabled } from '../../utils/useFocusableWhenDisabled';
 import { useToolbarGroupContext } from '../group/ToolbarGroupContext';
@@ -110,17 +112,54 @@ const { compositeProps, compositeRef } = useCompositeItem({
   disabled: () => itemDisabled.value && !props.focusableWhenDisabled,
 });
 
+const writesValue = useValueBeforeHydration(props, () => element.value);
+
+// The value that the input has after the last event and the last write of Vue. A form state that
+// the browser restores changes the value with neither.
+let handledValue: string | undefined;
+
+function syncHandledValue() {
+  handledValue = (element.value as HTMLInputElement | null)?.value;
+}
+
+const attrs = useAttrs();
+onMounted(syncHandledValue);
+// Vue writes the value at a render only when the input has the key `value`. Else the part reads
+// the input only when it held the handled value, so a restored value stays for the take. These
+// hooks come before the call of `useFormRestoreAsInput`, so the part reads the value of the render
+// before the composable writes a restored value back.
+let holdsHandledValue = false;
+onBeforeUpdate(() => {
+  holdsHandledValue = (element.value as HTMLInputElement | null)?.value === handledValue;
+});
+onUpdated(() => {
+  if (holdsHandledValue || (writesValue.value && attrs.value !== undefined)) {
+    syncHandledValue();
+  }
+});
+
 const { element, elementProps } = useRenderElement('input', props, {
   state,
   ref: [compositeRef],
-  props: (attrs) => [
-    compositeProps.value,
-    { onClick: preventWhenDisabled, onPointerdown: preventWhenDisabled },
-    defaultValueProps(),
-    attrs,
-    focusableWhenDisabledProps.value,
-  ],
+  props: (attrs) => {
+    // The part declares no `value` prop, so the `value` of the consumer is in `attrs`.
+    const { value, ...attrsWithoutValue } = attrs;
+    return [
+      compositeProps.value,
+      {
+        onClick: preventWhenDisabled,
+        onPointerdown: preventWhenDisabled,
+        onInput: syncHandledValue,
+        onChange: syncHandledValue,
+      },
+      defaultValueProps(),
+      writesValue.value ? attrs : attrsWithoutValue,
+      focusableWhenDisabledProps.value,
+    ];
+  },
 });
+
+useFormRestoreAsInput(element, () => handledValue, true);
 
 defineExpose({ element });
 </script>

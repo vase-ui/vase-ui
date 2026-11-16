@@ -53,6 +53,7 @@ export type CheckboxGroupChangeEventDetails =
 import { computed, provide, watch } from 'vue';
 import { areArraysEqual } from '../common/areArraysEqual';
 import { EMPTY_ARRAY } from '../common/empty';
+import { useAriaAfterHydration } from '../common/hydration';
 import { useControlled } from '../common/useControlled';
 import { isEligibleInput } from '../field/root/useFieldValidation';
 import { fieldValidityMapping } from '../internals/field-constants/constants';
@@ -66,8 +67,7 @@ import {
   useLabelableId,
 } from '../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../internals/types';
-import { useVaseUiId } from '../internals/useBaseUiId';
-import { isInTreeOf } from '../internals/useKeepAliveState';
+import { givenId, useVaseUiId } from '../internals/useBaseUiId';
 import { useRenderElement } from '../internals/useRenderElement';
 import { useValueChanged } from '../internals/useValueChanged';
 import { CheckboxGroupContext } from './CheckboxGroupContext';
@@ -247,16 +247,17 @@ provide(CheckboxGroupContext, {
   validation,
   registerControlId,
   reset,
-  reaches: (target) => isInTreeOf(element.value, target),
 });
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('div', props, {
   state,
   stateAttributesMapping: fieldValidityMapping,
   props: (attrs) => [
-    { id: props.id, role: 'group', 'aria-labelledby': labelId.value },
+    { id: givenId(props.id), role: 'group', 'aria-labelledby': ariaAfterHydration(labelId.value) },
     attrs,
     getDescriptionProps,
+    (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),
   ],
 });
 

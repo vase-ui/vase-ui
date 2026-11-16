@@ -120,6 +120,7 @@ import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useUnmountAfterClose } from '../../internals/useUnmountAfterClose';
 import type { FloatingRootStore } from '../../utils/popups/floating-root/FloatingRootStore';
+import { useElementId } from '../../utils/popups/useElementId';
 import {
   provideFloatingNode,
   provideFloatingTree,
@@ -187,11 +188,15 @@ const rootRef = shallowRef<HTMLElement | null>(null);
 
 const positionerElement = shallowRef<HTMLElement | null>(null);
 const popupElement = shallowRef<HTMLElement | null>(null);
+const backdropElement = shallowRef<HTMLElement | null>(null);
 const viewportElement = shallowRef<HTMLElement | null>(null);
 const viewportTargetElement = shallowRef<HTMLElement | null>(null);
 const activationDirection = shallowRef<NavigationMenuActivationDirection>(null);
 const floatingRootStore = shallowRef<FloatingRootStore | undefined>(undefined);
 const viewportInert = shallowRef(false);
+
+const popupElementId = useElementId(popupElement);
+const viewportElementId = useElementId(viewportElement);
 
 const prevTriggerElementRef = shallowRef<Element | null | undefined>(null);
 const currentContentRef = shallowRef<HTMLElement | null>(null);
@@ -205,6 +210,9 @@ const popupAutoSizeResetRef: NavigationMenuPopupAutoSizeResetState = {
 };
 
 const preventUnmountOnClose = shallowRef(false);
+// With no popup part, the positioner is the part that shows, and with no positioner, the backdrop.
+const transitionElement = () =>
+  popupElement.value ?? positionerElement.value ?? backdropElement.value;
 const {
   mounted,
   transitionStatus,
@@ -212,7 +220,7 @@ const {
   forceUnmount: unmount,
 } = useUnmountAfterClose({
   open,
-  ref: popupElement,
+  ref: transitionElement,
   preventUnmountOnClose,
   setPreventUnmountOnClose(next) {
     preventUnmountOnClose.value = next;
@@ -220,15 +228,18 @@ const {
   onUnmount() {
     const doc = ownerDocument(rootRef.value);
     const activeEl = activeElement(doc);
-    const popup = popupElement.value;
+    // A root with an inline viewport has no popup, positioner or backdrop part. Its content is in
+    // the viewport.
+    const element = transitionElement() ?? viewportElement.value;
 
     const isReturnFocusBlocked = closeReason ? blockedReturnFocusReasons.has(closeReason) : false;
 
+    // A `v-if` of the consumer can remove the portal part while the focus is in it. The element is
+    // then gone, and the focus is on the body.
     if (
       !isReturnFocusBlocked &&
       isHTMLElement(prevTriggerElementRef.value) &&
-      (activeEl === ownerDocument(popup).body || contains(popup, activeEl)) &&
-      popup
+      (activeEl === doc.body || contains(element, activeEl))
     ) {
       prevTriggerElementRef.value.focus({ preventScroll: true });
       prevTriggerElementRef.value = undefined;
@@ -346,7 +357,10 @@ provide(NavigationMenuRootContext, {
   transitionStatus,
   positionerElement,
   popupElement,
+  popupElementId,
+  backdropElement,
   viewportElement,
+  viewportElementId,
   viewportTargetElement,
   activationDirection: computed(() => (open.value ? activationDirection.value : null)),
   setActivationDirection(direction) {

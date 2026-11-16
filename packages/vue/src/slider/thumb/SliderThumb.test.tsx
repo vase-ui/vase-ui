@@ -1,6 +1,5 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import {
-  createSSRApp,
   defineComponent,
   h,
   KeepAlive,
@@ -10,29 +9,48 @@ import {
   shallowRef,
   useAttrs,
 } from 'vue';
+import type { VNode } from 'vue';
 import { Field } from '@vase-ui/vue/field';
+import { Form } from '@vase-ui/vue/form';
 import { Slider } from '@vase-ui/vue/slider';
 import type { VaseUIEvent } from '@vase-ui/vue/types';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   expectNoAxeViolations,
   fireEvent,
   flushMicrotasks,
   hydrate,
+  hydrateAfter,
   isJSDOM,
+  mockPageBeforeLoad,
   mockRuntimeLocale,
+  recordInputEvents,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
-  takeReportedMessages,
   waitFor,
   within,
 } from '#test-utils';
 import { platform } from '../../common/platform';
 import { createTouches, getHorizontalSliderRect } from '../utils/test-utils';
+import FormRestoreRender from '../../../test/FormRestoreRender.test.vue';
+import SliderRootHydration from '../root/SliderRootHydration.test.vue';
 import SliderThumbHydration from './SliderThumbHydration.test.vue';
 
 const isWebKit = platform.engine.webkit;
+
+const FIXTURE = 'src/slider/thumb/SliderThumbHydration.test.vue';
+
+// HTML moves the value of a range input to its step at a change of `step`. WebKit keeps the value.
+const stepMovesRangeValue = (() => {
+  const input = document.createElement('input');
+  input.type = 'range';
+  input.value = '33';
+  input.step = '10';
+  return input.value === '30';
+})();
 
 // Gives its root a new function ref in each render. It exposes its element.
 const UnstableRefThumb = defineComponent(
@@ -134,6 +152,26 @@ describe('<Slider.Thumb />', () => {
         </Slider.Root>,
       );
       expect(screen.getByRole('slider')).toHaveAttribute('aria-valuetext', '50 percent');
+    });
+
+    it.each([
+      { name: 'an empty value', label: '' },
+      { name: 'white space', label: '\n\t ' },
+    ])('VUE-106: keeps the name of the label for a getAriaLabel of $name', async ({ label }) => {
+      await render(
+        <Slider.Root defaultValue={50}>
+          <Slider.Label>Volume</Slider.Label>
+          <Slider.Control>
+            <Slider.Thumb getAriaLabel={() => label} />
+          </Slider.Control>
+        </Slider.Root>,
+      );
+
+      const slider = screen.getByRole('slider');
+      expect(slider).not.toHaveAttribute('aria-label');
+      await waitFor(() => {
+        expect(slider).toHaveAccessibleName('Volume');
+      });
     });
 
     it('formats aria-valuetext with en-US until hydrated, then with the runtime locale', async () => {
@@ -1798,6 +1836,25 @@ describe('<Slider.Thumb />', () => {
       expect(onValueChange).toHaveBeenCalledTimes(2);
       expect(slider).toHaveAttribute('aria-valuenow', '55');
     });
+
+    it('handles no change event for the value that the input has after a write', async () => {
+      const onValueChange = vi.fn();
+      await render(
+        <Slider.Root defaultValue={33} step={10} onValueChange={onValueChange}>
+          <Slider.Control>
+            <Slider.Thumb />
+          </Slider.Control>
+        </Slider.Root>,
+      );
+      const slider = screen.getByRole<HTMLInputElement>('slider');
+      expect(slider.value).toBe('30');
+
+      slider.dispatchEvent(new Event('change', { bubbles: true }));
+      await flushMicrotasks();
+
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(slider).toHaveAttribute('aria-valuenow', '33');
+    });
   });
 
   describe('prop: onKeydown', () => {
@@ -1905,10 +1962,90 @@ describe('<Slider.Thumb />', () => {
         expect(thumb.style.getPropertyValue('--position')).toBe('59%');
       });
     });
+
+    async function submitWithHeldSlider(name: string, shownControl: () => VNode) {
+      const handleSubmit = vi.fn();
+      const { HeldBranch, mountWhileHeld } = createHeldBranch(
+        () => (
+          <Slider.Root key="held" defaultValue={5}>
+            <Slider.Control>
+              <Slider.Thumb />
+            </Slider.Control>
+          </Slider.Root>
+        ),
+        { mounted: name === 'deactivated' },
+      );
+      const { user } = await render(() => (
+        <Form onFormSubmit={handleSubmit}>
+          <Field.Root name="volume" data-testid="field">
+            {shownControl()}
+            <HeldBranch />
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>
+      ));
+
+      await mountWhileHeld();
+      await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+      return handleSubmit;
+    }
+
+    it.each([{ name: 'held mount' }, { name: 'deactivated' }])(
+      'a held slider keeps the input of a shown required control: $name',
+      async ({ name }) => {
+        const handleSubmit = await submitWithHeldSlider(name, () => <Field.Control required />);
+
+        expect(handleSubmit).not.toHaveBeenCalled();
+        expect(screen.getByTestId('field')).toHaveAttribute('data-invalid', '');
+      },
+    );
+
+    it('a slider that mounts while KeepAlive holds it gives no value to its form', async () => {
+      const handleSubmit = await submitWithHeldSlider('held mount', () => (
+        <Field.Control defaultValue="shown" />
+      ));
+
+      expect(handleSubmit.mock.lastCall?.[0]).toEqual({ volume: 'shown' });
+    });
   });
 
   describe('hydration', () => {
-    const FIXTURE = 'src/slider/thumb/SliderThumbHydration.test.vue';
+    removedPartHydrationTests({
+      file: 'src/slider/root/SliderRootHydration.test.vue',
+      component: SliderRootHydration,
+      cases: [
+        {
+          name: 'a removed field label',
+          props: { id: 'volume', defaultValue: 30, field: true, laterRemovedAtMount: true },
+          selector: 'input[type="range"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description',
+          props: { id: 'volume', defaultValue: 30, field: true, laterRemovedAtMount: true },
+          selector: 'input[type="range"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed slider label',
+          props: {
+            id: 'volume',
+            defaultValue: 30,
+            sliderLabel: 'after',
+            laterRemovedAtMount: true,
+          },
+          selector: 'input[type="range"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'volume-label',
+          clientValue: null,
+        },
+      ],
+    });
 
     it.each([
       { name: 'a single thumb', props: { defaultValue: 30 } },
@@ -1956,31 +2093,437 @@ describe('<Slider.Thumb />', () => {
         ).toEqual(positions.map((position) => ['', position]));
       },
     );
+  });
 
-    it('writes the state over a value that the browser restored, when it hydrates', async () => {
-      // A browser can restore the form state of a page before the app starts.
-      const props = { defaultValue: [25, 75] };
+  describe('VUE-81: the state that the input got before the hydration', () => {
+    async function hydrateWritten(props: Record<string, unknown>, written: string[]) {
       const serverHtml = await renderOnServer(FIXTURE, props);
-      const container = document.createElement('div');
-      document.body.append(container);
-      container.append(document.createRange().createContextualFragment(serverHtml));
-      const inputs = [...container.querySelectorAll<HTMLInputElement>('input[type="range"]')];
-      inputs[0].value = '55';
-      const app = createSSRApp(SliderThumbHydration, props);
-      onTestFinished(() => {
-        app.unmount();
-        container.remove();
+      let serverInputs: HTMLInputElement[] = [];
+      let events: string[] = [];
+      const { container } = await hydrateAfter(SliderThumbHydration, {
+        serverHtml,
+        props,
+        before(serverContainer) {
+          events = recordInputEvents(serverContainer);
+          serverInputs = [...serverContainer.querySelectorAll<HTMLInputElement>('input')];
+          written.forEach((value, index) => {
+            if (value !== '') {
+              serverInputs[index]!.value = value;
+            }
+          });
+        },
       });
+      await flushMicrotasks();
+      // Vue hydrated the nodes of the server HTML. It did not make new nodes.
+      expect([...container.querySelectorAll('input')]).toEqual(serverInputs);
+      return { fixture: within(container), inputs: serverInputs, events };
+    }
 
-      app.mount(container);
+    it('takes the value that the browser restored into one thumb', async () => {
+      const { fixture, inputs, events } = await hydrateWritten({ defaultValue: [25, 75] }, [
+        '55',
+        '',
+      ]);
+
+      expect(inputs.map((input) => input.value)).toEqual(['55', '75']);
+      expect(fixture.getByTestId('changes').textContent).toBe('55,75 (input-change)');
+      expect(events).toEqual(['input']);
+    });
+
+    it.each([
+      {
+        name: 'a controlled range',
+        props: { defaultValue: [25, 75], controlled: true },
+        written: ['35', '65'],
+        result: '35,65',
+      },
+      {
+        name: 'a controlled range past its end',
+        props: { defaultValue: [20, 80], controlled: true },
+        written: ['85', '95'],
+        result: '85,95',
+      },
+      {
+        name: 'a range with a minimum distance',
+        props: { defaultValue: [20, 80], minStepsBetweenValues: 10 },
+        written: ['75', '95'],
+        result: '75,95',
+      },
+    ])('takes each changed thumb of $name in one change', async ({ props, written, result }) => {
+      const { fixture, inputs, events } = await hydrateWritten(props, written);
+
+      expect(fixture.getByTestId('model').textContent).toBe(
+        props.controlled ? result : String(props.defaultValue),
+      );
+      expect(fixture.getByTestId('changes').textContent).toBe(`${result} (input-change)`);
+      expect(inputs.map((input) => input.value)).toEqual(result.split(','));
+      expect(events).toEqual(['input', 'input']);
+    });
+
+    it('stops one thumb that the browser restored past its neighbour at the neighbour', async () => {
+      const { fixture, inputs, events } = await hydrateWritten({ defaultValue: [25, 75] }, [
+        '90',
+        '',
+      ]);
+
+      expect(fixture.getByTestId('changes').textContent).toBe('75,75 (input-change)');
+      expect(inputs.map((input) => input.value)).toEqual(['75', '75']);
+      expect(events).toEqual(['input']);
+    });
+  });
+
+  describe('VUE-81: the form state that the browser restores', () => {
+    function readThumbs(container: HTMLElement) {
+      return [...container.querySelectorAll<HTMLInputElement>('input[type="range"]')].map(
+        (input) => [input.value, input.getAttribute('aria-valuenow')],
+      );
+    }
+
+    function writeInputs(container: HTMLElement, written: string[]) {
+      const inputs = [...container.querySelectorAll<HTMLInputElement>('input[type="range"]')];
+      written.forEach((value, index) => {
+        inputs[index]!.value = value;
+      });
+      return inputs;
+    }
+
+    it('takes the input at a `pageshow` event', async () => {
+      const { container } = await render(<SliderThumbHydration defaultValue={30} controlled />);
+      const fixture = within(container);
+      const events = recordInputEvents(container);
+      const input = container.querySelector<HTMLInputElement>('input[type="range"]')!;
+      input.value = '45';
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
       await flushMicrotasks();
 
-      expect(inputs.map((input) => input.value)).toEqual(['25', '75']);
-      // Vue hydrated the nodes of the server HTML. It did not make new nodes.
-      container.querySelectorAll('input[type="range"]').forEach((input, index) => {
-        expect(input).toBe(inputs[index]);
+      expect(fixture.getByTestId('model').textContent).toBe('45');
+      expect(fixture.getByTestId('changes').textContent).toBe('45 (input-change)');
+      expect(input.value).toBe('45');
+      expect(events).toEqual(['input']);
+    });
+
+    it.each([
+      { name: 'one thumb', props: { defaultValue: 33 }, thumbs: [['30', '33']] },
+      {
+        name: 'a range',
+        props: { defaultValue: [25, 75] },
+        thumbs: [
+          ['30', '25'],
+          ['80', '75'],
+        ],
+      },
+      {
+        name: 'a controlled thumb',
+        props: { defaultValue: 33, controlled: true },
+        thumbs: [['30', '33']],
+      },
+    ])('keeps a value off the step at a `pageshow` event for $name', async ({ props, thumbs }) => {
+      const { container } = await render(<SliderThumbHydration {...props} step={10} />);
+      const events = recordInputEvents(container);
+      expect(readThumbs(container)).toEqual(thumbs);
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(readThumbs(container)).toEqual(thumbs);
+      expect(within(container).getByTestId('changes').textContent).toBe('');
+      expect(events).toEqual([]);
+    });
+
+    it('keeps a value off the step at a `pageshow` event after the hydration', async () => {
+      const props = { defaultValue: 33, step: 10 };
+      const serverHtml = await renderOnServer(FIXTURE, props);
+      const { container } = await hydrate(SliderThumbHydration, { serverHtml, props });
+      const events = recordInputEvents(container);
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(readThumbs(container)).toEqual([['30', '33']]);
+      expect(within(container).getByTestId('changes').textContent).toBe('');
+      expect(events).toEqual([]);
+    });
+
+    async function expectNoTakeAfterChange(
+      props: { defaultValue: number; step: number },
+      change: { min?: number; max?: number; step?: number },
+      thumb: string[],
+    ) {
+      const fixtureProps = shallowRef<typeof props & typeof change>(props);
+      const { container } = await render(() => <SliderThumbHydration {...fixtureProps.value} />);
+      fixtureProps.value = { ...props, ...change };
+      await flushMicrotasks();
+      const events = recordInputEvents(container);
+      expect(readThumbs(container)).toEqual([thumb]);
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(readThumbs(container)).toEqual([thumb]);
+      expect(within(container).getByTestId('changes').textContent).toBe('');
+      expect(events).toEqual([]);
+    }
+
+    it.each([
+      {
+        name: 'min',
+        props: { defaultValue: 30, step: 10 },
+        change: { min: 5 },
+        thumb: ['35', '30'],
+      },
+      {
+        name: 'max',
+        props: { defaultValue: 95, step: 10 },
+        change: { max: 95 },
+        thumb: ['90', '95'],
+      },
+    ])(
+      'keeps the value at a `pageshow` event after a change of $name',
+      async ({ props, change, thumb }) => {
+        await expectNoTakeAfterChange(props, change, thumb);
+      },
+    );
+
+    it.runIf(stepMovesRangeValue)(
+      'keeps the value at a `pageshow` event after a change of the step',
+      async () => {
+        await expectNoTakeAfterChange({ defaultValue: 33, step: 1 }, { step: 10 }, ['30', '33']);
+      },
+    );
+
+    it.runIf(!stepMovesRangeValue)(
+      'keeps the value at a `pageshow` event after a change of the step that the input keeps',
+      async () => {
+        await expectNoTakeAfterChange({ defaultValue: 33, step: 1 }, { step: 10 }, ['33', '33']);
+      },
+    );
+
+    it('keeps a value off the step that a key gives at a `pageshow` event', async () => {
+      const { container } = await render(
+        <SliderThumbHydration defaultValue={30} max={95} step={10} />,
+      );
+      const slider = screen.getByRole<HTMLInputElement>('slider');
+      slider.focus();
+      await fireEvent.keyDown(slider, { key: 'End' });
+      await flushMicrotasks();
+      const events = recordInputEvents(container);
+      expect(readThumbs(container)).toEqual([['90', '95']]);
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(readThumbs(container)).toEqual([['90', '95']]);
+      expect(within(container).getByTestId('changes').textContent).toBe('95 (keyboard)');
+      expect(events).toEqual([]);
+    });
+
+    it('sends no event at a `pageshow` event after a change that a listener cancels', async () => {
+      const onValueChange = vi.fn((_value: unknown, details: { cancel: () => void }) => {
+        details.cancel();
       });
-      expect(takeReportedMessages()).toEqual([]);
+      const { container } = await render(
+        <Slider.Root defaultValue={30} onValueChange={onValueChange}>
+          <Slider.Control>
+            <Slider.Thumb />
+          </Slider.Control>
+        </Slider.Root>,
+      );
+      const slider = screen.getByRole<HTMLInputElement>('slider');
+      slider.value = '55';
+      slider.dispatchEvent(new Event('input', { bubbles: true }));
+      await flushMicrotasks();
+      const events = recordInputEvents(container);
+      expect(slider.value).toBe('30');
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(events).toEqual([]);
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+    });
+
+    it.each([
+      {
+        name: 'a controlled range',
+        props: { defaultValue: [25, 75], controlled: true },
+        written: ['35', '65'],
+        result: '35,65',
+      },
+      {
+        name: 'a range',
+        props: { defaultValue: [25, 75] },
+        written: ['35', '65'],
+        result: '35,65',
+      },
+      {
+        name: 'a range that moves up past its end',
+        props: { defaultValue: [20, 80] },
+        written: ['85', '95'],
+        result: '85,95',
+      },
+      {
+        name: 'a controlled range that moves down',
+        props: { defaultValue: [20, 80], controlled: true },
+        written: ['5', '15'],
+        result: '5,15',
+      },
+      {
+        name: 'a range with a minimum distance',
+        props: { defaultValue: [20, 80], minStepsBetweenValues: 10 },
+        written: ['75', '95'],
+        result: '75,95',
+      },
+      {
+        name: 'a range written in the wrong order',
+        props: { defaultValue: [20, 80] },
+        written: ['95', '85'],
+        result: '85,95',
+      },
+    ])(
+      'takes each changed thumb of $name at a `pageshow` event in one change',
+      async ({ props, written, result }) => {
+        const { container } = await render(<SliderThumbHydration {...props} />);
+        const fixture = within(container);
+        const events = recordInputEvents(container);
+        writeInputs(container, written);
+
+        window.dispatchEvent(new PageTransitionEvent('pageshow'));
+        await flushMicrotasks();
+
+        expect(fixture.getByTestId('model').textContent).toBe(
+          props.controlled ? result : String(props.defaultValue),
+        );
+        expect(fixture.getByTestId('changes').textContent).toBe(`${result} (input-change)`);
+        expect(readThumbs(container)).toEqual(result.split(',').map((value) => [value, value]));
+        expect(events).toEqual(['input']);
+      },
+    );
+
+    it('keeps the second thumb when the take of the first thumb comes in its own task', async () => {
+      const { container } = await render(<SliderThumbHydration defaultValue={[25, 75]} />);
+      const inputs = writeInputs(container, ['35', '65']);
+
+      // A browser runs the microtasks after each listener of `pageshow`. The take of the first
+      // thumb thus renders the second thumb before the listener of the second thumb runs.
+      inputs[0]!.dispatchEvent(new InputEvent('input', { bubbles: true, composed: true }));
+      await flushMicrotasks();
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(within(container).getByTestId('changes').textContent).toBe('35,65 (input-change)');
+      expect(readThumbs(container)).toEqual([
+        ['35', '35'],
+        ['65', '65'],
+      ]);
+    });
+
+    it('puts each input back when a listener cancels the restore', async () => {
+      const onValueChange = vi.fn((_value: unknown, details: { cancel: () => void }) => {
+        details.cancel();
+      });
+      const { container } = await render(
+        <Slider.Root defaultValue={[25, 75]} onValueChange={onValueChange}>
+          <Slider.Control>
+            <Slider.Thumb />
+            <Slider.Thumb />
+          </Slider.Control>
+        </Slider.Root>,
+      );
+      writeInputs(container, ['35', '65']);
+      expect(readThumbs(container)).toEqual([
+        ['35', '25'],
+        ['65', '75'],
+      ]);
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(readThumbs(container)).toEqual([
+        ['25', '25'],
+        ['75', '75'],
+      ]);
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+      expect(onValueChange.mock.lastCall?.[0]).toEqual([35, 65]);
+    });
+
+    it('refuses values that a program wrote closer than the minimum distance', async () => {
+      const { container } = await render(
+        <SliderThumbHydration defaultValue={[20, 80]} minStepsBetweenValues={10} />,
+      );
+      writeInputs(container, ['50', '55']);
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(within(container).getByTestId('changes').textContent).toBe('');
+      expect(readThumbs(container)).toEqual([
+        ['20', '20'],
+        ['80', '80'],
+      ]);
+    });
+
+    it('keeps the value of a key between `min` and `max` when it also takes another thumb', async () => {
+      const onValueChange = vi.fn();
+      const { container } = await render(
+        <Slider.Root defaultValue={[0, 5]} minStepsBetweenValues={10} onValueChange={onValueChange}>
+          <Slider.Control>
+            <Slider.Thumb />
+            <Slider.Thumb />
+          </Slider.Control>
+        </Slider.Root>,
+      );
+      const [input] = container.querySelectorAll<HTMLInputElement>('input[type="range"]');
+      input!.focus();
+      await flushMicrotasks();
+      // The render of the focus writes the state of each thumb to its input.
+      writeInputs(container, ['0', '50']);
+
+      // End gives the first thumb the old value of its neighbour minus the minimum distance: -5.
+      await fireEvent.keyDown(input!, { key: 'End' });
+
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+      expect(onValueChange.mock.lastCall?.[0]).toEqual([0, 50]);
+    });
+
+    it('takes a value that the browser restores into a thumb whose value is off the step', async () => {
+      const { container } = await render(
+        <SliderThumbHydration defaultValue={33} step={10} controlled />,
+      );
+      const fixture = within(container);
+      const events = recordInputEvents(container);
+      const input = container.querySelector<HTMLInputElement>('input[type="range"]')!;
+      input.value = '70';
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(fixture.getByTestId('model').textContent).toBe('70');
+      expect(fixture.getByTestId('changes').textContent).toBe('70 (input-change)');
+      expect(input.value).toBe('70');
+      expect(events).toEqual(['input']);
+    });
+
+    it('keeps the value of a thumb through a render of its input only', async () => {
+      mockPageBeforeLoad();
+      const locale = shallowRef('en-US');
+      const { container } = await render(() => (
+        <FormRestoreRender family="slider" revision={0} locale={locale.value} />
+      ));
+      await flushMicrotasks();
+      const recorded = recordInputEvents(container);
+      const input = container.querySelector<HTMLInputElement>('input[name="volume"]')!;
+      input.value = '70';
+
+      locale.value = 'de-DE';
+      await flushMicrotasks();
+      expect(input).toHaveValue('70');
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(within(container).getByTestId('changes').textContent).toBe('70 (input-change)');
+      expect(recorded).toEqual(['input']);
     });
   });
 

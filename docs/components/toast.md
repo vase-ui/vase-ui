@@ -6,11 +6,15 @@ description: An unstyled Vue toast component to generate notifications.
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoToastAnchored from '../demos/toast/anchored/css-modules/index.vue';
+import DemoToastAnchoredTailwind from '../demos/toast/anchored/tailwind/index.vue';
 import DemoToastCustom from '../demos/toast/custom/css-modules/index.vue';
 import DemoToastDeduplicate from '../demos/toast/deduplicate/css-modules/index.vue';
 import DemoToastHero from '../demos/toast/hero/css-modules/index.vue';
+import DemoToastHeroTailwind from '../demos/toast/hero/tailwind/index.vue';
 import DemoToastPosition from '../demos/toast/position/css-modules/index.vue';
+import DemoToastPositionTailwind from '../demos/toast/position/tailwind/index.vue';
 import DemoToastPromise from '../demos/toast/promise/css-modules/index.vue';
 import DemoToastUndo from '../demos/toast/undo/css-modules/index.vue';
 import DemoToastVaryingHeights from '../demos/toast/varying-heights/css-modules/index.vue';
@@ -22,7 +26,12 @@ Generates toast notifications.
 
 <DemoFrame>
   <DemoToastHero />
+  <template #tailwind>
+    <DemoToastHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -35,6 +44,22 @@ Generates toast notifications.
 <<< ../demos/toast/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/toast/hero/tailwind/index.vue
+
+<<< ../demos/toast/hero/tailwind/ToastButton.vue
+
+<<< ../demos/toast/hero/tailwind/ToastList.vue
+
+:::
+
+</DemoSource>
 
 ## Anatomy
 
@@ -59,6 +84,8 @@ The manager has the same `add`, `close`, `update` and `promise` methods as `Toas
 <<< ./toast/GlobalManager.vue
 
 All server requests share a manager of a module. A server render does not subscribe the provider to its manager, so a toast of one request does not go to another request.
+
+You can give one manager to more than one provider. Each provider then gets each toast of the manager. The `promise` method returns one promise for all the providers, so one handler handles its rejection.
 
 ## Stacking and animations
 
@@ -144,7 +171,12 @@ To anchor a toast to an element, render it in `<Toast.Positioner>` and give the 
 
 <DemoFrame>
   <DemoToastAnchored />
+  <template #tailwind>
+    <DemoToastAnchoredTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -160,11 +192,31 @@ To anchor a toast to an element, render it in `<Toast.Positioner>` and give the 
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/toast/anchored/tailwind/index.vue
+
+<<< ../demos/toast/anchored/tailwind/AnchoredToasts.vue
+
+<<< ../demos/toast/anchored/tailwind/CopyButton.vue
+
+<<< ../demos/toast/anchored/tailwind/anchoredToastManager.ts
+
+:::
+
+</DemoSource>
+
 A prop of `<Toast.Positioner>` wins over the same key of `positionerProps`. When neither of them sets a key, the positioner uses the default of that key: `'top'` for `side`, `'center'` for `align`, `0` for `sideOffset` and `alignOffset`, `5` for `arrowPadding` and `collisionPadding`, `'clipping-ancestors'` for `collisionBoundary`, `'absolute'` for `positionMethod`, and `false` for `sticky` and `disableAnchorTracking`.
 
 Render the anchored toasts in a `<Toast.Provider>` of their own, apart from the stacked toasts. Make a global toast manager for each provider, so that the app can manage each kind of toast:
 
 <<< ./toast/MixingManagers.vue
+
+Each viewport is a landmark region, and its default name is "Notifications". Give the viewport of the anchored toasts an `aria-label` of its own, such as "Anchored notifications".
 
 ### Custom position
 
@@ -172,7 +224,12 @@ Your own CSS sets the position of the toasts. To change the position, change the
 
 <DemoFrame>
   <DemoToastPosition />
+  <template #tailwind>
+    <DemoToastPositionTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -185,6 +242,22 @@ Your own CSS sets the position of the toasts. To change the position, change the
 <<< ../demos/toast/position/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/toast/position/tailwind/index.vue
+
+<<< ../demos/toast/position/tailwind/ToastButton.vue
+
+<<< ../demos/toast/position/tailwind/ToastList.vue
+
+:::
+
+</DemoSource>
 
 ### Undo action
 
@@ -300,7 +373,7 @@ Manages the toasts. Call it in `setup` of a component inside a `<Toast.Provider>
 
 It returns `toasts` as a `ComputedRef` of the list. Read `toasts.value` in a script. A template unwraps a `toasts` that you destructure at the top level of `<script setup>`.
 
-<ApiReference name="Toast.useToastManager" />
+<ApiReference name="Toast.useToastManager" :heading-level="3" />
 
 ### `add` method
 
@@ -319,6 +392,8 @@ The `title` and the `description` are a text, a number, or a function that retur
 <<< ./toast/ManagerMethods.vue#label-function{ts}
 
 For a toast with the priority `high`, a screen reader announces the `title` and the `description`. A screen reader does not announce other content of `<Toast.Root>`, the content of `<Toast.Title>` and `<Toast.Description>` included, unless the user moves to the toast viewport.
+
+`<Toast.Title>` gives the toast its accessible name, and `<Toast.Description>` gives its description. A toast with no title gets its name from `<Toast.Description>`. To give such a toast another name, set `aria-label` on `<Toast.Root>`. A toast with no title and no description needs that `aria-label`.
 
 ### `update` method
 
@@ -345,6 +420,8 @@ To close all toasts, give no id:
 Makes an asynchronous toast with three states: `loading`, `success` and `error`.
 
 <<< ./toast/ManagerMethods.vue#promise{ts}
+
+It returns a promise. That promise resolves with the value of the given promise. When the given promise rejects, the toast gets the `error` state, and the returned promise rejects with the same reason. Handle that rejection with `.catch()`, or with `try` and `catch` around an `await`. Without a handler, the browser reports an unhandled rejection. The [Promise](#promise) demo handles it with `.catch()`.
 
 The `loading` state accepts the options of the `add` method. The `success` and `error` states accept the options of the `update` method:
 

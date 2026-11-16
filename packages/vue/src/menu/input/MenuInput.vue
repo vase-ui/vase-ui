@@ -5,7 +5,7 @@ import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/type
 
 // The type of `autocomplete` in `InputHTMLAttributes` is a union that is too large for vue-tsc.
 interface MenuInputAutocomplete {
-  autocomplete?: string | undefined;
+  autocomplete?: string | null | undefined;
 }
 
 export interface MenuInputState extends FilterDropdownInputState {}

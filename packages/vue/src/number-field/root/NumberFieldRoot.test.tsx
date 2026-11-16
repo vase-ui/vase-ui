@@ -4,22 +4,30 @@ import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import { NumberField as NumberFieldBase } from '@vase-ui/vue/number-field';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountFormResetTests,
   hiddenInputSizeTests,
   hydrate,
+  hydrateAfter,
   isJSDOM,
   mockRuntimeLocale,
   pasteText,
+  recordInputEvents,
   renderOnServer,
   screen,
+  within,
 } from '#test-utils';
 import NumberFieldContextProbe from '../../../test/fixtures/NumberFieldContextProbe.vue';
 import { REASONS } from '../../internals/reasons';
+import NumberFieldRootBeforeHydration from './NumberFieldRootBeforeHydration.test.vue';
 import NumberFieldRootHydration from './NumberFieldRootHydration.test.vue';
 import NumberFieldRootReplace from './NumberFieldRootReplace.test.vue';
+
+const BEFORE_HYDRATION_FIXTURE = 'src/number-field/root/NumberFieldRootBeforeHydration.test.vue';
 
 type FieldRootInstance = InstanceType<typeof Field.Root>;
 type NumberFieldRootInstance = InstanceType<typeof NumberFieldBase.Root>;
@@ -506,16 +514,48 @@ describe('<NumberField />', () => {
       expect(handleUpdate.mock.calls).toEqual([[7]]);
       expect(getHiddenInput().value).toBe('5');
     });
+  });
 
-    it('after a `pageshow` event, because a browser can restore the form state after the mount', async () => {
-      const handleChange = vi.fn();
-      await render(<NumberFieldBase.Root defaultValue={5} onValueChange={handleChange} />);
+  describe('VUE-81: the state that the input got before the hydration', () => {
+    it('takes the value that a program wrote into the hidden input', async () => {
+      const props = { value: 5 };
+      const serverHtml = await renderOnServer(BEFORE_HYDRATION_FIXTURE, props);
+      let events: string[] = [];
+
+      const { container } = await hydrateAfter(NumberFieldRootBeforeHydration, {
+        serverHtml,
+        props,
+        before(serverContainer) {
+          events = recordInputEvents(serverContainer);
+          serverContainer.querySelector<HTMLInputElement>('input[aria-hidden="true"]')!.value = '9';
+        },
+      });
+      await flushMicrotasks();
+
+      const fixture = within(container);
+      expect(fixture.getByTestId('model').textContent).toBe('9');
+      expect(fixture.getByTestId('changes').textContent).toBe('9 (none)');
+      expect(fixture.getByTestId<HTMLInputElement>('input').value).toBe('9');
+      expect(getHiddenInput().value).toBe('9');
+      expect(events).toEqual(['input']);
+    });
+  });
+
+  describe('VUE-81: the form state that the browser restores', () => {
+    it('takes the hidden input at a `pageshow` event', async () => {
+      const { container } = await render(<NumberFieldRootBeforeHydration value={5} />);
+      const fixture = within(container);
+      const events = recordInputEvents(container);
       getHiddenInput().value = '9';
 
       window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
 
-      expect(getHiddenInput().value).toBe('5');
-      expect(handleChange).not.toHaveBeenCalled();
+      expect(fixture.getByTestId('model').textContent).toBe('9');
+      expect(fixture.getByTestId('changes').textContent).toBe('9 (none)');
+      expect(fixture.getByTestId<HTMLInputElement>('input').value).toBe('9');
+      expect(getHiddenInput().value).toBe('9');
+      expect(events).toEqual(['input']);
     });
   });
 
@@ -833,6 +873,19 @@ describe('<NumberField />', () => {
         expect(seen).toEqual([false, true]);
         expect(getContext().isResetChangePending.value).toBe(false);
       });
+    });
+
+    heldMountFormResetTests({
+      render,
+      renderControl: () => (
+        <NumberFieldBase.Root name="quantity" defaultValue={5}>
+          <NumberFieldBase.Input data-testid="text" />
+        </NumberFieldBase.Root>
+      ),
+      change: () => autofill('9'),
+      readState: () => getText().value,
+      defaultState: '5',
+      changedState: '9',
     });
   });
 
@@ -1163,15 +1216,12 @@ describe('<NumberField />', () => {
   });
 
   describe('KeepAlive', () => {
-    beforeEach(() => {
-      vi.useFakeTimers();
-    });
-
-    afterEach(() => {
-      vi.useRealTimers();
-    });
-
     it('keeps its state, and a reset of the form does not change a field that is not shown', async () => {
+      // A real click does not end under fake timers, so only this case of the block uses them.
+      vi.useFakeTimers();
+      onTestFinished(() => {
+        vi.useRealTimers();
+      });
       const App = defineComponent({
         props: { shown: { type: Boolean, default: true } },
         setup(props) {
@@ -1205,6 +1255,60 @@ describe('<NumberField />', () => {
       await settleReset();
 
       expect(getHiddenInput().value).toBe('1');
+    });
+
+    it.each([{ name: 'held mount' }, { name: 'deactivated' }])(
+      'a held required number field does not block the submit of its form: $name',
+      async ({ name }) => {
+        const handleSubmit = vi.fn();
+        const { HeldBranch, mountWhileHeld } = createHeldBranch(
+          () => (
+            <NumberFieldBase.Root key="held" required>
+              <NumberFieldBase.Input />
+            </NumberFieldBase.Root>
+          ),
+          { mounted: name === 'deactivated' },
+        );
+        const { user } = await render(() => (
+          <Form onFormSubmit={handleSubmit}>
+            <Field.Root name="quantity" data-testid="field">
+              <Field.Control defaultValue="shown" />
+              <HeldBranch />
+            </Field.Root>
+            <button type="submit">Submit</button>
+          </Form>
+        ));
+
+        await mountWhileHeld();
+        await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+        expect(handleSubmit).toHaveBeenCalledTimes(1);
+        expect(screen.getByTestId('field')).not.toHaveAttribute('data-invalid');
+      },
+    );
+
+    it('the label does not name a number field that mounts while KeepAlive holds it', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <NumberFieldBase.Root key="held" id="held-number-field">
+          <NumberFieldBase.Input />
+        </NumberFieldBase.Root>
+      ));
+      await render(() => (
+        <Field.Root>
+          <Field.Label data-testid="label">Quantity</Field.Label>
+          <HeldBranch />
+        </Field.Root>
+      ));
+      const label = screen.getByTestId('label');
+      const providerId = label.getAttribute('for');
+
+      await mountWhileHeld();
+
+      expect(label.getAttribute('for')).toBe(providerId);
+
+      await show();
+
+      expect(label).toHaveAttribute('for', 'held-number-field');
     });
   });
 

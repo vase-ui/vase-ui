@@ -59,14 +59,17 @@ describe('<ScrollArea.Scrollbar />', () => {
     expect(screen.getByTestId('scrollbar')).toHaveAttribute('aria-hidden', 'true');
   });
 
-  it('allows overriding aria-hidden', async () => {
+  it.each([
+    { name: 'undefined', value: undefined, expected: 'true' },
+    { name: 'null', value: null, expected: null },
+  ])('VUE-103: aria-hidden of the consumer is $name', async ({ value, expected }) => {
     await render(
       <ScrollArea.Root>
-        <ScrollArea.Scrollbar keepMounted data-testid="scrollbar" aria-hidden={undefined} />
+        <ScrollArea.Scrollbar keepMounted data-testid="scrollbar" aria-hidden={value} />
       </ScrollArea.Root>,
     );
 
-    expect(screen.getByTestId('scrollbar')).not.toHaveAttribute('aria-hidden');
+    expect(screen.getByTestId('scrollbar').getAttribute('aria-hidden')).toBe(expected);
   });
 
   it('sets the orientation data attribute', async () => {

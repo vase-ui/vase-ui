@@ -6,6 +6,7 @@ import {
   detachedTriggersConformanceTests,
   fireEvent,
   flushMicrotasks,
+  hydrateAfter,
   isJSDOM,
   renderOnServer,
   screen,
@@ -93,10 +94,8 @@ describe('<Dialog.Root />', () => {
       });
     }
 
-    async function expectClosed(trigger: HTMLElement) {
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
-      });
+    function expectClosed(trigger: HTMLElement) {
+      expect(screen.queryByTestId('popup')).toBe(null);
       expect(trigger).toHaveAttribute('aria-expanded', 'false');
     }
 
@@ -107,7 +106,7 @@ describe('<Dialog.Root />', () => {
         await user.click(trigger1);
         await expectOpenedBy(trigger1);
         await user.keyboard('[Escape]');
-        await expectClosed(trigger1);
+        expectClosed(trigger1);
       }
 
       await openAndClose();
@@ -127,7 +126,7 @@ describe('<Dialog.Root />', () => {
       expect(trigger1).toHaveAttribute('aria-expanded', 'false');
       handle.close();
       await flushMicrotasks();
-      await expectClosed(trigger2);
+      expectClosed(trigger2);
 
       expect(bystander.renders).toBe(0);
     });
@@ -155,16 +154,16 @@ describe('<Dialog.Root />', () => {
     );
 
     async function openThenEscapeFromInactiveTrigger() {
-      await user.click(screen.getByRole('button', { name: 'Dialog trigger 1' }));
-      expect(await screen.findByTestId('dialog')).not.toBe(null);
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Dialog trigger 1' }));
+        expect(await screen.findByTestId('dialog')).not.toBe(null);
+      });
 
       screen.getByRole('button', { name: 'Dialog trigger 2' }).focus();
       await flushMicrotasks();
       await user.keyboard('[Escape]');
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('dialog')).toBe(null);
-      });
+      expect(screen.queryByTestId('dialog')).toBe(null);
       expect(screen.queryByTestId('popover')).not.toBe(null);
     }
 
@@ -194,29 +193,27 @@ describe('<Dialog.Root />', () => {
     );
 
     async function openHelp() {
-      await user.click(screen.getByRole('button', { name: 'Open help' }));
-      expect(await screen.findByTestId('help')).not.toBe(null);
-      expect(screen.getByTestId('help')).not.toHaveAttribute('data-nested-dialog-open');
-      expect(screen.getByTestId('help').style.getPropertyValue('--nested-dialogs')).toBe('0');
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Open help' }));
+        expect(await screen.findByTestId('help')).not.toBe(null);
+        expect(screen.getByTestId('help')).not.toHaveAttribute('data-nested-dialog-open');
+        expect(screen.getByTestId('help').style.getPropertyValue('--nested-dialogs')).toBe('0');
+      });
     }
 
-    await user.click(screen.getByRole('button', { name: 'Open section' }));
-    expect(await screen.findByTestId('section')).not.toBe(null);
-    await waitForLaterMillisecond();
+    await waitForLaterMillisecond(async () => {
+      await user.click(screen.getByRole('button', { name: 'Open section' }));
+      expect(await screen.findByTestId('section')).not.toBe(null);
+    });
 
     await openHelp();
     await user.keyboard('[Escape]');
-    await waitFor(() => {
-      expect(screen.queryByTestId('help')).toBe(null);
-    });
+    expect(screen.queryByTestId('help')).toBe(null);
     expect(screen.queryByTestId('section')).not.toBe(null);
 
     await openHelp();
     await user.click(screen.getByTestId('help-backdrop'));
-    await waitFor(() => {
-      expect(screen.queryByTestId('help')).toBe(null);
-    });
+    expect(screen.queryByTestId('help')).toBe(null);
     expect(screen.queryByTestId('section')).not.toBe(null);
   });
 
@@ -249,9 +246,7 @@ describe('<Dialog.Root />', () => {
     // The section dialog stays open, so it never sends a zeroed count.
     help.close();
     await flushMicrotasks();
-    await waitFor(() => {
-      expect(screen.queryByTestId('help')).toBe(null);
-    });
+    expect(screen.queryByTestId('help')).toBe(null);
     expect(screen.queryByTestId('section')).not.toBe(null);
 
     help.open(null);
@@ -283,18 +278,16 @@ describe('<Dialog.Root />', () => {
     const parent = await screen.findByTestId('parent');
 
     async function openAndCloseChild() {
-      await user.click(screen.getByRole('button', { name: 'Open child' }));
-      expect(await screen.findByTestId('child')).not.toBe(null);
-      await waitFor(() => {
-        expect(parent).toHaveAttribute('data-nested-dialog-open');
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Open child' }));
+        expect(await screen.findByTestId('child')).not.toBe(null);
+        await waitFor(() => {
+          expect(parent).toHaveAttribute('data-nested-dialog-open');
+        });
+        expect(parent.style.getPropertyValue('--nested-dialogs')).toBe('1');
       });
-      expect(parent.style.getPropertyValue('--nested-dialogs')).toBe('1');
-
-      await waitForLaterMillisecond();
       await user.click(screen.getByRole('button', { name: 'Close child' }));
-      await waitFor(() => {
-        expect(screen.queryByTestId('child')).toBe(null);
-      });
+      expect(screen.queryByTestId('child')).toBe(null);
       expect(parent).not.toHaveAttribute('data-nested-dialog-open');
       expect(parent.style.getPropertyValue('--nested-dialogs')).toBe('0');
     }
@@ -364,16 +357,17 @@ describe('<Dialog.Root />', () => {
     const trigger2 = screen.getByRole('button', { name: 'Trigger 2' });
 
     outside.focus();
-    open.value = true;
-    triggerId.value = 'trigger-1';
-    await nextTick();
-    // The open makes the outside button inert. The browser moves the focus off it only at the next
-    // rendering update, so the trigger changes while the inert button has the focus.
-    expect(outside).toHaveFocus();
-    triggerId.value = 'trigger-2';
-    await nextTick();
+    await waitForLaterMillisecond(async () => {
+      open.value = true;
+      triggerId.value = 'trigger-1';
+      await nextTick();
+      // The open makes the outside button inert. The browser moves the focus off it only at the
+      // next rendering update, so the trigger changes while the inert button has the focus.
+      expect(outside).toHaveFocus();
+      triggerId.value = 'trigger-2';
+      await nextTick();
+    });
 
-    await waitForLaterMillisecond();
     await user.click(screen.getByRole('button', { name: 'Close' }));
     await waitFor(() => {
       expect(trigger2).toHaveFocus();
@@ -385,27 +379,27 @@ describe('<Dialog.Root />', () => {
 
     it('hydrates a detached trigger from the stable fallback store', async () => {
       const handle = Dialog.createHandle();
-
-      const container = await insertServerHtml(
+      const serverHtml = await renderOnServer(
         'src/dialog/root/DialogDetachedTriggerHydration.test.vue',
+        {},
       );
-      const trigger = within(container).getByRole('button', { name: 'Trigger' });
-      expect(trigger).toHaveAttribute('aria-expanded', 'false');
-      expect(trigger).not.toHaveAttribute('data-popup-open');
+      let trigger: HTMLElement | undefined;
 
-      const app = createSSRApp(DialogDetachedTriggerHydration, { handle });
-      onTestFinished(() => {
-        app.unmount();
-        container.remove();
+      const { container } = await hydrateAfter(DialogDetachedTriggerHydration, {
+        serverHtml,
+        props: { handle },
+        before(serverContainer) {
+          trigger = within(serverContainer).getByRole('button', { name: 'Trigger' });
+          expect(trigger).toHaveAttribute('aria-expanded', 'false');
+          expect(trigger).not.toHaveAttribute('data-popup-open');
+        },
       });
-      app.mount(container);
 
       await waitFor(() => {
         expect(trigger).toHaveAttribute('aria-expanded', 'true');
       });
       expect(trigger).toHaveAttribute('data-popup-open');
       expect(within(container).getByRole('button', { name: 'Trigger' })).toBe(trigger);
-      expect(takeReportedMessages()).toEqual([]);
     });
 
     it('keeps the server snapshot stable when the root closes before a delayed trigger hydrates', async () => {
@@ -739,14 +733,14 @@ describe('<Dialog.Root />', () => {
 
       const { user } = await render(<App />);
 
-      handleB.openWithPayload(8);
-      await flushMicrotasks();
-      await waitFor(() => {
-        expect(screen.getByText('Dirty dialog')).toBeVisible();
+      await waitForLaterMillisecond(async () => {
+        handleB.openWithPayload(8);
+        await flushMicrotasks();
+        await waitFor(() => {
+          expect(screen.getByText('Dirty dialog')).toBeVisible();
+        });
+        expect(screen.getByTestId('dirty-payload').textContent).toBe('8');
       });
-      expect(screen.getByTestId('dirty-payload').textContent).toBe('8');
-
-      await waitForLaterMillisecond();
       await user.click(screen.getByRole('button', { name: 'Unmount dirty root' }));
       await flushMicrotasks();
       expect(handleB.isOpen).toBe(false);
@@ -833,9 +827,7 @@ describe('<Dialog.Root />', () => {
       // The currently-attached handle controls the live dialog.
       handleA.close();
       await flushMicrotasks();
-      await waitFor(() => {
-        expect(screen.queryByText('Dialog Content')).toBe(null);
-      });
+      expect(screen.queryByText('Dialog Content')).toBe(null);
     });
 
     it('attaches and detaches a handle when the prop toggles on a live root', async () => {
@@ -890,9 +882,7 @@ describe('<Dialog.Root />', () => {
 
       handle.close();
       await flushMicrotasks();
-      await waitFor(() => {
-        expect(screen.queryByRole('dialog')).toBe(null);
-      });
+      expect(screen.queryByRole('dialog')).toBe(null);
 
       await user.click(screen.getByRole('button', { name: 'Toggle handle' }));
       await flushMicrotasks();
@@ -1112,13 +1102,14 @@ describe('<Dialog.Root />', () => {
       const { user } = await render(<App />);
 
       const trigger1 = screen.getByRole('button', { name: 'Dialog 1' });
-      await user.click(trigger1);
-      await waitFor(() => {
-        expect(screen.getByTestId('content').textContent).toBe('1');
+      await waitForLaterMillisecond(async () => {
+        await user.click(trigger1);
+        await waitFor(() => {
+          expect(screen.getByTestId('content').textContent).toBe('1');
+        });
       });
 
       const updateButton = screen.getByRole('button', { name: 'Update payloads' });
-      await waitForLaterMillisecond();
       await user.click(updateButton);
       await waitFor(() => {
         expect(screen.getByTestId('content').textContent).toBe('8');
@@ -1176,17 +1167,19 @@ describe('<Dialog.Root />', () => {
       const trigger1 = screen.getByRole('button', { name: 'Trigger 1' });
       const trigger2 = screen.getByRole('button', { name: 'Trigger 2' });
 
-      await user.click(trigger1);
-      await waitFor(() => {
-        expect(screen.getByText('Dialog Content')).toBeVisible();
+      await waitForLaterMillisecond(async () => {
+        await user.click(trigger1);
+        await waitFor(() => {
+          expect(screen.getByText('Dialog Content')).toBeVisible();
+        });
       });
 
-      await waitForLaterMillisecond();
-      await user.click(screen.getByRole('button', { name: 'Unmount root' }));
-      await flushMicrotasks();
-      expect(screen.queryByText('Dialog Content')).toBe(null);
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Unmount root' }));
+        await flushMicrotasks();
+        expect(screen.queryByText('Dialog Content')).toBe(null);
+      });
 
-      await waitForLaterMillisecond();
       await user.click(screen.getByRole('button', { name: 'Remount root' }));
       await flushMicrotasks();
       expect(screen.queryByText('Dialog Content')).toBe(null);
@@ -1254,21 +1247,23 @@ describe('<Dialog.Root />', () => {
 
       expect(screen.getByTestId('payload').textContent).toBe('No payload');
 
-      testDialog.openWithPayload(8);
-      await flushMicrotasks();
-      await waitFor(() => {
-        expect(screen.getByText('Dialog Content')).toBeVisible();
+      await waitForLaterMillisecond(async () => {
+        testDialog.openWithPayload(8);
+        await flushMicrotasks();
+        await waitFor(() => {
+          expect(screen.getByText('Dialog Content')).toBeVisible();
+        });
+        expect(screen.getByTestId('payload').textContent).toBe('8');
       });
-      expect(screen.getByTestId('payload').textContent).toBe('8');
 
-      await waitForLaterMillisecond();
-      await user.click(
-        within(screen.getByRole('dialog')).getByRole('button', { name: 'Unmount root' }),
-      );
-      await flushMicrotasks();
-      expect(screen.queryByTestId('payload')).toBe(null);
+      await waitForLaterMillisecond(async () => {
+        await user.click(
+          within(screen.getByRole('dialog')).getByRole('button', { name: 'Unmount root' }),
+        );
+        await flushMicrotasks();
+        expect(screen.queryByTestId('payload')).toBe(null);
+      });
 
-      await waitForLaterMillisecond();
       await user.click(screen.getByRole('button', { name: 'Remount root' }));
       await flushMicrotasks();
       expect(screen.queryByRole('dialog')).toBe(null);
@@ -1329,24 +1324,26 @@ describe('<Dialog.Root />', () => {
       );
       const trigger = screen.getByRole('button', { name: 'Trigger' });
 
-      await user.click(trigger);
-      await waitFor(() => {
-        expect(screen.getByText('Dialog Content')).toBeVisible();
+      await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        await waitFor(() => {
+          expect(screen.getByText('Dialog Content')).toBeVisible();
+        });
+
+        expect(trigger).toHaveAttribute('aria-expanded', 'true');
+        expect(trigger.getAttribute('aria-controls')).toBe(
+          screen.getByRole('dialog').getAttribute('id'),
+        );
       });
 
-      expect(trigger).toHaveAttribute('aria-expanded', 'true');
-      expect(trigger.getAttribute('aria-controls')).toBe(
-        screen.getByRole('dialog').getAttribute('id'),
-      );
+      await waitForLaterMillisecond(async () => {
+        await user.click(
+          within(screen.getByRole('dialog')).getByRole('button', { name: 'Unmount root' }),
+        );
+        await flushMicrotasks();
+        expect(screen.queryByText('Dialog Content')).toBe(null);
+      });
 
-      await waitForLaterMillisecond();
-      await user.click(
-        within(screen.getByRole('dialog')).getByRole('button', { name: 'Unmount root' }),
-      );
-      await flushMicrotasks();
-      expect(screen.queryByText('Dialog Content')).toBe(null);
-
-      await waitForLaterMillisecond();
       await user.click(screen.getByRole('button', { name: 'Remount root' }));
       await flushMicrotasks();
       expect(screen.queryByText('Dialog Content')).toBe(null);
@@ -1415,18 +1412,20 @@ describe('<Dialog.Root />', () => {
 
       const { user } = await render(<App />);
 
-      await waitFor(() => {
-        expect(screen.getByText('Dialog Content')).toBeVisible();
+      await waitForLaterMillisecond(() =>
+        waitFor(() => {
+          expect(screen.getByText('Dialog Content')).toBeVisible();
+        }),
+      );
+
+      await waitForLaterMillisecond(async () => {
+        await user.click(
+          within(screen.getByRole('dialog')).getByRole('button', { name: 'Unmount root' }),
+        );
+        await flushMicrotasks();
+        expect(screen.queryByText('Dialog Content')).toBe(null);
       });
 
-      await waitForLaterMillisecond();
-      await user.click(
-        within(screen.getByRole('dialog')).getByRole('button', { name: 'Unmount root' }),
-      );
-      await flushMicrotasks();
-      expect(screen.queryByText('Dialog Content')).toBe(null);
-
-      await waitForLaterMillisecond();
       await user.click(screen.getByRole('button', { name: 'Remount uncontrolled root' }));
       await flushMicrotasks();
       expect(screen.queryByText('Dialog Content')).toBe(null);
@@ -1482,11 +1481,12 @@ describe('<Dialog.Root />', () => {
 
         const { user } = await render(<App />);
 
-        await user.click(screen.getByRole('button', { name: 'Unmount root' }));
-        await flushMicrotasks();
-        expect(screen.queryByText('Dialog Content')).toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.click(screen.getByRole('button', { name: 'Unmount root' }));
+          await flushMicrotasks();
+          expect(screen.queryByText('Dialog Content')).toBe(null);
+        });
 
-        await waitForLaterMillisecond();
         await user.click(screen.getByRole('button', { name: 'Remount controlled root' }));
         await waitFor(() => {
           expect(screen.getByText('Dialog Content')).toBeVisible();
@@ -1629,9 +1629,7 @@ describe('<Dialog.Root />', () => {
       await flushMicrotasks();
       await user.keyboard('{Escape}');
 
-      await waitFor(() => {
-        expect(screen.queryByText('Dialog Content')).toBe(null);
-      });
+      expect(screen.queryByText('Dialog Content')).toBe(null);
     });
   });
 
@@ -1685,25 +1683,27 @@ describe('<Dialog.Root />', () => {
       const { user } = await render(<App />);
       const trigger = screen.getByRole('button', { name: 'Trigger' });
 
-      dialog.open('trigger');
-      await flushMicrotasks();
-      await waitFor(() => {
-        expect(screen.getByText('Dialog Content')).toBeVisible();
+      await waitForLaterMillisecond(async () => {
+        dialog.open('trigger');
+        await flushMicrotasks();
+        await waitFor(() => {
+          expect(screen.getByText('Dialog Content')).toBeVisible();
+        });
+        expect(trigger).toHaveAttribute('aria-expanded', 'true');
+        expect(trigger.getAttribute('aria-controls')).toBe(
+          screen.getByRole('dialog').getAttribute('id'),
+        );
+        expect(screen.getByTestId('payload').textContent).toBe('7');
       });
-      expect(trigger).toHaveAttribute('aria-expanded', 'true');
-      expect(trigger.getAttribute('aria-controls')).toBe(
-        screen.getByRole('dialog').getAttribute('id'),
-      );
-      expect(screen.getByTestId('payload').textContent).toBe('7');
 
-      await waitForLaterMillisecond();
-      await user.click(
-        within(screen.getByRole('dialog')).getByRole('button', { name: 'Unmount root' }),
-      );
-      await flushMicrotasks();
-      expect(screen.queryByRole('dialog')).toBe(null);
+      await waitForLaterMillisecond(async () => {
+        await user.click(
+          within(screen.getByRole('dialog')).getByRole('button', { name: 'Unmount root' }),
+        );
+        await flushMicrotasks();
+        expect(screen.queryByRole('dialog')).toBe(null);
+      });
 
-      await waitForLaterMillisecond();
       await user.click(screen.getByRole('button', { name: 'Remount root' }));
       await waitFor(() => {
         expect(trigger).toHaveAttribute('aria-expanded', 'false');
@@ -1763,9 +1763,7 @@ describe('<Dialog.Root />', () => {
         expect(aTrigger).toHaveAttribute('aria-expanded', 'true');
         handleA.close();
         await flushMicrotasks();
-        await waitFor(() => {
-          expect(screen.queryByText('Dialog Content')).toBe(null);
-        });
+        expect(screen.queryByText('Dialog Content')).toBe(null);
 
         // The A-trigger stays mounted on handle A; only the root moves to handle B.
         await user.click(screen.getByRole('button', { name: 'Switch root to B' }));
@@ -1814,7 +1812,7 @@ describe('<Dialog.Root />', () => {
       dialog.openWithPayload('from openWithPayload');
       await flushMicrotasks();
       await waitFor(() => {
-        expect(screen.queryByRole('dialog')).not.toBe(null);
+        expect(screen.getByRole('dialog')).not.toBe(null);
       });
 
       expect(screen.getByTestId('content').textContent).toBe('from openWithPayload');
@@ -1824,14 +1822,12 @@ describe('<Dialog.Root />', () => {
 
       dialog.close();
       await flushMicrotasks();
-      await waitFor(() => {
-        expect(screen.queryByRole('dialog')).toBe(null);
-      });
+      expect(screen.queryByRole('dialog')).toBe(null);
 
       // Opening through the trigger afterwards still associates it and forwards its payload.
       await user.click(trigger);
       await waitFor(() => {
-        expect(screen.queryByRole('dialog')).not.toBe(null);
+        expect(screen.getByRole('dialog')).not.toBe(null);
       });
       expect(screen.getByTestId('content').textContent).toBe('from trigger');
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
@@ -1870,7 +1866,7 @@ describe('<Dialog.Root />', () => {
       dialog.openWithPayload('from openWithPayload');
       await flushMicrotasks();
       await waitFor(() => {
-        expect(screen.queryByRole('dialog')).not.toBe(null);
+        expect(screen.getByRole('dialog')).not.toBe(null);
       });
       expect(screen.getByTestId('content').textContent).toBe('from openWithPayload');
 
@@ -1925,7 +1921,7 @@ describe('<Dialog.Root />', () => {
       dialog.openWithPayload('from openWithPayload');
       await flushMicrotasks();
       await waitFor(() => {
-        expect(screen.queryByRole('dialog')).not.toBe(null);
+        expect(screen.getByRole('dialog')).not.toBe(null);
       });
 
       // The close request is declined, so the dialog stays open without a trigger.

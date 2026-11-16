@@ -8,18 +8,24 @@ import {
   onMounted,
   provide,
   shallowRef,
+  watch,
 } from 'vue';
 import type { MaybeRefOrGetter, PropType } from 'vue';
 import {
+  createHeldBranch,
   createRenderer,
   createTransitionRunCounter,
   fireEvent,
   flushMicrotasks,
   hydrate,
+  nextAnimationsRead,
+  nextCall,
+  nextEndingStyle,
   randomStringValue,
   renderOnServer,
   takeReportedMessages,
   waitFor,
+  waitSingleFrame,
 } from '#test-utils';
 import {
   PopupFixtureContext,
@@ -39,6 +45,7 @@ import {
 } from './popupRoot';
 import PopupRootHydration from './PopupRootHydration.test.vue';
 import PopupRootIsOpenHydration from './PopupRootIsOpenHydration.test.vue';
+import FloatingPortalLite from './portal/FloatingPortalLite.vue';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import type { InteractionType } from '../../common/useEnhancedClickHandler';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
@@ -51,6 +58,7 @@ import {
   popupStoreSelectors,
 } from './store';
 import type { PopupStoreContext, PopupStoreSelectors, PopupStoreState } from './store';
+import { PopupTriggerMap } from './popupTriggerMap';
 import { provideFloatingNode } from './tree/FloatingTree';
 import {
   createTestPopupStore,
@@ -706,7 +714,7 @@ describe('usePopupRoot', () => {
       const open = shallowRef(false);
       const follow = shallowRef(true);
       const updates: boolean[] = [];
-      const { getByText, queryByRole } = await render(() => (
+      const { getByRole, getByText, queryByRole } = await render(() => (
         <PopupRootPart
           open={open.value}
           {...{
@@ -730,17 +738,19 @@ describe('usePopupRoot', () => {
       await fireEvent.click(getByText('trigger'));
       expect(updates).toEqual([true, false]);
       expect(queryByRole('dialog')).not.toBe(null);
+      const dialog = getByRole('dialog');
 
       open.value = false;
       await waitFor(() => {
-        expect(queryByRole('dialog')).toBe(null);
+        expect(dialog).not.toBeInTheDocument();
       });
+      expect(queryByRole('dialog')).toBe(null);
     });
 
     it('forgets the trigger of a controlled popup that the open prop closed', async () => {
       const open = shallowRef(false);
       const root = createRootRef();
-      const { getByText, queryByRole } = await render(() => (
+      const { getByRole, getByText, queryByRole } = await render(() => (
         <PopupRootPart
           ref={root.ref}
           open={open.value}
@@ -751,12 +761,14 @@ describe('usePopupRoot', () => {
       ));
       await fireEvent.click(getByText('trigger'));
       expect(root.current.store.state.activeTriggerId).toBe('trigger');
+      const dialog = getByRole('dialog');
 
       // A close through the prop makes no request, so the request of the press is still in the store.
       open.value = false;
       await waitFor(() => {
-        expect(queryByRole('dialog')).toBe(null);
+        expect(dialog).not.toBeInTheDocument();
       });
+      expect(queryByRole('dialog')).toBe(null);
 
       expect(root.current.store.state.activeTriggerId).toBe(null);
     });
@@ -846,7 +858,7 @@ describe('usePopupRoot', () => {
     it('closes with the reason imperative-action from its close action', async () => {
       const reasons: string[] = [];
       const root = createRootRef();
-      const { queryByRole } = await render(() => (
+      const { getByRole, queryByRole } = await render(() => (
         <PopupRootPart
           ref={root.ref}
           defaultOpen
@@ -856,12 +868,14 @@ describe('usePopupRoot', () => {
         </PopupRootPart>
       ));
       expect(queryByRole('dialog')).not.toBe(null);
+      const dialog = getByRole('dialog');
 
       root.current.close();
 
       await waitFor(() => {
-        expect(queryByRole('dialog')).toBe(null);
+        expect(dialog).not.toBeInTheDocument();
       });
+      expect(queryByRole('dialog')).toBe(null);
       expect(reasons).toEqual(['imperative-action']);
     });
 
@@ -962,7 +976,7 @@ describe('usePopupRoot', () => {
       async ({ calls }) => {
         const completions: boolean[] = [];
         const root = createRootRef();
-        const { queryByRole } = await render(() => (
+        const { getByRole, queryByRole } = await render(() => (
           <PopupRootPart
             ref={root.ref}
             defaultOpen
@@ -977,13 +991,15 @@ describe('usePopupRoot', () => {
           </PopupRootPart>
         ));
         expect(queryByRole('dialog')).not.toBe(null);
+        const dialog = getByRole('dialog');
 
         for (const call of calls) {
           root.current[call]();
         }
         await waitFor(() => {
-          expect(queryByRole('dialog')).toBe(null);
+          expect(dialog).not.toBeInTheDocument();
         });
+        expect(queryByRole('dialog')).toBe(null);
 
         expect(completions.filter((open) => !open)).toHaveLength(1);
       },
@@ -998,7 +1014,7 @@ describe('usePopupRoot', () => {
         const open = shallowRef(true);
         const completions: boolean[] = [];
         const root = createRootRef();
-        const { queryByRole } = await render(() => (
+        const { getByRole, queryByRole } = await render(() => (
           <PopupRootPart
             ref={root.ref}
             open={open.value}
@@ -1014,13 +1030,15 @@ describe('usePopupRoot', () => {
           </PopupRootPart>
         ));
         expect(queryByRole('dialog')).not.toBe(null);
+        const dialog = getByRole('dialog');
 
         for (const call of calls) {
           root.current[call]();
         }
         await waitFor(() => {
-          expect(queryByRole('dialog')).toBe(null);
+          expect(dialog).not.toBeInTheDocument();
         });
+        expect(queryByRole('dialog')).toBe(null);
 
         expect(completions.filter((nextOpen) => !nextOpen)).toHaveLength(1);
       },
@@ -1121,14 +1139,16 @@ describe('usePopupRoot', () => {
         expect(completions).toEqual([true]);
       });
       const exit = createAnimation();
-      getByRole('dialog').getAnimations = () => [exit.animation];
+      const dialog = getByRole('dialog');
+      dialog.getAnimations = () => [exit.animation];
 
-      await fireEvent.click(getByText('trigger'));
-      await waitFor(() => {
-        expect(getByRole('dialog')).toHaveAttribute('data-ending-style');
-      });
+      await nextEndingStyle(dialog, { action: () => fireEvent.click(getByText('trigger')) });
+      // The root reads the animations of the popup in the frame after the close. Wait for that
+      // frame, so that a root that completes the close at that read has removed the popup.
+      await waitSingleFrame();
       await flushMicrotasks();
-      expect(queryByRole('dialog')).not.toBe(null);
+      expect(queryByRole('dialog')).toBe(dialog);
+      expect(dialog).toHaveAttribute('data-ending-style');
       expect(completions).toEqual([true]);
 
       exit.finish();
@@ -1228,7 +1248,7 @@ describe('usePopupRoot', () => {
     it('closes with the reason none when the active trigger unmounts while the popup is open', async () => {
       const showTrigger = shallowRef(true);
       const changes: unknown[] = [];
-      const { getByText, queryByRole } = await render(() => (
+      const { getByRole, getByText, queryByRole } = await render(() => (
         <PopupRootPart onOpenChange={(open, details) => changes.push([open, details.reason])}>
           {showTrigger.value ? <PopupTriggerPart id="a">a</PopupTriggerPart> : null}
           <PopupPart>popup</PopupPart>
@@ -1236,12 +1256,14 @@ describe('usePopupRoot', () => {
       ));
       await fireEvent.click(getByText('a'));
       expect(queryByRole('dialog')).not.toBe(null);
+      const dialog = getByRole('dialog');
 
       showTrigger.value = false;
 
       await waitFor(() => {
-        expect(queryByRole('dialog')).toBe(null);
+        expect(dialog).not.toBeInTheDocument();
       });
+      expect(queryByRole('dialog')).toBe(null);
       expect(changes).toEqual([
         [true, 'trigger-press'],
         [false, 'none'],
@@ -1465,6 +1487,56 @@ describe('usePopupRoot', () => {
         expect(handle.store).toBe(root.current.store);
         expect(root.current.open).toBe(false);
       });
+
+      it('detaches a root in a branch that KeepAlive holds when the branch resolves, after the onMounted hook of a part below it', async () => {
+        const handle = createPopupFixtureHandle<string>();
+        const root = createRootRef();
+        const gate = createGate();
+        const Pending = createPendingPart(gate.promise);
+        const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+          <Suspense>
+            <PopupRootPart ref={root.ref} handle={handle} defaultOpen>
+              <CloseOnHook hook={onMounted} handle={handle} />
+              <Pending />
+            </PopupRootPart>
+          </Suspense>
+        ));
+        await render(() => <HeldBranch />);
+        await mountWhileHeld();
+
+        gate.open();
+        await flushMicrotasks();
+        expect(handle.store).toBe(handle.serverStore);
+        expect(root.current.open).toBe(false);
+
+        await show();
+        expect(handle.store).toBe(root.current.store);
+      });
+
+      it('attaches a root in a branch that KeepAlive shows only when the branch resolves', async () => {
+        const handle = createPopupFixtureHandle<string>();
+        const root = createRootRef();
+        const gate = createGate();
+        const Pending = createPendingPart(gate.promise);
+        const { HeldBranch } = createHeldBranch(
+          () => (
+            <Suspense>
+              <PopupRootPart ref={root.ref} handle={handle} defaultOpen>
+                <CloseOnHook hook={onMounted} handle={handle} />
+                <Pending />
+              </PopupRootPart>
+            </Suspense>
+          ),
+          { mounted: true },
+        );
+        await render(() => <HeldBranch />);
+        expect(handle.store).toBe(handle.serverStore);
+
+        gate.open();
+        await flushMicrotasks();
+        expect(handle.store).toBe(root.current.store);
+        expect(root.current.open).toBe(false);
+      });
     });
   });
 
@@ -1500,6 +1572,31 @@ describe('usePopupRoot', () => {
       expect(getByText('trigger')).toHaveAttribute('aria-expanded', 'true');
     });
 
+    it('changes isOpen of its handle one time at its mount, at its deactivation and at its activation by KeepAlive', async () => {
+      const handle = createPopupFixtureHandle<string>();
+      const changes: boolean[] = [];
+      const stop = watch(
+        () => handle.isOpen,
+        (isOpen) => {
+          changes.push(isOpen);
+        },
+        { flush: 'sync' },
+      );
+      onTestFinished(stop);
+      const { HeldBranch, hide, show } = createHeldBranch(
+        () => <PopupRootPart handle={handle} defaultOpen />,
+        { mounted: true },
+      );
+      await render(() => <HeldBranch />);
+      expect(changes).toEqual([true]);
+
+      await hide();
+      expect(changes).toEqual([true, false]);
+
+      await show();
+      expect(changes).toEqual([true, false, true]);
+    });
+
     it('gives a new handle its store at the activation when the handle prop changes while KeepAlive holds the root', async () => {
       const first = createPopupFixtureHandle<string>();
       const second = createPopupFixtureHandle<string>();
@@ -1530,6 +1627,145 @@ describe('usePopupRoot', () => {
       expect(first.store).toBe(first.serverStore);
     });
 
+    it('detaches a root that mounts while KeepAlive holds its branch from its handle until the activation', async () => {
+      const handle = createPopupFixtureHandle<string>();
+      const root = createRootRef();
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <PopupRootPart ref={root.ref} handle={handle} />
+      ));
+      const { getByText } = await render(() => (
+        <div>
+          <PopupTriggerPart id="detached" handle={handle}>
+            detached
+          </PopupTriggerPart>
+          <HeldBranch />
+        </div>
+      ));
+
+      await mountWhileHeld();
+      expect(handle.store).toBe(handle.serverStore);
+
+      await fireEvent.click(getByText('detached'));
+      expect(handle.isOpen).toBe(false);
+
+      await show();
+      expect(handle.store).toBe(root.current.store);
+    });
+
+    it('takes a call of the handle in the onMounted hook of a part below a root that mounts while KeepAlive holds its branch', async () => {
+      const handle = createPopupFixtureHandle<string>();
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <PopupRootPart handle={handle} defaultOpen>
+          <CloseOnHook hook={onMounted} handle={handle} />
+        </PopupRootPart>
+      ));
+      await render(() => <HeldBranch />);
+
+      await mountWhileHeld();
+      await show();
+
+      expect(handle.isOpen).toBe(false);
+    });
+
+    it('keeps a detached trigger out of the store of a root that mounts while KeepAlive holds its branch', async () => {
+      const add = vi.spyOn(PopupTriggerMap.prototype, 'add');
+      onTestFinished(() => {
+        add.mockRestore();
+      });
+      const handle = createPopupFixtureHandle<string>();
+      const root = createRootRef();
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <PopupRootPart ref={root.ref} handle={handle} defaultOpen />
+      ));
+      const { getByText } = await render(() => (
+        <div>
+          <PopupTriggerPart id="detached" handle={handle}>
+            detached
+          </PopupTriggerPart>
+          <HeldBranch />
+        </div>
+      ));
+      const trigger = getByText('detached');
+      const changedAttributes: (string | null)[] = [];
+      const recordChanges = (records: MutationRecord[]) => {
+        changedAttributes.push(...records.map((record) => record.attributeName));
+      };
+      const observer = new MutationObserver(recordChanges);
+      observer.observe(trigger, { attributes: true });
+      onTestFinished(() => {
+        observer.disconnect();
+      });
+
+      await mountWhileHeld();
+
+      recordChanges(observer.takeRecords());
+      expect(changedAttributes).toEqual([]);
+      expect(add.mock.contexts).not.toContain(root.current.store.context.triggerElements);
+
+      await show();
+      expect(root.current.store.context.triggerElements.getById('detached')).toBe(trigger);
+    });
+
+    it.each([
+      { name: 'from a state', fromProp: false },
+      { name: 'from a prop', fromProp: true },
+    ])(
+      'keeps its handle when it mounts in the flush that shows its KeepAlive branch: $name',
+      async ({ fromProp }) => {
+        const handle = createPopupFixtureHandle<string>();
+        const root = createRootRef();
+        const { HeldBranch, hide, mountInActivation } = createHeldBranch(() => (
+          <PopupRootPart ref={root.ref} handle={handle} />
+        ));
+        const { getByText } = await render(() => (
+          <div>
+            <PopupTriggerPart id="detached" handle={handle}>
+              detached
+            </PopupTriggerPart>
+            <HeldBranch />
+          </div>
+        ));
+        await hide();
+
+        await mountInActivation({ fromProp });
+        expect(handle.store).toBe(root.current.store);
+
+        await fireEvent.click(getByText('detached'));
+        expect(handle.isOpen).toBe(true);
+      },
+    );
+
+    it('gives the handle back to an older root after a part below a root that mounts held calls it', async () => {
+      const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      onTestFinished(() => {
+        consoleWarn.mockRestore();
+      });
+      const handle = createPopupFixtureHandle<string>();
+      const older = createRootRef();
+      const held = createRootRef();
+      const { HeldBranch, mountWhileHeld } = createHeldBranch(() => (
+        <PopupRootPart ref={held.ref} handle={handle} defaultOpen>
+          <CloseOnHook hook={onMounted} handle={handle} />
+        </PopupRootPart>
+      ));
+      await render(() => (
+        <>
+          <PopupRootPart ref={older.ref} handle={handle} defaultOpen />
+          <HeldBranch />
+        </>
+      ));
+
+      await mountWhileHeld();
+      expect(held.current.open).toBe(false);
+      expect(older.current.open).toBe(true);
+      expect(handle.store).toBe(older.current.store);
+
+      // A development build warns one frame after two roots took one handle.
+      await waitSingleFrame();
+      await waitSingleFrame();
+      expect(consoleWarn).not.toHaveBeenCalled();
+    });
+
     it('closes with the reason none when KeepAlive deactivates the active trigger and the root stays', async () => {
       const show = shallowRef(true);
       const changes: unknown[] = [];
@@ -1537,7 +1773,7 @@ describe('usePopupRoot', () => {
         name: 'Branch',
         setup: () => () => <PopupTriggerPart id="trigger">trigger</PopupTriggerPart>,
       });
-      const { getByText, queryByRole } = await render(() => (
+      const { getByRole, getByText, queryByRole } = await render(() => (
         <PopupRootPart onOpenChange={(open, details) => changes.push([open, details.reason])}>
           <KeepAlive>{show.value ? <Branch key="branch" /> : <Other key="other" />}</KeepAlive>
           <PopupPart>popup</PopupPart>
@@ -1545,12 +1781,14 @@ describe('usePopupRoot', () => {
       ));
       await fireEvent.click(getByText('trigger'));
       expect(queryByRole('dialog')).not.toBe(null);
+      const dialog = getByRole('dialog');
 
       show.value = false;
 
       await waitFor(() => {
-        expect(queryByRole('dialog')).toBe(null);
+        expect(dialog).not.toBeInTheDocument();
       });
+      expect(queryByRole('dialog')).toBe(null);
       expect(changes).toEqual([
         [true, 'trigger-press'],
         [false, 'none'],
@@ -1690,6 +1928,9 @@ describe('usePopupRoot', () => {
       controls: expect.stringMatching(/^vase-ui-/) as string,
       open: true,
     };
+    // A portal renders the popup after the mount, so an open trigger of the server HTML names no
+    // popup.
+    const openOnServer: TriggerValues = { expanded: 'true', controls: null, open: true };
 
     // A server registers no trigger and attaches no store to a handle. A trigger that the root has
     // not named gets its values in the first flush after the mount. Vue does not patch an attribute
@@ -1709,13 +1950,13 @@ describe('usePopupRoot', () => {
       {
         name: 'open with defaultTriggerId',
         props: { defaultOpen: true, defaultTriggerId: 'first', triggers: ['first', 'second'] },
-        server: [open, closed],
+        server: [openOnServer, closed],
         client: [open, closed],
       },
       {
         name: 'open with the triggerId prop',
         props: { open: true, triggerId: 'second', triggers: ['first', 'second'] },
-        server: [closed, open],
+        server: [closed, openOnServer],
         client: [closed, open],
       },
       {
@@ -1761,7 +2002,7 @@ describe('usePopupRoot', () => {
       {
         name: 'a popup with an id of its own',
         props: { defaultOpen: true, defaultTriggerId: 'first', popupId: 'my-popup' },
-        server: [open],
+        server: [openOnServer],
         client: [{ expanded: 'true', controls: 'my-popup', open: true }],
       },
     ])('hydrates the server HTML of a root: $name', async ({ props, server, client }) => {
@@ -1803,15 +2044,18 @@ interface SingleAnchorRootInstance {
   transitionStatus: TransitionStatus;
 }
 
-// A root with one anchor: a button, and a popup while `mounted` is `true`. With `animatedClass`,
-// the popup holds an element that has the animations of the close, and the root gives that element
-// to the composable as `popupRef`.
+// A root with one anchor: a button, and a positioner while `mounted` is `true`. The positioner holds
+// the popup while `withPopup` is `true`. With `transitionClass`, the popup holds an element that has
+// the animations of an open change, and the root gives that element to the composable through
+// `getTransitionElement`.
 const SingleAnchorRoot = defineComponent({
   name: 'SingleAnchorRoot',
   props: {
     open: { type: Boolean as PropType<boolean | undefined>, default: undefined },
     defaultOpen: { type: Boolean, default: false },
-    animatedClass: { type: String as PropType<string | undefined>, default: undefined },
+    withPopup: { type: Boolean, default: true },
+    popupClass: { type: String as PropType<string | undefined>, default: undefined },
+    transitionClass: { type: String as PropType<string | undefined>, default: undefined },
   },
   emits: {
     openChange: (_open: boolean, _details: ValuePopupFixtureDetails) => true,
@@ -1819,13 +2063,14 @@ const SingleAnchorRoot = defineComponent({
     openChangeComplete: (_open: boolean) => true,
   },
   setup(props, { emit, expose }) {
-    const animatedElement = shallowRef<HTMLElement | null>(null);
+    const transitionElement = shallowRef<HTMLElement | null>(null);
     const { store, open, mounted, transitionStatus, actions } = useSingleAnchorPopupRoot(
       props,
       (initialState, defaultPopupId) => new ValuePopupFixtureStore(initialState, defaultPopupId),
       {
         name: 'SingleAnchorRoot',
-        popupRef: props.animatedClass === undefined ? undefined : animatedElement,
+        getTransitionElement:
+          props.transitionClass === undefined ? undefined : () => transitionElement.value,
         onOpenChange(nextOpen, details) {
           emit('openChange', nextOpen, details);
           if (!details.isCanceled) {
@@ -1840,6 +2085,11 @@ const SingleAnchorRoot = defineComponent({
 
     expose({ ...actions, store, open, mounted, transitionStatus });
 
+    const transitionAttributes = () => ({
+      'data-starting-style': transitionStatus.value === 'starting' ? '' : undefined,
+      'data-ending-style': transitionStatus.value === 'ending' ? '' : undefined,
+    });
+
     return () => (
       <>
         <button
@@ -1853,22 +2103,30 @@ const SingleAnchorRoot = defineComponent({
         </button>
         {mounted.value ? (
           <div
-            role="dialog"
-            ref={(element) => {
-              store.context.popupRef.value = element as HTMLElement | null;
-            }}
+            data-testid="positioner"
+            ref={(element) => store.set('positionerElement', element as HTMLElement | null)}
           >
-            popup
-            {props.animatedClass === undefined ? null : (
+            {props.withPopup ? (
               <div
+                role="dialog"
+                class={props.popupClass}
+                {...transitionAttributes()}
                 ref={(element) => {
-                  animatedElement.value = element as HTMLElement | null;
+                  store.context.popupRef.value = element as HTMLElement | null;
                 }}
-                class={props.animatedClass}
-                data-starting-style={transitionStatus.value === 'starting' ? '' : undefined}
-                data-ending-style={transitionStatus.value === 'ending' ? '' : undefined}
-              />
-            )}
+              >
+                popup
+                {props.transitionClass === undefined ? null : (
+                  <div
+                    ref={(element) => {
+                      transitionElement.value = element as HTMLElement | null;
+                    }}
+                    class={props.transitionClass}
+                    {...transitionAttributes()}
+                  />
+                )}
+              </div>
+            ) : null}
           </div>
         ) : null}
       </>
@@ -1891,6 +2149,9 @@ describe('useSingleAnchorPopupRoot', () => {
 
     await fireEvent.click(getByText('trigger'));
     expect(queryByRole('dialog')).not.toBe(null);
+    await waitFor(() => {
+      expect(events).toContainEqual(['openChangeComplete', true]);
+    });
     await fireEvent.click(getByText('trigger'));
     await waitFor(() => {
       expect(events).toContainEqual(['openChangeComplete', false]);
@@ -1899,6 +2160,7 @@ describe('useSingleAnchorPopupRoot', () => {
     expect(events).toEqual([
       ['openChange', true, 'trigger-press'],
       ['update:open', true],
+      ['openChangeComplete', true],
       ['openChange', false, 'trigger-press'],
       ['update:open', false],
       ['openChangeComplete', false],
@@ -1936,7 +2198,7 @@ describe('useSingleAnchorPopupRoot', () => {
     const open = shallowRef(false);
     const changes: boolean[] = [];
     const root = createRootRef<SingleAnchorRootInstance>();
-    const { getByText, queryByRole } = await render(() => (
+    const { getByRole, getByText, queryByRole } = await render(() => (
       <SingleAnchorRoot
         ref={root.ref}
         open={open.value}
@@ -1949,11 +2211,13 @@ describe('useSingleAnchorPopupRoot', () => {
     expect(queryByRole('dialog')).not.toBe(null);
     // A controlled root holds the last request in `state.open`.
     expect(root.current.store.state.open).toBe(true);
+    const dialog = getByRole('dialog');
 
     open.value = false;
     await waitFor(() => {
-      expect(queryByRole('dialog')).toBe(null);
+      expect(dialog).not.toBeInTheDocument();
     });
+    expect(queryByRole('dialog')).toBe(null);
 
     expect(root.current.store.state.open).toBe(false);
     // The popup is closed, so a close request has nothing to close.
@@ -1984,7 +2248,7 @@ describe('useSingleAnchorPopupRoot', () => {
   it('closes with the reason imperative-action from its close action', async () => {
     const reasons: string[] = [];
     const root = createRootRef<SingleAnchorRootInstance>();
-    const { queryByRole } = await render(() => (
+    const { getByRole, queryByRole } = await render(() => (
       <SingleAnchorRoot
         ref={root.ref}
         defaultOpen
@@ -1992,12 +2256,14 @@ describe('useSingleAnchorPopupRoot', () => {
       />
     ));
     expect(queryByRole('dialog')).not.toBe(null);
+    const dialog = getByRole('dialog');
 
     root.current.close();
 
     await waitFor(() => {
-      expect(queryByRole('dialog')).toBe(null);
+      expect(dialog).not.toBeInTheDocument();
     });
+    expect(queryByRole('dialog')).toBe(null);
     expect(reasons).toEqual(['imperative-action']);
   });
 
@@ -2022,44 +2288,115 @@ describe('useSingleAnchorPopupRoot', () => {
     await flushMicrotasks();
 
     expect(queryByRole('dialog')).not.toBe(null);
-    expect(completions).toEqual([]);
+    expect(completions).toEqual([true]);
 
     root.current.unmount();
     await flushMicrotasks();
 
     expect(queryByRole('dialog')).toBe(null);
-    expect(completions).toEqual([false]);
+    expect(completions).toEqual([true, false]);
   });
 
-  it('waits for the animations of the popupRef option', async () => {
+  it('waits for the animations of the element that getTransitionElement gives', async () => {
     globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     const className = randomStringValue();
     // The popup element has no animation. Only the element of the option has one. The list holds
-    // the number of running animations of that element at each completion.
-    const animationsAtCompletion: number[] = [];
+    // the open state and the number of running animations of that element at each completion.
+    const animationsAtCompletion: [boolean, number][] = [];
     let animated: HTMLElement | null = null;
+    const completed = vi.fn();
+    function onOpenChangeComplete(open: boolean) {
+      animationsAtCompletion.push([open, animated!.getAnimations().length]);
+      completed();
+    }
+    let completion = nextCall(completed);
     const { getByText, queryByRole, container } = await render(() => (
       <>
         <style>{`.${className} { transition: opacity 50ms; opacity: 1 } .${className}[data-ending-style] { opacity: 0 }`}</style>
         <SingleAnchorRoot
           defaultOpen
-          animatedClass={className}
-          onOpenChangeComplete={() => animationsAtCompletion.push(animated!.getAnimations().length)}
+          transitionClass={className}
+          onOpenChangeComplete={onOpenChangeComplete}
         />
       </>
     ));
     animated = container.querySelector<HTMLElement>(`.${className}`);
+    await completion;
     // A transition starts from the style that the element had before the change. Read it now, so
     // the close finds that style.
     expect(getComputedStyle(animated!).opacity).toBe('1');
 
+    completion = nextCall(completed);
     await fireEvent.click(getByText('trigger'));
-    await waitFor(() => {
-      expect(animationsAtCompletion).toHaveLength(1);
-    });
+    await completion;
 
-    expect(animationsAtCompletion).toEqual([0]);
+    expect(animationsAtCompletion).toEqual([
+      [true, 0],
+      [false, 0],
+    ]);
     expect(queryByRole('dialog')).toBe(null);
+  });
+
+  it('completes the open on a popup element that attaches before the positioner completes', async () => {
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    const className = randomStringValue();
+    const withPopup = shallowRef(false);
+    const onOpenChangeComplete = vi.fn();
+    const { getByText, getByRole, getByTestId, queryByRole } = await render(() => (
+      <>
+        <style>{`@keyframes ${className} { from { opacity: 0 } } .${className} { animation: ${className} 100s }`}</style>
+        <SingleAnchorRoot
+          withPopup={withPopup.value}
+          popupClass={className}
+          onOpenChangeComplete={onOpenChangeComplete}
+        />
+      </>
+    ));
+
+    await fireEvent.click(getByText('trigger'));
+    expect(getByTestId('positioner')).toBeVisible();
+    expect(queryByRole('dialog')).toBe(null);
+    withPopup.value = true;
+    await nextTick();
+    const popup = getByRole('dialog');
+    await waitSingleFrame();
+    await waitSingleFrame();
+    await flushMicrotasks();
+    expect(onOpenChangeComplete.mock.calls).toEqual([]);
+
+    const completion = nextCall(onOpenChangeComplete);
+    for (const animation of popup.getAnimations()) {
+      animation.finish();
+    }
+    await completion;
+
+    expect(onOpenChangeComplete.mock.calls).toEqual([[true]]);
+  });
+
+  it('reports the open completion again when the popup opens again before its exit ends', async () => {
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    const className = randomStringValue();
+    const onOpenChangeComplete = vi.fn();
+    const { getByText, getByRole } = await render(() => (
+      <>
+        <style>{`@keyframes ${className} { to { opacity: 0 } } .${className}[data-ending-style] { animation: ${className} 100s }`}</style>
+        <SingleAnchorRoot popupClass={className} onOpenChangeComplete={onOpenChangeComplete} />
+      </>
+    ));
+
+    let completion = nextCall(onOpenChangeComplete);
+    await fireEvent.click(getByText('trigger'));
+    await completion;
+    const exitAnimations = await nextAnimationsRead(getByRole('dialog'), {
+      action: () => fireEvent.click(getByText('trigger')),
+    });
+    expect(exitAnimations).toHaveLength(1);
+
+    completion = nextCall(onOpenChangeComplete);
+    await fireEvent.click(getByText('trigger'));
+    await completion;
+
+    expect(onOpenChangeComplete.mock.calls).toEqual([[true], [true]]);
   });
 
   it('marks a root inside a popup tree as nested', async () => {
@@ -2115,7 +2452,8 @@ describe('useSingleAnchorPopupRoot', () => {
 
     expect(queryByRole('dialog')).toBe(popup);
     expect(root.current.store.select('open')).toBe(true);
-    expect(events).toEqual([]);
+    // The one completion is the open of the mount. An activation reports none.
+    expect(events).toEqual([['openChangeComplete', true]]);
   });
 
   it('warns when open changes between controlled and uncontrolled', async () => {
@@ -2235,8 +2573,7 @@ describe('usePopupRootWithPopupId', () => {
 
     await render(<Root />);
 
-    expect(getStore().state.defaultPopupId).toBe('first');
-    expect(getStore().select('popupId')).toBe('first');
+    expect(getStore().select('defaultPopupId')).toBe('first');
   });
 
   it('follows a change of the id', async () => {
@@ -2247,12 +2584,12 @@ describe('usePopupRootWithPopupId', () => {
     popupId.value = 'second';
     await flushMicrotasks();
 
-    expect(getStore().select('popupId')).toBe('second');
+    expect(getStore().select('defaultPopupId')).toBe('second');
 
     popupId.value = undefined;
     await flushMicrotasks();
 
-    expect(getStore().select('popupId')).toBe(undefined);
+    expect(getStore().select('defaultPopupId')).toBe(undefined);
   });
 
   it('names the id in aria-controls of the trigger that opens the popup', async () => {
@@ -2261,17 +2598,23 @@ describe('usePopupRootWithPopupId', () => {
     const { getByRole } = await render(
       <Root>
         <PopupTriggerPart>trigger</PopupTriggerPart>
+        <FloatingPortalLite>
+          <PopupPart>popup</PopupPart>
+        </FloatingPortalLite>
       </Root>,
     );
     const trigger = getByRole('button');
 
     await fireEvent.click(trigger);
+    await flushMicrotasks();
 
+    expect(getByRole('dialog').id).toBe('first');
     expect(trigger.getAttribute('aria-controls')).toBe('first');
 
     popupId.value = 'second';
-    await nextTick();
+    await flushMicrotasks();
 
+    expect(getByRole('dialog').id).toBe('second');
     expect(trigger.getAttribute('aria-controls')).toBe('second');
   });
 
@@ -2280,7 +2623,6 @@ describe('usePopupRootWithPopupId', () => {
 
     await render(<Root />);
 
-    expect(getStore().state.defaultPopupId).toBe(undefined);
-    expect(getStore().select('popupId')).toBe(undefined);
+    expect(getStore().select('defaultPopupId')).toBe(undefined);
   });
 });

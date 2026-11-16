@@ -9,6 +9,8 @@ import {
   flushMicrotasks,
   hiddenInputSizeTests,
   hydrate,
+  hydrateAfter,
+  recordInputEvents,
   renderOnServer,
   screen,
   takeReportedMessages,
@@ -602,6 +604,114 @@ describe('useDateTimeFieldRoot', () => {
       expect(segmentOf(container, 'year')).toHaveAttribute('aria-valuenow', '2027');
     });
 
+    it('makes an ISO date in an empty date field when the locale has another calendar', async () => {
+      const onValueChange = vi.fn();
+      const { container, user } = await render(
+        <DateTimeFieldProbe locale="fa-IR" onValueChange={onValueChange} />,
+      );
+
+      await user.click(segmentOf(container, 'year'));
+      await user.keyboard('1405');
+      await user.click(segmentOf(container, 'month'));
+      await user.keyboard('8');
+      await user.click(segmentOf(container, 'day'));
+      await user.keyboard('23');
+
+      const [value] = onValueChange.mock.calls.at(-1) as [Temporal.PlainDate];
+      expect(kindOf(value)).toBe('date');
+      expect(value.toString()).toBe('2026-11-14');
+      expect(segmentOf(container, 'year')).toHaveAttribute('aria-valuenow', '1405');
+      expect(segmentOf(container, 'month')).toHaveAttribute('aria-valuenow', '8');
+    });
+
+    it.each([
+      {
+        name: 'the Persian calendar of the prop',
+        calendar: 'persian',
+        month: '8',
+        year: '1405',
+        expected: '2026-10-23[u-ca=persian]',
+      },
+      {
+        name: 'the ISO calendar, with a Buddhist prop',
+        calendar: 'buddhist',
+        month: '5',
+        year: '2570',
+        expected: '2027-05',
+      },
+    ])('makes the value of an empty year and month field in $name', async (row) => {
+      const onValueChange = vi.fn();
+      const { container, user } = await render(
+        <DateTimeFieldProbe
+          granularity="month"
+          locale="en-US"
+          calendar={row.calendar}
+          name="when"
+          onValueChange={onValueChange}
+        />,
+      );
+
+      await user.click(segmentOf(container, 'month'));
+      await user.keyboard(row.month);
+
+      expect(onValueChange).not.toHaveBeenCalled();
+      const firstDay = Temporal.PlainDate.from({
+        calendar: row.calendar,
+        year: Number(row.year),
+        month: Number(row.month),
+        day: 1,
+      });
+      expect(segmentOf(container, 'month')).toHaveAttribute(
+        'aria-valuetext',
+        textOf(firstDay, { month: 'long' }, 'en-US'),
+      );
+
+      await user.click(segmentOf(container, 'year'));
+      await user.keyboard(row.year);
+
+      const [value] = onValueChange.mock.calls.at(-1) as [Temporal.PlainYearMonth];
+      expect(kindOf(value)).toBe('yearMonth');
+      expect(value.toString()).toBe(row.expected);
+      expect(segmentOf(container, 'month')).toHaveAttribute('aria-valuenow', row.month);
+      expect(segmentOf(container, 'year')).toHaveAttribute('aria-valuenow', row.year);
+      expect(hiddenInputOf(container).value).toBe(row.expected);
+    });
+
+    it('keeps the calendar prop of an empty year and month field in a month that is also an ISO month', async () => {
+      // The ISO month 2027-11 is the Hebrew month 5788-M02, day for day.
+      const now = vi
+        .spyOn(Temporal.Now, 'plainDateISO')
+        .mockReturnValue(Temporal.PlainDate.from('2027-11-15'));
+      onTestFinished(() => {
+        now.mockRestore();
+      });
+      const onValueChange = vi.fn();
+      const { container, user } = await render(
+        <DateTimeFieldProbe
+          granularity="month"
+          locale="en-US"
+          calendar="hebrew"
+          onValueChange={onValueChange}
+        />,
+      );
+
+      await user.click(segmentOf(container, 'month'));
+      await user.keyboard('{ArrowUp}');
+      await user.click(segmentOf(container, 'year'));
+      await user.keyboard('{ArrowUp}');
+
+      const [first] = onValueChange.mock.calls.at(-1) as [Temporal.PlainYearMonth];
+      expect(first.toString()).toBe('2027-11-01[u-ca=hebrew]');
+
+      await user.click(segmentOf(container, 'month'));
+      await user.keyboard('{ArrowUp}');
+
+      const [next] = onValueChange.mock.calls.at(-1) as [Temporal.PlainYearMonth];
+      expect(next.toString()).toBe('2027-12-01[u-ca=hebrew]');
+      expect(segmentOf(container, 'month')).toHaveAttribute('aria-valuenow', '3');
+      expect(segmentOf(container, 'year')).toHaveAttribute('aria-valuenow', '5788');
+    });
+
     it('takes the numbers of an empty segment, and the zone, from referenceDate', async () => {
       const onValueChange = vi.fn();
       const { container, user } = await render(
@@ -900,14 +1010,50 @@ describe('useDateTimeFieldRoot', () => {
       expect(input.value).toBe('2026-11-14');
     });
 
-    it('writes its text again when the page is shown from the cache', async () => {
-      const { container } = await render(<DateTimeFieldProbe defaultValue="2026-11-14" />);
+    it('takes the text that its hidden input got before the hydration, with one change', async () => {
+      const props = { defaultValue: '2026-11-14', locale: 'en-US', name: 'when' };
+      const onValueChange = vi.fn();
+      const serverHtml = await renderOnServer(PROBE, props);
+      let events: string[] = [];
+
+      const { container } = await hydrateAfter(DateTimeFieldProbe, {
+        serverHtml,
+        props: { ...props, onValueChange },
+        before(serverContainer) {
+          const input = hiddenInputOf(serverContainer);
+          events = recordInputEvents(input);
+          input.value = '2026-12-25';
+        },
+      });
+      await flushMicrotasks();
+
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+      expect(onValueChange.mock.calls[0]![0].toString()).toBe('2026-12-25');
+      expect(onValueChange.mock.calls[0]![1].reason).toBe('input-change');
+      expect(segmentOf(container, 'month').value).toBe('12');
+      expect(hiddenInputOf(container).value).toBe('2026-12-25');
+      expect(events).toEqual(['input']);
+    });
+
+    it('keeps a value that the type of its hidden input refuses at a `pageshow` event after the hydration', async () => {
+      // A `date` input has no year 0, so it has no value.
+      const props = { defaultValue: '0000-03-01', locale: 'en-US', name: 'when' };
+      const onValueChange = vi.fn();
+      const serverHtml = await renderOnServer(PROBE, props);
+      const { container } = await hydrate(DateTimeFieldProbe, {
+        serverHtml,
+        props: { ...props, onValueChange },
+      });
       const input = hiddenInputOf(container);
+      const events = recordInputEvents(input);
+      expect(input.value).toBe('');
 
-      input.value = '2020-01-01';
-      window.dispatchEvent(new Event('pageshow'));
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
 
-      expect(input.value).toBe('2026-11-14');
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(segmentOf(container, 'year').value).toBe('1');
+      expect(events).toEqual([]);
     });
 
     hiddenInputSizeTests({

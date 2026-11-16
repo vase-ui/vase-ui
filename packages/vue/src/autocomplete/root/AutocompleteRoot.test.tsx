@@ -10,14 +10,21 @@ import {
   createRenderer,
   fireEvent,
   flushMicrotasks,
+  heldMountFormResetTests,
   hydrate,
+  hydrateAfter,
   isJSDOM,
+  popupAnatomyTests,
+  recordInputEvents,
   renderOnServer,
   screen,
   waitFor,
+  waitForLaterMillisecond,
+  within,
 } from '#test-utils';
 import type { VaseUIRenderResult } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
+import AutocompleteRootBeforeHydration from './AutocompleteRootBeforeHydration.test.vue';
 import AutocompleteRootHydration from './AutocompleteRootHydration.test.vue';
 
 const HYDRATION_FILE = 'src/autocomplete/root/AutocompleteRootHydration.test.vue';
@@ -104,6 +111,30 @@ async function writeOutside(target: { value: unknown }, next: unknown) {
 describe('<Autocomplete.Root />', () => {
   const { render } = createRenderer();
 
+  popupAnatomyTests({
+    createComponent: ({ open, onOpenChangeComplete, content }) => (
+      <Autocomplete.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Autocomplete.Input />
+        <Autocomplete.Portal>
+          <Autocomplete.Positioner data-testid="shown" class="shown">
+            Content
+            {content}
+          </Autocomplete.Positioner>
+        </Autocomplete.Portal>
+      </Autocomplete.Root>
+    ),
+    createPopup: () => <Autocomplete.Popup data-testid="popup">Popup</Autocomplete.Popup>,
+    createBackdropComponent: ({ open, onOpenChangeComplete }) => (
+      <Autocomplete.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Autocomplete.Input />
+        <Autocomplete.Portal>
+          <Autocomplete.Backdrop data-testid="shown" class="shown" />
+        </Autocomplete.Portal>
+      </Autocomplete.Root>
+    ),
+    render,
+  });
+
   // `getFilter` keeps the filter for no locale, with the runtime locale of its first use. The case
   // of the mocked locale is thus the first case of the file.
   describe('hydration', () => {
@@ -140,6 +171,60 @@ describe('<Autocomplete.Root />', () => {
       expect(namedInputs).toHaveLength(1);
       expect(namedInputs[0]).toHaveAttribute('aria-hidden', 'true');
       expect(namedInputs[0].value).toBe('Oslo');
+    });
+  });
+
+  describe('VUE-74: text that the user typed before the hydration', () => {
+    it('writes the text to v-model:value', async () => {
+      const serverHtml = await renderOnServer(
+        'src/autocomplete/root/AutocompleteRootBeforeHydration.test.vue',
+      );
+
+      const { container } = await hydrateAfter(AutocompleteRootBeforeHydration, {
+        serverHtml,
+        before(serverContainer) {
+          const serverInput = within(serverContainer).getByTestId<HTMLInputElement>('input');
+          serverInput.focus();
+          serverInput.value = 'Osl';
+        },
+      });
+      await flushMicrotasks();
+
+      const fixture = within(container);
+      expect(fixture.getByTestId('input')).toHaveValue('Osl');
+      expect(fixture.getByTestId('value').textContent).toBe('Osl');
+      expect(fixture.getByTestId('changes').textContent).toBe('Osl (input-change)');
+    });
+  });
+
+  describe('VUE-81: the state that the input got before the hydration', () => {
+    it.each([
+      { name: 'a name', props: { name: 'city' }, value: 'Oslo', changes: 'Oslo (none)' },
+      { name: 'no name', props: {}, value: '', changes: '' },
+    ])('takes the hidden input of a root with $name', async ({ props, ...expected }) => {
+      const serverHtml = await renderOnServer(
+        'src/autocomplete/root/AutocompleteRootBeforeHydration.test.vue',
+        props,
+      );
+      let events: string[] = [];
+
+      const { container } = await hydrateAfter(AutocompleteRootBeforeHydration, {
+        serverHtml,
+        props,
+        before(serverContainer) {
+          events = recordInputEvents(serverContainer);
+          serverContainer.querySelector<HTMLInputElement>('input[aria-hidden="true"]')!.value =
+            'Oslo';
+        },
+      });
+      await flushMicrotasks();
+
+      const fixture = within(container);
+      expect(fixture.getByTestId('value').textContent).toBe(expected.value);
+      expect(fixture.getByTestId('changes').textContent).toBe(expected.changes);
+      expect(fixture.getByTestId('input')).toHaveValue(expected.value);
+      expect(container.querySelector('input[aria-hidden="true"]')).toHaveValue(expected.value);
+      expect(events).toEqual(expected.value === '' ? [] : ['input']);
     });
   });
 
@@ -213,7 +298,7 @@ describe('<Autocomplete.Root />', () => {
       await user.click(screen.getByRole('combobox'));
       await screen.findByRole('listbox');
       await user.keyboard('{Escape}');
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(getCloseCompletions(onOpenChangeComplete)).toHaveLength(1);
 
       // Calling the action after the automatic unmount must not repeat the completion.
@@ -249,7 +334,7 @@ describe('<Autocomplete.Root />', () => {
       await setProps({ open: true });
       await screen.findByRole('listbox');
       await setProps({ open: false });
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(getCloseCompletions(onOpenChangeComplete)).toHaveLength(2);
     });
 
@@ -272,7 +357,7 @@ describe('<Autocomplete.Root />', () => {
       expect(onOpenChangeComplete).not.toHaveBeenCalledWith(false);
       await setProps({ open: true });
       await setProps({ open: false });
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(getCloseCompletions(onOpenChangeComplete)).toHaveLength(1);
     });
 
@@ -295,7 +380,7 @@ describe('<Autocomplete.Root />', () => {
       expect(screen.queryByRole('listbox')).not.toBe(null);
       cancel = false;
       await user.click(screen.getByRole('option'));
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
     });
 
     it('keeps the opt-out when a controlled close is applied in a transition', async () => {
@@ -416,7 +501,7 @@ describe('<Autocomplete.Root />', () => {
       expect(screen.queryByRole('listbox')).not.toBe(null);
 
       await user.keyboard('{Escape}');
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
     });
 
@@ -461,7 +546,7 @@ describe('<Autocomplete.Root />', () => {
 
       optOut = false;
       await user.click(screen.getByRole('option'));
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(getCloseCompletions(onOpenChangeComplete)).toHaveLength(2);
     });
 
@@ -521,31 +606,28 @@ describe('<Autocomplete.Root />', () => {
 
       const input = screen.getByRole<HTMLInputElement>('combobox');
 
-      await user.click(input);
-      await user.type(input, 'al');
-
-      const firstOption = await screen.findByRole('option', { name: 'alpha' });
+      const firstOption = await waitForLaterMillisecond(async () => {
+        await user.click(input);
+        await user.type(input, 'al');
+        return screen.findByRole('option', { name: 'alpha' });
+      });
       expect(firstOption).toHaveAttribute('data-highlighted');
 
       await user.keyboard('{Enter}');
       expect(input.value).toBe('alpha');
 
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
 
       await user.clear(input);
       await user.type(input, 'a');
 
       await waitFor(() => {
-        expect(screen.queryByRole('listbox')).not.toBe(null);
+        expect(screen.getByRole('listbox')).not.toBe(null);
       });
 
       await user.tab();
 
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
     });
 
     it('fills the input with the highlighted item on Space while the input is empty', async () => {
@@ -564,9 +646,11 @@ describe('<Autocomplete.Root />', () => {
       );
 
       const input = screen.getByRole<HTMLInputElement>('combobox');
-      await user.click(input);
-      await user.keyboard('{ArrowDown}');
-      const alpha = await screen.findByRole('option', { name: 'alpha' });
+      const alpha = await waitForLaterMillisecond(async () => {
+        await user.click(input);
+        await user.keyboard('{ArrowDown}');
+        return screen.findByRole('option', { name: 'alpha' });
+      });
       await user.keyboard('{ArrowDown}');
       await waitFor(() => {
         expect(alpha).toHaveAttribute('data-highlighted');
@@ -602,9 +686,10 @@ describe('<Autocomplete.Root />', () => {
       );
 
       const trigger = screen.getByTestId('trigger');
-      await user.click(trigger);
-
-      const input = await screen.findByTestId('input');
+      const input = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        return screen.findByTestId('input');
+      });
       await waitFor(() => expect(input).toHaveFocus());
       await user.type(input, 'al');
 
@@ -612,17 +697,18 @@ describe('<Autocomplete.Root />', () => {
       await waitFor(() => expect(alpha).toHaveAttribute('data-highlighted'));
       await user.keyboard('{Enter}');
 
-      await waitFor(() => expect(screen.queryByRole('dialog')).toBe(null));
+      expect(screen.queryByRole('dialog')).toBe(null);
       expect(trigger).toHaveFocus();
       expect(trigger).toHaveTextContent('alpha');
 
-      await user.click(trigger);
-
-      expect(await screen.findByTestId('input')).toHaveValue('alpha');
+      await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        expect(await screen.findByTestId('input')).toHaveValue('alpha');
+      });
       expect(await screen.findByRole('option', { name: 'alpha' })).not.toBe(null);
 
       await user.keyboard('{Escape}');
-      await waitFor(() => expect(screen.queryByRole('dialog')).toBe(null));
+      expect(screen.queryByRole('dialog')).toBe(null);
     });
 
     it('preserves the typed value when the popup is dismissed with Escape', async () => {
@@ -644,26 +730,29 @@ describe('<Autocomplete.Root />', () => {
       );
 
       const trigger = screen.getByTestId('trigger');
-      await user.click(trigger);
-      const input = await screen.findByTestId('input');
+      const input = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        return screen.findByTestId('input');
+      });
       await waitFor(() => expect(input).toHaveFocus());
       await user.type(input, 'al');
       await user.keyboard('{Escape}');
 
-      await waitFor(() => expect(screen.queryByRole('dialog')).toBe(null));
+      expect(screen.queryByRole('dialog')).toBe(null);
       expect(trigger).toHaveFocus();
       expect(trigger).toHaveTextContent('al');
       expect(onValueChange.mock.lastCall?.[0]).toBe('al');
 
-      await user.click(trigger);
-
-      expect(await screen.findByTestId('input')).toHaveValue('al');
+      await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        expect(await screen.findByTestId('input')).toHaveValue('al');
+      });
       expect(await screen.findByRole('option', { name: 'alpha' })).not.toBe(null);
       expect(await screen.findByRole('option', { name: 'alpine' })).not.toBe(null);
-      await waitFor(() => expect(screen.queryByRole('option', { name: 'beta' })).toBe(null));
+      expect(screen.queryByRole('option', { name: 'beta' })).toBe(null);
 
       await user.keyboard('{Escape}');
-      await waitFor(() => expect(screen.queryByRole('dialog')).toBe(null));
+      expect(screen.queryByRole('dialog')).toBe(null);
     });
   });
 
@@ -746,10 +835,11 @@ describe('<Autocomplete.Root />', () => {
     );
 
     const input = screen.getByTestId<HTMLInputElement>('input');
-    await user.click(input);
-    await user.keyboard('{ArrowDown}');
-
-    expect(await screen.findByRole('listbox')).toHaveAttribute('aria-readonly', 'true');
+    await waitForLaterMillisecond(async () => {
+      await user.click(input);
+      await user.keyboard('{ArrowDown}');
+      expect(await screen.findByRole('listbox')).toHaveAttribute('aria-readonly', 'true');
+    });
 
     await user.click(await screen.findByRole('option', { name: 'beta' }));
 
@@ -2079,8 +2169,10 @@ describe('<Autocomplete.Root />', () => {
       );
 
       const input = screen.getByRole('combobox');
-      await user.click(screen.getByRole('combobox'));
-      await user.type(input, 'a'); // open and highlight first
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('combobox'));
+        await user.type(input, 'a'); // open and highlight first
+      });
       await user.keyboard('{Enter}');
 
       expect(handleSubmit).not.toHaveBeenCalled();
@@ -2107,7 +2199,7 @@ describe('<Autocomplete.Root />', () => {
       );
 
       const input = screen.getByRole<HTMLInputElement>('combobox');
-      await user.type(input, 'al');
+      await waitForLaterMillisecond(() => user.type(input, 'al'));
 
       const alphaButton = screen.getByRole('option', { name: 'alpha' });
       await user.click(alphaButton);
@@ -2139,7 +2231,7 @@ describe('<Autocomplete.Root />', () => {
         </Autocomplete.Root>,
       );
 
-      await user.type(screen.getByRole('combobox'), 'a');
+      await waitForLaterMillisecond(() => user.type(screen.getByRole('combobox'), 'a'));
       await user.click(screen.getByRole('option', { name: 'alpha' }));
 
       expect(handleSubmit).toHaveBeenCalledTimes(1);
@@ -2175,7 +2267,7 @@ describe('<Autocomplete.Root />', () => {
         </>,
       );
 
-      await user.type(screen.getByRole('combobox'), 'a');
+      await waitForLaterMillisecond(() => user.type(screen.getByRole('combobox'), 'a'));
       await user.click(screen.getByRole('option', { name: 'alpha' }));
 
       expect(handleSubmit).toHaveBeenCalledTimes(1);
@@ -2203,7 +2295,7 @@ describe('<Autocomplete.Root />', () => {
       );
 
       const input = screen.getByRole<HTMLInputElement>('combobox');
-      await user.type(input, 'al');
+      await waitForLaterMillisecond(() => user.type(input, 'al'));
       await user.keyboard('{ArrowDown}');
 
       const alphaButton = screen.getByRole('option', { name: 'alpha' });
@@ -2242,7 +2334,7 @@ describe('<Autocomplete.Root />', () => {
         );
 
         const input = screen.getByRole<HTMLInputElement>('combobox');
-        await user.type(input, 'al');
+        await waitForLaterMillisecond(() => user.type(input, 'al'));
         await user.click(screen.getByRole('option', { name: 'alpha' }));
 
         expect(handleSubmit).toHaveBeenCalledTimes(1);
@@ -2271,7 +2363,7 @@ describe('<Autocomplete.Root />', () => {
       );
 
       const input = screen.getByRole<HTMLInputElement>('combobox');
-      await user.type(input, 'al');
+      await waitForLaterMillisecond(() => user.type(input, 'al'));
       await user.keyboard('{ArrowDown}');
 
       const listbox = screen.getByRole('listbox');
@@ -2691,12 +2783,13 @@ describe('<Autocomplete.Root />', () => {
       );
 
       const input = screen.getByTestId('input');
-      await user.click(input);
-      await user.type(input, 'can');
-
-      // Should match the item by its label, not its value
-      await waitFor(() => {
-        expect(screen.getAllByRole('option')).toHaveLength(1);
+      await waitForLaterMillisecond(async () => {
+        await user.click(input);
+        await user.type(input, 'can');
+        // Should match the item by its label, not its value
+        await waitFor(() => {
+          expect(screen.getAllByRole('option')).toHaveLength(1);
+        });
       });
       await user.click(screen.getByRole('option', { name: 'Canada' }));
 
@@ -2726,12 +2819,13 @@ describe('<Autocomplete.Root />', () => {
       );
 
       const input = screen.getByTestId('input');
-      await user.click(input);
-      await user.type(input, 'can');
-
-      // Should match by the provided itemToStringValue mapping
-      await waitFor(() => {
-        expect(screen.getAllByRole('option')).toHaveLength(1);
+      await waitForLaterMillisecond(async () => {
+        await user.click(input);
+        await user.type(input, 'can');
+        // Should match by the provided itemToStringValue mapping
+        await waitFor(() => {
+          expect(screen.getAllByRole('option')).toHaveLength(1);
+        });
       });
       await user.keyboard('{ArrowDown}');
       await user.keyboard('{Enter}');
@@ -2762,10 +2856,11 @@ describe('<Autocomplete.Root />', () => {
       );
 
       const input = screen.getByTestId('input');
-      await user.type(input, 'can');
-
-      await waitFor(() => {
-        expect(screen.getAllByRole('option')).toHaveLength(1);
+      await waitForLaterMillisecond(async () => {
+        await user.type(input, 'can');
+        await waitFor(() => {
+          expect(screen.getAllByRole('option')).toHaveLength(1);
+        });
       });
       await user.click(screen.getByRole('option', { name: 'Canada' }));
 
@@ -3217,9 +3312,89 @@ describe('<Autocomplete.Root />', () => {
       expect(getInput()).toHaveAttribute('aria-expanded', 'false');
       expect(getInput().value).toBe('ma');
     });
+
+    it('VUE-91: emits no valueChange for a press of an item whose text the input has', async () => {
+      const events: string[] = [];
+      await render(
+        <Autocomplete.Root
+          items={cities}
+          defaultValue="Malta"
+          defaultOpen
+          onValueChange={(value, details) => events.push(`valueChange:${value}:${details.reason}`)}
+          {...{ 'onUpdate:value': (value: string) => events.push(`update:value:${value}`) }}
+          onOpenChange={(open, details) => events.push(`openChange:${open}:${details.reason}`)}
+        >
+          <Autocomplete.Input />
+          {popupWithList()}
+        </Autocomplete.Root>,
+      );
+
+      await fireEvent.click(screen.getByRole('option', { name: 'Malta' }));
+      await flushMicrotasks();
+
+      expect(events).toEqual(['openChange:false:item-press']);
+      expect(getInput().value).toBe('Malta');
+    });
   });
 
   describe('inline completion', () => {
+    it('mode="both": Enter commits the inline text of the highlighted item', async () => {
+      const events: string[] = [];
+      await render(
+        <Autocomplete.Root
+          mode="both"
+          items={cities}
+          onValueChange={(value, details) => events.push(`valueChange:${value}:${details.reason}`)}
+          {...{ 'onUpdate:value': (value: string) => events.push(`update:value:${value}`) }}
+        >
+          <Autocomplete.Input />
+          {popupWithList()}
+        </Autocomplete.Root>,
+      );
+      getInput().focus();
+      await waitForLaterMillisecond(() => type('Ma'));
+      await pressArrowDown();
+      expect(getInput().value).toBe('Malmö');
+      events.length = 0;
+
+      await fireEvent.keyDown(getInput(), { key: 'Enter' });
+      await flushMicrotasks();
+
+      expect(events).toEqual(['valueChange:Malmö:item-press', 'update:value:Malmö']);
+      expect(getInput().value).toBe('Malmö');
+    });
+
+    it('VUE-91: a native reset removes the inline text of the default value and emits no valueChange', async () => {
+      const events: string[] = [];
+      await render(
+        <form data-testid="form">
+          <Autocomplete.Root
+            name="search"
+            mode="inline"
+            items={cities}
+            onValueChange={(value, details) =>
+              events.push(`valueChange:${value}:${details.reason}`)
+            }
+            {...{ 'onUpdate:value': (value: string) => events.push(`update:value:${value}`) }}
+          >
+            <Autocomplete.Input />
+            {popupWithList()}
+          </Autocomplete.Root>
+        </form>,
+      );
+      getInput().focus();
+      await pressArrowDown();
+      await pressArrowDown();
+      expect(getInput().value).toBe('Malmö');
+
+      screen.getByTestId<HTMLFormElement>('form').reset();
+
+      await waitFor(() => {
+        expect(getInput().value).toBe('');
+      });
+      expect(events).toEqual([]);
+    });
+
     it('typed text replaces the inline text', async () => {
       const handleValueChange = vi.fn();
       await render(
@@ -3356,6 +3531,76 @@ describe('<Autocomplete.Root />', () => {
     });
   });
 
+  describe('VUE-102: a value with a line break', () => {
+    const addresses = ['Main Street 1\nFlat 2', 'Box 1'];
+
+    function renderInPopup(props: {
+      defaultValue: string;
+      defaultOpen?: boolean;
+      onValueChange?: (value: string) => void;
+    }) {
+      return render(
+        <form data-testid="form">
+          <Autocomplete.Root name="address" items={addresses} {...props}>
+            <Autocomplete.Trigger>
+              <Autocomplete.Value />
+            </Autocomplete.Trigger>
+            <Autocomplete.Portal>
+              <Autocomplete.Positioner>
+                <Autocomplete.Popup>
+                  <Autocomplete.Input />
+                  <Autocomplete.List v-slots={itemSlot} />
+                </Autocomplete.Popup>
+              </Autocomplete.Positioner>
+            </Autocomplete.Portal>
+          </Autocomplete.Root>
+        </form>,
+      );
+    }
+
+    it.each([
+      {
+        name: 'an input outside the popup',
+        renderAutocomplete: () =>
+          render(
+            <form data-testid="form">
+              <Autocomplete.Root name="address" defaultValue={'Main Street 1\nFlat 2'}>
+                <Autocomplete.Input />
+              </Autocomplete.Root>
+            </form>,
+          ),
+      },
+      {
+        name: 'an input inside the popup',
+        renderAutocomplete: () => renderInPopup({ defaultValue: 'Main Street 1\nFlat 2' }),
+      },
+    ])('submits the value from $name', async ({ renderAutocomplete }) => {
+      await renderAutocomplete();
+
+      expect(getFormData('address')).toEqual(['Main Street 1\nFlat 2']);
+    });
+
+    // The open popup with no text registers each item, so the text can match an item.
+    it('keeps the text that the browser restores', async () => {
+      const handleValueChange = vi.fn();
+      await renderInPopup({
+        defaultValue: '',
+        defaultOpen: true,
+        onValueChange: handleValueChange,
+      });
+      expect(getOptions()).toEqual(['Main Street 1\nFlat 2', 'Box 1']);
+      const input = document.querySelector<HTMLInputElement>('input[name="address"]')!;
+      input.value = 'Main Street 1Flat 2';
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+      await flushMicrotasks();
+
+      expect(handleValueChange.mock.calls.map((call) => call[0])).toEqual(['Main Street 1Flat 2']);
+      expect(getFormData('address')).toEqual(['Main Street 1Flat 2']);
+    });
+  });
+
   describe('VUE-21: a native reset', () => {
     beforeEach(() => {
       vi.useFakeTimers();
@@ -3451,5 +3696,122 @@ describe('<Autocomplete.Root />', () => {
       expect(screen.queryByTestId('error')).toBe(null);
       expect(validate).toHaveBeenCalledTimes(validateCalls);
     });
+
+    it.each([
+      { name: 'mode="inline"', mode: 'inline' },
+      { name: 'mode="both"', mode: 'both' },
+    ] as const)(
+      'BUG-6206: puts back the default text while the input shows it as an inline completion, $name',
+      async ({ mode }) => {
+        const events: string[] = [];
+        await render(
+          <form data-testid="form">
+            <Autocomplete.Root
+              name="search"
+              mode={mode}
+              items={cities}
+              defaultValue="Malmö"
+              onValueChange={(value, details) =>
+                events.push(`valueChange:${value}:${details.reason}:${details.event.type}`)
+              }
+              {...{ 'onUpdate:value': (value: string) => events.push(`update:value:${value}`) }}
+            >
+              <Autocomplete.Input />
+              {popupWithList()}
+            </Autocomplete.Root>
+          </form>,
+        );
+        getInput().focus();
+        await type('');
+        await pressArrowDown();
+        await pressArrowDown();
+        expect(getInput().value).toBe('Malmö');
+        events.length = 0;
+
+        await reset();
+
+        expect(events).toEqual(['valueChange:Malmö:none:reset', 'update:value:Malmö']);
+        expect(getFormData('search')).toEqual(['Malmö']);
+        await fireEvent.keyDown(getInput(), { key: 'Escape' });
+        await flushMicrotasks();
+        expect(getInput().value).toBe('Malmö');
+      },
+    );
+
+    it('VUE-21: a canceled change of a reset that removes an inline completion starts no validation', async () => {
+      const validate = vi.fn(() => null);
+      await render(
+        <form data-testid="form">
+          <Field.Root name="search" validate={validate} validationMode="onChange">
+            <Autocomplete.Root
+              mode="inline"
+              items={cities}
+              defaultValue="Malmö"
+              onValueChange={(_value, details) => {
+                if (details.event.type === 'reset') {
+                  details.cancel();
+                }
+              }}
+            >
+              <Autocomplete.Input />
+              {popupWithList()}
+            </Autocomplete.Root>
+          </Field.Root>
+        </form>,
+      );
+      getInput().focus();
+      await type('x');
+      await pressArrowDown();
+      await pressArrowDown();
+      expect(getInput().value).toBe('Malta');
+      vi.advanceTimersByTime(0);
+      await flushMicrotasks();
+      const validateCalls = validate.mock.calls.length;
+
+      await reset();
+
+      expect(getInput().value).toBe('x');
+      expect(validate).toHaveBeenCalledTimes(validateCalls);
+    });
+
+    it('VUE-21: the next typed change after a reset of an inline completion starts a validation', async () => {
+      const validate = vi.fn(() => null);
+      await render(
+        <form data-testid="form">
+          <Field.Root name="search" validate={validate} validationMode="onChange">
+            <Autocomplete.Root mode="inline" items={cities} defaultValue="Malmö">
+              <Autocomplete.Input />
+              {popupWithList()}
+            </Autocomplete.Root>
+          </Field.Root>
+        </form>,
+      );
+      getInput().focus();
+      await type('');
+      await pressArrowDown();
+      await pressArrowDown();
+      expect(getInput().value).toBe('Malmö');
+      await reset();
+      const validateCalls = validate.mock.calls.length;
+
+      await type('z');
+      vi.advanceTimersByTime(0);
+      await flushMicrotasks();
+
+      expect(validate).toHaveBeenCalledTimes(validateCalls + 1);
+    });
+  });
+
+  heldMountFormResetTests({
+    render,
+    renderControl: () => (
+      <Autocomplete.Root name="search" items={cities} defaultValue="ma">
+        <Autocomplete.Input />
+      </Autocomplete.Root>
+    ),
+    change: () => type('mal'),
+    readState: () => getInput().value,
+    defaultState: 'ma',
+    changedState: 'mal',
   });
 });

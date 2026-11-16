@@ -6,7 +6,9 @@ description: An unstyled Vue switch component that indicates whether a setting i
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoSwitchHero from '../demos/switch/hero/css-modules/index.vue';
+import DemoSwitchHeroTailwind from '../demos/switch/hero/tailwind/index.vue';
 </script>
 
 # Switch
@@ -15,7 +17,12 @@ A control that indicates whether a setting is on or off.
 
 <DemoFrame>
   <DemoSwitchHero />
+  <template #tailwind>
+    <DemoSwitchHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -24,6 +31,18 @@ A control that indicates whether a setting is on or off.
 <<< ../demos/switch/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/switch/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Usage guidelines
 
@@ -38,6 +57,8 @@ Import the component and assemble its parts:
 `Switch.Root` renders its element and a hidden `<input>` after it. The input gives the switch the form behavior of a native checkbox. A reset of the form puts an uncontrolled switch back to `defaultChecked`. A controlled switch does not change.
 
 Because of the hidden input, `Switch.Root` has more than one root node. A rule of `<style scoped>` does not match its element, and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
+
+`Switch.Root` takes the state of its input when the visitor presses a native label before the page hydrates. It also takes a state that the browser restores after a move back in the history or a reload. The switch then emits `checkedChange` and `update:checked` one time. A `checkedChange` listener can thus run after a move back with no action of the visitor. A read-only or disabled switch takes no state.
 
 ## Examples
 

@@ -5,6 +5,7 @@ import {
   createRenderer,
   describeConformance,
   flushMicrotasks,
+  heldMountListTests,
   isJSDOM,
   positionerConformanceTests,
   screen,
@@ -20,6 +21,34 @@ import SelectPositionerScoped from './SelectPositionerScoped.test.vue';
 
 describe('<Select.Positioner />', () => {
   const { render } = createRenderer();
+
+  heldMountListTests({
+    render,
+    renderList: (withLastItem) => (
+      <Select.Root defaultOpen defaultValue="a">
+        <Select.Trigger>
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              <Select.Item value="a">Apple</Select.Item>
+              {withLastItem ? <Select.Item value="b">Banana</Select.Item> : null}
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>
+    ),
+    async check(user) {
+      await waitFor(() => {
+        expect(screen.getByRole('option', { name: 'Apple' })).toHaveFocus();
+      });
+      await user.keyboard('[ArrowDown]');
+      await waitFor(() => {
+        expect(screen.getByRole('option', { name: 'Banana' })).toHaveFocus();
+      });
+    },
+  });
 
   describeConformance(<Select.Positioner />, () => ({
     refInstanceof: window.HTMLDivElement,
@@ -81,7 +110,6 @@ describe('<Select.Positioner />', () => {
 
       await user.keyboard('{Escape}');
 
-      // The portal can remount around the close, so re-query the kept-mounted node.
       await waitFor(() => {
         expect(screen.getByTestId('positioner').hidden).toBe(true);
       });
@@ -305,10 +333,8 @@ describe('<Select.Positioner />', () => {
   });
 
   describe('scroll lock', () => {
-    // The lock and the unlock each wait for a timer of 0 ms. The observers of `waitFor` do not see a
-    // document in a frame, so it polls.
-    const POLL = { interval: 5, timeout: 3000 };
-
+    // The lock and the unlock each wait for a timer of 0 ms. The observer of `waitFor` does not see
+    // a change in the document of an iframe. Its check in each frame sees the change.
     function lockCount() {
       return getScrollLockRegistry()?.lockCount ?? 0;
     }
@@ -368,10 +394,10 @@ describe('<Select.Positioner />', () => {
       await render(<ModalSelect />);
 
       open.value = true;
-      await waitFor(() => expect(isPageLocked(page)).toBe(true), POLL);
+      await waitFor(() => expect(isPageLocked(page)).toBe(true));
 
       actions.close();
-      await waitFor(() => expect(isPageLocked(page)).toBe(false), POLL);
+      await waitFor(() => expect(isPageLocked(page)).toBe(false));
       expect(lockCount()).toBe(0);
       expect(getPositioner(page)?.isConnected).toBe(true);
     });
@@ -390,7 +416,7 @@ describe('<Select.Positioner />', () => {
         await render(<ModalSelect />);
 
         open.value = true;
-        await waitFor(() => expect(getPositioner(page)?.dataset.side).toBe(side), POLL);
+        await waitFor(() => expect(getPositioner(page)?.dataset.side).toBe(side));
 
         expect(lockCount()).toBe(locks);
       },
@@ -407,13 +433,13 @@ describe('<Select.Positioner />', () => {
       await render(() => (
         <KeepAlive>{show.value ? <ModalSelect key="select" /> : <Other key="other" />}</KeepAlive>
       ));
-      await waitFor(() => expect(isPageLocked(page)).toBe(true), POLL);
+      await waitFor(() => expect(isPageLocked(page)).toBe(true));
 
       show.value = false;
-      await waitFor(() => expect(isPageLocked(page)).toBe(false), POLL);
+      await waitFor(() => expect(isPageLocked(page)).toBe(false));
 
       show.value = true;
-      await waitFor(() => expect(isPageLocked(page)).toBe(true), POLL);
+      await waitFor(() => expect(isPageLocked(page)).toBe(true));
     });
   });
 

@@ -1,19 +1,31 @@
 import { beforeEach, describe, expect, it, onTestFinished } from 'vitest';
-import { createSSRApp, defineComponent, h, inject, onMounted, shallowRef, toRaw } from 'vue';
+import {
+  createSSRApp,
+  defineComponent,
+  h,
+  inject,
+  KeepAlive,
+  onMounted,
+  shallowRef,
+  toRaw,
+} from 'vue';
 import type { Component } from 'vue';
 import {
   createRenderer,
   flushMicrotasks,
+  nextEndingStyle,
   nextEvent,
   renderOnServer,
   screen,
   takeReportedMessages,
   waitFor,
+  waitForLaterMillisecond,
   waitSingleFrame,
 } from '#test-utils';
 import PopupPart from '../../../../test/fixtures/PopupPart.vue';
 import PopupPositionerPart from '../../../../test/fixtures/PopupPositionerPart.vue';
 import PopupRootPart from '../../../../test/fixtures/PopupRootPart.vue';
+import PopupTriggerPart from '../../../../test/fixtures/PopupTriggerPart.vue';
 import PopupViewportPart from '../../../../test/fixtures/PopupViewportPart.vue';
 import {
   createPopupFixtureHandle,
@@ -28,8 +40,10 @@ import type {
   ViewportRootInstance,
   ViewportScene,
 } from '../../../../test/fixtures/popupViewportHarness';
+import { REASONS } from '../../../internals/reasons';
 import type { HTMLProps } from '../../../internals/types';
 import { adaptiveOrigin } from '../positioning/adaptiveOriginMiddleware';
+import type { PopupOpenChangeEventDetails } from '../store';
 import PopupViewportHydration from './PopupViewportHydration.test.vue';
 import PopupViewportReplace from './PopupViewportReplace.test.vue';
 
@@ -333,17 +347,20 @@ describe('usePopupViewport', () => {
       // The wait for the end of the animations must begin before the next change.
       await waitSingleFrame();
 
-      await user.click(screen.getByTestId('trigger3'));
-      await waitSingleFrame();
+      // The viewport keeps one container for the previous content, and that container has the
+      // ending style of the first change. A frame after the change, the containers move from
+      // starting to ending styles. The wait resolves only for an ending style of this change.
+      const previousContainer = getPreviousContainer()!;
+      await nextEndingStyle(previousContainer, {
+        action: () => user.click(screen.getByTestId('trigger3')),
+      });
 
       expect(getCurrentContainer()!.textContent).toBe('Content 3');
       expect(getCurrentContainer()!.getAnimations()).toHaveLength(1);
       expect(screen.getByTestId('viewport')).toHaveAttribute('data-transitioning', '');
-      expect(getPreviousContainer()!.textContent).toBe('Content 2');
-
-      await waitFor(() => {
-        expect(getPreviousContainer()).toHaveAttribute('data-ending-style', '');
-      });
+      expect(getPreviousContainer()).toBe(previousContainer);
+      expect(previousContainer.textContent).toBe('Content 2');
+      expect(previousContainer).toHaveAttribute('data-ending-style', '');
       expect(getCurrentContainer()).not.toHaveAttribute('data-starting-style');
     });
 
@@ -893,6 +910,86 @@ describe('usePopupViewport', () => {
 
       expect(getPreviousContainer()).toBe(null);
       expect(screen.getByTestId('viewport')).not.toHaveAttribute('data-transitioning');
+    });
+  });
+
+  describe('VUE-88: no activation direction from a trigger that KeepAlive holds', () => {
+    beforeEach(() => {
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    });
+
+    // The old container stays only while the morph runs, so an observer records it.
+    function recordMorph(viewport: HTMLElement) {
+      const record = {
+        previous: false,
+        directions: [viewport.getAttribute('data-activation-direction')],
+      };
+      const observer = new MutationObserver(() => {
+        record.previous ||= getPreviousContainer() !== null;
+        const direction = viewport.getAttribute('data-activation-direction');
+        if (record.directions.at(-1) !== direction) {
+          record.directions.push(direction);
+        }
+      });
+      observer.observe(viewport, { subtree: true, childList: true, attributes: true });
+      onTestFinished(() => observer.disconnect());
+      return record;
+    }
+
+    it('morphs with no activation direction when the old trigger is held', async () => {
+      const handle = createPopupFixtureHandle<unknown>();
+      const visible = shallowRef(true);
+      // The fixture root closes when `KeepAlive` holds its active trigger, as a tooltip does. A
+      // popover stays open, so the case declines that close.
+      const keepOpen = (open: boolean, details: PopupOpenChangeEventDetails) => {
+        if (!open && details.reason === REASONS.none) {
+          details.cancel();
+        }
+      };
+      const HeldTrigger = defineComponent({
+        name: 'HeldTrigger',
+        setup: () => () => (
+          <PopupTriggerPart
+            handle={handle}
+            payload={0}
+            data-testid="trigger1"
+            style={placeTrigger(100, 10)}
+          >
+            Trigger 1
+          </PopupTriggerPart>
+        ),
+      });
+      const { user } = await render(() => (
+        <div>
+          <style>{getMorphAnimationStyles('10s')}</style>
+          {scene({ handle, root: { onOpenChange: keepOpen }, triggers: [], content })}
+          <KeepAlive>
+            {visible.value ? <HeldTrigger key="trigger" /> : <div key="empty" />}
+          </KeepAlive>
+          <PopupTriggerPart
+            handle={handle}
+            payload={1}
+            data-testid="trigger2"
+            style={placeTrigger(100, 300)}
+          >
+            Trigger 2
+          </PopupTriggerPart>
+        </div>
+      ));
+      await waitForLaterMillisecond(() => user.click(screen.getByTestId('trigger1')));
+      await waitFor(() => {
+        expect(screen.getByText('Content 0')).toBeVisible();
+      });
+      visible.value = false;
+      await flushMicrotasks();
+      const record = recordMorph(screen.getByTestId('viewport'));
+
+      await user.click(screen.getByTestId('trigger2'));
+      await waitFor(() => {
+        expect(getCurrentContainer()!.textContent).toBe('Content 1');
+      });
+
+      expect(record).toEqual({ previous: true, directions: [null] });
     });
   });
 

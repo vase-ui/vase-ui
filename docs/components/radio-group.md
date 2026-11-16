@@ -6,7 +6,9 @@ description: An unstyled Vue radio group component that provides shared state to
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoRadioGroupHero from '../demos/radio-group/hero/css-modules/index.vue';
+import DemoRadioGroupHeroTailwind from '../demos/radio-group/hero/tailwind/index.vue';
 </script>
 
 # Radio Group
@@ -15,7 +17,12 @@ Provides shared state to a series of radio buttons.
 
 <DemoFrame>
   <DemoRadioGroupHero />
+  <template #tailwind>
+    <DemoRadioGroupHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -24,6 +31,18 @@ Provides shared state to a series of radio buttons.
 <<< ../demos/radio-group/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/radio-group/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Usage guidelines
 
@@ -35,7 +54,7 @@ Import the components and assemble their parts:
 
 <<< ./radio-group/Anatomy.vue
 
-`Radio.Root` renders its element and a hidden `<input type="radio">` after it. The group gives its name and its `form` to each input, so a form submits the value of the checked radio under that name. A group with a name and `required` blocks the submit of the form while it has no value. A group with `disabled` submits nothing.
+`Radio.Root` renders its element and a hidden `<input type="radio">` after it. The group gives its name and its `form` to each input, so a form submits the value of the checked radio under that name. A group with a name and `required` blocks the submit of the form while it has no value. A group with `disabled` submits nothing. A disabled `<fieldset>` around the group, or `Fieldset.Root` with `disabled`, disables the group as its `disabled` prop does. A native `<fieldset>` takes effect after the mount, so the server HTML shows the group enabled.
 
 A reset of the form puts an uncontrolled group back to `defaultValue`, or to no value when it has none. A controlled group does not change. In a `Field`, a reset clears the error of the field. The reset starts no validation.
 
@@ -43,11 +62,13 @@ Because of the hidden input, `Radio.Root` has more than one root node. A rule of
 
 Bind the value with `v-model:value`. The group emits `valueChange` with the new value and `eventDetails`, and then `update:value`. To stop the change, call `eventDetails.cancel()` before the `valueChange` listener returns. The group then emits no `update:value` and keeps its value.
 
-The group exposes `element` and `inputElement` through a template ref. `inputElement` is the input of the checked radio, or else the first input. A disabled input does not count.
+The group takes the radio whose input is checked when the visitor presses a native label before the page hydrates. It also takes the radio that the browser checks after a move back in the history or a reload. The group then emits `valueChange` and `update:value` one time, and the inputs follow the value. A `valueChange` listener can thus run after a move back with no action of the visitor.
+
+The group exposes `element` and `inputElement` through a template ref. `inputElement` is the input of the checked radio, or else the first input of the group in the document. The input of a disabled radio does not count, so a group with no enabled radio gives `null`. The input of a radio in a disabled `<fieldset>` does not count either, unless the radio is in the first `<legend>` of that fieldset. After the radio of the input in `inputElement` unmounts, `inputElement` is `null`, also when the group has other radios.
 
 The group has one tab stop. A group with `disabled` has none. In the server HTML, the tab stop is on the checked radio. With no value, it is on the first radio that is not disabled.
 
-When the value changes while the focus is outside the group, the tab stop moves to the checked radio. If no radio is checked then, or the checked radio is disabled, the tab stop moves to the first radio that is not disabled. When the focus leaves the group, the tab stop moves to the checked radio, unless that radio is disabled.
+When the value changes while the focus is outside the group, the tab stop moves to the checked radio. If no radio is checked then, or the checked radio is disabled, the tab stop moves to the first radio that is not disabled. When the focus leaves the group, the tab stop moves to the checked radio, unless that radio is disabled. A checked radio that becomes disabled keeps the tab stop, unless it renders a native button. Another radio that becomes disabled loses it to the first radio that is not disabled.
 
 In the server HTML, the group already has the id of its `Field.Label` in `aria-labelledby`. A radio in a `Field.Item` has the id of its `Field.Label` there too. The group and its radios already have the id of a `Field.Description` in `aria-describedby`, and the id of a `Field.Error` while it shows. A label or a message can follow the part that it names.
 

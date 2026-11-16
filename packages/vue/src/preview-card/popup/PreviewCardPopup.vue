@@ -37,7 +37,6 @@ export interface PreviewCardPopupProps
 import { computed } from 'vue';
 import { DISABLED_TRANSITIONS_STYLE } from '../../internals/constants';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
@@ -59,16 +58,6 @@ const { side, align } = usePreviewCardPositionerContext();
 
 const open = computed(() => store.select('open'));
 const transitionStatus = computed(() => store.select('transitionStatus'));
-
-useOpenChangeComplete({
-  open,
-  ref: store.context.popupRef,
-  onComplete() {
-    if (open.value) {
-      store.context.onOpenChangeComplete?.(true);
-    }
-  },
-});
 
 useHoverPopupInteraction(store, { closeDelay: () => store.select('closeDelay') });
 

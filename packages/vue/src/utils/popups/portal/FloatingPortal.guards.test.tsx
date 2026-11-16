@@ -2,7 +2,14 @@ import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { defineComponent, h, KeepAlive, nextTick, shallowRef } from 'vue';
 import type { Component, VNode } from 'vue';
-import { createRenderer, describeConformance, hydrate, renderOnServer, screen } from '#test-utils';
+import {
+  createHeldBranch,
+  createRenderer,
+  describeConformance,
+  hydrate,
+  renderOnServer,
+  screen,
+} from '#test-utils';
 import FocusManagerPart from '../../../../test/fixtures/FocusManagerPart.vue';
 import { REASONS } from '../../../internals/reasons';
 import { createAttribute } from '../createAttribute';
@@ -607,6 +614,34 @@ describe('FloatingPortal', () => {
     expect(input.value).toBe('typed');
     expect(getOutsideGuards().map((guard, index) => guard === guards[index])).toEqual([true, true]);
     expect(getOwner(screen.getByTestId('host'))).toBe(owner);
+  });
+
+  it('VUE-5: keeps the portal element, the guards and the owner element out of the document when the part mounts while KeepAlive holds its branch', async () => {
+    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
+      () => (
+        <FloatingPortal data-testid="portal">
+          <FocusManagerPart>
+            <input />
+          </FocusManagerPart>
+        </FloatingPortal>
+      ),
+      { renderBranch: (part) => <div data-testid="host">{part}</div> },
+    );
+    await render(() => <HeldBranch />);
+
+    await mountWhileHeld();
+
+    expect(screen.queryByTestId('portal')).toBe(null);
+    expect(getOutsideGuards()).toEqual([]);
+    expect(document.querySelector('[aria-owns]')).toBe(null);
+
+    await show();
+
+    const portal = screen.getByTestId('portal');
+    const host = screen.getByTestId('host');
+    expect(portal.parentElement).toBe(document.body);
+    expect(listPlaceOfPortal(host)).toEqual(['guard outside', 'owner', 'guard outside']);
+    expect(getOwner(host)).toHaveAttribute('aria-owns', portal.id);
   });
 
   describe('hydration', () => {

@@ -103,7 +103,7 @@ const CONTENT_SECTIONS = [
               This layout keeps the popup fully on screen while allowing its content to scroll.
             </Dialog.Description>
           </div>
-          <div :class="styles.Body">
+          <div :class="styles.Body" tabindex="0">
             <section v-for="item in CONTENT_SECTIONS" :key="item.title" :class="styles.Section">
               <h3 :class="styles.SectionTitle">{{ item.title }}</h3>
               <p :class="styles.SectionBody">{{ item.body }}</p>

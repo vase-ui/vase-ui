@@ -6,10 +6,15 @@ description: An unstyled Vue preview card component for a link that shows a prev
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoPreviewCardDetachedTriggersControlled from '../demos/preview-card/detached-triggers-controlled/css-modules/index.vue';
+import DemoPreviewCardDetachedTriggersControlledTailwind from '../demos/preview-card/detached-triggers-controlled/tailwind/index.vue';
 import DemoPreviewCardDetachedTriggersFull from '../demos/preview-card/detached-triggers-full/css-modules/index.vue';
+import DemoPreviewCardDetachedTriggersFullTailwind from '../demos/preview-card/detached-triggers-full/tailwind/index.vue';
 import DemoPreviewCardDetachedTriggersSimple from '../demos/preview-card/detached-triggers-simple/css-modules/index.vue';
+import DemoPreviewCardDetachedTriggersSimpleTailwind from '../demos/preview-card/detached-triggers-simple/tailwind/index.vue';
 import DemoPreviewCardHero from '../demos/preview-card/hero/css-modules/index.vue';
+import DemoPreviewCardHeroTailwind from '../demos/preview-card/hero/tailwind/index.vue';
 </script>
 
 # Preview Card
@@ -18,7 +23,12 @@ A link that shows a preview of its destination without interrupting keyboard or 
 
 <DemoFrame>
   <DemoPreviewCardHero />
+  <template #tailwind>
+    <DemoPreviewCardHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -27,6 +37,18 @@ A link that shows a preview of its destination without interrupting keyboard or 
 <<< ../demos/preview-card/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/preview-card/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Usage guidelines
 
@@ -55,7 +77,12 @@ The methods of the handle, such as `open()` and `close()`, act only while a `Pre
 
 <DemoFrame>
   <DemoPreviewCardDetachedTriggersSimple />
+  <template #tailwind>
+    <DemoPreviewCardDetachedTriggersSimpleTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -64,6 +91,18 @@ The methods of the handle, such as `open()` and `close()`, act only while a `Pre
 <<< ../demos/preview-card/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/preview-card/detached-triggers-simple/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ### Multiple triggers
 
@@ -87,7 +126,12 @@ The root has no event for a change of the trigger id. The `openChange` event giv
 
 <DemoFrame>
   <DemoPreviewCardDetachedTriggersControlled />
+  <template #tailwind>
+    <DemoPreviewCardDetachedTriggersControlledTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -96,6 +140,18 @@ The root has no event for a change of the trigger id. The `openChange` event giv
 <<< ../demos/preview-card/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/preview-card/detached-triggers-controlled/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ### Animating the Preview Card
 
@@ -122,7 +178,12 @@ The viewport is optional. Use it only when more than one trigger opens one popup
 
 <DemoFrame>
   <DemoPreviewCardDetachedTriggersFull />
+  <template #tailwind>
+    <DemoPreviewCardDetachedTriggersFullTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -132,6 +193,18 @@ The viewport is optional. Use it only when more than one trigger opens one popup
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/preview-card/detached-triggers-full/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ## API reference
 
 <ApiReference />
@@ -140,12 +213,12 @@ The viewport is optional. Use it only when more than one trigger opens one popup
 
 Creates a handle that connects a `PreviewCard.Root` with detached `PreviewCard.Trigger` parts. The type argument of the function is the type of the payload.
 
-<ApiReference name="PreviewCard.createHandle" />
+<ApiReference name="PreviewCard.createHandle" :heading-level="3" />
 
 ### Handle
 
 `PreviewCard.Handle` is the class of the handle.
 
-<ApiReference name="PreviewCard.Handle" />
+<ApiReference name="PreviewCard.Handle" :heading-level="4" />
 
 While a root is mounted, `open()` throws when the handle has no trigger with that `id`.

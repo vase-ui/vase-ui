@@ -21,6 +21,16 @@ export interface SegmentLayoutOptions {
   timeZoneName: boolean;
 }
 
+/**
+ * The greatest number of items in a layout, for each family of field. A layout joins two literals
+ * in a row, so it has a literal before, between and after the items that are not literals. A date
+ * layout has at most ten of these items: the era, the year (a year of the Chinese calendar can have
+ * `relatedYear` and `yearName`), the month, the day, the three time units, the day period and the
+ * time zone name. A time layout has at most five. The `Input` of a field renders a list of this
+ * length.
+ */
+export const MAX_LAYOUT_LENGTH = { date: 21, time: 11 } as const;
+
 export interface LayoutSegment {
   type: SegmentType;
   /** The text of a literal. Each other type has no text in a layout. */
@@ -82,12 +92,11 @@ function toSegmentType(partType: string): SegmentType {
 }
 
 function layoutOf(
-  locale: Intl.LocalesArgument,
-  calendar: string,
+  format: Intl.DateTimeFormat,
+  epoch: number,
   hasTime: boolean,
   formatOptions: Intl.DateTimeFormatOptions,
 ): SegmentLayout {
-  const [format, epoch] = formatter(getSample(calendar), formatOptions, locale);
   const segments: LayoutSegment[] = [];
   for (const part of format.formatToParts(epoch)) {
     const type = toSegmentType(part.type);
@@ -105,22 +114,68 @@ function layoutOf(
   };
 }
 
+// For some fields and calendars, the pattern of `my`, `ksh` and `sc` has the year of the week
+// (`Y`), and `resolvedOptions()` then has no `year`. Before V8 15.5, `formatToParts` ends the
+// process for such a pattern (https://github.com/nodejs/node/issues/67076). WebKit gives its year
+// as a part of the type `unknown`. The Chinese and Dangi calendars also have no `year`. They give
+// `relatedYear`, and the process does not end.
+function hasWeekYear(format: Intl.DateTimeFormat, formatOptions: Intl.DateTimeFormatOptions) {
+  if (formatOptions.year === undefined) {
+    return false;
+  }
+  const { year, calendar } = format.resolvedOptions();
+  return year === undefined && calendar !== 'chinese' && calendar !== 'dangi';
+}
+
+// The digits and the separators of a date have no letter, so a letter is the era of the pattern.
+function patternHasEra(
+  sample: Temporal.ZonedDateTime,
+  locale: Intl.LocalesArgument,
+  options: SegmentLayoutOptions,
+): boolean {
+  const dateOptions = intlOptions({ ...options, time: undefined }, false);
+  const [format, epoch] = formatter(sample, dateOptions, locale);
+  return /\p{L}/u.test(format.format(epoch));
+}
+
+function withoutEra(layout: SegmentLayout): SegmentLayout {
+  const segments = layout.segments.slice();
+  const index = segments.findIndex(({ type }) => type === 'era');
+  if (index !== -1) {
+    segments.splice(index === 0 ? 0 : index - 1, 2);
+  }
+  return { ...layout, segments };
+}
+
 /**
  * The order of the segments and the text of the literals for a locale, from the parts that `Intl`
  * gives for a sample. Two literals in a row are one literal. `Intl` gets the era only when its
  * pattern for the locale and the calendar has no era. Where the pattern has one, such as the
  * Japanese calendar, the era keeps the style of the pattern in each era.
+ *
+ * When the pattern has the year of the week (`Y`), the layout comes from the pattern with an era.
+ * That pattern has the year of the calendar (`y`). The layout keeps its era only when the field
+ * needs one, or when the pattern with no era has one.
  */
 export function getSegmentLayout(
   locale: Intl.LocalesArgument,
   options: SegmentLayoutOptions,
 ): SegmentLayout {
   const hasTime = options.time !== undefined;
-  const layout = layoutOf(locale, options.calendar, hasTime, intlOptions(options, false));
+  const sample = getSample(options.calendar);
+  const layoutWithEra = () => {
+    const eraOptions = intlOptions(options, true);
+    return layoutOf(...formatter(sample, eraOptions, locale), hasTime, eraOptions);
+  };
+  const formatOptions = intlOptions(options, false);
+  const [format, epoch] = formatter(sample, formatOptions, locale);
+  if (hasWeekYear(format, formatOptions)) {
+    const layout = layoutWithEra();
+    return options.era || patternHasEra(sample, locale, options) ? layout : withoutEra(layout);
+  }
+  const layout = layoutOf(format, epoch, hasTime, formatOptions);
   const needsEra = options.era && !layout.segments.some(({ type }) => type === 'era');
-  return needsEra
-    ? layoutOf(locale, options.calendar, hasTime, intlOptions(options, true))
-    : layout;
+  return needsEra ? layoutWithEra() : layout;
 }
 
 // The calendar of a value gives the era, so the value is in the calendar of the layout. A year and

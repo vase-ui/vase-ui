@@ -6,10 +6,13 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  getFocusableUnderAriaHidden,
   isInaccessible,
   nextEvent,
+  POPUP_EXIT_CSS,
   screen,
   waitFor,
+  waitForLaterMillisecond,
 } from '#test-utils';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
 import type { ComboboxStore } from '../store';
@@ -152,25 +155,25 @@ describe('<Combobox.Popup />', () => {
 
     const input = screen.getByTestId('input');
 
-    await user.click(input);
+    const option = await waitForLaterMillisecond(async () => {
+      await user.click(input);
+      return screen.findByRole('option', { name: 'a' });
+    });
     // user-event's synthetic clicks carry no pointer type, so the mouse press is dispatched
     // directly.
-    const option = await screen.findByRole('option', { name: 'a' });
     await fireEvent.pointerDown(option, { pointerType: 'mouse' });
     await fireEvent.click(option, { detail: 1 });
-    await waitFor(() => {
-      expect(screen.queryByRole('listbox')).toBe(null);
-    });
+    expect(screen.queryByRole('listbox')).toBe(null);
     expect(finalFocus).toHaveBeenLastCalledWith('mouse');
 
     input.focus();
     await flushMicrotasks();
-    await user.keyboard('{ArrowDown}');
-    await screen.findByRole('listbox');
-    await user.keyboard('{ArrowDown}{Enter}');
-    await waitFor(() => {
-      expect(screen.queryByRole('listbox')).toBe(null);
+    await waitForLaterMillisecond(async () => {
+      await user.keyboard('{ArrowDown}');
+      await screen.findByRole('listbox');
     });
+    await user.keyboard('{ArrowDown}{Enter}');
+    expect(screen.queryByRole('listbox')).toBe(null);
     expect(finalFocus).toHaveBeenLastCalledWith('keyboard');
   });
 
@@ -209,7 +212,7 @@ describe('<Combobox.Popup />', () => {
   describe('the id of the popup in the store', () => {
     const Probe = defineComponent(() => {
       const store = useComboboxRootContext();
-      return () => <span data-testid="probe" data-popup-id={store.select('popupElementId')} />;
+      return () => <span data-testid="probe" data-popup-id={store.select('popupId')} />;
     });
 
     it('gives the rendered id of the popup to the store', async () => {
@@ -296,6 +299,28 @@ describe('<Combobox.Popup />', () => {
       expect(store.context.endDismissRef.value).toHaveAttribute('aria-label', 'Dismiss');
     });
 
+    it('keeps the dismiss button between the popup and its last inside guard', async () => {
+      await render(
+        <Combobox.Root defaultOpen modal>
+          <StoreProbe />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup data-testid="popup">
+                <Combobox.Input />
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+      const popup = await screen.findByTestId('popup');
+
+      await waitFor(() => {
+        expect(store.context.endDismissRef.value).toBe(popup.nextElementSibling);
+      });
+      expect(popup.previousElementSibling).toHaveAttribute('data-type', 'inside');
+      expect(popup.nextElementSibling?.nextElementSibling).toHaveAttribute('data-type', 'inside');
+    });
+
     it('renders no dismiss button after a popup that holds the input and is not modal', async () => {
       await render(
         <Combobox.Root defaultOpen>
@@ -359,7 +384,10 @@ describe('<Combobox.Popup />', () => {
 
     it('returns to the trigger when the popup with the input closes', async () => {
       const { user } = await renderWithInputInPopup();
-      await user.click(screen.getByTestId('trigger'));
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('trigger'));
+        await screen.findByTestId('input');
+      });
       await waitFor(() => {
         expect(screen.getByTestId('input')).toHaveFocus();
       });
@@ -524,16 +552,8 @@ describe('<Combobox.Popup />', () => {
   });
 
   describe('BUG-5519: an exit animation', () => {
-    const EXIT_CSS = `
-      .popup[data-ending-style] { animation: popup-exit 100s; }
-      @keyframes popup-exit { to { opacity: 0; } }
-    `;
-
-    // An element that the Tab key can reach, under `aria-hidden` on itself or on an ancestor.
-    function getFocusableUnderAriaHidden() {
-      return [...document.querySelectorAll<HTMLElement>('[aria-hidden="true"]')]
-        .flatMap((element) => [element, ...element.querySelectorAll<HTMLElement>('*')])
-        .filter((element) => element.tabIndex >= 0);
+    function getFocusGuards() {
+      return [...document.querySelectorAll<HTMLElement>('[data-vase-ui-focus-guard]')];
     }
 
     // Opens the popup with its trigger and closes it with the Escape key. The callback records the
@@ -544,7 +564,7 @@ describe('<Combobox.Popup />', () => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
       const { user } = await render(
         <div>
-          <style>{EXIT_CSS}</style>
+          <style>{POPUP_EXIT_CSS}</style>
           <Combobox.Root>
             <Combobox.Trigger data-testid="trigger">Open</Combobox.Trigger>
             <Combobox.Portal>
@@ -557,18 +577,22 @@ describe('<Combobox.Popup />', () => {
           </Combobox.Root>
         </div>,
       );
-      await user.click(screen.getByTestId('trigger'));
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('trigger'));
+        await screen.findByTestId('input');
+      });
       await waitFor(() => {
         expect(screen.getByTestId('input')).toHaveFocus();
       });
-      expect(getFocusableUnderAriaHidden().length).toBeGreaterThan(0);
+      // A focus guard has `aria-hidden`, except in WebKit on an Apple system, where it is a button.
+      expect(getFocusGuards().length).toBeGreaterThan(0);
       const popup = screen.getByTestId('popup');
 
       await nextEvent(popup, 'animationstart', { action: () => user.keyboard('{Escape}') });
       record();
-      // The first read of the animations of the popup after the close gives an empty list, and
-      // `nextAnimationsRead` would resolve with it. The animation of 100 s still runs after
-      // `animationstart`, so the case reads the list itself.
+      // The read of the open can come after the wait for the focus, and `nextAnimationsRead` would
+      // resolve with it. The animation of 100 s still runs after `animationstart`, so the case reads
+      // the list itself.
       const animations = popup.getAnimations();
       for (const animation of animations) {
         animation.finish();
@@ -583,12 +607,15 @@ describe('<Combobox.Popup />', () => {
 
     it('BUG-5519: keeps no focusable content under aria-hidden during the exit animation', async () => {
       let focusableDuringExit: HTMLElement[] = [];
+      let guardsDuringExit: HTMLElement[] = [];
 
       await recordExit(() => {
         focusableDuringExit = getFocusableUnderAriaHidden();
+        guardsDuringExit = getFocusGuards();
       });
 
       expect(focusableDuringExit).toEqual([]);
+      expect(guardsDuringExit).toEqual([]);
     });
 
     it('BUG-5519: returns the focus to the trigger when the exit animation starts', async () => {

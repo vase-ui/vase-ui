@@ -9,7 +9,14 @@ import {
   watch,
 } from 'vue';
 import type { ComponentPublicInstance, MaybeRefOrGetter, ShallowRef } from 'vue';
-import { createRenderer, describeConformance, hydrate, renderOnServer, screen } from '#test-utils';
+import {
+  createHeldBranch,
+  createRenderer,
+  describeConformance,
+  hydrate,
+  renderOnServer,
+  screen,
+} from '#test-utils';
 import FloatingPortal from './FloatingPortal.vue';
 import FloatingPortalLite from './FloatingPortalLite.vue';
 import FloatingPortalLiteHydration from './FloatingPortalLiteHydration.test.vue';
@@ -312,6 +319,49 @@ describe('FloatingPortalLite', () => {
     expect(portal.parentElement).toBe(document.body);
     expect(screen.getByTestId('input')).toBe(input);
     expect(input.value).toBe('typed');
+  });
+
+  it('VUE-5: keeps the portal element out of the document when the part mounts while KeepAlive holds its branch', async () => {
+    const counts = { mounted: 0, unmounted: 0 };
+    const Content = defineComponent({
+      name: 'Content',
+      setup() {
+        onMounted(() => {
+          counts.mounted += 1;
+        });
+        onUnmounted(() => {
+          counts.unmounted += 1;
+        });
+        return () => <div data-testid="content" />;
+      },
+    });
+    const { HeldBranch, hide, mountWhileHeld, show } = createHeldBranch(() => (
+      <FloatingPortalLite data-testid="portal">
+        <Content />
+      </FloatingPortalLite>
+    ));
+    await render(() => <HeldBranch />);
+
+    await mountWhileHeld();
+
+    expect(screen.queryByTestId('portal')).toBe(null);
+    expect(counts).toEqual({ mounted: 1, unmounted: 0 });
+
+    await show();
+
+    const portal = screen.getByTestId('portal');
+    expect(portal.parentElement).toBe(document.body);
+    expect(portal).toContainElement(screen.getByTestId('content'));
+
+    await hide();
+
+    expect(portal.isConnected).toBe(false);
+
+    await show();
+
+    expect(screen.getByTestId('portal')).toBe(portal);
+    expect(portal.parentElement).toBe(document.body);
+    expect(counts).toEqual({ mounted: 1, unmounted: 0 });
   });
 
   describe('hydration', () => {

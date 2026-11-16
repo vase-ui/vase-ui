@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { defineComponent, h, onMounted, shallowRef, Teleport } from 'vue';
+import { defineComponent, h, KeepAlive, nextTick, onMounted, shallowRef, Teleport } from 'vue';
 import type { PropType } from 'vue';
 import {
   createRenderer,
+  createTransitionRunCounter,
   describeConformance,
+  expectNoAxeViolations,
   fireEvent,
   flushMicrotasks,
+  nextEvent,
   screen,
   waitFor,
 } from '#test-utils';
@@ -317,9 +320,7 @@ describe('<Toast.Root />', () => {
       await user.click(screen.getByRole('button', { name: 'add' }));
       expect(screen.getByTestId('toast-root')).toBe(toastRoot);
 
-      await waitFor(() => {
-        expect(toastRoot).not.toHaveAttribute('data-starting-style');
-      });
+      expect(toastRoot).not.toHaveAttribute('data-starting-style');
       await waitFor(() => {
         expect(toastRoot.style.getPropertyValue('--toast-height')).toBe(initialHeight);
       });
@@ -471,9 +472,7 @@ describe('<Toast.Root />', () => {
 
       await user.click(screen.getByRole('button', { name: 'add-1' }));
 
-      await waitFor(() => {
-        expect(toast1).not.toHaveAttribute('data-starting-style');
-      });
+      expect(toast1).not.toHaveAttribute('data-starting-style');
       await waitFor(() => {
         expect(toast1.style.getPropertyValue('--toast-height')).not.toBe('');
       });
@@ -560,12 +559,8 @@ describe('<Toast.Root />', () => {
       await user.click(screen.getByRole('button', { name: 'add' }));
       expect(screen.getByTestId('toast-root')).toBe(toastRoot);
 
-      await waitFor(() => {
-        expect(toastRoot).not.toHaveAttribute('data-starting-style');
-      });
-      await waitFor(() => {
-        expect(toastRoot).not.toHaveAttribute('data-swipe-direction');
-      });
+      expect(toastRoot).not.toHaveAttribute('data-starting-style');
+      expect(toastRoot).not.toHaveAttribute('data-swipe-direction');
       expect(toastRoot.style.getPropertyValue('--toast-swipe-movement-x')).toBe('0px');
       expect(toastRoot.style.getPropertyValue('--toast-swipe-movement-y')).toBe('0px');
     } finally {
@@ -645,9 +640,7 @@ describe('<Toast.Root />', () => {
       await user.click(addButton);
       expect(screen.getByTestId('root-1')).toBe(swipedRoot);
 
-      await waitFor(() => {
-        expect(swipedRoot).not.toHaveAttribute('data-swipe-direction');
-      });
+      expect(swipedRoot).not.toHaveAttribute('data-swipe-direction');
       expect(swipedRoot).not.toHaveAttribute('data-ending-style');
       expect(swipedRoot.style.getPropertyValue('--toast-swipe-movement-x')).toBe('0px');
       expect(swipedRoot.style.getPropertyValue('--toast-swipe-movement-y')).toBe('0px');
@@ -813,12 +806,14 @@ describe('<Toast.Root />', () => {
     const { manager } = await renderToasts();
     manager.add({ id: 'toast', title: 'Toast', timeout: 0 });
     await flushMicrotasks();
+    const toast = screen.getByTestId('toast');
 
     manager.close('toast');
 
     await waitFor(() => {
-      expect(screen.queryByTestId('toast')).toBe(null);
+      expect(toast).not.toBeInTheDocument();
     });
+    expect(screen.queryByTestId('toast')).toBe(null);
   });
 
   it('gives a high priority toast the role alertdialog, and hides it until the viewport has focus', async () => {
@@ -837,6 +832,202 @@ describe('<Toast.Root />', () => {
 
     expect(screen.getByTestId('viewport')).toHaveFocus();
     expect(screen.getByTestId('high')).not.toHaveAttribute('aria-hidden');
+  });
+
+  describe('VUE-99: the name of a toast with no title', () => {
+    const LabelledToastList = defineComponent({
+      setup() {
+        const { toasts } = Toast.useToastManager();
+        return () =>
+          toasts.value.map((toastItem) => (
+            <Toast.Root key={toastItem.id} toast={toastItem} data-testid={toastItem.id}>
+              <Toast.Title />
+              <Toast.Description data-testid="description" />
+            </Toast.Root>
+          ));
+      },
+    });
+
+    it.each([
+      { name: 'dialog', priority: undefined, role: 'dialog' },
+      { name: 'alertdialog', priority: 'high', role: 'alertdialog' },
+    ] as const)(
+      'gives the role $name its name from the description',
+      async ({ priority, role }) => {
+        const manager = Toast.createToastManager();
+        await render(
+          <Toast.Provider toastManager={manager}>
+            <Toast.Viewport data-testid="viewport">
+              <LabelledToastList />
+            </Toast.Viewport>
+          </Toast.Provider>,
+        );
+
+        manager.add({ id: 'copied', description: 'Copied', priority, timeout: 0 });
+        await flushMicrotasks();
+        // A high priority toast has `aria-hidden` until the viewport has the focus.
+        await fireEvent.keyDown(document.body, { key: 'F6' });
+
+        const root = screen.getByTestId('copied');
+        expect(root).toHaveAttribute('role', role);
+        expect(root).toHaveAttribute('aria-labelledby', screen.getByTestId('description').id);
+        expect(root).not.toHaveAttribute('aria-describedby');
+        expect(root).toHaveAccessibleName('Copied');
+        expect(root).toHaveAccessibleDescription('');
+        await expectNoAxeViolations(root);
+      },
+    );
+
+    it('names the toast with its title while a title is mounted', async () => {
+      const showTitle = shallowRef(true);
+      await render(() => (
+        <Toast.Provider>
+          <Toast.Viewport>
+            <Toast.Root
+              toast={{ id: 'test', title: 'Saved', description: 'Copied' }}
+              data-testid="root"
+            >
+              {showTitle.value && <Toast.Title data-testid="title" />}
+              <Toast.Description data-testid="description" />
+            </Toast.Root>
+          </Toast.Viewport>
+        </Toast.Provider>
+      ));
+      const root = screen.getByTestId('root');
+
+      expect(root).toHaveAccessibleName('Saved');
+      expect(root).toHaveAccessibleDescription('Copied');
+
+      showTitle.value = false;
+      await nextTick();
+      expect(root).toHaveAttribute('aria-labelledby', screen.getByTestId('description').id);
+      expect(root).not.toHaveAttribute('aria-describedby');
+      expect(root).toHaveAccessibleName('Copied');
+
+      showTitle.value = true;
+      await nextTick();
+      expect(root).toHaveAttribute('aria-labelledby', screen.getByTestId('title').id);
+      expect(root).toHaveAttribute('aria-describedby', screen.getByTestId('description').id);
+    });
+
+    it.each([
+      { name: 'aria-label', attrs: { 'aria-label': 'Clipboard' }, labelledBy: null },
+      { name: 'aria-labelledby', attrs: { 'aria-labelledby': 'own-name' }, labelledBy: 'own-name' },
+    ])('keeps the name from the $name of the consumer', async ({ attrs, labelledBy }) => {
+      await render(
+        <Toast.Provider>
+          <span id="own-name">Clipboard</span>
+          <Toast.Viewport>
+            <Toast.Root toast={{ id: 'test', description: 'Copied' }} data-testid="root" {...attrs}>
+              <Toast.Description data-testid="description" />
+            </Toast.Root>
+          </Toast.Viewport>
+        </Toast.Provider>,
+      );
+      const root = screen.getByTestId('root');
+
+      expect(root.getAttribute('aria-labelledby')).toBe(labelledBy);
+      expect(root).toHaveAttribute('aria-describedby', screen.getByTestId('description').id);
+      expect(root).toHaveAccessibleName('Clipboard');
+      expect(root).toHaveAccessibleDescription('Copied');
+    });
+
+    describe.each([
+      { name: 'an empty aria-label', attrs: { 'aria-label': '' } },
+      { name: 'an aria-label of white space', attrs: { 'aria-label': ' ' } },
+      { name: 'an empty aria-labelledby', attrs: { 'aria-labelledby': '' } },
+      { name: 'an aria-labelledby of white space', attrs: { 'aria-labelledby': '\n\t ' } },
+    ])('VUE-106: $name of the consumer', ({ attrs }) => {
+      it('names the toast with its description', async () => {
+        await render(
+          <Toast.Provider>
+            <Toast.Viewport>
+              <Toast.Root
+                toast={{ id: 'test', description: 'Copied' }}
+                data-testid="root"
+                {...attrs}
+              >
+                <Toast.Description data-testid="description" />
+              </Toast.Root>
+            </Toast.Viewport>
+          </Toast.Provider>,
+        );
+        const root = screen.getByTestId('root');
+
+        expect(root).toHaveAttribute('aria-labelledby', screen.getByTestId('description').id);
+        expect(root).not.toHaveAttribute('aria-describedby');
+        expect(root).toHaveAccessibleName('Copied');
+        expect(root).toHaveAccessibleDescription('');
+        await expectNoAxeViolations(root);
+      });
+
+      it('keeps the title as the name of a toast that has a title', async () => {
+        await render(
+          <Toast.Provider>
+            <Toast.Viewport>
+              <Toast.Root
+                toast={{ id: 'test', title: 'Saved', description: 'Copied' }}
+                data-testid="root"
+                {...attrs}
+              >
+                <Toast.Title data-testid="title" />
+                <Toast.Description data-testid="description" />
+              </Toast.Root>
+            </Toast.Viewport>
+          </Toast.Provider>,
+        );
+        const root = screen.getByTestId('root');
+
+        expect(root).toHaveAttribute('aria-labelledby', screen.getByTestId('title').id);
+        expect(root).toHaveAttribute('aria-describedby', screen.getByTestId('description').id);
+        expect(root).toHaveAccessibleName('Saved');
+        expect(root).toHaveAccessibleDescription('Copied');
+      });
+    });
+
+    it('VUE-103: names the toast with its description for an aria-labelledby of undefined', async () => {
+      await render(
+        <Toast.Provider>
+          <Toast.Viewport>
+            <Toast.Root
+              toast={{ id: 'test', description: 'Copied' }}
+              data-testid="root"
+              aria-labelledby={undefined}
+            >
+              <Toast.Description data-testid="description" />
+            </Toast.Root>
+          </Toast.Viewport>
+        </Toast.Provider>,
+      );
+      const root = screen.getByTestId('root');
+
+      expect(root).toHaveAttribute('aria-labelledby', screen.getByTestId('description').id);
+      expect(root).not.toHaveAttribute('aria-describedby');
+      expect(root).toHaveAccessibleName('Copied');
+      expect(root).toHaveAccessibleDescription('');
+    });
+
+    it('VUE-103: gives no name and keeps the description for an aria-labelledby of null', async () => {
+      await render(
+        <Toast.Provider>
+          <Toast.Viewport>
+            <Toast.Root
+              toast={{ id: 'test', description: 'Copied' }}
+              data-testid="root"
+              aria-labelledby={null}
+            >
+              <Toast.Description data-testid="description" />
+            </Toast.Root>
+          </Toast.Viewport>
+        </Toast.Provider>,
+      );
+      const root = screen.getByTestId('root');
+
+      expect(root).not.toHaveAttribute('aria-labelledby');
+      expect(root).toHaveAttribute('aria-describedby', screen.getByTestId('description').id);
+      expect(root).toHaveAccessibleName('');
+      expect(root).toHaveAccessibleDescription('Copied');
+    });
   });
 
   it('marks a toast that the limit hides with data-limited, and makes it inert', async () => {
@@ -969,7 +1160,7 @@ describe('<Toast.Root />', () => {
         { keys: '[/TouchA]' },
       ]);
 
-      await waitFor(() => expect(screen.queryByTestId('toast-root')).toBe(null));
+      expect(screen.queryByTestId('toast-root')).toBe(null);
     });
 
     it('closes toast when swiping in the specified direction beyond threshold', async () => {
@@ -989,9 +1180,7 @@ describe('<Toast.Root />', () => {
       // Swipe up (starting at y=100, ending at y=55, which is > 40px threshold)
       await simulateSwipe(toastElement, 100, 100, 100, 55);
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('toast-root')).toBe(null);
-      });
+      expect(screen.queryByTestId('toast-root')).toBe(null);
     });
 
     it('locks to a single axis on the first move of a two-axis swipe', async () => {
@@ -1105,18 +1294,14 @@ describe('<Toast.Root />', () => {
         // Swipe right
         await simulateSwipe(screen.getByTestId('toast-root'), 100, 100, 150, 100);
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('toast-root')).toBe(null);
-        });
+        expect(screen.queryByTestId('toast-root')).toBe(null);
 
         await fireEvent.click(addToast);
 
         // Swipe up
         await simulateSwipe(screen.getByTestId('toast-root'), 100, 100, 100, 50);
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('toast-root')).toBe(null);
-        });
+        expect(screen.queryByTestId('toast-root')).toBe(null);
       });
 
       it('right + left', async () => {
@@ -1136,18 +1321,14 @@ describe('<Toast.Root />', () => {
         // Swipe right
         await simulateSwipe(screen.getByTestId('toast-root'), 100, 100, 150, 100);
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('toast-root')).toBe(null);
-        });
+        expect(screen.queryByTestId('toast-root')).toBe(null);
 
         await fireEvent.click(addToast);
 
         // Swipe left
         await simulateSwipe(screen.getByTestId('toast-root'), 100, 100, 50, 100);
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('toast-root')).toBe(null);
-        });
+        expect(screen.queryByTestId('toast-root')).toBe(null);
       });
 
       it('up + down', async () => {
@@ -1167,18 +1348,14 @@ describe('<Toast.Root />', () => {
         // Swipe up
         await simulateSwipe(screen.getByTestId('toast-root'), 100, 100, 100, 50);
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('toast-root')).toBe(null);
-        });
+        expect(screen.queryByTestId('toast-root')).toBe(null);
 
         await fireEvent.click(addToast);
 
         // Swipe down
         await simulateSwipe(screen.getByTestId('toast-root'), 100, 100, 100, 150);
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('toast-root')).toBe(null);
-        });
+        expect(screen.queryByTestId('toast-root')).toBe(null);
       });
     });
 
@@ -1323,9 +1500,7 @@ describe('<Toast.Root />', () => {
       await fireEvent.pointerMove(toastElement, { clientX: 160, clientY: 220, pointerId: 1 });
       await fireEvent.pointerUp(toastElement, { clientX: 160, clientY: 220, pointerId: 1 });
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('toast-root')).toBe(null);
-      });
+      expect(screen.queryByTestId('toast-root')).toBe(null);
     });
 
     it('locks the gesture to the vertical axis when it starts upright', async () => {
@@ -1367,9 +1542,7 @@ describe('<Toast.Root />', () => {
       await fireEvent.pointerMove(toastElement, { clientX: 220, clientY: 160, pointerId: 1 });
       await fireEvent.pointerUp(toastElement, { clientX: 220, clientY: 160, pointerId: 1 });
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('toast-root')).toBe(null);
-      });
+      expect(screen.queryByTestId('toast-root')).toBe(null);
     });
 
     it('does not start a swipe from a non-primary pointer button', async () => {
@@ -1689,9 +1862,7 @@ describe('<Toast.Root />', () => {
 
       await simulateSwipe(root, 100, 100, 100, 200);
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('toast')).toBe(null);
-      });
+      expect(screen.queryByTestId('toast')).toBe(null);
     });
   });
 
@@ -1755,9 +1926,7 @@ describe('<Toast.Root />', () => {
 
       await simulateSwipe(toastElement, 100, 100, 150, 100);
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('toast-root')).toBe(null);
-      });
+      expect(screen.queryByTestId('toast-root')).toBe(null);
     });
 
     it('resets drag state after a document pointercancel', async () => {
@@ -1887,9 +2056,7 @@ describe('<Toast.Root />', () => {
       // Verify the close button works (which also relies on ID-based lookup)
       await fireEvent.click(screen.getByTestId('toast-close'));
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('toast-root')).toBe(null);
-      });
+      expect(screen.queryByTestId('toast-root')).toBe(null);
     });
 
     it('correctly calculates indices for multiple toasts with recreated objects', async () => {
@@ -1954,6 +2121,211 @@ describe('<Toast.Root />', () => {
         );
         expect(toastIndexes.every((toastIndex) => toastIndex >= 0)).toBe(true);
       });
+    });
+  });
+
+  describe('KeepAlive', () => {
+    const TOAST_STYLE = `
+      [data-testid="toast"] { transition: opacity 1s; }
+      [data-testid="toast"][data-starting-style] { opacity: 0; }
+    `;
+
+    // The provider is outside `KeepAlive`, so it keeps the subscription to its manager while the
+    // viewport is held.
+    function renderKeptViewport(
+      options: { withContent?: boolean; onTransitionrun?: (event: Event) => void } = {},
+    ) {
+      const manager = Toast.createToastManager();
+      const visible = shallowRef(true);
+      const ToastList = defineComponent({
+        setup() {
+          const { toasts } = Toast.useToastManager();
+          return () =>
+            toasts.value.map((toastItem) => (
+              <Toast.Root
+                key={toastItem.id}
+                toast={toastItem}
+                data-testid="toast"
+                onTransitionrun={options.onTransitionrun}
+              >
+                {options.withContent ? (
+                  <Toast.Content>
+                    <div style={{ height: '40px' }} />
+                  </Toast.Content>
+                ) : (
+                  <div style={{ height: '40px' }} />
+                )}
+              </Toast.Root>
+            ));
+        },
+      });
+      const Page = defineComponent({
+        name: 'Page',
+        setup: () => () => (
+          <Toast.Viewport>
+            <ToastList />
+          </Toast.Viewport>
+        ),
+      });
+      const Other = defineComponent({ name: 'Other', setup: () => () => <p /> });
+      const rendered = render(() => (
+        <Toast.Provider toastManager={manager}>
+          <style>{TOAST_STYLE}</style>
+          <KeepAlive>{visible.value ? <Page key="page" /> : <Other key="other" />}</KeepAlive>
+        </Toast.Provider>
+      ));
+      return { manager, visible, rendered };
+    }
+
+    it.each([
+      { name: 'the root alone', withContent: false },
+      { name: 'a root with Toast.Content', withContent: true },
+    ])(
+      'measures a toast that mounts while KeepAlive holds it, at the show: $name',
+      async ({ withContent }) => {
+        globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+        const counter = createTransitionRunCounter(() => true);
+        const { manager, visible, rendered } = renderKeptViewport({
+          withContent,
+          onTransitionrun: counter.onTransitionrun,
+        });
+        const { container } = await rendered;
+        // A part that mounts in the flush of the deactivation gets `onDeactivated`.
+        visible.value = false;
+        await flushMicrotasks();
+        manager.add({ title: 'kept', timeout: 0 });
+        await flushMicrotasks();
+
+        await nextEvent(container, 'transitionrun', {
+          action: () => {
+            visible.value = true;
+          },
+        });
+
+        expect(counter.counts).toEqual({ enter: 1, exit: 0 });
+        expect(screen.getByTestId('toast').style.getPropertyValue('--toast-height')).toBe('40px');
+      },
+    );
+
+    // The observers of `Toast.Content` correct the height at the show. With them, only the enter
+    // transition shows a measure in the flush of the deactivation.
+    it.each([
+      { name: 'the root alone', withContent: false },
+      { name: 'a root with Toast.Content', withContent: true },
+    ])(
+      'measures a toast that mounts in the flush of the deactivation, at the show: $name',
+      async ({ withContent }) => {
+        globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+        const counter = createTransitionRunCounter(() => true);
+        const { manager, visible, rendered } = renderKeptViewport({
+          withContent,
+          onTransitionrun: counter.onTransitionrun,
+        });
+        const { container } = await rendered;
+        manager.add({ title: 'kept', timeout: 0 });
+        visible.value = false;
+        await flushMicrotasks();
+
+        await nextEvent(container, 'transitionrun', {
+          action: () => {
+            visible.value = true;
+          },
+        });
+
+        expect(counter.counts).toEqual({ enter: 1, exit: 0 });
+        expect(screen.getByTestId('toast').style.getPropertyValue('--toast-height')).toBe('40px');
+      },
+    );
+
+    it('measures a toast that mounts in the render of the activation', async () => {
+      const manager = Toast.createToastManager();
+      const visible = shallowRef(true);
+      const count = shallowRef(0);
+      // The page renders the toasts itself. A new prop then renders them in the patch of the
+      // activation.
+      const Page = defineComponent({
+        name: 'Page',
+        props: { count: { type: Number, required: true } },
+        setup(props) {
+          const { toasts } = Toast.useToastManager();
+          return () => (
+            <Toast.Viewport data-count={props.count}>
+              {toasts.value.map((toastItem) => (
+                <Toast.Root key={toastItem.id} toast={toastItem} data-testid="toast">
+                  <div style={{ height: '40px' }} />
+                </Toast.Root>
+              ))}
+            </Toast.Viewport>
+          );
+        },
+      });
+      const Other = defineComponent({ name: 'Other', setup: () => () => <p /> });
+      await render(() => (
+        <Toast.Provider toastManager={manager}>
+          <KeepAlive>
+            {visible.value ? <Page key="page" count={count.value} /> : <Other key="other" />}
+          </KeepAlive>
+        </Toast.Provider>
+      ));
+      visible.value = false;
+      await flushMicrotasks();
+
+      manager.add({ title: 'kept', timeout: 0 });
+      count.value += 1;
+      visible.value = true;
+      await flushMicrotasks();
+
+      const root = screen.getByTestId('toast');
+      await waitFor(() => {
+        expect(root.style.getPropertyValue('--toast-height')).toBe('40px');
+      });
+      expect(root).not.toHaveAttribute('data-starting-style');
+    });
+
+    it('ends a swipe with no dismissal when KeepAlive deactivates the toast', async () => {
+      const { manager, visible, rendered } = renderKeptViewport();
+      await rendered;
+      manager.add({ title: 'kept', timeout: 0 });
+      await flushMicrotasks();
+      const root = screen.getByTestId('toast');
+      await fireEvent.pointerDown(root, {
+        clientX: 100,
+        clientY: 100,
+        button: 0,
+        bubbles: true,
+        pointerId: 1,
+      });
+      await fireEvent.pointerMove(root, {
+        clientX: 101,
+        clientY: 100,
+        bubbles: true,
+        pointerId: 1,
+      });
+      await fireEvent.pointerMove(root, {
+        clientX: 200,
+        clientY: 100,
+        bubbles: true,
+        pointerId: 1,
+      });
+      expect(root).toHaveAttribute('data-swiping');
+      expect(root).toHaveAttribute('data-swipe-direction', 'right');
+
+      visible.value = false;
+      await flushMicrotasks();
+      await fireEvent.pointerUp(document, {
+        clientX: 200,
+        clientY: 100,
+        bubbles: true,
+        pointerId: 1,
+      });
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('toast')).toBe(root);
+      expect(root).not.toHaveAttribute('data-ending-style');
+      expect(root).not.toHaveAttribute('data-swiping');
+      expect(root).not.toHaveAttribute('data-swipe-direction');
+      expect(root.style.transform).toBe('');
     });
   });
 });

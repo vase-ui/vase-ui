@@ -1,7 +1,7 @@
 import { expect, describe, it } from 'vitest';
 import { defineComponent, h, KeepAlive, nextTick, shallowRef } from 'vue';
 import type { VNode } from 'vue';
-import { createRenderer, screen, takeReportedMessages } from '#test-utils';
+import { createHeldBranch, createRenderer, screen, takeReportedMessages } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
 import { Toast } from '@vase-ui/vue/toast';
 import type { ToastLabel } from '../useToastManager';
@@ -12,27 +12,40 @@ interface LabelPartCase {
   Part: typeof Toast.Title | typeof Toast.Description;
   field: 'title' | 'description';
   attribute: string;
+  /**
+   * Renders a title beside the part. A toast with no title takes its name from its description
+   * (VUE-99), so the description is in `aria-describedby` only beside a title.
+   */
+  renderTitle: () => VNode | null;
 }
 
 const cases: LabelPartCase[] = [
-  { name: 'Toast.Title', Part: Toast.Title, field: 'title', attribute: 'aria-labelledby' },
+  {
+    name: 'Toast.Title',
+    Part: Toast.Title,
+    field: 'title',
+    attribute: 'aria-labelledby',
+    renderTitle: () => null,
+  },
   {
     name: 'Toast.Description',
     Part: Toast.Description,
     field: 'description',
     attribute: 'aria-describedby',
+    renderTitle: () => <Toast.Title>Toast title</Toast.Title>,
   },
 ];
 
 describe('useToastLabelPart', () => {
   const { render } = createRenderer();
 
-  describe.each(cases)('<$name />', ({ Part, field, attribute }) => {
+  describe.each(cases)('<$name />', ({ Part, field, attribute, renderTitle }) => {
     function renderInRoot(node: VNode, toast: Toast.Root.ToastObject = { id: 'test' }) {
       return render(
         <Toast.Provider>
           <Toast.Viewport>
             <Toast.Root toast={toast} data-testid="root">
+              {renderTitle()}
               {node}
             </Toast.Root>
           </Toast.Viewport>
@@ -136,6 +149,7 @@ describe('useToastLabelPart', () => {
             <Toast.Provider>
               <Toast.Viewport>
                 <Toast.Root toast={{ id: 'test' }} data-testid="root">
+                  {renderTitle()}
                   <Part
                     id="part"
                     v-slots={content.value === null ? {} : { default: () => content.value }}
@@ -168,6 +182,7 @@ describe('useToastLabelPart', () => {
         <Toast.Provider>
           <Toast.Viewport>
             <Toast.Root toast={{ id: 'test' }} data-testid="root">
+              {renderTitle()}
               {parts.value !== 'new' && (
                 <Part key="old" id="old-part">
                   Old
@@ -202,6 +217,7 @@ describe('useToastLabelPart', () => {
         <Toast.Provider>
           <Toast.Viewport>
             <Toast.Root toast={{ id: 'test' }} data-testid="root">
+              {renderTitle()}
               <Part id="first-part">First</Part>
               {showLast.value && <Part id="last-part">Last</Part>}
             </Toast.Root>
@@ -232,6 +248,7 @@ describe('useToastLabelPart', () => {
         <Toast.Provider>
           <Toast.Viewport>
             <Toast.Root toast={toast.value} data-testid="root">
+              {renderTitle()}
               <Part data-testid="part" />
             </Toast.Root>
           </Toast.Viewport>
@@ -263,6 +280,7 @@ describe('useToastLabelPart', () => {
         <Toast.Provider>
           <Toast.Viewport>
             <Toast.Root toast={{ id: 'test' }} data-testid="root">
+              {renderTitle()}
               <KeepAlive>
                 {visible.value ? <Labelled key="labelled" /> : <Other key="other" />}
               </KeepAlive>
@@ -280,6 +298,31 @@ describe('useToastLabelPart', () => {
 
       visible.value = true;
       await nextTick();
+      expect(root).toHaveAttribute(attribute, 'part');
+    });
+
+    it(`drops ${attribute} for a part that mounts while KeepAlive holds it, and points it at the part after the show`, async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Part key="part" id="part">
+          Toast content
+        </Part>
+      ));
+      await render(() => (
+        <Toast.Provider>
+          <Toast.Viewport>
+            <Toast.Root toast={{ id: 'test' }} data-testid="root">
+              {renderTitle()}
+              <HeldBranch />
+            </Toast.Root>
+          </Toast.Viewport>
+        </Toast.Provider>
+      ));
+      const root = screen.getByTestId('root');
+
+      await mountWhileHeld();
+      expect(root).not.toHaveAttribute(attribute);
+
+      await show();
       expect(root).toHaveAttribute(attribute, 'part');
     });
   });

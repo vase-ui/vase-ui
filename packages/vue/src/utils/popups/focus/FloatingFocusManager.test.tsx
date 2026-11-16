@@ -12,13 +12,14 @@ import {
   Teleport,
   watch,
 } from 'vue';
-import type { PropType, ShallowRef } from 'vue';
+import type { PropType, ShallowRef, VNode } from 'vue';
 import {
   cloneElement,
   createRenderer,
   fireEvent,
   flushMicrotasks,
   isJSDOM,
+  nextEvent,
   screen,
   useTestInteractions,
   waitFor,
@@ -47,8 +48,8 @@ import {
 } from '../tree/FloatingTree';
 import { FloatingTreeStore } from '../tree/FloatingTreeStore';
 import type { PopupPositioningContext } from '../types';
-import FloatingFocusManager from './FloatingFocusManager.vue';
-import type { FloatingFocusManagerProps, FocusOption } from './FloatingFocusManager.vue';
+import { FloatingFocusManager } from '../../../../test/fixtures/floatingFocusManagerHarness';
+import type { FloatingFocusManagerProps, FocusOption } from './FloatingFocusManager';
 import FocusGuard from './FocusGuard.vue';
 
 // A module namespace is read-only. The mock gives `engine` as a plain object, so a case can set the
@@ -68,14 +69,26 @@ function setWebKit(webkit: boolean) {
   });
 }
 
+// A browser without the `preventScroll` option does not read the options of `focus`. This function
+// does not read them either.
+function ignoreFocusOptions() {
+  const focus = HTMLElement.prototype.focus;
+  const spy = vi.spyOn(HTMLElement.prototype, 'focus').mockImplementation(function (
+    this: HTMLElement,
+  ) {
+    focus.call(this);
+  });
+  onTestFinished(() => spy.mockRestore());
+}
+
 type ManagerProps = Partial<Omit<FloatingFocusManagerProps, 'store'>>;
 type PopupStore = ReturnType<typeof useFloatingRootStore>;
 
 // A popup with a reference field. The reference opens the popup for a click, and for a
 // `mousedown` as a trigger of a popup part does. With `keepMounted`, the popup element stays and
-// the focus manager is disabled while the popup is closed. The default content has a button that
-// closes the popup, and the slot of the content gets the same function as `close`. `name` is the
-// prefix of each test id, so that a popup can hold another popup.
+// the focus manager is disabled while the popup is closed, unless `manager.disabled` is set. The
+// default content has a button that closes the popup, and the slot of the content gets the same
+// function as `close`. `name` is the prefix of each test id, so that a popup can hold another popup.
 const Popup = defineComponent({
   props: {
     manager: { type: Object as PropType<ManagerProps>, default: () => ({}) },
@@ -128,7 +141,7 @@ const Popup = defineComponent({
           <FloatingFocusManager
             store={store}
             {...props.manager}
-            disabled={props.keepMounted ? !open.value : props.manager.disabled}
+            disabled={props.manager.disabled ?? (props.keepMounted ? !open.value : undefined)}
           >
             <div
               role={props.role}
@@ -178,6 +191,13 @@ async function openPopup(root: ParentNode = document, name = '') {
   reference.focus();
   await fireEvent.click(reference);
   await flushMicrotasks();
+}
+
+// The focus manager moves the focus into the popup in an animation frame after the open. The
+// reference takes the focus first, so the next `focusin` event is the move into the popup.
+async function openPopupAndWaitForFocus(name = '') {
+  screen.getByTestId(`${name}reference`).focus();
+  await nextEvent(document, 'focusin', { action: () => openPopup(document, name) });
 }
 
 function nextFrame() {
@@ -710,8 +730,8 @@ describe('FloatingFocusManager', () => {
   });
 
   describe('popup element that holds the guards', () => {
-    // A popup part renders the focus manager in its positioner. When that part renders no element
-    // that has the focusable marker, the positioner is the popup element, and the guards are in it.
+    // The element of a popup part is in its positioner. When that element has no focusable marker,
+    // the positioner is the popup element, and the guards are in it.
     const PositionerPopup = defineComponent({
       setup() {
         const open = shallowRef(false);
@@ -1473,6 +1493,143 @@ describe('FloatingFocusManager', () => {
 
         await waitFor(() => expect(screen.getByTestId('reference')).toHaveFocus());
       });
+
+      it('returns the focus when it is in an element of getInsideElements', async () => {
+        const popup = captureStore();
+        await render(
+          <div>
+            <Popup
+              manager={{ getInsideElements: () => [screen.queryByTestId('inside')] }}
+              onStore={popup.onStore}
+            />
+            <input data-testid="inside" />
+          </div>,
+        );
+        await openPopupAndWaitForFocus();
+        expect(screen.getByTestId('one')).toHaveFocus();
+        screen.getByTestId('inside').focus();
+
+        popup.close();
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('reference')).toHaveFocus();
+      });
+    });
+
+    // The portal puts the inner popup outside the element of the outer popup. With `keepMounted`,
+    // a focus manager stops at the close and the element stays, as the focus manager of a dialog
+    // does during its exit.
+    describe('BUG-5519: a popup in a popup', () => {
+      // `button` gets the functions that close the outer popup and the inner popup. It renders the
+      // content of the inner popup, and the focus moves to it at the open.
+      async function renderPopupInPopup({
+        outer = {},
+        innerKeepMounted = false,
+        button,
+      }: {
+        outer?: { keepMounted?: boolean; manager?: ManagerProps };
+        innerKeepMounted?: boolean;
+        button: (closeOuter: () => void, closeInner: () => void) => VNode;
+      }) {
+        await render(
+          <Popup keepMounted={outer.keepMounted} manager={outer.manager}>
+            {{
+              default: ({ close: closeOuter }: { close: () => void }) => (
+                <Popup name="inner-" portal keepMounted={innerKeepMounted}>
+                  {{
+                    default: ({ close: closeInner }: { close: () => void }) =>
+                      button(closeOuter, closeInner),
+                  }}
+                </Popup>
+              ),
+            }}
+          </Popup>,
+        );
+        await openPopup();
+        await openPopupAndWaitForFocus('inner-');
+        expect(screen.getByTestId('button')).toHaveFocus();
+      }
+
+      it.each<{ name: string; closeOuterFirst: boolean }>([
+        { name: 'the outer popup closes first', closeOuterFirst: true },
+        { name: 'the inner popup closes first', closeOuterFirst: false },
+      ])(
+        'BUG-5519: returns the focus to the outer reference when both close and $name',
+        async ({ closeOuterFirst }) => {
+          await renderPopupInPopup({
+            outer: { keepMounted: true },
+            innerKeepMounted: true,
+            button: (closeOuter, closeInner) => (
+              <button
+                data-testid="button"
+                onClick={() => {
+                  const [first, second] = closeOuterFirst
+                    ? [closeOuter, closeInner]
+                    : [closeInner, closeOuter];
+                  first();
+                  second();
+                }}
+              />
+            ),
+          });
+
+          await fireEvent.click(screen.getByTestId('button'));
+          await flushMicrotasks();
+
+          expect(screen.getByTestId('reference')).toHaveFocus();
+        },
+      );
+
+      // A popover that a hover opened has a disabled focus manager while it is open.
+      it('BUG-5519: returns the focus to the inner reference in an open popup with a disabled focus manager', async () => {
+        await renderPopupInPopup({
+          outer: { manager: { disabled: true } },
+          button: (_closeOuter, closeInner) => (
+            <button data-testid="button" onClick={() => closeInner()} />
+          ),
+        });
+
+        await fireEvent.click(screen.getByTestId('button'));
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('inner-reference')).toHaveFocus();
+      });
+
+      // A popup that stays mounted with its focus manager on returns the focus only at its unmount,
+      // as after `preventUnmountOnClose()`.
+      it('BUG-5519: returns the focus to the inner reference in a closed popup whose focus manager is on', async () => {
+        await renderPopupInPopup({
+          outer: { keepMounted: true, manager: { disabled: false } },
+          innerKeepMounted: true,
+          button: (closeOuter, closeInner) => (
+            <button
+              data-testid="button"
+              onClick={() => {
+                closeOuter();
+                closeInner();
+              }}
+            />
+          ),
+        });
+
+        await fireEvent.click(screen.getByTestId('button'));
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('inner-reference')).toHaveFocus();
+      });
+
+      it('BUG-5519: keeps the focus in an inner popup that stays open', async () => {
+        await renderPopupInPopup({
+          outer: { keepMounted: true },
+          innerKeepMounted: true,
+          button: (closeOuter) => <button data-testid="button" onClick={() => closeOuter()} />,
+        });
+
+        await fireEvent.click(screen.getByTestId('button'));
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('button')).toHaveFocus();
+      });
     });
 
     describe('Tab key that leaves a popup that is not modal', () => {
@@ -1853,18 +2010,6 @@ describe('FloatingFocusManager', () => {
     });
 
     describe('press outside the popup, in a browser that gives no preventScroll option', () => {
-      // A browser without the option does not read the options of `focus`. This function does not
-      // read them either.
-      function ignoreFocusOptions() {
-        const focus = HTMLElement.prototype.focus;
-        const spy = vi.spyOn(HTMLElement.prototype, 'focus').mockImplementation(function (
-          this: HTMLElement,
-        ) {
-          focus.call(this);
-        });
-        onTestFinished(() => spy.mockRestore());
-      }
-
       const mousePress = () =>
         new PointerEvent('pointerdown', { pointerType: 'mouse', buttons: 1, pressure: 0.5 });
       // Chromium gives a press of a screen reader as a mouse event of 1 by 1 pixel with no pressure.
@@ -2799,8 +2944,7 @@ describe('FloatingFocusManager', () => {
           </NestedDialog>,
         );
 
-        await user.click(screen.getByTestId('open-dialog'));
-        await waitForLaterMillisecond();
+        await waitForLaterMillisecond(() => user.click(screen.getByTestId('open-dialog')));
         await user.click(screen.getByTestId('open-nested-dialog'));
 
         expect(screen.getByTestId('close-nested-dialog')).toBeInTheDocument();
@@ -2872,12 +3016,7 @@ describe('FloatingFocusManager', () => {
       test('does not return focus to reference on outside press when preventScroll is not supported', async () => {
         // A browser reads the options of `focus`. Base UI runs this case only in jsdom, whose
         // `focus` reads none.
-        const focus = HTMLElement.prototype.focus;
-        vi.spyOn(HTMLElement.prototype, 'focus').mockImplementation(function focusWithNoOptions(
-          this: HTMLElement,
-        ) {
-          focus.call(this);
-        });
+        ignoreFocusOptions();
 
         const { user } = await render(<ClickDismissApp />);
 
@@ -3083,9 +3222,7 @@ describe('FloatingFocusManager', () => {
 
         await user.click(screen.getByTestId('close'));
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('close')).toBeNull();
-        });
+        expect(screen.queryByTestId('close')).toBeNull();
 
         expect(reference.nextElementSibling).toBeNull();
       });
@@ -3204,12 +3341,13 @@ describe('FloatingFocusManager', () => {
         // top-level document, so user-event needs an instance for the iframe's document.
         const user = testingLibraryUserEvent.setup({ document: iframeDoc });
 
-        await user.click(iframeWithin.getByRole('button', { name: 'Open' }));
+        await waitForLaterMillisecond(async () => {
+          await user.click(iframeWithin.getByRole('button', { name: 'Open' }));
 
-        // Vue makes each element with the document of the page, so the element has the class of
-        // that window. The DOM matchers refuse an element whose class is not of its own window.
-        expect(iframeWithin.getByTestId('popover').isConnected).toBe(true);
-        await waitForLaterMillisecond();
+          // Vue makes each element with the document of the page, so the element has the class of
+          // that window. The DOM matchers refuse an element whose class is not of its own window.
+          expect(iframeWithin.getByTestId('popover').isConnected).toBe(true);
+        });
 
         await user.tab();
         await user.tab();
@@ -3228,12 +3366,13 @@ describe('FloatingFocusManager', () => {
         // top-level document, so user-event needs an instance for the iframe's document.
         const user = testingLibraryUserEvent.setup({ document: iframeDoc });
 
-        await user.click(iframeWithin.getByRole('button', { name: 'Open' }));
+        await waitForLaterMillisecond(async () => {
+          await user.click(iframeWithin.getByRole('button', { name: 'Open' }));
 
-        // Vue makes each element with the document of the page, so the element has the class of
-        // that window. The DOM matchers refuse an element whose class is not of its own window.
-        expect(iframeWithin.getByTestId('popover').isConnected).toBe(true);
-        await waitForLaterMillisecond();
+          // Vue makes each element with the document of the page, so the element has the class of
+          // that window. The DOM matchers refuse an element whose class is not of its own window.
+          expect(iframeWithin.getByTestId('popover').isConnected).toBe(true);
+        });
 
         await user.tab({ shift: true });
 
@@ -3501,8 +3640,7 @@ describe('FloatingFocusManager', () => {
 
         const { user } = await render(<Test />);
 
-        await user.click(screen.getByTestId('open-dialog'));
-        await waitForLaterMillisecond();
+        await waitForLaterMillisecond(() => user.click(screen.getByTestId('open-dialog')));
         await user.click(screen.getByTestId('open-nested-dialog'));
 
         expect(screen.getByTestId('close-dialog')).toBeInTheDocument();
@@ -4380,11 +4518,12 @@ describe('FloatingFocusManager', () => {
       test('focuses inside element, tabbing out focuses last document element', async () => {
         const { user } = await render(<PortalApp />);
 
-        await user.click(screen.getByTestId('reference'));
-        await flushMicrotasks();
+        await waitForLaterMillisecond(async () => {
+          await user.click(screen.getByTestId('reference'));
+          await flushMicrotasks();
 
-        expect(screen.getByTestId('inside')).toHaveFocus();
-        await waitForLaterMillisecond();
+          expect(screen.getByTestId('inside')).toHaveFocus();
+        });
 
         await user.tab();
 
@@ -4472,9 +4611,10 @@ describe('FloatingFocusManager', () => {
       test('shift+tab', async () => {
         const { user } = await render(<PortalApp />);
 
-        await user.click(screen.getByTestId('reference'));
-        await flushMicrotasks();
-        await waitForLaterMillisecond();
+        await waitForLaterMillisecond(async () => {
+          await user.click(screen.getByTestId('reference'));
+          await flushMicrotasks();
+        });
 
         await user.tab({ shift: true });
 
@@ -4507,9 +4647,10 @@ describe('FloatingFocusManager', () => {
 
       test('returns focus to reference when floating element was opened by hover but is closed by an explicit close button', async () => {
         await render(<Navigation />);
-        await testingLibraryUserEvent.hover(screen.getByText('Product'));
-        await flushMicrotasks();
-        await waitForLaterMillisecond();
+        await waitForLaterMillisecond(async () => {
+          await testingLibraryUserEvent.hover(screen.getByText('Product'));
+          await flushMicrotasks();
+        });
         await testingLibraryUserEvent.click(screen.getByText('Close').parentElement!);
         await testingLibraryUserEvent.keyboard('{Tab}');
         expect(screen.getByText('Close')).toHaveFocus();
@@ -4526,7 +4667,9 @@ describe('FloatingFocusManager', () => {
 
       test('closes when unhovering floating element even when focus is inside it', async () => {
         await render(<Navigation />);
-        await testingLibraryUserEvent.hover(screen.getByText('Product'));
+        await waitForLaterMillisecond(() =>
+          testingLibraryUserEvent.hover(screen.getByText('Product')),
+        );
         await testingLibraryUserEvent.click(screen.getByTestId('subnavigation'));
         await testingLibraryUserEvent.unhover(screen.getByTestId('subnavigation'));
         await testingLibraryUserEvent.hover(screen.getByText('Product'));
@@ -4906,10 +5049,11 @@ describe('FloatingFocusManager', () => {
       });
 
       const { user } = await render(<Test />);
-      await user.click(screen.getByTestId('input'));
-      await flushMicrotasks();
-      expect(screen.getByTestId('input')).toHaveFocus();
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('input'));
+        await flushMicrotasks();
+        expect(screen.getByTestId('input')).toHaveFocus();
+      });
       await user.tab();
       expect(screen.getByRole('button', { name: 'one' })).toHaveFocus();
       await user.tab({ shift: true });
@@ -4985,10 +5129,11 @@ describe('FloatingFocusManager', () => {
       });
 
       const { user } = await render(<Parent />);
-      await user.click(screen.getByTestId('parent-reference'));
-      await flushMicrotasks();
-      expect(screen.getByTestId('parent-floating-reference')).toHaveFocus();
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('parent-reference'));
+        await flushMicrotasks();
+        expect(screen.getByTestId('parent-floating-reference')).toHaveFocus();
+      });
       await user.click(screen.getByTestId('parent-floating-reference'));
       await flushMicrotasks();
       expect(screen.getByTestId('child-reference')).toHaveFocus();
@@ -5386,12 +5531,13 @@ describe('FloatingFocusManager', () => {
       });
       const { user } = await render(<Test />);
 
-      await user.click(screen.getByTestId('reference'));
-      await flushMicrotasks();
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('reference'));
+        await flushMicrotasks();
 
-      expect(screen.getByTestId('floating')).toHaveAttribute('tabindex', '-1');
-      expect(screen.getByTestId('inner')).toHaveFocus();
-      await waitForLaterMillisecond();
+        expect(screen.getByTestId('floating')).toHaveAttribute('tabindex', '-1');
+        expect(screen.getByTestId('inner')).toHaveFocus();
+      });
       await user.tab({ shift: true });
       expect(screen.getByTestId('reference')).toHaveFocus();
       await user.tab();

@@ -8,6 +8,7 @@ import { Dialog } from '@vase-ui/vue/dialog';
 import { ScrollArea } from '@vase-ui/vue/scroll-area';
 import * as Menu from '../index.parts';
 import {
+  clientCenter,
   createRenderer,
   fireEvent,
   firePointer,
@@ -19,6 +20,7 @@ import {
   screen,
   wait,
   waitFor,
+  waitForLaterMillisecond,
   waitSingleFrame,
 } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
@@ -63,9 +65,11 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       </Menu.FilterProvider>,
     );
 
-    await fireEvent.mouseDown(screen.getByRole('button', { name: 'Actions' }));
-
-    const input = await screen.findByRole('searchbox', { name: 'Filter actions' });
+    const trigger = screen.getByRole('button', { name: 'Actions' });
+    const input = await waitForLaterMillisecond(async () => {
+      await fireEvent.mouseDown(trigger, clientCenter(trigger));
+      return screen.findByRole('searchbox', { name: 'Filter actions' });
+    });
     const checkbox = screen.getByRole('menuitemcheckbox', { name: 'Two' });
     await waitFor(() => {
       expect(input).toHaveFocus();
@@ -174,7 +178,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         const trigger = screen.getByRole('button', { name: 'Actions' });
         trigger.focus();
         await flushMicrotasks();
-        await user.keyboard('[ArrowDown]');
+        await waitForLaterMillisecond(() => user.keyboard('[ArrowDown]'));
         const input = screen.getByRole('searchbox', { name: 'Filter actions' });
         await waitFor(() => expect(input).toHaveFocus());
         await user.keyboard('[Escape]');
@@ -228,7 +232,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         const trigger = screen.getByRole('button', { name: 'Actions' });
         trigger.focus();
         await flushMicrotasks();
-        await user.keyboard('[ArrowDown]');
+        await waitForLaterMillisecond(() => user.keyboard('[ArrowDown]'));
         const input = screen.getByRole('searchbox', { name: 'Filter actions' });
         await waitFor(() => expect(input).toHaveFocus());
         await waitFor(() => {
@@ -620,9 +624,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
         await user.clear(input);
 
-        await waitFor(() => {
-          expect(input).not.toHaveAttribute('aria-activedescendant');
-        });
+        expect(input).not.toHaveAttribute('aria-activedescendant');
         expect(screen.getByRole('menuitem', { name: 'Rename' })).not.toHaveAttribute(
           'data-highlighted',
         );
@@ -649,7 +651,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         );
 
         const input = screen.getByRole('searchbox', { name: 'Filter actions' });
-        await user.type(input, 'e');
+        await waitForLaterMillisecond(() => user.type(input, 'e'));
         await user.keyboard('[ArrowDown]');
         const deleteItem = screen.getByRole('menuitem', { name: 'Delete' });
         await waitFor(() => {
@@ -658,9 +660,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
         await user.click(screen.getByLabelText('Clear filter'));
 
-        await waitFor(() => {
-          expect(input).not.toHaveAttribute('aria-activedescendant');
-        });
+        expect(input).not.toHaveAttribute('aria-activedescendant');
         expect(deleteItem).not.toHaveAttribute('data-highlighted');
       });
 
@@ -721,9 +721,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         const input = screen.getByRole('searchbox', { name: 'Filter actions' });
         await user.type(input, 'missing');
 
-        await waitFor(() => {
-          expect(input).not.toHaveAttribute('aria-activedescendant');
-        });
+        expect(input).not.toHaveAttribute('aria-activedescendant');
         expect(screen.queryAllByRole('menuitem')).toHaveLength(0);
       });
 
@@ -920,9 +918,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
         // Only Delete matches, so it moves to the top of the list, away from the resting pointer.
         await user.keyboard('l');
-        await waitFor(() => {
-          expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
-        });
+        expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
         await fireEvent.pointerLeave(deleteItem, { pointerType: 'mouse' });
 
         expect(input).toHaveAttribute('aria-activedescendant', deleteItem.id);
@@ -1019,6 +1015,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       'does not highlight the first item while closing from the trigger with a pointer',
       async () => {
         globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+        const onOpenChangeComplete = vi.fn();
 
         const { user } = await render(
           <>
@@ -1031,7 +1028,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
               }
             `}</style>
             <Menu.FilterProvider>
-              <Menu.Root>
+              <Menu.Root onOpenChangeComplete={onOpenChangeComplete}>
                 <Menu.Trigger>Actions</Menu.Trigger>
                 <Menu.Portal>
                   <Menu.Positioner>
@@ -1049,8 +1046,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         );
 
         const trigger = screen.getByRole('button', { name: 'Actions' });
-        await user.click(trigger);
-        const input = await screen.findByRole('searchbox', { name: 'Filter actions' });
+        const input = await waitForLaterMillisecond(async () => {
+          await user.click(trigger);
+          return screen.findByRole('searchbox', { name: 'Filter actions' });
+        });
         const item = screen.getByRole('menuitem', { name: 'Rename' });
         expect(item).not.toHaveAttribute('data-highlighted');
 
@@ -1060,10 +1059,11 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         expect(item).not.toHaveAttribute('data-highlighted');
 
         const popup = screen.getByTestId('popup');
-        // The popup reads its animations in a frame after the open. That read must not be the read
-        // that the close takes.
-        await waitSingleFrame();
-        await waitSingleFrame();
+        // The root reads the animations of the popup in a frame after the open. The wait for the
+        // read of the close must start after that read.
+        await waitFor(() => {
+          expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+        });
         await nextAnimationsRead(popup, { action: () => user.click(trigger) });
 
         expect(popup).toHaveAttribute('data-ending-style');
@@ -1315,9 +1315,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         await user.keyboard(' ');
 
         expect(onRenameClick).toHaveBeenCalledTimes(1);
-        await waitFor(() => {
-          expect(screen.queryByRole('menu')).toBe(null);
-        });
+        expect(screen.queryByRole('menu')).toBe(null);
       });
 
       it('does nothing while the input is empty and no item is highlighted', async () => {
@@ -1415,9 +1413,11 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
         const parentInput = screen.getByRole('searchbox', { name: 'Filter actions' });
         await user.click(parentInput);
-        await user.keyboard('[ArrowDown][ArrowRight]');
-        const submenuInput = await screen.findByRole<HTMLInputElement>('searchbox', {
-          name: 'Filter folders',
+        const submenuInput = await waitForLaterMillisecond(async () => {
+          await user.keyboard('[ArrowDown][ArrowRight]');
+          return screen.findByRole<HTMLInputElement>('searchbox', {
+            name: 'Filter folders',
+          });
         });
         await waitFor(() => {
           expect(submenuInput).toHaveFocus();
@@ -1429,9 +1429,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         expect(submenuInput).toHaveFocus();
 
         await user.keyboard('[ArrowLeft]');
-        await waitFor(() => {
-          expect(screen.queryByRole('searchbox', { name: 'Filter folders' })).toBe(null);
-        });
+        expect(screen.queryByRole('searchbox', { name: 'Filter folders' })).toBe(null);
         expect(parentInput).toHaveFocus();
       });
     });
@@ -1501,9 +1499,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       await user.type(input, 'ren');
       await user.keyboard('[ArrowDown]');
 
-      await waitFor(() => {
-        expect(screen.getByTestId('file-group')).not.toBeVisible();
-      });
+      expect(screen.getByTestId('file-group')).not.toBeVisible();
       expect(screen.getByTestId('manage-group')).toBeVisible();
       expect(screen.getByRole('menuitem', { name: 'Rename' })).toBeVisible();
 
@@ -1556,9 +1552,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         expect(parentInput).toHaveFocus();
       });
 
-      await user.keyboard('[ArrowDown][ArrowRight]');
-
-      const submenuInput = await screen.findByRole('searchbox', { name: 'Filter sharing options' });
+      const submenuInput = await waitForLaterMillisecond(async () => {
+        await user.keyboard('[ArrowDown][ArrowRight]');
+        return screen.findByRole('searchbox', { name: 'Filter sharing options' });
+      });
       await waitFor(() => {
         expect(submenuInput).toHaveFocus();
       });
@@ -1568,9 +1565,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       await waitFor(() => {
         expect(screen.getByTestId('after')).toHaveFocus();
       });
-      await waitFor(() => {
-        expect(screen.queryByRole('searchbox', { name: 'Filter actions' })).toBe(null);
-      });
+      expect(screen.queryByRole('searchbox', { name: 'Filter actions' })).toBe(null);
     });
 
     // Only the submenu filters here; the outer menu is an ordinary one.
@@ -1634,6 +1629,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     it('closes a pointer-opened filterable submenu and moves focus forward when tabbing', async () => {
       // Exit transitions keep the closing popups mounted while focus relocates.
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+      const onOpenChangeComplete = vi.fn();
 
       const { user } = await render(
         <div>
@@ -1643,7 +1639,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
           `}</style>
           <input />
           <Menu.FilterProvider>
-            <Menu.Root modal={false}>
+            <Menu.Root modal={false} onOpenChangeComplete={onOpenChangeComplete}>
               <Menu.Trigger>Actions</Menu.Trigger>
               <Menu.Portal>
                 <Menu.Positioner>
@@ -1675,20 +1671,26 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         </div>,
       );
 
-      await user.click(screen.getByRole('button', { name: 'Actions' }));
-
-      const submenuTrigger = await screen.findByRole('menuitem', { name: 'Share' });
-      await user.click(submenuTrigger);
-
-      const submenuInput = await screen.findByRole('searchbox', { name: 'Filter sharing options' });
+      const submenuTrigger = await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Actions' }));
+        return screen.findByRole('menuitem', { name: 'Share' });
+      });
+      const submenuInput = await waitForLaterMillisecond(async () => {
+        await user.click(submenuTrigger);
+        return screen.findByRole('searchbox', { name: 'Filter sharing options' });
+      });
       await waitFor(() => {
         expect(submenuInput).toHaveFocus();
       });
 
       // The exit of the parent popup ends with no time limit. Its read gives the transitions.
-      const parentPopup = screen
-        .getByRole('searchbox', { name: 'Filter actions' })
-        .closest<HTMLElement>('.filter-popup')!;
+      const parentInput = screen.getByRole('searchbox', { name: 'Filter actions' });
+      const parentPopup = parentInput.closest<HTMLElement>('.filter-popup')!;
+      // The root reads the animations of the popup in a frame after the open. The wait for the
+      // read of the close must start after that read.
+      await waitFor(() => {
+        expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+      });
       const animations = await nextAnimationsRead(parentPopup, { action: () => user.tab() });
       const finished = animations.map((animation) => animation.finished);
 
@@ -1697,8 +1699,9 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       });
       await Promise.all(finished);
       await waitFor(() => {
-        expect(screen.queryByRole('searchbox', { name: 'Filter actions' })).toBe(null);
+        expect(parentInput).not.toBeInTheDocument();
       });
+      expect(screen.queryByRole('searchbox', { name: 'Filter actions' })).toBe(null);
     });
 
     it('focuses a click-opened filterable submenu input so typing filters the submenu', async () => {
@@ -1736,12 +1739,14 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         </Menu.FilterProvider>,
       );
 
-      await user.click(screen.getByRole('button', { name: 'Actions' }));
-
-      const submenuTrigger = await screen.findByRole('menuitem', { name: 'Share' });
-      await user.click(submenuTrigger);
-
-      const submenuInput = await screen.findByRole('searchbox', { name: 'Filter sharing options' });
+      const submenuTrigger = await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Actions' }));
+        return screen.findByRole('menuitem', { name: 'Share' });
+      });
+      const submenuInput = await waitForLaterMillisecond(async () => {
+        await user.click(submenuTrigger);
+        return screen.findByRole('searchbox', { name: 'Filter sharing options' });
+      });
       await waitFor(() => {
         expect(submenuInput).toHaveFocus();
       });
@@ -1749,9 +1754,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       await user.keyboard('em');
 
       expect(submenuInput).toHaveValue('em');
-      await waitFor(() => {
-        expect(screen.queryByRole('menuitem', { name: 'Link' })).toBe(null);
-      });
+      expect(screen.queryByRole('menuitem', { name: 'Link' })).toBe(null);
       expect(screen.getByRole('menuitem', { name: 'Email' })).toBeVisible();
       // The parent list did not filter: its own items are all still present.
       expect(screen.getByRole('menuitem', { name: 'Share' })).toBeVisible();
@@ -2114,9 +2117,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       expect(trigger).toHaveAttribute('aria-haspopup', 'dialog');
 
-      await user.click(trigger);
-
-      const popup = await screen.findByRole('dialog', { name: 'Fruit' });
+      const popup = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        return screen.findByRole('dialog', { name: 'Fruit' });
+      });
       const list = screen.getByTestId('list');
       const input = screen.getByRole('searchbox', { name: 'Filter fruit' });
 
@@ -2195,9 +2199,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       await user.click(screen.getByRole('button', { name: 'Remove id' }));
 
-      await waitFor(() => {
-        expect(popup).not.toHaveAttribute('id', 'custom-popup');
-      });
+      expect(popup).not.toHaveAttribute('id', 'custom-popup');
       expect(trigger.getAttribute('aria-controls')).toBe(popup.id);
       expect(screen.getByRole('menuitem', { name: 'Apple' }).id).not.toBe('');
     });
@@ -2211,9 +2213,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         await waitFor(() => {
           expect(parentMenu).toHaveFocus();
         });
-        await user.keyboard('[ArrowDown][ArrowDown][ArrowRight]');
-
-        const input = await screen.findByRole('searchbox', { name: 'Filter folders' });
+        const input = await waitForLaterMillisecond(async () => {
+          await user.keyboard('[ArrowDown][ArrowDown][ArrowRight]');
+          return screen.findByRole('searchbox', { name: 'Filter folders' });
+        });
         await waitFor(() => {
           expect(input).toHaveFocus();
         });
@@ -2286,9 +2289,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       const submenuTrigger = screen.getByRole('menuitem', { name: 'Move to folder' });
       expect(parentInput).toHaveAttribute('aria-activedescendant', submenuTrigger.id);
 
-      await user.keyboard('[ArrowRight]');
-
-      const submenuInput = await screen.findByRole('searchbox', { name: 'Filter folders' });
+      const submenuInput = await waitForLaterMillisecond(async () => {
+        await user.keyboard('[ArrowRight]');
+        return screen.findByRole('searchbox', { name: 'Filter folders' });
+      });
       await waitFor(() => {
         expect(submenuInput).toHaveFocus();
       });
@@ -2352,10 +2356,11 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
           expect(parentInput).toHaveFocus();
         });
 
-        await user.keyboard('[ArrowDown][ArrowRight]');
-
-        const submenuInput = await screen.findByRole<HTMLInputElement>('searchbox', {
-          name: 'Filter folders',
+        const submenuInput = await waitForLaterMillisecond(async () => {
+          await user.keyboard('[ArrowDown][ArrowRight]');
+          return screen.findByRole<HTMLInputElement>('searchbox', {
+            name: 'Filter folders',
+          });
         });
         await waitFor(() => {
           expect(submenuInput).toHaveFocus();
@@ -2413,9 +2418,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         expect(parentInput).toHaveFocus();
       });
 
-      await user.keyboard('[ArrowDown][ArrowLeft]');
-
-      const submenuInput = await screen.findByRole('searchbox', { name: 'Filter folders' });
+      const submenuInput = await waitForLaterMillisecond(async () => {
+        await user.keyboard('[ArrowDown][ArrowLeft]');
+        return screen.findByRole('searchbox', { name: 'Filter folders' });
+      });
       await fireEvent.mouseMove(submenuInput);
       await waitFor(() => {
         expect(submenuInput).toHaveFocus();
@@ -2423,9 +2429,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       await user.keyboard('[ArrowRight]');
 
-      await waitFor(() => {
-        expect(screen.queryByRole('searchbox', { name: 'Filter folders' })).toBe(null);
-      });
+      expect(screen.queryByRole('searchbox', { name: 'Filter folders' })).toBe(null);
       expect(parentInput).toHaveFocus();
       expect(parentInput).toHaveAttribute(
         'aria-activedescendant',
@@ -2472,9 +2476,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         expect(parentInput).toHaveFocus();
       });
 
-      await user.keyboard('[ArrowDown][ArrowRight]');
-
-      const submenuInput = await screen.findByRole('searchbox', { name: 'Filter folders' });
+      const submenuInput = await waitForLaterMillisecond(async () => {
+        await user.keyboard('[ArrowDown][ArrowRight]');
+        return screen.findByRole('searchbox', { name: 'Filter folders' });
+      });
       await fireEvent.mouseMove(submenuInput);
       await waitFor(() => {
         expect(submenuInput).toHaveFocus();
@@ -2549,7 +2554,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       await waitFor(() => {
         expect(screen.getByRole('searchbox', { name: 'Filter actions' })).toHaveFocus();
       });
-      await user.keyboard('[ArrowDown][ArrowRight]');
+      await waitForLaterMillisecond(() => user.keyboard('[ArrowDown][ArrowRight]'));
       await waitFor(() => {
         expect(screen.getByRole('searchbox', { name: 'Filter folders' })).toHaveFocus();
       });
@@ -2611,10 +2616,11 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         expect(parentInput).toHaveFocus();
       });
 
-      await user.keyboard('[ArrowDown][ArrowRight]');
-
+      const submenuInput = await waitForLaterMillisecond(async () => {
+        await user.keyboard('[ArrowDown][ArrowRight]');
+        return screen.findByRole('searchbox', { name: 'Filter folders' });
+      });
       const submenuTrigger = screen.getByRole('menuitem', { name: 'Move to folder' });
-      const submenuInput = await screen.findByRole('searchbox', { name: 'Filter folders' });
       await fireEvent.mouseMove(submenuInput);
       await waitFor(() => {
         expect(submenuInput).toHaveFocus();
@@ -2623,9 +2629,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       const nestedTrigger = screen.getByRole('menuitem', { name: 'More folders' });
       expect(submenuInput).toHaveAttribute('aria-activedescendant', nestedTrigger.id);
 
-      await user.keyboard('[ArrowRight]');
-
-      const nestedItem = await screen.findByRole('menuitem', { name: 'Archive' });
+      const nestedItem = await waitForLaterMillisecond(async () => {
+        await user.keyboard('[ArrowRight]');
+        return screen.findByRole('menuitem', { name: 'Archive' });
+      });
       await waitFor(() => {
         expect(nestedItem).toHaveFocus();
       });
@@ -2693,7 +2700,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         expect(parentInput).toHaveAttribute('aria-activedescendant', submenuTrigger.id);
       });
 
-      await user.keyboard('[Enter]');
+      await waitForLaterMillisecond(() => user.keyboard('[Enter]'));
 
       const submenuInput = screen.getByRole('searchbox', { name: 'Filter sharing options' });
       await waitFor(() => {
@@ -2768,7 +2775,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         expect(input).toHaveFocus();
       });
 
-      await user.keyboard('[ArrowDown][ArrowDown][ArrowRight]');
+      await waitForLaterMillisecond(() => user.keyboard('[ArrowDown][ArrowDown][ArrowRight]'));
       await waitFor(() => {
         expect(screen.getByRole('searchbox', { name: 'Filter sharing options' })).toHaveFocus();
       });
@@ -2836,10 +2843,11 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         });
         await user.keyboard('[ArrowDown]');
         const submenuTrigger = screen.getByRole('menuitem', { name: 'Move to folder' });
-        await user.hover(submenuTrigger);
-
+        const submenuInput = await waitForLaterMillisecond(async () => {
+          await user.hover(submenuTrigger);
+          return screen.findByRole('searchbox', { name: 'Filter folders' });
+        });
         // Hovering only opens the submenu; the parent input keeps focus until the pointer enters.
-        const submenuInput = await screen.findByRole('searchbox', { name: 'Filter folders' });
         expect(parentInput).toHaveFocus();
 
         await fireEvent.mouseMove(submenuInput);
@@ -2892,9 +2900,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       });
       await user.keyboard('[ArrowDown]');
       const submenuTrigger = screen.getByRole('menuitem', { name: 'Move to folder' });
-      await user.hover(submenuTrigger);
-
-      const submenuInput = await screen.findByRole('searchbox', { name: 'Filter folders' });
+      const submenuInput = await waitForLaterMillisecond(async () => {
+        await user.hover(submenuTrigger);
+        return screen.findByRole('searchbox', { name: 'Filter folders' });
+      });
       await fireEvent.mouseMove(submenuInput);
       await waitFor(() => {
         expect(submenuInput).toHaveFocus();
@@ -2903,9 +2912,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       await user.keyboard('[ArrowLeft]');
 
-      await waitFor(() => {
-        expect(screen.queryByRole('searchbox', { name: 'Filter folders' })).toBe(null);
-      });
+      expect(screen.queryByRole('searchbox', { name: 'Filter folders' })).toBe(null);
       await waitFor(() => {
         expect(parentInput).toHaveFocus();
       });
@@ -2986,9 +2993,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       );
 
       const trigger = screen.getByRole('button', { name: 'Fruit' });
-      await user.click(trigger);
-
-      const popup = await screen.findByRole('dialog');
+      const popup = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        return screen.findByRole('dialog');
+      });
       const list = screen.getByTestId('list');
       const input = screen.getByRole('searchbox', { name: 'Filter fruit' });
 
@@ -3494,9 +3502,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       await user.type(parentInput, 'rename');
 
       expect(screen.queryByRole('menuitem', { name: 'Move to folder' })).toBe(null);
-      await waitFor(() => {
-        expect(screen.queryByRole('searchbox', { name: 'Filter folders' })).toBe(null);
-      });
+      expect(screen.queryByRole('searchbox', { name: 'Filter folders' })).toBe(null);
       expect(screen.getByRole('menuitem', { name: 'Rename' })).toBeVisible();
     });
 
@@ -3550,9 +3556,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       // The query really ran: it matches nothing, so only the canceled submenu trigger survives.
       expect(parentInput).toHaveValue('zzz');
-      await waitFor(() => {
-        expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
-      });
+      expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
 
       expect(screen.getByRole('menuitem', { name: 'Move to folder' })).toBeVisible();
       expect(screen.getByRole('searchbox', { name: 'Filter folders' })).toBeVisible();
@@ -3691,8 +3695,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       const trigger = screen.getByRole('button', { name: 'Actions' });
       trigger.focus();
       await flushMicrotasks();
-      await user.keyboard('[Enter]');
-      const input = await screen.findByRole('searchbox', { name: 'Filter actions' });
+      const input = await waitForLaterMillisecond(async () => {
+        await user.keyboard('[Enter]');
+        return screen.findByRole('searchbox', { name: 'Filter actions' });
+      });
       // The popup hands focus to the input asynchronously, so keys pressed before it lands
       // reach the body instead.
       await waitFor(() => {
@@ -3724,9 +3730,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       // Past the last item the highlight is released back to the input, matching Combobox.
       await user.keyboard('[ArrowDown]');
-      await waitFor(() => {
-        expect(input).not.toHaveAttribute('aria-activedescendant');
-      });
+      expect(input).not.toHaveAttribute('aria-activedescendant');
 
       await user.keyboard('[ArrowDown]');
       await waitFor(() => {
@@ -3748,9 +3752,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       });
 
       await user.keyboard('[Escape]');
-      await waitFor(() => {
-        expect(screen.queryByRole('menu')).toBe(null);
-      });
+      expect(screen.queryByRole('menu')).toBe(null);
 
       const reopenedInput = await openWithKeyboard(user);
       expect(reopenedInput).toHaveAttribute(
@@ -3809,9 +3811,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       });
 
       await user.type(input, 'e');
-      await waitFor(() => {
-        expect(input).not.toHaveAttribute('aria-activedescendant');
-      });
+      expect(input).not.toHaveAttribute('aria-activedescendant');
 
       await user.keyboard('[ArrowDown]');
       await waitFor(() => {
@@ -3849,9 +3849,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       });
 
       await user.keyboard('d');
-      await waitFor(() => {
-        expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
-      });
+      expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
       expect(input).not.toHaveAttribute('aria-activedescendant');
     });
   });
@@ -3895,9 +3893,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     const input = screen.getByRole('searchbox', { name: 'Filter actions' });
 
     await user.type(input, 'del');
-    await waitFor(() => {
-      expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
-    });
+    expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
 
     await fireEvent.input(input, { target: { value: 'ren' } });
 
@@ -3995,8 +3991,8 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     );
 
     const input = screen.getByRole('searchbox', { name: 'Filter actions' });
-    await user.type(input, 'ban');
-    await waitFor(() => {
+    await waitForLaterMillisecond(async () => {
+      await user.type(input, 'ban');
       expect(screen.queryByRole('menuitem', { name: 'Apple' })).toBe(null);
     });
 
@@ -4010,9 +4006,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     await user.click(screen.getByLabelText('Clear filter'));
 
     // Apple takes index 0 back, so a kept highlight would activate the wrong item.
-    await waitFor(() => {
-      expect(input).not.toHaveAttribute('aria-activedescendant');
-    });
+    expect(input).not.toHaveAttribute('aria-activedescendant');
     await user.keyboard('[Enter]');
     expect(onClick).toHaveBeenCalledTimes(0);
   });
@@ -4070,15 +4064,15 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     const { user } = await render(<App />);
 
     await user.type(screen.getByRole('searchbox', { name: 'Filter actions' }), 'ren');
-    await waitFor(() => {
-      expect(screen.queryByRole('menuitem', { name: 'Delete' })).toBe(null);
-    });
+    expect(screen.queryByRole('menuitem', { name: 'Delete' })).toBe(null);
 
     const toggle = screen.getByRole('button', { name: 'toggle' });
+    const menu = screen.getByRole('menu');
     toggle.click();
     await waitFor(() => {
-      expect(screen.queryByRole('menu')).toBe(null);
+      expect(menu).not.toBeInTheDocument();
     });
+    expect(screen.queryByRole('menu')).toBe(null);
 
     toggle.click();
 
@@ -4087,9 +4081,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     await waitFor(() => {
       expect(input).toHaveFocus();
     });
-    await waitFor(() => {
-      expect(screen.queryByRole('menuitem', { name: 'Delete' })).toBe(null);
-    });
+    expect(screen.queryByRole('menuitem', { name: 'Delete' })).toBe(null);
     expect(screen.getByRole('menuitem', { name: 'Rename' })).toBeVisible();
   });
 
@@ -4182,9 +4174,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     const { user } = await render(<App />);
 
     await user.type(screen.getByRole('searchbox', { name: 'Filter actions' }), 'rename');
-    await waitFor(() => {
-      expect(screen.queryByRole('menuitem', { name: 'Archive' })).toBe(null);
-    });
+    expect(screen.queryByRole('menuitem', { name: 'Archive' })).toBe(null);
 
     // The item is unmounted, so its text can only come from the rendered children.
     await user.click(screen.getByRole('button', { name: 'rename' }));
@@ -4333,9 +4323,11 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       </Menu.FilterProvider>,
     );
 
-    await user.click(screen.getByRole('button', { name: 'Actions' }));
-    await waitFor(() => {
-      expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+    await waitForLaterMillisecond(async () => {
+      await user.click(screen.getByRole('button', { name: 'Actions' }));
+      await waitFor(() => {
+        expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+      });
     });
 
     await user.keyboard('[Escape]');
@@ -4364,8 +4356,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     );
 
     const trigger = screen.getByRole('button', { name: 'Actions' });
-    await user.click(trigger);
-    const input = await screen.findByRole('searchbox', { name: 'Filter actions' });
+    const input = await waitForLaterMillisecond(async () => {
+      await user.click(trigger);
+      return screen.findByRole('searchbox', { name: 'Filter actions' });
+    });
     await waitFor(() => {
       expect(input).toHaveFocus();
     });
@@ -4467,16 +4461,12 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
     const input = screen.getByRole('searchbox', { name: 'Filter actions' });
     await user.type(input, 'app');
-    await waitFor(() => {
-      expect(screen.queryByRole('menuitem', { name: 'Banana' })).toBe(null);
-    });
+    expect(screen.queryByRole('menuitem', { name: 'Banana' })).toBe(null);
     expect(screen.getByRole('menuitem', { name: 'Fruit one' })).toBeVisible();
 
     await user.clear(input);
     await user.type(input, 'fruit');
-    await waitFor(() => {
-      expect(screen.queryByRole('menuitem', { name: 'Fruit one' })).toBe(null);
-    });
+    expect(screen.queryByRole('menuitem', { name: 'Fruit one' })).toBe(null);
   });
 
   it('removes Empty once the query matches again', async () => {
@@ -4509,9 +4499,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
     await user.clear(input);
     await user.type(input, 'ren');
-    await waitFor(() => {
-      expect(screen.queryByText('No actions found')).toBe(null);
-    });
+    expect(screen.queryByText('No actions found')).toBe(null);
     // The text of a message that appears again has a marker for a moment, so the text query alone
     // cannot see that the message is still there.
     expect(screen.queryByRole('status')).toBe(null);
@@ -4605,10 +4593,14 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     ));
 
     async function openAndHoverTrigger(user: ReturnType<typeof userEvent.setup>) {
-      await user.click(screen.getByRole('button', { name: 'Actions' }));
-      await screen.findByRole('searchbox', { name: 'Filter actions' });
-      await user.hover(screen.getByRole('menuitem', { name: 'Share' }));
-      const submenuInput = await screen.findByRole('searchbox', { name: 'Filter sharing options' });
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Actions' }));
+        await screen.findByRole('searchbox', { name: 'Filter actions' });
+      });
+      const submenuInput = await waitForLaterMillisecond(async () => {
+        await user.hover(screen.getByRole('menuitem', { name: 'Share' }));
+        return screen.findByRole('searchbox', { name: 'Filter sharing options' });
+      });
       await fireEvent.mouseMove(submenuInput);
       return submenuInput;
     }
@@ -4619,9 +4611,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       await user.hover(screen.getByRole('menuitem', { name: 'Rename' }));
 
-      await waitFor(() => {
-        expect(screen.queryByRole('searchbox', { name: 'Filter sharing options' })).toBe(null);
-      });
+      expect(screen.queryByRole('searchbox', { name: 'Filter sharing options' })).toBe(null);
     });
 
     it('closes when the pointer leaves the submenu popup', async () => {
@@ -4631,9 +4621,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       await user.hover(await screen.findByRole('menuitem', { name: 'Email' }));
       await user.hover(screen.getByRole('menuitem', { name: 'Duplicate' }));
 
-      await waitFor(() => {
-        expect(screen.queryByRole('searchbox', { name: 'Filter sharing options' })).toBe(null);
-      });
+      expect(screen.queryByRole('searchbox', { name: 'Filter sharing options' })).toBe(null);
     });
 
     it('closes and resets after a query was typed into the hover-opened submenu', async () => {
@@ -4651,9 +4639,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       await user.hover(screen.getByRole('menuitem', { name: 'Rename' }));
 
-      await waitFor(() => {
-        expect(screen.queryByRole('searchbox', { name: 'Filter sharing options' })).toBe(null);
-      });
+      expect(screen.queryByRole('searchbox', { name: 'Filter sharing options' })).toBe(null);
 
       // Reopening starts from an empty query rather than the previous one.
       await user.hover(screen.getByRole('menuitem', { name: 'Share' }));
@@ -4742,6 +4728,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
         const fruits = ['Apple', 'Apricot', 'Banana'];
         const onValueChange = vi.fn();
+        const onOpenChangeComplete = vi.fn();
 
         const ExternalFilterMenu = defineComponent(() => {
           const { contains } = Menu.useFilter();
@@ -4768,7 +4755,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
                     query.value = value;
                   }}
                 >
-                  <Menu.Root>
+                  <Menu.Root onOpenChangeComplete={onOpenChangeComplete}>
                     <Menu.Trigger>Fruit</Menu.Trigger>
                     <Menu.Portal>
                       <Menu.Positioner>
@@ -4795,18 +4782,21 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
         const { user } = await render(<ExternalFilterMenu />);
 
-        await user.click(screen.getByRole('button', { name: 'Fruit' }));
-        const input = await screen.findByRole('searchbox', { name: 'Filter fruit' });
+        const input = await waitForLaterMillisecond(async () => {
+          await user.click(screen.getByRole('button', { name: 'Fruit' }));
+          return screen.findByRole('searchbox', { name: 'Filter fruit' });
+        });
         await user.type(input, 'ap');
         await waitFor(() => {
           expect(getItemNames()).toEqual(['Apple', 'Apricot']);
         });
 
         const popup = screen.getByTestId('popup');
-        // The popup reads its animations in a frame after the open. That read must not be the
-        // read that the close takes.
-        await waitSingleFrame();
-        await waitSingleFrame();
+        // The root reads the animations of the popup in a frame after the open. The wait for the
+        // read of the close must start after that read.
+        await waitFor(() => {
+          expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+        });
         const animations = await nextAnimationsRead(popup, { action: () => close(user) });
 
         expect(popup).toHaveAttribute('data-ending-style');
@@ -4816,8 +4806,9 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
         animations.forEach((animation) => animation.finish());
         await waitFor(() => {
-          expect(screen.queryByTestId('popup')).toBe(null);
+          expect(popup).not.toBeInTheDocument();
         });
+        expect(screen.queryByTestId('popup')).toBe(null);
         await waitFor(() => {
           expect(onValueChange).toHaveBeenLastCalledWith('', 'popup-close');
         });
@@ -4880,8 +4871,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     }
 
     async function openAndType(user: ReturnType<typeof userEvent.setup>, text: string) {
-      await user.click(screen.getByRole('button', { name: 'Fruit' }));
-      const input = await screen.findByRole('searchbox', { name: 'Filter fruit' });
+      const input = await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Fruit' }));
+        return screen.findByRole('searchbox', { name: 'Filter fruit' });
+      });
       await waitFor(() => {
         expect(input).toHaveFocus();
       });
@@ -4892,12 +4885,16 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       return input;
     }
 
-    // The popup reads its animations in a frame after the open. That read must not be the read
-    // that the close takes.
-    async function pressEscapeAndReadAnimations(user: ReturnType<typeof userEvent.setup>) {
+    async function pressEscapeAndReadAnimations(
+      user: ReturnType<typeof userEvent.setup>,
+      onOpenChangeComplete: ReturnType<typeof vi.fn>,
+    ) {
       const popup = screen.getByTestId('popup');
-      await waitSingleFrame();
-      await waitSingleFrame();
+      // The root reads the animations of the popup in a frame after the open. The wait for the read
+      // of the close must start after that read.
+      await waitFor(() => {
+        expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+      });
       return nextAnimationsRead(popup, { action: () => user.keyboard('[Escape]') });
     }
 
@@ -4905,11 +4902,14 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       'keeps an item rendered from the controlled query while the popup animates out',
       async () => {
         globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+        const onOpenChangeComplete = vi.fn();
 
-        const { user } = await render(<ControlledQueryMenu onValueChange={vi.fn()} />);
+        const { user } = await render(
+          <ControlledQueryMenu onValueChange={vi.fn()} rootProps={{ onOpenChangeComplete }} />,
+        );
         await openAndType(user, 'ap');
 
-        await pressEscapeAndReadAnimations(user);
+        await pressEscapeAndReadAnimations(user, onOpenChangeComplete);
 
         expect(screen.getByTestId('popup')).toHaveAttribute('data-ending-style');
         expect(getItemNames()).toEqual(['Apple', 'Apricot', 'Create "ap"']);
@@ -4921,12 +4921,18 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       async () => {
         globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
         const onValueChange = vi.fn();
+        const onOpenChangeComplete = vi.fn();
 
-        const { user } = await render(<ControlledQueryMenu onValueChange={onValueChange} />);
+        const { user } = await render(
+          <ControlledQueryMenu
+            onValueChange={onValueChange}
+            rootProps={{ onOpenChangeComplete }}
+          />,
+        );
         const input = await openAndType(user, 'ap');
         onValueChange.mockClear();
 
-        await pressEscapeAndReadAnimations(user);
+        await pressEscapeAndReadAnimations(user, onOpenChangeComplete);
 
         expect(screen.getByTestId('popup')).toHaveAttribute('data-ending-style');
         expect(input).toHaveValue('ap');
@@ -4977,9 +4983,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       root.unmount();
       await flushMicrotasks();
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
-      });
+      expect(screen.queryByTestId('popup')).toBe(null);
       expect(onValueChange).toHaveBeenLastCalledWith('', 'popup-close');
     });
 
@@ -4988,6 +4992,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       async () => {
         globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
         const onValueChange = vi.fn();
+        const onOpenChangeComplete = vi.fn();
 
         const RemovedOnCloseMenu = defineComponent(() => {
           const rendered = shallowRef(true);
@@ -4998,6 +5003,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
                 onValueChange={onValueChange}
                 rootProps={{
                   onOpenChangeComplete(open: boolean) {
+                    onOpenChangeComplete(open);
                     if (!open) {
                       rendered.value = false;
                     }
@@ -5010,16 +5016,18 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         const { user } = await render(<RemovedOnCloseMenu />);
         await openAndType(user, 'ap');
 
-        const animations = await pressEscapeAndReadAnimations(user);
+        const animations = await pressEscapeAndReadAnimations(user, onOpenChangeComplete);
 
         expect(screen.getByTestId('popup')).toHaveAttribute('data-ending-style');
         expect(onValueChange).not.toHaveBeenCalledWith('', 'popup-close');
 
+        const trigger = screen.getByRole('button', { name: 'Fruit' });
         animations.forEach((animation) => animation.finish());
 
         await waitFor(() => {
-          expect(screen.queryByRole('button', { name: 'Fruit' })).toBe(null);
+          expect(trigger).not.toBeInTheDocument();
         });
+        expect(screen.queryByRole('button', { name: 'Fruit' })).toBe(null);
         expect(onValueChange).toHaveBeenLastCalledWith('', 'popup-close');
       },
     );
@@ -5203,9 +5211,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       expect(onValueChange).toHaveBeenCalledTimes(1);
       expect(onValueChange.mock.calls[0][0]).toBe('日本');
-      await waitFor(() => {
-        expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
-      });
+      expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
       expect(screen.getByRole('menuitem', { name: '日本語' })).toBeVisible();
     });
   });
@@ -5260,7 +5266,9 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       const onValueChange = vi.fn();
       const { user } = await renderReasonMenu(onValueChange);
 
-      await user.type(screen.getByRole('searchbox', { name: 'Filter actions' }), 'r');
+      await waitForLaterMillisecond(() =>
+        user.type(screen.getByRole('searchbox', { name: 'Filter actions' }), 'r'),
+      );
       await user.click(screen.getByLabelText('Clear filter'));
 
       expect(onValueChange).toHaveBeenLastCalledWith('', 'clear-press');
@@ -5349,7 +5357,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       expect(screen.getByRole('menu')).toHaveAttribute('aria-labelledby', trigger.id);
     });
 
-    it('omits aria-controls when the list has an explicitly empty id', async () => {
+    it('VUE-93: names the generated id of a list with an empty id in aria-controls', async () => {
       await render(
         <Menu.FilterProvider>
           <Menu.Root defaultOpen>
@@ -5369,10 +5377,11 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       );
 
       const input = screen.getByRole('searchbox', { name: 'Filter actions' });
+      const list = screen.getByRole('menu');
+      expect(list.id).toMatch(/^vase-ui-/);
       await waitFor(() => {
-        expect(input).not.toHaveAttribute('aria-controls');
+        expect(input).toHaveAttribute('aria-controls', list.id);
       });
-      expect(screen.getByRole('menu').id).toBe('');
     });
 
     it('omits the list label when the trigger renders with an explicitly empty id', async () => {
@@ -5480,8 +5489,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       });
 
       const { user } = await render(<DetachedTriggersMenu />);
-      await user.click(screen.getByRole('button', { name: 'First trigger' }));
-      const input = await screen.findByRole('searchbox', { name: 'Filter actions' });
+      const input = await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'First trigger' }));
+        return screen.findByRole('searchbox', { name: 'Filter actions' });
+      });
       await waitFor(() => {
         expect(input).toHaveFocus();
       });
@@ -5524,10 +5535,11 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         </Menu.FilterProvider>,
       );
 
-      await user.click(screen.getByRole('button', { name: 'Actions' }));
+      const input = await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Actions' }));
+        return screen.findByRole('searchbox', { name: 'Filter actions' });
+      });
       expect(onTriggerClick).toHaveBeenCalledTimes(1);
-
-      const input = await screen.findByRole('searchbox', { name: 'Filter actions' });
       await waitFor(() => {
         expect(input).toHaveFocus();
       });
@@ -5670,8 +5682,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       const rootInput = screen.getByRole('searchbox', { name: 'Filter actions' });
       const submenuTrigger = screen.getByRole('menuitem', { name: 'Move to folder' });
-      await user.hover(submenuTrigger);
-      const submenuInput = await screen.findByRole('searchbox', { name: 'Filter folders' });
+      const submenuInput = await waitForLaterMillisecond(async () => {
+        await user.hover(submenuTrigger);
+        return screen.findByRole('searchbox', { name: 'Filter folders' });
+      });
       // Let the root popup's initial focus land first so it can't steal focus from the click below.
       await waitSingleFrame();
       await fireEvent.mouseMove(submenuInput, { movementX: 1 });
@@ -5731,8 +5745,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
         const rootInput = screen.getByRole('searchbox', { name: 'Filter actions' });
         const submenuTrigger = screen.getByRole('menuitem', { name: 'Move to folder' });
-        await user.hover(submenuTrigger);
-        const submenuInput = await screen.findByRole('searchbox', { name: 'Filter folders' });
+        const submenuInput = await waitForLaterMillisecond(async () => {
+          await user.hover(submenuTrigger);
+          return screen.findByRole('searchbox', { name: 'Filter folders' });
+        });
         // The root popup's initial focus runs a frame after mounting. Let it land so it can't
         // steal focus from the tap below.
         await waitSingleFrame();
@@ -5785,13 +5801,13 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       const input = screen.getByRole('searchbox', { name: 'Filter actions' });
       const trigger = screen.getByRole('menuitem', { name: 'Share' });
-      await user.hover(trigger);
-      const item = await screen.findByRole('menuitem', { name: 'Email' });
+      const item = await waitForLaterMillisecond(async () => {
+        await user.hover(trigger);
+        return screen.findByRole('menuitem', { name: 'Email' });
+      });
       await fireEvent.mouseMove(item, { movementX: 1 });
       expect(item).toHaveFocus();
-      await waitFor(() => {
-        expect(input).not.toHaveAttribute('data-highlighted');
-      });
+      expect(input).not.toHaveAttribute('data-highlighted');
 
       await fireEvent.mouseOver(trigger);
       expect(input).toHaveFocus();
@@ -5836,17 +5852,17 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         </Menu.FilterProvider>,
       );
 
-      await user.hover(screen.getByRole('menuitem', { name: 'Move to folder' }));
-      const submenuInput = await screen.findByRole('searchbox', { name: 'Filter folders' });
+      const submenuInput = await waitForLaterMillisecond(async () => {
+        await user.hover(screen.getByRole('menuitem', { name: 'Move to folder' }));
+        return screen.findByRole('searchbox', { name: 'Filter folders' });
+      });
       await fireEvent.mouseMove(submenuInput, { movementX: 1 });
       await waitFor(() => {
         expect(submenuInput).toHaveFocus();
       });
 
       await user.hover(screen.getByRole('menuitem', { name: 'Rename' }));
-      await waitFor(() => {
-        expect(submenuInput).not.toBeInTheDocument();
-      });
+      expect(submenuInput).not.toBeInTheDocument();
 
       const rootInput = screen.getByRole('searchbox', { name: 'Filter actions' });
       await waitFor(() => {
@@ -5943,8 +5959,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       });
 
       const submenuTrigger = screen.getByRole('menuitem', { name: 'Move to folder' });
-      await user.hover(submenuTrigger);
-      const submenuInput = await screen.findByRole('searchbox', { name: 'Filter folders' });
+      const submenuInput = await waitForLaterMillisecond(async () => {
+        await user.hover(submenuTrigger);
+        return screen.findByRole('searchbox', { name: 'Filter folders' });
+      });
       await waitSingleFrame();
       expect(rootInput).toHaveFocus();
       expect(rootInput).toHaveAttribute('data-highlighted');
@@ -5960,18 +5978,22 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       const { user } = await render(<SiblingSubmenus onRootInputFocus={() => {}} />);
       const rootInput = screen.getByRole('searchbox', { name: 'Filter actions' });
 
-      await user.hover(screen.getByRole('menuitem', { name: 'Move to folder' }));
-      const firstInput = await screen.findByRole('searchbox', { name: 'Filter Move to folder' });
+      const firstInput = await waitForLaterMillisecond(async () => {
+        await user.hover(screen.getByRole('menuitem', { name: 'Move to folder' }));
+        return screen.findByRole('searchbox', { name: 'Filter Move to folder' });
+      });
       await fireEvent.mouseMove(firstInput, { movementX: 1 });
       await waitFor(() => {
         expect(firstInput).toHaveFocus();
       });
 
-      await user.hover(screen.getByRole('menuitem', { name: 'Share' }));
-      await waitFor(() => {
-        expect(rootInput).toHaveFocus();
+      const secondInput = await waitForLaterMillisecond(async () => {
+        await user.hover(screen.getByRole('menuitem', { name: 'Share' }));
+        await waitFor(() => {
+          expect(rootInput).toHaveFocus();
+        });
+        return screen.findByRole('searchbox', { name: 'Filter Share' });
       });
-      const secondInput = await screen.findByRole('searchbox', { name: 'Filter Share' });
       // Let the second submenu's open settle without moving focus.
       await waitSingleFrame();
       expect(rootInput).toHaveFocus();
@@ -6016,9 +6038,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       await user.keyboard('[Escape]');
 
       // Escape closes outright; it does not clear the query first.
-      await waitFor(() => {
-        expect(screen.queryByRole('menu')).toBe(null);
-      });
+      expect(screen.queryByRole('menu')).toBe(null);
       await waitFor(() => {
         expect(screen.getByRole('button', { name: 'Actions' })).toHaveFocus();
       });
@@ -6035,9 +6055,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       await browserUserEvent.keyboard('{Shift>}[Tab]{/Shift}');
 
       // Backward tabbing mirrors a plain menu: the popup closes and the trigger regains focus.
-      await waitFor(() => {
-        expect(screen.queryByRole('menu')).toBe(null);
-      });
+      expect(screen.queryByRole('menu')).toBe(null);
       await waitFor(() => {
         expect(screen.getByRole('button', { name: 'Actions' })).toHaveFocus();
       });
@@ -6109,9 +6127,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       const input = await screen.findByRole('searchbox', { name: 'Filter actions' });
       await user.type(input, 'ren');
-      await waitFor(() => {
-        expect(screen.queryByRole('menuitem', { name: 'Delete' })).toBe(null);
-      });
+      expect(screen.queryByRole('menuitem', { name: 'Delete' })).toBe(null);
 
       await user.keyboard('[ArrowDown]');
       expect(input).toHaveAttribute(
@@ -6205,9 +6221,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       await user.unhover(item);
 
       // The mirror of the `autoHighlight="always"` case, which retains the highlight.
-      await waitFor(() => {
-        expect(item).not.toHaveAttribute('data-highlighted');
-      });
+      expect(item).not.toHaveAttribute('data-highlighted');
     });
   });
 
@@ -6297,8 +6311,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       screen.getByRole('searchbox', { name: 'Filter actions' }).focus();
       await flushMicrotasks();
-      await user.keyboard('[ArrowDown][ArrowRight]');
-      const submenuInput = await screen.findByRole('searchbox', { name: 'Filter sharing options' });
+      const submenuInput = await waitForLaterMillisecond(async () => {
+        await user.keyboard('[ArrowDown][ArrowRight]');
+        return screen.findByRole('searchbox', { name: 'Filter sharing options' });
+      });
       await waitFor(() => {
         expect(submenuInput).toHaveFocus();
       });
@@ -6393,15 +6409,15 @@ describe('filterable menu navigation regressions', () => {
         );
         const input = screen.getByRole('searchbox', { name: 'Filter actions' });
         await waitFor(() => expect(input).toHaveFocus());
-        await user.keyboard(`[ArrowDown]${openKey}`);
-        const child = filterSubmenu
-          ? await screen.findByRole('searchbox', { name: 'Filter child actions' })
-          : await screen.findByRole('menuitem', { name: 'Child action' });
+        const child = await waitForLaterMillisecond(async () => {
+          await user.keyboard(`[ArrowDown]${openKey}`);
+          return filterSubmenu
+            ? screen.findByRole('searchbox', { name: 'Filter child actions' })
+            : screen.findByRole('menuitem', { name: 'Child action' });
+        });
         await waitFor(() => expect(child).toHaveFocus());
         await user.keyboard(closeKey);
-        await waitFor(() =>
-          expect(screen.queryByRole('menuitem', { name: 'Child action' })).toBe(null),
-        );
+        expect(screen.queryByRole('menuitem', { name: 'Child action' })).toBe(null);
         await waitFor(() => expect(input).toHaveFocus());
         await user.keyboard('ren');
         expect(input).toHaveValue('ren');

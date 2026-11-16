@@ -21,7 +21,7 @@ export interface OTPFieldInputState extends Omit<OTPFieldRootState, 'filled' | '
 // The type of `autocomplete` in `InputHTMLAttributes` is a union that is too large for vue-tsc.
 // With it, `defineProps` gives the error TS2590.
 interface OTPFieldInputAutocomplete {
-  autocomplete?: string | undefined;
+  autocomplete?: string | null | undefined;
 }
 
 export interface OTPFieldInputProps
@@ -33,8 +33,12 @@ export interface OTPFieldInputProps
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUpdated, shallowRef, useAttrs, watch } from 'vue';
+import { useAriaAfterHydration, useValueBeforeHydration } from '../../common/hydration';
+import { ownerDocument } from '../../common/owner';
 import { platform } from '../../common/platform';
+import { activeElement } from '../../common/shadowDom';
 import { warn } from '../../common/warn';
+import { givenName } from '../../internals/blankName';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
 import {
   createChangeEventDetails,
@@ -70,6 +74,7 @@ const {
   getInputId,
   handleInputBlur,
   handleInputFocus,
+  inputList,
   inputMode,
   inputAriaLabelledBy,
   invalid,
@@ -87,7 +92,7 @@ const {
   value,
 } = useOTPFieldRootContext();
 
-const { ref: listItemRef, index } = useCompositeListItem();
+const { ref: listItemRef, index } = useCompositeListItem({ list: inputList });
 const setFocused = useSetFieldFocused(disabled, () => element.value, setRootFocused);
 const direction = useDirection();
 
@@ -95,6 +100,10 @@ const direction = useDirection();
 // `d`, then `dd`, then `ddd`. A commit of each value would take it as bulk input and fill too many
 // slots. The slot thus buffers the text and commits it one time at `compositionend`.
 const composingValue = shallowRef<string | null>(null);
+
+// After a move in the history or a reload, the browser can restore the code of an earlier visit to
+// the first slot. The slot takes nothing, so the root does not complete and submit an old code.
+const writesValue = useValueBeforeHydration(props, () => element.value, { restorable: false });
 
 const slotValue = computed(() => value.value[index.value] ?? '');
 const inputState = computed(() => getOTPFieldInputState(state.value, slotValue.value, index.value));
@@ -124,7 +133,7 @@ if (process.env.NODE_ENV !== 'production') {
   let checkedLabel: unknown;
 
   const checkFirstSlotLabel = () => {
-    const slotAriaLabel = attrs['aria-label'];
+    const slotAriaLabel = givenName(attrs['aria-label']);
     if (checkedIndex === index.value && checkedLabel === slotAriaLabel) {
       return;
     }
@@ -195,7 +204,12 @@ function commitValue(
     createChangeEventDetails(reason, event as never),
   );
 
-  if (committedValue != null) {
+  // Until the hydration ends, the event can be for text that the user typed before the page was
+  // ready. The focus then moves only from the slot that has it.
+  if (
+    committedValue != null &&
+    (writesValue.value || activeElement(ownerDocument(input)) === input)
+  ) {
     queueFocusInput(Math.min(index.value + nextDigits.length, length.value - 1), committedValue);
   }
 }
@@ -328,6 +342,7 @@ function handlePaste(event: ClipboardEvent) {
   commitValue(rawValue, REASONS.inputPaste, event);
 }
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('input', props, {
   state: inputState,
   ref: [listItemRef],
@@ -345,13 +360,16 @@ const { element, elementProps } = useRenderElement('input', props, {
     } = attrs;
     const slotIndex = index.value;
     const ariaLabel = slotIndex === 0 ? undefined : (externalAriaLabel as string | undefined);
+    // `null` of the consumer removes the label of the field (VUE-103).
     const inheritedLabel =
-      (externalAriaLabelledBy as string | undefined) ?? inputAriaLabelledBy.value;
+      externalAriaLabelledBy === undefined
+        ? inputAriaLabelledBy.value
+        : (externalAriaLabelledBy as string | null);
 
     return [
       {
         id: getInputId(slotIndex),
-        value: composingValue.value ?? slotValue.value,
+        ...(writesValue.value ? { value: composingValue.value ?? slotValue.value } : undefined),
         type: mask.value ? 'password' : 'text',
         inputmode: inputMode.value,
         autocomplete: slotIndex === 0 ? autoComplete.value : 'off',
@@ -367,7 +385,7 @@ const { element, elementProps } = useRenderElement('input', props, {
         pattern: pattern.value,
         readonly: readOnly.value || undefined,
         required: required.value || undefined,
-        'aria-labelledby': ariaLabel == null ? inheritedLabel : undefined,
+        'aria-labelledby': ariaAfterHydration(ariaLabel == null ? inheritedLabel : undefined),
         'aria-invalid': !disabled.value && invalid.value ? true : undefined,
         'aria-label': ariaLabel,
         onMousedown(event: MouseEvent) {

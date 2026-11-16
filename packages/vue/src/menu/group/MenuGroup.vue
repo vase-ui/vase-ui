@@ -28,7 +28,9 @@ defineSlots<{
 
 // Each label registers by source, so a label that unmounts does not clear the id of a newer one.
 const labelIds = createIdRegistry();
-provide(MenuGroupContext, labelIds.registerId);
+provide(MenuGroupContext, {
+  registerLabelId: labelIds.registerId,
+});
 
 // A filterable menu hides the group, label included, once the query filters out all of its items.
 const filterGroup = useMenuFilterImpl()?.useGroup();

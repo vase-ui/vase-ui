@@ -5,6 +5,7 @@ import * as Menu from '../index.parts';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import { Menubar } from '@vase-ui/vue/menubar';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -68,7 +69,10 @@ describe('<Menu.Trigger />', () => {
       );
 
       const trigger = screen.getByRole('button', { name: 'Toggle' });
-      await userEvent.click(trigger);
+      await waitForLaterMillisecond(async () => {
+        await userEvent.click(trigger);
+        await screen.findByRole('menu');
+      });
       await waitFor(() => {
         expect(screen.getByRole('menu')).toHaveFocus();
       });
@@ -77,6 +81,7 @@ describe('<Menu.Trigger />', () => {
       trigger.focus();
       await flushMicrotasks();
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      const menu = screen.getByRole('menu');
 
       await userEvent.tab({ shift: true });
 
@@ -84,8 +89,9 @@ describe('<Menu.Trigger />', () => {
         expect(screen.getByRole('button', { name: 'Before' })).toHaveFocus();
       });
       await waitFor(() => {
-        expect(screen.queryByRole('menu')).toBe(null);
+        expect(menu).not.toBeInTheDocument();
       });
+      expect(screen.queryByRole('menu')).toBe(null);
     });
   });
 
@@ -595,18 +601,19 @@ describe('<Menu.Trigger />', () => {
         </Menu.Root>,
       );
 
-      await fireEvent.mouseDown(screen.getByRole('button', { name: 'Open' }));
-      await screen.findByRole('menu');
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.mouseDown(screen.getByRole('button', { name: 'Open' }));
+        await screen.findByRole('menu');
+      });
       // After 200 ms of a held press, a release over an item activates the item.
       await wait(250);
       await fireEvent.keyDown(document.body, { key: 'Escape' });
-      await waitFor(() => {
-        expect(screen.queryByRole('menu')).toBe(null);
-      });
+      expect(screen.queryByRole('menu')).toBe(null);
 
-      handle.open('trigger');
-      const item = await screen.findByRole('menuitem');
-      await waitForLaterMillisecond();
+      const item = await waitForLaterMillisecond(() => {
+        handle.open('trigger');
+        return screen.findByRole('menuitem');
+      });
       await fireEvent.mouseUp(item);
 
       expect(onClick).not.toHaveBeenCalled();
@@ -1014,8 +1021,10 @@ describe('<Menu.Trigger />', () => {
 
       // The open trigger of a menubar closes its menu on `click`, so a slow press ends with a
       // click after the open.
-      await fireEvent.mouseDown(trigger);
-      await screen.findByTestId('file-menu');
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.mouseDown(trigger);
+        await screen.findByTestId('file-menu');
+      });
       await fireEvent.mouseUp(trigger);
       await fireEvent.click(trigger);
       await waitSingleFrame();
@@ -1261,6 +1270,160 @@ describe('<Menu.Trigger />', () => {
 
     const button = screen.getByTestId('menu-trigger');
     expect(button).toHaveAttribute('role', 'button');
+  });
+
+  describe('VUE-73: aria-controls names only an element in the document', () => {
+    it('has no aria-controls while KeepAlive holds the popup', async () => {
+      const Popup = defineComponent({
+        setup: () => () => (
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.Item>Item</Menu.Item>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        ),
+      });
+      const Other = defineComponent({ setup: () => () => <span /> });
+      const visible = shallowRef(true);
+      await render(() => (
+        <Menu.Root defaultOpen>
+          <Menu.Trigger>Open</Menu.Trigger>
+          <KeepAlive>{visible.value ? <Popup key="popup" /> : <Other key="other" />}</KeepAlive>
+        </Menu.Root>
+      ));
+      await flushMicrotasks();
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      const popup = screen.getByRole('menu');
+      expect(popup.id).not.toBe('');
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
+
+      visible.value = false;
+      await flushMicrotasks();
+
+      expect(popup.isConnected).toBe(false);
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(popup.isConnected).toBe(true);
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
+    });
+
+    it('names the popup while KeepAlive holds the list', async () => {
+      const List = defineComponent({
+        setup: () => () => (
+          <Menu.List data-testid="list">
+            <Menu.Item>Item</Menu.Item>
+          </Menu.List>
+        ),
+      });
+      const Other = defineComponent({ setup: () => () => <span /> });
+      const visible = shallowRef(true);
+      await render(() => (
+        <Menu.Root defaultOpen>
+          <Menu.Trigger>Open</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup data-testid="popup">
+                <KeepAlive>{visible.value ? <List key="list" /> : <Other key="other" />}</KeepAlive>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      ));
+      await flushMicrotasks();
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      const popup = screen.getByTestId('popup');
+      const list = screen.getByTestId('list');
+      expect(list.id).not.toBe('');
+      expect(trigger).toHaveAttribute('aria-controls', list.id);
+
+      visible.value = false;
+      await flushMicrotasks();
+
+      expect(list.isConnected).toBe(false);
+      expect(popup.id).not.toBe('');
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(list.isConnected).toBe(true);
+      expect(trigger).toHaveAttribute('aria-controls', list.id);
+    });
+
+    it('has no aria-controls while the popup mounts in a branch that KeepAlive holds', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
+        () => (
+          <Menu.Popup>
+            <Menu.Item>Item</Menu.Item>
+          </Menu.Popup>
+        ),
+        { renderBranch: (part) => part },
+      );
+      await render(() => (
+        <Menu.Root defaultOpen>
+          <Menu.Trigger>Open</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <HeldBranch />
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      ));
+
+      await mountWhileHeld();
+
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+
+      await show();
+
+      const popup = screen.getByRole('menu');
+      expect(popup.id).not.toBe('');
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
+    });
+
+    it('names the popup while the list mounts in a branch that KeepAlive holds', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
+        () => (
+          <Menu.List data-testid="list">
+            <Menu.Item>Item</Menu.Item>
+          </Menu.List>
+        ),
+        { renderBranch: (part) => part },
+      );
+      await render(() => (
+        <Menu.Root defaultOpen>
+          <Menu.Trigger>Open</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup data-testid="popup">
+                <HeldBranch />
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      ));
+
+      await mountWhileHeld();
+
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      const popup = screen.getByTestId('popup');
+      expect(popup.id).not.toBe('');
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
+
+      await show();
+
+      const list = screen.getByTestId('list');
+      expect(list.id).not.toBe('');
+      expect(trigger).toHaveAttribute('aria-controls', list.id);
+    });
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current

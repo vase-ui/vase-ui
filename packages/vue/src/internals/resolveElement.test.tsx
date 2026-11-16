@@ -1,7 +1,9 @@
 import { vi, expect, describe, it } from 'vitest';
 import { defineComponent, h, shallowRef } from 'vue';
 import type { Component, ComponentPublicInstance, FunctionalComponent } from 'vue';
-import { createRenderer } from '#test-utils';
+import { createRenderer, isVaporApp, screen } from '#test-utils';
+import VaporTarget from '../../test/fixtures/VaporTarget.vue';
+import VaporTargetWithElement from '../../test/fixtures/VaporTargetWithElement.vue';
 import { resolveElement } from './resolveElement';
 
 describe('resolveElement', () => {
@@ -144,6 +146,29 @@ describe('resolveElement', () => {
     const element = document.createElement('div');
 
     expect(resolveElement({ element } as unknown as ComponentPublicInstance)).toBe(element);
+  });
+
+  // Only the project `vapor` mounts the test in an app that can render a Vapor component.
+  describe.runIf(isVaporApp)('target component in Vapor mode', () => {
+    it('returns the element that the component exposes', async () => {
+      const value = await getRefValue(VaporTargetWithElement);
+
+      expect(resolveElement(value)).toBe(screen.getByTestId('vapor-target'));
+    });
+
+    it('returns null and warns for a component that exposes no element', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      const value = await getRefValue(VaporTarget);
+
+      expect(screen.getByTestId('vapor-target')).toBeInTheDocument();
+      expect(resolveElement(value)).toBe(null);
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy.mock.calls[0][0]).toContain(
+        'Vase UI: The component is in Vapor mode and does not expose its element as `element`.',
+      );
+      expect(warnSpy.mock.calls[0][0]).toContain('`defineExpose({ element })`');
+    });
   });
 
   it('returns the root element of a component', async () => {

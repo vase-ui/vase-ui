@@ -7,11 +7,16 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  getFocusableUnderAriaHidden,
   isInaccessible,
+  nestedPopupCloseTests,
+  nextEvent,
+  POPUP_EXIT_CSS,
   popupFocusPropsTests,
   screen,
   takeReportedMessages,
   waitFor,
+  waitForLaterMillisecond,
   waitSingleFrame,
 } from '#test-utils';
 import * as AlertDialog from '../../alert-dialog/index.parts';
@@ -274,12 +279,14 @@ describe('<Dialog.Popup />', () => {
       const { user } = await render(<DialogFromItem source={source} {...props} />);
       const sourceTrigger = screen.getByTestId('source-trigger');
 
-      await user.click(sourceTrigger);
-      await user.click(
-        await screen.findByRole(source === 'select' ? 'option' : 'menuitem', { name: 'Custom' }),
-      );
-
-      const close = await screen.findByRole('button', { name: 'Close' });
+      const custom = await waitForLaterMillisecond(async () => {
+        await user.click(sourceTrigger);
+        return screen.findByRole(source === 'select' ? 'option' : 'menuitem', { name: 'Custom' });
+      });
+      const close = await waitForLaterMillisecond(async () => {
+        await user.click(custom);
+        return screen.findByRole('button', { name: 'Close' });
+      });
       await waitFor(() => {
         expect(close).toHaveFocus();
       });
@@ -323,21 +330,19 @@ describe('<Dialog.Popup />', () => {
 
     const { user } = await render(<App />);
     await user.click(await screen.findByRole('button', { name: 'Got it' }));
-    await waitFor(() => {
-      expect(screen.queryByRole('button', { name: 'Got it' })).toBe(null);
-    });
+    expect(screen.queryByRole('button', { name: 'Got it' })).toBe(null);
     (document.activeElement as HTMLElement).blur();
 
-    open.value = true;
-    const close = await screen.findByRole('button', { name: 'Close' });
+    const close = await waitForLaterMillisecond(async () => {
+      open.value = true;
+      return screen.findByRole('button', { name: 'Close' });
+    });
     await waitFor(() => {
       expect(close).toHaveFocus();
     });
     await user.keyboard('[Escape]');
 
-    await waitFor(() => {
-      expect(screen.queryByRole('dialog')).toBe(null);
-    });
+    expect(screen.queryByRole('dialog')).toBe(null);
     await flushMicrotasks();
     expect(screen.getByRole('button', { name: 'Tip' })).not.toHaveFocus();
   });
@@ -370,28 +375,31 @@ describe('<Dialog.Popup />', () => {
         </Dialog.Root>,
       );
 
-      await user.click(screen.getByRole('button', { name: 'Trigger 0' }));
-
-      await waitFor(() => {
-        expect(screen.getByTestId('popup0')).not.toBe(null);
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Trigger 0' }));
+        await waitFor(() => {
+          expect(screen.getByTestId('popup0')).not.toBe(null);
+        });
       });
 
       const computedStyles = getComputedStyle(screen.getByTestId('popup0'));
 
       expect(computedStyles.getPropertyValue('--nested-dialogs')).toBe('0');
 
-      await user.click(screen.getByRole('button', { name: 'Trigger 1' }));
-
-      await waitFor(() => {
-        expect(screen.getByTestId('popup1')).not.toBe(null);
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Trigger 1' }));
+        await waitFor(() => {
+          expect(screen.getByTestId('popup1')).not.toBe(null);
+        });
       });
 
       expect(computedStyles.getPropertyValue('--nested-dialogs')).toBe('1');
 
-      await user.click(screen.getByRole('button', { name: 'Trigger 2' }));
-
-      await waitFor(() => {
-        expect(screen.getByTestId('popup2')).not.toBe(null);
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Trigger 2' }));
+        await waitFor(() => {
+          expect(screen.getByTestId('popup2')).not.toBe(null);
+        });
       });
 
       expect(computedStyles.getPropertyValue('--nested-dialogs')).toBe('2');
@@ -435,10 +443,11 @@ describe('<Dialog.Popup />', () => {
 
       const { user } = await render(<App />);
 
-      await user.click(screen.getByRole('button', { name: 'Trigger 0' }));
-
-      await waitFor(() => {
-        expect(screen.getByTestId('popup0')).not.toBe(null);
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Trigger 0' }));
+        await waitFor(() => {
+          expect(screen.getByTestId('popup0')).not.toBe(null);
+        });
       });
 
       const computedStyles = getComputedStyle(screen.getByTestId('popup0'));
@@ -484,10 +493,11 @@ describe('<Dialog.Popup />', () => {
 
       const { user } = await render(<App />);
 
-      await user.click(screen.getByRole('button', { name: 'Trigger 0' }));
-
-      await waitFor(() => {
-        expect(screen.getByTestId('popup0')).not.toBe(null);
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Trigger 0' }));
+        await waitFor(() => {
+          expect(screen.getByTestId('popup0')).not.toBe(null);
+        });
       });
 
       const computedStyles = getComputedStyle(screen.getByTestId('popup0'));
@@ -519,14 +529,18 @@ describe('<Dialog.Popup />', () => {
         </Dialog.Root>,
       );
 
-      await user.click(screen.getByRole('button', { name: 'Open Dialog' }));
-      await waitFor(() => expect(screen.getByTestId('parent-dialog')).not.toBe(null));
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Open Dialog' }));
+        await waitFor(() => expect(screen.getByTestId('parent-dialog')).not.toBe(null));
+      });
 
       const parent = screen.getByTestId('parent-dialog');
       expect(getComputedStyle(parent).getPropertyValue('--nested-dialogs')).toBe('0');
 
-      await user.click(screen.getByRole('button', { name: 'Open Alert' }));
-      await waitFor(() => expect(screen.getByTestId('nested-alert')).not.toBe(null));
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Open Alert' }));
+        await waitFor(() => expect(screen.getByTestId('nested-alert')).not.toBe(null));
+      });
       await waitFor(() => {
         expect(getComputedStyle(parent).getPropertyValue('--nested-dialogs')).toBe('1');
       });
@@ -662,9 +676,11 @@ describe('<Dialog.Popup />', () => {
         const { user } = await render(<TestComponent />);
         const initial = screen.getByTestId('initial-outside');
 
-        await user.click(screen.getByText('Open'));
-        await waitFor(() => {
-          expect(initial.closest('[inert]')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.click(screen.getByText('Open'));
+          await waitFor(() => {
+            expect(initial.closest('[inert]')).not.toBe(null);
+          });
         });
         // The initial focus moves one frame after the DOM update of the open.
         await waitSingleFrame();
@@ -781,6 +797,116 @@ describe('<Dialog.Popup />', () => {
         expect(screen.getByTestId('popup')).toHaveFocus();
       });
     });
+  });
+
+  describe('BUG-5519: an exit animation', () => {
+    // Opens the dialog with its trigger and closes it with the Escape key. The callback records the
+    // document when the exit animation starts. The function resolves after the popup unmounts.
+    async function recordExit(record: () => void) {
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+      const { user } = await render(
+        <div>
+          <style>{POPUP_EXIT_CSS}</style>
+          <Dialog.Root>
+            <Dialog.Trigger>Open</Dialog.Trigger>
+            <Dialog.Portal>
+              <Dialog.Popup class="popup" data-testid="popup">
+                <Dialog.Close>Close</Dialog.Close>
+              </Dialog.Popup>
+            </Dialog.Portal>
+          </Dialog.Root>
+        </div>,
+      );
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Open' }));
+        await screen.findByTestId('popup');
+      });
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus();
+      });
+      expect(getFocusableUnderAriaHidden().length).toBeGreaterThan(0);
+      const popup = screen.getByTestId('popup');
+
+      await nextEvent(popup, 'animationstart', { action: () => user.keyboard('{Escape}') });
+      record();
+      // The animation of 100 s still runs after `animationstart`, so the case reads the list itself.
+      const animations = popup.getAnimations();
+      const finished = animations.map((animation) => animation.finished);
+      for (const animation of animations) {
+        animation.finish();
+      }
+      // A busy machine can stall the page for some seconds, so the wait for the end of the
+      // animations has no time limit.
+      await Promise.all(finished);
+      await waitFor(() => {
+        expect(popup).not.toBeInTheDocument();
+      });
+      expect(screen.queryByTestId('popup')).toBe(null);
+    }
+
+    it('BUG-5519: keeps no focusable content under aria-hidden during the exit animation', async () => {
+      let focusableDuringExit: HTMLElement[] = [];
+
+      await recordExit(() => {
+        focusableDuringExit = getFocusableUnderAriaHidden();
+      });
+
+      expect(focusableDuringExit).toEqual([]);
+    });
+
+    it('BUG-5519: returns the focus to the trigger when the exit animation starts', async () => {
+      let focusedDuringExit: Element | null = null;
+
+      await recordExit(() => {
+        focusedDuringExit = document.activeElement;
+      });
+
+      expect(focusedDuringExit).toBe(screen.getByRole('button', { name: 'Open' }));
+    });
+  });
+
+  it('BUG-5519: returns the focus to the trigger at the close while preventUnmountOnClose keeps the popup', async () => {
+    let root!: Dialog.Root.Actions;
+    const { user } = await render(() => (
+      <Dialog.Root
+        ref={(instance: unknown) => {
+          root = instance as Dialog.Root.Actions;
+        }}
+        onOpenChange={(_open, eventDetails) => eventDetails.preventUnmountOnClose()}
+      >
+        <Dialog.Trigger>Open</Dialog.Trigger>
+        <Dialog.Portal>
+          <Dialog.Popup data-testid="popup">
+            <Dialog.Close>Close</Dialog.Close>
+          </Dialog.Popup>
+        </Dialog.Portal>
+      </Dialog.Root>
+    ));
+    await waitForLaterMillisecond(async () => {
+      await user.click(screen.getByRole('button', { name: 'Open' }));
+      await screen.findByTestId('popup');
+    });
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus();
+    });
+
+    await user.keyboard('{Escape}');
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Open' })).toHaveFocus();
+    });
+    const popup = screen.getByTestId('popup');
+    expect(popup).toHaveAttribute('data-closed');
+
+    root.unmount();
+    await waitFor(() => {
+      expect(popup).not.toBeInTheDocument();
+    });
+    expect(screen.queryByTestId('popup')).toBe(null);
+  });
+
+  describe('BUG-5519: a popup in the popup that closes with it', () => {
+    nestedPopupCloseTests({ parts: Dialog, wrapPopup: (popup) => popup, render });
   });
 
   it('stops the arrow, Home and End keys at the popup', async () => {

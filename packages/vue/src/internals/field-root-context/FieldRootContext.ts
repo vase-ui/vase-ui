@@ -117,8 +117,6 @@ export interface FieldRootContext {
     getRegistration: (() => FieldControlRegistration | undefined) | undefined,
   ) => void;
   validation: UseFieldValidationReturnValue;
-  /** Whether an id reference of the field reaches `element`. */
-  reaches: (element: Element) => boolean;
 }
 
 const DEFAULT_VALIDITY_DATA: FieldValidityData = {
@@ -156,7 +154,6 @@ export const DEFAULT_FIELD_ROOT_CONTEXT: FieldRootContext = {
     change: NOOP,
     reset: NOOP,
   },
-  reaches: () => true,
 };
 
 export const FieldRootContext: InjectionKey<FieldRootContext> = Symbol();

@@ -24,11 +24,8 @@ function renderRoot(props: Record<string, unknown> = {}) {
 }
 
 const closed: TriggerValues = { expanded: 'false', controls: undefined, open: false };
-const open: TriggerValues = {
-  expanded: 'true',
-  controls: expect.stringMatching(/^vase-ui-/) as string,
-  open: true,
-};
+// A portal renders the popup after the mount, so an open trigger of the server HTML names no popup.
+const open: TriggerValues = { expanded: 'true', controls: undefined, open: true };
 
 describe('<Popover.Root /> on a server', () => {
   it('writes the attributes of a dialog trigger for a closed root', async () => {
@@ -42,12 +39,9 @@ describe('<Popover.Root /> on a server', () => {
   it('writes the open attributes for a root with defaultTriggerId', async () => {
     const html = await renderRoot({ defaultOpen: true, defaultTriggerId: 'inside' });
     const [tag] = /<button\b[^>]*>/.exec(html)!;
-    const [, controls] = / aria-controls="([^"]*)"/.exec(tag)!;
 
-    // The generated id of the popup has the count of the earlier ids, so the test reads it.
-    expect(controls).toMatch(/^vase-ui-/);
     expect(tag).toBe(
-      `<button data-popup-open type="button" tabindex="0" data-vase-ui-click-trigger id="inside" aria-haspopup="dialog" aria-expanded="true" aria-controls="${controls}">`,
+      '<button data-popup-open type="button" tabindex="0" data-vase-ui-click-trigger id="inside" aria-haspopup="dialog" aria-expanded="true">',
     );
   });
 

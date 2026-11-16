@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
-import { defineComponent, KeepAlive, nextTick, onMounted, shallowRef } from 'vue';
+import { defineComponent, h, KeepAlive, nextTick, onMounted, shallowRef } from 'vue';
 import type { PropType } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
@@ -12,11 +13,14 @@ import {
   renderOnServer,
   screen,
   waitFor,
+  waitForLaterMillisecond,
   within,
 } from '#test-utils';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { REASONS } from '../../internals/reasons';
+import type { HTMLProps } from '../../internals/types';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
+import { allowTopLevelViewportWarning } from '../utils/test-utils';
 import NavigationMenuTriggerHydration from './NavigationMenuTriggerHydration.test.vue';
 import NavigationMenuTriggerScoped from './NavigationMenuTriggerScoped.test.vue';
 
@@ -204,7 +208,13 @@ function getPositionerWidthCalls(calls: [property: string, value: string, priori
   return calls.filter((call) => call[0] === '--positioner-width').map((call) => call[1]);
 }
 
+type ViewportRenderSlotProps = Parameters<
+  NonNullable<InstanceType<typeof NavigationMenu.Viewport>['$slots']['render']>
+>[0];
+
 describe('<NavigationMenu.Trigger />', () => {
+  beforeEach(allowTopLevelViewportWarning);
+
   const { render } = createRenderer();
 
   describeConformance(<NavigationMenu.Trigger />, () => ({
@@ -625,7 +635,7 @@ describe('<NavigationMenu.Trigger />', () => {
       const one = screen.getByTestId('trigger-one');
       const two = screen.getByTestId('trigger-two');
       const viewport = screen.getByTestId('viewport');
-      await fireEvent.click(one);
+      await waitForLaterMillisecond(() => fireEvent.click(one));
       const secondLink = screen.getByRole('link', { name: 'Second link of one' });
       secondLink.focus();
       two.focus();
@@ -643,7 +653,7 @@ describe('<NavigationMenu.Trigger />', () => {
     it('moves the focus through the content with the Tab key, and on to the next trigger', async () => {
       const { user } = await render(<Menu />);
       const one = screen.getByTestId('trigger-one');
-      await fireEvent.click(one);
+      await waitForLaterMillisecond(() => fireEvent.click(one));
       const first = screen.getByRole('link', { name: 'First link of one' });
       const second = screen.getByRole('link', { name: 'Second link of one' });
       one.focus();
@@ -670,7 +680,7 @@ describe('<NavigationMenu.Trigger />', () => {
       const { user } = await render(<Menu />);
       const one = screen.getByTestId('trigger-one');
       await fireEvent.click(screen.getByTestId('trigger-two'));
-      await fireEvent.click(one);
+      await waitForLaterMillisecond(() => fireEvent.click(one));
       screen.getByRole('link', { name: 'Second link of one' }).focus();
 
       await user.tab();
@@ -682,7 +692,7 @@ describe('<NavigationMenu.Trigger />', () => {
       await render(<Menu />);
       const one = screen.getByTestId('trigger-one');
       const viewport = screen.getByTestId('viewport');
-      await fireEvent.click(one);
+      await waitForLaterMillisecond(() => fireEvent.click(one));
       screen.getByRole('link', { name: 'First link of one' }).focus();
       screen.getByTestId('trigger-two').focus();
       await flushMicrotasks();
@@ -918,6 +928,222 @@ describe('<NavigationMenu.Trigger />', () => {
 
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
     });
+
+    it('opens the item at the first activation of a trigger that mounted in a held branch when the pointer is over it', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => <Menu popup />);
+      await render(<HeldBranch />);
+      await mountWhileHeld();
+
+      // A pointer that is over a trigger at its first show sends no enter event.
+      const originalMatches = Element.prototype.matches;
+      const matchesSpy = vi.spyOn(Element.prototype, 'matches').mockImplementation(function matches(
+        this: Element,
+        selector: string,
+      ) {
+        if (selector === ':hover' && (this as HTMLElement).dataset.testid === 'trigger-one') {
+          return true;
+        }
+        return originalMatches.call(this, selector);
+      });
+      onTestFinished(() => {
+        matchesSpy.mockRestore();
+      });
+
+      await show();
+      vi.advanceTimersByTime(50);
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('trigger-one')).toHaveAttribute('aria-expanded', 'true');
+    });
+  });
+
+  describe('VUE-73: aria-controls names only an element in the document', () => {
+    function renderMenu(popupParts: () => unknown) {
+      return render(() => (
+        <NavigationMenu.Root defaultValue="one">
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="one">
+              <NavigationMenu.Trigger data-testid="trigger">One</NavigationMenu.Trigger>
+              <NavigationMenu.Content>Content</NavigationMenu.Content>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          {popupParts()}
+        </NavigationMenu.Root>
+      ));
+    }
+
+    function popupParts(
+      popupSlots: Record<string, unknown> = { default: () => <NavigationMenu.Viewport /> },
+    ) {
+      return (
+        <NavigationMenu.Portal>
+          <NavigationMenu.Positioner>
+            <NavigationMenu.Popup data-testid="popup" v-slots={popupSlots} />
+          </NavigationMenu.Positioner>
+        </NavigationMenu.Portal>
+      );
+    }
+
+    it('has no aria-controls while the popup has an empty id', async () => {
+      // An empty `id` of the part counts as no `id` (VUE-93). Only the `#render` slot can give the
+      // element an empty `id`.
+      await renderMenu(() =>
+        popupParts({
+          render: ({ props }: { props: HTMLProps }) => (
+            <nav {...props} id="">
+              <NavigationMenu.Viewport />
+            </nav>
+          ),
+        }),
+      );
+      await flushMicrotasks();
+
+      const trigger = screen.getByTestId('trigger');
+      expect(screen.getByTestId('popup').id).toBe('');
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+    });
+
+    it('has no aria-controls while KeepAlive holds the popup', async () => {
+      const Popup = defineComponent({ setup: () => () => popupParts() });
+      const Other = defineComponent({ setup: () => () => <span /> });
+      const visible = shallowRef(true);
+      await renderMenu(() => (
+        <KeepAlive>{visible.value ? <Popup key="popup" /> : <Other key="other" />}</KeepAlive>
+      ));
+      await flushMicrotasks();
+      const trigger = screen.getByTestId('trigger');
+      const popup = screen.getByTestId('popup');
+      expect(popup.id).not.toBe('');
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
+
+      visible.value = false;
+      await flushMicrotasks();
+
+      expect(popup.isConnected).toBe(false);
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(popup.isConnected).toBe(true);
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
+    });
+
+    it('has no aria-controls while the popup mounts in a branch that KeepAlive holds', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
+        () => (
+          <NavigationMenu.Popup data-testid="popup">
+            <NavigationMenu.Viewport />
+          </NavigationMenu.Popup>
+        ),
+        { renderBranch: (part) => part },
+      );
+      await renderMenu(() => (
+        <NavigationMenu.Portal>
+          <NavigationMenu.Positioner>
+            <HeldBranch />
+          </NavigationMenu.Positioner>
+        </NavigationMenu.Portal>
+      ));
+
+      await mountWhileHeld();
+
+      const trigger = screen.getByTestId('trigger');
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+
+      await show();
+
+      const popup = screen.getByTestId('popup');
+      expect(popup.id).not.toBe('');
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
+    });
+  });
+
+  describe('VUE-86: the active trigger follows the ids of the popup and the viewport', () => {
+    // An empty `id` of a part counts as no `id` (VUE-93). Only the `#render` slot can give the
+    // element an empty `id`, so the slots write the ids.
+    function menuWithIds(ids: { popup?: string; viewport?: string }) {
+      const idOf = (id: string | undefined) => (id === undefined ? {} : { id });
+      return (
+        <NavigationMenu.Root defaultValue="one">
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="one">
+              <NavigationMenu.Trigger data-testid="trigger">One</NavigationMenu.Trigger>
+              <NavigationMenu.Content>Content</NavigationMenu.Content>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          <NavigationMenu.Portal>
+            <NavigationMenu.Positioner>
+              <NavigationMenu.Popup
+                data-testid="popup"
+                v-slots={{
+                  render: ({ props }: { props: HTMLProps }) => (
+                    <nav {...props} {...idOf(ids.popup)}>
+                      <NavigationMenu.Viewport
+                        data-testid="viewport"
+                        v-slots={{
+                          render: ({ props: viewportProps, children }: ViewportRenderSlotProps) => (
+                            <div {...viewportProps} {...idOf(ids.viewport)}>
+                              {h(children)}
+                            </div>
+                          ),
+                        }}
+                      />
+                    </nav>
+                  ),
+                }}
+              />
+            </NavigationMenu.Positioner>
+          </NavigationMenu.Portal>
+        </NavigationMenu.Root>
+      );
+    }
+
+    it('follows the id of the popup in aria-controls', async () => {
+      const id = shallowRef('first');
+      await render(() => menuWithIds({ popup: id.value }));
+      await flushMicrotasks();
+
+      const trigger = screen.getByTestId('trigger');
+      expect(trigger).toHaveAttribute('aria-controls', 'first');
+
+      id.value = 'second';
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('popup').id).toBe('second');
+      expect(trigger).toHaveAttribute('aria-controls', 'second');
+
+      id.value = '';
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('popup').id).toBe('');
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+    });
+
+    it('follows the id of the viewport in aria-owns', async () => {
+      const id = shallowRef('first');
+      await render(() => menuWithIds({ viewport: id.value }));
+      await flushMicrotasks();
+
+      const owner = screen.getByTestId('trigger').parentElement!.querySelector('[aria-owns]');
+      expect(owner).toHaveAttribute('aria-owns', 'first');
+
+      id.value = 'second';
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('viewport').id).toBe('second');
+      expect(owner).toHaveAttribute('aria-owns', 'second');
+
+      id.value = '';
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('viewport').id).toBe('');
+      expect(owner).not.toHaveAttribute('aria-owns');
+    });
   });
 
   describe('popup size', () => {
@@ -962,8 +1188,10 @@ describe('<NavigationMenu.Trigger />', () => {
       overviewButton.focus();
       await flushMicrotasks();
 
-      await user.keyboard('{ArrowDown}');
-      await flushMicrotasks();
+      await waitForLaterMillisecond(async () => {
+        await user.keyboard('{ArrowDown}');
+        await flushMicrotasks();
+      });
 
       const positioner = screen.getByTestId('positioner');
       const popupHeight = () => screen.getByTestId('popup').getBoundingClientRect().height;
@@ -996,8 +1224,10 @@ describe('<NavigationMenu.Trigger />', () => {
         expect(handbookButton).toHaveFocus();
       });
 
-      await user.keyboard('{ArrowDown}');
-      await flushMicrotasks();
+      await waitForLaterMillisecond(async () => {
+        await user.keyboard('{ArrowDown}');
+        await flushMicrotasks();
+      });
 
       await waitFor(() => {
         expect(
@@ -1343,9 +1573,10 @@ describe('<NavigationMenu.Trigger />', () => {
     // The safe-polygon lock sets `pointer-events: none` on the list while hovering.
     const user = rendererUser.setup({ pointerEventsCheck: 0 });
 
-    await user.hover(screen.getByRole('button', { name: 'Product' }));
-
-    const popupRoot = await screen.findByTestId('popup-root');
+    const popupRoot = await waitForLaterMillisecond(async () => {
+      await user.hover(screen.getByRole('button', { name: 'Product' }));
+      return screen.findByTestId('popup-root');
+    });
     const positioner = popupRoot.parentElement as HTMLElement;
     const setPositionerPropertySpy = vi.spyOn(positioner.style, 'setProperty');
     const getPositionerWidthCallsSince = (startIndex = 0) =>

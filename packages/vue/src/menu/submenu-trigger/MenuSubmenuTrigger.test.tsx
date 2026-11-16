@@ -12,6 +12,7 @@ import {
   screen,
   takeReportedMessages,
   waitFor,
+  waitForLaterMillisecond,
 } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
 import { createAttribute } from '../../utils/popups/createAttribute';
@@ -241,12 +242,14 @@ describe('<Menu.SubmenuTrigger /> on hover and on a press', () => {
     const trigger = screen.getByRole('menuitem', { name: 'More' });
 
     await user.click(trigger);
-    expect(await screen.findByTestId('submenu')).not.toBe(null);
+    const submenu = await screen.findByTestId('submenu');
+    expect(submenu).not.toBe(null);
 
     await user.click(trigger);
     await waitFor(() => {
-      expect(screen.queryByTestId('submenu')).toBe(null);
+      expect(submenu).not.toBeInTheDocument();
     });
+    expect(screen.queryByTestId('submenu')).toBe(null);
   });
 
   it('ignores a mouse press while openOnHover is set', async () => {
@@ -296,8 +299,10 @@ describe('<Menu.SubmenuTrigger />', () => {
         </Menu.Root>,
       );
 
-      await user.click(screen.getByRole('button', { name: 'Actions' }));
-      const trigger = await screen.findByRole('menuitem', { name: 'More' });
+      const trigger = await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByRole('button', { name: 'Actions' }));
+        return screen.findByRole('menuitem', { name: 'More' });
+      });
       await user.hover(trigger);
       await screen.findByTestId('submenu');
       await waitFor(() => {
@@ -336,14 +341,15 @@ describe('<Menu.SubmenuTrigger />', () => {
 
     const trigger = screen.getByRole('menuitem', { name: 'More' });
     await user.pointer({ target: trigger, keys: '[TouchA]' });
-    await screen.findByTestId('submenu');
+    const submenu = await screen.findByTestId('submenu');
     await waitForAnimationFrame();
 
     await user.pointer({ target: trigger, keys: '[TouchA]' });
 
     await waitFor(() => {
-      expect(screen.queryByTestId('submenu')).toBe(null);
+      expect(submenu).not.toBeInTheDocument();
     });
+    expect(screen.queryByTestId('submenu')).toBe(null);
     expect(screen.getByTestId('parent-menu')).not.toBe(null);
   });
 
@@ -371,12 +377,12 @@ describe('<Menu.SubmenuTrigger />', () => {
       </Menu.Root>,
     );
 
-    await user.keyboard('[Tab][Enter]');
+    await waitForLaterMillisecond(() => user.keyboard('[Tab][Enter]'));
     const trigger = screen.getByRole('menuitem', { name: 'More' });
     await waitFor(() => {
       expect(trigger).toHaveFocus();
     });
-    await user.keyboard('[ArrowRight]');
+    await waitForLaterMillisecond(() => user.keyboard('[ArrowRight]'));
     const item = screen.getByRole('menuitem', { name: 'Alpha' });
     await waitFor(() => {
       expect(item).toHaveFocus();
@@ -401,9 +407,7 @@ describe('<Menu.SubmenuTrigger />', () => {
       expect(trigger).toHaveFocus();
     });
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('submenu')).toBe(null);
-    });
+    expect(screen.queryByTestId('submenu')).toBe(null);
     expect(screen.getByTestId('parent-menu')).not.toBe(null);
 
     await user.keyboard('[ArrowDown]');
@@ -443,12 +447,12 @@ describe('<Menu.SubmenuTrigger />', () => {
           </Menu.Root>,
         );
 
-        await user.keyboard('[Tab][Enter]');
+        await waitForLaterMillisecond(() => user.keyboard('[Tab][Enter]'));
         const trigger = screen.getByRole('menuitem', { name: 'More' });
         await waitFor(() => {
           expect(trigger).toHaveFocus();
         });
-        await user.keyboard('[ArrowRight]');
+        await waitForLaterMillisecond(() => user.keyboard('[ArrowRight]'));
         await waitFor(() => {
           expect(shadowRoot.activeElement?.textContent).toBe('Alpha');
         });
@@ -471,9 +475,7 @@ describe('<Menu.SubmenuTrigger />', () => {
         await waitFor(() => {
           expect(trigger).toHaveFocus();
         });
-        await waitFor(() => {
-          expect(shadowRoot.querySelector('[data-testid="submenu"]')).toBe(null);
-        });
+        expect(shadowRoot.querySelector('[data-testid="submenu"]')).toBe(null);
         expect(screen.getByTestId('parent-menu')).not.toBe(null);
 
         await user.keyboard('[ArrowDown]');

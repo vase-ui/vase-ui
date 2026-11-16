@@ -4,10 +4,12 @@ import { KeepAlive, computed, defineComponent, provide, shallowRef } from 'vue';
 import { Menubar } from '@vase-ui/vue/menubar';
 import * as Menu from '../index.parts';
 import {
+  clientCenter,
   createRenderer,
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  nextEvent,
   popupFocusPropsTests,
   screen,
   takeReportedMessages,
@@ -36,6 +38,15 @@ const ToolbarProvider = defineComponent((_, { slots }) => {
   });
   return () => slots.default?.();
 });
+
+// Each render of the popup reads the id of the trigger, and the popup renders again after the
+// open. A case that changes the id of the trigger waits for these renders first. Only the change
+// of the id can then give the popup its new name.
+async function waitForRendersOfOpen() {
+  await waitSingleFrame();
+  await waitSingleFrame();
+  await flushMicrotasks();
+}
 
 describe('<Menu.Popup />', () => {
   const { render } = createRenderer();
@@ -91,6 +102,77 @@ describe('<Menu.Popup />', () => {
       'aria-labelledby',
       'commands-label',
     );
+  });
+
+  it('VUE-109: follows a new id that the #render slot gives the trigger', async () => {
+    const id = shallowRef('first');
+    await render(
+      <Menu.Root defaultOpen>
+        <Menu.Trigger
+          v-slots={{
+            render: ({ props }: { props: Record<string, unknown> }) => (
+              <button type="button" {...props} id={id.value}>
+                Actions
+              </button>
+            ),
+          }}
+        />
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup data-testid="popup">
+              <Menu.Item>Rename</Menu.Item>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>,
+    );
+    await waitForRendersOfOpen();
+    const popup = screen.getByTestId('popup');
+    expect(popup).toHaveAttribute('aria-labelledby', 'first');
+
+    id.value = 'second';
+
+    await waitFor(() => {
+      expect(popup).toHaveAttribute('aria-labelledby', 'second');
+    });
+    expect(screen.getByRole('menu', { name: 'Actions' })).toBe(popup);
+  });
+
+  it('takes the registered id of the trigger until the trigger element exists', async () => {
+    const showTrigger = shallowRef(false);
+    await render(() => (
+      <Menu.Root defaultOpen defaultTriggerId="actions">
+        {showTrigger.value && (
+          <Menu.Trigger
+            id="actions"
+            v-slots={{
+              render: ({ props }: { props: Record<string, unknown> }) => (
+                <button type="button" {...props} id="rendered">
+                  Actions
+                </button>
+              ),
+            }}
+          />
+        )}
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup data-testid="popup">
+              <Menu.Item>Rename</Menu.Item>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>
+    ));
+    await waitForRendersOfOpen();
+    const popup = screen.getByTestId('popup');
+    expect(popup).toHaveAttribute('aria-labelledby', 'actions');
+
+    showTrigger.value = true;
+
+    await waitFor(() => {
+      expect(popup).toHaveAttribute('aria-labelledby', 'rendered');
+    });
+    expect(screen.getByRole('menu', { name: 'Actions' })).toBe(popup);
   });
 
   it('stops toolbar navigation keys without blocking ordinary key events', async () => {
@@ -149,8 +231,10 @@ describe('<Menu.Popup />', () => {
       </Menu.Root>,
     );
 
-    await user.click(screen.getByRole('button', { name: 'Open' }));
-    const one = await screen.findByRole('menuitem', { name: 'One' });
+    const one = await waitForLaterMillisecond(async () => {
+      await user.click(screen.getByRole('button', { name: 'Open' }));
+      return screen.findByRole('menuitem', { name: 'One' });
+    });
     // The open gives the focus to the first tabbable element in an animation frame. That frame
     // would take the focus back from the item.
     await waitFor(() => expect(screen.getByRole('button', { name: 'Custom' })).toHaveFocus());
@@ -186,9 +270,10 @@ describe('<Menu.Popup />', () => {
 
     screen.getByRole('button', { name: 'Open' }).focus();
     await flushMicrotasks();
-    await user.keyboard('[Enter]');
-
-    const one = await screen.findByRole('menuitem', { name: 'One' });
+    const one = await waitForLaterMillisecond(async () => {
+      await user.keyboard('[Enter]');
+      return screen.findByRole('menuitem', { name: 'One' });
+    });
     await waitFor(() => expect(one).toHaveAttribute('data-highlighted'));
     // The open gives the focus to the item in an animation frame. That frame would take the focus
     // back from the link.
@@ -223,9 +308,10 @@ describe('<Menu.Popup />', () => {
 
     screen.getByRole('button', { name: 'Open' }).focus();
     await flushMicrotasks();
-    await user.keyboard('[ArrowUp]');
-
-    const three = await screen.findByRole('menuitem', { name: 'Three' });
+    const three = await waitForLaterMillisecond(async () => {
+      await user.keyboard('[ArrowUp]');
+      return screen.findByRole('menuitem', { name: 'Three' });
+    });
     await waitFor(() => expect(three).toHaveAttribute('data-highlighted'));
     // The open gives the focus to the item in an animation frame. That frame would take the focus
     // back from the link.
@@ -284,13 +370,17 @@ describe('<Menu.Popup />', () => {
 
       const { user } = await render(<App />);
       const dialogTrigger = screen.getByRole('button', { name: 'Create' });
-      await user.click(dialogTrigger);
-      await user.click(await screen.findByRole('button', { name: 'Template' }));
-      await user.click(await screen.findByRole('menuitem', { name: 'Blank' }));
-
-      await waitFor(() => {
-        expect(screen.queryByRole('menuitem', { name: 'Blank' })).toBe(null);
+      const menuTrigger = await waitForLaterMillisecond(async () => {
+        await user.click(dialogTrigger);
+        return screen.findByRole('button', { name: 'Template' });
       });
+      const blank = await waitForLaterMillisecond(async () => {
+        await user.click(menuTrigger);
+        return screen.findByRole('menuitem', { name: 'Blank' });
+      });
+      await user.click(blank);
+
+      expect(screen.queryByRole('menuitem', { name: 'Blank' })).toBe(null);
       await flushMicrotasks();
       expect(screen.getByRole('dialog')).toBeInTheDocument();
       expect(dialogTrigger).not.toHaveFocus();
@@ -348,20 +438,21 @@ describe('<Menu.Popup />', () => {
 
     const { user } = await render(<App />);
     // Leaves the other trigger in the return-focus history.
-    await user.click(screen.getByRole('button', { name: 'Other' }));
-    await screen.findByRole('menuitem', { name: 'Item' });
-    await user.keyboard('[Escape]');
-    await waitFor(() => {
-      expect(screen.queryByRole('menuitem', { name: 'Item' })).toBe(null);
+    await waitForLaterMillisecond(async () => {
+      await user.click(screen.getByRole('button', { name: 'Other' }));
+      await screen.findByRole('menuitem', { name: 'Item' });
     });
+    await user.keyboard('[Escape]');
+    expect(screen.queryByRole('menuitem', { name: 'Item' })).toBe(null);
 
-    await user.click(screen.getByRole('button', { name: 'Actions' }));
-    await user.click(await screen.findByRole('menuitem', { name: 'Rename' }));
+    const rename = await waitForLaterMillisecond(async () => {
+      await user.click(screen.getByRole('button', { name: 'Actions' }));
+      return screen.findByRole('menuitem', { name: 'Rename' });
+    });
+    await user.click(rename);
 
     const input = await screen.findByRole('textbox', { name: 'Name' });
-    await waitFor(() => {
-      expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
-    });
+    expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
     await flushMicrotasks();
     expect(input).toHaveFocus();
   });
@@ -403,10 +494,11 @@ describe('<Menu.Popup />', () => {
 
       const trigger = screen.getByText('Open');
 
-      await user.click(trigger);
-      const item = await screen.findByText('Close');
       // The item mounts with the menu. Vue skips its listener for an event of that millisecond.
-      await waitForLaterMillisecond();
+      const item = await waitForLaterMillisecond(async () => {
+        await user.click(trigger);
+        return screen.findByText('Close');
+      });
       await fireEvent.pointerDown(item, { pointerType: 'mouse' });
       await fireEvent.click(item, { detail: 1 });
       await waitFor(() => {
@@ -414,8 +506,10 @@ describe('<Menu.Popup />', () => {
       });
       expect(finalFocus).toHaveBeenLastCalledWith('mouse');
 
-      await user.keyboard('{Enter}');
-      await screen.findByText('Close');
+      await waitForLaterMillisecond(async () => {
+        await user.keyboard('{Enter}');
+        await screen.findByText('Close');
+      });
       await user.keyboard('{Enter}');
       await waitFor(() => {
         expect(trigger).toHaveFocus();
@@ -440,16 +534,16 @@ describe('<Menu.Popup />', () => {
       );
 
       const trigger = screen.getByText('Open');
-      await fireEvent.mouseDown(trigger);
-      const item = await screen.findByText('Close');
+      const item = await waitForLaterMillisecond(async () => {
+        await fireEvent.mouseDown(trigger, clientCenter(trigger));
+        return screen.findByText('Close');
+      });
 
       // Drag-release selection is only armed 200ms after the trigger press.
       await wait(200);
       await fireEvent.mouseUp(item);
 
-      await waitFor(() => {
-        expect(screen.queryByText('Close')).toBe(null);
-      });
+      expect(screen.queryByText('Close')).toBe(null);
       expect(finalFocus).toHaveBeenLastCalledWith('mouse');
     });
   });
@@ -839,9 +933,7 @@ describe('<Menu.Popup />', () => {
       await waitFor(() => {
         expect(finalFocus).toHaveBeenCalledWith('keyboard');
       });
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
-      });
+      expect(screen.queryByTestId('popup')).toBe(null);
       expect(document.body).toHaveFocus();
     });
 
@@ -858,17 +950,19 @@ describe('<Menu.Popup />', () => {
       await userEvent.tab({ shift: true });
 
       expect(trigger).toHaveFocus();
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
-      });
+      expect(screen.queryByTestId('popup')).toBe(null);
     });
 
     it('focuses the trigger when the focus goes to the focus guard before the popup', async () => {
-      const { trigger } = await renderMenu(() => (
-        <Menu.Popup data-testid="popup">
-          <button data-testid="inside">Inside</button>
-        </Menu.Popup>
-      ));
+      const { trigger } = await waitForLaterMillisecond(async () => {
+        const result = await renderMenu(() => (
+          <Menu.Popup data-testid="popup">
+            <button data-testid="inside">Inside</button>
+          </Menu.Popup>
+        ));
+        await screen.findByTestId('popup');
+        return result;
+      });
       await waitFor(() => {
         expect(screen.getByTestId('inside')).toHaveFocus();
       });
@@ -991,7 +1085,10 @@ describe('<Menu.Popup />', () => {
         ));
         const before = screen.getByTestId('before');
         before.focus();
-        open.value = true;
+        await waitForLaterMillisecond(async () => {
+          open.value = true;
+          await screen.findByTestId('popup');
+        });
         await waitFor(() => {
           expect(screen.getByTestId('popup')).toHaveFocus();
         });
@@ -1013,9 +1110,7 @@ describe('<Menu.Popup />', () => {
 
         await fireEvent.pointerDown(screen.getByTestId('outside'), { pointerType: 'mouse' });
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('popup')).toBe(null);
-        });
+        expect(screen.queryByTestId('popup')).toBe(null);
         await flushMicrotasks();
         expect(before).not.toHaveFocus();
       });
@@ -1081,6 +1176,44 @@ describe('<Menu.Popup />', () => {
     expect(screen.getByTestId('popup')).toBe(popup);
     expect(popup.closest('[data-vase-ui-portal]')?.parentElement).toBe(document.body);
     expect(popup).toHaveAttribute('data-open');
+  });
+
+  it('VUE-82: keeps the focus on an item whose keydown listener calls preventVaseUIHandler()', async () => {
+    const { user } = await render(
+      <Menu.Root>
+        <Menu.Trigger>Open</Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup>
+              <Menu.Item
+                onKeydown={(event) => {
+                  if (event.key === 'ArrowDown') {
+                    event.preventVaseUIHandler();
+                  }
+                }}
+              >
+                One
+              </Menu.Item>
+              <Menu.Item>Two</Menu.Item>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>,
+    );
+
+    screen.getByRole('button', { name: 'Open' }).focus();
+    await flushMicrotasks();
+    // The item takes the focus in an animation frame after the open.
+    await waitForLaterMillisecond(() =>
+      nextEvent(document, 'focusin', { action: () => user.keyboard('[ArrowDown]') }),
+    );
+    const one = screen.getByRole('menuitem', { name: 'One' });
+    expect(one).toHaveFocus();
+
+    await user.keyboard('[ArrowDown]');
+    await waitSingleFrame();
+
+    expect(one).toHaveFocus();
   });
 
   it('BUG-5410: closes the menu for a press in a same-origin iframe', async () => {

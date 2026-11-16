@@ -69,8 +69,7 @@ export interface TabsTabProps
   disabled?: boolean | undefined;
   /**
    * The id of the tab. The panel of the tab uses it for `aria-labelledby`.
-   * A server render writes the tab before it renders a panel that comes after it. The tab then
-   * has no `aria-controls` in the server HTML, and it gets it in the first flush on the client.
+   * Without an id, the tab has a generated id.
    */
   id?: string | undefined;
 }
@@ -78,12 +77,14 @@ export interface TabsTabProps
 
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue';
+import { useAriaAfterHydration } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
 import { activeElement, contains } from '../../common/shadowDom';
 import { ACTIVE_COMPOSITE_ITEM } from '../../internals/composite/constants';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
 import { useCompositeRootContext } from '../../internals/composite/root/CompositeRootContext';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -117,6 +118,11 @@ const {
 } = useTabsRootContext();
 const { activateOnFocus, registerTabResizeObserverElement, tabsListElement } = useTabsListContext();
 const { highlightedIndex, onHighlightedIndexChange } = useCompositeRootContext();
+
+// A panel registers its id in `setup`, and it can come after the tab.
+useDeferredServerRender();
+
+const ariaAfterHydration = useAriaAfterHydration();
 
 const tabId = useVaseUiId(() => props.id);
 const active = computed(() => props.value === activeTabValue.value);
@@ -264,7 +270,7 @@ const { element, elementProps } = useRenderElement('button', props, {
     compositeProps.value,
     {
       role: 'tab',
-      'aria-controls': getTabPanelIdByValue(props.value),
+      'aria-controls': ariaAfterHydration(getTabPanelIdByValue(props.value)),
       'aria-selected': active.value,
       id: tabId.value,
       onClick,

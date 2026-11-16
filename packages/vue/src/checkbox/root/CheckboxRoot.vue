@@ -36,7 +36,10 @@ export interface CheckboxRootProps
   extends
     NonNativeButtonProps,
     VaseUIComponentProps<CheckboxRootState>,
-    /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes>, 'id' | 'onChange'> {
+    /* @vue-ignore */ Omit<
+      WithVaseUIEvent<HTMLAttributes, 'aria-label' | 'aria-labelledby'>,
+      'id' | 'onChange'
+    > {
   /**
    * The id of the hidden input element.
    *
@@ -130,15 +133,14 @@ import {
   shallowRef,
   watch,
 } from 'vue';
-import { addEventListener } from '../../common/addEventListener';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { getDefaultFormSubmitter } from '../../common/getDefaultFormSubmitter';
-import { useIsHydrated } from '../../common/hydration';
-import { ownerWindow } from '../../common/owner';
+import { queueInputTake, useAriaAfterHydration, useIsHydrated } from '../../common/hydration';
 import { useControlled } from '../../common/useControlled';
 import { useTimeout } from '../../common/useTimeout';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { useFieldItemContext } from '../../field/item/FieldItemContext';
+import { givenName } from '../../internals/blankName';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { useRegisterFieldControl } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
@@ -155,6 +157,7 @@ import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/
 import { useButton } from '../../internals/use-button';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useFormReset } from '../../internals/useFormReset';
+import { useFormRestore } from '../../internals/useFormRestore';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
@@ -208,7 +211,6 @@ const {
   disabled: fieldDisabled,
   name: fieldName,
   validation: fieldValidation,
-  reaches: fieldReaches,
 } = useFieldRootContext();
 const fieldItemContext = useFieldItemContext();
 const { getDescriptionProps, registerControlId } = useLabelableContext();
@@ -258,7 +260,7 @@ let unregisterInput: (() => void) | void;
 // `KeepAlive` takes the input out of the document, and the field must not use an input that is not
 // in the document. A held required checkbox that is off would block the submit of the form, and its
 // value would stay in the values of the form.
-const { isHeld, shown } = useKeepAliveState(() => element.value, group?.reaches ?? fieldReaches);
+const { isHeld, shown } = useKeepAliveState();
 
 function updateInputRegistration() {
   unregisterInput?.();
@@ -295,17 +297,15 @@ function releaseInput() {
 
 onDeactivated(releaseInput);
 
-// The `ref` setter of a checkbox that mounts in a held branch registers the input.
-watch(isHeld, (held) => {
+// The `ref` setter of a checkbox that mounts in a held branch registers the input. `isHeld` is
+// already `true` then, so the input is a source of the `watch`.
+watch([isHeld, inputElement], ([held]) => {
   if (held) {
     releaseInput();
   }
 });
 
-// `KeepAlive` runs the `onActivated` hooks from the last part to the first part. A registration in
-// the hook would reverse the order of the inputs. A watcher runs in the order of the parts. The
-// release before the registration moves an input that is still registered to the end, because
-// `Map.set` keeps the place of a key.
+// `KeepAlive` calls no `ref` setter at an activation.
 watch(shown, updateInputRegistration);
 
 watch(
@@ -327,11 +327,9 @@ const rootId = useVaseUiId();
 // of them would render the same id. A `Field.Item` opens a scope that the checkbox does own. The
 // provider chain does not change, so `setup` makes this choice one time.
 const ownsControlId = group?.registerControlId !== registerControlId;
-// An empty `id` is not an own id: the control takes the id of the provider.
 const controlId = useLabelableId({
-  id: () => props.id || undefined,
+  id: () => props.id,
   enabled: ownsControlId,
-  element: () => element.value,
 });
 const hiddenInputId = computed(() => (props.nativeButton ? undefined : controlId.value));
 
@@ -404,10 +402,9 @@ const ariaLabelledBy = useAriaLabelledBy(
 
 // Vue writes `checked` to the input only when the value changes between two renders, and
 // hydration does not write it. HTML has no attribute for `indeterminate`, so a server cannot write
-// it. A browser also changes the input with no change of the state: it restores the form state of a
-// page, and a click on the input sets `indeterminate` to `false` and keeps the new `checked`, also
-// when a parent does not accept the click. A form would then submit a state that the checkbox does
-// not show.
+// it. A click on the input sets `indeterminate` to `false` and keeps the new `checked`, also when a
+// parent does not accept the click. A form would then submit a state that the checkbox does not
+// show.
 function writeStateToInput() {
   const input = inputElement.value;
   if (!input) {
@@ -423,7 +420,7 @@ function writeStateToInput() {
   }
 }
 
-function requestChange(nextChecked: boolean, event: Event) {
+function requestChange(nextChecked: boolean, event?: Event) {
   const details = createChangeEventDetails(REASONS.none, event);
 
   emit('checkedChange', nextChecked, details);
@@ -474,6 +471,21 @@ function onInputClick(event: MouseEvent) {
   void nextTick(writeStateToInput);
 }
 
+// The input changed with no event that the checkbox handled: a press on a native label before the
+// hydration, or a form state that the browser restored.
+function takeInputState(event?: Event) {
+  const input = inputElement.value;
+  if (!input) {
+    return;
+  }
+
+  if (input.checked !== isChecked.value && !props.parent && !props.readOnly && !isDisabled.value) {
+    requestChange(input.checked, event);
+  }
+
+  void nextTick(writeStateToInput);
+}
+
 // An uncontrolled checkbox goes back to its default value through its change event. The result is
 // `true` when the state changed.
 function resetChecked(event: Event) {
@@ -507,20 +519,28 @@ useFormReset(inputElement, (event) => {
   }
 });
 
+// Vue writes `checked` to the attribute too, so only an input that changed before the hydration
+// differs from its `defaultChecked`. Its take waits until the field recorded its initial value.
 watch(
   inputElement,
-  (input, _previous, onCleanup) => {
+  (input) => {
     if (!input) {
       return;
     }
 
-    writeStateToInput();
-
-    // Chromium restores the form state of a page after `load`, with no event on the input.
-    onCleanup(addEventListener(ownerWindow(input), 'pageshow', writeStateToInput));
+    if (input.checked === input.defaultChecked) {
+      writeStateToInput();
+    } else {
+      queueInputTake(() => {
+        takeInputState();
+        return true;
+      });
+    }
   },
   { flush: 'post' },
 );
+
+useFormRestore(inputElement, takeInputState);
 
 watch(isIndeterminate, writeStateToInput, { flush: 'post' });
 
@@ -581,6 +601,7 @@ provide(CheckboxRootContext, state);
 
 const stateAttributesMapping = getCheckboxStateAttributesMapping(state);
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('span', props, {
   state,
   ref: [buttonRef],
@@ -592,8 +613,8 @@ const { element, elementProps } = useRenderElement('span', props, {
       'aria-checked': isIndeterminate.value ? 'mixed' : isChecked.value,
       'aria-readonly': props.readOnly || undefined,
       'aria-required': props.required || undefined,
-      'aria-label': props.ariaLabel,
-      'aria-labelledby': ariaLabelledBy.value,
+      'aria-label': givenName(props.ariaLabel),
+      'aria-labelledby': ariaAfterHydration(ariaLabelledBy.value),
       'data-parent': props.parent ? '' : undefined,
       onFocusin() {
         setFocused(true);
@@ -634,6 +655,7 @@ const { element, elementProps } = useRenderElement('span', props, {
     getButtonProps,
     getDescriptionProps,
     (merged) => validation.getValidationProps(isDisabled.value, merged),
+    (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),
   ],
 });
 
@@ -681,8 +703,10 @@ watch(
 // The style is the constant itself, in an object that no `mergeProps` call makes.
 // `handleHiddenInputInvalid` then keeps the size that it writes.
 function inputProps() {
+  const validationProps = validation.getValidationProps(isDisabled.value, getDescriptionProps({}));
   return {
-    ...validation.getValidationProps(isDisabled.value, getDescriptionProps({})),
+    ...validationProps,
+    'aria-describedby': ariaAfterHydration(validationProps['aria-describedby']),
     ref: setInputElement,
     checked: isChecked.value,
     disabled: isDisabled.value,

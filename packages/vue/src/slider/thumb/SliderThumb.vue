@@ -8,7 +8,13 @@ export interface SliderThumbState extends SliderRootState {}
 export interface SliderThumbProps
   extends
     VaseUIComponentProps<SliderThumbState>,
-    /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes>, 'tabindex'> {
+    /* @vue-ignore */ Omit<
+      WithVaseUIEvent<
+        HTMLAttributes,
+        'aria-describedby' | 'aria-label' | 'aria-labelledby' | 'aria-valuetext'
+      >,
+      'tabindex'
+    > {
   /**
    * Whether the thumb should ignore user interaction.
    * @default false
@@ -63,6 +69,7 @@ import {
   onActivated,
   onDeactivated,
   onMounted,
+  onScopeDispose,
   provide,
   shallowRef,
   useAttrs,
@@ -71,10 +78,15 @@ import {
 import type { Component } from 'vue';
 import { clamp } from '../../common/clamp';
 import { formatNumber } from '../../common/formatNumber';
-import { useIsHydrating } from '../../common/hydration';
+import {
+  useAriaAfterHydration,
+  useHiddenValueBeforeHydration,
+  useIsHydrating,
+} from '../../common/hydration';
 import { ownerWindow } from '../../common/owner';
 import { contains } from '../../common/shadowDom';
 import { visuallyHidden } from '../../common/visuallyHidden';
+import { givenName } from '../../internals/blankName';
 import {
   ARROW_DOWN,
   ARROW_LEFT,
@@ -88,11 +100,13 @@ import {
 } from '../../internals/composite/composite';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
+import { useFieldInput } from '../../internals/field-register-control';
 import { useFieldRootContext } from '../../internals/field-root-context';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
 import { useDeferredServerRender, useLabelableId } from '../../internals/labelable-provider';
 import type { HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useFormReset } from '../../internals/useFormReset';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { mergeProps } from '../../merge-props';
 import { matchesFocusVisible } from '../../utils/popups/element';
@@ -181,6 +195,7 @@ const {
   validation,
   format,
   handleInputChange,
+  registerThumbInput,
   inset,
   isArrayValue,
   labelId,
@@ -195,10 +210,12 @@ const {
   pressedThumbCenterOffsetRef,
   pressedThumbIndexRef,
   renderBeforeHydration,
+  reset,
   setActive,
   setIndicatorPosition,
   state: rootState,
   step,
+  thumbList,
   thumbRefs,
   values: sliderValues,
 } = useSliderRootContext();
@@ -230,6 +247,7 @@ const inputId = computed(() => (range.value ? defaultInputId.value : labelableId
 const thumbMetadata = computed<ThumbMetadata>(() => ({ inputId: inputId.value }));
 
 const { ref: listItemRef, index: compositeIndex } = useCompositeListItem<ThumbMetadata>({
+  list: thumbList,
   metadata: thumbMetadata,
 });
 
@@ -241,6 +259,7 @@ const thumbValuePercent = computed(() => valueToPercent(thumbValue.value, min.va
 
 const positionPercent = shallowRef<number | undefined>();
 const isHydrating = useIsHydrating();
+const ariaAfterHydration = useAriaAfterHydration();
 
 const safeLastUsedThumbIndex = computed(() =>
   lastUsedThumbIndex.value >= 0 && lastUsedThumbIndex.value < sliderValues.value.length
@@ -359,59 +378,95 @@ function getThumbStyle() {
   };
 }
 
+const giveFieldInput = useFieldInput();
+
 function setInputElement(value: unknown) {
   const input = value as HTMLInputElement | null;
   // Vue calls a function ref again on each patch, with the same element.
   if (input === inputElement.value) {
     return;
   }
-  // Another thumb can hold the ref of the field. Only this thumb clears its own input.
-  if (input || validation.inputRef.value === inputElement.value) {
-    validation.inputRef.value = input;
-  }
+  giveFieldInput(input);
   inputElement.value = input;
 }
 
-// The value that the input had after the last `input` or `change` event that the thumb handled.
-// A `change` event with that value is the second event of one user action.
-let handledInputValue: number | undefined;
+const writesValue = useHiddenValueBeforeHydration(() => inputElement.value);
+
+// The value that the input had after the last event that the thumb handled, or after the last
+// write of Vue or of the thumb. A range input moves its value to the step and into `min` and
+// `max`, so this text can differ from the value of the thumb.
+let handledInputValue: string | undefined;
+
+function syncHandledInputValue() {
+  handledInputValue = inputElement.value?.value;
+}
+
+watch([inputElement, thumbValue, min, max, step], syncHandledInputValue, { flush: 'post' });
+
+// The thumb follows the reset with its own input. The composite list of the root has no thumb
+// while `KeepAlive` holds the slider.
+useFormReset(inputElement, reset);
 
 function onNativeChange(event: Event) {
   const input = event.currentTarget as HTMLInputElement;
-  const inputValue = input.valueAsNumber;
-  if (event.type === 'change' && inputValue === handledInputValue) {
+  // A range input sends `input` and then `change` for one user action. A `change` is new only when
+  // the input did not have its value after the last event or write.
+  if (event.type === 'change' && input.value === handledInputValue) {
     return;
   }
-  handledInputValue = inputValue;
+  handledInputValue = input.value;
 
-  handleInputChange(inputValue, thumbIndex.value, event);
+  handleInputChange(input.valueAsNumber, thumbIndex.value, event);
 
   // A listener can cancel the change, and a parent that controls the slider can keep its value.
-  // Vue writes the value only when the thumb renders again.
-  void nextTick(() => {
-    handledInputValue = undefined;
-    if (thumbValue.value !== undefined && input.valueAsNumber !== thumbValue.value) {
-      input.value = String(thumbValue.value);
-    }
-  });
+  void nextTick(writeValueToInput);
 }
+
+// Vue writes the value only when the thumb renders again.
+function writeValueToInput() {
+  const input = inputElement.value;
+  if (!input) {
+    return;
+  }
+  if (thumbValue.value !== undefined && input.valueAsNumber !== thumbValue.value) {
+    input.value = String(thumbValue.value);
+  }
+  handledInputValue = input.value;
+}
+
+onScopeDispose(
+  registerThumbInput({
+    take() {
+      const input = inputElement.value;
+      // Until its take of the hydration, the input holds a value that it got before the hydration.
+      if (!input || (writesValue.value && input.value === handledInputValue)) {
+        return undefined;
+      }
+      handledInputValue = input.value;
+      return { index: thumbIndex.value, value: input.valueAsNumber };
+    },
+    writeValue: writeValueToInput,
+  }),
+);
 
 function inputProps() {
   const value = thumbValue.value;
-  const ariaLabel =
+  const ariaLabel = givenName(
     typeof props.getAriaLabel === 'function'
       ? props.getAriaLabel(thumbIndex.value)
-      : props.ariaLabel;
+      : props.ariaLabel,
+  );
 
   let cssWritingMode: 'vertical-rl' | 'vertical-lr' | undefined;
   if (vertical.value) {
     cssWritingMode = rtl.value ? 'vertical-rl' : 'vertical-lr';
   }
 
-  return mergeProps<'input'>(
+  const merged = mergeProps<'input'>(
     {
       'aria-label': ariaLabel,
-      'aria-labelledby': props.ariaLabelledby ?? (ariaLabel == null ? labelId.value : undefined),
+      'aria-labelledby':
+        givenName(props.ariaLabelledby) ?? (ariaLabel == null ? labelId.value : undefined),
       'aria-describedby': props.ariaDescribedby,
       'aria-orientation': orientation.value,
       'aria-valuenow': value,
@@ -569,7 +624,7 @@ function inputProps() {
       },
       tabindex: props.tabindex,
       type: 'range',
-      value: value ?? '',
+      ...(writesValue.value ? { value: value ?? '' } : undefined),
     },
     (merged) => validation.getValidationProps(isDisabled.value, merged),
     {
@@ -591,10 +646,17 @@ function inputProps() {
       ref: setInputElement,
     },
   );
+  return {
+    ...merged,
+    'aria-labelledby': ariaAfterHydration(merged['aria-labelledby']),
+    'aria-describedby': ariaAfterHydration(merged['aria-describedby']),
+  };
 }
 
 provide(SliderThumbContext, {
   inputProps,
+  inputElement,
+  getHandledInputValue: () => handledInputValue,
   // Rendered with the last thumb to ensure all preceding thumbs are already in the DOM.
   hasPrehydrationScript: computed(() => inset.value && last.value && renderBeforeHydration.value),
 });

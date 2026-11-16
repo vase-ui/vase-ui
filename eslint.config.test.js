@@ -53,6 +53,15 @@ const SRC = 'packages/vue/src/dialog';
 
 const SCRIPT_ONLY_TEMPLATE = '\n<template>\n  <div />\n</template>\n';
 
+const WAIT_HINT = '#test-utils';
+const ABSENCE_HINT = 'before the element appears';
+const WAIT_IMPORT =
+  "import { expect } from 'vitest';\nimport { screen, waitFor, within } from '#test-utils';\n\n";
+const WAIT_FILES = [
+  ['a test file', `${SRC}/DialogRoot.test.tsx`],
+  ['a shared suite', 'packages/vue/test/popupConformanceTests.tsx'],
+];
+
 const reported = [
   {
     name: 'an import of getCurrentInstance',
@@ -124,6 +133,13 @@ const reported = [
     ruleId: 'no-restricted-properties',
     hint: 'provide',
   },
+  ...['toSorted', 'toReversed', 'toSpliced'].map((method) => ({
+    name: `a call of ${method}`,
+    file: `${SRC}/useRoot.ts`,
+    code: `export const copy = (items: number[]) => items.${method}();\n`,
+    ruleId: 'no-restricted-properties',
+    hint: 'Firefox 114',
+  })),
   {
     name: 'a read of $parent in resolveElement.ts',
     file: 'packages/vue/src/internals/resolveElement.ts',
@@ -145,6 +161,13 @@ const reported = [
     ruleId: 'vue/no-restricted-syntax',
     hint: 'provide',
   },
+  ...['toSorted', 'toReversed', 'toSpliced'].map((method) => ({
+    name: `a call of ${method} in a template`,
+    file: `${SRC}/DialogRoot.vue`,
+    code: `<script setup lang="ts">\nconst items = [2, 1];\n</script>\n\n<template>\n  <div>{{ items.${method}() }}</div>\n</template>\n`,
+    ruleId: 'vue/no-restricted-syntax',
+    hint: 'Firefox 114',
+  })),
   {
     name: 'a directive variable in script setup',
     file: `${SRC}/DialogRoot.vue`,
@@ -222,6 +245,41 @@ const reported = [
     ruleId: 'no-restricted-syntax',
     hint: 'nodeType',
   })),
+  {
+    name: 'a private field',
+    file: `${SRC}/store.ts`,
+    code: 'export class Store {\n  private readonly items: string[] = [];\n\n  get size() {\n    return this.items.length;\n  }\n}\n',
+    ruleId: 'no-restricted-syntax',
+    hint: '#name',
+  },
+  {
+    name: 'a private method',
+    file: `${SRC}/store.ts`,
+    code: 'export class Store {\n  private clear() {}\n\n  reset() {\n    this.clear();\n  }\n}\n',
+    ruleId: 'no-restricted-syntax',
+    hint: '#name',
+  },
+  {
+    name: 'a private get accessor',
+    file: `${SRC}/store.ts`,
+    code: 'export class Store {\n  private get size() {\n    return 0;\n  }\n\n  read() {\n    return this.size;\n  }\n}\n',
+    ruleId: 'no-restricted-syntax',
+    hint: '#name',
+  },
+  {
+    name: 'a private member of a class expression in script setup',
+    file: `${SRC}/DialogRoot.vue`,
+    code: `<script setup lang="ts">\nconst Store = class {\n  private static count = 0;\n\n  static next() {\n    Store.count += 1;\n    return Store.count;\n  }\n};\nconst count = Store.next();\n</script>\n\n<template>\n  <div>{{ count }}</div>\n</template>\n`,
+    ruleId: 'no-restricted-syntax',
+    hint: '#name',
+  },
+  {
+    name: 'a public member',
+    file: `${SRC}/store.ts`,
+    code: 'export class Store {\n  public clear() {}\n}\n',
+    ruleId: '@typescript-eslint/explicit-member-accessibility',
+    hint: 'Public accessibility modifier',
+  },
   {
     name: 'a TSX file',
     file: `${SRC}/DialogRoot.tsx`,
@@ -469,11 +527,83 @@ const reported = [
     hint: 'XSS',
   },
   {
-    name: 'a style block in a demo',
+    name: 'a style block in a CSS-module demo',
     file: 'docs/demos/sample/hero/css-modules/index.vue',
     code: '<script setup lang="ts"></script>\n\n<template>\n  <div class="sample" />\n</template>\n\n<style>\n.sample {\n  color: red;\n}\n</style>\n',
     ruleId: 'vue/no-restricted-block',
     hint: 'copied style sheet',
+  },
+  ...WAIT_FILES.flatMap(([place, file]) => [
+    ...[
+      'waitFor',
+      'waitForElementToBeRemoved',
+      'findByRole',
+      'findAllByText',
+      'screen',
+      'within',
+      'queries',
+      'getQueriesForElement',
+    ].map((name) => ({
+      name: `an import of ${name} from Testing Library in ${place}`,
+      file,
+      code: `import { ${name} } from '@testing-library/dom';\n\nexport const used = ${name};\n`,
+      ruleId: 'no-restricted-imports',
+      hint: WAIT_HINT,
+    })),
+    ...[
+      ['vi.waitFor', "import { vi } from 'vitest';\n\nexport const wait = vi.waitFor(() => 1);\n"],
+      [
+        'vi.waitUntil',
+        "import { vi } from 'vitest';\n\nexport const wait = vi.waitUntil(() => true);\n",
+      ],
+      [
+        'expect.poll',
+        "import { expect } from 'vitest';\n\nexport const poll = expect.poll(() => 1);\n",
+      ],
+      [
+        'expect.element',
+        "import { expect } from 'vitest';\n\ndeclare const locator: unknown;\nexport const read = expect.element(locator);\n",
+      ],
+    ].map(([name, code]) => ({
+      name: `${name} in ${place}`,
+      file,
+      code,
+      ruleId: 'no-restricted-properties',
+      hint: WAIT_HINT,
+    })),
+  ]),
+  ...WAIT_FILES.flatMap(([place, file]) =>
+    [
+      [
+        'a queryBy query of screen for an absence',
+        "await waitFor(() => {\n  expect(screen.queryByRole('dialog')).toBe(null);\n});\n",
+      ],
+      [
+        'a queryBy query of screen for a presence',
+        "await waitFor(() => {\n  expect(screen.queryByRole('dialog')).not.toBe(null);\n});\n",
+      ],
+      [
+        'a queryAllBy query of within',
+        "await waitFor(() => expect(within(document.body).queryAllByRole('option')).toHaveLength(0));\n",
+      ],
+      [
+        'a queryBy query of the result of render',
+        "declare const queryByText: (text: string) => HTMLElement | null;\nawait waitFor(() => {\n  expect(queryByText('Open')).toBe(null);\n});\n",
+      ],
+    ].map(([name, code]) => ({
+      name: `${name} in waitFor in ${place}`,
+      file,
+      code: `${WAIT_IMPORT}${code}`,
+      ruleId: 'no-restricted-syntax',
+      hint: ABSENCE_HINT,
+    })),
+  ),
+  {
+    name: 'a style block in a Tailwind demo',
+    file: 'docs/demos/sample/hero/tailwind/index.vue',
+    code: '<script setup lang="ts"></script>\n\n<template>\n  <div class="sample" />\n</template>\n\n<style>\n.sample {\n  color: red;\n}\n</style>\n',
+    ruleId: 'vue/no-restricted-block',
+    hint: 'class names',
   },
 ];
 
@@ -507,6 +637,21 @@ const passed = [
     name: 'instanceof the class of ownerWindow',
     file: `${SRC}/useRoot.ts`,
     code: 'declare function ownerWindow(element: Element): Window & typeof globalThis;\n\nexport const check = (value: unknown, element: Element) =>\n  value instanceof ownerWindow(element).HTMLElement;\n',
+  },
+  {
+    name: 'an ECMAScript private member and a protected member',
+    file: `${SRC}/store.ts`,
+    code: 'export class Store {\n  readonly #items: string[] = [];\n\n  protected readonly name = "store";\n\n  get size() {\n    return this.#items.length;\n  }\n}\n',
+  },
+  {
+    name: 'a private field that has the declare keyword',
+    file: `${SRC}/handle.ts`,
+    code: 'export class Handle {\n  declare private readonly __handleBrand: never;\n}\n',
+  },
+  {
+    name: 'a private member of a declare class',
+    file: `${SRC}/itemCollection.ts`,
+    code: 'export declare class ItemCollection<Item> {\n  private constructor();\n  private readonly __itemCollectionBrand: (item: Item) => void;\n}\n',
   },
   {
     name: 'defineOptions in script setup',
@@ -618,6 +763,36 @@ const passed = [
     file: PAGE,
     code: '---\norder: 1\n---\n',
   },
+  {
+    name: 'an import of waitFor, screen and within from #test-utils in a test file',
+    file: `${SRC}/DialogRoot.test.tsx`,
+    code: "import { screen, waitFor, within } from '#test-utils';\n\nexport const used = [screen, waitFor, within];\n",
+  },
+  {
+    name: 'a queryBy query for an absence after a wait on an element that the test holds',
+    file: `${SRC}/DialogRoot.test.tsx`,
+    code: `${WAIT_IMPORT}const dialog = screen.getByRole('dialog');\nawait waitFor(() => {\n  expect(dialog).not.toBeInTheDocument();\n});\nexpect(screen.queryByRole('dialog')).toBe(null);\nexpect(within(document.body).queryAllByRole('option')).toHaveLength(0);\n`,
+  },
+  {
+    name: 'a getBy query in waitFor in a shared suite',
+    file: 'packages/vue/test/popupConformanceTests.tsx',
+    code: `${WAIT_IMPORT}await waitFor(() => {\n  expect(screen.getByRole('dialog')).toHaveFocus();\n});\nawait waitFor(() => expect(within(document.body).getAllByRole('option')).toHaveLength(2));\n`,
+  },
+  {
+    name: 'an import of fireEvent, createEvent and isInaccessible from Testing Library in a shared suite',
+    file: 'packages/vue/test/popupConformanceTests.tsx',
+    code: "import { createEvent, fireEvent, isInaccessible } from '@testing-library/dom';\n\nexport const used = [createEvent, fireEvent, isInaccessible];\n",
+  },
+  {
+    name: 'an import of the queries of Testing Library in test/queries.ts',
+    file: 'packages/vue/test/queries.ts',
+    code: "import { getQueriesForElement, queries } from '@testing-library/dom';\n\nexport const used = [getQueriesForElement, queries];\n",
+  },
+  {
+    name: 'expect.poll in a test of the Nuxt fixture',
+    file: 'fixtures/nuxt/test/pages.test.ts',
+    code: "import { expect } from 'vitest';\n\nexport const poll = expect.poll(() => 1);\n",
+  },
 ];
 
 for (const { name, file, code, ruleId, hint } of reported) {
@@ -663,6 +838,13 @@ test('reports a form that the page does not hold at line 1', async () => {
   });
   const { line, column } = messages.find(({ ruleId }) => ruleId === 'vue/no-child-content');
   assert.deepEqual({ line, column }, { line: 1, column: 1 });
+});
+
+test('renders a page with the Markdown rules of the site', async () => {
+  const { default: config } = await import('./eslint.config.js');
+  const { processor } = config.find((entry) => entry.processor?.meta?.name === 'vase-ui/page');
+  const [{ text }] = processor.preprocess('### Filtering [Preview]\n', join(ROOT, PAGE));
+  assert.match(text, /<span class="heading-badge ignore-header">Preview<\/span>/);
 });
 
 test('does not write a fix into a page', async () => {

@@ -11,7 +11,7 @@ import type {
   ComponentRenderFn,
   HTMLProps,
   VaseUIComponentProps,
-  WithVaseUIEvent,
+  WithVaseUIEventHandlers,
 } from '../internals/types';
 import { useRenderElement } from '../internals/useRenderElement';
 import type { UseRenderElementParameters } from '../internals/useRenderElement';
@@ -70,9 +70,11 @@ export type UseRenderRenderProp<State = Record<string, unknown>> = ComponentRend
  * The native attributes and listeners of a tag.
  * Extend it behind a `@vue-ignore` comment in the props interface of a component.
  * The SFC compiler then makes no prop of them, and they stay in `$attrs`.
+ * The attributes have the types of Vue, with no `null`, so an object of this type is a set of
+ * `mergeProps`.
  */
 export type UseRenderElementProps<TagName extends keyof IntrinsicElementAttributes> =
-  WithVaseUIEvent<IntrinsicElementAttributes[TagName]>;
+  WithVaseUIEventHandlers<IntrinsicElementAttributes[TagName]>;
 
 /**
  * The props that a component declares for `useRender`: `as`, `stateClass` and `stateStyle`.
@@ -94,7 +96,9 @@ export interface UseRenderParameters<State, RenderedElementType extends Element 
    */
   stateAttributesMapping?: StateAttributesMapping<State> | undefined;
   /**
-   * A function that gets the attributes and listeners of the consumer, without `class` and `style`.
+   * A function that gets the attributes and listeners of the consumer, without `class`, `style`,
+   * each attribute whose value is `undefined`, an empty `id`, and a blank `aria-label` or
+   * `aria-labelledby`.
    * It returns the props of the element, or an array of props, in merge order. The rightmost wins.
    * A set can be `undefined`, or a function that gets the props merged so far.
    * The default is the attributes of the consumer.

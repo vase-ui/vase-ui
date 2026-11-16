@@ -67,7 +67,7 @@ defineSlots<{
 const state: MeterRootState = EMPTY_OBJECT;
 
 const formatLocale = useFormatLocale(() => props.locale);
-const { labelRoot, getAriaLabelledBy } = useLabelId(() => element.value);
+const { labelRoot, getAriaLabelledBy } = useLabelId();
 
 // `clamp` handles infinity. `NaN` needs a fallback, because `Math.min(NaN, max)` is `NaN`.
 const percentageValue = computed(() => {

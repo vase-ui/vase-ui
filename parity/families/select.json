@@ -15,15 +15,6 @@
     },
     {
       "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
-      "describe": ["<Select.Root />", "prop: highlightItemOnHover"],
-      "title": "highlights an item on mouse move by default",
-      "kind": "engine",
-      "engine": "webkit",
-      "link": "https://github.com/mui/base-ui/issues/4002",
-      "reason": "WebKit sends a `mousemove` with no movement when a list scrolls under a pointer that does not move. In WebKit, the list navigation thus ignores a `mousemove` with no movement, and the hover of user-event sends one."
-    },
-    {
-      "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
       "describe": ["<Select.Root />"],
       "title": "does not dismiss when pressing portalled content inside the popup but outside the list",
       "kind": "replaced",
@@ -36,15 +27,6 @@
       "title": "replaces and unregisters its label in Strict Mode",
       "kind": "not-applicable",
       "reason": "The case tests React Strict Mode. Vue has no Strict Mode."
-    },
-    {
-      "upstream": "packages/react/src/select/item/SelectItem.test.tsx",
-      "describe": ["<Select.Item />"],
-      "title": "should highlight a hovered item and commit it with a mouse click",
-      "kind": "engine",
-      "engine": "webkit",
-      "link": "https://github.com/mui/base-ui/issues/4002",
-      "reason": "WebKit sends a `mousemove` with no movement when a list scrolls under a pointer that does not move. In WebKit, the list navigation thus ignores a `mousemove` with no movement, and the case dispatches one."
     },
     {
       "upstream": "packages/react/src/select/store.test.tsx",
@@ -60,6 +42,14 @@
       "prop": "multiple",
       "kind": "not-applicable",
       "reason": "The row gives the default `false`. The prop has no declared default, because `withDefaults` refuses a default for a prop of the generic type `Multiple & boolean` (TS2322). Vue gives an absent Boolean prop the value `false`, and the JSDoc has `@default false` for the API reference."
+    },
+    {
+      "upstream": "packages/react/src/select/group-label/SelectGroupLabel.test.tsx",
+      "describe": ["<Select.GroupLabel />"],
+      "title": "allows overriding aria-hidden",
+      "kind": "replaced",
+      "test": "packages/vue/src/select/group-label/SelectGroupLabel.test.tsx",
+      "reason": "The case gives `aria-hidden` the value `undefined` and asserts that the part removes the attribute. Vase UI keeps the value of the part for `undefined` and removes it for `null` (VUE-103). The case \"VUE-103: aria-hidden of the consumer is $name\" tests both values."
     }
   ],
   "surfaceAdditions": [

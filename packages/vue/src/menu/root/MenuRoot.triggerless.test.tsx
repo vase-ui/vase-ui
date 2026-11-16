@@ -2,7 +2,13 @@ import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { defineComponent, onMounted, onUpdated, shallowRef } from 'vue';
 import type { FunctionalComponent } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
-import { createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
+import {
+  createRenderer,
+  flushMicrotasks,
+  screen,
+  waitFor,
+  waitForLaterMillisecond,
+} from '#test-utils';
 import * as Menu from '../index.parts';
 import { useMenuRootContext } from './MenuRootContext';
 
@@ -68,17 +74,17 @@ describe('<Menu.Root /> without a trigger', () => {
         const more = await focusItem('More');
         const root = screen.getByRole('menu');
         const openKey = direction === 'rtl' ? '{ArrowLeft}' : '{ArrowRight}';
-        await user.keyboard(openKey);
+        await waitForLaterMillisecond(() => user.keyboard(openKey));
         await waitFor(() => expect(screen.getByRole('menuitem', { name: 'Leaf' })).toHaveFocus());
         expect(changed).not.toHaveBeenCalled();
         expect(root).toHaveAttribute('data-open');
 
         await user.keyboard('{Escape}');
-        await waitFor(() => expect(screen.queryByRole('menuitem', { name: 'Leaf' })).toBeNull());
+        expect(screen.queryByRole('menuitem', { name: 'Leaf' })).toBeNull();
         expect(more).toHaveFocus();
         expect(changed).not.toHaveBeenCalled();
         await user.keyboard('{Escape}');
-        await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
+        expect(screen.queryByRole('menu')).toBeNull();
         expect(changed).toHaveBeenCalledExactlyOnceWith(
           false,
           expect.objectContaining({ reason: 'escape-key' }),
@@ -159,17 +165,22 @@ describe('<Menu.Root /> without a trigger', () => {
       }
 
       async function openAndSelect() {
-        await user.click(anchor);
+        await waitForLaterMillisecond(async () => {
+          await user.click(anchor);
+          await screen.findByRole('menuitem', { name: 'More' });
+        });
         await focusItem('More');
-        await user.keyboard('{ArrowRight}');
-        const nested = await screen.findByRole('menuitem', { name: 'Nested' });
+        const nested = await waitForLaterMillisecond(async () => {
+          await user.keyboard('{ArrowRight}');
+          return screen.findByRole('menuitem', { name: 'Nested' });
+        });
         await advanceFrame();
         await advanceFrame();
         await waitFor(() => expect(nested).toHaveFocus());
         expect(changed).not.toHaveBeenCalled();
         await user.click(nested);
         await advanceFrame();
-        await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
+        expect(screen.queryByRole('menu')).toBeNull();
         expect(changed).toHaveBeenCalledExactlyOnceWith(false, 'item-press');
         await waitFor(() => expect(anchor).toHaveFocus());
         changed.mockClear();
@@ -201,9 +212,7 @@ describe('<Menu.Root /> without a trigger', () => {
       firstChanged.mockClear();
       await user[method](screen.getByRole('menuitem', { name: 'Second' }));
       await screen.findByRole('menuitem', { name: 'Second item' });
-      await waitFor(() =>
-        expect(screen.queryByRole('menuitem', { name: 'First item' })).toBeNull(),
-      );
+      expect(screen.queryByRole('menuitem', { name: 'First item' })).toBeNull();
       expect(firstChanged).toHaveBeenCalledExactlyOnceWith(
         false,
         expect.objectContaining({
@@ -311,13 +320,13 @@ describe('<Menu.Root /> without a trigger', () => {
         expect(nodeId).toBe(triggerNodeId);
         expect(parentNodeId).toBe(triggerParentNodeId);
       }
-      await user.keyboard('{ArrowRight}');
+      await waitForLaterMillisecond(() => user.keyboard('{ArrowRight}'));
       await waitFor(() => expect(screen.getByRole('menuitem', { name: 'Nested' })).toHaveFocus());
       expect(changed).not.toHaveBeenCalled();
       await user.keyboard('{Escape}');
-      await waitFor(() => expect(screen.queryByRole('menuitem', { name: 'Nested' })).toBeNull());
+      expect(screen.queryByRole('menuitem', { name: 'Nested' })).toBeNull();
       await user.keyboard('{Escape}');
-      await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
+      expect(screen.queryByRole('menu')).toBeNull();
       await waitFor(() => expect(trigger).toHaveFocus());
     },
   );

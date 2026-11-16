@@ -1,5 +1,6 @@
 import { expect, vi, describe, it } from 'vitest';
-import { computed, defineComponent, provide } from 'vue';
+import { userEvent } from 'vitest/browser';
+import { computed, defineComponent, provide, shallowRef } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import type { TextDirection } from '@vase-ui/vue/direction-provider';
 import { ToggleGroup } from '@vase-ui/vue/toggle-group';
@@ -9,10 +10,12 @@ import {
   createRenderer,
   describeConformance,
   flushMicrotasks,
+  heldMountListTests,
   hydrate,
   isJSDOM,
   renderOnServer,
   screen,
+  waitFor,
 } from '#test-utils';
 import type { Orientation } from '../internals/types';
 import { ToolbarGroupContext } from '../toolbar/group/ToolbarGroupContext';
@@ -34,6 +37,23 @@ function parse(html: string) {
 
 describe('<ToggleGroup />', () => {
   const { render } = createRenderer();
+
+  heldMountListTests({
+    render,
+    renderList: (withLastItem) => (
+      <ToggleGroup>
+        <Toggle value="a">A</Toggle>
+        {withLastItem ? <Toggle value="b">B</Toggle> : null}
+      </ToggleGroup>
+    ),
+    async check(user) {
+      screen.getByRole('button', { name: 'A' }).focus();
+      await user.keyboard('[ArrowRight]');
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'B' })).toHaveFocus();
+      });
+    },
+  });
 
   describeConformance(<ToggleGroup />, () => ({
     refInstanceof: window.HTMLDivElement,
@@ -837,6 +857,43 @@ describe('<ToggleGroup />', () => {
       const { container } = await hydrate(ToggleGroupHydration, { serverHtml, props });
 
       expect(readTabindexes(container)).toEqual(tabindexes);
+    });
+  });
+
+  describe('VUE-113: the tab stop of a toggle that becomes disabled', () => {
+    it('keeps the group in the tab order when the toggle with the tab stop becomes disabled', async () => {
+      const disabled = shallowRef<string[]>([]);
+      const Group = defineComponent(() => () => (
+        <div>
+          <button type="button" data-testid="before" />
+          <ToggleGroup>
+            {['a', 'b', 'c'].map((value) => (
+              <Toggle
+                key={value}
+                value={value}
+                data-testid={value}
+                disabled={disabled.value.includes(value)}
+              />
+            ))}
+          </ToggleGroup>
+          <button type="button" data-testid="after" />
+        </div>
+      ));
+      await render(<Group />);
+      screen.getByTestId('before').focus();
+      await userEvent.keyboard('{Tab}');
+      await userEvent.keyboard('{ArrowRight}');
+      await waitFor(() => {
+        expect(screen.getByTestId('b')).toHaveFocus();
+      });
+      await userEvent.keyboard('{Tab}');
+      expect(screen.getByTestId('after')).toHaveFocus();
+
+      disabled.value = ['b'];
+      await flushMicrotasks();
+      await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+
+      expect(screen.getByTestId('a')).toHaveFocus();
     });
   });
 });

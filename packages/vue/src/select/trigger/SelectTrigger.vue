@@ -49,6 +49,7 @@ export interface SelectTriggerProps<Value = any>
 
 <script setup lang="ts" generic="Value = any">
 import { computed, onActivated, onDeactivated, onMounted, onScopeDispose, toRaw, watch } from 'vue';
+import { useAriaAfterHydration } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
 import { useTimeout } from '../../common/useTimeout';
 import { contains, getTarget } from '../../common/shadowDom';
@@ -65,9 +66,10 @@ import type { StateAttributesMapping } from '../../internals/getStateAttributesP
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
 import { REASONS } from '../../internals/reasons';
+import { givenId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { isMouseWithinBounds } from '../../utils/getPseudoElementBounds';
-import { getFloatingFocusElement } from '../../utils/popups/element';
+import { isReleaseAtPressPoint } from '../../utils/popups/isReleaseAtPressPoint';
 import { pressableTriggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
 import { resolveAriaLabelledBy } from '../../utils/resolveAriaLabelledBy';
 import { useSelectRootContext } from '../root/SelectRootContext';
@@ -109,13 +111,17 @@ const hasSelectedValue = computed(() => store.select('hasSelectedValue'));
 const popupSide = computed(() =>
   store.select('mounted') && store.select('positionerElement') ? store.select('popupSide') : null,
 );
-const triggerId = computed(() => props.id ?? store.select('id'));
-const ariaControls = computed(() =>
-  isOpen.value
-    ? (store.select('listElement')?.id ??
-      getFloatingFocusElement(store.select('positionerElement'))?.id)
-    : undefined,
-);
+const triggerId = computed(() => givenId(props.id) ?? store.select('id'));
+// The trigger names the list, or the popup while the popup holds no list. An element with no id has
+// an empty `id`, and the trigger then has no `aria-controls`.
+const ariaControls = computed(() => {
+  if (!isOpen.value) {
+    return undefined;
+  }
+  return store.select('listElement')
+    ? store.select('listElementId') || undefined
+    : store.select('popupId');
+});
 
 useLabelableId({ id: () => props.id });
 
@@ -148,6 +154,9 @@ function removeMouseUpListener() {
 }
 
 function handleMouseUp(mouseEvent: MouseEvent) {
+  const press = store.context.triggerPressRef.value;
+  store.context.triggerPressRef.value = null;
+
   const trigger = element.value;
   if (!trigger) {
     return;
@@ -165,6 +174,10 @@ function handleMouseUp(mouseEvent: MouseEvent) {
   }
 
   if (isMouseWithinBounds(mouseEvent, trigger)) {
+    return;
+  }
+
+  if (press && isReleaseAtPressPoint(press, mouseEvent)) {
     return;
   }
 
@@ -235,6 +248,7 @@ const stateAttributesMapping: StateAttributesMapping<SelectTriggerState<Value>> 
   value: () => null,
 };
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('button', props, {
   state,
   ref: [buttonRef, setTriggerElement],
@@ -247,7 +261,9 @@ const { element, elementProps } = useRenderElement('button', props, {
       'aria-expanded': isOpen.value,
       'aria-haspopup': 'listbox',
       'aria-controls': ariaControls.value,
-      'aria-labelledby': resolveAriaLabelledBy(fieldLabelId.value, store.context.labelId.value),
+      'aria-labelledby': ariaAfterHydration(
+        resolveAriaLabelledBy(fieldLabelId.value, store.context.labelId.value),
+      ),
       'aria-readonly': isReadOnly.value || undefined,
       'aria-required': store.select('required') || undefined,
       tabindex: isDisabled.value ? -1 : 0,
@@ -288,6 +304,7 @@ const { element, elementProps } = useRenderElement('button', props, {
 
         removeMouseUpListener();
         mouseUpDocument = ownerDocument(event.currentTarget as Element);
+        store.context.triggerPressRef.value = event;
         mouseUpDocument.addEventListener('mouseup', handleMouseUp, { once: true });
       },
     },
@@ -295,6 +312,7 @@ const { element, elementProps } = useRenderElement('button', props, {
     getButtonProps,
     // `getButtonProps` gives an element that is not a native button the role `button`.
     (merged) => ({ ...validation.getValidationProps(isDisabled.value, merged), role: 'combobox' }),
+    (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),
   ],
 });
 

@@ -143,17 +143,19 @@ function utcDay(date: string): string {
 }
 
 function otherOf(paths: string[], scope: ScopeFile): NonNullable<Change['other']> {
-  const isNotStarted = paths.some(
-    (path) =>
-      isUnderMappedRoot(path) ||
-      scope.outOfScope.some((rule) => matchesAny(path, rule.except ?? [])),
-  );
-  if (isNotStarted) {
+  const notPortedRows = (path: string): ScopeFile['notPorted'] =>
+    scope.notPorted.filter((row) => matchesAny(path, row.upstream));
+  const isInScope = (path: string): boolean =>
+    isUnderMappedRoot(path) || scope.outOfScope.some((rule) => matchesAny(path, rule.except ?? []));
+  if (paths.some((path) => isInScope(path) && notPortedRows(path).length === 0)) {
     return { state: 'not-started' };
   }
-  const reasons = scope.outOfScope
-    .filter((rule) => paths.some((path) => matchesAny(path, rule.paths)))
-    .map((rule) => rule.reason);
+  const reasons = [
+    ...scope.outOfScope.filter((rule) =>
+      paths.some((path) => matchesAny(path, rule.paths) && !matchesAny(path, rule.except ?? [])),
+    ),
+    ...paths.flatMap(notPortedRows),
+  ].map(({ reason }) => reason);
   return { state: 'out-of-scope', reasons: [...new Set(reasons)] };
 }
 

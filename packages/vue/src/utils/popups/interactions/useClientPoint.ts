@@ -13,6 +13,7 @@ import { addEventListener } from '../../../common/addEventListener';
 import { ownerWindow } from '../../../common/owner';
 import { contains, getTarget } from '../../../common/shadowDom';
 import type { HTMLProps } from '../../../internals/types';
+import { isInHeldBranch } from '../../../internals/useKeepAliveState';
 import type { PopupInteractionContext, PopupInteractionStore } from '../types';
 import { isMouseLikePointerType } from '../event';
 
@@ -51,11 +52,15 @@ function createVirtualElement(
       let x = domRect.x;
       let y = domRect.y;
 
-      if (offsetX == null && data.x && isXAxis) {
+      // An element out of the document, such as a trigger that `KeepAlive` holds, has an empty
+      // rect. The offset waits for a rect of the element in the document.
+      const isMeasured = !domElement || domElement.isConnected;
+
+      if (offsetX == null && data.x && isXAxis && isMeasured) {
         offsetX = domRect.x - data.x;
       }
 
-      if (offsetY == null && data.y && isYAxis) {
+      if (offsetY == null && data.y && isYAxis && isMeasured) {
         offsetY = domRect.y - data.y;
       }
 
@@ -122,7 +127,7 @@ export function useClientPoint(
 
   let disabledWhileOpen = false;
   let stopListening: (() => void) | null = null;
-  let deactivated = false;
+  let deactivated = isInHeldBranch();
   // Vue runs the cleanup of a part in the render of its parent. The cleanup thus reads no reactive
   // state, and it clears the store of the last run.
   let anchoredStore: PopupInteractionStore | undefined;

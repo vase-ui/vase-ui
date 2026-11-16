@@ -1,11 +1,13 @@
 import { expect, vi, describe, it, onTestFinished } from 'vitest';
-import { defineComponent, KeepAlive } from 'vue';
+import { userEvent } from 'vitest/browser';
+import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import { Tabs } from '@vase-ui/vue/tabs';
 import {
   createRenderer,
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountListTests,
   screen,
   waitFor,
   waitSingleFrame,
@@ -13,6 +15,25 @@ import {
 
 describe('<Tabs.List />', () => {
   const { render } = createRenderer();
+
+  heldMountListTests({
+    render,
+    renderList: (withLastItem) => (
+      <Tabs.Root defaultValue={0}>
+        <Tabs.List>
+          <Tabs.Tab value={0}>A</Tabs.Tab>
+          {withLastItem ? <Tabs.Tab value={1}>B</Tabs.Tab> : null}
+        </Tabs.List>
+      </Tabs.Root>
+    ),
+    async check(user) {
+      screen.getByRole('tab', { name: 'A' }).focus();
+      await user.keyboard('[ArrowRight]');
+      await waitFor(() => {
+        expect(screen.getByRole('tab', { name: 'B' })).toHaveFocus();
+      });
+    },
+  });
 
   describeConformance(<Tabs.List />, () => ({
     render: (node) => render(<Tabs.Root>{node}</Tabs.Root>),
@@ -527,5 +548,32 @@ describe('<Tabs.List />', () => {
         expect(tabElements.map((tab) => tab.tabIndex)).toEqual(tabStops);
       },
     );
+  });
+
+  describe('a selected tab that becomes disabled', () => {
+    it('keeps the tab stop on a controlled selected tab that becomes disabled', async () => {
+      const disabled = shallowRef(false);
+      const App = defineComponent(() => () => (
+        <div>
+          <button type="button" data-testid="before" />
+          <Tabs.Root value={1}>
+            <Tabs.List>
+              <Tabs.Tab value={0}>Tab 0</Tabs.Tab>
+              <Tabs.Tab value={1} disabled={disabled.value}>
+                Tab 1
+              </Tabs.Tab>
+            </Tabs.List>
+          </Tabs.Root>
+        </div>
+      ));
+      await render(<App />);
+
+      disabled.value = true;
+      await flushMicrotasks();
+      screen.getByTestId('before').focus();
+      await userEvent.keyboard('{Tab}');
+
+      expect(screen.getByText('Tab 1')).toHaveFocus();
+    });
   });
 });

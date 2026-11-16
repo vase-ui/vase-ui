@@ -6,10 +6,15 @@ description: An unstyled Vue select component for choosing a predefined value in
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoSelectGrouped from '../demos/select/grouped/css-modules/index.vue';
+import DemoSelectGroupedTailwind from '../demos/select/grouped/tailwind/index.vue';
 import DemoSelectHero from '../demos/select/hero/css-modules/index.vue';
+import DemoSelectHeroTailwind from '../demos/select/hero/tailwind/index.vue';
 import DemoSelectMultiple from '../demos/select/multiple/css-modules/index.vue';
+import DemoSelectMultipleTailwind from '../demos/select/multiple/tailwind/index.vue';
 import DemoSelectObjectValues from '../demos/select/object-values/css-modules/index.vue';
+import DemoSelectObjectValuesTailwind from '../demos/select/object-values/tailwind/index.vue';
 </script>
 
 # Select
@@ -18,7 +23,12 @@ A common form component for choosing a predefined value in a dropdown menu.
 
 <DemoFrame>
   <DemoSelectHero />
+  <template #tailwind>
+    <DemoSelectHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -27,6 +37,18 @@ A common form component for choosing a predefined value in a dropdown menu.
 <<< ../demos/select/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/select/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Usage guidelines
 
@@ -43,7 +65,9 @@ Import the component and assemble its parts:
 
 `Select.Root` renders no element. It renders a hidden input beside its content. A select with a `name` submits its value with the form. A select with `multiple` submits one value for each selected item.
 
-Bind the value with `v-model:value`. The root emits `valueChange` with the new value and `eventDetails`, and then `update:value`. To stop the change, call `eventDetails.cancel()` before the `valueChange` listener returns. The root then emits no `update:value` and keeps its value.
+Bind the value with `v-model:value`. The root emits `valueChange` with the new value and `eventDetails`, and then `update:value`. Without `multiple`, a press of the selected item emits neither event, and the popup closes. To stop the change, call `eventDetails.cancel()` before the `valueChange` listener returns. The root then emits no `update:value` and keeps its value.
+
+The root takes a value that a program or the browser writes into its hidden input before the page hydrates, as it takes an autofill. It also takes a value that the browser restores after a move back in the history or a reload. The root then emits `valueChange` and `update:value` one time. A `valueChange` listener can thus run after a move back with no action of the visitor. A select with no `name`, no field, no `autoComplete` and no `required` keeps its value, because its input is `type="hidden"`.
 
 ## Positioning
 
@@ -107,7 +131,12 @@ Add the `multiple` prop to `<Select.Root>` to allow more than one selected item.
 
 <DemoFrame>
   <DemoSelectMultiple />
+  <template #tailwind>
+    <DemoSelectMultipleTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -117,13 +146,30 @@ Add the `multiple` prop to `<Select.Root>` to allow more than one selected item.
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/select/multiple/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Object values
 
 An item can have an object as its value. The default slot of `<Select.Value>` then gets the whole object, and the select needs no `items` for the lookup.
 
 <DemoFrame>
   <DemoSelectObjectValues />
+  <template #tailwind>
+    <DemoSelectObjectValuesTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -132,6 +178,18 @@ An item can have an object as its value. The default slot of `<Select.Value>` th
 <<< ../demos/select/object-values/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/select/object-values/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ### Grouped
 
@@ -143,7 +201,12 @@ The `items` prop describes the groups as an array of objects. Each object has an
 
 <DemoFrame>
   <DemoSelectGrouped />
+  <template #tailwind>
+    <DemoSelectGroupedTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -152,6 +215,18 @@ The `items` prop describes the groups as an array of objects. Each object has an
 <<< ../demos/select/grouped/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/select/grouped/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## API reference
 

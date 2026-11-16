@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { defineComponent } from 'vue';
+import { defineComponent, shallowRef } from 'vue';
 import type { PropType } from 'vue';
 import * as Menu from '../index.parts';
 import {
@@ -9,7 +9,18 @@ import {
   flushMicrotasks,
   screen,
   waitFor,
+  waitForLaterMillisecond,
+  waitSingleFrame,
 } from '#test-utils';
+
+// Each render of the list reads the id of the trigger, and the list renders again after the open. A
+// case that changes the id of the trigger waits for these renders first. Only the change of the id
+// can then give the list its new name.
+async function waitForRendersOfOpen() {
+  await waitSingleFrame();
+  await waitSingleFrame();
+  await flushMicrotasks();
+}
 
 const PlainMenu = defineComponent({
   props: {
@@ -295,9 +306,7 @@ describe('<Menu.List />', () => {
       await focusList(list);
       await fireEvent.keyDown(list, { key: 'Escape' });
 
-      await waitFor(() => {
-        expect(screen.queryByRole('dialog')).toBe(null);
-      });
+      expect(screen.queryByRole('dialog')).toBe(null);
     });
 
     it('hands typing keys back to the input', async () => {
@@ -346,6 +355,40 @@ describe('filterable menu list semantics', () => {
         </Menu.Root>
       </Menu.FilterProvider>
     ),
+  });
+
+  it('VUE-109: follows a new id of the trigger', async () => {
+    const id = shallowRef('first');
+    // Only this component reads the id, as in a compiled template. Vue then renders the trigger
+    // again and no other part.
+    const Trigger = defineComponent(() => () => <Menu.Trigger id={id.value}>Actions</Menu.Trigger>);
+    await render(
+      <Menu.FilterProvider>
+        <Menu.Root defaultOpen>
+          <Trigger />
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.Input aria-label="Filter actions" />
+                <Menu.List data-testid="list">
+                  <Menu.Item>First</Menu.Item>
+                </Menu.List>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      </Menu.FilterProvider>,
+    );
+    await waitForRendersOfOpen();
+    const list = screen.getByTestId('list');
+    expect(list).toHaveAttribute('aria-labelledby', 'first');
+
+    id.value = 'second';
+
+    await waitFor(() => {
+      expect(list).toHaveAttribute('aria-labelledby', 'second');
+    });
+    expect(screen.getByRole('menu', { name: 'Actions' })).toBe(list);
   });
 
   it('reads an item id when navigating to it', async () => {
@@ -399,7 +442,7 @@ describe('filterable menu list semantics', () => {
       await waitFor(() => expect(input).toHaveFocus());
 
       await user.type(input, 'p');
-      await waitFor(() => expect(screen.queryByText('Beta')).toBe(null));
+      expect(screen.queryByText('Beta')).toBe(null);
 
       // Left and Right keep moving the caret while nothing is highlighted.
       await user.keyboard('[ArrowLeft]');
@@ -467,6 +510,42 @@ describe('<Menu.List /> in a plain menu', () => {
     expect(trigger).toHaveAttribute('aria-controls', list.id);
   });
 
+  it('VUE-109: follows a new id that the #render slot gives the trigger', async () => {
+    const id = shallowRef('first');
+    await render(
+      <Menu.Root defaultOpen>
+        <Menu.Trigger
+          v-slots={{
+            render: ({ props }: { props: Record<string, unknown> }) => (
+              <button type="button" {...props} id={id.value}>
+                Actions
+              </button>
+            ),
+          }}
+        />
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup>
+              <Menu.List data-testid="list">
+                <Menu.Item>Rename</Menu.Item>
+              </Menu.List>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>,
+    );
+    await waitForRendersOfOpen();
+    const list = screen.getByTestId('list');
+    expect(list).toHaveAttribute('aria-labelledby', 'first');
+
+    id.value = 'second';
+
+    await waitFor(() => {
+      expect(list).toHaveAttribute('aria-labelledby', 'second');
+    });
+    expect(screen.getByRole('menu', { name: 'Actions' })).toBe(list);
+  });
+
   it('updates the trigger when the open list changes its id', async () => {
     const { user, setProps } = await render(() => <PlainMenu listId="old-list" />);
     const trigger = screen.getByRole('button', { name: 'Actions' });
@@ -497,7 +576,7 @@ describe('<Menu.List /> in a plain menu', () => {
 
     trigger.focus();
     await flushMicrotasks();
-    await user.keyboard('[Enter]');
+    await waitForLaterMillisecond(() => user.keyboard('[Enter]'));
 
     await waitFor(() => {
       expect(screen.getByTestId('item-1')).toHaveFocus();

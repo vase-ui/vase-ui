@@ -26,10 +26,6 @@ export interface AccordionTriggerProps
   /**
    * The id of the trigger. The panel uses it for `aria-labelledby`.
    * If the id is absent or empty, the trigger has the id that the item generates.
-   * If the panel comes before the trigger in the template, a server render writes the panel first.
-   * The `aria-labelledby` of the panel in the server HTML then names the id that the item generates
-   * until the page hydrates. It does not name a trigger that has an `id` of its own until then.
-   * To correct this, set `aria-labelledby` on `Accordion.Panel` to the same id.
    */
   id?: string | undefined;
 }
@@ -43,8 +39,11 @@ const stateAttributesMapping: StateAttributesMapping<AccordionItemState> = {
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useCollapsibleRootContext } from '../../collapsible/root/CollapsibleRootContext';
+import { useAriaAfterHydration } from '../../common/hydration';
+import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { givenId } from '../../internals/useBaseUiId';
 import { useButton } from '../../internals/use-button';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useAccordionItemContext } from '../item/AccordionItemContext';
@@ -64,6 +63,9 @@ defineSlots<{
 
 const { panelId, open, handleTrigger, disabled: contextDisabled } = useCollapsibleRootContext();
 
+// The panel registers its id in `setup`, and it can come after the trigger.
+useDeferredServerRender();
+
 const isDisabled = computed(() => props.disabled || contextDisabled.value);
 
 const { getButtonProps, buttonRef } = useButton({
@@ -73,7 +75,7 @@ const { getButtonProps, buttonRef } = useButton({
 
 const { defaultTriggerId, registerTriggerId, state: itemState } = useAccordionItemContext();
 
-const triggerId = computed(() => props.id || defaultTriggerId.value);
+const triggerId = computed(() => givenId(props.id) ?? defaultTriggerId.value);
 
 const source = Symbol();
 
@@ -87,12 +89,13 @@ const state = computed<AccordionTriggerState>(() => ({
   disabled: isDisabled.value,
 }));
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('button', props, {
   state,
   ref: buttonRef,
   props: (attrs) => [
     {
-      'aria-controls': open.value ? panelId.value : undefined,
+      'aria-controls': ariaAfterHydration(open.value ? panelId.value : undefined),
       'aria-expanded': open.value,
       id: triggerId.value,
       onClick: handleTrigger,

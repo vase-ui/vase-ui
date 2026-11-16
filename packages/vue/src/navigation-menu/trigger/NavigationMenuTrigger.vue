@@ -95,7 +95,9 @@ import { useDirection } from '../../internals/direction-context/DirectionContext
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
+import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { isInHeldBranch } from '../../internals/useKeepAliveState';
 import { getCssDimensions } from '../../utils/getCssDimensions';
 import { stopEvent } from '../../utils/popups/event';
 import { useFloatingRootStore } from '../../utils/popups/floating-root/useFloatingRootStore';
@@ -147,7 +149,9 @@ const {
   setActivationDirection,
   setFloatingRootStore,
   popupElement,
+  popupElementId,
   viewportElement,
+  viewportElementId,
   rootRef,
   beforeOutsideRef,
   afterOutsideRef,
@@ -168,6 +172,7 @@ const direction = useDirection();
 
 const stickIfOpenTimeout = useTimeout();
 
+const triggerId = useVaseUiId();
 const triggerElement = shallowRef<HTMLElement | null>(null);
 const stickIfOpen = shallowRef(true);
 const pointerType = shallowRef('');
@@ -483,6 +488,8 @@ const { element, elementProps } = useRenderElement('button', props, {
     hoverProps,
     dismissProps?.value?.reference,
     {
+      // The popup reads this id from the element for its name.
+      id: triggerId.value,
       // The key wins over the roving `tabindex` of the composite, so each trigger is a tab stop.
       tabindex: 0,
       onMouseenter: handleOpenEvent,
@@ -490,7 +497,7 @@ const { element, elementProps } = useRenderElement('button', props, {
       onPointerenter: handleSetPointerType,
       onPointerdown: handleTriggerPointerDown,
       'aria-expanded': isActiveItem.value,
-      'aria-controls': isActiveItem.value ? popupElement.value?.id : undefined,
+      'aria-controls': (isActiveItem.value && popupElementId.value) || undefined,
       [NAVIGATION_MENU_TRIGGER_IDENTIFIER]: '',
       onFocusin() {
         if (isActiveItem.value) {
@@ -523,7 +530,7 @@ function openHoveredTrigger() {
   hoverProps.onMousemove?.(createHoverEvent('mousemove', trigger));
 }
 
-let isDeactivated = false;
+let isDeactivated = isInHeldBranch();
 
 onMounted(openHoveredTrigger);
 
@@ -583,7 +590,7 @@ function releaseOutsideGuards() {
 }
 
 watch(
-  [outsideSiblings, () => viewportElement.value?.id],
+  [outsideSiblings, viewportElementId],
   ([siblings, viewportId]) => {
     if (!outsideNodes) {
       return;

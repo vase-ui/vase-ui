@@ -12,11 +12,14 @@ export interface NumberFieldScrubAreaCursorProps
 </script>
 
 <script setup lang="ts">
+import { isShadowRoot } from '@floating-ui/utils/dom';
 import { computed } from 'vue';
 import type { CSSProperties } from 'vue';
+import { ownerDocument } from '../../common/owner';
 import { platform } from '../../common/platform';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { createAttribute } from '../../utils/popups/createAttribute';
 import { useNumberFieldRootContext } from '../root/NumberFieldRootContext';
 import { useNumberFieldScrubAreaContext } from '../scrub-area/NumberFieldScrubAreaContext';
 import { stateAttributesMapping } from '../utils/stateAttributesMapping';
@@ -28,6 +31,13 @@ const CURSOR_STYLE: CSSProperties = {
   'pointer-events': 'none',
 };
 
+// A style that is scoped to the portal elements of the page reaches the cursor in this element.
+// The element makes no box, so its container gets no new box during a scrub.
+// The element is in this template and not in `FloatingPortalLite`, because that portal renders its
+// slot after the mount of this part. The checks of the `#render` slot run in the hooks of this part,
+// and they then do not see the element.
+const PORTAL_PROPS = { [createAttribute('portal')]: '', style: { display: 'contents' } };
+
 defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<NumberFieldScrubAreaCursorProps>(), { as: 'span' });
@@ -38,8 +48,16 @@ defineSlots<{
 }>();
 
 const { state } = useNumberFieldRootContext();
-const { isScrubbing, isTouchInput, isPointerLockDenied, scrubAreaCursorRef } =
+const { isScrubbing, isTouchInput, isPointerLockDenied, scrubAreaCursorRef, scrubAreaElement } =
   useNumberFieldScrubAreaContext();
+
+// The styles of a shadow root apply only in that root. The coordinates of the pointer are those of
+// the document of the scrub area.
+function getContainer() {
+  const scrubArea = scrubAreaElement.value;
+  const root = scrubArea?.getRootNode();
+  return root && isShadowRoot(root) ? root : ownerDocument(scrubArea).body;
+}
 
 const shouldRender = computed(
   () =>
@@ -73,8 +91,10 @@ defineExpose({ element });
 </script>
 
 <template>
-  <Teleport v-if="shouldRender" to="body">
-    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-    <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+  <Teleport v-if="shouldRender" :to="getContainer()">
+    <div v-bind="PORTAL_PROPS">
+      <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+      <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+    </div>
   </Teleport>
 </template>

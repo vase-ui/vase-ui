@@ -29,12 +29,21 @@ export interface RadioGroupContext<Value> {
    */
   inputSyncRequest: Readonly<Ref<number>>;
   /**
+   * Asks each radio to take the state of its input, with the event of the request. The group sets
+   * it at a form restore and in the take that `takeInputsAfterMount` queues. Base UI does not have
+   * this member.
+   */
+  inputTakeRequest: Readonly<Ref<{ event?: Event } | undefined>>;
+  /**
+   * Queues one take of the inputs of the group after the mount. A radio whose input changed before
+   * the hydration calls it. Base UI does not have this member.
+   */
+  takeInputsAfterMount: () => void;
+  /**
    * Follows the native reset of the form of an input of the group. A radio calls it for each reset
    * that it gets. The group handles the first call for each `reset` event.
    */
   reset: (event: Event) => void;
-  /** Whether an id reference of the group reaches `element`. */
-  reaches: (element: Element) => boolean;
 }
 
 export const RadioGroupContext: InjectionKey<RadioGroupContext<any>> = Symbol();

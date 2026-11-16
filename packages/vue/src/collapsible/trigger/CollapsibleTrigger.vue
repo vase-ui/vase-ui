@@ -27,7 +27,9 @@ export interface CollapsibleTriggerProps
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useAriaAfterHydration } from '../../common/hydration';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
+import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { transitionStatusMapping } from '../../internals/stateAttributesMapping';
 import { useButton } from '../../internals/use-button';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -60,6 +62,9 @@ const {
   disabled: contextDisabled,
 } = useCollapsibleRootContext();
 
+// The panel registers its id in `setup`, and it can come after the trigger.
+useDeferredServerRender();
+
 const isDisabled = computed(() => props.disabled || contextDisabled.value);
 
 const state = computed<CollapsibleTriggerState>(() => ({
@@ -72,12 +77,13 @@ const { getButtonProps, buttonRef } = useButton({
   native: () => props.nativeButton,
 });
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('button', props, {
   state,
   ref: buttonRef,
   props: (attrs) => [
     {
-      'aria-controls': open.value ? panelId.value : undefined,
+      'aria-controls': ariaAfterHydration(open.value ? panelId.value : undefined),
       'aria-expanded': open.value,
       onClick: handleTrigger,
     },

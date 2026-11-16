@@ -4,22 +4,29 @@ import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { Field } from '@vase-ui/vue/field';
 import {
+  clientCenter,
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
   flushMicrotasks,
   hydrate,
+  isInaccessible,
   isJSDOM,
   pressWithScreenReader,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   wait,
   waitFor,
+  waitForLaterMillisecond,
+  waitSingleFrame,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
 import type { ComboboxStore } from '../store';
+import ComboboxTriggerLabelHydration from './ComboboxTriggerLabelHydration.test.vue';
 import ComboboxTriggerOpenHydration from './ComboboxTriggerOpenHydration.test.vue';
 import ComboboxTriggerReplacement from './ComboboxTriggerReplacement.test.vue';
 
@@ -117,6 +124,8 @@ describe('<Combobox.Trigger />', () => {
 
       const trigger = screen.getByTestId('trigger');
       await user.click(trigger);
+      await waitSingleFrame();
+      await flushMicrotasks();
 
       expect(screen.queryByRole('listbox')).toBe(null);
     });
@@ -382,12 +391,14 @@ describe('<Combobox.Trigger />', () => {
       const trigger = screen.getByTestId('trigger');
 
       await user.click(trigger);
-      expect(await screen.findByRole('listbox')).not.toBe(null);
+      const listbox = await screen.findByRole('listbox');
+      expect(listbox).not.toBe(null);
 
       await user.click(trigger);
       await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
+        expect(isInaccessible(listbox)).toBe(true);
       });
+      expect(screen.queryByRole('listbox')).toBe(null);
     });
 
     it('closes a popup opened with an arrow key', async () => {
@@ -412,12 +423,14 @@ describe('<Combobox.Trigger />', () => {
       input.focus();
       await flushMicrotasks();
       await user.keyboard('{ArrowDown}');
-      expect(await screen.findByRole('listbox')).not.toBe(null);
+      const listbox = await screen.findByRole('listbox');
+      expect(listbox).not.toBe(null);
 
       await user.click(screen.getByTestId('trigger'));
       await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
+        expect(isInaccessible(listbox)).toBe(true);
       });
+      expect(screen.queryByRole('listbox')).toBe(null);
     });
 
     it('should call onOpenChange when toggling', async () => {
@@ -483,17 +496,41 @@ describe('<Combobox.Trigger />', () => {
 
     it('does not open on ArrowDown/ArrowUp when reference is a textarea', async () => {
       const { user } = await render(
-        <Combobox.Root>
+        <Combobox.Root items={['alpha', 'beta']}>
           <Combobox.Trigger>Open</Combobox.Trigger>
-          <textarea aria-label="notes" />
+          <Combobox.Input as="textarea" aria-label="notes" />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List>
+                  {{
+                    item: ({ item }: ItemSlotProps) => (
+                      <Combobox.Item key={item} value={item}>
+                        {item}
+                      </Combobox.Item>
+                    ),
+                  }}
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
         </Combobox.Root>,
       );
 
-      const trigger = screen.getByRole('combobox');
-      await user.click(trigger);
-      await user.keyboard('{ArrowDown}');
+      // A press of the trigger opens the popup. The keys thus go to the textarea while the popup
+      // is closed.
+      screen.getByRole('textbox', { name: 'notes' }).focus();
+      await flushMicrotasks();
       expect(screen.queryByRole('listbox')).toBe(null);
+
+      await user.keyboard('{ArrowDown}');
+      await waitSingleFrame();
+      await flushMicrotasks();
+      expect(screen.queryByRole('listbox')).toBe(null);
+
       await user.keyboard('{ArrowUp}');
+      await waitSingleFrame();
+      await flushMicrotasks();
       expect(screen.queryByRole('listbox')).toBe(null);
     });
 
@@ -580,11 +617,12 @@ describe('<Combobox.Trigger />', () => {
       );
 
       const trigger = screen.getByTestId('trigger');
-      await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-      await fireEvent.mouseDown(trigger, { button: 0 });
-
-      await screen.findByRole('listbox');
-      const option = await screen.findByRole('option', { name: 'Beta' });
+      const option = await waitForLaterMillisecond(async () => {
+        await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+        await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
+        await screen.findByRole('listbox');
+        return screen.findByRole('option', { name: 'Beta' });
+      });
 
       await fireEvent.mouseMove(option, { pointerType: 'mouse', movementX: 1 });
       await waitFor(() => expect(option).toHaveAttribute('data-highlighted'));
@@ -618,11 +656,12 @@ describe('<Combobox.Trigger />', () => {
       );
 
       const trigger = screen.getByTestId('trigger');
-      await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-      await fireEvent.mouseDown(trigger, { button: 0 });
-
-      await screen.findByRole('listbox');
-      const option = await screen.findByRole('option', { name: 'Beta' });
+      const option = await waitForLaterMillisecond(async () => {
+        await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+        await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
+        await screen.findByRole('listbox');
+        return screen.findByRole('option', { name: 'Beta' });
+      });
 
       await fireEvent.mouseMove(option, { pointerType: 'mouse', movementX: 1 });
       await waitFor(() => expect(option).toHaveAttribute('data-highlighted'));
@@ -658,11 +697,12 @@ describe('<Combobox.Trigger />', () => {
         );
 
         const trigger = screen.getByTestId('trigger');
-        await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-        await fireEvent.mouseDown(trigger, { button: 0 });
-
-        await screen.findByRole('listbox');
-        const alpha = await screen.findByRole('option', { name: 'Alpha' });
+        const alpha = await waitForLaterMillisecond(async () => {
+          await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+          await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
+          await screen.findByRole('listbox');
+          return screen.findByRole('option', { name: 'Alpha' });
+        });
         const beta = await screen.findByRole('option', { name: 'Beta' });
 
         // Highlight Alpha so a stray drag-select would be able to commit it.
@@ -713,20 +753,20 @@ describe('<Combobox.Trigger />', () => {
         // closed-state effect must clear the shared pointerdown ref, otherwise the
         // stale entry makes the next drag-select onto Alpha read as a same-item tap
         // and never commit.
-        await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-        await fireEvent.mouseDown(trigger, { button: 0 });
-        await screen.findByRole('listbox');
-        const alpha = await screen.findByRole('option', { name: 'Alpha' });
+        const alpha = await waitForLaterMillisecond(async () => {
+          await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+          await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
+          await screen.findByRole('listbox');
+          return screen.findByRole('option', { name: 'Alpha' });
+        });
         await fireEvent.pointerDown(alpha, { pointerType: 'touch', isPrimary: true, button: 0 });
 
         await user.keyboard('{Escape}');
-        await waitFor(() => {
-          expect(screen.queryByRole('listbox')).toBe(null);
-        });
+        expect(screen.queryByRole('listbox')).toBe(null);
 
         // Reopen and drag-select onto Alpha (gesture starts on the trigger).
         await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-        await fireEvent.mouseDown(trigger, { button: 0 });
+        await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
         await screen.findByRole('listbox');
         const alphaReopened = await screen.findByRole('option', { name: 'Alpha' });
         await fireEvent.mouseMove(alphaReopened, { pointerType: 'mouse', movementX: 1 });
@@ -761,11 +801,12 @@ describe('<Combobox.Trigger />', () => {
       );
 
       const trigger = screen.getByTestId('trigger');
-      await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
-      await fireEvent.mouseDown(trigger, { button: 0 });
-
-      await screen.findByRole('listbox');
-      const option = await screen.findByRole('option', { name: 'Beta' });
+      const option = await waitForLaterMillisecond(async () => {
+        await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+        await fireEvent.mouseDown(trigger, { button: 0, ...clientCenter(trigger) });
+        await screen.findByRole('listbox');
+        return screen.findByRole('option', { name: 'Beta' });
+      });
 
       await fireEvent.mouseUp(option, { button: 0 });
 
@@ -802,9 +843,7 @@ describe('<Combobox.Trigger />', () => {
 
       await fireEvent.mouseUp(document.body, { button: 0, clientX: 999, clientY: 999 });
 
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(onOpenChange.mock.lastCall?.[0]).toBe(false);
       expect(onOpenChange.mock.lastCall?.[1].reason).toBe(REASONS.cancelOpen);
     });
@@ -851,6 +890,37 @@ describe('<Combobox.Trigger />', () => {
       expect(listbox.isConnected).toBe(true);
     });
 
+    it('keeps the popup open for a release up to 5px off the trigger, away from the point of the press', async () => {
+      const onOpenChange = vi.fn();
+      await render(
+        <Combobox.Root onOpenChange={onOpenChange}>
+          <Combobox.Trigger data-testid="trigger">Open</Combobox.Trigger>
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List>
+                  <Combobox.Item value="alpha">Alpha</Combobox.Item>
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+      trigger.getBoundingClientRect = () =>
+        DOMRect.fromRect({ x: 100, y: 100, width: 100, height: 40 });
+
+      await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+      await fireEvent.mouseDown(trigger, { button: 0, clientX: 110, clientY: 120 });
+      await screen.findByRole('listbox');
+
+      await fireEvent.mouseUp(document.body, { button: 0, clientX: 205, clientY: 120 });
+
+      expect(onOpenChange.mock.calls.map(([open]) => open)).toEqual([true]);
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    });
+
     it('closes the popup when the release is more than 5px outside the trigger bounds', async () => {
       await render(
         <Combobox.Root>
@@ -878,9 +948,7 @@ describe('<Combobox.Trigger />', () => {
 
       await fireEvent.mouseUp(document.body, { button: 0, clientX: 94, clientY: 120 });
 
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
     });
   });
 
@@ -992,9 +1060,18 @@ describe('<Combobox.Trigger />', () => {
             <Combobox.Trigger data-testid="trigger" />
             <Combobox.Portal>
               <Combobox.Positioner>
-                <Combobox.Popup id="" data-testid="popup">
-                  <Combobox.Input />
-                </Combobox.Popup>
+                <Combobox.Popup
+                  data-testid="popup"
+                  v-slots={{
+                    // An empty `id` of the part counts as no `id` (VUE-93). Only the `#render`
+                    // slot can give the element an empty `id`.
+                    render: ({ props }: { props: HTMLProps }) => (
+                      <div {...props} id="">
+                        <Combobox.Input />
+                      </div>
+                    ),
+                  }}
+                />
               </Combobox.Positioner>
             </Combobox.Portal>
           </Combobox.Root>,
@@ -1104,6 +1181,106 @@ describe('<Combobox.Trigger />', () => {
         expect(popup.id).not.toBe('');
         expect(screen.getByTestId('trigger')).toHaveAttribute('aria-controls', popup.id);
       });
+
+      it('has no aria-controls while KeepAlive holds the popup', async () => {
+        const Popup = defineComponent({
+          setup: () => () => (
+            <Combobox.Portal>
+              <Combobox.Positioner>
+                <Combobox.Popup data-testid="popup">
+                  <Combobox.Input />
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          ),
+        });
+        const Other = defineComponent({ setup: () => () => <span /> });
+        const visible = shallowRef(true);
+        await render(() => (
+          <Combobox.Root defaultOpen>
+            <Combobox.Trigger data-testid="trigger" />
+            <KeepAlive>{visible.value ? <Popup key="popup" /> : <Other key="other" />}</KeepAlive>
+          </Combobox.Root>
+        ));
+        await flushMicrotasks();
+        const trigger = screen.getByTestId('trigger');
+        const popup = screen.getByTestId('popup');
+        expect(popup.id).not.toBe('');
+        expect(trigger).toHaveAttribute('aria-controls', popup.id);
+
+        visible.value = false;
+        await flushMicrotasks();
+
+        expect(popup.isConnected).toBe(false);
+        expect(trigger).toHaveAttribute('aria-expanded', 'true');
+        expect(trigger).not.toHaveAttribute('aria-controls');
+
+        visible.value = true;
+        await flushMicrotasks();
+
+        expect(popup.isConnected).toBe(true);
+        expect(trigger).toHaveAttribute('aria-controls', popup.id);
+      });
+
+      it('has no aria-controls while the popup mounts in a branch that KeepAlive holds', async () => {
+        const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
+          () => (
+            <Combobox.Popup data-testid="popup">
+              <Combobox.Input />
+            </Combobox.Popup>
+          ),
+          { renderBranch: (part) => part },
+        );
+        await render(() => (
+          <Combobox.Root defaultOpen>
+            <Combobox.Trigger data-testid="trigger" />
+            <Combobox.Portal>
+              <Combobox.Positioner>
+                <HeldBranch />
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>
+        ));
+
+        await mountWhileHeld();
+
+        const trigger = screen.getByTestId('trigger');
+        expect(trigger).toHaveAttribute('aria-expanded', 'true');
+        expect(trigger).not.toHaveAttribute('aria-controls');
+
+        await show();
+
+        const popup = screen.getByTestId('popup');
+        expect(popup.id).not.toBe('');
+        expect(trigger).toHaveAttribute('aria-controls', popup.id);
+      });
+    });
+
+    it('VUE-77: follows the id of the list beside the input', async () => {
+      const id = shallowRef('first');
+      await render(() => (
+        <Combobox.Root defaultOpen>
+          <Combobox.Input />
+          <Combobox.Trigger data-testid="trigger" />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List id={id.value} data-testid="list" />
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>
+      ));
+      await flushMicrotasks();
+
+      const trigger = screen.getByTestId('trigger');
+      expect(trigger).toHaveAttribute('aria-controls', 'first');
+
+      id.value = 'second';
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('list').id).toBe('second');
+      expect(trigger).toHaveAttribute('aria-controls', 'second');
     });
   });
 
@@ -1176,9 +1353,7 @@ describe('<Combobox.Trigger />', () => {
       await user.click(trigger);
       await screen.findByRole('listbox');
       await user.keyboard('{Escape}');
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
       // Focus returns to the trigger asynchronously after close.
       await waitFor(() => {
         expect(trigger).toHaveFocus();
@@ -1218,9 +1393,7 @@ describe('<Combobox.Trigger />', () => {
         await user.click(trigger);
         await screen.findByRole('listbox');
         await user.keyboard('{Escape}');
-        await waitFor(() => {
-          expect(screen.queryByRole('listbox')).toBe(null);
-        });
+        expect(screen.queryByRole('listbox')).toBe(null);
         await waitFor(() => {
           expect(trigger).toHaveFocus();
         });
@@ -1275,9 +1448,7 @@ describe('<Combobox.Trigger />', () => {
       await user.click(trigger);
       await screen.findByRole('listbox');
       await user.keyboard('{Escape}');
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
       await waitFor(() => {
         expect(trigger).toHaveFocus();
       });
@@ -1335,13 +1506,9 @@ describe('<Combobox.Trigger />', () => {
       await screen.findByRole('listbox');
 
       await user.click(screen.getByRole('button', { name: 'Remove banana' }));
-      await waitFor(() => {
-        expect(screen.queryByRole('option', { name: 'Banana' })).toBe(null);
-      });
+      expect(screen.queryByRole('option', { name: 'Banana' })).toBe(null);
       await user.keyboard('{Escape}');
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
 
       trigger.focus();
       await flushMicrotasks();
@@ -1381,12 +1548,12 @@ describe('<Combobox.Trigger />', () => {
 
       await user.click(trigger);
 
-      await waitFor(() => expect(screen.queryByRole('listbox')).not.toBe(null));
+      await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
       expect(trigger).toHaveAttribute('data-popup-side', 'right');
 
       await user.click(document.body);
 
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(trigger).not.toHaveAttribute('data-popup-side');
     });
 
@@ -1622,9 +1789,7 @@ describe('<Combobox.Trigger />', () => {
       // The press closes the popup before the focus leaves the input in the popup.
       await user.click(screen.getByRole('button', { name: 'Outside' }));
 
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
+      expect(screen.queryByRole('listbox')).toBe(null);
       expect(screen.getByRole('button', { name: 'Outside' })).toHaveFocus();
       expect(screen.getByTestId('error')).toHaveTextContent('required');
       expect(screen.getByTestId('trigger')).toHaveAttribute('aria-invalid', 'true');
@@ -1806,6 +1971,32 @@ describe('<Combobox.Trigger />', () => {
         expect(store.select('forceMounted')).toBe(true);
       });
     });
+
+    it('the label does not name a trigger that mounts while KeepAlive holds it', async () => {
+      // With no `Combobox.Input` beside the trigger, the input is in the popup and the trigger is
+      // the control of the field.
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Combobox.Root key="held" items={['apple']}>
+          <Combobox.Trigger id="held-trigger" />
+        </Combobox.Root>
+      ));
+      await render(() => (
+        <Field.Root>
+          <Field.Label data-testid="label">Fruit</Field.Label>
+          <HeldBranch />
+        </Field.Root>
+      ));
+      const label = screen.getByTestId('label');
+      const providerId = label.getAttribute('for');
+
+      await mountWhileHeld();
+
+      expect(label.getAttribute('for')).toBe(providerId);
+
+      await show();
+
+      expect(label).toHaveAttribute('for', 'held-trigger');
+    });
   });
 
   // The compiled template of the fixture mounts the new trigger before it unmounts the old
@@ -1835,6 +2026,47 @@ describe('<Combobox.Trigger />', () => {
       const labelId = screen.getByTestId('label').id;
       expect(labelId).not.toBe('');
       expect(screen.getByTestId('trigger')).toHaveAttribute('aria-labelledby', labelId);
+    });
+  });
+
+  describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/combobox/trigger/ComboboxTriggerLabelHydration.test.vue',
+      component: ComboboxTriggerLabelHydration,
+      cases: [
+        {
+          name: 'a removed label part',
+          props: { label: 'after', laterRemovedAtMount: true },
+          selector: '[data-testid="trigger"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'fruit-label',
+          clientValue: null,
+        },
+        {
+          name: 'a removed field label',
+          props: { field: true, laterRemovedAtMount: true },
+          selector: '[data-testid="trigger"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description',
+          props: { field: true, laterRemovedAtMount: true },
+          selector: '[data-testid="trigger"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+        {
+          name: 'a label part and a removed field label',
+          props: { label: 'before', field: true, laterRemovedAtMount: true },
+          selector: '[data-testid="trigger"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: { idOf: '[data-testid="label"]' },
+        },
+      ],
     });
   });
 });

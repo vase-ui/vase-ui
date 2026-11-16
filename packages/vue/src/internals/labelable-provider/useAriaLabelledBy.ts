@@ -1,6 +1,7 @@
 import { computed, shallowRef, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { ownerWindow } from '../../common/owner';
+import { givenName } from '../blankName';
 import { useVaseUiId } from '../useBaseUiId';
 import { useKeepAliveState } from '../useKeepAliveState';
 
@@ -38,22 +39,18 @@ export function useAriaLabelledBy(
   // A non-blank `aria-label` wins over any associated label, as it does on native inputs.
   const hasAriaLabel = () => Boolean(toValue(ariaLabel)?.trim());
 
+  const explicitId = () => givenName(toValue(explicitAriaLabelledBy));
+
   const ariaLabelledBy = computed(() => {
     const implicitLabelId = hasAriaLabel() ? undefined : toValue(labelId);
-    return toValue(explicitAriaLabelledBy) ?? implicitLabelId ?? fallbackAriaLabelledBy.value;
+    return explicitId() ?? implicitLabelId ?? fallbackAriaLabelledBy.value;
   });
 
   const isLookupEnabled = () =>
-    !(
-      toValue(explicitAriaLabelledBy) ||
-      toValue(labelId) ||
-      hasAriaLabel() ||
-      !toValue(enableFallback)
-    );
+    !(explicitId() || toValue(labelId) || hasAriaLabel() || !toValue(enableFallback));
 
   // `KeepAlive` moves the DOM of a held control into a detached element. The input has no label
   // there, and its root node is that element. The lookup and the observer wait for the activation.
-  // A control that mounts in a held branch observes that element until its first activation.
   const { isHeld, shown } = useKeepAliveState();
 
   // Base UI runs this lookup after each commit. A Vue component with the same props does not render

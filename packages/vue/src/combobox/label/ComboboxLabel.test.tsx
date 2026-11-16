@@ -1,7 +1,14 @@
 import { expect, vi, describe, it } from 'vitest';
-import { shallowRef } from 'vue';
+import { createApp, shallowRef } from 'vue';
 import { Combobox } from '@vase-ui/vue/combobox';
-import { createRenderer, describeConformance, flushMicrotasks, screen } from '#test-utils';
+import { Field } from '@vase-ui/vue/field';
+import {
+  createHeldBranch,
+  createRenderer,
+  describeConformance,
+  flushMicrotasks,
+  screen,
+} from '#test-utils';
 
 const message =
   'Vase UI: <Combobox.Label> labels <Combobox.Trigger> only, and <Combobox.Input> is the form control of this combobox.';
@@ -73,5 +80,85 @@ describe('<Combobox.Label />', () => {
 
     expect(screen.getByTestId('label')).toHaveAttribute('id', 'fruit-label');
     expect(screen.getByTestId('trigger')).toHaveAttribute('aria-labelledby', 'fruit-label');
+  });
+
+  it('does not name the trigger while KeepAlive holds a label that mounted in a held branch', async () => {
+    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+      <Combobox.Label key="label" data-testid="label">
+        Fruit
+      </Combobox.Label>
+    ));
+    await render(() => (
+      <Combobox.Root>
+        <HeldBranch />
+        <Combobox.Trigger data-testid="trigger" />
+      </Combobox.Root>
+    ));
+    const trigger = screen.getByTestId('trigger');
+
+    await mountWhileHeld();
+    expect(trigger).not.toHaveAttribute('aria-labelledby');
+
+    await show();
+    expect(trigger).toHaveAttribute('aria-labelledby', screen.getByTestId('label').id);
+  });
+
+  it('does not name a trigger that mounts later while KeepAlive holds a label of a combobox with no trigger', async () => {
+    const hasTrigger = shallowRef(false);
+    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+      <Combobox.Label key="label" data-testid="label">
+        Fruit
+      </Combobox.Label>
+    ));
+    await render(() => (
+      <Combobox.Root>
+        <HeldBranch />
+        {hasTrigger.value && <Combobox.Trigger data-testid="trigger" />}
+      </Combobox.Root>
+    ));
+
+    await mountWhileHeld();
+    hasTrigger.value = true;
+    await flushMicrotasks();
+    const trigger = screen.getByTestId('trigger');
+    expect(trigger).not.toHaveAttribute('aria-labelledby');
+
+    await show();
+    expect(trigger).toHaveAttribute('aria-labelledby', screen.getByTestId('label').id);
+  });
+
+  it('names a portaled input from a label that mounts after it in an app in a detached element', async () => {
+    const labelMounted = shallowRef(false);
+    const container = document.createElement('div');
+    const app = createApp(() => (
+      <Field.Root>
+        <Combobox.Root>
+          {labelMounted.value && <Combobox.Label data-testid="label">Fruit</Combobox.Label>}
+          <Combobox.Portal keepMounted>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.Input data-testid="input" />
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>
+      </Field.Root>
+    ));
+    app.mount(container);
+    try {
+      await flushMicrotasks();
+      labelMounted.value = true;
+      await flushMicrotasks();
+      document.body.append(container);
+      await flushMicrotasks();
+
+      expect(document.querySelector('[data-testid="input"]')).toHaveAttribute(
+        'aria-labelledby',
+        container.querySelector('[data-testid="label"]')?.id,
+      );
+    } finally {
+      app.unmount();
+      container.remove();
+    }
   });
 });

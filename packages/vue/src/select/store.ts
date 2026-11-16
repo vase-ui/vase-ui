@@ -62,6 +62,11 @@ export type SelectStoreContext = ValuePopupContext<SelectRootOpenChangeEventDeta
     allowSelectedMouseUp: boolean;
     dragY: number;
   }>;
+  /**
+   * The `mousedown` event of the trigger press that opened the popup, until its release. An item
+   * reads it to ignore a release at the point of the press.
+   */
+  readonly triggerPressRef: Holder<MouseEvent | null>;
   readonly firstItemTextRef: Holder<HTMLElement | null>;
   readonly selectedItemTextRef: Holder<HTMLElement | null>;
   readonly alignItemWithTriggerActiveRef: Holder<boolean>;
@@ -151,6 +156,14 @@ export class SelectStore extends ValuePopupStore<
 > {
   protected getAnchorElement(state: Readonly<State>) {
     return state.triggerElement;
+  }
+
+  // The focus of the trigger and an autofill of the hidden input also set `forceMounted`. When
+  // neither comes before the end of a close, the popup leaves the DOM without this write (`VUE-95`).
+  override setState(newState: Readonly<State>): void {
+    super.setState(
+      newState.mounted && !newState.forceMounted ? { ...newState, forceMounted: true } : newState,
+    );
   }
 
   protected override prepareUnmount() {

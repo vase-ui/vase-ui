@@ -32,10 +32,7 @@ export interface CollapsiblePanelProps
   keepMounted?: boolean | undefined;
   /**
    * The id of the panel. The trigger uses it for `aria-controls`.
-   * A server render writes the trigger before it renders the panel.
-   * The `aria-controls` of an open trigger in the server HTML then names a generated id until the
-   * page hydrates. It does not name a panel that has an `id` of its own until then.
-   * To correct this, set `aria-controls` on `Collapsible.Trigger` to the same id.
+   * If the id is absent or empty, the panel has the id that the root generates.
    */
   id?: string | undefined;
 }
@@ -46,6 +43,7 @@ import { computed, onMounted, watch } from 'vue';
 import { warn } from '../../common/warn';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { givenId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useCollapsibleRootContext } from '../root/CollapsibleRootContext';
 import { collapsibleStateAttributesMapping } from '../root/stateAttributesMapping';
@@ -92,7 +90,7 @@ const {
   transitionStatus,
 } = useCollapsibleRootContext();
 
-const panelId = computed(() => props.id || defaultPanelId.value);
+const panelId = computed(() => givenId(props.id) ?? defaultPanelId.value);
 
 const source = Symbol();
 

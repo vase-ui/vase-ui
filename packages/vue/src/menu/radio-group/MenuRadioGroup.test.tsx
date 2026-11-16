@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import * as Menu from '../index.parts';
-import { createRenderer, describeConformance, flushMicrotasks, screen } from '#test-utils';
+import { createRenderer, describeConformance, flushMicrotasks, screen, waitFor } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
 
 describe('<Menu.RadioGroup />', () => {
@@ -49,6 +49,30 @@ describe('<Menu.RadioGroup />', () => {
       )[1] as Menu.RadioGroup.ChangeEventDetails;
       expect(details.reason).toBe(REASONS.itemPress);
       expect(onUpdateValue).toHaveBeenLastCalledWith('b');
+    });
+
+    it('VUE-91: emits no valueChange for a click of the checked item', async () => {
+      const onValueChange = vi.fn();
+      const onUpdateValue = vi.fn();
+      const { user } = await render(
+        <Menu.Root open>
+          <Menu.RadioGroup
+            defaultValue="a"
+            onValueChange={onValueChange}
+            {...{ 'onUpdate:value': onUpdateValue }}
+          >
+            <Menu.RadioItem value="a">A</Menu.RadioItem>
+            <Menu.RadioItem value="b">B</Menu.RadioItem>
+          </Menu.RadioGroup>
+        </Menu.Root>,
+      );
+
+      const [a] = screen.getAllByRole('menuitemradio');
+      await user.click(a);
+
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(onUpdateValue).not.toHaveBeenCalled();
+      expect(a).toHaveAttribute('aria-checked', 'true');
     });
 
     it('keeps the value when valueChange cancels the change', async () => {
@@ -133,5 +157,24 @@ describe('<Menu.RadioGroup />', () => {
     );
 
     expect(screen.getByRole('group')).toHaveAttribute('aria-labelledby', 'heading');
+  });
+
+  it('VUE-103: removes the id of its label for an aria-labelledby of null', async () => {
+    await render(
+      <Menu.Root open>
+        <Menu.RadioGroup data-testid="control">
+          <Menu.GroupLabel id="control-label">Control</Menu.GroupLabel>
+        </Menu.RadioGroup>
+        <Menu.RadioGroup aria-labelledby={null} data-testid="group">
+          <Menu.GroupLabel id="label">Label</Menu.GroupLabel>
+        </Menu.RadioGroup>
+      </Menu.Root>,
+    );
+
+    // Both groups get the id of their label in the same flush.
+    await waitFor(() => {
+      expect(screen.getByTestId('control')).toHaveAttribute('aria-labelledby', 'control-label');
+    });
+    expect(screen.getByTestId('group')).not.toHaveAttribute('aria-labelledby');
   });
 });

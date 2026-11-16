@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { nextTick, shallowRef } from 'vue';
+import { KeepAlive, defineComponent, nextTick, shallowRef } from 'vue';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   enterWithMouse,
@@ -530,12 +531,9 @@ describe('<Popover.Trigger />', () => {
 
   describe('opened by hover', () => {
     async function renderOpenedByHover(tabindex?: number) {
-      // WebKit on macOS skips a button for the Tab key unless the button has a `tabindex`.
       await render(
         <div>
-          <button data-testid="before" tabindex={0}>
-            Before
-          </button>
+          <button data-testid="before">Before</button>
           <Popover.Root>
             <Popover.Trigger openOnHover delay={0} tabindex={tabindex}>
               Toggle
@@ -548,9 +546,7 @@ describe('<Popover.Trigger />', () => {
               </Popover.Positioner>
             </Popover.Portal>
           </Popover.Root>
-          <button data-testid="after" tabindex={0}>
-            After
-          </button>
+          <button data-testid="after">After</button>
         </div>,
       );
 
@@ -624,9 +620,7 @@ describe('<Popover.Trigger />', () => {
     expect(document.activeElement).toBe(trigger);
 
     await userEvent.keyboard('[Enter]');
-    await waitFor(() => {
-      expect(screen.queryByText('Content')).toBe(null);
-    });
+    expect(screen.queryByText('Content')).toBe(null);
 
     await userEvent.keyboard('[Enter]');
     expect(screen.queryByText('Content')).not.toBe(null);
@@ -682,6 +676,75 @@ describe('<Popover.Trigger />', () => {
         expect(trigger).not.toBeVisible();
       },
     );
+  });
+
+  describe('VUE-73: aria-controls names only an element in the document', () => {
+    it('has no aria-controls while KeepAlive holds the popup', async () => {
+      const Popup = defineComponent({
+        setup: () => () => (
+          <Popover.Portal>
+            <Popover.Positioner>
+              <Popover.Popup>popup</Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        ),
+      });
+      const Other = defineComponent({ setup: () => () => <span /> });
+      const visible = shallowRef(true);
+      await render(() => (
+        <Popover.Root defaultOpen>
+          <Popover.Trigger>Open</Popover.Trigger>
+          <KeepAlive>{visible.value ? <Popup key="popup" /> : <Other key="other" />}</KeepAlive>
+        </Popover.Root>
+      ));
+      await flushMicrotasks();
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      const popup = screen.getByRole('dialog');
+      expect(popup.id).not.toBe('');
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
+
+      visible.value = false;
+      await flushMicrotasks();
+
+      expect(popup.isConnected).toBe(false);
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(popup.isConnected).toBe(true);
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
+    });
+
+    it('has no aria-controls while the popup mounts in a branch that KeepAlive holds', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
+        () => <Popover.Popup>popup</Popover.Popup>,
+        { renderBranch: (part) => part },
+      );
+      await render(() => (
+        <Popover.Root defaultOpen>
+          <Popover.Trigger>Open</Popover.Trigger>
+          <Popover.Portal>
+            <Popover.Positioner>
+              <HeldBranch />
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>
+      ));
+
+      await mountWhileHeld();
+
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+
+      await show();
+
+      const popup = screen.getByRole('dialog');
+      expect(popup.id).not.toBe('');
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
+    });
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current

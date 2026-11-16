@@ -1,47 +1,39 @@
+import type { CDPSession } from '@vitest/browser-playwright';
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { createSSRApp, defineComponent, nextTick, shallowRef, Teleport } from 'vue';
+import { defineComponent, shallowRef, Teleport } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import type { HTMLProps } from '@vase-ui/vue/types';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountFormResetTests,
   hydrate,
+  hydrateAfter,
   isJSDOM,
+  mockPageBeforeLoad,
+  recordInputEvents,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   takeReportedMessages,
+  wait,
   waitFor,
   within,
 } from '#test-utils';
+import { platform } from '../../common/platform';
 import FieldPartOrder from '../root/FieldPartOrder.test.vue';
+import FieldControlBeforeHydration from './FieldControlBeforeHydration.test.vue';
 import FieldControlHydration from './FieldControlHydration.test.vue';
 import FieldControlReplace from './FieldControlReplace.test.vue';
 
 const HYDRATION_FIXTURE = 'src/field/control/FieldControlHydration.test.vue';
+const BEFORE_HYDRATION_FIXTURE = 'src/field/control/FieldControlBeforeHydration.test.vue';
 const ORDER_FIXTURE = 'src/field/root/FieldPartOrder.test.vue';
-
-// A case that acts between the server HTML and the hydration puts the HTML in the document and
-// mounts the app by hand.
-async function insertServerHtml(props: Record<string, unknown>) {
-  const serverHtml = await renderOnServer(HYDRATION_FIXTURE, props);
-  const container = document.createElement('div');
-  document.body.append(container);
-  container.innerHTML = serverHtml;
-  onTestFinished(() => container.remove());
-  return container;
-}
-
-async function mountByHand(container: HTMLElement, props: Record<string, unknown>) {
-  const app = createSSRApp(FieldControlHydration, props);
-  onTestFinished(() => app.unmount());
-  app.mount(container);
-  await nextTick();
-  await nextTick();
-}
 
 describe('<Field.Control />', () => {
   const { render } = createRenderer();
@@ -532,7 +524,7 @@ describe('<Field.Control />', () => {
     const control = screen.getByRole<HTMLInputElement>('textbox');
 
     await userEvent.type(control, '[Enter]');
-    await flushMicrotasks();
+    await wait(0);
 
     expect(validate).toHaveBeenCalledTimes(1);
     expect(handleSubmit).toHaveBeenCalledTimes(1);
@@ -555,9 +547,10 @@ describe('<Field.Control />', () => {
     const control = screen.getByDisplayValue<HTMLInputElement>('a');
 
     await userEvent.type(control, '[Enter]');
-    await flushMicrotasks();
 
-    expect(validate).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(validate).toHaveBeenCalledTimes(1);
+    });
     expect(handleSubmit).not.toHaveBeenCalled();
   });
 
@@ -582,9 +575,10 @@ describe('<Field.Control />', () => {
       const control = screen.getByRole<HTMLInputElement>('textbox');
 
       await userEvent.type(control, '[Enter]');
-      await flushMicrotasks();
 
-      expect(validate).toHaveBeenCalledTimes(1);
+      await waitFor(() => {
+        expect(validate).toHaveBeenCalledTimes(1);
+      });
       expect(handleSubmit).not.toHaveBeenCalled();
     },
   );
@@ -755,19 +749,23 @@ describe('<Field.Control />', () => {
 
   it.skipIf(isJSDOM)('should sync focused state when autoFocus is used with SSR', async () => {
     const props = { autofocus: true };
-    const container = await insertServerHtml(props);
-    const input = within(container).getByRole('textbox');
+    const serverHtml = await renderOnServer(HYDRATION_FIXTURE, props);
 
-    expect(input).toHaveAttribute('autofocus');
+    const { container } = await hydrateAfter(FieldControlHydration, {
+      serverHtml,
+      props,
+      before(serverContainer) {
+        const serverInput = within(serverContainer).getByRole('textbox');
+        expect(serverInput).toHaveAttribute('autofocus');
 
-    // The browser focuses the control before the hydration.
-    input.focus();
-    expect(input).toBe(document.activeElement);
-
-    await mountByHand(container, props);
+        // The browser focuses the control before the hydration.
+        serverInput.focus();
+        expect(serverInput).toBe(document.activeElement);
+      },
+    });
 
     expect(within(container).getByTestId('root')).toHaveAttribute('data-focused', '');
-    expect(input).toHaveAttribute('data-focused', '');
+    expect(within(container).getByRole('textbox')).toHaveAttribute('data-focused', '');
     expect(within(container).getByText('Name')).toHaveAttribute('data-focused', '');
   });
 
@@ -1306,6 +1304,19 @@ describe('<Field.Control />', () => {
     });
   });
 
+  heldMountFormResetTests({
+    render,
+    renderControl: () => (
+      <Field.Root data-testid="root">
+        <Field.Control name="comment" defaultValue="" />
+      </Field.Root>
+    ),
+    change: () => fireEvent.input(screen.getByRole('textbox'), { target: { value: 'typed' } }),
+    readState: () => screen.getByTestId('root').hasAttribute('data-filled'),
+    defaultState: false,
+    changedState: true,
+  });
+
   describe('replacing the control', () => {
     it('uses a control that mounts before the old control unmounts as the input of the field', async () => {
       const swapped = shallowRef(false);
@@ -1325,6 +1336,56 @@ describe('<Field.Control />', () => {
     });
   });
 
+  describe('KeepAlive', () => {
+    it.each([{ name: 'held mount' }, { name: 'deactivated' }])(
+      'a held required control does not block the submit of its form: $name',
+      async ({ name }) => {
+        const handleSubmit = vi.fn();
+        const { HeldBranch, mountWhileHeld } = createHeldBranch(
+          () => <Field.Control key="held" required />,
+          { mounted: name === 'deactivated' },
+        );
+        const { user } = await render(() => (
+          <Form onFormSubmit={handleSubmit}>
+            <Field.Root name="email" data-testid="field">
+              <Field.Control defaultValue="shown" />
+              <HeldBranch />
+            </Field.Root>
+            <button type="submit">Submit</button>
+          </Form>
+        ));
+
+        await mountWhileHeld();
+        await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+        expect(handleSubmit).toHaveBeenCalledTimes(1);
+        expect(screen.getByTestId('field')).not.toHaveAttribute('data-invalid');
+      },
+    );
+
+    it('the label does not name a control that mounts while KeepAlive holds it', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Field.Control key="held" id="held-control" />
+      ));
+      await render(() => (
+        <Field.Root>
+          <Field.Label data-testid="label">Email</Field.Label>
+          <HeldBranch />
+        </Field.Root>
+      ));
+      const label = screen.getByTestId('label');
+      const providerId = label.getAttribute('for');
+
+      await mountWhileHeld();
+
+      expect(label.getAttribute('for')).toBe(providerId);
+
+      await show();
+
+      expect(label).toHaveAttribute('for', 'held-control');
+    });
+  });
+
   describe('label and id', () => {
     it('has the id of the provider and the id of a registered label in aria-labelledby', async () => {
       await render(
@@ -1341,6 +1402,27 @@ describe('<Field.Control />', () => {
       expect(label).toHaveAttribute('for', control.id);
       expect(label.id).not.toBe('');
       expect(control).toHaveAttribute('aria-labelledby', label.id);
+    });
+
+    it('VUE-103: removes the description of the field for an aria-describedby of null', async () => {
+      await render(
+        <div>
+          <Field.Root>
+            <Field.Control data-testid="described" />
+            <Field.Description data-testid="description">Your full name.</Field.Description>
+          </Field.Root>
+          <Field.Root>
+            <Field.Control aria-describedby={null} data-testid="undescribed" />
+            <Field.Description>Your full name.</Field.Description>
+          </Field.Root>
+        </div>,
+      );
+
+      const description = screen.getByTestId('description');
+      await waitFor(() => {
+        expect(screen.getByTestId('described')).toHaveAttribute('aria-describedby', description.id);
+      });
+      expect(screen.getByTestId('undescribed')).not.toHaveAttribute('aria-describedby');
     });
   });
 
@@ -1382,6 +1464,45 @@ describe('<Field.Control />', () => {
   });
 
   describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/field/control/FieldControlHydration.test.vue',
+      component: FieldControlHydration,
+      cases: [
+        {
+          name: 'a removed label after the control',
+          props: { label: 'after', laterRemovedAtMount: true },
+          selector: '[data-testid="control"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description',
+          props: { description: 'after', laterRemovedAtMount: true },
+          selector: '[data-testid="control"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description after another',
+          props: { description: 'both', laterRemovedAtMount: true },
+          selector: '[data-testid="control"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-0 desc-a',
+          clientValue: 'desc-0',
+        },
+        {
+          name: 'a removed label after another label',
+          props: { label: 'both', laterRemovedAtMount: true },
+          selector: '[data-testid="control"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: 'label-0',
+        },
+      ],
+    });
+
     it.each([
       {
         name: 'the label and the messages first',
@@ -1441,19 +1562,232 @@ describe('<Field.Control />', () => {
 
     it('keeps the text that the user typed before the hydration, and the focus', async () => {
       const props = { defaultValue: 'foo', autofocus: true };
-      const container = await insertServerHtml(props);
-      const input = within(container).getByTestId('control') as HTMLInputElement;
+      const serverHtml = await renderOnServer(HYDRATION_FIXTURE, props);
+      let input: HTMLInputElement | undefined;
 
-      // The page is interactive before the hydration.
-      input.focus();
-      input.value = 'typed before';
-
-      await mountByHand(container, props);
+      const { container } = await hydrateAfter(FieldControlHydration, {
+        serverHtml,
+        props,
+        before(serverContainer) {
+          input = within(serverContainer).getByTestId<HTMLInputElement>('control');
+          // The page is interactive before the hydration.
+          input.focus();
+          input.value = 'typed before';
+        },
+      });
 
       expect(input).toHaveValue('typed before');
       expect(within(container).getByTestId('control')).toBe(input);
       expect(within(container).getByTestId('root')).toHaveAttribute('data-focused', '');
-      expect(takeReportedMessages()).toEqual([]);
+    });
+  });
+
+  describe('VUE-74: text that the user typed before the hydration', () => {
+    async function hydrateTyped(
+      props: Record<string, unknown>,
+      { typed, focus }: { typed: string; focus: 'control' | 'outside' },
+    ) {
+      const serverHtml = await renderOnServer(BEFORE_HYDRATION_FIXTURE, props);
+      const { container } = await hydrateAfter(FieldControlBeforeHydration, {
+        serverHtml,
+        props,
+        before(serverContainer) {
+          const serverInput = within(serverContainer).getByTestId<HTMLInputElement>('control');
+          serverInput.value = typed;
+          within(serverContainer).getByTestId(focus).focus();
+        },
+      });
+      const fixture = within(container);
+      return {
+        control: fixture.getByTestId<HTMLInputElement>('control'),
+        root: fixture.getByTestId('root'),
+        model: fixture.getByTestId('model'),
+        changes: fixture.getByTestId('changes'),
+        queryError: () => fixture.queryByTestId('error'),
+      };
+    }
+
+    it('writes the typed text to v-model:value', async () => {
+      const { control, root, model, changes } = await hydrateTyped(
+        { value: 'foo' },
+        { typed: 'foo bar', focus: 'control' },
+      );
+      await flushMicrotasks();
+
+      expect(control).toHaveValue('foo bar');
+      expect(model.textContent).toBe('foo bar');
+      expect(changes.textContent).toBe('foo bar (none)');
+      expect(root).toHaveAttribute('data-dirty', '');
+      expect(root).toHaveAttribute('data-filled', '');
+    });
+
+    it('marks an uncontrolled field dirty', async () => {
+      const { control, root, changes } = await hydrateTyped(
+        { defaultValue: 'foo' },
+        { typed: 'foo bar', focus: 'control' },
+      );
+      await flushMicrotasks();
+
+      expect(control).toHaveValue('foo bar');
+      expect(changes.textContent).toBe('foo bar (none)');
+      expect(root).toHaveAttribute('data-dirty', '');
+      expect(root).toHaveAttribute('data-filled', '');
+    });
+
+    it('writes the value back when a listener cancels the change', async () => {
+      const { control, model, changes } = await hydrateTyped(
+        { value: 'foo', cancels: true },
+        { typed: 'foo bar', focus: 'control' },
+      );
+      await flushMicrotasks();
+
+      expect(changes.textContent).toBe('foo bar (none)');
+      expect(model.textContent).toBe('foo');
+      expect(control).toHaveValue('foo');
+    });
+
+    it('writes the typed text of a textarea to v-model:value', async () => {
+      const { control, model } = await hydrateTyped(
+        { value: 'foo', as: 'textarea' },
+        { typed: 'foo bar', focus: 'control' },
+      );
+      await flushMicrotasks();
+
+      expect(control.localName).toBe('textarea');
+      expect(control).toHaveValue('foo bar');
+      expect(model.textContent).toBe('foo bar');
+    });
+
+    it('touches and validates a field that the user left', async () => {
+      const { root } = await hydrateTyped(
+        { value: '', type: 'email', validationMode: 'onBlur' },
+        { typed: 'abc', focus: 'outside' },
+      );
+
+      await waitFor(() => expect(root).toHaveAttribute('data-touched', ''));
+      await waitFor(() => expect(within(root).getByTestId('error')).not.toBeNull());
+      expect(root).toHaveAttribute('data-invalid', '');
+    });
+
+    it('does not touch a field whose control has the focus', async () => {
+      const { root, model, queryError } = await hydrateTyped(
+        { value: '', type: 'email', validationMode: 'onBlur' },
+        { typed: 'abc', focus: 'control' },
+      );
+      await flushMicrotasks();
+
+      expect(model.textContent).toBe('abc');
+      expect(root).not.toHaveAttribute('data-touched');
+      expect(queryError()).toBeNull();
+    });
+
+    // Playwright has a command for the input method editor only for Chromium.
+    it.runIf(platform.engine.blink)(
+      'goes on with a composition of before the hydration',
+      async () => {
+        const { cdp } = await import('vitest/browser');
+        const session = cdp() as CDPSession;
+        const events: string[] = [];
+        const props = { value: '' };
+        const serverHtml = await renderOnServer(BEFORE_HYDRATION_FIXTURE, props);
+
+        const { container } = await hydrateAfter(FieldControlBeforeHydration, {
+          serverHtml,
+          props,
+          async before(serverContainer) {
+            const serverInput = within(serverContainer).getByTestId('control');
+            for (const type of ['compositionstart', 'compositionend']) {
+              serverInput.addEventListener(type, () => events.push(type));
+            }
+            serverInput.focus();
+            await session.send('Input.imeSetComposition', {
+              text: 'か',
+              selectionStart: 1,
+              selectionEnd: 1,
+            });
+          },
+        });
+        const fixture = within(container);
+        await flushMicrotasks();
+        expect(events).toEqual(['compositionstart']);
+
+        await session.send('Input.imeSetComposition', {
+          text: 'かな',
+          selectionStart: 2,
+          selectionEnd: 2,
+        });
+        await flushMicrotasks();
+        expect(events).toEqual(['compositionstart']);
+        await session.send('Input.insertText', { text: 'かな' });
+
+        await waitFor(() => expect(events).toEqual(['compositionstart', 'compositionend']));
+        expect(fixture.getByTestId('control')).toHaveValue('かな');
+        await waitFor(() => expect(fixture.getByTestId('model').textContent).toBe('かな'));
+      },
+    );
+  });
+
+  describe('VUE-81: the form state that the browser restores', () => {
+    async function restore(props: Record<string, unknown>, restored: string | undefined) {
+      const { container } = await render(<FieldControlBeforeHydration {...props} />);
+      const fixture = within(container);
+      const events = recordInputEvents(container);
+      if (restored !== undefined) {
+        fixture.getByTestId<HTMLInputElement>('control').value = restored;
+      }
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+      return { fixture, events };
+    }
+
+    it.each([
+      { name: 'an uncontrolled control', props: { defaultValue: 'server' }, model: '' },
+      { name: 'a control with v-model', props: { value: 'server' }, model: 'restored' },
+    ])('takes a value that the browser restores into $name', async ({ props, model }) => {
+      const { fixture, events } = await restore(props, 'restored');
+
+      expect(fixture.getByTestId('changes').textContent).toBe('restored (none)');
+      expect(fixture.getByTestId('model').textContent).toBe(model);
+      expect(fixture.getByTestId('root')).toHaveAttribute('data-dirty', '');
+      expect(events).toEqual(['input', 'change', 'blur', 'focusout']);
+    });
+
+    it('touches and validates a restored control that does not have the focus', async () => {
+      const { fixture } = await restore({ type: 'email', validationMode: 'onBlur' }, 'abc');
+
+      expect(fixture.getByTestId('changes').textContent).toBe('abc (none)');
+      expect(fixture.getByTestId('root')).toHaveAttribute('data-touched', '');
+      expect(fixture.getByTestId('root')).toHaveAttribute('data-invalid', '');
+      expect(fixture.getByTestId('error').textContent).not.toBe('');
+    });
+
+    it('sends no event for a control with the handled value', async () => {
+      const { fixture, events } = await restore({ defaultValue: 'server' }, undefined);
+
+      expect(events).toEqual([]);
+      expect(fixture.getByTestId('changes').textContent).toBe('');
+      expect(fixture.getByTestId('root')).not.toHaveAttribute('data-touched');
+    });
+
+    it('sends no event at the page show after a new value of Field.Control', async () => {
+      mockPageBeforeLoad();
+      const value = shallowRef('a');
+      const { container } = await render(() => (
+        <Field.Root>
+          <Field.Control value={value.value} data-testid="input" />
+        </Field.Root>
+      ));
+      const recorded = recordInputEvents(container);
+      screen.getByTestId<HTMLInputElement>('input').value = 'restored';
+
+      value.value = 'b';
+      await flushMicrotasks();
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('input')).toHaveValue('b');
+      expect(recorded).toEqual([]);
     });
   });
 });

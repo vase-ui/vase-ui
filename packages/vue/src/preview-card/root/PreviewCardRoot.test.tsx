@@ -6,6 +6,7 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  popupAnatomyTests,
   popupConformanceTests,
   renderOnServer,
   screen,
@@ -98,6 +99,30 @@ const MultipleDetachedTriggersPreviewCard = defineComponent({
 
 describe('<PreviewCard.Root />', () => {
   const { render } = createRenderer();
+
+  popupAnatomyTests({
+    createComponent: ({ open, onOpenChangeComplete, content }) => (
+      <PreviewCard.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <PreviewCard.Trigger href="#">Open</PreviewCard.Trigger>
+        <PreviewCard.Portal>
+          <PreviewCard.Positioner data-testid="shown" class="shown">
+            Content
+            {content}
+          </PreviewCard.Positioner>
+        </PreviewCard.Portal>
+      </PreviewCard.Root>
+    ),
+    createPopup: () => <PreviewCard.Popup data-testid="popup">Popup</PreviewCard.Popup>,
+    createBackdropComponent: ({ open, onOpenChangeComplete }) => (
+      <PreviewCard.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <PreviewCard.Trigger href="#">Open</PreviewCard.Trigger>
+        <PreviewCard.Portal>
+          <PreviewCard.Backdrop data-testid="shown" class="shown" />
+        </PreviewCard.Portal>
+      </PreviewCard.Root>
+    ),
+    render,
+  });
 
   it('keeps the payload while a controlled reopen moves to another trigger', async () => {
     const handle = PreviewCard.createHandle<string>();
@@ -692,13 +717,13 @@ describe('<PreviewCard.Root />', () => {
         await user.hover(trigger);
 
         await waitFor(() => {
-          expect(screen.queryByTestId('positioner')).not.toBe(null);
+          expect(screen.getByTestId('positioner')).not.toBe(null);
         });
 
         await user.unhover(trigger);
 
         await waitFor(() => {
-          expect(screen.queryByTestId('positioner')).not.toBe(null);
+          expect(screen.getByTestId('positioner')).not.toBe(null);
         });
 
         actions!.unmount();
@@ -729,7 +754,7 @@ describe('<PreviewCard.Root />', () => {
         await user.hover(trigger);
 
         await waitFor(() => {
-          expect(screen.queryByTestId('popup')).not.toBe(null);
+          expect(screen.getByTestId('popup')).not.toBe(null);
         });
 
         actions!.close();

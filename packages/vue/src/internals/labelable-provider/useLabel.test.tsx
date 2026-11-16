@@ -2,13 +2,21 @@ import { expect, describe, it, onTestFinished, vi } from 'vitest';
 import { Teleport, defineComponent } from 'vue';
 import type { ComponentPublicInstance } from 'vue';
 import { Field } from '@vase-ui/vue/field';
-import { createRenderer, fireEvent, flushMicrotasks, screen, within } from '#test-utils';
+import {
+  createHeldBranch,
+  createRenderer,
+  fireEvent,
+  flushMicrotasks,
+  screen,
+  within,
+} from '#test-utils';
 import * as Combobox from '../../combobox/index.parts';
 import * as Select from '../../select/index.parts';
 import LabelableControl from '../../../test/fixtures/LabelableControl.vue';
 import LabelableLabel from '../../../test/fixtures/LabelableLabel.vue';
 import LabelableScope from '../../../test/fixtures/LabelableScope.vue';
 import LabelableLabelPosition from './LabelableLabelPosition.test.vue';
+import { useLabelableContext } from './LabelableContext';
 import { createLabelIdRegistry } from './createLabelIdRegistry';
 import { useLabel } from './useLabel';
 
@@ -520,6 +528,37 @@ describe('useLabel', () => {
         await rerender(<Test ownLabel={false} />);
 
         expect(labelId.value).toBeUndefined();
+      });
+    });
+
+    describe('KeepAlive', () => {
+      // The label registers with the field outside the branch and with the registry of a root.
+      it('gives no id to the field or to the root while KeepAlive holds a label that mounted in a held branch', async () => {
+        const { labelId, registerLabelId } = createLabelIdRegistry();
+        const HeldLabel = defineComponent(() => {
+          const labelProps = useLabel({ id: 'held-label', registerLabelId });
+          return () => <div {...labelProps.value} />;
+        });
+        const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => <HeldLabel />);
+        const FieldLabelId = defineComponent(() => {
+          const context = useLabelableContext();
+          return () => <output data-testid="field-label-id">{context.labelId.value}</output>;
+        });
+        await render(() => (
+          <Field.Root>
+            <FieldLabelId />
+            <HeldBranch />
+          </Field.Root>
+        ));
+        const fieldLabelId = screen.getByTestId('field-label-id');
+
+        await mountWhileHeld();
+        expect(fieldLabelId.textContent).toBe('');
+        expect(labelId.value).toBeUndefined();
+
+        await show();
+        expect(fieldLabelId.textContent).toBe('held-label');
+        expect(labelId.value).toBe('held-label');
       });
     });
   });

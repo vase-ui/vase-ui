@@ -6,9 +6,13 @@ description: An unstyled Vue navigation menu component that shows a collection o
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoNavigationMenuHero from '../demos/navigation-menu/hero/css-modules/index.vue';
+import DemoNavigationMenuHeroTailwind from '../demos/navigation-menu/hero/tailwind/index.vue';
 import DemoNavigationMenuNested from '../demos/navigation-menu/nested/css-modules/index.vue';
+import DemoNavigationMenuNestedTailwind from '../demos/navigation-menu/nested/tailwind/index.vue';
 import DemoNavigationMenuNestedInline from '../demos/navigation-menu/nested-inline/css-modules/index.vue';
+import DemoNavigationMenuNestedInlineTailwind from '../demos/navigation-menu/nested-inline/tailwind/index.vue';
 </script>
 
 # Navigation Menu
@@ -17,7 +21,12 @@ A collection of links and menus for website navigation.
 
 <DemoFrame>
   <DemoNavigationMenuHero />
+  <template #tailwind>
+    <DemoNavigationMenuHeroTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -26,6 +35,18 @@ A collection of links and menus for website navigation.
 <<< ../demos/navigation-menu/hero/css-modules/index.module.css
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/navigation-menu/hero/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Anatomy
 
@@ -41,7 +62,12 @@ Put a `NavigationMenu.Root` in a `NavigationMenu.Content` to make a menu with mo
 
 <DemoFrame>
   <DemoNavigationMenuNested />
+  <template #tailwind>
+    <DemoNavigationMenuNestedTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -51,13 +77,32 @@ Put a `NavigationMenu.Root` in a `NavigationMenu.Content` to make a menu with mo
 
 :::
 
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/navigation-menu/nested/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
 ### Nested inline submenus
 
 A second level can stay in the panel of the first level. Then the nested root has no `NavigationMenu.Portal`. Give it a `NavigationMenu.List`, a `NavigationMenu.Viewport` and a `defaultValue`.
 
+Show a viewport inline only in a nested root. A top-level root with no `NavigationMenu.Positioner` does not close on Escape, on a click outside or on a second click on its trigger. A development build shows a warning for an inline viewport in a top-level root.
+
 <DemoFrame>
   <DemoNavigationMenuNestedInline />
+  <template #tailwind>
+    <DemoNavigationMenuNestedInlineTailwind />
+  </template>
 </DemoFrame>
+
+<DemoSource variant="css-modules">
 
 ::: code-group
 
@@ -68,6 +113,20 @@ A second level can stay in the panel of the first level. Then the nested root ha
 <<< ../demos/navigation-menu/nested-inline/data.ts
 
 :::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/navigation-menu/nested-inline/tailwind/index.vue
+
+<<< ../demos/navigation-menu/nested-inline/data.ts
+
+:::
+
+</DemoSource>
 
 ### Custom links
 

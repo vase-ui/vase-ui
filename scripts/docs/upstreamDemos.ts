@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, posix, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { format, resolveConfig } from 'prettier';
 import ts from 'typescript';
@@ -15,13 +15,42 @@ import {
 } from '../parity/repository.ts';
 import type { FamilyFiles } from '../parity/repository.ts';
 import { listFiles, readFileAt, resolveCommit } from '../parity/upstreamClone.ts';
+import { classRowOfBaseUi, classRowOfVue } from './demoClasses.ts';
+import type { ClassRow, DemoFile } from './demoClasses.ts';
+import { baseUiVariantsDiffer, compareVueVariants } from './demoVariants.ts';
+import type { VariantDifference } from './demoVariants.ts';
 import { listFamilyPages } from './familyPages.ts';
 import { docsFolderGlobs } from './upstreamDocs.ts';
 
-/** A demo of Base UI has one folder for each variant. The Tailwind variants are not ported. */
+// A demo of Base UI has one folder for each variant.
+const CSS_MODULES_FOLDER = 'css-modules';
 const TAILWIND_FOLDER = 'tailwind';
 
+/**
+ * The name of a Vue folder of a demo, by family, when it is not the name of the Base UI folder. The
+ * library of such a demo has no Vue release, so the Vue demo uses another library.
+ */
+const VUE_DEMO_NAMES: Record<string, Record<string, string> | undefined> = {
+  'handbook-forms': { 'react-hook-form': 'vee-validate' },
+};
+
+/**
+ * The class strings that the Vue folder of a demo has and its row of `classes` lacks, by family, by
+ * the key of the row and by element name. The Vue library of such a demo needs an element that the
+ * Base UI demo does not have.
+ */
+const VUE_DEMO_EXTRA_CLASSES: Record<string, Record<string, ClassRow> | undefined> = {
+  'handbook-forms': {
+    // `handleSubmit` of VeeValidate must get each `submit` event, so the demo has a native form.
+    // `Form` emits `submit` only when each field is valid. The string is that of the wrapper `Form`.
+    'react-hook-form/tailwind': { form: ['flex w-full max-w-3xs flex-col gap-5 sm:max-w-[20rem]'] },
+  },
+};
+
 const ENTRY_POINT_IMPORT = /^@base-ui\/react\/([^/]+)$/;
+
+/** The Tailwind folder at the start of a path from the folder of a family, such as `hero/tailwind`. */
+const TAILWIND_FOLDER_PATH = /^[^/]+\/tailwind(?=\/)/;
 
 export interface DemoRecord {
   commit: string;
@@ -34,6 +63,18 @@ export interface DemoRecord {
    * folder of the demo. A demo that imports no other entry point has no row.
    */
   entryPoints?: Record<string, string[]>;
+  /**
+   * The class strings of the `.ts` and `.tsx` files of a folder, by the path of the folder from
+   * `upstream` and then by element name. The path of a file at the root is `.`. A string has one
+   * space between its class names. A list keeps each repeat, in the sequence of the code units.
+   * `classRowOfBaseUi` gives the count of each string. A folder with no class string has no row.
+   */
+  classes?: Record<string, ClassRow>;
+  /**
+   * The sorted names of the demos whose two variants differ in more than their classes and their
+   * text. A record with no such demo has no key.
+   */
+  differentVariants?: string[];
 }
 
 export interface UpstreamDemos {
@@ -44,12 +85,29 @@ export interface UpstreamDemos {
 
 export interface DemoFamily {
   name: string;
+  /**
+   * Whether the family is a component of Vase UI's own. Such a family has no family file and no
+   * record, and its demos are not demos of Base UI.
+   */
+  own: boolean;
   /** The `matchedCommit` of the family file, or `undefined` when the family has no family file. */
   matchedCommit: string | undefined;
   /** The record of the family, or `undefined` when `docs/demos/<family>/upstream.json` does not exist. */
   record: DemoRecord | undefined;
   /** The SHA-256 of each file under `docs/demos/<family>`, by its path from that folder. */
   files: Map<string, string>;
+  /**
+   * The class strings of the `.vue` and `.ts` files in the Vue folder of each key of
+   * `record.classes`, by that key and then by element name. A key whose Vue folder has no such file
+   * is not in the map. A component of Vase UI's own has no record, so its keys are its Tailwind
+   * folders, such as `hero/tailwind`.
+   */
+  vueClasses: Map<string, ClassRow>;
+  /**
+   * The first difference between the two Vue variants of each demo that has both, by the name of its
+   * Vue folder.
+   */
+  vueVariants: Map<string, VariantDifference>;
 }
 
 function demosFolder(name: string): string {
@@ -92,9 +150,71 @@ function sortedUnique(names: string[]): string[] {
   return [...new Set(names)].sort((a, b) => a.localeCompare(b, 'en'));
 }
 
+/** The name of the Vue folder of the demo of Base UI `demo`. */
+function vueDemoName(family: string, demo: string): string {
+  return VUE_DEMO_NAMES[family]?.[demo] ?? demo;
+}
+
+/** The name of the demo of Base UI that the Vue folder `vueDemo` holds. */
+function upstreamDemoName(family: string, vueDemo: string): string {
+  const names = Object.entries(VUE_DEMO_NAMES[family] ?? {});
+  return names.find(([, name]) => name === vueDemo)?.[0] ?? vueDemo;
+}
+
+/** The Vue folder of a folder of Base UI, both by their paths from the folder of the demos. */
+function vueFolder(family: string, upstreamFolder: string): string {
+  const [demo, ...rest] = upstreamFolder.split('/');
+  return [vueDemoName(family, demo), ...rest].join('/');
+}
+
+/** The strings of `strings` that `other` does not have. A repeated string counts as often as it repeats. */
+function subtract(strings: string[], other: string[]): string[] {
+  const available = new Map<string, number>();
+  for (const item of other) {
+    available.set(item, (available.get(item) ?? 0) + 1);
+  }
+  return strings.filter((item) => {
+    const count = available.get(item) ?? 0;
+    available.set(item, count - 1);
+    return count < 1;
+  });
+}
+
+function stringsOf(row: ClassRow, element: string): string[] {
+  return Object.hasOwn(row, element) ? row[element] : [];
+}
+
+/** The row with the strings of `extra` added to the same elements. */
+function addStrings(row: ClassRow, extra: ClassRow): ClassRow {
+  return {
+    ...row,
+    ...Object.fromEntries(
+      Object.entries(extra).map(([element, strings]): [string, string[]] => [
+        element,
+        [...stringsOf(row, element), ...strings],
+      ]),
+    ),
+  };
+}
+
+/** For each element name that the rows do not share, its absent and its extra strings, as text. */
+function rowDifferences(expected: ClassRow, actual: ClassRow): string[] {
+  const elements = new Set([...Object.keys(expected), ...Object.keys(actual)]);
+  return [...elements].toSorted().flatMap((element) => {
+    const absent = subtract(stringsOf(expected, element), stringsOf(actual, element));
+    const extra = subtract(stringsOf(actual, element), stringsOf(expected, element));
+    const differences = [
+      ...absent.map((item) => `absent ${JSON.stringify(item)}`),
+      ...extra.map((item) => `extra ${JSON.stringify(item)}`),
+    ];
+    return differences.length > 0 ? [`${element}: ${differences.join(', ')}.`] : [];
+  });
+}
+
 /**
  * Reads the demo files of a family from the file list of Base UI at the matched commit of the family.
- * The record also names the other entry points that each demo imports.
+ * The record also names the other entry points that each demo imports, the class strings of each
+ * folder and the demos whose two variants differ in more than their classes and their text.
  */
 export function readUpstreamDemos(
   name: string,
@@ -106,6 +226,7 @@ export function readUpstreamDemos(
   const files: Record<string, string> = {};
   const styles = new Map<string, string>();
   const imported = new Map<string, string[]>();
+  const sources = new Map<string, string>();
   for (const path of upstreamFiles) {
     if (!path.startsWith(`${upstream}/`)) {
       continue;
@@ -113,16 +234,19 @@ export function readUpstreamDemos(
     const local = path.slice(upstream.length + 1);
     // `<demo>/index.ts` makes the demo with the docs code of Base UI.
     // The page of Vase UI does not use it.
-    if (local.split('/').includes(TAILWIND_FOLDER) || /^[^/]+\/index\.ts$/.test(local)) {
+    if (/^[^/]+\/index\.ts$/.test(local)) {
       continue;
     }
     const text = readFile(path);
     files[local] = sha256(text);
     if (local.endsWith('.css')) {
       styles.set(local, text);
-    } else if (/\.tsx?$/.test(local) && local.includes('/')) {
-      const demo = local.slice(0, local.indexOf('/'));
-      imported.set(demo, [...(imported.get(demo) ?? []), ...importedEntryPoints(text, name)]);
+    } else if (/\.tsx?$/.test(local)) {
+      sources.set(local, text);
+      if (local.includes('/')) {
+        const demo = local.slice(0, local.indexOf('/'));
+        imported.set(demo, [...(imported.get(demo) ?? []), ...importedEntryPoints(text, name)]);
+      }
     }
   }
   const entryPoints = Object.fromEntries(
@@ -131,15 +255,61 @@ export function readUpstreamDemos(
       .map(([demo, names]): [string, string[]] => [demo, sortedUnique(names)])
       .sort(([a], [b]) => a.localeCompare(b, 'en')),
   );
+  const classes = readClassRows(sources);
+  const differentVariants = readDifferentVariants(sources);
   return {
     record: {
       commit: family.matchedCommit,
       upstream,
       files,
       ...(Object.keys(entryPoints).length > 0 ? { entryPoints } : {}),
+      ...(Object.keys(classes).length > 0 ? { classes } : {}),
+      ...(differentVariants.length > 0 ? { differentVariants } : {}),
     },
     styles,
   };
+}
+
+/** The class row of each folder that has a class string, by the path of the folder. */
+function readClassRows(sources: Map<string, string>): Record<string, ClassRow> {
+  const folders = new Map<string, DemoFile[]>();
+  for (const [local, text] of sources) {
+    const folder = posix.dirname(local);
+    folders.set(folder, [...(folders.get(folder) ?? []), { name: posix.basename(local), text }]);
+  }
+  // A comparison with `<` compares the code units. The record then does not depend on the collation
+  // data of the machine.
+  return Object.fromEntries(
+    [...folders]
+      .map(([folder, folderFiles]): [string, ClassRow] => [folder, classRowOfBaseUi(folderFiles)])
+      .filter(([, row]) => Object.keys(row).length > 0)
+      .sort(([a], [b]) => (a < b ? -1 : 1)),
+  );
+}
+
+/** The names of the demos that have the two variants and whose variants differ in more than classes and text. */
+function readDifferentVariants(sources: Map<string, string>): string[] {
+  const variantFiles = (demo: string, variant: string): DemoFile[] =>
+    [...sources].flatMap(([local, text]) =>
+      local.startsWith(`${demo}/${variant}/`)
+        ? [{ name: local.slice(`${demo}/${variant}/`.length), text }]
+        : [],
+    );
+  return [...sources.keys()]
+    .flatMap((local) => {
+      const [demo, variant, file, ...deeper] = local.split('/');
+      return variant === TAILWIND_FOLDER && file === 'index.tsx' && deeper.length === 0
+        ? [demo]
+        : [];
+    })
+    .filter((demo) => sources.has(`${demo}/${CSS_MODULES_FOLDER}/index.tsx`))
+    .filter((demo) =>
+      baseUiVariantsDiffer(
+        variantFiles(demo, CSS_MODULES_FOLDER),
+        variantFiles(demo, TAILWIND_FOLDER),
+      ),
+    )
+    .toSorted();
 }
 
 /** The files that the command writes, by their path from the repository root. */
@@ -162,14 +332,20 @@ export async function expectedFiles(
 }
 
 /**
- * Checks the records and the copied style sheets of the families against each other. Each problem
- * says what to do. `entryPoints` holds the names of the entry points that Vase UI has. A demo
- * with no Vue file waits while an entry point that it imports is not among them.
+ * Checks the records and the copied style sheets of the families against each other. It also
+ * checks the class strings of each Vue folder and the two variants of each Vue demo. A component of
+ * Vase UI's own has no record, so the check reads only its two variants. Each problem says what to
+ * do. `entryPoints` holds the names of the entry points that Vase UI has. A demo with no Vue file
+ * waits while an entry point that it imports is not among them.
  */
 export function checkDemos(families: DemoFamily[], entryPoints: ReadonlySet<string>): string[] {
   const problems: string[] = [];
-  for (const { name, matchedCommit, record, files } of families) {
+  for (const { name, own, matchedCommit, record, files, vueClasses, vueVariants } of families) {
     const folder = demosFolder(name);
+    if (own) {
+      problems.push(...checkOwnDemos(folder, files, vueVariants));
+      continue;
+    }
     const rerun = `Run \`${command(name)}\`.`;
     if (matchedCommit === undefined) {
       problems.push(
@@ -206,21 +382,96 @@ export function checkDemos(families: DemoFamily[], entryPoints: ReadonlySet<stri
       }
     }
     for (const path of Object.keys(record.files)) {
-      const demo = /^(.+)\/css-modules\/index\.tsx$/.exec(path)?.[1];
-      if (demo === undefined || files.has(`${demo}/css-modules/index.vue`)) {
+      const match = /^(.+)\/(css-modules|tailwind)\/index\.tsx$/.exec(path);
+      if (match === null) {
         continue;
       }
+      const [, demo, variant] = match;
+      const vueFile = `${vueDemoName(name, demo)}/${variant}/index.vue`;
       const waits = (record.entryPoints?.[demo] ?? []).some(
         (entryPoint) => !entryPoints.has(entryPoint),
       );
-      if (!waits) {
+      if (!files.has(vueFile) && !waits) {
+        const kind = variant === TAILWIND_FOLDER ? 'Tailwind demo' : 'demo';
         problems.push(
-          `${folder}/${demo}/css-modules/index.vue does not exist. Base UI has the demo ${demo}. Port it.`,
+          `${folder}/${vueFile} does not exist. Base UI has the ${kind} ${demo}. Port it.`,
+        );
+      }
+    }
+    for (const [key, row] of Object.entries(record.classes ?? {})) {
+      const vueRow = vueClasses.get(key);
+      if (vueRow === undefined) {
+        continue;
+      }
+      const expected = addStrings(row, VUE_DEMO_EXTRA_CLASSES[name]?.[key] ?? {});
+      const differences = rowDifferences(expected, vueRow);
+      if (differences.length > 0) {
+        problems.push(
+          `${folder}/${vueFolder(name, key)} has classes that differ from Base UI. ${differences.join(' ')} Copy each class string from the Base UI file to the same element. Do not change it.`,
+        );
+      }
+    }
+    const recordedFolders = new Set(
+      Object.keys(record.files).flatMap((path) => /^([^/]+)\/tailwind\//.exec(path)?.[1] ?? []),
+    );
+    const vueFolders = new Set(
+      [...files.keys()].flatMap((path) => /^([^/]+)\/tailwind\//.exec(path)?.[1] ?? []),
+    );
+    for (const vueDemo of vueFolders) {
+      if (!recordedFolders.has(upstreamDemoName(name, vueDemo))) {
+        problems.push(
+          `${folder}/${vueDemo}/${TAILWIND_FOLDER} is not in ${recordPath(name)}. ${rerun} When the record still lacks the folder, Base UI has no such Tailwind demo. Delete the folder.`,
+        );
+      }
+    }
+    for (const [vueDemo, { form, text }] of vueVariants) {
+      const differs = record.differentVariants?.includes(upstreamDemoName(name, vueDemo)) ?? false;
+      if (!differs && form !== undefined) {
+        problems.push(
+          `${folder}/${vueDemo}: the Tailwind demo differs from the CSS-module demo in more than its classes, and the two Base UI files do not. ${form}. Make the two demos equal apart from the classes.`,
+        );
+      } else if (differs && text !== undefined) {
+        problems.push(
+          `${folder}/${vueDemo}: the Tailwind demo has other texts than the CSS-module demo. ${text}. Give the Tailwind demo the texts of the CSS-module demo.`,
         );
       }
     }
   }
   return problems;
+}
+
+/**
+ * The problems of the demos of a component of Vase UI's own. Each demo has the two variants, and
+ * the variants differ only in their classes.
+ */
+function checkOwnDemos(
+  folder: string,
+  files: ReadonlyMap<string, string>,
+  vueVariants: ReadonlyMap<string, VariantDifference>,
+): string[] {
+  const demos = new Set(
+    [...files.keys()].flatMap(
+      (path) => /^([^/]+)\/(?:css-modules|tailwind)\/index\.vue$/.exec(path)?.[1] ?? [],
+    ),
+  );
+  return [...demos].toSorted().flatMap((demo) => {
+    for (const [variant, kind] of [
+      [CSS_MODULES_FOLDER, 'CSS-module'],
+      [TAILWIND_FOLDER, 'Tailwind'],
+    ] as const) {
+      if (!files.has(`${demo}/${variant}/index.vue`)) {
+        return [
+          `${folder}/${demo}/${variant}/index.vue does not exist. A demo of a component of Vase UI's own has the two variants. Add the ${kind} demo.`,
+        ];
+      }
+    }
+    const form = vueVariants.get(demo)?.form;
+    return form === undefined
+      ? []
+      : [
+          `${folder}/${demo}: the Tailwind demo differs from the CSS-module demo in more than its classes. ${form}. Make the two demos equal apart from the classes.`,
+        ];
+  });
 }
 
 function listFolderFiles(folder: string): Map<string, string> {
@@ -234,12 +485,8 @@ function listFolderFiles(folder: string): Map<string, string> {
   );
 }
 
-/**
- * The families that have a family page or a folder in `docs/demos`. `ownComponents` holds the names
- * of the components that Base UI does not have. They have no demos of Base UI, so they are not in
- * the list.
- */
-export function demoFamilyNames(root: string, ownComponents: ReadonlySet<string>): string[] {
+/** The names that have a family page or a folder in `docs/demos`. */
+function demoFolderNames(root: string): string[] {
   const demos = join(root, 'docs/demos');
   const folders = existsSync(demos)
     ? readdirSync(demos, { withFileTypes: true })
@@ -247,9 +494,16 @@ export function demoFamilyNames(root: string, ownComponents: ReadonlySet<string>
         .map((item) => item.name)
     : [];
   const pages = listFamilyPages(join(root, 'docs')).map(({ family }) => family);
-  return [...new Set([...pages, ...folders])]
-    .filter((name) => !ownComponents.has(name))
-    .sort((a, b) => a.localeCompare(b, 'en'));
+  return [...new Set([...pages, ...folders])].sort((a, b) => a.localeCompare(b, 'en'));
+}
+
+/**
+ * The families whose demos are demos of Base UI: each name that has a family page or a folder in
+ * `docs/demos`, without the components that Base UI does not have. `ownComponents` holds the names
+ * of these components. The command writes a record for each family of the list.
+ */
+export function demoFamilyNames(root: string, ownComponents: ReadonlySet<string>): string[] {
+  return demoFolderNames(root).filter((name) => !ownComponents.has(name));
 }
 
 /** The names of the entry points of Vase UI: the folders of the source that have an `index.ts`. */
@@ -284,16 +538,76 @@ function readRecord(name: string, file: string): DemoRecord {
   }
 }
 
+/** The `.vue` and `.ts` files of a folder, with no file of a subfolder, in the sequence of their names. */
+function readDemoFiles(directory: string): DemoFile[] {
+  return existsSync(directory)
+    ? readdirSync(directory)
+        .filter((file) => /\.(?:vue|ts)$/.test(file))
+        .toSorted()
+        .map((file) => ({ name: file, text: readFileSync(join(directory, file), 'utf8') }))
+    : [];
+}
+
+/** The class row of the Vue folder of each folder in `keys`. */
+function readVueClasses(name: string, folder: string, keys: string[]): Map<string, ClassRow> {
+  return new Map(
+    keys.flatMap((key): [string, ClassRow][] => {
+      const files = readDemoFiles(join(folder, vueFolder(name, key)));
+      return files.length === 0 ? [] : [[key, classRowOfVue(files)]];
+    }),
+  );
+}
+
+/** The first difference between the two variants of each demo that has a Vue file for both. */
+function readVueVariants(folder: string): Map<string, VariantDifference> {
+  if (!existsSync(folder)) {
+    return new Map();
+  }
+  return new Map(
+    readdirSync(folder, { withFileTypes: true }).flatMap((item): [string, VariantDifference][] => {
+      const cssModules = join(folder, item.name, CSS_MODULES_FOLDER);
+      const tailwind = join(folder, item.name, TAILWIND_FOLDER);
+      return item.isDirectory() &&
+        existsSync(join(cssModules, 'index.vue')) &&
+        existsSync(join(tailwind, 'index.vue'))
+        ? [[item.name, compareVueVariants(readDemoFiles(cssModules), readDemoFiles(tailwind))]]
+        : [];
+    }),
+  );
+}
+
+/** The Tailwind folders of the demos, such as `hero/tailwind`, in the sequence of their names. */
+function tailwindFolders(files: ReadonlyMap<string, string>): string[] {
+  return [
+    ...new Set([...files.keys()].flatMap((path) => TAILWIND_FOLDER_PATH.exec(path)?.[0] ?? [])),
+  ].toSorted();
+}
+
+/**
+ * The families that have a family page or a folder in `docs/demos`, the components of Vase UI's own
+ * included. Each check of the demos reads this list, so no check leaves out a component of Vase
+ * UI's own.
+ */
 export function loadDemoFamilies(root: string): DemoFamily[] {
   const { families, ownComponents } = readFamilyFiles(root);
-  return demoFamilyNames(root, ownComponents).map((name) => {
+  return demoFolderNames(root).map((name) => {
+    const own = ownComponents.has(name);
     const folder = join(root, demosFolder(name));
     const recordFile = join(root, recordPath(name));
+    const record = !own && existsSync(recordFile) ? readRecord(name, recordFile) : undefined;
+    const files: Map<string, string> = existsSync(folder) ? listFolderFiles(folder) : new Map();
     return {
       name,
+      own,
       matchedCommit: families.find((item) => item.name === name)?.family?.matchedCommit,
-      record: existsSync(recordFile) ? readRecord(name, recordFile) : undefined,
-      files: existsSync(folder) ? listFolderFiles(folder) : new Map(),
+      record,
+      files,
+      vueClasses: readVueClasses(
+        name,
+        folder,
+        own ? tailwindFolders(files) : Object.keys(record?.classes ?? {}),
+      ),
+      vueVariants: readVueVariants(folder),
     };
   });
 }

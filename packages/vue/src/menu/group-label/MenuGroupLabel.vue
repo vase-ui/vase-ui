@@ -32,7 +32,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, MenuGroupLabelState>;
 }>();
 
-const registerLabelId = useMenuGroupRootContext();
+const { registerLabelId } = useMenuGroupRootContext();
 
 const labelId = useVaseUiId(() => props.id);
 

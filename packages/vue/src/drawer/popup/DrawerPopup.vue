@@ -3,7 +3,7 @@ import type { CSSProperties, HTMLAttributes } from 'vue';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
-import type { FocusOption } from '../../utils/popups/focus/FloatingFocusManager.vue';
+import type { FocusOption } from '../../utils/popups/focus/FloatingFocusManager';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import * as DrawerBackdropCssVars from '../backdrop/DrawerBackdropCssVars';
 import type { DrawerSwipeDirection } from '../root/DrawerRootContext';
@@ -172,10 +172,11 @@ import { useDialogPortalContext } from '../../dialog/portal/DialogPortalContext'
 import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
+import { isInHeldBranch } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
-import FloatingFocusManager from '../../utils/popups/focus/FloatingFocusManager.vue';
+import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
 import { FOCUSABLE_POPUP_PROPS } from '../../utils/popups/popupStoreUtils';
+import { useKeepAliveElementRef } from '../../utils/popups/useKeepAliveElementRef';
 import { useDrawerRootContext } from '../root/DrawerRootContext';
 import { getSnapPointSwipeMovement, useDrawerSnapPoints } from '../root/useDrawerSnapPoints';
 import { useDrawerViewportContext } from '../viewport/DrawerViewportContext';
@@ -213,6 +214,9 @@ const mounted = computed(() => store.select('mounted'));
 const modal = computed(() => store.select('modal'));
 const transitionStatus = computed(() => store.select('transitionStatus'));
 const nestedOpenDrawerCount = computed(() => store.select('nestedOpenDrawerCount'));
+// As in `Dialog.Popup`, the focus manager stops when the popup closes, not when it unmounts
+// (BUG-5519).
+const focusManagerDisabled = computed(() => !open.value);
 
 const swipe = useDrawerViewportContext();
 useDialogPortalContext();
@@ -271,7 +275,7 @@ function measureHeight() {
 // `KeepAlive` takes the popup out of the document, and the popup then has no layout. The parts of
 // the popup that read the layout, or that report to the drawer above, stop while it is
 // deactivated.
-const deactivated = shallowRef(false);
+const deactivated = shallowRef(isInHeldBranch());
 
 let clearFrontmostHeight = NOOP;
 function reportFrontmostHeight() {
@@ -313,16 +317,6 @@ onDeactivated(() => {
 });
 onActivated(() => {
   deactivated.value = false;
-});
-
-useOpenChangeComplete({
-  open,
-  ref: popupRef,
-  onComplete() {
-    if (open.value) {
-      store.context.onOpenChangeComplete?.(true);
-    }
-  },
 });
 
 const resolvedInitialFocus = computed(() =>
@@ -442,7 +436,7 @@ function setPopup(popup: HTMLElement | null) {
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: setPopup,
+  ref: useKeepAliveElementRef(setPopup),
   stateAttributesMapping,
   props: (attrs) => [
     store.select('popupProps'),
@@ -545,23 +539,26 @@ function getInsideElements() {
   return [store.context.internalBackdropRef.value];
 }
 
+useFloatingFocusManager(
+  () => ({
+    store,
+    openInteractionType: store.select('openMethod'),
+    disabled: focusManagerDisabled.value,
+    closeOnFocusOut: !store.select('disablePointerDismissal'),
+    initialFocus: resolvedInitialFocus.value,
+    returnFocus: props.finalFocus,
+    modal: modal.value !== false,
+    outsideElementsInert: modal.value === true,
+    getInsideElements,
+    restoreFocus: 'popup',
+  }),
+  element,
+);
+
 defineExpose({ element });
 </script>
 
 <template>
-  <FloatingFocusManager
-    :store="store"
-    :open-interaction-type="store.select('openMethod')"
-    :disabled="!mounted"
-    :close-on-focus-out="!store.select('disablePointerDismissal')"
-    :initial-focus="resolvedInitialFocus"
-    :return-focus="finalFocus"
-    :modal="modal !== false"
-    :outside-elements-inert="modal === true"
-    :get-inside-elements="getInsideElements"
-    restore-focus="popup"
-  >
-    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-    <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
-  </FloatingFocusManager>
+  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
 </template>

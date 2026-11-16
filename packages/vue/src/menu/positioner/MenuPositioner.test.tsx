@@ -10,6 +10,7 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountListTests,
   isInaccessible,
   isJSDOM,
   positionerConformanceTests,
@@ -85,8 +86,41 @@ const ParentNode = defineComponent({
   },
 });
 
+// The positioner rounds its place to the pixels of the device, as Floating UI does.
+function roundToDevicePixels(value: number) {
+  return Math.round(value * window.devicePixelRatio) / window.devicePixelRatio;
+}
+
 describe('<Menu.Positioner />', () => {
   const { render } = createRenderer();
+
+  heldMountListTests({
+    render,
+    renderList: (withLastItem) => (
+      <Menu.Root defaultOpen>
+        <Menu.Trigger>Toggle</Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup data-testid="popup">
+              <Menu.Item>Item 1</Menu.Item>
+              {withLastItem ? <Menu.Item>Item 2</Menu.Item> : null}
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>
+    ),
+    async check(user) {
+      screen.getByTestId('popup').focus();
+      await user.keyboard('[ArrowDown]');
+      await waitFor(() => {
+        expect(screen.getByRole('menuitem', { name: 'Item 1' })).toHaveFocus();
+      });
+      await user.keyboard('[ArrowDown]');
+      await waitFor(() => {
+        expect(screen.getByRole('menuitem', { name: 'Item 2' })).toHaveFocus();
+      });
+    },
+  });
 
   it('leaves lazy flipping off for a plain menu', async () => {
     useAnchorPositioningSpy.mockClear();
@@ -398,7 +432,9 @@ describe('<Menu.Positioner />', () => {
 
       let anchorRect = anchorElement.getBoundingClientRect();
       await waitFor(() => {
-        expect(getTransform()).toBe(`translate(${anchorRect.left}px, ${anchorRect.bottom}px)`);
+        expect(getTransform()).toBe(
+          `translate(${roundToDevicePixels(anchorRect.left)}px, ${roundToDevicePixels(anchorRect.bottom)}px)`,
+        );
       });
 
       await user.click(setUndefinedButton);
@@ -406,7 +442,7 @@ describe('<Menu.Positioner />', () => {
       const triggerRect = trigger.getBoundingClientRect();
       await waitFor(() => {
         expect(getTransform()).toBe(
-          `translate(${Math.floor(triggerRect.left)}px, ${triggerRect.bottom}px)`,
+          `translate(${roundToDevicePixels(triggerRect.left)}px, ${roundToDevicePixels(triggerRect.bottom)}px)`,
         );
       });
 
@@ -414,7 +450,9 @@ describe('<Menu.Positioner />', () => {
 
       anchorRect = anchorElement.getBoundingClientRect();
       await waitFor(() => {
-        expect(getTransform()).toBe(`translate(${anchorRect.left}px, ${anchorRect.bottom}px)`);
+        expect(getTransform()).toBe(
+          `translate(${roundToDevicePixels(anchorRect.left)}px, ${roundToDevicePixels(anchorRect.bottom)}px)`,
+        );
       });
     });
   });
@@ -1040,10 +1078,8 @@ describe('<Menu.Positioner />', () => {
   });
 
   describe('scroll lock', () => {
-    // The lock and the unlock each wait for a timer of 0 ms. The observers of `waitFor` do not see a
-    // document in a frame, so it polls.
-    const POLL = { interval: 5, timeout: 3000 };
-
+    // The lock and the unlock each wait for a timer of 0 ms. The observer of `waitFor` does not see
+    // a change in the document of an iframe. Its check in each frame sees the change.
     function lockCount() {
       return getScrollLockRegistry()?.lockCount ?? 0;
     }
@@ -1081,10 +1117,10 @@ describe('<Menu.Positioner />', () => {
       await render(<ModalMenu />);
 
       handle.open('trigger');
-      await waitFor(() => expect(isPageLocked(page)).toBe(true), POLL);
+      await waitFor(() => expect(isPageLocked(page)).toBe(true));
 
       handle.close();
-      await waitFor(() => expect(isPageLocked(page)).toBe(false), POLL);
+      await waitFor(() => expect(isPageLocked(page)).toBe(false));
       expect(lockCount()).toBe(0);
     });
 
@@ -1148,13 +1184,13 @@ describe('<Menu.Positioner />', () => {
       await render(() => (
         <KeepAlive>{show.value ? <ModalMenu key="menu" /> : <Other key="other" />}</KeepAlive>
       ));
-      await waitFor(() => expect(isPageLocked(page)).toBe(true), POLL);
+      await waitFor(() => expect(isPageLocked(page)).toBe(true));
 
       show.value = false;
-      await waitFor(() => expect(isPageLocked(page)).toBe(false), POLL);
+      await waitFor(() => expect(isPageLocked(page)).toBe(false));
 
       show.value = true;
-      await waitFor(() => expect(isPageLocked(page)).toBe(true), POLL);
+      await waitFor(() => expect(isPageLocked(page)).toBe(true));
     });
   });
 
@@ -1202,16 +1238,16 @@ describe('<Menu.Positioner />', () => {
 
       await userEvent.click(trigger, { delay: 20 });
       await waitFor(() => {
-        expect(screen.queryByRole('menu', { hidden: false })).not.toBe(null);
+        expect(screen.getByRole('menu', { hidden: false })).not.toBe(null);
       });
       expect(isInaccessible(screen.queryByRole('menu', { hidden: false })!)).toBe(false);
 
       await userEvent.click(trigger, { delay: 20 });
       await waitFor(() => {
-        expect(screen.queryByRole('menu', { hidden: true })).not.toBe(null);
+        expect(screen.getByRole('menu', { hidden: true })).not.toBe(null);
       });
       await waitFor(() => {
-        expect(isInaccessible(screen.queryByRole('menu', { hidden: true })!)).toBe(true);
+        expect(isInaccessible(screen.getByRole('menu', { hidden: true }))).toBe(true);
       });
     });
 
@@ -1237,14 +1273,16 @@ describe('<Menu.Positioner />', () => {
       await userEvent.click(trigger, { delay: 20 });
       await flushMicrotasks();
       await waitFor(() => {
-        expect(screen.queryByRole('menu', { hidden: false })).not.toBe(null);
+        expect(screen.getByRole('menu', { hidden: false })).not.toBe(null);
       });
       expect(isInaccessible(screen.queryByRole('menu', { hidden: false })!)).toBe(false);
+      const menu = screen.getByRole('menu', { hidden: true });
 
       await userEvent.click(trigger, { delay: 20 });
       await waitFor(() => {
-        expect(screen.queryByRole('menu', { hidden: true })).toBe(null);
+        expect(menu).not.toBeInTheDocument();
       });
+      expect(screen.queryByRole('menu', { hidden: true })).toBe(null);
     });
   });
 

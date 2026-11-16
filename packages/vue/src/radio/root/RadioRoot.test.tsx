@@ -1,5 +1,6 @@
-import { expect, onTestFinished, vi, describe, it } from 'vitest';
-import { createSSRApp, defineComponent, shallowRef } from 'vue';
+import { expect, vi, describe, it } from 'vitest';
+import { userEvent } from 'vitest/browser';
+import { defineComponent, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Radio } from '@vase-ui/vue/radio';
 import { RadioGroup } from '@vase-ui/vue/radio-group';
@@ -9,12 +10,17 @@ import {
   fireEvent,
   flushMicrotasks,
   hiddenInputSizeTests,
+  hydrateAfter,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
-  takeReportedMessages,
   waitFor,
+  within,
 } from '#test-utils';
-import RadioGroupHydration from '../../radio-group/RadioGroupHydration.test.vue';
+import RadioGroupBeforeHydration from '../../radio-group/RadioGroupBeforeHydration.test.vue';
+import RadioGroupFieldHydration from '../../radio-group/RadioGroupFieldHydration.test.vue';
+
+const BEFORE_HYDRATION_FIXTURE = 'src/radio-group/RadioGroupBeforeHydration.test.vue';
 
 describe('<Radio.Root />', () => {
   const { render } = createRenderer();
@@ -192,6 +198,24 @@ describe('<Radio.Root />', () => {
     expect(radio).toHaveAccessibleName('Apple');
   });
 
+  it.each([
+    { name: 'an empty aria-label', ariaLabel: '' },
+    { name: 'an aria-label of white space', ariaLabel: '\n\t ' },
+  ])('VUE-106: writes no aria-label for $name', async ({ ariaLabel }) => {
+    await render(
+      <RadioGroup>
+        <label>
+          <Radio.Root value="a" aria-label={ariaLabel} />
+          Apple
+        </label>
+      </RadioGroup>,
+    );
+
+    const radio = screen.getByRole('radio');
+    expect(radio).not.toHaveAttribute('aria-label');
+    expect(radio).toHaveAccessibleName('Apple');
+  });
+
   describe('prop: onClick', () => {
     it.each([false, true])(
       'propagates a single click event to ancestors per user click (nativeButton=%s)',
@@ -303,6 +327,27 @@ describe('<Radio.Root />', () => {
       expect(screen.getByTestId('a')).toHaveAttribute('tabindex', '0');
       expect(screen.getByTestId('b')).toHaveAttribute('tabindex', '-1');
     });
+
+    it('keeps the tab stop on a checked radio that becomes disabled', async () => {
+      const disabled = shallowRef(false);
+      const Group = defineComponent(() => () => (
+        <div>
+          <button type="button" data-testid="before" />
+          <RadioGroup defaultValue="b">
+            <Radio.Root value="a" data-testid="a" />
+            <Radio.Root value="b" disabled={disabled.value} data-testid="b" />
+          </RadioGroup>
+        </div>
+      ));
+      await render(<Group />);
+
+      disabled.value = true;
+      await flushMicrotasks();
+      screen.getByTestId('before').focus();
+      await userEvent.keyboard('{Tab}');
+
+      expect(screen.getByTestId('b')).toHaveFocus();
+    });
   });
 
   describe('prop: readOnly', () => {
@@ -367,52 +412,6 @@ describe('<Radio.Root />', () => {
       expect(getInputs().map((input) => input.checked)).toEqual([true, false]);
     });
 
-    it('after the hydration of HTML whose inputs changed before', async () => {
-      const props = { defaultValue: 'b' };
-      const serverHtml = await renderOnServer(
-        'src/radio-group/RadioGroupHydration.test.vue',
-        props,
-      );
-      const container = document.createElement('div');
-      document.body.append(container);
-      container.innerHTML = serverHtml;
-      const inputs = getInputs();
-      expect(inputs.map((input) => input.checked)).toEqual([false, true, false]);
-      // A browser that restores the form state of the page.
-      inputs[0].checked = true;
-      inputs[1].checked = false;
-
-      const app = createSSRApp(RadioGroupHydration, props);
-      onTestFinished(() => {
-        app.unmount();
-        container.remove();
-      });
-      app.mount(container);
-      await flushMicrotasks();
-
-      expect(getInputs()).toEqual(inputs);
-      expect(inputs.map((input) => input.checked)).toEqual([false, true, false]);
-      expect(takeReportedMessages()).toEqual([]);
-    });
-
-    it('after a `pageshow` event, because a browser can restore the form state after the mount', async () => {
-      const handleChange = vi.fn();
-      await render(
-        <RadioGroup onValueChange={handleChange}>
-          <Radio.Root value="a" data-testid="radio" />
-        </RadioGroup>,
-      );
-      getInputs()[0].checked = true;
-
-      window.dispatchEvent(new PageTransitionEvent('pageshow'));
-
-      expect(getInputs()[0].checked).toBe(false);
-
-      await fireEvent.click(screen.getByTestId('radio'));
-
-      expect(handleChange.mock.calls.map(([value]) => value)).toEqual(['a']);
-    });
-
     it.each([
       { name: 'is not checked', value: 'a', checked: false },
       { name: 'is checked', value: '', checked: true },
@@ -456,6 +455,65 @@ describe('<Radio.Root />', () => {
     });
   });
 
+  describe('VUE-81: the state that the input got before the hydration', () => {
+    it('gives the group the value of the input that the browser checked', async () => {
+      const props = { value: 'b' };
+      const serverHtml = await renderOnServer(BEFORE_HYDRATION_FIXTURE, props);
+      let serverInputs: HTMLInputElement[] = [];
+
+      const { container } = await hydrateAfter(RadioGroupBeforeHydration, {
+        serverHtml,
+        props,
+        before(serverContainer) {
+          serverInputs = [...serverContainer.querySelectorAll<HTMLInputElement>('input')];
+          expect(serverInputs.map((input) => input.checked)).toEqual([false, true, false]);
+          // A browser that restores the form state of the page.
+          serverInputs[0]!.checked = true;
+          serverInputs[1]!.checked = false;
+        },
+      });
+      await flushMicrotasks();
+
+      const fixture = within(container);
+      expect([...container.querySelectorAll('input')]).toEqual(serverInputs);
+      expect(serverInputs.map((input) => input.checked)).toEqual([true, false, false]);
+      expect(fixture.getByTestId('a')).toHaveAttribute('aria-checked', 'true');
+      expect(fixture.getByTestId('changes').textContent).toBe('a (vase-ui)');
+    });
+  });
+
+  describe('VUE-81: the form state that the browser restores', () => {
+    it('gives the group the value of the input at a `pageshow` event', async () => {
+      const handleChange = vi.fn();
+      const { container } = await render(
+        <RadioGroup onValueChange={handleChange}>
+          <Radio.Root value="a" data-testid="radio" />
+        </RadioGroup>,
+      );
+      container.querySelector<HTMLInputElement>('input[type="radio"]')!.checked = true;
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(handleChange.mock.calls.map(([value]) => value)).toEqual(['a']);
+      expect(screen.getByTestId('radio')).toHaveAttribute('aria-checked', 'true');
+
+      await fireEvent.click(screen.getByTestId('radio'));
+
+      expect(handleChange).toHaveBeenCalledTimes(1);
+    });
+
+    it('writes the state of a radio with no group at a `pageshow` event', async () => {
+      const { container } = await render(<Radio.Root value="a" />);
+      const input = container.querySelector<HTMLInputElement>('input[type="radio"]')!;
+      input.checked = true;
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+
+      expect(input.checked).toBe(false);
+    });
+  });
+
   describe('in a native label', () => {
     it('emits `valueChange` one time for a click on the radio, also when the parent keeps its value', async () => {
       const handleChange = vi.fn();
@@ -486,5 +544,30 @@ describe('<Radio.Root />', () => {
     await flushMicrotasks();
 
     expect(handleChange).not.toHaveBeenCalled();
+  });
+
+  describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/radio-group/RadioGroupFieldHydration.test.vue',
+      component: RadioGroupFieldHydration,
+      cases: [
+        {
+          name: 'a removed label',
+          props: { defaultValue: 'a', laterRemovedAtMount: true },
+          selector: '[data-testid="a"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description',
+          props: { defaultValue: 'a', laterRemovedAtMount: true },
+          selector: '[data-testid="a"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+      ],
+    });
   });
 });

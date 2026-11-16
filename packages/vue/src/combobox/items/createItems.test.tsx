@@ -10,6 +10,7 @@ import {
   takeReportedMessages,
   wait,
   waitFor,
+  waitForLaterMillisecond,
 } from '#test-utils';
 import { reset } from '../../common/error';
 import { defaultItemEquality } from '../../internals/itemEquality';
@@ -201,8 +202,10 @@ describe('Combobox.createItems', () => {
       expect(bob).toHaveTextContent('Product manager');
       expect(bob).toHaveTextContent('bob@example.com');
 
-      await user.clear(input);
-      await user.type(input, 'car');
+      await waitForLaterMillisecond(async () => {
+        await user.clear(input);
+        await user.type(input, 'car');
+      });
 
       const carol = screen.getByRole('option', { name: /Carol/ });
       expect(screen.queryByRole('option', { name: /Bob/ })).toBe(null);
@@ -213,7 +216,7 @@ describe('Combobox.createItems', () => {
 
       expect(api.saveAssignee).toHaveBeenCalledWith('user-3');
       expect(input).toHaveValue('Carol');
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
 
       await user.click(input);
 
@@ -356,7 +359,7 @@ describe('Combobox.createItems', () => {
       await user.click(screen.getByRole('option', { name: 'Carol' }));
 
       expect(input).toHaveValue('user-3');
-      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(screen.queryByRole('listbox')).toBe(null);
     });
 
     it('keeps nullish entries out of the accessors and out of filtered results', async () => {

@@ -1,6 +1,7 @@
 import { expect, describe, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, Teleport, defineComponent, shallowRef } from 'vue';
 import {
+  createHeldBranch,
   createRenderer,
   flushMicrotasks,
   hydrate,
@@ -42,7 +43,7 @@ describe('useAriaLabelledBy', () => {
       labelId: string | null;
     }>([
       {
-        name: 'gives a label with no `id` the id of the control plus `-label`',
+        name: 'gives a label with no `id` `<id>-label`',
         labelledBy: 'a-label',
         labelId: 'a-label',
       },
@@ -53,43 +54,49 @@ describe('useAriaLabelledBy', () => {
         labelId: 'own',
       },
       {
-        name: 'prefers the `aria-labelledby` of the consumer',
+        name: 'prefers the given `aria-labelledby`',
         controlProps: { ariaLabelledby: 'explicit' },
         labelledBy: 'explicit',
         labelId: null,
       },
       {
-        name: 'keeps a blank `aria-labelledby` of the consumer',
+        name: 'ignores an empty `aria-labelledby`',
         controlProps: { ariaLabelledby: '' },
-        labelledBy: '',
+        labelledBy: 'a-label',
         labelId: 'a-label',
       },
       {
-        name: 'gives no `aria-labelledby` when the control has an `aria-label`',
+        name: 'ignores a white space `aria-labelledby`',
+        controlProps: { ariaLabelledby: '\n\t ' },
+        labelledBy: 'a-label',
+        labelId: 'a-label',
+      },
+      {
+        name: 'prefers an `aria-label` to the label',
         controlProps: { ariaLabel: 'Name' },
         labelledBy: null,
         labelId: null,
       },
       {
-        name: 'keeps the label when the `aria-label` is empty',
+        name: 'ignores an empty `aria-label`',
         controlProps: { ariaLabel: '' },
         labelledBy: 'a-label',
         labelId: 'a-label',
       },
       {
-        name: 'keeps the label when the `aria-label` is a space',
+        name: 'ignores an `aria-label` of one space',
         controlProps: { ariaLabel: ' ' },
         labelledBy: 'a-label',
         labelId: 'a-label',
       },
       {
-        name: 'keeps the label when the `aria-label` has tabs, line breaks and spaces',
+        name: 'ignores a white space `aria-label`',
         controlProps: { ariaLabel: '\n\t ' },
         labelledBy: 'a-label',
         labelId: 'a-label',
       },
       {
-        name: 'gives no `aria-labelledby` when `enableFallback` is `false`',
+        name: 'gives none for `enableFallback: false`',
         controlProps: { enableFallback: false },
         labelledBy: null,
         labelId: null,
@@ -374,25 +381,15 @@ describe('useAriaLabelledBy', () => {
     });
 
     it('follows a change of the id of the label around a control that mounted while held', async () => {
-      const shown = shallowRef(true);
-      const extra = shallowRef(false);
       const labelId = shallowRef('label-1');
-      const Branch = defineComponent(() => () => (
-        <div>
-          {extra.value ? (
-            <label key="label" id={labelId.value}>
-              <HiddenInputControl data-testid="control" />
-            </label>
-          ) : null}
-        </div>
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <label key="label" id={labelId.value}>
+          <HiddenInputControl data-testid="control" />
+        </label>
       ));
-      await render(() => <KeepAlive>{shown.value ? <Branch /> : null}</KeepAlive>);
-      shown.value = false;
-      await flushMicrotasks();
-      extra.value = true;
-      await flushMicrotasks();
-      shown.value = true;
-      await flushMicrotasks();
+      await render(<HeldBranch />);
+      await mountWhileHeld();
+      await show();
 
       const control = screen.getByTestId('control');
       expect(control).toHaveAttribute('aria-labelledby', 'label-1');

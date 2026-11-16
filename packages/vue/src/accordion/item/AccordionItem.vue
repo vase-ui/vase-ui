@@ -52,12 +52,11 @@ export type AccordionItemChangeEventDetails =
 </script>
 
 <script setup lang="ts">
-import { computed, provide, shallowRef } from 'vue';
+import { computed, provide } from 'vue';
 import { CollapsibleRootContext } from '../../collapsible/root/CollapsibleRootContext';
 import { useCollapsibleRoot } from '../../collapsible/root/useCollapsibleRoot';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
 import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
-import type { RegisterId } from '../../internals/labelable-provider/LabelableContext';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -85,14 +84,15 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, AccordionItemState>;
 }>();
 
-const { ref: listItemRef, index } = useCompositeListItem();
-
 const {
   disabled: contextDisabled,
   handleValueChange,
+  itemList,
   state: rootState,
   value: openValues,
 } = useAccordionRootContext();
+
+const { ref: listItemRef, index } = useCompositeListItem({ list: itemList });
 
 const fallbackValue = useVaseUiId();
 
@@ -140,26 +140,13 @@ const state = computed<AccordionItemState>(() => ({
 }));
 
 const defaultTriggerId = useVaseUiId();
-const { ids: triggerIds, registerId } = createIdRegistry();
-// The panel can render before its trigger registers. Until a trigger registers, the item assumes a
-// trigger with the generated id.
-const hasRegisteredTrigger = shallowRef(false);
-
-const registerTriggerId: RegisterId = (source, getId) => {
-  if (getId) {
-    hasRegisteredTrigger.value = true;
-  }
-  registerId(source, getId);
-};
+const { ids: triggerIds, registerId: registerTriggerId } = createIdRegistry();
 
 provide(AccordionItemContext, {
   defaultTriggerId,
   registerTriggerId,
   state,
-  triggerId: computed(
-    () =>
-      triggerIds.value.at(-1) ?? (hasRegisteredTrigger.value ? undefined : defaultTriggerId.value),
-  ),
+  triggerId: computed(() => triggerIds.value.at(-1)),
 });
 
 const { element, elementProps } = useRenderElement('div', props, {

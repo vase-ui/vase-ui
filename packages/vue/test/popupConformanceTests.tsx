@@ -2,11 +2,14 @@ import { defineComponent, shallowRef } from 'vue';
 import type { VNode } from 'vue';
 import type { UserEvent } from '@testing-library/user-event';
 import { expect, vi, describe, it, afterEach, beforeEach, onTestFinished } from 'vitest';
-import { isInaccessible, screen, waitFor } from '@testing-library/dom';
+import { isInaccessible } from '@testing-library/dom';
+import { screen } from './queries';
+import { waitFor } from './waitFor';
 import { ownerDocument } from '../src/common/owner';
 import { activeElement } from '../src/common/shadowDom';
 import { isJSDOM } from '../src/common/testUtils';
 import { REASONS } from '../src/internals/reasons';
+import { nextAnimationsRead, nextEndingStyle, seekBeforeEnd } from './animation';
 import type { createRenderer } from './createRenderer';
 import { fireEvent } from './fireEvent';
 import { flushMicrotasks } from './flushMicrotasks';
@@ -655,7 +658,13 @@ export function popupConformanceTests(config: PopupTestConfig) {
         const animationName = `anim-${randomStringValue()}`;
         const className = `open-change-complete-${animationName}`;
 
-        function AnimatedPopup(props: { open: boolean; onOpenChangeComplete: () => void }) {
+        function AnimatedPopup(props: {
+          open: boolean;
+          onOpenChangeComplete: () => void;
+          enterDuration?: string;
+          exitDuration?: string;
+        }) {
+          const { enterDuration = '200ms', exitDuration = '200ms' } = props;
           // Enter and exit use different keyframes: swapping the selector while keeping the
           // same animation name doesn't restart the animation.
           const style = `
@@ -672,11 +681,11 @@ export function popupConformanceTests(config: PopupTestConfig) {
             }
 
             .${className}[data-open] {
-              animation: ${animationName}-enter 200ms;
+              animation: ${animationName}-enter ${enterDuration};
             }
 
             .${className}[data-ending-style] {
-              animation: ${animationName}-exit 200ms;
+              animation: ${animationName}-exit ${exitDuration};
             }
           `;
 
@@ -691,18 +700,6 @@ export function popupConformanceTests(config: PopupTestConfig) {
           );
         }
 
-        // An animation runs only for a short time, so a case records what it needs at the
-        // start of the animation and then waits for a state that stays.
-        const recordAnimationStarts = (record: (popup: HTMLElement) => void) => {
-          const listener = (event: Event) => {
-            if (event.target === getPopup()) {
-              record(event.target as HTMLElement);
-            }
-          };
-          document.addEventListener('animationstart', listener);
-          onTestFinished(() => document.removeEventListener('animationstart', listener));
-        };
-
         it('is not called on close when onOpenChange prevents unmounting after an await', async () => {
           globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
           const onOpenChangeComplete = vi.fn();
@@ -710,7 +707,7 @@ export function popupConformanceTests(config: PopupTestConfig) {
             <div>
               <style>
                 {`@keyframes ${animationName}-exit { to { opacity: 0; } }
-                  .${className}[data-ending-style] { animation: ${animationName}-exit 200ms; }`}
+                  .${className}[data-ending-style] { animation: ${animationName}-exit 100s; }`}
               </style>
               {prepareComponent({
                 root: {
@@ -728,13 +725,18 @@ export function popupConformanceTests(config: PopupTestConfig) {
               })}
             </div>,
           );
-          expect(getPopup()).toBeVisible();
+          const popup = getPopup()!;
+          expect(popup).toBeVisible();
 
-          await user.keyboard('[Escape]');
-          await waitFor(() => {
-            expect(getPopup()).toHaveAttribute('data-ending-style');
-          });
-          await wait(400);
+          await nextEndingStyle(popup, { action: () => user.keyboard('[Escape]') });
+          expect(popup).toHaveAttribute('data-ending-style');
+          // The part can stop its wait before it reads the animations, so the case reads them.
+          const animations = popup.getAnimations();
+          const finished = Promise.all(animations.map((animation) => animation.finished));
+          seekBeforeEnd(animations, 50);
+          await finished;
+          // A part completes the close in the microtasks after the end of the exit.
+          await flushMicrotasks();
 
           expect(onOpenChangeComplete).not.toHaveBeenCalledWith(false);
           expect(getPopup()).not.toBe(null);
@@ -743,20 +745,33 @@ export function popupConformanceTests(config: PopupTestConfig) {
         it('is called on open once the enter animation finishes', async () => {
           globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
           const onOpenChangeComplete = vi.fn();
-          const callsAtAnimationStart: number[] = [];
-          recordAnimationStarts(() => {
-            callsAtAnimationStart.push(onOpenChangeComplete.mock.calls.length);
-          });
           const { setProps } = await renderPopup(
-            <AnimatedPopup open={false} onOpenChangeComplete={onOpenChangeComplete} />,
+            <AnimatedPopup
+              open={false}
+              onOpenChangeComplete={onOpenChangeComplete}
+              enterDuration="100s"
+            />,
           );
 
           await setProps({ open: true });
+          // The popup mounts at the open. The part reads its animations in a later frame.
+          const popup = await screen.findByTestId('popup');
+          const animations = await nextAnimationsRead(popup);
+          expect(animations.map((animation) => animation.playState)).toContain('running');
+          expect(onOpenChangeComplete).not.toHaveBeenCalled();
+          const callsAtEnd: number[] = [];
+          const finished = Promise.all(animations.map((animation) => animation.finished)).then(
+            () => {
+              callsAtEnd.push(onOpenChangeComplete.mock.calls.length);
+            },
+          );
 
+          seekBeforeEnd(animations, 50);
+          await finished;
           await waitFor(() => {
             expect(onOpenChangeComplete).toHaveBeenCalled();
           });
-          expect(callsAtAnimationStart).toEqual([0]);
+          expect(callsAtEnd).toEqual([0]);
           expect(onOpenChangeComplete.mock.calls).toEqual([[true]]);
         });
 
@@ -764,24 +779,31 @@ export function popupConformanceTests(config: PopupTestConfig) {
           globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
           const onOpenChangeComplete = vi.fn();
           const { setProps } = await renderPopup(
-            <AnimatedPopup open onOpenChangeComplete={onOpenChangeComplete} />,
+            <AnimatedPopup open onOpenChangeComplete={onOpenChangeComplete} exitDuration="100s" />,
           );
           await waitFor(() => {
             expect(onOpenChangeComplete).toHaveBeenCalled();
           });
           onOpenChangeComplete.mockClear();
-          const exitStarts: { isEnding: boolean; calls: number }[] = [];
-          recordAnimationStarts((popup) => {
-            exitStarts.push({
-              isEnding: popup.hasAttribute('data-ending-style'),
-              calls: onOpenChangeComplete.mock.calls.length,
-            });
+          const popup = getPopup()!;
+
+          const animations = await nextAnimationsRead(popup, {
+            action: () => setProps({ open: false }),
           });
+          expect(popup).toHaveAttribute('data-ending-style');
+          expect(animations.map((animation) => animation.playState)).toContain('running');
+          expect(onOpenChangeComplete).not.toHaveBeenCalled();
+          const callsAtEnd: number[] = [];
+          const finished = Promise.all(animations.map((animation) => animation.finished)).then(
+            () => {
+              callsAtEnd.push(onOpenChangeComplete.mock.calls.length);
+            },
+          );
 
-          await setProps({ open: false });
-
+          seekBeforeEnd(animations, 50);
+          await finished;
           await waitFor(expectPopupClosed);
-          expect(exitStarts).toEqual([{ isEnding: true, calls: 0 }]);
+          expect(callsAtEnd).toEqual([0]);
           expect(onOpenChangeComplete.mock.calls).toEqual([[false]]);
         });
       }
@@ -809,6 +831,7 @@ export function popupConformanceTests(config: PopupTestConfig) {
         'hides the kept-mounted popup once the exit animation finishes',
         async () => {
           const animationName = `anim-${randomStringValue()}`;
+          const onOpenChangeComplete = vi.fn();
 
           function Test(props: { open: boolean }) {
             const style = `
@@ -823,7 +846,7 @@ export function popupConformanceTests(config: PopupTestConfig) {
             }
 
             .animation-test-popup-${animationName}[data-ending-style] {
-              animation: ${animationName} 150ms;
+              animation: ${animationName} 100s;
             }
           `;
 
@@ -831,7 +854,7 @@ export function popupConformanceTests(config: PopupTestConfig) {
               <div>
                 <style>{style}</style>
                 {prepareComponent({
-                  root: { open: props.open },
+                  root: { open: props.open, onOpenChangeComplete },
                   // Popups that stay mounted after opening don't accept `keepMounted`.
                   portal: alwaysMounted ? {} : { keepMounted: true },
                   popup: {
@@ -842,28 +865,32 @@ export function popupConformanceTests(config: PopupTestConfig) {
             );
           }
 
-          const exitStarts: { isEnding: boolean; isInaccessible: boolean }[] = [];
-          const listener = (event: Event) => {
-            const popup = event.target as HTMLElement;
-            if (popup === getPopup()) {
-              exitStarts.push({
-                isEnding: popup.hasAttribute('data-ending-style'),
-                isInaccessible: isInaccessible(popup),
-              });
-            }
-          };
-          document.addEventListener('animationstart', listener);
-          onTestFinished(() => document.removeEventListener('animationstart', listener));
-
           const { setProps } = await renderPopup(<Test open />);
-          await setProps({ open: false });
+          // The root reads the animations of the popup in a frame after the mount, to report the
+          // end of the open. The wait for the read of the close must start after that read.
+          await waitFor(() => {
+            expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+          });
+          const popup = getPopup()!;
 
-          // The popup stays visible while the exit animation runs, and is hidden once it
-          // finishes.
+          // The popup stays visible while the exit animation runs...
+          const animations = await nextAnimationsRead(popup, {
+            action: () => setProps({ open: false }),
+          });
+          expect(popup).toHaveAttribute('data-ending-style');
+          expect(animations).not.toHaveLength(0);
+          expect(isInaccessible(popup)).toBe(false);
+          // A hide before the end cancels the animation, and `finished` then rejects.
+          const finished = Promise.all(animations.map((animation) => animation.finished));
+
+          // ...and is hidden once it finishes.
+          seekBeforeEnd(animations, 50);
+          await finished;
+          // A family can replace the popup element when it hides it, so the case queries the
+          // popup again.
           await waitFor(() => {
             expect(isInaccessible(getPopup()!)).toBe(true);
           });
-          expect(exitStarts).toEqual([{ isEnding: true, isInaccessible: false }]);
         },
       );
     });

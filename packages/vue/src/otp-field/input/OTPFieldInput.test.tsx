@@ -10,13 +10,21 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  hydrateAfter,
+  mockNavigationType,
   pasteText,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   takeReportedMessages,
+  waitFor,
+  within,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
 import OTPFieldRootHydration from '../root/OTPFieldRootHydration.test.vue';
+import OTPFieldInputBeforeHydration from './OTPFieldInputBeforeHydration.test.vue';
+
+const BEFORE_HYDRATION_FIXTURE = 'src/otp-field/input/OTPFieldInputBeforeHydration.test.vue';
 
 describe('<OTPField.Input />', () => {
   const { render } = createRenderer();
@@ -841,6 +849,22 @@ describe('<OTPField.Input />', () => {
     });
   });
 
+  it('VUE-103: removes the Field label of a slot for an aria-labelledby of null', async () => {
+    await render(
+      <Field.Root>
+        <Field.Label data-testid="label">Verification code</Field.Label>
+        <OTPField.Root length={2}>
+          <OTPField.Input data-testid="labelled" />
+          <OTPField.Input aria-labelledby={null} data-testid="unlabelled" />
+        </OTPField.Root>
+      </Field.Root>,
+    );
+
+    const label = screen.getByTestId('label');
+    expect(screen.getByTestId('labelled')).toHaveAttribute('aria-labelledby', label.id);
+    expect(screen.getByTestId('unlabelled')).not.toHaveAttribute('aria-labelledby');
+  });
+
   it('applies a native label to every slot', async () => {
     await render(
       <>
@@ -904,6 +928,25 @@ describe('<OTPField.Input />', () => {
       expect(warnSpy.mock.calls[0]?.[0]).toContain(
         'Vase UI: <OTPField.Input> ignores `aria-label` on the first input.',
       );
+    } finally {
+      warnSpy.mockRestore();
+    }
+  });
+
+  it.each([
+    { name: 'an empty aria-label', ariaLabel: '' },
+    { name: 'an aria-label of white space', ariaLabel: '\n\t ' },
+  ])('VUE-106: does not warn for $name on the first slot', async ({ ariaLabel }) => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    try {
+      await render(
+        <OTPField.Root length={1}>
+          <OTPField.Input aria-label={ariaLabel} />
+        </OTPField.Root>,
+      );
+
+      expect(warnSpy).not.toHaveBeenCalled();
     } finally {
       warnSpy.mockRestore();
     }
@@ -1251,7 +1294,6 @@ describe('<OTPField.Input />', () => {
     });
 
     it('moves the focus out with Tab, and back to the tab stop with Shift+Tab', async () => {
-      // WebKit does not move the focus to a button with the Tab key, so the neighbors are inputs.
       await render(
         <div>
           <input aria-label="Before" />
@@ -1353,6 +1395,28 @@ describe('<OTPField.Input />', () => {
   });
 
   describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/otp-field/root/OTPFieldRootHydration.test.vue',
+      component: OTPFieldRootHydration,
+      cases: [
+        {
+          name: 'a removed label',
+          props: {
+            label: 'after',
+            description: true,
+            inputs: 4,
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: 'input:not([aria-hidden])',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+      ],
+    });
+
     it.each([
       { name: 'an empty field', props: {} },
       { name: 'a field with a value', props: { defaultValue: '12', name: 'otp' } },
@@ -1373,6 +1437,113 @@ describe('<OTPField.Input />', () => {
       );
 
       await hydrate(OTPFieldRootHydration, { serverHtml, props: fixtureProps });
+    });
+  });
+
+  describe('VUE-74: text that the user typed before the hydration', () => {
+    // The slots take no text after a move in the history or a reload. Each case gives the type of
+    // the navigation, so that no case depends on how the runner loaded the page.
+    async function hydrateTyped(
+      props: Record<string, unknown>,
+      {
+        typed,
+        focus,
+        navigation = 'navigate',
+      }: { typed: string[]; focus: string; navigation?: NavigationTimingType },
+    ) {
+      mockNavigationType(navigation);
+      const serverHtml = await renderOnServer(BEFORE_HYDRATION_FIXTURE, props);
+      const { container } = await hydrateAfter(OTPFieldInputBeforeHydration, {
+        serverHtml,
+        props,
+        before(serverContainer) {
+          typed.forEach((text, index) => {
+            within(serverContainer).getByTestId<HTMLInputElement>(`slot-${index}`).value = text;
+          });
+          within(serverContainer).getByTestId(focus).focus();
+        },
+      });
+      const fixture = within(container);
+      return {
+        fixture,
+        slots: [0, 1, 2, 3].map((index) => fixture.getByTestId<HTMLInputElement>(`slot-${index}`)),
+        field: fixture.getByTestId('field'),
+        root: fixture.getByTestId('root'),
+        model: fixture.getByTestId('model'),
+      };
+    }
+
+    it('moves the focus from the focused first slot to the next slot', async () => {
+      const { slots, model } = await hydrateTyped({}, { typed: ['1'], focus: 'slot-0' });
+      await flushMicrotasks();
+
+      expect(model.textContent).toBe('1');
+      expect(document.activeElement).toBe(slots[1]);
+    });
+
+    it('fills each slot from a full code in the first slot', async () => {
+      const { fixture, slots, model } = await hydrateTyped(
+        {},
+        { typed: ['1234'], focus: 'slot-0' },
+      );
+      await flushMicrotasks();
+
+      expect(slots.map((slot) => slot.value)).toEqual(['1', '2', '3', '4']);
+      expect(model.textContent).toBe('1234');
+      expect(fixture.getByTestId('completes').textContent).toBe('1234 (input-change)');
+      expect(fixture.getByTestId('submits').textContent).toBe('1');
+    });
+
+    it.each([
+      { name: 'a move in the history', navigation: 'back_forward' },
+      { name: 'a reload', navigation: 'reload' },
+    ] as const)('takes no code from before the hydration after $name', async ({ navigation }) => {
+      const { fixture, slots, field, model } = await hydrateTyped(
+        {},
+        { typed: ['1234'], focus: 'outside', navigation },
+      );
+      await flushMicrotasks();
+
+      expect(slots.map((slot) => slot.value)).toEqual(['', '', '', '']);
+      expect(model.textContent).toBe('');
+      expect(fixture.getByTestId('changes').textContent).toBe('');
+      expect(fixture.getByTestId('completes').textContent).toBe('');
+      expect(fixture.getByTestId('submits').textContent).toBe('0');
+      expect(field).not.toHaveAttribute('data-touched');
+    });
+
+    it('keeps the focus on a button outside, and touches the field', async () => {
+      const { fixture, field, model } = await hydrateTyped({}, { typed: ['1'], focus: 'outside' });
+
+      await waitFor(() => expect(field).toHaveAttribute('data-touched', ''));
+      expect(model.textContent).toBe('1');
+      expect(fixture.getByTestId('changes').textContent).toBe('1 (input-change)');
+      expect(field).toHaveAttribute('data-dirty', '');
+      expect(document.activeElement).toBe(fixture.getByTestId('outside'));
+    });
+
+    it('keeps the root focused while the focus is in the third slot', async () => {
+      const { fixture, field, root, model } = await hydrateTyped(
+        { validationMode: 'onBlur' },
+        { typed: ['1', '2'], focus: 'slot-2' },
+      );
+      await flushMicrotasks();
+
+      expect(model.textContent).toBe('12');
+      expect(root).toHaveAttribute('data-focused', '');
+      expect(field).not.toHaveAttribute('data-touched');
+      expect(fixture.queryByTestId('error')).toBeNull();
+    });
+
+    it('validates a partial code when the focus is outside', async () => {
+      const { fixture, field } = await hydrateTyped(
+        { validationMode: 'onBlur' },
+        { typed: ['1', '2'], focus: 'outside' },
+      );
+
+      await waitFor(() => expect(fixture.getByTestId('error')).not.toBeNull());
+      expect(field).toHaveAttribute('data-touched', '');
+      expect(field).toHaveAttribute('data-invalid', '');
     });
   });
 

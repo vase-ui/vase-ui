@@ -8,7 +8,9 @@ import {
   hydrate,
   isInaccessible,
   isJSDOM,
+  nextCall,
   nextEvent,
+  popupAnatomyTests,
   popupConformanceTests,
   renderOnServer,
   screen,
@@ -124,6 +126,60 @@ const MultipleDetachedTriggersTooltip = defineComponent(
 
 describe('<Tooltip.Root />', () => {
   const { render } = createRenderer();
+
+  popupAnatomyTests({
+    createComponent: ({ open, onOpenChangeComplete, content }) => (
+      <Tooltip.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <Tooltip.Trigger>Open</Tooltip.Trigger>
+        <Tooltip.Portal>
+          <Tooltip.Positioner data-testid="shown" class="shown">
+            Content
+            {content}
+          </Tooltip.Positioner>
+        </Tooltip.Portal>
+      </Tooltip.Root>
+    ),
+    createPopup: () => <Tooltip.Popup data-testid="popup">Popup</Tooltip.Popup>,
+    render,
+  });
+
+  describe('VUE-92: a portal part that a v-if of the consumer removes', () => {
+    it.each([
+      { name: 'no keepMounted', keepMounted: false },
+      { name: 'keepMounted', keepMounted: true },
+    ])('emits openChangeComplete with false after each close: $name', async ({ keepMounted }) => {
+      const onOpenChangeComplete = vi.fn();
+      const open = shallowRef(false);
+      await render(() => (
+        <Tooltip.Root open={open.value} onOpenChangeComplete={onOpenChangeComplete}>
+          <Tooltip.Trigger>Open</Tooltip.Trigger>
+          {open.value && (
+            <Tooltip.Portal keepMounted={keepMounted}>
+              <Tooltip.Positioner>
+                <Tooltip.Popup data-testid="popup">Popup</Tooltip.Popup>
+              </Tooltip.Positioner>
+            </Tooltip.Portal>
+          )}
+        </Tooltip.Root>
+      ));
+
+      async function openAndClose(cycle: number) {
+        const opened = nextCall(onOpenChangeComplete);
+        open.value = true;
+        await opened;
+        open.value = false;
+        await flushMicrotasks();
+
+        expect(screen.queryByTestId('popup')).toBe(null);
+        expect(onOpenChangeComplete).toHaveBeenCalledTimes(cycle * 2);
+      }
+
+      await openAndClose(1);
+      await openAndClose(2);
+
+      expect(onOpenChangeComplete.mock.calls).toEqual([[true], [false], [true], [false]]);
+    });
+  });
 
   it('keeps the payload while a controlled reopen moves to another trigger', async () => {
     const handle = Tooltip.createHandle<string>();
@@ -555,9 +611,7 @@ describe('<Tooltip.Root />', () => {
 
         await user.unhover(trigger);
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('positioner')).toBe(null);
-        });
+        expect(screen.queryByTestId('positioner')).toBe(null);
       });
     });
 
@@ -598,9 +652,7 @@ describe('<Tooltip.Root />', () => {
         actions.ref.current!.unmount();
         await flushMicrotasks();
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('positioner')).toBe(null);
-        });
+        expect(screen.queryByTestId('positioner')).toBe(null);
       });
 
       it('closes the tooltip when the `close` method is called', async () => {
@@ -622,9 +674,7 @@ describe('<Tooltip.Root />', () => {
         actions.ref.current!.close();
         await flushMicrotasks();
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('positioner')).toBe(null);
-        });
+        expect(screen.queryByTestId('positioner')).toBe(null);
 
         expect(trigger).not.toHaveAttribute('data-popup-open');
         expect(onOpenChange).toHaveBeenLastCalledWith(
@@ -773,8 +823,9 @@ describe('<Tooltip.Root />', () => {
         await screen.findByTestId('popup-2');
 
         await waitFor(() => {
-          expect(screen.queryByTestId('popup-1')).toBe(null);
+          expect(firstPopup).not.toBeInTheDocument();
         });
+        expect(screen.queryByTestId('popup-1')).toBe(null);
         // The first tooltip was already closing, so it reports only its open and its hover close.
         expect(handleFirstOpenChange).toHaveBeenCalledTimes(2);
       });
@@ -943,6 +994,28 @@ describe('<Tooltip.Root />', () => {
         expect(onOpenChangeComplete).not.toHaveBeenCalledWith(true);
       });
 
+      it('reports the open completion again when it toggles on an open tooltip that is not kept mounted', async () => {
+        const onOpenChangeComplete = vi.fn();
+        let completion = nextCall(onOpenChangeComplete);
+        const { setProps } = await render(
+          <TestTooltip rootProps={{ open: true, disabled: false, onOpenChangeComplete }} />,
+        );
+        await completion;
+
+        completion = nextCall(onOpenChangeComplete);
+        await setProps({ rootProps: { open: true, disabled: true, onOpenChangeComplete } });
+        await completion;
+        completion = nextCall(onOpenChangeComplete);
+        await setProps({ rootProps: { open: true, disabled: false, onOpenChangeComplete } });
+        await completion;
+        expect(onOpenChangeComplete.mock.calls).toEqual([[true], [false], [true]]);
+
+        completion = nextCall(onOpenChangeComplete);
+        await setProps({ rootProps: { open: false, disabled: false, onOpenChangeComplete } });
+        await completion;
+        expect(onOpenChangeComplete.mock.calls).toEqual([[true], [false], [true], [false]]);
+      });
+
       it('does not throw error when combined with defaultOpen', async () => {
         await render(<TestTooltip rootProps={{ defaultOpen: true, disabled: true }} />);
         await flushMicrotasks();
@@ -1050,13 +1123,15 @@ describe('<Tooltip.Root />', () => {
         await flushMicrotasks();
         await flushMicrotasks();
 
-        expect(screen.getByTestId('popup')).toHaveAttribute('data-instant', 'focus');
+        const popup = screen.getByTestId('popup');
+        expect(popup).toHaveAttribute('data-instant', 'focus');
 
         trigger.blur();
         await flushMicrotasks();
         await waitFor(() => {
-          expect(screen.queryByTestId('popup')).toBe(null);
+          expect(popup).not.toBeInTheDocument();
         });
+        expect(screen.queryByTestId('popup')).toBe(null);
 
         await hoverTrigger(trigger);
 
@@ -1089,9 +1164,7 @@ describe('<Tooltip.Root />', () => {
 
         await fireEvent.keyDown(document.body, { key: 'Escape' });
 
-        await waitFor(() => {
-          expect(screen.queryByText('Content')).toBe(null);
-        });
+        expect(screen.queryByText('Content')).toBe(null);
 
         expect(stopPropagationSpy).toHaveBeenCalledTimes(0);
         stopPropagationSpy.mockRestore();
@@ -1320,9 +1393,7 @@ describe('<Tooltip.Root />', () => {
       expect(screen.queryByTestId('positioner')).not.toBe(null);
 
       await user.click(screen.getByRole('button', { name: 'Unmount root' }));
-      await waitFor(() => {
-        expect(screen.queryByTestId('positioner')).toBe(null);
-      });
+      expect(screen.queryByTestId('positioner')).toBe(null);
 
       await user.click(screen.getByRole('button', { name: 'Remount open' }));
       await waitFor(() => {
@@ -1332,9 +1403,7 @@ describe('<Tooltip.Root />', () => {
       expect(screen.queryByTestId('positioner')).not.toBe(null);
 
       await user.click(screen.getByRole('button', { name: 'Close tooltip' }));
-      await waitFor(() => {
-        expect(screen.queryByTestId('positioner')).toBe(null);
-      });
+      expect(screen.queryByTestId('positioner')).toBe(null);
     });
   });
 
@@ -1429,9 +1498,7 @@ describe('<Tooltip.Root />', () => {
     await user.hover(screen.getByRole('button', { name: 'Second' }));
     await screen.findByText('Second tooltip');
 
-    await waitFor(() => {
-      expect(screen.queryByText('First tooltip')).toBe(null);
-    });
+    expect(screen.queryByText('First tooltip')).toBe(null);
     expect(handleFirstOpenChange).toHaveBeenLastCalledWith(
       false,
       expect.objectContaining({ reason: REASONS.none }),
@@ -1529,9 +1596,7 @@ describe('<Tooltip.Root />', () => {
       });
 
       await fireEvent.mouseLeave(trigger);
-      await waitFor(() => {
-        expect(screen.queryByTestId('positioner')).toBe(null);
-      });
+      expect(screen.queryByTestId('positioner')).toBe(null);
 
       await user.click(screen.getByRole('button', { name: 'Disable tracking' }));
 
@@ -1586,9 +1651,7 @@ describe('<Tooltip.Root />', () => {
       });
 
       await fireEvent.mouseLeave(trigger);
-      await waitFor(() => {
-        expect(screen.queryByTestId('positioner')).toBe(null);
-      });
+      expect(screen.queryByTestId('positioner')).toBe(null);
 
       await fireEvent.mouseEnter(trigger, { clientX: secondCursorX, clientY: cursorY });
       await fireEvent.mouseMove(trigger, { clientX: secondCursorX, clientY: cursorY });
@@ -1655,9 +1718,7 @@ describe('<Tooltip.Root />', () => {
       });
 
       await fireEvent.click(screen.getByRole('button', { name: 'Close' }));
-      await waitFor(() => {
-        expect(screen.queryByTestId('positioner')).toBe(null);
-      });
+      expect(screen.queryByTestId('positioner')).toBe(null);
 
       await fireEvent.click(screen.getByRole('button', { name: 'Open' }));
       await screen.findByTestId('positioner');
@@ -1763,9 +1824,7 @@ describe('<Tooltip.Root />', () => {
         ...center(screen.getByRole('button', { name: 'Outside' })),
       });
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
-      });
+      expect(screen.queryByTestId('popup')).toBe(null);
     });
 
     it('closes on that same trip when `disableHoverablePopup` is set', async () => {
@@ -1879,13 +1938,9 @@ describe('<Tooltip.Root />', () => {
 
         await user.hover(trigger);
 
-        // Well under the open delay, so only the close-transition fast path can reopen it.
-        await waitFor(
-          () => {
-            expect(screen.getByTestId('popup')).toHaveAttribute('data-open');
-          },
-          { timeout: 200 },
-        );
+        // The fast path of the close transition opens the popup in the task of the enter event. The
+        // open delay would open it later.
+        expect(screen.getByTestId('popup')).toHaveAttribute('data-open');
         expect(screen.getByTestId('popup')).not.toHaveAttribute('data-closed');
       },
     );

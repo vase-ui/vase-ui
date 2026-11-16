@@ -32,7 +32,10 @@ export interface SwitchRootProps
   extends
     NonNativeButtonProps,
     VaseUIComponentProps<SwitchRootState>,
-    /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes>, 'id' | 'onChange'> {
+    /* @vue-ignore */ Omit<
+      WithVaseUIEvent<HTMLAttributes, 'aria-label' | 'aria-labelledby'>,
+      'id' | 'onChange'
+    > {
   /**
    * The id of the hidden input element.
    *
@@ -102,12 +105,12 @@ export type SwitchRootChangeEventDetails = VaseUIChangeEventDetails<SwitchRootCh
 
 <script setup lang="ts">
 import { computed, nextTick, provide, shallowRef, watch } from 'vue';
-import { addEventListener } from '../../common/addEventListener';
-import { ownerWindow } from '../../common/owner';
+import { queueInputTake, useAriaAfterHydration } from '../../common/hydration';
 import { useControlled } from '../../common/useControlled';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
+import { givenName } from '../../internals/blankName';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
-import { useRegisterFieldControl } from '../../internals/field-register-control';
+import { useFieldInput, useRegisterFieldControl } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
 import { useFormContext } from '../../internals/form-context';
@@ -121,6 +124,7 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useFormReset } from '../../internals/useFormReset';
+import { useFormRestore } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { dispatchClickWithModifiers } from '../../utils/dispatchClickWithModifiers';
@@ -174,6 +178,7 @@ const inputName = computed(() => fieldName.value ?? props.name);
 const clearFieldError = useClearFieldError(inputName);
 
 const inputElement = shallowRef<HTMLInputElement | null>(null);
+const giveFieldInput = useFieldInput();
 
 function setInputElement(value: unknown) {
   const input = value as HTMLInputElement | null;
@@ -182,7 +187,7 @@ function setInputElement(value: unknown) {
     return;
   }
   inputElement.value = input;
-  validation.inputRef.value = input;
+  giveFieldInput(input);
 }
 
 const setFocused = useSetFieldFocused(isDisabled, () => element.value);
@@ -243,8 +248,7 @@ const ariaLabelledBy = useAriaLabelledBy(
 );
 
 // Vue writes `checked` to the input only when the value changes between two renders, and
-// hydration does not write it. A browser changes the input with no change of the state: it
-// restores the form state of a page, and it keeps the result of a click that a parent does not
+// hydration does not write it. A browser keeps the result of a click that a parent does not
 // accept. A form would then submit a state that the switch does not show.
 function writeCheckedToInput() {
   const input = inputElement.value;
@@ -253,7 +257,7 @@ function writeCheckedToInput() {
   }
 }
 
-function requestChange(nextChecked: boolean, event: Event) {
+function requestChange(nextChecked: boolean, event?: Event) {
   const details = createChangeEventDetails(REASONS.none, event);
 
   emit('checkedChange', nextChecked, details);
@@ -285,6 +289,21 @@ function onInputClick(event: MouseEvent) {
   void nextTick(writeCheckedToInput);
 }
 
+// The input changed with no event that the switch handled: a press on a native label before the
+// hydration, or a form state that the browser restored.
+function takeInputState(event?: Event) {
+  const input = inputElement.value;
+  if (!input) {
+    return;
+  }
+
+  if (input.checked !== isChecked.value && !props.readOnly && !isDisabled.value) {
+    requestChange(input.checked, event);
+  }
+
+  void nextTick(writeCheckedToInput);
+}
+
 useFormReset(inputElement, (event) => {
   const hasChanged =
     props.checked === undefined &&
@@ -298,20 +317,28 @@ useFormReset(inputElement, (event) => {
   }
 });
 
+// Vue writes `checked` to the attribute too, so only an input that changed before the hydration
+// differs from its `defaultChecked`. Its take waits until the field recorded its initial value.
 watch(
   inputElement,
-  (input, _previous, onCleanup) => {
+  (input) => {
     if (!input) {
       return;
     }
 
-    writeCheckedToInput();
-
-    // Chromium restores the form state of a page after `load`, with no event on the input.
-    onCleanup(addEventListener(ownerWindow(input), 'pageshow', writeCheckedToInput));
+    if (input.checked === input.defaultChecked) {
+      writeCheckedToInput();
+    } else {
+      queueInputTake(() => {
+        takeInputState();
+        return true;
+      });
+    }
   },
   { flush: 'post' },
 );
+
+useFormRestore(inputElement, takeInputState);
 
 const state = computed<SwitchRootState>(() => ({
   ...fieldState.value,
@@ -323,6 +350,7 @@ const state = computed<SwitchRootState>(() => ({
 
 provide(SwitchRootContext, state);
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('span', props, {
   state,
   ref: [buttonRef],
@@ -334,8 +362,8 @@ const { element, elementProps } = useRenderElement('span', props, {
       'aria-checked': isChecked.value,
       'aria-readonly': props.readOnly || undefined,
       'aria-required': props.required || undefined,
-      'aria-label': props.ariaLabel,
-      'aria-labelledby': ariaLabelledBy.value,
+      'aria-label': givenName(props.ariaLabel),
+      'aria-labelledby': ariaAfterHydration(ariaLabelledBy.value),
       onFocusin() {
         setFocused(true);
       },
@@ -370,14 +398,17 @@ const { element, elementProps } = useRenderElement('span', props, {
     attrs,
     getButtonProps,
     (merged) => validation.getValidationProps(isDisabled.value, merged),
+    (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),
   ],
 });
 
 // The style is the constant itself, in an object that no `mergeProps` call makes.
 // `handleHiddenInputInvalid` then keeps the size that it writes.
 function inputProps() {
+  const validationProps = validation.getValidationProps(isDisabled.value);
   return {
-    ...validation.getValidationProps(isDisabled.value),
+    ...validationProps,
+    'aria-describedby': ariaAfterHydration(validationProps['aria-describedby']),
     ref: setInputElement,
     checked: isChecked.value,
     disabled: isDisabled.value,

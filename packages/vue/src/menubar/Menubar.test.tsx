@@ -1,7 +1,8 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import type { Mock } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { defineComponent, KeepAlive, nextTick, shallowRef } from 'vue';
-import type { ComputedRef } from 'vue';
+import type { ComputedRef, VNode } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import type { TextDirection } from '@vase-ui/vue/direction-provider';
 import { Menubar } from '@vase-ui/vue/menubar';
@@ -10,8 +11,10 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountListTests,
   hydrate,
   isJSDOM,
+  nextEvent,
   pressWithTouch,
   renderOnServer,
   screen,
@@ -50,11 +53,17 @@ function parse(html: string) {
 
 // The focus of the next trigger opens its menu only when the trigger matches `:focus-visible`. After a
 // real click of an earlier case, a script focus does not match it. A real Tab sets it, and each later
-// script focus keeps it. WebKit does not tab to a button, so the call also focuses the trigger.
+// script focus keeps it.
 async function focusTriggerWithKeyboard(trigger: HTMLElement) {
   await userEvent.tab();
-  trigger.focus();
-  await flushMicrotasks();
+  expect(trigger).toHaveFocus();
+}
+
+// A menu focuses a hovered submenu trigger in an animation frame, and a user reaches the submenu
+// after that frame. A pointer that reaches a submenu item before that frame moves the focus from
+// the menubar trigger to the item. `useFocus` of the menubar trigger then closes the menu.
+async function hoverSubmenuTrigger(trigger: HTMLElement) {
+  await nextEvent(trigger, 'focusin', { action: () => userEvent.hover(trigger) });
   expect(trigger).toHaveFocus();
 }
 
@@ -389,6 +398,29 @@ describe('filterable menubar menus', () => {
 
 describe('<Menubar />', () => {
   const { render } = createRenderer();
+
+  heldMountListTests({
+    render,
+    renderList: (withLastItem) => (
+      <Menubar>
+        <Menu.Root>
+          <Menu.Trigger>File</Menu.Trigger>
+        </Menu.Root>
+        {withLastItem ? (
+          <Menu.Root>
+            <Menu.Trigger>Edit</Menu.Trigger>
+          </Menu.Root>
+        ) : null}
+      </Menubar>
+    ),
+    async check(user) {
+      screen.getByRole('menuitem', { name: 'File' }).focus();
+      await user.keyboard('[ArrowRight]');
+      await waitFor(() => {
+        expect(screen.getByRole('menuitem', { name: 'Edit' })).toHaveFocus();
+      });
+    },
+  });
 
   describeConformance(<Menubar />, () => ({
     render: (node) => render(<Menubar>{node}</Menubar>),
@@ -866,9 +898,7 @@ describe('<Menubar />', () => {
       new PointerEvent('click', { bubbles: true, cancelable: true, pointerType: 'touch' }),
     );
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('edit-menu')).toBe(null);
-    });
+    expect(screen.queryByTestId('edit-menu')).toBe(null);
   });
 
   it('keeps a controlled menu open on a delayed touch click it ignores, until the cooldown ends', async () => {
@@ -944,9 +974,7 @@ describe('<Menubar />', () => {
     );
 
     expect(onEditOpenChange).toHaveBeenLastCalledWith(false, 'trigger-press');
-    await waitFor(() => {
-      expect(screen.queryByTestId('edit-menu')).toBe(null);
-    });
+    expect(screen.queryByTestId('edit-menu')).toBe(null);
   });
 
   it('closes on a touch item click immediately after focus opens another menu', async () => {
@@ -959,10 +987,11 @@ describe('<Menubar />', () => {
     // active when the item is clicked.
     vi.useFakeTimers();
     try {
-      screen.getByTestId('edit-trigger').focus();
-      await flushMicrotasks();
-      // The item mounts with the menu. Vue skips its listener for an event of that millisecond.
-      await waitForLaterMillisecond();
+      // The focus opens the menu, and the item mounts with it.
+      await waitForLaterMillisecond(() => {
+        screen.getByTestId('edit-trigger').focus();
+        return flushMicrotasks();
+      });
 
       await fireEvent(
         screen.getByTestId('edit-item-1'),
@@ -972,9 +1001,7 @@ describe('<Menubar />', () => {
       vi.useRealTimers();
     }
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('edit-menu')).toBe(null);
-    });
+    expect(screen.queryByTestId('edit-menu')).toBe(null);
   });
 
   it('keeps focus on an outside target when a triggerless menubar menu closes', async () => {
@@ -1018,6 +1045,250 @@ describe('<Menubar />', () => {
     expect(outside).toHaveFocus();
   });
 
+  describe.skipIf(isJSDOM)(
+    'VUE-85: a menu that another menu closes gives the focus to that menu',
+    () => {
+      // The test setup disables the animation check, so a popup unmounts in the update of its close.
+      // The focus manager then returns the focus before the pointer or the new popup moves the focus.
+      type SiblingMenuName = 'file' | 'edit';
+      type OpenChangeSpy = Mock<(open: boolean, reason: MenuRootChangeEventReason) => void>;
+
+      type SiblingMenusOptions = {
+        detached?: boolean;
+        filterableFile?: boolean;
+        fileDefaultOpen?: boolean;
+        controlledEdit?: boolean;
+      };
+
+      function createSiblingMenus({
+        detached = false,
+        filterableFile = false,
+        fileDefaultOpen = false,
+        controlledEdit = false,
+      }: SiblingMenusOptions = {}) {
+        const editOpen = shallowRef(false);
+        const onOpenChange: Record<SiblingMenuName, OpenChangeSpy> = {
+          file: vi.fn(),
+          edit: vi.fn((open: boolean) => {
+            editOpen.value = open;
+          }),
+        };
+        const handles = detached
+          ? { file: Menu.createHandle(), edit: Menu.createHandle() }
+          : undefined;
+
+        function renderTrigger(name: SiblingMenuName, label: string) {
+          return (
+            <Menu.Trigger
+              handle={handles?.[name]}
+              id={`${name}-trigger`}
+              data-testid={`${name}-trigger`}
+            >
+              {label}
+            </Menu.Trigger>
+          );
+        }
+
+        function renderMenu(
+          name: SiblingMenuName,
+          label: string,
+          rootProps: { defaultOpen?: boolean | undefined; open?: boolean | undefined },
+          popup: VNode,
+        ) {
+          return (
+            <Menu.Root
+              {...rootProps}
+              handle={handles?.[name]}
+              onOpenChange={(open: boolean, details: Menu.Root.ChangeEventDetails) => {
+                onOpenChange[name](open, details.reason);
+              }}
+            >
+              {detached ? null : renderTrigger(name, label)}
+              <Menu.Portal>
+                <Menu.Positioner data-testid={`${name}-menu`}>{popup}</Menu.Positioner>
+              </Menu.Portal>
+            </Menu.Root>
+          );
+        }
+
+        const SiblingMenus = defineComponent(() => () => {
+          const fileRoot = renderMenu(
+            'file',
+            'File',
+            { defaultOpen: fileDefaultOpen },
+            <Menu.Popup>
+              {filterableFile ? (
+                <>
+                  <Menu.Input aria-label="Filter file actions" />
+                  <Menu.List>
+                    <Menu.Item>Open</Menu.Item>
+                  </Menu.List>
+                </>
+              ) : (
+                <Menu.Item>Open</Menu.Item>
+              )}
+            </Menu.Popup>,
+          );
+          const menus = [
+            filterableFile ? <Menu.FilterProvider>{fileRoot}</Menu.FilterProvider> : fileRoot,
+            renderMenu(
+              'edit',
+              'Edit',
+              { open: controlledEdit ? editOpen.value : undefined },
+              <Menu.Popup>
+                <Menu.Item>Copy</Menu.Item>
+              </Menu.Popup>,
+            ),
+          ];
+
+          return (
+            <>
+              <Menubar style={menubarStyle}>
+                {detached ? [renderTrigger('file', 'File'), renderTrigger('edit', 'Edit')] : menus}
+              </Menubar>
+              {detached ? menus : null}
+            </>
+          );
+        });
+
+        return { SiblingMenus, onOpenChange, handles, editOpen };
+      }
+
+      type SiblingMenusFixture = ReturnType<typeof createSiblingMenus>;
+
+      // Each focus that arrives in the document after the call, so a case can show that the focus
+      // does not pass through the trigger of the menu that closed.
+      function recordFocusTargets() {
+        const targets: EventTarget[] = [];
+        function handleFocusin(event: FocusEvent) {
+          if (event.target) {
+            targets.push(event.target);
+          }
+        }
+        document.addEventListener('focusin', handleFocusin);
+        onTestFinished(() => document.removeEventListener('focusin', handleFocusin));
+        return targets;
+      }
+
+      async function openFileWithKeyboard() {
+        await focusTriggerWithKeyboard(screen.getByTestId('file-trigger'));
+        await nextEvent(document, 'focusin', { action: () => userEvent.keyboard('{Enter}') });
+        expect(screen.getByTestId('file-menu')).toContainElement(
+          document.activeElement as HTMLElement,
+        );
+      }
+
+      // The trigger takes the focus in a microtask of the `mouseenter` of the hover. The open menu
+      // focuses its popup one animation frame later, so the wait for that focus starts before that
+      // frame.
+      async function hoverTriggerAndWaitForMenuFocus(name: SiblingMenuName) {
+        const trigger = screen.getByTestId(`${name}-trigger`);
+        await nextEvent(trigger, 'focusin', { action: () => userEvent.hover(trigger) });
+        await nextEvent(document, 'focusin');
+      }
+
+      it.each([
+        { name: 'contained triggers', options: {} },
+        { name: 'detached triggers', options: { detached: true } },
+        { name: 'a filterable menu', options: { filterableFile: true } },
+      ])(
+        'opens the other menu once when the pointer moves to its trigger after a keyboard open, with $name',
+        async ({ options }) => {
+          const { SiblingMenus, onOpenChange } = createSiblingMenus(options);
+          await render(<SiblingMenus />);
+          const fileTrigger = screen.getByTestId('file-trigger');
+          const editTrigger = screen.getByTestId('edit-trigger');
+
+          await openFileWithKeyboard();
+          const focusTargets = recordFocusTargets();
+          await hoverTriggerAndWaitForMenuFocus('edit');
+
+          expect(onOpenChange.file.mock.calls).toEqual([
+            [true, 'trigger-press'],
+            [false, 'sibling-open'],
+          ]);
+          expect(onOpenChange.edit.mock.calls).toEqual([
+            [true, 'trigger-hover'],
+            [true, 'trigger-focus'],
+          ]);
+          expect(fileTrigger).not.toHaveAttribute('data-popup-open');
+          expect(editTrigger).toHaveAttribute('data-popup-open');
+          expect(focusTargets).toHaveLength(2);
+          expect(focusTargets[0]).toBe(editTrigger);
+          expect(screen.getByTestId('edit-menu')).toContainElement(
+            document.activeElement as HTMLElement,
+          );
+        },
+      );
+
+      it('keeps a menu with defaultOpen open at the mount, and closes it once when the pointer moves to another trigger', async () => {
+        // A script focus matches `:focus-visible` only after a keyboard input.
+        await userEvent.tab();
+        const { SiblingMenus, onOpenChange } = createSiblingMenus({ fileDefaultOpen: true });
+
+        await nextEvent(document, 'focusin', { action: () => render(<SiblingMenus />) });
+        expect(onOpenChange.file.mock.calls).toEqual([]);
+        expect(screen.getByTestId('file-menu')).toContainElement(
+          document.activeElement as HTMLElement,
+        );
+
+        await hoverTriggerAndWaitForMenuFocus('edit');
+
+        expect(onOpenChange.file.mock.calls).toEqual([[false, 'sibling-open']]);
+        expect(onOpenChange.edit.mock.calls).toEqual([
+          [true, 'trigger-hover'],
+          [true, 'trigger-focus'],
+        ]);
+        expect(screen.getByTestId('edit-menu')).toContainElement(
+          document.activeElement as HTMLElement,
+        );
+      });
+
+      it.each([
+        {
+          name: 'its open prop',
+          options: { controlledEdit: true },
+          openEdit: ({ editOpen }: SiblingMenusFixture) => {
+            editOpen.value = true;
+          },
+          editCalls: [[true, 'trigger-focus']],
+        },
+        {
+          name: 'its handle',
+          options: { detached: true },
+          openEdit: ({ handles }: SiblingMenusFixture) => handles?.edit.open('edit-trigger'),
+          editCalls: [
+            [true, 'imperative-action'],
+            [true, 'trigger-focus'],
+          ],
+        },
+      ])(
+        'keeps a menu that $name opens open while the focus is in another menu',
+        async ({ options, openEdit, editCalls }) => {
+          const fixture = createSiblingMenus(options);
+          const { SiblingMenus, onOpenChange } = fixture;
+          await render(<SiblingMenus />);
+          const editTrigger = screen.getByTestId('edit-trigger');
+
+          await openFileWithKeyboard();
+          await nextEvent(document, 'focusin', { action: () => openEdit(fixture) });
+          expect(editTrigger).toHaveFocus();
+          await nextEvent(document, 'focusin');
+
+          expect(onOpenChange.file.mock.calls).toEqual([
+            [true, 'trigger-press'],
+            [false, 'sibling-open'],
+          ]);
+          expect(onOpenChange.edit.mock.calls).toEqual(editCalls);
+          expect(editTrigger).toHaveAttribute('data-popup-open');
+          expect(screen.getByTestId('edit-menu')).toContainElement(
+            document.activeElement as HTMLElement,
+          );
+        },
+      );
+    },
+  );
+
   describe.for([
     { name: 'contained triggers', Component: ContainedTriggerMenubar },
     { name: 'detached triggers', Component: DetachedTriggerMenubar },
@@ -1034,9 +1305,7 @@ describe('<Menubar />', () => {
 
         // Click again to close the menu
         await userEvent.click(fileTrigger, { delay: 30 });
-        await waitFor(() => {
-          expect(screen.queryByTestId('file-menu')).toBe(null);
-        });
+        expect(screen.queryByTestId('file-menu')).toBe(null);
       });
     });
 
@@ -1070,7 +1339,7 @@ describe('<Menubar />', () => {
         await userEvent.hover(editTrigger as HTMLElement);
 
         await waitFor(() => {
-          expect(screen.queryByTestId('edit-menu')).not.toBe(null);
+          expect(screen.getByTestId('edit-menu')).not.toBe(null);
         });
 
         // The file menu should now be closed
@@ -1081,7 +1350,7 @@ describe('<Menubar />', () => {
         await userEvent.hover(viewTrigger);
 
         await waitFor(() => {
-          expect(screen.queryByTestId('view-menu')).not.toBe(null);
+          expect(screen.getByTestId('view-menu')).not.toBe(null);
         });
 
         // The edit menu should now be closed
@@ -1093,10 +1362,11 @@ describe('<Menubar />', () => {
 
         // First click to open the file menu
         const fileTrigger = screen.getByTestId('file-trigger');
-        await userEvent.click(fileTrigger);
-
-        await waitFor(() => {
-          expect(screen.getByTestId('file-menu')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await userEvent.click(fileTrigger);
+          await waitFor(() => {
+            expect(screen.getByTestId('file-menu')).not.toBe(null);
+          });
         });
         await waitFor(() => {
           expect(screen.getByRole('menubar')).toHaveAttribute('data-has-submenu-open');
@@ -1110,7 +1380,7 @@ describe('<Menubar />', () => {
 
         // The share submenu should open
         await waitFor(() => {
-          expect(screen.queryByTestId('share-menu')).not.toBe(null);
+          expect(screen.getByTestId('share-menu')).not.toBe(null);
         });
       });
 
@@ -1119,10 +1389,11 @@ describe('<Menubar />', () => {
 
         // First click to open the file menu
         const fileTrigger = screen.getByTestId('file-trigger');
-        await userEvent.click(fileTrigger);
-
-        await waitFor(() => {
-          expect(screen.getByTestId('file-menu')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await userEvent.click(fileTrigger);
+          await waitFor(() => {
+            expect(screen.getByTestId('file-menu')).not.toBe(null);
+          });
         });
         await waitFor(() => {
           expect(screen.getByRole('menubar')).toHaveAttribute('data-has-submenu-open');
@@ -1130,11 +1401,12 @@ describe('<Menubar />', () => {
 
         // Now hover over the share submenu trigger
         const shareTrigger = await screen.findByTestId('share-trigger');
-        await userEvent.hover(shareTrigger);
-
         // The share submenu should open
-        await waitFor(() => {
-          expect(screen.queryByTestId('share-menu')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await hoverSubmenuTrigger(shareTrigger);
+          await waitFor(() => {
+            expect(screen.getByTestId('share-menu')).not.toBe(null);
+          });
         });
 
         // Hover over the first item in the share submenu
@@ -1145,7 +1417,7 @@ describe('<Menubar />', () => {
         await userEvent.hover(editTrigger);
 
         await waitFor(() => {
-          expect(screen.queryByTestId('edit-menu')).not.toBe(null);
+          expect(screen.getByTestId('edit-menu')).not.toBe(null);
         });
 
         expect(screen.queryByTestId('file-menu')).toBe(null);
@@ -1169,7 +1441,7 @@ describe('<Menubar />', () => {
 
         await user.keyboard('{Enter}');
         await waitFor(() => {
-          expect(screen.queryByTestId('file-menu')).not.toBe(null);
+          expect(screen.getByTestId('file-menu')).not.toBe(null);
         });
       });
     });
@@ -1180,20 +1452,23 @@ describe('<Menubar />', () => {
 
         const viewTrigger = screen.getByTestId('view-trigger');
 
-        await userEvent.click(viewTrigger, { delay: 30 });
-        await screen.findByTestId('view-menu');
+        await waitForLaterMillisecond(async () => {
+          await userEvent.click(viewTrigger, { delay: 30 });
+          await screen.findByTestId('view-menu');
+        });
 
         const layoutTrigger = screen.getByTestId('layout-trigger');
-        await userEvent.hover(layoutTrigger);
-
-        await screen.findByTestId('layout-menu');
+        await waitForLaterMillisecond(async () => {
+          await hoverSubmenuTrigger(layoutTrigger);
+          await screen.findByTestId('layout-menu');
+        });
 
         const layoutItem2 = screen.getByTestId('layout-item-2');
         await userEvent.click(layoutItem2, { delay: 30 });
 
         // The layout menu should not close after clicking an item
         await waitFor(() => {
-          expect(screen.queryByTestId('layout-menu')).not.toBe(null);
+          expect(screen.getByTestId('layout-menu')).not.toBe(null);
         });
       });
 
@@ -1204,23 +1479,28 @@ describe('<Menubar />', () => {
         const fileTrigger = screen.getByTestId('file-trigger');
         const viewTrigger = screen.getByTestId('view-trigger');
 
-        await userEvent.click(fileTrigger, { delay: 30 });
-        await screen.findByTestId('file-menu');
+        await waitForLaterMillisecond(async () => {
+          await userEvent.click(fileTrigger, { delay: 30 });
+          await screen.findByTestId('file-menu');
+        });
 
-        await userEvent.hover(viewTrigger);
-        await screen.findByTestId('view-menu');
+        await waitForLaterMillisecond(async () => {
+          await userEvent.hover(viewTrigger);
+          await screen.findByTestId('view-menu');
+        });
 
         const layoutTrigger = screen.getByTestId('layout-trigger');
-        await userEvent.hover(layoutTrigger);
-
-        await screen.findByTestId('layout-menu');
+        await waitForLaterMillisecond(async () => {
+          await hoverSubmenuTrigger(layoutTrigger);
+          await screen.findByTestId('layout-menu');
+        });
 
         const layoutItem2 = screen.getByTestId('layout-item-2');
         await userEvent.click(layoutItem2, { delay: 30 });
 
         // The layout menu should not close after clicking an item
         await waitFor(() => {
-          expect(screen.queryByTestId('layout-menu')).not.toBe(null);
+          expect(screen.getByTestId('layout-menu')).not.toBe(null);
         });
       });
     });
@@ -1283,7 +1563,7 @@ describe('<Menubar />', () => {
 
         // Menu should be open
         await waitFor(() => {
-          expect(screen.queryByTestId('file-menu')).not.toBe(null);
+          expect(screen.getByTestId('file-menu')).not.toBe(null);
         });
       });
 
@@ -1294,11 +1574,12 @@ describe('<Menubar />', () => {
         // Focus and open file menu
         fileTrigger.focus();
         await flushMicrotasks();
-        await user.keyboard('{Enter}');
-
-        // File menu should be open
-        await waitFor(() => {
-          expect(screen.queryByTestId('file-menu')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.keyboard('{Enter}');
+          // File menu should be open
+          await waitFor(() => {
+            expect(screen.getByTestId('file-menu')).not.toBe(null);
+          });
         });
 
         // First item should be focused automatically
@@ -1329,9 +1610,11 @@ describe('<Menubar />', () => {
         // Focus and open file menu
         fileTrigger.focus();
         await flushMicrotasks();
-        await user.keyboard('{Enter}');
-        await waitFor(() => {
-          expect(screen.queryByTestId('file-menu')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.keyboard('{Enter}');
+          await waitFor(() => {
+            expect(screen.getByTestId('file-menu')).not.toBe(null);
+          });
         });
 
         await waitFor(() => {
@@ -1353,7 +1636,7 @@ describe('<Menubar />', () => {
 
         // Share submenu should be open
         await waitFor(() => {
-          expect(screen.queryByTestId('share-menu')).not.toBe(null);
+          expect(screen.getByTestId('share-menu')).not.toBe(null);
         });
 
         // First submenu item should be focused
@@ -1371,20 +1654,19 @@ describe('<Menubar />', () => {
         fileTrigger.focus();
         await flushMicrotasks();
 
-        await user.keyboard('{Enter}');
-
-        // Menu should be open
-        await waitFor(() => {
-          expect(screen.queryByTestId('file-menu')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.keyboard('{Enter}');
+          // Menu should be open
+          await waitFor(() => {
+            expect(screen.getByTestId('file-menu')).not.toBe(null);
+          });
         });
 
         // Press Escape to close
         await user.keyboard('{Escape}');
 
         // Menu should be closed
-        await waitFor(() => {
-          expect(screen.queryByTestId('file-menu')).toBe(null);
-        });
+        expect(screen.queryByTestId('file-menu')).toBe(null);
       });
 
       it('should close submenu with left arrow key and return focus to submenu trigger', async () => {
@@ -1394,7 +1676,7 @@ describe('<Menubar />', () => {
         // Focus and open file menu
         fileTrigger.focus();
         await flushMicrotasks();
-        await user.keyboard('{Enter}');
+        await waitForLaterMillisecond(() => user.keyboard('{Enter}'));
         await waitFor(() => {
           expect(screen.getByTestId('file-item-1')).toHaveFocus();
         });
@@ -1413,9 +1695,11 @@ describe('<Menubar />', () => {
         });
 
         // Open submenu
-        await user.keyboard('{ArrowRight}');
-        await waitFor(() => {
-          expect(screen.queryByTestId('share-menu')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.keyboard('{ArrowRight}');
+          await waitFor(() => {
+            expect(screen.getByTestId('share-menu')).not.toBe(null);
+          });
         });
         // The submenu focuses its first item a frame after opening.
         await waitFor(() => {
@@ -1426,9 +1710,7 @@ describe('<Menubar />', () => {
         await user.keyboard('{ArrowLeft}');
 
         // Submenu should be closed
-        await waitFor(() => {
-          expect(screen.queryByTestId('share-menu')).toBe(null);
-        });
+        expect(screen.queryByTestId('share-menu')).toBe(null);
 
         // Focus should return to submenu trigger
         expect(shareTrigger).toHaveFocus();
@@ -1480,8 +1762,10 @@ describe('<Menubar />', () => {
         const fileTrigger = screen.getByTestId('menubar-file-trigger');
 
         await focusTriggerWithKeyboard(fileTrigger);
-        await user.keyboard('{Enter}');
-        await screen.findByTestId('menubar-file-menu');
+        await waitForLaterMillisecond(async () => {
+          await user.keyboard('{Enter}');
+          await screen.findByTestId('menubar-file-menu');
+        });
 
         await waitFor(() => {
           expect(screen.getByTestId('menubar-file-item')).toHaveFocus();
@@ -1493,8 +1777,10 @@ describe('<Menubar />', () => {
           expect(submenuTrigger).toHaveFocus();
         });
 
-        await user.keyboard('{ArrowRight}');
-        await screen.findByTestId('menubar-submenu-menu');
+        await waitForLaterMillisecond(async () => {
+          await user.keyboard('{ArrowRight}');
+          await screen.findByTestId('menubar-submenu-menu');
+        });
 
         await waitFor(() => {
           expect(screen.getByTestId('menubar-submenu-item')).toHaveFocus();
@@ -1504,13 +1790,9 @@ describe('<Menubar />', () => {
 
         await screen.findByTestId('menubar-next-menu');
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('menubar-submenu-menu')).toBe(null);
-        });
+        expect(screen.queryByTestId('menubar-submenu-menu')).toBe(null);
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('menubar-file-menu')).toBe(null);
-        });
+        expect(screen.queryByTestId('menubar-file-menu')).toBe(null);
 
         expect(submenuOnOpenChange.mock.lastCall?.[0]).toBe(false);
         expect(rootOnOpenChange.mock.lastCall?.[0]).toBe(false);
@@ -1523,22 +1805,21 @@ describe('<Menubar />', () => {
 
         // Focus and open file menu
         await focusTriggerWithKeyboard(fileTrigger);
-        await user.keyboard('{Enter}');
-
-        // File menu should be open
-        await waitFor(() => {
-          expect(screen.queryByTestId('file-menu')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.keyboard('{Enter}');
+          // File menu should be open
+          await waitFor(() => {
+            expect(screen.getByTestId('file-menu')).not.toBe(null);
+          });
         });
 
         // Navigate right to edit menu
         await user.keyboard('{ArrowRight}');
 
         // File menu should close, edit menu should open
+        expect(screen.queryByTestId('file-menu')).toBe(null);
         await waitFor(() => {
-          expect(screen.queryByTestId('file-menu')).toBe(null);
-        });
-        await waitFor(() => {
-          expect(screen.queryByTestId('edit-menu')).not.toBe(null);
+          expect(screen.getByTestId('edit-menu')).not.toBe(null);
         });
       });
     });
@@ -1549,11 +1830,12 @@ describe('<Menubar />', () => {
 
         // Open the menu with a mouse click
         const fileTrigger = screen.getByTestId('file-trigger');
-        await user.click(fileTrigger);
-
-        // Menu should be open
-        await waitFor(() => {
-          expect(screen.queryByTestId('file-menu')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await user.click(fileTrigger);
+          // Menu should be open
+          await waitFor(() => {
+            expect(screen.getByTestId('file-menu')).not.toBe(null);
+          });
         });
 
         // Navigate with keyboard
@@ -1580,18 +1862,16 @@ describe('<Menubar />', () => {
         await user.click(fileTrigger);
 
         await waitFor(() => {
-          expect(screen.queryByTestId('file-menu')).not.toBe(null);
+          expect(screen.getByTestId('file-menu')).not.toBe(null);
         });
 
         // Navigate to edit menu with keyboard
         await user.keyboard('{ArrowRight}');
 
         // File menu should close, edit menu should open
+        expect(screen.queryByTestId('file-menu')).toBe(null);
         await waitFor(() => {
-          expect(screen.queryByTestId('file-menu')).toBe(null);
-        });
-        await waitFor(() => {
-          expect(screen.queryByTestId('edit-menu')).not.toBe(null);
+          expect(screen.getByTestId('edit-menu')).not.toBe(null);
         });
       });
     });
@@ -1606,9 +1886,10 @@ describe('<Menubar />', () => {
         );
 
         const fileTrigger = screen.getByTestId('file-trigger');
-        await pressWithTouch(fileTrigger);
-
-        await screen.findByTestId('file-menu');
+        await waitForLaterMillisecond(async () => {
+          await pressWithTouch(fileTrigger);
+          await screen.findByTestId('file-menu');
+        });
 
         const shareTrigger = await screen.findByTestId('share-trigger');
         await pressWithTouch(shareTrigger);
@@ -1619,9 +1900,7 @@ describe('<Menubar />', () => {
         await pressWithTouch(outside);
 
         // The submenu lives inside the file menu, so it is gone once the file menu closes.
-        await waitFor(() => {
-          expect(screen.queryByTestId('file-menu')).toBe(null);
-        });
+        expect(screen.queryByTestId('file-menu')).toBe(null);
         expect(screen.queryByTestId('share-menu')).toBe(null);
       });
     });
@@ -1720,9 +1999,10 @@ describe('<Menubar />', () => {
         const editTrigger = screen.getByTestId('edit-trigger');
         const doc = fileTrigger.ownerDocument;
 
-        await pressWithTouch(fileTrigger);
-
-        await screen.findByTestId('file-menu');
+        await waitForLaterMillisecond(async () => {
+          await pressWithTouch(fileTrigger);
+          await screen.findByTestId('file-menu');
+        });
 
         await waitFor(() => {
           expect(isScrollLocked(doc)).toBe(true);
@@ -1732,9 +2012,7 @@ describe('<Menubar />', () => {
 
         await screen.findByTestId('edit-menu');
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('file-menu')).toBe(null);
-        });
+        expect(screen.queryByTestId('file-menu')).toBe(null);
 
         await waitFor(() => {
           expect(isScrollLocked(doc)).toBe(false);
@@ -1790,7 +2068,7 @@ describe('<Menubar />', () => {
 
           await user.keyboard('{ArrowRight}');
           await waitFor(() => {
-            expect(screen.queryByTestId('edit-trigger')).not.toBe(null);
+            expect(screen.getByTestId('edit-trigger')).not.toBe(null);
           });
 
           await user.keyboard('{ArrowRight}');
@@ -1851,7 +2129,7 @@ describe('<Menubar />', () => {
         await userEvent.click(fileTrigger);
 
         await waitFor(() => {
-          expect(screen.queryByTestId('file-menu')).not.toBe(null);
+          expect(screen.getByTestId('file-menu')).not.toBe(null);
         });
         await waitFor(() => {
           expect(screen.getByRole('menubar')).toHaveAttribute('data-has-submenu-open');
@@ -1860,22 +2138,18 @@ describe('<Menubar />', () => {
         await userEvent.hover(editTrigger);
 
         await waitFor(() => {
-          expect(screen.queryByTestId('edit-menu')).not.toBe(null);
+          expect(screen.getByTestId('edit-menu')).not.toBe(null);
         });
 
         await userEvent.click(editTrigger);
 
-        await waitFor(() => {
-          expect(screen.queryByTestId('edit-menu')).toBe(null);
-        });
-        await waitFor(() => {
-          expect(screen.getByRole('menubar')).not.toHaveAttribute('data-has-submenu-open');
-        });
+        expect(screen.queryByTestId('edit-menu')).toBe(null);
+        expect(screen.getByRole('menubar')).not.toHaveAttribute('data-has-submenu-open');
 
         await userEvent.click(fileTrigger);
 
         await waitFor(() => {
-          expect(screen.queryByTestId('file-menu')).not.toBe(null);
+          expect(screen.getByTestId('file-menu')).not.toBe(null);
         });
         await waitFor(() => {
           expect(screen.getByRole('menubar')).toHaveAttribute('data-has-submenu-open');
@@ -1884,7 +2158,7 @@ describe('<Menubar />', () => {
         await userEvent.hover(editTrigger);
 
         await waitFor(() => {
-          expect(screen.queryByTestId('edit-menu')).not.toBe(null);
+          expect(screen.getByTestId('edit-menu')).not.toBe(null);
         });
       },
     );
@@ -2053,6 +2327,39 @@ describe('<Menubar />', () => {
       // The disabled first trigger must not swallow the only tab stop.
       await user.tab();
       expect(editTrigger).toHaveFocus();
+    });
+
+    it('VUE-113: keeps the menubar in the tab order when the trigger with the tab stop becomes disabled', async () => {
+      const disabled = shallowRef(false);
+      const App = defineComponent(() => () => (
+        <div>
+          <Menubar style={{ display: 'flex' }}>
+            <Menu.Root>
+              <Menu.Trigger data-testid="file-trigger">File</Menu.Trigger>
+            </Menu.Root>
+            <Menu.Root>
+              <Menu.Trigger disabled={disabled.value} data-testid="edit-trigger">
+                Edit
+              </Menu.Trigger>
+            </Menu.Root>
+          </Menubar>
+          <button type="button" data-testid="after" />
+        </div>
+      ));
+      await render(<App />);
+      screen.getByTestId('file-trigger').focus();
+      await userEvent.keyboard('{ArrowRight}');
+      await waitFor(() => {
+        expect(screen.getByTestId('edit-trigger')).toHaveFocus();
+      });
+      await userEvent.keyboard('{Tab}');
+      expect(screen.getByTestId('after')).toHaveFocus();
+
+      disabled.value = true;
+      await flushMicrotasks();
+      await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+
+      expect(screen.getByTestId('file-trigger')).toHaveFocus();
     });
 
     it('disables menu items while the menubar is disabled', async () => {

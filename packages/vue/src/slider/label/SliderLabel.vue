@@ -50,7 +50,11 @@ function focusControl(event: MouseEvent, controlId: string | undefined) {
   }
 }
 
-const labelProps = useLabel({ id: rootLabelId, registerLabelId, focusControl });
+const labelProps = useLabel({
+  id: rootLabelId,
+  registerLabelId,
+  focusControl,
+});
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,

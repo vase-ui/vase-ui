@@ -1,10 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import {
   createRenderer,
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountListTests,
   nextEvent,
   screen,
   waitFor,
@@ -12,6 +13,7 @@ import {
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import type { NavigationMenuRootContext } from '../root/NavigationMenuRootContext';
+import { allowTopLevelViewportWarning } from '../utils/test-utils';
 
 // The root waits for the animations of its popup element before it unmounts the popup. This
 // component gives the root an element to wait for.
@@ -80,7 +82,35 @@ const Menu = defineComponent<MenuProps>(
 );
 
 describe('<NavigationMenu.Content />', () => {
+  beforeEach(allowTopLevelViewportWarning);
+
   const { render } = createRenderer();
+
+  heldMountListTests({
+    render,
+    renderList: (withLastItem) => (
+      <NavigationMenu.Root defaultValue="one">
+        <NavigationMenu.List>
+          <NavigationMenu.Item value="one">
+            <NavigationMenu.Content>
+              <NavigationMenu.Link href="#first">First link</NavigationMenu.Link>
+              {withLastItem ? (
+                <NavigationMenu.Link href="#second">Second link</NavigationMenu.Link>
+              ) : null}
+            </NavigationMenu.Content>
+          </NavigationMenu.Item>
+        </NavigationMenu.List>
+        <NavigationMenu.Viewport />
+      </NavigationMenu.Root>
+    ),
+    async check(user) {
+      screen.getByRole('link', { name: 'First link' }).focus();
+      await user.keyboard('[ArrowDown]');
+      await waitFor(() => {
+        expect(screen.getByRole('link', { name: 'Second link' })).toHaveFocus();
+      });
+    },
+  });
 
   describeConformance.skip(<NavigationMenu.Content />, () => ({
     refInstanceof: window.HTMLDivElement,
@@ -262,13 +292,15 @@ describe('<NavigationMenu.Content />', () => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
       const value = shallowRef<string | null>('one');
       await render(() => <Menu popup duration={5000} value={value.value} />);
-      expect(screen.getAllByTestId(/^content-/)).toHaveLength(1);
+      const contents = screen.getAllByTestId(/^content-/);
+      expect(contents).toHaveLength(1);
 
       value.value = null;
 
       await waitFor(() => {
-        expect(screen.queryAllByTestId(/^content-/)).toHaveLength(0);
+        expect(contents.filter((content) => content.isConnected)).toEqual([]);
       });
+      expect(screen.queryAllByTestId(/^content-/)).toHaveLength(0);
     });
   });
 
@@ -364,7 +396,7 @@ describe('<NavigationMenu.Content />', () => {
     await flushMicrotasks();
 
     await waitFor(() => {
-      expect(screen.queryByTestId('content-2')).not.toBe(null);
+      expect(screen.getByTestId('content-2')).not.toBe(null);
     });
 
     const content1After = screen.queryByTestId('content-1');

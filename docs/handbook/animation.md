@@ -95,9 +95,9 @@ Use these attributes to make a CSS animation when a component becomes visible or
 
 A JavaScript animation library, such as [Motion for Vue](https://motion.dev/docs/vue) (the package `motion-v`), needs the popup in the DOM while its exit animation plays. Vase UI must also know when that animation ends.
 
-When a popup closes, `open` becomes `false` at once. The popup stays in the DOM until its exit animation ends. Vase UI finds the animations on the element of the popup. It always finds CSS transitions and CSS animations. It also finds a `motion-v` animation that includes `opacity`.
+When a popup closes, `open` becomes `false` at once. The popup stays in the DOM until its exit animation ends. Vase UI finds the animations on the element of the popup. With no popup part, it finds them on the positioner, and with no positioner, on the backdrop. It always finds CSS transitions and CSS animations. It also finds a `motion-v` animation that includes `opacity`.
 
-When the animation ends, Vase UI removes the popup from the DOM, or hides it if the portal has `keepMounted`. The root emits `openChangeComplete` with `false`.
+When the animation ends, Vase UI removes the popup from the DOM, or hides it if the portal has `keepMounted`. It also hides the popup of a [Select](#animate-a-select-popup), and in some cases the popup of a [Combobox or Autocomplete](#animate-a-combobox-or-autocomplete-popup). The root emits `openChangeComplete` with `false`.
 
 Vase UI ends the exit when the animation that it finds ends. If it finds none, it ends the exit in the next frame. To end the exit yourself, see [Manual unmounting](#manual-unmounting). The examples of the next three sections animate `opacity`, so Vase UI ends the exit on its own.
 
@@ -123,7 +123,7 @@ The examples of this section and the next section use [Popover](/components/popo
 
 Vase UI keeps the popup in the DOM while the exit animation plays. The popup needs no `<AnimatePresence>`, no `keepMounted` and no controlled `open`.
 
-Do not put a part in `<AnimatePresence>`: a portal part renders a `<Teleport>`, which `<AnimatePresence>` cannot animate.
+Do not use `<AnimatePresence>` and the `exit` prop for the close of a popup. For the reasons, see [AnimatePresence](#animatepresence).
 
 You can also give `motion.div` to the `as` prop. The template then cannot read the `state` of the popup, so `animate` reads a controlled `open`.
 
@@ -147,7 +147,7 @@ A popup stays in the DOM while it is closed when its portal has `keepMounted`. T
 
 ### Animate a Select popup
 
-The popup of [Select](/components/select) is not in the DOM until the first interaction with the select. After that, the popup stays in the DOM, and it is hidden while the select is closed. `Select.Portal` has no `keepMounted` prop. The same code animates the popup.
+The popup of [Select](/components/select) is not in the DOM until the select is open, gets the focus, or reads a value from its hidden input. After that, the popup stays in the DOM, and it is hidden while the select is closed. `Select.Portal` has no `keepMounted` prop. The code of [Animate a popup with motion-v](#animate-a-popup-with-motion-v) animates the popup. The popup can enter the DOM open, so `initial` is the closed style.
 
 <DemoFrame>
   <MotionSelect />
@@ -161,14 +161,18 @@ The popup of [Select](/components/select) is not in the DOM until the first inte
 
 :::
 
+### Animate a Combobox or Autocomplete popup
+
+The popup of [Combobox](/components/combobox) or [Autocomplete](/components/autocomplete) can stay in the DOM with no `keepMounted`. With no `items` prop on the root, the popup enters the DOM when the `Trigger` part gets the focus or a press. Without `multiple`, the popup of a Combobox also enters when the root reads a value from its hidden input. With the `items` prop, it then enters only if no item has that value or label. After that, the popup stays in the DOM, and it is hidden while it is closed. The code of [Animate a popup with motion-v](#animate-a-popup-with-motion-v) animates the popup. The popup can enter the DOM open, so `initial` is the closed style.
+
 ### Manual unmounting
 
-Use this when Vase UI cannot find the exit animation. Use it also when something other than an animation must end the exit. `motion-v` runs some values in JavaScript, such as `height`. Vase UI cannot find such an animation, so it removes the popup in the next frame, before the exit shows.
+Use this when Vase UI cannot find the exit animation. Use it also when something other than an animation must end the exit. `motion-v` runs some values in JavaScript, such as `height`. Vase UI cannot find such an animation, so it removes or hides the popup in the next frame, before the exit shows.
 
 1. Call `details.preventUnmountOnClose()` in the `openChange` listener when the popup closes.
 2. When the exit ends, call `unmount()` on the root. Get the root with a template ref.
 
-The root then emits `openChangeComplete` with `false`. `keepMounted` still decides if the popup leaves the DOM.
+The root then emits `openChangeComplete` with `false`. The popup then leaves the DOM or stays hidden, as it does when an animation ends.
 
 <DemoFrame>
   <ManualUnmount />
@@ -187,3 +191,23 @@ The request lasts until the popup opens again or unmounts, also when more close 
 <<< ../examples/animation/ManualUnmountAfterAwait.vue#listener{6-8 ts}
 
 [Navigation Menu](/components/navigation-menu#closing-animations) takes `details.preventUnmountOnClose()` in its `valueChange` listener.
+
+### AnimatePresence
+
+`<AnimatePresence>` renders a Vue `<Transition>` or `<TransitionGroup>`. Both keep the element of the portal part in the DOM during the exit, but the parts in that element unmount. Thus the `exit` prop does not fit the close of a popup:
+
+- With `v-if="open"` on the portal part, the parts in the portal unmount when the popup closes. The root emits `openChangeComplete` with `false` when the animations of the popup element end. The popup keeps `data-open` during the exit. The page under a modal dialog takes no pointer input until the exit ends.
+- With no `v-if`, the parts in the portal unmount after Vase UI ends the close, if Vase UI removes the popup. The `exit` animation starts only then. The root thus emits `openChangeComplete` with `false` before the exit plays.
+- With no `v-if`, the parts stay mounted if Vase UI hides the popup at the end of the close. The `exit` animation does not play.
+
+In the first two cases, a popup that opens again during the exit is a second popup in the page. The two popups have the same `id`.
+
+A `<Transition>` or `<TransitionGroup>` can animate the element of a portal part only with Vue 3.5.41 or later. In Vue 3.6, it needs 3.6.0-rc.3 or later. With an earlier version, an `exit` animation does not play. A development build of Vue then writes this warning for each `<AnimatePresence>` around a portal part:
+
+```txt
+Component inside <Transition> renders non-element root node that cannot be animated.
+```
+
+With the `#render` slot on the portal part, a development build of Vue writes the warning in each version.
+
+The examples on this page use no `<AnimatePresence>` and no `<Transition>`. They work with each Vue version that Vase UI supports.

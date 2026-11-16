@@ -1,7 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, shallowRef, watch } from 'vue';
 import * as Menu from '../index.parts';
-import { createRenderer, flushMicrotasks, screen, waitFor, waitSingleFrame } from '#test-utils';
+import {
+  createRenderer,
+  flushMicrotasks,
+  screen,
+  waitFor,
+  waitForLaterMillisecond,
+  waitSingleFrame,
+} from '#test-utils';
 import type { HTMLProps, VaseUIEvent } from '../../internals/types';
 
 // Kept in a separate file so the module mock doesn't leak into `MenuFilterRoot.test.tsx`.
@@ -198,9 +205,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider> (WebKit)', () 
     );
 
     await setProps({ close: true });
-    await waitFor(() =>
-      expect(screen.queryByRole('searchbox', { name: 'Filter actions' })).toBe(null),
-    );
+    expect(screen.queryByRole('searchbox', { name: 'Filter actions' })).toBe(null);
 
     await user.hover(screen.getByRole('button', { name: 'Actions' }));
     const reopenedInput = await screen.findByRole('searchbox', { name: 'Filter actions' });
@@ -350,9 +355,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider> (WebKit)', () 
     await waitFor(() => {
       expect(screen.getByRole('searchbox', { name: 'Filter actions' })).toHaveFocus();
     });
-    await user.keyboard('[ArrowDown][ArrowRight]');
-
-    const submenuInput = await screen.findByRole('searchbox', { name: 'Filter more actions' });
+    const submenuInput = await waitForLaterMillisecond(async () => {
+      await user.keyboard('[ArrowDown][ArrowRight]');
+      return screen.findByRole('searchbox', { name: 'Filter more actions' });
+    });
     await waitFor(() => {
       expect(submenuInput).toHaveFocus();
     });
@@ -408,7 +414,7 @@ describe('focus listeners of Menu.Input', () => {
     await waitFor(() => expect(input).toHaveFocus());
     await waitFor(() => expect(input).toHaveAttribute('data-highlighted'));
 
-    // A Vue listener of a new input misses the focus of the mount only in most runs, so the case
+    // The focus of the mount comes in the millisecond of the attach only in some runs, so the case
     // replaces the input three times.
     let previous = input;
     for (const inputKey of ['second', 'third', 'fourth']) {

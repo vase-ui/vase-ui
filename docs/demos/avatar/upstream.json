@@ -3,6 +3,19 @@
   "upstream": "docs/src/app/(docs)/react/components/avatar/demos",
   "files": {
     "hero/css-modules/index.module.css": "9d053f9570b1f2861cfc37124696369d3a8acb5f6cc1bf1ceb7581b32677e818",
-    "hero/css-modules/index.tsx": "62268c1001351fc6c989ffb02650a82c87db18602e6bcdd25b2a7df61d574993"
-  }
+    "hero/css-modules/index.tsx": "62268c1001351fc6c989ffb02650a82c87db18602e6bcdd25b2a7df61d574993",
+    "hero/tailwind/index.tsx": "56a81381c79585a0726e2d13cc44a7bae5b5ed2870f7050ec74d378e67875f23"
+  },
+  "classes": {
+    "hero/tailwind": {
+      "Avatar.Fallback": ["flex size-full items-center justify-center text-sm"],
+      "Avatar.Image": ["size-full object-cover"],
+      "Avatar.Root": [
+        "inline-flex size-8 items-center justify-center overflow-hidden rounded-full bg-neutral-200 align-middle text-sm leading-none font-normal text-neutral-950 select-none dark:bg-neutral-800 dark:text-white",
+        "inline-flex size-8 items-center justify-center overflow-hidden rounded-full bg-neutral-200 align-middle text-sm leading-none font-normal text-neutral-950 select-none dark:bg-neutral-800 dark:text-white"
+      ],
+      "div": ["flex gap-4"]
+    }
+  },
+  "differentVariants": ["hero"]
 }

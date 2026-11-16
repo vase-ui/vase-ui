@@ -1,7 +1,8 @@
 import { fileURLToPath } from 'node:url';
 import { clearServerLogs, createPage, getServerLogs, setup, url } from '@nuxt/test-utils/e2e';
-import type { Locator, Page } from 'playwright-core';
-import { describe, expect, it } from 'vitest';
+import { chromium, firefox, webkit } from 'playwright-core';
+import type { BrowserType, Locator, Page, Route } from 'playwright-core';
+import { describe, expect, it, onTestFinished } from 'vitest';
 import nuxtConfig from '../nuxt.config';
 
 const rootDir = fileURLToPath(new URL('..', import.meta.url));
@@ -456,10 +457,8 @@ async function expectIndicatorUnderTab(
   );
 }
 
-// The server writes a part before it registers the parts that come after it. The part that comes
-// first then has no id of the other part in the server HTML. It gets the id in the first flush on
-// the client. Panel `a` is not mounted, so no tab names it.
-async function expectTabIds(page: Page, { hydrated }: { hydrated: boolean }) {
+// Panel `a` is not mounted, so no tab names it.
+async function expectTabIds(page: Page) {
   const after = await readTabsRoot(page, 'panels-after');
   const before = await readTabsRoot(page, 'panels-before');
 
@@ -470,19 +469,19 @@ async function expectTabIds(page: Page, { hydrated }: { hydrated: boolean }) {
     after.tabs[1].id,
     after.tabs[2].id,
   ]);
-  expect(after.tabs.map((tab) => tab.controls)).toEqual(
-    hydrated ? [null, after.panels[0].id, after.panels[1].id] : [null, null, null],
-  );
-  expect(before.tabs.map((tab) => tab.controls)).toEqual([null, before.panels[0].id]);
-  expect(before.panels.map((panel) => panel.labelledby)).toEqual([
-    hydrated ? before.tabs[1].id : null,
+  expect(after.tabs.map((tab) => tab.controls)).toEqual([
+    null,
+    after.panels[0].id,
+    after.panels[1].id,
   ]);
+  expect(before.tabs.map((tab) => tab.controls)).toEqual([null, before.panels[0].id]);
+  expect(before.panels.map((panel) => panel.labelledby)).toEqual([before.tabs[1].id]);
 }
 
 // The server cannot measure the layout, so the indicator is hidden and has no variable. The script
 // after it has the nonce of the provider. It does not run here, because this page has no JavaScript.
 async function expectTabsPage(page: Page) {
-  await expectTabIds(page, { hydrated: false });
+  await expectTabIds(page);
 
   expect(
     await page.locator('[role="tablist"] script').evaluateAll((scripts) =>
@@ -503,7 +502,7 @@ async function expectTabsPage(page: Page) {
 }
 
 async function expectHydratedTabsPage(page: Page) {
-  await expectTabIds(page, { hydrated: true });
+  await expectTabIds(page);
 
   expect(await page.locator('[role="tablist"] script').count()).toBe(0);
   await expectIndicatorUnderTab(page, 'tab-b', { left: '100px', right: '100px' });
@@ -854,6 +853,83 @@ async function expectOTPFieldPage(page: Page) {
   expect(await readFormData(page)).toEqual(['code=12']);
   expect(await readOTPSlots(page, 'pin', 'type')).toEqual(Array(4).fill('password'));
   expect(await readOTPSlotValues(page, 'pin')).toEqual(['5', '6', '', '']);
+}
+
+function readDateFieldSegments(page: Page, testId: string, attributeName: string) {
+  return page
+    .getByTestId(testId)
+    .locator('input[data-type]')
+    .evaluateAll((inputs, name) => inputs.map((input) => input.getAttribute(name)), attributeName);
+}
+
+function readDateFieldValues(page: Page, testId: string) {
+  return page
+    .getByTestId(testId)
+    .locator('input[data-type]')
+    .evaluateAll((inputs) => inputs.map((input) => (input as HTMLInputElement).value));
+}
+
+// The label of the first field comes after the field, and the server HTML names the group with it.
+// The hidden input has the name and the ISO text of the value.
+async function expectDateFieldPage(page: Page) {
+  const labelId = await page.getByTestId('when-label').getAttribute('id');
+  expect(labelId).toBeTruthy();
+  expect(await page.getByTestId('when').getAttribute('aria-labelledby')).toBe(labelId);
+  expect(await page.getByTestId('when').getAttribute('role')).toBe('group');
+  expect(await readDateFieldSegments(page, 'when', 'data-type')).toEqual(['month', 'day', 'year']);
+  expect(await readDateFieldValues(page, 'when')).toEqual(['11', '14', '2026']);
+  expect(await page.getByTestId('when-value').textContent()).toBe('2026-11-14');
+  expect(await readFormData(page)).toEqual(['when=2026-11-14']);
+  expect(await readDateFieldValues(page, 'card')).toEqual(['11', '2026']);
+}
+
+// The first calendar shows days and the second is a month picker. Each shows its grid in the server
+// HTML, with one tab stop on its selected day or month.
+async function expectCalendarPage(page: Page) {
+  const days = page.getByTestId('days');
+  expect(await days.getAttribute('role')).toBe('group');
+  expect(await days.getAttribute('aria-label')).toBe('November 2026');
+  expect(await days.getAttribute('data-view')).toBe('day');
+  expect(await days.locator('[data-date] button[tabindex="0"]').evaluateAll(readDates)).toEqual([
+    '2026-11-10',
+  ]);
+  expect(await page.getByTestId('day-value').textContent()).toBe('2026-11-10');
+
+  const months = page.getByTestId('months');
+  expect(await months.getAttribute('data-view')).toBe('month');
+  expect(await months.locator('[role="gridcell"]').count()).toBe(12);
+  expect(await readTabStops(months)).toEqual(['March 2026']);
+  expect(await readSelected(months)).toEqual(['March 2026']);
+  expect(await page.getByTestId('month-value').textContent()).toBe('2026-03');
+}
+
+function readDates(buttons: Element[]) {
+  return buttons.map((button) => button.closest('[data-date]')!.getAttribute('data-date'));
+}
+
+function readTabStops(calendar: Locator) {
+  return calendar
+    .locator('[role="gridcell"][tabindex="0"]')
+    .evaluateAll((cells) => cells.map((cell) => cell.getAttribute('aria-label')));
+}
+
+function readSelected(calendar: Locator) {
+  return calendar
+    .locator('[role="gridcell"][aria-selected="true"]')
+    .evaluateAll((cells) => cells.map((cell) => cell.getAttribute('aria-label')));
+}
+
+async function expectDateFieldPageOnServer(page: Page) {
+  await expectDateFieldPage(page);
+  // A server has no DOM, so it cannot find a native label.
+  expect(await page.getByTestId('card').getAttribute('aria-labelledby')).toBe(null);
+}
+
+async function expectHydratedDateFieldPage(page: Page) {
+  await expectDateFieldPage(page);
+  const labelId = await page.getByTestId('card-label').getAttribute('id');
+  expect(labelId).toBeTruthy();
+  expect(await page.getByTestId('card').getAttribute('aria-labelledby')).toBe(labelId);
 }
 
 async function expectOTPFieldPageOnServer(page: Page) {
@@ -1284,7 +1360,7 @@ async function expectHydratedPreviewCardPage(page: Page) {
 }
 
 // A server renders no popup and no portal. The trigger of an open root has the open state and
-// names the id of its popup.
+// names no popup, because a server renders no popup.
 async function expectAlertDialogPageOnServer(page: Page) {
   const attributeNames = ['aria-haspopup', 'aria-expanded', 'data-popup-open'];
   const read = (testId: string) => readAttributes(page.getByTestId(testId), attributeNames);
@@ -1304,7 +1380,7 @@ async function expectAlertDialogPageOnServer(page: Page) {
     'aria-expanded': 'false',
     'data-popup-open': null,
   });
-  expect(await page.getByTestId('open').getAttribute('aria-controls')).toBeTruthy();
+  expect(await page.getByTestId('open').getAttribute('aria-controls')).toBeNull();
   expect(await page.locator('[data-vase-ui-portal], [role="alertdialog"]').count()).toBe(0);
 }
 
@@ -1538,6 +1614,330 @@ async function expectHydratedComboboxPage(page: Page) {
   ).toEqual({ role: null, tabindex: '-1', 'aria-haspopup': 'listbox' });
 }
 
+// The text that the case types into each control before hydration, and the value that the
+// control and the model of the page have after hydration.
+const TEXT_BEFORE_HYDRATION = [
+  { control: 'input', text: 'Ada', value: 'Ada', output: 'input-value', model: 'Ada' },
+  {
+    control: 'field-control',
+    text: 'ada@example.com',
+    value: 'ada@example.com',
+    output: 'field-value',
+    model: 'ada@example.com',
+  },
+  // The input lost the focus before hydration, so the root formats its text.
+  {
+    control: 'number-input',
+    text: '1234.5',
+    value: '1,234.5',
+    output: 'number-value',
+    model: '1234.5',
+  },
+  // The first slot takes the whole code, and the root gives each slot its character.
+  { control: 'otp-input-1', text: '1234', value: '1', output: 'otp-value', model: '1234' },
+  { control: 'combobox-input', text: 'Ban', value: 'Ban', output: 'combobox-value', model: 'Ban' },
+  {
+    control: 'autocomplete-input',
+    text: 'Che',
+    value: 'Che',
+    output: 'autocomplete-value',
+    model: 'Che',
+  },
+  // The last control keeps the focus.
+  { control: 'toolbar-input', text: 'red', value: 'red', output: 'toolbar-value', model: 'red' },
+];
+
+// Nobody typed, so each control and each model is empty.
+async function expectTextBeforeHydrationPage(page: Page) {
+  for (const { control, output } of TEXT_BEFORE_HYDRATION) {
+    expect(await page.getByTestId(control).inputValue()).toBe('');
+    expect(await page.getByTestId(output).textContent()).toBe('');
+  }
+}
+
+interface FormState {
+  formData: Record<string, string[]>;
+  models: Record<string, unknown>;
+  changes: Record<string, number>;
+  checked: Record<string, string | null>;
+  newsDirty: boolean;
+  submits: string;
+  completes: string;
+}
+
+const FORM_STATE_INITIAL_MODELS = {
+  text: '',
+  filter: '',
+  agree: false,
+  letters: [],
+  notify: false,
+  size: 's',
+  font: 'serif',
+  fruit: null,
+  quantity: 1,
+  code: '',
+  volume: 50,
+  range: [20, 80],
+  when: null,
+  alarm: null,
+};
+
+// The state of /form-state after a visitor presses each native label, types into each text control
+// and writes each hidden input. `code` is the hidden input of OTP Field.
+const FORM_STATE_CHANGED: Omit<FormState, 'submits' | 'completes'> = {
+  formData: {
+    note: ['typed'],
+    text: ['typed'],
+    filter: ['typed'],
+    agree: ['on'],
+    news: ['on'],
+    letters: ['a', 'b'],
+    notify: ['on'],
+    size: ['l'],
+    font: ['mono'],
+    fruit: ['Cherry'],
+    quantity: ['7'],
+    code: ['1234'],
+    volume: ['70'],
+    range: ['30', '60'],
+    when: ['2026-12-25'],
+    alarm: ['09:30'],
+  },
+  models: {
+    text: 'typed',
+    filter: 'typed',
+    agree: true,
+    letters: ['a', 'b'],
+    notify: true,
+    size: 'l',
+    font: 'mono',
+    fruit: 'Cherry',
+    quantity: 7,
+    code: '1234',
+    volume: 70,
+    range: [30, 60],
+    when: '2026-12-25',
+    alarm: '09:30',
+  },
+  changes: {
+    note: 1,
+    text: 1,
+    filter: 1,
+    agree: 1,
+    news: 1,
+    letters: 2,
+    notify: 1,
+    size: 1,
+    font: 1,
+    fruit: 1,
+    quantity: 1,
+    code: 1,
+    volume: 1,
+    range: 1,
+    when: 1,
+    alarm: 1,
+  },
+  checked: {
+    agree: 'true',
+    news: 'true',
+    'letter-a': 'true',
+    'letter-b': 'true',
+    notify: 'true',
+    'size-s': 'false',
+    'size-m': 'false',
+    'size-l': 'true',
+  },
+  newsDirty: true,
+};
+
+const FORM_STATE_LABELS = [
+  'agree-label',
+  'news-label',
+  'letter-a-label',
+  'letter-b-label',
+  'notify-label',
+  'size-l-label',
+];
+
+const FORM_STATE_ENGINES: { name: string; engine: BrowserType }[] = [
+  { name: 'Chromium', engine: chromium },
+  { name: 'Firefox', engine: firefox },
+  { name: 'WebKit', engine: webkit },
+];
+
+async function expectFormStatePage(page: Page) {
+  expect(JSON.parse((await page.getByTestId('models').textContent()) ?? '')).toEqual(
+    FORM_STATE_INITIAL_MODELS,
+  );
+  expect(await page.getByTestId('changes').textContent()).toBe('{}');
+}
+
+async function readFormState(page: Page): Promise<FormState> {
+  return page.evaluate(() => {
+    const read = (testId: string) =>
+      document.querySelector(`[data-testid="${testId}"]`)?.textContent ?? '';
+    const formData: Record<string, string[]> = {};
+    const form = document.querySelector<HTMLFormElement>('[data-testid="form"]');
+    for (const [name, value] of new FormData(form ?? undefined)) {
+      (formData[name] ??= []).push(String(value));
+    }
+    const parts = document.querySelectorAll('[role="checkbox"], [role="switch"], [role="radio"]');
+    return {
+      formData,
+      models: JSON.parse(read('models')) as Record<string, unknown>,
+      changes: JSON.parse(read('changes')) as Record<string, number>,
+      checked: Object.fromEntries(
+        Array.from(parts, (part) => [
+          part.getAttribute('data-testid') ?? '',
+          part.getAttribute('aria-checked'),
+        ]),
+      ),
+      newsDirty:
+        document.querySelector('[data-testid="news-field"]')?.hasAttribute('data-dirty') ?? false,
+      submits: read('submits'),
+      completes: read('completes'),
+    };
+  });
+}
+
+// What a visitor and a program do to /form-state before its scripts run. A program writes a
+// hidden input with no event, as a browser restores it.
+async function changeFormStateBeforeHydration(page: Page) {
+  for (const label of FORM_STATE_LABELS) {
+    await page.getByTestId(label).click();
+  }
+  for (const control of ['note', 'text', 'filter']) {
+    await page.getByTestId(control).fill('typed');
+  }
+  await page.evaluate(() => {
+    const write = (name: string, values: string[]) => {
+      document
+        .querySelectorAll<HTMLInputElement>(`input[name="${name}"]`)
+        .forEach((input, index) => {
+          input.value = values[index] ?? input.value;
+        });
+    };
+    write('font', ['mono']);
+    write('fruit', ['Cherry']);
+    write('quantity', ['7']);
+    write('code', ['1234']);
+    write('volume', ['70']);
+    write('range', ['30', '60']);
+    write('when', ['2026-12-25']);
+    write('alarm', ['09:30']);
+  });
+}
+
+// What a visitor does to /form-state after the hydration.
+async function changeHydratedFormState(page: Page) {
+  for (const label of FORM_STATE_LABELS) {
+    await page.getByTestId(label).click();
+  }
+  for (const control of ['note', 'text', 'filter']) {
+    await page.getByTestId(control).fill('typed');
+  }
+  await page.getByTestId('font-trigger').click();
+  await page.getByRole('option', { name: 'Monospace' }).click();
+  await page.getByTestId('fruit-input').click();
+  await page.keyboard.type('Che');
+  await page.getByRole('option', { name: 'Cherry' }).click();
+  await page.getByTestId('quantity-input').fill('7');
+  await page.keyboard.press('Tab');
+  await page.getByTestId('code-1').click();
+  await page.keyboard.type('1234');
+  await page.locator('input[name="volume"]').focus();
+  await page.keyboard.press('ArrowRight');
+  for (const input of await page.locator('input[name="range"]').all()) {
+    await input.focus();
+    await page.keyboard.press('ArrowRight');
+  }
+  await page.getByTestId('when').locator('input[data-type="month"]').click();
+  await page.keyboard.type('12252026');
+  await page.getByTestId('alarm').locator('input[data-type="hour"]').click();
+  await page.keyboard.type('0930');
+}
+
+function holdScripts(page: Page) {
+  const heldScripts: Route[] = [];
+  let holds = true;
+  void page.route('**/_nuxt/**', async (route) => {
+    if (holds && route.request().resourceType() === 'script') {
+      heldScripts.push(route);
+    } else {
+      await route.continue();
+    }
+  });
+  return async () => {
+    holds = false;
+    // A route of a page that the visitor left fails.
+    await Promise.all(heldScripts.map((route) => route.continue().catch(() => {})));
+  };
+}
+
+async function waitForFormStateHydration(page: Page) {
+  await page.waitForFunction(
+    () =>
+      location.pathname === '/form-state' &&
+      (window as { useNuxtApp?: () => { isHydrating: boolean } }).useNuxtApp?.().isHydrating ===
+        false,
+  );
+  await waitForTwoFrames(page);
+}
+
+async function openFormStatePage({ engine }: { engine: BrowserType }) {
+  const browser = await engine.launch();
+  onTestFinished(() => browser.close());
+  const page = await browser.newPage();
+  return { page, messages: collectMessages(page) };
+}
+
+const RESIZABLE_PANELS = ['p-a', 'p-b', 'p-c', 'l-a', 'l-b', 'c-a', 'c-b'];
+
+function readResizablePanel(page: Page, testId: string) {
+  return page.getByTestId(testId).evaluate((element) => {
+    const { style } = element as HTMLElement;
+    return {
+      flex: style.flex,
+      flexGrow: style.flexGrow,
+      size: style.getPropertyValue('--resizable-panel-size'),
+    };
+  });
+}
+
+async function expectResizablePercentPanels(page: Page) {
+  const panels = await Promise.all(['p-a', 'p-b', 'p-c'].map((id) => readResizablePanel(page, id)));
+  expect(panels.map(({ flexGrow, size }) => [flexGrow, size])).toEqual([
+    ['30', '30'],
+    ['35', '35'],
+    ['35', '35'],
+  ]);
+  expect(
+    await page.getByTestId('percent').getByRole('separator').first().getAttribute('aria-valuenow'),
+  ).toBe('30');
+}
+
+async function expectResizablePageOnServer(page: Page) {
+  await expectResizablePercentPanels(page);
+  // A server cannot measure the page, so the length stays a length until the mount.
+  expect(await readResizablePanel(page, 'l-a')).toEqual({
+    flex: '0 1 240px',
+    flexGrow: '0',
+    size: '',
+  });
+  expect((await readResizablePanel(page, 'l-b')).flexGrow).toBe('100');
+}
+
+async function expectHydratedResizablePage(page: Page) {
+  await expectResizablePercentPanels(page);
+  expect((await readResizablePanel(page, 'l-a')).flexGrow).toBe('40');
+}
+
+async function readResizableWidths(page: Page) {
+  return Promise.all(
+    RESIZABLE_PANELS.map(async (testId) => (await page.getByTestId(testId).boundingBox())?.width),
+  );
+}
+
 interface PageCase {
   path: string;
   expectPage: (page: Page) => Promise<void>;
@@ -1601,6 +2001,12 @@ const PAGES: PageCase[] = [
     expectPage: expectOTPFieldPageOnServer,
     expectHydratedPage: expectHydratedOTPFieldPage,
   },
+  { path: '/calendar', expectPage: expectCalendarPage },
+  {
+    path: '/date-field',
+    expectPage: expectDateFieldPageOnServer,
+    expectHydratedPage: expectHydratedDateFieldPage,
+  },
   { path: '/number-field', expectPage: expectNumberFieldPage },
   { path: '/providers', expectPage: expectProvidersPage },
   { path: '/use-render', expectPage: expectUseRenderPage },
@@ -1663,6 +2069,13 @@ const PAGES: PageCase[] = [
     path: '/combobox',
     expectPage: expectComboboxPageOnServer,
     expectHydratedPage: expectHydratedComboboxPage,
+  },
+  { path: '/text-before-hydration', expectPage: expectTextBeforeHydrationPage },
+  { path: '/form-state', expectPage: expectFormStatePage },
+  {
+    path: '/resizable',
+    expectPage: expectResizablePageOnServer,
+    expectHydratedPage: expectHydratedResizablePage,
   },
 ];
 
@@ -1939,6 +2352,58 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(messages).toEqual([]);
   });
 
+  it('shows the years, the months and the days of /calendar, and selects a day and a month, after hydration', async () => {
+    const page = await createPage('/calendar');
+    const messages = collectMessages(page);
+    const days = page.getByTestId('days');
+
+    await page.getByTestId('days-year').click();
+    expect(await days.getAttribute('data-view')).toBe('year');
+    await days.getByRole('gridcell', { name: '2027' }).click();
+    expect(await days.getAttribute('data-view')).toBe('month');
+    await days.getByRole('gridcell', { name: 'March 2027' }).click();
+
+    expect(await days.getAttribute('data-view')).toBe('day');
+    expect(await days.getAttribute('aria-label')).toBe('March 2027');
+    await days.getByRole('button', { name: /March 5, 2027/ }).click();
+    expect(await page.getByTestId('day-value').textContent()).toBe('2027-03-05');
+
+    const months = page.getByTestId('months');
+    await months.getByRole('gridcell', { name: 'November 2026' }).click();
+    expect(await page.getByTestId('month-value').textContent()).toBe('2026-11');
+    expect(await readSelected(months)).toEqual(['November 2026']);
+    expect(messages).toEqual([]);
+  });
+
+  it('types a date into /date-field, and clears it with the Clear button, after hydration', async () => {
+    const page = await createPage('/date-field');
+    const messages = collectMessages(page);
+    const readFocusedTestId = () =>
+      page.evaluate(() => document.activeElement?.getAttribute('data-testid'));
+
+    await page.getByTestId('when-month').click();
+    await page.keyboard.type('12');
+
+    expect(await readFocusedTestId()).toBe('when-day');
+    expect(await readDateFieldValues(page, 'when')).toEqual(['12', '14', '2026']);
+    expect(await page.getByTestId('when-value').textContent()).toBe('2026-12-14');
+    expect(await readFormData(page)).toEqual(['when=2026-12-14']);
+
+    await page.getByTestId('when-clear').click();
+
+    expect(await readFocusedTestId()).toBe('when-month');
+    expect(await readDateFieldValues(page, 'when')).toEqual(['', '', '']);
+    expect(await page.getByTestId('when-value').textContent()).toBe('');
+    expect(await readFormData(page)).toEqual(['when=']);
+
+    await page.getByTestId('card-label').click();
+
+    expect(await page.evaluate(() => document.activeElement?.getAttribute('data-type'))).toBe(
+      'month',
+    );
+    expect(messages).toEqual([]);
+  });
+
   it('moves the thumb of /scroll-area when its viewport scrolls after hydration', async () => {
     const page = await createPage('/scroll-area');
     const thumb = page.getByTestId('thumb');
@@ -2201,6 +2666,268 @@ describe.each(MODES)('in $name', async ({ dev }) => {
 
     expect(await input.inputValue()).toBe('Cherry');
     expect(await readFormData(page)).toEqual(['fruit=Cherry', 'tags=b', 'country=Sweden']);
+    expect(messages).toEqual([]);
+  });
+
+  it('keeps the text that a visitor types into /text-before-hydration while the scripts load', async () => {
+    const page = await createPage();
+    const messages = collectMessages(page);
+    const heldScripts: Route[] = [];
+    let holdsScripts = true;
+    await page.route('**/_nuxt/**', async (route) => {
+      if (holdsScripts && route.request().resourceType() === 'script') {
+        heldScripts.push(route);
+      } else {
+        await route.continue();
+      }
+    });
+
+    // The scripts of the page are modules, so `DOMContentLoaded` waits for them.
+    await page.goto(url('/text-before-hydration'), { waitUntil: 'commit' });
+    for (const { control, text } of TEXT_BEFORE_HYDRATION) {
+      await page.getByTestId(control).pressSequentially(text);
+    }
+    expect(heldScripts.length).toBeGreaterThan(0);
+    holdsScripts = false;
+    await Promise.all(heldScripts.map((route) => route.continue()));
+    await page.waitForFunction(
+      () =>
+        (window as { useNuxtApp?: () => { isHydrating: boolean } }).useNuxtApp?.().isHydrating ===
+        false,
+    );
+
+    for (const { control, value, output, model } of TEXT_BEFORE_HYDRATION) {
+      await expect.poll(() => page.getByTestId(output).textContent()).toBe(model);
+      await expect.poll(() => page.getByTestId(control).inputValue()).toBe(value);
+    }
+    expect(
+      await Promise.all(
+        [2, 3, 4].map((index) => page.getByTestId(`otp-input-${index}`).inputValue()),
+      ),
+    ).toEqual(['2', '3', '4']);
+    expect(await page.evaluate(() => document.activeElement?.getAttribute('data-testid'))).toBe(
+      'toolbar-input',
+    );
+    expect(messages).toEqual([]);
+  });
+
+  describe.skipIf(dev)('VUE-81: /form-state', () => {
+    // Each case launches its engine against the one server, because each engine restores the form
+    // state of a page at another time.
+    it.each(FORM_STATE_ENGINES)(
+      'takes the state of each part that changed before the hydration in $name',
+      async (engine) => {
+        const { page, messages } = await openFormStatePage(engine);
+        const releaseScripts = holdScripts(page);
+
+        await page.goto(url('/form-state'), { waitUntil: 'commit' });
+        await changeFormStateBeforeHydration(page);
+        await releaseScripts();
+        await waitForFormStateHydration(page);
+
+        expect(await readFormState(page)).toEqual({
+          ...FORM_STATE_CHANGED,
+          submits: '1',
+          completes: '1',
+        });
+        expect(messages).toEqual([]);
+      },
+      60_000,
+    );
+
+    it.each(FORM_STATE_ENGINES)(
+      'gives each part the state that the browser restores after a hydrated visit in $name',
+      async (engine) => {
+        const { page, messages } = await openFormStatePage(engine);
+        await page.goto(url('/form-state'));
+        await waitForFormStateHydration(page);
+        await changeHydratedFormState(page);
+        await page.getByTestId('away').click();
+        await page.waitForURL(url('/'));
+
+        await page.goBack();
+        await waitForFormStateHydration(page);
+
+        // Each engine restores the checkboxes, the radios and a text control that no part
+        // controls. Firefox also restores each other value.
+        const state = await readFormState(page);
+        expect(state.checked).toEqual(FORM_STATE_CHANGED.checked);
+        expect(state.newsDirty).toBe(true);
+        for (const name of ['note', 'agree', 'news', 'letters', 'notify', 'size']) {
+          expect(state.formData[name]).toEqual(FORM_STATE_CHANGED.formData[name]);
+          expect(state.changes[name]).toBe(FORM_STATE_CHANGED.changes[name]);
+        }
+        for (const name of [
+          'text',
+          'filter',
+          'font',
+          'fruit',
+          'quantity',
+          'volume',
+          'range',
+          'when',
+          'alarm',
+        ]) {
+          const model = state.models[name];
+          const isRestored =
+            JSON.stringify(model) !==
+            JSON.stringify(
+              FORM_STATE_INITIAL_MODELS[name as keyof typeof FORM_STATE_INITIAL_MODELS],
+            );
+          expect(state.formData[name]).toEqual([model ?? ''].flat().map(String));
+          expect(state.changes[name] ?? 0).toBe(isRestored ? FORM_STATE_CHANGED.changes[name] : 0);
+        }
+        expect(state.models).toMatchObject({ agree: true, letters: ['a', 'b'], code: '' });
+        expect(state.formData.code).toEqual(['']);
+        expect([state.submits, state.completes]).toEqual(['0', '0']);
+        expect(messages).toEqual([]);
+      },
+      60_000,
+    );
+
+    // WebKit restores no form state of a page whose module scripts did not run. Empty scripts in
+    // their place do not help: on the move back, WebKit takes the scripts of the first visit from
+    // its cache, so the page never hydrates.
+    it.each(FORM_STATE_ENGINES.filter(({ name }) => name !== 'WebKit'))(
+      'gives each part the state that the browser restores after a visit that never hydrated in $name',
+      async (engine) => {
+        const { page, messages } = await openFormStatePage(engine);
+        const releaseScripts = holdScripts(page);
+        await page.goto(url('/form-state'), { waitUntil: 'commit' });
+        await changeFormStateBeforeHydration(page);
+        await page.getByTestId('away').click();
+        await page.waitForURL(url('/'), { waitUntil: 'commit' });
+        await releaseScripts();
+        await page.waitForLoadState('load');
+        // Firefox reports each module load that the move cut, on the page that the visitor left.
+        messages.length = 0;
+
+        await page.goBack();
+        await waitForFormStateHydration(page);
+
+        // OTP Field takes no code from before the hydration after a move in the history.
+        const { code: _code, ...changes } = FORM_STATE_CHANGED.changes;
+        expect(await readFormState(page)).toEqual({
+          ...FORM_STATE_CHANGED,
+          formData: { ...FORM_STATE_CHANGED.formData, code: [''] },
+          models: { ...FORM_STATE_CHANGED.models, code: '' },
+          changes,
+          submits: '0',
+          completes: '0',
+        });
+        expect(messages).toEqual([]);
+      },
+      60_000,
+    );
+  });
+
+  it('renders the layout of the cookie of /resizable on a server', async () => {
+    const cookie = {
+      name: 'resizable-layout',
+      value: encodeURIComponent(JSON.stringify({ 'c-a': '180px', 'c-b': 70 })),
+      url: url('/'),
+    };
+    const serverPage = await createPage(undefined, { javaScriptEnabled: false });
+    await serverPage.context().addCookies([cookie]);
+
+    await serverPage.goto(url('/resizable'));
+
+    expect((await readResizablePanel(serverPage, 'c-a')).flex).toBe('0 1 180px');
+
+    const page = await createPage();
+    await page.context().addCookies([cookie]);
+    const messages = collectMessages(page);
+
+    await page.goto(url('/resizable'), { waitUntil: 'hydration' });
+    await waitForTwoFrames(page);
+
+    const { width } = (await page.getByTestId('c-a').boundingBox())!;
+    expect(Math.abs(width - 180)).toBeLessThanOrEqual(1);
+    expect(messages).toEqual([]);
+  });
+
+  it('renders the layout of /resizable on a server for a cookie with a size that is not valid', async () => {
+    const cookie = {
+      name: 'resizable-layout',
+      value: encodeURIComponent(JSON.stringify({ 'c-a': '1fr', 'c-b': 70 })),
+      url: url('/'),
+    };
+    const serverPage = await createPage(undefined, { javaScriptEnabled: false });
+    await serverPage.context().addCookies([cookie]);
+
+    await serverPage.goto(url('/resizable'));
+
+    expect((await readResizablePanel(serverPage, 'c-a')).flexGrow).toBe('30');
+    expect((await readResizablePanel(serverPage, 'c-b')).flexGrow).toBe('70');
+
+    const page = await createPage();
+    await page.context().addCookies([cookie]);
+    const messages = collectMessages(page);
+
+    await page.goto(url('/resizable'), { waitUntil: 'hydration' });
+    await waitForTwoFrames(page);
+
+    expect((await readResizablePanel(page, 'c-a')).flexGrow).toBe('30');
+    expect(messages).toEqual(
+      dev
+        ? [
+            'console warning: Vase UI: The layout gives the panel "c-a" the size "1fr", which is not valid. The root ignores this size, so the panel takes its `defaultSize`, or an equal share of the space that is left. Use a number of 0 or more, or a string of such a number with an optional unit: "%", "px", "em", "rem", "vh" or "vw".',
+          ]
+        : [],
+    );
+  });
+
+  it('keeps each panel rectangle of /resizable when the scripts run', async () => {
+    const serverPage = await createPage(undefined, { javaScriptEnabled: false });
+    await serverPage.goto(url('/resizable'));
+    const serverWidths = await readResizableWidths(serverPage);
+
+    const page = await createPage();
+    const messages = collectMessages(page);
+    await page.goto(url('/resizable'), { waitUntil: 'hydration' });
+    await waitForTwoFrames(page);
+    const widths = await readResizableWidths(page);
+
+    expect(serverWidths).toHaveLength(RESIZABLE_PANELS.length);
+    for (const [index, width] of widths.entries()) {
+      expect(Math.abs(width! - serverWidths[index]!)).toBeLessThanOrEqual(1);
+    }
+    expect(messages).toEqual([]);
+  });
+
+  it('saves the layout of /resizable in its cookie after a key on the handle', async () => {
+    const page = await createPage();
+    const messages = collectMessages(page);
+    await page.goto(url('/resizable'), { waitUntil: 'hydration' });
+    await waitForTwoFrames(page);
+
+    await page.getByTestId('cookie-handle').focus();
+    await page.keyboard.press('ArrowRight');
+    await page.waitForFunction(() => document.cookie.includes('resizable-layout='));
+
+    const cookie = await page.evaluate(() =>
+      decodeURIComponent(
+        document.cookie
+          .split('; ')
+          .find((entry) => entry.startsWith('resizable-layout='))!
+          .slice('resizable-layout='.length),
+      ),
+    );
+    expect(JSON.parse(cookie)).toEqual({ 'c-a': '156px', 'c-b': 74 });
+    expect(messages).toEqual([]);
+  });
+
+  it('shows the stored layout of /resizable after the mount', async () => {
+    const page = await createPage();
+    const messages = collectMessages(page);
+    await page.addInitScript(() => {
+      localStorage.setItem('nuxt-resizable', JSON.stringify({ 's-a': 20, 's-b': 80 }));
+    });
+
+    await page.goto(url('/resizable'), { waitUntil: 'hydration' });
+    await waitForTwoFrames(page);
+
+    expect((await readResizablePanel(page, 's-a')).flexGrow).toBe('20');
     expect(messages).toEqual([]);
   });
 

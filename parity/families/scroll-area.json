@@ -11,6 +11,22 @@
       "title": "adds [data-hovering] when the synthetic pointer target differs from the native path",
       "kind": "not-applicable",
       "reason": "The case dispatches `pointerover` and tests the target of a React synthetic enter event. A Vue listener gets the native event, whose path starts at its target. An own case covers the native event."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/corner/ScrollAreaCorner.test.tsx",
+      "describe": ["<ScrollArea.Corner />"],
+      "title": "allows overriding aria-hidden",
+      "kind": "replaced",
+      "test": "packages/vue/src/scroll-area/corner/ScrollAreaCorner.test.tsx",
+      "reason": "The case gives `aria-hidden` the value `undefined` and asserts that the part removes the attribute. Vase UI keeps the value of the part for `undefined` and removes it for `null` (VUE-103). The case \"VUE-103: aria-hidden of the consumer is $name\" tests both values."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbar.test.tsx",
+      "describe": ["<ScrollArea.Scrollbar />"],
+      "title": "allows overriding aria-hidden",
+      "kind": "replaced",
+      "test": "packages/vue/src/scroll-area/scrollbar/ScrollAreaScrollbar.test.tsx",
+      "reason": "The case gives `aria-hidden` the value `undefined` and asserts that the part removes the attribute. Vase UI keeps the value of the part for `undefined` and removes it for `null` (VUE-103). The case \"VUE-103: aria-hidden of the consumer is $name\" tests both values."
     }
   ],
   "surfaceAdditions": [],

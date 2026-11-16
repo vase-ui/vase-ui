@@ -2,7 +2,10 @@
 import { computed } from 'vue';
 import { useData } from 'vitepress';
 import type { ApiReference, ApiClass } from '../../../scripts/docs/apiReference.ts';
+import ScrollBox from './ScrollBox.vue';
 import TextWithCode from './TextWithCode.vue';
+import { apiPartId } from './apiPartId.ts';
+import { HEADING_BADGE_CLASS } from './headingBadgeClass.ts';
 
 const props = defineProps<{
   /**
@@ -10,6 +13,11 @@ const props = defineProps<{
    * writes the heading and the text. With no name, the component shows each part of the family.
    */
   name?: string;
+  /**
+   * The level of the headings that the component writes for a function or a class, such as
+   * `Parameters`. It is one more than the level of the heading above the component.
+   */
+  headingLevel?: 3 | 4 | 5 | 6;
 }>();
 
 // `transformPageData` in the site configuration adds `apiReference`.
@@ -42,6 +50,18 @@ const named = computed(() => {
   }
   return { apiFunction, apiClass, apiType };
 });
+// A heading of a function or a class follows the outline of the page, which only the page knows.
+const sectionHeading = computed(() => {
+  if (!named.value?.apiFunction && !named.value?.apiClass) {
+    return undefined;
+  }
+  if (props.headingLevel === undefined) {
+    throw new Error(
+      `${page.value.relativePath} has <ApiReference name="${String(props.name)}" /> with no heading-level. The reference of a function or a class writes headings, such as Parameters. Give heading-level one more than the level of the heading above it, such as :heading-level="3" below a ## heading.`,
+    );
+  }
+  return `h${String(props.headingLevel)}`;
+});
 const showsDefault = computed(
   () => named.value?.apiType?.properties.some((property) => property.default !== null) ?? false,
 );
@@ -64,18 +84,13 @@ function signatureOf({ name, parameters }: ApiClass['methods'][number]): string 
   );
   return `${name}(${list.join(', ')})`;
 }
-
-// The prefix makes the id different from the slug of a Markdown heading, such as the page title.
-function idOf(name: string): string {
-  return `api-${name.toLowerCase().replaceAll('.', '-')}`;
-}
 </script>
 
 <template>
   <template v-if="named?.apiFunction">
     <template v-if="named.apiFunction.parameters.length > 0">
-      <h4>Parameters</h4>
-      <div class="api-table">
+      <component :is="sectionHeading">Parameters</component>
+      <ScrollBox class="api-table" :label="`Parameters of ${named.apiFunction.name}`">
         <table>
           <thead>
             <tr>
@@ -96,9 +111,9 @@ function idOf(name: string): string {
             </tr>
           </tbody>
         </table>
-      </div>
+      </ScrollBox>
     </template>
-    <h4>Return value</h4>
+    <component :is="sectionHeading">Return value</component>
     <p v-if="named.apiFunction.returns.description">
       <TextWithCode :text="named.apiFunction.returns.description" />
     </p>
@@ -108,8 +123,8 @@ function idOf(name: string): string {
   </template>
   <template v-else-if="named?.apiClass">
     <template v-if="named.apiClass.properties.length > 0">
-      <h4>Properties</h4>
-      <div class="api-table">
+      <component :is="sectionHeading">Properties</component>
+      <ScrollBox class="api-table" :label="`Properties of ${named.apiClass.name}`">
         <table>
           <thead>
             <tr>
@@ -134,11 +149,11 @@ function idOf(name: string): string {
             </tr>
           </tbody>
         </table>
-      </div>
+      </ScrollBox>
     </template>
     <template v-if="named.apiClass.methods.length > 0">
-      <h4>Methods</h4>
-      <div class="api-table">
+      <component :is="sectionHeading">Methods</component>
+      <ScrollBox class="api-table" :label="`Methods of ${named.apiClass.name}`">
         <table>
           <thead>
             <tr>
@@ -170,10 +185,14 @@ function idOf(name: string): string {
             </tr>
           </tbody>
         </table>
-      </div>
+      </ScrollBox>
     </template>
   </template>
-  <div v-else-if="named?.apiType && named.apiType.properties.length > 0" class="api-table">
+  <ScrollBox
+    v-else-if="named?.apiType && named.apiType.properties.length > 0"
+    class="api-table"
+    :label="`Properties of ${named.apiType.name}`"
+  >
     <table>
       <thead>
         <tr>
@@ -198,16 +217,17 @@ function idOf(name: string): string {
         </tr>
       </tbody>
     </table>
-  </div>
+  </ScrollBox>
   <p v-else-if="named?.apiType">
     <code>{{ named.apiType.values.map((value) => `'${value}'`).join(' | ') }}</code>
   </p>
   <section v-for="part in parts" :key="part.name">
-    <h3 :id="idOf(part.name)" tabindex="-1">
+    <h3 :id="apiPartId(part.name)" tabindex="-1">
       {{ part.name }}
+      <span v-if="part.badge" :class="HEADING_BADGE_CLASS">{{ part.badge }}</span>
       <a
         class="header-anchor"
-        :href="`#${idOf(part.name)}`"
+        :href="`#${apiPartId(part.name)}`"
         :aria-label="`Permalink to “${part.name}”`"
         >&#8203;</a
       >
@@ -220,7 +240,7 @@ function idOf(name: string): string {
     </p>
     <template v-if="part.props.length > 0">
       <h4>Props</h4>
-      <div class="api-table">
+      <ScrollBox class="api-table" :label="`Props of ${part.name}`">
         <table>
           <thead>
             <tr>
@@ -246,11 +266,11 @@ function idOf(name: string): string {
             </tr>
           </tbody>
         </table>
-      </div>
+      </ScrollBox>
     </template>
     <template v-if="part.slots.length > 0">
       <h4>Slots</h4>
-      <div class="api-table">
+      <ScrollBox class="api-table" :label="`Slots of ${part.name}`">
         <table>
           <thead>
             <tr>
@@ -273,12 +293,12 @@ function idOf(name: string): string {
             </tr>
           </tbody>
         </table>
-      </div>
+      </ScrollBox>
     </template>
     <template v-for="table in MEMBER_TABLES" :key="table.key">
       <template v-if="part[table.key].length > 0">
         <h4>{{ table.title }}</h4>
-        <div class="api-table">
+        <ScrollBox class="api-table" :label="`${table.title} of ${part.name}`">
           <table>
             <thead>
               <tr>
@@ -297,7 +317,7 @@ function idOf(name: string): string {
               </tr>
             </tbody>
           </table>
-        </div>
+        </ScrollBox>
       </template>
     </template>
   </section>

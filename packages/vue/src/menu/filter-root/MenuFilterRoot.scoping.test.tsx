@@ -1,6 +1,6 @@
 import userEvent from '@testing-library/user-event';
 import { userEvent as browserUserEvent } from 'vitest/browser';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent } from 'vue';
 import type { VNode } from 'vue';
 import { reset as resetWarnings } from '../../common/warn';
@@ -11,9 +11,11 @@ import {
   fireEvent,
   flushMicrotasks,
   isJSDOM,
+  nextEndingStyle,
   screen,
   takeReportedMessages,
   waitFor,
+  waitForLaterMillisecond,
 } from '#test-utils';
 
 describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
@@ -69,18 +71,14 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     await flushMicrotasks();
     await user.type(input, 'del');
 
-    await waitFor(() => {
-      expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
-    });
+    expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
     expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeVisible();
     expect(screen.queryByRole('status')).toBe(null);
 
     await user.clear(input);
     await user.type(input, 'zzz');
 
-    await waitFor(() => {
-      expect(screen.queryAllByRole('menuitem')).toHaveLength(0);
-    });
+    expect(screen.queryAllByRole('menuitem')).toHaveLength(0);
     expect(screen.getByRole('status')).toHaveTextContent('No results');
   });
 
@@ -196,9 +194,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     input.focus();
     await flushMicrotasks();
     await user.type(input, 'ren');
-    await waitFor(() => {
-      expect(screen.queryByRole('menuitem', { name: 'Move to' })).toBe(null);
-    });
+    expect(screen.queryByRole('menuitem', { name: 'Move to' })).toBe(null);
   });
 
   it('filters a submenu that uses FilterSubmenuRoot', async () => {
@@ -234,16 +230,15 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     await user.keyboard('[ArrowDown][ArrowDown][ArrowDown][ArrowDown]');
     expect(input).toHaveAttribute('aria-activedescendant', submenuTrigger.id);
 
-    await user.keyboard('[ArrowRight]');
-
-    const submenuInput = await screen.findByRole('searchbox', { name: 'Filter folders' });
+    const submenuInput = await waitForLaterMillisecond(async () => {
+      await user.keyboard('[ArrowRight]');
+      return screen.findByRole('searchbox', { name: 'Filter folders' });
+    });
     await waitFor(() => {
       expect(submenuInput).toHaveFocus();
     });
     await user.type(submenuInput, 'arch');
-    await waitFor(() => {
-      expect(screen.queryByRole('menuitem', { name: 'Projects' })).toBe(null);
-    });
+    expect(screen.queryByRole('menuitem', { name: 'Projects' })).toBe(null);
     expect(screen.getByRole('menuitem', { name: 'Archive' })).toBeVisible();
     // The parent list is untouched by the submenu query.
     expect(screen.getByRole('menuitem', { name: 'Rename' })).toBeVisible();
@@ -366,8 +361,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     expect(input).toHaveAttribute('aria-activedescendant', trigger.id);
 
     // A plain submenu roves real focus, so entering it hands focus to its first item.
-    await user.keyboard('[ArrowRight]');
-    const email = await screen.findByRole('menuitem', { name: 'Email' });
+    const email = await waitForLaterMillisecond(async () => {
+      await user.keyboard('[ArrowRight]');
+      return screen.findByRole('menuitem', { name: 'Email' });
+    });
     await waitFor(() => {
       expect(email).toHaveFocus();
     });
@@ -378,11 +375,73 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
     // Leaving returns focus to the input and highlights the trigger again.
     await user.keyboard('[ArrowLeft]');
-    await waitFor(() => {
-      expect(screen.queryByTestId('submenu')).toBe(null);
-    });
+    expect(screen.queryByTestId('submenu')).toBe(null);
     expect(input).toHaveFocus();
     expect(input).toHaveAttribute('aria-activedescendant', trigger.id);
+  });
+
+  describe('a plain submenu that takes the focus in the millisecond of its mount', () => {
+    // A mocked clock moves only in `render`, `rerender`, `setProps` and `waitForLaterMillisecond`.
+    // The focus of the submenu thus comes in the millisecond in which Vue attached its listeners.
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date('2026-01-01T00:00:00Z'));
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('clears the highlight of the parent trigger when a plain submenu takes the focus in the millisecond of its mount', async () => {
+      const { user } = await render(
+        <Menu.FilterProvider>
+          <Menu.Root defaultOpen>
+            <Menu.Trigger>Actions</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Input aria-label="Filter actions" />
+                  <Menu.List>
+                    <Menu.Item>Rename</Menu.Item>
+                    <Menu.SubmenuRoot>
+                      <Menu.SubmenuTrigger>Share</Menu.SubmenuTrigger>
+                      <Menu.Portal>
+                        <Menu.Positioner>
+                          <Menu.Popup data-testid="submenu">
+                            <Menu.Item>Email</Menu.Item>
+                            <Menu.Item>Copy link</Menu.Item>
+                          </Menu.Popup>
+                        </Menu.Positioner>
+                      </Menu.Portal>
+                    </Menu.SubmenuRoot>
+                  </Menu.List>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menu.FilterProvider>,
+      );
+
+      const input = screen.getByRole('searchbox', { name: 'Filter actions' });
+      await waitFor(() => {
+        expect(input).toHaveFocus();
+      });
+      await user.keyboard('[ArrowDown][ArrowDown]');
+      const trigger = screen.getByRole('menuitem', { name: 'Share' });
+      expect(input).toHaveAttribute('aria-activedescendant', trigger.id);
+
+      // The focus of the submenu comes before the clock moves, and the next key comes after it.
+      await waitForLaterMillisecond(async () => {
+        await user.keyboard('[ArrowRight]');
+        const email = await screen.findByRole('menuitem', { name: 'Email' });
+        await waitFor(() => {
+          expect(email).toHaveFocus();
+        });
+      });
+
+      expect(trigger).not.toHaveAttribute('data-highlighted');
+      await user.keyboard('[ArrowDown]');
+      expect(screen.getByRole('menuitem', { name: 'Copy link' })).toHaveFocus();
+    });
   });
 
   describe.skipIf(isJSDOM)('leaving a plain submenu while it animates out', () => {
@@ -432,7 +491,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         await waitFor(() => {
           expect(input).toHaveFocus();
         });
-        await user.keyboard('[ArrowDown][ArrowDown][ArrowRight]');
+        await waitForLaterMillisecond(() => user.keyboard('[ArrowDown][ArrowDown][ArrowRight]'));
         await waitFor(() => {
           expect(screen.getByRole('menuitem', { name: 'Email' })).toHaveFocus();
         });
@@ -454,7 +513,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       await waitFor(() => {
         expect(input).toHaveFocus();
       });
-      await user.keyboard('[ArrowDown][ArrowDown][ArrowRight]');
+      await waitForLaterMillisecond(() => user.keyboard('[ArrowDown][ArrowDown][ArrowRight]'));
       await waitFor(() => {
         expect(screen.getByRole('menuitem', { name: 'Email' })).toHaveFocus();
       });
@@ -472,8 +531,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       // The bare instance skips the pointer-events check of user-event, which a popup that a hover
       // opened fails while it transitions in.
-      await userEvent.hover(screen.getByRole('menuitem', { name: 'Share' }));
-      const email = await screen.findByRole('menuitem', { name: 'Email' });
+      const email = await waitForLaterMillisecond(async () => {
+        await userEvent.hover(screen.getByRole('menuitem', { name: 'Share' }));
+        return screen.findByRole('menuitem', { name: 'Email' });
+      });
       // In WebKit, a list ignores a pointer move with no movement, and the bare instance gives
       // none.
       await userEvent.hover(email);
@@ -484,11 +545,14 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       });
 
       const rename = screen.getByRole('menuitem', { name: 'Rename' });
-      await userEvent.hover(rename);
-      await fireEvent.mouseMove(rename, { movementX: 1 });
-      await waitFor(() => {
-        expect(screen.getByTestId('submenu')).toHaveAttribute('data-ending-style');
+      const submenu = screen.getByTestId('submenu');
+      await nextEndingStyle(submenu, {
+        action: async () => {
+          await userEvent.hover(rename);
+          await fireEvent.mouseMove(rename, { movementX: 1 });
+        },
       });
+      expect(submenu).toHaveAttribute('data-ending-style');
       expect(screen.getByRole('searchbox', { name: 'Filter actions' })).toHaveFocus();
     });
   });
@@ -521,8 +585,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       const trigger = screen.getByRole('button', { name: 'Actions' });
       trigger.focus();
       await flushMicrotasks();
-      await user.hover(trigger);
-      const input = await screen.findByRole('searchbox', { name: 'Filter actions' });
+      const input = await waitForLaterMillisecond(async () => {
+        await user.hover(trigger);
+        return screen.findByRole('searchbox', { name: 'Filter actions' });
+      });
       // A hover open shows the popup without moving focus off the trigger.
       expect(trigger).toHaveFocus();
       return { trigger, input };
@@ -864,19 +930,17 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       trigger.focus();
       await flushMicrotasks();
-      await user.keyboard('[Enter]');
+      await waitForLaterMillisecond(() => user.keyboard('[Enter]'));
       await waitFor(() => {
         expect(screen.getByRole('searchbox', { name: 'Filter actions' })).toHaveFocus();
       });
       await user.keyboard('sav[Escape]');
-      await waitFor(() => {
-        expect(screen.queryByRole('searchbox', { name: 'Filter actions' })).toBe(null);
-      });
+      expect(screen.queryByRole('searchbox', { name: 'Filter actions' })).toBe(null);
       await waitFor(() => {
         expect(trigger).toHaveFocus();
       });
 
-      await user.keyboard('[Enter]');
+      await waitForLaterMillisecond(() => user.keyboard('[Enter]'));
       const input = screen.getByRole('searchbox', { name: 'Filter actions' });
       await waitFor(() => {
         expect(input).toHaveFocus();
@@ -929,9 +993,7 @@ describe('independent menu focus inside a filterable menu', () => {
     screen.getByRole('menuitem', { name: 'Independent action' }).focus();
     await flushMicrotasks();
     await user.keyboard('{Shift>}[Tab]{/Shift}');
-    await waitFor(() =>
-      expect(screen.queryByRole('menuitem', { name: 'Independent action' })).toBe(null),
-    );
+    expect(screen.queryByRole('menuitem', { name: 'Independent action' })).toBe(null);
     await waitFor(() => expect(screen.getByRole('button', { name: 'Independent' })).toHaveFocus());
   });
 
@@ -1045,9 +1107,7 @@ describe('independent menu focus inside a filterable menu', () => {
       await waitFor(() => {
         expect(screen.getByTestId('after')).toHaveFocus();
       });
-      await waitFor(() => {
-        expect(screen.queryByRole('menu')).toBe(null);
-      });
+      expect(screen.queryByRole('menu')).toBe(null);
     });
 
     it('skips Clear when tabbing out of the popup', async () => {
@@ -1083,9 +1143,7 @@ describe('independent menu focus inside a filterable menu', () => {
       await waitFor(() => {
         expect(screen.getByTestId('after')).toHaveFocus();
       });
-      await waitFor(() => {
-        expect(screen.queryByRole('menu')).toBe(null);
-      });
+      expect(screen.queryByRole('menu')).toBe(null);
     });
 
     it('closes the popup with Escape and returns focus to the trigger', async () => {
@@ -1096,9 +1154,7 @@ describe('independent menu focus inside a filterable menu', () => {
 
       await user.keyboard('[Escape]');
 
-      await waitFor(() => {
-        expect(screen.queryByRole('menu')).toBe(null);
-      });
+      expect(screen.queryByRole('menu')).toBe(null);
       await waitFor(() => {
         expect(screen.getByRole('button', { name: 'Actions' })).toHaveFocus();
       });

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { nextTick, shallowRef } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import {
+  createHeldBranch,
   createRenderer,
   createTransitionRunCounter,
   flushMicrotasks,
@@ -44,6 +45,18 @@ interface AnchoringCase {
 
 function readVariable(element: HTMLElement, name: string) {
   return element.style.getPropertyValue(name);
+}
+
+function recordVariable(element: HTMLElement, name: string) {
+  const values = [readVariable(element, name)];
+  const observer = new MutationObserver(() => {
+    const value = readVariable(element, name);
+    if (values.at(-1) !== value) {
+      values.push(value);
+    }
+  });
+  observer.observe(element, { attributes: true, attributeFilter: ['style'] });
+  return { values, stop: () => observer.disconnect() };
 }
 
 // A change of the variable inside one task leaves no trace for a test. The variable of the first
@@ -160,18 +173,6 @@ describe('usePopupAutoResize', () => {
         expect(screen.getByTestId('popup')).toBeInTheDocument();
       });
       return result;
-    }
-
-    function recordVariable(element: HTMLElement, name: string) {
-      const values = [readVariable(element, name)];
-      const observer = new MutationObserver(() => {
-        const value = readVariable(element, name);
-        if (values.at(-1) !== value) {
-          values.push(value);
-        }
-      });
-      observer.observe(element, { attributes: true, attributeFilter: ['style'] });
-      return { values, stop: () => observer.disconnect() };
     }
 
     it('gives the measured size to the positioner and leaves the popup at auto when the popup opens', async () => {
@@ -452,6 +453,76 @@ describe('usePopupAutoResize', () => {
       await flushMicrotasks();
 
       expect(readVariable(positioner, '--positioner-width')).toBe('160px');
+    });
+
+    it('measures a popup that mounts open while KeepAlive holds its branch, at the show', async () => {
+      const branchElement = shallowRef<HTMLElement | null>(null);
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <div ref={branchElement}>
+          {scene({
+            root: openRoot,
+            triggers: [{ id: 'trigger', payload: 'narrow' }],
+            content: sized,
+          })}
+        </div>
+      ));
+      await render(() => (
+        <div>
+          <style>{POPUP_STYLE}</style>
+          <HeldBranch />
+        </div>
+      ));
+      await mountWhileHeld();
+      const popup = branchElement.value!.querySelector<HTMLElement>('[data-testid="popup"]')!;
+      const widths = recordVariable(popup, '--popup-width');
+
+      await show();
+
+      await waitFor(() => {
+        expect(readVariable(screen.getByTestId('positioner'), '--positioner-width')).toBe('120px');
+      });
+      widths.stop();
+      expect(widths.values).not.toContain('0px');
+    });
+
+    it('starts the next resize from the size before the deactivation', async () => {
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+      const payload = shallowRef('narrow');
+      const root = shallowRef<ViewportRootInstance | null>(null);
+      const kept = createKeptScene(() => ({
+        root: { ...openRoot, ref: root },
+        triggers: [{ id: 'trigger', payload: payload.value }],
+        content: sized,
+      }));
+      await render(() => (
+        <div>
+          <style>{POPUP_STYLE}</style>
+          {kept.render()}
+        </div>
+      ));
+      const positioner = screen.getByTestId('positioner');
+      await waitFor(() => {
+        expect(readVariable(positioner, '--positioner-width')).toBe('120px');
+      });
+
+      // The trigger writes its payload to the store one flush later, after `onDeactivated`. The
+      // write to the store changes the content in the flush of the deactivation.
+      payload.value = 'wide';
+      root.value!.store.set('payload', 'wide');
+      kept.visible.value = false;
+      await flushMicrotasks();
+      // The parts share one frame request. A request that waits from before the show would run
+      // the frame of the resize before the frame of the read.
+      await waitSingleFrame();
+
+      const popupWidth = await readInFirstFrame('--popup-width', () => {
+        kept.visible.value = true;
+      });
+
+      expect(popupWidth).toBe('120px');
+      await waitFor(() => {
+        expect(readVariable(positioner, '--positioner-width')).toBe('160px');
+      });
     });
   });
 });

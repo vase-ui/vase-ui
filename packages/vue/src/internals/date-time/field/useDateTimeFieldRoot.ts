@@ -1,7 +1,6 @@
 import {
   computed,
   nextTick,
-  onActivated,
   onDeactivated,
   onMounted,
   provide,
@@ -11,8 +10,8 @@ import {
   watch,
 } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
-import { addEventListener } from '../../../common/addEventListener';
 import { clamp } from '../../../common/clamp';
+import { useAriaAfterHydration, useHiddenValueBeforeHydration } from '../../../common/hydration';
 import { ownerWindow } from '../../../common/owner';
 import { contains } from '../../../common/shadowDom';
 import { useControlled } from '../../../common/useControlled';
@@ -33,11 +32,21 @@ import {
 } from '../../labelable-provider';
 import { REASONS } from '../../reasons';
 import { useFormReset } from '../../useFormReset';
+import { useFormRestoreAsInput } from '../../useFormRestore';
+import { useKeepAliveState } from '../../useKeepAliveState';
 import { useValueChanged } from '../../useValueChanged';
 import { displayCalendar } from '../displayCalendar';
 import { digits as getDigits, formatter } from '../format';
 import type { DateMatcher } from '../matchers';
-import { isKind, kindOf, parseInputText, toInputText, toPlainDate, today } from '../temporal';
+import {
+  isKind,
+  kindOf,
+  parseInputText,
+  toInputText,
+  toPlainDate,
+  today,
+  yearMonthInCalendar,
+} from '../temporal';
 import type { DateValue, TemporalKind, TemporalValue } from '../temporal';
 import { DateTimeFieldContext } from './DateTimeFieldContext';
 import type {
@@ -341,7 +350,15 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
       return source;
     }
     if (kind.value === 'yearMonth') {
-      return midnight.value.toPlainDate().toPlainYearMonth();
+      const date = midnight.value.toPlainDate();
+      const isoMonth = date.toPlainYearMonth();
+      const calendar = toValue(parameters.calendar);
+      // An ISO year and month does not show in a calendar that has other months, so
+      // `displayCalendar` ignores such a `calendar` prop for an ISO template. The template is thus
+      // in that calendar.
+      return calendar === undefined || yearMonthInCalendar(isoMonth, calendar)
+        ? isoMonth
+        : date.withCalendar(calendar).toPlainYearMonth();
     }
     if (kind.value === 'date') {
       return midnight.value.toPlainDate();
@@ -362,7 +379,11 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   const digits = computed(() => getDigits(locale.value));
   const dayPeriodTexts = computed(() => getDayPeriodTexts(locale.value));
 
-  const controlId = useLabelableId({ id: () => toValue(parameters.id) });
+  const rootElement = shallowRef<HTMLElement | null>(null);
+
+  const controlId = useLabelableId({
+    id: () => toValue(parameters.id),
+  });
 
   // The name of a month depends on its year in a calendar with leap months. The value can have
   // another calendar than the field, so the date goes into the calendar of the field first.
@@ -607,8 +628,6 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     focusSegment(ordered[ordered.indexOf(from) + direction]);
   }
 
-  const rootElement = shallowRef<HTMLElement | null>(null);
-
   function handleInputPress(event: MouseEvent) {
     if (event.defaultPrevented || isDisabled.value) {
       return;
@@ -637,6 +656,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     }
   }
 
+  const ariaAfterHydration = useAriaAfterHydration();
   const ariaLabelledBy = useAriaLabelledBy(
     () => toValue(parameters.ariaLabelledby),
     useControlLabelId(),
@@ -677,6 +697,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   });
 
   const hiddenInputElement = shallowRef<HTMLInputElement | null>(null);
+  const writesHiddenValue = useHiddenValueBeforeHydration(() => hiddenInputElement.value);
 
   function syncCustomValidity() {
     hiddenInputElement.value?.setCustomValidity(customMessage.value);
@@ -801,12 +822,12 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   let heldInput: HTMLInputElement | null = null;
   let unregisterInput: (() => void) | void;
   // `KeepAlive` takes the input out of the document, and the field must not use an input that is
-  // not in the document.
-  const isDeactivated = shallowRef(false);
+  // not in the document. A held required field that is empty would block the submit of its form.
+  const { isHeld, shown } = useKeepAliveState();
 
   // A field can have more than one input, such as two date fields of a range. The input goes to the
   // registry of the field and not to `validation.inputRef`. The registry gives the field the first
-  // input that is invalid.
+  // invalid input in the document.
   function updateInputRegistration() {
     unregisterInput?.();
     unregisterInput = heldInput
@@ -830,42 +851,49 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     updateInputRegistration();
   }
 
-  onDeactivated(() => {
-    isDeactivated.value = true;
+  function releaseInput() {
     unregisterInput?.();
     unregisterInput = undefined;
-  });
+  }
 
-  onActivated(() => {
-    isDeactivated.value = false;
-  });
+  onDeactivated(releaseInput);
 
-  // `KeepAlive` runs the `onActivated` hooks from the last part to the first part. A registration
-  // in the hook would reverse the order of the inputs. A watcher runs in the order of the parts.
-  watch(isDeactivated, (deactivated) => {
-    if (!deactivated) {
-      updateInputRegistration();
+  // The `ref` setter of a root that mounts in a held branch registers the input. `isHeld` is
+  // already `true` then, so the input is a source of the `watch`.
+  watch([isHeld, hiddenInputElement], ([held]) => {
+    if (held) {
+      releaseInput();
     }
   });
 
+  // `KeepAlive` calls no `ref` setter at an activation, so the root registers the input again. The
+  // release before the registration keeps one cleanup for each registration. The field finds its
+  // input by its position in the document, so the order of the watchers decides only between
+  // inputs in two trees.
+  watch(shown, updateInputRegistration);
+
   watch(
     hiddenInputElement,
-    (input, _previous, onCleanup) => {
+    (input) => {
       if (!input) {
         return;
       }
-      handledHiddenValue = input.value;
+      // Until the take of the hydration, the input can hold a value that the root did not handle.
+      handledHiddenValue = writesHiddenValue.value ? input.value : hiddenText.value;
       syncCustomValidity();
-      // A browser restores the form state of a page with no event on the inputs.
-      onCleanup(addEventListener(ownerWindow(input), 'pageshow', writeValueToHiddenInput));
     },
     { flush: 'post' },
   );
 
-  // Vue writes the value to the hidden input when the text changes. A program can then send a
-  // `change` event with the text that the input had before, and the root must handle it.
+  // The value sanitization of the input type can change the text of the value. A `date` input has
+  // no value for a year 0.
+  useFormRestoreAsInput(hiddenInputElement, () => handledHiddenValue, false);
+
+  // Vue writes the value to the hidden input when the text changes, and when the input gets the
+  // `value` key after the hydration. A program can then send a `change` event with the text that
+  // the input had before, and the root must handle it.
   watch(
-    hiddenText,
+    [hiddenText, writesHiddenValue],
     () => {
       handledHiddenValue = hiddenInputElement.value?.value;
     },
@@ -878,15 +906,17 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   // `handleHiddenInputInvalid` then keeps the size that it writes.
   function hiddenInputProps() {
     const type = INPUT_TYPES[kind.value] ?? 'text';
+    const validationProps = validation.getValidationProps(isDisabled.value);
     return {
-      ...validation.getValidationProps(isDisabled.value),
+      ...validationProps,
+      'aria-describedby': ariaAfterHydration(validationProps['aria-describedby']),
       ref: setHiddenInput,
       type,
       id:
         controlId.value && inputName.value == null ? `${controlId.value}-hidden-input` : undefined,
       form: toValue(parameters.form),
       name: inputName.value,
-      value: hiddenText.value,
+      ...(writesHiddenValue.value ? { value: hiddenText.value } : undefined),
       autocomplete: toValue(parameters.autoComplete),
       min: inputLimits.value.min,
       max: inputLimits.value.max,
@@ -926,10 +956,10 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     return [
       {
         role: 'group',
-        'aria-describedby': getDescriptionProps({ 'aria-describedby': ariaDescribedBy })[
-          'aria-describedby'
-        ],
-        'aria-labelledby': ariaLabelledBy.value,
+        'aria-describedby': ariaAfterHydration(
+          getDescriptionProps({ 'aria-describedby': ariaDescribedBy })['aria-describedby'],
+        ),
+        'aria-labelledby': ariaAfterHydration(ariaLabelledBy.value),
         onFocusout: handleFocusout,
       },
       elementAttrs,
@@ -937,17 +967,24 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   }
 
   // `listKey` changes when the layout of the server differs from the first layout of the browser.
-  // Vue reuses a server element of the same tag for another segment, and it writes no attribute
-  // while it hydrates. The element then keeps the attributes of the server, such as `data-type`
-  // and `aria-valuemax`. New keys make the elements again. Vue changes the text of a literal itself.
+  // Vue reuses a server element of the same tag for another part, and it writes no attribute
+  // while it hydrates. The element then keeps the attributes of the server, such as `data-type`,
+  // `aria-hidden` and `aria-valuemax`. A server can put a time zone name or an era in the place of
+  // a separator, so the root also compares each literal part with its place in the layout. New
+  // keys make the elements again. Vue changes the text of a literal itself.
   const listKey = shallowRef(0);
+  const hydratedLayout = segments.value.map(({ type }) => type);
   const hydratedTypes = editableTypes.value;
   const hydratedAttributes = hydratedTypes.map((type) =>
     getSegmentAttributes(type, views.value[type] ?? EMPTY_VIEW),
   );
+  const literalElements = new Map<HTMLElement, number>();
   onMounted(() => {
     const shown = getOrderedSegments();
     const isSame =
+      [...literalElements].every(
+        ([element, index]) => element.dataset.type === hydratedLayout[index],
+      ) &&
       shown.length === hydratedTypes.length &&
       shown.every(
         (element, index) =>
@@ -981,6 +1018,8 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     moveFocus,
     registerSegment: (element) => segmentElements.add(element),
     unregisterSegment: (element) => segmentElements.delete(element),
+    registerLiteral: (element, index) => literalElements.set(element, index),
+    unregisterLiteral: (element) => literalElements.delete(element),
     setFocused(next) {
       focused.value = next;
     },

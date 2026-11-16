@@ -20,6 +20,7 @@ import {
   describeConformance,
   flushMicrotasks,
   isJSDOM,
+  nextEndingStyle,
   positionerConformanceTests,
   screen,
   takeReportedMessages,
@@ -287,14 +288,15 @@ describe('<Popover.Positioner />', () => {
       await waitForPositioned(positioner);
       const initialRect = positioner.getBoundingClientRect();
 
-      await user.click(screen.getByRole('button', { name: 'Close' }));
+      const popup = screen.getByTestId('popup');
+      await nextEndingStyle(popup, {
+        action: () => user.click(screen.getByRole('button', { name: 'Close' })),
+      });
       await waitSingleFrame();
       await waitSingleFrame();
       await flushMicrotasks();
 
-      await waitFor(() => {
-        expect(screen.getByTestId('popup')).toHaveAttribute('data-ending-style');
-      });
+      expect(popup).toHaveAttribute('data-ending-style');
 
       const closingRect = positioner.getBoundingClientRect();
       expect(Math.abs(closingRect.x - initialRect.x)).toBeLessThanOrEqual(1);
@@ -589,10 +591,8 @@ describe('<Popover.Positioner />', () => {
   });
 
   describe('scroll lock', () => {
-    // The lock and the unlock each wait for a timer of 0 ms. The observers of `waitFor` do not see a
-    // document in a frame, so it polls.
-    const POLL = { interval: 5, timeout: 3000 };
-
+    // The lock and the unlock each wait for a timer of 0 ms. The observer of `waitFor` does not see
+    // a change in the document of an iframe. Its check in each frame sees the change.
     function lockCount() {
       return getScrollLockRegistry()?.lockCount ?? 0;
     }
@@ -628,10 +628,10 @@ describe('<Popover.Positioner />', () => {
       await render(<ModalPopover />);
 
       handle.open('trigger');
-      await waitFor(() => expect(isPageLocked(page)).toBe(true), POLL);
+      await waitFor(() => expect(isPageLocked(page)).toBe(true));
 
       handle.close();
-      await waitFor(() => expect(isPageLocked(page)).toBe(false), POLL);
+      await waitFor(() => expect(isPageLocked(page)).toBe(false));
       expect(lockCount()).toBe(0);
     });
 
@@ -681,13 +681,13 @@ describe('<Popover.Positioner />', () => {
       await render(() => (
         <KeepAlive>{show.value ? <ModalPopover key="popover" /> : <Other key="other" />}</KeepAlive>
       ));
-      await waitFor(() => expect(isPageLocked(page)).toBe(true), POLL);
+      await waitFor(() => expect(isPageLocked(page)).toBe(true));
 
       show.value = false;
-      await waitFor(() => expect(isPageLocked(page)).toBe(false), POLL);
+      await waitFor(() => expect(isPageLocked(page)).toBe(false));
 
       show.value = true;
-      await waitFor(() => expect(isPageLocked(page)).toBe(true), POLL);
+      await waitFor(() => expect(isPageLocked(page)).toBe(true));
     });
   });
 

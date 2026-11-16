@@ -7,12 +7,15 @@ import {
   fireEvent,
   firePointer,
   flushMicrotasks,
+  getFocusableUnderAriaHidden,
+  nestedPopupCloseTests,
+  nextEvent,
   nextAnimationsRead,
+  POPUP_EXIT_CSS,
   screen,
   takeReportedMessages,
   waitFor,
   waitForLaterMillisecond,
-  waitSingleFrame,
 } from '#test-utils';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import * as Dialog from '../../dialog/index.parts';
@@ -595,6 +598,7 @@ describe('<Drawer.Popup />', () => {
 
   it('clears parent nested drawer state when a nested drawer starts closing before unmount', async () => {
     globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    const onOpenChangeComplete = vi.fn();
 
     const style = `
       @keyframes test-drawer-exit {
@@ -615,7 +619,7 @@ describe('<Drawer.Popup />', () => {
           <Drawer.Portal>
             <Drawer.Viewport>
               <Drawer.Popup data-testid="parent-popup">
-                <Drawer.Root defaultOpen modal={false}>
+                <Drawer.Root defaultOpen modal={false} onOpenChangeComplete={onOpenChangeComplete}>
                   <Drawer.Portal>
                     <Drawer.Viewport>
                       <Drawer.Popup class="animation-test-child-popup" data-testid="child-popup">
@@ -638,9 +642,11 @@ describe('<Drawer.Popup />', () => {
     });
     expect(parentPopup).toHaveAttribute('data-nested-drawer-open', '');
 
-    // The nested drawer is open at the mount and reads its animations in the frame after the mount.
-    // The next read of its popup is then the read of its exit.
-    await waitSingleFrame();
+    // The root of the nested drawer reads the animations of its popup in a frame after the mount,
+    // to report the end of the open. The wait for the read of the close must start after that read.
+    await waitFor(() => {
+      expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+    });
     const childPopup = screen.getByTestId('child-popup');
     // The exit lasts 100 s, so its state stays until the case ends the exit.
     const animations = await nextAnimationsRead(childPopup, {
@@ -662,6 +668,7 @@ describe('<Drawer.Popup />', () => {
 
   it('keeps a fixed height applied while a nested drawer closes', async () => {
     globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    const onOpenChangeComplete = vi.fn();
 
     const style = `
       @keyframes test-drawer-exit {
@@ -703,7 +710,7 @@ describe('<Drawer.Popup />', () => {
             <Drawer.Viewport>
               <Drawer.Popup class="animation-test-parent-popup" data-testid="parent-popup">
                 <div class="animation-test-parent-content" />
-                <Drawer.Root modal={false}>
+                <Drawer.Root modal={false} onOpenChangeComplete={onOpenChangeComplete}>
                   <Drawer.Trigger>Open nested drawer</Drawer.Trigger>
                   <Drawer.Portal>
                     <Drawer.Viewport>
@@ -722,10 +729,11 @@ describe('<Drawer.Popup />', () => {
     );
 
     const parentPopup = screen.getByTestId('parent-popup');
-    screen.getByRole('button', { name: 'Open nested drawer' }).click();
-    await flushMicrotasks();
     // The open mounts the close button. Vue skips its listener for a click in that millisecond.
-    await waitForLaterMillisecond();
+    await waitForLaterMillisecond(async () => {
+      screen.getByRole('button', { name: 'Open nested drawer' }).click();
+      await flushMicrotasks();
+    });
 
     await waitFor(() => {
       expect(parentPopup).toHaveAttribute('data-nested-drawer-open', '');
@@ -748,6 +756,11 @@ describe('<Drawer.Popup />', () => {
     });
 
     const childPopup = screen.getByTestId('child-popup');
+    // The root of the nested drawer reads the animations of its popup in a frame after the open,
+    // to report the end of the open. The wait for the read of the close must start after that read.
+    await waitFor(() => {
+      expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+    });
     // The exit lasts 100 s, so its state stays until the case ends the exit.
     const animations = await nextAnimationsRead(childPopup, {
       action: () => screen.getByRole('button', { name: 'Close nested drawer' }).click(),
@@ -823,24 +836,25 @@ describe('<Drawer.Popup />', () => {
     );
 
     const parentPopup = screen.getByTestId('parent-popup');
-    screen.getByRole('button', { name: 'Open nested drawer' }).click();
-    await flushMicrotasks();
     // The open mounts the close button. Vue skips its listener for a click in that millisecond.
-    await waitForLaterMillisecond();
+    await waitForLaterMillisecond(async () => {
+      screen.getByRole('button', { name: 'Open nested drawer' }).click();
+      await flushMicrotasks();
+    });
 
     await waitFor(() => {
       expect(parentPopup).toHaveAttribute('data-nested-drawer-open', '');
     });
 
+    const childPopup = screen.getByTestId('child-popup');
     screen.getByRole('button', { name: 'Close nested drawer' }).click();
     await flushMicrotasks();
 
+    expect(parentPopup).not.toHaveAttribute('data-nested-drawer-open');
     await waitFor(() => {
-      expect(parentPopup).not.toHaveAttribute('data-nested-drawer-open');
+      expect(childPopup).not.toBeInTheDocument();
     });
-    await waitFor(() => {
-      expect(screen.queryByTestId('child-popup')).toBe(null);
-    });
+    expect(screen.queryByTestId('child-popup')).toBe(null);
 
     const mutations: { hasNested: boolean; drawerHeight: string }[] = [];
     const observer = new MutationObserver(() => {
@@ -1026,6 +1040,79 @@ describe('<Drawer.Popup />', () => {
 
       expect(popup).toHaveAttribute('data-label', 'second');
       expect(popup.style.getPropertyValue('--drawer-swipe-progress')).toBe('0.5');
+    });
+  });
+
+  describe('BUG-5519: an exit animation', () => {
+    // Opens the drawer with its trigger and closes it with the Escape key. The callback records the
+    // document when the exit animation starts. The function resolves after the popup unmounts.
+    async function recordExit(record: () => void) {
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+      const { user } = await render(
+        <div>
+          <style>{POPUP_EXIT_CSS}</style>
+          <Drawer.Root>
+            <Drawer.Trigger>Open</Drawer.Trigger>
+            <Drawer.Portal>
+              <Drawer.Viewport>
+                <Drawer.Popup class="popup" data-testid="popup">
+                  <Drawer.Close>Close</Drawer.Close>
+                </Drawer.Popup>
+              </Drawer.Viewport>
+            </Drawer.Portal>
+          </Drawer.Root>
+        </div>,
+      );
+      await user.click(screen.getByRole('button', { name: 'Open' }));
+      const popup = screen.getByTestId('popup');
+      await waitFor(() => {
+        expect(popup).toHaveFocus();
+      });
+      expect(getFocusableUnderAriaHidden().length).toBeGreaterThan(0);
+
+      await nextEvent(popup, 'animationstart', { action: () => user.keyboard('{Escape}') });
+      record();
+      // The animation of 100 s still runs after `animationstart`, so the case reads the list itself.
+      const animations = popup.getAnimations();
+      const finished = animations.map((animation) => animation.finished);
+      for (const animation of animations) {
+        animation.finish();
+      }
+      // A busy machine can stall the page for some seconds, so the wait for the end of the
+      // animations has no time limit.
+      await Promise.all(finished);
+      await waitFor(() => {
+        expect(popup).not.toBeInTheDocument();
+      });
+      expect(screen.queryByTestId('popup')).toBe(null);
+    }
+
+    it('BUG-5519: keeps no focusable content under aria-hidden during the exit animation', async () => {
+      let focusableDuringExit: HTMLElement[] = [];
+
+      await recordExit(() => {
+        focusableDuringExit = getFocusableUnderAriaHidden();
+      });
+
+      expect(focusableDuringExit).toEqual([]);
+    });
+
+    it('BUG-5519: returns the focus to the trigger when the exit animation starts', async () => {
+      let focusedDuringExit: Element | null = null;
+
+      await recordExit(() => {
+        focusedDuringExit = document.activeElement;
+      });
+
+      expect(focusedDuringExit).toBe(screen.getByRole('button', { name: 'Open' }));
+    });
+  });
+
+  describe('BUG-5519: a popup in the popup that closes with it', () => {
+    nestedPopupCloseTests({
+      parts: Drawer,
+      wrapPopup: (popup) => <Drawer.Viewport>{popup}</Drawer.Viewport>,
+      render,
     });
   });
 

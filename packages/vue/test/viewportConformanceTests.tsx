@@ -1,12 +1,14 @@
-import { defineComponent, shallowRef } from 'vue';
+import { defineComponent, nextTick, shallowRef } from 'vue';
 import type { CSSProperties, VNode, VNodeChild } from 'vue';
 import type { UserEvent } from '@testing-library/user-event';
 import { expect, describe, it, beforeEach, afterEach } from 'vitest';
-import { screen, waitFor } from '@testing-library/dom';
+import { screen } from './queries';
+import { waitFor } from './waitFor';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import { isJSDOM } from '../src/common/testUtils';
 import type { Side } from '../src/internals/useAnchorPositioning';
-import { nextEvent } from './animation';
+import { nextAnimationsRead, nextEndingStyle, nextEvent } from './animation';
+import { waitForLaterMillisecond } from './createRenderer';
 import type { createRenderer } from './createRenderer';
 import { flushMicrotasks } from './flushMicrotasks';
 import { waitSingleFrame } from './wait';
@@ -86,9 +88,10 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
         }),
       );
 
-      await activateTrigger(screen.getByTestId('trigger1'), user);
-
-      const firstImage = await screen.findByTestId('payload-image-1');
+      const firstImage = await waitForLaterMillisecond(async () => {
+        await activateTrigger(screen.getByTestId('trigger1'), user);
+        return screen.findByTestId('payload-image-1');
+      });
       const firstContainer = firstImage.closest('[data-current]');
       expect(firstContainer).not.toBe(null);
 
@@ -252,9 +255,11 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
           '100s',
         );
 
-        await activateTrigger(screen.getByTestId('trigger1'), user);
-        await waitFor(() => {
-          expect(screen.getByText('Content 0')).toBeVisible();
+        await waitForLaterMillisecond(async () => {
+          await activateTrigger(screen.getByTestId('trigger1'), user);
+          await waitFor(() => {
+            expect(screen.getByText('Content 0')).toBeVisible();
+          });
         });
         const viewport = screen.getByTestId('viewport');
         expect(viewport).not.toHaveAttribute('data-transitioning');
@@ -283,11 +288,13 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
         expect(currentContainer).not.toBe(null);
         expect(currentContainer!.textContent).toBe('Content 1');
 
-        // The previous container is removed once the animations finish.
+        // Allow `useAnimationsFinished` to begin waiting before the animations finish.
+        await waitSingleFrame();
+        await waitSingleFrame();
+        // The part removes the previous container in the microtasks after the animations end.
         finishAnimations();
-        await waitFor(() => {
-          expect(document.querySelector('[data-previous]')).toBe(null);
-        });
+        await flushMicrotasks();
+        expect(document.querySelector('[data-previous]')).toBe(null);
 
         expect(viewport).not.toHaveAttribute('data-transitioning');
         expect(document.querySelector('[data-current]')).toBeVisible();
@@ -303,9 +310,11 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
           '0.2s',
         );
 
-        await activateTrigger(screen.getByTestId('trigger1'), user);
-        await waitFor(() => {
-          expect(screen.getByText('Content 0')).toBeVisible();
+        await waitForLaterMillisecond(async () => {
+          await activateTrigger(screen.getByTestId('trigger1'), user);
+          await waitFor(() => {
+            expect(screen.getByText('Content 0')).toBeVisible();
+          });
         });
 
         await activateTrigger(screen.getByTestId('trigger2'), user);
@@ -320,6 +329,7 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
 
       it('creates morphing containers after a kept-mounted popup closes and reopens', async () => {
         const open = shallowRef(false);
+        const exitEnd = Promise.withResolvers<void>();
 
         const { user } = await render(() => (
           <div>
@@ -329,6 +339,11 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
                 open: open.value,
                 onOpenChange: (nextOpen) => {
                   open.value = nextOpen;
+                },
+                onOpenChangeComplete: (nextOpen) => {
+                  if (!nextOpen) {
+                    exitEnd.resolve();
+                  }
                 },
               },
               triggers: [
@@ -354,16 +369,20 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
         await waitFor(() => {
           expect(document.querySelector('[data-previous]')).not.toBe(null);
         });
+        // Allow `useAnimationsFinished` to begin waiting before the animations finish.
+        await waitSingleFrame();
+        await waitSingleFrame();
         finishAnimations();
-        await waitFor(() => {
-          expect(document.querySelector('[data-previous]')).toBe(null);
-        });
+        await flushMicrotasks();
+        expect(document.querySelector('[data-previous]')).toBe(null);
 
         open.value = false;
+        await exitEnd.promise;
         // A kept-mounted positioner gets `hidden` when the exit completes.
         await waitFor(() => {
           expect(screen.getByTestId('popup').closest('[hidden]')).toBeInstanceOf(HTMLElement);
         });
+        expect(screen.getByTestId('popup')).not.toHaveAttribute('data-ending-style');
 
         await activateTrigger(trigger1, user);
         await waitFor(() => {
@@ -388,7 +407,7 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
       it('shows the latest content after rapid trigger changes', async () => {
         const { user } = await render(
           <div>
-            <style>{getMorphAnimationStyles('0.2s')}</style>
+            <style>{getMorphAnimationStyles('100s')}</style>
             {createComponent({
               triggers: [
                 { payload: 1, 'data-testid': 'trigger1', children: 'Trigger 1' },
@@ -402,12 +421,22 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
 
         const trigger1 = screen.getByTestId('trigger1');
 
-        await activateTrigger(trigger1, user);
+        await waitForLaterMillisecond(async () => {
+          await activateTrigger(trigger1, user);
+          await screen.findByText('Content 1', { selector: '[data-current]' });
+        });
         await activateTrigger(screen.getByTestId('trigger2'), user);
-        await activateTrigger(screen.getByTestId('trigger3'), user);
+        // A trigger that opens on `mousedown`, such as `Menu.Trigger`, changes the popup in the
+        // frame after the press. On a busy page, the clicks can end before that frame. Wait for
+        // `Content 3`, so that `Content 1` comes only from the last click.
+        await waitForLaterMillisecond(async () => {
+          await activateTrigger(screen.getByTestId('trigger3'), user);
+          await screen.findByText('Content 3', { selector: '[data-current]' });
+        });
         await activateTrigger(trigger1, user);
 
-        const content = await screen.findByText('Content 1');
+        const content = await screen.findByText('Content 1', { selector: '[data-current]' });
+        finishAnimations();
         await waitFor(() => {
           expect(content).toBeVisible();
         });
@@ -435,30 +464,28 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
         });
         // The containers have an animation only while the viewport transitions, so the first
         // `animationstart` comes from the morph.
-        await nextEvent(screen.getByTestId('viewport'), 'animationstart', {
-          action: () => activateTrigger(screen.getByTestId('trigger2'), user),
-        });
+        await waitForLaterMillisecond(() =>
+          nextEvent(screen.getByTestId('viewport'), 'animationstart', {
+            action: () => activateTrigger(screen.getByTestId('trigger2'), user),
+          }),
+        );
         // Allow `useAnimationsFinished` to begin waiting before replacing the current container.
         await waitSingleFrame();
 
-        await activateTrigger(screen.getByTestId('trigger3'), user);
-        await waitSingleFrame();
+        // The viewport keeps one container for the previous content, and that container has the
+        // ending style of the first switch. A frame after the switch, the containers move from
+        // starting to ending styles. The wait resolves only for an ending style of this switch.
+        const previousContainer = document.querySelector('[data-previous]')!;
+        await nextEndingStyle(previousContainer, {
+          action: () => activateTrigger(screen.getByTestId('trigger3'), user),
+        });
 
         const currentContainer = screen.getByText('Content 3').closest('[data-current]');
         expect(currentContainer?.getAnimations()).toHaveLength(1);
         expect(screen.getByTestId('viewport')).toHaveAttribute('data-transitioning', '');
         expect(document.querySelector('[data-previous]')).toHaveTextContent('Content 2');
-
-        // A frame after the switch, the containers move from starting to ending styles.
-        await waitFor(() => {
-          expect(document.querySelector('[data-previous]')).toHaveAttribute(
-            'data-ending-style',
-            '',
-          );
-        });
-        expect(screen.getByText('Content 3').closest('[data-current]')).not.toHaveAttribute(
-          'data-starting-style',
-        );
+        expect(document.querySelector('[data-previous]')).toHaveAttribute('data-ending-style', '');
+        expect(currentContainer).not.toHaveAttribute('data-starting-style');
       });
 
       it('cleans up the transition when a lagging payload remounts the current container', async () => {
@@ -487,22 +514,24 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
           </div>
         ));
 
-        await activateTrigger(screen.getByTestId('trigger1'), user);
-        await waitFor(() => {
-          expect(document.querySelector('[data-current]')).not.toBe(null);
+        await waitForLaterMillisecond(async () => {
+          await activateTrigger(screen.getByTestId('trigger1'), user);
+          await waitFor(() => {
+            expect(document.querySelector('[data-current]')).not.toBe(null);
+          });
         });
-        const runs = recordTransitionRuns(screen.getByTestId('viewport'));
-
-        await activateTrigger(screen.getByTestId('trigger2'), user);
+        const viewport = screen.getByTestId('viewport');
+        const runs = recordTransitionRuns(viewport);
 
         // The morph is in progress: the previous snapshot exists and both containers
         // are running their (long) transitions.
-        await waitFor(() => {
-          expect(runs).toContain(document.querySelector('[data-previous]'));
+        await nextEvent(viewport, 'transitionrun', {
+          action: () => activateTrigger(screen.getByTestId('trigger2'), user),
         });
-        await waitFor(() => {
-          expect(runs).toContain(document.querySelector('[data-current]'));
-        });
+        // The browser sends the `transitionrun` events of one update together, before the next task.
+        await flushMicrotasks();
+        expect(runs).toContain(document.querySelector('[data-previous]'));
+        expect(runs).toContain(document.querySelector('[data-current]'));
 
         // Allow `useAnimationsFinished` to begin waiting before the container is replaced.
         await waitSingleFrame();
@@ -513,18 +542,16 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
         // The payload for the already-active trigger arrives a render later, which
         // bumps the content key and remounts the current container mid-morph.
         payload2.value = 'ready';
-        await flushMicrotasks();
+        await nextTick();
 
-        await waitFor(() => {
-          expect(document.querySelector('[data-current]')).not.toBe(containerBeforePayload);
-        });
-        expect(document.querySelector('[data-current]')!.textContent).toBe('Content ready');
+        const remountedContainer = document.querySelector('[data-current]')!;
+        expect(remountedContainer).not.toBe(containerBeforePayload);
+        expect(remountedContainer.textContent).toBe('Content ready');
 
         // The remounted container must restart its entry transition, otherwise the
         // cleanup watcher finds nothing to await and truncates the exit transition.
-        await waitFor(() => {
-          expect(runs).toContain(document.querySelector('[data-current]'));
-        });
+        const awaitedAnimations = await nextAnimationsRead(remountedContainer);
+        expect(awaitedAnimations.length).toBeGreaterThanOrEqual(1);
 
         // The previous container's exit transition is still running, so it must not
         // have been torn down in the frames right after the remount.
@@ -536,11 +563,10 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
 
         // Finish the live animations so the cleanup watcher can settle.
         finishAnimations();
-        await waitFor(() => {
-          expect(document.querySelector('[data-previous]')).toBe(null);
-        });
+        await flushMicrotasks();
+        expect(document.querySelector('[data-previous]')).toBe(null);
 
-        expect(screen.getByTestId('viewport')).not.toHaveAttribute('data-transitioning');
+        expect(viewport).not.toHaveAttribute('data-transitioning');
       });
     });
   });
@@ -639,6 +665,7 @@ export interface ViewportTestProps {
     defaultOpen?: boolean;
     defaultTriggerId?: string;
     onOpenChange?: (open: boolean, eventDetails: { preventUnmountOnClose(): void }) => void;
+    onOpenChangeComplete?: (open: boolean) => void;
   };
   triggers: ViewportTestTriggerProps[];
   portal?: { keepMounted?: boolean };

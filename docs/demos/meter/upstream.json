@@ -3,6 +3,16 @@
   "upstream": "docs/src/app/(docs)/react/components/meter/demos",
   "files": {
     "hero/css-modules/index.module.css": "18b2354e062f37bdeb8fb7ad588cdb358c8f13a09778e126e79335582dccde10",
-    "hero/css-modules/index.tsx": "d55d4cae38e4368778bce3b21be449d89a5ff3ffeb3eab24dada75c31b63f548"
+    "hero/css-modules/index.tsx": "d55d4cae38e4368778bce3b21be449d89a5ff3ffeb3eab24dada75c31b63f548",
+    "hero/tailwind/index.tsx": "3f6a8faeef7b63873b23595daacde7023be3ae711d5a1a9c45d25835ee9a37db"
+  },
+  "classes": {
+    "hero/tailwind": {
+      "Meter.Indicator": ["bg-neutral-950 transition-[width] duration-500 dark:bg-white"],
+      "Meter.Label": ["text-sm font-normal text-neutral-950 dark:text-white"],
+      "Meter.Root": ["grid max-w-full w-60 grid-cols-2 gap-y-2"],
+      "Meter.Track": ["col-span-2 h-3 overflow-hidden bg-neutral-200 dark:bg-neutral-800"],
+      "Meter.Value": ["text-right text-sm text-neutral-950 dark:text-white"]
+    }
   }
 }

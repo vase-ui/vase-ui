@@ -25,6 +25,7 @@ import { computed } from 'vue';
 import type { CSSProperties } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { createElementSetter } from '../../utils/popups/createElementSetter';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { usePreviewCardRootContext } from '../root/PreviewCardContext';
 
@@ -52,6 +53,7 @@ const state = computed<PreviewCardBackdropState>(() => ({
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
+  ref: createElementSetter(store.context.backdropRef),
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
     { role: 'presentation', hidden: !store.select('mounted'), style: BACKDROP_STYLE },

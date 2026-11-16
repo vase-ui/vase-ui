@@ -33,7 +33,7 @@
       "describe": ["<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>", "accessible names"],
       "title": "omits aria-controls when the list renders with an explicitly empty id",
       "kind": "not-applicable",
-      "reason": "The case gives a React element with an `id` as `render`. In Vue `#render` is a slot, which is a function, so the part does not see the `id` of the element of the slot. The `id` prop gives the same result."
+      "reason": "The case gives a React element with an `id` as `render`. In Vue `#render` is a slot, which is a function, so the part does not see the `id` of the element of the slot. An empty `id` prop counts as no `id` (`VUE-93`), so the list keeps its generated id, and `Menu.Input` names it in `aria-controls`."
     },
     {
       "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
@@ -137,6 +137,14 @@
       "prop": "alignOffset",
       "kind": "not-applicable",
       "reason": "The row gives the default `0`. The part has no Vue default: a prop that is absent takes `2` for a context menu that has no `side` and an `align` other than `'center'`, and `0` for any other menu, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
+    },
+    {
+      "upstream": "packages/react/src/menu/group-label/MenuGroupLabel.test.tsx",
+      "describe": ["<Menu.GroupLabel />", "a11y attributes"],
+      "title": "allows overriding aria-hidden",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/group-label/MenuGroupLabel.test.tsx",
+      "reason": "The case gives `aria-hidden` the value `undefined` and asserts that the part removes the attribute. Vase UI keeps the value of the part for `undefined` and removes it for `null` (VUE-103). The case \"VUE-103: aria-hidden of the consumer is $name\" tests both values."
     }
   ],
   "surfaceAdditions": [

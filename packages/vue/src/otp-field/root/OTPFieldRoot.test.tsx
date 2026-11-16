@@ -4,18 +4,27 @@ import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import { Input } from '@vase-ui/vue/input';
 import { OTPField as OTPFieldBase } from '@vase-ui/vue/otp-field';
+import { Toolbar } from '@vase-ui/vue/toolbar';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountFormResetTests,
+  heldMountListTests,
   hiddenInputSizeTests,
   hydrate,
+  hydrateAfter,
+  mockNavigationType,
   pasteText,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
+  within,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
+import OTPFieldInputBeforeHydration from '../input/OTPFieldInputBeforeHydration.test.vue';
 import OTPFieldRootHydration from './OTPFieldRootHydration.test.vue';
 import OTPFieldRootReplace from './OTPFieldRootReplace.test.vue';
 
@@ -25,6 +34,8 @@ async function settleReset() {
   vi.advanceTimersByTime(0);
   await flushMicrotasks();
 }
+
+const BEFORE_HYDRATION_FIXTURE = 'src/otp-field/input/OTPFieldInputBeforeHydration.test.vue';
 
 function getHiddenInput(container: Element) {
   return container.querySelector<HTMLInputElement>('input[aria-hidden]')!;
@@ -47,6 +58,23 @@ async function fillHiddenInput(
 describe('<OTPField.Root />', () => {
   const { render } = createRenderer();
   const OTP_LENGTH = 6;
+
+  heldMountListTests({
+    render,
+    renderList: (withLastItem) => (
+      <OTPFieldBase.Root length={3}>
+        <OTPFieldBase.Input />
+        <OTPFieldBase.Input />
+        {withLastItem ? <OTPFieldBase.Input /> : null}
+      </OTPFieldBase.Root>
+    ),
+    async check() {
+      const [first, second] = screen.getAllByRole<HTMLInputElement>('textbox');
+      first.focus();
+      await fireEvent.input(first, { target: { value: '1' } });
+      expect(second).toHaveFocus();
+    },
+  });
 
   describeConformance(<OTPFieldBase.Root length={1} />, () => ({
     refInstanceof: window.HTMLDivElement,
@@ -895,6 +923,31 @@ describe('<OTPField.Root />', () => {
       );
     });
 
+    it('VUE-103: removes the description of the field for an `aria-describedby` of null', async () => {
+      await render(
+        <div>
+          <Field.Root>
+            <OTPFieldBase.Root length={OTP_LENGTH} data-testid="described" />
+            <Field.Description>Enter the six digits.</Field.Description>
+          </Field.Root>
+          <Field.Root>
+            <OTPFieldBase.Root
+              length={OTP_LENGTH}
+              aria-describedby={null}
+              data-testid="undescribed"
+            />
+            <Field.Description>Enter the code.</Field.Description>
+          </Field.Root>
+        </div>,
+      );
+
+      expect(screen.getByTestId('described')).toHaveAttribute(
+        'aria-describedby',
+        screen.getByText('Enter the six digits.').id,
+      );
+      expect(screen.getByTestId('undescribed')).not.toHaveAttribute('aria-describedby');
+    });
+
     it('lets the `aria-labelledby` of the consumer win over the label of the field', async () => {
       await render(
         <Field.Root>
@@ -905,6 +958,27 @@ describe('<OTPField.Root />', () => {
 
       expect(screen.getByRole('group')).toHaveAttribute('aria-labelledby', 'custom');
     });
+
+    it.each([
+      { name: 'an empty aria-labelledby', ariaLabelledby: '' },
+      { name: 'an aria-labelledby of white space', ariaLabelledby: '\n\t ' },
+    ])(
+      'VUE-106: gives the group and each input the label of the field for $name',
+      async ({ ariaLabelledby }) => {
+        await render(
+          <Field.Root>
+            <Field.Label data-testid="label">Verification code</Field.Label>
+            <OTPField aria-labelledby={ariaLabelledby} />
+          </Field.Root>,
+        );
+
+        const labelId = screen.getByTestId('label').id;
+        expect(screen.getByRole('group')).toHaveAttribute('aria-labelledby', labelId);
+        for (const input of screen.getAllByRole('textbox')) {
+          expect(input).toHaveAttribute('aria-labelledby', labelId);
+        }
+      },
+    );
 
     it('validates the value of the root when the form submits', async () => {
       const validate = vi.fn((value: unknown) => (value === '123456' ? null : 'Wrong code'));
@@ -1887,6 +1961,19 @@ describe('<OTPField.Root />', () => {
       });
     });
 
+    heldMountFormResetTests({
+      render,
+      renderControl: () => <OTPField name="otp" defaultValue="12" />,
+      change: () => fireEvent.input(getHiddenInput(document.body), { target: { value: '123456' } }),
+      readState: () =>
+        screen
+          .getAllByRole<HTMLInputElement>('textbox')
+          .map((input) => input.value)
+          .join(''),
+      defaultState: '12',
+      changedState: '123456',
+    });
+
     describe('autofill', () => {
       it.each([
         { name: 'an `input` event', types: ['input'] as ('input' | 'change')[] },
@@ -2429,6 +2516,58 @@ describe('<OTPField.Root />', () => {
   });
 
   describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/otp-field/root/OTPFieldRootHydration.test.vue',
+      component: OTPFieldRootHydration,
+      cases: [
+        {
+          name: 'a removed label',
+          props: {
+            label: 'after',
+            description: true,
+            inputs: 4,
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: '[data-testid="root"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description',
+          props: {
+            label: 'after',
+            description: true,
+            inputs: 4,
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: '[data-testid="root"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+        {
+          name: 'the hidden input, a removed description',
+          props: {
+            label: 'after',
+            description: true,
+            inputs: 4,
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: 'input[aria-hidden]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+      ],
+    });
+
     it.each([
       { name: 'an empty field', props: {} },
       { name: 'a field with a value and a name', props: { defaultValue: '12', name: 'otp' } },
@@ -2447,6 +2586,53 @@ describe('<OTPField.Root />', () => {
       );
 
       await hydrate(OTPFieldRootHydration, { serverHtml, props });
+    });
+  });
+
+  describe('VUE-81: the state that the input got before the hydration', () => {
+    async function hydrateFilled(navigationType: NavigationTimingType) {
+      mockNavigationType(navigationType);
+      const serverHtml = await renderOnServer(BEFORE_HYDRATION_FIXTURE);
+      const { container } = await hydrateAfter(OTPFieldInputBeforeHydration, {
+        serverHtml,
+        before(serverContainer) {
+          within(serverContainer).getByTestId('outside').focus();
+          getHiddenInput(serverContainer).value = '1234';
+        },
+      });
+      await flushMicrotasks();
+      const fixture = within(container);
+      return {
+        fixture,
+        hiddenInput: getHiddenInput(container),
+        slots: [0, 1, 2, 3].map((index) => fixture.getByTestId<HTMLInputElement>(`slot-${index}`)),
+      };
+    }
+
+    it('takes a code that an autofill wrote into the hidden input', async () => {
+      const { fixture, slots } = await hydrateFilled('navigate');
+
+      expect(fixture.getByTestId('model').textContent).toBe('1234');
+      expect(fixture.getByTestId('changes').textContent).toBe('1234 (input-change)');
+      expect(fixture.getByTestId('completes').textContent).toBe('1234 (input-change)');
+      expect(fixture.getByTestId('submits').textContent).toBe('1');
+      expect(slots.map((slot) => slot.value)).toEqual(['1', '2', '3', '4']);
+      expect(fixture.getByTestId('outside')).toHaveFocus();
+    });
+
+    it.each([
+      { name: 'a move in the history', type: 'back_forward' as const },
+      { name: 'a reload', type: 'reload' as const },
+    ])('takes no code from the hidden input after $name', async ({ type }) => {
+      const { fixture, hiddenInput, slots } = await hydrateFilled(type);
+
+      expect(hiddenInput.value).toBe('');
+      expect(slots.map((slot) => slot.value)).toEqual(['', '', '', '']);
+      expect(fixture.getByTestId('model').textContent).toBe('');
+      expect(fixture.getByTestId('changes').textContent).toBe('');
+      expect(fixture.getByTestId('completes').textContent).toBe('');
+      expect(fixture.getByTestId('submits').textContent).toBe('0');
+      expect(fixture.getByTestId('field')).not.toHaveAttribute('data-touched');
     });
   });
 
@@ -2497,6 +2683,60 @@ describe('<OTPField.Root />', () => {
 
       expect(getValues()).toBe('1234');
       expect(document.activeElement).toBe(inputs[4]);
+    });
+
+    it.each([{ name: 'held mount' }, { name: 'deactivated' }])(
+      'a held required OTP field does not block the submit of its form: $name',
+      async ({ name }) => {
+        const handleSubmit = vi.fn();
+        const { HeldBranch, mountWhileHeld } = createHeldBranch(
+          () => (
+            <OTPFieldBase.Root key="held" length={1} required>
+              <OTPFieldBase.Input />
+            </OTPFieldBase.Root>
+          ),
+          { mounted: name === 'deactivated' },
+        );
+        const { user } = await render(() => (
+          <Form onFormSubmit={handleSubmit}>
+            <Field.Root name="code" data-testid="field">
+              <Field.Control defaultValue="shown" />
+              <HeldBranch />
+            </Field.Root>
+            <button type="submit">Submit</button>
+          </Form>
+        ));
+
+        await mountWhileHeld();
+        await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+        expect(handleSubmit).toHaveBeenCalledTimes(1);
+        expect(screen.getByTestId('field')).not.toHaveAttribute('data-invalid');
+      },
+    );
+
+    it('the label does not name an OTP field that mounts while KeepAlive holds it', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <OTPFieldBase.Root key="held" length={1} id="held-otp-field">
+          <OTPFieldBase.Input />
+        </OTPFieldBase.Root>
+      ));
+      await render(() => (
+        <Field.Root>
+          <Field.Label data-testid="label">Code</Field.Label>
+          <HeldBranch />
+        </Field.Root>
+      ));
+      const label = screen.getByTestId('label');
+      const providerId = label.getAttribute('for');
+
+      await mountWhileHeld();
+
+      expect(label.getAttribute('for')).toBe(providerId);
+
+      await show();
+
+      expect(label).toHaveAttribute('for', 'held-otp-field');
     });
   });
 
@@ -2650,6 +2890,27 @@ describe('<OTPField.Root />', () => {
     await render(<OTPField id="verification-code" />);
 
     expect(document.querySelector('#verification-code-hidden-input')).not.toBeNull();
+  });
+
+  it('VUE-87: an item of a composite around the root joins that composite, and the inputs keep their slots', async () => {
+    await render(
+      <Toolbar.Root>
+        <OTPFieldBase.Root defaultValue="12" length={3}>
+          <Toolbar.Button data-testid="in-root">In the root</Toolbar.Button>
+          <OTPFieldBase.Input />
+          <OTPFieldBase.Input />
+          <OTPFieldBase.Input />
+        </OTPFieldBase.Root>
+        <Toolbar.Button data-testid="after-root">After the root</Toolbar.Button>
+      </Toolbar.Root>,
+    );
+    const inRoot = screen.getByTestId('in-root');
+    inRoot.focus();
+
+    await fireEvent.keyDown(inRoot, { key: 'ArrowRight' });
+    expect(screen.getByTestId('after-root')).toHaveFocus();
+    const inputs = screen.getAllByRole<HTMLInputElement>('textbox');
+    expect(inputs.map((input) => input.value)).toEqual(['1', '2', '']);
   });
 
   it('warns when length does not match the rendered input count', async () => {

@@ -1,10 +1,12 @@
 import type { CSSProperties, VNode } from 'vue';
 import type { UserEvent } from '@testing-library/user-event';
 import { expect, vi, describe, it } from 'vitest';
-import { screen, waitFor } from '@testing-library/dom';
+import { screen } from './queries';
+import { waitFor } from './waitFor';
 import * as Dialog from '../src/dialog/index.parts';
 import { platform } from '../src/common/platform';
 import { isJSDOM } from '../src/common/testUtils';
+import { waitForLaterMillisecond } from './createRenderer';
 import type { createRenderer } from './createRenderer';
 import { fireEvent } from './fireEvent';
 import { flushMicrotasks } from './flushMicrotasks';
@@ -130,13 +132,17 @@ export function popupListConformanceTests(config: PopupListTestConfig) {
     await flushMicrotasks();
   }
 
-  async function waitForOpen() {
+  async function waitForItems() {
     await waitFor(() => {
       expect(getTrigger()).toHaveAttribute('aria-expanded', 'true');
     });
     await waitFor(() => {
       expect(screen.getAllByRole(itemRole)[0]).toBeVisible();
     });
+  }
+
+  async function waitForOpen() {
+    await waitForItems();
     // Let opening focus and scroll work scheduled in animation frames settle.
     await settle();
   }
@@ -159,14 +165,24 @@ export function popupListConformanceTests(config: PopupListTestConfig) {
   }
 
   async function openWithMouse(user: UserEvent) {
-    await user.click(getTrigger());
-    await waitForOpen();
+    await waitForLaterMillisecond(async () => {
+      await user.click(getTrigger());
+      await waitForItems();
+    });
+    await settle();
+  }
+
+  async function openWithKey(user: UserEvent, key: string) {
+    await focusTrigger();
+    await waitForLaterMillisecond(async () => {
+      await user.keyboard(key);
+      await waitForItems();
+    });
+    await settle();
   }
 
   async function openWithKeyboard(user: UserEvent) {
-    await focusTrigger();
-    await user.keyboard('{ArrowDown}');
-    await waitForOpen();
+    await openWithKey(user, '{ArrowDown}');
     await waitFor(() => {
       expect(getHighlightedIndex()).not.toBe(-1);
     });
@@ -702,9 +718,7 @@ export function popupListConformanceTests(config: PopupListTestConfig) {
         await user.keyboard('{Escape}');
         await waitForClosed();
         if (enterSpaceOpen) {
-          await focusTrigger();
-          await user.keyboard('{Enter}');
-          await waitForOpen();
+          await openWithKey(user, '{Enter}');
           await user.keyboard('{Escape}');
           await waitForClosed();
         }
@@ -835,9 +849,7 @@ export function popupListConformanceTests(config: PopupListTestConfig) {
         it('starts a new typeahead search after a pause', async () => {
           const items = ['Alpha', 'Bravo', 'Charlie'];
           const { user } = await renderList({ items });
-          await focusTrigger();
-          await user.keyboard('{ArrowDown}');
-          await waitForOpen();
+          await openWithKey(user, '{ArrowDown}');
 
           await user.keyboard('b');
           await waitFor(() => {
@@ -891,9 +903,7 @@ export function popupListConformanceTests(config: PopupListTestConfig) {
 
       it(`${pastEndVerb} past the last item`, async () => {
         const { user } = await renderList();
-        await focusTrigger();
-        await user.keyboard('{ArrowUp}');
-        await waitForOpen();
+        await openWithKey(user, '{ArrowUp}');
         await waitFor(() => {
           expect(getHighlightedIndex()).toBe(ITEMS.length - 1);
         });
@@ -915,9 +925,7 @@ export function popupListConformanceTests(config: PopupListTestConfig) {
         'scrolls the first item into view when wrapping past the last item',
         async () => {
           const { user } = await renderList();
-          await focusTrigger();
-          await user.keyboard('{ArrowUp}');
-          await waitForOpen();
+          await openWithKey(user, '{ArrowUp}');
           await waitFor(() => {
             expect(getHighlightedIndex()).toBe(ITEMS.length - 1);
           });
@@ -957,9 +965,11 @@ export function popupListConformanceTests(config: PopupListTestConfig) {
 
         const focusOwner = focusModel === 'virtual' ? 'trigger' : 'popup';
 
-        await user.keyboard('{ArrowDown}');
-        await waitFor(() => {
-          expect(getTrigger()).toHaveAttribute('aria-expanded', 'true');
+        await waitForLaterMillisecond(async () => {
+          await user.keyboard('{ArrowDown}');
+          await waitFor(() => {
+            expect(getTrigger()).toHaveAttribute('aria-expanded', 'true');
+          });
         });
         await waitFor(() => {
           expect(getFocusOwner()).toBe(focusOwner);
@@ -974,10 +984,8 @@ export function popupListConformanceTests(config: PopupListTestConfig) {
       it('does not activate anything when every item is disabled', async () => {
         const spies = createSpies();
         const { user } = await renderList({ ...spies.options, disabledItems: ITEMS });
-        await focusTrigger();
 
-        await user.keyboard('{ArrowDown}');
-        await waitForOpen();
+        await openWithKey(user, '{ArrowDown}');
         await user.keyboard('{ArrowDown}{ArrowUp}{Enter}');
         await settle();
 
@@ -1097,9 +1105,7 @@ export function popupListConformanceTests(config: PopupListTestConfig) {
         expect(screen.getByTestId('dialog')).toBeVisible();
 
         await user.keyboard('{Escape}');
-        await waitFor(() => {
-          expect(screen.queryByTestId('dialog')).toBe(null);
-        });
+        expect(screen.queryByTestId('dialog')).toBe(null);
       });
     });
   });

@@ -1,30 +1,38 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { createSSRApp, defineComponent, h, KeepAlive, onMounted, shallowRef } from 'vue';
+import { createSSRApp, defineComponent, h, onMounted, shallowRef } from 'vue';
 import { Checkbox } from '@vase-ui/vue/checkbox';
 import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import {
   createFormDataSpy,
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountFormResetTests,
   hiddenInputSizeTests,
   hydrate,
+  hydrateAfter,
   isJSDOM,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   takeReportedMessages,
+  wait,
   waitFor,
+  within,
 } from '#test-utils';
 import type { VaseUIRenderResult } from '#test-utils';
+import CheckboxRootBeforeHydration from './CheckboxRootBeforeHydration.test.vue';
 import CheckboxRootHydration from './CheckboxRootHydration.test.vue';
 
 type User = VaseUIRenderResult['user'];
 
 const HYDRATION_FIXTURE = 'src/checkbox/root/CheckboxRootHydration.test.vue';
+const BEFORE_HYDRATION_FIXTURE = 'src/checkbox/root/CheckboxRootBeforeHydration.test.vue';
 
 // The part follows a reset in a timeout of 0 ms, after the listeners of the event.
 // The case that calls this function uses fake timers.
@@ -146,34 +154,28 @@ describe('<Checkbox.Root />', () => {
       async (nativeButton) => {
         const props = { label: 'field', id: 'explicit', nativeButton };
         const serverHtml = await renderOnServer(HYDRATION_FIXTURE, props);
-        // The case acts between the server HTML and the hydration, so it hydrates by hand.
-        const container = document.createElement('div');
-        document.body.append(container);
-        container.innerHTML = serverHtml;
-        const getControl = () =>
+        const getControl = (container: HTMLElement) =>
           nativeButton
             ? container.querySelector<HTMLElement>('[role="checkbox"]')!
             : container.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
-        const getLabel = () => container.querySelector<HTMLElement>('[data-testid="label"]')!;
+        const getLabel = (container: HTMLElement) =>
+          container.querySelector<HTMLElement>('[data-testid="label"]')!;
+        let serverControl: HTMLElement | undefined;
 
-        const control = getControl();
-        expect(control.id).not.toBe('');
-        expect(control).not.toHaveAttribute('id', 'explicit');
-        expect(getLabel()).toHaveAttribute('for', control.id);
-
-        const app = createSSRApp(CheckboxRootHydration, props);
-        onTestFinished(() => {
-          app.unmount();
-          container.remove();
+        const { container } = await hydrateAfter(CheckboxRootHydration, {
+          serverHtml,
+          props,
+          before(serverContainer) {
+            serverControl = getControl(serverContainer);
+            expect(serverControl.id).not.toBe('');
+            expect(serverControl).not.toHaveAttribute('id', 'explicit');
+            expect(getLabel(serverContainer)).toHaveAttribute('for', serverControl.id);
+          },
         });
-        app.mount(container);
 
-        await waitFor(() => {
-          expect(getControl()).toHaveAttribute('id', 'explicit');
-        });
-        expect(getControl()).toBe(control);
-        expect(getLabel()).toHaveAttribute('for', 'explicit');
-        expect(takeReportedMessages()).toEqual([]);
+        expect(getControl(container)).toHaveAttribute('id', 'explicit');
+        expect(getControl(container)).toBe(serverControl);
+        expect(getLabel(container)).toHaveAttribute('for', 'explicit');
       },
     );
   });
@@ -1883,6 +1885,22 @@ describe('<Checkbox.Root />', () => {
     expect(siblingLabelled).toHaveAccessibleName('Sibling label');
   });
 
+  it.each([
+    { name: 'an empty aria-label', ariaLabel: '' },
+    { name: 'an aria-label of white space', ariaLabel: '\n\t ' },
+  ])('VUE-106: writes no aria-label for $name', async ({ ariaLabel }) => {
+    await render(
+      <label>
+        <Checkbox.Root aria-label={ariaLabel} />
+        Terms
+      </label>,
+    );
+
+    const checkbox = screen.getByRole('checkbox');
+    expect(checkbox).not.toHaveAttribute('aria-label');
+    expect(checkbox).toHaveAccessibleName('Terms');
+  });
+
   describe.each(['native', 'Field.Label'])('dynamic %s label', (labelType) => {
     function TestCase({
       ariaLabel,
@@ -2317,72 +2335,6 @@ describe('<Checkbox.Root />', () => {
       expect(screen.getByRole('checkbox')).not.toHaveAttribute('data-indeterminate');
     });
 
-    it.each([
-      {
-        name: 'an uncontrolled checkbox',
-        props: { defaultChecked: true },
-        change: (input: HTMLInputElement) => {
-          input.checked = false;
-        },
-        expected: { checked: true, indeterminate: false },
-      },
-      {
-        name: 'a controlled checkbox',
-        props: { checked: true },
-        change: (input: HTMLInputElement) => {
-          input.checked = false;
-        },
-        expected: { checked: true, indeterminate: false },
-      },
-      {
-        name: 'an indeterminate checkbox',
-        props: { indeterminate: true },
-        change: (input: HTMLInputElement) => {
-          input.checked = true;
-        },
-        expected: { checked: false, indeterminate: true },
-      },
-    ])(
-      'after the hydration of $name whose input changed before',
-      async ({ props, change, expected }) => {
-        const serverHtml = await renderOnServer(HYDRATION_FIXTURE, props);
-        const container = document.createElement('div');
-        document.body.append(container);
-        container.innerHTML = serverHtml;
-        const input = container.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
-        // A browser that restores the form state of the page, or a click on a label.
-        change(input);
-
-        const app = createSSRApp(CheckboxRootHydration, props);
-        onTestFinished(() => {
-          app.unmount();
-          container.remove();
-        });
-        app.mount(container);
-        await flushMicrotasks();
-
-        expect(container.querySelector('input[type="checkbox"]')).toBe(input);
-        expect({ checked: input.checked, indeterminate: input.indeterminate }).toEqual(expected);
-        expect(takeReportedMessages()).toEqual([]);
-      },
-    );
-
-    it('after a `pageshow` event, because a browser can restore the form state after the mount', async () => {
-      const handleChange = vi.fn();
-      await render(<Checkbox.Root indeterminate onCheckedChange={handleChange} />);
-      getInput().checked = true;
-      getInput().indeterminate = false;
-
-      window.dispatchEvent(new PageTransitionEvent('pageshow'));
-
-      expect(getInput().checked).toBe(false);
-      expect(getInput().indeterminate).toBe(true);
-
-      await fireEvent.click(screen.getByRole('checkbox'));
-
-      expect(handleChange.mock.calls.map(([checked]) => checked)).toEqual([true]);
-    });
-
     it('of a parent after a click that leaves it mixed', async () => {
       await render(
         <CheckboxGroup allValues={['a', 'b']}>
@@ -2683,6 +2635,15 @@ describe('<Checkbox.Root />', () => {
         expect(input.indeterminate).toBe(true);
         expect(screen.getByRole('checkbox')).toHaveAttribute('aria-checked', 'mixed');
       });
+    });
+
+    heldMountFormResetTests({
+      render,
+      renderControl: () => <Checkbox.Root name="notifications" defaultChecked />,
+      change: () => fireEvent.click(screen.getByRole('checkbox')),
+      readState: () => screen.getByRole('checkbox').getAttribute('aria-checked'),
+      defaultState: 'true',
+      changedState: 'false',
     });
   });
 
@@ -3044,7 +3005,7 @@ describe('<Checkbox.Root />', () => {
       screen.getByRole('checkbox').focus();
 
       await userEvent.keyboard('{Enter}');
-      await flushMicrotasks();
+      await wait(0);
 
       expect(handleKeydown.mock.results.at(-1)?.value).toBe(false);
       expect(handleSubmit).not.toHaveBeenCalled();
@@ -3085,38 +3046,19 @@ describe('<Checkbox.Root />', () => {
       screen.getByRole('checkbox').focus();
 
       await userEvent.keyboard('{Enter}');
-      await flushMicrotasks();
 
+      await waitFor(() => {
+        expect(handleSubmit).toHaveBeenCalledTimes(1);
+      });
       expect(handleKeydown.mock.results.at(-1)?.value).toBe(false);
-      expect(handleSubmit).toHaveBeenCalledTimes(1);
       expect(screen.getByRole('checkbox')).toHaveAttribute('aria-checked', 'false');
     });
   });
 
   describe('a checkbox that mounts while KeepAlive holds its branch', () => {
-    function createBranch(renderExtra: () => unknown) {
-      const visible = shallowRef(true);
-      const extra = shallowRef(false);
-      const Branch = defineComponent(() => () => <div>{extra.value ? renderExtra() : null}</div>);
-      const HeldBranch = defineComponent(() => () => (
-        <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
-      ));
-      async function mountWhileHeld() {
-        visible.value = false;
-        await flushMicrotasks();
-        extra.value = true;
-        await flushMicrotasks();
-      }
-      async function show() {
-        visible.value = true;
-        await flushMicrotasks();
-      }
-      return { HeldBranch, mountWhileHeld, show };
-    }
-
     it('does not block the form while held, and blocks it after the show', async () => {
       const handleSubmit = vi.fn();
-      const { HeldBranch, mountWhileHeld, show } = createBranch(() => (
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
         <Checkbox.Root key="box" required data-testid="box" />
       ));
       const { user } = await render(() => (
@@ -3142,7 +3084,7 @@ describe('<Checkbox.Root />', () => {
 
     it('does not block the form of its group while held, and blocks it after the show', async () => {
       const handleSubmit = vi.fn();
-      const { HeldBranch, mountWhileHeld, show } = createBranch(() => (
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
         <Checkbox.Root key="b" value="b" required />
       ));
       const { user } = await render(() => (
@@ -3169,7 +3111,7 @@ describe('<Checkbox.Root />', () => {
     });
 
     it('is not in `aria-controls` of the parent checkbox while held', async () => {
-      const { HeldBranch, mountWhileHeld, show } = createBranch(() => (
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
         <Checkbox.Root key="b" value="b" data-testid="b" />
       ));
       await render(() => (
@@ -3190,7 +3132,7 @@ describe('<Checkbox.Root />', () => {
     });
 
     it('does not give its id to the `for` of the label while held', async () => {
-      const { HeldBranch, mountWhileHeld, show } = createBranch(() => (
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
         <Checkbox.Root key="box" id="box" />
       ));
       await render(() => (
@@ -3211,7 +3153,207 @@ describe('<Checkbox.Root />', () => {
     });
   });
 
+  describe('VUE-81: the state that the input got before the hydration', () => {
+    // The press of a native label, or the restore of the form state of the page.
+    async function hydrateChanged(
+      props: Record<string, unknown>,
+      change: (serverContainer: HTMLElement) => void,
+    ) {
+      const serverHtml = await renderOnServer(BEFORE_HYDRATION_FIXTURE, props);
+      let serverInputs: HTMLInputElement[] = [];
+      const { container } = await hydrateAfter(CheckboxRootBeforeHydration, {
+        serverHtml,
+        props,
+        before(serverContainer) {
+          serverInputs = [...serverContainer.querySelectorAll('input')];
+          change(serverContainer);
+        },
+      });
+      await flushMicrotasks();
+      expect([...container.querySelectorAll('input')]).toEqual(serverInputs);
+      return within(container);
+    }
+
+    function press(...labels: string[]) {
+      return (serverContainer: HTMLElement) => {
+        for (const label of labels) {
+          within(serverContainer).getByTestId(label).click();
+        }
+      };
+    }
+
+    function getHiddenInput(fixture: ReturnType<typeof within>, testId = 'checkbox') {
+      return fixture.getByTestId(testId).nextElementSibling as HTMLInputElement;
+    }
+
+    it.each([
+      { name: 'an uncontrolled checkbox', props: {}, model: '' },
+      { name: 'a checkbox with v-model', props: { mode: 'model', checked: false }, model: 'true' },
+    ])('takes a press on a native label of $name', async ({ props, model }) => {
+      const fixture = await hydrateChanged(props, press('label'));
+
+      expect(fixture.getByTestId('checkbox')).toHaveAttribute('aria-checked', 'true');
+      expect(getHiddenInput(fixture).checked).toBe(true);
+      expect(fixture.getByTestId('model').textContent).toBe(model);
+      expect(fixture.getByTestId('changes').textContent).toBe('true (vase-ui)');
+    });
+
+    it('takes the input of an indeterminate checkbox and stays indeterminate', async () => {
+      const fixture = await hydrateChanged({ indeterminate: true }, press('label'));
+
+      expect(fixture.getByTestId('checkbox')).toHaveAttribute('aria-checked', 'mixed');
+      expect(getHiddenInput(fixture).checked).toBe(true);
+      expect(getHiddenInput(fixture).indeterminate).toBe(true);
+      expect(fixture.getByTestId('changes').textContent).toBe('true (vase-ui)');
+    });
+
+    it('keeps the state of a parent that keeps its value', async () => {
+      const fixture = await hydrateChanged({ mode: 'keeps', checked: true }, press('label'));
+
+      expect(fixture.getByTestId('checkbox')).toHaveAttribute('aria-checked', 'true');
+      expect(getHiddenInput(fixture).checked).toBe(true);
+      expect(fixture.getByTestId('changes').textContent).toBe('false (vase-ui)');
+    });
+
+    it.each([
+      { name: 'read-only', props: { readOnly: true } },
+      { name: 'disabled', props: { disabled: true } },
+    ])('takes nothing while it is $name', async ({ props }) => {
+      const fixture = await hydrateChanged(props, (serverContainer) => {
+        serverContainer.querySelector('input')!.checked = true;
+      });
+
+      expect(fixture.getByTestId('checkbox')).toHaveAttribute('aria-checked', 'false');
+      expect(getHiddenInput(fixture).checked).toBe(false);
+      expect(fixture.getByTestId('changes').textContent).toBe('');
+    });
+
+    it('takes nothing for the parent checkbox', async () => {
+      const fixture = await hydrateChanged({ mode: 'group' }, press('label-parent'));
+
+      expect(fixture.getByTestId('parent')).toHaveAttribute('aria-checked', 'false');
+      expect(getHiddenInput(fixture, 'parent').checked).toBe(false);
+      expect(fixture.getByTestId('model').textContent).toBe('');
+      expect(fixture.getByTestId('changes').textContent).toBe('');
+    });
+
+    it('gives a controlled group both items that changed', async () => {
+      const fixture = await hydrateChanged({ mode: 'group' }, press('label-a', 'label-b'));
+
+      expect(fixture.getByTestId('model').textContent).toBe('a,b');
+      expect(fixture.getByTestId('changes').textContent).toBe('a (vase-ui); a,b (vase-ui)');
+      expect(fixture.getByTestId('parent')).toHaveAttribute('aria-checked', 'true');
+    });
+
+    it('marks its field dirty after a press before the hydration', async () => {
+      const fixture = await hydrateChanged({ mode: 'field' }, press('label'));
+      expect(fixture.getByTestId('field')).toHaveAttribute('data-dirty', '');
+
+      await fireEvent.click(fixture.getByTestId('checkbox'));
+
+      expect(fixture.getByTestId('checkbox')).toHaveAttribute('aria-checked', 'false');
+      expect(fixture.getByTestId('field')).not.toHaveAttribute('data-dirty');
+    });
+
+    it('keeps a client state that differs from the server HTML', async () => {
+      const serverHtml = await renderOnServer(BEFORE_HYDRATION_FIXTURE, { defaultChecked: false });
+      const container = document.createElement('div');
+      document.body.append(container);
+      container.innerHTML = serverHtml;
+      // The client props differ from the server props, so `hydrateAfter` would throw on the
+      // mismatch. Vue does not write `checked` when it hydrates.
+      const app = createSSRApp(CheckboxRootBeforeHydration, { defaultChecked: true });
+      onTestFinished(() => {
+        app.unmount();
+        container.remove();
+      });
+      app.mount(container);
+      await flushMicrotasks();
+
+      // Vue does not correct the attributes of a mismatch, so the case reads the input.
+      const fixture = within(container);
+      expect(getHiddenInput(fixture).checked).toBe(true);
+      expect(fixture.getByTestId('changes').textContent).toBe('');
+      // Vue writes `Hydration completed but contains mismatches.` one time for each page, so only the
+      // first mismatch of a test file has it.
+      const messages = takeReportedMessages().filter(
+        (message) => message !== 'console.error: Hydration completed but contains mismatches.',
+      );
+      expect(messages).toEqual([
+        expect.stringMatching(/^console\.warn: .*Hydration attribute mismatch[\s\S]*checked/),
+      ]);
+    });
+  });
+
+  describe('VUE-81: the form state that the browser restores', () => {
+    it('takes the input at a `pageshow` event', async () => {
+      const { container } = await render(<CheckboxRootBeforeHydration indeterminate />);
+      const fixture = within(container);
+      getInput().checked = true;
+      getInput().indeterminate = false;
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+      await flushMicrotasks();
+
+      expect(fixture.getByTestId('changes').textContent).toBe('true (pageshow)');
+      expect(getInput().checked).toBe(true);
+      expect(getInput().indeterminate).toBe(true);
+      expect(fixture.getByTestId('checkbox')).toHaveAttribute('aria-checked', 'mixed');
+    });
+
+    it('does nothing at a `pageshow` event from the back/forward cache', async () => {
+      const { container } = await render(<CheckboxRootBeforeHydration />);
+      const fixture = within(container);
+      getInput().checked = true;
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }));
+      await flushMicrotasks();
+
+      expect(fixture.getByTestId('changes').textContent).toBe('');
+      expect(fixture.getByTestId('checkbox')).toHaveAttribute('aria-checked', 'false');
+    });
+  });
+
   describe('server-side rendering', () => {
+    removedPartHydrationTests({
+      file: 'src/checkbox/root/CheckboxRootHydration.test.vue',
+      component: CheckboxRootHydration,
+      cases: [
+        {
+          name: 'a removed label',
+          props: { label: 'field-after', laterRemovedAtMount: true },
+          selector: '[data-testid="checkbox"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description',
+          props: { label: 'field-after', laterRemovedAtMount: true },
+          selector: '[data-testid="checkbox"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+        {
+          name: 'the input, a removed description',
+          props: { label: 'field-after', laterRemovedAtMount: true },
+          selector: 'input',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description after another',
+          props: { label: 'field-after', descriptionBefore: true, laterRemovedAtMount: true },
+          selector: '[data-testid="checkbox"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-0 desc-a',
+          clientValue: 'desc-0',
+        },
+      ],
+    });
+
     it.each([
       { name: 'a checkbox that is off', props: {}, indeterminate: false },
       {

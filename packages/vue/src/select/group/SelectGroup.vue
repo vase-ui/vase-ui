@@ -32,7 +32,10 @@ defineSlots<{
 const { ids, registerId } = createIdRegistry();
 const labelId = computed(() => ids.value.at(-1));
 
-provide(SelectGroupContext, { labelId, registerLabelId: registerId });
+provide(SelectGroupContext, {
+  labelId,
+  registerLabelId: registerId,
+});
 
 const state: SelectGroupState = EMPTY_OBJECT;
 

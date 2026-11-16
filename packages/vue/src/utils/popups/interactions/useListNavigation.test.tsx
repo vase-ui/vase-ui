@@ -1,4 +1,4 @@
-import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import {
   defineComponent,
   inject,
@@ -17,10 +17,10 @@ import {
   fireEvent,
   flushMicrotasks,
   isJSDOM,
-  nextEvent,
   screen,
   useTestInteractions,
   waitFor,
+  waitForLaterMillisecond,
   waitSingleFrame,
 } from '#test-utils';
 import CompositeList from '../../../../test/fixtures/CompositeListPart.vue';
@@ -32,7 +32,7 @@ import { REASONS } from '../../../internals/reasons';
 import { mergeProps } from '../../../merge-props/mergeProps';
 import { FOCUSABLE_ATTRIBUTE } from '../constants';
 import type { FloatingRootStore } from '../floating-root/FloatingRootStore';
-import FloatingFocusManager from '../focus/FloatingFocusManager.vue';
+import { FloatingFocusManager } from '../../../../test/fixtures/floatingFocusManagerHarness';
 import FloatingPortal from '../portal/FloatingPortal.vue';
 import {
   provideFloatingNode,
@@ -953,13 +953,12 @@ async function renderList(props: InstanceType<typeof List>['$props'] = {}) {
 
 describe('useListNavigation', () => {
   it('does not add role-dependent aria-orientation', async () => {
-    const { container } = await render(<App orientation="horizontal" />);
+    await render(<App orientation="horizontal" />);
 
-    // The item takes the focus in an animation frame after the open.
-    await nextEvent(container, 'focusin', {
-      action: () => fireEvent.keyDown(screen.getByRole('button'), { key: 'ArrowRight' }),
+    await fireEvent.keyDown(screen.getByRole('button'), { key: 'ArrowRight' });
+    await waitFor(() => {
+      expect(screen.getByTestId('item-0')).toHaveFocus();
     });
-    expect(screen.getByTestId('item-0')).toHaveFocus();
 
     expect(screen.getByRole('menu')).not.toHaveAttribute('aria-orientation');
   });
@@ -2088,9 +2087,10 @@ describe('useListNavigation', () => {
   it('grid navigation with changing list items', async () => {
     const { user } = await render(<EmojiPicker />);
 
-    await fireEvent.click(screen.getByRole('button'));
-
-    await flushMicrotasks();
+    await waitForLaterMillisecond(async () => {
+      await fireEvent.click(screen.getByRole('button'));
+      await flushMicrotasks();
+    });
 
     const input = screen.getByRole('textbox');
     const activeIndicator = screen.getByTestId('emoji-picker-active-index');
@@ -2118,9 +2118,10 @@ describe('useListNavigation', () => {
   it('grid navigation with disabled list items', async () => {
     const { unmount, user } = await render(<EmojiPicker />);
 
-    await fireEvent.click(screen.getByRole('button'));
-
-    await flushMicrotasks();
+    await waitForLaterMillisecond(async () => {
+      await fireEvent.click(screen.getByRole('button'));
+      await flushMicrotasks();
+    });
 
     const input = screen.getByRole('textbox');
     const activeIndicator = screen.getByTestId('emoji-picker-active-index');
@@ -2149,9 +2150,10 @@ describe('useListNavigation', () => {
 
     await render(<EmojiPicker />);
 
-    await fireEvent.click(screen.getByRole('button'));
-
-    await flushMicrotasks();
+    await waitForLaterMillisecond(async () => {
+      await fireEvent.click(screen.getByRole('button'));
+      await flushMicrotasks();
+    });
 
     const nextInput = screen.getByRole('textbox');
     const nextActiveIndicator = screen.getByTestId('emoji-picker-active-index');
@@ -2562,13 +2564,15 @@ describe('useListNavigation', () => {
         </Tree>,
       );
       const toEnd = orientation === 'vertical' ? 'ArrowDown' : 'ArrowRight';
-      await keyDown(part('trigger-root'), toEnd);
+      await waitForLaterMillisecond(() => keyDown(part('trigger-root'), toEnd));
       await waitFor(() => expect(item('one')).toHaveFocus());
       await keyDown(part('menu-root'), toEnd);
       await keyDown(part('menu-root'), toEnd);
       expect(part('trigger-more')).toHaveFocus();
       // The key that opens a list below: the cross axis of the list above.
-      await keyDown(part('trigger-more'), orientation === 'vertical' ? 'ArrowRight' : 'ArrowDown');
+      await waitForLaterMillisecond(() =>
+        keyDown(part('trigger-more'), orientation === 'vertical' ? 'ArrowRight' : 'ArrowDown'),
+      );
       await waitFor(() => expect(item('x')).toHaveFocus());
     }
 
@@ -2636,11 +2640,11 @@ describe('useListNavigation', () => {
           <NestedList label="root" items={['one', image]} />
         </Tree>,
       );
-      await keyDown(part('trigger-root'), 'ArrowDown');
+      await waitForLaterMillisecond(() => keyDown(part('trigger-root'), 'ArrowDown'));
       await waitFor(() => expect(item('one')).toHaveFocus());
       await keyDown(part('menu-root'), 'ArrowDown');
       expect(part('trigger-image')).toHaveFocus();
-      await keyDown(part('trigger-image'), 'ArrowRight');
+      await waitForLaterMillisecond(() => keyDown(part('trigger-image'), 'ArrowRight'));
       await waitFor(() => expect(item('.png')).toHaveFocus());
 
       await keyDown(part('menu-image'), 'ArrowRight');
@@ -2820,6 +2824,90 @@ describe('useListNavigation', () => {
       expect(list.proposals).toEqual([0, 1]);
       await keyDown(menu(), 'ArrowDown');
       expect(focused()).toBe('item-2');
+    });
+  });
+
+  describe('a popup in a portal that is not modal', () => {
+    // A mocked clock moves only in `render`, `rerender`, `setProps` and `waitForLaterMillisecond`.
+    // The focus of the consumer thus comes in the millisecond in which Vue attached the listeners of
+    // the items.
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date('2026-01-01T00:00:00Z'));
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('highlights an item that the consumer focuses in the millisecond of the open', async () => {
+      const FocusSecondItemOnMount = defineComponent(() => {
+        onMounted(() => {
+          screen.getByTestId('item-1').focus();
+        });
+        return () => null;
+      });
+      const PortalApp = defineComponent(() => {
+        const open = shallowRef(false);
+        const listRef = shallowRef<(HTMLLIElement | null)[]>([]);
+        const activeIndex = shallowRef<null | number>(null);
+        const { refs, context } = useFloating({
+          open,
+          onOpenChange(nextOpen) {
+            open.value = nextOpen;
+          },
+        });
+        const { getReferenceProps, getFloatingProps, getItemProps } = useTestInteractions([
+          useClick(context.rootStore),
+          useListNavigation(context.rootStore, {
+            listRef,
+            activeIndex,
+            onNavigate(index) {
+              activeIndex.value = index;
+            },
+          }),
+        ]);
+
+        return () => (
+          <>
+            <button {...getReferenceProps({ ref: refs.setReference })} />
+            {open.value && (
+              <FloatingPortal>
+                <div role="menu" {...getFloatingProps({ ref: refs.setFloating })}>
+                  <ul>
+                    {['one', 'two', 'three'].map((string, index) => (
+                      <li
+                        data-testid={`item-${index}`}
+                        aria-selected={activeIndex.value === index}
+                        key={string}
+                        tabindex={-1}
+                        {...getItemProps({
+                          ref(node) {
+                            listRef.value[index] = node as HTMLLIElement | null;
+                          },
+                        })}
+                      >
+                        {string}
+                      </li>
+                    ))}
+                  </ul>
+                  <FocusSecondItemOnMount />
+                </div>
+              </FloatingPortal>
+            )}
+          </>
+        );
+      });
+      const { user } = await render(<PortalApp />);
+
+      // The key comes after the clock moves, so Vue runs the key listeners of the new popup.
+      await waitForLaterMillisecond(() => fireEvent.click(screen.getByRole('button')));
+      await waitFor(() => {
+        expect(screen.getByTestId('item-1')).toHaveFocus();
+      });
+
+      expect(screen.getByTestId('item-1')).toHaveAttribute('aria-selected', 'true');
+      await user.keyboard('{ArrowDown}');
+      expect(screen.getByTestId('item-2')).toHaveFocus();
     });
   });
 });

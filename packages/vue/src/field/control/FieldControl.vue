@@ -15,7 +15,7 @@ export type FieldControlChangeEventDetails =
 // The type of `autocomplete` in `InputHTMLAttributes` is a union that is too large for vue-tsc.
 // With it, `defineProps` gives the error TS2590.
 interface FieldControlAutocomplete {
-  autocomplete?: string | undefined;
+  autocomplete?: string | null | undefined;
 }
 
 export interface FieldControlProps
@@ -53,11 +53,12 @@ export interface FieldControlProps
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, watch } from 'vue';
+import { computed, nextTick, onBeforeUpdate, onMounted, watch } from 'vue';
+import { useAriaAfterHydration, useValueBeforeHydration } from '../../common/hydration';
 import { useTimeout } from '../../common/useTimeout';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { fieldValidityMapping } from '../../internals/field-constants';
-import { useRegisterFieldControl } from '../../internals/field-register-control';
+import { useFieldInput, useRegisterFieldControl } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
 import { useFormContext } from '../../internals/form-context';
@@ -69,6 +70,7 @@ import {
 import { REASONS as REASON_VALUES } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useFormReset } from '../../internals/useFormReset';
+import { useFormRestoreAsInput } from '../../internals/useFormRestore';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 
@@ -130,11 +132,18 @@ const serializedDefaultValue = computed(() =>
   props.defaultValue == null ? undefined : String(props.defaultValue),
 );
 
+const writesValue = useValueBeforeHydration(props, () => element.value);
+
+// Until the hydration ends, the input can hold text that the part did not handle yet. The field
+// then takes the value of the props as the initial value, and the `input` event changes it.
 useRegisterFieldControl(
   () => element.value,
   controlId,
   () => serializedValue.value,
-  () => (element.value as HTMLInputElement | null)?.value,
+  () =>
+    writesValue.value
+      ? (element.value as HTMLInputElement | null)?.value
+      : (serializedValue.value ?? serializedDefaultValue.value ?? ''),
   () => !isDisabled.value,
   () => props.name,
 );
@@ -162,8 +171,25 @@ function syncAfterWrite() {
   syncFilled();
 }
 
+// Vue writes the value at a render only when the input has the key `value`. Else a new default
+// value moves only an input that no user, browser restore or program changed. The part then reads
+// the input only when it held the handled value, so a restored value stays for the take. Vue queues
+// the watch at the change of the props, before the `onUpdated` hooks of the render. The part thus
+// reads the value of the render before `useFormRestoreAsInput` writes a restored value back.
+let holdsHandledValue = false;
+onBeforeUpdate(() => {
+  holdsHandledValue = (element.value as HTMLInputElement | null)?.value === handledValue;
+});
 onMounted(syncAfterWrite);
-watch([serializedValue, serializedDefaultValue], syncAfterWrite, { flush: 'post' });
+watch(
+  [serializedValue, serializedDefaultValue],
+  () => {
+    if (holdsHandledValue || (writesValue.value && props.value !== undefined)) {
+      syncAfterWrite();
+    }
+  },
+  { flush: 'post' },
+);
 
 useValueChanged(serializedValue, () => {
   if (serializedValue.value === undefined) {
@@ -184,7 +210,7 @@ const enterValidationTimeout = useTimeout();
 // property `defaultValue` is the `value` attribute, and Vue sets it only when its value changes.
 function valueProps() {
   if (props.value !== undefined) {
-    return { value: props.value };
+    return writesValue.value ? { value: props.value } : undefined;
   }
   if (props.defaultValue === undefined) {
     return undefined;
@@ -289,26 +315,18 @@ function handleKeydown(event: KeyboardEvent) {
   }
 }
 
-// A template can mount the control that replaces this control before it unmounts this control.
-// The control then clears the input of the field only when the input is its own.
-let ownInput: HTMLInputElement | null = null;
-function setInput(next: HTMLElement | null) {
-  const input = next as HTMLInputElement | null;
-  if (input !== null || validation.inputRef.value === ownInput) {
-    validation.inputRef.value = input;
-  }
-  ownInput = input;
-}
+const giveFieldInput = useFieldInput();
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('input', props, {
   state,
-  ref: setInput,
+  ref: giveFieldInput,
   props: (attrs) => [
     {
       id: controlId.value,
       disabled: isDisabled.value ? '' : undefined,
       name: controlName.value,
-      'aria-labelledby': labelId.value,
+      'aria-labelledby': ariaAfterHydration(labelId.value),
       onInput: handleInput,
       onChange: handleChange,
       onFocusin() {
@@ -320,6 +338,7 @@ const { element, elementProps } = useRenderElement('input', props, {
     valueProps(),
     attrs,
     (merged) => validation.getValidationProps(isDisabled.value, merged),
+    (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),
   ],
   stateAttributesMapping: fieldValidityMapping,
 });
@@ -332,6 +351,8 @@ useFormReset(element, () => {
   setDirty(value !== (validityData.value.initialValue ?? ''));
   clearFieldError(value);
 });
+
+useFormRestoreAsInput(element, () => handledValue, true);
 
 defineExpose({ element });
 </script>

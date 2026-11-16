@@ -179,8 +179,7 @@ let shouldHonorDisabledDefaultValue = hasExplicitDefaultValue;
 let didRegisterTabs = false;
 
 const tabMap = shallowRef<TabMap>(new Map());
-// A tab and a panel register in `setup`, so that the server HTML of a part that renders later has
-// the `id`. A part that renders earlier gets it in the first flush on the client.
+// A tab and a panel register in `setup`, so that the server HTML of the other part has the `id`.
 const tabs = shallowReactive(new Map<symbol, TabsPartRegistration>());
 const panels = shallowReactive(new Map<symbol, TabsPartRegistration>());
 
@@ -373,6 +372,10 @@ const hasChosenTab = computed(
   () => activeTabValue.value != null && (isControlled || hasExplicitDefaultValue),
 );
 
+// The panels register their elements in this list, to get their `data-index`.
+const panelElements = shallowRef<(HTMLElement | null)[]>([]);
+const panelList = useCompositeList({ elementsRef: panelElements, provide: false });
+
 provide(TabsRootContext, {
   value: activeTabValue,
   onValueChange,
@@ -387,11 +390,8 @@ provide(TabsRootContext, {
   },
   tabActivationDirection,
   hasChosenTab,
+  panelList,
 });
-
-// The panels register their elements in this list, to get their `data-index`.
-const panelElements = shallowRef<(HTMLElement | null)[]>([]);
-useCompositeList({ elementsRef: panelElements });
 
 const state = computed<TabsRootState>(() => ({
   orientation: props.orientation,

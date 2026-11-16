@@ -13,11 +13,11 @@ import type {
   UpstreamCommit,
   UpstreamFile,
 } from '../parity/parityFiles.ts';
-import { vaseFiles } from '../parity/paths.ts';
+import { DOCS_FOLDER_PREFIX, vaseFiles } from '../parity/paths.ts';
 import { REPOSITORY_ROOT } from '../parity/repository.ts';
 import type { FamilyFiles } from '../parity/repository.ts';
 import { buildParityReport, loadParityReport, readScope } from './parityReport.ts';
-import type { ParityReport, ReportInput, ScopeFile } from './parityReport.ts';
+import type { Change, ParityReport, ReportInput, ScopeFile } from './parityReport.ts';
 
 const [FIRST, SECOND, THIRD, FOURTH, CI, UNPORTED, UNPORTED_DOCS, ROOT_FILE] = [
   'a',
@@ -62,13 +62,19 @@ const upstream: UpstreamFile = {
 };
 
 const scope: ScopeFile = {
-  notPorted: [{ what: 'a thing', upstream: ['packages/react/src/thing/**'], reason: 'A reason.' }],
+  notPorted: [
+    {
+      what: 'a thing',
+      upstream: ['packages/react/src/thing/**', 'docs/src/app/(docs)/react/components/thing/**'],
+      reason: 'A reason.',
+    },
+  ],
   outOfScope: [
     { paths: ['.github/**'], reason: 'CI and repository automation.' },
     { paths: ['.circleci/**'], reason: 'CI and repository automation.' },
     {
       paths: ['docs/**'],
-      except: ['docs/src/app/(docs)/react/components/**'],
+      except: ['docs/src/app/(docs)/react/components/*/**'],
       reason: 'The docs site.',
     },
   ],
@@ -205,7 +211,56 @@ test('a commit that no rule names is out-of-scope with no reason', () => {
   });
 });
 
-test('a root file, a settings file and an overview page have one reason, and a ported page and source file are not started', () => {
+const NOT_PORTED_FILE = 'packages/react/src/thing/Thing.tsx';
+
+function otherOfCommit(...paths: string[]): Change['other'] {
+  const sha = '9'.repeat(40);
+  const commits = [commit(sha, '2026-02-01T10:00:00+00:00', ...paths)];
+  const report = buildParityReport(makeInput({ upstream: { ...upstream, commits }, families: [] }));
+  return changeOf(report, sha).other;
+}
+
+test('a commit with only paths of a notPorted row is out-of-scope with the reason of the row', () => {
+  assert.deepEqual(otherOfCommit(NOT_PORTED_FILE, 'packages/react/src/thing/Thing.test.tsx'), {
+    state: 'out-of-scope',
+    reasons: ['A reason.'],
+  });
+});
+
+test('a commit with a path of a notPorted row and an out-of-scope path has the two reasons', () => {
+  assert.deepEqual(otherOfCommit(NOT_PORTED_FILE, '.github/workflows/ci.yml'), {
+    state: 'out-of-scope',
+    reasons: ['CI and repository automation.', 'A reason.'],
+  });
+});
+
+test('a commit with a path of a notPorted row and a path that no family has is not-started', () => {
+  assert.deepEqual(otherOfCommit(NOT_PORTED_FILE, 'packages/react/src/dialog/Dialog.tsx'), {
+    state: 'not-started',
+  });
+});
+
+test('a docs path of a notPorted row has no reason of the rule that keeps it in scope', () => {
+  assert.deepEqual(otherOfCommit('docs/src/app/(docs)/react/components/thing/page.mdx'), {
+    state: 'out-of-scope',
+    reasons: ['A reason.'],
+  });
+});
+
+function statesOfSinglePathCommits(paths: string[]): (path: string) => Change['other'] {
+  const shaOf = (path: string): string => String(paths.indexOf(path)).padStart(40, '0');
+  const commits = paths.map((path) => commit(shaOf(path), '2026-02-01T10:00:00+00:00', path));
+  const report = buildParityReport(
+    makeInput({
+      upstream: { ...upstream, commits },
+      families: [],
+      scope: readScope(REPOSITORY_ROOT),
+    }),
+  );
+  return (path) => changeOf(report, shaOf(path)).other;
+}
+
+test('a root file, a settings file and an overview page have one reason, and a source file is not started', () => {
   const oneReason = [
     'LICENSE',
     '.gitignore',
@@ -214,27 +269,49 @@ test('a root file, a settings file and an overview page have one reason, and a p
     '.vscode/settings.json',
     'docs/src/app/(docs)/react/overview/quick-start/page.mdx',
   ];
-  const notStarted = [
-    'docs/src/app/(docs)/react/components/dialog/page.mdx',
-    'packages/react/src/dialog/Dialog.tsx',
-  ];
-  const paths = [...oneReason, ...notStarted];
-  const shaOf = (path: string): string => String(paths.indexOf(path)).repeat(40);
-  const commits = paths.map((path) => commit(shaOf(path), '2026-02-01T10:00:00+00:00', path));
-  const report = buildParityReport(
-    makeInput({
-      upstream: { ...upstream, commit: shaOf(paths[paths.length - 1]), commits },
-      families: [],
-      scope: readScope(REPOSITORY_ROOT),
-    }),
-  );
+  const sourceFile = 'packages/react/src/dialog/Dialog.tsx';
+  const stateOf = statesOfSinglePathCommits([...oneReason, sourceFile]);
   for (const path of oneReason) {
-    const { other } = changeOf(report, shaOf(path));
+    const other = stateOf(path);
     assert.ok(other?.state === 'out-of-scope', path);
     assert.equal(other.reasons.length, 1, path);
   }
-  for (const path of notStarted) {
-    assert.deepEqual(changeOf(report, shaOf(path)).other, { state: 'not-started' }, path);
+  assert.deepEqual(stateOf(sourceFile), { state: 'not-started' });
+});
+
+test('the index page of a page group has one reason, and each file of a page folder is not started', () => {
+  const groupFolders = ['components', 'utils', 'handbook'].map(
+    (group) => DOCS_FOLDER_PREFIX + group,
+  );
+  const indexPages = groupFolders.map((folder) => `${folder}/page.mdx`);
+  const pageFiles = groupFolders.flatMap((folder) => [
+    `${folder}/a-page/page.mdx`,
+    `${folder}/a-page/demos/hero/css-modules/index.tsx`,
+  ]);
+  const stateOf = statesOfSinglePathCommits([...indexPages, ...pageFiles]);
+  for (const path of indexPages) {
+    const other = stateOf(path);
+    assert.ok(other?.state === 'out-of-scope', path);
+    assert.equal(other.reasons.length, 1, path);
+  }
+  for (const path of pageFiles) {
+    assert.deepEqual(stateOf(path), { state: 'not-started' }, path);
+  }
+});
+
+test('a temporal adapter, a file of its shared suite and the barrel of the package have one reason', () => {
+  const notPorted = [
+    'packages/react/src/internals/temporal/temporal.ts',
+    'packages/react/src/internals/temporal-adapter-date-fns/TemporalAdapterDateFns.ts',
+    'packages/react/src/internals/temporal-adapter-luxon/TemporalAdapterLuxon.test.ts',
+    'packages/react/test/describeGregorianAdapter/testComputations.ts',
+    'packages/react/src/index.ts',
+  ];
+  const stateOf = statesOfSinglePathCommits(notPorted);
+  for (const path of notPorted) {
+    const other = stateOf(path);
+    assert.ok(other?.state === 'out-of-scope', path);
+    assert.equal(other.reasons.length, 1, path);
   }
 });
 

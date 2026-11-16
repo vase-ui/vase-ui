@@ -1,9 +1,9 @@
 import {
   computed,
   nextTick,
-  onActivated,
   onDeactivated,
   onMounted,
+  onScopeDispose,
   provide,
   shallowRef,
   toRaw,
@@ -14,7 +14,7 @@ import { getOverflowAncestors } from '@floating-ui/vue';
 import { isHTMLElement } from '@floating-ui/utils/dom';
 import { addEventListener } from '../../common/addEventListener';
 import { EMPTY_ARRAY, EMPTY_OBJECT } from '../../common/empty';
-import { useIsHydrating } from '../../common/hydration';
+import { useHiddenValueBeforeHydration, useIsHydrating } from '../../common/hydration';
 import { ownerWindow } from '../../common/owner';
 import { activeElement, closest, contains, getTarget } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
@@ -28,7 +28,7 @@ import type {
   VaseUIHighlightEventDetails,
 } from '../../internals/createBaseUIEventDetails';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
-import { useRegisterFieldControl } from '../../internals/field-register-control';
+import { useFieldInput, useRegisterFieldControl } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { getFilter } from '../../internals/filter';
 import { useFormContext } from '../../internals/form-context';
@@ -54,7 +54,9 @@ import {
 } from '../../internals/resolveValueLabel';
 import type { Group } from '../../internals/resolveValueLabel';
 import type { VaseUIEvent } from '../../internals/types';
+import { sanitizeValue, useFormEntryValue } from '../../internals/useFormEntryValue';
 import { useFormReset } from '../../internals/useFormReset';
+import { useFormRestoreAsInput } from '../../internals/useFormRestore';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { mergeProps } from '../../merge-props';
 import { getHighlightReason } from '../../utils/getHighlightReason';
@@ -63,7 +65,7 @@ import { useClick } from '../../utils/popups/interactions/useClick';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
 import { useListNavigation } from '../../utils/popups/interactions/useListNavigation';
 import { useOpenInteractionType } from '../../utils/popups/interactions/useOpenInteractionType';
-import { useSingleAnchorPopupRoot } from '../../utils/popups/popupRoot';
+import { getPopupTransitionElement, useSingleAnchorPopupRoot } from '../../utils/popups/popupRoot';
 import {
   FOCUSABLE_POPUP_PROPS,
   usePopupInteractionProps,
@@ -407,6 +409,25 @@ export interface UseAriaComboboxReturnValue {
 }
 
 /**
+ * Gives the element whose animations end an open change of a combobox.
+ * - An inline combobox in a Dialog waits for the animations of the dialog. The function finds the
+ *   dialog by `[role="dialog"]` and not by a context, so the dialog of another library also works.
+ *   The closest such element must be the element that animates.
+ * - A list with no `Combobox.Positioner` is its own positioner element. It stays on the screen
+ *   while the popup is closed, so it ends no open change.
+ */
+function getTransitionElement(store: ComboboxStore) {
+  const { inline, positionerElement, listElement } = store.state;
+  if (inline && positionerElement) {
+    return closest<HTMLElement>(positionerElement, '[role="dialog"]');
+  }
+  if (positionerElement !== null && positionerElement === listElement) {
+    return null;
+  }
+  return getPopupTransitionElement(store);
+}
+
+/**
  * Does the work of the internal root of a combobox: the selected value, the input value, the
  * filter, the popup store, the contexts and the form wiring. Call it in the `setup` of a root part.
  * @param props An object with one getter for each prop of the root part. A read then tracks only
@@ -431,7 +452,9 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     setValidityData,
   } = useFieldRootContext();
 
-  const id = useLabelableId({ id: () => props.id });
+  const id = useLabelableId({
+    id: () => props.id,
+  });
   const { labelId, registerLabelId } = createLabelIdRegistry();
   const direction = useDirection();
   const locale = useFormatLocale(() => props.locale);
@@ -617,11 +640,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   const chipsContainerRef = shallowRef<HTMLDivElement | null>(null);
   const pointerDownItemRef = shallowRef<Element | null>(null);
   const selectionEventRef = shallowRef<MouseEvent | PointerEvent | KeyboardEvent | null>(null);
-
-  // Support composing the Dialog component around an inline combobox: its transitions wait for
-  // the dialog's animations. The root composable takes the element as a ref, and a `post` watcher
-  // below points it at that element.
-  const animatedPopup = shallowRef<HTMLElement | null>(null);
+  const openPressRef = shallowRef<MouseEvent | null>(null);
 
   const { store, open, transitionStatus, actions } = useSingleAnchorPopupRoot(
     props,
@@ -664,6 +683,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
             isItemEqualToValue: isItemEqualToValue.value,
           },
           listElement: null,
+          listElementId: undefined,
           triggerElement: null,
           inputElement: null,
           inputGroupElement: null,
@@ -696,6 +716,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
           valuesRef,
           pointerDownItemRef,
           selectionEventRef,
+          openPressRef,
           labelId,
           registerLabelId,
         },
@@ -705,7 +726,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
       name: 'Combobox',
       onOpenChange: (nextOpen, eventDetails) => handleOpenChange(nextOpen, eventDetails),
       onOpenChangeComplete: (nextOpen) => callbacks.onOpenChangeComplete(nextOpen),
-      popupRef: animatedPopup,
+      getTransitionElement,
     },
   );
   // A function of `setup` reads the current props, so the root assigns each command one time. A
@@ -942,9 +963,14 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   }
 
   function setInputValue(next: string, eventDetails: AriaCombobox.ChangeEventDetails) {
-    callbacks.onInputValueChange(next, eventDetails);
-    if (eventDetails.isCanceled) {
-      return;
+    // The root emits no change for the text that the input has (`VUE-91`). The code below still
+    // runs for that text. With `selectionMode: 'none'` (Autocomplete), the input can show an
+    // inline completion, which is not the value of the root.
+    if (selectionMode.value === 'none' || next !== String(inputValue.value ?? '')) {
+      callbacks.onInputValueChange(next, eventDetails);
+      if (eventDetails.isCanceled) {
+        return;
+      }
     }
 
     // A canceled selection clear must not suppress close-completion cleanup.
@@ -1033,6 +1059,33 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     }
   }
 
+  // The open can put an item under a pointer that does not move. Thus an item ignores a release at
+  // the point of the press that opened the popup (`VUE-84`). The trigger opens its popup in the
+  // frame after the press, and the press can end before that frame. Thus the next press clears the
+  // event, not the release. The input opens its popup in the handler of its press, and a bubble
+  // listener on the window then gets that press too. Thus the listener is in the capture phase.
+  let removeOpenPressListener: (() => void) | null = null;
+
+  function clearOpenPress() {
+    removeOpenPressListener?.();
+    removeOpenPressListener = null;
+    openPressRef.value = null;
+  }
+
+  function keepOpenPress(press: MouseEvent) {
+    clearOpenPress();
+    openPressRef.value = press;
+    removeOpenPressListener = addEventListener(
+      ownerWindow(getTarget(press)),
+      'mousedown',
+      clearOpenPress,
+      { capture: true },
+    );
+  }
+
+  onScopeDispose(clearOpenPress);
+  onDeactivated(clearOpenPress);
+
   // Calls `onOpenChange` for every open change that isn't ignored, with the combobox's own handling
   // around it, before the store commits the change.
   function handleOpenChange(nextOpen: boolean, eventDetails: AriaCombobox.OpenChangeEventDetails) {
@@ -1061,6 +1114,10 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
 
     if (eventDetails.isCanceled) {
       return;
+    }
+
+    if (nextOpen && eventDetails.event?.type === 'mousedown') {
+      keepOpenPress(eventDetails.event as MouseEvent);
     }
 
     if (nextOpen && closeQuery.value !== null) {
@@ -1121,12 +1178,27 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   }
 
   function setSelectedValue(nextValue: any, eventDetails: AriaCombobox.ChangeEventDetails) {
+    // A pick of the selected item changes no value (`VUE-91`), but it can still fill the input.
+    if (
+      single.value &&
+      compareItemEquality(nextValue, selectedValue.value, isItemEqualToValue.value)
+    ) {
+      fillInput(nextValue, eventDetails);
+    } else {
+      commitSelectedValue(nextValue, eventDetails);
+    }
+  }
+
+  function commitSelectedValue(nextValue: any, eventDetails: AriaCombobox.ChangeEventDetails) {
     callbacks.onSelectedValueChange(nextValue, eventDetails);
     if (eventDetails.isCanceled) {
       return;
     }
     setSelectedValueUnwrapped(nextValue);
+    fillInput(nextValue, eventDetails);
+  }
 
+  function fillInput(nextValue: any, eventDetails: AriaCombobox.ChangeEventDetails) {
     const shouldFillInput =
       (selectionMode.value === 'none' && popupRef.value && (props.fillInputOnItemPress ?? true)) ||
       (single.value && !toRaw(store.state).inputInsidePopup);
@@ -1240,24 +1312,6 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     }
   }
 
-  // Support composing the Dialog component around an inline combobox.
-  // `[role="dialog"]` is more interoperable than using a context, e.g. it can work
-  // with third-party modal libraries, though the limitation is that the closest
-  // `role=dialog` part must be the animated element.
-  function getResolvedPopup() {
-    const positioner = toRaw(store.state).positionerElement;
-    return inline.value && positioner
-      ? closest<HTMLElement>(positioner, '[role="dialog"]')
-      : popupRef.value;
-  }
-  function syncAnimatedPopup() {
-    animatedPopup.value = getResolvedPopup();
-  }
-  onMounted(syncAnimatedPopup);
-  watch([inline, () => store.select('positionerElement'), popupRef], syncAnimatedPopup, {
-    flush: 'post',
-  });
-
   // The blocks below are the layout effects of Base UI, in the sequence of its source.
   function syncSelectedIndex() {
     const closeQueryReleased = previousCloseQuery !== null && closeQuery.value === null;
@@ -1316,7 +1370,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   function syncHighlight(settled = false) {
     // A kept-mounted dialog hides its inline list on close. Discard query-clear restoration
     // before it can overwrite the cleared highlight or report an item from the unfiltered list.
-    if (!open.value && inline.value && getResolvedPopup()) {
+    if (!open.value && inline.value && getTransitionElement(store)) {
       pendingQueryHighlight = null;
       return;
     }
@@ -1372,7 +1426,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
           queueMicrotask(() => {
             const current = toRaw(store.state);
             if (
-              (!open.value && (!current.inline || getResolvedPopup())) ||
+              (!open.value && (!current.inline || getTransitionElement(store))) ||
               (inputRef.value && inputRef.value.value.trim() !== '')
             ) {
               return;
@@ -1634,19 +1688,21 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   // An inline list is permanently expanded (see `ComboboxStore.interactions`).
   const expanded = computed(() => open.value || inline.value);
   const inputElement = computed(() => store.select('inputElement'));
-  const listElementId = computed(() => store.select('listElement')?.id);
+  // An element with no id has an empty `id`, and the input then has no `aria-controls`.
+  const listElementId = computed(() => store.select('listElementId') || undefined);
+  // During SSR and initial hydration, the input ref is not available yet.
+  // Assume an input-like control so combobox ARIA attributes are present.
+  const shouldTreatAsInput = computed(
+    () => inputElement.value == null || inputElement.value.tagName === 'INPUT',
+  );
 
   const role = computed(() => {
-    const isPlainInput = inputElement.value?.tagName === 'INPUT';
-    // During SSR and initial hydration, the input ref is not available yet.
-    // Assume an input-like control so combobox ARIA attributes are present.
-    const shouldTreatAsInput = inputElement.value == null || isPlainInput;
     // A non-input control only takes on combobox semantics while the list is exposed, which for
     // an inline list is the whole time.
-    const shouldApplyAria = shouldTreatAsInput || expanded.value;
+    const shouldApplyAria = shouldTreatAsInput.value || expanded.value;
     // Vue before 3.5.14 sets the key `autocorrect` as a Boolean DOM property. The key
     // `autoCorrect` is an attribute in each version.
-    const reference: Record<string, unknown> = shouldTreatAsInput
+    const reference: Record<string, unknown> = shouldTreatAsInput.value
       ? { autocomplete: 'off', spellcheck: 'false', autoCorrect: 'off', autocapitalize: 'none' }
       : {};
     if (shouldApplyAria) {
@@ -1703,6 +1759,9 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     activeIndex,
     selectedIndex,
     virtual: true,
+    // A closed control that is not an input, such as a textarea, has no combobox role. Its arrow
+    // keys then move the caret, as in each other textarea (`VUE-97`).
+    openOnArrowKeyDown: shouldTreatAsInput,
     loopFocus: () => props.loopFocus ?? true,
     allowEscape: () => (props.loopFocus ?? true) && !autoHighlightMode.value,
     focusItemOnOpen: () =>
@@ -1840,6 +1899,8 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     return value.map((current) => stringifyAsValue(current, props.itemToStringValue));
   });
 
+  const giveFieldInput = useFieldInput();
+
   function setHiddenInputElement(value: unknown) {
     const input = value as HTMLInputElement | null;
     // Vue calls a function ref again on each patch, with the same element.
@@ -1847,32 +1908,49 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
       return;
     }
     hiddenInputElement.value = input;
-    validation.inputRef.value = input;
+    giveFieldInput(input);
   }
 
+  const writesHiddenValue = useHiddenValueBeforeHydration(() => hiddenInputElement.value);
+
+  // The value that the input has after the last event that the root handled. A write of Vue or of
+  // the root sets it too.
+  let handledValue: string | undefined;
+
   // Vue writes the value to the input only when the root renders. A browser can change the input
-  // with no change of the state: an autofill, and the restore of the form state of a page.
+  // with no change of the state, such as an autofill.
   function writeValueToInput() {
     const input = hiddenInputElement.value;
     if (input && input.value !== serializedValue.value) {
       input.value = serializedValue.value;
     }
+    handledValue = input?.value;
   }
 
+  // Until the take of the hydration, the input can hold a value that the root did not handle.
+  onMounted(() => {
+    handledValue = writesHiddenValue.value
+      ? hiddenInputElement.value?.value
+      : serializedValue.value;
+  });
+  watch(
+    serializedValue,
+    () => {
+      handledValue = hiddenInputElement.value?.value;
+    },
+    { flush: 'post' },
+  );
+
   // Handle browser autofill.
-  let lastHandledValue: string | undefined;
   function handleAutofill(event: Event) {
     const input = event.currentTarget as HTMLInputElement;
     const nextValue = input.value;
     // A program can send `input` and `change` in one task. The root handles a value one time.
-    if (nextValue === lastHandledValue || nextValue === serializedValue.value) {
+    if (nextValue === handledValue) {
       return;
     }
-    lastHandledValue = nextValue;
-    void nextTick(() => {
-      lastHandledValue = undefined;
-      writeValueToInput();
-    });
+    handledValue = nextValue;
+    void nextTick(writeValueToInput);
     if (event.defaultPrevented || disabled.value || readOnly.value) {
       return;
     }
@@ -1880,12 +1958,24 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     const nextValueLower = nextValue.toLowerCase();
     const details = createChangeEventDetails(REASONS.none, event);
 
-    const findSerializedMatchIndex = () =>
-      valuesRef.value.findIndex(
+    const findSerializedMatchIndex = () => {
+      const index = valuesRef.value.findIndex(
         (candidate) =>
           stringifyAsValue(candidate, props.itemToStringValue).toLowerCase() === nextValueLower ||
           stringifyValueLabel(candidate).toLowerCase() === nextValueLower,
       );
+      if (index !== -1) {
+        return index;
+      }
+      // A browser restores only the text of the input, without the line breaks of the value.
+      return valuesRef.value.findIndex(
+        (candidate) =>
+          sanitizeValue(
+            input,
+            stringifyAsValue(candidate, props.itemToStringValue),
+          ).toLowerCase() === nextValueLower,
+      );
+    };
 
     function handleChange() {
       // Browser autofill only writes a single scalar value.
@@ -1950,18 +2040,23 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     let hasChanged = false;
     if (selectionMode.value !== 'none' && props.selectedValue === undefined) {
       const defaultValue = getDefaultSelectedValue();
+      // `setSelectedValue` keeps a value that `isItemEqualToValue` matches with the default object.
+      // The dirty state compares a single value by identity, so the reset puts back that object.
       if (isSelectedValueDirty(selectedValue.value, defaultValue, isItemEqualToValue.value)) {
         const details = createChangeEventDetails(REASONS.none, event);
-        setSelectedValue(defaultValue, details);
+        commitSelectedValue(defaultValue, details);
         hasChanged = !details.isCanceled;
       }
     }
     if (!(props.inputValueControlled ?? props.inputValue !== undefined)) {
       const defaultInputValue = getDefaultInputValue();
-      if (inputValue.value !== defaultInputValue) {
-        const details = createChangeEventDetails(REASONS.none, event);
-        setInputValue(defaultInputValue, details);
-        hasChanged ||= selectionMode.value === 'none' && !details.isCanceled;
+      const shownInputValue = inputValue.value;
+      // With `selectionMode: 'none'`, the input can show an inline completion of the default text
+      // while the typed text differs. The root part compares the default text with its typed text.
+      if (selectionMode.value === 'none' || shownInputValue !== defaultInputValue) {
+        setInputValue(defaultInputValue, createChangeEventDetails(REASONS.none, event));
+        // The watcher of the input value clears the flag, and it runs only when the text changes.
+        hasChanged ||= selectionMode.value === 'none' && inputValue.value !== shownInputValue;
       }
     }
     if (hasChanged) {
@@ -1971,26 +2066,8 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     }
   });
 
-  // `KeepAlive` takes the hidden input out of the document. The flag is a source of the `watch`,
-  // so its cleanup removes the listener of the window.
-  const isDeactivated = shallowRef(false);
-  onDeactivated(() => {
-    isDeactivated.value = true;
-  });
-  onActivated(() => {
-    isDeactivated.value = false;
-  });
-  watch(
-    [hiddenInputElement, isDeactivated] as const,
-    ([input, deactivated], _previous, onCleanup) => {
-      if (!input || deactivated) {
-        return;
-      }
-      // Chromium restores the form state of a page after `load`, with no event on the input.
-      onCleanup(addEventListener(ownerWindow(input), 'pageshow', writeValueToInput));
-    },
-    { flush: 'post' },
-  );
+  useFormRestoreAsInput(hiddenInputElement, () => handledValue, false);
+  useFormEntryValue(hiddenInputElement, () => serializedValue.value);
 
   // The style is the constant itself, in an object that no `mergeProps` call makes.
   // `handleHiddenInputInvalid` then keeps the size that it writes.
@@ -2011,7 +2088,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
       disabled: disabled.value,
       required: required.value && !hasMultipleSelection.value,
       readonly: readOnly.value,
-      value: serializedValue.value,
+      ...(writesHiddenValue.value ? { value: serializedValue.value } : undefined),
       style: hiddenInputName.value ? visuallyHiddenInput : visuallyHiddenInputPinned,
       tabindex: -1,
       'aria-hidden': true,

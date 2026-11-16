@@ -5,15 +5,19 @@ import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountFormResetTests,
   hydrate,
   isJSDOM,
+  removedPartHydrationTests,
   renderOnServer,
   screen,
   waitFor,
+  within,
 } from '#test-utils';
 import CheckboxGroupHydration from './CheckboxGroupHydration.test.vue';
 import CheckboxGroupParentHydration from './CheckboxGroupParentHydration.test.vue';
@@ -2701,6 +2705,21 @@ describe('<CheckboxGroup />', () => {
     });
   });
 
+  heldMountFormResetTests({
+    render,
+    renderControl: () => (
+      <CheckboxGroup defaultValue={['apple']}>
+        <Checkbox.Root name="fruits" value="apple" />
+        <Checkbox.Root name="fruits" value="banana" />
+      </CheckboxGroup>
+    ),
+    change: () => fireEvent.click(screen.getAllByRole('checkbox')[0]!),
+    readState: () =>
+      screen.getAllByRole('checkbox').map((checkbox) => checkbox.getAttribute('aria-checked')),
+    defaultState: ['true', 'false'],
+    changedState: ['false', 'false'],
+  });
+
   describe('VUE-21: a native reset clears the error of the field', () => {
     beforeEach(() => {
       vi.useFakeTimers();
@@ -2952,7 +2971,7 @@ describe('<CheckboxGroup />', () => {
       expect(handleSubmit.mock.lastCall?.[0]).toEqual({ fruits: ['apple', 'banana'] });
     });
 
-    it('keeps the order of the checkboxes when KeepAlive shows them again', async () => {
+    it('focuses the first checkbox when KeepAlive shows the checkboxes again', async () => {
       const shown = shallowRef(true);
       const Fruits = defineComponent(() => () => (
         <CheckboxGroup>
@@ -2977,6 +2996,40 @@ describe('<CheckboxGroup />', () => {
       await user.click(screen.getByText('Submit'));
 
       expect(screen.getByTestId('apple')).toHaveFocus();
+    });
+
+    it('focuses a checkbox that mounted while held before the other checkboxes', async () => {
+      const handleSubmit = vi.fn();
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
+        () => <Checkbox.Root key="banana" value="banana" required data-testid="banana" />,
+        {
+          renderBranch: (part) => (
+            <>
+              {part}
+              <Checkbox.Root key="apple" value="apple" required data-testid="apple" />
+              <Checkbox.Root key="cherry" value="cherry" required data-testid="cherry" />
+            </>
+          ),
+        },
+      );
+      const App = defineComponent(() => () => (
+        <Form onFormSubmit={handleSubmit}>
+          <Field.Root name="fruits">
+            <CheckboxGroup>
+              <HeldBranch />
+            </CheckboxGroup>
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>
+      ));
+      const { user } = await render(<App />);
+
+      await mountWhileHeld();
+      await show();
+      await user.click(screen.getByText('Submit'));
+
+      expect(handleSubmit).not.toHaveBeenCalled();
+      expect(screen.getByTestId('banana')).toHaveFocus();
     });
 
     it('gives no value to its form while KeepAlive holds the group', async () => {
@@ -3018,6 +3071,185 @@ describe('<CheckboxGroup />', () => {
         fruits: ['apple', 'banana'],
         other: 'x',
       });
+    });
+
+    it('the label keeps naming a shown control when a group mounts while KeepAlive holds it', async () => {
+      const { HeldBranch, mountWhileHeld } = createHeldBranch(() => (
+        <CheckboxGroup key="held" defaultValue={[]}>
+          <Checkbox.Root value="apple" />
+        </CheckboxGroup>
+      ));
+      await render(() => (
+        <Field.Root>
+          <Field.Label data-testid="label">Fruit</Field.Label>
+          <Field.Control data-testid="control" />
+          <HeldBranch />
+        </Field.Root>
+      ));
+      const label = screen.getByTestId('label');
+      const control = screen.getByTestId('control');
+      const controlId = control.id;
+
+      expect(label).toHaveAttribute('for', controlId);
+
+      await mountWhileHeld();
+
+      expect(control).toHaveAttribute('id', controlId);
+      expect(label).toHaveAttribute('for', controlId);
+    });
+  });
+
+  describe('VUE-78: the first checkbox in the document', () => {
+    it('focuses a checkbox that mounts before the other checkboxes', async () => {
+      const extra = shallowRef(false);
+      const handleSubmit = vi.fn();
+      const App = defineComponent(() => () => (
+        <Form onFormSubmit={handleSubmit}>
+          <Field.Root name="fruits">
+            <CheckboxGroup>
+              {extra.value ? (
+                <Checkbox.Root key="banana" value="banana" required data-testid="banana" />
+              ) : null}
+              <Checkbox.Root key="apple" value="apple" required data-testid="apple" />
+              <Checkbox.Root key="cherry" value="cherry" required data-testid="cherry" />
+            </CheckboxGroup>
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>
+      ));
+      const { user } = await render(<App />);
+
+      extra.value = true;
+      await flushMicrotasks();
+      await user.click(screen.getByText('Submit'));
+
+      expect(handleSubmit).not.toHaveBeenCalled();
+      expect(screen.getByTestId('banana')).toHaveFocus();
+    });
+
+    it('focuses the first checkbox after a keyed move', async () => {
+      const order = shallowRef(['apple', 'banana']);
+      const handleSubmit = vi.fn();
+      const App = defineComponent(() => () => (
+        <Form onFormSubmit={handleSubmit}>
+          <Field.Root name="fruits">
+            <CheckboxGroup>
+              {order.value.map((value) => (
+                <Checkbox.Root key={value} value={value} required data-testid={value} />
+              ))}
+            </CheckboxGroup>
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>
+      ));
+      const { user } = await render(<App />);
+
+      order.value = ['banana', 'apple'];
+      await flushMicrotasks();
+      await user.click(screen.getByText('Submit'));
+
+      expect(handleSubmit).not.toHaveBeenCalled();
+      expect(screen.getByTestId('banana')).toHaveFocus();
+    });
+
+    it('focuses the first invalid checkbox when another checkbox is checked', async () => {
+      const extra = shallowRef(false);
+      const handleSubmit = vi.fn();
+      const App = defineComponent(() => () => (
+        <Form onFormSubmit={handleSubmit}>
+          <Field.Root name="fruits">
+            <CheckboxGroup defaultValue={['apple']}>
+              {extra.value ? (
+                <Checkbox.Root key="banana" value="banana" required data-testid="banana" />
+              ) : null}
+              <Checkbox.Root key="apple" value="apple" required data-testid="apple" />
+              <Checkbox.Root key="cherry" value="cherry" required data-testid="cherry" />
+            </CheckboxGroup>
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>
+      ));
+      const { user } = await render(<App />);
+
+      extra.value = true;
+      await flushMicrotasks();
+      await user.click(screen.getByText('Submit'));
+
+      expect(handleSubmit).not.toHaveBeenCalled();
+      expect(screen.getByTestId('banana')).toHaveFocus();
+    });
+
+    it('focuses the first checkbox for an error of the form', async () => {
+      const extra = shallowRef(false);
+      const errors = shallowRef<Form.Props['errors']>({});
+      const App = defineComponent(() => () => (
+        <Form
+          errors={errors.value}
+          onSubmit={(event: SubmitEvent) => {
+            event.preventDefault();
+            errors.value = { fruits: 'server error' };
+          }}
+        >
+          <Field.Root name="fruits">
+            <CheckboxGroup>
+              {extra.value ? (
+                <Checkbox.Root key="banana" value="banana" data-testid="banana" />
+              ) : null}
+              <Checkbox.Root key="apple" value="apple" data-testid="apple" />
+            </CheckboxGroup>
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>
+      ));
+      const { user } = await render(<App />);
+
+      extra.value = true;
+      await flushMicrotasks();
+      await user.click(screen.getByText('Submit'));
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('banana')).toHaveFocus();
+    });
+
+    it('keeps the order of the registrations for two checkboxes in two shadow roots', async () => {
+      const hosts = [document.createElement('div'), document.createElement('div')];
+      const roots = hosts.map((host) => host.attachShadow({ mode: 'open' }));
+      const containers = roots.map((root) => {
+        const container = document.createElement('div');
+        root.append(container);
+        return container;
+      });
+      document.body.append(...hosts);
+
+      const { unmount } = await render(
+        <Form data-testid="form">
+          <Field.Root name="fruits">
+            <CheckboxGroup>
+              <Teleport to={containers[0]}>
+                <Checkbox.Root value="apple" required data-testid="apple" />
+              </Teleport>
+              <Teleport to={containers[1]}>
+                <Checkbox.Root value="banana" required data-testid="banana" />
+              </Teleport>
+            </CheckboxGroup>
+          </Field.Root>
+        </Form>,
+      );
+
+      // The document position of two inputs in two trees depends on the engine. The stub makes it
+      // the same in each engine. Without the check for the other tree, the later input wins.
+      const compareDocumentPosition = vi
+        .spyOn(Node.prototype, 'compareDocumentPosition')
+        .mockReturnValue(Node.DOCUMENT_POSITION_DISCONNECTED | Node.DOCUMENT_POSITION_FOLLOWING);
+      try {
+        await fireEvent.submit(screen.getByTestId('form'));
+
+        expect(roots[0].activeElement).toBe(within(containers[0]).getByTestId('apple'));
+      } finally {
+        compareDocumentPosition.mockRestore();
+        unmount();
+        hosts.forEach((host) => host.remove());
+      }
     });
   });
 
@@ -3081,6 +3313,39 @@ describe('<CheckboxGroup />', () => {
   });
 
   describe('server-side rendering', () => {
+    removedPartHydrationTests({
+      file: 'src/checkbox-group/CheckboxGroupHydration.test.vue',
+      component: CheckboxGroupHydration,
+      cases: [
+        {
+          name: 'a removed label',
+          props: {
+            label: 'after',
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: '[data-testid="group"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'label-a',
+          clientValue: null,
+        },
+        {
+          name: 'a removed description',
+          props: {
+            label: 'after',
+            labelId: 'label-a',
+            descriptionId: 'desc-a',
+            laterRemovedAtMount: true,
+          },
+          selector: '[data-testid="group"]',
+          attribute: 'aria-describedby',
+          serverValue: 'desc-a',
+          clientValue: null,
+        },
+      ],
+    });
+
     it.each([
       { name: 'a value', props: { defaultValue: ['banana'] } },
       { name: 'no value', props: {} },

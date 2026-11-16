@@ -1,10 +1,10 @@
-import { describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { defineComponent, h, onMounted, shallowRef, watch } from 'vue';
 import type { Component, MaybeRefOrGetter, PropType } from 'vue';
 import { Checkbox } from '@vase-ui/vue/checkbox';
-import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
+import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#test-utils';
 import { useFloating } from '../../../../test/fixtures/useFloating';
-import FloatingFocusManager from '../focus/FloatingFocusManager.vue';
+import { FloatingFocusManager } from '../../../../test/fixtures/floatingFocusManagerHarness';
 import FloatingPortal from './FloatingPortal.vue';
 import FloatingPortalLite from './FloatingPortalLite.vue';
 import type { FloatingPortalContainer } from './useFloatingPortalNode';
@@ -202,6 +202,56 @@ describe('FloatingPortal', () => {
 
     const portal = document.querySelector('[data-testid="lite-portal"]');
     expect(portal).not.toBeNull();
+  });
+});
+
+describe('focus in the millisecond of the mount', () => {
+  const { render } = createRenderer();
+
+  // A mocked clock moves only in `render`, `rerender`, `setProps` and `waitForLaterMillisecond`.
+  // The focus of the case thus comes in the millisecond in which Vue attached the listener of the
+  // input.
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-01-01T00:00:00Z'));
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  test('gives a focus in the popup to the Vue listener of the target', async () => {
+    const focusin = vi.fn();
+    const FocusOnMount = defineComponent(() => {
+      onMounted(() => {
+        screen.getByTestId('input').focus();
+      });
+      return () => null;
+    });
+    const Popup = defineComponent(() => {
+      const open = shallowRef(false);
+      return () => (
+        <>
+          <button
+            data-testid="reference"
+            onClick={() => {
+              open.value = true;
+            }}
+          />
+          <FloatingPortal>
+            {open.value && [<input data-testid="input" onFocusin={focusin} />, <FocusOnMount />]}
+          </FloatingPortal>
+        </>
+      );
+    });
+    await render(<Popup />);
+
+    await fireEvent.click(screen.getByTestId('reference'));
+    const input = await screen.findByTestId('input');
+    await waitFor(() => {
+      expect(input).toHaveFocus();
+    });
+
+    expect(focusin).toHaveBeenCalledTimes(1);
   });
 });
 

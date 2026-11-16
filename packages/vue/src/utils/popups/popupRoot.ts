@@ -16,7 +16,9 @@ import { createChangeEventDetails } from '../../internals/createBaseUIEventDetai
 import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useUnmountAfterClose } from '../../internals/useUnmountAfterClose';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import type { ReactiveStore } from './ReactiveStore';
 import { popupStoreSelectors } from './store';
 import type {
@@ -92,7 +94,8 @@ export interface UsePopupRootOptions<Store extends PopupRootStore> {
   /**
    * The root attaches its store to the handle after the DOM update of its mount. A root in a
    * pending `<Suspense>` branch attaches when Vue resolves the branch. The root detaches when it
-   * unmounts and while `KeepAlive` holds it.
+   * unmounts and while `KeepAlive` holds it. A root that mounts in a branch that `KeepAlive` holds
+   * detaches in its own `onMounted` hook, after the `onMounted` hooks of the parts below it.
    */
   handle?: MaybeRefOrGetter<PopupRootStoreHandle<Store> | undefined>;
   /**
@@ -110,6 +113,11 @@ export interface UsePopupRootOptions<Store extends PopupRootStore> {
    * @default false
    */
   disabled?: MaybeRefOrGetter<boolean | undefined>;
+  /**
+   * Gives the element whose animations end an open change. The default is the popup element, else
+   * the positioner element, else the backdrop element.
+   */
+  getTransitionElement?: ((store: Store) => HTMLElement | null) | undefined;
 }
 
 type CreatePopupRootStore<Store extends PopupRootStore> = (
@@ -117,16 +125,19 @@ type CreatePopupRootStore<Store extends PopupRootStore> = (
   defaultPopupId: string | undefined,
 ) => Store;
 
-export interface UseSingleAnchorPopupRootOptions<Store extends PopupRootStore> extends Pick<
+export type UseSingleAnchorPopupRootOptions<Store extends PopupRootStore> = Pick<
   UsePopupRootOptions<Store>,
-  'name' | 'onOpenChange' | 'onOpenChangeComplete'
-> {
-  /**
-   * The element whose animations end the close, as a ref. The default is `store.context.popupRef`.
-   * A root inside another popup, such as a dialog, gives the element of that popup. The close then
-   * waits for the animations of that popup.
-   */
-  popupRef?: Readonly<Ref<HTMLElement | null>> | undefined;
+  'name' | 'onOpenChange' | 'onOpenChangeComplete' | 'getTransitionElement'
+>;
+
+/**
+ * Gives the element whose animations end an open change: the popup element, else the positioner
+ * element, else the backdrop element.
+ */
+export function getPopupTransitionElement(store: PopupRootStore) {
+  return (
+    store.context.popupRef.value ?? store.state.positionerElement ?? store.context.backdropRef.value
+  );
 }
 
 /**
@@ -195,7 +206,7 @@ export function usePopupRootWithPopupId<Store extends PopupRootStore>(
   const { mounted, transitionStatus, actions } = usePopupRootTransitions(
     store,
     open,
-    store.context.popupRef,
+    () => (options.getTransitionElement ?? getPopupTransitionElement)(store),
     options.animateInitialOpen,
   );
 
@@ -210,22 +221,50 @@ export function usePopupRootWithPopupId<Store extends PopupRootStore>(
   // would come after those hooks. Vue holds that run while the root is in a pending `<Suspense>`
   // branch, and a branch that Vue drops never runs it.
   const isActive = shallowRef(false);
-  watch(
-    () => (isActive.value ? toValue(options.handle) : undefined),
-    (handle, _previous, onCleanup) => {
-      const detach = handle?.attachStore(store);
-      if (detach !== undefined) {
-        onCleanup(detach);
-      }
-    },
-    { flush: 'post' },
-  );
+  let attachedHandle: PopupRootStoreHandle<Store> | undefined;
+  let detachStore: (() => void) | undefined;
+  function setAttachedHandle(handle: PopupRootStoreHandle<Store> | undefined) {
+    if (handle === attachedHandle) {
+      return;
+    }
+    detachStore?.();
+    attachedHandle = handle;
+    detachStore = handle?.attachStore(store);
+  }
+  watch(() => (isActive.value ? toValue(options.handle) : undefined), setAttachedHandle, {
+    flush: 'post',
+  });
   isActive.value = true;
+  onScopeDispose(() => {
+    setAttachedHandle(undefined);
+  });
+
+  // A root that mounts in a branch that `KeepAlive` holds also attaches in that run, so an
+  // `onMounted` hook of a part below it reaches its store. The `onMounted` hook of the root comes
+  // after those hooks, and it detaches the store directly. A `watch` job that a post flush queues
+  // runs in a later pass of the flush, after the watchers of a detached trigger that follow the
+  // handle. The trigger would then register in the store of the held root.
+  // When `KeepAlive` shows the branch in the flush of the mount, `onActivated` can come after that
+  // detach. The `watch` then gets the same handle as in its last run and does not call
+  // `setAttachedHandle`, so `onActivated` calls it. A root in a pending `<Suspense>` branch below a
+  // `KeepAlive` can get `onActivated` before its mount, so only the `watch` attaches it.
+  const { isHeld } = useKeepAliveState();
+  let isMounted = false;
+  onMounted(() => {
+    isMounted = true;
+    if (isHeld.value) {
+      isActive.value = false;
+      setAttachedHandle(undefined);
+    }
+  });
   onDeactivated(() => {
     isActive.value = false;
   });
   onActivated(() => {
     isActive.value = true;
+    if (isMounted) {
+      setAttachedHandle(toValue(options.handle));
+    }
   });
 
   return { store, open, mounted, payload, transitionStatus, actions };
@@ -261,10 +300,8 @@ export function useSingleAnchorPopupRoot<Store extends PopupRootStore>(
   usePopupRootOpenState(store, props, options.name);
 
   const open = computed(() => store.select('open'));
-  const { mounted, transitionStatus, actions } = usePopupRootTransitions(
-    store,
-    open,
-    options.popupRef ?? store.context.popupRef,
+  const { mounted, transitionStatus, actions } = usePopupRootTransitions(store, open, () =>
+    (options.getTransitionElement ?? getPopupTransitionElement)(store),
   );
 
   return { store, open, mounted, transitionStatus, actions };
@@ -339,18 +376,21 @@ function usePopupRootOpenState(
 function usePopupRootTransitions(
   store: PopupRootStore,
   open: Readonly<Ref<boolean>>,
-  popupRef: Readonly<Ref<HTMLElement | null>>,
+  transitionElement: () => HTMLElement | null,
   animateInitialOpen?: boolean,
 ) {
+  // One `true` for each open. A popup part that attaches after the completion starts no second one.
+  let openCompleted = false;
   const { mounted, transitionStatus, forceUnmount } = useUnmountAfterClose({
     open,
-    ref: popupRef,
+    ref: transitionElement,
     preventUnmountOnClose: () => store.select('preventUnmountingOnClose'),
     setPreventUnmountOnClose: (preventUnmountOnClose) =>
       store.set('preventUnmountingOnClose', preventUnmountOnClose),
     animateInitialOpen,
     onUnmount() {
       store.resetOnUnmount();
+      openCompleted = false;
       store.context.onOpenChangeComplete?.(false);
     },
   });
@@ -366,6 +406,30 @@ function usePopupRootTransitions(
     { flush: 'sync', immediate: true },
   );
 
+  // The open wait follows the open state of the store, as `openChange` does, and not the `open` of
+  // a disabled root. A disabled root that stays mounted thus reports no second open completion when
+  // it shows again.
+  const storeOpen = () => store.select('open');
+  // `openCompleted` resets at a close, where the open wait does nothing. The result thus does not
+  // depend on the order of the watchers.
+  watch(storeOpen, (isOpen) => {
+    if (!isOpen) {
+      openCompleted = false;
+    }
+  });
+  useOpenChangeComplete({
+    enabled: storeOpen,
+    open: storeOpen,
+    ref: transitionElement,
+    restartKey: transitionElement,
+    onComplete() {
+      if (storeOpen() && !openCompleted) {
+        openCompleted = true;
+        store.context.onOpenChangeComplete?.(true);
+      }
+    },
+  });
+
   const actions: PopupRootActions = {
     unmount: forceUnmount,
     close: () => store.setOpen(false, createChangeEventDetails(REASONS.imperativeAction)),
@@ -376,7 +440,7 @@ function usePopupRootTransitions(
 
 /**
  * Keeps the trigger registration and the state of an open popup in step. Call it in `setup` of the
- * root. It does nothing while `KeepAlive` holds the root.
+ * root. It does nothing from a deactivation of the root by `KeepAlive` to the next activation.
  *
  * - A popup with no active trigger takes the only registered trigger, unless the open request
  *   named no trigger.

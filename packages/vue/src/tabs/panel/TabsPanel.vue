@@ -36,8 +36,7 @@ export interface TabsPanelProps
   keepMounted?: boolean | undefined;
   /**
    * The id of the panel. The tab of the panel uses it for `aria-controls`.
-   * A server render writes the panel before it renders a tab that comes after it. The panel then
-   * has no `aria-labelledby` in the server HTML, and it gets it in the first flush on the client.
+   * Without an id, the panel has a generated id.
    */
   id?: string | undefined;
 }
@@ -45,8 +44,10 @@ export interface TabsPanelProps
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useAriaAfterHydration } from '../../common/hydration';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
+import { useDeferredServerRender } from '../../internals/labelable-provider';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import { transitionStatusMapping } from '../../internals/stateAttributesMapping';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -79,13 +80,19 @@ const {
   value: selectedValue,
   getTabIdByPanelValue,
   orientation,
+  panelList,
   registerPanel,
   tabActivationDirection,
 } = useTabsRootContext();
 
+// A tab registers its id in `setup`, and it can come after the panel.
+useDeferredServerRender();
+
+const ariaAfterHydration = useAriaAfterHydration();
+
 const panelId = useVaseUiId(() => props.id);
 
-const { ref: listItemRef, index } = useCompositeListItem();
+const { ref: listItemRef, index } = useCompositeListItem({ list: panelList });
 
 const open = computed(() => props.value === selectedValue.value);
 // The getter for `element` runs after `setup`, so the later declaration of `element` is in scope.
@@ -117,7 +124,7 @@ const { element, elementProps } = useRenderElement('div', props, {
   ref: [listItemRef],
   props: (attrs) => [
     {
-      'aria-labelledby': getTabIdByPanelValue(props.value),
+      'aria-labelledby': ariaAfterHydration(getTabIdByPanelValue(props.value)),
       // Vue writes `false` as the attribute `hidden="false"` on an element that is not HTML.
       hidden: hidden.value ? true : undefined,
       id: panelId.value,

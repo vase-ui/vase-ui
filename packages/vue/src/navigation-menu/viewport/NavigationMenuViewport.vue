@@ -20,16 +20,17 @@ const EMPTY_ROOT_STORE = getEmptyRootStore();
 </script>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue';
+import { computed, onMounted, watch } from 'vue';
 import type { Component } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { contains } from '../../common/shadowDom';
+import { warn } from '../../common/warn';
 import type { HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useNavigationMenuPositionerContext } from '../positioner/NavigationMenuPositionerContext';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
-import { createElementSetter } from '../utils/createElementSetter';
+import { createElementSetter } from '../../utils/popups/createElementSetter';
 import NavigationMenuViewportChildren from './NavigationMenuViewportChildren.vue';
 import { useNavigationMenuViewportSiblingGuards } from './useNavigationMenuViewportGuards';
 
@@ -51,6 +52,7 @@ const state: NavigationMenuViewportState = EMPTY_OBJECT;
 const viewportId = useVaseUiId(() => props.id);
 
 const {
+  nested,
   viewportElement,
   floatingRootStore,
   prevTriggerElementRef,
@@ -59,6 +61,16 @@ const {
 } = useNavigationMenuRootContext();
 
 const inPositioner = useNavigationMenuPositionerContext(true) !== undefined;
+
+if (process.env.NODE_ENV !== 'production' && !nested && !inPositioner) {
+  onMounted(() => {
+    warn(
+      '<NavigationMenu.Viewport> of a top-level <NavigationMenu.Root> is not inside <NavigationMenu.Positioner>.',
+      'A top-level root with no positioner does not close on Escape, on a click outside or on a second click on its trigger.',
+      'Put the viewport inside <NavigationMenu.Portal>, <NavigationMenu.Positioner> and <NavigationMenu.Popup>. Only a nested root can have a viewport with no positioner.',
+    );
+  });
+}
 
 const domReference = computed(() => {
   const store: PopupInteractionStore = floatingRootStore.value ?? EMPTY_ROOT_STORE;

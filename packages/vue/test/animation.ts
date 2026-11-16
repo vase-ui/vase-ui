@@ -113,9 +113,11 @@ export function nextEvent(
  * It fails when no call comes in 600 frames of the page. With `action`, the function runs after
  * this function replaced `getAnimations` of the element, and the count of frames starts when it
  * ends, as in `nextEvent`.
- * Call it before the action, or give it the action. With three or more elements in one frame, a
- * part can get the animations of an element from the root of the tree. This function does not see
- * that read.
+ * Call it before the action, or give it the action. A part can read the animations of an open in a
+ * frame after the open. For the exit of a popup, call this function after `openChangeComplete`
+ * with `true`. An earlier call can get the read of the open.
+ * With three or more elements in one frame, a part can get the animations of an element from the
+ * root of the tree. This function does not see that read.
  */
 export function nextAnimationsRead(
   element: Element,
@@ -136,6 +138,42 @@ export function nextAnimationsRead(
   });
 }
 
+/**
+ * Resolves in the update that gives the element `data-ending-style`. An attribute that the element
+ * has at the call does not resolve it. It rejects when no such update comes in 180 frames of the
+ * page. With `action`, the function runs after the observer is attached, and the count of frames
+ * starts when it ends, as in `nextEvent`.
+ * A part gives the attribute only when an exit starts. An event of a transition and a read of the
+ * animations can come from an earlier step.
+ * Read a state of the start of the exit directly after the wait. No task and no frame runs between
+ * the update and the code after the wait.
+ */
+export function nextEndingStyle(
+  element: Element,
+  { action }: { action?: () => unknown } = {},
+): Promise<void> {
+  const message = `The element got no data-ending-style in ${EVENT_FRAMES} frames of the page.`;
+
+  return waitWithFrameLimit<void>({ frames: EVENT_FRAMES, message, action }, (resolve) => {
+    const observer = new MutationObserver(() => {
+      if (element.hasAttribute('data-ending-style')) {
+        resolve();
+      }
+    });
+    observer.observe(element, { attributes: true, attributeFilter: ['data-ending-style'] });
+    return () => observer.disconnect();
+  });
+}
+
+/**
+ * A style sheet that gives an element of the class `popup` an exit animation of 100 s. A case ends
+ * the animation with its own call. A late frame can end a short animation before that call.
+ */
+export const POPUP_EXIT_CSS = `
+  .popup[data-ending-style] { animation: popup-exit 100s; }
+  @keyframes popup-exit { to { opacity: 0; } }
+`;
+
 export function openInTimerTask(open: { value: boolean }) {
   setTimeout(() => {
     open.value = true;
@@ -155,8 +193,9 @@ export interface FrameProbeResult {
   isSameFrame: boolean;
 }
 
-const MINIMUM_EXIT_DURATION = 10_000;
+const MINIMUM_ANIMATION_DURATION = 10_000;
 const SEEK_MARGIN = 50;
+const EARLY_END_MARGIN = 1;
 
 /**
  * Tells if a frame paints between the end of the exit animation and the removal of the panel.
@@ -183,21 +222,36 @@ export async function probeFrameAfterExit(
   const read = nextAnimationsRead(panel);
   close();
   const animations = await read;
+  seekBeforeEnd(animations, SEEK_MARGIN);
+
+  return readFrameOfEnd(animations, isGone);
+}
+
+/**
+ * Moves each animation to `margin` ms before its end, so the next frame ends it. The browser ends
+ * the animation in a frame, as it does for a user, and no call of the test ends it. It throws when
+ * the list is empty, and when an animation lasts less than 10 s: a short animation can end before
+ * the seek. Give the animation a duration of 100 s.
+ */
+export function seekBeforeEnd(animations: Animation[], margin: number) {
   if (animations.length === 0) {
-    throw new Error('The part found no exit animation on the panel.');
+    throw new Error('There is no animation to move.');
   }
   const endTimes = animations.map((animation) =>
     Number(animation.effect!.getComputedTiming().endTime),
   );
-  if (endTimes.some((endTime) => endTime < MINIMUM_EXIT_DURATION)) {
-    throw new Error(
-      'The exit animation of the panel lasts less than 10 seconds. Give the exit a duration of 100 s.',
-    );
+  if (endTimes.some((endTime) => endTime < MINIMUM_ANIMATION_DURATION)) {
+    throw new Error('An animation lasts less than 10 seconds. Give it a duration of 100 s.');
   }
   animations.forEach((animation, index) => {
-    animation.currentTime = endTimes[index] - SEEK_MARGIN;
+    animation.currentTime = endTimes[index] - margin;
   });
+}
 
+async function readFrameOfEnd(
+  animations: Animation[],
+  isGone: () => boolean,
+): Promise<FrameProbeResult> {
   await waitWithFrameLimit<void>(
     {
       frames: GUARD_FRAMES,
@@ -222,6 +276,57 @@ export async function probeFrameAfterExit(
       resolve({ isGone: isGone(), isSameFrame: Math.abs(frameTime - endTime) < 0.5 });
     });
   });
+}
+
+export interface EarlyExitProbeResult extends FrameProbeResult {
+  /** The part read the animations of the panel before the end of the exit. */
+  isReadBeforeEnd: boolean;
+}
+
+/**
+ * Tells if a frame paints between the end of the exit animation and the removal of the panel, when
+ * the exit ends before the part reads the animations of the panel. A late frame can end an exit in
+ * this way.
+ * The probe calls `close` and waits for the update that gives the panel `data-ending-style`. It
+ * rejects when that update does not come in 180 frames of the page after `close` ends. Then it
+ * moves each animation of the panel to 1 ms before its end, so the next frame ends the exit. The
+ * exit must last 100 s.
+ * The probe rejects when the panel has no animation, and when the panel goes before the end of the
+ * exit. It reads `isGone` as `probeFrameAfterExit` does.
+ * `isReadBeforeEnd` tells if a part called `getAnimations()` on the panel before the end. A read in
+ * the reaction to the end, such as a read in a listener of `animationend`, is not a read before the
+ * end. The probe sees only a call on the panel itself. A part that reads the animations of three or
+ * more elements in one microtask can get them from the root of the tree, as `nextAnimationsRead`
+ * says.
+ */
+export async function probeFrameAfterExitBeforeRead(
+  panel: HTMLElement,
+  isGone: () => boolean,
+  close: () => unknown,
+): Promise<EarlyExitProbeResult> {
+  await nextEndingStyle(panel, { action: close });
+
+  const animations = panel.getAnimations();
+  seekBeforeEnd(animations, EARLY_END_MARGIN);
+  let isReadBeforeEnd = false;
+  let hasEnded = false;
+  panel.getAnimations = (options) => {
+    isReadBeforeEnd ||= !hasEnded;
+    return Element.prototype.getAnimations.call(panel, options);
+  };
+  Promise.all(animations.map((animation) => animation.finished)).then(
+    () => {
+      hasEnded = true;
+    },
+    () => {},
+  );
+
+  try {
+    const result = await readFrameOfEnd(animations, isGone);
+    return { ...result, isReadBeforeEnd };
+  } finally {
+    Reflect.deleteProperty(panel, 'getAnimations');
+  }
 }
 
 /**

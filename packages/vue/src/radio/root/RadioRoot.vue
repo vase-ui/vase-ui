@@ -50,7 +50,10 @@ export interface RadioRootProps<Value = any>
   extends
     NonNativeButtonProps,
     VaseUIComponentProps<RadioRootState>,
-    /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes>, 'id'> {
+    /* @vue-ignore */ Omit<
+      WithVaseUIEvent<HTMLAttributes, 'aria-label' | 'aria-labelledby'>,
+      'id'
+    > {
   /**
    * The unique identifying value of the radio in a group.
    */
@@ -85,12 +88,13 @@ export interface RadioRootProps<Value = any>
 </script>
 
 <script setup lang="ts" generic="Value = any">
-import { computed, onDeactivated, provide, shallowRef, watch } from 'vue';
-import { addEventListener } from '../../common/addEventListener';
+import { computed, nextTick, onDeactivated, provide, shallowRef, watch } from 'vue';
+import { useAriaAfterHydration } from '../../common/hydration';
 import { mergeCleanups } from '../../common/mergeCleanups';
-import { ownerWindow } from '../../common/owner';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { useFieldItemContext } from '../../field/item/FieldItemContext';
+import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
+import { givenName } from '../../internals/blankName';
 import { ACTIVE_COMPOSITE_ITEM } from '../../internals/composite/constants';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -109,6 +113,7 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useFormReset } from '../../internals/useFormReset';
+import { useFormRestore } from '../../internals/useFormRestore';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useRadioGroupContext } from '../../radio-group/RadioGroupContext';
@@ -141,11 +146,13 @@ const {
 const fieldItem = useFieldItemContext();
 const { getDescriptionProps } = useLabelableContext();
 
+const fieldsetDisabled = useFieldsetDisabled(() => element.value);
 const isDisabled = computed(
   () =>
     fieldDisabled.value ||
     fieldItem.disabled.value ||
     (group?.disabled.value ?? false) ||
+    fieldsetDisabled.value ||
     props.disabled,
 );
 const isReadOnly = computed(() => (group?.readOnly.value ?? false) || props.readOnly);
@@ -196,7 +203,7 @@ if (!group && checked.value) {
 }
 
 const rootId = useVaseUiId();
-const controlId = useLabelableId({ id: () => props.id, element: () => element.value });
+const controlId = useLabelableId({ id: () => props.id });
 const hiddenInputId = computed(() => (props.nativeButton ? undefined : controlId.value));
 
 const ariaLabelledBy = useAriaLabelledBy(
@@ -216,8 +223,7 @@ const { getButtonProps, buttonRef } = useButton({
 });
 
 // Vue writes `checked` to the input only when the value changes between two renders, and
-// hydration does not write it. A browser changes the input with no change of the state: it
-// restores the form state of a page, and it checks the input of a click that the parent does not
+// hydration does not write it. A browser checks the input of a click that the parent does not
 // accept. A form would then submit a state that the radio does not show.
 function writeCheckedToInput() {
   const input = inputElement.value;
@@ -226,17 +232,21 @@ function writeCheckedToInput() {
   }
 }
 
+// Vue writes `checked` to the attribute too, so only an input that changed before the hydration
+// differs from its `defaultChecked`. The group then takes its inputs one time, and the radio writes
+// nothing before that take.
 watch(
   inputElement,
-  (input, _previous, onCleanup) => {
+  (input) => {
     if (!input) {
       return;
     }
 
-    writeCheckedToInput();
-
-    // Chromium restores the form state of a page after `load`, with no event on the input.
-    onCleanup(addEventListener(ownerWindow(input), 'pageshow', writeCheckedToInput));
+    if (group && input.checked !== input.defaultChecked) {
+      group.takeInputsAfterMount();
+    } else {
+      writeCheckedToInput();
+    }
   },
   { flush: 'post' },
 );
@@ -246,13 +256,33 @@ if (group) {
   // that controls the group can keep the old value, and then no radio renders again.
   watch(group.inputSyncRequest, writeCheckedToInput, { flush: 'post' });
 
+  // Only the input that the browser checked gives its value to the group. Each radio writes its
+  // state in the next tick: a write in this tick can uncheck the input that the browser checked,
+  // before its radio reads it.
+  watch(
+    group.inputTakeRequest,
+    (request) => {
+      const input = inputElement.value;
+      if (!request || !input || input.checked === checked.value) {
+        return;
+      }
+
+      if (input.checked && !isDisabled.value && !isReadOnly.value && props.value !== undefined) {
+        group.setCheckedValue(props.value, createChangeEventDetails(REASONS.none, request.event));
+      }
+
+      void nextTick(writeCheckedToInput);
+    },
+    { flush: 'post' },
+  );
+
   // The radio follows the reset with its own input. The input that the group exposes changes with
   // the value and can be absent.
   useFormReset(inputElement, group.reset);
 
   // `KeepAlive` takes the input out of the document and calls no `ref` setter. The input must not
   // stay in the group and in the field: the field would validate an input that the user cannot reach.
-  const { isHeld, shown } = useKeepAliveState(() => element.value, group.reaches);
+  const { isHeld, shown } = useKeepAliveState();
 
   function releaseRegisteredInput() {
     releaseInput?.();
@@ -261,17 +291,15 @@ if (group) {
 
   onDeactivated(releaseRegisteredInput);
 
-  // The `ref` setter of a radio that mounts in a held branch registers the input.
-  watch(isHeld, (held) => {
+  // The `ref` setter of a radio that mounts in a held branch registers the input. `isHeld` is
+  // already `true` then, so the input is a source of the `watch`.
+  watch([isHeld, inputElement], ([held]) => {
     if (held) {
       releaseRegisteredInput();
     }
   });
 
-  // `KeepAlive` runs the `onActivated` hooks from the last part to the first part. A registration in
-  // the hook would reverse the order of the inputs in the field, and the first radio would lose its
-  // place. A watcher runs in the order of the radios. The release before the registration moves an
-  // input that is still registered to the end, because `Map.set` keeps the place of a key.
+  // `KeepAlive` calls no `ref` setter at an activation.
   watch(shown, () => {
     const input = inputElement.value;
     releaseRegisteredInput();
@@ -280,13 +308,14 @@ if (group) {
     }
   });
 
-  // The group follows the checked input and the first enabled input. A radio that is disabled and
-  // checked keeps the input that the group has.
+  // The registration of an input whose `disabled` property is `false` ends the `null` after an
+  // unmount. A `computed` that reads `inputElement` also follows each change of `checked` and
+  // `disabled`.
   watch(
     [checked, isDisabled],
     () => {
       const input = inputElement.value;
-      if (input && !isHeld.value && !(isDisabled.value && checked.value)) {
+      if (input && !isHeld.value) {
         group.registerInputRef(input);
       }
     },
@@ -331,6 +360,11 @@ function onInputClick(event: MouseEvent) {
   }
 }
 
+// A radio with no group has no state to change, so it writes its state over a restored input.
+if (!group) {
+  useFormRestore(inputElement, writeCheckedToInput);
+}
+
 const state = computed<RadioRootState>(() => ({
   ...fieldState.value,
   required: isRequired.value,
@@ -346,6 +380,7 @@ provide(RadioRootContext, state);
 // time.
 const item = group ? useCompositeItem({ active: checked, disabled: isDisabled }) : undefined;
 
+const ariaAfterHydration = useAriaAfterHydration();
 const { element, elementProps } = useRenderElement('span', props, {
   state,
   ref: item ? [item.compositeRef, buttonRef] : [buttonRef],
@@ -356,8 +391,8 @@ const { element, elementProps } = useRenderElement('span', props, {
       id: props.nativeButton ? controlId.value : rootId.value,
       role: 'radio',
       'aria-checked': checked.value,
-      'aria-label': props.ariaLabel,
-      'aria-labelledby': ariaLabelledBy.value,
+      'aria-label': givenName(props.ariaLabel),
+      'aria-labelledby': ariaAfterHydration(ariaLabelledBy.value),
       [ACTIVE_COMPOSITE_ITEM]: checked.value ? '' : undefined,
       // Only a fully disabled group leaves the tab order. A single disabled radio keeps the
       // composite tab index.
@@ -411,6 +446,7 @@ const { element, elementProps } = useRenderElement('span', props, {
     getButtonProps,
     getDescriptionProps,
     group && ((merged) => group.validation.getValidationProps(isDisabled.value, merged)),
+    (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),
   ],
 });
 

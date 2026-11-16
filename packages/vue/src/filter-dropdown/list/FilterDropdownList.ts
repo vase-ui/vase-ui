@@ -1,6 +1,7 @@
 import { computed, onScopeDispose, provide, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { getTarget } from '../../common/shadowDom';
+import { givenId } from '../../internals/useBaseUiId';
 import type { UseRenderElementParameters } from '../../internals/useRenderElement';
 import { FilterDropdownGroupContext } from '../group/FilterDropdownGroupContext';
 import { useFilterDropdownRootContext } from '../root/FilterDropdownRootContext';
@@ -21,7 +22,7 @@ export function useFilterDropdownList(
 ): UseFilterDropdownListReturnValue {
   const context = useFilterDropdownRootContext();
 
-  const id = computed(() => toValue(params.id) ?? context.defaultListId.value);
+  const id = computed(() => givenId(toValue(params.id)) ?? context.defaultListId.value);
 
   // The root names the list with the id that the list renders. A generated id is not a request, so
   // removing an explicit id gives the generated id back.

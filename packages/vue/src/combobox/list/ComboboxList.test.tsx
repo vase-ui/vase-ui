@@ -1,20 +1,45 @@
 import { expect, vi, describe, it } from 'vitest';
-import { toRaw } from 'vue';
+import { KeepAlive, shallowRef, toRaw } from 'vue';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  heldMountListTests,
   screen,
+  waitFor,
 } from '#test-utils';
 import ComboboxListReplacement from '../../../test/fixtures/ComboboxListReplacement.vue';
+import type { HTMLProps } from '../../internals/types';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
 import type { ComboboxStore } from '../store';
 
 describe('<Combobox.List />', () => {
   const { render } = createRenderer();
+
+  heldMountListTests({
+    render,
+    renderList: (withLastItem) => (
+      <Combobox.Root inline>
+        <Combobox.Input />
+        <Combobox.List>
+          <Combobox.Item value="a">a</Combobox.Item>
+          {withLastItem ? <Combobox.Item value="b">b</Combobox.Item> : null}
+        </Combobox.List>
+      </Combobox.Root>
+    ),
+    async check(user) {
+      screen.getByRole('combobox').focus();
+      await user.keyboard('[ArrowDown]');
+      await user.keyboard('[ArrowDown]');
+      await waitFor(() => {
+        expect(screen.getByRole('option', { name: 'b' })).toHaveAttribute('data-highlighted');
+      });
+    },
+  });
 
   describeConformance(<Combobox.List />, () => ({
     refInstanceof: window.HTMLDivElement,
@@ -418,6 +443,127 @@ describe('<Combobox.List />', () => {
       expect(screen.queryByTestId('first-list')).toBe(null);
       expect(toRaw(store.state).listElement).toBe(list);
       expect(toRaw(store.state).positionerElement).toBe(list);
+    });
+
+    it('gives no element while KeepAlive holds the list', async () => {
+      const show = shallowRef(true);
+      await render(() => (
+        <Combobox.Root defaultOpen>
+          <Combobox.Input data-testid="input" />
+          <Combobox.Trigger data-testid="trigger" />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <KeepAlive>{show.value ? <Combobox.List id="list" /> : null}</KeepAlive>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>
+      ));
+      await flushMicrotasks();
+      const input = screen.getByTestId('input');
+      const trigger = screen.getByTestId('trigger');
+      expect(input).toHaveAttribute('aria-controls', 'list');
+      expect(trigger).toHaveAttribute('aria-controls', 'list');
+
+      show.value = false;
+      await flushMicrotasks();
+
+      expect(document.getElementById('list')).toBe(null);
+      expect(input).not.toHaveAttribute('aria-controls');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+
+      show.value = true;
+      await flushMicrotasks();
+
+      expect(input).toHaveAttribute('aria-controls', 'list');
+      expect(trigger).toHaveAttribute('aria-controls', 'list');
+    });
+
+    it('gives a new element to the store only after KeepAlive shows the list again', async () => {
+      const show = shallowRef(true);
+      const tag = shallowRef<'div' | 'ul'>('div');
+      let store!: ComboboxStore;
+      await render(() => (
+        <Combobox.Root defaultOpen>
+          <StoreProbe onStore={(value) => (store = value)} />
+          <Combobox.Input data-testid="input" />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <KeepAlive>
+                  {show.value ? (
+                    <Combobox.List
+                      v-slots={{
+                        render: ({ props }: { props: HTMLProps }) =>
+                          tag.value === 'div' ? (
+                            <div {...props} id="list" data-testid="list" />
+                          ) : (
+                            <ul {...props} id="list" data-testid="list" />
+                          ),
+                      }}
+                    />
+                  ) : null}
+                </KeepAlive>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>
+      ));
+      await flushMicrotasks();
+      const input = screen.getByTestId('input');
+      expect(input).toHaveAttribute('aria-controls', 'list');
+
+      show.value = false;
+      await flushMicrotasks();
+      tag.value = 'ul';
+      await flushMicrotasks();
+
+      expect(document.getElementById('list')).toBe(null);
+      expect(toRaw(store.state).listElement).toBe(null);
+      expect(input).not.toHaveAttribute('aria-controls');
+
+      show.value = true;
+      await flushMicrotasks();
+
+      const list = screen.getByTestId('list');
+      expect(list.tagName).toBe('UL');
+      expect(toRaw(store.state).listElement).toBe(list);
+      expect(input).toHaveAttribute('aria-controls', 'list');
+    });
+
+    it('gives no element when it mounts while KeepAlive holds its branch', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(
+        () => <Combobox.List id="list" data-testid="list" />,
+        { renderBranch: (part) => part },
+      );
+      let store!: ComboboxStore;
+      await render(() => (
+        <Combobox.Root defaultOpen>
+          <StoreProbe onStore={(value) => (store = value)} />
+          <Combobox.Input data-testid="input" />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <HeldBranch />
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>
+      ));
+      await flushMicrotasks();
+
+      await mountWhileHeld();
+
+      const input = screen.getByTestId('input');
+      expect(document.getElementById('list')).toBe(null);
+      expect(toRaw(store.state).listElement).toBe(null);
+      expect(input).not.toHaveAttribute('aria-controls');
+
+      await show();
+
+      expect(toRaw(store.state).listElement).toBe(screen.getByTestId('list'));
+      expect(input).toHaveAttribute('aria-controls', 'list');
     });
   });
 });

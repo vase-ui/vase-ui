@@ -3,7 +3,7 @@ import type { HTMLAttributes } from 'vue';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { Align, Side } from '../../internals/useAnchorPositioning';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
-import type { FocusOption } from '../../utils/popups/focus/FloatingFocusManager.vue';
+import type { FocusOption } from '../../utils/popups/focus/FloatingFocusManager';
 
 export interface MenuPopupState {
   /**
@@ -55,17 +55,19 @@ export interface MenuPopupProps
 
 <script setup lang="ts">
 import { computed, inject, onScopeDispose, toRaw, watch } from 'vue';
+import { contains } from '../../common/shadowDom';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import { REASONS } from '../../internals/reasons';
 import { resolvePopupLabel } from '../../internals/resolvePopupLabel';
-import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
+import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/types';
+import { givenId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
-import FloatingFocusManager from '../../utils/popups/focus/FloatingFocusManager.vue';
+import { useFloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
 import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
+import { useKeepAliveElementRef } from '../../utils/popups/useKeepAliveElementRef';
 import { useToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
 import { MenuFilterImplContext, useMenuFilterImpl } from '../filter-root/MenuFilterContext';
 import { useMenuPositionerContext } from '../positioner/MenuPositionerContext';
@@ -82,7 +84,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, MenuPopupState>;
 }>();
 
-const { store, generatedPopupId, setRenderedPopupId, orientation, virtualFocus } =
+const { store, generatedPopupId, setRenderedPopupId, popupLabelId, orientation, virtualFocus } =
   useMenuRootContext();
 const inheritedSubmenuRootContext = useMenuSubmenuRootContext();
 const { side, align } = useMenuPositionerContext();
@@ -104,7 +106,7 @@ const activeTriggerElement = computed(
   () => store.select('activeTriggerElement') as HTMLElement | null,
 );
 
-const popupId = computed(() => props.id ?? generatedPopupId);
+const popupId = computed(() => givenId(props.id) ?? generatedPopupId);
 
 // The root names the popup with the id that the popup renders. A generated id is not a request, so
 // removing an explicit id gives the generated id back.
@@ -112,16 +114,6 @@ watch(() => (popupId.value === generatedPopupId ? undefined : popupId.value), se
   immediate: true,
 });
 onScopeDispose(() => setRenderedPopupId(undefined));
-
-useOpenChangeComplete({
-  open,
-  ref: store.context.popupRef,
-  onComplete() {
-    if (open.value) {
-      store.context.onOpenChangeComplete?.(true);
-    }
-  },
-});
 
 watch(
   floatingTreeRoot,
@@ -172,19 +164,19 @@ const state = computed<MenuPopupState>(() => ({
 
 let popupElement: HTMLElement | null = null;
 
+function setPopupElement(popup: HTMLElement | null) {
+  // A compiled template can mount a new popup before it unmounts the old one. The old popup
+  // then must not clear the element of the new one.
+  if (popup !== null || toRaw(store.state).popupElement === popupElement) {
+    store.context.popupRef.value = popup;
+    store.set('popupElement', popup);
+  }
+  popupElement = popup;
+}
+
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: [
-    (popup) => {
-      // A compiled template can mount a new popup before it unmounts the old one. The old popup
-      // then must not clear the element of the new one.
-      if (popup !== null || toRaw(store.state).popupElement === popupElement) {
-        store.context.popupRef.value = popup;
-        store.set('popupElement', popup);
-      }
-      popupElement = popup;
-    },
-  ],
+  ref: useKeepAliveElementRef(setPopupElement),
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
     // This listener runs after each other listener of the popup.
@@ -199,13 +191,14 @@ const { element, elementProps } = useRenderElement('div', props, {
             role: 'menu',
             // `menu` is implicitly vertical, so only the non-default value needs to be rendered.
             'aria-orientation': orientation.value === 'horizontal' ? 'horizontal' : undefined,
-            'aria-labelledby': resolvePopupLabel(
-              attrs,
-              store.select('activeTriggerElement'),
-              store.select('activeTriggerId'),
-            ),
+            'aria-labelledby': resolvePopupLabel(attrs, popupLabelId.value),
           }),
-      onKeydown(event: KeyboardEvent) {
+      onKeydown(event: VaseUIEvent<KeyboardEvent>) {
+        // The handlers to the left also handle the keys of the items and of `Menu.Input`. A call of
+        // `event.preventVaseUIHandler()` in a listener of such a part thus stops them too.
+        if (event.vaseUIHandlerPrevented) {
+          event.preventVaseUIHandler();
+        }
         submenuRootContext.value?.onPopupKeydown?.(event);
         if (insideToolbar && COMPOSITE_KEYS.has(event.key)) {
           event.stopPropagation();
@@ -245,9 +238,32 @@ const initialFocus = computed<FocusOption>(() => {
   };
 });
 
-// The input of a filtered parent menu holds the real focus while the parent highlights an item. It
-// is an internal default, not a target of the consumer: the focus manager keeps a focus that moved.
-const dynamicReturnFocus = computed(() => parentHandoff?.parentVirtualFocusRef);
+// After the close, a root outside the menubar writes its own node ids to its store, and the menubar
+// is not the parent of that node. The search thus finds the open menu by its trigger in the menubar
+// element.
+function getOpenMenubarTrigger() {
+  const menuParent = parent.value;
+  const menubarElement =
+    menuParent.type === 'menubar' ? menuParent.context.contentElement.value : null;
+  const openNode = store
+    .select('floatingTreeRoot')
+    .nodesRef.value.find(
+      (node) => node.context?.open && contains(menubarElement, node.context.elements.domReference),
+    );
+  return openNode?.context?.elements.domReference ?? true;
+}
+
+// These targets are internal defaults, not targets of the consumer: the focus manager keeps a
+// focus that moved. The input of a filtered parent menu holds the real focus while the parent
+// highlights an item. A menu of a menubar that closes for another menu gives the focus to the
+// trigger of that menu, because a focus on its own trigger can open it again.
+const dynamicReturnFocus = computed(
+  () =>
+    parentHandoff?.parentVirtualFocusRef ??
+    (parent.value.type === 'menubar' && store.select('lastOpenChangeReason') === REASONS.siblingOpen
+      ? getOpenMenubarTrigger
+      : undefined),
+);
 
 const returnFocus = computed(() => {
   const { type } = parent.value;
@@ -269,27 +285,31 @@ function getNextFocusableElement() {
   return store.context.triggerFocusTargetRef.value;
 }
 
+useFloatingFocusManager(
+  () => ({
+    store,
+    openInteractionType: store.select('openMethod'),
+    modal: parent.value.type === 'context-menu',
+    disabled: !mounted.value,
+    returnFocus: props.finalFocus ?? dynamicReturnFocus.value ?? returnFocus.value,
+    explicitReturnFocus:
+      props.finalFocus === undefined && dynamicReturnFocus.value ? false : undefined,
+    initialFocus: initialFocus.value,
+    restoreFocus: true,
+    getInsideElements: parent.value.type === undefined ? getInsideElements : undefined,
+    externalTree: parent.value.type !== 'menubar' ? floatingTreeRoot.value : undefined,
+    previousFocusableElement: activeTriggerElement.value,
+    nextFocusableElement: parent.value.type === undefined ? getNextFocusableElement : undefined,
+    beforeContentFocusGuardRef: store.context.beforeContentFocusGuardRef,
+    afterContentFocusGuardRef: store.context.afterContentFocusGuardRef,
+  }),
+  element,
+);
+
 defineExpose({ element });
 </script>
 
 <template>
-  <FloatingFocusManager
-    :store="store"
-    :open-interaction-type="store.select('openMethod')"
-    :modal="parent.type === 'context-menu'"
-    :disabled="!mounted"
-    :return-focus="finalFocus ?? dynamicReturnFocus ?? returnFocus"
-    :explicit-return-focus="finalFocus === undefined && dynamicReturnFocus ? false : undefined"
-    :initial-focus="initialFocus"
-    restore-focus
-    :get-inside-elements="parent.type === undefined ? getInsideElements : undefined"
-    :external-tree="parent.type !== 'menubar' ? floatingTreeRoot : undefined"
-    :previous-focusable-element="activeTriggerElement"
-    :next-focusable-element="parent.type === undefined ? getNextFocusableElement : undefined"
-    :before-content-focus-guard-ref="store.context.beforeContentFocusGuardRef"
-    :after-content-focus-guard-ref="store.context.afterContentFocusGuardRef"
-  >
-    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-    <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
-  </FloatingFocusManager>
+  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
 </template>

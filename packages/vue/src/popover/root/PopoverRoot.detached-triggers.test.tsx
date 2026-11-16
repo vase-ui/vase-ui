@@ -10,6 +10,7 @@ import {
   nextAnimationsRead,
   screen,
   waitFor,
+  waitForLaterMillisecond,
   waitForPositioned,
   waitSingleFrame,
 } from '#test-utils';
@@ -138,10 +139,8 @@ describe('<Popover.Root />', () => {
       });
     }
 
-    async function expectClosed(trigger: HTMLElement) {
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
-      });
+    function expectClosed(trigger: HTMLElement) {
+      expect(screen.queryByTestId('popup')).toBe(null);
       expect(trigger).toHaveAttribute('aria-expanded', 'false');
     }
 
@@ -152,7 +151,7 @@ describe('<Popover.Root />', () => {
         await user.click(trigger);
         await expectOpenedBy(trigger);
         await user.click(trigger);
-        await expectClosed(trigger);
+        expectClosed(trigger);
       }
 
       await openAndClose();
@@ -168,7 +167,7 @@ describe('<Popover.Root />', () => {
         await user.pointer({ keys: '[TouchA]', target: trigger });
         await expectOpenedBy(trigger);
         await user.pointer({ keys: '[TouchA]', target: trigger });
-        await expectClosed(trigger);
+        expectClosed(trigger);
       }
 
       await openAndClose();
@@ -184,10 +183,10 @@ describe('<Popover.Root />', () => {
       });
 
       async function openAndClose() {
-        await user.click(trigger);
+        await waitForLaterMillisecond(() => user.click(trigger));
         await expectOpenedBy(trigger);
         await user.click(screen.getByRole('button', { name: 'Close' }));
-        await expectClosed(trigger);
+        expectClosed(trigger);
       }
 
       await openAndClose();
@@ -210,7 +209,7 @@ describe('<Popover.Root />', () => {
       expect(trigger2.previousElementSibling).toHaveAttribute('data-vase-ui-focus-guard');
       expect(trigger2.nextElementSibling).toHaveAttribute('data-vase-ui-focus-guard');
       await user.click(trigger2);
-      await expectClosed(trigger2);
+      expectClosed(trigger2);
 
       expect(inactiveTrigger.renders).toBe(0);
     });
@@ -360,16 +359,16 @@ describe('<Popover.Root />', () => {
     );
 
     const trigger = screen.getByRole('button', { name: 'Trigger' });
-    await user.click(trigger);
-    const popup = await screen.findByTestId('popup');
+    const popup = await waitForLaterMillisecond(async () => {
+      await user.click(trigger);
+      return screen.findByTestId('popup');
+    });
 
     await fireEvent.pointerDown(popup, { pointerType: 'touch', button: 0 });
     await fireEvent.pointerUp(popup, { pointerType: 'touch', button: 0 });
     await fireEvent.click(popup);
     await user.keyboard('[Escape]');
-    await waitFor(() => {
-      expect(screen.queryByTestId('popup')).toBe(null);
-    });
+    expect(screen.queryByTestId('popup')).toBe(null);
 
     trigger.focus();
     await flushMicrotasks();
@@ -378,9 +377,7 @@ describe('<Popover.Root />', () => {
 
     // Virtual clicks have no pointerdown to replace the previous session's touch type.
     await fireEvent.click(screen.getByRole('button', { name: 'Outside' }), { detail: 0 });
-    await waitFor(() => {
-      expect(screen.queryByTestId('popup')).toBe(null);
-    });
+    expect(screen.queryByTestId('popup')).toBe(null);
   });
 
   describe.skipIf(isJSDOM)('multiple triggers within Root', () => {
@@ -436,7 +433,7 @@ describe('<Popover.Root />', () => {
       const trigger1 = screen.getByRole('button', { name: 'Trigger 1' });
       const trigger2 = screen.getByRole('button', { name: 'Trigger 2' });
 
-      await user.click(trigger1);
+      await waitForLaterMillisecond(() => user.click(trigger1));
       await user.click(screen.getByRole('button', { name: 'Close' }));
       await waitFor(() => {
         expect(trigger1).toHaveFocus();
@@ -445,7 +442,9 @@ describe('<Popover.Root />', () => {
       trigger1.blur();
       expect(document.body).toHaveFocus();
 
-      await user.click(screen.getByRole('button', { name: 'Open Trigger 2 without focus' }));
+      await waitForLaterMillisecond(() =>
+        user.click(screen.getByRole('button', { name: 'Open Trigger 2 without focus' })),
+      );
       await waitFor(() => {
         expect(screen.getByTestId('content')).toBeVisible();
       });
@@ -501,15 +500,15 @@ describe('<Popover.Root />', () => {
       await user.click(fallback);
       expect(fallback).toHaveFocus();
 
-      await user.click(screen.getByRole('button', { name: 'Disappearing trigger' }));
+      await waitForLaterMillisecond(() =>
+        user.click(screen.getByRole('button', { name: 'Disappearing trigger' })),
+      );
       await waitFor(() => {
         expect(screen.getByTestId('content')).toBeVisible();
       });
 
       await user.click(screen.getByRole('button', { name: 'Close' }));
-      await waitFor(() => {
-        expect(screen.queryByTestId('content')).toBe(null);
-      });
+      expect(screen.queryByTestId('content')).toBe(null);
       expect(fallback).toHaveFocus();
     });
   });
@@ -589,6 +588,7 @@ describe('<Popover.Root />', () => {
 
       const testPopover = Popover.createHandle<number>();
       const instantsWhileEnding: (string | undefined)[] = [];
+      const onOpenChangeComplete = vi.fn();
 
       const utils = await render(
         <div style={{ position: 'relative', width: '400px', height: '200px' }}>
@@ -615,6 +615,7 @@ describe('<Popover.Root />', () => {
 
           <Popover.Root
             handle={testPopover}
+            onOpenChangeComplete={onOpenChangeComplete}
             v-slots={{
               default: ({ payload }: NumberPayload) => (
                 <Popover.Portal>
@@ -657,6 +658,14 @@ describe('<Popover.Root />', () => {
       await waitFor(() => {
         expect(screen.getByTestId('content').textContent).toBe('1');
       });
+      // The root reads the animations of the popup when the popup loses `data-starting-style`, one
+      // frame after the open. A switch before that frame removes the attribute and starts an exit.
+      // The next frame cancels the exit, and the root reads the animations of the popup again,
+      // after the setup. `startExit` would take that read for the read of a close. The end of the
+      // open comes after the first read, so the case waits for it before the switch.
+      await waitFor(() => {
+        expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+      });
 
       const switchAnimations = await nextAnimationsRead(screen.getByTestId('positioner'), {
         action: () => utils.user.hover(trigger2),
@@ -669,8 +678,9 @@ describe('<Popover.Root />', () => {
         await settleTriggerChange();
       }
 
-      // The handoff itself legitimately renders `trigger-change` while closing
-      // the previous trigger's popup. Only the close that follows matters.
+      // `user.hover` gives the leave event no `relatedTarget`, so the switch to trigger 2 closes
+      // the popup and opens it again in one task. The popup thus has the ending status until the
+      // next frame, and it renders with that status. Only the close that follows matters.
       instantsWhileEnding.length = 0;
 
       return {
@@ -683,26 +693,32 @@ describe('<Popover.Root />', () => {
       };
     }
 
+    /**
+     * Runs `close` and waits until the root reads the animations of the exit. After the setup,
+     * only a close makes the root read the animations of the popup.
+     */
+    async function startExit(popup: HTMLElement, close: () => unknown) {
+      const exitAnimations = await nextAnimationsRead(popup, { action: close });
+      expect(exitAnimations.length).toBeGreaterThan(0);
+      expect(popup).toHaveAttribute('data-ending-style');
+    }
+
     it('does not apply the trigger-change instant to a hover close after switching triggers', async () => {
       const { user, trigger2, popup, instantsWhileEnding } = await renderHoverDetachedTriggers();
 
-      await user.unhover(trigger2);
-      await waitFor(() => {
-        expect(popup).toHaveAttribute('data-ending-style');
-      });
+      await startExit(popup, () => user.unhover(trigger2));
 
       expect(instantsWhileEnding).not.toContain('trigger-change');
     });
 
     it('does not apply the trigger-change instant to a non-hover close after switching triggers', async () => {
-      const { popup, instantsWhileEnding } = await renderHoverDetachedTriggers({
-        popupChildren: () => <Popover.Close>Close</Popover.Close>,
-      });
+      const { popup, instantsWhileEnding } = await waitForLaterMillisecond(() =>
+        renderHoverDetachedTriggers({
+          popupChildren: () => <Popover.Close>Close</Popover.Close>,
+        }),
+      );
 
-      await fireEvent.click(screen.getByRole('button', { name: 'Close' }));
-      await waitFor(() => {
-        expect(popup).toHaveAttribute('data-ending-style');
-      });
+      await startExit(popup, () => fireEvent.click(screen.getByRole('button', { name: 'Close' })));
 
       expect(instantsWhileEnding).not.toContain('trigger-change');
     });
@@ -717,10 +733,7 @@ describe('<Popover.Root />', () => {
       await settleTriggerChange();
       instantsWhileEnding.length = 0;
 
-      await user.unhover(trigger1);
-      await waitFor(() => {
-        expect(screen.getByTestId('popup')).toHaveAttribute('data-ending-style');
-      });
+      await startExit(screen.getByTestId('popup'), () => user.unhover(trigger1));
 
       expect(instantsWhileEnding).not.toContain('trigger-change');
     });
@@ -734,10 +747,7 @@ describe('<Popover.Root />', () => {
       });
       expect(switchAnimations.length).toBeGreaterThan(0);
 
-      await user.unhover(trigger2);
-      await waitFor(() => {
-        expect(screen.getByTestId('popup')).toHaveAttribute('data-ending-style');
-      });
+      await startExit(screen.getByTestId('popup'), () => user.unhover(trigger2));
 
       await user.hover(trigger2);
       await waitFor(() => {
@@ -745,6 +755,7 @@ describe('<Popover.Root />', () => {
       });
 
       const reopenedPopup = screen.getByTestId('popup');
+      await waitSingleFrame();
       switchAnimations.forEach((animation) => animation.finish());
       await waitSingleFrame();
       await flushMicrotasks();
@@ -760,6 +771,7 @@ describe('<Popover.Root />', () => {
       const endingInstants: (string | undefined)[] = [];
       const open = shallowRef(false);
       const triggerId = shallowRef<string | null>(null);
+      const onOpenChangeComplete = vi.fn();
 
       const Test = defineComponent({
         setup() {
@@ -776,6 +788,7 @@ describe('<Popover.Root />', () => {
                   }
                   open.value = nextOpen;
                 }}
+                onOpenChangeComplete={onOpenChangeComplete}
               >
                 <Popover.Trigger
                   id="t1"
@@ -822,16 +835,22 @@ describe('<Popover.Root />', () => {
 
       await user.click(screen.getByRole('button', { name: 'Trigger 1' }));
       await waitFor(() => {
-        expect(screen.queryByTestId('popup')).not.toBe(null);
+        expect(screen.getByTestId('popup')).not.toBe(null);
       });
       await waitForPositioned(screen.getByTestId('positioner'));
+      // The root reads the animations of the popup in a frame after the open, to report the end of
+      // the open. The wait for the read of the close must start after that read.
+      await waitFor(() => {
+        expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+      });
 
       triggerId.value = 't2';
       await flushMicrotasks();
       await settleTriggerChange();
 
       endingInstants.length = 0;
-      const exitAnimations = nextAnimationsRead(screen.getByTestId('popup'), {
+      const popup = screen.getByTestId('popup');
+      const exitAnimations = nextAnimationsRead(popup, {
         action: () => {
           open.value = false;
         },
@@ -846,13 +865,14 @@ describe('<Popover.Root />', () => {
       // inherit the `trigger-change` the earlier switch had stored.
       (await exitAnimations).forEach((animation) => animation.finish());
       await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
+        expect(popup).not.toBeInTheDocument();
       });
+      expect(screen.queryByTestId('popup')).toBe(null);
 
       open.value = true;
       await flushMicrotasks();
       await waitFor(() => {
-        expect(screen.queryByTestId('popup')).not.toBe(null);
+        expect(screen.getByTestId('popup')).not.toBe(null);
       });
 
       expect(screen.getByTestId('popup')).not.toHaveAttribute('data-instant');
@@ -953,7 +973,7 @@ describe('<Popover.Root />', () => {
 
       await user.hover(trigger1);
       await waitFor(() => {
-        expect(screen.queryByTestId('popup')).not.toBe(null);
+        expect(screen.getByTestId('popup')).not.toBe(null);
       });
       await waitForPositioned(screen.getByTestId('positioner'));
 
@@ -990,13 +1010,16 @@ describe('<Popover.Root />', () => {
       });
       expect(switchAnimations.length).toBeGreaterThan(0);
 
-      await user.unhover(trigger2);
-      await waitFor(() => {
-        expect(popup).toHaveAttribute('data-ending-style');
-      });
+      await startExit(popup, () => user.unhover(trigger2));
+      await waitSingleFrame();
 
-      switchAnimations.forEach((animation) => animation.finish());
-      await Promise.all(switchAnimations.map((animation) => animation.finished));
+      // The case takes each promise before it ends the animation. A canceled animation gets a new
+      // promise that never settles.
+      const finished = switchAnimations.map((animation) => animation.finished);
+      for (const animation of switchAnimations) {
+        animation.finish();
+      }
+      await Promise.all(finished);
       await flushMicrotasks();
 
       // Still mid-exit: the stale callback must not have marked it instant and
@@ -1033,7 +1056,7 @@ describe('<Popover.Root />', () => {
 
       const trigger2 = screen.getByRole('button', { name: 'Trigger 2' });
 
-      await user.click(trigger2);
+      await waitForLaterMillisecond(() => user.click(trigger2));
       await waitFor(() => {
         expect(screen.getByText('Content')).toBeVisible();
       });
@@ -1041,9 +1064,7 @@ describe('<Popover.Root />', () => {
       expect(trigger2.nextElementSibling).toHaveAttribute('data-vase-ui-focus-guard');
 
       await user.click(screen.getByRole('button', { name: 'Close' }));
-      await waitFor(() => {
-        expect(screen.queryByText('Content')).toBe(null);
-      });
+      expect(screen.queryByText('Content')).toBe(null);
       expect(trigger2.previousElementSibling).not.toHaveAttribute('data-vase-ui-focus-guard');
       expect(trigger2.nextElementSibling).not.toHaveAttribute('data-vase-ui-focus-guard');
       // Closing with Popover.Close reports the active trigger.
@@ -1123,6 +1144,205 @@ describe('<Popover.Root />', () => {
           ),
         ).toBeLessThanOrEqual(1);
       });
+    });
+  });
+
+  // The outside press closes the popover before the click listener of the outside button runs.
+  // The listener then opens the popover again.
+  describe('an outside button that opens the open popover', () => {
+    const actions = ['move', 'same trigger', 'handle.open'] as const;
+    const rows = actions.flatMap((action) =>
+      [false, true].flatMap((child) =>
+        [false, true].map((initialFocus) => ({
+          name: `${action} (${child ? 'child' : 'text'}, initialFocus ${initialFocus})`,
+          action,
+          child,
+          initialFocus,
+        })),
+      ),
+    );
+
+    it.each(rows)('keeps it open: $name', async ({ action, child, initialFocus }) => {
+      const handle = Popover.createHandle<number>();
+      const open = shallowRef(false);
+      const triggerId = shallowRef<string | null>(null);
+      const target = action === 'same trigger' ? 1 : 2;
+
+      function openFor(id: string) {
+        if (action === 'handle.open') {
+          handle.open(id);
+        } else {
+          open.value = true;
+          triggerId.value = id;
+        }
+      }
+
+      const Test = defineComponent(() => () => (
+        <div style={{ margin: '50px' }}>
+          <Popover.Trigger handle={handle} id="trigger-1" payload={1}>
+            Trigger 1
+          </Popover.Trigger>
+          <Popover.Trigger
+            handle={handle}
+            id="trigger-2"
+            payload={2}
+            style={{ marginLeft: '200px' }}
+          >
+            Trigger 2
+          </Popover.Trigger>
+          <Popover.Root
+            handle={handle}
+            {...(action === 'handle.open'
+              ? {}
+              : {
+                  open: open.value,
+                  triggerId: triggerId.value,
+                  onOpenChange: (nextOpen: boolean, details: Popover.Root.ChangeEventDetails) => {
+                    triggerId.value = details.trigger?.id ?? null;
+                    open.value = nextOpen;
+                  },
+                })}
+          >
+            {{
+              default: ({ payload }: { payload: number | undefined }) => (
+                <Popover.Portal>
+                  <Popover.Positioner data-testid="positioner" side="bottom" align="start">
+                    <Popover.Popup data-testid="popup" initialFocus={initialFocus}>
+                      <span data-testid="content">{String(payload)}</span>
+                      <button type="button">Inside</button>
+                    </Popover.Popup>
+                  </Popover.Positioner>
+                </Popover.Portal>
+              ),
+            }}
+          </Popover.Root>
+          <button type="button" onClick={() => openFor('trigger-1')}>
+            Open Trigger 1
+          </button>
+          <button
+            type="button"
+            style={{ padding: '0' }}
+            onClick={() => openFor(`trigger-${target}`)}
+          >
+            {child ? (
+              <span data-testid="child" style={{ display: 'inline-block', padding: '4px' }}>
+                Open target
+              </span>
+            ) : (
+              'Open target'
+            )}
+          </button>
+        </div>
+      ));
+
+      const { user } = await render(<Test />);
+      await user.click(screen.getByRole('button', { name: 'Open Trigger 1' }));
+      await waitFor(() => {
+        expect(screen.getByTestId('content').textContent).toBe('1');
+      });
+      // A person presses the next button after the frame of the initial focus.
+      if (initialFocus) {
+        await waitFor(() => {
+          expect(screen.getByTestId('popup').contains(document.activeElement)).toBe(true);
+        });
+      } else {
+        await waitSingleFrame();
+      }
+
+      await user.click(
+        child ? screen.getByTestId('child') : screen.getByRole('button', { name: 'Open target' }),
+      );
+
+      const trigger = screen.getByRole('button', { name: `Trigger ${target}` });
+      await waitFor(() => {
+        expect(screen.getByTestId('content').textContent).toBe(String(target));
+      });
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      await waitFor(() => {
+        expect(
+          Math.abs(
+            screen.getByTestId('positioner').getBoundingClientRect().left -
+              trigger.getBoundingClientRect().left,
+          ),
+        ).toBeLessThanOrEqual(1);
+      });
+    });
+  });
+
+  describe('VUE-75: an outside button that toggles the popover', () => {
+    it.each([
+      { name: 'opens it again: v-model', withHandle: false, cancel: false },
+      { name: 'opens it again: handle', withHandle: true, cancel: false },
+      { name: 'closes it with details.cancel(): v-model', withHandle: false, cancel: true },
+      { name: 'closes it with details.cancel(): handle', withHandle: true, cancel: true },
+    ])('$name', async ({ withHandle, cancel }) => {
+      const handle = Popover.createHandle();
+      const open = shallowRef(false);
+      const isOpen = () => (withHandle ? handle.isOpen : open.value);
+
+      function toggle() {
+        if (!withHandle) {
+          open.value = !open.value;
+        } else if (handle.isOpen) {
+          handle.close();
+        } else {
+          handle.open('trigger');
+        }
+      }
+
+      const Test = defineComponent(() => () => (
+        <div>
+          <Popover.Trigger handle={handle} id="trigger">
+            Trigger
+          </Popover.Trigger>
+          <Popover.Root
+            handle={handle}
+            {...(withHandle
+              ? {}
+              : {
+                  open: open.value,
+                  triggerId: 'trigger',
+                  'onUpdate:open': (value: boolean) => {
+                    open.value = value;
+                  },
+                })}
+            onOpenChange={(_open: boolean, details: Popover.Root.ChangeEventDetails) => {
+              if (cancel && details.event.target === toggleButton()) {
+                details.cancel();
+              }
+            }}
+          >
+            <Popover.Portal>
+              <Popover.Positioner>
+                <Popover.Popup data-testid="popup" initialFocus={false}>
+                  Content
+                </Popover.Popup>
+              </Popover.Positioner>
+            </Popover.Portal>
+          </Popover.Root>
+          <button type="button" onClick={toggle}>
+            Toggle
+          </button>
+        </div>
+      ));
+      const toggleButton = () => screen.getByRole('button', { name: 'Toggle' });
+
+      const { user } = await render(<Test />);
+      await user.click(toggleButton());
+      await waitFor(() => {
+        expect(screen.getByTestId('popup')).toBeVisible();
+      });
+
+      await user.click(toggleButton());
+
+      expect(isOpen()).toBe(!cancel);
+      if (cancel) {
+        expect(screen.queryByTestId('popup')).toBe(null);
+      } else {
+        await waitFor(() => {
+          expect(screen.getByTestId('popup')).toBeVisible();
+        });
+      }
     });
   });
 });

@@ -1,7 +1,13 @@
-import { afterEach, beforeEach, onTestFinished, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, onTestFinished, vi } from 'vitest';
 import { reset } from '../src/common/error';
 import { resetAnimationFrameScheduler } from '../src/common/useAnimationFrame';
 import { failOnReportedMessages } from './reportedMessages';
+
+declare module 'vitest/browser' {
+  interface BrowserCommands {
+    collectGarbage: () => Promise<void>;
+  }
+}
 
 failOnReportedMessages();
 
@@ -14,7 +20,17 @@ if (typeof document !== 'undefined') {
 if (typeof document !== 'undefined') {
   // Fake timers replace the global `setTimeout`. This reference stays the timer of the browser.
   const browserSetTimeout = globalThis.setTimeout;
-  const { userEvent } = await import('vitest/browser');
+  const { commands, server, userEvent } = await import('vitest/browser');
+
+  // Firefox collects the garbage of the earlier test files of the page late. One cycle collection
+  // then visits millions of objects and stops the page for some seconds, in the test that runs at
+  // that time. A full garbage collection and cycle collection before the first test of each file
+  // keep each collection small.
+  if (server.browser === 'firefox') {
+    beforeAll(async () => {
+      await commands.collectGarbage();
+    });
+  }
 
   // The browser keeps its real pointer where a test leaves it. Some frames later, an element that a
   // later test renders under the pointer gets trusted hover events, and a hover popup of that test

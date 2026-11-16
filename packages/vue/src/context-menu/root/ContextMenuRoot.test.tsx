@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { defineComponent, shallowRef } from 'vue';
 import type { ComponentPublicInstance } from 'vue';
 import {
@@ -6,11 +7,14 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  nextEvent,
+  popupAnatomyTests,
   renderOnServer,
   screen,
   waitFor,
   waitForLaterMillisecond,
 } from '#test-utils';
+import * as Dialog from '../../dialog/index.parts';
 import { REASONS } from '../../internals/reasons';
 import * as Menu from '../../menu/index.parts';
 import { useMenuRootContext } from '../../menu/root/MenuRootContext';
@@ -66,6 +70,30 @@ interface RootActions {
 
 describe('<ContextMenu.Root />', () => {
   const { render } = createRenderer();
+
+  popupAnatomyTests({
+    createComponent: ({ open, onOpenChangeComplete, content }) => (
+      <ContextMenu.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <ContextMenu.Trigger>Open</ContextMenu.Trigger>
+        <ContextMenu.Portal>
+          <ContextMenu.Positioner data-testid="shown" class="shown">
+            Content
+            {content}
+          </ContextMenu.Positioner>
+        </ContextMenu.Portal>
+      </ContextMenu.Root>
+    ),
+    createPopup: () => <ContextMenu.Popup data-testid="popup">Popup</ContextMenu.Popup>,
+    createBackdropComponent: ({ open, onOpenChangeComplete }) => (
+      <ContextMenu.Root open={open} onOpenChangeComplete={onOpenChangeComplete}>
+        <ContextMenu.Trigger>Open</ContextMenu.Trigger>
+        <ContextMenu.Portal>
+          <ContextMenu.Backdrop data-testid="shown" class="shown" />
+        </ContextMenu.Portal>
+      </ContextMenu.Root>
+    ),
+    render,
+  });
 
   describe('interactions', () => {
     beforeEach(() => {
@@ -163,15 +191,16 @@ describe('<ContextMenu.Root />', () => {
       );
 
       const trigger = screen.getByTestId('context-trigger');
-      await fireEvent.contextMenu(trigger, { clientX: 20, clientY: 20, button: 2 });
-      await screen.findByTestId('context-root-popup');
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.contextMenu(trigger, { clientX: 20, clientY: 20, button: 2 });
+        await screen.findByTestId('context-root-popup');
+      });
 
-      await fireEvent.pointerMove(document.body, { clientX: 24, clientY: 24 });
+      await fireEvent.pointerMove(document.body, { clientX: 30, clientY: 30 });
       await fireEvent.mouseUp(screen.getByTestId('context-submenu-trigger'), {
         button: 2,
-        clientX: 24,
-        clientY: 24,
+        clientX: 30,
+        clientY: 30,
       });
       await flushMicrotasks();
 
@@ -197,11 +226,12 @@ describe('<ContextMenu.Root />', () => {
 
       const trigger = screen.getByTestId('context-trigger');
 
-      await fireEvent.contextMenu(trigger, { clientX: 12, clientY: 12, button: 2 });
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.contextMenu(trigger, { clientX: 12, clientY: 12, button: 2 });
 
-      await screen.findByTestId('context-popup');
+        await screen.findByTestId('context-popup');
+      });
       const item = screen.getByTestId('context-item');
-      await waitForLaterMillisecond();
 
       await fireEvent.mouseUp(item, { button: 2, clientX: 12, clientY: 12 });
       await flushMicrotasks();
@@ -228,11 +258,12 @@ describe('<ContextMenu.Root />', () => {
 
       const trigger = screen.getByTestId('context-trigger');
 
-      await fireEvent.contextMenu(trigger, { clientX: 18, clientY: 18, button: 2 });
+      await waitForLaterMillisecond(async () => {
+        await fireEvent.contextMenu(trigger, { clientX: 18, clientY: 18, button: 2 });
 
-      await screen.findByTestId('context-popup');
+        await screen.findByTestId('context-popup');
+      });
       const item = screen.getByTestId('context-item');
-      await waitForLaterMillisecond();
 
       await fireEvent.mouseUp(item, { button: 2, clientX: 18, clientY: 18 });
       await flushMicrotasks();
@@ -259,14 +290,15 @@ describe('<ContextMenu.Root />', () => {
 
       const trigger = screen.getByTestId('context-trigger');
 
-      await fireEvent.contextMenu(trigger, { clientX: 20, clientY: 20, button: 2 });
+      const popup = await waitForLaterMillisecond(async () => {
+        await fireEvent.contextMenu(trigger, { clientX: 20, clientY: 20, button: 2 });
 
-      const popup = await screen.findByTestId('context-popup');
+        return screen.findByTestId('context-popup');
+      });
       const item = screen.getByTestId('context-item');
-      await waitForLaterMillisecond();
 
-      await fireEvent.pointerMove(document.body, { clientX: 24, clientY: 24 });
-      await fireEvent.mouseUp(item, { button: 2, clientX: 24, clientY: 24 });
+      await fireEvent.pointerMove(document.body, { clientX: 30, clientY: 30 });
+      await fireEvent.mouseUp(item, { button: 2, clientX: 30, clientY: 30 });
 
       await waitFor(() => {
         expect(popup.isConnected).toBe(false);
@@ -299,6 +331,68 @@ describe('<ContextMenu.Root />', () => {
       expect(screen.queryByTestId('context-popup')).toBe(null);
       expect(onOpenChange.mock.calls.length).toBe(0);
     });
+  });
+
+  it('returns focus to the focused surface when closing with Shift+Tab', async () => {
+    const { user } = await render(
+      <ContextMenu.Root>
+        <ContextMenu.Trigger as="button">Surface</ContextMenu.Trigger>
+        <ContextMenu.Portal>
+          <ContextMenu.Positioner>
+            <ContextMenu.Popup>
+              <ContextMenu.Item>Item</ContextMenu.Item>
+            </ContextMenu.Popup>
+          </ContextMenu.Positioner>
+        </ContextMenu.Portal>
+      </ContextMenu.Root>,
+    );
+
+    const surface = screen.getByRole('button', { name: 'Surface' });
+    await user.tab();
+    expect(surface).toHaveFocus();
+    // The menu takes the focus in an animation frame after the open.
+    await nextEvent(document, 'focusin', {
+      action: () => fireEvent.contextMenu(surface, { clientX: 20, clientY: 20, button: 2 }),
+    });
+    const menu = screen.getByRole('menu');
+    expect(menu).toHaveFocus();
+
+    await user.tab({ shift: true });
+    await waitFor(() => {
+      expect(menu.isConnected).toBe(false);
+    });
+    expect(surface).toHaveFocus();
+  });
+
+  it('returns focus to the focused surface when closing with Tab', async () => {
+    const { user } = await render(
+      <ContextMenu.Root>
+        <ContextMenu.Trigger as="button">Surface</ContextMenu.Trigger>
+        <ContextMenu.Portal>
+          <ContextMenu.Positioner>
+            <ContextMenu.Popup>
+              <ContextMenu.Item>Item</ContextMenu.Item>
+            </ContextMenu.Popup>
+          </ContextMenu.Positioner>
+        </ContextMenu.Portal>
+      </ContextMenu.Root>,
+    );
+
+    const surface = screen.getByRole('button', { name: 'Surface' });
+    await user.tab();
+    expect(surface).toHaveFocus();
+    // The menu takes the focus in an animation frame after the open.
+    await nextEvent(document, 'focusin', {
+      action: () => fireEvent.contextMenu(surface, { clientX: 20, clientY: 20, button: 2 }),
+    });
+    const menu = screen.getByRole('menu');
+    expect(menu).toHaveFocus();
+
+    await user.tab();
+    await waitFor(() => {
+      expect(menu.isConnected).toBe(false);
+    });
+    expect(surface).toHaveFocus();
   });
 
   describe('prop: collisionAvoidance', () => {
@@ -603,6 +697,184 @@ describe('<ContextMenu.Root />', () => {
       );
 
       expect(probe.store.state.parent.type).toBe(undefined);
+    });
+  });
+
+  describe('nested popups', () => {
+    it('keeps the context menu and a nested dialog open when Tab leaves a menu in the dialog', async () => {
+      const { user } = await render(
+        <ContextMenu.Root>
+          <ContextMenu.Trigger as="button" data-testid="surface">
+            Surface
+          </ContextMenu.Trigger>
+          <ContextMenu.Portal>
+            <ContextMenu.Positioner>
+              <ContextMenu.Popup data-testid="context-popup">
+                <Dialog.Root>
+                  <ContextMenu.Item
+                    as={Dialog.Trigger}
+                    closeOnClick={false}
+                    nativeButton
+                    data-testid="dialog-trigger"
+                  >
+                    Settings
+                  </ContextMenu.Item>
+                  <Dialog.Portal>
+                    <Dialog.Popup data-testid="dialog-popup">
+                      <Menu.Root>
+                        <Menu.Trigger data-testid="inner-trigger">Options</Menu.Trigger>
+                        <Menu.Portal>
+                          <Menu.Positioner>
+                            <Menu.Popup data-testid="inner-popup">
+                              <Menu.Item data-testid="inner-item">Rename</Menu.Item>
+                            </Menu.Popup>
+                          </Menu.Positioner>
+                        </Menu.Portal>
+                      </Menu.Root>
+                      <Dialog.Close data-testid="dialog-close">Close</Dialog.Close>
+                    </Dialog.Popup>
+                  </Dialog.Portal>
+                </Dialog.Root>
+              </ContextMenu.Popup>
+            </ContextMenu.Positioner>
+          </ContextMenu.Portal>
+        </ContextMenu.Root>,
+      );
+
+      const surface = screen.getByTestId('surface');
+      surface.focus();
+      await waitForLaterMillisecond(() =>
+        nextEvent(document, 'focusin', {
+          action: () => fireEvent.contextMenu(surface, { clientX: 10, clientY: 10, button: 2 }),
+        }),
+      );
+      expect(screen.getByTestId('context-popup')).toHaveFocus();
+
+      await user.keyboard('{ArrowDown}');
+      expect(screen.getByTestId('dialog-trigger')).toHaveFocus();
+      await waitForLaterMillisecond(() =>
+        nextEvent(document, 'focusin', { action: () => user.keyboard('{Enter}') }),
+      );
+      expect(screen.getByTestId('inner-trigger')).toHaveFocus();
+
+      await waitForLaterMillisecond(() =>
+        nextEvent(document, 'focusin', { action: () => user.keyboard('{ArrowDown}') }),
+      );
+      expect(screen.getByTestId('inner-item')).toHaveFocus();
+
+      await user.keyboard('{Tab}');
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('dialog-close')).toHaveFocus();
+      expect(screen.queryByTestId('inner-popup')).toBe(null);
+      expect(screen.getByTestId('dialog-popup')).toBeInTheDocument();
+      expect(screen.getByTestId('context-popup')).toBeInTheDocument();
+    });
+  });
+
+  describe('VUE-107: Tab in a submenu', () => {
+    async function openSubmenus(depth: 1 | 2) {
+      const onRootOpenChange = vi.fn();
+      const onSubmenuOpenChange = vi.fn();
+      const { user } = await render(
+        <div>
+          <ContextMenu.Root onOpenChange={onRootOpenChange}>
+            <ContextMenu.Trigger as="button" data-testid="surface">
+              Surface
+            </ContextMenu.Trigger>
+            <ContextMenu.Portal>
+              <ContextMenu.Positioner>
+                <ContextMenu.Popup data-testid="context-popup">
+                  <ContextMenu.Item>Copy</ContextMenu.Item>
+                  <ContextMenu.SubmenuRoot onOpenChange={onSubmenuOpenChange}>
+                    <ContextMenu.SubmenuTrigger data-testid="submenu-trigger">
+                      Share
+                    </ContextMenu.SubmenuTrigger>
+                    <ContextMenu.Portal>
+                      <ContextMenu.Positioner>
+                        <ContextMenu.Popup data-testid="submenu-popup">
+                          <ContextMenu.Item data-testid="submenu-item">Email</ContextMenu.Item>
+                          <ContextMenu.SubmenuRoot>
+                            <ContextMenu.SubmenuTrigger data-testid="nested-submenu-trigger">
+                              More
+                            </ContextMenu.SubmenuTrigger>
+                            <ContextMenu.Portal>
+                              <ContextMenu.Positioner>
+                                <ContextMenu.Popup data-testid="nested-submenu-popup">
+                                  <ContextMenu.Item data-testid="nested-submenu-item">
+                                    Message
+                                  </ContextMenu.Item>
+                                </ContextMenu.Popup>
+                              </ContextMenu.Positioner>
+                            </ContextMenu.Portal>
+                          </ContextMenu.SubmenuRoot>
+                        </ContextMenu.Popup>
+                      </ContextMenu.Positioner>
+                    </ContextMenu.Portal>
+                  </ContextMenu.SubmenuRoot>
+                </ContextMenu.Popup>
+              </ContextMenu.Positioner>
+            </ContextMenu.Portal>
+          </ContextMenu.Root>
+          <input data-testid="after" />
+        </div>,
+      );
+
+      const surface = screen.getByTestId('surface');
+      surface.focus();
+      await waitForLaterMillisecond(() =>
+        nextEvent(document, 'focusin', {
+          action: () => fireEvent.contextMenu(surface, { clientX: 10, clientY: 10, button: 2 }),
+        }),
+      );
+      await user.keyboard('{ArrowDown}{ArrowDown}');
+      expect(screen.getByTestId('submenu-trigger')).toHaveFocus();
+      await waitForLaterMillisecond(() =>
+        nextEvent(document, 'focusin', { action: () => user.keyboard('{ArrowRight}') }),
+      );
+      expect(screen.getByTestId('submenu-item')).toHaveFocus();
+
+      if (depth === 2) {
+        await user.keyboard('{ArrowDown}');
+        await waitForLaterMillisecond(() =>
+          nextEvent(document, 'focusin', { action: () => user.keyboard('{ArrowRight}') }),
+        );
+        expect(screen.getByTestId('nested-submenu-item')).toHaveFocus();
+      }
+
+      return { user, surface, onRootOpenChange, onSubmenuOpenChange };
+    }
+
+    it.each([
+      { name: 'a submenu', depth: 1 },
+      { name: 'a submenu of a submenu', depth: 2 },
+    ] as const)('closes every menu for Tab in $name', async ({ depth }) => {
+      const { surface, onRootOpenChange, onSubmenuOpenChange } = await openSubmenus(depth);
+
+      // A native Tab runs the microtasks of the close, which return the focus to the surface,
+      // before its default action. A Tab that no handler prevents then moves the focus to the input.
+      await userEvent.keyboard('{Tab}');
+
+      expect(screen.queryByTestId('context-popup')).toBe(null);
+      expect(screen.queryByTestId('submenu-popup')).toBe(null);
+      expect(surface).toHaveFocus();
+      expect(onRootOpenChange.mock.lastCall?.[0]).toBe(false);
+      expect(onRootOpenChange.mock.lastCall?.[1].reason).toBe(REASONS.focusOut);
+      expect(onSubmenuOpenChange.mock.lastCall?.[0]).toBe(false);
+      expect(onSubmenuOpenChange.mock.lastCall?.[1].reason).toBe(REASONS.focusOut);
+    });
+
+    it('closes only the submenu for Shift+Tab in a submenu', async () => {
+      const { user, onRootOpenChange, onSubmenuOpenChange } = await openSubmenus(1);
+
+      await user.keyboard('{Shift>}{Tab}{/Shift}');
+
+      expect(screen.queryByTestId('submenu-popup')).toBe(null);
+      expect(screen.getByTestId('submenu-trigger')).toHaveFocus();
+      expect(screen.getByTestId('context-popup')).toBeInTheDocument();
+      expect(onSubmenuOpenChange.mock.lastCall?.[0]).toBe(false);
+      expect(onSubmenuOpenChange.mock.lastCall?.[1].reason).toBe(REASONS.focusOut);
+      expect(onRootOpenChange.mock.calls.map(([open]) => open)).toEqual([true]);
     });
   });
 

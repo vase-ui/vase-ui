@@ -1,7 +1,7 @@
 import { expect, describe, it } from 'vitest';
 import { defineComponent } from 'vue';
 import { Combobox } from '@vase-ui/vue/combobox';
-import { createRenderer, describeConformance, screen } from '#test-utils';
+import { createHeldBranch, createRenderer, describeConformance, screen } from '#test-utils';
 
 describe('<Combobox.GroupLabel />', () => {
   const { render } = createRenderer();
@@ -56,14 +56,17 @@ describe('<Combobox.GroupLabel />', () => {
       expect(screen.getByText('Label')).toHaveAttribute('aria-hidden', 'true');
     });
 
-    it('allows overriding aria-hidden', async () => {
+    it.each([
+      { name: 'undefined', value: undefined, expected: 'true' },
+      { name: 'null', value: null, expected: null },
+    ])('VUE-103: aria-hidden of the consumer is $name', async ({ value, expected }) => {
       await render(
         <Combobox.Root open>
           <Combobox.Portal>
             <Combobox.Positioner>
               <Combobox.Popup>
                 <Combobox.Group>
-                  <Combobox.GroupLabel aria-hidden={undefined}>Label</Combobox.GroupLabel>
+                  <Combobox.GroupLabel aria-hidden={value}>Label</Combobox.GroupLabel>
                 </Combobox.Group>
               </Combobox.Popup>
             </Combobox.Positioner>
@@ -71,7 +74,7 @@ describe('<Combobox.GroupLabel />', () => {
         </Combobox.Root>,
       );
 
-      expect(screen.getByText('Label')).not.toHaveAttribute('aria-hidden');
+      expect(screen.getByText('Label').getAttribute('aria-hidden')).toBe(expected);
     });
 
     it('uses provided id in aria-labelledby', async () => {
@@ -125,5 +128,31 @@ describe('<Combobox.GroupLabel />', () => {
       await setProps({ labels: 'new' });
       expect(group).toHaveAttribute('aria-labelledby', 'new-label');
     });
+  });
+
+  it('does not name the group while KeepAlive holds a label that mounted in a held branch', async () => {
+    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+      <Combobox.GroupLabel key="label" id="held-label" />
+    ));
+    await render(() => (
+      <Combobox.Root open>
+        <Combobox.Portal>
+          <Combobox.Positioner>
+            <Combobox.Popup>
+              <Combobox.Group>
+                <HeldBranch />
+              </Combobox.Group>
+            </Combobox.Popup>
+          </Combobox.Positioner>
+        </Combobox.Portal>
+      </Combobox.Root>
+    ));
+    const group = screen.getByRole('group');
+
+    await mountWhileHeld();
+    expect(group).not.toHaveAttribute('aria-labelledby');
+
+    await show();
+    expect(group).toHaveAttribute('aria-labelledby', 'held-label');
   });
 });

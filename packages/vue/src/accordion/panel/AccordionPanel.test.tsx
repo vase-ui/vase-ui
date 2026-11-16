@@ -1,7 +1,16 @@
 import { expect, vi, describe, it } from 'vitest';
 import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import { Accordion } from '@vase-ui/vue/accordion';
-import { createRenderer, describeConformance, isJSDOM, screen, waitFor } from '#test-utils';
+import {
+  createHeldBranch,
+  createRenderer,
+  describeConformance,
+  isJSDOM,
+  removedPartHydrationTests,
+  screen,
+  waitFor,
+} from '#test-utils';
+import AccordionRootPanelFirst from '../root/AccordionRootPanelFirst.test.vue';
 
 const PANEL_CONTENT = 'This is panel content';
 
@@ -241,6 +250,31 @@ describe('<Accordion.Panel />', () => {
 
       expect(panel.getAnimations().length).toBe(0);
     });
+
+    it('is not named by the trigger while KeepAlive holds a panel that mounted in a held branch', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Accordion.Panel key="panel" id="held-panel">
+          {PANEL_CONTENT}
+        </Accordion.Panel>
+      ));
+      await render(() => (
+        <Accordion.Root defaultValue={['one']}>
+          <Accordion.Item value="one">
+            <Accordion.Header>
+              <Accordion.Trigger>Trigger</Accordion.Trigger>
+            </Accordion.Header>
+            <HeldBranch />
+          </Accordion.Item>
+        </Accordion.Root>
+      ));
+      const trigger = screen.getByRole('button');
+
+      await mountWhileHeld();
+      expect(trigger).not.toHaveAttribute('aria-controls', 'held-panel');
+
+      await show();
+      expect(trigger).toHaveAttribute('aria-controls', 'held-panel');
+    });
   });
 
   describe('prop: id', () => {
@@ -265,6 +299,23 @@ describe('<Accordion.Panel />', () => {
         'aria-controls',
         panel.id,
       );
+    });
+  });
+
+  describe('hydration', () => {
+    removedPartHydrationTests({
+      file: 'src/accordion/root/AccordionRootPanelFirst.test.vue',
+      component: AccordionRootPanelFirst,
+      cases: [
+        {
+          name: 'a removed trigger after the panel',
+          props: { triggerId: 'trigger-a', laterRemovedAtMount: true },
+          selector: '[data-testid="panel"]',
+          attribute: 'aria-labelledby',
+          serverValue: 'trigger-a',
+          clientValue: null,
+        },
+      ],
     });
   });
 });

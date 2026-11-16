@@ -10,6 +10,7 @@ import { NullStore } from '../../utils/popups/NullStore';
 import type { AdaptiveOriginMiddleware } from '../../utils/popups/positioning/adaptiveOriginConstants';
 import {
   BasePopupStore,
+  createElementIdObserver,
   createInitialPopupStoreState,
   createPopupStoreContext,
   popupStoreSelectors,
@@ -59,6 +60,11 @@ export type State<Payload> = PopupStoreState<Payload> & {
   inputFocused: boolean;
   /** The element at `activeIndex` once the item list settles. Only virtual focus publishes it. */
   highlightedItem: HTMLElement | undefined;
+  /**
+   * The `id` that `highlightedItem` has. A read of `highlightedItem.id` in a selector does not
+   * follow a change of the id, so the store copies the id here.
+   */
+  highlightedItemId: string | undefined;
   hoverEnabled: boolean;
   instantType: 'dismiss' | 'click' | 'group' | 'trigger-change' | undefined;
   openChangeReason: MenuRootChangeEventReason | null;
@@ -83,6 +89,12 @@ type Context = PopupStoreContext<MenuRootChangeEventDetails> & {
   /** The item last reported as highlighted, kept in every menu so reasons compare against it. */
   reportedItem: HTMLElement | undefined;
   allowMouseUpTriggerRef: Ref<boolean>;
+  /**
+   * The `mousedown` event of the press whose release the trigger waits for, or `null` after a hover
+   * open. An item reads it to ignore a release at the point of the press. A submenu shares the ref of
+   * its parent.
+   */
+  triggerPressRef: ShallowRef<MouseEvent | null>;
   /** The element that holds real focus while virtual list navigation is active. */
   virtualFocusRef: Readonly<Ref<HTMLElement | null>> | undefined;
   /** Whether a filterable menu's trigger was last pressed by a screen reader. */
@@ -154,7 +166,7 @@ const selectors = {
   // does not encounter the invalid attribute.
   webkitAriaSelected: (state: State<unknown>, highlighted: boolean) =>
     platform.engine.webkit && state.inputFocused && highlighted ? true : undefined,
-  highlightedItemId: (state: State<unknown>) => state.highlightedItem?.id || undefined,
+  highlightedItemId: (state: State<unknown>) => state.highlightedItemId || undefined,
   isActive: (state: State<unknown>, itemIndex: number) => state.activeIndex === itemIndex,
   highlightedWhileOpen: (state: State<unknown>, highlighted: boolean) =>
     highlighted && popupStoreSelectors.open(state),
@@ -218,22 +230,37 @@ export class MenuStore<Payload> extends BasePopupStore<
       selectors,
     );
 
-    this.#shareMouseUpTriggerRef(toRaw(this.state).parent);
+    this.#shareMouseUpRefs(toRaw(this.state).parent);
   }
 
-  // A store makes no watcher, so the write that changes `parent` shares the ref of the new parent.
+  // A render can give the highlighted item a new `id` and write nothing to the store. The id comes
+  // from the `id` prop or the `#render` slot of the item.
+  readonly #observeHighlightedItemId = createElementIdObserver(() => {
+    this.set('highlightedItemId', toRaw(this.state).highlightedItem?.id);
+  });
+
+  // A store makes no watcher, so this method does the work that follows a write of a key.
   override setState(newState: Readonly<State<Payload>>): void {
-    const previousParent = toRaw(this.state).parent;
-    super.setState(newState);
+    const current = toRaw(this.state);
+    const previousParent = current.parent;
+    super.setState(
+      newState.highlightedItem === current.highlightedItem
+        ? newState
+        : {
+            ...newState,
+            highlightedItemId: this.#observeHighlightedItemId(newState.highlightedItem ?? null),
+          },
+    );
     const parent = toRaw(this.state).parent;
     if (parent !== previousParent) {
-      this.#shareMouseUpTriggerRef(parent);
+      this.#shareMouseUpRefs(parent);
     }
   }
 
-  #shareMouseUpTriggerRef(parent: MenuParent) {
+  #shareMouseUpRefs(parent: MenuParent) {
     if (parent.type === 'menu') {
       this.context.allowMouseUpTriggerRef = parent.store.context.allowMouseUpTriggerRef;
+      this.context.triggerPressRef = parent.store.context.triggerPressRef;
     } else if (parent.type !== undefined) {
       this.context.allowMouseUpTriggerRef = parent.context.allowMouseUpTriggerRef;
     }
@@ -370,6 +397,7 @@ function createInitialContext(): Context {
     highlightEvent: undefined,
     reportedItem: undefined,
     allowMouseUpTriggerRef: shallowRef(false),
+    triggerPressRef: shallowRef<MouseEvent | null>(null),
     virtualFocusRef: undefined,
     triggerFocusTargetRef: shallowRef<HTMLElement | null>(null),
     beforeTriggerFocusGuardRef: shallowRef<HTMLElement | null>(null),
@@ -405,6 +433,7 @@ function createInitialState<Payload>(
     inputProps: EMPTY_OBJECT,
     inputFocused: false,
     highlightedItem: undefined,
+    highlightedItemId: undefined,
     hoverEnabled: true,
     instantType: undefined,
     openChangeReason: null,
