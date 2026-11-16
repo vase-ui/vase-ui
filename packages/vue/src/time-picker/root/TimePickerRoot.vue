@@ -224,17 +224,24 @@ const fieldContext = useFieldRootContext();
 const fieldsetDisabled = useFieldsetDisabled(
   () => picker.fieldElement.value ?? picker.triggerElement.value,
 );
-const disabled = computed(
+const isDisabled = computed(
   () => props.disabled || (fieldContext.disabled.value ?? false) || fieldsetDisabled.value,
 );
-const readOnly = computed(() => props.readOnly);
+const isReadOnly = computed(() => props.readOnly);
 // A part of the popup changes the time of the value. While the picker has no value, it starts at
 // the time of the reference date.
 const time = computed(() =>
   picker.value.value === null ? referenceTime.value : toPlainTime(picker.value.value),
 );
 
-provide(TimePickerRootContext, { ...picker, props, disabled, readOnly, time, referenceTime });
+provide(TimePickerRootContext, {
+  ...picker,
+  props,
+  disabled: isDisabled,
+  readOnly: isReadOnly,
+  time,
+  referenceTime,
+});
 
 const popover = useTemplateRef<TimePickerRootActions>('popover');
 

@@ -45,7 +45,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, TimePickerPopupState>;
 }>();
 
-const initialFocus = usePickerInitialFocus(() => props.initialFocus);
+const pickerInitialFocus = usePickerInitialFocus(() => props.initialFocus);
 
 // This part renders `Popover.Popup` and makes no element of its own. The template has one form for
 // `#render` and one for the content. A `v-if` on a slot template makes the slots of
@@ -58,12 +58,20 @@ defineExpose({ element });
 </script>
 
 <template>
-  <PopoverPopup v-if="$slots.render" ref="popup" v-bind="{ ...$attrs, ...props, initialFocus }">
+  <PopoverPopup
+    v-if="$slots.render"
+    ref="popup"
+    v-bind="{ ...$attrs, ...props, initialFocus: pickerInitialFocus }"
+  >
     <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
     </template>
   </PopoverPopup>
-  <PopoverPopup v-else ref="popup" v-bind="{ ...$attrs, ...props, initialFocus }">
+  <PopoverPopup
+    v-else
+    ref="popup"
+    v-bind="{ ...$attrs, ...props, initialFocus: pickerInitialFocus }"
+  >
     <template #default="slotProps">
       <slot v-bind="slotProps" />
     </template>

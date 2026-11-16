@@ -59,11 +59,11 @@ const selected = computed(
     picker.value.value !== null &&
     Temporal.PlainTime.compare(toPlainTime(picker.value.value), props.time) === 0,
 );
-const disabled = computed(() => props.disabled || picker.disabled.value);
+const isDisabled = computed(() => props.disabled || picker.disabled.value);
 
 const state = computed<TimePickerItemState>(() => ({
   selected: selected.value,
-  disabled: disabled.value,
+  disabled: isDisabled.value,
 }));
 
 const text = computed(() =>
@@ -77,7 +77,7 @@ const text = computed(() =>
 const { compositeRef, optionProps } = useTimePickerOption({
   picker,
   selected,
-  disabled,
+  disabled: isDisabled,
   closeOnSelect: picker.closeOnSelect,
   time: () => props.time,
 });

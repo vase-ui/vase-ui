@@ -112,7 +112,7 @@ usePickerFocusTarget(() => element.value?.querySelector<HTMLInputElement>('input
 // The clock commits a view and shows the next view, so the picker follows the view to know the
 // last commit.
 const shownView = shallowRef<TimeClockView>(props.defaultView ?? 'hour');
-const view = computed(() => props.view ?? shownView.value);
+const currentView = computed(() => props.view ?? shownView.value);
 // A clock in a popup that mounts at each open starts at its first view. The part thus gives the
 // view to `TimeClock.Root`, and it shows the first view again each time that a popup that stays
 // mounted opens.
@@ -122,7 +122,7 @@ watch(popup.open, (open) => {
   }
 });
 const isLastView = computed(
-  () => nextView(view.value, picker.props.granularity ?? 'minute') === undefined,
+  () => nextView(currentView.value, picker.props.granularity ?? 'minute') === undefined,
 );
 
 function handleValueChange(value: TimePickerRootValue, details: TimeClockRootChangeEventDetails) {
@@ -165,7 +165,7 @@ function clockProps() {
     ...attrs,
     ...props,
     ...valueProps,
-    view: view.value,
+    view: currentView.value,
     granularity: root.granularity,
     hourCycle: root.hourCycle,
     minTime: root.minTime,

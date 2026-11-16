@@ -67,7 +67,7 @@ const limits = computed(() => ({
 }));
 
 const selected = computed(() => column.selectedValue.value === props.value);
-const disabled = computed(
+const isDisabled = computed(
   () =>
     props.disabled ||
     picker.disabled.value ||
@@ -82,7 +82,7 @@ const disabled = computed(
 
 const state = computed<TimePickerColumnItemState>(() => ({
   selected: selected.value,
-  disabled: disabled.value,
+  disabled: isDisabled.value,
 }));
 
 const text = computed(() =>
@@ -92,7 +92,7 @@ const text = computed(() =>
 const { compositeRef, optionProps } = useTimePickerOption({
   picker,
   selected,
-  disabled,
+  disabled: isDisabled,
   closeOnSelect: column.closeOnSelect,
   // An hour or a minute that has times out of the limits moves the time into them.
   time: () =>
