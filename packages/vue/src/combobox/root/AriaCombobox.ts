@@ -19,6 +19,7 @@ import { ownerWindow } from '../../common/owner';
 import { activeElement, closest, contains, getTarget } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
+import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import {
   createChangeEventDetails,
   createGenericEventDetails,
@@ -454,6 +455,8 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
 
   const id = useLabelableId({
     id: () => props.id,
+    element: () =>
+      store.select('inputInsidePopup') ? store.select('triggerElement') : inputRef.value,
   });
   const { labelId, registerLabelId } = createLabelIdRegistry();
   const direction = useDirection();
@@ -463,7 +466,11 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   const selectionMode = computed<SelectionMode>(() => props.selectionMode);
   const multiple = computed(() => selectionMode.value === 'multiple');
   const single = computed(() => selectionMode.value === 'single');
-  const disabled = computed(() => Boolean(fieldDisabled.value || props.disabled));
+  // The root has no element. Its hidden input is at the place of the root.
+  const fieldsetDisabled = useFieldsetDisabled(() => hiddenInputElement.value);
+  const disabled = computed(() =>
+    Boolean(fieldDisabled.value || fieldsetDisabled.value || props.disabled),
+  );
   const readOnly = computed(() => props.readOnly ?? false);
   const required = computed(() => props.required ?? false);
   const name = computed(() => fieldName.value ?? props.name);

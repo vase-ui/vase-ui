@@ -16,10 +16,18 @@ defineProps<{
     | 'length'
     | 'lengthMixed'
     | 'nested'
+    | 'removedLast'
+    | 'stateFunctions'
+    | 'stored'
     | 'style'
     | 'vertical';
   laterRemovedAtMount?: boolean | undefined;
 }>();
+
+const { layout: storedLayout } = Resizable.useLayoutStorage({
+  key: 'layout',
+  storage: { getItem: () => '{"a":30,"b":40,"c":30}', setItem() {} },
+});
 
 const isMounted = shallowRef(false);
 onMounted(() => {
@@ -120,6 +128,51 @@ const WrappedPanel = defineComponent({
   <Resizable.Root v-else-if="composition === 'collapsed'" data-testid="root">
     <Resizable.Panel id="a" data-testid="a" collapsible :min-size="20" :default-size="0" />
     <Resizable.Handle data-testid="handle-a" aria-label="First" />
+    <Resizable.Panel v-if="!(laterRemovedAtMount && isMounted)" id="b" data-testid="b" />
+  </Resizable.Root>
+  <Resizable.Root
+    v-else-if="composition === 'removedLast'"
+    data-testid="root"
+    :default-layout="{ a: 20, b: 50, c: 30 }"
+  >
+    <Resizable.Panel id="a" data-testid="a" :min-size="20" />
+    <Resizable.Handle data-testid="handle-a" aria-label="First" />
+    <Resizable.Panel id="b" data-testid="b" />
+    <Resizable.Handle data-testid="handle-b" aria-label="Second" />
+    <Resizable.Panel v-if="!(laterRemovedAtMount && isMounted)" id="c" data-testid="c" />
+  </Resizable.Root>
+  <Resizable.Root
+    v-else-if="composition === 'stored'"
+    v-model:layout="storedLayout"
+    data-testid="root"
+  >
+    <Resizable.Panel id="a" data-testid="a" collapsible :min-size="20" :default-size="0" />
+    <Resizable.Handle data-testid="handle-a" aria-label="First" />
+    <Resizable.Panel id="b" data-testid="b" />
+    <Resizable.Handle aria-label="Second">
+      <template #render="{ props: handleProps, children }">
+        <div v-bind="handleProps" data-testid="handle-b"><component :is="children" /></div>
+      </template>
+    </Resizable.Handle>
+    <Resizable.Panel id="c" data-testid="c" collapsible :min-size="20" :default-size="0" />
+  </Resizable.Root>
+  <Resizable.Root v-else-if="composition === 'stateFunctions'" data-testid="root">
+    <Resizable.Panel
+      id="a"
+      data-testid="a"
+      collapsible
+      :min-size="20"
+      :default-size="0"
+      :state-class="(state) => (state.collapsed ? 'collapsed' : 'expanded')"
+    >
+      <template #default="{ state }">{{ state.collapsed ? 'Closed' : 'Open' }}</template>
+    </Resizable.Panel>
+    <Resizable.Handle
+      data-testid="handle-a"
+      aria-label="First"
+      :state-class="(state) => (state.atMin ? 'at-min' : 'free')"
+      :state-style="(state) => ({ opacity: state.atMin ? 0.5 : 1 })"
+    />
     <Resizable.Panel id="b" data-testid="b" />
   </Resizable.Root>
   <Resizable.Root v-else-if="composition === 'vertical'" data-testid="root" orientation="vertical">

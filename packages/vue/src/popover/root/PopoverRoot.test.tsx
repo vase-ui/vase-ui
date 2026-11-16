@@ -2691,6 +2691,8 @@ describe('<Popover.Root />', () => {
             const doc = popup.ownerDocument;
 
             await waitSingleFrame();
+            // A lock comes in a 0 ms timer after the open.
+            await wait(0);
 
             expect(isScrollLocked(doc)).toBe(false);
           },

@@ -21,6 +21,7 @@ import { useRegisteredId } from '../../internals/labelable-provider/useRegistere
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { useElementId } from '../../utils/popups/useElementId';
 import { useDialogRootContext } from '../root/DialogRootContext';
 
 defineOptions({ inheritAttrs: false });
@@ -36,19 +37,22 @@ const store = useDialogRootContext();
 
 const descriptionId = useVaseUiId(() => props.id);
 
-const source = Symbol();
-
-useRegisteredId(
-  () => descriptionId.value,
-  (getId) => store.context.registerDescriptionId(source, getId),
-);
-
 const state: DialogDescriptionState = EMPTY_OBJECT;
 
 const { element, elementProps } = useRenderElement('p', props, {
   state,
   props: (attrs) => [{ id: descriptionId.value }, attrs],
 });
+
+// The `#render` slot can give the element another id. An empty id names no element.
+const elementId = useElementId(element);
+
+const source = Symbol();
+
+useRegisteredId(
+  () => elementId.value || undefined,
+  (getId) => store.context.registerDescriptionId(source, getId),
+);
 
 defineExpose({ element });
 </script>

@@ -24,7 +24,7 @@ function renderInput(input: { value: HTMLInputElement | null }) {
   });
 }
 
-function createRestorable(onRestore: (event: PageTransitionEvent) => void) {
+function createRestorable(onRestore: (event?: PageTransitionEvent) => void) {
   return defineComponent(() => {
     const input = shallowRef<HTMLInputElement | null>(null);
     useFormRestore(input, onRestore);
@@ -107,6 +107,53 @@ describe('useFormRestore', () => {
 
     expect(handleRestore).toHaveBeenCalledTimes(1);
   });
+
+  it('calls the callback with no event at the activation after a page show while KeepAlive held the part', async () => {
+    const showPage = mockPageBeforeLoad();
+    const handleRestore = vi.fn();
+    const Restorable = createRestorable(handleRestore);
+    const { HeldBranch, hide, show } = createHeldBranch(() => <Restorable />, { mounted: true });
+    await render(<HeldBranch />);
+
+    await hide();
+    showPage();
+
+    expect(handleRestore).not.toHaveBeenCalled();
+
+    await show();
+
+    expect(handleRestore.mock.calls).toEqual([[]]);
+  });
+
+  it('calls the callback one time after a page show while KeepAlive held the part', async () => {
+    const showPage = mockPageBeforeLoad();
+    const handleRestore = vi.fn();
+    const Restorable = createRestorable(handleRestore);
+    const { HeldBranch, hide, show } = createHeldBranch(() => <Restorable />, { mounted: true });
+    await render(<HeldBranch />);
+    await hide();
+    showPage();
+    await show();
+
+    await hide();
+    await show();
+
+    expect(handleRestore).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not call the callback at an activation after the part got the page show', async () => {
+    const showPage = mockPageBeforeLoad();
+    const handleRestore = vi.fn();
+    const Restorable = createRestorable(handleRestore);
+    const { HeldBranch, hide, show } = createHeldBranch(() => <Restorable />, { mounted: true });
+    await render(<HeldBranch />);
+    showPage();
+
+    await hide();
+    await show();
+
+    expect(handleRestore.mock.calls).toEqual([[expect.objectContaining({ type: 'pageshow' })]]);
+  });
 });
 
 describe('useFormRestoreAsInput', () => {
@@ -150,146 +197,150 @@ describe('useFormRestoreAsInput', () => {
   });
 });
 
+const LEAVES = ['input', 'change', 'blur', 'focusout'];
+
+function getInputs(container: HTMLElement, name: string) {
+  return [...container.querySelectorAll<HTMLInputElement>(`input[name="${name}"]`)];
+}
+
+function readInputs(container: HTMLElement, name: string) {
+  return getInputs(container, name).map((input) => input.value);
+}
+
+interface RestoredFamily {
+  name: string;
+  family: FormRestoreFamily;
+  inputName: string;
+  written: string[];
+  model: string;
+  changes: string;
+  events: string[];
+}
+
+const RESTORED_FAMILIES: RestoredFamily[] = [
+  {
+    name: 'Field.Control with v-model',
+    family: 'field',
+    inputName: 'name',
+    written: ['restored'],
+    model: 'restored',
+    changes: 'restored (none)',
+    events: LEAVES,
+  },
+  {
+    name: 'Field.Control with a new default value',
+    family: 'field-default',
+    inputName: 'name',
+    written: ['restored'],
+    model: 'restored',
+    changes: 'restored (none)',
+    events: LEAVES,
+  },
+  {
+    name: 'Input with v-model',
+    family: 'input',
+    inputName: 'text',
+    written: ['restored'],
+    model: 'restored',
+    changes: 'restored (none)',
+    events: LEAVES,
+  },
+  {
+    name: 'Input with a new default value',
+    family: 'input-default',
+    inputName: 'text',
+    written: ['restored'],
+    model: 'restored',
+    changes: 'restored (none)',
+    events: LEAVES,
+  },
+  {
+    name: 'Toolbar.Input with a value',
+    family: 'toolbar',
+    inputName: 'filter',
+    written: ['restored'],
+    model: 'restored',
+    changes: 'restored (input)',
+    events: LEAVES,
+  },
+  {
+    name: 'Toolbar.Input with a default value',
+    family: 'toolbar-default',
+    inputName: 'filter',
+    written: ['restored'],
+    model: 'restored',
+    changes: 'restored (input)',
+    events: LEAVES,
+  },
+  {
+    name: 'Select.Root',
+    family: 'select',
+    inputName: 'font',
+    written: ['mono'],
+    model: 'mono',
+    changes: 'mono (none)',
+    events: ['input'],
+  },
+  {
+    name: 'Combobox.Root',
+    family: 'combobox',
+    inputName: 'fruit',
+    written: ['Cherry'],
+    model: 'Cherry',
+    changes: 'Cherry (none)',
+    events: ['input'],
+  },
+  {
+    name: 'NumberField.Root',
+    family: 'number-field',
+    inputName: 'quantity',
+    written: ['7'],
+    model: '7',
+    changes: '7 (none)',
+    events: ['input'],
+  },
+  {
+    name: 'Slider.Thumb',
+    family: 'slider',
+    inputName: 'volume',
+    written: ['70'],
+    model: '70',
+    changes: '70 (input-change)',
+    events: ['input'],
+  },
+  {
+    name: 'a range slider',
+    family: 'range',
+    inputName: 'range',
+    written: ['30', '60'],
+    model: '30,60',
+    changes: '30,60 (input-change)',
+    events: ['input'],
+  },
+  {
+    name: 'DateField.Root',
+    family: 'date-field',
+    inputName: 'when',
+    written: ['2026-12-25'],
+    model: '2026-12-25',
+    changes: '2026-12-25 (input-change)',
+    events: ['input'],
+  },
+  {
+    name: 'TimeField.Root',
+    family: 'time-field',
+    inputName: 'alarm',
+    written: ['09:30'],
+    model: '09:30:00',
+    changes: '09:30:00 (input-change)',
+    events: ['input'],
+  },
+];
+
 describe('VUE-81: a render before the page show', () => {
   const { render } = createRenderer();
 
-  const LEAVES = ['input', 'change', 'blur', 'focusout'];
-
-  function getInputs(container: HTMLElement, name: string) {
-    return [...container.querySelectorAll<HTMLInputElement>(`input[name="${name}"]`)];
-  }
-
-  function readInputs(container: HTMLElement, name: string) {
-    return getInputs(container, name).map((input) => input.value);
-  }
-
-  it.each<{
-    name: string;
-    family: FormRestoreFamily;
-    inputName: string;
-    written: string[];
-    model: string;
-    changes: string;
-    events: string[];
-  }>([
-    {
-      name: 'Field.Control with v-model',
-      family: 'field',
-      inputName: 'name',
-      written: ['restored'],
-      model: 'restored',
-      changes: 'restored (none)',
-      events: LEAVES,
-    },
-    {
-      name: 'Field.Control with a new default value',
-      family: 'field-default',
-      inputName: 'name',
-      written: ['restored'],
-      model: 'restored',
-      changes: 'restored (none)',
-      events: LEAVES,
-    },
-    {
-      name: 'Input with v-model',
-      family: 'input',
-      inputName: 'text',
-      written: ['restored'],
-      model: 'restored',
-      changes: 'restored (none)',
-      events: LEAVES,
-    },
-    {
-      name: 'Input with a new default value',
-      family: 'input-default',
-      inputName: 'text',
-      written: ['restored'],
-      model: 'restored',
-      changes: 'restored (none)',
-      events: LEAVES,
-    },
-    {
-      name: 'Toolbar.Input with a value',
-      family: 'toolbar',
-      inputName: 'filter',
-      written: ['restored'],
-      model: 'restored',
-      changes: 'restored (input)',
-      events: LEAVES,
-    },
-    {
-      name: 'Toolbar.Input with a default value',
-      family: 'toolbar-default',
-      inputName: 'filter',
-      written: ['restored'],
-      model: 'restored',
-      changes: 'restored (input)',
-      events: LEAVES,
-    },
-    {
-      name: 'Select.Root',
-      family: 'select',
-      inputName: 'font',
-      written: ['mono'],
-      model: 'mono',
-      changes: 'mono (none)',
-      events: ['input'],
-    },
-    {
-      name: 'Combobox.Root',
-      family: 'combobox',
-      inputName: 'fruit',
-      written: ['Cherry'],
-      model: 'Cherry',
-      changes: 'Cherry (none)',
-      events: ['input'],
-    },
-    {
-      name: 'NumberField.Root',
-      family: 'number-field',
-      inputName: 'quantity',
-      written: ['7'],
-      model: '7',
-      changes: '7 (none)',
-      events: ['input'],
-    },
-    {
-      name: 'Slider.Thumb',
-      family: 'slider',
-      inputName: 'volume',
-      written: ['70'],
-      model: '70',
-      changes: '70 (input-change)',
-      events: ['input'],
-    },
-    {
-      name: 'a range slider',
-      family: 'range',
-      inputName: 'range',
-      written: ['30', '60'],
-      model: '30,60',
-      changes: '30,60 (input-change)',
-      events: ['input'],
-    },
-    {
-      name: 'DateField.Root',
-      family: 'date-field',
-      inputName: 'when',
-      written: ['2026-12-25'],
-      model: '2026-12-25',
-      changes: '2026-12-25 (input-change)',
-      events: ['input'],
-    },
-    {
-      name: 'TimeField.Root',
-      family: 'time-field',
-      inputName: 'alarm',
-      written: ['09:30'],
-      model: '09:30:00',
-      changes: '09:30:00 (input-change)',
-      events: ['input'],
-    },
-  ])(
+  it.each(RESTORED_FAMILIES)(
     'takes the value that the browser restored into $name',
     async ({ family, inputName, written, model, changes, events }) => {
       mockPageBeforeLoad();
@@ -311,6 +362,44 @@ describe('VUE-81: a render before the page show', () => {
 
       window.dispatchEvent(new PageTransitionEvent('pageshow'));
       await flushMicrotasks();
+      await flushMicrotasks();
+
+      const fixture = within(container);
+      expect(fixture.getByTestId('model').textContent).toBe(model);
+      expect(fixture.getByTestId('changes').textContent).toBe(changes);
+      expect(recorded).toEqual(events);
+    },
+  );
+});
+
+describe('VUE-81: a part that KeepAlive holds at the page show', () => {
+  const { render } = createRenderer();
+
+  it.each(RESTORED_FAMILIES)(
+    'takes the value that the browser restored into $name at its activation',
+    async ({ family, inputName, written, model, changes, events }) => {
+      const showPage = mockPageBeforeLoad();
+      const revision = shallowRef(0);
+      const { HeldBranch, hide, show } = createHeldBranch(
+        () => <FormRestoreRender family={family} revision={revision.value} />,
+        { mounted: true },
+      );
+      const { container } = await render(<HeldBranch />);
+      await flushMicrotasks();
+      const recorded = recordInputEvents(container);
+      const inputs = getInputs(container, inputName);
+      expect(inputs).toHaveLength(written.length);
+      written.forEach((text, index) => {
+        inputs[index]!.value = text;
+      });
+
+      await hide();
+      revision.value += 1;
+      await flushMicrotasks();
+      expect(inputs.map((input) => input.value)).toEqual(written);
+
+      showPage();
+      await show();
       await flushMicrotasks();
 
       const fixture = within(container);
@@ -392,21 +481,67 @@ describe('useFormRestoreAsInput before the page show', () => {
     expect(input).toHaveValue('handled');
   });
 
-  it('writes the state over a value of a program while KeepAlive holds the part', async () => {
-    mockPageBeforeLoad();
-    const value = shallowRef('handled');
+  async function renderHeldStatefulInput() {
     const revision = shallowRef(0);
-    const shown = shallowRef(true);
-    const StatefulInput = createStatefulInput(value, revision);
-    await render(() => <KeepAlive>{shown.value ? <StatefulInput key="input" /> : null}</KeepAlive>);
+    const StatefulInput = createStatefulInput(shallowRef('handled'), revision);
+    const { HeldBranch, hide, show } = createHeldBranch(() => <StatefulInput />, {
+      mounted: true,
+    });
+    const { container } = await render(<HeldBranch />);
+    const events = recordInputEvents(container);
     const input = screen.getByTestId<HTMLInputElement>('input');
+    return { revision, input, events, hide, show };
+  }
+
+  it('keeps a value that the part did not handle while KeepAlive holds it, and takes it at the activation after the page show', async () => {
+    const showPage = mockPageBeforeLoad();
+    const { revision, input, events, hide, show } = await renderHeldStatefulInput();
+    input.value = 'restored';
+
+    await hide();
+    revision.value += 1;
+    await flushMicrotasks();
+
+    expect(input).toHaveValue('restored');
+
+    showPage();
+    await show();
+    await flushMicrotasks();
+
+    expect(input).toHaveValue('restored');
+    expect(events).toEqual(['input']);
+  });
+
+  it('keeps a value that the part did not handle while KeepAlive holds it, and takes it at a page show after the activation', async () => {
+    const showPage = mockPageBeforeLoad();
+    const { revision, input, events, hide, show } = await renderHeldStatefulInput();
+    input.value = 'restored';
+    await hide();
+    revision.value += 1;
+    await flushMicrotasks();
+
+    await show();
+
+    expect(events).toEqual([]);
+
+    showPage();
+    await flushMicrotasks();
+
+    expect(input).toHaveValue('restored');
+    expect(events).toEqual(['input']);
+  });
+
+  it('writes the state over a value of a program while KeepAlive holds the part after the page show', async () => {
+    const showPage = mockPageBeforeLoad();
+    const { revision, input, events, hide } = await renderHeldStatefulInput();
+    showPage();
     input.value = 'written';
 
-    shown.value = false;
-    await flushMicrotasks();
+    await hide();
     revision.value += 1;
     await flushMicrotasks();
 
     expect(input).toHaveValue('handled');
+    expect(events).toEqual([]);
   });
 });

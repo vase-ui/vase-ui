@@ -12,9 +12,11 @@ import {
   within,
 } from '#test-utils';
 import { useIsHydrated, useIsHydrating } from './hydration';
+import ServerElementProbe from './ServerElementProbe.test.vue';
 import ValueBeforeHydrationProbe from './ValueBeforeHydrationProbe.test.vue';
 
 const PROBE = 'src/common/ValueBeforeHydrationProbe.test.vue';
+const SERVER_ELEMENT_PROBE = 'src/common/ServerElementProbe.test.vue';
 
 function createProbe(hook: () => Readonly<Ref<boolean>>, testId: string) {
   return defineComponent(() => {
@@ -74,6 +76,21 @@ describe('hydration', () => {
       await render(<Probe />);
 
       expect(screen.getByTestId('hydrating')).toHaveTextContent('no');
+    });
+  });
+
+  describe('useServerElement', () => {
+    it('gives no element to a part that renders no element', async () => {
+      const serverHtml = await renderOnServer(SERVER_ELEMENT_PROBE);
+      const elements: (HTMLElement | null)[] = [];
+
+      // The helper renders the probe on the client first, and then hydrates it.
+      await hydrate(ServerElementProbe, {
+        serverHtml,
+        props: { onRead: (element: HTMLElement | null) => elements.push(element) },
+      });
+
+      expect(elements).toEqual([null, null]);
     });
   });
 

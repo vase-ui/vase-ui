@@ -3,7 +3,7 @@ import CalendarAnatomy from './CalendarAnatomy.test.vue';
 
 // A server render takes its props as JSON, so each date is a text that this fixture reads.
 const props = defineProps<{
-  today: string;
+  today?: string | undefined;
   value?: string | undefined;
   focusedDate?: string | undefined;
   minDate?: string | undefined;
@@ -14,10 +14,14 @@ const props = defineProps<{
   locale?: string | undefined;
   calendar?: string | undefined;
   firstDayOfWeek?: number | undefined;
+  defaultMonth?: string | undefined;
+  autoFocus?: boolean | undefined;
 }>();
 
 const date = (text: string | undefined) =>
   text === undefined ? undefined : Temporal.PlainDate.from(text);
+const yearMonth = (text: string | undefined) =>
+  text === undefined ? undefined : Temporal.PlainYearMonth.from(text);
 const dates = (text: string | undefined) =>
   text === undefined ? undefined : text.split(',').map((item) => Temporal.PlainDate.from(item));
 </script>
@@ -35,5 +39,7 @@ const dates = (text: string | undefined) =>
     :locale="props.locale"
     :calendar="props.calendar"
     :first-day-of-week="props.firstDayOfWeek"
+    :default-month="yearMonth(props.defaultMonth)"
+    :auto-focus="props.autoFocus"
   />
 </template>

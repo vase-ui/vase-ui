@@ -8,6 +8,7 @@ import {
   flushMicrotasks,
   screen,
 } from '#test-utils';
+import type { HTMLProps } from '../../internals/types';
 import PopoverTitleReplacement from './PopoverTitleReplacement.test.vue';
 
 describe('<Popover.Title />', () => {
@@ -111,5 +112,40 @@ describe('<Popover.Title />', () => {
 
     await show();
     expect(popup).toHaveAttribute('aria-labelledby', 'held-title');
+  });
+
+  it('VUE-119: follows the id that the #render slot gives the title', async () => {
+    const id = shallowRef('slot-title');
+    await render(() => (
+      <Popover.Root open>
+        <Popover.Portal>
+          <Popover.Positioner>
+            <Popover.Popup>
+              <Popover.Title
+                v-slots={{
+                  render: ({ props }: { props: HTMLProps }) => (
+                    <h2 {...props} id={id.value}>
+                      Text
+                    </h2>
+                  ),
+                }}
+              />
+            </Popover.Popup>
+          </Popover.Positioner>
+        </Popover.Portal>
+      </Popover.Root>
+    ));
+    await flushMicrotasks();
+    const popup = screen.getByRole('dialog');
+    expect(popup).toHaveAttribute('aria-labelledby', 'slot-title');
+
+    id.value = 'other-title';
+    await flushMicrotasks();
+    expect(popup).toHaveAttribute('aria-labelledby', 'other-title');
+
+    id.value = '';
+    await flushMicrotasks();
+    expect(screen.getByText('Text').id).toBe('');
+    expect(popup).not.toHaveAttribute('aria-labelledby');
   });
 });

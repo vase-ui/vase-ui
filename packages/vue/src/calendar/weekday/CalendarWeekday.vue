@@ -30,7 +30,7 @@ export interface CalendarWeekdayProps
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useIsHydrating } from '../../common/hydration';
+import { useAriaAfterHydration, useIsHydrating } from '../../common/hydration';
 import { formatWeekday } from '../../internals/date-time/calendar/formatText';
 import type { HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -47,6 +47,7 @@ defineSlots<{
 
 const { state: rootState, weekend, locale } = useCalendarRootContext();
 const isHydrating = useIsHydrating();
+const ariaAfterHydration = useAriaAfterHydration();
 
 const state = computed<CalendarWeekdayState>(() => ({
   ...rootState.value,
@@ -60,7 +61,7 @@ const { element, elementProps } = useRenderElement('th', props, {
   props: (attrs) => [
     {
       scope: 'col',
-      abbr: name.value,
+      abbr: ariaAfterHydration(name.value),
       // The names come from the data of `Intl` in the engine, and a server and a browser can
       // differ.
       'data-allow-mismatch': isHydrating.value ? 'attribute,text' : undefined,

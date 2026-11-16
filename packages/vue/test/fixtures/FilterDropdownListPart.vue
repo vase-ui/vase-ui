@@ -37,6 +37,7 @@ const list = useFilterDropdownList({ id: () => props.id });
 // A menu-shaped host: the list has the `menu` role and the label of the trigger.
 const { element, elementProps } = useRenderElement('div', props, {
   state,
+  ref: list.ref,
   props: (attrs) =>
     list.props({
       role: 'menu',
