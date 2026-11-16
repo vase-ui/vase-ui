@@ -550,3 +550,73 @@ test('a `props` option that the check cannot read is an error that names the fil
     );
   }
 });
+
+for (const { kind, file, part, exposed } of [
+  { kind: 'a generic SFC', file: ROOT, part: 'Root', exposed: '{ close, unmount }' },
+  { kind: 'an SFC with no type parameter', file: POPUP, part: 'Popup', exposed: '{ element }' },
+]) {
+  for (const { form, declaration } of [
+    {
+      form: 'an object literal',
+      declaration: 'defineExpose({ active: true, ...actions, inputElement });',
+    },
+    {
+      form: 'a variable that holds an object literal',
+      declaration:
+        'const exposed = { active: true, ...actions, inputElement };\ndefineExpose(exposed);',
+    },
+  ]) {
+    test(`the exposed members of ${kind} keep the sequence of ${form}, with the members of a spread at its place`, () => {
+      const members = withText(
+        file,
+        [
+          [
+            `defineExpose(${exposed});`,
+            `
+interface Actions {
+  /** Removes the popup. */
+  unmount: () => void;
+  /** Closes the popup. */
+  close: () => void;
+}
+function useActions(): Actions {
+  return { unmount() {}, close() {} };
+}
+const actions = useActions();
+const inputElement = ref<HTMLInputElement | null>(null);
+${declaration}`,
+          ],
+        ],
+        () => project.readComponent(exportOf(part))?.exposed,
+      );
+      assert.deepEqual(members && [...members], [
+        ['active', { type: 'boolean', description: '' }],
+        ['unmount', { type: '() => void', description: 'Removes the popup.' }],
+        ['close', { type: '() => void', description: 'Closes the popup.' }],
+        ['inputElement', { type: 'HTMLInputElement | null', description: '' }],
+      ]);
+    });
+  }
+}
+
+test('the exposed members of a spread keep the sequence of their declaration, also the properties that an Omit copies', () => {
+  const members = withText(
+    POPUP,
+    [
+      [
+        'export interface SamplePopupState {',
+        "export type ActionSeed = 'close' | 'unmount';\n\ninterface PopupActions {\n  unmount: () => void;\n  close: () => void;\n  open: () => void;\n}\n\nexport type SamplePopupActions = Omit<PopupActions, 'open'>;\n\nexport interface SamplePopupState {",
+      ],
+      [
+        'defineExpose({ element });',
+        'function useActions(): SamplePopupActions {\n  return { unmount() {}, close() {} };\n}\nconst actions = useActions();\ndefineExpose({ element, ...actions });',
+      ],
+    ],
+    () => {
+      // The checker makes the keys in the reverse sequence when it reads the seed first.
+      project.readUnionValues(ENTRY, 'ActionSeed');
+      return project.readComponent(exportOf('Popup'))?.exposed;
+    },
+  );
+  assert.deepEqual([...(members?.keys() ?? [])], ['element', 'unmount', 'close']);
+});
