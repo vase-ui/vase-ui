@@ -12,6 +12,7 @@ import {
   waitForLaterMillisecond,
   waitSingleFrame,
 } from '#test-utils';
+import type { HTMLProps } from '../../internals/types';
 
 // Each render of the list reads the id of the trigger, and the list renders again after the open. A
 // case that changes the id of the trigger waits for these renders first. Only the change of the id
@@ -558,6 +559,45 @@ describe('<Menu.List /> in a plain menu', () => {
     await waitFor(() => {
       expect(trigger).toHaveAttribute('aria-controls', 'new-list');
     });
+  });
+
+  it('VUE-117: follows the id that the #render slot gives the list', async () => {
+    const id = shallowRef('slot-list');
+    await render(() => (
+      <Menu.Root defaultOpen defaultTriggerId="actions">
+        <Menu.Trigger id="actions">Actions</Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup data-testid="popup">
+              <Menu.List
+                v-slots={{
+                  // The slot writes the id after the props of the part, so the element has this id.
+                  render: ({ props }: { props: HTMLProps }) => (
+                    <div {...props} id={id.value} data-testid="list">
+                      <Menu.Item>Rename</Menu.Item>
+                    </div>
+                  ),
+                }}
+              />
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>
+    ));
+    const trigger = screen.getByRole('button', { name: 'Actions' });
+    await waitForRendersOfOpen();
+    expect(trigger).toHaveAttribute('aria-controls', 'slot-list');
+
+    id.value = 'second-list';
+    await flushMicrotasks();
+    expect(screen.getByTestId('list').id).toBe('second-list');
+    expect(trigger).toHaveAttribute('aria-controls', 'second-list');
+
+    // A list with an empty id cannot take a reference, so the trigger names the popup.
+    id.value = '';
+    await flushMicrotasks();
+    expect(screen.getByTestId('list').id).toBe('');
+    expect(trigger).toHaveAttribute('aria-controls', screen.getByTestId('popup').id);
   });
 
   it('renders the orientation on the list', async () => {

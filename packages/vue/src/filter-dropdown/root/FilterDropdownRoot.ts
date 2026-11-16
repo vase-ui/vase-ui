@@ -3,6 +3,7 @@ import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
 import { getFilter } from '../../internals/filter';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useItemRegistry } from '../../internals/useItemRegistry';
+import { useElementId } from '../../utils/popups/useElementId';
 import { FilterDropdownStore } from '../store';
 import {
   FilterDropdownItemContext,
@@ -30,7 +31,8 @@ export function useFilterDropdownRoot(
 
   const parentItemContext = inject(FilterDropdownItemContext, null);
 
-  const renderedListId = shallowRef<string | undefined>(undefined);
+  const listElement = shallowRef<HTMLElement | null>(null);
+  const listElementId = useElementId(listElement);
   const initialOpenedByKeyboard = Boolean(toValue(params.openedByKeyboard));
   const inputFocusVisible = shallowRef(initialOpenedByKeyboard);
   const keyboardModality = shallowRef(initialOpenedByKeyboard);
@@ -89,7 +91,9 @@ export function useFilterDropdownRoot(
       (autoHighlight.value === 'always' || (autoHighlight.value && filterQuery.value !== '')),
   );
   const defaultListId = computed(() => `${defaultId.value}-list`);
-  const listId = computed(() => renderedListId.value ?? defaultListId.value);
+  // The `#render` slot of the list can give its element an id of its own, and an empty id names no
+  // element. The input thus names only the id that a list element has.
+  const listId = computed(() => listElementId.value || undefined);
   // The host owns the trigger. `null` and `''` both mean no element carries an id to point at.
   const triggerId = computed(() => toValue(params.triggerId) || undefined);
 
@@ -202,9 +206,7 @@ export function useFilterDropdownRoot(
     triggerId,
     defaultListId,
     listId,
-    setRenderedListId(id) {
-      renderedListId.value = id;
-    },
+    listElement,
     focusOwnerRef,
     setActiveIndex,
     onItemsChange: handleItemsChange,
