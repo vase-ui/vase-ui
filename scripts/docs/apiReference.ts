@@ -342,7 +342,6 @@ export function createApiReferenceReader(
 ): (family: string) => ApiReference {
   let project: VaseProject | undefined;
   let parity: { families: FamilyFiles[]; ownComponents: OwnComponentFile[] } | undefined;
-  const references = new Map<string, ApiReference>();
   const readProject = (): VaseProject =>
     (project ??= createVaseProject(join(root, 'packages/vue/tsconfig.build.json')));
 
@@ -406,15 +405,17 @@ export function createApiReferenceReader(
     };
   };
 
+  if (!cache) {
+    return readFamily;
+  }
+  const references = new Map<string, ApiReference>();
   return (family) => {
     const kept = references.get(family);
     if (kept) {
       return kept;
     }
     const reference = readFamily(family);
-    if (cache) {
-      references.set(family, reference);
-    }
+    references.set(family, reference);
     return reference;
   };
 }
