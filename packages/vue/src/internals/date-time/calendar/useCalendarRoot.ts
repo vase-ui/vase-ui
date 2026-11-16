@@ -2,13 +2,14 @@ import { computed, nextTick, onMounted, shallowRef, watch } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 import { ownerDocument } from '../../../common/owner';
 import { activeElement } from '../../../common/shadowDom';
+import { useServerValue } from '../../../common/hydration';
 import { useControlled } from '../../../common/useControlled';
 import { useFormatLocale } from '../../../utils/useFormatLocale';
 import { createChangeEventDetails } from '../../createBaseUIEventDetails';
 import { useDirection } from '../../direction-context/DirectionContext';
 import { REASONS } from '../../reasons';
 import { displayCalendar } from '../displayCalendar';
-import { weekInfo } from '../format';
+import { isTemporalCalendar, parseDaysOfWeek, weekInfo } from '../format';
 import { compareDates, isKind, isSameDay, toInputText, toPlainDate, today } from '../temporal';
 import type { DateValue, DayOfWeek } from '../temporal';
 import type {
@@ -133,6 +134,11 @@ export interface CalendarRootController {
    * that date. With no date, it focuses the cell that has the tab stop.
    */
   focus: (date?: DateValue) => void;
+  /**
+   * The attributes that keep the calendar, the first day of the week and the weekend of the server
+   * in the server HTML. The element of the root binds them.
+   */
+  hydrationAttributes: () => Record<string, string>;
   /** What the grid shows. A root with no views shows `day`. */
   view: ComputedRef<CalendarView>;
   /**
@@ -173,12 +179,19 @@ export function useCalendarRoot({
   const direction = useDirection();
   const name = part.replace(/\.Root$/, '');
 
+  // A server and a browser can have other `Intl` data for one locale: another calendar, first day
+  // of the week or weekend. While the root hydrates, these values thus come from the server HTML.
+  //
   // The dates of an ISO grid and of a Gregorian grid are the same, so the dates of the grid and
   // the months that the root emits are ISO and not Gregorian. The text still follows the locale.
-  const calendar = computed(() => {
-    const id = displayCalendar(props.calendar, selection.template.value, formatLocale.value);
-    return id === 'gregory' ? 'iso8601' : id;
-  });
+  const { value: calendar, attributes: calendarAttributes } = useServerValue(
+    'data-vase-ui-calendar',
+    () => {
+      const id = displayCalendar(props.calendar, selection.template.value, formatLocale.value);
+      return id === 'gregory' ? 'iso8601' : id;
+    },
+    (text) => (isTemporalCalendar(text) ? text : undefined),
+  );
 
   function assertBroadcastCalendar() {
     if (props.broadcastCalendar === true && calendar.value !== 'iso8601') {
@@ -195,15 +208,26 @@ export function useCalendarRoot({
   }
 
   const weekData = computed(() => weekInfo(formatLocale.value));
-  const firstDay = computed<DayOfWeek>(() =>
-    props.isoWeek === true || props.broadcastCalendar === true
-      ? 1
-      : (props.firstDayOfWeek ?? weekData.value.firstDay),
+  const { value: firstDay, attributes: firstDayAttributes } = useServerValue<DayOfWeek>(
+    'data-vase-ui-first-day',
+    () =>
+      props.isoWeek === true || props.broadcastCalendar === true
+        ? 1
+        : (props.firstDayOfWeek ?? weekData.value.firstDay),
+    (text) => {
+      const days = parseDaysOfWeek(text);
+      return days?.length === 1 ? days[0] : undefined;
+    },
   );
   const minimalDays = computed(() =>
     props.isoWeek === true ? 4 : (props.firstWeekContainsDate ?? (firstDay.value === 1 ? 4 : 1)),
   );
-  const weekend = computed(() => weekData.value.weekend);
+  const { value: weekend, attributes: weekendAttributes } = useServerValue<readonly DayOfWeek[]>(
+    'data-vase-ui-weekend',
+    () => weekData.value.weekend,
+    parseDaysOfWeek,
+    (days) => days.join(' '),
+  );
   const monthCount = computed(() => Math.max(1, Math.floor(props.numberOfMonths ?? 1)));
   // A duration has at least one week or one day.
   const duration = computed<VisibleDuration | undefined>(() => {
@@ -631,6 +655,31 @@ export function useCalendarRoot({
     });
   }
 
+  // A new calendar or first day of the week gives the grid new elements, such as the data of the
+  // browser after the mount. The focus then falls to `<body>`. The day that had the focus takes it
+  // again. When that day left the grid, the day that has the tab stop takes it.
+  watch([calendar, firstDay], () => {
+    const [someDayElement] = dayElements.values();
+    const doc = ownerDocument(someDayElement);
+    const focused = activeElement(doc);
+    const key = [...dayElements].find(([, element]) => element === focused)?.[0];
+    if (key === undefined) {
+      return;
+    }
+    void nextTick().then(() => {
+      const active = activeElement(doc);
+      if (active !== doc.body && active !== null) {
+        return;
+      }
+      const element = dayElements.get(key);
+      if (element === undefined) {
+        focus();
+      } else {
+        element.focus();
+      }
+    });
+  });
+
   // The watchers compare a text, because a consumer can give a new object for the same day or the
   // same month in each render.
   watch(
@@ -1005,6 +1054,11 @@ export function useCalendarRoot({
     onDayKeydown,
     registerDay,
     focus,
+    hydrationAttributes: () => ({
+      ...calendarAttributes(),
+      ...firstDayAttributes(),
+      ...weekendAttributes(),
+    }),
     view,
     hasViews,
     selectsMonths: isMonthValue,

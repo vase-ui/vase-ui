@@ -5,10 +5,13 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  hydrate,
+  renderOnServer,
   screen,
 } from '#test-utils';
 import * as RangeCalendar from '../index.parts';
 import RangeCalendarAnatomy from './RangeCalendarAnatomy.test.vue';
+import RangeCalendarRootHydration from './RangeCalendarRootHydration.test.vue';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
 
@@ -491,6 +494,21 @@ describe('<RangeCalendar.Root />', () => {
       const handlers = await pressKeys('{Shift>}{ArrowRight}{/Shift}', { props });
 
       expect(rangesOf(handlers)).toEqual([['2026-11-11', '2026-11-13']]);
+    });
+  });
+  describe('the server render', () => {
+    const file = 'src/range-calendar/root/RangeCalendarRootHydration.test.vue';
+
+    it.each([
+      { name: 'a Persian server', server: 'en-US-u-ca-persian' },
+      { name: 'a server week from Monday', server: 'en-US-u-fw-mon' },
+    ])('hydrates the grid of $name, then shows the grid of the browser', async ({ server }) => {
+      const props = { today: '2026-11-14', start: '2026-11-10', end: '2026-11-12', locale: 'en-US' };
+      const serverHtml = await renderOnServer(file, { ...props, locale: server });
+
+      await hydrate(RangeCalendarRootHydration, { serverHtml, props });
+
+      expect(shown()).toEqual({ start: ['2026-11-10'], middle: ['2026-11-11'], end: ['2026-11-12'] });
     });
   });
 });

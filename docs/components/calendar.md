@@ -179,6 +179,8 @@ The calendar renders with `renderToString`. The server HTML has the grid of the 
 
 A server and a browser can have another day for today. The hydration then keeps `data-today`, `data-current` and `aria-current` of the server, because Vue does not patch an attribute while it hydrates. Give `today`, so that the server and the browser agree. The data of `Intl` in a server and in a browser can also give other names of the months and other digits of the years. While the calendar hydrates, each cell and each trigger allows that text, and it then shows the text of the browser.
 
+A server and a browser can also have another calendar, first day of the week or weekend for one locale. The calendar then hydrates with the grid of the server, and it shows the grid of the browser after the mount. Give `calendar` and `firstDayOfWeek`, and the server HTML has the days and the weeks of the final grid. The weekend has no prop, so `data-weekend` follows the browser. A browser whose `Temporal` does not have the calendar of the server cannot show the grid of the server, and Vue then reports a hydration mismatch. The entry `temporal-polyfill/global` has only the ISO and Gregorian calendars, so it is such a `Temporal`.
+
 On a Node.js version before 26, load a `Temporal` polyfill before the server starts. See the [guide](/handbook/dates-and-times#servers).
 
 ## Keyboard

@@ -599,6 +599,41 @@ describe('<Calendar.Root /> pages', () => {
       await hydrate(CalendarNavigationHydration, { serverHtml, props: { ...base, ...props } });
     });
 
+    // A `-u-` keyword gives the server other `Intl` data than the browser. A page whose first day
+    // changes, such as a Hebrew month or a week from Monday, then mounts again after the mount. Vue
+    // gives the caption of the new page a new id.
+    it.each([
+      {
+        name: 'week numbers of a server week from Monday',
+        server: 'en-US-u-fw-mon',
+        props: { weekNumbers: true, selects: true },
+        first: '2026-11-01',
+      },
+      {
+        name: 'the selects of a Hebrew server',
+        server: 'en-US-u-ca-hebrew',
+        props: { selects: true },
+        first: '2026-11-01',
+      },
+      {
+        name: 'two weeks of a server week from Monday',
+        server: 'en-US-u-fw-mon',
+        props: { duration: 'weeks:2' },
+        first: '2026-11-08',
+      },
+    ])('hydrates $name, then shows the grid of the browser', async ({ server, props, first }) => {
+      const all = { ...base, ...props, locale: 'en-US' };
+      const serverHtml = await renderOnServer(file, { ...all, locale: server });
+
+      const { container } = await hydrate(CalendarNavigationHydration, {
+        serverHtml,
+        props: all,
+        renumberIds: true,
+      });
+
+      expect(container.querySelector('td[data-date]')).toHaveAttribute('data-date', first);
+    });
+
     it.each([
       {
         name: 'two months with outside days',

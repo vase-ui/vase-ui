@@ -3,7 +3,7 @@ import type { ComputedRef, InjectionKey } from 'vue';
 import type { CalendarRootController } from '../../internals/date-time/calendar/useCalendarRoot';
 import type { CalendarState } from './CalendarRoot.vue';
 
-export interface CalendarRootContext extends Omit<CalendarRootController, 'focus'> {
+export interface CalendarRootContext extends Omit<CalendarRootController, 'focus' | 'hydrationAttributes'> {
   state: ComputedRef<CalendarState>;
 }
 

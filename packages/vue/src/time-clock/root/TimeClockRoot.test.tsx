@@ -9,6 +9,7 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  mockRuntimeDateTimeLocale,
   renderOnServer,
   screen,
   takeReportedMessages,
@@ -21,17 +22,6 @@ const time = (text: string) => Temporal.PlainTime.from(text);
 const numberSlot = {
   number: ({ number }: { number: TimeClockFaceNumber }) => <TimeClock.Number number={number} />,
 };
-
-// Makes `Intl.DateTimeFormat` use `locale` when a call gives no locale, until the test ends.
-function mockRuntimeDateTimeLocale(locale: string) {
-  const DateTimeFormat = Intl.DateTimeFormat;
-  const spy = vi
-    .spyOn(Intl, 'DateTimeFormat')
-    .mockImplementation(function MockDateTimeFormat(requestedLocale, options) {
-      return new DateTimeFormat(requestedLocale ?? locale, options);
-    });
-  onTestFinished(() => spy.mockRestore());
-}
 
 describe('<TimeClock.Root />', () => {
   const { render } = createRenderer();
@@ -436,5 +426,55 @@ describe('<TimeClock.Root />', () => {
       expect(within(container).getByRole('slider')).toHaveAttribute('max', '23');
       expect(container.querySelectorAll('button[aria-pressed]')).toHaveLength(2);
     });
+
+    // A `-u-hc-` keyword gives the server another hour cycle than the browser, as other `Intl` data
+    // do for one locale.
+    it.each([
+      {
+        name: 'a 24-hour server, a 12-hour browser',
+        server: 'en-US-u-hc-h23',
+        browser: 'en-US',
+        view: 'hour' as const,
+        max: '12',
+        buttons: 4,
+      },
+      {
+        name: 'a 12-hour server, a 24-hour browser',
+        server: 'en-US',
+        browser: 'en-US-u-hc-h23',
+        view: 'hour' as const,
+        max: '23',
+        buttons: 2,
+      },
+      {
+        name: 'a 24-hour server, in the minutes',
+        server: 'en-US-u-hc-h23',
+        browser: 'en-US',
+        view: 'minute' as const,
+        max: '59',
+        buttons: 4,
+      },
+      {
+        name: 'a 24-hour server, in a #render slot',
+        server: 'en-US-u-hc-h23',
+        browser: 'en-US',
+        view: 'hour' as const,
+        renderSlot: true,
+        max: '12',
+        buttons: 4,
+      },
+    ])(
+      'hydrates the face of $name, then shows the hour cycle of the browser',
+      async ({ server, browser, view, renderSlot, max, buttons }) => {
+        const file = 'src/time-clock/root/TimeClockRootHydration.test.vue';
+        const props = { time: '15:45', locale: browser, view, renderSlot };
+        const serverHtml = await renderOnServer(file, { ...props, locale: server });
+
+        const { container } = await hydrate(TimeClockRootHydration, { serverHtml, props });
+
+        expect(within(container).getByRole('slider')).toHaveAttribute('max', max);
+        expect(container.querySelectorAll('button[aria-pressed]')).toHaveLength(buttons);
+      },
+    );
   });
 });

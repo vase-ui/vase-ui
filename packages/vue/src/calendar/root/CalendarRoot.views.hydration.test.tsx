@@ -45,6 +45,19 @@ describe('<Calendar.Root /> views hydration', () => {
   });
 
   it.each([
+    { name: 'the months of a Hebrew server', server: 'en-US-u-ca-hebrew', view: 'month' as const, cells: 12 },
+    { name: 'the years of a Persian server', server: 'en-US-u-ca-persian', view: 'year' as const, cells: 12 },
+  ])('hydrates $name, then shows the calendar of the browser', async ({ server, view, cells }) => {
+    const props = { ...base, view, locale: 'en-US' };
+    const serverHtml = await renderOnServer(file, { ...props, locale: server });
+
+    const { container } = await hydrate(CalendarViewsHydration, { serverHtml, props });
+
+    expect(container.querySelectorAll('[role="gridcell"]')).toHaveLength(cells);
+    expect(container).toHaveTextContent('2026');
+  });
+
+  it.each([
     { name: 'a day', props: {}, text: '14' },
     { name: 'a weekday', props: {}, text: 'Sat' },
     { name: 'a month', props: { view: 'month' as const }, text: 'March' },
