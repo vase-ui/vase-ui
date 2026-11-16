@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToString } from 'vue/server-renderer';
 import { Field } from '@vase-ui/vue/field';
+import { Fieldset } from '@vase-ui/vue/fieldset';
 import { Form } from '@vase-ui/vue/form';
 import { Radio } from '@vase-ui/vue/radio';
 import { RadioGroup } from '@vase-ui/vue/radio-group';
@@ -133,6 +134,31 @@ describe('<RadioGroup />', () => {
       expect(readAttribute(html, 'group', 'aria-invalid')).toBe('true');
       expect(readAttribute(html, 'group', 'aria-describedby')).toBe(errorId);
       expect(readAttribute(html, 'a', 'aria-describedby')).toBe(errorId);
+    });
+  });
+
+  describe('VUE-112: a disabled fieldset', () => {
+    it('renders the group of a disabled Fieldset.Root as disabled with no Field.Root', async () => {
+      const html = await renderToString(
+        <Fieldset.Root disabled>
+          <RadioGroup data-testid="group" defaultValue="b">
+            <Radio.Root value="a" data-testid="a" />
+            <Radio.Root value="b" data-testid="b" />
+            <Radio.Root value="c" data-testid="c" />
+          </RadioGroup>
+        </Fieldset.Root>,
+      );
+
+      expect(readAttribute(html, 'group', 'aria-disabled')).toBe('true');
+      expect(readAttributes(html, 'aria-disabled')).toEqual(['true', 'true', 'true']);
+      expect(
+        ['a', 'b', 'c'].map((testId) =>
+          / data-disabled[ =>]/.test(
+            new RegExp(`<[^>]*data-testid="${testId}"[^>]*>`).exec(html)?.[0] ?? '',
+          ),
+        ),
+      ).toEqual([true, true, true]);
+      expect(readAttributes(html, 'tabindex')).toEqual(['-1', '-1', '-1']);
     });
   });
 });
