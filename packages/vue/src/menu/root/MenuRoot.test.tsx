@@ -494,9 +494,11 @@ describe('<Menu.Root />', () => {
   ])(
     'VUE-69: keeps the focus in a context menu for $name when the root cancels the close',
     async ({ shift }) => {
+      const reasons: string[] = [];
       await render(
         <ContextMenu.Root
           onOpenChange={(open: boolean, details: ContextMenu.Root.ChangeEventDetails) => {
+            reasons.push(details.reason);
             if (!open) {
               details.cancel();
             }
@@ -523,6 +525,7 @@ describe('<Menu.Root />', () => {
       await browserUserEvent.keyboard(shift ? '{Shift>}[Tab]{/Shift}' : '[Tab]');
 
       expect(menu).toHaveFocus();
+      expect(reasons).toEqual([REASONS.triggerPress, REASONS.focusOut]);
     },
   );
 
