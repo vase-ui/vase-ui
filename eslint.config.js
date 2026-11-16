@@ -55,6 +55,8 @@ const MESSAGES = {
     '`useAnchorPositioning` gives `useFloating` the middleware of Base UI, and it corrects `isPositioned` for a popup that closes during a position pass. Call `usePopupPositioner` in a positioner part.',
   watchPostEffect:
     "`watchPostEffect` runs again for each value that the effect reads. Use `watch` with the dependencies of the Base UI effect and `flush: 'post'`.",
+  keepAliveHook:
+    "`onActivated` also runs at the first mount, and a part that mounts in a held branch gets no `onDeactivated`. Read `isHeld` of `useKeepAliveState`, and react to a change with a `watch`. Give `flush: 'sync'` to work that must run in the hook.",
   transition:
     'CSS drives each animation through `data-starting-style`, `data-ending-style` and `getAnimations()`. Use `useTransitionStatus`.',
   defineModel:
@@ -85,6 +87,7 @@ const RESTRICTED_IMPORTS = [
   },
   { name: 'vue', importNames: ['defineComponent'], message: MESSAGES.defineComponent },
   { name: 'vue', importNames: ['watchPostEffect'], message: MESSAGES.watchPostEffect },
+  { name: 'vue', importNames: ['onActivated', 'onDeactivated'], message: MESSAGES.keepAliveHook },
   { name: 'vue', importNames: ['Transition', 'TransitionGroup'], message: MESSAGES.transition },
   { name: '@floating-ui/vue', importNames: ['useFloating'], message: MESSAGES.useFloating },
 ];
@@ -712,6 +715,18 @@ export default defineConfig([
         'error',
         {
           paths: RESTRICTED_IMPORTS.filter(({ message }) => message !== MESSAGES.useFloating),
+          patterns: RESTRICTED_IMPORT_PATTERNS,
+        },
+      ],
+    },
+  },
+  {
+    files: ['packages/vue/src/internals/useKeepAliveState.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: RESTRICTED_IMPORTS.filter(({ message }) => message !== MESSAGES.keepAliveHook),
           patterns: RESTRICTED_IMPORT_PATTERNS,
         },
       ],

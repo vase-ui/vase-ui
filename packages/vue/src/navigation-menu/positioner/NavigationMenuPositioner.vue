@@ -38,16 +38,7 @@ export interface NavigationMenuPositionerProps
 </script>
 
 <script setup lang="ts">
-import {
-  computed,
-  onActivated,
-  onDeactivated,
-  onMounted,
-  onScopeDispose,
-  provide,
-  shallowRef,
-  watch,
-} from 'vue';
+import { computed, onMounted, onScopeDispose, provide, shallowRef, watch } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { NOOP } from '../../common/empty';
 import { mergeCleanups } from '../../common/mergeCleanups';
@@ -56,6 +47,7 @@ import { useTimeout } from '../../common/useTimeout';
 import { DROPDOWN_COLLISION_AVOIDANCE, POPUP_COLLISION_AVOIDANCE } from '../../internals/constants';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useAnchorPositioning } from '../../internals/useAnchorPositioning';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useFloatingRootStore } from '../../utils/popups/floating-root/useFloatingRootStore';
 import {
   disableFocusInside,
@@ -157,13 +149,13 @@ function handleResize() {
 }
 
 let removeResizeListener = NOOP;
-let deactivated = false;
+const { isHeld } = useKeepAliveState();
 
 function listenToResize() {
   removeResizeListener();
   removeResizeListener = NOOP;
 
-  if (!open.value || deactivated) {
+  if (!open.value || isHeld.value) {
     return;
   }
 
@@ -188,17 +180,7 @@ onMounted(listenToResize);
 watch([open, positionerElement], listenToResize, { flush: 'post' });
 onScopeDispose(() => removeResizeListener());
 
-onDeactivated(() => {
-  deactivated = true;
-  listenToResize();
-});
-// `onActivated` also runs at the first mount in a `KeepAlive`.
-onActivated(() => {
-  if (deactivated) {
-    deactivated = false;
-    listenToResize();
-  }
-});
+watch(isHeld, listenToResize, { flush: 'sync' });
 
 // https://codesandbox.io/s/tabbable-portal-f4tng?file=/src/TabbablePortal.tsx
 watch(

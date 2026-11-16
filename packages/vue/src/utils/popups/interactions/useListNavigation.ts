@@ -1,15 +1,4 @@
-import {
-  computed,
-  inject,
-  onActivated,
-  onBeforeMount,
-  onDeactivated,
-  onMounted,
-  provide,
-  shallowRef,
-  toValue,
-  watch,
-} from 'vue';
+import { computed, inject, onBeforeMount, onMounted, provide, toValue, watch } from 'vue';
 import type { ComputedRef, InjectionKey, MaybeRefOrGetter, Ref } from 'vue';
 import { isElement, isHTMLElement } from '@floating-ui/utils/dom';
 import { ownerDocument } from '../../../common/owner';
@@ -25,6 +14,7 @@ import {
 } from '../../../internals/composite/listIndex';
 import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
+import { useKeepAliveState } from '../../../internals/useKeepAliveState';
 import { ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT, ARROW_UP } from '../constants';
 import {
   getFloatingFocusElement,
@@ -260,7 +250,7 @@ interface ListNavigationParent {
 const ListNavigationParentContext: InjectionKey<ListNavigationParent> = Symbol();
 
 interface SyncState {
-  deactivated: boolean;
+  isHeld: boolean;
   enabled: boolean;
   open: boolean;
   positionerElement: HTMLElement | null;
@@ -435,11 +425,11 @@ export function useListNavigation(
     return !last || dependencies.some((dependency, i) => !Object.is(dependency, last[i]));
   }
 
-  const deactivated = shallowRef(false);
+  const { isHeld } = useKeepAliveState();
 
   function readState(): SyncState {
     return {
-      deactivated: deactivated.value,
+      isHeld: isHeld.value,
       enabled: isEnabled(),
       open: store.select('open'),
       positionerElement: store.select('positionerElement'),
@@ -477,7 +467,7 @@ export function useListNavigation(
       rtl,
     } = state;
 
-    if (state.deactivated) {
+    if (state.isHeld) {
       focusFrame.cancel();
       waitForListPopulatedFrame.cancel();
       cancelQueuedFocus?.();
@@ -631,12 +621,6 @@ export function useListNavigation(
 
   onMounted(() => sync(readState()));
   watch(readState, sync, { flush: 'post' });
-  onDeactivated(() => {
-    deactivated.value = true;
-  });
-  onActivated(() => {
-    deactivated.value = false;
-  });
 
   function syncCurrentTarget(event: Event) {
     if (!store.select('open')) {

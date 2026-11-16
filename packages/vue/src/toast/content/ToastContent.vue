@@ -20,8 +20,9 @@ export interface ToastContentProps
 </script>
 
 <script setup lang="ts">
-import { computed, onActivated, onDeactivated, shallowRef, watch } from 'vue';
+import { computed, watch } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useToastRootContext } from '../root/ToastRootContext';
 
@@ -43,22 +44,14 @@ const state = computed<ToastContentState>(() => ({
 
 const { element, elementProps } = useRenderElement('div', props, { state });
 
-// `KeepAlive` takes the element of a deactivated content out of the document. The element then has
-// no layout, so the height stays as it was until the content is active again.
-const deactivated = shallowRef(false);
-
-onDeactivated(() => {
-  deactivated.value = true;
-});
-
-onActivated(() => {
-  deactivated.value = false;
-});
+// `KeepAlive` takes the element of a held content out of the document. The element then has no
+// layout, so the height stays as it was until the content is active again.
+const { isHeld } = useKeepAliveState();
 
 watch(
-  [element, deactivated],
-  ([node, isDeactivated], _previous, onCleanup) => {
-    if (isDeactivated) {
+  [element, isHeld],
+  ([node, held], _previous, onCleanup) => {
+    if (held) {
       return;
     }
 

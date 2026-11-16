@@ -1,6 +1,7 @@
 import { expect, describe, it, onTestFinished } from 'vitest';
 import { createSSRApp, defineComponent, KeepAlive, onActivated, shallowRef } from 'vue';
 import {
+  createHeldBranch,
   createRenderer,
   flushMicrotasks,
   renderOnServer,
@@ -217,6 +218,38 @@ describe('useSetFieldFocused', () => {
       await flushMicrotasks();
 
       expect(control).toHaveFocus();
+      expect(screen.getByTestId('root')).toHaveAttribute('data-focused');
+    });
+
+    it('takes focus without an event at the first activation after a held mount', async () => {
+      // The hook of this part runs before the hook of the control, as in the case above.
+      const FocusOnActivation = defineComponent(() => {
+        onActivated(() => {
+          screen.getByTestId('control').focus();
+        });
+        return () => null;
+      });
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <>
+          <FieldControlPart data-testid="control" />
+          <FocusOnActivation />
+        </>
+      ));
+      await render(
+        <FieldScope data-testid="root">
+          <HeldBranch />
+        </FieldScope>,
+      );
+      await mountWhileHeld();
+      expect(screen.getByTestId('root')).not.toHaveAttribute('data-focused');
+      document.addEventListener('focusin', (event) => event.stopImmediatePropagation(), {
+        capture: true,
+        once: true,
+      });
+
+      await show();
+
+      expect(screen.getByTestId('control')).toHaveFocus();
       expect(screen.getByTestId('root')).toHaveAttribute('data-focused');
     });
 

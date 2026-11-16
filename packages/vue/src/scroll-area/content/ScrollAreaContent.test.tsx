@@ -2,6 +2,7 @@ import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { createApp, createSSRApp, defineComponent, KeepAlive, nextTick, shallowRef } from 'vue';
 import { ScrollArea } from '@vase-ui/vue/scroll-area';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   isJSDOM,
@@ -146,6 +147,42 @@ describe('<ScrollArea.Content />', () => {
 
       expect(observe).toHaveBeenCalledTimes(observeAfterMount + 1);
       expect(disconnect).toHaveBeenCalledTimes(disconnectAfterMount + 1);
+    });
+
+    it('observes content from the first activation after a held mount', async () => {
+      const height = shallowRef(50);
+      // `KeepAlive` is in the viewport and holds only the content, so the viewport stays active.
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <ScrollArea.Content data-testid="content">
+          <div style={{ height: `${height.value}px` }} />
+        </ScrollArea.Content>
+      ));
+      await render(
+        <ScrollArea.Root data-testid="root">
+          <ScrollArea.Viewport style={{ height: '100px' }}>
+            <HeldBranch />
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>,
+      );
+      const root = screen.getByTestId('root');
+
+      const observe = vi.spyOn(ResizeObserver.prototype, 'observe');
+      onTestFinished(() => observe.mockRestore());
+      await mountWhileHeld();
+      expect(
+        observe.mock.calls.some(([target]) => target.getAttribute('data-testid') === 'content'),
+      ).toBe(false);
+      await show();
+      await waitSingleFrame();
+      await waitSingleFrame();
+
+      expect(root).not.toHaveAttribute('data-has-overflow-y');
+
+      height.value = 300;
+
+      await waitFor(() => {
+        expect(root).toHaveAttribute('data-has-overflow-y');
+      });
     });
   });
 

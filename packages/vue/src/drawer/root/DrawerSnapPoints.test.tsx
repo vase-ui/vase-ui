@@ -1,7 +1,7 @@
 import { describe, expect, it, onTestFinished } from 'vitest';
 import { KeepAlive, defineComponent, onScopeDispose, shallowRef, watch } from 'vue';
 import type { PropType } from 'vue';
-import { createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
+import { createHeldBranch, createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
 import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
 import * as Drawer from '../index.parts';
 import { useDrawerRootContext } from './DrawerRootContext';
@@ -309,6 +309,42 @@ describe('Drawer snap point composition', () => {
 
     shown.value = true;
     await flushMicrotasks();
+    expect(snapPoints.viewportHeight.value).toBe(200);
+
+    viewportHeight.value = 300;
+    await waitFor(() => {
+      expect(snapPoints.viewportHeight.value).toBe(300);
+    });
+  });
+
+  it('VUE-5: measures snap points from the first activation after a held mount', async () => {
+    const viewportHeight = shallowRef(400);
+    let snapPoints!: UseDrawerSnapPointsReturnValue;
+    const Held = defineComponent({
+      name: 'Held',
+      setup() {
+        snapPoints = useDrawerSnapPoints();
+        return () => <p>held</p>;
+      },
+    });
+    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => <Held />);
+    await render(() => (
+      <Drawer.Root open modal={false} snapPoints={[0.5]}>
+        <PopupHeightReport height={300} />
+        <TestViewport height={viewportHeight.value} />
+        <HeldBranch />
+      </Drawer.Root>
+    ));
+
+    await mountWhileHeld();
+    expect(snapPoints.viewportHeight.value).toBe(0);
+    viewportHeight.value = 200;
+    await flushMicrotasks();
+    await nextAnimationFrame();
+    await nextAnimationFrame();
+    expect(snapPoints.viewportHeight.value).toBe(0);
+    await show();
+
     expect(snapPoints.viewportHeight.value).toBe(200);
 
     viewportHeight.value = 300;

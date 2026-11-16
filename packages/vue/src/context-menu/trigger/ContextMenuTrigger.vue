@@ -16,7 +16,7 @@ export interface ContextMenuTriggerProps
 </script>
 
 <script setup lang="ts">
-import { computed, onActivated, onDeactivated, onMounted, onScopeDispose } from 'vue';
+import { computed, onMounted, onScopeDispose, watch } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { ownerDocument } from '../../common/owner';
 import { contains, getTarget } from '../../common/shadowDom';
@@ -24,6 +24,7 @@ import { useTimeout } from '../../common/useTimeout';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useMenuRootContext } from '../../menu/root/MenuRootContext';
 import { findRootOwnerId } from '../../menu/utils/findRootOwnerId';
@@ -66,8 +67,7 @@ const allowMouseUpTimeout = useTimeout();
 let allowMouseUp = false;
 let mouseUpAbortController: AbortController | null = null;
 let removeDocumentListener: (() => void) | undefined;
-// `onActivated` also runs at the first mount.
-let deactivated = false;
+const { isHeld } = useKeepAliveState();
 
 function handleLongPress(x: number, y: number, event: MouseEvent | TouchEvent) {
   const isTouchEvent = event.type.startsWith('touch');
@@ -229,6 +229,7 @@ function handleDocumentContextMenu(event: MouseEvent) {
 }
 
 function listenToDocument() {
+  removeDocumentListener?.();
   removeDocumentListener = addEventListener(
     ownerDocument(element.value),
     'contextmenu',
@@ -247,17 +248,12 @@ function release() {
   allowMouseUp = false;
 }
 
-onMounted(listenToDocument);
-onDeactivated(() => {
-  deactivated = true;
-  release();
-});
-onActivated(() => {
-  if (deactivated) {
-    deactivated = false;
+onMounted(() => {
+  if (!isHeld.value) {
     listenToDocument();
   }
 });
+watch(isHeld, (held) => (held ? release() : listenToDocument()), { flush: 'sync' });
 onScopeDispose(release);
 
 const { element, elementProps } = useRenderElement('div', props, {

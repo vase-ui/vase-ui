@@ -1,14 +1,4 @@
-import {
-  computed,
-  nextTick,
-  onActivated,
-  onDeactivated,
-  onMounted,
-  onScopeDispose,
-  shallowRef,
-  toValue,
-  watch,
-} from 'vue';
+import { computed, nextTick, onMounted, onScopeDispose, shallowRef, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { ownerWindow } from '../../common/owner';
 import { AnimationFrame } from '../../common/useAnimationFrame';
@@ -17,6 +7,7 @@ import { warn } from '../../common/warn';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import { useAnimationsFinished } from '../../internals/useAnimationsFinished';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
 import { isFiniteAnimation } from '../../utils/getFiniteAnimations';
@@ -157,9 +148,9 @@ export function useCollapsiblePanel(
     });
   }
 
-  // `KeepAlive` keeps the state of a deactivated part. The effects below do not run for a
-  // deactivated panel, because the element is out of the document and its computed style is empty.
-  let isDeactivated = false;
+  // `KeepAlive` keeps the state of a held part. The effects below do not run for a held panel,
+  // because the element is out of the document and its computed style is empty.
+  const { isHeld } = useKeepAliveState();
   let cleanupSizeEffect: (() => void) | undefined;
   let cleanupCloseEffect: (() => void) | undefined;
 
@@ -185,7 +176,7 @@ export function useCollapsiblePanel(
     cleanupSizeEffect?.();
     cleanupSizeEffect = undefined;
 
-    if (isDeactivated) {
+    if (isHeld.value) {
       return;
     }
 
@@ -365,7 +356,7 @@ export function useCollapsiblePanel(
     cleanupCloseEffect?.();
     cleanupCloseEffect = undefined;
 
-    if (isDeactivated) {
+    if (isHeld.value) {
       return;
     }
 
@@ -423,7 +414,7 @@ export function useCollapsiblePanel(
   // becomes hidden, the element first gets a plain `hidden` for one style computation. The browser
   // then cancels the transitions that still run.
   function writeUntilFoundAttribute(isBecomingHidden: boolean) {
-    if (isDeactivated || !panel || !isHiddenUntilFound() || !hidden.value) {
+    if (isHeld.value || !panel || !isHiddenUntilFound() || !hidden.value) {
       return;
     }
 
@@ -519,27 +510,25 @@ export function useCollapsiblePanel(
     scheduleRevealRevert(revealedPanel, true, hadStartingStyle);
   }
 
-  onDeactivated(() => {
-    isDeactivated = true;
-    cleanupSizeEffect?.();
-    cleanupSizeEffect = undefined;
-    cleanupCloseEffect?.();
-    cleanupCloseEffect = undefined;
-    markActivityResumeAnimationSuppressed();
-    restorePendingTemporaryStyle();
-    clearRevealRevert();
-  });
+  watch(
+    isHeld,
+    (held) => {
+      if (!held) {
+        runSizeEffect();
+        runCloseEffect();
+        return;
+      }
 
-  onActivated(() => {
-    // `onActivated` also runs at the first mount inside `KeepAlive`, where the effects ran at mount.
-    if (!isDeactivated) {
-      return;
-    }
-
-    isDeactivated = false;
-    runSizeEffect();
-    runCloseEffect();
-  });
+      cleanupSizeEffect?.();
+      cleanupSizeEffect = undefined;
+      cleanupCloseEffect?.();
+      cleanupCloseEffect = undefined;
+      markActivityResumeAnimationSuppressed();
+      restorePendingTemporaryStyle();
+      clearRevealRevert();
+    },
+    { flush: 'sync' },
+  );
 
   onScopeDispose(() => {
     cleanupSizeEffect?.();

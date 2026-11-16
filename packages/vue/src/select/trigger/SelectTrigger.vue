@@ -48,7 +48,7 @@ export interface SelectTriggerProps<Value = any>
 </script>
 
 <script setup lang="ts" generic="Value = any">
-import { computed, onActivated, onDeactivated, onMounted, onScopeDispose, toRaw, watch } from 'vue';
+import { computed, onMounted, onScopeDispose, toRaw, watch } from 'vue';
 import { ownerDocument } from '../../common/owner';
 import { useTimeout } from '../../common/useTimeout';
 import { contains, getTarget } from '../../common/shadowDom';
@@ -66,6 +66,7 @@ import type { StateAttributesMapping } from '../../internals/getStateAttributesP
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
 import { REASONS } from '../../internals/reasons';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { isMouseWithinBounds } from '../../utils/getPseudoElementBounds';
 import { isReleaseAtPressPoint } from '../../utils/popups/isReleaseAtPressPoint';
@@ -187,9 +188,14 @@ onScopeDispose(removeMouseUpListener);
 
 const focusTimeout = useTimeout();
 const selectedDelayTimeout = useTimeout();
+const { isHeld } = useKeepAliveState();
 
 function syncMouseUpSelection() {
   if (isOpen.value) {
+    if (isHeld.value) {
+      return;
+    }
+
     // A mousedown on the trigger can open the popup under the cursor. Keep mouseup selection
     // disabled briefly so releasing over either the selected item or a neighboring item doesn't
     // commit an accidental selection. SelectItem can still opt into unselected mouseup sooner
@@ -211,23 +217,20 @@ function syncMouseUpSelection() {
 
 onMounted(syncMouseUpSelection);
 watch(isOpen, syncMouseUpSelection);
+watch(
+  isHeld,
+  (held) => {
+    if (!held) {
+      syncMouseUpSelection();
+      return;
+    }
 
-let isDeactivated = false;
-
-onDeactivated(() => {
-  isDeactivated = true;
-  removeMouseUpListener();
-  focusTimeout.clear();
-  selectedDelayTimeout.clear();
-});
-
-// `onActivated` also runs at the first mount in a `KeepAlive`.
-onActivated(() => {
-  if (isDeactivated) {
-    isDeactivated = false;
-    syncMouseUpSelection();
-  }
-});
+    removeMouseUpListener();
+    focusTimeout.clear();
+    selectedDelayTimeout.clear();
+  },
+  { flush: 'sync' },
+);
 
 const state = computed<SelectTriggerState<Value>>(() => ({
   ...fieldState.value,

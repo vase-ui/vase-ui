@@ -1,4 +1,4 @@
-import { onActivated, onDeactivated, onMounted, onScopeDispose, toValue, watch } from 'vue';
+import { onMounted, onScopeDispose, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 import { isElement, isHTMLElement } from '@floating-ui/utils/dom';
 import { addEventListener } from '../../../common/addEventListener';
@@ -10,6 +10,7 @@ import { useTimeout } from '../../../common/useTimeout';
 import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import type { FloatingUIOpenChangeDetails, HTMLProps } from '../../../internals/types';
+import { useKeepAliveState } from '../../../internals/useKeepAliveState';
 import { createAttribute } from '../createAttribute';
 import { isTargetInsideEnabledTrigger, isTypeableElement, matchesFocusVisible } from '../element';
 import type { PopupInteractionStore } from '../types';
@@ -53,7 +54,7 @@ export function useFocus(
   // The element that the last `focusin` event reached: the trigger of this composable. `KeepAlive`
   // closes the popup only when this element is the anchor of the store.
   let lastFocusedTrigger: Element | null = null;
-  let deactivated = false;
+  const { isHeld } = useKeepAliveState();
   let disposed = false;
 
   // As in Base UI, one timer serves the open request of a focus and the check of a focus out. The
@@ -84,7 +85,7 @@ export function useFocus(
   function listenToWindow() {
     stopWindowListeners?.();
     stopWindowListeners = undefined;
-    if (deactivated) {
+    if (isHeld.value) {
       return;
     }
 
@@ -157,27 +158,26 @@ export function useFocus(
   // `KeepAlive` takes the focused trigger out of the document. Firefox and WebKit send no
   // `focusout` for it. A popup that focus opened would then stay open after the activation, with
   // no focus on its trigger.
-  onDeactivated(() => {
-    deactivated = true;
-    timeout.clear();
-    listenToWindow();
-
-    const current = currentStore();
-    if (
-      current.select('open') &&
-      current.context.openEvent?.type === 'focusin' &&
-      lastFocusedTrigger === current.select('anchorElement')
-    ) {
-      current.setOpen(false, createChangeEventDetails(REASONS.triggerFocus));
-    }
-  });
-  // `onActivated` also runs at the first mount in a `KeepAlive`.
-  onActivated(() => {
-    if (deactivated) {
-      deactivated = false;
+  watch(
+    isHeld,
+    (held) => {
       listenToWindow();
-    }
-  });
+      if (!held) {
+        return;
+      }
+
+      timeout.clear();
+      const current = currentStore();
+      if (
+        current.select('open') &&
+        current.context.openEvent?.type === 'focusin' &&
+        lastFocusedTrigger === current.select('anchorElement')
+      ) {
+        current.setOpen(false, createChangeEventDetails(REASONS.triggerFocus));
+      }
+    },
+    { flush: 'sync' },
+  );
 
   function resetBlockedFocus() {
     blockFocus = false;

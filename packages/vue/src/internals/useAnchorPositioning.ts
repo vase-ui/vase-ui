@@ -1,4 +1,4 @@
-import { computed, onActivated, onDeactivated, onMounted, shallowRef, toValue, watch } from 'vue';
+import { computed, onMounted, shallowRef, toValue, watch } from 'vue';
 import type {
   ComponentPublicInstance,
   ComputedRef,
@@ -33,6 +33,7 @@ import { arrow } from '../utils/popups/positioning/arrow';
 import { hide } from '../utils/popups/positioning/hideMiddleware';
 import { DEFAULT_SIDES } from '../utils/popups/positioning/adaptiveOriginConstants';
 import * as CommonPositionerCssVars from '../utils/popups/positioning/CommonPositionerCssVars';
+import { useKeepAliveState } from './useKeepAliveState';
 
 const AVAILABLE_WIDTH_VAR = CommonPositionerCssVars.availableWidth;
 const AVAILABLE_HEIGHT_VAR = CommonPositionerCssVars.availableHeight;
@@ -246,18 +247,12 @@ export function useAnchorPositioning(
     (a, b) => a.top === b.top && a.right === b.right && a.bottom === b.bottom && a.left === b.left,
   );
 
-  // `true` from the mount to the unmount, except from a deactivation by `KeepAlive` to the next
-  // activation. A component that mounts in a held branch is active from its mount.
-  const isActive = shallowRef(false);
+  const { isHeld } = useKeepAliveState();
+  const isMounted = shallowRef(false);
   onMounted(() => {
-    isActive.value = true;
+    isMounted.value = true;
   });
-  onActivated(() => {
-    isActive.value = true;
-  });
-  onDeactivated(() => {
-    isActive.value = false;
-  });
+  const isActive = computed(() => isMounted.value && !isHeld.value);
 
   const collisionBoundary = stableComputed<ResolvedBoundary>(
     // A getter of a consumer can read the DOM, so it does not run before the mount.
@@ -940,8 +935,9 @@ export interface UseAnchorPositioningReturnValue {
   placement: Readonly<Ref<Placement>>;
   anchorHidden: ComputedRef<boolean>;
   /**
-   * The element or the virtual element that the popup is positioned against. It is `null` while
-   * the popup is not mounted, and from a deactivation by `KeepAlive` to the next activation.
+   * The element or the virtual element that the popup is positioned against. It is `null` before
+   * the mount, while the popup is not mounted, and while `KeepAlive` holds the part, also from a
+   * mount in a held branch to the activation.
    */
   reference: ComputedRef<Element | VirtualElement | null>;
   isPositioned: Readonly<Ref<boolean>>;
