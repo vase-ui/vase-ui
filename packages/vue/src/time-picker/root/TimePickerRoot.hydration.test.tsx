@@ -18,7 +18,7 @@ describe('<TimePicker.Root /> hydration', () => {
     { name: 'limits', props: { value: '15:04', minTime: '09:00' } },
     {
       name: 'a layout that Node and Chromium format in another way',
-      props: { locale: 'is-IS', parts: false },
+      props: { locale: 'is-IS', list: false, columns: false, clock: false },
     },
     { name: 'a disabled picker', props: { value: '15:04', disabled: true } },
     { name: 'a read-only picker', props: { value: '15:04', readOnly: true } },
@@ -33,6 +33,17 @@ describe('<TimePicker.Root /> hydration', () => {
 
     expect(screen.getByTestId('trigger')).toHaveAttribute('aria-haspopup', 'dialog');
     expect(container.querySelector('[role="dialog"]')).toBe(null);
+  });
+
+  // Node and Chromium have another `Intl` data for `is-IS`, so the texts of the items differ. The
+  // part allows the text mismatch, and the hydration writes the text of the client.
+  it('hydrates the texts of a list that Node and Chromium format in another way', async () => {
+    const props = { locale: 'is-IS', columns: false, clock: false };
+    const serverHtml = await renderOnServer(HYDRATION_FILE, props);
+
+    await hydrate(TimePickerRootHydration, { serverHtml, props });
+
+    expect(screen.getAllByRole('option')).toHaveLength(24);
   });
 
   it('has the value in the hidden input and the name in the trigger, from the server HTML', async () => {

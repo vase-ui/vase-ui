@@ -15,11 +15,14 @@ const props = withDefaults(
     disabled?: boolean | undefined;
     readOnly?: boolean | undefined;
     minTime?: string | undefined;
-    // The list, the columns and the clock follow the hour cycle, which an engine can resolve in
-    // another way than Node.
-    parts?: boolean | undefined;
+    // A list, a column and a clock follow the hour cycle and the digits of the locale, which an
+    // engine can resolve in another way than Node. A case that hydrates such a layout leaves some
+    // of them out.
+    list?: boolean | undefined;
+    columns?: boolean | undefined;
+    clock?: boolean | undefined;
   }>(),
-  { parts: true },
+  { list: true, columns: true, clock: true },
 );
 
 function toValue(text: string | undefined) {
@@ -50,19 +53,19 @@ const minTime = props.minTime === undefined ? undefined : Temporal.PlainTime.fro
       <TimeField.Input />
     </TimePicker.Field>
     <TimePicker.Trigger data-testid="trigger">Open</TimePicker.Trigger>
-    <template v-if="props.parts">
-      <TimePicker.List :step="60" data-testid="list" />
+    <TimePicker.List v-if="props.list" :step="60" data-testid="list" />
+    <template v-if="props.columns">
       <TimePicker.Column unit="hour" data-testid="hour-column" />
       <TimePicker.Column unit="minute" :step="15" data-testid="minute-column" />
       <TimePicker.Column unit="dayPeriod" data-testid="period-column" />
-      <TimePicker.Clock data-testid="clock">
-        <TimeClock.Face data-testid="face">
-          <TimeClock.Hand />
-          <template #number="{ number }">
-            <TimeClock.Number :number="number" />
-          </template>
-        </TimeClock.Face>
-      </TimePicker.Clock>
     </template>
+    <TimePicker.Clock v-if="props.clock" data-testid="clock">
+      <TimeClock.Face data-testid="face">
+        <TimeClock.Hand />
+        <template #number="{ number }">
+          <TimeClock.Number :number="number" />
+        </template>
+      </TimeClock.Face>
+    </TimePicker.Clock>
   </TimePicker.Root>
 </template>
