@@ -176,12 +176,11 @@ export interface CalendarRootController {
  */
 export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootController {
   const { part, props, views } = options;
-  // The listeners and the selection of each root take the reasons that each root has.
   const emit: CalendarRootEmit<CalendarBaseChangeEventDetails> = options.emit;
   const selection: CalendarSelection = options.selection;
-  // Only a root with views has listeners and a selection that take the reasons of the views. A root
-  // with no views gets no press on the view trigger, a month or a year, because its trigger is
-  // disabled and its grids of months and of years do not render.
+  // Only a root with views has listeners and a selection that take the reasons of the views.
+  // A root with no views gets no press on its view trigger, a month or a year. Its trigger is
+  // disabled, and its grids of months and of years do not render.
   const optionsWithViews = options.views ? options : undefined;
   const formatLocale = useFormatLocale(() => props.locale);
   const direction = useDirection();
@@ -500,8 +499,8 @@ export function useCalendarRoot(options: UseCalendarRootOptions): CalendarRootCo
     return applyMonth(month, details);
   }
 
-  // A press on a month, a year or the view trigger has a reason of the views, which only the
-  // listeners of a root with views take.
+  // A press on a month, a year or the view trigger has a reason of the views. Only the listeners
+  // of a root with views take it.
   function setMonthOfView(
     root: UseCalendarRootOptionsWithViews,
     month: Temporal.PlainYearMonth,
