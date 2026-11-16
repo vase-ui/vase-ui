@@ -65,7 +65,10 @@ function describe(value: DatePickerRootValue): string {
 // gives replaces it, and `null` removes it.
 const label = computed(() => {
   const ariaLabel = attrs['aria-label'];
-  if (ariaLabel === null || (typeof ariaLabel === 'string' && given('aria-label', ariaLabel) !== undefined)) {
+  if (
+    ariaLabel === null ||
+    (typeof ariaLabel === 'string' && given('aria-label', ariaLabel) !== undefined)
+  ) {
     return ariaLabel;
   }
   const value = picker.value.value;

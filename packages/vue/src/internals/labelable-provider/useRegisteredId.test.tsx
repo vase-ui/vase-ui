@@ -435,6 +435,17 @@ describe('useRegisteredId', () => {
           </Resizable.Root>
         ),
       },
+      {
+        name: 'Resizable.Panel with disabled handle',
+        attribute: 'aria-controls',
+        render: (id) => (
+          <Resizable.Root>
+            <Resizable.Panel id="a" v-slots={slot('div', id)} />
+            <Resizable.Handle disabled data-testid="named" />
+            <Resizable.Panel id="b" />
+          </Resizable.Root>
+        ),
+      },
     ];
 
     it.each(rows)('$name', async ({ attribute, render: renderRow }) => {
