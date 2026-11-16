@@ -227,7 +227,8 @@ export interface UseDismissProps {
  * A component calls it one time. A second call in the same component replaces the functions that
  * the first call provides.
  *
- * Base UI mounts a component for the hook only while the popup is open or mounted, and it gives an
+ * Some roots of Base UI, such as `PopoverRoot`, call the hook in a component of their own. That
+ * component mounts only while the popup is open, is mounted or has a handle. The hook gives an
  * empty object while `enabled` is `false`. A root here calls the composable also while the popup
  * is closed, and each handler does nothing while the composable is not enabled. The object is
  * thus made one time.

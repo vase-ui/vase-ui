@@ -455,12 +455,12 @@ export function useListNavigation(
     };
   }
 
-  // Separate post watchers run in the sequence of the writes, so they would lose the sequence of
-  // Base UI. One function runs the blocks in that sequence, in `onMounted` and in one `watch` with
-  // `flush: 'post'`.
   // Each block is one effect of Base UI. It runs when one of its dependencies changed since its
   // last run. `state` holds the values of one DOM update, as a render of React does: a block that
   // calls `onNavigate` does not change what the blocks after it read.
+  // `sync` runs the blocks in the sequence of Base UI, in `onMounted` and in one `watch` with
+  // `flush: 'post'`. Separate post watchers run in the sequence of the writes, so they would lose
+  // that sequence.
   function sync(state: SyncState) {
     const {
       enabled,

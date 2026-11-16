@@ -1229,7 +1229,7 @@ The delay group is in `src/utils/popups/delay-group`. The popups of a group shar
 
 `useDismiss(store, options)` closes a popup for an Escape press, for a press outside it and for a press of its reference. The code is in `src/utils/popups/interactions/useDismiss.ts`.
 
-- A root calls it one time in `setup`, also while the popup is closed. A closed popup holds no document listener and no timer.
+- A root calls it one time in `setup`. While the popup is closed, the composable holds no document listener and no timer.
 - The JSDoc of each option of `useDismiss` gives its forms. The root gives `reference`, `floating` and `trigger` of the result to `usePopupInteractionProps`.
 - The document listeners exist only while the popup is open, enabled and not held by `KeepAlive`. A server render adds none.
 - One function, `update()`, removes the listeners of the last run and adds the listeners of the new state. It follows the rule of [What differs from the React source](#what-differs-from-the-react-source) for an effect that reads the DOM: `onMounted` plus a `watch` with `flush: 'post'`. A server calls no `onMounted` and runs no such `watch`.
@@ -1271,7 +1271,7 @@ The scroll lock stops the scroll of the page under a modal popup. The code is in
 - A root that merges `reference` or `floating` with other props merges them in a `computed`. The merge then follows a change of `aria-activedescendant`.
 - The popup of a root with virtual focus does not need `aria-activedescendant`, because the input holds it. Such a root drops the key and keeps one props object for the popup while the highlight moves. A new object renders the popup part again, and Vue then patches each item again. `useMenuRoot` does this.
 - The orientation goes to `context.orientation` of the store in `onBeforeMount`, and a `watch` follows a change. A list below reads it through the popup tree. A server render writes nothing to the store. A store with a frozen context, such as `getEmptyRootStore()`, throws at that write, so give the composable the store of the root.
-- The comments of `useListNavigation.ts` give the relay of a `keydown` from a list that `Teleport` moved to the list above (`VUE-46`). A component calls `useListNavigation` one time.
+- The comments of `useListNavigation.ts` give the relay of a `keydown` from a list that `Teleport` moved to the list above (`VUE-46`).
 - `KeepAlive` takes the list out of the document, and the active item loses the focus. While `KeepAlive` holds the list, the composable stops its frames. At the activation, the active item gets the focus again, and the highlight does not change.
 
 ### Popup typeahead
@@ -1286,7 +1286,7 @@ The scroll lock stops the scroll of the page under a modal popup. The code is in
 
 The toasts of one `Toast.Provider` are in a `ToastStore`. The code is in `src/toast/store.ts`.
 
-- `ToastStore` is a `ReactiveStore`, and the rules of [Popup store](#popup-store) apply to it.
+- `ToastStore` is a `ReactiveStore`, and the rules of [Popup store](#popup-store) for a `ReactiveStore` apply to it.
 - A toast keeps no vnode in its data, because a vnode that mounts a second time on a page that Vue hydrated loses its components. The `title`, the `description` and the `children` of `actionProps` are a text, a number, or a function that returns the content.
 
 ### Toast parts
