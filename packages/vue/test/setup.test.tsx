@@ -1,4 +1,4 @@
-import { afterAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { defineComponent, onMounted, onUnmounted, shallowRef } from 'vue';
 import type { CSSProperties } from 'vue';
@@ -128,6 +128,47 @@ describe('real pointer between tests', () => {
     await waitSingleFrame();
 
     expect(onPointerover).not.toHaveBeenCalled();
+  });
+
+  // The first test ends by a time-out while the browser still does its 50 moves to a point in the
+  // element of the second test.
+  it('times out in a pointer move', { fails: true, timeout: 1 }, async () => {
+    await userEvent.pointer(Array.from({ length: 50 }, () => ({ coords: { x: 50, y: 50 } })));
+  });
+
+  it('gets no hover event from the pointer move of the last test', async () => {
+    const onPointerover = vi.fn();
+    await render(<div style={SPOT} onPointerover={onPointerover} />);
+    await waitSingleFrame();
+    await waitSingleFrame();
+
+    expect(onPointerover).not.toHaveBeenCalled();
+  });
+});
+
+describe('real keyboard between tests', () => {
+  // Vitest runs the tests of a file in order. The first test ends by a time-out while the browser
+  // still does its key command. The command holds Shift when it ends.
+  const { render } = createRenderer();
+
+  it('times out in a key command', { fails: true, timeout: 1 }, async () => {
+    await userEvent.keyboard(`{Shift>}${'{End}'.repeat(200)}`);
+  });
+
+  it('gets no key of the last test and no Shift that it held', async () => {
+    const keydowns: { key: string; shiftKey: boolean }[] = [];
+    function recordKeydown({ key, shiftKey }: KeyboardEvent) {
+      keydowns.push({ key, shiftKey });
+    }
+    window.addEventListener('keydown', recordKeydown, { capture: true });
+    onTestFinished(() => {
+      window.removeEventListener('keydown', recordKeydown, { capture: true });
+    });
+    await render(<input data-testid="input" />);
+    screen.getByTestId('input').focus();
+    await userEvent.keyboard('a');
+
+    expect(keydowns).toEqual([{ key: 'a', shiftKey: false }]);
   });
 });
 
