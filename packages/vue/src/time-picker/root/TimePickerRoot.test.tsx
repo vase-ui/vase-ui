@@ -131,10 +131,11 @@ describe('<TimePicker.Root />', () => {
       await waitFor(() => {
         expect(listItem('18:30')).toHaveFocus();
       });
+      // A fractional line height can move an edge by less than one pixel.
       const list = screen.getByTestId('list').getBoundingClientRect();
       const item = listItem('18:30').getBoundingClientRect();
-      expect(item.top).toBeGreaterThanOrEqual(list.top);
-      expect(item.bottom).toBeLessThanOrEqual(list.bottom);
+      expect(item.top).toBeGreaterThanOrEqual(list.top - 1);
+      expect(item.bottom).toBeLessThanOrEqual(list.bottom + 1);
     });
 
     it('stays on the time after the frame in which the focus manager moves the focus', async () => {
