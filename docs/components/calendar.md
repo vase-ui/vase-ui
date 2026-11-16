@@ -7,12 +7,36 @@ description: An unstyled Vue calendar for days, months and years, on the Tempora
 import ApiReference from '../.vitepress/components/ApiReference.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
 import DemoSource from '../.vitepress/components/DemoSource.vue';
+import DemoCalendarAnimation from '../demos/calendar/animation/css-modules/index.vue';
+import DemoCalendarAnimationTailwind from '../demos/calendar/animation/tailwind/index.vue';
+import DemoCalendarBroadcast from '../demos/calendar/broadcast/css-modules/index.vue';
+import DemoCalendarBroadcastTailwind from '../demos/calendar/broadcast/tailwind/index.vue';
+import DemoCalendarCalendarSystem from '../demos/calendar/calendar-system/css-modules/index.vue';
+import DemoCalendarCalendarSystemTailwind from '../demos/calendar/calendar-system/tailwind/index.vue';
+import DemoCalendarDisabledDates from '../demos/calendar/disabled-dates/css-modules/index.vue';
+import DemoCalendarDisabledDatesTailwind from '../demos/calendar/disabled-dates/tailwind/index.vue';
 import DemoCalendarHero from '../demos/calendar/hero/css-modules/index.vue';
 import DemoCalendarHeroTailwind from '../demos/calendar/hero/tailwind/index.vue';
+import DemoCalendarModifiers from '../demos/calendar/modifiers/css-modules/index.vue';
+import DemoCalendarModifiersTailwind from '../demos/calendar/modifiers/tailwind/index.vue';
 import DemoCalendarMonthPicker from '../demos/calendar/month-picker/css-modules/index.vue';
 import DemoCalendarMonthPickerTailwind from '../demos/calendar/month-picker/tailwind/index.vue';
+import DemoCalendarMonthYearSelect from '../demos/calendar/month-year-select/css-modules/index.vue';
+import DemoCalendarMonthYearSelectTailwind from '../demos/calendar/month-year-select/tailwind/index.vue';
+import DemoCalendarMultiple from '../demos/calendar/multiple/css-modules/index.vue';
+import DemoCalendarMultipleTailwind from '../demos/calendar/multiple/tailwind/index.vue';
+import DemoCalendarMultipleMonths from '../demos/calendar/multiple-months/css-modules/index.vue';
+import DemoCalendarMultipleMonthsTailwind from '../demos/calendar/multiple-months/tailwind/index.vue';
+import DemoCalendarTimeZone from '../demos/calendar/time-zone/css-modules/index.vue';
+import DemoCalendarTimeZoneTailwind from '../demos/calendar/time-zone/tailwind/index.vue';
+import DemoCalendarUnavailableDates from '../demos/calendar/unavailable-dates/css-modules/index.vue';
+import DemoCalendarUnavailableDatesTailwind from '../demos/calendar/unavailable-dates/tailwind/index.vue';
 import DemoCalendarViews from '../demos/calendar/views/css-modules/index.vue';
 import DemoCalendarViewsTailwind from '../demos/calendar/views/tailwind/index.vue';
+import DemoCalendarWeekNumbers from '../demos/calendar/week-numbers/css-modules/index.vue';
+import DemoCalendarWeekNumbersTailwind from '../demos/calendar/week-numbers/tailwind/index.vue';
+import DemoCalendarWeekView from '../demos/calendar/week-view/css-modules/index.vue';
+import DemoCalendarWeekViewTailwind from '../demos/calendar/week-view/tailwind/index.vue';
 </script>
 
 # Calendar
@@ -34,7 +58,7 @@ Base UI has no calendar. This one follows the [Date Picker Dialog pattern](https
 
 <<< ../demos/calendar/hero/css-modules/index.vue
 
-<<< ../demos/calendar/hero/css-modules/index.module.css
+<<< ../demos/calendar/_index.module.css
 
 :::
 
@@ -79,11 +103,9 @@ The value is `null` when nothing is selected. With `multiple`, the value is a li
 
 <<< ./calendar/Days.vue
 
-The calendar shows more than one month with `numberOfMonths`, and `pagedNavigation` moves the buttons by that count. `fixedWeeks` gives each month six weeks. `showOutsideDays` gives a button to a day of the month before or after, and a press on it shows its month. `visibleDuration` shows one page of weeks or days, in place of a month. `broadcastCalendar` shows the broadcast months, whose weeks start on Monday. `Calendar.WeekNumber` shows the number of a week: a week that starts on Monday has its ISO 8601 number. `isoWeek` and `firstWeekContainsDate` change that rule. `Calendar.MonthSelect` and `Calendar.YearSelect` choose the month and the year of the page.
+`fixedWeeks` gives each month six weeks. `showOutsideDays` gives a button to a day of the month before or after, and a press on it shows its month.
 
-A page that the user leaves stays until its animations end. It has `data-ending-style` and `inert`, and the new page has `data-starting-style`. `data-navigation-direction` of the root and of `Calendar.Months` says the side of the move: `previous`, `next` or `none`.
-
-`today` gives the day that is today, and `timeZone` gives the time zone of the clock. `locale` gives the names, the digits, the first day of the week and the weekend, and `firstDayOfWeek` changes the first day. `calendar` shows the dates in another calendar, such as `persian`, and the value keeps its own calendar.
+`today` gives the day that is today. `locale` gives the names, the digits, the first day of the week and the weekend, and `firstDayOfWeek` changes the first day.
 
 ## Months and years
 
@@ -102,7 +124,7 @@ A page that the user leaves stays until its animations end. It has `data-ending-
 
 <<< ../demos/calendar/views/css-modules/index.vue
 
-<<< ../demos/calendar/views/css-modules/index.module.css
+<<< ../demos/calendar/_index.module.css
 
 :::
 
@@ -141,7 +163,7 @@ A value that is a `Temporal.PlainYearMonth` makes a month picker. Its first view
 
 <<< ../demos/calendar/month-picker/css-modules/index.vue
 
-<<< ../demos/calendar/month-picker/css-modules/index.module.css
+<<< ../demos/calendar/_index.module.css
 
 :::
 
@@ -158,6 +180,404 @@ A value that is a `Temporal.PlainYearMonth` makes a month picker. Its first view
 </DemoSource>
 
 The grid shows a year and month in the calendar of the locale only where that calendar has the same months. A Buddhist calendar has them. A value in the ISO calendar thus shows in Buddhist years, and a press gives an ISO value. A Persian month is not an ISO month. A Persian value thus shows in its own months, and a press gives a Persian value.
+
+## Examples
+
+### Multiple days
+
+With `multiple`, a person selects a list of days, and `maxDays` limits the list. This calendar takes at most three interview days, none before today. `Calendar.Footer` is a live region for a message below the calendar. Here it counts the days.
+
+<DemoFrame>
+  <DemoCalendarMultiple />
+  <template #tailwind>
+    <DemoCalendarMultipleTailwind />
+  </template>
+</DemoFrame>
+
+<DemoSource variant="css-modules">
+
+::: code-group
+
+<<< ../demos/calendar/multiple/css-modules/index.vue
+
+<<< ../demos/calendar/_index.module.css
+
+:::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/calendar/multiple/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
+### Disabled days
+
+This calendar is for a delivery on a working day, from today to the end of the year. `disabledDates` matches Saturday and Sunday, so the keys skip them.
+
+<DemoFrame>
+  <DemoCalendarDisabledDates />
+  <template #tailwind>
+    <DemoCalendarDisabledDatesTailwind />
+  </template>
+</DemoFrame>
+
+<DemoSource variant="css-modules">
+
+::: code-group
+
+<<< ../demos/calendar/disabled-dates/css-modules/index.vue
+
+<<< ../demos/calendar/_index.module.css
+
+:::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/calendar/disabled-dates/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
+### Unavailable days
+
+Some days of this calendar are full. A day that `unavailableDates` matches stays in the sequence of the keys, and its button has `aria-disabled`. A screen reader user thus finds the day and hears that it is not available. The style sheet draws a line through the number of such a day.
+
+<DemoFrame>
+  <DemoCalendarUnavailableDates />
+  <template #tailwind>
+    <DemoCalendarUnavailableDatesTailwind />
+  </template>
+</DemoFrame>
+
+<DemoSource variant="css-modules">
+
+::: code-group
+
+<<< ../demos/calendar/unavailable-dates/css-modules/index.vue
+
+<<< ../demos/calendar/_index.module.css
+
+:::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/calendar/unavailable-dates/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
+### Modifiers
+
+This calendar marks the public holidays with the modifier `holiday`. The style sheet draws a dot on a day that has `data-holiday`. A screen reader does not read the dot, so the button of such a day has the name of the holiday as its `aria-description`. The footer also says the name of the holiday of the selected day.
+
+<DemoFrame>
+  <DemoCalendarModifiers />
+  <template #tailwind>
+    <DemoCalendarModifiersTailwind />
+  </template>
+</DemoFrame>
+
+<DemoSource variant="css-modules">
+
+::: code-group
+
+<<< ../demos/calendar/modifiers/css-modules/index.vue
+
+<<< ../demos/calendar/_index.module.css
+
+:::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/calendar/modifiers/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
+### More than one month
+
+`numberOfMonths` shows that number of months, one after the other, and the root has `data-multiple-months`. With `pagedNavigation`, the two buttons move by that number of months. Without it, they move by one month.
+
+<DemoFrame>
+  <DemoCalendarMultipleMonths />
+  <template #tailwind>
+    <DemoCalendarMultipleMonthsTailwind />
+  </template>
+</DemoFrame>
+
+<DemoSource variant="css-modules">
+
+::: code-group
+
+<<< ../demos/calendar/multiple-months/css-modules/index.vue
+
+<<< ../demos/calendar/_index.module.css
+
+:::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/calendar/multiple-months/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
+### Month and year selects
+
+This calendar is for a date of birth. `Calendar.MonthSelect` and `Calendar.YearSelect` choose the month and the year of the page, and each is a native `<select>`. The years go from the year of `minDate` to the year of `maxDate`, and `order="desc"` puts the last year first.
+
+<DemoFrame>
+  <DemoCalendarMonthYearSelect />
+  <template #tailwind>
+    <DemoCalendarMonthYearSelectTailwind />
+  </template>
+</DemoFrame>
+
+<DemoSource variant="css-modules">
+
+::: code-group
+
+<<< ../demos/calendar/month-year-select/css-modules/index.vue
+
+<<< ../demos/calendar/_index.module.css
+
+:::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/calendar/month-year-select/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
+### Week numbers
+
+`Calendar.WeekNumber` shows the number of a week, and `Calendar.WeekNumberHeader` is the header of that column. By default, a week that starts on Monday has its ISO 8601 number. `isoWeek` gives each locale such weeks. Without `isoWeek`, `firstWeekContainsDate` gives the day of January that is always in the first week.
+
+<DemoFrame>
+  <DemoCalendarWeekNumbers />
+  <template #tailwind>
+    <DemoCalendarWeekNumbersTailwind />
+  </template>
+</DemoFrame>
+
+<DemoSource variant="css-modules">
+
+::: code-group
+
+<<< ../demos/calendar/week-numbers/css-modules/index.vue
+
+<<< ../demos/calendar/_index.module.css
+
+:::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/calendar/week-numbers/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
+### Broadcast calendar
+
+`broadcastCalendar` shows the broadcast months. A broadcast month has four or five whole weeks that start on Monday, so the grid also shows days of the months around it. The first week of a broadcast year holds January 1, so this calendar sets `firstWeekContainsDate` to `1`. Without it, the weeks have their ISO 8601 numbers.
+
+<DemoFrame>
+  <DemoCalendarBroadcast />
+  <template #tailwind>
+    <DemoCalendarBroadcastTailwind />
+  </template>
+</DemoFrame>
+
+<DemoSource variant="css-modules">
+
+::: code-group
+
+<<< ../demos/calendar/broadcast/css-modules/index.vue
+
+<<< ../demos/calendar/_index.module.css
+
+:::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/calendar/broadcast/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
+### A page of weeks or days
+
+`visibleDuration` shows one page of weeks or days, in place of a month, and the two buttons move by that page. This calendar shows one week. `format` of `Calendar.Caption` gives the form of the first day and the last day of the page.
+
+<DemoFrame>
+  <DemoCalendarWeekView />
+  <template #tailwind>
+    <DemoCalendarWeekViewTailwind />
+  </template>
+</DemoFrame>
+
+<DemoSource variant="css-modules">
+
+::: code-group
+
+<<< ../demos/calendar/week-view/css-modules/index.vue
+
+<<< ../demos/calendar/_index.module.css
+
+:::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/calendar/week-view/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
+### Time zone
+
+The value of this calendar is a call at 09:00 in Tokyo, a `Temporal.ZonedDateTime`. A press moves the call to another day. `timeZone` gives the time zone of the clock that says which day is today. With no `timeZone`, the calendar uses the zone of the value, and then the zone of the runtime. This calendar gives `today`, so it does not use the day of the clock.
+
+<DemoFrame>
+  <DemoCalendarTimeZone />
+  <template #tailwind>
+    <DemoCalendarTimeZoneTailwind />
+  </template>
+</DemoFrame>
+
+<DemoSource variant="css-modules">
+
+::: code-group
+
+<<< ../demos/calendar/time-zone/css-modules/index.vue
+
+<<< ../demos/calendar/_index.module.css
+
+:::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/calendar/time-zone/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
+### Another calendar
+
+`calendar` shows the dates in another calendar, such as `persian`, and the value keeps its own calendar. This calendar shows Persian months, and its value is an ISO date. With no `calendar`, the grid takes the calendar of a value that is not ISO, and else the calendar of the locale. `calendar="gregory"` turns the calendar of the locale off.
+
+<DemoFrame>
+  <DemoCalendarCalendarSystem />
+  <template #tailwind>
+    <DemoCalendarCalendarSystemTailwind />
+  </template>
+</DemoFrame>
+
+<DemoSource variant="css-modules">
+
+::: code-group
+
+<<< ../demos/calendar/calendar-system/css-modules/index.vue
+
+<<< ../demos/calendar/_index.module.css
+
+:::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/calendar/calendar-system/tailwind/index.vue
+
+:::
+
+</DemoSource>
+
+### Animation
+
+A page that the user leaves stays until its animations end. It has `data-ending-style` and `inert`, and the new page has `data-starting-style`. `data-navigation-direction` of the root and of `Calendar.Months` says the side of the move: `previous`, `next` or `none`. This calendar fades each page and moves it 0.5rem, to the left for `next` and to the right for `previous`. `fixedWeeks` and `showOutsideDays` give each page six rows of buttons, so the grid keeps its height. The style sheet has no transition for a person who prefers reduced motion.
+
+<DemoFrame>
+  <DemoCalendarAnimation />
+  <template #tailwind>
+    <DemoCalendarAnimationTailwind />
+  </template>
+</DemoFrame>
+
+<DemoSource variant="css-modules">
+
+::: code-group
+
+<<< ../demos/calendar/animation/css-modules/index.vue
+
+<<< ../demos/calendar/_index.module.css
+
+:::
+
+</DemoSource>
+
+<DemoSource variant="tailwind">
+
+::: code-group
+
+<<< ../demos/calendar/animation/tailwind/index.vue
+
+:::
+
+</DemoSource>
 
 ## Events
 
