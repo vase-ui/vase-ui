@@ -162,6 +162,9 @@ describe('normalizeLayout', () => {
       number | string
     >;
 
-    expect(normalizeLayout(snapshot, new Set(['a']), basis)).toEqual({ layout: { b: 40 }, pins: {} });
+    expect(normalizeLayout(snapshot, new Set(['a']), basis)).toEqual({
+      layout: { b: 40 },
+      pins: {},
+    });
   });
 });
