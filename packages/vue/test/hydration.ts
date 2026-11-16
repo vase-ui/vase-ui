@@ -149,6 +149,27 @@ export async function hydrateAfter(
   return { container };
 }
 
+/**
+ * Gives `html` with `value` in the attribute `name` of the first element that matches `selector`.
+ * A case of a server whose `Intl` data differs from the data of the browser changes the server
+ * HTML with it.
+ */
+export function setAttributeInHtml(
+  html: string,
+  selector: string,
+  name: string,
+  value: string,
+): string {
+  const template = document.createElement('template');
+  template.innerHTML = html;
+  const element = template.content.querySelector(selector);
+  if (!element) {
+    throw new Error(`No element of the HTML matches \`${selector}\`.`);
+  }
+  element.setAttribute(name, value);
+  return template.innerHTML;
+}
+
 function mockNavigation(navigation: Partial<PerformanceNavigationTiming>) {
   const getEntriesByType = performance.getEntriesByType.bind(performance);
   const spy = vi
