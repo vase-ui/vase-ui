@@ -1,11 +1,11 @@
 import { computed, onMounted, onScopeDispose, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
+import { given } from '../givenAttributes';
 import { NOOP } from '../noop';
-import { givenId, useVaseUiId } from '../useBaseUiId';
+import { useVaseUiId } from '../useBaseUiId';
 import { useKeepAliveState } from '../useKeepAliveState';
 import { useLabelableContext } from './LabelableContext';
 import { useRegisteredId } from './useRegisteredId';
-import { useRenderedElementId } from './useRenderedElementId';
 
 /**
  * A control calls it in `setup` and binds the result to its `id`. The label of the same provider
@@ -18,7 +18,7 @@ export function useLabelableId(params: UseLabelableIdParameters = {}): ComputedR
   const defaultId = useVaseUiId();
 
   const source = Symbol();
-  const id = () => givenId(toValue(params.id));
+  const id = () => given('id', toValue(params.id));
   const isEnabled = () => toValue(params.enabled) ?? true;
 
   let hasRegistered = false;
@@ -92,19 +92,22 @@ export function useLabelableId(params: UseLabelableIdParameters = {}): ComputedR
   // replaces it runs in the flush after that, so the new control never sees the old registration.
   onScopeDispose(unregister);
 
-  if (registerControlId !== NOOP && params.element !== undefined) {
-    const elementId = useRenderedElementId(params.element);
-    const elementSource = Symbol();
-    useRegisteredId(
-      () => elementId.value,
-      (getId) => registerControlElementId(elementSource, getId),
-    );
-  }
-
   // The id of the provider wins until the registration. The label has `for` with that id in the
   // server HTML. An id of the control here would leave the label and the control with two ids, and
   // a label that names no element names nothing.
-  return computed(() => (isEnabled() ? controlId.value : undefined) ?? id() ?? defaultId.value);
+  const boundId = computed(
+    () => (isEnabled() ? controlId.value : undefined) ?? id() ?? defaultId.value,
+  );
+
+  if (registerControlId !== NOOP && params.element !== undefined) {
+    useRegisteredId(
+      () => (isEnabled() ? boundId.value : undefined),
+      registerControlElementId,
+      params.element,
+    );
+  }
+
+  return boundId;
 }
 
 export interface UseLabelableIdParameters {

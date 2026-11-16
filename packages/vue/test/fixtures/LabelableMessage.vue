@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useAttrs } from 'vue';
+import { shallowRef, useAttrs } from 'vue';
 import { useVaseUiId } from '../../src/internals/useBaseUiId';
 import { useRegisteredMessageId } from '../../src/internals/labelable-provider';
 
@@ -11,7 +11,8 @@ const props = defineProps<{
 
 const attrs = useAttrs();
 const messageId = useVaseUiId(() => props.id);
-useRegisteredMessageId(messageId);
+const element = shallowRef<HTMLElement | null>(null);
+useRegisteredMessageId(messageId, element);
 
 function elementProps() {
   return { ...attrs, id: messageId.value };
@@ -19,5 +20,5 @@ function elementProps() {
 </script>
 
 <template>
-  <p v-bind="elementProps()"><slot /></p>
+  <p ref="element" v-bind="elementProps()"><slot /></p>
 </template>

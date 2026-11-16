@@ -3,6 +3,7 @@
 import * as Checkbox from '../checkbox/index.parts';
 import * as Combobox from '../combobox/index.parts';
 import * as DateField from '../date-field/index.parts';
+import * as DatePicker from '../date-picker/index.parts';
 import * as Dialog from '../dialog/index.parts';
 import * as Field from '../field/index.parts';
 import { Input } from '../input';
@@ -52,6 +53,10 @@ declare const segment: EditableDateTimeFieldSegment;
   <Checkbox.Root :ariaLabelledby="null" />
   <!-- @vue-expect-error the prop `ariaLabelledby` takes no `null` -->
   <DateField.Root :aria-labelledby="null" />
+  <!-- @vue-expect-error the prop `ariaLabelledby` takes no `null` -->
+  <DatePicker.Field :aria-labelledby="null" />
+  <!-- @vue-expect-error the prop `ariaLabelledby` takes no `null` -->
+  <DatePicker.TimeField :aria-labelledby="null" />
   <!-- @vue-expect-error the prop `ariaLabelledby` takes no `null` -->
   <OTPField.Root :length="6" :aria-labelledby="null" />
   <!-- @vue-expect-error the prop `ariaLabel` takes no `null` -->

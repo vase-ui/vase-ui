@@ -79,18 +79,25 @@ describe('hydration', () => {
     });
   });
 
-  describe('useServerElement', () => {
-    it('gives no element to a part that renders no element', async () => {
-      const serverHtml = await renderOnServer(SERVER_ELEMENT_PROBE);
-      const elements: (HTMLElement | null)[] = [];
+  describe('getServerElement', () => {
+    it.each([
+      { form: 'element' as const, expected: 'own' },
+      { form: 'fragment' as const, expected: 'own' },
+      // The walk stops at the end of the fragment of the part, before the element of the next part.
+      { form: 'empty fragment' as const, expected: null },
+      { form: 'no element' as const, expected: null },
+    ])('gives $expected for a part that renders $form', async ({ form, expected }) => {
+      const serverHtml = await renderOnServer(SERVER_ELEMENT_PROBE, { form });
+      const elements: (string | null)[] = [];
 
-      // The helper renders the probe on the client first, and then hydrates it.
+      // The helper renders the probe on the client first, and then hydrates it. A client-only
+      // mount has no server element.
       await hydrate(ServerElementProbe, {
         serverHtml,
-        props: { onRead: (element: HTMLElement | null) => elements.push(element) },
+        props: { form, onRead: (testId: string | null) => elements.push(testId) },
       });
 
-      expect(elements).toEqual([null, null]);
+      expect(elements).toEqual([null, expected]);
     });
   });
 

@@ -33,6 +33,8 @@ export interface VaseUiConformanceTestsOptions {
    * the default element.
    * Rendering a `button` also sets `nativeButton` on components that accept it, and for those
    * components the tests run again with a `div` and `nativeButton={false}`.
+   * In the project `vapor`, `conformanceTests/VaporConsumer.vue` renders a static element for each
+   * tag. Add a tag that a new call needs.
    * @default 'div'
    */
   testRenderPropWith?: string;

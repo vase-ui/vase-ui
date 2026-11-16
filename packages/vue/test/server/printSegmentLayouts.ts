@@ -1,4 +1,6 @@
-// Node.js runs this file with no Vitest. When `Intl` ends the process, it ends only this child.
+// Node.js runs this file with no Vitest. A `.node.test` file starts it with `spawnSync` and gives
+// it the cases as JSON on standard input. When `Intl` ends the process, it ends only this child.
+// The `.node.test` file then gets the signal and the name of the last case.
 import { readFileSync, writeSync } from 'node:fs';
 import { registerHooks } from 'node:module';
 import type { SegmentLayoutOptions } from '../../src/internals/date-time/field/segmentLayout.ts';

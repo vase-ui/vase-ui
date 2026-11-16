@@ -651,7 +651,7 @@ describe('<Menu.Popup />', () => {
   });
 
   describe('prop: id', () => {
-    it('gives the id of the popup to the root and to the trigger, and gives the generated id back to the root', async () => {
+    it('gives the id to the popup element and to the trigger, and the default id after a removal', async () => {
       const id = shallowRef<string | undefined>('custom-popup');
       const probe = createMenuStoreProbe();
       await render(() => (
@@ -669,22 +669,48 @@ describe('<Menu.Popup />', () => {
       const popup = screen.getByRole('menu');
       const trigger = screen.getByRole('button', { name: 'Actions' });
       expect(popup.id).toBe('custom-popup');
-      expect(probe.store.select('popupId')).toBe('custom-popup');
       expect(trigger).toHaveAttribute('aria-controls', 'custom-popup');
 
       id.value = undefined;
       await flushMicrotasks();
 
-      expect(popup.id).toBe(probe.context.generatedPopupId);
-      expect(probe.store.select('defaultPopupId')).toBe(probe.context.generatedPopupId);
+      expect(popup.id).toBe(probe.store.select('defaultPopupId'));
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
     });
 
-    it('takes back the id of a popup that unmounts', async () => {
-      const mounted = shallowRef(true);
-      const probe = createMenuStoreProbe();
+    it('names in aria-controls the id that the #render slot gives the popup element', async () => {
+      const id = shallowRef('slot-popup');
       await render(() => (
         <Menu.Root open>
-          <probe.Probe />
+          <Menu.Trigger>Actions</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup
+                id="custom-popup"
+                v-slots={{
+                  render: ({ props }: { props: Record<string, unknown> }) => (
+                    <div {...props} id={id.value} />
+                  ),
+                }}
+              />
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      ));
+      const trigger = screen.getByRole('button', { name: 'Actions' });
+      expect(trigger).toHaveAttribute('aria-controls', 'slot-popup');
+
+      id.value = '';
+      await flushMicrotasks();
+
+      expect(trigger).not.toHaveAttribute('aria-controls');
+    });
+
+    it('names no popup in aria-controls after the popup unmounts', async () => {
+      const mounted = shallowRef(true);
+      await render(() => (
+        <Menu.Root open>
+          <Menu.Trigger>Actions</Menu.Trigger>
           <Menu.Portal>
             <Menu.Positioner>
               {mounted.value ? <Menu.Popup id="custom-popup" /> : null}
@@ -692,12 +718,13 @@ describe('<Menu.Popup />', () => {
           </Menu.Portal>
         </Menu.Root>
       ));
-      expect(probe.store.select('defaultPopupId')).toBe('custom-popup');
+      const trigger = screen.getByRole('button', { name: 'Actions' });
+      expect(trigger).toHaveAttribute('aria-controls', 'custom-popup');
 
       mounted.value = false;
       await flushMicrotasks();
 
-      expect(probe.store.select('defaultPopupId')).toBe(probe.context.generatedPopupId);
+      expect(trigger).not.toHaveAttribute('aria-controls');
     });
   });
 

@@ -1011,6 +1011,20 @@ function readSelected(calendar: Locator) {
     .evaluateAll((cells) => cells.map((cell) => cell.getAttribute('aria-label')));
 }
 
+// The server HTML has the field with the value, the hidden input and the trigger with its name. It
+// has no popup, because the portal renders after the mount.
+async function expectDatePickerPage(page: Page) {
+  expect(await page.getByTestId('when').getAttribute('role')).toBe('group');
+  expect(await readDateFieldValues(page, 'when')).toEqual(['11', '10', '2026']);
+  expect(await page.getByTestId('when-value').textContent()).toBe('2026-11-10');
+  expect(await readFormData(page)).toEqual(['when=2026-11-10']);
+  const trigger = page.getByTestId('when-trigger');
+  expect(await trigger.getAttribute('aria-haspopup')).toBe('dialog');
+  expect(await trigger.getAttribute('aria-expanded')).toBe('false');
+  expect(await trigger.getAttribute('aria-label')).toBe('Change date, Tuesday, November 10, 2026');
+  expect(await page.getByTestId('when-popup').count()).toBe(0);
+}
+
 async function expectDateFieldPageOnServer(page: Page) {
   await expectDateFieldPage(page);
   // A server has no DOM, so it cannot find a native label.
@@ -2104,6 +2118,7 @@ const PAGES: PageCase[] = [
     expectPage: expectDateFieldPageOnServer,
     expectHydratedPage: expectHydratedDateFieldPage,
   },
+  { path: '/date-picker', expectPage: expectDatePickerPage },
   { path: '/number-field', expectPage: expectNumberFieldPage },
   { path: '/providers', expectPage: expectProvidersPage },
   { path: '/use-render', expectPage: expectUseRenderPage },
@@ -2514,6 +2529,36 @@ describe.each(MODES)('in $name', async ({ dev }) => {
 
     expect(await page.evaluate(() => document.activeElement?.getAttribute('data-type'))).toBe(
       'month',
+    );
+    expect(messages).toEqual([]);
+  });
+
+  it('opens the popup of /date-picker, focuses the day, and selects a day, after hydration', async () => {
+    const page = await createPage('/date-picker');
+    const messages = collectMessages(page);
+    const readFocusedDate = () =>
+      page.evaluate(() =>
+        document.activeElement?.closest('[data-date]')?.getAttribute('data-date'),
+      );
+
+    await page.getByTestId('when-trigger').click();
+    await page.getByTestId('when-popup').waitFor();
+
+    expect(await page.getByTestId('when-trigger').getAttribute('aria-expanded')).toBe('true');
+    await page.waitForFunction(
+      () =>
+        document.activeElement?.closest('[data-date]')?.getAttribute('data-date') === '2026-11-10',
+    );
+    expect(await readFocusedDate()).toBe('2026-11-10');
+
+    await page.getByRole('button', { name: /November 12, 2026/ }).click();
+
+    await page.getByTestId('when-popup').waitFor({ state: 'detached' });
+    expect(await page.getByTestId('when-value').textContent()).toBe('2026-11-12');
+    expect(await readDateFieldValues(page, 'when')).toEqual(['11', '12', '2026']);
+    expect(await readFormData(page)).toEqual(['when=2026-11-12']);
+    expect(await page.getByTestId('when-trigger').getAttribute('aria-label')).toBe(
+      'Change date, Thursday, November 12, 2026',
     );
     expect(messages).toEqual([]);
   });

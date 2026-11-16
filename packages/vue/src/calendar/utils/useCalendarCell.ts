@@ -1,6 +1,6 @@
 import { computed, watch } from 'vue';
 import type { ComputedRef } from 'vue';
-import { useAriaAfterHydration, useIsHydrating } from '../../common/hydration';
+import { useIsHydrating } from '../../common/hydration';
 import { formatText } from '../../internals/date-time/calendar/formatText';
 import type { CalendarCellState } from '../../internals/date-time/calendar/viewPages';
 import { isSameDay } from '../../internals/date-time/temporal';
@@ -38,7 +38,6 @@ export function useCalendarCell({
   const root = useCalendarRootContext();
   const { columns } = useCalendarViewGridContext();
   const isHydrating = useIsHydrating();
-  const ariaAfterHydration = useAriaAfterHydration();
 
   const date = computed(() => cell().toPlainDate({ day: 1 }));
   const isTabStop = computed(
@@ -59,7 +58,7 @@ export function useCalendarCell({
       return [
         {
           role: 'gridcell',
-          'aria-label': ariaAfterHydration(label()),
+          'aria-label': label(),
           'aria-selected': state.value.selected,
           'aria-current': state.value.current ? 'date' : undefined,
           ...(state.value.disabled && { 'aria-disabled': true }),

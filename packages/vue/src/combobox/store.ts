@@ -4,7 +4,7 @@ import { compareItemEquality } from '../internals/itemEquality';
 import type { RegisterId } from '../internals/labelable-provider/LabelableContext';
 import { hasNullItemLabel } from '../internals/resolveValueLabel';
 import type { AdaptiveOriginMiddleware } from '../utils/popups/positioning/adaptiveOriginConstants';
-import { popupStoreSelectors } from '../utils/popups/store';
+import { createElementIdObserver, popupStoreSelectors } from '../utils/popups/store';
 import type { PopupInteractionReader, PositioningInteractionStore } from '../utils/popups/types';
 import { ValuePopupStore, valuePopupSelectors } from '../utils/popups/value-popup/ValuePopupStore';
 import type {
@@ -33,6 +33,10 @@ export type State = ValuePopupState & {
 
   inputElement: HTMLInputElement | null;
   inputGroupElement: HTMLDivElement | null;
+  /** The element of the highlighted item. The item writes it. */
+  highlightedItem: Element | null;
+  /** The `id` of `highlightedItem`. The store follows each change of the attribute. */
+  highlightedItemId: string | undefined;
 
   inputInsidePopup: boolean;
   inputOwnsFormValue: boolean;
@@ -149,6 +153,7 @@ export const selectors = {
 
   inputElement: (state: State) => state.inputElement,
   inputGroupElement: (state: State) => state.inputGroupElement,
+  highlightedItemId: (state: State) => state.highlightedItemId || undefined,
   // See `interactions`.
   interactionOpen: (state: State) => popupStoreSelectors.open(state) || state.inline,
   // The shared selector hides the positioner while a popup that opens mounts. The list navigation
@@ -180,6 +185,24 @@ export class ComboboxStore extends ValuePopupStore<
    * key of the store itself.
    */
   readonly interactions: PositioningInteractionStore = createInteractionView(this);
+
+  // A render can give the highlighted item a new `id` and write nothing to the store. The id comes
+  // from the `#render` slot of the item.
+  readonly #observeHighlightedItemId = createElementIdObserver(() => {
+    this.set('highlightedItemId', toRaw(this.state).highlightedItem?.id);
+  });
+
+  override setState(newState: Readonly<State>): void {
+    const current = toRaw(this.state);
+    super.setState(
+      newState.highlightedItem === current.highlightedItem
+        ? newState
+        : {
+            ...newState,
+            highlightedItemId: this.#observeHighlightedItemId(newState.highlightedItem),
+          },
+    );
+  }
 
   // The input, or the trigger when the input is inside the popup.
   protected getAnchorElement(state: Readonly<State>) {

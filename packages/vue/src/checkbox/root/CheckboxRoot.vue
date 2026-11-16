@@ -123,16 +123,7 @@ export type CheckboxRootChangeEventDetails =
 </script>
 
 <script setup lang="ts">
-import {
-  computed,
-  nextTick,
-  onDeactivated,
-  onMounted,
-  onUpdated,
-  provide,
-  shallowRef,
-  watch,
-} from 'vue';
+import { computed, nextTick, onDeactivated, provide, shallowRef, watch } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { getDefaultFormSubmitter } from '../../common/getDefaultFormSubmitter';
 import { queueInputTake, useAriaAfterHydration, useIsHydrated } from '../../common/hydration';
@@ -141,12 +132,12 @@ import { useTimeout } from '../../common/useTimeout';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { useFieldItemContext } from '../../field/item/FieldItemContext';
 import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
-import { givenName } from '../../internals/blankName';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { useRegisterFieldControl } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
 import { useFormContext } from '../../internals/form-context';
+import { given } from '../../internals/givenAttributes';
 import { handleHiddenInputInvalid } from '../../internals/handleHiddenInputInvalid';
 import {
   useAriaLabelledBy,
@@ -163,6 +154,7 @@ import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { dispatchClickWithModifiers } from '../../utils/dispatchClickWithModifiers';
+import { useElementId } from '../../utils/popups/useElementId';
 import { useCheckboxGroupContext } from '../../checkbox-group/CheckboxGroupContext';
 import type { UseCheckboxGroupParentReturnValue } from '../../checkbox-group/useCheckboxGroupParent';
 import { getCheckboxStateAttributesMapping } from '../utils/getCheckboxStateAttributesMapping';
@@ -617,8 +609,8 @@ const { element, elementProps } = useRenderElement('span', props, {
       'aria-checked': isIndeterminate.value ? 'mixed' : isChecked.value,
       'aria-readonly': props.readOnly || undefined,
       'aria-required': props.required || undefined,
-      'aria-label': givenName(props.ariaLabel),
-      'aria-labelledby': ariaAfterHydration(ariaLabelledBy.value),
+      'aria-label': given('aria-label', props.ariaLabel),
+      'aria-labelledby': ariaLabelledBy.value,
       'data-parent': props.parent ? '' : undefined,
       onFocusin() {
         setFocused(true);
@@ -659,20 +651,11 @@ const { element, elementProps } = useRenderElement('span', props, {
     getButtonProps,
     getDescriptionProps,
     (merged) => validation.getValidationProps(isDisabled.value, merged),
-    (merged) => ({ ...merged, 'aria-describedby': ariaAfterHydration(merged['aria-describedby']) }),
   ],
 });
 
-// A `#render` slot can give the element an `id` that no prop shows, so the part reads the `id` from
-// the element after each update.
-const renderedId = shallowRef<string>();
-
-function readRenderedId() {
-  renderedId.value = element.value?.id || undefined;
-}
-
-onMounted(readRenderedId);
-onUpdated(readRenderedId);
+// The `id` can come from the `#render` slot, also from a component in it that renders on its own.
+const elementId = useElementId(element);
 
 // The parent checkbox of the group lists the id of each child in `aria-controls`, and it reads the
 // disabled state of each child when it changes the value. The id waits for the mount, because a
@@ -694,9 +677,9 @@ watch(
 );
 
 watch(
-  [isHeld, groupParent, () => props.parent, itemValue, renderedId],
+  [isHeld, groupParent, () => props.parent, itemValue, elementId],
   ([held, parent, isParent, value, id], _previous, onCleanup) => {
-    if (held || isParent || !parent || value === undefined || id === undefined) {
+    if (held || isParent || !parent || value === undefined || !id) {
       return;
     }
 

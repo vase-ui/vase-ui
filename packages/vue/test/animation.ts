@@ -166,8 +166,9 @@ export function nextEndingStyle(
 }
 
 /**
- * A style sheet that gives an element of the class `popup` an exit animation of 100 s. A case ends
- * the animation with its own call. A late frame can end a short animation before that call.
+ * A style sheet that gives an element of the class `popup` an exit animation of 100 s. Put it in a
+ * `<style>` element, and give the popup part that class. A case ends the animation with its own
+ * call. A late frame can end a short animation before that call.
  */
 export const POPUP_EXIT_CSS = `
   .popup[data-ending-style] { animation: popup-exit 100s; }

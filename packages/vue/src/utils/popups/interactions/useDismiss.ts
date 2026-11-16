@@ -188,6 +188,7 @@ export interface UseDismissProps {
    * Whether to dismiss the floating element upon pressing outside of the floating element.
    * A function decides for each press. The composable reads the option one time, so a function is
    * the form that follows a change.
+   * No caller of Base UI gives a Boolean that changes.
    * @default true
    */
   outsidePress?: boolean | ((event: MouseEvent | TouchEvent) => boolean) | undefined;
@@ -218,6 +219,19 @@ export interface UseDismissProps {
  * Call it in the `setup` of the root of the popup. A popup below that root then counts as inside
  * the popup, also when `Teleport` moved it, with each part in its portal, such as its backdrop.
  * Other content that `Teleport` moved out of the popup is outside it.
+ *
+ * Base UI differs in its boundary. It counts only the React children of the popup element as
+ * inside, and that includes content that a React portal moves out of the element. Here the
+ * boundary is the root that calls this composable.
+ *
+ * A component calls it one time. A second call in the same component replaces the functions that
+ * the first call provides.
+ *
+ * Some roots of Base UI, such as `PopoverRoot`, call the hook in a component of their own. That
+ * component mounts only while the popup is open, is mounted or has a handle. The hook gives an
+ * empty object while `enabled` is `false`. A root here calls the composable also while the popup
+ * is closed, and each handler does nothing while the composable is not enabled. The object is
+ * thus made one time.
  *
  * A press in a same-origin frame below the document of the popup counts as a press on the frame
  * element. A press in a cross-origin frame closes nothing, and neither does a press in a frame in
@@ -275,6 +289,8 @@ export function useDismiss(
 
   const parent = inject(DismissParentContext, undefined);
 
+  // The popup tree cannot replace the marker. Dialog, Select, Combobox and Tooltip register no
+  // node, and a Select in a Popover must not close the Popover.
   // A closed store that a module shares has a frozen context. The two functions thus write the
   // marker only for an open popup and only when it is set.
   function clearInsideComponentTree() {

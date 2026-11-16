@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { shallowRef } from 'vue';
 import { Calendar } from '@vase-ui/vue/calendar';
-import styles from './index.module.css';
+import styles from '../../_index.module.css';
 
 const today = Temporal.PlainDate.from('2026-11-14');
 const selected = shallowRef<Temporal.PlainYearMonth | null>(

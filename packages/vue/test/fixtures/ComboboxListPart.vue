@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, toRaw } from 'vue';
+import { computed, toRaw, watch } from 'vue';
 import {
   useComboboxDerivedItemsContext,
   useComboboxRootContext,
@@ -47,6 +47,20 @@ function setItemElement(index: number, value: unknown, element: unknown) {
     delete store.context.valuesRef.value[index];
   }
 }
+
+// `Combobox.Item` gives the element of the highlighted item to the store, and the input names its
+// `id` in `aria-activedescendant`. This part gives the option at the active index after the DOM
+// update that follows a change of the index, of the mount or of the filtered values.
+watch(
+  [() => store.select('activeIndex'), mounted, flatFilteredValues],
+  ([index]) => {
+    store.set(
+      'highlightedItem',
+      index === null ? null : (store.context.listRef.value[index] ?? null),
+    );
+  },
+  { flush: 'post' },
+);
 
 function getLabel(value: unknown) {
   return typeof value === 'object' && value !== null ? (value as { label: string }).label : value;
