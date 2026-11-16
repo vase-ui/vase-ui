@@ -93,6 +93,7 @@ import { useAriaAfterHydration } from '../../common/hydration';
 import { mergeCleanups } from '../../common/mergeCleanups';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { useFieldItemContext } from '../../field/item/FieldItemContext';
+import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { ACTIVE_COMPOSITE_ITEM } from '../../internals/composite/constants';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -144,11 +145,13 @@ const {
 const fieldItem = useFieldItemContext();
 const { getDescriptionProps } = useLabelableContext();
 
+const fieldsetDisabled = useFieldsetDisabled(() => element.value);
 const isDisabled = computed(
   () =>
     fieldDisabled.value ||
     fieldItem.disabled.value ||
     (group?.disabled.value ?? false) ||
+    fieldsetDisabled.value ||
     props.disabled,
 );
 const isReadOnly = computed(() => (group?.readOnly.value ?? false) || props.readOnly);

@@ -74,6 +74,7 @@ import { contains } from '../common/shadowDom';
 import { useControlled } from '../common/useControlled';
 import { isEligibleInput } from '../field/root/useFieldValidation';
 import { useFieldsetRootContext } from '../fieldset/root/FieldsetRootContext';
+import { useFieldsetDisabled } from '../fieldset/root/useFieldsetDisabled';
 import { comesBeforeInSameTree } from '../internals/comesBeforeInSameTree';
 import { SHIFT } from '../internals/composite/composite';
 import { useCompositeRoot } from '../internals/composite/root/useCompositeRoot';
@@ -138,7 +139,8 @@ const fieldset = useFieldsetRootContext(true);
 // The group binds the id of a label, a legend and a message that can come after it.
 useDeferredServerRender();
 
-const isDisabled = computed(() => fieldDisabled.value || props.disabled);
+const fieldsetDisabled = useFieldsetDisabled(() => element.value);
+const isDisabled = computed(() => fieldDisabled.value || fieldsetDisabled.value || props.disabled);
 const inputName = computed(() => fieldName.value ?? props.name);
 const controlId = useVaseUiId(() => props.id);
 const clearFieldError = useClearFieldError(inputName);
@@ -206,9 +208,9 @@ const radioInputs = new Set<HTMLInputElement>();
 // this state.
 const isExposedInputDetached = shallowRef(false);
 
-// A keyed move and a change of a native `<fieldset>` run no registration, so the group reads its
-// inputs at each read. `:disabled` also matches an input in a disabled `<fieldset>`, and the browser
-// does not focus that input. The `disabled` property gives only the attribute.
+// A keyed move runs no registration, and a radio follows a change of a native `<fieldset>` only after
+// its observer calls back. The group thus reads its inputs at each read. `:disabled` also matches an
+// input in a disabled `<fieldset>`, and the browser does not focus that input.
 function getExposedInput() {
   if (isExposedInputDetached.value) {
     return null;
@@ -232,8 +234,9 @@ function getExposedInput() {
 function registerInputRef(input: HTMLInputElement) {
   radioInputs.add(input);
 
-  // A fieldset that becomes enabled runs no registration, so an input that only a fieldset
-  // disables also ends the detach.
+  // A radio reads a native `<fieldset>` after its mount. The first registration of a radio that
+  // mounts in a disabled fieldset thus sees no `disabled` attribute, and it ends the detach, as in
+  // Base UI.
   if (!input.disabled) {
     isExposedInputDetached.value = false;
   }

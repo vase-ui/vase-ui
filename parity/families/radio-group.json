@@ -63,6 +63,14 @@
       "entry": "RadioIndicatorDataAttributes",
       "kind": "not-applicable",
       "reason": "The `types.md` of Radio Group repeats this entry of Radio. The family `radio` ports it."
+    },
+    {
+      "upstream": "packages/react/src/radio-group/RadioGroup.test.tsx",
+      "describe": ["<RadioGroup />", "Form"],
+      "title": "excludes a radio disabled through an ancestor <fieldset disabled> to match native form data",
+      "kind": "replaced",
+      "test": "packages/vue/src/radio-group/RadioGroup.test.tsx",
+      "reason": "The case asserts `{ choice: null }` in the values of `onFormSubmit`. A disabled `<fieldset>` disables the group in Vase UI, and the form leaves the field out, as it does for a field in a disabled `Fieldset.Root` (VUE-112). The case \"leaves a group in a disabled fieldset out of the form values\" of the block `VUE-112: a disabled fieldset` asserts `{}` and the same native form data."
     }
   ],
   "surfaceAdditions": [

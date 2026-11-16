@@ -54,7 +54,7 @@ Import the components and assemble their parts:
 
 <<< ./radio-group/Anatomy.vue
 
-`Radio.Root` renders its element and a hidden `<input type="radio">` after it. The group gives its name and its `form` to each input, so a form submits the value of the checked radio under that name. A group with a name and `required` blocks the submit of the form while it has no value. A group with `disabled` submits nothing.
+`Radio.Root` renders its element and a hidden `<input type="radio">` after it. The group gives its name and its `form` to each input, so a form submits the value of the checked radio under that name. A group with a name and `required` blocks the submit of the form while it has no value. A group with `disabled` submits nothing. A disabled `<fieldset>` around the group, or `Fieldset.Root` with `disabled`, disables the group as its `disabled` prop does. A native `<fieldset>` takes effect after the mount, so the server HTML shows the group enabled.
 
 A reset of the form puts an uncontrolled group back to `defaultValue`, or to no value when it has none. A controlled group does not change. In a `Field`, a reset clears the error of the field. The reset starts no validation.
 
