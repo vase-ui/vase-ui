@@ -86,6 +86,7 @@ import {
 import { ownerWindow } from '../../common/owner';
 import { contains } from '../../common/shadowDom';
 import { visuallyHidden } from '../../common/visuallyHidden';
+import { givenIdReference } from '../../internals/blankIdReference';
 import { givenName } from '../../internals/blankName';
 import {
   ARROW_DOWN,
@@ -467,7 +468,7 @@ function inputProps() {
       'aria-label': ariaLabel,
       'aria-labelledby':
         givenName(props.ariaLabelledby) ?? (ariaLabel == null ? labelId.value : undefined),
-      'aria-describedby': props.ariaDescribedby,
+      'aria-describedby': givenIdReference(props.ariaDescribedby),
       'aria-orientation': orientation.value,
       'aria-valuenow': value,
       'aria-valuetext':

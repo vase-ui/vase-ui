@@ -42,6 +42,7 @@ import type { Component } from 'vue';
 import { formatNumber } from '../../common/formatNumber';
 import { useAriaAfterHydration } from '../../common/hydration';
 import { visuallyHiddenInput } from '../../common/visuallyHidden';
+import { givenIdReference } from '../../internals/blankIdReference';
 import { givenName } from '../../internals/blankName';
 import {
   ARROW_DOWN,
@@ -146,7 +147,7 @@ function inputProps() {
           givenName(props.ariaLabel) ?? (ariaLabelledby == null ? label.value : undefined),
         ) ?? undefined,
       'aria-labelledby': ariaLabelledby,
-      'aria-describedby': props.ariaDescribedby,
+      'aria-describedby': givenIdReference(props.ariaDescribedby),
       'aria-readonly': root.readOnly.value ? 'true' : undefined,
       'aria-valuenow': root.selectedNumber.value.value,
       'aria-valuetext':
