@@ -30,8 +30,13 @@ interface Tab {
 interface PageElement {
   localName: string;
   id: string;
-  className: string;
   getAttribute(name: string): string | null;
+}
+
+interface ElementName {
+  localName: string;
+  id: string;
+  classes: string;
 }
 
 /** A case returns the problem that it found. */
@@ -53,15 +58,26 @@ async function openFromButton(tab: Tab): Promise<Locator> {
   return button;
 }
 
+function describeElement({ localName, id, classes }: ElementName): string {
+  const [firstClass = ''] = classes.split(' ');
+  return `${localName}${id && `#${id}`}${firstClass && `.${firstClass}`}`;
+}
+
 async function focusOn(tab: Tab, target: Locator, name: string): Promise<string | undefined> {
   if (await target.evaluate((element) => element === document.activeElement)) {
     return undefined;
   }
   const active = await tab.evaluate(() => {
     const element = document.activeElement;
-    return element ? `${element.localName}${element.id && `#${element.id}`}` : 'no element';
+    return (
+      element && {
+        localName: element.localName,
+        id: element.id,
+        classes: element.getAttribute('class') ?? '',
+      }
+    );
   });
-  return `the focus is on ${active}, not on ${name}.`;
+  return `the focus is on ${active ? describeElement(active) : 'no element'}, not on ${name}.`;
 }
 
 /** focus-trap moves the focus in a timer. A timer that starts later ends later. */
@@ -183,18 +199,17 @@ const CASES: { name: string; width: number; run: Case }[] = [
       await tab.keyboard.press('Control+k');
       await tab.locator(FIELD).fill('Quick start');
       await tab.locator(SELECTED_RESULT).waitFor();
-      const withoutTabindex = await tab
-        .locator(`${BOX} :is(button, a)`)
-        .evaluateAll((controls) => [
-          ...new Set(
-            controls
-              .filter((control) => control.getAttribute('tabindex') !== '0')
-              .map((control) => `${control.localName}.${control.className.split(' ')[0]}`),
-          ),
-        ]);
-      return withoutTabindex.length > 0
-        ? `these controls do not have it: ${withoutTabindex.join(', ')}.`
-        : undefined;
+      const withoutTabindex = await tab.locator(`${BOX} :is(button, a)`).evaluateAll((controls) =>
+        controls
+          .filter((control) => control.getAttribute('tabindex') !== '0')
+          .map((control) => ({
+            localName: control.localName,
+            id: control.id,
+            classes: control.getAttribute('class') ?? '',
+          })),
+      );
+      const names = [...new Set(withoutTabindex.map(describeElement))];
+      return names.length > 0 ? `these controls do not have it: ${names.join(', ')}.` : undefined;
     },
   },
   {
