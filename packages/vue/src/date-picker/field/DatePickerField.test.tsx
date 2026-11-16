@@ -7,7 +7,9 @@ import {
   createFormDataSpy,
   createRenderer,
   describeConformance,
+  fireEvent,
   flushMicrotasks,
+  heldMountFormResetTests,
   screen,
   wait,
   waitFor,
@@ -336,6 +338,23 @@ describe('<DatePicker.Field />', () => {
   });
 
   describe('form', () => {
+    heldMountFormResetTests({
+      render,
+      renderControl: () => (
+        <DatePicker.Root name="date" locale="en-US" defaultValue={day}>
+          <DatePicker.Field>
+            <DateField.Input />
+          </DatePicker.Field>
+        </DatePicker.Root>
+      ),
+      change: () =>
+        fireEvent.input(hiddenInputOf(document.body), { target: { value: '2027-02-03' } }),
+      readState: () =>
+        screen.getAllByRole('spinbutton').map((segment) => segment.getAttribute('aria-valuenow')),
+      defaultState: ['11', '14', '2026'],
+      changedState: ['2', '3', '2027'],
+    });
+
     it('submits one entry with the ISO text of the value', async () => {
       const onSubmit = createFormDataSpy('when');
       const { container } = await render(

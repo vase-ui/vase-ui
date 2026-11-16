@@ -13,7 +13,10 @@ export interface DatePickerRootContext extends DateTimePickerContext<
 > {
   /** The props of the root. Its parts read the props that they share. */
   props: Readonly<DatePickerRootProps>;
-  /** Whether the picker ignores user interaction: its `disabled` prop, or a disabled field around it. */
+  /**
+   * Whether the picker ignores user interaction: its `disabled` prop, or a disabled field or
+   * fieldset around it.
+   */
   disabled: ComputedRef<boolean>;
 }
 

@@ -143,6 +143,7 @@ export interface DatePickerRootProps<
 
 <script setup lang="ts" generic="Value extends DatePickerRootValue = DatePickerRootValue">
 import { computed, provide, useTemplateRef } from 'vue';
+import { useFieldsetDisabled } from '../../fieldset/root/useFieldsetDisabled';
 import { useDateTimePickerRoot } from '../../internals/date-time/picker/useDateTimePickerRoot';
 import { assertTemporal } from '../../internals/date-time/temporal';
 import { useFieldRootContext } from '../../internals/field-root-context';
@@ -227,7 +228,11 @@ const picker = useDateTimePickerRoot<DatePickerRootValue, DatePickerRootChangeEv
 });
 
 const fieldContext = useFieldRootContext();
-const disabled = computed(() => props.disabled || (fieldContext.disabled.value ?? false));
+// The root has no element. Its field is at the place of the picker.
+const fieldsetDisabled = useFieldsetDisabled(() => picker.fieldElement.value);
+const disabled = computed(
+  () => props.disabled || (fieldContext.disabled.value ?? false) || fieldsetDisabled.value,
+);
 
 provide(DatePickerRootContext, { ...picker, props, disabled });
 
