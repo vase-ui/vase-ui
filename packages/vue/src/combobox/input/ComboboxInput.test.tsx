@@ -910,6 +910,10 @@ describe('<Combobox.Input />', () => {
         });
         const apricot = screen.getByRole('option', { name: 'apricot' });
         await userEvent.hover(apricot);
+        // In WebKit, the first real pointer event of a page has no movement, and the list ignores
+        // a move with no movement.
+        await fireEvent.mouseMove(apricot, { movementX: 1 });
+        await fireEvent.pointerMove(apricot, { pointerType: 'mouse', movementX: 1 });
         await waitFor(() => {
           expect(input).toHaveAttribute('aria-activedescendant', apricot.id);
         });
